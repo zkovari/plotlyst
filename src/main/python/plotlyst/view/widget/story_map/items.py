@@ -17,12 +17,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional, List
+from typing import Optional
 
 from PyQt6.QtCore import Qt, pyqtSignal, QRect, QRectF, QPoint, QPointF, QTimer
 from PyQt6.QtGui import QIcon, QColor, QPainter, QPen, QFontMetrics
 from PyQt6.QtWidgets import QWidget, QApplication, QStyleOptionGraphicsItem, \
-    QGraphicsSceneHoverEvent, QGraphicsSceneMouseEvent, QGraphicsRectItem, QGraphicsItem
+    QGraphicsSceneHoverEvent, QGraphicsSceneMouseEvent, QGraphicsItem
 from overrides import overrides
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
@@ -112,34 +112,6 @@ class SocketItem(AbstractSocketItem):
         return self.scene()
 
 
-class SelectorRectItem(QGraphicsRectItem):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._startingPoint: QPointF = QPointF(0, 0)
-        self._rect = QRectF()
-
-        self.setPen(QPen(Qt.GlobalColor.gray, 1, Qt.PenStyle.DashLine))
-
-    def start(self, pos: QPointF):
-        self._startingPoint = pos
-        self._rect.setTopLeft(pos)
-        self.setRect(self._rect)
-
-    def adjust(self, pos: QPointF):
-        x1 = min(self._startingPoint.x(), pos.x())
-        y1 = min(self._startingPoint.y(), pos.y())
-        x2 = max(self._startingPoint.x(), pos.x())
-        y2 = max(self._startingPoint.y(), pos.y())
-
-        self._rect.setTopLeft(QPointF(x1, y1))
-        self._rect.setBottomRight(QPointF(x2, y2))
-
-        self.setRect(self._rect)
-
-
-
-
-
 class StickerItem(MindMapNode):
     displayMessage = pyqtSignal()
 
@@ -183,11 +155,6 @@ class StickerItem(MindMapNode):
 class ConnectableNode(MindMapNode):
     def __init__(self, node: Node, parent=None):
         super().__init__(node, parent)
-        self._sockets: List[SocketItem] = []
-
-    def removeConnectors(self):
-        for socket in self._sockets:
-            socket.removeConnectors()
 
     @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:

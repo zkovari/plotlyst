@@ -23,9 +23,11 @@ from functools import partial
 from typing import Any, Optional, List
 
 from PyQt6.QtCore import Qt, QTimer, QRectF, pyqtSignal, QPointF
-from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QPen, QPainterPath, QColor, QIcon, QResizeEvent, QTransform
+from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QPen, QPainterPath, QColor, QIcon, QResizeEvent, QTransform, \
+    QKeyEvent
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QFrame, \
-    QToolButton, QApplication, QGraphicsScene, QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QWidget
+    QToolButton, QApplication, QGraphicsScene, QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QWidget, \
+    QGraphicsRectItem
 from overrides import overrides
 from qthandy import hbox, margins, sp, incr_icon, vbox
 
@@ -129,12 +131,38 @@ class ConnectorItem(QGraphicsPathItem):
         return self._target
 
 
+class SelectorRectItem(QGraphicsRectItem):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._startingPoint: QPointF = QPointF(0, 0)
+        self._rect = QRectF()
+
+        self.setPen(QPen(Qt.GlobalColor.gray, 1, Qt.PenStyle.DashLine))
+
+    def start(self, pos: QPointF):
+        self._startingPoint = pos
+        self._rect.setTopLeft(pos)
+        self.setRect(self._rect)
+
+    def adjust(self, pos: QPointF):
+        x1 = min(self._startingPoint.x(), pos.x())
+        y1 = min(self._startingPoint.y(), pos.y())
+        x2 = max(self._startingPoint.x(), pos.x())
+        y2 = max(self._startingPoint.y(), pos.y())
+
+        self._rect.setTopLeft(QPointF(x1, y1))
+        self._rect.setBottomRight(QPointF(x2, y2))
+
+        self.setRect(self._rect)
+
+
 class NodeItem(QAbstractGraphicsShapeItem):
     def __init__(self, node: Node, parent=None):
         super().__init__(parent)
         self._node = node
 
         self.setPos(node.x, node.y)
+        self._sockets: List[AbstractSocketItem] = []
 
         self.setFlag(
             QGraphicsItem.GraphicsItemFlag.ItemIsMovable | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable |
@@ -144,6 +172,10 @@ class NodeItem(QAbstractGraphicsShapeItem):
         self._posChangedTimer = QTimer()
         self._posChangedTimer.setInterval(1000)
         self._posChangedTimer.timeout.connect(self._posChangedOnTimeout)
+
+    def removeConnectors(self):
+        for socket in self._sockets:
+            socket.removeConnectors()
 
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
@@ -222,6 +254,11 @@ class NetworkScene(QGraphicsScene):
         self._placeholder: Optional[PlaceholderSocketItem] = None
         self._connectorPlaceholder: Optional[ConnectorItem] = None
 
+        self._selectionMode = False
+        self._selectionRect = SelectorRectItem()
+        self.addItem(self._selectionRect)
+        self._selectionRect.setVisible(False)
+
     def isAdditionMode(self) -> bool:
         return self._additionMode is not None
 
@@ -265,16 +302,41 @@ class NetworkScene(QGraphicsScene):
         self.endLink()
 
     @overrides
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_Escape:
+            if self.linkMode():
+                self.endLink()
+            elif self.isAdditionMode():
+                self.cancelItemAddition.emit()
+            else:
+                self.clearSelection()
+        elif event.key() == Qt.Key.Key_Delete or event.key() == Qt.Key.Key_Backspace:
+            for item in self.selectedItems():
+                if isinstance(item, NodeItem):
+                    item.removeConnectors()
+                self.removeItem(item)
+
+    @overrides
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         if (not self.isAdditionMode() and not self.linkMode() and
                 event.button() & Qt.MouseButton.LeftButton and not self.itemAt(event.scenePos(), QTransform())):
-            pass
-            # self._selectionRect.start(event.scenePos())
+            self._selectionRect.start(event.scenePos())
             # self._selectionMode = True
         elif event.button() & Qt.MouseButton.RightButton or event.button() & Qt.MouseButton.MiddleButton:
             # disallow view movement to clear item selection
             return
         super().mousePressEvent(event)
+
+    @overrides
+    def mouseMoveEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        if self.linkMode():
+            self._placeholder.setPos(event.scenePos())
+            self._connectorPlaceholder.rearrange()
+        elif self._selectionMode:
+            self._selectionRect.adjust(event.scenePos())
+            self._selectionRect.setVisible(True)
+            self._updateSelection()
+        super().mouseMoveEvent(event)
 
     @overrides
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
@@ -283,10 +345,10 @@ class NetworkScene(QGraphicsScene):
                 self.endLink()
         elif self.isAdditionMode() and event.button() & Qt.MouseButton.RightButton:
             self.cancelItemAddition.emit()
-        # elif self._selectionMode and event.button() & Qt.MouseButton.LeftButton:
-        #     self._selectionMode = False
-        #     self._selectionRect.setVisible(False)
-        #     self._updateSelection()
+        elif self._selectionMode and event.button() & Qt.MouseButton.LeftButton:
+            self._selectionMode = False
+            self._selectionRect.setVisible(False)
+            self._updateSelection()
         elif self._additionMode is not None:
             self._addNewItem(self._additionMode, event.scenePos())
 
@@ -295,6 +357,14 @@ class NetworkScene(QGraphicsScene):
     @abstractmethod
     def _addNewItem(self, itemType: NetworkItemType, scenePos: QPointF):
         pass
+
+    def _updateSelection(self):
+        if not self._selectionRect.rect().isValid():
+            return
+        self.clearSelection()
+        items_in_rect = self.items(self._selectionRect.rect(), Qt.ItemSelectionMode.IntersectsItemBoundingRect)
+        for item in items_in_rect:
+            item.setSelected(True)
 
 
 class NetworkGraphicsView(BaseGraphicsView):

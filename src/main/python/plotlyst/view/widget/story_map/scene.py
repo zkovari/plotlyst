@@ -19,14 +19,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from PyQt6.QtCore import Qt, pyqtSignal, QPointF
-from PyQt6.QtGui import QKeyEvent, QTransform
+from PyQt6.QtGui import QKeyEvent
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Node, CharacterNode
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.view.widget.graphics import NetworkScene
 from src.main.python.plotlyst.view.widget.story_map.items import ItemType, MindMapNode, EventItem, StickerItem, \
-    SelectorRectItem, CharacterItem, SocketItem, ConnectableNode
+    CharacterItem, SocketItem
 
 
 class EventsMindMapScene(NetworkScene):
@@ -39,11 +39,6 @@ class EventsMindMapScene(NetworkScene):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
-
-        self._selectionMode = False
-        self._selectionRect = SelectorRectItem()
-        self.addItem(self._selectionRect)
-        self._selectionRect.setVisible(False)
 
         if novel.characters:
             characterItem = CharacterItem(CharacterNode(50, 50), novel.characters[0])
@@ -73,60 +68,11 @@ class EventsMindMapScene(NetworkScene):
 
     @overrides
     def keyPressEvent(self, event: QKeyEvent) -> None:
-        if event.key() == Qt.Key.Key_Escape:
-            if self.linkMode():
-                self.endLink()
-            elif self.isAdditionMode():
-                self.cancelItemAddition.emit()
-            else:
-                self.clearSelection()
-        elif event.key() == Qt.Key.Key_Delete or event.key() == Qt.Key.Key_Backspace:
-            for item in self.selectedItems():
-                if isinstance(item, ConnectableNode):
-                    item.removeConnectors()
-                self.removeItem(item)
-        elif not event.modifiers() and len(self.selectedItems()) == 1:
+        super().keyPressEvent(event)
+        if not event.modifiers() and len(self.selectedItems()) == 1:
             item = self.selectedItems()[0]
             if isinstance(item, EventItem):
                 self.editEvent.emit(item)
-
-    @overrides
-    def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        if (not self.isAdditionMode() and not self.linkMode() and
-                event.button() & Qt.MouseButton.LeftButton and not self.itemAt(event.scenePos(), QTransform())):
-            self._selectionRect.start(event.scenePos())
-            self._selectionMode = True
-        elif event.button() & Qt.MouseButton.RightButton or event.button() & Qt.MouseButton.MiddleButton:
-            # disallow view movement to clear item selection
-            return
-        super().mousePressEvent(event)
-
-    @overrides
-    def mouseMoveEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        if self.linkMode():
-            self._placeholder.setPos(event.scenePos())
-            self._connectorPlaceholder.rearrange()
-        elif self._selectionMode:
-            self._selectionRect.adjust(event.scenePos())
-            self._selectionRect.setVisible(True)
-            self._updateSelection()
-        super().mouseMoveEvent(event)
-
-    @overrides
-    def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        if self.linkMode():
-            if event.button() & Qt.MouseButton.RightButton:
-                self.endLink()
-        elif self.isAdditionMode() and event.button() & Qt.MouseButton.RightButton:
-            self.cancelItemAddition.emit()
-        elif self._selectionMode and event.button() & Qt.MouseButton.LeftButton:
-            self._selectionMode = False
-            self._selectionRect.setVisible(False)
-            self._updateSelection()
-        elif self._additionMode is not None:
-            self._addNewEvent(self._additionMode, event.scenePos())
-
-        super().mouseReleaseEvent(event)
 
     def displayStickerMessage(self, sticker: StickerItem):
         self.editSticker.emit(sticker)
@@ -145,14 +91,6 @@ class EventsMindMapScene(NetworkScene):
         self.addItem(item)
         self.itemAdded.emit(itemType, item)
         self.endAdditionMode()
-
-    def _updateSelection(self):
-        if not self._selectionRect.rect().isValid():
-            return
-        self.clearSelection()
-        items_in_rect = self.items(self._selectionRect.rect(), Qt.ItemSelectionMode.IntersectsItemBoundingRect)
-        for item in items_in_rect:
-            item.setSelected(True)
 
     @staticmethod
     def toEventNode(scenePos: QPointF) -> Node:

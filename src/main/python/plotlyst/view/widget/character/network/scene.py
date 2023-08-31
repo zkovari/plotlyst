@@ -21,7 +21,7 @@ import math
 from typing import Optional
 
 from PyQt6.QtCore import QRectF, Qt, QPointF
-from PyQt6.QtGui import QPainter, QPen, QKeyEvent, QColor, QBrush
+from PyQt6.QtGui import QPainter, QPen, QColor, QBrush
 from PyQt6.QtWidgets import QWidget, QStyleOptionGraphicsItem, QGraphicsSceneHoverEvent, \
     QGraphicsSceneMouseEvent
 from overrides import overrides
@@ -177,19 +177,6 @@ class RelationsEditorScene(NetworkScene):
     def setNetwork(self, network: RelationsNetwork):
         self._network = network
 
-    @overrides
-    def keyReleaseEvent(self, event: QKeyEvent) -> None:
-        if event.key() == Qt.Key.Key_Delete or event.key() == Qt.Key.Key_Backspace:
-            for item in self.selectedItems():
-                if isinstance(item, CharacterItem):
-                    # self._network.nodes[:] = [node for node in self._network.nodes if
-                    #                           node.character_id != item.character().id]
-                    self.removeItem(item)
-                    # self.charactersChanged.emit(self._network)
-
-    # def link(self, item: CharacterItem):
-    #     self.charactersLinked.emit(item)
-
     @staticmethod
     def toCharacterNode(scenePos: QPointF) -> CharacterNode:
         node = CharacterNode(scenePos.x(), scenePos.y())
@@ -201,11 +188,6 @@ class RelationsEditorScene(NetworkScene):
     def _addNewItem(self, itemType: CharacterNetworkItemType, scenePos: QPointF):
         if itemType == CharacterNetworkItemType.CHARACTER:
             item = CharacterItem(PlaceholderCharacter('Character'), self.toCharacterNode(scenePos))
-            # elif itemType in [ItemType.COMMENT, ItemType.TOOL, ItemType.COST]:
-            #     item = StickerItem(Node(scenePos.x(), scenePos.y()), itemType)
-            # else:
-            #     item = EventItem(self.toEventNode(scenePos), itemType)
-
             self.addItem(item)
             self.itemAdded.emit(itemType, item)
         self.endAdditionMode()
