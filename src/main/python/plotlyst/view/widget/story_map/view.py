@@ -110,14 +110,17 @@ class EventsMindMapView(NetworkGraphicsView):
     @overrides
     def _startAddition(self, itemType: ItemType):
         super()._startAddition(itemType)
-        self._wdgSecondaryEventSelector.setHidden(True)
-        self._wdgSecondaryStickerSelector.setHidden(True)
         self._hideItemEditor()
 
         if itemType == ItemType.EVENT:
             self._wdgSecondaryEventSelector.setVisible(True)
+            self._wdgSecondaryStickerSelector.setHidden(True)
         elif itemType == ItemType.COMMENT:
             self._wdgSecondaryStickerSelector.setVisible(True)
+            self._wdgSecondaryEventSelector.setHidden(True)
+        elif itemType == ItemType.CHARACTER:
+            self._wdgSecondaryStickerSelector.setHidden(True)
+            self._wdgSecondaryEventSelector.setHidden(True)
 
     @overrides
     def _endAddition(self, itemType: Optional[ItemType] = None, item: Optional[MindMapNode] = None):

@@ -18,8 +18,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QIcon, QShowEvent
 from PyQt6.QtWidgets import QLabel, QButtonGroup, QToolButton, QFrame
+from overrides import overrides
 from qthandy import grid
 
 from src.main.python.plotlyst.view.common import shadow, tool_btn
@@ -85,6 +86,10 @@ class EventSelectorWidget(SecondarySelectorWidget):
 
         self._btnGeneral.setChecked(True)
 
+    @overrides
+    def showEvent(self, event: QShowEvent) -> None:
+        self._btnGeneral.setChecked(True)
+
 
 class StickerSelectorWidget(SecondarySelectorWidget):
     def __init__(self, parent=None):
@@ -94,4 +99,8 @@ class StickerSelectorWidget(SecondarySelectorWidget):
         self._btnTool = self._newButton(ItemType.TOOL, IconRegistry.tool_icon('black', 'black'), 'Add new tool', 0, 1)
         self._btnCost = self._newButton(ItemType.COST, IconRegistry.cost_icon('black', 'black'), 'Add new cost', 1, 0)
 
+        self._btnComment.setChecked(True)
+
+    @overrides
+    def showEvent(self, event: QShowEvent) -> None:
         self._btnComment.setChecked(True)
