@@ -209,6 +209,9 @@ class NodeItem(QAbstractGraphicsShapeItem):
         self._posChangedTimer.setInterval(1000)
         self._posChangedTimer.timeout.connect(self._posChangedOnTimeout)
 
+    def networkScene(self) -> 'NetworkScene':
+        return self.scene()
+
     def removeConnectors(self):
         for socket in self._sockets:
             socket.removeConnectors()

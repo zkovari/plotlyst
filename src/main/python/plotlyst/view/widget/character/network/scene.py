@@ -22,8 +22,7 @@ from typing import Optional
 
 from PyQt6.QtCore import QRectF, Qt, QPointF
 from PyQt6.QtGui import QPainter, QPen, QColor, QBrush
-from PyQt6.QtWidgets import QWidget, QStyleOptionGraphicsItem, QGraphicsSceneHoverEvent, \
-    QGraphicsSceneMouseEvent
+from PyQt6.QtWidgets import QWidget, QStyleOptionGraphicsItem, QGraphicsSceneHoverEvent
 from overrides import overrides
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
@@ -72,8 +71,7 @@ class CharacterItem(NodeItem):
         self._center = QPointF(self.Margin + self._size / 2, self.Margin + self._size / 2)
         self._outerRadius = self._size // 2 + self.Margin // 2
 
-        self._animation = None
-        self._linkMode: bool = False
+        self._linkDisplayedMode: bool = False
 
         self._socket = SocketItem(self)
         self._socket.setVisible(False)
@@ -94,7 +92,7 @@ class CharacterItem(NodeItem):
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
-        if self._linkMode:
+        if self._linkDisplayedMode:
             painter.setPen(QPen(QColor(PLOTLYST_TERTIARY_COLOR), self.PenWidth, Qt.PenStyle.DashLine))
             brush = QBrush(QColor(PLOTLYST_TERTIARY_COLOR), Qt.BrushStyle.Dense5Pattern)
             painter.setBrush(brush)
@@ -107,12 +105,6 @@ class CharacterItem(NodeItem):
         avatar.paint(painter, self.Margin, self.Margin, self._size, self._size)
 
     @overrides
-    def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        if self.relationsScene().linkMode():
-            self.relationsScene().link(self)
-        super(CharacterItem, self).mousePressEvent(event)
-
-    @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         if self.relationsScene().linkMode() or event.modifiers() & Qt.KeyboardModifier.AltModifier:
             self._setConnectionEnabled(True)
@@ -120,13 +112,13 @@ class CharacterItem(NodeItem):
 
     @overrides
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        if self._linkMode and not self.isSelected():
+        if self._linkDisplayedMode and not self.isSelected():
             self._setConnectionEnabled(False)
             self.update()
 
     @overrides
     def hoverMoveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        if self._linkMode:
+        if self._linkDisplayedMode:
             angle = math.degrees(math.atan2(
                 event.pos().y() - self._center.y(), event.pos().x() - self._center.x()
             ))
@@ -147,7 +139,7 @@ class CharacterItem(NodeItem):
         self._setConnectionEnabled(selected)
 
     def _setConnectionEnabled(self, enabled: bool):
-        self._linkMode = enabled
+        self._linkDisplayedMode = enabled
         self._socket.setVisible(enabled)
         self.update()
 
