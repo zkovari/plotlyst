@@ -25,7 +25,7 @@ from typing import Any, Optional, List
 from PyQt6.QtCore import Qt, QTimer, QRectF, pyqtSignal, QPointF
 from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QPen, QPainterPath, QColor, QIcon, QResizeEvent, QTransform
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QFrame, \
-    QToolButton, QApplication, QGraphicsScene, QGraphicsSceneMouseEvent
+    QToolButton, QApplication, QGraphicsScene, QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QWidget
 from overrides import overrides
 from qthandy import hbox, margins, sp, incr_icon, vbox
 
@@ -80,6 +80,17 @@ class AbstractSocketItem(QAbstractGraphicsShapeItem):
         for con in self._connectors:
             self.scene().removeItem(con)
         self._connectors.clear()
+
+
+class PlaceholderSocketItem(AbstractSocketItem):
+    def __init__(self, parent=None):
+        super().__init__(Qt.Edge.RightEdge, parent)
+        self.setEnabled(False)
+        self.setAcceptHoverEvents(False)
+
+    @overrides
+    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
+        pass
 
 
 class ConnectorItem(QGraphicsPathItem):
@@ -208,6 +219,9 @@ class NetworkScene(QGraphicsScene):
         self._linkMode: bool = False
         self._additionMode: Optional[NetworkItemType] = None
 
+        self._placeholder: Optional[PlaceholderSocketItem] = None
+        self._connectorPlaceholder: Optional[ConnectorItem] = None
+
     def isAdditionMode(self) -> bool:
         return self._additionMode is not None
 
@@ -220,11 +234,35 @@ class NetworkScene(QGraphicsScene):
     def linkMode(self) -> bool:
         return self._linkMode
 
-    def startLink(self):
+    def linkSource(self) -> Optional[AbstractSocketItem]:
+        if self._connectorPlaceholder is not None:
+            return self._connectorPlaceholder.source()
+
+    def startLink(self, source: AbstractSocketItem):
         self._linkMode = True
+        self._placeholder = PlaceholderSocketItem()
+        self._placeholder.setVisible(False)
+        self._placeholder.setEnabled(False)
+        self.addItem(self._placeholder)
+        self._connectorPlaceholder = ConnectorItem(source, self._placeholder)
+        self.addItem(self._connectorPlaceholder)
+
+        self._placeholder.setPos(source.scenePos())
+        self._connectorPlaceholder.rearrange()
 
     def endLink(self):
         self._linkMode = False
+        self.removeItem(self._connectorPlaceholder)
+        self.removeItem(self._placeholder)
+        self._connectorPlaceholder = None
+        self._placeholder = None
+
+    def link(self, target: AbstractSocketItem):
+        connector = ConnectorItem(self._connectorPlaceholder.source(), target)
+        self._connectorPlaceholder.source().addConnector(connector)
+        target.addConnector(connector)
+        self.addItem(connector)
+        self.endLink()
 
     @overrides
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:

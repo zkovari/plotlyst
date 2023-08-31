@@ -137,12 +137,7 @@ class SelectorRectItem(QGraphicsRectItem):
         self.setRect(self._rect)
 
 
-class PlaceholderItem(SocketItem):
-    def __init__(self, parent=None):
-        super().__init__(Qt.Edge.RightEdge, parent)
-        self.setEnabled(False)
-        self.setAcceptHoverEvents(False)
-        self.setToolTip('Click to add a new node')
+
 
 
 class StickerItem(MindMapNode):

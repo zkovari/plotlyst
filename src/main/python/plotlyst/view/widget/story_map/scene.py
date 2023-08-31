@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional
 
 from PyQt6.QtCore import Qt, pyqtSignal, QPointF
 from PyQt6.QtGui import QKeyEvent, QTransform
@@ -25,9 +24,9 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Node, CharacterNode
 from src.main.python.plotlyst.core.domain import Novel
-from src.main.python.plotlyst.view.widget.graphics import ConnectorItem, NetworkScene
+from src.main.python.plotlyst.view.widget.graphics import NetworkScene
 from src.main.python.plotlyst.view.widget.story_map.items import ItemType, MindMapNode, EventItem, StickerItem, \
-    SelectorRectItem, PlaceholderItem, CharacterItem, SocketItem, ConnectableNode
+    SelectorRectItem, CharacterItem, SocketItem, ConnectableNode
 
 
 class EventsMindMapScene(NetworkScene):
@@ -46,9 +45,6 @@ class EventsMindMapScene(NetworkScene):
         self.addItem(self._selectionRect)
         self._selectionRect.setVisible(False)
 
-        self._placeholder: Optional[PlaceholderItem] = None
-        self._connectorPlaceholder: Optional[ConnectorItem] = None
-
         if novel.characters:
             characterItem = CharacterItem(CharacterNode(50, 50), novel.characters[0])
 
@@ -59,36 +55,10 @@ class EventsMindMapScene(NetworkScene):
         sticker = StickerItem(Node(200, 0), ItemType.COMMENT)
         self.addItem(sticker)
 
-    def linkSource(self) -> Optional[SocketItem]:
-        if self._connectorPlaceholder is not None:
-            return self._connectorPlaceholder.source()
-
+    @overrides
     def startLink(self, source: SocketItem):
+        super().startLink(source)
         self.hideEditor()
-        self._linkMode = True
-        self._placeholder = PlaceholderItem()
-        self._placeholder.setVisible(False)
-        self._placeholder.setEnabled(False)
-        self.addItem(self._placeholder)
-        self._connectorPlaceholder = ConnectorItem(source, self._placeholder)
-        self.addItem(self._connectorPlaceholder)
-
-        self._placeholder.setPos(source.scenePos())
-        self._connectorPlaceholder.rearrange()
-
-    def endLink(self):
-        self._linkMode = False
-        self.removeItem(self._connectorPlaceholder)
-        self.removeItem(self._placeholder)
-        self._connectorPlaceholder = None
-        self._placeholder = None
-
-    def link(self, target: SocketItem):
-        connector = ConnectorItem(self._connectorPlaceholder.source(), target)
-        self._connectorPlaceholder.source().addConnector(connector)
-        target.addConnector(connector)
-        self.addItem(connector)
-        self.endLink()
 
     def editEventText(self, item: EventItem):
         self.editEvent.emit(item)

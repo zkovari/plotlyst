@@ -20,13 +20,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import math
 from typing import Optional
 
-from PyQt6.QtCore import QRectF, pyqtSignal, Qt, QPointF
+from PyQt6.QtCore import QRectF, Qt, QPointF
 from PyQt6.QtGui import QPainter, QPen, QKeyEvent, QColor, QBrush
 from PyQt6.QtWidgets import QWidget, QStyleOptionGraphicsItem, QGraphicsSceneHoverEvent, \
     QGraphicsSceneMouseEvent
 from overrides import overrides
 
-from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR, PLOTLYST_MAIN_COLOR
+from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
 from src.main.python.plotlyst.core.domain import Character, Novel, RelationsNetwork, CharacterNode
 from src.main.python.plotlyst.view.common import pointy
 from src.main.python.plotlyst.view.icons import avatars
@@ -161,8 +161,8 @@ class CharacterItem(NodeItem):
 
 
 class RelationsEditorScene(NetworkScene):
-    charactersChanged = pyqtSignal(RelationsNetwork)
-    charactersLinked = pyqtSignal(CharacterItem)
+    # charactersChanged = pyqtSignal(RelationsNetwork)
+    # charactersLinked = pyqtSignal(CharacterItem)
 
     def __init__(self, novel: Novel, parent=None):
         super(RelationsEditorScene, self).__init__(parent)
@@ -187,8 +187,8 @@ class RelationsEditorScene(NetworkScene):
                     self.removeItem(item)
                     # self.charactersChanged.emit(self._network)
 
-    def link(self, item: CharacterItem):
-        self.charactersLinked.emit(item)
+    # def link(self, item: CharacterItem):
+    #     self.charactersLinked.emit(item)
 
     @staticmethod
     def toCharacterNode(scenePos: QPointF) -> CharacterNode:
