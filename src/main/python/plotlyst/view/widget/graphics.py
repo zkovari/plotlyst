@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import math
 from abc import abstractmethod
 from enum import Enum
 from functools import partial
@@ -24,10 +25,10 @@ from typing import Any, Optional, List
 
 from PyQt6.QtCore import Qt, QTimer, QRectF, pyqtSignal, QPointF
 from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QPen, QPainterPath, QColor, QIcon, QResizeEvent, QTransform, \
-    QKeyEvent
+    QKeyEvent, QPolygonF
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QFrame, \
     QToolButton, QApplication, QGraphicsScene, QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QWidget, \
-    QGraphicsRectItem, QGraphicsSceneHoverEvent
+    QGraphicsRectItem, QGraphicsSceneHoverEvent, QGraphicsPolygonItem
 from overrides import overrides
 from qthandy import hbox, margins, sp, incr_icon, vbox
 
@@ -146,19 +147,38 @@ class ConnectorItem(QGraphicsPathItem):
         else:
             self.setPen(QPen(QColor(Qt.GlobalColor.darkBlue), 2))
 
+        self._arrowheadItem = QGraphicsPolygonItem(self)
+        self._arrowheadItem.setPen(QPen(QColor(Qt.GlobalColor.darkBlue), 1))
+        self._arrowheadItem.setBrush(QColor(Qt.GlobalColor.darkBlue))
+
         self.rearrange()
 
     def rearrange(self):
         self.setPos(self._source.sceneBoundingRect().center())
 
         path = QPainterPath()
-        width = self._target.scenePos().x() - self.scenePos().x()
-        height = self._target.scenePos().y() - self._source.scenePos().y()
+
+        start = self.scenePos()
+        end = self._target.sceneBoundingRect().center()
+
+        width = end.x() - start.x()
+        height = end.y() - start.y()
 
         if abs(height) < 5:
             path.lineTo(width, height)
         else:
             path.quadTo(0, height / 2, width, height)
+
+        angle = math.degrees(math.atan2(-height / 2, width))
+        arrowhead = QPolygonF([
+            QPointF(-10, -5),
+            QPointF(0, 0),
+            QPointF(-10, 5),
+        ])
+
+        self._arrowheadItem.setPolygon(arrowhead)
+        self._arrowheadItem.setPos(width, height)
+        self._arrowheadItem.setRotation(-angle)
 
         self.setPath(path)
 
