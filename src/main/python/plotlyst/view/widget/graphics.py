@@ -147,7 +147,12 @@ class ConnectorItem(QGraphicsPathItem):
         else:
             self.setPen(QPen(QColor(Qt.GlobalColor.darkBlue), 2))
 
-        self._arrowheadItem = QGraphicsPolygonItem(self)
+        arrowhead = QPolygonF([
+            QPointF(-10, -5),
+            QPointF(0, 0),
+            QPointF(-10, 5),
+        ])
+        self._arrowheadItem = QGraphicsPolygonItem(arrowhead, self)
         self._arrowheadItem.setPen(QPen(QColor(Qt.GlobalColor.darkBlue), 1))
         self._arrowheadItem.setBrush(QColor(Qt.GlobalColor.darkBlue))
 
@@ -169,15 +174,8 @@ class ConnectorItem(QGraphicsPathItem):
         else:
             path.quadTo(0, height / 2, width, height)
 
-        angle = math.degrees(math.atan2(-height / 2, width))
-        arrowhead = QPolygonF([
-            QPointF(-10, -5),
-            QPointF(0, 0),
-            QPointF(-10, 5),
-        ])
-
-        self._arrowheadItem.setPolygon(arrowhead)
         self._arrowheadItem.setPos(width, height)
+        angle = math.degrees(math.atan2(-height / 2, width))
         self._arrowheadItem.setRotation(-angle)
 
         self.setPath(path)
