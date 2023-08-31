@@ -59,13 +59,6 @@ class MindMapNode(NodeItem):
 
 
 class SocketItem(AbstractSocketItem):
-    def __init__(self, orientation: Qt.Edge, parent: 'ConnectableNode'):
-        super().__init__(orientation, parent)
-
-        self.setAcceptHoverEvents(True)
-        self._hovered = False
-        self._linkAvailable = True
-        self.setToolTip('Connect')
 
     @overrides
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
@@ -78,35 +71,6 @@ class SocketItem(AbstractSocketItem):
         painter.drawEllipse(QPointF(self._size / 2, self._size // 2), radius, radius)
         if self._hovered and self.mindMapScene().linkMode():
             painter.drawEllipse(QPointF(self._size / 2, self._size // 2), 2, 2)
-
-    @overrides
-    def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent) -> None:
-        self._hovered = True
-        if self.mindMapScene().linkMode() and self.mindMapScene().linkSource().parentItem() == self.parentItem():
-            self._linkAvailable = False
-        else:
-            self._linkAvailable = True
-        self.setToolTip('Connect' if self._linkAvailable else 'Cannot connect to itself')
-        self.update()
-
-    @overrides
-    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        self._hovered = False
-        self._linkAvailable = True
-        self.setToolTip('Connect')
-        self.update()
-
-    @overrides
-    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
-        event.accept()
-
-    @overrides
-    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
-        if self.mindMapScene().linkMode():
-            if self.mindMapScene().linkSource().parentItem() != self.parentItem():
-                self.mindMapScene().link(self)
-        else:
-            self.mindMapScene().startLink(self)
 
     def mindMapScene(self) -> 'EventsMindMapScene':
         return self.scene()

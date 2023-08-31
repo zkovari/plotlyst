@@ -50,17 +50,6 @@ class SocketItem(AbstractSocketItem):
         self._size = self.Size
         super().__init__(Qt.Edge.TopEdge, parent)
         pointy(self)
-        self._hovered: bool = False
-
-    @overrides
-    def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent) -> None:
-        self._hovered = True
-        self.update()
-
-    @overrides
-    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        self._hovered = False
-        self.update()
 
     @overrides
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:

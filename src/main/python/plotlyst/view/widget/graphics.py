@@ -27,7 +27,7 @@ from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QPen, QPainterPath, 
     QKeyEvent
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QFrame, \
     QToolButton, QApplication, QGraphicsScene, QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QWidget, \
-    QGraphicsRectItem
+    QGraphicsRectItem, QGraphicsSceneHoverEvent
 from overrides import overrides
 from qthandy import hbox, margins, sp, incr_icon, vbox
 
@@ -62,14 +62,47 @@ class AbstractSocketItem(QAbstractGraphicsShapeItem):
     def __init__(self, orientation: Qt.Edge, parent=None):
         super().__init__(parent)
         self._size = 16
+        self._orientation: Qt.Edge = orientation
+        self._hovered = False
+        self._linkAvailable = True
+
+        self.setToolTip('Connect')
         self.setAcceptHoverEvents(True)
-        self._orientation = orientation
 
         self._connectors: List[ConnectorItem] = []
 
     @overrides
     def boundingRect(self):
         return QRectF(0, 0, self._size, self._size)
+
+    @overrides
+    def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent) -> None:
+        self._hovered = True
+        if self.networkScene().linkMode() and self.networkScene().linkSource().parentItem() == self.parentItem():
+            self._linkAvailable = False
+        else:
+            self._linkAvailable = True
+        self.setToolTip('Connect' if self._linkAvailable else 'Cannot connect to itself')
+        self.update()
+
+    @overrides
+    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        self._hovered = False
+        self._linkAvailable = True
+        self.setToolTip('Connect')
+        self.update()
+
+    @overrides
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        event.accept()
+
+    @overrides
+    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        if self.networkScene().linkMode():
+            if self.networkScene().linkSource().parentItem() != self.parentItem():
+                self.networkScene().link(self)
+        else:
+            self.networkScene().startLink(self)
 
     def addConnector(self, connector: 'ConnectorItem'):
         self._connectors.append(connector)
@@ -82,6 +115,9 @@ class AbstractSocketItem(QAbstractGraphicsShapeItem):
         for con in self._connectors:
             self.scene().removeItem(con)
         self._connectors.clear()
+
+    def networkScene(self) -> 'NetworkScene':
+        return self.scene()
 
 
 class PlaceholderSocketItem(AbstractSocketItem):
