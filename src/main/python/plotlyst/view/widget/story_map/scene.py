@@ -80,7 +80,8 @@ class EventsMindMapScene(NetworkScene):
     def hideStickerMessage(self):
         self.closeSticker.emit()
 
-    def _addNewEvent(self, itemType: ItemType, scenePos: QPointF):
+    @overrides
+    def _addNewItem(self, itemType: ItemType, scenePos: QPointF):
         if itemType == ItemType.CHARACTER:
             item = CharacterItem(self.toCharacterNode(scenePos), character=None)
         elif itemType in [ItemType.COMMENT, ItemType.TOOL, ItemType.COST]:

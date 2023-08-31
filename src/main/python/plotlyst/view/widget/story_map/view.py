@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 import qtanim
+from PyQt6.QtCore import QTimer
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Character
@@ -129,9 +130,9 @@ class EventsMindMapView(NetworkGraphicsView):
         self._wdgSecondaryStickerSelector.setHidden(True)
 
         if itemType == ItemType.CHARACTER:
-            self._endCharacterAddition(item)
+            QTimer.singleShot(100, lambda: self._finishCharacterAddition(item))
 
-    def _endCharacterAddition(self, item: CharacterItem):
+    def _finishCharacterAddition(self, item: CharacterItem):
         def select(character: Character):
             item.setCharacter(character)
 

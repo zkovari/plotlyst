@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
+from PyQt6.QtCore import QTimer
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, RelationsNetwork, Character
@@ -65,7 +66,7 @@ class CharacterNetworkView(NetworkGraphicsView):
     def _endAddition(self, itemType: Optional[NetworkItemType] = None, item: Optional[NodeItem] = None):
         super()._endAddition(itemType, item)
         if itemType == CharacterNetworkItemType.CHARACTER:
-            self._finishCharacterAddition(item)
+            QTimer.singleShot(100, lambda: self._finishCharacterAddition(item))
 
     def _finishCharacterAddition(self, item: CharacterItem):
         def select(character: Character):
