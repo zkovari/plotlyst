@@ -41,7 +41,8 @@ class CharacterNetworkView(NetworkGraphicsView):
         self._btnAddSticker = self._newControlButton(IconRegistry.from_name('mdi6.sticker-circle-outline'),
                                                      'Add new sticker', CharacterNetworkItemType.STICKER)
 
-        self._connectorEditor = ConnectorEditor(self)
+        network = RelationsNetwork('Test')
+        self._connectorEditor = ConnectorEditor(network, self)
         self._connectorEditor.setVisible(False)
 
         self._scene.selectionChanged.connect(self._selectionChanged)

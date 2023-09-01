@@ -1737,6 +1737,11 @@ class RelationsNetwork:
 
 
 @dataclass
+class Relation(SelectionItem):
+    pass
+
+
+@dataclass
 class DocsPreferences:
     grammar_check: bool = True
 

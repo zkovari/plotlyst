@@ -28,12 +28,12 @@ from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QPen, QPainterPath, 
     QKeyEvent, QPolygonF, QPaintEvent
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QFrame, \
     QToolButton, QApplication, QGraphicsScene, QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QWidget, \
-    QGraphicsRectItem, QGraphicsSceneHoverEvent, QGraphicsPolygonItem, QAbstractButton, QSlider
+    QGraphicsRectItem, QGraphicsSceneHoverEvent, QGraphicsPolygonItem, QAbstractButton, QSlider, QButtonGroup
 from overrides import overrides
-from qthandy import hbox, margins, sp, incr_icon, vbox
+from qthandy import hbox, margins, sp, incr_icon, vbox, grid
 
-from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR
-from src.main.python.plotlyst.core.domain import Node
+from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR, RELAXED_WHITE_COLOR
+from src.main.python.plotlyst.core.domain import Node, Relation
 from src.main.python.plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButtonGroup, \
     TooltipPositionEventFilter, pointy
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -58,6 +58,34 @@ def draw_helpers(painter: QPainter, item: QAbstractGraphicsShapeItem):
     draw_rect(painter, item)
     draw_center(painter, item)
     draw_zero(painter)
+
+
+class IconBadge(QAbstractGraphicsShapeItem):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._size: int = 32
+        self._icon: Optional[QIcon] = None
+        self._color: str = 'blue'
+
+    def setIcon(self, icon_name: str, color: str):
+        self._icon = IconRegistry.from_name(icon_name, color)
+        self._color = color
+        self.update()
+
+    @overrides
+    def boundingRect(self) -> QRectF:
+        return QRectF(0, 0, self._size, self._size)
+
+    @overrides
+    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        painter.setPen(QPen(QColor(self._color), 2))
+        painter.setBrush(QColor(RELAXED_WHITE_COLOR))
+        painter.drawEllipse(0, 0, self._size, self._size)
+
+        if self._icon:
+            self._icon.paint(painter, 3, 3, self._size - 5, self._size - 5)
 
 
 class AbstractSocketItem(QAbstractGraphicsShapeItem):
@@ -147,6 +175,7 @@ class ConnectorItem(QGraphicsPathItem):
             self.setPen(pen)
         else:
             self.setPen(QPen(QColor(Qt.GlobalColor.darkBlue), 2))
+        self._relation: Optional[Relation] = None
 
         self._arrowhead = QPolygonF([
             QPointF(0, -5),
@@ -156,6 +185,9 @@ class ConnectorItem(QGraphicsPathItem):
         self._arrowheadItem = QGraphicsPolygonItem(self._arrowhead, self)
         self._arrowheadItem.setPen(QPen(QColor(Qt.GlobalColor.darkBlue), 1))
         self._arrowheadItem.setBrush(QColor(Qt.GlobalColor.darkBlue))
+
+        self._iconBadge = IconBadge(self)
+        self._iconBadge.setVisible(False)
 
         self.rearrange()
 
@@ -172,8 +204,24 @@ class ConnectorItem(QGraphicsPathItem):
 
         arrowPen = self._arrowheadItem.pen()
         prevWidth = arrowPen.width()
-        arrowPen.setWidth(width)
         self._arrowheadItem.setScale(1.0 + (width - prevWidth) / 10)
+
+        self.rearrange()
+
+    def setRelation(self, relation: Relation):
+        pen = self.pen()
+        color = QColor(relation.icon_color)
+        pen.setColor(color)
+        self.setPen(pen)
+
+        arrowPen = self._arrowheadItem.pen()
+        arrowPen.setColor(color)
+        arrowPen.setBrush(color)
+        self._arrowheadItem.setPen(arrowPen)
+
+        self._relation = relation
+        self._iconBadge.setIcon(relation.icon, relation.icon_color)
+        self._iconBadge.setVisible(True)
 
         self.rearrange()
 
@@ -189,13 +237,23 @@ class ConnectorItem(QGraphicsPathItem):
         height = end.y() - start.y()
 
         if abs(height) < 5:
+            line = True
             path.lineTo(width, height)
         else:
+            line = False
             path.quadTo(0, height / 2, width, height)
 
         self._arrowheadItem.setPos(width, height)
         angle = math.degrees(math.atan2(-height / 2, width))
         self._arrowheadItem.setRotation(-angle)
+
+        if self._relation:
+            if line:
+                point = path.pointAtPercent(0.4)
+            else:
+                point = path.pointAtPercent(0.6)
+            self._iconBadge.setPos(point.x() - self._iconBadge.boundingRect().width() / 2,
+                                   point.y() - self._iconBadge.boundingRect().height() / 2)
 
         self.setPath(path)
 
@@ -569,6 +627,42 @@ class ZoomBar(QFrame):
         self.layout().addWidget(self._btnZoomIn)
 
 
+class SecondarySelectorWidget(QFrame):
+    selected = pyqtSignal(NetworkItemType)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setProperty('relaxed-white-bg', True)
+        self.setProperty('rounded', True)
+        shadow(self)
+        self._grid = grid(self, h_spacing=5, v_spacing=3)
+        margins(self, left=5, right=5)
+
+        self._btnGroup = QButtonGroup()
+
+    def _newButton(self, icon: QIcon, tooltip: str, row: int,
+                   col: int) -> QToolButton:
+        btn = tool_btn(icon, tooltip,
+                       True, icon_resize=False,
+                       properties=['transparent-rounded-bg-on-hover', 'top-selector'],
+                       parent=self)
+        self._btnGroup.addButton(btn)
+        self._grid.layout().addWidget(btn, row, col)
+
+        return btn
+
+    def _newItemTypeButton(self, itemType: NetworkItemType, icon: QIcon, tooltip: str, row: int,
+                           col: int) -> QToolButton:
+        def clicked(toggled: bool):
+            if toggled:
+                self.selected.emit(itemType)
+
+        btn = self._newButton(icon, tooltip, row, col)
+        btn.clicked.connect(clicked)
+
+        return btn
+
+
 class BaseItemEditor(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -578,8 +672,7 @@ class BaseItemEditor(QWidget):
         self._toolbar.setProperty('rounded', True)
         shadow(self._toolbar)
 
-        hbox(self._toolbar, spacing=6)
-        margins(self._toolbar, left=5, right=5)
+        hbox(self._toolbar, 5, spacing=6)
         self.layout().addWidget(self._toolbar)
 
         self._secondaryWidgets = []
@@ -589,7 +682,7 @@ class BaseItemEditor(QWidget):
         sp(widget).h_max()
         self.layout().addWidget(widget, alignment)
         btn.clicked.connect(partial(self._toggleSecondarySelector, widget))
-        self._toggleSecondarySelector(widget)
+        widget.setVisible(False)
 
     def _toggleSecondarySelector(self, secondary: QWidget):
         secondary.setVisible(not secondary.isVisible())
@@ -629,6 +722,7 @@ class PenStyleSelector(QAbstractButton):
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
         painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         if self.isChecked():
             painter.setPen(self._penToggled)
         else:
@@ -663,3 +757,24 @@ class PenWidthEditor(QSlider):
         self.setMinimum(1)
         self.setMaximum(10)
         self.setOrientation(Qt.Orientation.Horizontal)
+
+
+class RelationsButton(QAbstractButton):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._icon = IconRegistry.character_icon()
+        self.setFixedSize(40, 20)
+        pointy(self)
+
+    @overrides
+    def paintEvent(self, event: QPaintEvent) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(QPen(Qt.GlobalColor.black, 1))
+
+        x = 5
+        y = 2
+        painter.drawEllipse(x, y, self.rect().width() - x * 2, self.rect().height() - y * 2)
+
+        self._icon.paint(painter, 0, y, 15, 15)
+        self._icon.paint(painter, self.rect().width() - 15, y, 15, 15)
