@@ -25,7 +25,7 @@ from qthandy import vline
 from src.main.python.plotlyst.view.common import tool_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.graphics import BaseItemEditor, SolidPenStyleSelector, DashPenStyleSelector, \
-    DotPenStyleSelector, ConnectorItem
+    DotPenStyleSelector, ConnectorItem, PenWidthEditor
 
 
 class ConnectorEditor(BaseItemEditor):
@@ -45,11 +45,16 @@ class ConnectorEditor(BaseItemEditor):
         self._lineBtnGroup.addButton(self._dotLine)
         self._lineBtnGroup.buttonClicked.connect(self._penStyleChanged)
 
+        self._sbWidth = PenWidthEditor()
+        self._sbWidth.valueChanged.connect(self._widthChanged)
+
         self._toolbar.layout().addWidget(self._btnColor)
         self._toolbar.layout().addWidget(vline())
         self._toolbar.layout().addWidget(self._solidLine)
         self._toolbar.layout().addWidget(self._dashLine)
         self._toolbar.layout().addWidget(self._dotLine)
+        self._toolbar.layout().addWidget(vline())
+        self._toolbar.layout().addWidget(self._sbWidth)
 
     def setItem(self, connector: ConnectorItem):
         self._connector = connector
@@ -58,3 +63,6 @@ class ConnectorEditor(BaseItemEditor):
         btn = self._lineBtnGroup.checkedButton()
         if btn:
             self._connector.setPenStyle(btn.penStyle())
+
+    def _widthChanged(self, value: int):
+        self._connector.setPenWidth(value)

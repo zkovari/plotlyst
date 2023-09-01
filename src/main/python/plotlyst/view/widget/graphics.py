@@ -28,7 +28,7 @@ from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QPen, QPainterPath, 
     QKeyEvent, QPolygonF, QPaintEvent
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QFrame, \
     QToolButton, QApplication, QGraphicsScene, QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QWidget, \
-    QGraphicsRectItem, QGraphicsSceneHoverEvent, QGraphicsPolygonItem, QAbstractButton
+    QGraphicsRectItem, QGraphicsSceneHoverEvent, QGraphicsPolygonItem, QAbstractButton, QSlider
 from overrides import overrides
 from qthandy import hbox, margins, sp, incr_icon, vbox
 
@@ -148,12 +148,12 @@ class ConnectorItem(QGraphicsPathItem):
         else:
             self.setPen(QPen(QColor(Qt.GlobalColor.darkBlue), 2))
 
-        arrowhead = QPolygonF([
-            QPointF(-10, -5),
-            QPointF(0, 0),
-            QPointF(-10, 5),
+        self._arrowhead = QPolygonF([
+            QPointF(0, -5),
+            QPointF(10, 0),
+            QPointF(0, 5),
         ])
-        self._arrowheadItem = QGraphicsPolygonItem(arrowhead, self)
+        self._arrowheadItem = QGraphicsPolygonItem(self._arrowhead, self)
         self._arrowheadItem.setPen(QPen(QColor(Qt.GlobalColor.darkBlue), 1))
         self._arrowheadItem.setBrush(QColor(Qt.GlobalColor.darkBlue))
 
@@ -169,7 +169,13 @@ class ConnectorItem(QGraphicsPathItem):
         pen = self.pen()
         pen.setWidth(width)
         self.setPen(pen)
-        self.update()
+
+        arrowPen = self._arrowheadItem.pen()
+        prevWidth = arrowPen.width()
+        arrowPen.setWidth(width)
+        self._arrowheadItem.setScale(1.0 + (width - prevWidth) / 10)
+
+        self.rearrange()
 
     def rearrange(self):
         self.setPos(self._source.sceneBoundingRect().center())
@@ -647,3 +653,11 @@ class DotPenStyleSelector(PenStyleSelector):
     @overrides
     def penStyle(self) -> Qt.PenStyle:
         return Qt.PenStyle.DotLine
+
+
+class PenWidthEditor(QSlider):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setMinimum(1)
+        self.setMaximum(10)
+        self.setOrientation(Qt.Orientation.Horizontal)
