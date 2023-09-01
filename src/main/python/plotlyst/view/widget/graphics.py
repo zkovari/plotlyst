@@ -507,6 +507,7 @@ class NetworkGraphicsView(BaseGraphicsView):
             QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
 
         self._scene.startAdditionMode(itemType)
+        self.setToolTip(f'Click to add a new {itemType.name.lower()}')
 
     def _endAddition(self, itemType: Optional[NetworkItemType] = None, item: Optional[NodeItem] = None):
         for btn in self._btnGroup.buttons():
@@ -514,6 +515,7 @@ class NetworkGraphicsView(BaseGraphicsView):
             if btn.isChecked():
                 btn.setChecked(False)
         QApplication.restoreOverrideCursor()
+        self.setToolTip('')
 
     def _roundedFrame(self) -> QFrame:
         frame_ = frame(self)
