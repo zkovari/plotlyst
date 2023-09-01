@@ -186,18 +186,6 @@ class ConnectorItem(QGraphicsPathItem):
     def target(self) -> QAbstractGraphicsShapeItem:
         return self._target
 
-    @overrides
-    def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
-        if change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
-            self._onSelection(value)
-        return super().itemChange(change, value)
-
-    def networkScene(self) -> 'NetworkScene':
-        return self.scene()
-
-    def _onSelection(self, selected: bool):
-        self.networkScene().connectorSelectedEvent(self, selected)
-
 
 class SelectorRectItem(QGraphicsRectItem):
     def __init__(self, parent=None):
@@ -317,7 +305,6 @@ class NetworkItemType(Enum):
 class NetworkScene(QGraphicsScene):
     cancelItemAddition = pyqtSignal()
     itemAdded = pyqtSignal(NetworkItemType, NodeItem)
-    connectorSelected = pyqtSignal(ConnectorItem)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -429,10 +416,6 @@ class NetworkScene(QGraphicsScene):
 
         super().mouseReleaseEvent(event)
 
-    def connectorSelectedEvent(self, connector: ConnectorItem, selected: bool):
-        if not self.selectedItems() and selected:
-            self.connectorSelected.emit(connector)
-
     @abstractmethod
     def _addNewItem(self, itemType: NetworkItemType, scenePos: QPointF):
         pass
@@ -460,7 +443,7 @@ class NetworkGraphicsView(BaseGraphicsView):
         self._wdgZoomBar = ZoomBar(self)
         self._wdgZoomBar.zoomed.connect(lambda x: self.scale(1.0 + x, 1.0 + x))
 
-        self._controlsNavBar = self.__roundedFrame()
+        self._controlsNavBar = self._roundedFrame()
         sp(self._controlsNavBar).h_max()
         shadow(self._controlsNavBar)
         vbox(self._controlsNavBar, 5, 6)
@@ -513,7 +496,7 @@ class NetworkGraphicsView(BaseGraphicsView):
                 btn.setChecked(False)
         QApplication.restoreOverrideCursor()
 
-    def __roundedFrame(self) -> QFrame:
+    def _roundedFrame(self) -> QFrame:
         frame_ = frame(self)
         frame_.setProperty('relaxed-white-bg', True)
         frame_.setProperty('rounded', True)
@@ -525,6 +508,17 @@ class NetworkGraphicsView(BaseGraphicsView):
                                      self._wdgZoomBar.sizeHint().height())
         self._controlsNavBar.setGeometry(10, 100, self._controlsNavBar.sizeHint().width(),
                                          self._controlsNavBar.sizeHint().height())
+
+    def _popupAbove(self, widget: QWidget, refItem: QGraphicsItem):
+        item_w = refItem.sceneBoundingRect().width()
+        editor_w = widget.sizeHint().width()
+        diff_w = int(editor_w - item_w) // 2
+
+        view_pos = self.mapFromScene(refItem.sceneBoundingRect().topLeft())
+        view_pos.setX(view_pos.x() - diff_w)
+        view_pos.setY(view_pos.y() - 50)
+        widget.move(view_pos)
+        widget.setVisible(True)
 
     def _initScene(self):
         return NetworkScene()

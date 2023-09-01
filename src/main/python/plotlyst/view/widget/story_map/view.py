@@ -94,16 +94,7 @@ class EventsMindMapView(NetworkGraphicsView):
 
     def _showItemEditor(self, item: MindMapNode):
         self._itemEditor.setItem(item)
-
-        item_w = item.sceneBoundingRect().width()
-        editor_w = self._itemEditor.sizeHint().width()
-        diff_w = int(editor_w - item_w) // 2
-
-        view_pos = self.mapFromScene(item.sceneBoundingRect().topLeft())
-        view_pos.setX(view_pos.x() - diff_w)
-        view_pos.setY(view_pos.y() - 50)
-        self._itemEditor.move(view_pos)
-        self._itemEditor.setVisible(True)
+        self._popupAbove(self._itemEditor, item)
 
     def _hideItemEditor(self):
         self._itemEditor.setVisible(False)

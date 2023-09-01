@@ -24,10 +24,11 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, RelationsNetwork, Character
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.character.network.editor import ConnectorEditor
 from src.main.python.plotlyst.view.widget.character.network.scene import RelationsEditorScene, CharacterItem, \
     NetworkItemType, CharacterNetworkItemType
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
-from src.main.python.plotlyst.view.widget.graphics import NodeItem, NetworkGraphicsView, NetworkScene
+from src.main.python.plotlyst.view.widget.graphics import NodeItem, NetworkGraphicsView, NetworkScene, ConnectorItem
 
 
 class CharacterNetworkView(NetworkGraphicsView):
@@ -39,6 +40,11 @@ class CharacterNetworkView(NetworkGraphicsView):
                                                        CharacterNetworkItemType.CHARACTER)
         self._btnAddSticker = self._newControlButton(IconRegistry.from_name('mdi6.sticker-circle-outline'),
                                                      'Add new sticker', CharacterNetworkItemType.STICKER)
+
+        self._connectorEditor = ConnectorEditor(self)
+        self._connectorEditor.setVisible(False)
+
+        self._scene.selectionChanged.connect(self._selectionChanged)
 
     @overrides
     def _initScene(self) -> NetworkScene:
@@ -76,3 +82,13 @@ class CharacterNetworkView(NetworkGraphicsView):
         popup.selected.connect(select)
         view_pos = self.mapFromScene(item.sceneBoundingRect().topRight())
         popup.exec(self.mapToGlobal(view_pos))
+
+    def _selectionChanged(self):
+        items = self._scene.selectedItems()
+        if len(items) == 1 and isinstance(items[0], ConnectorItem):
+            self._connectorSelected(items[0])
+        else:
+            self._connectorEditor.setVisible(False)
+
+    def _connectorSelected(self, connector: ConnectorItem):
+        self._popupAbove(self._connectorEditor, connector)
