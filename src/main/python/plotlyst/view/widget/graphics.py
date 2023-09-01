@@ -28,7 +28,7 @@ from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QPen, QPainterPath, 
     QKeyEvent, QPolygonF
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QFrame, \
     QToolButton, QApplication, QGraphicsScene, QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QWidget, \
-    QGraphicsRectItem, QGraphicsSceneHoverEvent, QGraphicsPolygonItem
+    QGraphicsRectItem, QGraphicsSceneHoverEvent, QGraphicsPolygonItem, QAbstractButton
 from overrides import overrides
 from qthandy import hbox, margins, sp, incr_icon, vbox
 
@@ -186,6 +186,18 @@ class ConnectorItem(QGraphicsPathItem):
     def target(self) -> QAbstractGraphicsShapeItem:
         return self._target
 
+    @overrides
+    def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
+        if change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
+            self._onSelection(value)
+        return super().itemChange(change, value)
+
+    def networkScene(self) -> 'NetworkScene':
+        return self.scene()
+
+    def _onSelection(self, selected: bool):
+        self.networkScene().connectorSelectedEvent(self, selected)
+
 
 class SelectorRectItem(QGraphicsRectItem):
     def __init__(self, parent=None):
@@ -305,6 +317,7 @@ class NetworkItemType(Enum):
 class NetworkScene(QGraphicsScene):
     cancelItemAddition = pyqtSignal()
     itemAdded = pyqtSignal(NetworkItemType, NodeItem)
+    connectorSelected = pyqtSignal(ConnectorItem)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -415,6 +428,10 @@ class NetworkScene(QGraphicsScene):
             self._addNewItem(self._additionMode, event.scenePos())
 
         super().mouseReleaseEvent(event)
+
+    def connectorSelectedEvent(self, connector: ConnectorItem, selected: bool):
+        if not self.selectedItems() and selected:
+            self.connectorSelected.emit(connector)
 
     @abstractmethod
     def _addNewItem(self, itemType: NetworkItemType, scenePos: QPointF):
@@ -535,3 +552,38 @@ class ZoomBar(QFrame):
 
         self.layout().addWidget(self._btnZoomOut)
         self.layout().addWidget(self._btnZoomIn)
+
+
+class BaseItemEditor(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        vbox(self, spacing=5)
+        self._toolbar = QFrame(self)
+        self._toolbar.setProperty('relaxed-white-bg', True)
+        self._toolbar.setProperty('rounded', True)
+        shadow(self._toolbar)
+
+        hbox(self._toolbar, spacing=6)
+        margins(self._toolbar, left=5, right=5)
+        self.layout().addWidget(self._toolbar)
+
+        self._secondaryWidgets = []
+
+    def addSecondaryWidget(self, btn: QAbstractButton, widget: QWidget, alignment=Qt.AlignmentFlag.AlignLeft):
+        self._secondaryWidgets.append(widget)
+        sp(widget).h_max()
+        self.layout().addWidget(widget, alignment)
+        btn.clicked.connect(partial(self._toggleSecondarySelector, widget))
+        self._toggleSecondarySelector(widget)
+
+    def _toggleSecondarySelector(self, secondary: QWidget):
+        secondary.setVisible(not secondary.isVisible())
+        if secondary.isVisible():
+            self.setFixedHeight(self._toolbar.sizeHint().height() + secondary.sizeHint().height())
+        else:
+            self.setFixedHeight(self._toolbar.sizeHint().height())
+
+    def _hideSecondarySelectors(self):
+        for wdg in self._secondaryWidgets:
+            wdg.setVisible(False)
+        self.setFixedHeight(self._toolbar.sizeHint().height())
