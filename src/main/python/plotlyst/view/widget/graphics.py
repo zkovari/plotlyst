@@ -25,16 +25,17 @@ from typing import Any, Optional, List
 
 from PyQt6.QtCore import Qt, QTimer, QRectF, pyqtSignal, QPointF
 from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QPen, QPainterPath, QColor, QIcon, QResizeEvent, QTransform, \
-    QKeyEvent, QPolygonF
+    QKeyEvent, QPolygonF, QPaintEvent
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QFrame, \
     QToolButton, QApplication, QGraphicsScene, QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QWidget, \
     QGraphicsRectItem, QGraphicsSceneHoverEvent, QGraphicsPolygonItem, QAbstractButton
 from overrides import overrides
 from qthandy import hbox, margins, sp, incr_icon, vbox
 
+from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR
 from src.main.python.plotlyst.core.domain import Node
 from src.main.python.plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButtonGroup, \
-    TooltipPositionEventFilter
+    TooltipPositionEventFilter, pointy
 from src.main.python.plotlyst.view.icons import IconRegistry
 
 
@@ -157,6 +158,18 @@ class ConnectorItem(QGraphicsPathItem):
         self._arrowheadItem.setBrush(QColor(Qt.GlobalColor.darkBlue))
 
         self.rearrange()
+
+    def setPenStyle(self, penStyle: Qt.PenStyle):
+        pen = self.pen()
+        pen.setStyle(penStyle)
+        self.setPen(pen)
+        self.update()
+
+    def setPenWidth(self, width: int):
+        pen = self.pen()
+        pen.setWidth(width)
+        self.setPen(pen)
+        self.update()
 
     def rearrange(self):
         self.setPos(self._source.sceneBoundingRect().center())
@@ -581,3 +594,56 @@ class BaseItemEditor(QWidget):
         for wdg in self._secondaryWidgets:
             wdg.setVisible(False)
         self.setFixedHeight(self._toolbar.sizeHint().height())
+
+
+class PenStyleSelector(QAbstractButton):
+    penStyleToggled = pyqtSignal(Qt.PenStyle, bool)
+
+    def __init__(self, penWidth: int = 2, color=Qt.GlobalColor.black, colorOn=PLOTLYST_TERTIARY_COLOR,
+                 parent=None):
+        super().__init__(parent)
+        self._penWidth = penWidth
+        self._color = color
+        self._colorOn = colorOn
+        self._penStyle = self.penStyle()
+        self.setFixedSize(20, 20)
+
+        self.setCheckable(True)
+
+        self._pen = QPen(QColor(self._color), self._penWidth, self._penStyle)
+        self._penToggled = QPen(QColor(self._colorOn), self._penWidth, self._penStyle)
+        pointy(self)
+
+    @abstractmethod
+    def penStyle(self) -> Qt.PenStyle:
+        pass
+
+    @overrides
+    def paintEvent(self, event: QPaintEvent) -> None:
+        painter = QPainter(self)
+        if self.isChecked():
+            painter.setPen(self._penToggled)
+        else:
+            painter.setPen(self._pen)
+        painter.drawLine(0, self.rect().height() // 2, self.rect().width(), self.rect().height() // 2)
+
+
+class SolidPenStyleSelector(PenStyleSelector):
+
+    @overrides
+    def penStyle(self) -> Qt.PenStyle:
+        return Qt.PenStyle.SolidLine
+
+
+class DashPenStyleSelector(PenStyleSelector):
+
+    @overrides
+    def penStyle(self) -> Qt.PenStyle:
+        return Qt.PenStyle.DashLine
+
+
+class DotPenStyleSelector(PenStyleSelector):
+
+    @overrides
+    def penStyle(self) -> Qt.PenStyle:
+        return Qt.PenStyle.DotLine

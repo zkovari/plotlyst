@@ -91,4 +91,5 @@ class CharacterNetworkView(NetworkGraphicsView):
             self._connectorEditor.setVisible(False)
 
     def _connectorSelected(self, connector: ConnectorItem):
+        self._connectorEditor.setItem(connector)
         self._popupAbove(self._connectorEditor, connector)
