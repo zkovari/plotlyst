@@ -191,11 +191,17 @@ class ConnectorItem(QGraphicsPathItem):
 
         self.rearrange()
 
+    def penStyle(self) -> Qt.PenStyle:
+        return self.pen().style()
+
     def setPenStyle(self, penStyle: Qt.PenStyle):
         pen = self.pen()
         pen.setStyle(penStyle)
         self.setPen(pen)
         self.update()
+
+    def penWidth(self) -> int:
+        return self.pen().width()
 
     def setPenWidth(self, width: int):
         pen = self.pen()
@@ -207,6 +213,9 @@ class ConnectorItem(QGraphicsPathItem):
         self._arrowheadItem.setScale(1.0 + (width - prevWidth) / 10)
 
         self.rearrange()
+
+    def relation(self) -> Optional[Relation]:
+        return self._relation
 
     def setRelation(self, relation: Relation):
         pen = self.pen()
@@ -632,7 +641,7 @@ class ZoomBar(QFrame):
 class SecondarySelectorWidget(QFrame):
     selected = pyqtSignal(NetworkItemType)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, optional: bool = False):
         super().__init__(parent)
         self.setProperty('relaxed-white-bg', True)
         self.setProperty('rounded', True)
@@ -640,7 +649,10 @@ class SecondarySelectorWidget(QFrame):
         self._grid = grid(self, h_spacing=5, v_spacing=3)
         margins(self, left=5, right=5)
 
-        self._btnGroup = QButtonGroup()
+        if optional:
+            self._btnGroup = ExclusiveOptionalButtonGroup()
+        else:
+            self._btnGroup = QButtonGroup()
 
     def _newButton(self, icon: QIcon, tooltip: str, row: int,
                    col: int) -> QToolButton:
