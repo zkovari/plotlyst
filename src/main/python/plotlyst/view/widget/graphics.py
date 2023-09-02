@@ -447,6 +447,7 @@ class NetworkScene(QGraphicsScene):
                 self.endLink()
             elif self.isAdditionMode():
                 self.cancelItemAddition.emit()
+                self.endAdditionMode()
             else:
                 self.clearSelection()
         elif event.key() == Qt.Key.Key_Delete or event.key() == Qt.Key.Key_Backspace:
@@ -484,6 +485,7 @@ class NetworkScene(QGraphicsScene):
                 self.endLink()
         elif self.isAdditionMode() and event.button() & Qt.MouseButton.RightButton:
             self.cancelItemAddition.emit()
+            self.endAdditionMode()
         elif self._selectionMode and event.button() & Qt.MouseButton.LeftButton:
             self._selectionMode = False
             self._selectionRect.setVisible(False)
