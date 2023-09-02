@@ -45,8 +45,8 @@ class PlaceholderCharacter(Character):
 class SocketItem(AbstractSocketItem):
     Size: int = 20
 
-    def __init__(self, parent=None):
-        super().__init__(Qt.Edge.TopEdge, self.Size, parent)
+    def __init__(self, angle: float, parent=None):
+        super().__init__(angle, self.Size, parent)
         pointy(self)
 
     @overrides
@@ -72,7 +72,7 @@ class CharacterItem(NodeItem):
 
         self._linkDisplayedMode: bool = False
 
-        self._socket = SocketItem(self)
+        self._socket = SocketItem(0, self)
         self._socket.setVisible(False)
 
     def character(self) -> Character:
@@ -85,7 +85,7 @@ class CharacterItem(NodeItem):
     def addSocket(self, socket: SocketItem):
         self._sockets.append(socket)
         socket.setVisible(False)
-        self._socket = SocketItem(self)
+        self._socket = SocketItem(socket.angle(), self)
         self._socket.setVisible(False)
 
     @overrides
@@ -129,6 +129,7 @@ class CharacterItem(NodeItem):
             y = self._center.y() + self._outerRadius * math.sin(angle_radians) - SocketItem.Size // 2
 
             self.prepareGeometryChange()
+            self._socket.setAngle(-angle)
             self._socket.setPos(x, y)
             self.update()
 

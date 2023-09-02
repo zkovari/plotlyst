@@ -60,9 +60,6 @@ class MindMapNode(NodeItem):
 
 class SocketItem(AbstractSocketItem):
 
-    def __init__(self, orientation: Qt.Edge, parent=None):
-        super().__init__(orientation, parent=parent)
-
     @overrides
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
         if self._linkAvailable:
@@ -164,14 +161,14 @@ class EventItem(ConnectableNode):
         self._nestedRectWidth = 1
         self._nestedRectHeight = 1
 
-        self._socketLeft = SocketItem(Qt.Edge.LeftEdge, self)
-        self._socketTopLeft = SocketItem(Qt.Edge.TopEdge, self)
-        self._socketTopCenter = SocketItem(Qt.Edge.TopEdge, self)
-        self._socketTopRight = SocketItem(Qt.Edge.TopEdge, self)
-        self._socketRight = SocketItem(Qt.Edge.RightEdge, self)
-        self._socketBottomLeft = SocketItem(Qt.Edge.BottomEdge, self)
-        self._socketBottomCenter = SocketItem(Qt.Edge.BottomEdge, self)
-        self._socketBottomRight = SocketItem(Qt.Edge.BottomEdge, self)
+        self._socketLeft = SocketItem(180, parent=self)
+        self._socketTopLeft = SocketItem(135, parent=self)
+        self._socketTopCenter = SocketItem(90, parent=self)
+        self._socketTopRight = SocketItem(45, parent=self)
+        self._socketRight = SocketItem(0, parent=self)
+        self._socketBottomLeft = SocketItem(-135, parent=self)
+        self._socketBottomCenter = SocketItem(-90, parent=self)
+        self._socketBottomRight = SocketItem(-45, parent=self)
         self._sockets.extend([self._socketLeft,
                               self._socketTopLeft, self._socketTopCenter, self._socketTopRight,
                               self._socketRight,
@@ -316,10 +313,10 @@ class CharacterItem(ConnectableNode):
         self._character: Optional[Character] = character
         self._size: int = 68
 
-        self._socketTop = SocketItem(Qt.Edge.TopEdge, self)
-        self._socketRight = SocketItem(Qt.Edge.RightEdge, self)
-        self._socketBottom = SocketItem(Qt.Edge.BottomEdge, self)
-        self._socketLeft = SocketItem(Qt.Edge.LeftEdge, self)
+        self._socketTop = SocketItem(90, parent=self)
+        self._socketRight = SocketItem(0, parent=self)
+        self._socketBottom = SocketItem(-90, parent=self)
+        self._socketLeft = SocketItem(180, parent=self)
         self._sockets.extend([self._socketLeft, self._socketTop, self._socketRight, self._socketBottom])
         socketSize = self._socketTop.boundingRect().width()
         half = self.Margin + v_center(self._size, socketSize)

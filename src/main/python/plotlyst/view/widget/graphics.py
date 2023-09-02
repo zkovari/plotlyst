@@ -89,10 +89,10 @@ class IconBadge(QAbstractGraphicsShapeItem):
 
 
 class AbstractSocketItem(QAbstractGraphicsShapeItem):
-    def __init__(self, orientation: Qt.Edge, size: int = 16, parent=None):
+    def __init__(self, angle: float, size: int = 16, parent=None):
         super().__init__(parent)
         self._size = size
-        self._orientation: Qt.Edge = orientation
+        self._angle: float = angle
         self._hovered = False
         self._linkAvailable = True
 
@@ -100,6 +100,12 @@ class AbstractSocketItem(QAbstractGraphicsShapeItem):
         self.setAcceptHoverEvents(True)
 
         self._connectors: List[ConnectorItem] = []
+
+    def angle(self) -> float:
+        return self._angle
+
+    def setAngle(self, angle: float):
+        self._angle = angle
 
     @overrides
     def boundingRect(self):
@@ -154,7 +160,7 @@ class AbstractSocketItem(QAbstractGraphicsShapeItem):
 
 class PlaceholderSocketItem(AbstractSocketItem):
     def __init__(self, parent=None):
-        super().__init__(Qt.Edge.RightEdge, parent=parent)
+        super().__init__(0, parent=parent)
         self.setEnabled(False)
         self.setAcceptHoverEvents(False)
 
@@ -165,7 +171,7 @@ class PlaceholderSocketItem(AbstractSocketItem):
 
 class ConnectorItem(QGraphicsPathItem):
 
-    def __init__(self, source: QAbstractGraphicsShapeItem, target: QAbstractGraphicsShapeItem,
+    def __init__(self, source: AbstractSocketItem, target: AbstractSocketItem,
                  pen: Optional[QPen] = None):
         super(ConnectorItem, self).__init__()
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
@@ -245,15 +251,19 @@ class ConnectorItem(QGraphicsPathItem):
         width = end.x() - start.x()
         height = end.y() - start.y()
 
+        angle = math.degrees(math.atan2(-height / 2, width))
         if abs(height) < 5:
             line = True
             path.lineTo(width, height)
         else:
             line = False
-            path.quadTo(0, height / 2, width, height)
+            if self._source.angle() >= 0:
+                path.quadTo(0, height / 2, width, height)
+            else:
+                path.quadTo(width / 2, -height / 2, width, height)
+                angle = math.degrees(math.atan2(-height / 2, width/2))
 
         self._arrowheadItem.setPos(width, height)
-        angle = math.degrees(math.atan2(-height / 2, width))
         self._arrowheadItem.setRotation(-angle)
 
         if self._relation:
@@ -264,6 +274,11 @@ class ConnectorItem(QGraphicsPathItem):
             self._iconBadge.setPos(point.x() - self._iconBadge.boundingRect().width() / 2,
                                    point.y() - self._iconBadge.boundingRect().height() / 2)
 
+        # if line:
+        #     point = path.pointAtPercent(0.4)
+        # else:
+        #     point = path.pointAtPercent(0.6)
+        # path.addText(point, QApplication.font(), 'Romance')
         self.setPath(path)
 
     def source(self) -> QAbstractGraphicsShapeItem:
