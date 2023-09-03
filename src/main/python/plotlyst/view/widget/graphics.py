@@ -65,9 +65,9 @@ class IconBadge(QAbstractGraphicsShapeItem):
         super().__init__(parent)
         self._size: int = 32
         self._icon: Optional[QIcon] = None
-        self._color: str = 'black'
+        self._color: QColor = QColor('black')
 
-    def setIcon(self, icon: QIcon, borderColor: Optional[str] = None):
+    def setIcon(self, icon: QIcon, borderColor: Optional[QColor] = None):
         self._icon = icon
         if borderColor:
             self._color = borderColor
@@ -81,7 +81,7 @@ class IconBadge(QAbstractGraphicsShapeItem):
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        painter.setPen(QPen(QColor(self._color), 2))
+        painter.setPen(QPen(self._color, 2))
         painter.setBrush(QColor(RELAXED_WHITE_COLOR))
         painter.drawEllipse(0, 0, self._size, self._size)
 
@@ -178,13 +178,13 @@ class ConnectorItem(QGraphicsPathItem):
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
         self._source = source
         self._target = target
-        self._color: str = 'darkblue'
+        self._color: QColor = QColor('darkblue')
         self._relation: Optional[Relation] = None
-        self._icon: Optional[QIcon] = None
+        self._icon: Optional[str] = None
         if pen:
             self.setPen(pen)
         else:
-            self.setPen(QPen(QColor(self._color), 2))
+            self.setPen(QPen(self._color, 2))
 
         self._arrowhead = QPolygonF([
             QPointF(0, -5),
@@ -192,8 +192,8 @@ class ConnectorItem(QGraphicsPathItem):
             QPointF(0, 5),
         ])
         self._arrowheadItem = QGraphicsPolygonItem(self._arrowhead, self)
-        self._arrowheadItem.setPen(QPen(QColor(Qt.GlobalColor.darkBlue), 1))
-        self._arrowheadItem.setBrush(QColor(Qt.GlobalColor.darkBlue))
+        self._arrowheadItem.setPen(QPen(self._color, 1))
+        self._arrowheadItem.setBrush(self._color)
 
         self._iconBadge = IconBadge(self)
         self._iconBadge.setVisible(False)
@@ -227,32 +227,36 @@ class ConnectorItem(QGraphicsPathItem):
         return self._relation
 
     def setRelation(self, relation: Relation):
-        pen = self.pen()
-        color = QColor(relation.icon_color)
-        pen.setColor(color)
-        self.setPen(pen)
+        self._icon = relation.icon
 
-        arrowPen = self._arrowheadItem.pen()
-        arrowPen.setColor(color)
-        arrowPen.setBrush(color)
-        self._arrowheadItem.setPen(arrowPen)
+        self.setColor(QColor(relation.icon_color))
 
         self._relation = relation
-        self._icon = IconRegistry.from_name(relation.icon, relation.icon_color)
-        self._color = relation.icon_color
-        self._iconBadge.setIcon(self._icon, self._color)
+        self._iconBadge.setIcon(IconRegistry.from_name(relation.icon, relation.icon_color), self._color)
         self._iconBadge.setVisible(True)
 
         self.rearrange()
 
-    def icon(self) -> Optional[QIcon]:
+    def icon(self) -> Optional[str]:
         return self._icon
 
-    def setIcon(self, icon: QIcon):
+    def setIcon(self, icon: str, color: Optional[QColor] = None):
         self._icon = icon
-        self._iconBadge.setIcon(self._icon, self._color)
+        if color:
+            self._color = color
+        self._iconBadge.setIcon(IconRegistry.from_name(self._icon, self._color.name()), self._color)
         self._iconBadge.setVisible(True)
         self.rearrange()
+
+    def color(self) -> QColor:
+        return self._color
+
+    def setColor(self, color: QColor):
+        self._setColor(color)
+        if self._icon:
+            self._iconBadge.setIcon(IconRegistry.from_name(self._icon, self._color.name()), self._color)
+
+        self.update()
 
     def rearrange(self):
         self.setPos(self._source.sceneBoundingRect().center())
@@ -300,6 +304,17 @@ class ConnectorItem(QGraphicsPathItem):
 
     def target(self) -> QAbstractGraphicsShapeItem:
         return self._target
+
+    def _setColor(self, color: QColor):
+        self._color = color
+        pen = self.pen()
+        pen.setColor(self._color)
+        self.setPen(pen)
+
+        arrowPen = self._arrowheadItem.pen()
+        arrowPen.setColor(self._color)
+        self._arrowheadItem.setPen(arrowPen)
+        self._arrowheadItem.setBrush(self._color)
 
 
 class SelectorRectItem(QGraphicsRectItem):

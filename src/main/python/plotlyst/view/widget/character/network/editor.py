@@ -133,10 +133,10 @@ class ConnectorEditor(BaseItemEditor):
 
     def _colorChanged(self, color: QColor):
         if self._connector:
-            # self._connector.setColor(color)
+            self._connector.setColor(color)
             pass
 
     def _showIconSelector(self):
         result = IconSelectorDialog().display()
         if result and self._connector:
-            self._connector.setIcon(IconRegistry.from_name(result[0], result[1].name()))
+            self._connector.setIcon(result[0])
