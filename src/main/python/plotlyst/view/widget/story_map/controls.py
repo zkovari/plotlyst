@@ -31,30 +31,30 @@ class EventSelectorWidget(SecondarySelectorWidget):
         super().__init__(parent)
         self._grid.addWidget(QLabel('Events'), 0, 0, 1, 3)
 
-        self._btnGeneral = self._newItemTypeButton(ItemType.EVENT, IconRegistry.from_name('mdi.square-rounded-outline'),
+        self._btnGeneral = self.addItemTypeButton(ItemType.EVENT, IconRegistry.from_name('mdi.square-rounded-outline'),
                                                    'General event', 1, 0)
-        self._btnGoal = self._newItemTypeButton(ItemType.GOAL, IconRegistry.goal_icon('black', 'black'), 'Add new goal',
-                                                1, 1)
-        self._btnConflict = self._newItemTypeButton(ItemType.CONFLICT, IconRegistry.conflict_icon('black', 'black'),
+        self._btnGoal = self.addItemTypeButton(ItemType.GOAL, IconRegistry.goal_icon('black', 'black'), 'Add new goal',
+                                               1, 1)
+        self._btnConflict = self.addItemTypeButton(ItemType.CONFLICT, IconRegistry.conflict_icon('black', 'black'),
                                                     'Conflict', 1, 2)
-        self._btnDisturbance = self._newItemTypeButton(ItemType.DISTURBANCE,
-                                                       IconRegistry.inciting_incident_icon('black'),
+        self._btnDisturbance = self.addItemTypeButton(ItemType.DISTURBANCE,
+                                                      IconRegistry.inciting_incident_icon('black'),
                                                        'Inciting incident', 2,
-                                                       0)
-        self._btnBackstory = self._newItemTypeButton(ItemType.BACKSTORY, IconRegistry.backstory_icon('black', 'black'),
+                                                      0)
+        self._btnBackstory = self.addItemTypeButton(ItemType.BACKSTORY, IconRegistry.backstory_icon('black', 'black'),
                                                      'Backstory', 2, 1)
 
         self._grid.addWidget(QLabel('Narrative'), 3, 0, 1, 3)
-        self._btnQuestion = self._newItemTypeButton(ItemType.QUESTION, IconRegistry.from_name('ei.question-sign'),
+        self._btnQuestion = self.addItemTypeButton(ItemType.QUESTION, IconRegistry.from_name('ei.question-sign'),
                                                     "Reader's question", 4,
-                                                    0)
-        self._btnSetup = self._newItemTypeButton(ItemType.SETUP, IconRegistry.from_name('ri.seedling-fill'),
+                                                   0)
+        self._btnSetup = self.addItemTypeButton(ItemType.SETUP, IconRegistry.from_name('ri.seedling-fill'),
                                                  'Setup and payoff', 4, 1)
-        self._btnForeshadowing = self._newItemTypeButton(ItemType.FORESHADOWING,
-                                                         IconRegistry.from_name('mdi6.crystal-ball'),
+        self._btnForeshadowing = self.addItemTypeButton(ItemType.FORESHADOWING,
+                                                        IconRegistry.from_name('mdi6.crystal-ball'),
                                                          'Foreshadowing',
-                                                         4,
-                                                         2)
+                                                        4,
+                                                        2)
 
         self._btnGeneral.setChecked(True)
 
@@ -66,12 +66,12 @@ class EventSelectorWidget(SecondarySelectorWidget):
 class StickerSelectorWidget(SecondarySelectorWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._btnComment = self._newItemTypeButton(ItemType.COMMENT, IconRegistry.from_name('mdi.comment-text-outline'),
+        self._btnComment = self.addItemTypeButton(ItemType.COMMENT, IconRegistry.from_name('mdi.comment-text-outline'),
                                                    'Add new comment', 0, 0)
-        self._btnTool = self._newItemTypeButton(ItemType.TOOL, IconRegistry.tool_icon('black', 'black'), 'Add new tool',
-                                                0, 1)
-        self._btnCost = self._newItemTypeButton(ItemType.COST, IconRegistry.cost_icon('black', 'black'), 'Add new cost',
-                                                1, 0)
+        self._btnTool = self.addItemTypeButton(ItemType.TOOL, IconRegistry.tool_icon('black', 'black'), 'Add new tool',
+                                               0, 1)
+        self._btnCost = self.addItemTypeButton(ItemType.COST, IconRegistry.cost_icon('black', 'black'), 'Add new cost',
+                                               1, 0)
 
         self._btnComment.setChecked(True)
 

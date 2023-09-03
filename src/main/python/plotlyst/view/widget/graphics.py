@@ -683,8 +683,11 @@ class SecondarySelectorWidget(QFrame):
         else:
             self._btnGroup = QButtonGroup()
 
-    def _newButton(self, icon: QIcon, tooltip: str, row: int,
-                   col: int) -> QToolButton:
+    def addWidget(self, widget: QWidget, row: int, col: int):
+        self._grid.layout().addWidget(widget, row, col)
+
+    def addButton(self, icon: QIcon, tooltip: str, row: int,
+                  col: int) -> QToolButton:
         btn = tool_btn(icon, tooltip,
                        True, icon_resize=False,
                        properties=['transparent-rounded-bg-on-hover', 'top-selector'],
@@ -694,13 +697,13 @@ class SecondarySelectorWidget(QFrame):
 
         return btn
 
-    def _newItemTypeButton(self, itemType: NetworkItemType, icon: QIcon, tooltip: str, row: int,
-                           col: int) -> QToolButton:
+    def addItemTypeButton(self, itemType: NetworkItemType, icon: QIcon, tooltip: str, row: int,
+                          col: int) -> QToolButton:
         def clicked(toggled: bool):
             if toggled:
                 self.selected.emit(itemType)
 
-        btn = self._newButton(icon, tooltip, row, col)
+        btn = self.addButton(icon, tooltip, row, col)
         btn.clicked.connect(clicked)
 
         return btn

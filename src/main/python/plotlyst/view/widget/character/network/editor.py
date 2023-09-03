@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QAction
+from PyQt6.QtGui import QAction, QColor
 from PyQt6.QtWidgets import QButtonGroup
 from qthandy import vline
 from qtmenu import GridMenuWidget
@@ -30,7 +30,8 @@ from src.main.python.plotlyst.view.common import tool_btn, action
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.graphics import BaseItemEditor, SolidPenStyleSelector, DashPenStyleSelector, \
-    DotPenStyleSelector, ConnectorItem, PenWidthEditor, RelationsButton
+    DotPenStyleSelector, ConnectorItem, PenWidthEditor, RelationsButton, SecondarySelectorWidget
+from src.main.python.plotlyst.view.widget.utility import ColorPicker
 
 
 class RelationSelector(GridMenuWidget):
@@ -63,9 +64,13 @@ class ConnectorEditor(BaseItemEditor):
         self._connector: Optional[ConnectorItem] = None
 
         self._btnRelationType = RelationsButton()
-
         self._btnColor = tool_btn(IconRegistry.from_name('fa5s.circle', color='darkBlue'), 'Change style',
                                   transparent_=True)
+        self._colorPicker = ColorPicker(self, maxColumn=5)
+        self._colorPicker.colorPicked.connect(self._colorChanged)
+        self._colorSecondaryWidget = SecondarySelectorWidget(self)
+        self._colorSecondaryWidget.addWidget(self._colorPicker, 0, 0)
+        self.addSecondaryWidget(self._btnColor, self._colorSecondaryWidget)
         self._btnIcon = tool_btn(IconRegistry.from_name('mdi.emoticon-outline'), 'Change icon', transparent_=True)
         self._btnIcon.clicked.connect(self._showIconSelector)
 
@@ -125,6 +130,11 @@ class ConnectorEditor(BaseItemEditor):
     def _widthChanged(self, value: int):
         if self._connector:
             self._connector.setPenWidth(value)
+
+    def _colorChanged(self, color: QColor):
+        if self._connector:
+            # self._connector.setColor(color)
+            pass
 
     def _showIconSelector(self):
         result = IconSelectorDialog().display()
