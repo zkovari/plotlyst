@@ -27,6 +27,7 @@ from qtmenu import GridMenuWidget
 
 from src.main.python.plotlyst.core.domain import RelationsNetwork, Relation
 from src.main.python.plotlyst.view.common import tool_btn, action
+from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.graphics import BaseItemEditor, SolidPenStyleSelector, DashPenStyleSelector, \
     DotPenStyleSelector, ConnectorItem, PenWidthEditor, RelationsButton
@@ -65,6 +66,8 @@ class ConnectorEditor(BaseItemEditor):
 
         self._btnColor = tool_btn(IconRegistry.from_name('fa5s.circle', color='darkBlue'), 'Change style',
                                   transparent_=True)
+        self._btnIcon = tool_btn(IconRegistry.from_name('mdi.emoticon-outline'), 'Change icon', transparent_=True)
+        self._btnIcon.clicked.connect(self._showIconSelector)
 
         self._solidLine = SolidPenStyleSelector()
         self._dashLine = DashPenStyleSelector()
@@ -84,6 +87,7 @@ class ConnectorEditor(BaseItemEditor):
         self._toolbar.layout().addWidget(self._btnRelationType)
         self._toolbar.layout().addWidget(vline())
         self._toolbar.layout().addWidget(self._btnColor)
+        self._toolbar.layout().addWidget(self._btnIcon)
         self._toolbar.layout().addWidget(vline())
         self._toolbar.layout().addWidget(self._solidLine)
         self._toolbar.layout().addWidget(self._dashLine)
@@ -121,3 +125,8 @@ class ConnectorEditor(BaseItemEditor):
     def _widthChanged(self, value: int):
         if self._connector:
             self._connector.setPenWidth(value)
+
+    def _showIconSelector(self):
+        result = IconSelectorDialog().display()
+        if result and self._connector:
+            self._connector.setIcon(IconRegistry.from_name(result[0], result[1].name()))

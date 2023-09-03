@@ -65,11 +65,12 @@ class IconBadge(QAbstractGraphicsShapeItem):
         super().__init__(parent)
         self._size: int = 32
         self._icon: Optional[QIcon] = None
-        self._color: str = 'blue'
+        self._color: str = 'black'
 
-    def setIcon(self, icon_name: str, color: str):
-        self._icon = IconRegistry.from_name(icon_name, color)
-        self._color = color
+    def setIcon(self, icon: QIcon, borderColor: Optional[str] = None):
+        self._icon = icon
+        if borderColor:
+            self._color = borderColor
         self.update()
 
     @overrides
@@ -177,11 +178,13 @@ class ConnectorItem(QGraphicsPathItem):
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
         self._source = source
         self._target = target
+        self._color: str = 'darkblue'
+        self._relation: Optional[Relation] = None
+        self._icon: Optional[QIcon] = None
         if pen:
             self.setPen(pen)
         else:
-            self.setPen(QPen(QColor(Qt.GlobalColor.darkBlue), 2))
-        self._relation: Optional[Relation] = None
+            self.setPen(QPen(QColor(self._color), 2))
 
         self._arrowhead = QPolygonF([
             QPointF(0, -5),
@@ -235,9 +238,20 @@ class ConnectorItem(QGraphicsPathItem):
         self._arrowheadItem.setPen(arrowPen)
 
         self._relation = relation
-        self._iconBadge.setIcon(relation.icon, relation.icon_color)
+        self._icon = IconRegistry.from_name(relation.icon, relation.icon_color)
+        self._color = relation.icon_color
+        self._iconBadge.setIcon(self._icon, self._color)
         self._iconBadge.setVisible(True)
 
+        self.rearrange()
+
+    def icon(self) -> Optional[QIcon]:
+        return self._icon
+
+    def setIcon(self, icon: QIcon):
+        self._icon = icon
+        self._iconBadge.setIcon(self._icon, self._color)
+        self._iconBadge.setVisible(True)
         self.rearrange()
 
     def rearrange(self):
@@ -261,12 +275,12 @@ class ConnectorItem(QGraphicsPathItem):
                 path.quadTo(0, height / 2, width, height)
             else:
                 path.quadTo(width / 2, -height / 2, width, height)
-                angle = math.degrees(math.atan2(-height / 2, width/2))
+                angle = math.degrees(math.atan2(-height / 2, width / 2))
 
         self._arrowheadItem.setPos(width, height)
         self._arrowheadItem.setRotation(-angle)
 
-        if self._relation:
+        if self._icon:
             if line:
                 point = path.pointAtPercent(0.4)
             else:
