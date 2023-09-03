@@ -20,54 +20,40 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QButtonGroup, QToolButton
+from PyQt6.QtGui import QAction
+from PyQt6.QtWidgets import QButtonGroup
 from qthandy import vline
+from qtmenu import GridMenuWidget
 
 from src.main.python.plotlyst.core.domain import RelationsNetwork, Relation
-from src.main.python.plotlyst.view.common import tool_btn
+from src.main.python.plotlyst.view.common import tool_btn, action
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.graphics import BaseItemEditor, SolidPenStyleSelector, DashPenStyleSelector, \
-    DotPenStyleSelector, ConnectorItem, PenWidthEditor, RelationsButton, SecondarySelectorWidget
+    DotPenStyleSelector, ConnectorItem, PenWidthEditor, RelationsButton
 
 
-class RelationSelector(SecondarySelectorWidget):
+class RelationSelector(GridMenuWidget):
     relationSelected = pyqtSignal(Relation)
 
     def __init__(self, network: RelationsNetwork, parent=None):
-        super().__init__(parent, optional=True)
+        super().__init__(parent)
         self._network = network
         self._romance = Relation('Romance', icon='ei.heart', icon_color='#d1495b')
         self._friendship = Relation('Friendship', icon='fa5s.user-friends', icon_color='#457b9d')
         self._sidekick = Relation('Sidekick', icon='ei.asl', icon_color='#b0a990')
         self._guide = Relation('Guide', icon='mdi.compass-rose', icon_color='#80ced7')
 
-        self._btnRomance = self._newRelationButton(self._romance, 0, 0)
-        self._btnFriendship = self._newRelationButton(self._friendship, 0, 1)
-        self._btnSidekick = self._newRelationButton(self._sidekick, 0, 2)
-        self._btnGuide = self._newRelationButton(self._guide, 1, 0)
+        self._newAction(self._romance, 0, 0)
+        self._newAction(self._friendship, 0, 1)
+        self._newAction(self._sidekick, 0, 2)
+        self._newAction(self._guide, 1, 0)
 
-    def _newRelationButton(self, relation: Relation, row: int, col: int) -> QToolButton:
-        btn = self._newButton(IconRegistry.from_name(relation.icon), relation.text, row, col)
-        btn.clicked.connect(lambda: self.relationSelected.emit(relation))
+    def _newAction(self, relation: Relation, row: int, col: int) -> QAction:
+        action_ = action(relation.text, IconRegistry.from_name(relation.icon, relation.icon_color))
+        self.addAction(action_, row, col)
+        action_.triggered.connect(lambda: self.relationSelected.emit(relation))
 
-        return btn
-
-    def selectRelation(self, relation: Relation):
-        if relation == self._romance:
-            self._btnRomance.setChecked(True)
-        elif relation == self._friendship:
-            self._btnFriendship.setChecked(True)
-        elif relation == self._sidekick:
-            self._btnSidekick.setChecked(True)
-        elif relation == self._guide:
-            self._btnGuide.setChecked(True)
-        else:
-            self.reset()
-
-    def reset(self):
-        btn = self._btnGroup.checkedButton()
-        if btn:
-            btn.setChecked(False)
+        return action_
 
 
 class ConnectorEditor(BaseItemEditor):
@@ -92,9 +78,8 @@ class ConnectorEditor(BaseItemEditor):
         self._sbWidth = PenWidthEditor()
         self._sbWidth.valueChanged.connect(self._widthChanged)
 
-        self._relationSelector = RelationSelector(network, self)
+        self._relationSelector = RelationSelector(network, self._btnRelationType)
         self._relationSelector.relationSelected.connect(self._relationChanged)
-        self.addSecondaryWidget(self._btnRelationType, self._relationSelector)
 
         self._toolbar.layout().addWidget(self._btnRelationType)
         self._toolbar.layout().addWidget(vline())
@@ -112,10 +97,10 @@ class ConnectorEditor(BaseItemEditor):
 
         self._sbWidth.setValue(connector.penWidth())
         relation = connector.relation()
-        if relation:
-            self._relationSelector.selectRelation(relation)
-        else:
-            self._relationSelector.reset()
+        # if relation:
+        #     self._relationSelector.selectRelation(relation)
+        # else:
+        #     self._relationSelector.reset()
 
         penStyle = connector.penStyle()
         for line in [self._solidLine, self._dashLine, self._dotLine]:
