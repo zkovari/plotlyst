@@ -40,7 +40,6 @@ from src.main.python.plotlyst.view.generated.icon_selector_widget_ui import Ui_I
 from src.main.python.plotlyst.view.generated.resource_manager_dialog_ui import Ui_ResourceManagerDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
-from src.main.python.plotlyst.view.style.button import apply_button_color
 from src.main.python.plotlyst.view.widget._icons import icons_registry
 from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton
 
@@ -51,28 +50,46 @@ class ColorButton(QToolButton):
         self.color = color
         self.setCheckable(True)
         pointy(self)
-        apply_button_color(self, self.color)
+        self.setIcon(IconRegistry.from_name('fa5s.circle', color=color))
+        transparent(self)
+        self.setIconSize(QSize(24, 24))
         self.installEventFilter(ButtonPressResizeEventFilter(self))
+
+
+BASE_COLORS = ['darkBlue', '#0077b6', '#00b4d8', '#007200', '#2a9d8f', '#94d2bd', '#ffd000', '#f48c06',
+               '#e85d04',
+               '#dc2f02',
+               '#ffc6ff', '#b5179e', '#7209b7', '#d6ccc2', '#6c757d', '#dda15e', '#bc6c25', 'black']
 
 
 class ColorPicker(QWidget):
     colorPicked = pyqtSignal(QColor)
 
-    def __init__(self, parent=None):
-        super(ColorPicker, self).__init__(parent)
-        flow(self)
+    def __init__(self, parent=None, maxColumn: Optional[int] = None):
+        super().__init__(parent)
+        if maxColumn:
+            grid(self, 1, 1, 1)
+        else:
+            flow(self)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
 
         self.btnGroup = QButtonGroup(self)
         self.btnGroup.setExclusive(True)
 
-        for color in ['#0077b6', '#00b4d8', '#007200', '#2a9d8f', '#94d2bd', '#ffe66d', '#ffd000', '#f48c06', '#e85d04',
-                      '#dc2f02',
-                      '#ffc6ff', '#b5179e', '#7209b7', '#d6ccc2', '#6c757d', '#dda15e', '#bc6c25', 'black', 'white']:
+        row = -1
+        for i, color in enumerate(BASE_COLORS):
             btn = ColorButton(color, self)
 
             self.btnGroup.addButton(btn)
-            self.layout().addWidget(btn)
+            if maxColumn:
+                if i % maxColumn == 0:
+                    row += 1
+                    col = 0
+                else:
+                    col = i % maxColumn
+                self.layout().addWidget(btn, row, col)
+            else:
+                self.layout().addWidget(btn)
         self.btnGroup.buttonClicked.connect(self._clicked)
 
     def color(self) -> QColor:

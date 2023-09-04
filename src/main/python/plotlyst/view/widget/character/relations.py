@@ -18,22 +18,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from typing import Optional, Set, Any
+from typing import Optional, Set
 
-import qtanim
-from PyQt6.QtCore import QRectF, pyqtSignal, QSize, Qt, QTimer
-from PyQt6.QtGui import QPainter, QPen, QKeyEvent
-from PyQt6.QtWidgets import QWidget, QGraphicsScene, QAbstractGraphicsShapeItem, \
-    QStyleOptionGraphicsItem, QGraphicsPathItem, QGraphicsItem, QToolButton, QGraphicsSceneDragDropEvent, \
-    QGraphicsObject, QMenu, QGraphicsSceneHoverEvent, QGraphicsSceneMouseEvent
+from PyQt6.QtCore import QRectF, pyqtSignal, QSize, Qt
+from PyQt6.QtGui import QPainter
+from PyQt6.QtWidgets import QWidget, QAbstractGraphicsShapeItem, \
+    QStyleOptionGraphicsItem, QToolButton, QGraphicsObject, QGraphicsSceneHoverEvent, QGraphicsSceneMouseEvent
 from overrides import overrides
 from qthandy import flow, transparent, pointy
 from qthandy.filter import OpacityEventFilter, DragEventFilter
 from qttoolbox import ToolBox
 
-from src.main.python.plotlyst.core.domain import Character, Novel, RelationsNetwork, CharacterNode
+from src.main.python.plotlyst.core.domain import Character, Novel, RelationsNetwork
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry
-from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView
 
 
 class PlusItem(QAbstractGraphicsShapeItem, QGraphicsObject):
@@ -80,187 +77,6 @@ class PlusItem(QAbstractGraphicsShapeItem, QGraphicsObject):
     @overrides
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
         self.relationsScene().startLink()
-
-
-class CharacterItem(QAbstractGraphicsShapeItem):
-
-    def __init__(self, character: Character, node: CharacterNode, parent=None):
-        super(CharacterItem, self).__init__(parent)
-        self._character = character
-        self._node = node
-        self._size: int = 128
-        self._margin: int = 25
-        self.setFlag(
-            QGraphicsItem.GraphicsItemFlag.ItemIsMovable | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable |
-            QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
-        self.setAcceptHoverEvents(True)
-
-        self._posChangedTimer = QTimer()
-        self._posChangedTimer.setInterval(1000)
-        self._posChangedTimer.timeout.connect(self._posChangedOnTimeout)
-        self._plusItem = PlusItem(self)
-        self._plusItem.setPos(50, -self._margin)
-        self._plusItem.setVisible(False)
-        self._animation = None
-        self._linkMode: bool = False
-
-    def character(self) -> Character:
-        return self._character
-
-    @overrides
-    def boundingRect(self) -> QRectF:
-        return QRectF(0, -self._margin, self._size, self._size + self._margin)
-
-    @overrides
-    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
-        if self._linkMode:
-            painter.setPen(QPen(Qt.GlobalColor.darkBlue, 2, Qt.PenStyle.DashLine))
-            painter.drawRoundedRect(0, 0, self._size, self._size, 2, 2)
-        elif self.isSelected():
-            painter.setPen(QPen(Qt.GlobalColor.gray, 2, Qt.PenStyle.DashLine))
-            painter.drawRoundedRect(0, 0, self._size, self._size, 2, 2)
-
-        avatar = avatars.avatar(self._character)
-        avatar.paint(painter, 0, 0, self._size, self._size)
-
-    @overrides
-    def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        if self.relationsScene().linkMode():
-            self.relationsScene().link(self)
-        super(CharacterItem, self).mousePressEvent(event)
-
-    @overrides
-    def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
-        if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
-            self._posChangedTimer.start(1000)
-        elif change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
-            if value:
-                self._plusItem.setVisible(True)
-                self._animation = qtanim.fade_in(self._plusItem)
-            else:
-                self.relationsScene().endLink()
-                self._plusItem.setVisible(False)
-                self._plusItem.reset()
-        return super(CharacterItem, self).itemChange(change, value)
-
-    @overrides
-    def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        if self.relationsScene().linkMode():
-            self._linkMode = True
-        self.update()
-
-    @overrides
-    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        self._linkMode = False
-        self.update()
-
-    def relationsScene(self) -> 'RelationsEditorScene':
-        return self.scene()
-
-    def _posChangedOnTimeout(self):
-        self._posChangedTimer.stop()
-        self._node.x = self.scenePos().x()
-        self._node.y = self.scenePos().y()
-
-
-class RelationItem(QGraphicsPathItem):
-    def __init__(self, source: CharacterItem, target: CharacterItem):
-        super(RelationItem, self).__init__(source)
-
-
-class RelationsEditorScene(QGraphicsScene):
-    charactersChanged = pyqtSignal(RelationsNetwork)
-    charactersLinked = pyqtSignal(CharacterItem)
-
-    def __init__(self, novel: Novel, parent=None):
-        super(RelationsEditorScene, self).__init__(parent)
-        self._novel = novel
-        self._network: Optional[RelationsNetwork] = None
-        self._linkMode: bool = False
-
-    def setNetwork(self, network: RelationsNetwork):
-        self._network = network
-
-    @overrides
-    def dragEnterEvent(self, event: QGraphicsSceneDragDropEvent) -> None:
-        if event.mimeData().hasFormat(CHARACTER_AVATAR_MIME_TYPE):
-            event.accept()
-
-    @overrides
-    def dragMoveEvent(self, event: QGraphicsSceneDragDropEvent) -> None:
-        if event.mimeData().hasFormat(CHARACTER_AVATAR_MIME_TYPE):
-            event.accept()
-
-    @overrides
-    def dropEvent(self, event: 'QGraphicsSceneDragDropEvent') -> None:
-        if event.mimeData().hasFormat(CHARACTER_AVATAR_MIME_TYPE):
-            event.accept()
-
-            character: Character = event.mimeData().reference()
-            node = CharacterNode(event.scenePos().x(), event.scenePos().y())
-            node.set_character(character)
-            self._network.nodes.append(node)
-
-            item = CharacterItem(character, node)
-            item.setPos(event.scenePos())
-            self.addItem(item)
-            self.charactersChanged.emit(self._network)
-
-    @overrides
-    def keyReleaseEvent(self, event: QKeyEvent) -> None:
-        if event.key() == Qt.Key.Key_Delete or event.key() == Qt.Key.Key_Backspace:
-            for item in self.selectedItems():
-                if isinstance(item, CharacterItem):
-                    self._network.nodes[:] = [node for node in self._network.nodes if
-                                              node.character_id != item.character().id]
-                    self.removeItem(item)
-                    self.charactersChanged.emit(self._network)
-
-    def linkMode(self) -> bool:
-        return self._linkMode
-
-    def startLink(self):
-        self._linkMode = True
-
-    def endLink(self):
-        self._linkMode = False
-
-    def link(self, item: CharacterItem):
-        self.charactersLinked.emit(item)
-
-
-class RelationsView(BaseGraphicsView):
-    def __init__(self, novel: Novel, parent=None):
-        super(RelationsView, self).__init__(parent)
-        self._novel = novel
-        self._scene = RelationsEditorScene(self._novel)
-        self.setScene(self._scene)
-        self.scale(0.6, 0.6)
-        self.setAcceptDrops(True)
-
-        self._linkEditorMenu = QMenu(self)
-        self._linkEditorMenu.addAction('Friendship')
-        self._linkEditorMenu.addAction('Colleagues')
-        self._linkEditorMenu.addAction('Love')
-
-        self._scene.charactersLinked.connect(self._charactersLinked)
-
-    def relationsScene(self) -> RelationsEditorScene:
-        return self._scene
-
-    def refresh(self, network: RelationsNetwork):
-        self._scene.clear()
-        self._scene.setNetwork(network)
-        for node in network.nodes:
-            item = CharacterItem(node.character(self._novel), node)
-            self._scene.addItem(item)
-            item.setPos(node.x, node.y)
-
-        self.centerOn(0, 0)
-
-    def _charactersLinked(self, item: CharacterItem):
-        view_pos = self.mapFromScene(item.sceneBoundingRect().topRight())
-        self._linkEditorMenu.popup(self.mapToGlobal(view_pos))
 
 
 CHARACTER_AVATAR_MIME_TYPE = 'application/character-avatar'

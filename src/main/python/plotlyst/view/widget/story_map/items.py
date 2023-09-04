@@ -17,47 +17,25 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from enum import Enum
-from typing import Optional, List
+from typing import Optional
 
 from PyQt6.QtCore import Qt, pyqtSignal, QRect, QRectF, QPoint, QPointF, QTimer
 from PyQt6.QtGui import QIcon, QColor, QPainter, QPen, QFontMetrics
-from PyQt6.QtWidgets import QWidget, QApplication, QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
-    QGraphicsSceneHoverEvent, QGraphicsSceneMouseEvent, QGraphicsRectItem, QGraphicsItem
+from PyQt6.QtWidgets import QWidget, QApplication, QStyleOptionGraphicsItem, \
+    QGraphicsSceneHoverEvent, QGraphicsSceneMouseEvent, QGraphicsItem
 from overrides import overrides
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Character, Node
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.widget.graphics import NodeItem, AbstractSocketItem
-
-
-def draw_rect(painter: QPainter, item: QAbstractGraphicsShapeItem):
-    painter.setPen(QPen(Qt.GlobalColor.red, 1, Qt.PenStyle.DashLine))
-    painter.drawRoundedRect(item.boundingRect(), 2, 2)
-
-
-def draw_center(painter: QPainter, item: QAbstractGraphicsShapeItem):
-    painter.setPen(QPen(Qt.GlobalColor.red, 1, Qt.PenStyle.DashLine))
-    painter.drawEllipse(item.boundingRect().center(), 1, 1)
-
-
-def draw_zero(painter: QPainter):
-    painter.setPen(QPen(Qt.GlobalColor.blue, 1, Qt.PenStyle.DashLine))
-    painter.drawEllipse(QPointF(0, 0), 1, 1)
-
-
-def draw_helpers(painter: QPainter, item: QAbstractGraphicsShapeItem):
-    draw_rect(painter, item)
-    draw_center(painter, item)
-    draw_zero(painter)
+from src.main.python.plotlyst.view.widget.graphics import NodeItem, AbstractSocketItem, NetworkItemType
 
 
 def v_center(ref_height: int, item_height: int) -> int:
     return (ref_height - item_height) // 2
 
 
-class ItemType(Enum):
+class ItemType(NetworkItemType):
     EVENT = 1
     CHARACTER = 2
     GOAL = 3
@@ -81,14 +59,6 @@ class MindMapNode(NodeItem):
 
 
 class SocketItem(AbstractSocketItem):
-    def __init__(self, orientation: Qt.Edge, parent: 'ConnectableNode'):
-        super().__init__(orientation, parent)
-
-        self._size = 16
-        self.setAcceptHoverEvents(True)
-        self._hovered = False
-        self._linkAvailable = True
-        self.setToolTip('Connect')
 
     @overrides
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
@@ -102,70 +72,8 @@ class SocketItem(AbstractSocketItem):
         if self._hovered and self.mindMapScene().linkMode():
             painter.drawEllipse(QPointF(self._size / 2, self._size // 2), 2, 2)
 
-    @overrides
-    def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent) -> None:
-        self._hovered = True
-        if self.mindMapScene().linkMode() and self.mindMapScene().linkSource().parentItem() == self.parentItem():
-            self._linkAvailable = False
-        else:
-            self._linkAvailable = True
-        self.setToolTip('Connect' if self._linkAvailable else 'Cannot connect to itself')
-        self.update()
-
-    @overrides
-    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        self._hovered = False
-        self._linkAvailable = True
-        self.setToolTip('Connect')
-        self.update()
-
-    @overrides
-    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
-        event.accept()
-
-    @overrides
-    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
-        if self.mindMapScene().linkMode():
-            if self.mindMapScene().linkSource().parentItem() != self.parentItem():
-                self.mindMapScene().link(self)
-        else:
-            self.mindMapScene().startLink(self)
-
     def mindMapScene(self) -> 'EventsMindMapScene':
         return self.scene()
-
-
-class SelectorRectItem(QGraphicsRectItem):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._startingPoint: QPointF = QPointF(0, 0)
-        self._rect = QRectF()
-
-        self.setPen(QPen(Qt.GlobalColor.gray, 1, Qt.PenStyle.DashLine))
-
-    def start(self, pos: QPointF):
-        self._startingPoint = pos
-        self._rect.setTopLeft(pos)
-        self.setRect(self._rect)
-
-    def adjust(self, pos: QPointF):
-        x1 = min(self._startingPoint.x(), pos.x())
-        y1 = min(self._startingPoint.y(), pos.y())
-        x2 = max(self._startingPoint.x(), pos.x())
-        y2 = max(self._startingPoint.y(), pos.y())
-
-        self._rect.setTopLeft(QPointF(x1, y1))
-        self._rect.setBottomRight(QPointF(x2, y2))
-
-        self.setRect(self._rect)
-
-
-class PlaceholderItem(SocketItem):
-    def __init__(self, parent=None):
-        super().__init__(Qt.Edge.RightEdge, parent)
-        self.setEnabled(False)
-        self.setAcceptHoverEvents(False)
-        self.setToolTip('Click to add a new node')
 
 
 class StickerItem(MindMapNode):
@@ -211,11 +119,6 @@ class StickerItem(MindMapNode):
 class ConnectableNode(MindMapNode):
     def __init__(self, node: Node, parent=None):
         super().__init__(node, parent)
-        self._sockets: List[SocketItem] = []
-
-    def removeConnectors(self):
-        for socket in self._sockets:
-            socket.removeConnectors()
 
     @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
@@ -226,11 +129,6 @@ class ConnectableNode(MindMapNode):
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         if not self.isSelected():
             self._setSocketsVisible(False)
-
-    @overrides
-    def _onPosChanged(self):
-        for socket in self._sockets:
-            socket.rearrangeConnectors()
 
     @overrides
     def _onSelection(self, selected: bool):
@@ -263,14 +161,14 @@ class EventItem(ConnectableNode):
         self._nestedRectWidth = 1
         self._nestedRectHeight = 1
 
-        self._socketLeft = SocketItem(Qt.Edge.LeftEdge, self)
-        self._socketTopLeft = SocketItem(Qt.Edge.TopEdge, self)
-        self._socketTopCenter = SocketItem(Qt.Edge.TopEdge, self)
-        self._socketTopRight = SocketItem(Qt.Edge.TopEdge, self)
-        self._socketRight = SocketItem(Qt.Edge.RightEdge, self)
-        self._socketBottomLeft = SocketItem(Qt.Edge.BottomEdge, self)
-        self._socketBottomCenter = SocketItem(Qt.Edge.BottomEdge, self)
-        self._socketBottomRight = SocketItem(Qt.Edge.BottomEdge, self)
+        self._socketLeft = SocketItem(180, parent=self)
+        self._socketTopLeft = SocketItem(135, parent=self)
+        self._socketTopCenter = SocketItem(90, parent=self)
+        self._socketTopRight = SocketItem(45, parent=self)
+        self._socketRight = SocketItem(0, parent=self)
+        self._socketBottomLeft = SocketItem(-135, parent=self)
+        self._socketBottomCenter = SocketItem(-90, parent=self)
+        self._socketBottomRight = SocketItem(-45, parent=self)
         self._sockets.extend([self._socketLeft,
                               self._socketTopLeft, self._socketTopCenter, self._socketTopRight,
                               self._socketRight,
@@ -415,10 +313,10 @@ class CharacterItem(ConnectableNode):
         self._character: Optional[Character] = character
         self._size: int = 68
 
-        self._socketTop = SocketItem(Qt.Edge.TopEdge, self)
-        self._socketRight = SocketItem(Qt.Edge.RightEdge, self)
-        self._socketBottom = SocketItem(Qt.Edge.BottomEdge, self)
-        self._socketLeft = SocketItem(Qt.Edge.LeftEdge, self)
+        self._socketTop = SocketItem(90, parent=self)
+        self._socketRight = SocketItem(0, parent=self)
+        self._socketBottom = SocketItem(-90, parent=self)
+        self._socketLeft = SocketItem(180, parent=self)
         self._sockets.extend([self._socketLeft, self._socketTop, self._socketRight, self._socketBottom])
         socketSize = self._socketTop.boundingRect().width()
         half = self.Margin + v_center(self._size, socketSize)

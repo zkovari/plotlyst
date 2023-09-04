@@ -1514,7 +1514,7 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
 
 default_topics: List[Topic] = [
     Topic('Family', uuid.UUID('2ce9c3b4-1dd9-4f88-a16e-b8dc507633b7'), 'mdi6.human-male-female-child', '#457b9d'),
-    Topic('Job', uuid.UUID('19d9bfe9-5432-42d8-a444-0bd849720b2d'), 'fa5s.briefcase', '9c6644'),
+    Topic('Job', uuid.UUID('19d9bfe9-5432-42d8-a444-0bd849720b2d'), 'fa5s.briefcase', '#9c6644'),
     Topic('Education', uuid.UUID('01e9ef93-7a71-4b2d-af88-53b30d3947cb'), 'fa5s.graduation-cap'),
     Topic('Hometown', uuid.UUID('1ac1eec9-7953-419c-a265-88a0723a64ea'), 'ei.home-alt', '#4c334d'),
     Topic('Physical appearance', uuid.UUID('3c1a00d2-5085-47f0-8fe5-6d253e708999'), 'ri.body-scan-fill', ''),
