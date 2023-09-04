@@ -133,11 +133,13 @@ class ConnectorEditor(BaseItemEditor):
         self._hideSecondarySelectors()
 
         self._sbWidth.setValue(connector.penWidth())
-        relation = connector.relation()
-        # if relation:
-        #     self._relationSelector.selectRelation(relation)
-        # else:
-        #     self._relationSelector.reset()
+
+        icon: str = connector.icon()
+        self._updateColor(connector.color().name())
+        if icon:
+            self._updateIcon(icon)
+        else:
+            self._resetIcon()
 
         penStyle = connector.penStyle()
         for line in [self._solidLine, self._dashLine, self._dotLine]:
@@ -149,6 +151,8 @@ class ConnectorEditor(BaseItemEditor):
     def _relationChanged(self, relation: Relation):
         if self._connector:
             self._connector.setRelation(relation)
+            self._updateIcon(relation.icon)
+            self._updateColor(relation.icon_color)
 
     def _penStyleChanged(self):
         btn = self._lineBtnGroup.checkedButton()
@@ -162,6 +166,7 @@ class ConnectorEditor(BaseItemEditor):
     def _colorChanged(self, color: QColor):
         if self._connector:
             self._connector.setColor(color)
+            self._updateColor(color.name())
             pass
 
     def _showIconSelector(self):
@@ -171,3 +176,13 @@ class ConnectorEditor(BaseItemEditor):
         result = dialog.display()
         if result and self._connector:
             self._connector.setIcon(result[0])
+            self._updateIcon(result[0])
+
+    def _updateIcon(self, icon: str):
+        self._btnIcon.setIcon(IconRegistry.from_name(icon))
+
+    def _resetIcon(self):
+        self._btnIcon.setIcon(IconRegistry.from_name('mdi.emoticon-outline'))
+
+    def _updateColor(self, color: str):
+        self._btnColor.setIcon(IconRegistry.from_name('fa5s.circle', color))
