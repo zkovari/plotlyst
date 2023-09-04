@@ -37,22 +37,50 @@ from src.main.python.plotlyst.view.widget.utility import ColorPicker
 class RelationSelector(GridMenuWidget):
     relationSelected = pyqtSignal(Relation)
 
-    def __init__(self, network: RelationsNetwork, parent=None):
+    def __init__(self, network: RelationsNetwork = None, parent=None):
         super().__init__(parent)
         self._network = network
         self._romance = Relation('Romance', icon='ei.heart', icon_color='#d1495b')
+        self._breakUp = Relation('Breakup', icon='fa5s.heart-broken', icon_color='#d1495b')
+        self._affection = Relation('Affection', icon='mdi.sparkles', icon_color='#d1495b')
+        self._crush = Relation('Crush', icon='fa5.grin-hearts', icon_color='#d1495b')
+        self._unrequited = Relation('Unrequited love', icon='mdi.heart-half-full', icon_color='#d1495b')
+
+        self._colleague = Relation('Colleague', icon='fa5s.briefcase', icon_color='#9c6644')
+        self._student = Relation('Student', icon='fa5s.graduation-cap', icon_color='black')
+        self._foil = Relation('Foil', icon='fa5s.yin-yang', icon_color='#947eb0')
+
         self._friendship = Relation('Friendship', icon='fa5s.user-friends', icon_color='#457b9d')
         self._sidekick = Relation('Sidekick', icon='ei.asl', icon_color='#b0a990')
         self._guide = Relation('Guide', icon='mdi.compass-rose', icon_color='#80ced7')
+        self._supporter = Relation('Supporter', icon='fa5s.thumbs-up', icon_color='#266dd3')
+        self._adversary = Relation('Adversary', icon='fa5s.thumbs-down', icon_color='#9e1946')
+        self._betrayal = Relation('Betrayal', icon='mdi6.knife', icon_color='grey')
+        self._conflict = Relation('Conflict', icon='mdi.sword-cross', icon_color='#f3a712')
 
         self._newAction(self._romance, 0, 0)
-        self._newAction(self._friendship, 0, 1)
-        self._newAction(self._sidekick, 0, 2)
-        self._newAction(self._guide, 1, 0)
+        self._newAction(self._affection, 0, 1)
+        self._newAction(self._crush, 0, 2)
+        self._newAction(self._breakUp, 1, 0)
+        self._newAction(self._unrequited, 1, 1, 2)
+        self.addSeparator(2, 0, colSpan=3)
+        self._newAction(self._friendship, 3, 0)
+        self._newAction(self._sidekick, 3, 1)
+        self._newAction(self._guide, 3, 2)
+        self._newAction(self._supporter, 4, 0)
+        self._newAction(self._adversary, 4, 1)
+        self._newAction(self._betrayal, 5, 0)
+        self._newAction(self._conflict, 5, 1)
+        self._newAction(self._foil, 6, 0)
+        self.addSeparator(7, 0, colSpan=3)
+        self._newAction(self._colleague, 8, 0)
+        self._newAction(self._student, 8, 1)
 
-    def _newAction(self, relation: Relation, row: int, col: int) -> QAction:
-        action_ = action(relation.text, IconRegistry.from_name(relation.icon, relation.icon_color))
-        self.addAction(action_, row, col)
+    def _newAction(self, relation: Relation, row: int, col: int, colSpan: int = 1, showText: bool = True) -> QAction:
+        text = relation.text if showText else ''
+        action_ = action(text, IconRegistry.from_name(relation.icon, relation.icon_color))
+        action_.setToolTip(relation.text)
+        self.addAction(action_, row, col, colSpan=colSpan)
         action_.triggered.connect(lambda: self.relationSelected.emit(relation))
 
         return action_
