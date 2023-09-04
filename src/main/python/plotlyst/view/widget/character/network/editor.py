@@ -22,7 +22,7 @@ from typing import Optional
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QAction, QColor
 from PyQt6.QtWidgets import QButtonGroup
-from qthandy import vline
+from qthandy import vline, retain_when_hidden
 from qtmenu import GridMenuWidget
 
 from src.main.python.plotlyst.core.domain import RelationsNetwork, Relation
@@ -137,6 +137,9 @@ class ConnectorEditor(BaseItemEditor):
             pass
 
     def _showIconSelector(self):
-        result = IconSelectorDialog().display()
+        dialog = IconSelectorDialog()
+        retain_when_hidden(dialog.selector.colorPicker)
+        dialog.selector.colorPicker.setVisible(False)
+        result = dialog.display()
         if result and self._connector:
             self._connector.setIcon(result[0])
