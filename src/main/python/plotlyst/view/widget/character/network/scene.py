@@ -26,7 +26,9 @@ from PyQt6.QtWidgets import QWidget, QStyleOptionGraphicsItem, QGraphicsSceneHov
 from overrides import overrides
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
-from src.main.python.plotlyst.core.domain import Character, Novel, Diagram, CharacterNode
+from src.main.python.plotlyst.core.client import json_client
+from src.main.python.plotlyst.core.domain import Character, Novel, CharacterNode
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import pointy
 from src.main.python.plotlyst.view.icons import avatars
 from src.main.python.plotlyst.view.widget.graphics import NodeItem, AbstractSocketItem, NetworkItemType, \
@@ -154,19 +156,8 @@ class RelationsEditorScene(NetworkScene):
     def __init__(self, novel: Novel, parent=None):
         super(RelationsEditorScene, self).__init__(parent)
         self._novel = novel
-        self._network: Optional[Diagram] = None
 
-        if self._novel.characters:
-            node = CharacterNode(50, 50)
-            node.set_character(self._novel.characters[0])
-            self.addItem(CharacterItem(self._novel.characters[0], node))
-
-            node = CharacterNode(200, -50)
-            node.set_character(self._novel.characters[1])
-            self.addItem(CharacterItem(self._novel.characters[1], node))
-
-    def setNetwork(self, network: Diagram):
-        self._network = network
+        self.repo = RepositoryPersistenceManager.instance()
 
     @staticmethod
     def toCharacterNode(scenePos: QPointF) -> CharacterNode:
@@ -188,3 +179,11 @@ class RelationsEditorScene(NetworkScene):
                 targetSocket: AbstractSocketItem):
         sourceNode.addSocket(sourceSocket)
         targetNode.addSocket(targetSocket)
+
+    @overrides
+    def _load(self):
+        json_client.load_diagram(self._novel, self._diagram)
+
+    @overrides
+    def _save(self):
+        self.repo.update_diagram(self._novel, self._diagram)

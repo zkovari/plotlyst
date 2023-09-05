@@ -22,7 +22,7 @@ from typing import Optional
 from PyQt6.QtCore import QTimer
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel, Diagram, Character
+from src.main.python.plotlyst.core.domain import Novel, Character
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.character.network.editor import ConnectorEditor
 from src.main.python.plotlyst.view.widget.character.network.scene import RelationsEditorScene, CharacterItem, \
@@ -41,8 +41,7 @@ class CharacterNetworkView(NetworkGraphicsView):
         self._btnAddSticker = self._newControlButton(IconRegistry.from_name('mdi6.sticker-circle-outline'),
                                                      'Add new sticker', CharacterNetworkItemType.STICKER)
 
-        network = Diagram('Test')
-        self._connectorEditor = ConnectorEditor(network, self)
+        self._connectorEditor = ConnectorEditor(self)
         self._connectorEditor.setVisible(False)
 
         self._scene.selectionChanged.connect(self._selectionChanged)
@@ -51,18 +50,13 @@ class CharacterNetworkView(NetworkGraphicsView):
     def _initScene(self) -> NetworkScene:
         return RelationsEditorScene(self._novel)
 
+    def refresh(self):
+        if not self._diagram:
+            self.setDiagram(self._novel.character_networks[0])
+            self._connectorEditor.setNetwork(self._diagram)
+
     def relationsScene(self) -> RelationsEditorScene:
         return self._scene
-
-    def refresh(self, network: Diagram):
-        self._scene.clear()
-        self._scene.setNetwork(network)
-        for node in network.nodes:
-            item = CharacterItem(node.character(self._novel), node)
-            self._scene.addItem(item)
-            item.setPos(node.x, node.y)
-
-        self.centerOn(0, 0)
 
     @overrides
     def _startAddition(self, itemType: CharacterNetworkItemType):

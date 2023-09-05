@@ -87,7 +87,7 @@ class RelationSelector(GridMenuWidget):
 
 
 class ConnectorEditor(BaseItemEditor):
-    def __init__(self, network: Diagram, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self._connector: Optional[ConnectorItem] = None
 
@@ -114,8 +114,7 @@ class ConnectorEditor(BaseItemEditor):
         self._sbWidth = PenWidthEditor()
         self._sbWidth.valueChanged.connect(self._widthChanged)
 
-        self._relationSelector = RelationSelector(network, self._btnRelationType)
-        self._relationSelector.relationSelected.connect(self._relationChanged)
+        self._relationSelector: Optional[RelationSelector] = None
 
         self._toolbar.layout().addWidget(self._btnRelationType)
         self._toolbar.layout().addWidget(vline())
@@ -127,6 +126,10 @@ class ConnectorEditor(BaseItemEditor):
         self._toolbar.layout().addWidget(self._dotLine)
         self._toolbar.layout().addWidget(vline())
         self._toolbar.layout().addWidget(self._sbWidth)
+
+    def setNetwork(self, diagram: Diagram):
+        self._relationSelector = RelationSelector(diagram, self._btnRelationType)
+        self._relationSelector.relationSelected.connect(self._relationChanged)
 
     def setItem(self, connector: ConnectorItem):
         self._connector = None

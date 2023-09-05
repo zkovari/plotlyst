@@ -18,12 +18,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PyQt6.QtCore import Qt, pyqtSignal, QPointF
+from PyQt6.QtCore import pyqtSignal, QPointF
 from PyQt6.QtGui import QKeyEvent
 from overrides import overrides
 
+from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Node, CharacterNode
 from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.widget.graphics import NetworkScene
 from src.main.python.plotlyst.view.widget.story_map.items import ItemType, MindMapNode, EventItem, StickerItem, \
     CharacterItem, SocketItem
@@ -49,6 +51,8 @@ class EventsMindMapScene(NetworkScene):
 
         sticker = StickerItem(Node(200, 0), ItemType.COMMENT)
         self.addItem(sticker)
+
+        self.repo = RepositoryPersistenceManager.instance()
 
     @overrides
     def startLink(self, source: SocketItem):
@@ -106,3 +110,11 @@ class EventsMindMapScene(NetworkScene):
         node.x = node.x - CharacterItem.Margin
         node.y = node.y - CharacterItem.Margin
         return node
+
+    @overrides
+    def _load(self):
+        json_client.load_diagram(self._novel, self._diagram)
+
+    @overrides
+    def _save(self):
+        self.repo.update_diagram(self._novel, self._diagram)

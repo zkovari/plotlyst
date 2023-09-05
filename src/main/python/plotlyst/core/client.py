@@ -409,7 +409,10 @@ class JsonClient:
             return
 
         json_str = self.__load_diagram(novel, diagram.id)
-        diagram.data = DiagramData.from_json(json_str)
+        if json_str:
+            diagram.data = DiagramData.from_json(json_str)
+        else:
+            diagram.data = DiagramData()
         diagram.loaded = True
 
     def update_document(self, novel: Novel, document: Document):
@@ -547,7 +550,8 @@ class JsonClient:
                       story_structures=novel_info.story_structures, character_profiles=novel_info.character_profiles,
                       conflicts=conflicts, goals=[x for x in novel_info.goals if str(x.id) in goal_ids], tags=tags_dict,
                       documents=novel_info.documents, premise=novel_info.premise, synopsis=novel_info.synopsis,
-                      prefs=novel_info.prefs, manuscript_goals=novel_info.manuscript_goals, events_map=novel_info.events_map,
+                      prefs=novel_info.prefs, manuscript_goals=novel_info.manuscript_goals,
+                      events_map=novel_info.events_map,
                       character_networks=novel_info.character_networks)
 
         world_path = self.novels_dir.joinpath(str(novel_info.id)).joinpath('world.json')

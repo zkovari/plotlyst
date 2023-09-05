@@ -33,7 +33,7 @@ from overrides import overrides
 from qthandy import hbox, margins, sp, incr_icon, vbox, grid
 
 from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR, RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Node, Relation
+from src.main.python.plotlyst.core.domain import Node, Relation, Diagram
 from src.main.python.plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButtonGroup, \
     TooltipPositionEventFilter, pointy
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -438,6 +438,7 @@ class NetworkScene(QGraphicsScene):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._diagram: Optional[Diagram] = None
         self._linkMode: bool = False
         self._additionMode: Optional[NetworkItemType] = None
 
@@ -446,8 +447,14 @@ class NetworkScene(QGraphicsScene):
 
         self._selectionMode = False
         self._selectionRect = SelectorRectItem()
-        self.addItem(self._selectionRect)
         self._selectionRect.setVisible(False)
+
+    def setDiagram(self, diagram: Diagram):
+        self._diagram = diagram
+        self.clear()
+        self.addItem(self._selectionRect)
+        if not self._diagram.loaded:
+            self._load()
 
     def isAdditionMode(self) -> bool:
         return self._additionMode is not None
@@ -552,6 +559,14 @@ class NetworkScene(QGraphicsScene):
     def _addNewItem(self, itemType: NetworkItemType, scenePos: QPointF):
         pass
 
+    @abstractmethod
+    def _load(self):
+        pass
+
+    @abstractmethod
+    def _save(self):
+        pass
+
     def _onLink(self, sourceNode: NodeItem, sourceSocket: AbstractSocketItem, targetNode: NodeItem,
                 targetSocket: AbstractSocketItem):
         pass
@@ -569,6 +584,7 @@ class NetworkGraphicsView(BaseGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setBackgroundBrush(QColor('#e9ecef'))
+        self._diagram: Optional[Diagram] = None
         self._scene = self._initScene()
         self.setScene(self._scene)
 
@@ -584,6 +600,11 @@ class NetworkGraphicsView(BaseGraphicsView):
 
         self._scene.itemAdded.connect(self._endAddition)
         self._scene.cancelItemAddition.connect(self._endAddition)
+
+    def setDiagram(self, diagram: Diagram):
+        self._diagram = diagram
+        self._scene.setDiagram(diagram)
+        self.centerOn(0, 0)
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
