@@ -1727,13 +1727,40 @@ class CharacterNode(Node, CharacterBased):
     character_id: Optional[uuid.UUID] = None
 
 
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class DiagramData:
+    nodes: List[Node] = field(default_factory=list)
+
+
 @dataclass
 class Diagram:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
-    nodes: List[Node] = field(default_factory=list)
+
+    def __post_init__(self):
+        self.loaded: bool = False
+        self.data: Optional[DiagramData] = None
+
+    @overrides
+    def __eq__(self, other: 'Diagram'):
+        if isinstance(other, Diagram):
+            return self.id == other.id
+        return False
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
+
+def default_events_map() -> Diagram:
+    return Diagram('Events', id=uuid.UUID('6c74e40f-d3de-4c83-bcd2-0ca5e626081d'))
+
+
+def default_character_networks() -> List[Diagram]:
+    return [Diagram('Character relations', id=uuid.UUID('bfd1f2d3-cb33-48a6-a09e-b4332c3d1ed1'))]
 
 
 @dataclass
@@ -1802,6 +1829,8 @@ class Novel(NovelDescriptor):
     world: WorldBuilding = field(default_factory=WorldBuilding)
     board: Board = field(default_factory=Board)
     manuscript_goals: ManuscriptGoals = field(default_factory=ManuscriptGoals)
+    events_map: Diagram = field(default_factory=default_events_map)
+    character_networks: List[Diagram] = field(default_factory=default_character_networks)
 
     def pov_characters(self) -> List[Character]:
         pov_ids = set()
