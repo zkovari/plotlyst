@@ -21,6 +21,7 @@ from typing import Optional
 
 import qtanim
 from PyQt6.QtCore import QTimer
+from PyQt6.QtGui import QShowEvent
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Character
@@ -72,6 +73,11 @@ class EventsMindMapView(NetworkGraphicsView):
     @overrides
     def _initScene(self) -> NetworkScene:
         return EventsMindMapScene(self._novel)
+
+    @overrides
+    def showEvent(self, event: QShowEvent) -> None:
+        if self._diagram is None:
+            self.setDiagram(self._novel.events_map)
 
     def _editEvent(self, item: EventItem):
         def setText(text: str):
