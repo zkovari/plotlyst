@@ -1716,15 +1716,17 @@ def default_tags() -> Dict[TagType, List[Tag]]:
 
 
 @dataclass
-class Node:
+class Node(CharacterBased):
     x: float
     y: float
-
-
-@dataclass
-class CharacterNode(Node, CharacterBased):
     id: uuid.UUID = field(default_factory=uuid.uuid4)
-    character_id: Optional[uuid.UUID] = None
+    character_id: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
+    icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    color: str = field(default='black', metadata=config(exclude=exclude_if_black))
+    text: str = field(default='', metadata=config(exclude=exclude_if_empty))
+
+    def __post_init__(self):
+        self._character: Optional[Character] = None
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)

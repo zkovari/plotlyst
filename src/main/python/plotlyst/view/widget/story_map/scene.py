@@ -23,10 +23,10 @@ from PyQt6.QtGui import QKeyEvent
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Node, CharacterNode
+from src.main.python.plotlyst.core.domain import Node
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.widget.graphics import NetworkScene
+from src.main.python.plotlyst.view.widget.graphics import NetworkScene, NodeItem
 from src.main.python.plotlyst.view.widget.story_map.items import ItemType, MindMapNode, EventItem, StickerItem, \
     CharacterItem, SocketItem
 
@@ -41,16 +41,6 @@ class EventsMindMapScene(NetworkScene):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
-
-        if novel.characters:
-            characterItem = CharacterItem(CharacterNode(50, 50), novel.characters[0])
-
-            self.addItem(characterItem)
-        eventItem = EventItem(Node(400, 100), ItemType.EVENT)
-        self.addItem(eventItem)
-
-        sticker = StickerItem(Node(200, 0), ItemType.COMMENT)
-        self.addItem(sticker)
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -85,7 +75,7 @@ class EventsMindMapScene(NetworkScene):
         self.closeSticker.emit()
 
     @overrides
-    def _addNewItem(self, itemType: ItemType, scenePos: QPointF):
+    def _addNewItem(self, itemType: ItemType, scenePos: QPointF) -> NodeItem:
         if itemType == ItemType.CHARACTER:
             item = CharacterItem(self.toCharacterNode(scenePos), character=None)
         elif itemType in [ItemType.COMMENT, ItemType.TOOL, ItemType.COST]:
@@ -96,6 +86,12 @@ class EventsMindMapScene(NetworkScene):
         self.addItem(item)
         self.itemAdded.emit(itemType, item)
         self.endAdditionMode()
+
+        return item
+
+    @overrides
+    def _addNode(self, node: Node):
+        pass
 
     @staticmethod
     def toEventNode(scenePos: QPointF) -> Node:

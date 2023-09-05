@@ -27,7 +27,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Character, Novel, CharacterNode
+from src.main.python.plotlyst.core.domain import Character, Novel, Node
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import pointy
 from src.main.python.plotlyst.view.icons import avatars
@@ -65,7 +65,7 @@ class CharacterItem(NodeItem):
     Margin: int = 20
     PenWidth: int = 2
 
-    def __init__(self, character: Character, node: CharacterNode, parent=None):
+    def __init__(self, character: Character, node: Node, parent=None):
         super(CharacterItem, self).__init__(node, parent)
         self._character = character
         self._size: int = 68
@@ -160,19 +160,27 @@ class RelationsEditorScene(NetworkScene):
         self.repo = RepositoryPersistenceManager.instance()
 
     @staticmethod
-    def toCharacterNode(scenePos: QPointF) -> CharacterNode:
-        node = CharacterNode(scenePos.x(), scenePos.y())
+    def toCharacterNode(scenePos: QPointF) -> Node:
+        node = Node(scenePos.x(), scenePos.y())
         node.x = node.x - CharacterItem.Margin
         node.y = node.y - CharacterItem.Margin
         return node
 
     @overrides
-    def _addNewItem(self, itemType: CharacterNetworkItemType, scenePos: QPointF):
+    def _addNewItem(self, itemType: CharacterNetworkItemType, scenePos: QPointF) -> NodeItem:
         if itemType == CharacterNetworkItemType.CHARACTER:
             item = CharacterItem(PlaceholderCharacter('Character'), self.toCharacterNode(scenePos))
             self.addItem(item)
             self.itemAdded.emit(itemType, item)
         self.endAdditionMode()
+
+        return item
+
+    @overrides
+    def _addNode(self, node: Node):
+        character = node.character(self._novel) if node.character_id else PlaceholderCharacter('Character')
+        item = CharacterItem(character, node)
+        self.addItem(item)
 
     @overrides
     def _onLink(self, sourceNode: NodeItem, sourceSocket: AbstractSocketItem, targetNode: NodeItem,

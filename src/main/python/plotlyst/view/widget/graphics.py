@@ -359,6 +359,9 @@ class NodeItem(QAbstractGraphicsShapeItem):
         self._posChangedTimer.setInterval(1000)
         self._posChangedTimer.timeout.connect(self._posChangedOnTimeout)
 
+    def node(self) -> Node:
+        return self._node
+
     def networkScene(self) -> 'NetworkScene':
         return self.scene()
 
@@ -456,6 +459,9 @@ class NetworkScene(QGraphicsScene):
         if not self._diagram.loaded:
             self._load()
 
+        for node in self._diagram.data.nodes:
+            self._addNode(node)
+
     def isAdditionMode(self) -> bool:
         return self._additionMode is not None
 
@@ -514,7 +520,9 @@ class NetworkScene(QGraphicsScene):
             for item in self.selectedItems():
                 if isinstance(item, NodeItem):
                     item.removeConnectors()
+                    self._diagram.data.nodes.remove(item.node())
                 self.removeItem(item)
+                self._save()
 
     @overrides
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
@@ -551,12 +559,18 @@ class NetworkScene(QGraphicsScene):
             self._selectionRect.setVisible(False)
             self._updateSelection()
         elif self._additionMode is not None:
-            self._addNewItem(self._additionMode, event.scenePos())
+            item = self._addNewItem(self._additionMode, event.scenePos())
+            self._diagram.data.nodes.append(item.node())
+            self._save()
 
         super().mouseReleaseEvent(event)
 
     @abstractmethod
-    def _addNewItem(self, itemType: NetworkItemType, scenePos: QPointF):
+    def _addNewItem(self, itemType: NetworkItemType, scenePos: QPointF) -> NodeItem:
+        pass
+
+    @abstractmethod
+    def _addNode(self, node: Node):
         pass
 
     @abstractmethod

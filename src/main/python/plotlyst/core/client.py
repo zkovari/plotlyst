@@ -639,7 +639,7 @@ class JsonClient:
         diagrams_dir = self.diagrams_dir(novel)
         if not os.path.exists(str(diagrams_dir)):
             os.mkdir(diagrams_dir)
-        self.__persist_info(diagrams_dir, diagram.data)
+        self.__persist_json_by_id(diagrams_dir, diagram.data.to_json(), diagram.id)
 
     @staticmethod
     def __id_or_none(item):
