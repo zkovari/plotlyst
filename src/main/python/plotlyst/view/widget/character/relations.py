@@ -29,7 +29,7 @@ from qthandy import flow, transparent, pointy
 from qthandy.filter import OpacityEventFilter, DragEventFilter
 from qttoolbox import ToolBox
 
-from src.main.python.plotlyst.core.domain import Character, Novel, RelationsNetwork
+from src.main.python.plotlyst.core.domain import Character, Novel, Diagram
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry
 
 
@@ -100,7 +100,7 @@ class _CharacterSelectorAvatar(QToolButton):
 
 
 class NetworkPanel(QWidget):
-    def __init__(self, novel: Novel, network: RelationsNetwork, parent=None):
+    def __init__(self, novel: Novel, network: Diagram, parent=None):
         super(NetworkPanel, self).__init__(parent)
         self._novel = novel
         self._network = network
@@ -112,7 +112,7 @@ class NetworkPanel(QWidget):
 
         self.updateAvatars()
 
-    def network(self) -> RelationsNetwork:
+    def network(self) -> Diagram:
         return self._network
 
     def updateAvatars(self):
@@ -125,17 +125,17 @@ class NetworkPanel(QWidget):
 
 
 class RelationsSelectorBox(ToolBox):
-    relationsSelected = pyqtSignal(RelationsNetwork)
+    relationsSelected = pyqtSignal(Diagram)
 
     def __init__(self, novel: Novel, parent=None):
         super(RelationsSelectorBox, self).__init__(parent)
         self._novel = novel
 
-    def addNetwork(self, network: RelationsNetwork):
+    def addNetwork(self, network: Diagram):
         wdg = NetworkPanel(self._novel, network)
         self.addItem(wdg, network.title, icon=IconRegistry.from_name(network.icon, network.icon_color))
 
-    def refreshCharacters(self, network: RelationsNetwork):
+    def refreshCharacters(self, network: Diagram):
         panel = self.currentWidget()
         if panel.network() is network:
             panel.updateAvatars()

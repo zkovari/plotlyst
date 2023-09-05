@@ -29,7 +29,7 @@ from overrides import overrides
 from qthandy import ask_confirmation
 
 from src.main.python.plotlyst.core.client import client, json_client
-from src.main.python.plotlyst.core.domain import Novel, Character, Scene, NovelDescriptor, Document, Plot
+from src.main.python.plotlyst.core.domain import Novel, Character, Scene, NovelDescriptor, Document, Plot, Diagram
 from src.main.python.plotlyst.env import app_env
 
 
@@ -48,6 +48,7 @@ class Operation:
     scene: Optional[Scene] = None
     update_image: bool = False
     doc: Optional[Document] = None
+    diagram: Optional[Diagram] = None
 
 
 class RepositoryPersistenceManager(QObject):

@@ -1728,12 +1728,12 @@ class CharacterNode(Node, CharacterBased):
 
 
 @dataclass
-class RelationsNetwork:
+class Diagram:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
-    nodes: List[CharacterNode] = field(default_factory=list)
+    nodes: List[Node] = field(default_factory=list)
 
 
 @dataclass

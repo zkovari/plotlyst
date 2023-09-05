@@ -26,7 +26,7 @@ from PyQt6.QtWidgets import QWidget, QStyleOptionGraphicsItem, QGraphicsSceneHov
 from overrides import overrides
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
-from src.main.python.plotlyst.core.domain import Character, Novel, RelationsNetwork, CharacterNode
+from src.main.python.plotlyst.core.domain import Character, Novel, Diagram, CharacterNode
 from src.main.python.plotlyst.view.common import pointy
 from src.main.python.plotlyst.view.icons import avatars
 from src.main.python.plotlyst.view.widget.graphics import NodeItem, AbstractSocketItem, NetworkItemType, \
@@ -154,7 +154,7 @@ class RelationsEditorScene(NetworkScene):
     def __init__(self, novel: Novel, parent=None):
         super(RelationsEditorScene, self).__init__(parent)
         self._novel = novel
-        self._network: Optional[RelationsNetwork] = None
+        self._network: Optional[Diagram] = None
 
         if self._novel.characters:
             node = CharacterNode(50, 50)
@@ -165,7 +165,7 @@ class RelationsEditorScene(NetworkScene):
             node.set_character(self._novel.characters[1])
             self.addItem(CharacterItem(self._novel.characters[1], node))
 
-    def setNetwork(self, network: RelationsNetwork):
+    def setNetwork(self, network: Diagram):
         self._network = network
 
     @staticmethod

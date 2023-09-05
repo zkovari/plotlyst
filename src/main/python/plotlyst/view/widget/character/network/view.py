@@ -22,7 +22,7 @@ from typing import Optional
 from PyQt6.QtCore import QTimer
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel, RelationsNetwork, Character
+from src.main.python.plotlyst.core.domain import Novel, Diagram, Character
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.character.network.editor import ConnectorEditor
 from src.main.python.plotlyst.view.widget.character.network.scene import RelationsEditorScene, CharacterItem, \
@@ -41,7 +41,7 @@ class CharacterNetworkView(NetworkGraphicsView):
         self._btnAddSticker = self._newControlButton(IconRegistry.from_name('mdi6.sticker-circle-outline'),
                                                      'Add new sticker', CharacterNetworkItemType.STICKER)
 
-        network = RelationsNetwork('Test')
+        network = Diagram('Test')
         self._connectorEditor = ConnectorEditor(network, self)
         self._connectorEditor.setVisible(False)
 
@@ -54,7 +54,7 @@ class CharacterNetworkView(NetworkGraphicsView):
     def relationsScene(self) -> RelationsEditorScene:
         return self._scene
 
-    def refresh(self, network: RelationsNetwork):
+    def refresh(self, network: Diagram):
         self._scene.clear()
         self._scene.setNetwork(network)
         for node in network.nodes:
