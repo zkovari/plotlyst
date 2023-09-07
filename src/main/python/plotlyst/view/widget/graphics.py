@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import math
 from abc import abstractmethod
-from enum import Enum
 from functools import partial
 from typing import Any, Optional, List
 
@@ -33,7 +32,7 @@ from overrides import overrides
 from qthandy import hbox, margins, sp, incr_icon, vbox, grid
 
 from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR, RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Node, Relation, Diagram
+from src.main.python.plotlyst.core.domain import Node, Relation, Diagram, DiagramNodeType
 from src.main.python.plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButtonGroup, \
     TooltipPositionEventFilter, pointy
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -431,19 +430,16 @@ class BaseGraphicsView(QGraphicsView):
             self.scale(1 + scale, 1 + scale)
 
 
-class NetworkItemType(Enum):
-    pass
-
-
 class NetworkScene(QGraphicsScene):
     cancelItemAddition = pyqtSignal()
-    itemAdded = pyqtSignal(NetworkItemType, NodeItem)
+    itemAdded = pyqtSignal(DiagramNodeType, NodeItem)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self._diagram: Optional[Diagram] = None
         self._linkMode: bool = False
-        self._additionMode: Optional[NetworkItemType] = None
+        self._additionMode: Optional[DiagramNodeType] = None
+        self._additionSubType: str = ''
 
         self._placeholder: Optional[PlaceholderSocketItem] = None
         self._connectorPlaceholder: Optional[ConnectorItem] = None
@@ -465,11 +461,13 @@ class NetworkScene(QGraphicsScene):
     def isAdditionMode(self) -> bool:
         return self._additionMode is not None
 
-    def startAdditionMode(self, itemType: NetworkItemType):
+    def startAdditionMode(self, itemType: DiagramNodeType, subType: str = ''):
         self._additionMode = itemType
+        self._additionSubType = subType
 
     def endAdditionMode(self):
         self._additionMode = None
+        self._additionSubType = ''
 
     def linkMode(self) -> bool:
         return self._linkMode
@@ -559,14 +557,14 @@ class NetworkScene(QGraphicsScene):
             self._selectionRect.setVisible(False)
             self._updateSelection()
         elif self._additionMode is not None:
-            item = self._addNewItem(self._additionMode, event.scenePos())
+            item = self._addNewItem(event.scenePos(), self._additionMode, self._additionSubType)
             self._diagram.data.nodes.append(item.node())
             self._save()
 
         super().mouseReleaseEvent(event)
 
     @abstractmethod
-    def _addNewItem(self, itemType: NetworkItemType, scenePos: QPointF) -> NodeItem:
+    def _addNewItem(self, scenePos: QPointF, itemType: DiagramNodeType, subType: str = '') -> NodeItem:
         pass
 
     @abstractmethod
@@ -625,13 +623,13 @@ class NetworkGraphicsView(BaseGraphicsView):
         super().resizeEvent(event)
         self._arrangeSideBars()
 
-    def _mainControlClicked(self, itemType: NetworkItemType, checked: bool):
+    def _mainControlClicked(self, itemType: DiagramNodeType, checked: bool):
         if checked:
             self._startAddition(itemType)
         else:
             self._endAddition()
 
-    def _newControlButton(self, icon: QIcon, tooltip: str, itemType: NetworkItemType) -> QToolButton:
+    def _newControlButton(self, icon: QIcon, tooltip: str, itemType: DiagramNodeType) -> QToolButton:
         btn = tool_btn(icon, tooltip,
                        True, icon_resize=False,
                        properties=['transparent-rounded-bg-on-hover', 'top-selector'],
@@ -646,7 +644,7 @@ class NetworkGraphicsView(BaseGraphicsView):
 
         return btn
 
-    def _startAddition(self, itemType: NetworkItemType):
+    def _startAddition(self, itemType: DiagramNodeType, subType: str = ''):
         for btn in self._btnGroup.buttons():
             if not btn.isChecked():
                 btn.setDisabled(True)
@@ -654,10 +652,10 @@ class NetworkGraphicsView(BaseGraphicsView):
         if not QApplication.overrideCursor():
             QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
 
-        self._scene.startAdditionMode(itemType)
+        self._scene.startAdditionMode(itemType, subType)
         self.setToolTip(f'Click to add a new {itemType.name.lower()}')
 
-    def _endAddition(self, itemType: Optional[NetworkItemType] = None, item: Optional[NodeItem] = None):
+    def _endAddition(self, itemType: Optional[DiagramNodeType] = None, item: Optional[NodeItem] = None):
         for btn in self._btnGroup.buttons():
             btn.setEnabled(True)
             if btn.isChecked():
@@ -718,7 +716,7 @@ class ZoomBar(QFrame):
 
 
 class SecondarySelectorWidget(QFrame):
-    selected = pyqtSignal(NetworkItemType)
+    selected = pyqtSignal(DiagramNodeType, str)
 
     def __init__(self, parent=None, optional: bool = False):
         super().__init__(parent)
@@ -747,11 +745,11 @@ class SecondarySelectorWidget(QFrame):
 
         return btn
 
-    def addItemTypeButton(self, itemType: NetworkItemType, icon: QIcon, tooltip: str, row: int,
-                          col: int) -> QToolButton:
+    def addItemTypeButton(self, itemType: DiagramNodeType, icon: QIcon, tooltip: str, row: int,
+                          col: int, subType: str = '') -> QToolButton:
         def clicked(toggled: bool):
             if toggled:
-                self.selected.emit(itemType)
+                self.selected.emit(itemType, subType)
 
         btn = self.addButton(icon, tooltip, row, col)
         btn.clicked.connect(clicked)

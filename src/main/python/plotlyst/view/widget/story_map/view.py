@@ -24,14 +24,14 @@ from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QShowEvent
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Character
+from src.main.python.plotlyst.core.domain import Character, DiagramNodeType
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
 from src.main.python.plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene
 from src.main.python.plotlyst.view.widget.story_map.controls import EventSelectorWidget, StickerSelectorWidget
 from src.main.python.plotlyst.view.widget.story_map.editors import StickerEditor, TextLineEditorPopup, EventItemEditor
-from src.main.python.plotlyst.view.widget.story_map.items import EventItem, StickerItem, ItemType, MindMapNode, \
+from src.main.python.plotlyst.view.widget.story_map.items import EventItem, StickerItem, MindMapNode, \
     CharacterItem
 from src.main.python.plotlyst.view.widget.story_map.scene import EventsMindMapScene
 
@@ -42,12 +42,12 @@ class EventsMindMapView(NetworkGraphicsView):
         self._novel = novel
         super().__init__(parent)
         self._btnAddEvent = self._newControlButton(
-            IconRegistry.from_name('mdi6.shape-square-rounded-plus'), 'Add new event', ItemType.EVENT)
+            IconRegistry.from_name('mdi6.shape-square-rounded-plus'), 'Add new event', DiagramNodeType.EVENT)
         self._btnAddCharacter = self._newControlButton(
-            IconRegistry.character_icon('#040406'), 'Add new character', ItemType.CHARACTER)
+            IconRegistry.character_icon('#040406'), 'Add new character', DiagramNodeType.CHARACTER)
         self._btnAddSticker = self._newControlButton(IconRegistry.from_name('mdi6.sticker-circle-outline'),
                                                      'Add new sticker',
-                                                     ItemType.COMMENT)
+                                                     DiagramNodeType.COMMENT)
 
         self._wdgSecondaryEventSelector = EventSelectorWidget(self)
         self._wdgSecondaryEventSelector.setVisible(False)
@@ -106,27 +106,27 @@ class EventsMindMapView(NetworkGraphicsView):
         self._itemEditor.setVisible(False)
 
     @overrides
-    def _startAddition(self, itemType: ItemType):
-        super()._startAddition(itemType)
+    def _startAddition(self, itemType: DiagramNodeType, subType: str = ''):
+        super()._startAddition(itemType, subType)
         self._hideItemEditor()
 
-        if itemType == ItemType.EVENT:
+        if itemType == DiagramNodeType.EVENT:
             self._wdgSecondaryEventSelector.setVisible(True)
             self._wdgSecondaryStickerSelector.setHidden(True)
-        elif itemType == ItemType.COMMENT:
+        elif itemType == DiagramNodeType.COMMENT:
             self._wdgSecondaryStickerSelector.setVisible(True)
             self._wdgSecondaryEventSelector.setHidden(True)
-        elif itemType == ItemType.CHARACTER:
+        elif itemType == DiagramNodeType.CHARACTER:
             self._wdgSecondaryStickerSelector.setHidden(True)
             self._wdgSecondaryEventSelector.setHidden(True)
 
     @overrides
-    def _endAddition(self, itemType: Optional[ItemType] = None, item: Optional[MindMapNode] = None):
+    def _endAddition(self, itemType: Optional[DiagramNodeType] = None, item: Optional[MindMapNode] = None):
         super()._endAddition(itemType, item)
         self._wdgSecondaryEventSelector.setHidden(True)
         self._wdgSecondaryStickerSelector.setHidden(True)
 
-        if itemType == ItemType.CHARACTER:
+        if itemType == DiagramNodeType.CHARACTER:
             QTimer.singleShot(100, lambda: self._finishCharacterAddition(item))
 
     def _finishCharacterAddition(self, item: CharacterItem):

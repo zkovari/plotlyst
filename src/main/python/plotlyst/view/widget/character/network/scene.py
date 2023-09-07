@@ -27,17 +27,11 @@ from overrides import overrides
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Character, Novel, Node
+from src.main.python.plotlyst.core.domain import Character, Novel, Node, DiagramNodeType
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import pointy
 from src.main.python.plotlyst.view.icons import avatars
-from src.main.python.plotlyst.view.widget.graphics import NodeItem, AbstractSocketItem, NetworkItemType, \
-    NetworkScene
-
-
-class CharacterNetworkItemType(NetworkItemType):
-    CHARACTER = 1
-    STICKER = 2
+from src.main.python.plotlyst.view.widget.graphics import NodeItem, AbstractSocketItem, NetworkScene
 
 
 class PlaceholderCharacter(Character):
@@ -161,14 +155,14 @@ class RelationsEditorScene(NetworkScene):
 
     @staticmethod
     def toCharacterNode(scenePos: QPointF) -> Node:
-        node = Node(scenePos.x(), scenePos.y())
+        node = Node(scenePos.x(), scenePos.y(), type=DiagramNodeType.CHARACTER)
         node.x = node.x - CharacterItem.Margin
         node.y = node.y - CharacterItem.Margin
         return node
 
     @overrides
-    def _addNewItem(self, itemType: CharacterNetworkItemType, scenePos: QPointF) -> NodeItem:
-        if itemType == CharacterNetworkItemType.CHARACTER:
+    def _addNewItem(self, scenePos: QPointF, itemType: DiagramNodeType, subType: str = '') -> NodeItem:
+        if itemType == DiagramNodeType.CHARACTER:
             item = CharacterItem(PlaceholderCharacter('Character'), self.toCharacterNode(scenePos))
             self.addItem(item)
             self.itemAdded.emit(itemType, item)

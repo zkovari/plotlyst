@@ -23,11 +23,11 @@ from PyQt6.QtGui import QKeyEvent
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Node
+from src.main.python.plotlyst.core.domain import Node, DiagramNodeType
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.widget.graphics import NetworkScene, NodeItem
-from src.main.python.plotlyst.view.widget.story_map.items import ItemType, MindMapNode, EventItem, StickerItem, \
+from src.main.python.plotlyst.view.widget.story_map.items import MindMapNode, EventItem, StickerItem, \
     CharacterItem, SocketItem
 
 
@@ -75,13 +75,13 @@ class EventsMindMapScene(NetworkScene):
         self.closeSticker.emit()
 
     @overrides
-    def _addNewItem(self, itemType: ItemType, scenePos: QPointF) -> NodeItem:
-        if itemType == ItemType.CHARACTER:
-            item = CharacterItem(self.toCharacterNode(scenePos), character=None)
-        elif itemType in [ItemType.COMMENT, ItemType.TOOL, ItemType.COST]:
-            item = StickerItem(Node(scenePos.x(), scenePos.y()), itemType)
+    def _addNewItem(self, scenePos: QPointF, itemType: DiagramNodeType, subType: str = '') -> NodeItem:
+        if itemType == DiagramNodeType.CHARACTER:
+            item = CharacterItem(self.toCharacterNode(scenePos, itemType), character=None)
+        elif itemType in [DiagramNodeType.COMMENT, DiagramNodeType.STICKER]:
+            item = StickerItem(Node(scenePos.x(), scenePos.y(), itemType, subType))
         else:
-            item = EventItem(self.toEventNode(scenePos), itemType)
+            item = EventItem(self.toEventNode(scenePos, itemType, subType))
 
         self.addItem(item)
         self.itemAdded.emit(itemType, item)
@@ -94,15 +94,15 @@ class EventsMindMapScene(NetworkScene):
         pass
 
     @staticmethod
-    def toEventNode(scenePos: QPointF) -> Node:
-        node = Node(scenePos.x(), scenePos.y())
+    def toEventNode(scenePos: QPointF, itemType: DiagramNodeType, subType: str = '') -> Node:
+        node = Node(scenePos.x(), scenePos.y(), itemType, subType)
         node.x = node.x - EventItem.Margin - EventItem.Padding
         node.y = node.y - EventItem.Margin - EventItem.Padding
         return node
 
     @staticmethod
-    def toCharacterNode(scenePos: QPointF) -> Node:
-        node = Node(scenePos.x(), scenePos.y())
+    def toCharacterNode(scenePos: QPointF, itemType: DiagramNodeType) -> Node:
+        node = Node(scenePos.x(), scenePos.y(), itemType)
         node.x = node.x - CharacterItem.Margin
         node.y = node.y - CharacterItem.Margin
         return node

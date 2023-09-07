@@ -27,13 +27,14 @@ from qthandy import hbox, margins, transparent, vline
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from src.main.python.plotlyst.core.domain import DiagramNodeType
 from src.main.python.plotlyst.view.common import tool_btn
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.graphics import BaseItemEditor
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableLineEdit, FontSizeSpinBox
 from src.main.python.plotlyst.view.widget.story_map.controls import EventSelectorWidget
-from src.main.python.plotlyst.view.widget.story_map.items import EventItem, ItemType
+from src.main.python.plotlyst.view.widget.story_map.items import EventItem
 
 
 class StickerEditor(QWidget):
@@ -136,7 +137,7 @@ class EventItemEditor(BaseItemEditor):
             self._item.setFontSettings(bold=self._btnBold.isChecked(), italic=self._btnItalic.isChecked(),
                                        underline=self._btnUnderline.isChecked())
 
-    def _typeChanged(self, itemType: ItemType):
+    def _typeChanged(self, itemType: DiagramNodeType):
         if self._item:
             self._item.setItemType(itemType)
 

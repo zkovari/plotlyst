@@ -1715,10 +1715,30 @@ def default_tags() -> Dict[TagType, List[Tag]]:
     return tags
 
 
+class DiagramNodeType(Enum):
+    CHARACTER = 'character'
+    STICKER = 'sticker'
+    EVENT = 'event'
+    COMMENT = 'comment'
+    SETUP = 'setup'
+
+
+NODE_SUBTYPE_GOAL = 'goal'
+NODE_SUBTYPE_CONFLICT = 'conflict'
+NODE_SUBTYPE_DISTURBANCE = 'disturbance'
+NODE_SUBTYPE_BACKSTORY = 'backstory'
+NODE_SUBTYPE_QUESTION = 'question'
+NODE_SUBTYPE_FORESHADOWING = 'foreshadowing'
+NODE_SUBTYPE_TOOL = 'tool'
+NODE_SUBTYPE_COST = 'cost'
+
+
 @dataclass
 class Node(CharacterBased):
     x: float
     y: float
+    type: DiagramNodeType
+    subtype: str = field(default='', metadata=config(exclude=exclude_if_empty))
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     character_id: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))

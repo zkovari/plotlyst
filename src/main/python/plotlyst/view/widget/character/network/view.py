@@ -22,11 +22,10 @@ from typing import Optional
 from PyQt6.QtCore import QTimer
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel, Character
+from src.main.python.plotlyst.core.domain import Novel, Character, DiagramNodeType
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.character.network.editor import ConnectorEditor
-from src.main.python.plotlyst.view.widget.character.network.scene import RelationsEditorScene, CharacterItem, \
-    NetworkItemType, CharacterNetworkItemType
+from src.main.python.plotlyst.view.widget.character.network.scene import RelationsEditorScene, CharacterItem
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
 from src.main.python.plotlyst.view.widget.graphics import NodeItem, NetworkGraphicsView, NetworkScene, ConnectorItem
 
@@ -37,9 +36,9 @@ class CharacterNetworkView(NetworkGraphicsView):
         super(CharacterNetworkView, self).__init__(parent)
 
         self._btnAddCharacter = self._newControlButton(IconRegistry.character_icon('#040406'), 'Add new character',
-                                                       CharacterNetworkItemType.CHARACTER)
+                                                       DiagramNodeType.CHARACTER)
         self._btnAddSticker = self._newControlButton(IconRegistry.from_name('mdi6.sticker-circle-outline'),
-                                                     'Add new sticker', CharacterNetworkItemType.STICKER)
+                                                     'Add new sticker', DiagramNodeType.STICKER)
 
         self._connectorEditor = ConnectorEditor(self)
         self._connectorEditor.setVisible(False)
@@ -59,14 +58,14 @@ class CharacterNetworkView(NetworkGraphicsView):
         return self._scene
 
     @overrides
-    def _startAddition(self, itemType: CharacterNetworkItemType):
+    def _startAddition(self, itemType: DiagramNodeType):
         super()._startAddition(itemType)
         self._scene.startAdditionMode(itemType)
 
     @overrides
-    def _endAddition(self, itemType: Optional[NetworkItemType] = None, item: Optional[NodeItem] = None):
+    def _endAddition(self, itemType: Optional[DiagramNodeType] = None, item: Optional[NodeItem] = None):
         super()._endAddition(itemType, item)
-        if itemType == CharacterNetworkItemType.CHARACTER:
+        if itemType == DiagramNodeType.CHARACTER:
             QTimer.singleShot(100, lambda: self._finishCharacterAddition(item))
 
     def _finishCharacterAddition(self, item: CharacterItem):
