@@ -25,7 +25,7 @@ from PyQt6.QtWidgets import QButtonGroup
 from qthandy import vline, retain_when_hidden
 from qtmenu import GridMenuWidget
 
-from src.main.python.plotlyst.core.domain import RelationsNetwork, Relation
+from src.main.python.plotlyst.core.domain import Diagram, Relation
 from src.main.python.plotlyst.view.common import tool_btn, action
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -37,7 +37,7 @@ from src.main.python.plotlyst.view.widget.utility import ColorPicker
 class RelationSelector(GridMenuWidget):
     relationSelected = pyqtSignal(Relation)
 
-    def __init__(self, network: RelationsNetwork = None, parent=None):
+    def __init__(self, network: Diagram = None, parent=None):
         super().__init__(parent)
         self._network = network
         self._romance = Relation('Romance', icon='ei.heart', icon_color='#d1495b')
@@ -87,7 +87,7 @@ class RelationSelector(GridMenuWidget):
 
 
 class ConnectorEditor(BaseItemEditor):
-    def __init__(self, network: RelationsNetwork, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self._connector: Optional[ConnectorItem] = None
 
@@ -114,8 +114,7 @@ class ConnectorEditor(BaseItemEditor):
         self._sbWidth = PenWidthEditor()
         self._sbWidth.valueChanged.connect(self._widthChanged)
 
-        self._relationSelector = RelationSelector(network, self._btnRelationType)
-        self._relationSelector.relationSelected.connect(self._relationChanged)
+        self._relationSelector: Optional[RelationSelector] = None
 
         self._toolbar.layout().addWidget(self._btnRelationType)
         self._toolbar.layout().addWidget(vline())
@@ -127,6 +126,10 @@ class ConnectorEditor(BaseItemEditor):
         self._toolbar.layout().addWidget(self._dotLine)
         self._toolbar.layout().addWidget(vline())
         self._toolbar.layout().addWidget(self._sbWidth)
+
+    def setNetwork(self, diagram: Diagram):
+        self._relationSelector = RelationSelector(diagram, self._btnRelationType)
+        self._relationSelector.relationSelected.connect(self._relationChanged)
 
     def setItem(self, connector: ConnectorItem):
         self._connector = None

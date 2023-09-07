@@ -256,6 +256,8 @@ class CharactersView(AbstractNovelView):
         elif self.ui.btnBackstoryView.isChecked():
             self.ui.wdgToolbar.setVisible(False)
             self.ui.wdgCharacterSelector.updateCharacters(self.novel.characters, checkAll=False)
+        elif self.ui.btnRelationsView.isChecked():
+            self._relations.refresh()
         elif self.ui.btnComparison.isChecked():
             self.ui.wdgToolbar.setVisible(False)
         else:

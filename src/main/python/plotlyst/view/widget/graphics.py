@@ -19,9 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import math
 from abc import abstractmethod
-from enum import Enum
 from functools import partial
-from typing import Any, Optional, List
+from typing import Any, Optional, List, Dict
 
 from PyQt6.QtCore import Qt, QTimer, QRectF, pyqtSignal, QPointF
 from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QPen, QPainterPath, QColor, QIcon, QResizeEvent, QTransform, \
@@ -33,7 +32,7 @@ from overrides import overrides
 from qthandy import hbox, margins, sp, incr_icon, vbox, grid
 
 from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR, RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Node, Relation
+from src.main.python.plotlyst.core.domain import Node, Relation, Diagram, DiagramNodeType, Connector
 from src.main.python.plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButtonGroup, \
     TooltipPositionEventFilter, pointy
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -143,6 +142,9 @@ class AbstractSocketItem(QAbstractGraphicsShapeItem):
         else:
             self.networkScene().startLink(self)
 
+    def connectors(self) -> List['ConnectorItem']:
+        return self._connectors
+
     def addConnector(self, connector: 'ConnectorItem'):
         self._connectors.append(connector)
 
@@ -151,9 +153,10 @@ class AbstractSocketItem(QAbstractGraphicsShapeItem):
             con.rearrange()
 
     def removeConnectors(self):
-        for con in self._connectors:
-            self.scene().removeItem(con)
         self._connectors.clear()
+
+    def removeConnector(self, connector: 'ConnectorItem'):
+        self._connectors.remove(connector)
 
     def networkScene(self) -> 'NetworkScene':
         return self.scene()
@@ -178,6 +181,7 @@ class ConnectorItem(QGraphicsPathItem):
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
         self._source = source
         self._target = target
+        self._connector: Optional[Connector] = None
         self._color: QColor = QColor('darkblue')
         self._relation: Optional[Relation] = None
         self._icon: Optional[str] = None
@@ -200,6 +204,21 @@ class ConnectorItem(QGraphicsPathItem):
 
         self.rearrange()
 
+    def networkScene(self) -> 'NetworkScene':
+        return self.scene()
+
+    def connector(self) -> Optional[Connector]:
+        return self._connector
+
+    def setConnector(self, connector: Connector):
+        self._connector = None
+        self.setPenStyle(connector.pen)
+        self.setPenWidth(connector.width)
+        self.setColor(QColor(connector.color))
+        if connector.icon:
+            self.setIcon(connector.icon)
+        self._connector = connector
+
     def penStyle(self) -> Qt.PenStyle:
         return self.pen().style()
 
@@ -208,6 +227,9 @@ class ConnectorItem(QGraphicsPathItem):
         pen.setStyle(penStyle)
         self.setPen(pen)
         self.update()
+        if self._connector:
+            self._connector.pen = penStyle
+            self.networkScene().connectorChangedEvent(self)
 
     def penWidth(self) -> int:
         return self.pen().width()
@@ -222,6 +244,9 @@ class ConnectorItem(QGraphicsPathItem):
         self._arrowheadItem.setScale(1.0 + (width - prevWidth) / 10)
 
         self.rearrange()
+        if self._connector:
+            self._connector.width = width
+            self.networkScene().connectorChangedEvent(self)
 
     def relation(self) -> Optional[Relation]:
         return self._relation
@@ -229,13 +254,19 @@ class ConnectorItem(QGraphicsPathItem):
     def setRelation(self, relation: Relation):
         self._icon = relation.icon
 
-        self.setColor(QColor(relation.icon_color))
+        self._setColor(QColor(relation.icon_color))
 
         self._relation = relation
         self._iconBadge.setIcon(IconRegistry.from_name(relation.icon, relation.icon_color), self._color)
         self._iconBadge.setVisible(True)
 
         self.rearrange()
+
+        if self._connector:
+            self._connector.type = relation.text
+            self._connector.icon = relation.icon
+            self._connector.color = relation.icon_color
+            self.networkScene().connectorChangedEvent(self)
 
     def icon(self) -> Optional[str]:
         return self._icon
@@ -248,6 +279,10 @@ class ConnectorItem(QGraphicsPathItem):
         self._iconBadge.setVisible(True)
         self.rearrange()
 
+        if self._connector:
+            self._connector.icon = icon
+            self.networkScene().connectorChangedEvent(self)
+
     def color(self) -> QColor:
         return self._color
 
@@ -257,6 +292,10 @@ class ConnectorItem(QGraphicsPathItem):
             self._iconBadge.setIcon(IconRegistry.from_name(self._icon, self._color.name()), self._color)
 
         self.update()
+
+        if self._connector:
+            self._connector.color = color.name()
+            self.networkScene().connectorChangedEvent(self)
 
     def rearrange(self):
         self.setPos(self._source.sceneBoundingRect().center())
@@ -299,10 +338,10 @@ class ConnectorItem(QGraphicsPathItem):
         # path.addText(point, QApplication.font(), 'Romance')
         self.setPath(path)
 
-    def source(self) -> QAbstractGraphicsShapeItem:
+    def source(self) -> AbstractSocketItem:
         return self._source
 
-    def target(self) -> QAbstractGraphicsShapeItem:
+    def target(self) -> AbstractSocketItem:
         return self._target
 
     def _setColor(self, color: QColor):
@@ -359,10 +398,20 @@ class NodeItem(QAbstractGraphicsShapeItem):
         self._posChangedTimer.setInterval(1000)
         self._posChangedTimer.timeout.connect(self._posChangedOnTimeout)
 
+    def node(self) -> Node:
+        return self._node
+
     def networkScene(self) -> 'NetworkScene':
         return self.scene()
 
-    def removeConnectors(self):
+    def connectors(self) -> List[ConnectorItem]:
+        connectors = []
+        for socket in self._sockets:
+            connectors.extend(socket.connectors())
+
+        return connectors
+
+    def clearConnectors(self):
         for socket in self._sockets:
             socket.removeConnectors()
 
@@ -375,6 +424,10 @@ class NodeItem(QAbstractGraphicsShapeItem):
             self._onSelection(value)
         return super(NodeItem, self).itemChange(change, value)
 
+    @abstractmethod
+    def socket(self, angle: float) -> AbstractSocketItem:
+        pass
+
     def _onPosChanged(self):
         for socket in self._sockets:
             socket.rearrangeConnectors()
@@ -386,6 +439,7 @@ class NodeItem(QAbstractGraphicsShapeItem):
         self._posChangedTimer.stop()
         self._node.x = self.scenePos().x()
         self._node.y = self.scenePos().y()
+        self.networkScene().itemChangedEvent(self)
 
 
 class BaseGraphicsView(QGraphicsView):
@@ -428,35 +482,51 @@ class BaseGraphicsView(QGraphicsView):
             self.scale(1 + scale, 1 + scale)
 
 
-class NetworkItemType(Enum):
-    pass
-
-
 class NetworkScene(QGraphicsScene):
     cancelItemAddition = pyqtSignal()
-    itemAdded = pyqtSignal(NetworkItemType, NodeItem)
+    itemAdded = pyqtSignal(DiagramNodeType, NodeItem)
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._diagram: Optional[Diagram] = None
         self._linkMode: bool = False
-        self._additionMode: Optional[NetworkItemType] = None
+        self._additionMode: Optional[DiagramNodeType] = None
+        self._additionSubType: str = ''
 
         self._placeholder: Optional[PlaceholderSocketItem] = None
         self._connectorPlaceholder: Optional[ConnectorItem] = None
 
         self._selectionMode = False
         self._selectionRect = SelectorRectItem()
-        self.addItem(self._selectionRect)
         self._selectionRect.setVisible(False)
+
+    def setDiagram(self, diagram: Diagram):
+        self._diagram = diagram
+        self.clear()
+        self.addItem(self._selectionRect)
+        if not self._diagram.loaded:
+            self._load()
+
+        nodes: Dict[str, NodeItem] = {}
+        for node in self._diagram.data.nodes:
+            nodeItem = self._addNode(node)
+            nodes[str(node.id)] = nodeItem
+        for connector in self._diagram.data.connectors:
+            source = nodes.get(str(connector.source_id), None)
+            target = nodes.get(str(connector.target_id), None)
+            if source and target:
+                self._addConnector(connector, source, target)
 
     def isAdditionMode(self) -> bool:
         return self._additionMode is not None
 
-    def startAdditionMode(self, itemType: NetworkItemType):
+    def startAdditionMode(self, itemType: DiagramNodeType, subType: str = ''):
         self._additionMode = itemType
+        self._additionSubType = subType
 
     def endAdditionMode(self):
         self._additionMode = None
+        self._additionSubType = ''
 
     def linkMode(self) -> bool:
         return self._linkMode
@@ -485,12 +555,27 @@ class NetworkScene(QGraphicsScene):
         self._placeholder = None
 
     def link(self, target: AbstractSocketItem):
-        self._onLink(self._connectorPlaceholder.source().parentItem(), self._connectorPlaceholder.source(),
-                     target.parentItem(), target)
-        connector = ConnectorItem(self._connectorPlaceholder.source(), target)
-        self._connectorPlaceholder.source().addConnector(connector)
-        target.addConnector(connector)
-        self.addItem(connector)
+        sourceNode: NodeItem = self._connectorPlaceholder.source().parentItem()
+        targetNode: NodeItem = target.parentItem()
+
+        self._onLink(sourceNode, self._connectorPlaceholder.source(), targetNode, target)
+        connectorItem = ConnectorItem(self._connectorPlaceholder.source(), target)
+        self._connectorPlaceholder.source().addConnector(connectorItem)
+        target.addConnector(connectorItem)
+
+        connector = Connector(
+            sourceNode.node().id,
+            targetNode.node().id,
+            self._connectorPlaceholder.source().angle(), target.angle(),
+            pen=connectorItem.penStyle(), width=connectorItem.penWidth(), color=connectorItem.color().name()
+        )
+        if connectorItem.icon():
+            connector.icon = connectorItem.icon()
+        connectorItem.setConnector(connector)
+        self._diagram.data.connectors.append(connector)
+        self._save()
+
+        self.addItem(connectorItem)
         self.endLink()
 
     @overrides
@@ -505,9 +590,7 @@ class NetworkScene(QGraphicsScene):
                 self.clearSelection()
         elif event.key() == Qt.Key.Key_Delete or event.key() == Qt.Key.Key_Backspace:
             for item in self.selectedItems():
-                if isinstance(item, NodeItem):
-                    item.removeConnectors()
-                self.removeItem(item)
+                self._removeItem(item)
 
     @overrides
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
@@ -544,12 +627,60 @@ class NetworkScene(QGraphicsScene):
             self._selectionRect.setVisible(False)
             self._updateSelection()
         elif self._additionMode is not None:
-            self._addNewItem(self._additionMode, event.scenePos())
+            item = self._addNewItem(event.scenePos(), self._additionMode, self._additionSubType)
+            self._diagram.data.nodes.append(item.node())
+            self._save()
 
         super().mouseReleaseEvent(event)
 
+    def itemChangedEvent(self, item: NodeItem):
+        self._save()
+
+    def connectorChangedEvent(self, connector: ConnectorItem):
+        self._save()
+
+    def _removeItem(self, item: QGraphicsItem):
+        if isinstance(item, NodeItem):
+            for connectorItem in item.connectors():
+                self._diagram.data.connectors.remove(connectorItem.connector())
+                self.removeItem(connectorItem)
+            item.clearConnectors()
+            self._diagram.data.nodes.remove(item.node())
+        elif isinstance(item, ConnectorItem):
+            self._diagram.data.connectors.remove(item.connector())
+            item.source().removeConnector(item)
+            item.target().removeConnector(item)
+
+        self.removeItem(item)
+        self._save()
+
+    def _addConnector(self, connector: Connector, source: NodeItem, target: NodeItem):
+        sourceSocket = source.socket(connector.source_angle)
+        targetSocket = target.socket(connector.target_angle)
+        connectorItem = ConnectorItem(sourceSocket, targetSocket)
+
+        sourceSocket.addConnector(connectorItem)
+        targetSocket.addConnector(connectorItem)
+
+        self.addItem(connectorItem)
+        connectorItem.setConnector(connector)
+
+        self._onLink(source, sourceSocket, target, targetSocket)
+
     @abstractmethod
-    def _addNewItem(self, itemType: NetworkItemType, scenePos: QPointF):
+    def _addNewItem(self, scenePos: QPointF, itemType: DiagramNodeType, subType: str = '') -> NodeItem:
+        pass
+
+    @abstractmethod
+    def _addNode(self, node: Node) -> NodeItem:
+        pass
+
+    @abstractmethod
+    def _load(self):
+        pass
+
+    @abstractmethod
+    def _save(self):
         pass
 
     def _onLink(self, sourceNode: NodeItem, sourceSocket: AbstractSocketItem, targetNode: NodeItem,
@@ -569,6 +700,7 @@ class NetworkGraphicsView(BaseGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setBackgroundBrush(QColor('#e9ecef'))
+        self._diagram: Optional[Diagram] = None
         self._scene = self._initScene()
         self.setScene(self._scene)
 
@@ -585,18 +717,23 @@ class NetworkGraphicsView(BaseGraphicsView):
         self._scene.itemAdded.connect(self._endAddition)
         self._scene.cancelItemAddition.connect(self._endAddition)
 
+    def setDiagram(self, diagram: Diagram):
+        self._diagram = diagram
+        self._scene.setDiagram(diagram)
+        self.centerOn(0, 0)
+
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
         self._arrangeSideBars()
 
-    def _mainControlClicked(self, itemType: NetworkItemType, checked: bool):
+    def _mainControlClicked(self, itemType: DiagramNodeType, checked: bool):
         if checked:
             self._startAddition(itemType)
         else:
             self._endAddition()
 
-    def _newControlButton(self, icon: QIcon, tooltip: str, itemType: NetworkItemType) -> QToolButton:
+    def _newControlButton(self, icon: QIcon, tooltip: str, itemType: DiagramNodeType) -> QToolButton:
         btn = tool_btn(icon, tooltip,
                        True, icon_resize=False,
                        properties=['transparent-rounded-bg-on-hover', 'top-selector'],
@@ -611,7 +748,7 @@ class NetworkGraphicsView(BaseGraphicsView):
 
         return btn
 
-    def _startAddition(self, itemType: NetworkItemType):
+    def _startAddition(self, itemType: DiagramNodeType, subType: str = ''):
         for btn in self._btnGroup.buttons():
             if not btn.isChecked():
                 btn.setDisabled(True)
@@ -619,10 +756,10 @@ class NetworkGraphicsView(BaseGraphicsView):
         if not QApplication.overrideCursor():
             QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
 
-        self._scene.startAdditionMode(itemType)
+        self._scene.startAdditionMode(itemType, subType)
         self.setToolTip(f'Click to add a new {itemType.name.lower()}')
 
-    def _endAddition(self, itemType: Optional[NetworkItemType] = None, item: Optional[NodeItem] = None):
+    def _endAddition(self, itemType: Optional[DiagramNodeType] = None, item: Optional[NodeItem] = None):
         for btn in self._btnGroup.buttons():
             btn.setEnabled(True)
             if btn.isChecked():
@@ -683,7 +820,7 @@ class ZoomBar(QFrame):
 
 
 class SecondarySelectorWidget(QFrame):
-    selected = pyqtSignal(NetworkItemType)
+    selected = pyqtSignal(DiagramNodeType, str)
 
     def __init__(self, parent=None, optional: bool = False):
         super().__init__(parent)
@@ -712,11 +849,11 @@ class SecondarySelectorWidget(QFrame):
 
         return btn
 
-    def addItemTypeButton(self, itemType: NetworkItemType, icon: QIcon, tooltip: str, row: int,
-                          col: int) -> QToolButton:
+    def addItemTypeButton(self, itemType: DiagramNodeType, icon: QIcon, tooltip: str, row: int,
+                          col: int, subType: str = '') -> QToolButton:
         def clicked(toggled: bool):
             if toggled:
-                self.selected.emit(itemType)
+                self.selected.emit(itemType, subType)
 
         btn = self.addButton(icon, tooltip, row, col)
         btn.clicked.connect(clicked)

@@ -43,7 +43,8 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
     default_tag_types, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterPreferences, TagReference, \
     ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding, Board, \
-    default_big_five_values, CharacterPlan, ManuscriptGoals
+    default_big_five_values, CharacterPlan, ManuscriptGoals, Diagram, DiagramData, default_events_map, \
+    default_character_networks
 from src.main.python.plotlyst.core.template import Role, exclude_if_empty, exclude_if_black
 from src.main.python.plotlyst.env import app_env
 
@@ -200,6 +201,8 @@ class NovelInfo:
     world: WorldBuilding = field(default_factory=WorldBuilding)
     board: Board = field(default_factory=Board)
     manuscript_goals: ManuscriptGoals = field(default_factory=ManuscriptGoals)
+    events_map: Diagram = field(default_factory=default_events_map)
+    character_networks: List[Diagram] = field(default_factory=default_character_networks)
 
 
 @dataclass
@@ -286,6 +289,12 @@ class JsonClient:
         if not scenes_dir_.exists():
             scenes_dir_.mkdir()
         return scenes_dir_
+
+    def diagrams_dir(self, novel: Novel):
+        diagrams_dir_ = self.novels_dir.joinpath(str(novel.id)).joinpath('diagrams')
+        if not diagrams_dir_.exists():
+            diagrams_dir_.mkdir()
+        return diagrams_dir_
 
     def docs_dir(self, novel: Novel) -> Path:
         docs_dir_ = self.novels_dir.joinpath(str(novel.id)).joinpath('docs')
@@ -395,11 +404,25 @@ class JsonClient:
             if scene.manuscript and not scene.manuscript.loaded:
                 self.load_document(novel, scene.manuscript)
 
-    def save_document(self, novel: Novel, document: Document):
+    def load_diagram(self, novel: Novel, diagram: Diagram):
+        if diagram.loaded:
+            return
+
+        json_str = self.__load_diagram(novel, diagram.id)
+        if json_str:
+            diagram.data = DiagramData.from_json(json_str)
+        else:
+            diagram.data = DiagramData()
+        diagram.loaded = True
+
+    def update_document(self, novel: Novel, document: Document):
         self.__persist_doc(novel, document)
 
     def delete_document(self, novel: Novel, document: Document):
         self.__delete_doc(novel, document)
+
+    def update_diagram(self, novel: Novel, diagram: Diagram):
+        self._persist_diagram(novel, diagram)
 
     def fetch_novel(self, id: uuid.UUID) -> Novel:
         project_novel_info: ProjectNovelInfo = self._find_project_novel_info_or_fail(id)
@@ -527,7 +550,9 @@ class JsonClient:
                       story_structures=novel_info.story_structures, character_profiles=novel_info.character_profiles,
                       conflicts=conflicts, goals=[x for x in novel_info.goals if str(x.id) in goal_ids], tags=tags_dict,
                       documents=novel_info.documents, premise=novel_info.premise, synopsis=novel_info.synopsis,
-                      prefs=novel_info.prefs, manuscript_goals=novel_info.manuscript_goals)
+                      prefs=novel_info.prefs, manuscript_goals=novel_info.manuscript_goals,
+                      events_map=novel_info.events_map,
+                      character_networks=novel_info.character_networks)
 
         world_path = self.novels_dir.joinpath(str(novel_info.id)).joinpath('world.json')
         if os.path.exists(world_path):
@@ -565,7 +590,8 @@ class JsonClient:
                                tag_types=list(novel.tags.keys()),
                                documents=novel.documents,
                                premise=novel.premise, synopsis=novel.synopsis,
-                               version=LATEST_VERSION, prefs=novel.prefs, manuscript_goals=novel.manuscript_goals)
+                               version=LATEST_VERSION, prefs=novel.prefs, manuscript_goals=novel.manuscript_goals,
+                               events_map=novel.events_map, character_networks=novel.character_networks)
 
         self.__persist_info(self.novels_dir, novel_info)
         self._persist_world(novel.id, novel.world)
@@ -609,6 +635,12 @@ class JsonClient:
                          drive=scene.drive)
         self.__persist_info(self.scenes_dir(novel), info)
 
+    def _persist_diagram(self, novel: Novel, diagram: Diagram):
+        diagrams_dir = self.diagrams_dir(novel)
+        if not os.path.exists(str(diagrams_dir)):
+            os.mkdir(diagrams_dir)
+        self.__persist_json_by_id(diagrams_dir, diagram.data.to_json(), diagram.id)
+
     @staticmethod
     def __id_or_none(item):
         return item.id if item else None
@@ -646,6 +678,14 @@ class JsonClient:
             return ''
         novel_doc_dir = self.docs_dir(novel).joinpath(str(novel.id))
         path = novel_doc_dir.joinpath(self.__json_file(data_uuid))
+        if not os.path.exists(path):
+            return ''
+        with open(path, encoding='utf8') as json_file:
+            return json_file.read()
+
+    def __load_diagram(self, novel: Novel, diagram_uuid: uuid.UUID) -> str:
+        diagrams_dir = self.diagrams_dir(novel)
+        path = diagrams_dir.joinpath(self.__json_file(diagram_uuid))
         if not os.path.exists(path):
             return ''
         with open(path, encoding='utf8') as json_file:

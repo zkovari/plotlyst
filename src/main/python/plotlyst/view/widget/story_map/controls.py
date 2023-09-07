@@ -21,9 +21,11 @@ from PyQt6.QtGui import QShowEvent
 from PyQt6.QtWidgets import QLabel
 from overrides import overrides
 
+from src.main.python.plotlyst.core.domain import DiagramNodeType, NODE_SUBTYPE_GOAL, NODE_SUBTYPE_CONFLICT, \
+    NODE_SUBTYPE_DISTURBANCE, NODE_SUBTYPE_BACKSTORY, NODE_SUBTYPE_QUESTION, NODE_SUBTYPE_FORESHADOWING, \
+    NODE_SUBTYPE_TOOL, NODE_SUBTYPE_COST
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.graphics import SecondarySelectorWidget
-from src.main.python.plotlyst.view.widget.story_map.items import ItemType
 
 
 class EventSelectorWidget(SecondarySelectorWidget):
@@ -31,30 +33,33 @@ class EventSelectorWidget(SecondarySelectorWidget):
         super().__init__(parent)
         self._grid.addWidget(QLabel('Events'), 0, 0, 1, 3)
 
-        self._btnGeneral = self.addItemTypeButton(ItemType.EVENT, IconRegistry.from_name('mdi.square-rounded-outline'),
-                                                   'General event', 1, 0)
-        self._btnGoal = self.addItemTypeButton(ItemType.GOAL, IconRegistry.goal_icon('black', 'black'), 'Add new goal',
-                                               1, 1)
-        self._btnConflict = self.addItemTypeButton(ItemType.CONFLICT, IconRegistry.conflict_icon('black', 'black'),
-                                                    'Conflict', 1, 2)
-        self._btnDisturbance = self.addItemTypeButton(ItemType.DISTURBANCE,
+        self._btnGeneral = self.addItemTypeButton(DiagramNodeType.EVENT,
+                                                  IconRegistry.from_name('mdi.square-rounded-outline'),
+                                                  'General event', 1, 0)
+        self._btnGoal = self.addItemTypeButton(DiagramNodeType.EVENT, IconRegistry.goal_icon('black', 'black'),
+                                               'Add new goal',
+                                               1, 1, subType=NODE_SUBTYPE_GOAL)
+        self._btnConflict = self.addItemTypeButton(DiagramNodeType.EVENT,
+                                                   IconRegistry.conflict_icon('black', 'black'),
+                                                   'Conflict', 1, 2, subType=NODE_SUBTYPE_CONFLICT)
+        self._btnDisturbance = self.addItemTypeButton(DiagramNodeType.EVENT,
                                                       IconRegistry.inciting_incident_icon('black'),
-                                                       'Inciting incident', 2,
-                                                      0)
-        self._btnBackstory = self.addItemTypeButton(ItemType.BACKSTORY, IconRegistry.backstory_icon('black', 'black'),
-                                                     'Backstory', 2, 1)
+                                                      'Inciting incident', 2,
+                                                      0, subType=NODE_SUBTYPE_DISTURBANCE)
+        self._btnBackstory = self.addItemTypeButton(DiagramNodeType.EVENT,
+                                                    IconRegistry.backstory_icon('black', 'black'),
+                                                    'Backstory', 2, 1, subType=NODE_SUBTYPE_BACKSTORY)
 
         self._grid.addWidget(QLabel('Narrative'), 3, 0, 1, 3)
-        self._btnQuestion = self.addItemTypeButton(ItemType.QUESTION, IconRegistry.from_name('ei.question-sign'),
-                                                    "Reader's question", 4,
-                                                   0)
-        self._btnSetup = self.addItemTypeButton(ItemType.SETUP, IconRegistry.from_name('ri.seedling-fill'),
-                                                 'Setup and payoff', 4, 1)
-        self._btnForeshadowing = self.addItemTypeButton(ItemType.FORESHADOWING,
+        self._btnQuestion = self.addItemTypeButton(DiagramNodeType.SETUP, IconRegistry.from_name('ei.question-sign'),
+                                                   "Reader's question", 4,
+                                                   0, subType=NODE_SUBTYPE_QUESTION)
+        self._btnSetup = self.addItemTypeButton(DiagramNodeType.SETUP, IconRegistry.from_name('ri.seedling-fill'),
+                                                'Setup and payoff', 4, 1)
+        self._btnForeshadowing = self.addItemTypeButton(DiagramNodeType.SETUP,
                                                         IconRegistry.from_name('mdi6.crystal-ball'),
-                                                         'Foreshadowing',
-                                                        4,
-                                                        2)
+                                                        'Foreshadowing',
+                                                        4, 2, subType=NODE_SUBTYPE_FORESHADOWING)
 
         self._btnGeneral.setChecked(True)
 
@@ -66,12 +71,15 @@ class EventSelectorWidget(SecondarySelectorWidget):
 class StickerSelectorWidget(SecondarySelectorWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._btnComment = self.addItemTypeButton(ItemType.COMMENT, IconRegistry.from_name('mdi.comment-text-outline'),
-                                                   'Add new comment', 0, 0)
-        self._btnTool = self.addItemTypeButton(ItemType.TOOL, IconRegistry.tool_icon('black', 'black'), 'Add new tool',
-                                               0, 1)
-        self._btnCost = self.addItemTypeButton(ItemType.COST, IconRegistry.cost_icon('black', 'black'), 'Add new cost',
-                                               1, 0)
+        self._btnComment = self.addItemTypeButton(DiagramNodeType.COMMENT,
+                                                  IconRegistry.from_name('mdi.comment-text-outline'),
+                                                  'Add new comment', 0, 0)
+        self._btnTool = self.addItemTypeButton(DiagramNodeType.STICKER, IconRegistry.tool_icon('black', 'black'),
+                                               'Add new tool',
+                                               0, 1, subType=NODE_SUBTYPE_TOOL)
+        self._btnCost = self.addItemTypeButton(DiagramNodeType.STICKER, IconRegistry.cost_icon('black', 'black'),
+                                               'Add new cost',
+                                               1, 0, subType=NODE_SUBTYPE_COST)
 
         self._btnComment.setChecked(True)
 

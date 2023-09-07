@@ -26,16 +26,12 @@ from PyQt6.QtWidgets import QWidget, QStyleOptionGraphicsItem, QGraphicsSceneHov
 from overrides import overrides
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
-from src.main.python.plotlyst.core.domain import Character, Novel, RelationsNetwork, CharacterNode
+from src.main.python.plotlyst.core.client import json_client
+from src.main.python.plotlyst.core.domain import Character, Novel, Node, DiagramNodeType
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import pointy
 from src.main.python.plotlyst.view.icons import avatars
-from src.main.python.plotlyst.view.widget.graphics import NodeItem, AbstractSocketItem, NetworkItemType, \
-    NetworkScene
-
-
-class CharacterNetworkItemType(NetworkItemType):
-    CHARACTER = 1
-    STICKER = 2
+from src.main.python.plotlyst.view.widget.graphics import NodeItem, AbstractSocketItem, NetworkScene
 
 
 class PlaceholderCharacter(Character):
@@ -63,7 +59,7 @@ class CharacterItem(NodeItem):
     Margin: int = 20
     PenWidth: int = 2
 
-    def __init__(self, character: Character, node: CharacterNode, parent=None):
+    def __init__(self, character: Character, node: Node, parent=None):
         super(CharacterItem, self).__init__(node, parent)
         self._character = character
         self._size: int = 68
@@ -80,7 +76,20 @@ class CharacterItem(NodeItem):
 
     def setCharacter(self, character: Character):
         self._character = character
+        self._node.set_character(self._character)
         self.update()
+        self.networkScene().itemChangedEvent(self)
+
+    @overrides
+    def socket(self, angle: float) -> AbstractSocketItem:
+        angle_radians = math.radians(-angle)
+        x = self._center.x() + self._outerRadius * math.cos(angle_radians) - SocketItem.Size // 2
+        y = self._center.y() + self._outerRadius * math.sin(angle_radians) - SocketItem.Size // 2
+
+        self._socket.setAngle(angle)
+        self._socket.setPos(x, y)
+
+        return self._socket
 
     def addSocket(self, socket: SocketItem):
         self._sockets.append(socket)
@@ -127,10 +136,10 @@ class CharacterItem(NodeItem):
             angle_radians = math.radians(angle)
             x = self._center.x() + self._outerRadius * math.cos(angle_radians) - SocketItem.Size // 2
             y = self._center.y() + self._outerRadius * math.sin(angle_radians) - SocketItem.Size // 2
-
             self.prepareGeometryChange()
             self._socket.setAngle(-angle)
             self._socket.setPos(x, y)
+
             self.update()
 
     def relationsScene(self) -> 'RelationsEditorScene':
@@ -154,37 +163,44 @@ class RelationsEditorScene(NetworkScene):
     def __init__(self, novel: Novel, parent=None):
         super(RelationsEditorScene, self).__init__(parent)
         self._novel = novel
-        self._network: Optional[RelationsNetwork] = None
 
-        if self._novel.characters:
-            node = CharacterNode(50, 50)
-            node.set_character(self._novel.characters[0])
-            self.addItem(CharacterItem(self._novel.characters[0], node))
-
-            node = CharacterNode(200, -50)
-            node.set_character(self._novel.characters[1])
-            self.addItem(CharacterItem(self._novel.characters[1], node))
-
-    def setNetwork(self, network: RelationsNetwork):
-        self._network = network
+        self.repo = RepositoryPersistenceManager.instance()
 
     @staticmethod
-    def toCharacterNode(scenePos: QPointF) -> CharacterNode:
-        node = CharacterNode(scenePos.x(), scenePos.y())
+    def toCharacterNode(scenePos: QPointF) -> Node:
+        node = Node(scenePos.x(), scenePos.y(), type=DiagramNodeType.CHARACTER)
         node.x = node.x - CharacterItem.Margin
         node.y = node.y - CharacterItem.Margin
         return node
 
     @overrides
-    def _addNewItem(self, itemType: CharacterNetworkItemType, scenePos: QPointF):
-        if itemType == CharacterNetworkItemType.CHARACTER:
+    def _addNewItem(self, scenePos: QPointF, itemType: DiagramNodeType, subType: str = '') -> NodeItem:
+        if itemType == DiagramNodeType.CHARACTER:
             item = CharacterItem(PlaceholderCharacter('Character'), self.toCharacterNode(scenePos))
             self.addItem(item)
             self.itemAdded.emit(itemType, item)
         self.endAdditionMode()
+
+        return item
+
+    @overrides
+    def _addNode(self, node: Node):
+        character = node.character(self._novel) if node.character_id else PlaceholderCharacter('Character')
+        item = CharacterItem(character, node)
+        self.addItem(item)
+
+        return item
 
     @overrides
     def _onLink(self, sourceNode: NodeItem, sourceSocket: AbstractSocketItem, targetNode: NodeItem,
                 targetSocket: AbstractSocketItem):
         sourceNode.addSocket(sourceSocket)
         targetNode.addSocket(targetSocket)
+
+    @overrides
+    def _load(self):
+        json_client.load_diagram(self._novel, self._diagram)
+
+    @overrides
+    def _save(self):
+        self.repo.update_diagram(self._novel, self._diagram)

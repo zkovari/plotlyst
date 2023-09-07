@@ -26,6 +26,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Any, Dict
 
+from PyQt6.QtCore import Qt
 from dataclasses_json import dataclass_json, Undefined, config
 from overrides import overrides
 
@@ -1715,25 +1716,89 @@ def default_tags() -> Dict[TagType, List[Tag]]:
     return tags
 
 
+class DiagramNodeType(Enum):
+    CHARACTER = 'character'
+    STICKER = 'sticker'
+    EVENT = 'event'
+    COMMENT = 'comment'
+    SETUP = 'setup'
+
+
+NODE_SUBTYPE_GOAL = 'goal'
+NODE_SUBTYPE_CONFLICT = 'conflict'
+NODE_SUBTYPE_DISTURBANCE = 'disturbance'
+NODE_SUBTYPE_BACKSTORY = 'backstory'
+NODE_SUBTYPE_QUESTION = 'question'
+NODE_SUBTYPE_FORESHADOWING = 'foreshadowing'
+NODE_SUBTYPE_TOOL = 'tool'
+NODE_SUBTYPE_COST = 'cost'
+
+
 @dataclass
-class Node:
+class Node(CharacterBased):
     x: float
     y: float
-
-
-@dataclass
-class CharacterNode(Node, CharacterBased):
+    type: DiagramNodeType
+    subtype: str = field(default='', metadata=config(exclude=exclude_if_empty))
     id: uuid.UUID = field(default_factory=uuid.uuid4)
-    character_id: Optional[uuid.UUID] = None
+    character_id: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
+    icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    color: str = field(default='black', metadata=config(exclude=exclude_if_black))
+    text: str = field(default='', metadata=config(exclude=exclude_if_empty))
+
+    def __post_init__(self):
+        self._character: Optional[Character] = None
 
 
 @dataclass
-class RelationsNetwork:
+class Connector:
+    source_id: uuid.UUID
+    target_id: uuid.UUID
+    source_angle: float
+    target_angle: float
+    type: str = ''
+    pen: Qt.PenStyle = Qt.PenStyle.SolidLine
+    width: int = 1
+    icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    color: str = field(default='black', metadata=config(exclude=exclude_if_black))
+    text: str = field(default='', metadata=config(exclude=exclude_if_empty))
+
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class DiagramData:
+    nodes: List[Node] = field(default_factory=list)
+    connectors: List[Connector] = field(default_factory=list)
+
+
+@dataclass
+class Diagram:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
-    nodes: List[CharacterNode] = field(default_factory=list)
+
+    def __post_init__(self):
+        self.loaded: bool = False
+        self.data: Optional[DiagramData] = None
+
+    @overrides
+    def __eq__(self, other: 'Diagram'):
+        if isinstance(other, Diagram):
+            return self.id == other.id
+        return False
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
+
+def default_events_map() -> Diagram:
+    return Diagram('Events', id=uuid.UUID('6c74e40f-d3de-4c83-bcd2-0ca5e626081d'))
+
+
+def default_character_networks() -> List[Diagram]:
+    return [Diagram('Character relations', id=uuid.UUID('bfd1f2d3-cb33-48a6-a09e-b4332c3d1ed1'))]
 
 
 @dataclass
@@ -1802,6 +1867,8 @@ class Novel(NovelDescriptor):
     world: WorldBuilding = field(default_factory=WorldBuilding)
     board: Board = field(default_factory=Board)
     manuscript_goals: ManuscriptGoals = field(default_factory=ManuscriptGoals)
+    events_map: Diagram = field(default_factory=default_events_map)
+    character_networks: List[Diagram] = field(default_factory=default_character_networks)
 
     def pov_characters(self) -> List[Character]:
         pov_ids = set()

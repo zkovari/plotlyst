@@ -26,28 +26,15 @@ from PyQt6.QtWidgets import QWidget, QApplication, QStyleOptionGraphicsItem, \
 from overrides import overrides
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Character, Node
+from src.main.python.plotlyst.core.domain import Character, Node, DiagramNodeType, NODE_SUBTYPE_GOAL, \
+    NODE_SUBTYPE_CONFLICT, NODE_SUBTYPE_BACKSTORY, NODE_SUBTYPE_DISTURBANCE, NODE_SUBTYPE_QUESTION, \
+    NODE_SUBTYPE_FORESHADOWING
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.widget.graphics import NodeItem, AbstractSocketItem, NetworkItemType
+from src.main.python.plotlyst.view.widget.graphics import NodeItem, AbstractSocketItem
 
 
 def v_center(ref_height: int, item_height: int) -> int:
     return (ref_height - item_height) // 2
-
-
-class ItemType(NetworkItemType):
-    EVENT = 1
-    CHARACTER = 2
-    GOAL = 3
-    CONFLICT = 4
-    DISTURBANCE = 5
-    BACKSTORY = 6
-    SETUP = 7
-    QUESTION = 8
-    FORESHADOWING = 9
-    COMMENT = 10
-    TOOL = 11
-    COST = 12
 
 
 class MindMapNode(NodeItem):
@@ -79,14 +66,14 @@ class SocketItem(AbstractSocketItem):
 class StickerItem(MindMapNode):
     displayMessage = pyqtSignal()
 
-    def __init__(self, node: Node, type: ItemType, parent=None):
+    def __init__(self, node: Node, parent=None):
         super().__init__(node, parent)
         self._size = 28
-        if type == ItemType.COMMENT:
+        if type == DiagramNodeType.COMMENT:
             self._icon = IconRegistry.from_name('mdi.comment-text', PLOTLYST_SECONDARY_COLOR)
-        elif type == ItemType.TOOL:
+        elif type == DiagramNodeType.TOOL:
             self._icon = IconRegistry.tool_icon()
-        if type == ItemType.COST:
+        if type == DiagramNodeType.COST:
             self._icon = IconRegistry.cost_icon()
 
         self.setFlag(
@@ -144,10 +131,12 @@ class EventItem(ConnectableNode):
     Margin: int = 30
     Padding: int = 20
 
-    def __init__(self, node: Node, itemType: ItemType, parent=None):
+    def __init__(self, node: Node, parent=None):
         super().__init__(node, parent)
-        self._text: str = 'New event'
-        self._itemType = itemType
+        if self._node.text:
+            self._text = self._node.text
+        else:
+            self._text: str = 'New event'
         self._icon: Optional[QIcon] = None
         self._iconSize: int = 0
         self._iconTextSpacing: int = 3
@@ -182,11 +171,32 @@ class EventItem(ConnectableNode):
 
     def setText(self, text: str):
         self._text = text
+        self._node.text = text
         self.setSelected(False)
         self._refresh()
+        self.networkScene().itemChangedEvent(self)
 
-    def itemType(self) -> ItemType:
-        return self._itemType
+    def DiagramNodeType(self) -> DiagramNodeType:
+        return self._DiagramNodeType
+
+    @overrides
+    def socket(self, angle: float) -> AbstractSocketItem:
+        if angle == 0:
+            return self._socketRight
+        elif angle == 45:
+            return self._socketTopRight
+        elif angle == 90:
+            return self._socketTopCenter
+        elif angle == 135:
+            return self._socketTopLeft
+        elif angle == 180:
+            return self._socketLeft
+        elif angle == -135:
+            return self._socketBottomLeft
+        elif angle == -90:
+            return self._socketBottomCenter
+        elif angle == -45:
+            return self._socketBottomRight
 
     def setIcon(self, icon: QIcon):
         self._icon = icon
@@ -207,8 +217,8 @@ class EventItem(ConnectableNode):
 
         self._refresh()
 
-    def setItemType(self, itemType: ItemType):
-        self._itemType = itemType
+    def setDiagramNodeType(self, DiagramNodeType: DiagramNodeType):
+        self._DiagramNodeType = DiagramNodeType
         self._updateIcon()
 
         self._refresh()
@@ -264,19 +274,19 @@ class EventItem(ConnectableNode):
         self.update()
 
     def _updateIcon(self):
-        if self._itemType == ItemType.GOAL:
+        if self._node.subtype == NODE_SUBTYPE_GOAL:
             self._icon = IconRegistry.goal_icon()
-        elif self._itemType == ItemType.CONFLICT:
+        elif self._node.subtype == NODE_SUBTYPE_CONFLICT:
             self._icon = IconRegistry.conflict_icon()
-        elif self._itemType == ItemType.BACKSTORY:
+        elif self._node.subtype == NODE_SUBTYPE_BACKSTORY:
             self._icon = IconRegistry.backstory_icon()
-        elif self._itemType == ItemType.DISTURBANCE:
+        elif self._node.subtype == NODE_SUBTYPE_DISTURBANCE:
             self._icon = IconRegistry.inciting_incident_icon()
-        elif self._itemType == ItemType.QUESTION:
+        elif self._node.subtype == NODE_SUBTYPE_QUESTION:
             self._icon = IconRegistry.from_name('ei.question-sign')
-        elif self._itemType == ItemType.SETUP:
+        elif self._node.subtype == DiagramNodeType.SETUP:
             self._icon = IconRegistry.from_name('ri.seedling-fill')
-        elif self._itemType == ItemType.FORESHADOWING:
+        elif self._node.subtype == NODE_SUBTYPE_FORESHADOWING:
             self._icon = IconRegistry.from_name('mdi6.crystal-ball')
 
     def _recalculateRect(self):
@@ -331,6 +341,17 @@ class CharacterItem(ConnectableNode):
     @overrides
     def boundingRect(self) -> QRectF:
         return QRectF(0, 0, self._size + self.Margin * 2, self._size + self.Margin * 2)
+
+    @overrides
+    def socket(self, angle: float) -> AbstractSocketItem:
+        if angle == 0:
+            return self._socketRight
+        elif angle == 90:
+            return self._socketTop
+        elif angle == 180:
+            return self._socketLeft
+        elif angle == -90:
+            return self._socketBottom
 
     def setCharacter(self, character: Character):
         self._character = character
