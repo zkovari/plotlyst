@@ -76,7 +76,20 @@ class CharacterItem(NodeItem):
 
     def setCharacter(self, character: Character):
         self._character = character
+        self._node.set_character(self._character)
         self.update()
+        self.networkScene().itemChangedEvent(self)
+
+    @overrides
+    def socket(self, angle: float) -> AbstractSocketItem:
+        angle_radians = math.radians(-angle)
+        x = self._center.x() + self._outerRadius * math.cos(angle_radians) - SocketItem.Size // 2
+        y = self._center.y() + self._outerRadius * math.sin(angle_radians) - SocketItem.Size // 2
+
+        self._socket.setAngle(angle)
+        self._socket.setPos(x, y)
+
+        return self._socket
 
     def addSocket(self, socket: SocketItem):
         self._sockets.append(socket)
@@ -123,10 +136,10 @@ class CharacterItem(NodeItem):
             angle_radians = math.radians(angle)
             x = self._center.x() + self._outerRadius * math.cos(angle_radians) - SocketItem.Size // 2
             y = self._center.y() + self._outerRadius * math.sin(angle_radians) - SocketItem.Size // 2
-
             self.prepareGeometryChange()
             self._socket.setAngle(-angle)
             self._socket.setPos(x, y)
+
             self.update()
 
     def relationsScene(self) -> 'RelationsEditorScene':
@@ -175,6 +188,8 @@ class RelationsEditorScene(NetworkScene):
         character = node.character(self._novel) if node.character_id else PlaceholderCharacter('Character')
         item = CharacterItem(character, node)
         self.addItem(item)
+
+        return item
 
     @overrides
     def _onLink(self, sourceNode: NodeItem, sourceSocket: AbstractSocketItem, targetNode: NodeItem,

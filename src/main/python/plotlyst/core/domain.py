@@ -26,6 +26,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Any, Dict
 
+from PyQt6.QtCore import Qt
 from dataclasses_json import dataclass_json, Undefined, config
 from overrides import overrides
 
@@ -1749,10 +1750,25 @@ class Node(CharacterBased):
         self._character: Optional[Character] = None
 
 
+@dataclass
+class Connector:
+    source_id: uuid.UUID
+    target_id: uuid.UUID
+    source_angle: float
+    target_angle: float
+    type: str = ''
+    pen: Qt.PenStyle = Qt.PenStyle.SolidLine
+    width: int = 1
+    icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    color: str = field(default='black', metadata=config(exclude=exclude_if_black))
+    text: str = field(default='', metadata=config(exclude=exclude_if_empty))
+
+
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class DiagramData:
     nodes: List[Node] = field(default_factory=list)
+    connectors: List[Connector] = field(default_factory=list)
 
 
 @dataclass

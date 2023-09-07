@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import math
 from abc import abstractmethod
 from functools import partial
-from typing import Any, Optional, List
+from typing import Any, Optional, List, Dict
 
 from PyQt6.QtCore import Qt, QTimer, QRectF, pyqtSignal, QPointF
 from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QPen, QPainterPath, QColor, QIcon, QResizeEvent, QTransform, \
@@ -32,7 +32,7 @@ from overrides import overrides
 from qthandy import hbox, margins, sp, incr_icon, vbox, grid
 
 from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR, RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Node, Relation, Diagram, DiagramNodeType
+from src.main.python.plotlyst.core.domain import Node, Relation, Diagram, DiagramNodeType, Connector
 from src.main.python.plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButtonGroup, \
     TooltipPositionEventFilter, pointy
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -298,10 +298,10 @@ class ConnectorItem(QGraphicsPathItem):
         # path.addText(point, QApplication.font(), 'Romance')
         self.setPath(path)
 
-    def source(self) -> QAbstractGraphicsShapeItem:
+    def source(self) -> AbstractSocketItem:
         return self._source
 
-    def target(self) -> QAbstractGraphicsShapeItem:
+    def target(self) -> AbstractSocketItem:
         return self._target
 
     def _setColor(self, color: QColor):
@@ -376,6 +376,10 @@ class NodeItem(QAbstractGraphicsShapeItem):
         elif change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
             self._onSelection(value)
         return super(NodeItem, self).itemChange(change, value)
+
+    @abstractmethod
+    def socket(self, angle: float) -> AbstractSocketItem:
+        pass
 
     def _onPosChanged(self):
         for socket in self._sockets:
@@ -455,8 +459,15 @@ class NetworkScene(QGraphicsScene):
         if not self._diagram.loaded:
             self._load()
 
+        nodes: Dict[str, NodeItem] = {}
         for node in self._diagram.data.nodes:
-            self._addNode(node)
+            nodeItem = self._addNode(node)
+            nodes[str(node.id)] = nodeItem
+        for connector in self._diagram.data.connectors:
+            source = nodes.get(str(connector.source_id), None)
+            target = nodes.get(str(connector.target_id), None)
+            if source and target:
+                self._addConnector(connector, source, target)
 
     def isAdditionMode(self) -> bool:
         return self._additionMode is not None
@@ -496,12 +507,26 @@ class NetworkScene(QGraphicsScene):
         self._placeholder = None
 
     def link(self, target: AbstractSocketItem):
-        self._onLink(self._connectorPlaceholder.source().parentItem(), self._connectorPlaceholder.source(),
-                     target.parentItem(), target)
-        connector = ConnectorItem(self._connectorPlaceholder.source(), target)
-        self._connectorPlaceholder.source().addConnector(connector)
-        target.addConnector(connector)
-        self.addItem(connector)
+        sourceNode: NodeItem = self._connectorPlaceholder.source().parentItem()
+        targetNode: NodeItem = target.parentItem()
+
+        self._onLink(sourceNode, self._connectorPlaceholder.source(), targetNode, target)
+        connectorItem = ConnectorItem(self._connectorPlaceholder.source(), target)
+        self._connectorPlaceholder.source().addConnector(connectorItem)
+        target.addConnector(connectorItem)
+
+        connector = Connector(
+            sourceNode.node().id,
+            targetNode.node().id,
+            self._connectorPlaceholder.source().angle(), target.angle(),
+            pen=connectorItem.penStyle(), width=connectorItem.penWidth(), color=connectorItem.color().name()
+        )
+        if connectorItem.icon():
+            connector.icon = connectorItem.icon()
+        self._diagram.data.connectors.append(connector)
+        self._save()
+
+        self.addItem(connectorItem)
         self.endLink()
 
     @overrides
@@ -563,12 +588,27 @@ class NetworkScene(QGraphicsScene):
 
         super().mouseReleaseEvent(event)
 
+    def itemChangedEvent(self, item: NodeItem):
+        self._save()
+
+    def _addConnector(self, connector: Connector, source: NodeItem, target: NodeItem):
+        sourceSocket = source.socket(connector.source_angle)
+        targetSocket = target.socket(connector.target_angle)
+        connectorItem = ConnectorItem(sourceSocket, targetSocket)
+
+        sourceSocket.addConnector(connectorItem)
+        targetSocket.addConnector(connectorItem)
+
+        self.addItem(connectorItem)
+
+        self._onLink(source, sourceSocket, target, targetSocket)
+
     @abstractmethod
     def _addNewItem(self, scenePos: QPointF, itemType: DiagramNodeType, subType: str = '') -> NodeItem:
         pass
 
     @abstractmethod
-    def _addNode(self, node: Node):
+    def _addNode(self, node: Node) -> NodeItem:
         pass
 
     @abstractmethod

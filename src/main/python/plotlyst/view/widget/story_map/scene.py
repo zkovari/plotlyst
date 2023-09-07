@@ -100,6 +100,7 @@ class EventsMindMapScene(NetworkScene):
             item = EventItem(node)
 
         self.addItem(item)
+        return item
 
     @staticmethod
     def toEventNode(scenePos: QPointF, itemType: DiagramNodeType, subType: str = '') -> Node:

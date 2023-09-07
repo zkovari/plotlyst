@@ -133,7 +133,10 @@ class EventItem(ConnectableNode):
 
     def __init__(self, node: Node, parent=None):
         super().__init__(node, parent)
-        self._text: str = 'New event'
+        if self._node.text:
+            self._text = self._node.text
+        else:
+            self._text: str = 'New event'
         self._icon: Optional[QIcon] = None
         self._iconSize: int = 0
         self._iconTextSpacing: int = 3
@@ -168,11 +171,32 @@ class EventItem(ConnectableNode):
 
     def setText(self, text: str):
         self._text = text
+        self._node.text = text
         self.setSelected(False)
         self._refresh()
+        self.networkScene().itemChangedEvent(self)
 
     def DiagramNodeType(self) -> DiagramNodeType:
         return self._DiagramNodeType
+
+    @overrides
+    def socket(self, angle: float) -> AbstractSocketItem:
+        if angle == 0:
+            return self._socketRight
+        elif angle == 45:
+            return self._socketTopRight
+        elif angle == 90:
+            return self._socketTopCenter
+        elif angle == 135:
+            return self._socketTopLeft
+        elif angle == 180:
+            return self._socketLeft
+        elif angle == -135:
+            return self._socketBottomLeft
+        elif angle == -90:
+            return self._socketBottomCenter
+        elif angle == -45:
+            return self._socketBottomRight
 
     def setIcon(self, icon: QIcon):
         self._icon = icon
@@ -317,6 +341,17 @@ class CharacterItem(ConnectableNode):
     @overrides
     def boundingRect(self) -> QRectF:
         return QRectF(0, 0, self._size + self.Margin * 2, self._size + self.Margin * 2)
+
+    @overrides
+    def socket(self, angle: float) -> AbstractSocketItem:
+        if angle == 0:
+            return self._socketRight
+        elif angle == 90:
+            return self._socketTop
+        elif angle == 180:
+            return self._socketLeft
+        elif angle == -90:
+            return self._socketBottom
 
     def setCharacter(self, character: Character):
         self._character = character
