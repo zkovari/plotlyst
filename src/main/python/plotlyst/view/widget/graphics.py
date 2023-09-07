@@ -177,6 +177,7 @@ class ConnectorItem(QGraphicsPathItem):
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
         self._source = source
         self._target = target
+        self._connector: Optional[Connector] = None
         self._color: QColor = QColor('darkblue')
         self._relation: Optional[Relation] = None
         self._icon: Optional[str] = None
@@ -199,6 +200,21 @@ class ConnectorItem(QGraphicsPathItem):
 
         self.rearrange()
 
+    def networkScene(self) -> 'NetworkScene':
+        return self.scene()
+
+    def connector(self) -> Optional[Connector]:
+        return self._connector
+
+    def setConnector(self, connector: Connector):
+        self._connector = None
+        self.setPenStyle(connector.pen)
+        self.setPenWidth(connector.width)
+        self.setColor(QColor(connector.color))
+        if connector.icon:
+            self.setIcon(connector.icon)
+        self._connector = connector
+
     def penStyle(self) -> Qt.PenStyle:
         return self.pen().style()
 
@@ -207,6 +223,9 @@ class ConnectorItem(QGraphicsPathItem):
         pen.setStyle(penStyle)
         self.setPen(pen)
         self.update()
+        if self._connector:
+            self._connector.pen = penStyle
+            self.networkScene().connectorChangedEvent(self)
 
     def penWidth(self) -> int:
         return self.pen().width()
@@ -221,6 +240,9 @@ class ConnectorItem(QGraphicsPathItem):
         self._arrowheadItem.setScale(1.0 + (width - prevWidth) / 10)
 
         self.rearrange()
+        if self._connector:
+            self._connector.width = width
+            self.networkScene().connectorChangedEvent(self)
 
     def relation(self) -> Optional[Relation]:
         return self._relation
@@ -228,13 +250,19 @@ class ConnectorItem(QGraphicsPathItem):
     def setRelation(self, relation: Relation):
         self._icon = relation.icon
 
-        self.setColor(QColor(relation.icon_color))
+        self._setColor(QColor(relation.icon_color))
 
         self._relation = relation
         self._iconBadge.setIcon(IconRegistry.from_name(relation.icon, relation.icon_color), self._color)
         self._iconBadge.setVisible(True)
 
         self.rearrange()
+
+        if self._connector:
+            self._connector.type = relation.text
+            self._connector.icon = relation.icon
+            self._connector.color = relation.icon_color
+            self.networkScene().connectorChangedEvent(self)
 
     def icon(self) -> Optional[str]:
         return self._icon
@@ -247,6 +275,10 @@ class ConnectorItem(QGraphicsPathItem):
         self._iconBadge.setVisible(True)
         self.rearrange()
 
+        if self._connector:
+            self._connector.icon = icon
+            self.networkScene().connectorChangedEvent(self)
+
     def color(self) -> QColor:
         return self._color
 
@@ -256,6 +288,10 @@ class ConnectorItem(QGraphicsPathItem):
             self._iconBadge.setIcon(IconRegistry.from_name(self._icon, self._color.name()), self._color)
 
         self.update()
+
+        if self._connector:
+            self._connector.color = color.name()
+            self.networkScene().connectorChangedEvent(self)
 
     def rearrange(self):
         self.setPos(self._source.sceneBoundingRect().center())
@@ -524,6 +560,7 @@ class NetworkScene(QGraphicsScene):
         )
         if connectorItem.icon():
             connector.icon = connectorItem.icon()
+        connectorItem.setConnector(connector)
         self._diagram.data.connectors.append(connector)
         self._save()
 
@@ -592,6 +629,9 @@ class NetworkScene(QGraphicsScene):
     def itemChangedEvent(self, item: NodeItem):
         self._save()
 
+    def connectorChangedEvent(self, connector: ConnectorItem):
+        self._save()
+
     def _addConnector(self, connector: Connector, source: NodeItem, target: NodeItem):
         sourceSocket = source.socket(connector.source_angle)
         targetSocket = target.socket(connector.target_angle)
@@ -601,6 +641,7 @@ class NetworkScene(QGraphicsScene):
         targetSocket.addConnector(connectorItem)
 
         self.addItem(connectorItem)
+        connectorItem.setConnector(connector)
 
         self._onLink(source, sourceSocket, target, targetSocket)
 
