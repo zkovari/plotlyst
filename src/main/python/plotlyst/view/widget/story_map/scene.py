@@ -91,7 +91,15 @@ class EventsMindMapScene(NetworkScene):
 
     @overrides
     def _addNode(self, node: Node):
-        pass
+        if node.type == DiagramNodeType.CHARACTER:
+            character = node.character(self._novel) if node.character_id else None
+            item = CharacterItem(node, character)
+        elif node.type in [DiagramNodeType.COMMENT, DiagramNodeType.STICKER]:
+            item = StickerItem(node)
+        else:
+            item = EventItem(node)
+
+        self.addItem(item)
 
     @staticmethod
     def toEventNode(scenePos: QPointF, itemType: DiagramNodeType, subType: str = '') -> Node:
