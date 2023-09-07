@@ -142,6 +142,9 @@ class AbstractSocketItem(QAbstractGraphicsShapeItem):
         else:
             self.networkScene().startLink(self)
 
+    def connectors(self) -> List['ConnectorItem']:
+        return self._connectors
+
     def addConnector(self, connector: 'ConnectorItem'):
         self._connectors.append(connector)
 
@@ -150,9 +153,10 @@ class AbstractSocketItem(QAbstractGraphicsShapeItem):
             con.rearrange()
 
     def removeConnectors(self):
-        for con in self._connectors:
-            self.scene().removeItem(con)
         self._connectors.clear()
+
+    def removeConnector(self, connector: 'ConnectorItem'):
+        self._connectors.remove(connector)
 
     def networkScene(self) -> 'NetworkScene':
         return self.scene()
@@ -400,7 +404,14 @@ class NodeItem(QAbstractGraphicsShapeItem):
     def networkScene(self) -> 'NetworkScene':
         return self.scene()
 
-    def removeConnectors(self):
+    def connectors(self) -> List[ConnectorItem]:
+        connectors = []
+        for socket in self._sockets:
+            connectors.extend(socket.connectors())
+
+        return connectors
+
+    def clearConnectors(self):
         for socket in self._sockets:
             socket.removeConnectors()
 
@@ -579,11 +590,7 @@ class NetworkScene(QGraphicsScene):
                 self.clearSelection()
         elif event.key() == Qt.Key.Key_Delete or event.key() == Qt.Key.Key_Backspace:
             for item in self.selectedItems():
-                if isinstance(item, NodeItem):
-                    item.removeConnectors()
-                    self._diagram.data.nodes.remove(item.node())
-                self.removeItem(item)
-                self._save()
+                self._removeItem(item)
 
     @overrides
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
@@ -630,6 +637,21 @@ class NetworkScene(QGraphicsScene):
         self._save()
 
     def connectorChangedEvent(self, connector: ConnectorItem):
+        self._save()
+
+    def _removeItem(self, item: QGraphicsItem):
+        if isinstance(item, NodeItem):
+            for connectorItem in item.connectors():
+                self._diagram.data.connectors.remove(connectorItem.connector())
+                self.removeItem(connectorItem)
+            item.clearConnectors()
+            self._diagram.data.nodes.remove(item.node())
+        elif isinstance(item, ConnectorItem):
+            self._diagram.data.connectors.remove(item.connector())
+            item.source().removeConnector(item)
+            item.target().removeConnector(item)
+
+        self.removeItem(item)
         self._save()
 
     def _addConnector(self, connector: Connector, source: NodeItem, target: NodeItem):
