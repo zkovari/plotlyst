@@ -1032,9 +1032,30 @@ class TaskStatus(SelectionItem):
         return hash(str(id))
 
 
-task_tags: Dict[str, SelectionItem] = {}
+tag_characterization = SelectionItem('Characterization', icon='fa5s.user', icon_color='darkBlue')
+tag_worldbuilding = SelectionItem('Worldbuilding', icon='mdi.globe-model', icon_color='#2d6a4f')
+tag_brainstorming = SelectionItem('Brainstorming', icon='fa5s.brain', icon_color='#FF5733')
+tag_research = SelectionItem('Research', icon='mdi.library', icon_color='#0066CC')
+tag_writing = SelectionItem('Writing', icon='mdi.typewriter', icon_color='#9933CC')
+tag_plotting = SelectionItem('Plotting', icon='fa5s.theater-masks', icon_color='#FF6666')
+tag_theme = SelectionItem('Theme', icon='mdi.butterfly-outline', icon_color='#9d4edd')
+tag_outlining = SelectionItem('Outlining', icon='fa5s.list', icon_color='#99CC00')
+tag_revision = SelectionItem('Revision', icon='mdi.clipboard-edit-outline', icon_color='#FF9933')
+tag_drafting = SelectionItem('Drafting', icon='fa5s.dog', icon_color='#66CC33')
+tag_editing = SelectionItem('Editing', icon='fa5s.cat', icon_color='#ff758f')
+tag_collect_feedback = SelectionItem('Collect feedback', icon='msc.feedback', icon_color='#5e60ce')
+tag_publishing = SelectionItem('Publishing', icon='fa5s.cloud-upload-alt', icon_color='#FF9900')
+tag_marketing = SelectionItem('Marketing', icon='fa5s.bullhorn', icon_color='#FF3366')
+tag_book_cover_design = SelectionItem('Book cover design', icon='fa5s.book', icon_color='#FF66CC')
+tag_formatting = SelectionItem('Formatting', icon='mdi.format-pilcrow', icon_color='#006600')
 
-for tag in [SelectionItem('Character', icon='fa5s.user', icon_color='darkBlue')]:
+_tags = [
+    tag_characterization, tag_worldbuilding, tag_brainstorming, tag_research, tag_writing,
+    tag_plotting, tag_theme, tag_outlining, tag_revision, tag_drafting, tag_editing,
+    tag_collect_feedback, tag_publishing, tag_marketing, tag_book_cover_design, tag_formatting
+]
+task_tags: Dict[str, SelectionItem] = {}
+for tag in _tags:
     task_tags[tag.text] = tag
 
 

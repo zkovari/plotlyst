@@ -26,7 +26,8 @@ from PyQt6.QtGui import QColor, QIcon, QMouseEvent, QEnterEvent
 from PyQt6.QtWidgets import QPushButton, QSizePolicy, QToolButton, QAbstractButton, QLabel, QButtonGroup, QMenu, QWidget
 from overrides import overrides
 from qtanim import fade_in
-from qthandy import hbox, translucent, bold, incr_font, transparent, retain_when_hidden, underline, vbox, decr_icon
+from qthandy import hbox, translucent, bold, incr_font, transparent, retain_when_hidden, underline, vbox, decr_icon, \
+    incr_icon
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
@@ -512,7 +513,7 @@ class TaskTagSelector(QToolButton):
         tagsMenu.addSeparator()
         tagsMenu.addAction(action('Remove', IconRegistry.trash_can_icon(), slot=self._reset))
         transparent(self)
-        translucent(self)
+        translucent(self, 0.9)
         self.installEventFilter(ButtonPressResizeEventFilter(self))
 
     @overrides
@@ -520,6 +521,7 @@ class TaskTagSelector(QToolButton):
         if not self._selected:
             self.setIcon(IconRegistry.from_name('ei.tag', 'grey'))
 
+    @overrides
     def leaveEvent(self, event: QEvent) -> None:
         if not self._selected:
             self.setIcon(IconRegistry.from_name('ei.tag', '#adb5bd'))
@@ -535,8 +537,11 @@ class TaskTagSelector(QToolButton):
         self.setIcon(IconRegistry.from_name('ei.tag', '#adb5bd'))
         self.setToolTip('Ling a tag')
         self._selected = False
+        decr_icon(self)
 
     def __updateTag(self, tag: SelectionItem):
+        if not self._selected:
+            incr_icon(self)
         self.setIcon(IconRegistry.from_selection_item(tag))
         self.setToolTip(tag.text)
         self._selected = True

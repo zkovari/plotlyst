@@ -77,6 +77,7 @@ class TaskWidget(QFrame):
 
         self._charSelector = CharacterSelectorButton(app_env.novel, self, opacityEffectEnabled=False, iconSize=24)
         self._charSelector.setToolTip('Link character')
+        decr_icon(self._charSelector)
         if self._task.character_id:
             self._charSelector.setCharacter(self._task.character(app_env.novel))
         else:
@@ -93,7 +94,6 @@ class TaskWidget(QFrame):
 
         self._btnTags = TaskTagSelector(self._wdgBottom)
         self._btnTags.tagSelected.connect(self._tagChanged)
-        decr_icon(self._btnTags)
 
         self._btnResolve = tool_btn(IconRegistry.from_name('fa5s.check', 'grey'), 'Resolve task',
                                     properties=['transparent-circle-bg-on-hover', 'positive'], parent=self._wdgBottom)
