@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import math
 import sys
 from functools import partial
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Union
 
 import qtawesome
 from PyQt6.QtCore import QRectF, QModelIndex, QRect, QPoint, QBuffer, QIODevice, QSize, QObject, QEvent, Qt, QTimer
@@ -469,3 +469,11 @@ def spawn(cls):
     main_window.show()
 
     sys.exit(app.exec())
+
+
+def any_menu_visible(*buttons: Union[QPushButton, QToolButton]) -> bool:
+    for btn in buttons:
+        if btn.menu().isVisible():
+            return True
+
+    return False

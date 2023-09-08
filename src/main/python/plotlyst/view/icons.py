@@ -640,7 +640,7 @@ class IconRegistry:
     def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2, hflip: bool = False,
                   vflip: bool = False) -> QIcon:
         _color_on = color_on if color_on else color
-        if name.startswith('md') or name.startswith('ri') or name.startswith('ph'):
+        if name.startswith('md') or name.startswith('ri') or name.startswith('ph') or name.startswith('msc'):
             return QIcon(qtawesome.icon(name, color=color, color_on=_color_on, hflip=hflip, vflip=vflip,
                                         options=[{'scale_factor': mdi_scale}]))
         return QIcon(qtawesome.icon(name, color=color, color_on=_color_on, hflip=hflip, vflip=vflip))

@@ -23,27 +23,29 @@ from typing import Dict
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QMimeData, QObject, QEvent
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QWidget, QFrame, QSizePolicy, QLabel, QToolButton, QPushButton, \
-    QLineEdit
+from PyQt6.QtWidgets import QWidget, QFrame, QSizePolicy, QLabel, QToolButton, QPushButton
 from overrides import overrides
 from qthandy import vbox, hbox, transparent, vspacer, margins, spacer, bold, retain_when_hidden, incr_font, \
-    gc
+    gc, decr_icon
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import TaskStatus, Task, Novel, Character
+from src.main.python.plotlyst.core.domain import TaskStatus, Task, Novel, Character, task_tags
+from src.main.python.plotlyst.core.template import SelectionItem
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import CharacterDeletedEvent, TaskChanged, TaskDeleted, TaskChangedToWip, \
     TaskChangedFromWip
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, pointy, shadow, action
+from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, pointy, shadow, action, tool_btn, \
+    any_menu_visible
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
-from src.main.python.plotlyst.view.widget.button import CollapseButton
+from src.main.python.plotlyst.view.widget.button import CollapseButton, TaskTagSelector
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
+from src.main.python.plotlyst.view.widget.input import AutoAdjustableLineEdit
 
 TASK_WIDGET_MAX_WIDTH = 350
 
@@ -64,17 +66,18 @@ class TaskWidget(QFrame):
         self.setMinimumHeight(75)
         shadow(self, 3)
 
-        self._lineTitle = QLineEdit(self)
+        self._lineTitle = AutoAdjustableLineEdit(self, defaultWidth=100)
         self._lineTitle.setPlaceholderText('New task')
         self._lineTitle.setText(task.title)
         self._lineTitle.setFrame(False)
-        font = QFont('Arial')
+        font = QFont('Helvetica')
         font.setWeight(QFont.Weight.Medium)
         self._lineTitle.setFont(font)
         incr_font(self._lineTitle)
 
         self._charSelector = CharacterSelectorButton(app_env.novel, self, opacityEffectEnabled=False, iconSize=24)
         self._charSelector.setToolTip('Link character')
+        decr_icon(self._charSelector)
         if self._task.character_id:
             self._charSelector.setCharacter(self._task.character(app_env.novel))
         else:
@@ -82,35 +85,41 @@ class TaskWidget(QFrame):
         retain_when_hidden(self._charSelector)
         self._charSelector.characterSelected.connect(self._linkCharacter)
         self._charSelector.menu().aboutToHide.connect(self._onLeave)
-        top_wdg = group(self._lineTitle, self._charSelector, margin=0, spacing=1)
+        top_wdg = group(self._lineTitle, spacer(), self._charSelector, margin=0, spacing=1)
         self.layout().addWidget(top_wdg, alignment=Qt.AlignmentFlag.AlignTop)
 
         self._wdgBottom = QWidget()
         retain_when_hidden(self._wdgBottom)
         hbox(self._wdgBottom)
-        self._btnResolve = QToolButton(self._wdgBottom)
-        self._btnResolve.setIcon(IconRegistry.from_name('fa5s.check', 'grey'))
-        self._btnResolve.setToolTip('Resolve task')
-        pointy(self._btnResolve)
-        self._btnResolve.setProperty('transparent-circle-bg-on-hover', True)
-        self._btnResolve.setProperty('positive', True)
-        self._btnResolve.installEventFilter(ButtonPressResizeEventFilter(self._btnResolve))
+
+        self._btnTags = TaskTagSelector(self._wdgBottom)
+        self._btnTags.tagSelected.connect(self._tagChanged)
+
+        self._btnResolve = tool_btn(IconRegistry.from_name('fa5s.check', 'grey'), 'Resolve task',
+                                    properties=['transparent-circle-bg-on-hover', 'positive'], parent=self._wdgBottom)
+        decr_icon(self._btnResolve)
         self._btnResolve.clicked.connect(self.resolved.emit)
 
-        self._btnMenu = QToolButton(self._wdgBottom)
-        self._btnMenu.setIcon(IconRegistry.dots_icon('grey'))
-        self._btnMenu.setProperty('transparent-circle-bg-on-hover', True)
-        pointy(self._btnMenu)
+        self._btnMenu = tool_btn(IconRegistry.dots_icon('grey'), 'Menu', properties=['transparent-circle-bg-on-hover'],
+                                 parent=self._wdgBottom)
+        decr_icon(self._btnMenu)
         menu = MenuWidget(self._btnMenu)
         menu.addAction(action('Rename', IconRegistry.edit_icon(), self._lineTitle.setFocus))
         menu.addSeparator()
         menu.addAction(action('Delete', IconRegistry.trash_can_icon(), lambda: self.removalRequested.emit(self)))
         menu.aboutToHide.connect(self._onLeave)
+        self._wdgBottom.layout().addWidget(self._btnTags)
         self._wdgBottom.layout().addWidget(spacer())
         self._wdgBottom.layout().addWidget(self._btnResolve, alignment=Qt.AlignmentFlag.AlignRight)
         self._wdgBottom.layout().addWidget(self._btnMenu, alignment=Qt.AlignmentFlag.AlignRight)
         self.layout().addWidget(self._wdgBottom, alignment=Qt.AlignmentFlag.AlignBottom)
 
+        if self._task.tags:
+            tag = task_tags.get(self._task.tags[0], None)
+            if tag:
+                self._btnTags.select(tag)
+        else:
+            self._btnTags.setHidden(True)
         self._btnResolve.setHidden(True)
         self._btnMenu.setHidden(True)
 
@@ -125,8 +134,9 @@ class TaskWidget(QFrame):
                 self._charSelector.setVisible(True)
             self._btnMenu.setVisible(True)
             self._btnResolve.setVisible(True)
+            self._btnTags.setVisible(True)
         elif event.type() == QEvent.Type.Leave:
-            if self._charSelector.menu().isVisible() or self._btnMenu.menu().isVisible():
+            if any_menu_visible(self._charSelector, self._btnMenu, self._btnTags):
                 return True
             self._onLeave()
         return super(TaskWidget, self).eventFilter(watched, event)
@@ -150,9 +160,15 @@ class TaskWidget(QFrame):
         self._lineTitle.setFocus()
         shadow(self, 3)
 
+    def _tagChanged(self, tag: SelectionItem):
+        self._task.tags.clear()
+        self._task.tags.append(tag.text)
+
     def _onLeave(self):
         if not self._task.character_id:
             self._charSelector.setHidden(True)
+        if not self._task.tags:
+            self._btnTags.setHidden(True)
         self._btnMenu.setVisible(False)
         self._btnResolve.setVisible(False)
 

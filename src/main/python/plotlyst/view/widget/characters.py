@@ -554,6 +554,7 @@ class CharacterSelectorButton(QToolButton):
             self._opacityFilter = OpacityEventFilter(self)
         else:
             self._opacityFilter = None
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
         self._menu = CharacterSelectorMenu(self._novel, self)
         self._menu.selected.connect(self._selected)
         self.clear()

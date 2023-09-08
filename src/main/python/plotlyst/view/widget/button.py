@@ -22,18 +22,21 @@ from typing import Optional
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, pyqtProperty, QTimer, QEvent
-from PyQt6.QtGui import QColor, QIcon, QMouseEvent
+from PyQt6.QtGui import QColor, QIcon, QMouseEvent, QEnterEvent, QAction
 from PyQt6.QtWidgets import QPushButton, QSizePolicy, QToolButton, QAbstractButton, QLabel, QButtonGroup, QMenu, QWidget
 from overrides import overrides
 from qtanim import fade_in
-from qthandy import hbox, translucent, bold, incr_font, transparent, retain_when_hidden, underline, vbox, decr_icon
+from qthandy import hbox, translucent, bold, incr_font, transparent, retain_when_hidden, underline, vbox, decr_icon, \
+    incr_icon, italic
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
-from qtmenu import MenuWidget
+from qtmenu import MenuWidget, GridMenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR
-from src.main.python.plotlyst.core.domain import SelectionItem, Novel
+from src.main.python.plotlyst.core.domain import SelectionItem, Novel, tag_characterization, tag_worldbuilding, \
+    tag_brainstorming, tag_research, tag_writing, tag_plotting, tag_theme, tag_outlining, tag_revision, tag_drafting, \
+    tag_editing, tag_collect_feedback, tag_publishing, tag_marketing, tag_book_cover_design, tag_formatting
 from src.main.python.plotlyst.service.importer import SyncImporter
-from src.main.python.plotlyst.view.common import pointy, ButtonPressResizeEventFilter, tool_btn, spin
+from src.main.python.plotlyst.view.common import pointy, ButtonPressResizeEventFilter, tool_btn, spin, action
 from src.main.python.plotlyst.view.icons import IconRegistry
 
 
@@ -494,3 +497,78 @@ class EyeToggle(QToolButton):
         else:
             self.setIcon(IconRegistry.from_name('ei.eye-close'))
             translucent(self)
+
+
+class TaskTagSelector(QToolButton):
+    tagSelected = pyqtSignal(SelectionItem)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._selected = False
+        pointy(self)
+        self._reset()
+
+        tagsMenu = GridMenuWidget(self)
+
+        tagsMenu.addAction(self._action(tag_characterization), 0, 0)
+        tagsMenu.addAction(self._action(tag_worldbuilding), 0, 2)
+        tagsMenu.addAction(self._action(tag_brainstorming), 1, 0)
+        tagsMenu.addAction(self._action(tag_writing), 2, 0)
+        tagsMenu.addAction(self._action(tag_research), 1, 2)
+        tagsMenu.addAction(self._action(tag_plotting), 2, 2)
+        tagsMenu.addAction(self._action(tag_theme), 3, 0)
+        tagsMenu.addSeparator(4, 0, colSpan=3)
+
+        tagsMenu.addAction(self._action(tag_outlining), 5, 0)
+        tagsMenu.addAction(self._action(tag_revision), 6, 0)
+        tagsMenu.addAction(self._action(tag_drafting), 7, 0)
+        tagsMenu.addAction(self._action(tag_editing), 8, 0)
+        tagsMenu.addAction(self._action(tag_formatting), 9, 0)
+        tagsMenu.addSeparator(5, 1, rowSpan=5, vertical=True)
+
+        tagsMenu.addAction(self._action(tag_collect_feedback), 5, 2)
+        tagsMenu.addAction(self._action(tag_book_cover_design), 6, 2)
+        tagsMenu.addAction(self._action(tag_publishing), 7, 2)
+        tagsMenu.addAction(self._action(tag_marketing), 8, 2)
+
+        tagsMenu.addSeparator(10, 0, colSpan=3)
+        self._actionRemove = action('Remove', IconRegistry.trash_can_icon(), slot=self._reset)
+        italic(self._actionRemove)
+        tagsMenu.addAction(self._actionRemove, 12, 0)
+        transparent(self)
+        translucent(self, 0.9)
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        if not self._selected:
+            self.setIcon(IconRegistry.from_name('ei.tag', 'grey'))
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        if not self._selected:
+            self.setIcon(IconRegistry.from_name('ei.tag', '#adb5bd'))
+
+    def select(self, tag: SelectionItem):
+        self.__updateTag(tag)
+
+    def _tagSelected(self, tag: SelectionItem):
+        self.__updateTag(tag)
+        self.tagSelected.emit(tag)
+
+    def _reset(self):
+        self.setIcon(IconRegistry.from_name('ei.tag', '#adb5bd'))
+        self.setToolTip('Ling a tag')
+        self._selected = False
+        decr_icon(self)
+
+    def _action(self, tag: SelectionItem) -> QAction:
+        return action(tag.text, IconRegistry.from_selection_item(tag),
+                      slot=partial(self._tagSelected, tag))
+
+    def __updateTag(self, tag: SelectionItem):
+        if not self._selected:
+            incr_icon(self)
+        self.setIcon(IconRegistry.from_selection_item(tag))
+        self.setToolTip(tag.text)
+        self._selected = True
