@@ -1032,6 +1032,12 @@ class TaskStatus(SelectionItem):
         return hash(str(id))
 
 
+task_tags: Dict[str, SelectionItem] = {}
+
+for tag in [SelectionItem('Character', icon='fa5s.user', icon_color='darkBlue')]:
+    task_tags[tag.text] = tag
+
+
 @dataclass
 class Task(CharacterBased):
     title: str
@@ -1041,6 +1047,7 @@ class Task(CharacterBased):
     resolved_date: Optional[datetime] = None
     summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
     character_id: Optional[uuid.UUID] = None
+    tags: List[str] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
 
     def __post_init__(self):
         if self.creation_date is None:
