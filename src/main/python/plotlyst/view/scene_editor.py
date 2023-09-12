@@ -76,8 +76,10 @@ class SceneEditor(QObject, EventListener):
         self.ui.lineTitle.setReadOnly(self.novel.is_readonly())
         self.ui.lineTitle.textEdited.connect(self._title_edited)
 
-        self.ui.lblDayEmoji.setFont(self._emoji_font)
-        self.ui.lblDayEmoji.setText(emoji.emojize(':spiral_calendar:'))
+        # self.ui.lblDayEmoji.setFont(self._emoji_font)
+        # self.ui.lblDayEmoji.setText(emoji.emojize(':spiral_calendar:'))
+        self.ui.lblDayEmoji.setHidden(True)
+        self.ui.sbDay.setHidden(True)
         self.ui.lblTitleEmoji.setFont(self._emoji_font)
         self.ui.lblTitleEmoji.setText(emoji.emojize(':clapper_board:'))
         self.ui.lblSynopsisEmoji.setFont(self._emoji_font)
