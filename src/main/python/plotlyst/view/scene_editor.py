@@ -65,8 +65,7 @@ class SceneEditor(QObject, EventListener):
         self.ui.btnAttributes.setIcon(IconRegistry.from_name('fa5s.yin-yang'))
         self.ui.btnNotes.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
         self.ui.btnNotes.setIcon(IconRegistry.document_edition_icon())
-        self.ui.btnDrive.setIcon(IconRegistry.from_name('mdi.chemical-weapon'))
-        self.ui.btnDrive.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
+        # self.ui.btnDrive.setIcon(IconRegistry.from_name('mdi.chemical-weapon'))
 
         self.ui.btnStageCharacterLabel.setIcon(IconRegistry.character_icon(color_on='black'))
         underline(self.ui.btnStageCharacterLabel)
@@ -190,16 +189,12 @@ class SceneEditor(QObject, EventListener):
         self._characters_model.setScene(self.scene)
         self._character_changed()
 
-        self.ui.wdgDriveEditor.setScene(self.scene)
-
     def _page_toggled(self):
         if self.ui.btnAttributes.isChecked():
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageStructure)
         elif self.ui.btnNotes.isChecked():
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageNotes)
             self._update_notes()
-        elif self.ui.btnDrive.isChecked():
-            self.ui.stackedWidget.setCurrentWidget(self.ui.pageDrive)
 
     def _beat_selected(self, beat: StoryBeat):
         if self.scene.beat(self.novel) and self.scene.beat(self.novel) != beat:
