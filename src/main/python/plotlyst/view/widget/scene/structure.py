@@ -585,7 +585,8 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
 
         self._text.setStyleSheet(f'''
                     border: 2px solid {self._color()};
-                    border-radius: 3px;
+                    border-radius: 6px;
+                    padding: 4px;
                     ''')
 
     def _textChanged(self):
