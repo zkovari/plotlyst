@@ -149,7 +149,7 @@ class CharacterEditor(QObject, EventListener):
         self._bigFive.setCharacter(self.character)
         self.ui.tabBigFive.layout().addWidget(self._bigFive)
 
-        self.ui.wdgAvatar.btnPov.setToolTip('Character avatar. Click to add an image')
+        self.ui.wdgAvatar.btnAvatar.setToolTip('Character avatar. Click to add an image')
         self.ui.wdgAvatar.setCharacter(self.character)
         self.ui.wdgAvatar.setUploadPopupMenu()
         self.ui.wdgAvatar.avatarUpdated.connect(self.ui.wdgBackstory.refreshCharacter)

@@ -94,10 +94,11 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgStructure.setRemovalContextMenuEnabled(True)
         self.ui.wdgStructure.beatRemovalRequested.connect(self._beat_removed)
 
-        self._povMenu = ScrollableMenuWidget(self.ui.wdgPov.btnPov)
+        self._povMenu = ScrollableMenuWidget(self.ui.wdgPov.btnAvatar)
         for char in self.novel.characters:
             self._povMenu.addAction(action(char.name, avatars.avatar(char), partial(self._on_pov_changed, char)))
-        self.ui.wdgPov.btnPov.setText('Select POV')
+        self.ui.wdgPov.btnAvatar.setText('POV')
+        self.ui.wdgPov.setFixedSize(170, 170)
 
         self.ui.textNotes.setTitleVisible(False)
         self.ui.textNotes.setPlaceholderText("Scene notes")
@@ -260,10 +261,10 @@ class SceneEditor(QObject, EventListener):
     def _update_pov_avatar(self):
         if self.scene.pov:
             self.ui.wdgPov.setCharacter(self.scene.pov)
-            self.ui.wdgPov.btnPov.setToolTip(f'<html>Point of view character: <b>{self.scene.pov.name}</b>')
+            self.ui.wdgPov.btnAvatar.setToolTip(f'<html>Point of view character: <b>{self.scene.pov.name}</b>')
         else:
             self.ui.wdgPov.reset()
-            self.ui.wdgPov.btnPov.setToolTip('Select point of view character')
+            self.ui.wdgPov.btnAvatar.setToolTip('Select point of view character')
 
     def _title_edited(self, text: str):
         self.scene.title = text
