@@ -120,11 +120,11 @@ def apply_color(wdg: QWidget, color: Union[str, QColor, Qt.GlobalColor]):
 
 
 def apply_bg_image(wdg: QWidget, resource_url: str):
-    wdg.setStyleSheet(f'QWidget[bg-image=true] {{background-image: url({resource_url});}}')
+    wdg.setStyleSheet(f'.QWidget[bg-image=true] {{background-image: url({resource_url});}}')
 
 
 def apply_border_image(wdg: QWidget, resource_url: str):
-    wdg.setStyleSheet(f'QWidget[border-image=true] {{border-image: url({resource_url}) 0 0 0 0 stretch stretch;}}')
+    wdg.setStyleSheet(f'.QWidget[border-image=true] {{border-image: url({resource_url}) 0 0 0 0 stretch stretch;}}')
 
 
 def apply_white_menu(menu: MenuWidget):

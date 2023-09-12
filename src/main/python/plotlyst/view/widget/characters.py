@@ -57,11 +57,10 @@ from src.main.python.plotlyst.model.scenes_model import SceneConflictsModel
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import emoji_font, \
-    link_buttons_to_pages, pointy, action, ButtonPressResizeEventFilter
+    link_buttons_to_pages, pointy, action, ButtonPressResizeEventFilter, tool_btn
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog, ArtbreederDialog, ImageCropDialog
 from src.main.python.plotlyst.view.generated.avatar_selectors_ui import Ui_AvatarSelectors
-from src.main.python.plotlyst.view.generated.character_avatar_ui import Ui_CharacterAvatar
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
 from src.main.python.plotlyst.view.generated.character_role_selector_ui import Ui_CharacterRoleSelector
@@ -70,7 +69,7 @@ from src.main.python.plotlyst.view.generated.characters_progress_widget_ui impor
 from src.main.python.plotlyst.view.generated.scene_conflict_intensity_ui import Ui_ConflictReferenceEditor
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
-from src.main.python.plotlyst.view.style.base import apply_bg_image
+from src.main.python.plotlyst.view.style.base import apply_border_image
 from src.main.python.plotlyst.view.widget.button import SelectionItemPushButton
 from src.main.python.plotlyst.view.widget.display import IconText, Icon
 from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel
@@ -1095,15 +1094,18 @@ class AvatarSelectors(QWidget, Ui_AvatarSelectors):
             self._update_avatar(pixmap)
 
 
-class CharacterAvatar(QWidget, Ui_CharacterAvatar):
+class CharacterAvatar(QWidget):
     avatarUpdated = pyqtSignal()
 
     def __init__(self, parent=None):
-        super(CharacterAvatar, self).__init__(parent)
-        self.setupUi(self)
-        apply_bg_image(self.wdgPovFrame, resource_registry.circular_frame1)
-        self.wdgPovFrame.setFixedSize(190, 190)
-        self.btnPov.installEventFilter(OpacityEventFilter(parent=self.btnPov, enterOpacity=0.7, leaveOpacity=1.0))
+        super().__init__(parent)
+        self.wdgFrame = QWidget()
+        self.wdgFrame.setProperty('border-image', True)
+        hbox(self, 0, 0).addWidget(self.wdgFrame)
+        self.btnAvatar = tool_btn(IconRegistry.character_icon(), transparent_=True)
+        hbox(self.wdgFrame, 17).addWidget(self.btnAvatar)
+        self.btnAvatar.installEventFilter(OpacityEventFilter(parent=self.btnAvatar, enterOpacity=0.7, leaveOpacity=1.0))
+        apply_border_image(self.wdgFrame, resource_registry.circular_frame1)
 
         self._character: Optional[Character] = None
         self._uploaded: bool = False
@@ -1117,29 +1119,29 @@ class CharacterAvatar(QWidget, Ui_CharacterAvatar):
         wdg = AvatarSelectors(self._character)
         wdg.updated.connect(self._uploadedAvatar)
         wdg.selectorChanged.connect(self.updateAvatar)
-        btn_popup(self.btnPov, wdg)
+        btn_popup(self.btnAvatar, wdg)
 
     def setCharacter(self, character: Character):
         self._character = character
         self.updateAvatar()
 
     def updateAvatar(self):
-        self.btnPov.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
+        self.btnAvatar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         if self._character.prefs.avatar.use_role or self._character.prefs.avatar.use_custom_icon:
-            self.btnPov.setIconSize(QSize(132, 132))
+            self.btnAvatar.setIconSize(QSize(132, 132))
         else:
-            self.btnPov.setIconSize(QSize(168, 168))
+            self.btnAvatar.setIconSize(QSize(168, 168))
         avatar = avatars.avatar(self._character, fallback=False)
         if avatar:
-            self.btnPov.setIcon(avatar)
+            self.btnAvatar.setIcon(avatar)
         else:
             self.reset()
         self.avatarUpdated.emit()
 
     def reset(self):
-        self.btnPov.setIconSize(QSize(118, 118))
-        self.btnPov.setIcon(IconRegistry.character_icon(color='grey'))
-        self.btnPov.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        self.btnAvatar.setIconSize(QSize(118, 118))
+        self.btnAvatar.setIcon(IconRegistry.character_icon(color='grey'))
+        self.btnAvatar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
 
     def imageUploaded(self) -> bool:
         return self._uploaded
