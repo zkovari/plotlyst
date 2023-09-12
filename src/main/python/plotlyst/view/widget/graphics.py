@@ -29,12 +29,12 @@ from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QGraphics
     QToolButton, QApplication, QGraphicsScene, QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QWidget, \
     QGraphicsRectItem, QGraphicsSceneHoverEvent, QGraphicsPolygonItem, QAbstractButton, QSlider, QButtonGroup
 from overrides import overrides
-from qthandy import hbox, margins, sp, incr_icon, vbox, grid
+from qthandy import hbox, margins, sp, incr_icon, vbox, grid, pointy
 
 from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Node, Relation, Diagram, DiagramNodeType, Connector
 from src.main.python.plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButtonGroup, \
-    TooltipPositionEventFilter, pointy
+    TooltipPositionEventFilter
 from src.main.python.plotlyst.view.icons import IconRegistry
 
 

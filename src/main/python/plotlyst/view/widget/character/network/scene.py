@@ -24,12 +24,12 @@ from PyQt6.QtCore import QRectF, Qt, QPointF
 from PyQt6.QtGui import QPainter, QPen, QColor, QBrush
 from PyQt6.QtWidgets import QWidget, QStyleOptionGraphicsItem, QGraphicsSceneHoverEvent
 from overrides import overrides
+from qthandy import pointy
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Character, Novel, Node, DiagramNodeType
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import pointy
 from src.main.python.plotlyst.view.icons import avatars
 from src.main.python.plotlyst.view.widget.graphics import NodeItem, AbstractSocketItem, NetworkScene
 

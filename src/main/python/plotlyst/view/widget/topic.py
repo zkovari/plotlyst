@@ -23,11 +23,11 @@ from typing import Dict
 import qtanim
 from PyQt6.QtCore import Qt, QSize, pyqtSignal
 from PyQt6.QtWidgets import QWidget, QPushButton, QTextEdit
-from qthandy import vbox, bold, line, transparent, margins, vspacer, spacer, ask_confirmation
+from qthandy import vbox, bold, line, transparent, margins, vspacer, spacer, ask_confirmation, pointy
 from qthandy.filter import VisibilityToggleEventFilter
 
 from src.main.python.plotlyst.core.domain import TemplateValue, Topic
-from src.main.python.plotlyst.view.common import pointy, insert_before_the_end, fade_out_and_gc
+from src.main.python.plotlyst.view.common import insert_before_the_end, fade_out_and_gc
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import CollapseButton

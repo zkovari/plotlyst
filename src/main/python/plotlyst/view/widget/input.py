@@ -31,7 +31,7 @@ from PyQt6.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyl
     QApplication, QToolButton, QLineEdit, QWidgetAction, QListView, QSpinBox, QWidget, QLabel
 from language_tool_python import LanguageTool
 from overrides import overrides
-from qthandy import transparent, hbox, margins
+from qthandy import transparent, hbox, margins, pointy
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
 
 from src.main.python.plotlyst.core.domain import TextStatistics, Character
@@ -44,7 +44,7 @@ from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.service.grammar import language_tool_proxy, dictionary
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import action, pointy
+from src.main.python.plotlyst.view.common import action
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.text import apply_texteditor_toolbar_style

@@ -23,7 +23,7 @@ from typing import Set, Optional, Dict
 from PyQt6.QtCore import pyqtSignal, Qt, QMimeData, QPointF, QModelIndex
 from PyQt6.QtWidgets import QListView
 from overrides import overrides
-from qthandy import clear_layout, vspacer, translucent, gc, ask_confirmation
+from qthandy import clear_layout, vspacer, translucent, gc, ask_confirmation, pointy
 from qthandy.filter import DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget
 
@@ -32,7 +32,7 @@ from src.main.python.plotlyst.core.domain import Document, Novel, DocumentType, 
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import fade_out_and_gc, pointy, action
+from src.main.python.plotlyst.view.common import fade_out_and_gc, action
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 

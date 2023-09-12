@@ -29,7 +29,7 @@ from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu, QPushButton, 
 from overrides import overrides
 from qthandy import bold, flow, incr_font, \
     margins, btn_popup_menu, ask_confirmation, italic, retain_when_hidden, vbox, transparent, \
-    clear_layout, vspacer, underline, decr_font, decr_icon, hbox, spacer, sp
+    clear_layout, vspacer, underline, decr_font, decr_icon, hbox, spacer, sp, pointy
 from qthandy.filter import VisibilityToggleEventFilter, ObjectReferenceMimeData, OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
@@ -44,7 +44,7 @@ from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
-from src.main.python.plotlyst.view.common import action, fade_out_and_gc, pointy, ButtonPressResizeEventFilter, wrap
+from src.main.python.plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter, wrap
 from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor

@@ -27,7 +27,7 @@ from PyQt6.QtWidgets import QPushButton, QSizePolicy, QToolButton, QAbstractButt
 from overrides import overrides
 from qtanim import fade_in
 from qthandy import hbox, translucent, bold, incr_font, transparent, retain_when_hidden, underline, vbox, decr_icon, \
-    incr_icon, italic
+    incr_icon, italic, pointy
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget, GridMenuWidget
 
@@ -36,7 +36,7 @@ from src.main.python.plotlyst.core.domain import SelectionItem, Novel, tag_chara
     tag_brainstorming, tag_research, tag_writing, tag_plotting, tag_theme, tag_outlining, tag_revision, tag_drafting, \
     tag_editing, tag_collect_feedback, tag_publishing, tag_marketing, tag_book_cover_design, tag_formatting
 from src.main.python.plotlyst.service.importer import SyncImporter
-from src.main.python.plotlyst.view.common import pointy, ButtonPressResizeEventFilter, tool_btn, spin, action
+from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, tool_btn, spin, action
 from src.main.python.plotlyst.view.icons import IconRegistry
 
 

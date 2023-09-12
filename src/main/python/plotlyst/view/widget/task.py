@@ -26,7 +26,7 @@ from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QWidget, QFrame, QSizePolicy, QLabel, QToolButton, QPushButton
 from overrides import overrides
 from qthandy import vbox, hbox, transparent, vspacer, margins, spacer, bold, retain_when_hidden, incr_font, \
-    gc, decr_icon
+    gc, decr_icon, pointy
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget
 
@@ -39,7 +39,7 @@ from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import CharacterDeletedEvent, TaskChanged, TaskDeleted, TaskChangedToWip, \
     TaskChangedFromWip
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, pointy, shadow, action, tool_btn, \
+from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, shadow, action, tool_btn, \
     any_menu_visible
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
