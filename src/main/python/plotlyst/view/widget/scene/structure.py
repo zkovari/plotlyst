@@ -718,14 +718,14 @@ class SceneStructureTimeline(QWidget):
         forward = True
         y = 0
         for i, wdg in enumerate(self._beatWidgets):
-            pos = wdg.pos().toPointF()
+            pos: QPoint = wdg.pos()
             pos.setY(pos.y() + wdg.layout().contentsMargins().top())
             if isinstance(wdg, SceneStructureItemWidget):
                 pos.setY(pos.y() + wdg.iconFixedSize // 2)
             pos.setX(pos.x() + wdg.layout().contentsMargins().left())
             if i == 0:
                 y = pos.y()
-                path.moveTo(pos)
+                path.moveTo(pos.toPointF())
                 painter.drawLine(pos.x(), y - 10, pos.x(), y + 10)
             else:
                 if pos.y() > y:
@@ -739,7 +739,7 @@ class SceneStructureTimeline(QWidget):
 
             if forward:
                 pos.setX(pos.x() + wdg.width())
-            path.lineTo(pos)
+            path.lineTo(pos.toPointF())
 
         painter.drawPath(path)
         if self._beatWidgets:
