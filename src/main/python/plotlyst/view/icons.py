@@ -152,7 +152,7 @@ class IconRegistry:
 
     @staticmethod
     def scene_icon(color: str = 'black', color_on: str = PLOTLYST_SECONDARY_COLOR) -> QIcon:
-        return IconRegistry.from_name('mdi.movie-open', color, color_on=color_on, mdi_scale=1.1)
+        return IconRegistry.from_name('mdi.movie-open', color, color_on=color_on, scale=1.1)
 
     @staticmethod
     def manuscript_icon(color: str = 'black', color_on: str = PLOTLYST_SECONDARY_COLOR) -> QIcon:
@@ -243,7 +243,7 @@ class IconRegistry:
 
     @staticmethod
     def reports_icon(color: str = 'black', color_on: str = PLOTLYST_SECONDARY_COLOR) -> QIcon:
-        return IconRegistry.from_name('mdi.chart-arc', color=color, color_on=color_on, mdi_scale=1.4)
+        return IconRegistry.from_name('mdi.chart-arc', color=color, color_on=color_on, scale=1.4)
 
     @staticmethod
     def document_edition_icon(color: str = 'black', color_on=PLOTLYST_SECONDARY_COLOR) -> QIcon:
@@ -455,7 +455,7 @@ class IconRegistry:
 
     @staticmethod
     def heading_1_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.format-header-1', mdi_scale=1.4)
+        return IconRegistry.from_name('mdi.format-header-1', scale=1.4)
 
     @staticmethod
     def heading_2_icon() -> QIcon:
@@ -637,13 +637,32 @@ class IconRegistry:
         return IconRegistry.from_name(item.icon, item.icon_color)
 
     @staticmethod
-    def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2, hflip: bool = False,
-                  vflip: bool = False) -> QIcon:
+    def from_name(name: str, color: str = 'black', color_on: str = '', scale: Optional[float] = None,
+                  hflip: bool = False,
+                  vflip: bool = False, rotated: int = 0) -> QIcon:
         _color_on = color_on if color_on else color
-        if name.startswith('md') or name.startswith('ri') or name.startswith('ph') or name.startswith('msc'):
-            return QIcon(qtawesome.icon(name, color=color, color_on=_color_on, hflip=hflip, vflip=vflip,
-                                        options=[{'scale_factor': mdi_scale}]))
-        return QIcon(qtawesome.icon(name, color=color, color_on=_color_on, hflip=hflip, vflip=vflip))
+
+        icon_args = {
+            'color': color,
+            'color_on': _color_on
+        }
+
+        if (scale is not None) or (
+                name.startswith('md') or name.startswith('ri') or name.startswith('ph') or name.startswith('msc')):
+            if scale is not None:
+                icon_args['options'] = [{'scale_factor': scale}]
+            elif scale is None and (
+                    name.startswith('md') or name.startswith('ri') or name.startswith('ph') or name.startswith('msc')):
+                icon_args['options'] = [{'scale_factor': 1.2}]
+
+        if hflip is not None:
+            icon_args['hflip'] = hflip
+        if vflip is not None:
+            icon_args['vflip'] = vflip
+        if rotated != 0:
+            icon_args['rotated'] = rotated
+
+        return QIcon(qtawesome.icon(name, **icon_args))
 
 
 class AvatarsRegistry:
