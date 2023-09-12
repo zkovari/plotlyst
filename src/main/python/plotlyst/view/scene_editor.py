@@ -38,10 +38,9 @@ from src.main.python.plotlyst.events import NovelAboutToSyncEvent, SceneStoryBea
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, action
+from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, action, set_tab_icon
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
 from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotSelector
 from src.main.python.plotlyst.view.widget.scenes import SceneTagSelector
@@ -61,11 +60,11 @@ class SceneEditor(QObject, EventListener):
 
         self._emoji_font = emoji_font()
 
-        self.ui.btnAttributes.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
-        self.ui.btnAttributes.setIcon(IconRegistry.from_name('fa5s.yin-yang'))
-        self.ui.btnNotes.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
-        self.ui.btnNotes.setIcon(IconRegistry.document_edition_icon())
         # self.ui.btnDrive.setIcon(IconRegistry.from_name('mdi.chemical-weapon'))
+        set_tab_icon(self.ui.tabWidget, self.ui.tabStorylines, IconRegistry.story_structure_icon())
+        set_tab_icon(self.ui.tabWidget, self.ui.tabCharacter, IconRegistry.character_icon())
+        set_tab_icon(self.ui.tabWidget, self.ui.tabStructure, IconRegistry.from_name('mdi6.timeline-outline', rotated=90))
+        set_tab_icon(self.ui.tabWidget, self.ui.tabNotes, IconRegistry.document_edition_icon())
 
         self.ui.btnStageCharacterLabel.setIcon(IconRegistry.character_icon(color_on='black'))
         underline(self.ui.btnStageCharacterLabel)
@@ -134,11 +133,9 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgSceneStructure.setUnsetCharacterSlot(self._pov_not_selected_notification)
 
         self._update_view(scene)
-
-        self.ui.btnGroupPages.buttonToggled.connect(self._page_toggled)
+        self.ui.tabWidget.currentChanged.connect(self._page_toggled)
 
         self.repo = RepositoryPersistenceManager.instance()
-        self.ui.btnAttributes.setChecked(True)
 
         dispatcher = event_dispatchers.instance(self.novel)
         dispatcher.register(self, NovelAboutToSyncEvent)
@@ -184,7 +181,8 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgStructure.setActChecked(acts_registry.act(self.scene))
 
         self.notes_updated = False
-        if self.ui.btnNotes.isChecked() or (self.scene.document and self.scene.document.loaded):
+        if self.ui.tabWidget.currentWidget() is self.ui.tabNotes or (
+                self.scene.document and self.scene.document.loaded):
             self._update_notes()
         else:
             self.ui.textNotes.clear()
@@ -193,10 +191,7 @@ class SceneEditor(QObject, EventListener):
         self._character_changed()
 
     def _page_toggled(self):
-        if self.ui.btnAttributes.isChecked():
-            self.ui.stackedWidget.setCurrentWidget(self.ui.pageStructure)
-        elif self.ui.btnNotes.isChecked():
-            self.ui.stackedWidget.setCurrentWidget(self.ui.pageNotes)
+        if self.ui.tabWidget.currentWidget() is self.ui.tabNotes:
             self._update_notes()
 
     def _beat_selected(self, beat: StoryBeat):
