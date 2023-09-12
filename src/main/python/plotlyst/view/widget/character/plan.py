@@ -28,13 +28,13 @@ from PyQt6.QtGui import QPaintEvent, QPainter, QPen, QColor, QPainterPath, QShow
 from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel, QSizePolicy, QPushButton, QToolButton
 from overrides import overrides
 from qthandy import vbox, vspacer, hbox, spacer, transparent, margins, line, retain_when_hidden, decr_font, curved_flow, \
-    gc, sp, decr_icon, translucent
+    gc, sp, decr_icon, translucent, pointy
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from src.main.python.plotlyst.core.domain import Character, CharacterGoal, Novel, CharacterPlan, Goal
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, pointy, action, wrap, \
+from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, action, wrap, \
     fade_out_and_gc, MouseEventDelegate
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group

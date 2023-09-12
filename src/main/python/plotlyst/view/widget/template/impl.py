@@ -30,7 +30,7 @@ from PyQt6.QtWidgets import QFrame, QHBoxLayout, QWidget, QLineEdit, QToolButton
     QSpinBox, QButtonGroup, QSizePolicy, QListView, QPushButton, QMenu, QVBoxLayout, QSlider
 from overrides import overrides
 from qthandy import spacer, hbox, vbox, bold, line, underline, transparent, margins, \
-    decr_font, retain_when_hidden, btn_popup_menu, vspacer, gc, italic, sp
+    decr_font, retain_when_hidden, btn_popup_menu, vspacer, gc, italic, sp, pointy
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
@@ -41,7 +41,7 @@ from src.main.python.plotlyst.core.template import TemplateField, SelectionItem,
     healing_field, methods_field, misbelief_field, positive_arc, negative_arc, need_field, ghost_field, desire_field
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
-from src.main.python.plotlyst.view.common import pointy, wrap, emoji_font, hmax, action, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import wrap, emoji_font, hmax, action, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui import Ui_FieldTextSelectionWidget
 from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from src.main.python.plotlyst.view.icons import IconRegistry

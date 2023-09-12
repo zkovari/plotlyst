@@ -32,7 +32,7 @@ from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemVie
 from fbs_runtime import platform
 from overrides import overrides
 from qtanim import fade_out
-from qthandy import hbox, vbox, margins, gc, transparent, spacer, sp
+from qthandy import hbox, vbox, margins, gc, transparent, spacer, sp, pointy
 
 from src.main.python.plotlyst.env import app_env
 
@@ -276,8 +276,8 @@ def icon_to_html_img(icon: QIcon, size: int = 20) -> str:
     return f"<img src='data:image/png;base64, {bytes(buffer.data().toBase64()).decode()}'>"
 
 
-def pointy(widget):
-    widget.setCursor(Qt.CursorShape.PointingHandCursor)
+# def pointy(widget):
+#     widget.setCursor(Qt.CursorShape.PointingHandCursor)
 
 
 def restyle(widget: QWidget):

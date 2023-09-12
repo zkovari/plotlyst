@@ -33,7 +33,7 @@ from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, Q
     QHeaderView, QFileDialog, QMessageBox, QGridLayout, QWidgetAction
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup, incr_font, \
-    spacer, clear_layout, vbox, hbox, flow, translucent, margins, bold
+    spacer, clear_layout, vbox, hbox, flow, translucent, margins, bold, pointy
 from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
@@ -57,7 +57,7 @@ from src.main.python.plotlyst.model.scenes_model import SceneConflictsModel
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import emoji_font, \
-    link_buttons_to_pages, pointy, action, ButtonPressResizeEventFilter, tool_btn
+    link_buttons_to_pages, action, ButtonPressResizeEventFilter, tool_btn
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog, ArtbreederDialog, ImageCropDialog
 from src.main.python.plotlyst.view.generated.avatar_selectors_ui import Ui_AvatarSelectors
