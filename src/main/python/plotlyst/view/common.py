@@ -35,6 +35,7 @@ from qtanim import fade_out
 from qthandy import hbox, vbox, margins, gc, transparent, spacer, sp, pointy
 
 from src.main.python.plotlyst.env import app_env
+from src.main.python.plotlyst.view.stylesheet import APP_STYLESHEET
 
 
 def rounded_pixmap(original: QPixmap) -> QPixmap:
@@ -446,6 +447,7 @@ class DelayedSignalSlotConnector(QObject):
 
 def spawn(cls):
     app = QApplication(sys.argv)
+    app.setStyleSheet(APP_STYLESHEET)
     main_window = QMainWindow()
     wdgCentral = QWidget()
     vbox(wdgCentral)
