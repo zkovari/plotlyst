@@ -288,7 +288,7 @@ class CharacterGoalWidget(_AbstractCharacterObjectiveWidget):
         subtaskWdg = CharacterSubtaskWidget(self._novel, charGoal, selectable=self._selectable)
         subtaskWdg.delete.connect(partial(self._deleteSubtask, subtaskWdg))
         subtaskWdg.selected.connect(partial(self.subtaskSelected.emit, subtaskWdg))
-        margins(subtaskWdg, left=self.btnAddBefore.sizeHint().width() + self.iconSelector.sizeHint().width() / 2)
+        margins(subtaskWdg, left=self.btnAddBefore.sizeHint().width() + self.iconSelector.sizeHint().width() // 2)
         self._wdgBottom.layout().insertWidget(self._wdgBottom.layout().count() - 1, subtaskWdg)
         self._btnAddSubtask.setText('')
         subtaskWdg.lineText.setFocus()
