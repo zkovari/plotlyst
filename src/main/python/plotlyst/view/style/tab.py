@@ -102,7 +102,7 @@ QTabBar::tab:right:!selected {
 QTabBar::tab:left, QTabBar::tab:right {
     min-height: 8ex;
     margin-bottom: -1px;
-    padding: 10px 5px 10px 5px;
+    padding: 5px 5px 5px 5px;
 }
 
 QTabBar::tab:left:selected {
