@@ -131,7 +131,7 @@ class SceneEditor(QObject, EventListener):
         self._purposeSelector = ScenePurposeSelectorWidget()
         margins(self._purposeSelector, top=25)
         self.ui.pagePurpose.layout().addWidget(self._purposeSelector)
-        self._purposeSelector.skipped.connect(lambda: self._purposeChanged(None))
+        self._purposeSelector.skipped.connect(self._purposeSkipped)
         self._purposeSelector.selected.connect(self._purposeChanged)
 
         self.ui.btnClose.clicked.connect(self._on_close)
@@ -147,8 +147,6 @@ class SceneEditor(QObject, EventListener):
 
         dispatcher = event_dispatchers.instance(self.novel)
         dispatcher.register(self, NovelAboutToSyncEvent)
-
-        self.ui.stackedWidget.setCurrentWidget(self.ui.pagePurpose)
 
     @overrides
     def event_received(self, event: Event):
@@ -198,9 +196,9 @@ class SceneEditor(QObject, EventListener):
             self.ui.textNotes.clear()
 
         if self.scene.purpose is None:
-            self._resetPurpose()
+            self._resetPurposeEditor()
         else:
-            self._purposeChanged(self.scene.purpose)
+            self._closePurposeEditor()
 
         self._characters_model.setScene(self.scene)
         self._character_changed()
@@ -288,18 +286,24 @@ class SceneEditor(QObject, EventListener):
 
         self.ui.wdgSceneStructure.updateAvailableAgendaCharacters()
 
-    def _purposeChanged(self, purpose: Optional[ScenePurpose]):
-        if purpose and purpose.type == ScenePurposeType.Story:
-            self._purposeSelector.setDisabled(
-                True)  # to avoid segfault for some reason, we disable it first before changing the stack widget
-            self.ui.stackedWidget.setCurrentWidget(self.ui.pageOutcome)
-        else:
-            self.ui.btnPurpose.setVisible(True)
-            self.ui.btnInfo.setVisible(True)
-            self._purposeSelector.setDisabled(True)
-            self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
+    def _purposeSkipped(self):
+        self.scene.purpose = ScenePurposeType.Other
+        self._closePurposeEditor()
 
-    def _resetPurpose(self):
+    def _purposeChanged(self, purpose: ScenePurpose):
+        self.scene.purpose = purpose.type
+        if purpose.type == ScenePurposeType.Story:
+            pass
+        self._closePurposeEditor()
+
+    def _closePurposeEditor(self):
+        self.ui.btnPurpose.setVisible(True)
+        self.ui.btnInfo.setVisible(True)
+        # to avoid segfault for some reason, we disable it first before changing the stack widget
+        self._purposeSelector.setDisabled(True)
+        self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
+
+    def _resetPurposeEditor(self):
         self.ui.btnPurpose.setHidden(True)
         self.ui.btnInfo.setHidden(True)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pagePurpose)

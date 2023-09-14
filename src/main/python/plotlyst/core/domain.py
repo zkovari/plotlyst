@@ -880,6 +880,7 @@ class ScenePurposeType(Enum):
     Emotion = 'emotion'
     Setup = 'setup'
     Exposition = 'exposition'
+    Other = 'other'
 
 
 @dataclass
