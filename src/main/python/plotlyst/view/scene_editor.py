@@ -25,12 +25,12 @@ import qtanim
 from PyQt6.QtCore import QObject, pyqtSignal, Qt
 from PyQt6.QtWidgets import QWidget, QTableView
 from overrides import overrides
-from qthandy import flow, clear_layout, underline, incr_font
+from qthandy import flow, clear_layout, underline, incr_font, margins
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, Document, StoryBeat, \
-    Character, ScenePlotReference, TagReference
+    Character, ScenePlotReference, TagReference, ScenePurposeType, ScenePurpose
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_info, EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
@@ -42,6 +42,7 @@ from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEv
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
+from src.main.python.plotlyst.view.widget.scene.editor import ScenePurposeSelectorWidget
 from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotSelector
 from src.main.python.plotlyst.view.widget.scenes import SceneTagSelector
 
@@ -63,7 +64,8 @@ class SceneEditor(QObject, EventListener):
         # self.ui.btnDrive.setIcon(IconRegistry.from_name('mdi.chemical-weapon'))
         set_tab_icon(self.ui.tabWidget, self.ui.tabStorylines, IconRegistry.story_structure_icon())
         set_tab_icon(self.ui.tabWidget, self.ui.tabCharacter, IconRegistry.character_icon())
-        set_tab_icon(self.ui.tabWidget, self.ui.tabStructure, IconRegistry.from_name('mdi6.timeline-outline', rotated=90))
+        set_tab_icon(self.ui.tabWidget, self.ui.tabStructure,
+                     IconRegistry.from_name('mdi6.timeline-outline', rotated=90))
         set_tab_icon(self.ui.tabWidget, self.ui.tabNotes, IconRegistry.document_edition_icon())
 
         self.ui.btnStageCharacterLabel.setIcon(IconRegistry.character_icon(color_on='black'))
@@ -126,6 +128,12 @@ class SceneEditor(QObject, EventListener):
         self.ui.treeScenes.setNovel(self.novel, readOnly=True)
         self.ui.treeScenes.sceneSelected.connect(self._scene_selected)
 
+        self._purposeSelector = ScenePurposeSelectorWidget()
+        margins(self._purposeSelector, top=25)
+        self.ui.pagePurpose.layout().addWidget(self._purposeSelector)
+        self._purposeSelector.skipped.connect(lambda: self._purposeChanged(None))
+        self._purposeSelector.selected.connect(self._purposeChanged)
+
         self.ui.btnClose.clicked.connect(self._on_close)
 
         flow(self.ui.wdgPlotContainer)
@@ -139,6 +147,8 @@ class SceneEditor(QObject, EventListener):
 
         dispatcher = event_dispatchers.instance(self.novel)
         dispatcher.register(self, NovelAboutToSyncEvent)
+
+        self.ui.stackedWidget.setCurrentWidget(self.ui.pagePurpose)
 
     @overrides
     def event_received(self, event: Event):
@@ -186,6 +196,11 @@ class SceneEditor(QObject, EventListener):
             self._update_notes()
         else:
             self.ui.textNotes.clear()
+
+        if self.scene.purpose is None:
+            self._resetPurpose()
+        else:
+            self._purposeChanged(self.scene.purpose)
 
         self._characters_model.setScene(self.scene)
         self._character_changed()
@@ -272,6 +287,23 @@ class SceneEditor(QObject, EventListener):
             self.ui.wdgCharacters.addLabel(CharacterLabel(character))
 
         self.ui.wdgSceneStructure.updateAvailableAgendaCharacters()
+
+    def _purposeChanged(self, purpose: Optional[ScenePurpose]):
+        if purpose and purpose.type == ScenePurposeType.Story:
+            self._purposeSelector.setDisabled(
+                True)  # to avoid segfault for some reason, we disable it first before changing the stack widget
+            self.ui.stackedWidget.setCurrentWidget(self.ui.pageOutcome)
+        else:
+            self.ui.btnPurpose.setVisible(True)
+            self.ui.btnInfo.setVisible(True)
+            self._purposeSelector.setDisabled(True)
+            self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
+
+    def _resetPurpose(self):
+        self.ui.btnPurpose.setHidden(True)
+        self.ui.btnInfo.setHidden(True)
+        self.ui.stackedWidget.setCurrentWidget(self.ui.pagePurpose)
+        self._purposeSelector.setEnabled(True)
 
     def _save_scene(self):
         self.scene.title = self.ui.lineTitle.text()

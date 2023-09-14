@@ -183,7 +183,8 @@ class IconRegistry:
         else:
             color = '#fe4a49'
         return qtawesome.icon('fa5s.circle', 'fa5s.yin-yang',
-                              options=[{'color': 'white', 'scale_factor': 1}, {'color': color}])
+                              options=[{'color': 'white', 'scale_factor': 1},
+                                       {'color': color, 'color_disabled': 'black'}])
 
     @staticmethod
     def scene_type_icon(scene: Scene) -> Optional[QIcon]:
@@ -203,15 +204,28 @@ class IconRegistry:
     @staticmethod
     def reaction_scene_icon() -> QIcon:
         return qtawesome.icon('fa5s.circle', 'fa5s.yin-yang',
-                              options=[{'color': 'white', 'scale_factor': 1}, {'color': '#4b86b4'}])
+                              options=[{'color': 'white', 'scale_factor': 1},
+                                       {'color': '#4b86b4', 'color_disabled': 'black'}])
 
     @staticmethod
     def happening_scene_icon() -> QIcon:
         return IconRegistry.from_name('mdi.motion-outline', 'grey', 'black')
 
     @staticmethod
+    def setup_scene_icon() -> QIcon:
+        return IconRegistry.from_name('fa5s.seedling', 'grey')
+
+    @staticmethod
     def exposition_scene_icon() -> QIcon:
         return IconRegistry.from_name('mdi.information-outline', 'grey', 'black')
+
+    @staticmethod
+    def character_development_scene_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.account-cog', 'grey', 'black')
+
+    @staticmethod
+    def emotion_scene_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.emoticon-outline', 'grey', 'black')
 
     @staticmethod
     def summary_scene_icon() -> QIcon:

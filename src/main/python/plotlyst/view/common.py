@@ -28,7 +28,8 @@ from PyQt6.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon, Q
 from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemView, \
     QMenu, QAbstractButton, \
     QStackedWidget, QAbstractScrollArea, QLineEdit, QHeaderView, QScrollArea, QFrame, QTabWidget, \
-    QGraphicsDropShadowEffect, QTableView, QPushButton, QToolButton, QButtonGroup, QToolTip, QApplication, QMainWindow
+    QGraphicsDropShadowEffect, QTableView, QPushButton, QToolButton, QButtonGroup, QToolTip, QApplication, QMainWindow, \
+    QLabel
 from fbs_runtime import platform
 from overrides import overrides
 from qtanim import fade_out
@@ -303,6 +304,7 @@ def stretch_col(view: QTableView, col: int):
 
 
 def scrolled(parent: QWidget, frameless: bool = False) -> Tuple[QScrollArea, QWidget]:
+    """Usage: self._scrollarea, self._wdgCenter = scrolled(self)"""
     scrollArea = QScrollArea(parent)
     scrollArea.setFocusPolicy(Qt.FocusPolicy.NoFocus)
     scrollArea.setWidgetResizable(True)
@@ -399,6 +401,26 @@ def frame(parent=None):
     frame_ = QFrame(parent)
     frame_.setFrameShape(QFrame.Shape.StyledPanel)
     return frame_
+
+
+def label(text: str = '', bold: Optional[bool] = None, italic: Optional[bool] = None, underline: Optional[bool] = None,
+          description: Optional[bool] = None, wordWrap: Optional[bool] = None) -> QLabel:
+    lbl = QLabel(text)
+    font = lbl.font()
+    if bold:
+        font.setBold(bold)
+    if italic:
+        font.setItalic(italic)
+    if underline:
+        font.setUnderline(underline)
+    lbl.setFont(font)
+
+    if description:
+        lbl.setProperty('description', description)
+    if wordWrap:
+        lbl.setWordWrap(wordWrap)
+
+    return lbl
 
 
 class ExclusiveOptionalButtonGroup(QButtonGroup):

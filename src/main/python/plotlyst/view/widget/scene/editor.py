@@ -20,18 +20,27 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import List, Optional
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel
+from PyQt6.QtCore import Qt, QSize, QEvent, pyqtSignal, QObject
+from PyQt6.QtGui import QEnterEvent, QIcon, QMouseEvent
+from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame
 from overrides import overrides
-from qthandy import vbox, vspacer, transparent, sp, line, incr_font
+from qthandy import vbox, vspacer, transparent, sp, line, incr_font, hbox, pointy, vline, retain_when_hidden, margins, \
+    spacer, underline
+from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.core.domain import Scene, Novel
+from src.main.python.plotlyst.common import raise_unrecognized_arg
+from src.main.python.plotlyst.core.domain import Scene, Novel, ScenePurpose, advance_story_scene_purpose, \
+    ScenePurposeType, reaction_story_scene_purpose, character_story_scene_purpose, setup_story_scene_purpose, \
+    emotion_story_scene_purpose, exposition_story_scene_purpose
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import DelayedSignalSlotConnector, action
+from src.main.python.plotlyst.view.common import DelayedSignalSlotConnector, action, wrap, label, scrolled, \
+    ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.display import Icon
 
 
 class SceneMiniEditor(QWidget, EventListener):
@@ -118,3 +127,162 @@ class SceneMiniEditor(QWidget, EventListener):
             self._currentScene.synopsis = self._textSynopsis.toPlainText()
             self._repo.update_scene(self._currentScene)
             emit_event(self._novel, SceneChangedEvent(self, self._currentScene))
+
+
+def purpose_icon(purpose_type: ScenePurposeType) -> QIcon:
+    if purpose_type == ScenePurposeType.Story:
+        return IconRegistry.action_scene_icon()
+    elif purpose_type == ScenePurposeType.Reaction:
+        return IconRegistry.reaction_scene_icon()
+    elif purpose_type == ScenePurposeType.Character:
+        return IconRegistry.character_development_scene_icon()
+    elif purpose_type == ScenePurposeType.Emotion:
+        return IconRegistry.emotion_scene_icon()
+    elif purpose_type == ScenePurposeType.Setup:
+        return IconRegistry.setup_scene_icon()
+    elif purpose_type == ScenePurposeType.Exposition:
+        return IconRegistry.exposition_scene_icon()
+    else:
+        raise_unrecognized_arg(purpose_type)
+
+
+class ScenePurposeWidget(QFrame):
+    clicked = pyqtSignal()
+
+    def __init__(self, purpose: ScenePurpose, parent=None):
+        super().__init__(parent)
+        self._purpose = purpose
+        self.setMinimumWidth(150)
+        self.setMaximumWidth(170)
+
+        self._icon = Icon()
+        self._icon.setIcon(purpose_icon(self._purpose.type))
+        self._icon.setIconSize(QSize(64, 64))
+        self._icon.setDisabled(True)
+        self._icon.installEventFilter(self)
+        self._title = QLabel(self._purpose.display_name)
+        self._title.setProperty('h4', True)
+        self._title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self._wdgInfo = QWidget(self)
+        vbox(self._wdgInfo)
+        if self._purpose.type == ScenePurposeType.Story or self._purpose.type == ScenePurposeType.Character:
+            margins(self._wdgInfo, top=20)
+        else:
+            margins(self._wdgInfo, top=40)
+
+        if self._purpose.keywords:
+            self._wdgInfo.layout().addWidget(label('Keywords:', underline=True))
+            keywords = ', '.join(self._purpose.keywords)
+            lbl = label(keywords, description=True, wordWrap=True)
+            self._wdgInfo.layout().addWidget(wrap(lbl, margin_left=5))
+        if self._purpose.pacing:
+            lbl = label('Pacing:', underline=True)
+            self._wdgInfo.layout().addWidget(wrap(lbl, margin_top=10))
+            lbl = label(self._purpose.pacing, description=True)
+            self._wdgInfo.layout().addWidget(wrap(lbl, margin_left=5))
+        if self._purpose.include:
+            lbl = label('May include:', underline=True)
+            icons = QWidget()
+            icons.setToolTip(self._purpose.help_include)
+            hbox(icons, 0, 3)
+            margins(icons, left=5)
+            for type in self._purpose.include:
+                icon = Icon()
+                icon.setIcon(purpose_icon(type))
+                icon.setDisabled(True)
+                icons.layout().addWidget(icon)
+            icons.layout().addWidget(spacer())
+            self._wdgInfo.layout().addWidget(wrap(lbl, margin_top=10))
+            self._wdgInfo.layout().addWidget(icons)
+
+        self._wdgInfo.setHidden(True)
+        retain_when_hidden(self._wdgInfo)
+
+        pointy(self)
+        vbox(self)
+        self.layout().addWidget(self._icon, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self._title, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self._wdgInfo)
+        self.layout().addWidget(vspacer())
+
+        self.installEventFilter(OpacityEventFilter(self))
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.MouseButtonPress:
+            self.mousePressEvent(event)
+            return False
+        elif event.type() == QEvent.Type.MouseButtonRelease:
+            self.mouseReleaseEvent(event)
+            return False
+        return super().eventFilter(watched, event)
+
+    @overrides
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        self._setBgColor(0.1)
+        event.accept()
+
+    @overrides
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        self._setBgColor()
+        event.accept()
+        self.clicked.emit()
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        self._icon.setEnabled(True)
+        self._setBgColor()
+        self._wdgInfo.setVisible(True)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self._icon.setDisabled(True)
+        self._wdgInfo.setHidden(True)
+        self.setStyleSheet('')
+
+    def _setBgColor(self, opacity: float = 0.04):
+        if self._purpose.type == ScenePurposeType.Story:
+            self._bgRgb = '254, 74, 73'
+        elif self._purpose.type == ScenePurposeType.Reaction:
+            self._bgRgb = '75, 134, 180'
+        else:
+            self._bgRgb = '144, 151, 156'
+        self.setStyleSheet(f'ScenePurposeWidget {{background-color: rgba({self._bgRgb}, {opacity});}}')
+
+
+class ScenePurposeSelectorWidget(QWidget):
+    skipped = pyqtSignal()
+    selected = pyqtSignal(ScenePurpose)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        vbox(self)
+        self._btnSkip = QPushButton('Ignore')
+        self._btnSkip.setIcon(IconRegistry.from_name('ri.share-forward-fill'))
+        underline(self._btnSkip)
+        transparent(self._btnSkip)
+        pointy(self._btnSkip)
+        self._btnSkip.installEventFilter(OpacityEventFilter(self._btnSkip))
+        self._btnSkip.installEventFilter(ButtonPressResizeEventFilter(self._btnSkip))
+        self._btnSkip.clicked.connect(self.skipped.emit)
+        self.layout().addWidget(self._btnSkip, alignment=Qt.AlignmentFlag.AlignRight)
+        self.layout().addWidget(label("Select the scene's main purpose:", bold=True),
+                                alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self._scrollarea, self._wdgPurposes = scrolled(self, frameless=True)
+        self._wdgPurposes.setProperty('relaxed-white-bg', True)
+        sp(self._scrollarea).h_exp().v_exp()
+        sp(self._wdgPurposes).h_exp().v_exp()
+        hbox(self._wdgPurposes, 0, 0)
+        margins(self._wdgPurposes, top=10)
+
+        self._wdgPurposes.layout().addWidget(spacer())
+        for purpose in [advance_story_scene_purpose, reaction_story_scene_purpose, character_story_scene_purpose,
+                        setup_story_scene_purpose, emotion_story_scene_purpose, exposition_story_scene_purpose]:
+            wdg = ScenePurposeWidget(purpose)
+            wdg.clicked.connect(partial(self.selected.emit, purpose))
+            self._wdgPurposes.layout().addWidget(wdg)
+        self._wdgPurposes.layout().insertWidget(3, vline())
+        self._wdgPurposes.layout().addWidget(spacer())

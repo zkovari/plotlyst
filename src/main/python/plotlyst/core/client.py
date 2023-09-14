@@ -44,7 +44,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     default_tag_types, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterPreferences, TagReference, \
     ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding, Board, \
     default_big_five_values, CharacterPlan, ManuscriptGoals, Diagram, DiagramData, default_events_map, \
-    default_character_networks
+    default_character_networks, ScenePurposeType
 from src.main.python.plotlyst.core.template import Role, exclude_if_empty, exclude_if_black
 from src.main.python.plotlyst.env import app_env
 
@@ -169,7 +169,8 @@ class SceneInfo:
     tag_references: List[TagReference] = field(default_factory=list)
     document: Optional[Document] = None
     manuscript: Optional[Document] = None
-    drive: SceneDrive = SceneDrive()
+    drive: SceneDrive = field(default_factory=SceneDrive)
+    purpose: Optional[ScenePurposeType] = None
 
 
 @dataclass
@@ -521,7 +522,7 @@ class JsonClient:
                               plot_values=scene_plots, pov=pov, characters=scene_characters, agendas=info.agendas,
                               chapter=chapter, stage=stage, beats=info.beats,
                               comments=info.comments, tag_references=info.tag_references,
-                              document=info.document, manuscript=info.manuscript, drive=info.drive)
+                              document=info.document, manuscript=info.manuscript, drive=info.drive, purpose=info.purpose)
                 scenes.append(scene)
 
         tag_types = novel_info.tag_types
@@ -632,7 +633,7 @@ class JsonClient:
                          stage=self.__id_or_none(scene.stage),
                          beats=scene.beats, comments=scene.comments,
                          tag_references=scene.tag_references, document=scene.document, manuscript=scene.manuscript,
-                         drive=scene.drive)
+                         drive=scene.drive, purpose=scene.purpose)
         self.__persist_info(self.scenes_dir(novel), info)
 
     def _persist_diagram(self, novel: Novel, diagram: Diagram):
