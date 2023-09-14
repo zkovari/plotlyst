@@ -893,7 +893,7 @@ class ScenePurpose:
     pacing: str = ''
 
 
-advance_story_scene_purpose = ScenePurpose(ScenePurposeType.Story, 'Advancing\nstory',
+advance_story_scene_purpose = ScenePurpose(ScenePurposeType.Story, 'Advance\nstory',
                                            keywords=['goal', 'conflict', 'action', 'outcome', 'tension', 'revelation',
                                                      'mystery', 'catalyst'],
                                            include=[ScenePurposeType.Character, ScenePurposeType.Emotion,
@@ -913,6 +913,15 @@ setup_story_scene_purpose = ScenePurpose(ScenePurposeType.Setup, 'Setup',
                                          keywords=['plant', 'foreshadowing', 'setup', 'happening', 'transition'])
 exposition_story_scene_purpose = ScenePurpose(ScenePurposeType.Exposition, 'Exposition',
                                               keywords=['introduction', 'description', 'information'])
+
+scene_purposes: Dict[ScenePurposeType, ScenePurpose] = {
+    ScenePurposeType.Story: advance_story_scene_purpose,
+    ScenePurposeType.Reaction: reaction_story_scene_purpose,
+    ScenePurposeType.Character: character_story_scene_purpose,
+    ScenePurposeType.Emotion: emotion_story_scene_purpose,
+    ScenePurposeType.Setup: setup_story_scene_purpose,
+    ScenePurposeType.Exposition: exposition_story_scene_purpose,
+}
 
 
 @dataclass

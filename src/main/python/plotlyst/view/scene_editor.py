@@ -25,6 +25,7 @@ import qtanim
 from PyQt6.QtCore import QObject, pyqtSignal, Qt
 from PyQt6.QtWidgets import QWidget, QTableView
 from overrides import overrides
+from qtanim import fade_in
 from qthandy import flow, clear_layout, underline, incr_font, margins
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
@@ -42,7 +43,7 @@ from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEv
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
-from src.main.python.plotlyst.view.widget.scene.editor import ScenePurposeSelectorWidget
+from src.main.python.plotlyst.view.widget.scene.editor import ScenePurposeSelectorWidget, ScenePurposeTypeButton
 from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotSelector
 from src.main.python.plotlyst.view.widget.scenes import SceneTagSelector
 
@@ -133,6 +134,10 @@ class SceneEditor(QObject, EventListener):
         self.ui.pagePurpose.layout().addWidget(self._purposeSelector)
         self._purposeSelector.skipped.connect(self._purposeSkipped)
         self._purposeSelector.selected.connect(self._purposeChanged)
+
+        self._btnPurposeType = ScenePurposeTypeButton(ScenePurposeType.Other)
+        self._btnPurposeType.selectionRequested.connect(self._resetPurposeEditor)
+        self.ui.wdgMidbar.layout().insertWidget(0, self._btnPurposeType)
 
         self.ui.btnClose.clicked.connect(self._on_close)
 
@@ -297,14 +302,18 @@ class SceneEditor(QObject, EventListener):
         self._closePurposeEditor()
 
     def _closePurposeEditor(self):
-        self.ui.btnPurpose.setVisible(True)
-        self.ui.btnInfo.setVisible(True)
+        self._btnPurposeType.setPurposeType(self.scene.purpose)
+        if not self._btnPurposeType.isVisible():
+            fade_in(self._btnPurposeType)
+        if not self.ui.btnInfo.isVisible():
+            fade_in(self.ui.btnInfo)
         # to avoid segfault for some reason, we disable it first before changing the stack widget
         self._purposeSelector.setDisabled(True)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
 
     def _resetPurposeEditor(self):
-        self.ui.btnPurpose.setHidden(True)
+        self.scene.purpose = None
+        self._btnPurposeType.setHidden(True)
         self.ui.btnInfo.setHidden(True)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pagePurpose)
         self._purposeSelector.setEnabled(True)

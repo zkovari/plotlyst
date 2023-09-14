@@ -25,14 +25,14 @@ from PyQt6.QtGui import QEnterEvent, QIcon, QMouseEvent
 from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame
 from overrides import overrides
 from qthandy import vbox, vspacer, transparent, sp, line, incr_font, hbox, pointy, vline, retain_when_hidden, margins, \
-    spacer, underline
+    spacer, underline, bold
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import raise_unrecognized_arg
 from src.main.python.plotlyst.core.domain import Scene, Novel, ScenePurpose, advance_story_scene_purpose, \
     ScenePurposeType, reaction_story_scene_purpose, character_story_scene_purpose, setup_story_scene_purpose, \
-    emotion_story_scene_purpose, exposition_story_scene_purpose
+    emotion_story_scene_purpose, exposition_story_scene_purpose, scene_purposes
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent
@@ -146,6 +146,74 @@ def purpose_icon(purpose_type: ScenePurposeType) -> QIcon:
         raise_unrecognized_arg(purpose_type)
 
 
+class ScenePurposeTypeButton(QPushButton):
+    selectionRequested = pyqtSignal()
+
+    def __init__(self, type: ScenePurposeType, parent=None):
+        super(ScenePurposeTypeButton, self).__init__(parent)
+        self.type = type
+        pointy(self)
+        self._opacityFilter = OpacityEventFilter(self, 0.8, 1.0, ignoreCheckedButton=True)
+        self.installEventFilter(self._opacityFilter)
+
+        self._menu = MenuWidget(self)
+        self._menu.addAction(action('Select new purpose', slot=self.selectionRequested.emit))
+
+        self.refresh()
+
+    def setPurposeType(self, type: ScenePurposeType):
+        self.type = type
+        self.refresh()
+
+    def refresh(self):
+        if self.type == ScenePurposeType.Other:
+            self.setText('')
+            self.setToolTip('Scene purpose not selected')
+        else:
+            purpose = scene_purposes.get(self.type)
+            tip = purpose.display_name.replace('\n', ' ')
+            self.setText(tip)
+            self.setToolTip(f'Scene purpose: {tip}')
+
+        if self.type == ScenePurposeType.Exposition:
+            self.setIcon(IconRegistry.exposition_scene_icon())
+        elif self.type == ScenePurposeType.Setup:
+            self.setIcon(IconRegistry.setup_scene_icon())
+        elif self.type == ScenePurposeType.Character:
+            self.setIcon(IconRegistry.character_development_scene_icon())
+        elif self.type == ScenePurposeType.Emotion:
+            self.setIcon(IconRegistry.emotion_scene_icon())
+
+        bold(self, self.type != ScenePurposeType.Other)
+
+        if self.type == ScenePurposeType.Story:
+            bgColor = '#f4978e'
+            borderColor = '#fb5607'
+            self.setIcon(IconRegistry.action_scene_icon())
+        elif self.type == ScenePurposeType.Reaction:
+            bgColor = '#89c2d9'
+            borderColor = '#1a759f'
+            self.setIcon(IconRegistry.reaction_scene_icon())
+        elif self.type == ScenePurposeType.Other:
+            bgColor = 'lightgrey'
+            borderColor = 'grey'
+        else:
+            bgColor = 'darkGrey'
+            borderColor = 'grey'
+
+        self.setStyleSheet(f'''
+            QPushButton {{
+                background: {bgColor};
+                border: 2px solid {borderColor};
+                border-radius: 8px;
+                padding: 2px;
+            }}
+            QPushButton::menu-indicator{{
+                width:0px;
+            }}
+            ''')
+
+
 class ScenePurposeWidget(QFrame):
     clicked = pyqtSignal()
 
@@ -191,6 +259,7 @@ class ScenePurposeWidget(QFrame):
                 icon = Icon()
                 icon.setIcon(purpose_icon(type))
                 icon.setDisabled(True)
+                icon.setToolTip(scene_purposes[type].display_name)
                 icons.layout().addWidget(icon)
             icons.layout().addWidget(spacer())
             self._wdgInfo.layout().addWidget(wrap(lbl, margin_top=10))
