@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from timeit import default_timer as timer
+from typing import Any, NoReturn
 
 from src.main.python.plotlyst.core.domain import VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY
 
@@ -138,3 +139,7 @@ def camel_to_whitespace(text: str) -> str:
     new_text = ' '.join(words)
     new_text = new_text.strip()
     return new_text
+
+
+def raise_unrecognized_arg(arg: Any) -> NoReturn:
+    raise ValueError(f'Unrecognized argument {arg}')

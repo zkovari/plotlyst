@@ -873,6 +873,47 @@ class SceneDrive:
     deus_ex_machina: bool = field(default=False, metadata=config(exclude=exclude_if_false))
 
 
+class ScenePurposeType(Enum):
+    Story = 'story'
+    Reaction = 'reaction'
+    Character = 'character'
+    Emotion = 'emotion'
+    Setup = 'setup'
+    Exposition = 'exposition'
+
+
+@dataclass
+class ScenePurpose:
+    type: ScenePurposeType
+    display_name: str
+    keywords: List[str] = field(default_factory=list)
+    include: List[ScenePurposeType] = field(default_factory=list)
+    help_include: str = ''
+    pacing: str = ''
+
+
+advance_story_scene_purpose = ScenePurpose(ScenePurposeType.Story, 'Advancing\nstory',
+                                           keywords=['goal', 'conflict', 'action', 'outcome', 'tension', 'revelation',
+                                                     'mystery', 'catalyst'],
+                                           include=[ScenePurposeType.Character, ScenePurposeType.Emotion,
+                                                    ScenePurposeType.Setup],
+                                           pacing='fast-medium')
+reaction_story_scene_purpose = ScenePurpose(ScenePurposeType.Reaction, 'Reaction',
+                                            keywords=['reflection', 'dilemma', 'decision', 'introspection', 'analysis',
+                                                      'new goal'],
+                                            include=[ScenePurposeType.Character, ScenePurposeType.Emotion],
+                                            pacing='medium-slow')
+character_story_scene_purpose = ScenePurpose(ScenePurposeType.Character, 'Character\ndevelopment',
+                                             keywords=['internal conflict', 'relations'],
+                                             include=[ScenePurposeType.Emotion])
+emotion_story_scene_purpose = ScenePurpose(ScenePurposeType.Emotion, 'Emotion',
+                                           keywords=['mood', 'atmosphere', 'emotion'])
+setup_story_scene_purpose = ScenePurpose(ScenePurposeType.Setup, 'Setup',
+                                         keywords=['plant', 'foreshadowing', 'setup', 'happening', 'transition'])
+exposition_story_scene_purpose = ScenePurpose(ScenePurposeType.Exposition, 'Exposition',
+                                              keywords=['introduction', 'description', 'information'])
+
+
 @dataclass
 class Scene:
     title: str
@@ -893,7 +934,8 @@ class Scene:
     tag_references: List[TagReference] = field(default_factory=list)
     document: Optional['Document'] = None
     manuscript: Optional['Document'] = None
-    drive: SceneDrive = SceneDrive()
+    drive: SceneDrive = field(default_factory=SceneDrive)
+    purpose: Optional[ScenePurposeType] = None
 
     def beat(self, novel: 'Novel') -> Optional[StoryBeat]:
         structure = novel.active_story_structure
