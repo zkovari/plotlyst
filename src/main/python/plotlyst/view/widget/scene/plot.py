@@ -199,11 +199,15 @@ class ScenePlotSelectorButton(QPushButton):
 
         self.installEventFilter(OpacityEventFilter(parent=self, leaveOpacity=0.7))
 
+        self._menu = ScenePlotSelectorMenu(self._novel, self)
+        self._menu.plotSelected.connect(self._plotSelected)
+
         if self._novel.plots:
             pointy(self)
             underline(self)
-            self._menu = ScenePlotSelectorMenu(self._novel, self)
-            self._menu.plotSelected.connect(self._plotSelected)
+        else:
+            self._menu.setDisabled(True)
+
 
     def setScene(self, scene: Scene):
         self._scene = scene
