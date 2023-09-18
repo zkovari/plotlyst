@@ -554,9 +554,13 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         self._btnAddNewPlot.installEventFilter(OpacityEventFilter(self._btnAddNewPlot))
         self._btnAddNewPlot.clicked.connect(self._addNewPlot)
 
-        self._wdgAddNewPlotParent = wrap(self._btnAddNewPlot, margin_top=self._plotElement.sizeHint().height() // 2,
-                                         margin_left=5,
-                                         margin_right=5)
+        self._wdgAddNewPlotParent = QWidget()
+        vbox(self._wdgAddNewPlotParent)
+        margins(self._wdgAddNewPlotParent, top=self._plotElement.sizeHint().height() // 2, left=5, right=5)
+        icon = Icon()
+        icon.setIcon(IconRegistry.from_name('fa5s.theater-masks', 'lightgrey'))
+        self._wdgAddNewPlotParent.layout().addWidget(icon)
+        self._wdgAddNewPlotParent.layout().addWidget(self._btnAddNewPlot)
         self._wdgAddNewPlotParent.setHidden(True)
 
         self._themeElement = TextBasedSceneElementWidget()
@@ -595,7 +599,7 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
 
     def __newPlotElementEditor(self) -> PlotSceneElementEditor:
         elementEditor = PlotSceneElementEditor(self._novel)
-        elementEditor.setText('Plot')
+        elementEditor.setText('Storyline')
         elementEditor.setIcon('fa5s.theater-masks')
         elementEditor.setPlaceholderText('Describe how this scene is related to the selected storyline')
         elementEditor.plotSelected.connect(partial(self._plotSelected, elementEditor))
