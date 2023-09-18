@@ -40,7 +40,7 @@ from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import DelayedSignalSlotConnector, action, wrap, label, scrolled, \
-    ButtonPressResizeEventFilter, insert_after
+    ButtonPressResizeEventFilter, insert_after, tool_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
 from src.main.python.plotlyst.view.widget.display import Icon
@@ -492,6 +492,8 @@ class TextBasedSceneElementWidget(SceneElementWidget):
 
 
 class PlotSceneElementEditor(TextBasedSceneElementWidget):
+    plotSelected = pyqtSignal()
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
@@ -511,6 +513,8 @@ class PlotSceneElementEditor(TextBasedSceneElementWidget):
         font = self._btnPlotSelector.font()
         font.setPointSize(self._titleActive.font().pointSize())
         self._btnPlotSelector.setFont(font)
+
+        self.plotSelected.emit()
 
 
 class AbstractSceneElementsEditor(QWidget):
@@ -542,12 +546,18 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
-        # self._lblBottom.setText('Character relations')
 
-        self._plotElement = PlotSceneElementEditor(self._novel)
-        self._plotElement.setText('Plot')
-        self._plotElement.setIcon('fa5s.theater-masks')
-        self._plotElement.setPlaceholderText('Describe how this scene is related to the selected plot')
+        self._plotElement = self.__newPlotElementEditor()
+
+        self._btnAddNewPlot = tool_btn(IconRegistry.plus_circle_icon('grey'), 'Add new storyline', transparent_=True,
+                                       parent=self._wdgElementsTopRow)
+        self._btnAddNewPlot.installEventFilter(OpacityEventFilter(self._btnAddNewPlot))
+        self._btnAddNewPlot.clicked.connect(self._addNewPlot)
+
+        self._wdgAddNewPlotParent = wrap(self._btnAddNewPlot, margin_top=self._plotElement.sizeHint().height() // 2,
+                                         margin_left=5,
+                                         margin_right=5)
+        self._wdgAddNewPlotParent.setHidden(True)
 
         self._themeElement = TextBasedSceneElementWidget()
         self._themeElement.setText('Theme')
@@ -570,6 +580,30 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
     def setScene(self, scene: Scene):
         super().setScene(scene)
         self._plotElement.setScene(scene)
+
+    def _plotSelected(self, plotElement: PlotSceneElementEditor):
+        insert_after(self._wdgElementsTopRow, self._wdgAddNewPlotParent, reference=plotElement)
+        self._wdgAddNewPlotParent.setVisible(True)
+
+    def _addNewPlot(self):
+        elementEditor = self.__newPlotElementEditor()
+        insert_after(self._wdgElementsTopRow, elementEditor, reference=self._wdgAddNewPlotParent)
+        self._wdgAddNewPlotParent.setHidden(True)
+        self._wdgElementsTopRow.layout().removeWidget(self._wdgAddNewPlotParent)
+
+        elementEditor.activate()
+
+    def __newPlotElementEditor(self) -> PlotSceneElementEditor:
+        elementEditor = PlotSceneElementEditor(self._novel)
+        elementEditor.setText('Plot')
+        elementEditor.setIcon('fa5s.theater-masks')
+        elementEditor.setPlaceholderText('Describe how this scene is related to the selected storyline')
+        elementEditor.plotSelected.connect(partial(self._plotSelected, elementEditor))
+
+        if self._scene:
+            elementEditor.setScene(self._scene)
+
+        return elementEditor
 
 
 class SceneAgendaEditor(AbstractSceneElementsEditor):
