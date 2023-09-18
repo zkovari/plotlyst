@@ -404,7 +404,8 @@ def frame(parent=None):
 
 
 def label(text: str = '', bold: Optional[bool] = None, italic: Optional[bool] = None, underline: Optional[bool] = None,
-          description: Optional[bool] = None, wordWrap: Optional[bool] = None) -> QLabel:
+          description: Optional[bool] = None, wordWrap: Optional[bool] = None, h1: Optional[bool] = None,
+          h2: Optional[bool] = None, h3: Optional[bool] = None, h4: Optional[bool] = None) -> QLabel:
     lbl = QLabel(text)
     font = lbl.font()
     if bold:
@@ -417,6 +418,15 @@ def label(text: str = '', bold: Optional[bool] = None, italic: Optional[bool] = 
 
     if description:
         lbl.setProperty('description', description)
+    if h1:
+        lbl.setProperty('h1', h1)
+    elif h2:
+        lbl.setProperty('h2', h2)
+    elif h3:
+        lbl.setProperty('h3', h3)
+    elif h4:
+        lbl.setProperty('h4', h4)
+
     if wordWrap:
         lbl.setWordWrap(wordWrap)
 

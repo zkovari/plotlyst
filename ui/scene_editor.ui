@@ -590,7 +590,7 @@
             <enum>QTabWidget::West</enum>
            </property>
            <property name="currentIndex">
-            <number>0</number>
+            <number>1</number>
            </property>
            <widget class="QWidget" name="tabStorylines">
             <property name="relaxed-white-bg" stdset="0">
@@ -622,7 +622,7 @@
              <bool>true</bool>
             </property>
             <attribute name="title">
-             <string>Character</string>
+             <string>Agency</string>
             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_8">
              <property name="spacing">
@@ -831,7 +831,4 @@
  </customwidgets>
  <resources/>
  <connections/>
- <buttongroups>
-  <buttongroup name="btnGroupPages"/>
- </buttongroups>
 </ui>

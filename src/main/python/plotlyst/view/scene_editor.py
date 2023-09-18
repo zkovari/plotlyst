@@ -43,7 +43,8 @@ from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEv
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
-from src.main.python.plotlyst.view.widget.scene.editor import ScenePurposeSelectorWidget, ScenePurposeTypeButton
+from src.main.python.plotlyst.view.widget.scene.editor import ScenePurposeSelectorWidget, ScenePurposeTypeButton, \
+    SceneStorylineEditor, SceneAgendaEditor
 from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotSelector
 from src.main.python.plotlyst.view.widget.scenes import SceneTagSelector
 
@@ -139,6 +140,12 @@ class SceneEditor(QObject, EventListener):
         self._btnPurposeType.selectionRequested.connect(self._resetPurposeEditor)
         self.ui.wdgMidbar.layout().insertWidget(0, self._btnPurposeType)
 
+        self._storylineEditor = SceneStorylineEditor()
+        self.ui.tabStorylines.layout().addWidget(self._storylineEditor)
+
+        self._agencyEditor = SceneAgendaEditor(self.novel)
+        self.ui.tabCharacter.layout().addWidget(self._agencyEditor)
+
         self.ui.btnClose.clicked.connect(self._on_close)
 
         flow(self.ui.wdgPlotContainer)
@@ -146,6 +153,7 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgSceneStructure.setUnsetCharacterSlot(self._pov_not_selected_notification)
 
         self._update_view(scene)
+        self.ui.tabWidget.setCurrentWidget(self.ui.tabStorylines)
         self.ui.tabWidget.currentChanged.connect(self._page_toggled)
 
         self.repo = RepositoryPersistenceManager.instance()
