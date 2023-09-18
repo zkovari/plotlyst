@@ -18,7 +18,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
-from enum import Enum
 from functools import partial
 from typing import List, Optional, Any
 
@@ -35,17 +34,18 @@ from qtmenu import MenuWidget
 from src.main.python.plotlyst.common import raise_unrecognized_arg
 from src.main.python.plotlyst.core.domain import Scene, Novel, ScenePurpose, advance_story_scene_purpose, \
     ScenePurposeType, reaction_story_scene_purpose, character_story_scene_purpose, setup_story_scene_purpose, \
-    emotion_story_scene_purpose, exposition_story_scene_purpose, scene_purposes, Character
+    emotion_story_scene_purpose, exposition_story_scene_purpose, scene_purposes, Character, Plot
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import DelayedSignalSlotConnector, action, wrap, label, scrolled, \
-    ButtonPressResizeEventFilter
+    ButtonPressResizeEventFilter, insert_after
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import RemovalButton
+from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotSelectorButton
 
 
 class SceneMiniEditor(QWidget, EventListener):
@@ -362,11 +362,6 @@ class ScenePurposeSelectorWidget(QWidget):
         self._wdgPurposes.layout().addWidget(spacer())
 
 
-class SceneElementIconDisplayMode(Enum):
-    Center = 0
-    Left = 1
-
-
 class SceneElementWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -434,7 +429,7 @@ class SceneElementWidget(QWidget):
         else:
             self._btnClose.setVisible(False)
 
-    def setIcon(self, icon: str, colorActive: str):
+    def setIcon(self, icon: str, colorActive: str = 'black'):
         self._colorActive = QColor(colorActive)
         self._iconActive.setIcon(IconRegistry.from_name(icon, colorActive))
         self._iconIdle.setIcon(IconRegistry.from_name(icon, 'lightgrey'))
@@ -497,13 +492,32 @@ class TextBasedSceneElementWidget(SceneElementWidget):
 
 
 class PlotSceneElementEditor(TextBasedSceneElementWidget):
-    def __init__(self, parent=None):
+    def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
+        self._novel = novel
+
+        self._btnPlotSelector = ScenePlotSelectorButton(self._novel)
+        self._btnPlotSelector.plotSelected.connect(self._plotSelected)
+        self._btnPlotSelector.setFixedHeight(self._titleActive.sizeHint().height())
+        self._titleActive.setHidden(True)
+        insert_after(self._pageEditor, self._btnPlotSelector, reference=self._titleActive,
+                     alignment=Qt.AlignmentFlag.AlignCenter)
+
+    def setScene(self, scene: Scene):
+        self._btnPlotSelector.setScene(scene)
+
+    def _plotSelected(self, plot: Plot):
+        self.setIcon(plot.icon, plot.icon_color)
+        font = self._btnPlotSelector.font()
+        font.setPointSize(self._titleActive.font().pointSize())
+        self._btnPlotSelector.setFont(font)
 
 
 class AbstractSceneElementsEditor(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._scene: Optional[Scene] = None
+
         vbox(self)
         sp(self).h_exp()
         self._scrollarea, self._wdgElementsParent = scrolled(self, frameless=True)
@@ -520,15 +534,19 @@ class AbstractSceneElementsEditor(QWidget):
         self._wdgElementsParent.layout().addWidget(self._lblBottom)
         self._wdgElementsParent.layout().addWidget(self._wdgElementsBottomRow)
 
+    def setScene(self, scene: Scene):
+        self._scene = scene
+
 
 class SceneStorylineEditor(AbstractSceneElementsEditor):
-    def __init__(self, parent=None):
+    def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
-        self._lblBottom.setText('Character relations')
+        self._novel = novel
+        # self._lblBottom.setText('Character relations')
 
-        self._plotElement = PlotSceneElementEditor()
+        self._plotElement = PlotSceneElementEditor(self._novel)
         self._plotElement.setText('Plot')
-        self._plotElement.setIcon('fa5s.theater-masks', 'grey')
+        self._plotElement.setIcon('fa5s.theater-masks')
         self._plotElement.setPlaceholderText('Describe how this scene is related to the selected plot')
 
         self._themeElement = TextBasedSceneElementWidget()
@@ -541,12 +559,17 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
 
         self._consequencesElement = TextBasedSceneElementWidget()
         self._consequencesElement.setText('Consequences')
-        self._consequencesElement.setIcon('mdi.ray-start-arrow', 'black')
+        self._consequencesElement.setIcon('mdi.ray-start-arrow')
 
         self._wdgElementsTopRow.layout().addWidget(self._plotElement)
         self._wdgElementsTopRow.layout().addWidget(self._themeElement)
         self._wdgElementsTopRow.layout().addWidget(self._outcomeElement)
         self._wdgElementsTopRow.layout().addWidget(self._consequencesElement)
+
+    @overrides
+    def setScene(self, scene: Scene):
+        super().setScene(scene)
+        self._plotElement.setScene(scene)
 
 
 class SceneAgendaEditor(AbstractSceneElementsEditor):

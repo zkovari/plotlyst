@@ -26,12 +26,12 @@ from PyQt6.QtCore import QObject, pyqtSignal, Qt
 from PyQt6.QtWidgets import QWidget, QTableView
 from overrides import overrides
 from qtanim import fade_in
-from qthandy import flow, clear_layout, underline, incr_font, margins
+from qthandy import flow, underline, incr_font, margins
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, Document, StoryBeat, \
-    Character, ScenePlotReference, TagReference, ScenePurposeType, ScenePurpose
+    Character, TagReference, ScenePurposeType, ScenePurpose
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_info, EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
@@ -45,7 +45,6 @@ from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
 from src.main.python.plotlyst.view.widget.scene.editor import ScenePurposeSelectorWidget, ScenePurposeTypeButton, \
     SceneStorylineEditor, SceneAgendaEditor
-from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotSelector
 from src.main.python.plotlyst.view.widget.scenes import SceneTagSelector
 
 
@@ -87,8 +86,6 @@ class SceneEditor(QObject, EventListener):
         self.ui.lblTitleEmoji.setText(emoji.emojize(':clapper_board:'))
         self.ui.lblSynopsisEmoji.setFont(self._emoji_font)
         self.ui.lblSynopsisEmoji.setText(emoji.emojize(':scroll:'))
-        self.ui.lblPlotEmoji.setFont(self._emoji_font)
-        self.ui.lblPlotEmoji.setText(emoji.emojize(':chart_increasing:'))
 
         self.ui.wdgStructure.setBeatsCheckable(True)
         self.ui.wdgStructure.setStructure(self.novel)
@@ -140,15 +137,13 @@ class SceneEditor(QObject, EventListener):
         self._btnPurposeType.selectionRequested.connect(self._resetPurposeEditor)
         self.ui.wdgMidbar.layout().insertWidget(0, self._btnPurposeType)
 
-        self._storylineEditor = SceneStorylineEditor()
+        self._storylineEditor = SceneStorylineEditor(self.novel)
         self.ui.tabStorylines.layout().addWidget(self._storylineEditor)
 
         self._agencyEditor = SceneAgendaEditor(self.novel)
         self.ui.tabCharacter.layout().addWidget(self._agencyEditor)
 
         self.ui.btnClose.clicked.connect(self._on_close)
-
-        flow(self.ui.wdgPlotContainer)
 
         self.ui.wdgSceneStructure.setUnsetCharacterSlot(self._pov_not_selected_notification)
 
@@ -185,12 +180,8 @@ class SceneEditor(QObject, EventListener):
         self.ui.sbDay.setValue(self.scene.day)
 
         self.ui.wdgSceneStructure.setScene(self.novel, self.scene)
-        clear_layout(self.ui.wdgPlotContainer)
-        for plot_v in self.scene.plot_values:
-            self._add_plot_selector(plot_v)
-        self._add_plot_selector()
-
         self.tag_selector.setScene(self.scene)
+        self._storylineEditor.setScene(self.scene)
 
         self.ui.lineTitle.setText(self.scene.title)
         self.ui.textSynopsis.setText(self.scene.synopsis)
@@ -258,14 +249,6 @@ class SceneEditor(QObject, EventListener):
     def _pov_not_selected_notification(self):
         emit_info('POV character must be selected first')
         qtanim.shake(self.ui.wdgPov)
-
-    def _add_plot_selector(self, plot_value: Optional[ScenePlotReference] = None):
-        if plot_value or len(self.novel.plots) > len(self.scene.plot_values):
-            plot_selector = ScenePlotSelector(self.novel, self.scene, simplified=len(self.scene.plot_values) > 0)
-            plot_selector.plotSelected.connect(self._add_plot_selector)
-            if plot_value:
-                plot_selector.setPlot(plot_value)
-            self.ui.wdgPlotContainer.layout().addWidget(plot_selector)
 
     def _on_pov_changed(self, pov: Character):
         self.scene.pov = pov

@@ -370,9 +370,12 @@ def insert_before(parent: QWidget, widget: QWidget, reference: QWidget):
     parent.layout().insertWidget(i, widget)
 
 
-def insert_after(parent: QWidget, widget: QWidget, reference: QWidget):
+def insert_after(parent: QWidget, widget: QWidget, reference: QWidget, alignment=None):
     i = parent.layout().indexOf(reference)
-    parent.layout().insertWidget(i + 1, widget)
+    if alignment is not None:
+        parent.layout().insertWidget(i + 1, widget, alignment=alignment)
+    else:
+        parent.layout().insertWidget(i + 1, widget)
 
 
 def tool_btn(icon: QIcon, tooltip: str = '', checkable: bool = False, base: bool = False,

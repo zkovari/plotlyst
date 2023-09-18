@@ -23,19 +23,18 @@ from typing import Optional
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QMouseEvent, QShowEvent
-from PyQt6.QtWidgets import QWidget, QToolButton, QTextEdit, QLabel
+from PyQt6.QtWidgets import QWidget, QToolButton, QTextEdit, QLabel, QPushButton
 from overrides import overrides
-from qthandy import vbox, hbox, pointy, transparent, retain_when_hidden, spacer, sp, decr_icon, ask_confirmation, line
+from qthandy import vbox, hbox, transparent, retain_when_hidden, spacer, sp, decr_icon, line, pointy, underline
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.core.domain import Novel, Scene, ScenePlotReference, PlotValue, ScenePlotValueCharge, Plot
-from src.main.python.plotlyst.view.common import action, fade_out_and_gc
+from src.main.python.plotlyst.view.common import action
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.style.base import apply_white_menu
-from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton, SecondaryActionPushButton
+from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton
 from src.main.python.plotlyst.view.widget.display import IconText
-from src.main.python.plotlyst.view.widget.labels import PlotValueLabel, SelectionItemLabel, ScenePlotValueLabel
+from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
 
 
 class ScenePlotValueChargeWidget(QWidget):
@@ -157,68 +156,68 @@ class ScenePlotValueEditor(QWidget):
         self.plotReference.data.comment = self.textComment.toPlainText()
 
 
-class ScenePlotSelector(QWidget):
-    plotSelected = pyqtSignal()
+class ScenePlotSelectorMenu(MenuWidget):
+    plotSelected = pyqtSignal(Plot)
 
-    def __init__(self, novel: Novel, scene: Scene, simplified: bool = False, parent=None):
-        super(ScenePlotSelector, self).__init__(parent)
-        self.novel = novel
-        self.scene = scene
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+        self._scene: Optional[Scene] = None
+
+        self.aboutToShow.connect(self._beforeShow)
+
+    def setScene(self, scene: Scene):
+        self._scene = scene
+
+    def _beforeShow(self):
+        if self._scene is None:
+            return
+        self.clear()
+        occupied_plot_ids = [x.plot.id for x in self._scene.plot_values]
+        self.addSection('Link storylines to this scene')
+        self.addSeparator()
+        for plot in self._novel.plots:
+            action_ = action(plot.text, IconRegistry.from_name(plot.icon, plot.icon_color),
+                             partial(self.plotSelected.emit, plot))
+            if plot.id in occupied_plot_ids:
+                action_.setDisabled(True)
+            self.addAction(action_)
+
+
+class ScenePlotSelectorButton(QPushButton):
+    plotSelected = pyqtSignal(Plot)
+
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+        self._scene: Optional[Scene] = None
         self.plotValue: Optional[ScenePlotReference] = None
-        hbox(self)
 
-        self.label: Optional[SelectionItemLabel] = None
+        transparent(self)
+        self.setProperty('no-menu', True)
+        self.setText('Storyline')
 
-        self.btnLinkPlot = SecondaryActionPushButton(self)
-        if simplified:
-            self.btnLinkPlot.setIcon(IconRegistry.plus_circle_icon('grey'))
-        else:
-            self.btnLinkPlot.setText('Associate plot')
-        self.layout().addWidget(self.btnLinkPlot)
+        self.installEventFilter(OpacityEventFilter(parent=self, leaveOpacity=0.7))
 
-        self.btnLinkPlot.installEventFilter(
-            OpacityEventFilter(parent=self.btnLinkPlot, leaveOpacity=0.4 if simplified else 0.7))
+        if self._novel.plots:
+            pointy(self)
+            underline(self)
+            self._menu = ScenePlotSelectorMenu(self._novel, self)
+            self._menu.plotSelected.connect(self._plotSelected)
 
-        self._menu = MenuWidget(self.btnLinkPlot)
-        self._menu.aboutToShow.connect(self._beforeShow)
+    def setScene(self, scene: Scene):
+        self._scene = scene
+        self._menu.setScene(scene)
 
     def setPlot(self, plotValue: ScenePlotReference):
         self.plotValue = plotValue
-        self.label = ScenePlotValueLabel(plotValue, self)
-        pointy(self.label)
-        self.label.clicked.connect(self._plotValueClicked)
-
-        self.label.removalRequested.connect(self._remove)
-        self.layout().addWidget(self.label)
-        self.btnLinkPlot.setHidden(True)
+        self.setText(plotValue.plot.text)
+        underline(self, False)
 
     def _plotSelected(self, plot: Plot):
         plotValue = ScenePlotReference(plot)
-        self.scene.plot_values.append(plotValue)
+        # TODO add back later
+        # self._scene.plot_values.append(plotValue)
         self.setPlot(plotValue)
 
-        self.plotSelected.emit()
-        self._plotValueClicked()
-
-    def _plotValueClicked(self):
-        menu = MenuWidget(self.label)
-        apply_white_menu(menu)
-        menu.addWidget(ScenePlotValueEditor(self.plotValue))
-        menu.exec()
-
-    def _beforeShow(self):
-        self._menu.clear()
-        occupied_plot_ids = [x.plot.id for x in self.scene.plot_values]
-        self._menu.addSection('Link plotlines to this scene')
-        self._menu.addSeparator()
-        for plot in self.novel.plots:
-            action_ = action(plot.text, IconRegistry.from_name(plot.icon, plot.icon_color),
-                             partial(self._plotSelected, plot))
-            if plot.id in occupied_plot_ids:
-                action_.setDisabled(True)
-            self._menu.addAction(action_)
-
-    def _remove(self):
-        if ask_confirmation(f"Remove scene association for plot '{self.plotValue.plot.text}'?"):
-            self.scene.plot_values.remove(self.plotValue)
-            fade_out_and_gc(self.parent(), self)
+        self.plotSelected.emit(plot)
