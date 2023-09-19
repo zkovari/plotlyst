@@ -497,9 +497,11 @@ class PlotSceneElementEditor(TextBasedSceneElementWidget):
     plotSelected = pyqtSignal()
 
     def __init__(self, novel: Novel, parent=None):
+        self._plotRef: Optional[ScenePlotReference] = None
         super().__init__(parent)
         self._novel = novel
-        self._plotRef: Optional[ScenePlotReference] = None
+        self._scene: Optional[Scene] = None
+
         self._plotValueEditor: Optional[ScenePlotValueEditor] = None
         self._plotValueDisplay: Optional[PlotValuesDisplay] = None
 
@@ -526,8 +528,15 @@ class PlotSceneElementEditor(TextBasedSceneElementWidget):
         self._pageEditor.layout().addWidget(self._wdgValues)
 
     def setScene(self, scene: Scene):
+        self._scene = scene
         self._btnPlotSelector.setScene(scene)
         self._plotRef = None
+
+    @overrides
+    def deactivate(self):
+        super().deactivate()
+        if self._plotRef:
+            self._scene.plot_values.remove(self._plotRef)
 
     @overrides
     def _activateFinished(self):
@@ -551,8 +560,7 @@ class PlotSceneElementEditor(TextBasedSceneElementWidget):
         self._plotValueEditor.charged.connect(self._plotValueDisplay.updateValue)
 
         self._wdgValues.layout().insertWidget(0, self._plotValueDisplay)
-        # TODO add back later
-        # self._scene.plot_values.append(plotValue)
+        self._scene.plot_values.append(self._plotRef)
 
         self.plotSelected.emit()
 

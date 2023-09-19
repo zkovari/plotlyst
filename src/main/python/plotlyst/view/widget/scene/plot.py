@@ -206,7 +206,6 @@ class ScenePlotSelectorButton(QPushButton):
         super().__init__(parent)
         self._novel = novel
         self._scene: Optional[Scene] = None
-        self.plotValue: Optional[ScenePlotReference] = None
 
         transparent(self)
         self.setProperty('no-menu', True)
@@ -230,15 +229,10 @@ class ScenePlotSelectorButton(QPushButton):
         self._scene = scene
         self._menu.setScene(scene)
 
-    def setPlot(self, plotValue: ScenePlotReference):
-        self.plotValue = plotValue
-        self.setText(plotValue.plot.text)
+    def setPlot(self, plot: Plot):
+        self.setText(plot.text)
         underline(self, False)
 
     def _plotSelected(self, plot: Plot):
-        plotValue = ScenePlotReference(plot)
-        # TODO add back later
-        # self._scene.plot_values.append(plotValue)
-        self.setPlot(plotValue)
-
+        self.setPlot(plot)
         self.plotSelected.emit(plot)
