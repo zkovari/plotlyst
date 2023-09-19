@@ -102,6 +102,7 @@ jobs:
           appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
           appstore-connect-password: ${{ secrets.NOTARIZATION_PASSWORD }}
           appstore-connect-team-id: W527JJ9SK4
+          verbose: true
 
       - if: matrix.os == 'macos-11'
         name: "Staple Macos App"
