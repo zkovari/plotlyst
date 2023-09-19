@@ -223,6 +223,9 @@ class ScenePlotSelectorButton(QPushButton):
         else:
             self._menu.setDisabled(True)
 
+    def menuWidget(self) -> MenuWidget:
+        return self._menu
+
     def setScene(self, scene: Scene):
         self._scene = scene
         self._menu.setScene(scene)

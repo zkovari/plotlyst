@@ -446,7 +446,7 @@ class SceneElementWidget(QWidget):
     def activate(self):
         self._pageIdle.setDisabled(True)
         self._stackWidget.setCurrentWidget(self._pageEditor)
-        qtanim.glow(self._iconActive, color=self._colorActive)
+        qtanim.glow(self._iconActive, duration=150, color=self._colorActive)
         self._btnClose.setVisible(True)
 
     def deactivate(self):
@@ -481,12 +481,12 @@ class TextBasedSceneElementWidget(SceneElementWidget):
 
     @overrides
     def activate(self):
-        def glowText():
-            qtanim.glow(self._textEditor, color=self._colorActive)
-
         super().activate()
         anim = qtanim.fade_in(self._textEditor, duration=150)
-        anim.finished.connect(glowText)
+        anim.finished.connect(self._activateFinished)
+
+    def _activateFinished(self):
+        qtanim.glow(self._textEditor, color=self._colorActive)
 
     @overrides
     def _updateValue(self, value: Any):
@@ -518,8 +518,8 @@ class PlotSceneElementEditor(TextBasedSceneElementWidget):
         self._btnEditValues.installEventFilter(OpacityEventFilter(self._btnEditValues, enterOpacity=0.7))
         self._btnEditValues.installEventFilter(ButtonPressResizeEventFilter(self._btnEditValues))
         self._btnEditValues.setIcon(IconRegistry.from_name('fa5s.chevron-circle-down', 'grey'))
-        # self._btnEditValues.clicked.connect(self._editValues)
         self._plotValueMenu = MenuWidget(self._btnEditValues)
+        self._btnEditValues.setProperty('no-menu', True)
         transparent(self._btnEditValues)
         self._wdgValues.layout().addWidget(self._btnEditValues)
 
@@ -528,6 +528,11 @@ class PlotSceneElementEditor(TextBasedSceneElementWidget):
     def setScene(self, scene: Scene):
         self._btnPlotSelector.setScene(scene)
         self._plotRef = None
+
+    @overrides
+    def _activateFinished(self):
+        if self._novel.plots:
+            self._btnPlotSelector.menuWidget().exec()
 
     def _plotSelected(self, plot: Plot):
         self.setIcon(plot.icon, plot.icon_color)
