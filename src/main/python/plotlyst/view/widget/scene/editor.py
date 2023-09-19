@@ -34,7 +34,7 @@ from qtmenu import MenuWidget
 from src.main.python.plotlyst.common import raise_unrecognized_arg
 from src.main.python.plotlyst.core.domain import Scene, Novel, ScenePurpose, advance_story_scene_purpose, \
     ScenePurposeType, reaction_story_scene_purpose, character_story_scene_purpose, setup_story_scene_purpose, \
-    emotion_story_scene_purpose, exposition_story_scene_purpose, scene_purposes, Character, Plot
+    emotion_story_scene_purpose, exposition_story_scene_purpose, scene_purposes, Character, Plot, ScenePlotReference
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent
@@ -45,7 +45,8 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import RemovalButton
-from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotSelectorButton
+from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotSelectorButton, ScenePlotValueEditor, \
+    PlotValuesDisplay
 
 
 class SceneMiniEditor(QWidget, EventListener):
@@ -446,6 +447,7 @@ class SceneElementWidget(QWidget):
         self._pageIdle.setDisabled(True)
         self._stackWidget.setCurrentWidget(self._pageEditor)
         qtanim.glow(self._iconActive, color=self._colorActive)
+        self._btnClose.setVisible(True)
 
     def deactivate(self):
         self._btnClose.setHidden(True)
@@ -497,6 +499,9 @@ class PlotSceneElementEditor(TextBasedSceneElementWidget):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
+        self._plotRef: Optional[ScenePlotReference] = None
+        self._plotValueEditor: Optional[ScenePlotValueEditor] = None
+        self._plotValueDisplay: Optional[PlotValuesDisplay] = None
 
         self._btnPlotSelector = ScenePlotSelectorButton(self._novel)
         self._btnPlotSelector.plotSelected.connect(self._plotSelected)
@@ -505,14 +510,44 @@ class PlotSceneElementEditor(TextBasedSceneElementWidget):
         insert_after(self._pageEditor, self._btnPlotSelector, reference=self._titleActive,
                      alignment=Qt.AlignmentFlag.AlignCenter)
 
+        self._wdgValues = QWidget()
+        self._wdgValues.setHidden(True)
+        vbox(self._wdgValues)
+        pointy(self._wdgValues)
+        self._btnEditValues = QPushButton('Edit values')
+        self._btnEditValues.installEventFilter(OpacityEventFilter(self._btnEditValues, enterOpacity=0.7))
+        self._btnEditValues.installEventFilter(ButtonPressResizeEventFilter(self._btnEditValues))
+        self._btnEditValues.setIcon(IconRegistry.from_name('fa5s.chevron-circle-down', 'grey'))
+        # self._btnEditValues.clicked.connect(self._editValues)
+        self._plotValueMenu = MenuWidget(self._btnEditValues)
+        transparent(self._btnEditValues)
+        self._wdgValues.layout().addWidget(self._btnEditValues)
+
+        self._pageEditor.layout().addWidget(self._wdgValues)
+
     def setScene(self, scene: Scene):
         self._btnPlotSelector.setScene(scene)
+        self._plotRef = None
 
     def _plotSelected(self, plot: Plot):
         self.setIcon(plot.icon, plot.icon_color)
         font = self._btnPlotSelector.font()
         font.setPointSize(self._titleActive.font().pointSize())
         self._btnPlotSelector.setFont(font)
+
+        self._wdgValues.setVisible(True)
+
+        self._plotRef = ScenePlotReference(plot)
+        self._plotValueEditor = ScenePlotValueEditor(self._plotRef)
+        self._plotValueMenu.clear()
+        self._plotValueMenu.addWidget(self._plotValueEditor)
+
+        self._plotValueDisplay = PlotValuesDisplay(self._plotRef)
+        self._plotValueEditor.charged.connect(self._plotValueDisplay.updateValue)
+
+        self._wdgValues.layout().insertWidget(0, self._plotValueDisplay)
+        # TODO add back later
+        # self._scene.plot_values.append(plotValue)
 
         self.plotSelected.emit()
 

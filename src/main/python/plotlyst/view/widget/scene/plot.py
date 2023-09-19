@@ -18,14 +18,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Optional
+from typing import Optional, Dict
 
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QMouseEvent, QShowEvent
-from PyQt6.QtWidgets import QWidget, QToolButton, QTextEdit, QLabel, QPushButton
+from PyQt6.QtGui import QColor, QMouseEvent
+from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QGraphicsDropShadowEffect
 from overrides import overrides
-from qthandy import vbox, hbox, transparent, retain_when_hidden, spacer, sp, decr_icon, line, pointy, underline
+from qthandy import vbox, hbox, transparent, retain_when_hidden, spacer, sp, decr_icon, line, pointy, underline, flow
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -33,17 +33,51 @@ from src.main.python.plotlyst.core.domain import Novel, Scene, ScenePlotReferenc
 from src.main.python.plotlyst.view.common import action
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton
-from src.main.python.plotlyst.view.widget.display import IconText
 from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
 
 
+class PlotValuesDisplay(QWidget):
+    def __init__(self, plotReference: ScenePlotReference, parent=None):
+        super().__init__(parent)
+        self._plotReference = plotReference
+        self._values: Dict[PlotValue, PlotValueLabel] = {}
+
+        flow(self, spacing=9)
+        for value in self._plotReference.plot.values:
+            lbl = PlotValueLabel(value, simplified=True)
+            sp(lbl).h_max()
+            lbl.setHidden(True)
+            self._values[value] = lbl
+            self.layout().addWidget(lbl)
+
+    def updateValue(self, value: PlotValue, charge: ScenePlotValueCharge):
+        lbl = self._values[value]
+        if charge.charge == 0:
+            lbl.setHidden(True)
+        else:
+            lbl.setVisible(True)
+            effect = QGraphicsDropShadowEffect()
+            if charge.charge > 0:
+                effect.setColor(QColor('#52b788'))
+                lbl.setEnabled(True)
+            else:
+                effect.setColor(QColor('#9d0208'))
+                lbl.setEnabled(False)
+
+            effect.setOffset(5 * abs(charge.charge), 0)
+            effect.setBlurRadius(25)
+            lbl.setGraphicsEffect(effect)
+
+
 class ScenePlotValueChargeWidget(QWidget):
+    charged = pyqtSignal(PlotValue, ScenePlotValueCharge)
+
     def __init__(self, plotReference: ScenePlotReference, value: PlotValue, parent=None):
         super(ScenePlotValueChargeWidget, self).__init__(parent)
         self.plotReference = plotReference
         self.value: PlotValue = value
-        lbl = PlotValueLabel(value)
-        sp(lbl).h_max()
+        self._lbl = PlotValueLabel(value)
+        sp(self._lbl).h_max()
         hbox(self)
 
         self.charge: int = 0
@@ -69,7 +103,7 @@ class ScenePlotValueChargeWidget(QWidget):
         retain_when_hidden(self.negCharge)
 
         self.layout().addWidget(self.chargeIcon)
-        self.layout().addWidget(lbl, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self._lbl, alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(spacer())
         self.layout().addWidget(self.negCharge)
         self.layout().addWidget(self.posCharge)
@@ -90,6 +124,7 @@ class ScenePlotValueChargeWidget(QWidget):
             qtanim.glow(self.chargeIcon, color=QColor('#9d0208'))
 
         self._updateButtons()
+        self.charged.emit(self.value, self.plot_value_charge)
 
     def _updateButtons(self):
         if not self.negCharge.isEnabled():
@@ -107,53 +142,33 @@ class ScenePlotValueChargeWidget(QWidget):
 
 
 class ScenePlotValueEditor(QWidget):
+    charged = pyqtSignal(PlotValue, ScenePlotValueCharge)
+
     def __init__(self, plotReference: ScenePlotReference, parent=None):
-        super(ScenePlotValueEditor, self).__init__(parent)
+        super().__init__(parent)
         self.plotReference = plotReference
 
         self.setProperty('relaxed-white-bg', True)
-
         vbox(self)
-
-        self._title = IconText()
-        if plotReference.plot.icon:
-            self._title.setIcon(IconRegistry.from_name(plotReference.plot.icon, plotReference.plot.icon_color))
-        self._title.setText(plotReference.plot.text)
-        self.layout().addWidget(self._title, alignment=Qt.AlignmentFlag.AlignCenter)
-
-        self.textComment = QTextEdit(self)
-        self.textComment.setProperty('white-bg', True)
-        self.textComment.setProperty('rounded', True)
-        self.textComment.setAcceptRichText(False)
-        self.textComment.setFixedHeight(100)
-        self.textComment.setPlaceholderText('Describe how this scene is related to the selected plot')
-        self.textComment.setText(self.plotReference.data.comment)
-        self.textComment.textChanged.connect(self._commentChanged)
-        self.layout().addWidget(self.textComment)
 
         if self.plotReference.plot.default_value_enabled:
             wdg = ScenePlotValueChargeWidget(self.plotReference, self.plotReference.plot.default_value)
-            self.layout().addWidget(QLabel('General progress or setback'))
+            wdg.charged.connect(self.charged.emit)
+            # self.layout().addWidget(QLabel('General progress or setback'))
             self.layout().addWidget(wdg)
             self.layout().addWidget(line(color='lightgrey'))
 
-        if self.plotReference.plot.values:
-            self.layout().addWidget(QLabel('Custom values'))
+        # if self.plotReference.plot.values:
+        #     self.layout().addWidget(QLabel('Custom values'))
 
         for value in self.plotReference.plot.values:
             wdg = ScenePlotValueChargeWidget(self.plotReference, value)
+            wdg.charged.connect(self.charged.emit)
             self.layout().addWidget(wdg)
-
-    @overrides
-    def showEvent(self, _: QShowEvent) -> None:
-        self.textComment.setFocus()
 
     @overrides
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         pass
-
-    def _commentChanged(self):
-        self.plotReference.data.comment = self.textComment.toPlainText()
 
 
 class ScenePlotSelectorMenu(MenuWidget):
@@ -207,7 +222,6 @@ class ScenePlotSelectorButton(QPushButton):
             underline(self)
         else:
             self._menu.setDisabled(True)
-
 
     def setScene(self, scene: Scene):
         self._scene = scene
