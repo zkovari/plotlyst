@@ -31,129 +31,129 @@ from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Character, Novel, Node, DiagramNodeType
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.icons import avatars
-from src.main.python.plotlyst.view.widget.graphics import NodeItem, AbstractSocketItem, NetworkScene
+from src.main.python.plotlyst.view.widget.graphics import NodeItem, AbstractSocketItem, NetworkScene, CharacterItem
 
 
 class PlaceholderCharacter(Character):
     pass
 
 
-class SocketItem(AbstractSocketItem):
-    Size: int = 20
+# class SocketItem(AbstractSocketItem):
+#     Size: int = 20
+#
+#     def __init__(self, angle: float, parent=None):
+#         super().__init__(angle, self.Size, parent)
+#         pointy(self)
+#
+#     @overrides
+#     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
+#         color = PLOTLYST_SECONDARY_COLOR if self._hovered else PLOTLYST_TERTIARY_COLOR
+#         painter.setPen(QPen(QColor(color), 1))
+#         painter.setBrush(QColor(color))
+#
+#         radius = self.Size // 2
+#         painter.drawEllipse(QPointF(self.Size / 2, self.Size // 2), radius, radius)
 
-    def __init__(self, angle: float, parent=None):
-        super().__init__(angle, self.Size, parent)
-        pointy(self)
 
-    @overrides
-    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
-        color = PLOTLYST_SECONDARY_COLOR if self._hovered else PLOTLYST_TERTIARY_COLOR
-        painter.setPen(QPen(QColor(color), 1))
-        painter.setBrush(QColor(color))
-
-        radius = self.Size // 2
-        painter.drawEllipse(QPointF(self.Size / 2, self.Size // 2), radius, radius)
-
-
-class CharacterItem(NodeItem):
-    Margin: int = 20
-    PenWidth: int = 2
-
-    def __init__(self, character: Character, node: Node, parent=None):
-        super(CharacterItem, self).__init__(node, parent)
-        self._character = character
-        self._size: int = 68
-        self._center = QPointF(self.Margin + self._size / 2, self.Margin + self._size / 2)
-        self._outerRadius = self._size // 2 + self.Margin // 2
-
-        self._linkDisplayedMode: bool = False
-
-        self._socket = SocketItem(0, self)
-        self._socket.setVisible(False)
-
-    def character(self) -> Character:
-        return self._character
-
-    def setCharacter(self, character: Character):
-        self._character = character
-        self._node.set_character(self._character)
-        self.update()
-        self.networkScene().itemChangedEvent(self)
-
-    @overrides
-    def socket(self, angle: float) -> AbstractSocketItem:
-        angle_radians = math.radians(-angle)
-        x = self._center.x() + self._outerRadius * math.cos(angle_radians) - SocketItem.Size // 2
-        y = self._center.y() + self._outerRadius * math.sin(angle_radians) - SocketItem.Size // 2
-
-        self._socket.setAngle(angle)
-        self._socket.setPos(x, y)
-
-        return self._socket
-
-    def addSocket(self, socket: SocketItem):
-        self._sockets.append(socket)
-        socket.setVisible(False)
-        self._socket = SocketItem(socket.angle(), self)
-        self._socket.setVisible(False)
-
-    @overrides
-    def boundingRect(self) -> QRectF:
-        return QRectF(0, 0, self._size + self.Margin * 2, self._size + self.Margin * 2)
-
-    @overrides
-    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
-        if self._linkDisplayedMode:
-            painter.setPen(QPen(QColor(PLOTLYST_TERTIARY_COLOR), self.PenWidth, Qt.PenStyle.DashLine))
-            brush = QBrush(QColor(PLOTLYST_TERTIARY_COLOR), Qt.BrushStyle.Dense5Pattern)
-            painter.setBrush(brush)
-            painter.drawEllipse(self._center, self._outerRadius, self._outerRadius)
-        elif self.isSelected():
-            painter.setPen(QPen(Qt.GlobalColor.gray, self.PenWidth, Qt.PenStyle.DashLine))
-            painter.drawRoundedRect(self.Margin, self.Margin, self._size, self._size, 2, 2)
-
-        avatar = avatars.avatar(self._character)
-        avatar.paint(painter, self.Margin, self.Margin, self._size, self._size)
-
-    @overrides
-    def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        if self.relationsScene().linkMode() or event.modifiers() & Qt.KeyboardModifier.AltModifier:
-            self._setConnectionEnabled(True)
-            self.update()
-
-    @overrides
-    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        if self._linkDisplayedMode and not self.isSelected():
-            self._setConnectionEnabled(False)
-            self.update()
-
-    @overrides
-    def hoverMoveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        if self._linkDisplayedMode:
-            angle = math.degrees(math.atan2(
-                event.pos().y() - self._center.y(), event.pos().x() - self._center.x()
-            ))
-            angle_radians = math.radians(angle)
-            x = self._center.x() + self._outerRadius * math.cos(angle_radians) - SocketItem.Size // 2
-            y = self._center.y() + self._outerRadius * math.sin(angle_radians) - SocketItem.Size // 2
-            self.prepareGeometryChange()
-            self._socket.setAngle(-angle)
-            self._socket.setPos(x, y)
-
-            self.update()
-
-    def relationsScene(self) -> 'RelationsEditorScene':
-        return self.scene()
-
-    @overrides
-    def _onSelection(self, selected: bool):
-        super()._onSelection(selected)
-        self._setConnectionEnabled(selected)
-
-    def _setConnectionEnabled(self, enabled: bool):
-        self._linkDisplayedMode = enabled
-        self._socket.setVisible(enabled)
-        self.update()
+# class NetworkCharacterItem(NodeItem):
+#     Margin: int = 20
+#     PenWidth: int = 2
+#
+#     def __init__(self, character: Character, node: Node, parent=None):
+#         super(NetworkCharacterItem, self).__init__(node, parent)
+#         self._character = character
+#         self._size: int = 68
+#         self._center = QPointF(self.Margin + self._size / 2, self.Margin + self._size / 2)
+#         self._outerRadius = self._size // 2 + self.Margin // 2
+#
+#         self._linkDisplayedMode: bool = False
+#
+#         self._socket = SocketItem(0, self)
+#         self._socket.setVisible(False)
+#
+#     def character(self) -> Character:
+#         return self._character
+#
+#     def setCharacter(self, character: Character):
+#         self._character = character
+#         self._node.set_character(self._character)
+#         self.update()
+#         self.networkScene().itemChangedEvent(self)
+#
+#     @overrides
+#     def socket(self, angle: float) -> AbstractSocketItem:
+#         angle_radians = math.radians(-angle)
+#         x = self._center.x() + self._outerRadius * math.cos(angle_radians) - SocketItem.Size // 2
+#         y = self._center.y() + self._outerRadius * math.sin(angle_radians) - SocketItem.Size // 2
+#
+#         self._socket.setAngle(angle)
+#         self._socket.setPos(x, y)
+#
+#         return self._socket
+#
+#     def addSocket(self, socket: SocketItem):
+#         self._sockets.append(socket)
+#         socket.setVisible(False)
+#         self._socket = SocketItem(socket.angle(), self)
+#         self._socket.setVisible(False)
+#
+#     @overrides
+#     def boundingRect(self) -> QRectF:
+#         return QRectF(0, 0, self._size + self.Margin * 2, self._size + self.Margin * 2)
+#
+#     @overrides
+#     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+#         if self._linkDisplayedMode:
+#             painter.setPen(QPen(QColor(PLOTLYST_TERTIARY_COLOR), self.PenWidth, Qt.PenStyle.DashLine))
+#             brush = QBrush(QColor(PLOTLYST_TERTIARY_COLOR), Qt.BrushStyle.Dense5Pattern)
+#             painter.setBrush(brush)
+#             painter.drawEllipse(self._center, self._outerRadius, self._outerRadius)
+#         elif self.isSelected():
+#             painter.setPen(QPen(Qt.GlobalColor.gray, self.PenWidth, Qt.PenStyle.DashLine))
+#             painter.drawRoundedRect(self.Margin, self.Margin, self._size, self._size, 2, 2)
+#
+#         avatar = avatars.avatar(self._character)
+#         avatar.paint(painter, self.Margin, self.Margin, self._size, self._size)
+#
+#     @overrides
+#     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+#         if self.relationsScene().linkMode() or event.modifiers() & Qt.KeyboardModifier.AltModifier:
+#             self._setConnectionEnabled(True)
+#             self.update()
+#
+#     @overrides
+#     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+#         if self._linkDisplayedMode and not self.isSelected():
+#             self._setConnectionEnabled(False)
+#             self.update()
+#
+#     @overrides
+#     def hoverMoveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+#         if self._linkDisplayedMode:
+#             angle = math.degrees(math.atan2(
+#                 event.pos().y() - self._center.y(), event.pos().x() - self._center.x()
+#             ))
+#             angle_radians = math.radians(angle)
+#             x = self._center.x() + self._outerRadius * math.cos(angle_radians) - SocketItem.Size // 2
+#             y = self._center.y() + self._outerRadius * math.sin(angle_radians) - SocketItem.Size // 2
+#             self.prepareGeometryChange()
+#             self._socket.setAngle(-angle)
+#             self._socket.setPos(x, y)
+#
+#             self.update()
+#
+#     def relationsScene(self) -> 'RelationsEditorScene':
+#         return self.scene()
+#
+#     @overrides
+#     def _onSelection(self, selected: bool):
+#         super()._onSelection(selected)
+#         self._setConnectionEnabled(selected)
+#
+#     def _setConnectionEnabled(self, enabled: bool):
+#         self._linkDisplayedMode = enabled
+#         self._socket.setVisible(enabled)
+#         self.update()
 
 
 class RelationsEditorScene(NetworkScene):
