@@ -65,11 +65,12 @@ class StickerEditor(QWidget):
 
 class TextLineEditorPopup(MenuWidget):
 
-    def __init__(self, text: str, rect: QRect, parent=None):
+    def __init__(self, text: str, rect: QRect, parent=None, placeholder: str = 'Event'):
         super().__init__(parent)
         transparent(self)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self._lineEdit = AutoAdjustableLineEdit(defaultWidth=rect.width())
+        self._lineEdit.setPlaceholderText(placeholder)
         self._lineEdit.setText(text)
         self.addWidget(self._lineEdit)
 

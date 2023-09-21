@@ -115,10 +115,9 @@ class EventItem(ConnectableNode):
 
     def __init__(self, node: Node, parent=None):
         super().__init__(node, parent)
-        if self._node.text:
-            self._text = self._node.text
-        else:
-            self._text: str = 'New event'
+        self._placeholderText: str = 'New event'
+        self._text: str = self._node.text if self._node.text else ''
+
         self._icon: Optional[QIcon] = None
         self._iconSize: int = 0
         self._iconTextSpacing: int = 3
@@ -225,7 +224,8 @@ class EventItem(ConnectableNode):
         painter.setBrush(QColor(RELAXED_WHITE_COLOR))
         painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 24, 24)
         painter.setFont(self._font)
-        painter.drawText(self._textRect, Qt.AlignmentFlag.AlignCenter, self._text)
+        painter.drawText(self._textRect, Qt.AlignmentFlag.AlignCenter,
+                         self._text if self._text else self._placeholderText)
 
         if self._icon:
             self._icon.paint(painter, self.Margin + self.Padding - self._iconTextSpacing,
@@ -272,7 +272,7 @@ class EventItem(ConnectableNode):
             self._icon = IconRegistry.from_name('mdi6.crystal-ball')
 
     def _recalculateRect(self):
-        self._textRect = self._metrics.boundingRect(self._text)
+        self._textRect = self._metrics.boundingRect(self._text if self._text else self._placeholderText)
         self._iconSize = int(self._textRect.height() * 1.25) if self._icon else 0
         self._textRect.moveTopLeft(QPoint(self.Margin + self.Padding, self.Margin + self.Padding))
         self._textRect.moveTopLeft(QPoint(self._textRect.x() + self._iconSize, self._textRect.y()))
