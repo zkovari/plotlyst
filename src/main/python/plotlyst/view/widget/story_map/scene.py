@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PyQt6.QtCore import pyqtSignal, QPointF
+from PyQt6.QtCore import pyqtSignal, QPointF, Qt
 from PyQt6.QtGui import QKeyEvent
 from overrides import overrides
 
@@ -62,7 +62,7 @@ class EventsMindMapScene(NetworkScene):
     @overrides
     def keyPressEvent(self, event: QKeyEvent) -> None:
         super().keyPressEvent(event)
-        if not event.modifiers() and len(self.selectedItems()) == 1:
+        if not event.modifiers() and not event.key() == Qt.Key.Key_Escape and len(self.selectedItems()) == 1:
             item = self.selectedItems()[0]
             if isinstance(item, EventItem):
                 self.editEvent.emit(item)
