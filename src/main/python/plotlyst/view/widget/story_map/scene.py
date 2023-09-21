@@ -26,9 +26,9 @@ from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Node, DiagramNodeType
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.widget.graphics import NetworkScene, NodeItem
+from src.main.python.plotlyst.view.widget.graphics import NetworkScene, NodeItem, AbstractSocketItem
 from src.main.python.plotlyst.view.widget.story_map.items import MindMapNode, EventItem, StickerItem, \
-    CharacterItem, SocketItem
+    CharacterItem
 
 
 class EventsMindMapScene(NetworkScene):
@@ -45,7 +45,7 @@ class EventsMindMapScene(NetworkScene):
         self.repo = RepositoryPersistenceManager.instance()
 
     @overrides
-    def startLink(self, source: SocketItem):
+    def startLink(self, source: AbstractSocketItem):
         super().startLink(source)
         self.hideEditor()
 
