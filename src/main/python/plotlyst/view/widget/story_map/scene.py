@@ -23,12 +23,11 @@ from PyQt6.QtGui import QKeyEvent
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Node, DiagramNodeType
+from src.main.python.plotlyst.core.domain import Node, DiagramNodeType, PlaceholderCharacter
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.widget.graphics import NetworkScene, NodeItem, AbstractSocketItem
-from src.main.python.plotlyst.view.widget.story_map.items import MindMapNode, EventItem, StickerItem, \
-    CharacterItem
+from src.main.python.plotlyst.view.widget.graphics import NetworkScene, NodeItem, AbstractSocketItem, CharacterItem
+from src.main.python.plotlyst.view.widget.story_map.items import MindMapNode, EventItem, StickerItem
 
 
 class EventsMindMapScene(NetworkScene):
@@ -77,7 +76,7 @@ class EventsMindMapScene(NetworkScene):
     @overrides
     def _addNewItem(self, scenePos: QPointF, itemType: DiagramNodeType, subType: str = '') -> NodeItem:
         if itemType == DiagramNodeType.CHARACTER:
-            item = CharacterItem(self.toCharacterNode(scenePos, itemType), character=None)
+            item = CharacterItem(PlaceholderCharacter('Character'), self.toCharacterNode(scenePos, itemType))
         elif itemType in [DiagramNodeType.COMMENT, DiagramNodeType.STICKER]:
             item = StickerItem(Node(scenePos.x(), scenePos.y(), itemType, subType))
         else:
@@ -93,7 +92,7 @@ class EventsMindMapScene(NetworkScene):
     def _addNode(self, node: Node):
         if node.type == DiagramNodeType.CHARACTER:
             character = node.character(self._novel) if node.character_id else None
-            item = CharacterItem(node, character)
+            item = CharacterItem(character, node)
         elif node.type in [DiagramNodeType.COMMENT, DiagramNodeType.STICKER]:
             item = StickerItem(node)
         else:

@@ -26,10 +26,10 @@ from PyQt6.QtWidgets import QWidget, QApplication, QStyleOptionGraphicsItem, \
 from overrides import overrides
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Character, Node, DiagramNodeType, NODE_SUBTYPE_GOAL, \
+from src.main.python.plotlyst.core.domain import Node, DiagramNodeType, NODE_SUBTYPE_GOAL, \
     NODE_SUBTYPE_CONFLICT, NODE_SUBTYPE_BACKSTORY, NODE_SUBTYPE_DISTURBANCE, NODE_SUBTYPE_QUESTION, \
     NODE_SUBTYPE_FORESHADOWING
-from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.graphics import NodeItem, DotCircleSocketItem, AbstractSocketItem
 
 
@@ -295,58 +295,3 @@ class EventItem(ConnectableNode):
                                       self._height - self.Margin + socketPadding)
         self._socketBottomRight.setPos(self._nestedRectWidth, self._height - self.Margin + socketPadding)
         self._socketLeft.setPos(socketPadding, self._height / 2 - socketRad)
-
-
-class CharacterItem(ConnectableNode):
-    Margin: int = 25
-
-    def __init__(self, node: Node, character: Optional[Character], parent=None):
-        super().__init__(node, parent)
-        self._character: Optional[Character] = character
-        self._size: int = 68
-
-        self._socketTop = DotCircleSocketItem(90, parent=self)
-        self._socketRight = DotCircleSocketItem(0, parent=self)
-        self._socketBottom = DotCircleSocketItem(-90, parent=self)
-        self._socketLeft = DotCircleSocketItem(180, parent=self)
-        self._sockets.extend([self._socketLeft, self._socketTop, self._socketRight, self._socketBottom])
-        socketSize = self._socketTop.boundingRect().width()
-        half = self.Margin + v_center(self._size, socketSize)
-        padding = v_center(self.Margin, socketSize)
-        self._socketTop.setPos(half, padding)
-        self._socketRight.setPos(self._size + self.Margin + padding, half)
-        self._socketBottom.setPos(half, self._size + self.Margin + padding)
-        self._socketLeft.setPos(padding, half)
-
-        self._setSocketsVisible(False)
-
-    @overrides
-    def boundingRect(self) -> QRectF:
-        return QRectF(0, 0, self._size + self.Margin * 2, self._size + self.Margin * 2)
-
-    @overrides
-    def socket(self, angle: float) -> AbstractSocketItem:
-        if angle == 0:
-            return self._socketRight
-        elif angle == 90:
-            return self._socketTop
-        elif angle == 180:
-            return self._socketLeft
-        elif angle == -90:
-            return self._socketBottom
-
-    def setCharacter(self, character: Character):
-        self._character = character
-        self.update()
-
-    @overrides
-    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
-        if self.isSelected():
-            painter.setPen(QPen(Qt.GlobalColor.gray, 2, Qt.PenStyle.DashLine))
-            painter.drawRoundedRect(self.Margin, self.Margin, self._size, self._size, 2, 2)
-
-        if self._character is None:
-            avatar = IconRegistry.character_icon()
-        else:
-            avatar = avatars.avatar(self._character)
-        avatar.paint(painter, self.Margin, self.Margin, self._size, self._size)
