@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEv
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Node, Diagram, DiagramNodeType, Connector
-from src.main.python.plotlyst.view.widget.graphics.items import NodeItem, PlaceholderSocketItem, ConnectorItem, \
+from src.main.python.plotlyst.view.widget.graphics import NodeItem, CharacterItem, PlaceholderSocketItem, ConnectorItem, \
     SelectorRectItem, AbstractSocketItem
 
 
@@ -235,7 +235,10 @@ class NetworkScene(QGraphicsScene):
 
     def _onLink(self, sourceNode: NodeItem, sourceSocket: AbstractSocketItem, targetNode: NodeItem,
                 targetSocket: AbstractSocketItem):
-        pass
+        if isinstance(sourceNode, CharacterItem):
+            sourceNode.addSocket(sourceSocket)
+        if isinstance(targetNode, CharacterItem):
+            targetNode.addSocket(targetSocket)
 
     def _updateSelection(self):
         if not self._selectionRect.rect().isValid():

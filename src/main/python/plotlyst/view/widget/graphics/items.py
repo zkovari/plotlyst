@@ -507,7 +507,7 @@ class CharacterItem(NodeItem):
 
         return self._socket
 
-    def addSocket(self, socket: FilledSocketItem):
+    def addSocket(self, socket: AbstractSocketItem):
         self._sockets.append(socket)
         socket.setVisible(False)
         self._socket = FilledSocketItem(socket.angle(), self)

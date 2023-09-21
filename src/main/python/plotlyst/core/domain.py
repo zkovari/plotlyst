@@ -365,7 +365,7 @@ class Character:
         return hash(str(self.id))
 
 
-class NpcCharacter(Character):
+class PlaceholderCharacter(Character):
     pass
 
 
