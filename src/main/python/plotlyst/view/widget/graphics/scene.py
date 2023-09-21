@@ -155,7 +155,12 @@ class NetworkScene(QGraphicsScene):
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         if (not self.isAdditionMode() and not self.linkMode() and
                 event.button() & Qt.MouseButton.LeftButton and not self.itemAt(event.scenePos(), QTransform())):
-            pass
+            if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+                pos = self._cursorScenePos()
+                if pos:
+                    self._addNewItem(pos, DiagramNodeType.EVENT)
+            else:
+                pass
             # self._selectionRect.start(event.scenePos())
             # self._selectionMode = True
         elif event.button() & Qt.MouseButton.RightButton or event.button() & Qt.MouseButton.MiddleButton:
@@ -232,11 +237,16 @@ class NetworkScene(QGraphicsScene):
 
     def _paste(self):
         if self._copyDescriptor:
-            view = self.views()[0]
-            viewPos: QPoint = view.mapFromGlobal(QCursor.pos())
-            scenePos: QPointF = view.mapToScene(viewPos)
+            pos = self._cursorScenePos()
+            if pos:
+                self._addNewItem(pos, self._copyDescriptor.mode, self._copyDescriptor.subType)
 
-            self._addNewItem(scenePos, self._copyDescriptor.mode, self._copyDescriptor.subType)
+    def _cursorScenePos(self) -> Optional[QPointF]:
+        view = self.views()[0]
+        if not view.underMouse():
+            return
+        viewPos: QPoint = view.mapFromGlobal(QCursor.pos())
+        return view.mapToScene(viewPos)
 
     @abstractmethod
     def _addNewItem(self, scenePos: QPointF, itemType: DiagramNodeType, subType: str = '') -> NodeItem:
