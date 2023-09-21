@@ -22,7 +22,7 @@ from abc import abstractmethod
 from functools import partial
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QPainter, QPen, QColor, QIcon, QPaintEvent
+from PyQt6.QtGui import QPainter, QPen, QColor, QIcon, QPaintEvent, QKeySequence
 from PyQt6.QtWidgets import QFrame, \
     QToolButton, QWidget, \
     QAbstractButton, QSlider, QButtonGroup
@@ -50,8 +50,10 @@ class ZoomBar(QFrame):
 
         self._btnZoomIn = tool_btn(IconRegistry.plus_circle_icon('lightgrey'), 'Zoom in', transparent_=True,
                                    parent=self)
+        self._btnZoomIn.setShortcut(QKeySequence.StandardKey.ZoomIn)
         self._btnZoomOut = tool_btn(IconRegistry.minus_icon('lightgrey'), 'Zoom out', transparent_=True,
                                     parent=self)
+        self._btnZoomOut.setShortcut(QKeySequence.StandardKey.ZoomOut)
         self._btnZoomIn.clicked.connect(lambda: self.zoomed.emit(0.1))
         self._btnZoomOut.clicked.connect(lambda: self.zoomed.emit(-0.1))
 
