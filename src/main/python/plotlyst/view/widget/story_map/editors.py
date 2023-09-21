@@ -23,7 +23,7 @@ from PyQt6.QtCore import Qt, QEvent, QRect
 from PyQt6.QtGui import QEnterEvent
 from PyQt6.QtWidgets import QWidget, QTextEdit
 from overrides import overrides
-from qthandy import hbox, margins, transparent, vline
+from qthandy import hbox, margins, transparent, vline, decr_icon
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
@@ -31,6 +31,7 @@ from src.main.python.plotlyst.core.domain import DiagramNodeType
 from src.main.python.plotlyst.view.common import tool_btn
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.graphics import BaseItemEditor
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableLineEdit, FontSizeSpinBox
 from src.main.python.plotlyst.view.widget.story_map.controls import EventSelectorWidget
@@ -98,12 +99,15 @@ class EventItemEditor(BaseItemEditor):
         self._sbFont.fontChanged.connect(self._fontChanged)
         self._btnBold = tool_btn(IconRegistry.from_name('fa5s.bold'), 'Bold', checkable=True, icon_resize=False,
                                  properties=['transparent-rounded-bg-on-hover', 'top-selector'])
+        decr_icon(self._btnBold)
         self._btnItalic = tool_btn(IconRegistry.from_name('fa5s.italic'), 'Italic',
                                    checkable=True, icon_resize=False,
                                    properties=['transparent-rounded-bg-on-hover', 'top-selector'])
+        decr_icon(self._btnItalic)
         self._btnUnderline = tool_btn(IconRegistry.from_name('fa5s.underline'), 'Underline',
                                       checkable=True, icon_resize=False,
                                       properties=['transparent-rounded-bg-on-hover', 'top-selector'])
+        decr_icon(self._btnUnderline)
         self._btnBold.clicked.connect(self._textStyleChanged)
         self._btnItalic.clicked.connect(self._textStyleChanged)
         self._btnUnderline.clicked.connect(self._textStyleChanged)
@@ -119,9 +123,7 @@ class EventItemEditor(BaseItemEditor):
         self._toolbar.layout().addWidget(vline())
         self._toolbar.layout().addWidget(self._sbFont)
         self._toolbar.layout().addWidget(vline())
-        self._toolbar.layout().addWidget(self._btnBold)
-        self._toolbar.layout().addWidget(self._btnItalic)
-        self._toolbar.layout().addWidget(self._btnUnderline)
+        self._toolbar.layout().addWidget(group(self._btnBold, self._btnItalic, self._btnUnderline, margin=0, spacing=2))
 
     def setItem(self, item: EventItem):
         self._item = item
