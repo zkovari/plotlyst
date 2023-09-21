@@ -254,6 +254,7 @@ class EventItem(ConnectableNode):
         self._recalculateRect()
         self.prepareGeometryChange()
         self.update()
+        self.rearrangeConnectors()
 
     def _updateIcon(self):
         if self._node.subtype == NODE_SUBTYPE_GOAL:

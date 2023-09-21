@@ -457,9 +457,12 @@ class NodeItem(QAbstractGraphicsShapeItem):
     def socket(self, angle: float) -> AbstractSocketItem:
         pass
 
-    def _onPosChanged(self):
+    def rearrangeConnectors(self):
         for socket in self._sockets:
             socket.rearrangeConnectors()
+
+    def _onPosChanged(self):
+        self.rearrangeConnectors()
 
     def _onSelection(self, selected: bool):
         pass
