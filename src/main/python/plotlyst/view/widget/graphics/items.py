@@ -327,7 +327,7 @@ class ConnectorItem(QGraphicsPathItem):
             self.networkScene().connectorChangedEvent(self)
 
     def rearrange(self):
-        self.setPos(self._source.sceneBoundingRect().center())
+        self.setPos(self._source.sceneBoundingRect().topRight())
 
         path = QPainterPath()
 
