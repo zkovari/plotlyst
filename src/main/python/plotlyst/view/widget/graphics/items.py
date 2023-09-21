@@ -468,7 +468,9 @@ class NodeItem(QAbstractGraphicsShapeItem):
         self._posChangedTimer.stop()
         self._node.x = self.scenePos().x()
         self._node.y = self.scenePos().y()
-        self.networkScene().itemChangedEvent(self)
+        scene = self.networkScene()
+        if scene:
+            scene.itemChangedEvent(self)
 
 
 class CharacterItem(NodeItem):
