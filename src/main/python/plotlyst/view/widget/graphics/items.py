@@ -176,6 +176,21 @@ class FilledSocketItem(AbstractSocketItem):
         painter.drawEllipse(QPointF(self.Size / 2, self.Size // 2), radius, radius)
 
 
+class DotCircleSocketItem(AbstractSocketItem):
+
+    @overrides
+    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
+        if self._linkAvailable:
+            painter.setPen(QPen(QColor(PLOTLYST_SECONDARY_COLOR), 2))
+        else:
+            painter.setPen(QPen(QColor('lightgrey'), 2))
+
+        radius = 7 if self._hovered else 5
+        painter.drawEllipse(QPointF(self._size / 2, self._size // 2), radius, radius)
+        if self._hovered and self.networkScene().linkMode():
+            painter.drawEllipse(QPointF(self._size / 2, self._size // 2), 2, 2)
+
+
 class PlaceholderSocketItem(AbstractSocketItem):
     def __init__(self, parent=None):
         super().__init__(0, parent=parent)

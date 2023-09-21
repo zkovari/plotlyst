@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt6.QtCore import Qt, pyqtSignal, QRect, QRectF, QPoint, QPointF, QTimer
+from PyQt6.QtCore import Qt, pyqtSignal, QRect, QRectF, QPoint, QTimer
 from PyQt6.QtGui import QIcon, QColor, QPainter, QPen, QFontMetrics
 from PyQt6.QtWidgets import QWidget, QApplication, QStyleOptionGraphicsItem, \
     QGraphicsSceneHoverEvent, QGraphicsSceneMouseEvent, QGraphicsItem
@@ -30,7 +30,7 @@ from src.main.python.plotlyst.core.domain import Character, Node, DiagramNodeTyp
     NODE_SUBTYPE_CONFLICT, NODE_SUBTYPE_BACKSTORY, NODE_SUBTYPE_DISTURBANCE, NODE_SUBTYPE_QUESTION, \
     NODE_SUBTYPE_FORESHADOWING
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.widget.graphics import NodeItem, AbstractSocketItem
+from src.main.python.plotlyst.view.widget.graphics import NodeItem, DotCircleSocketItem, AbstractSocketItem
 
 
 def v_center(ref_height: int, item_height: int) -> int:
@@ -43,24 +43,6 @@ class MindMapNode(NodeItem):
 
     def linkMode(self) -> bool:
         return self.mindMapScene().linkMode()
-
-
-class SocketItem(AbstractSocketItem):
-
-    @overrides
-    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
-        if self._linkAvailable:
-            painter.setPen(QPen(QColor(PLOTLYST_SECONDARY_COLOR), 2))
-        else:
-            painter.setPen(QPen(QColor('lightgrey'), 2))
-
-        radius = 7 if self._hovered else 5
-        painter.drawEllipse(QPointF(self._size / 2, self._size // 2), radius, radius)
-        if self._hovered and self.mindMapScene().linkMode():
-            painter.drawEllipse(QPointF(self._size / 2, self._size // 2), 2, 2)
-
-    def mindMapScene(self) -> 'EventsMindMapScene':
-        return self.scene()
 
 
 class StickerItem(MindMapNode):
@@ -150,14 +132,14 @@ class EventItem(ConnectableNode):
         self._nestedRectWidth = 1
         self._nestedRectHeight = 1
 
-        self._socketLeft = SocketItem(180, parent=self)
-        self._socketTopLeft = SocketItem(135, parent=self)
-        self._socketTopCenter = SocketItem(90, parent=self)
-        self._socketTopRight = SocketItem(45, parent=self)
-        self._socketRight = SocketItem(0, parent=self)
-        self._socketBottomLeft = SocketItem(-135, parent=self)
-        self._socketBottomCenter = SocketItem(-90, parent=self)
-        self._socketBottomRight = SocketItem(-45, parent=self)
+        self._socketLeft = DotCircleSocketItem(180, parent=self)
+        self._socketTopLeft = DotCircleSocketItem(135, parent=self)
+        self._socketTopCenter = DotCircleSocketItem(90, parent=self)
+        self._socketTopRight = DotCircleSocketItem(45, parent=self)
+        self._socketRight = DotCircleSocketItem(0, parent=self)
+        self._socketBottomLeft = DotCircleSocketItem(-135, parent=self)
+        self._socketBottomCenter = DotCircleSocketItem(-90, parent=self)
+        self._socketBottomRight = DotCircleSocketItem(-45, parent=self)
         self._sockets.extend([self._socketLeft,
                               self._socketTopLeft, self._socketTopCenter, self._socketTopRight,
                               self._socketRight,
@@ -323,10 +305,10 @@ class CharacterItem(ConnectableNode):
         self._character: Optional[Character] = character
         self._size: int = 68
 
-        self._socketTop = SocketItem(90, parent=self)
-        self._socketRight = SocketItem(0, parent=self)
-        self._socketBottom = SocketItem(-90, parent=self)
-        self._socketLeft = SocketItem(180, parent=self)
+        self._socketTop = DotCircleSocketItem(90, parent=self)
+        self._socketRight = DotCircleSocketItem(0, parent=self)
+        self._socketBottom = DotCircleSocketItem(-90, parent=self)
+        self._socketLeft = DotCircleSocketItem(180, parent=self)
         self._sockets.extend([self._socketLeft, self._socketTop, self._socketRight, self._socketBottom])
         socketSize = self._socketTop.boundingRect().width()
         half = self.Margin + v_center(self._size, socketSize)
