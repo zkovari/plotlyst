@@ -41,6 +41,7 @@ class BaseGraphicsView(QGraphicsView):
         super(BaseGraphicsView, self).__init__(parent)
         self._moveOriginX = 0
         self._moveOriginY = 0
+        self._scaledFactor: float = 1.0
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.NoAnchor)
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
         self.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
@@ -73,7 +74,14 @@ class BaseGraphicsView(QGraphicsView):
         if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
             diff = event.angleDelta().y()
             scale = diff / 1200
-            self.scale(1 + scale, 1 + scale)
+            self._scale(round(scale, 1))
+
+    def scaledFactor(self) -> float:
+        return self._scaledFactor
+
+    def _scale(self, scale: float):
+        self._scaledFactor += scale
+        self.scale(1.0 + scale, 1.0 + scale)
 
 
 class NetworkGraphicsView(BaseGraphicsView):
@@ -85,7 +93,7 @@ class NetworkGraphicsView(BaseGraphicsView):
         self.setScene(self._scene)
 
         self._wdgZoomBar = ZoomBar(self)
-        self._wdgZoomBar.zoomed.connect(lambda x: self.scale(1.0 + x, 1.0 + x))
+        self._wdgZoomBar.zoomed.connect(self._scale)
 
         self._controlsNavBar = self._roundedFrame()
         sp(self._controlsNavBar).h_max()
@@ -106,6 +114,11 @@ class NetworkGraphicsView(BaseGraphicsView):
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
         self._arrangeSideBars()
+
+    @overrides
+    def _scale(self, scale: float):
+        super()._scale(scale)
+        self._wdgZoomBar.updateScaledFactor(self.scaledFactor())
 
     def _mainControlClicked(self, itemType: DiagramNodeType, checked: bool):
         if checked:

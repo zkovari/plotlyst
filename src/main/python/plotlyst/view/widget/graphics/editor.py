@@ -25,7 +25,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QPainter, QPen, QColor, QIcon, QPaintEvent, QKeySequence
 from PyQt6.QtWidgets import QFrame, \
     QToolButton, QWidget, \
-    QAbstractButton, QSlider, QButtonGroup
+    QAbstractButton, QSlider, QButtonGroup, QPushButton
 from overrides import overrides
 from qthandy import hbox, margins, sp, vbox, grid, pointy
 
@@ -37,6 +37,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 
 class ZoomBar(QFrame):
     zoomed = pyqtSignal(float)
+    reset = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -51,6 +52,14 @@ class ZoomBar(QFrame):
         self._btnZoomIn = tool_btn(IconRegistry.plus_circle_icon('lightgrey'), 'Zoom in', transparent_=True,
                                    parent=self)
         self._btnZoomIn.setShortcut(QKeySequence.StandardKey.ZoomIn)
+
+        self._btnScaledFactor = QPushButton()
+        self._btnScaledFactor.setStyleSheet('border: 0px; color: lightgrey;')
+        # pointy(self._btnScaledFactor)
+        # self._btnScaledFactor.installEventFilter(ButtonPressResizeEventFilter(self._btnScaledFactor))
+        # self._btnScaledFactor.clicked.connect(self.reset.emit)
+        self.updateScaledFactor(1.0)
+
         self._btnZoomOut = tool_btn(IconRegistry.minus_icon('lightgrey'), 'Zoom out', transparent_=True,
                                     parent=self)
         self._btnZoomOut.setShortcut(QKeySequence.StandardKey.ZoomOut)
@@ -58,7 +67,11 @@ class ZoomBar(QFrame):
         self._btnZoomOut.clicked.connect(lambda: self.zoomed.emit(-0.1))
 
         self.layout().addWidget(self._btnZoomOut)
+        self.layout().addWidget(self._btnScaledFactor)
         self.layout().addWidget(self._btnZoomIn)
+
+    def updateScaledFactor(self, scale: float):
+        self._btnScaledFactor.setText(f'{int(scale * 100)}%')
 
 
 class SecondarySelectorWidget(QFrame):
