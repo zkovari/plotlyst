@@ -21,10 +21,10 @@ from typing import Optional, List
 
 from PyQt6.QtCore import Qt, QRectF, QRect, QPoint, pyqtSignal
 from PyQt6.QtGui import QMouseEvent, QPainter, QColor, QPen, QFontMetrics, QFont, QIcon, QKeyEvent, \
-    QPainterPath, QResizeEvent
+    QResizeEvent
 from PyQt6.QtWidgets import QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
     QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent, QGraphicsLineItem, \
-    QMenu, QTabWidget, QWidgetAction, QGraphicsPathItem, QTextEdit, QToolButton
+    QMenu, QTabWidget, QWidgetAction, QTextEdit, QToolButton
 from overrides import overrides
 from qtemoji import EmojiPicker
 from qthandy import transparent, busy
@@ -43,83 +43,6 @@ LINE_WIDTH: int = 4
 DEFAULT_COLOR: str = '#219ebc'
 ITEM_HORIZONTAL_DISTANCE = 20
 ITEM_VERTICAL_DISTANCE = 80
-
-
-class ConnectorItem(QGraphicsPathItem):
-
-    def __init__(self, source: 'WorldBuildingItemGroup', target: 'WorldBuildingItemGroup'):
-        super(ConnectorItem, self).__init__(source)
-        self._source = source
-        self._collapseItem = source.collapseItem()
-        self._target = target
-        if self._target.entity().bg_color:
-            self.setPen(QPen(QColor(self._target.entity().bg_color), LINE_WIDTH))
-        else:
-            self.setPen(QPen(source.connectorColor(), LINE_WIDTH))
-        self.updatePos()
-        source.addOutputConnector(self)
-        target.setInputConnector(self)
-
-    def updatePos(self):
-        self.setPos(self._collapseItem.pos().x() + self._collapseItem.boundingRect().width() - LINE_WIDTH - 1,
-                    self._collapseItem.y() + self._collapseItem.radius() - LINE_WIDTH)
-        self.rearrange()
-
-    def rearrange(self):
-        path = QPainterPath()
-        target_x = self._target.pos().x() - self.pos().x()
-        target_y = self._target.pos().y()
-        if self._target.pos().y() < 0:
-            path.quadTo(0, target_y / 2, target_x, target_y)
-        elif self._target.pos().y() > 0:
-            path.quadTo(0, target_y / 2, target_x, target_y)
-        else:
-            path.lineTo(target_x, target_y)
-
-        self.setPath(path)
-
-    def source(self) -> 'WorldBuildingItemGroup':
-        return self._source
-
-    def target(self) -> 'WorldBuildingItemGroup':
-        return self._target
-
-
-class PlusItem(QAbstractGraphicsShapeItem):
-    def __init__(self, parent: 'WorldBuildingItemGroup'):
-        super(PlusItem, self).__init__(parent)
-        self._parent = parent
-        self._plusIcon = IconRegistry.plus_circle_icon('lightgrey')
-        self._iconSize = 25
-        self.setAcceptHoverEvents(True)
-        pointy(self)
-        self.setToolTip('Add new child')
-
-    @overrides
-    def boundingRect(self):
-        return QRectF(0, 0, self._iconSize, self._iconSize)
-
-    @overrides
-    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
-        self._plusIcon.paint(painter, 0, 0, self._iconSize, self._iconSize)
-
-    @overrides
-    def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        self._plusIcon = IconRegistry.plus_circle_icon('#457b9d')
-        self.update()
-
-    @overrides
-    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        self._plusIcon = IconRegistry.plus_circle_icon('lightgrey')
-        self.update()
-
-    @overrides
-    def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        event.accept()
-
-    @overrides
-    def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        self._parent.addNewChild()
 
 
 class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):
