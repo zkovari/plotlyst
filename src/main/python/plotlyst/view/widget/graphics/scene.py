@@ -19,17 +19,24 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from abc import abstractmethod
+from dataclasses import dataclass
 from typing import Optional, Dict
 
-from PyQt6.QtCore import Qt, pyqtSignal, QPointF
+from PyQt6.QtCore import Qt, pyqtSignal, QPointF, QPoint
 from PyQt6.QtGui import QTransform, \
-    QKeyEvent
+    QKeyEvent, QKeySequence, QCursor
 from PyQt6.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Node, Diagram, DiagramNodeType, Connector
 from src.main.python.plotlyst.view.widget.graphics import NodeItem, CharacterItem, PlaceholderSocketItem, ConnectorItem, \
     SelectorRectItem, AbstractSocketItem
+
+
+@dataclass
+class ItemDescriptor:
+    mode: DiagramNodeType
+    subType: str = ''
 
 
 class NetworkScene(QGraphicsScene):
@@ -40,8 +47,8 @@ class NetworkScene(QGraphicsScene):
         super().__init__(parent)
         self._diagram: Optional[Diagram] = None
         self._linkMode: bool = False
-        self._additionMode: Optional[DiagramNodeType] = None
-        self._additionSubType: str = ''
+        self._additionDescriptor: Optional[ItemDescriptor] = None
+        self._copyDescriptor: Optional[ItemDescriptor] = None
 
         self._placeholder: Optional[PlaceholderSocketItem] = None
         self._connectorPlaceholder: Optional[ConnectorItem] = None
@@ -68,15 +75,13 @@ class NetworkScene(QGraphicsScene):
                 self._addConnector(connector, source, target)
 
     def isAdditionMode(self) -> bool:
-        return self._additionMode is not None
+        return self._additionDescriptor is not None
 
     def startAdditionMode(self, itemType: DiagramNodeType, subType: str = ''):
-        self._additionMode = itemType
-        self._additionSubType = subType
+        self._additionDescriptor = ItemDescriptor(itemType, subType)
 
     def endAdditionMode(self):
-        self._additionMode = None
-        self._additionSubType = ''
+        self._additionDescriptor = None
 
     def linkMode(self) -> bool:
         return self._linkMode
@@ -141,6 +146,10 @@ class NetworkScene(QGraphicsScene):
         elif event.key() == Qt.Key.Key_Delete or event.key() == Qt.Key.Key_Backspace:
             for item in self.selectedItems():
                 self._removeItem(item)
+        elif event.matches(QKeySequence.StandardKey.Copy) and len(self.selectedItems()) == 1:
+            self._copy(self.selectedItems()[0])
+        elif event.matches(QKeySequence.StandardKey.Paste):
+            self._paste()
 
     @overrides
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
@@ -176,8 +185,8 @@ class NetworkScene(QGraphicsScene):
             self._selectionMode = False
             self._selectionRect.setVisible(False)
             self._updateSelection()
-        elif self._additionMode is not None:
-            item = self._addNewItem(event.scenePos(), self._additionMode, self._additionSubType)
+        elif self._additionDescriptor is not None:
+            item = self._addNewItem(event.scenePos(), self._additionDescriptor.mode, self._additionDescriptor.subType)
             self._diagram.data.nodes.append(item.node())
             self._save()
 
@@ -216,6 +225,17 @@ class NetworkScene(QGraphicsScene):
         connectorItem.setConnector(connector)
 
         self._onLink(source, sourceSocket, target, targetSocket)
+
+    def _copy(self, item: NodeItem):
+        self._copyDescriptor = ItemDescriptor(item.node().type, item.node().subtype)
+
+    def _paste(self):
+        if self._copyDescriptor:
+            view = self.views()[0]
+            viewPos: QPoint = view.mapFromGlobal(QCursor.pos())
+            scenePos: QPointF = view.mapToScene(viewPos)
+
+            self._addNewItem(scenePos, self._copyDescriptor.mode, self._copyDescriptor.subType)
 
     @abstractmethod
     def _addNewItem(self, scenePos: QPointF, itemType: DiagramNodeType, subType: str = '') -> NodeItem:
