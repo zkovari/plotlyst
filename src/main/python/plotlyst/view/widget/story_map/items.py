@@ -288,10 +288,10 @@ class EventItem(ConnectableNode):
         socketPadding = (self.Margin - socketWidth) / 2
         self._socketTopCenter.setPos(self._width / 2 - socketRad, socketPadding)
         self._socketTopLeft.setPos(self._nestedRectWidth / 3 - socketRad, socketPadding)
-        self._socketTopRight.setPos(self._nestedRectWidth, socketPadding)
+        self._socketTopRight.setPos(self._nestedRectWidth + socketRad, socketPadding)
         self._socketRight.setPos(self._width - self.Margin + socketPadding, self._height / 2 - socketRad)
         self._socketBottomCenter.setPos(self._width / 2 - socketRad, self._height - self.Margin + socketPadding)
         self._socketBottomLeft.setPos(self._nestedRectWidth / 3 - socketRad,
                                       self._height - self.Margin + socketPadding)
-        self._socketBottomRight.setPos(self._nestedRectWidth, self._height - self.Margin + socketPadding)
+        self._socketBottomRight.setPos(self._nestedRectWidth + socketRad, self._height - self.Margin + socketPadding)
         self._socketLeft.setPos(socketPadding, self._height / 2 - socketRad)
