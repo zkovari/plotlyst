@@ -22,17 +22,23 @@ import math
 from abc import abstractmethod
 from typing import Any, Optional, List
 
-from PyQt6.QtCore import Qt, QTimer, QRectF, QPointF
-from PyQt6.QtGui import QPainter, QPen, QPainterPath, QColor, QIcon, QPolygonF, QBrush
+from PyQt6.QtCore import Qt, QTimer, QRectF, QPointF, QPoint, QRect
+from PyQt6.QtGui import QPainter, QPen, QPainterPath, QColor, QIcon, QPolygonF, QBrush, QFontMetrics
 from PyQt6.QtWidgets import QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QGraphicsSceneMouseEvent, \
     QStyleOptionGraphicsItem, QWidget, \
-    QGraphicsRectItem, QGraphicsSceneHoverEvent, QGraphicsPolygonItem
+    QGraphicsRectItem, QGraphicsSceneHoverEvent, QGraphicsPolygonItem, QApplication
 from overrides import overrides
 from qthandy import pointy
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
-from src.main.python.plotlyst.core.domain import Node, Relation, Connector, Character
+from src.main.python.plotlyst.core.domain import Node, Relation, Connector, Character, NODE_SUBTYPE_GOAL, \
+    NODE_SUBTYPE_CONFLICT, NODE_SUBTYPE_BACKSTORY, NODE_SUBTYPE_DISTURBANCE, NODE_SUBTYPE_QUESTION, \
+    NODE_SUBTYPE_FORESHADOWING, DiagramNodeType
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+
+
+def v_center(ref_height: int, item_height: int) -> int:
+    return (ref_height - item_height) // 2
 
 
 def draw_rect(painter: QPainter, item: QAbstractGraphicsShapeItem):
@@ -447,7 +453,7 @@ class NodeItem(QAbstractGraphicsShapeItem):
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
-            self._posChangedTimer.start(1000)
+            self._posChangedTimer.start()
             self._onPosChanged()
         elif change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
             self._onSelection(value)
@@ -463,6 +469,7 @@ class NodeItem(QAbstractGraphicsShapeItem):
 
     def _onPosChanged(self):
         self.rearrangeConnectors()
+        self.networkScene().itemChangedEvent(self)
 
     def _onSelection(self, selected: bool):
         pass
@@ -473,7 +480,7 @@ class NodeItem(QAbstractGraphicsShapeItem):
         self._node.y = self.scenePos().y()
         scene = self.networkScene()
         if scene:
-            scene.itemChangedEvent(self)
+            scene.nodeChangedEvent(self._node)
 
 
 class CharacterItem(NodeItem):
@@ -499,7 +506,7 @@ class CharacterItem(NodeItem):
         self._character = character
         self._node.set_character(self._character)
         self.update()
-        self.networkScene().itemChangedEvent(self)
+        self.networkScene().nodeChangedEvent(self._node)
 
     @overrides
     def socket(self, angle: float) -> AbstractSocketItem:
@@ -572,3 +579,188 @@ class CharacterItem(NodeItem):
         self._linkDisplayedMode = enabled
         self._socket.setVisible(enabled)
         self.update()
+
+
+class EventItem(NodeItem):
+    Margin: int = 30
+    Padding: int = 20
+
+    def __init__(self, node: Node, parent=None):
+        super().__init__(node, parent)
+        self._placeholderText: str = 'New event'
+        self._text: str = self._node.text if self._node.text else ''
+
+        self._icon: Optional[QIcon] = None
+        self._iconSize: int = 0
+        self._iconTextSpacing: int = 3
+        self._updateIcon()
+
+        self._font = QApplication.font()
+        self._metrics = QFontMetrics(self._font)
+        self._textRect: QRect = QRect(0, 0, 1, 1)
+        self._width = 1
+        self._height = 1
+        self._nestedRectWidth = 1
+        self._nestedRectHeight = 1
+
+        self._socketLeft = DotCircleSocketItem(180, parent=self)
+        self._socketTopLeft = DotCircleSocketItem(135, parent=self)
+        self._socketTopCenter = DotCircleSocketItem(90, parent=self)
+        self._socketTopRight = DotCircleSocketItem(45, parent=self)
+        self._socketRight = DotCircleSocketItem(0, parent=self)
+        self._socketBottomLeft = DotCircleSocketItem(-135, parent=self)
+        self._socketBottomCenter = DotCircleSocketItem(-90, parent=self)
+        self._socketBottomRight = DotCircleSocketItem(-45, parent=self)
+        self._sockets.extend([self._socketLeft,
+                              self._socketTopLeft, self._socketTopCenter, self._socketTopRight,
+                              self._socketRight,
+                              self._socketBottomRight, self._socketBottomCenter, self._socketBottomLeft])
+        self._setSocketsVisible(False)
+
+        self._recalculateRect()
+
+    def text(self) -> str:
+        return self._text
+
+    def setText(self, text: str):
+        self._text = text
+        self._node.text = text
+        self.setSelected(False)
+        self._refresh()
+        self.networkScene().nodeChangedEvent(self._node)
+
+    @overrides
+    def socket(self, angle: float) -> AbstractSocketItem:
+        if angle == 0:
+            return self._socketRight
+        elif angle == 45:
+            return self._socketTopRight
+        elif angle == 90:
+            return self._socketTopCenter
+        elif angle == 135:
+            return self._socketTopLeft
+        elif angle == 180:
+            return self._socketLeft
+        elif angle == -135:
+            return self._socketBottomLeft
+        elif angle == -90:
+            return self._socketBottomCenter
+        elif angle == -45:
+            return self._socketBottomRight
+
+    @overrides
+    def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        if self.networkScene().linkMode() or event.modifiers() & Qt.KeyboardModifier.AltModifier:
+            self._setSocketsVisible()
+
+    @overrides
+    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        if not self.isSelected():
+            self._setSocketsVisible(False)
+
+    def setIcon(self, icon: QIcon):
+        self._icon = icon
+        self._refresh()
+
+    def setFontSettings(self, size: Optional[int] = None, bold: Optional[bool] = None, italic: Optional[bool] = None,
+                        underline: Optional[bool] = None):
+        if size is not None:
+            self._font.setPointSize(size)
+        if bold is not None:
+            self._font.setBold(bold)
+        if italic is not None:
+            self._font.setItalic(italic)
+        if underline is not None:
+            self._font.setUnderline(underline)
+
+        self._metrics = QFontMetrics(self._font)
+
+        self._refresh()
+
+    def textRect(self) -> QRect:
+        return self._textRect
+
+    def textSceneRect(self) -> QRectF:
+        return self.mapRectToScene(self._textRect.toRectF())
+
+    @overrides
+    def boundingRect(self) -> QRectF:
+        return QRectF(0, 0, self._width, self._height)
+
+    @overrides
+    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+        if self.isSelected():
+            painter.setPen(QPen(Qt.GlobalColor.gray, 2, Qt.PenStyle.DashLine))
+            painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 2, 2)
+
+        painter.setPen(QPen(Qt.GlobalColor.black, 1))
+        painter.setBrush(QColor(RELAXED_WHITE_COLOR))
+        painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 24, 24)
+        painter.setFont(self._font)
+        painter.drawText(self._textRect, Qt.AlignmentFlag.AlignCenter,
+                         self._text if self._text else self._placeholderText)
+
+        if self._icon:
+            self._icon.paint(painter, self.Margin + self.Padding - self._iconTextSpacing,
+                             self.Margin + v_center(self.Padding * 2 + self._textRect.height(), self._iconSize),
+                             self._iconSize, self._iconSize)
+
+    @overrides
+    def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        self.networkScene().editEventText(self)
+
+    def _setSocketsVisible(self, visible: bool = True):
+        for socket in self._sockets:
+            socket.setVisible(visible)
+
+    @overrides
+    def _onSelection(self, selected: bool):
+        super()._onSelection(selected)
+        self._setSocketsVisible(selected)
+
+    def _refresh(self):
+        self._recalculateRect()
+        self.prepareGeometryChange()
+        self.update()
+        self.rearrangeConnectors()
+
+    def _updateIcon(self):
+        if self._node.subtype == NODE_SUBTYPE_GOAL:
+            self._icon = IconRegistry.goal_icon()
+        elif self._node.subtype == NODE_SUBTYPE_CONFLICT:
+            self._icon = IconRegistry.conflict_icon()
+        elif self._node.subtype == NODE_SUBTYPE_BACKSTORY:
+            self._icon = IconRegistry.backstory_icon()
+        elif self._node.subtype == NODE_SUBTYPE_DISTURBANCE:
+            self._icon = IconRegistry.inciting_incident_icon()
+        elif self._node.subtype == NODE_SUBTYPE_QUESTION:
+            self._icon = IconRegistry.from_name('ei.question-sign')
+        elif self._node.subtype == DiagramNodeType.SETUP:
+            self._icon = IconRegistry.from_name('ri.seedling-fill')
+        elif self._node.subtype == NODE_SUBTYPE_FORESHADOWING:
+            self._icon = IconRegistry.from_name('mdi6.crystal-ball')
+
+    def _recalculateRect(self):
+        self._textRect = self._metrics.boundingRect(self._text if self._text else self._placeholderText)
+        self._iconSize = int(self._textRect.height() * 1.25) if self._icon else 0
+        self._textRect.moveTopLeft(QPoint(self.Margin + self.Padding, self.Margin + self.Padding))
+        self._textRect.moveTopLeft(QPoint(self._textRect.x() + self._iconSize, self._textRect.y()))
+
+        self._width = self._textRect.width() + self._iconSize + self.Margin * 2 + self.Padding * 2
+        self._height = self._textRect.height() + self.Margin * 2 + self.Padding * 2
+
+        self._nestedRectWidth = self._textRect.width() + self.Padding * 2 + self._iconSize
+        self._nestedRectHeight = self._textRect.height() + self.Padding * 2
+
+        socketWidth = self._socketLeft.boundingRect().width()
+        socketRad = socketWidth / 2
+        socketPadding = (self.Margin - socketWidth) / 2
+        self._socketTopCenter.setPos(self._width / 2 - socketRad, socketPadding)
+        self._socketTopLeft.setPos(self._nestedRectWidth / 3 - socketRad, socketPadding)
+        self._socketTopRight.setPos(self._nestedRectWidth + socketRad, socketPadding)
+        self._socketRight.setPos(self._width - self.Margin + socketPadding, self._height / 2 - socketRad)
+        self._socketBottomCenter.setPos(self._width / 2 - socketRad, self._height - self.Margin + socketPadding)
+        self._socketBottomLeft.setPos(self._nestedRectWidth / 3 - socketRad,
+                                      self._height - self.Margin + socketPadding)
+        self._socketBottomRight.setPos(self._nestedRectWidth + socketRad, self._height - self.Margin + socketPadding)
+        self._socketLeft.setPos(socketPadding, self._height / 2 - socketRad)

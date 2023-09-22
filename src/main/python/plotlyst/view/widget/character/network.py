@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt6.QtCore import QTimer, QPointF, pyqtSignal
+from PyQt6.QtCore import QTimer, pyqtSignal
 from PyQt6.QtGui import QAction, QColor
 from PyQt6.QtWidgets import QButtonGroup
 from overrides import overrides
@@ -27,7 +27,7 @@ from qthandy import vline, retain_when_hidden
 from qtmenu import GridMenuWidget
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Diagram, Relation, Node, PlaceholderCharacter
+from src.main.python.plotlyst.core.domain import Diagram, Relation, Node
 from src.main.python.plotlyst.core.domain import Novel, Character, DiagramNodeType
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import tool_btn, action
@@ -41,39 +41,15 @@ from src.main.python.plotlyst.view.widget.utility import ColorPicker
 
 
 class RelationsEditorScene(NetworkScene):
-    # charactersChanged = pyqtSignal(RelationsNetwork)
-    # charactersLinked = pyqtSignal(CharacterItem)
-
     def __init__(self, novel: Novel, parent=None):
         super(RelationsEditorScene, self).__init__(parent)
         self._novel = novel
 
         self.repo = RepositoryPersistenceManager.instance()
 
-    @staticmethod
-    def toCharacterNode(scenePos: QPointF) -> Node:
-        node = Node(scenePos.x(), scenePos.y(), type=DiagramNodeType.CHARACTER)
-        node.x = node.x - CharacterItem.Margin
-        node.y = node.y - CharacterItem.Margin
-        return node
-
     @overrides
-    def _addNewItem(self, scenePos: QPointF, itemType: DiagramNodeType, subType: str = '') -> NodeItem:
-        if itemType == DiagramNodeType.CHARACTER:
-            item = CharacterItem(PlaceholderCharacter('Character'), self.toCharacterNode(scenePos))
-            self.addItem(item)
-            self.itemAdded.emit(itemType, item)
-        self.endAdditionMode()
-
-        return item
-
-    @overrides
-    def _addNode(self, node: Node):
-        character = node.character(self._novel) if node.character_id else PlaceholderCharacter('Character')
-        item = CharacterItem(character, node)
-        self.addItem(item)
-
-        return item
+    def _character(self, node: Node) -> Optional[Character]:
+        return node.character(self._novel) if node.character_id else None
 
     @overrides
     def _load(self):

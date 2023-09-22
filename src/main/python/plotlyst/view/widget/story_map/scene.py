@@ -17,21 +17,20 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import Optional
 
-from PyQt6.QtCore import pyqtSignal, QPointF, Qt
+from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtGui import QKeyEvent
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Node, DiagramNodeType, PlaceholderCharacter
-from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.core.domain import Novel, Node, Character
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.widget.graphics import NetworkScene, NodeItem, AbstractSocketItem, CharacterItem
-from src.main.python.plotlyst.view.widget.story_map.items import MindMapNode, EventItem, StickerItem
+from src.main.python.plotlyst.view.widget.graphics import NetworkScene, AbstractSocketItem, EventItem
+from src.main.python.plotlyst.view.widget.story_map.items import MindMapNode, StickerItem
 
 
 class EventsMindMapScene(NetworkScene):
-    editEvent = pyqtSignal(EventItem)
     editSticker = pyqtSignal(StickerItem)
     closeSticker = pyqtSignal()
     showItemEditor = pyqtSignal(MindMapNode)
@@ -74,46 +73,8 @@ class EventsMindMapScene(NetworkScene):
         self.closeSticker.emit()
 
     @overrides
-    def _addNewItem(self, scenePos: QPointF, itemType: DiagramNodeType, subType: str = '') -> NodeItem:
-        if itemType == DiagramNodeType.CHARACTER:
-            item = CharacterItem(PlaceholderCharacter('Character'), self.toCharacterNode(scenePos, itemType))
-        elif itemType in [DiagramNodeType.COMMENT, DiagramNodeType.STICKER]:
-            item = StickerItem(Node(scenePos.x(), scenePos.y(), itemType, subType))
-        else:
-            item = EventItem(self.toEventNode(scenePos, itemType, subType))
-
-        self.addItem(item)
-        self.itemAdded.emit(itemType, item)
-        self.endAdditionMode()
-
-        return item
-
-    @overrides
-    def _addNode(self, node: Node):
-        if node.type == DiagramNodeType.CHARACTER:
-            character = node.character(self._novel) if node.character_id else None
-            item = CharacterItem(character, node)
-        elif node.type in [DiagramNodeType.COMMENT, DiagramNodeType.STICKER]:
-            item = StickerItem(node)
-        else:
-            item = EventItem(node)
-
-        self.addItem(item)
-        return item
-
-    @staticmethod
-    def toEventNode(scenePos: QPointF, itemType: DiagramNodeType, subType: str = '') -> Node:
-        node = Node(scenePos.x(), scenePos.y(), itemType, subType)
-        node.x = node.x - EventItem.Margin - EventItem.Padding
-        node.y = node.y - EventItem.Margin - EventItem.Padding
-        return node
-
-    @staticmethod
-    def toCharacterNode(scenePos: QPointF, itemType: DiagramNodeType) -> Node:
-        node = Node(scenePos.x(), scenePos.y(), itemType)
-        node.x = node.x - CharacterItem.Margin
-        node.y = node.y - CharacterItem.Margin
-        return node
+    def _character(self, node: Node) -> Optional[Character]:
+        return node.character(self._novel) if node.character_id else None
 
     @overrides
     def _load(self):

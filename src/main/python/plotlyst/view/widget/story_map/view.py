@@ -28,10 +28,10 @@ from src.main.python.plotlyst.core.domain import Character, DiagramNodeType
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
-from src.main.python.plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, CharacterItem
+from src.main.python.plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, CharacterItem, EventItem
 from src.main.python.plotlyst.view.widget.story_map.controls import EventSelectorWidget, StickerSelectorWidget
 from src.main.python.plotlyst.view.widget.story_map.editors import StickerEditor, TextLineEditorPopup, EventItemEditor
-from src.main.python.plotlyst.view.widget.story_map.items import EventItem, StickerItem, MindMapNode
+from src.main.python.plotlyst.view.widget.story_map.items import StickerItem, MindMapNode
 from src.main.python.plotlyst.view.widget.story_map.scene import EventsMindMapScene
 
 

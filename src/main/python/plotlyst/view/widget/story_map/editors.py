@@ -32,10 +32,9 @@ from src.main.python.plotlyst.view.common import tool_btn
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
-from src.main.python.plotlyst.view.widget.graphics import BaseItemEditor
+from src.main.python.plotlyst.view.widget.graphics import BaseItemEditor, EventItem
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableLineEdit, FontSizeSpinBox
 from src.main.python.plotlyst.view.widget.story_map.controls import EventSelectorWidget
-from src.main.python.plotlyst.view.widget.story_map.items import EventItem
 
 
 class StickerEditor(QWidget):

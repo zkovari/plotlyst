@@ -28,9 +28,10 @@ from PyQt6.QtGui import QTransform, \
 from PyQt6.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Node, Diagram, DiagramNodeType, Connector
+from src.main.python.plotlyst.core.domain import Node, Diagram, DiagramNodeType, Connector, PlaceholderCharacter, \
+    Character
 from src.main.python.plotlyst.view.widget.graphics import NodeItem, CharacterItem, PlaceholderSocketItem, ConnectorItem, \
-    SelectorRectItem, AbstractSocketItem
+    SelectorRectItem, AbstractSocketItem, EventItem
 
 
 @dataclass
@@ -42,6 +43,7 @@ class ItemDescriptor:
 class NetworkScene(QGraphicsScene):
     cancelItemAddition = pyqtSignal()
     itemAdded = pyqtSignal(DiagramNodeType, NodeItem)
+    editEvent = pyqtSignal(EventItem)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -158,9 +160,7 @@ class NetworkScene(QGraphicsScene):
             if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
                 pos = self._cursorScenePos()
                 if pos:
-                    item = self._addNewItem(pos, DiagramNodeType.EVENT)
-                    self._diagram.data.nodes.append(item.node())
-                    self._save()
+                    self._addNewItem(pos, DiagramNodeType.EVENT)
             else:
                 pass
             # self._selectionRect.start(event.scenePos())
@@ -194,17 +194,32 @@ class NetworkScene(QGraphicsScene):
             self._selectionRect.setVisible(False)
             self._updateSelection()
         elif self._additionDescriptor is not None:
-            item = self._addNewItem(event.scenePos(), self._additionDescriptor.mode, self._additionDescriptor.subType)
-            self._diagram.data.nodes.append(item.node())
-            self._save()
+            self._addNewItem(event.scenePos(), self._additionDescriptor.mode, self._additionDescriptor.subType)
 
         super().mouseReleaseEvent(event)
 
     def itemChangedEvent(self, item: NodeItem):
+        pass
+
+    def nodeChangedEvent(self, node: Node):
         self._save()
 
     def connectorChangedEvent(self, connector: ConnectorItem):
         self._save()
+
+    @staticmethod
+    def toCharacterNode(scenePos: QPointF) -> Node:
+        node = Node(scenePos.x(), scenePos.y(), type=DiagramNodeType.CHARACTER)
+        node.x = node.x - CharacterItem.Margin
+        node.y = node.y - CharacterItem.Margin
+        return node
+
+    @staticmethod
+    def toEventNode(scenePos: QPointF, itemType: DiagramNodeType, subType: str = '') -> Node:
+        node = Node(scenePos.x(), scenePos.y(), itemType, subType)
+        node.x = node.x - EventItem.Margin - EventItem.Padding
+        node.y = node.y - EventItem.Margin - EventItem.Padding
+        return node
 
     def _removeItem(self, item: QGraphicsItem):
         if isinstance(item, NodeItem):
@@ -241,9 +256,7 @@ class NetworkScene(QGraphicsScene):
         if self._copyDescriptor:
             pos = self._cursorScenePos()
             if pos:
-                item = self._addNewItem(pos, self._copyDescriptor.mode, self._copyDescriptor.subType)
-                self._diagram.data.nodes.append(item.node())
-                self._save()
+                self._addNewItem(pos, self._copyDescriptor.mode, self._copyDescriptor.subType)
 
     def _cursorScenePos(self) -> Optional[QPointF]:
         view = self.views()[0]
@@ -252,13 +265,34 @@ class NetworkScene(QGraphicsScene):
         viewPos: QPoint = view.mapFromGlobal(QCursor.pos())
         return view.mapToScene(viewPos)
 
-    @abstractmethod
     def _addNewItem(self, scenePos: QPointF, itemType: DiagramNodeType, subType: str = '') -> NodeItem:
-        pass
+        if itemType == DiagramNodeType.CHARACTER:
+            item = CharacterItem(PlaceholderCharacter('Character'), self.toCharacterNode(scenePos))
+        # elif itemType in [DiagramNodeType.COMMENT, DiagramNodeType.STICKER]:
+        #     item = StickerItem(Node(scenePos.x(), scenePos.y(), itemType, subType))
+        else:
+            item = EventItem(self.toEventNode(scenePos, itemType, subType))
 
-    @abstractmethod
+        self.addItem(item)
+        self.itemAdded.emit(itemType, item)
+        self.endAdditionMode()
+
+        self._diagram.data.nodes.append(item.node())
+        self._save()
+
+        return item
+
     def _addNode(self, node: Node) -> NodeItem:
-        pass
+        if node.type == DiagramNodeType.CHARACTER:
+            character = self._character(node)
+            if character is None:
+                character = PlaceholderCharacter('Character')
+            item = CharacterItem(character, node)
+        else:
+            item = EventItem(node)
+
+        self.addItem(item)
+        return item
 
     @abstractmethod
     def _load(self):
@@ -266,6 +300,10 @@ class NetworkScene(QGraphicsScene):
 
     @abstractmethod
     def _save(self):
+        pass
+
+    @abstractmethod
+    def _character(self, node: Node) -> Optional[Character]:
         pass
 
     def _onLink(self, sourceNode: NodeItem, sourceSocket: AbstractSocketItem, targetNode: NodeItem,
