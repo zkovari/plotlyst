@@ -31,10 +31,9 @@ from src.main.python.plotlyst.view.widget.story_map.items import MindMapNode, St
 
 
 class EventsMindMapScene(NetworkScene):
-    editSticker = pyqtSignal(StickerItem)
-    closeSticker = pyqtSignal()
-    showItemEditor = pyqtSignal(MindMapNode)
-    hideItemEditor = pyqtSignal()
+    # editSticker = pyqtSignal(StickerItem)
+    # closeSticker = pyqtSignal()
+    # showItemEditor = pyqtSignal(MindMapNode)
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -42,21 +41,18 @@ class EventsMindMapScene(NetworkScene):
 
         self.repo = RepositoryPersistenceManager.instance()
 
-    @overrides
-    def startLink(self, source: AbstractSocketItem):
-        super().startLink(source)
-        self.hideEditor()
+    # @overrides
+    # def startLink(self, source: AbstractSocketItem):
+    #     super().startLink(source)
+    #     self.hideEditor()
 
-    def editEventText(self, item: EventItem):
-        self.editEvent.emit(item)
-
-    def showEditor(self, item: MindMapNode):
-        if not self._selectionMode:
-            self.showItemEditor.emit(item)
-
-    def hideEditor(self):
-        if len(self.selectedItems()) == 1:
-            self.hideItemEditor.emit()
+    # def showEditor(self, item: MindMapNode):
+    #     if not self._selectionMode:
+    #         self.showItemEditor.emit(item)
+    #
+    # def hideEditor(self):
+    #     if len(self.selectedItems()) == 1:
+    #         self.hideItemEditor.emit()
 
     @overrides
     def keyPressEvent(self, event: QKeyEvent) -> None:
@@ -64,7 +60,7 @@ class EventsMindMapScene(NetworkScene):
         if not event.modifiers() and not event.key() == Qt.Key.Key_Escape and len(self.selectedItems()) == 1:
             item = self.selectedItems()[0]
             if isinstance(item, EventItem):
-                self.editEvent.emit(item)
+                self.editItem.emit(item)
 
     def displayStickerMessage(self, sticker: StickerItem):
         self.editSticker.emit(sticker)

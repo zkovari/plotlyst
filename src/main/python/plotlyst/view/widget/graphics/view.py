@@ -31,8 +31,9 @@ from qthandy import sp, incr_icon, vbox
 from src.main.python.plotlyst.core.domain import Diagram, DiagramNodeType
 from src.main.python.plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButtonGroup, \
     TooltipPositionEventFilter
-from src.main.python.plotlyst.view.widget.graphics.editor import ZoomBar
-from src.main.python.plotlyst.view.widget.graphics.items import NodeItem
+from src.main.python.plotlyst.view.widget.graphics import CharacterItem, ConnectorItem
+from src.main.python.plotlyst.view.widget.graphics.editor import ZoomBar, ConnectorEditor
+from src.main.python.plotlyst.view.widget.graphics.items import NodeItem, EventItem
 from src.main.python.plotlyst.view.widget.graphics.scene import NetworkScene
 
 
@@ -100,10 +101,15 @@ class NetworkGraphicsView(BaseGraphicsView):
         shadow(self._controlsNavBar)
         vbox(self._controlsNavBar, 5, 6)
 
+        self._connectorEditor: Optional[ConnectorEditor] = None
+
         self._btnGroup = ExclusiveOptionalButtonGroup()
 
         self._scene.itemAdded.connect(self._endAddition)
         self._scene.cancelItemAddition.connect(self._endAddition)
+        self._scene.selectionChanged.connect(self._selectionChanged)
+        self._scene.editItem.connect(self._editItem)
+        self._scene.hideItemEditor.connect(self._hideItemToolbar)
 
     def setDiagram(self, diagram: Diagram):
         self._diagram = diagram
@@ -151,6 +157,7 @@ class NetworkGraphicsView(BaseGraphicsView):
 
         self._scene.startAdditionMode(itemType, subType)
         self.setToolTip(f'Click to add a new {itemType.name.lower()}')
+        self._hideItemToolbar()
 
     def _endAddition(self, itemType: Optional[DiagramNodeType] = None, item: Optional[NodeItem] = None):
         for btn in self._btnGroup.buttons():
@@ -186,3 +193,45 @@ class NetworkGraphicsView(BaseGraphicsView):
 
     def _initScene(self):
         return NetworkScene()
+
+    def _selectionChanged(self):
+        if len(self._scene.selectedItems()) == 1:
+            self._hideItemToolbar()
+            self._showItemToolbar(self._scene.selectedItems()[0])
+        else:
+            self._hideItemToolbar()
+
+    def _editItem(self, item: NodeItem):
+        if isinstance(item, CharacterItem):
+            self._editCharacterItem(item)
+        elif isinstance(item, EventItem):
+            self._editEventItem(item)
+
+    def _showItemToolbar(self, item: NodeItem):
+        if isinstance(item, ConnectorItem):
+            self._showConnectorToolbar(item)
+        elif isinstance(item, CharacterItem):
+            self._showCharacterItemToolbar(item)
+        elif isinstance(item, EventItem):
+            self._showEventItemToolbar(item)
+
+    def _editCharacterItem(self, item: CharacterItem):
+        pass
+
+    def _editEventItem(self, item: EventItem):
+        pass
+
+    def _showConnectorToolbar(self, item: ConnectorItem):
+        if self._connectorEditor:
+            self._connectorEditor.setItem(item)
+            self._popupAbove(self._connectorEditor, item)
+
+    def _showCharacterItemToolbar(self, item: CharacterItem):
+        pass
+
+    def _showEventItemToolbar(self, item: EventItem):
+        pass
+
+    def _hideItemToolbar(self):
+        if self._connectorEditor:
+            self._connectorEditor.setVisible(False)

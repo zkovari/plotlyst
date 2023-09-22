@@ -20,19 +20,27 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from abc import abstractmethod
 from functools import partial
+from typing import Optional
 
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QPainter, QPen, QColor, QIcon, QPaintEvent, QKeySequence
+from PyQt6.QtCore import Qt, pyqtSignal, QRect
+from PyQt6.QtGui import QPainter, QPen, QColor, QIcon, QPaintEvent, QKeySequence, QShowEvent
 from PyQt6.QtWidgets import QFrame, \
     QToolButton, QWidget, \
-    QAbstractButton, QSlider, QButtonGroup, QPushButton
+    QAbstractButton, QSlider, QButtonGroup, QPushButton, QLabel
 from overrides import overrides
-from qthandy import hbox, margins, sp, vbox, grid, pointy
+from qthandy import hbox, margins, sp, vbox, grid, pointy, vline, decr_icon, transparent, retain_when_hidden
+from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR
-from src.main.python.plotlyst.core.domain import DiagramNodeType
+from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR
+from src.main.python.plotlyst.core.domain import DiagramNodeType, NODE_SUBTYPE_QUESTION, NODE_SUBTYPE_FORESHADOWING, \
+    NODE_SUBTYPE_DISTURBANCE, NODE_SUBTYPE_CONFLICT, NODE_SUBTYPE_GOAL, NODE_SUBTYPE_BACKSTORY
 from src.main.python.plotlyst.view.common import shadow, tool_btn, ExclusiveOptionalButtonGroup
+from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import group
+from src.main.python.plotlyst.view.widget.graphics.items import EventItem, ConnectorItem
+from src.main.python.plotlyst.view.widget.input import FontSizeSpinBox, AutoAdjustableLineEdit
+from src.main.python.plotlyst.view.widget.utility import ColorPicker
 
 
 class ZoomBar(QFrame):
@@ -148,6 +156,225 @@ class BaseItemEditor(QWidget):
         for wdg in self._secondaryWidgets:
             wdg.setVisible(False)
         self.setFixedHeight(self._toolbar.sizeHint().height())
+
+
+class TextLineEditorPopup(MenuWidget):
+
+    def __init__(self, text: str, rect: QRect, parent=None, placeholder: str = 'Event'):
+        super().__init__(parent)
+        transparent(self)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self._lineEdit = AutoAdjustableLineEdit(defaultWidth=rect.width())
+        self._lineEdit.setPlaceholderText(placeholder)
+        self._lineEdit.setText(text)
+        self.addWidget(self._lineEdit)
+
+        self._lineEdit.editingFinished.connect(self.hide)
+
+    @overrides
+    def showEvent(self, QShowEvent):
+        self._lineEdit.setFocus()
+
+    def text(self) -> str:
+        return self._lineEdit.text()
+
+
+class EventSelectorWidget(SecondarySelectorWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._grid.addWidget(QLabel('Events'), 0, 0, 1, 3)
+
+        self._btnGeneral = self.addItemTypeButton(DiagramNodeType.EVENT,
+                                                  IconRegistry.from_name('mdi.square-rounded-outline'),
+                                                  'General event', 1, 0)
+        self._btnGoal = self.addItemTypeButton(DiagramNodeType.EVENT, IconRegistry.goal_icon('black', 'black'),
+                                               'Add new goal',
+                                               1, 1, subType=NODE_SUBTYPE_GOAL)
+        self._btnConflict = self.addItemTypeButton(DiagramNodeType.EVENT,
+                                                   IconRegistry.conflict_icon('black', 'black'),
+                                                   'Conflict', 1, 2, subType=NODE_SUBTYPE_CONFLICT)
+        self._btnDisturbance = self.addItemTypeButton(DiagramNodeType.EVENT,
+                                                      IconRegistry.inciting_incident_icon('black'),
+                                                      'Inciting incident', 2,
+                                                      0, subType=NODE_SUBTYPE_DISTURBANCE)
+        self._btnBackstory = self.addItemTypeButton(DiagramNodeType.EVENT,
+                                                    IconRegistry.backstory_icon('black', 'black'),
+                                                    'Backstory', 2, 1, subType=NODE_SUBTYPE_BACKSTORY)
+
+        self._grid.addWidget(QLabel('Narrative'), 3, 0, 1, 3)
+        self._btnQuestion = self.addItemTypeButton(DiagramNodeType.SETUP, IconRegistry.from_name('ei.question-sign'),
+                                                   "Reader's question", 4,
+                                                   0, subType=NODE_SUBTYPE_QUESTION)
+        self._btnSetup = self.addItemTypeButton(DiagramNodeType.SETUP, IconRegistry.from_name('ri.seedling-fill'),
+                                                'Setup and payoff', 4, 1)
+        self._btnForeshadowing = self.addItemTypeButton(DiagramNodeType.SETUP,
+                                                        IconRegistry.from_name('mdi6.crystal-ball'),
+                                                        'Foreshadowing',
+                                                        4, 2, subType=NODE_SUBTYPE_FORESHADOWING)
+
+        self._btnGeneral.setChecked(True)
+
+    @overrides
+    def showEvent(self, event: QShowEvent) -> None:
+        self._btnGeneral.setChecked(True)
+
+
+class ConnectorEditor(BaseItemEditor):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._connector: Optional[ConnectorItem] = None
+
+        self._btnRelationType = RelationsButton()
+        self._btnColor = tool_btn(IconRegistry.from_name('fa5s.circle', color='darkBlue'), 'Change style',
+                                  transparent_=True)
+        self._colorPicker = ColorPicker(self, maxColumn=5)
+        self._colorPicker.colorPicked.connect(self._colorChanged)
+        self._colorSecondaryWidget = SecondarySelectorWidget(self)
+        self._colorSecondaryWidget.addWidget(self._colorPicker, 0, 0)
+        self.addSecondaryWidget(self._btnColor, self._colorSecondaryWidget)
+        self._btnIcon = tool_btn(IconRegistry.from_name('mdi.emoticon-outline'), 'Change icon', transparent_=True)
+        self._btnIcon.clicked.connect(self._showIconSelector)
+
+        self._solidLine = SolidPenStyleSelector()
+        self._dashLine = DashPenStyleSelector()
+        self._dotLine = DotPenStyleSelector()
+        self._lineBtnGroup = QButtonGroup()
+        self._lineBtnGroup.addButton(self._solidLine)
+        self._lineBtnGroup.addButton(self._dashLine)
+        self._lineBtnGroup.addButton(self._dotLine)
+        self._lineBtnGroup.buttonClicked.connect(self._penStyleChanged)
+
+        self._sbWidth = PenWidthEditor()
+        self._sbWidth.valueChanged.connect(self._widthChanged)
+
+        self._toolbar.layout().addWidget(self._btnRelationType)
+        self._toolbar.layout().addWidget(vline())
+        self._toolbar.layout().addWidget(self._btnColor)
+        self._toolbar.layout().addWidget(self._btnIcon)
+        self._toolbar.layout().addWidget(vline())
+        self._toolbar.layout().addWidget(self._solidLine)
+        self._toolbar.layout().addWidget(self._dashLine)
+        self._toolbar.layout().addWidget(self._dotLine)
+        self._toolbar.layout().addWidget(vline())
+        self._toolbar.layout().addWidget(self._sbWidth)
+
+    def setItem(self, connector: ConnectorItem):
+        self._connector = None
+        self._hideSecondarySelectors()
+
+        self._sbWidth.setValue(connector.penWidth())
+
+        icon: str = connector.icon()
+        self._updateColor(connector.color().name())
+        if icon:
+            self._updateIcon(icon)
+        else:
+            self._resetIcon()
+
+        penStyle = connector.penStyle()
+        for line in [self._solidLine, self._dashLine, self._dotLine]:
+            if penStyle == line.penStyle():
+                line.setChecked(True)
+                break
+        self._connector = connector
+
+    def _penStyleChanged(self):
+        btn = self._lineBtnGroup.checkedButton()
+        if btn and self._connector:
+            self._connector.setPenStyle(btn.penStyle())
+
+    def _widthChanged(self, value: int):
+        if self._connector:
+            self._connector.setPenWidth(value)
+
+    def _colorChanged(self, color: QColor):
+        if self._connector:
+            self._connector.setColor(color)
+            self._updateColor(color.name())
+            pass
+
+    def _showIconSelector(self):
+        dialog = IconSelectorDialog()
+        retain_when_hidden(dialog.selector.colorPicker)
+        dialog.selector.colorPicker.setVisible(False)
+        result = dialog.display()
+        if result and self._connector:
+            self._connector.setIcon(result[0])
+            self._updateIcon(result[0])
+
+    def _updateIcon(self, icon: str):
+        self._btnIcon.setIcon(IconRegistry.from_name(icon))
+
+    def _resetIcon(self):
+        self._btnIcon.setIcon(IconRegistry.from_name('mdi.emoticon-outline'))
+
+    def _updateColor(self, color: str):
+        self._btnColor.setIcon(IconRegistry.from_name('fa5s.circle', color))
+
+
+class EventItemEditor(BaseItemEditor):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._item: Optional[EventItem] = None
+
+        self._btnType = tool_btn(IconRegistry.from_name('mdi.square-rounded-outline'), 'Change type', transparent_=True)
+        self._btnColor = tool_btn(IconRegistry.from_name('fa5s.circle', color=PLOTLYST_SECONDARY_COLOR), 'Change style',
+                                  transparent_=True)
+        self._btnIcon = tool_btn(IconRegistry.from_name('mdi.emoticon-outline'), 'Change icon', transparent_=True)
+        self._btnIcon.clicked.connect(self._showIconSelector)
+        self._sbFont = FontSizeSpinBox()
+        self._sbFont.fontChanged.connect(self._fontChanged)
+        self._btnBold = tool_btn(IconRegistry.from_name('fa5s.bold'), 'Bold', checkable=True, icon_resize=False,
+                                 properties=['transparent-rounded-bg-on-hover', 'top-selector'])
+        decr_icon(self._btnBold)
+        self._btnItalic = tool_btn(IconRegistry.from_name('fa5s.italic'), 'Italic',
+                                   checkable=True, icon_resize=False,
+                                   properties=['transparent-rounded-bg-on-hover', 'top-selector'])
+        decr_icon(self._btnItalic)
+        self._btnUnderline = tool_btn(IconRegistry.from_name('fa5s.underline'), 'Underline',
+                                      checkable=True, icon_resize=False,
+                                      properties=['transparent-rounded-bg-on-hover', 'top-selector'])
+        decr_icon(self._btnUnderline)
+        self._btnBold.clicked.connect(self._textStyleChanged)
+        self._btnItalic.clicked.connect(self._textStyleChanged)
+        self._btnUnderline.clicked.connect(self._textStyleChanged)
+
+        self._eventSelector = EventSelectorWidget(self)
+        self.addSecondaryWidget(self._btnType, self._eventSelector)
+        self._eventSelector.selected.connect(self._typeChanged)
+
+        self._toolbar.layout().addWidget(self._btnType)
+        self._toolbar.layout().addWidget(vline())
+        self._toolbar.layout().addWidget(self._btnIcon)
+        self._toolbar.layout().addWidget(self._btnColor)
+        self._toolbar.layout().addWidget(vline())
+        self._toolbar.layout().addWidget(self._sbFont)
+        self._toolbar.layout().addWidget(vline())
+        self._toolbar.layout().addWidget(group(self._btnBold, self._btnItalic, self._btnUnderline, margin=0, spacing=2))
+
+    def setItem(self, item: EventItem):
+        self._item = item
+        self._hideSecondarySelectors()
+
+    def _fontChanged(self, size: int):
+        self._hideSecondarySelectors()
+        if self._item:
+            self._item.setFontSettings(size=size)
+
+    def _textStyleChanged(self):
+        self._hideSecondarySelectors()
+        if self._item:
+            self._item.setFontSettings(bold=self._btnBold.isChecked(), italic=self._btnItalic.isChecked(),
+                                       underline=self._btnUnderline.isChecked())
+
+    def _typeChanged(self, itemType: DiagramNodeType):
+        if self._item:
+            self._item.setItemType(itemType)
+
+    def _showIconSelector(self):
+        result = IconSelectorDialog().display()
+        if result and self._item:
+            self._item.setIcon(IconRegistry.from_name(result[0], result[1].name()))
 
 
 class PenStyleSelector(QAbstractButton):

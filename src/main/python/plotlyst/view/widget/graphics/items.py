@@ -707,7 +707,7 @@ class EventItem(NodeItem):
 
     @overrides
     def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
-        self.networkScene().editEventText(self)
+        self.networkScene().editItemEvent(self)
 
     def _setSocketsVisible(self, visible: bool = True):
         for socket in self._sockets:

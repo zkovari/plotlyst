@@ -43,7 +43,8 @@ class ItemDescriptor:
 class NetworkScene(QGraphicsScene):
     cancelItemAddition = pyqtSignal()
     itemAdded = pyqtSignal(DiagramNodeType, NodeItem)
-    editEvent = pyqtSignal(EventItem)
+    editItem = pyqtSignal(NodeItem)
+    hideItemEditor = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -103,6 +104,7 @@ class NetworkScene(QGraphicsScene):
 
         self._placeholder.setPos(source.scenePos())
         self._connectorPlaceholder.rearrange()
+        self.hideItemEditor.emit()
 
     def endLink(self):
         self._linkMode = False
@@ -134,6 +136,9 @@ class NetworkScene(QGraphicsScene):
 
         self.addItem(connectorItem)
         self.endLink()
+
+    def editItemEvent(self, item: Node):
+        self.editItem.emit(item)
 
     @overrides
     def keyPressEvent(self, event: QKeyEvent) -> None:

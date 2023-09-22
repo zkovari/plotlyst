@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-import qtanim
 from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QShowEvent
 from overrides import overrides
@@ -29,9 +28,10 @@ from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
 from src.main.python.plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, CharacterItem, EventItem
-from src.main.python.plotlyst.view.widget.story_map.controls import EventSelectorWidget, StickerSelectorWidget
-from src.main.python.plotlyst.view.widget.story_map.editors import StickerEditor, TextLineEditorPopup, EventItemEditor
-from src.main.python.plotlyst.view.widget.story_map.items import StickerItem, MindMapNode
+from src.main.python.plotlyst.view.widget.graphics.editor import EventSelectorWidget, TextLineEditorPopup, \
+    EventItemEditor, ConnectorEditor
+from src.main.python.plotlyst.view.widget.story_map.controls import StickerSelectorWidget
+from src.main.python.plotlyst.view.widget.story_map.items import MindMapNode
 from src.main.python.plotlyst.view.widget.story_map.scene import EventsMindMapScene
 
 
@@ -55,17 +55,14 @@ class EventsMindMapView(NetworkGraphicsView):
         self._wdgSecondaryStickerSelector.setVisible(False)
         self._wdgSecondaryStickerSelector.selected.connect(self._startAddition)
 
-        self._stickerEditor = StickerEditor(self)
-        self._stickerEditor.setVisible(False)
+        # self._stickerEditor = StickerEditor(self)
+        # self._stickerEditor.setVisible(False)
 
         self._itemEditor = EventItemEditor(self)
         self._itemEditor.setVisible(False)
 
-        self._scene.editEvent.connect(self._editEvent)
-        self._scene.editSticker.connect(self._editSticker)
-        self._scene.closeSticker.connect(self._hideSticker)
-        self._scene.showItemEditor.connect(self._showItemEditor)
-        self._scene.hideItemEditor.connect(self._hideItemEditor)
+        self._connectorEditor = ConnectorEditor(self)
+        self._connectorEditor.setVisible(False)
 
         self._arrangeSideBars()
 
@@ -78,36 +75,9 @@ class EventsMindMapView(NetworkGraphicsView):
         if self._diagram is None:
             self.setDiagram(self._novel.events_map)
 
-    def _editEvent(self, item: EventItem):
-        def setText(text: str):
-            item.setText(text)
-
-        popup = TextLineEditorPopup(item.text(), item.textRect(), parent=self)
-        view_pos = self.mapFromScene(item.textSceneRect().topLeft())
-        popup.exec(self.mapToGlobal(view_pos))
-
-        popup.aboutToHide.connect(lambda: setText(popup.text()))
-
-    def _editSticker(self, sticker: StickerItem):
-        view_pos = self.mapFromScene(sticker.sceneBoundingRect().topRight())
-        self._stickerEditor.move(view_pos)
-        qtanim.fade_in(self._stickerEditor)
-
-    def _hideSticker(self):
-        if not self._stickerEditor.underMouse():
-            self._stickerEditor.setHidden(True)
-
-    def _showItemEditor(self, item: MindMapNode):
-        self._itemEditor.setItem(item)
-        self._popupAbove(self._itemEditor, item)
-
-    def _hideItemEditor(self):
-        self._itemEditor.setVisible(False)
-
     @overrides
     def _startAddition(self, itemType: DiagramNodeType, subType: str = ''):
         super()._startAddition(itemType, subType)
-        self._hideItemEditor()
 
         if itemType == DiagramNodeType.EVENT:
             self._wdgSecondaryEventSelector.setVisible(True)
@@ -137,6 +107,7 @@ class EventsMindMapView(NetworkGraphicsView):
         view_pos = self.mapFromScene(item.sceneBoundingRect().topRight())
         popup.exec(self.mapToGlobal(view_pos))
 
+    @overrides
     def _arrangeSideBars(self):
         super()._arrangeSideBars()
 
@@ -151,3 +122,24 @@ class EventsMindMapView(NetworkGraphicsView):
         self._wdgSecondaryStickerSelector.setGeometry(secondary_x, secondary_y,
                                                       self._wdgSecondaryStickerSelector.sizeHint().width(),
                                                       self._wdgSecondaryStickerSelector.sizeHint().height())
+
+    @overrides
+    def _editEventItem(self, item: EventItem):
+        def setText(text: str):
+            item.setText(text)
+
+        popup = TextLineEditorPopup(item.text(), item.textRect(), parent=self)
+        view_pos = self.mapFromScene(item.textSceneRect().topLeft())
+        popup.exec(self.mapToGlobal(view_pos))
+
+        popup.aboutToHide.connect(lambda: setText(popup.text()))
+
+    @overrides
+    def _showEventItemToolbar(self, item: EventItem):
+        self._itemEditor.setItem(item)
+        self._popupAbove(self._itemEditor, item)
+
+    @overrides
+    def _hideItemToolbar(self):
+        super()._hideItemToolbar()
+        self._itemEditor.setVisible(False)
