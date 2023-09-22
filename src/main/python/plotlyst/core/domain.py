@@ -1825,6 +1825,10 @@ class Node(CharacterBased):
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
     color: str = field(default='black', metadata=config(exclude=exclude_if_black))
     text: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    size: int = 12
+    bold: bool = field(default=False, metadata=config(exclude=exclude_if_false))
+    italic: bool = field(default=False, metadata=config(exclude=exclude_if_false))
+    underline: bool = field(default=False, metadata=config(exclude=exclude_if_false))
 
     def __post_init__(self):
         self._character: Optional[Character] = None

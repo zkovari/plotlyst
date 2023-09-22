@@ -617,6 +617,13 @@ class EventItem(NodeItem):
                               self._socketBottomRight, self._socketBottomCenter, self._socketBottomLeft])
         self._setSocketsVisible(False)
 
+        self._font.setPointSize(self._node.size)
+        self._font.setBold(self._node.bold)
+        self._font.setItalic(self._node.italic)
+        self._font.setUnderline(self._node.underline)
+        self._metrics = QFontMetrics(self._font)
+        self._refresh()
+
         self._recalculateRect()
 
     def text(self) -> str:
@@ -661,21 +668,27 @@ class EventItem(NodeItem):
     def setIcon(self, icon: QIcon):
         self._icon = icon
         self._refresh()
+        if self._node:
+            self.networkScene().nodeChangedEvent(self._node)
 
     def setFontSettings(self, size: Optional[int] = None, bold: Optional[bool] = None, italic: Optional[bool] = None,
                         underline: Optional[bool] = None):
         if size is not None:
             self._font.setPointSize(size)
+            self._node.size = size
         if bold is not None:
             self._font.setBold(bold)
+            self._node.bold = bold
         if italic is not None:
             self._font.setItalic(italic)
+            self._node.italic = italic
         if underline is not None:
             self._font.setUnderline(underline)
+            self._node.underline = underline
 
         self._metrics = QFontMetrics(self._font)
-
         self._refresh()
+        self.networkScene().nodeChangedEvent(self._node)
 
     def fontSize(self) -> int:
         return self._font.pointSize()
