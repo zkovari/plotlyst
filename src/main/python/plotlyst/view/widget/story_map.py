@@ -17,22 +17,54 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+
 from typing import Optional
 
 from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtGui import QShowEvent
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Character, DiagramNodeType
+from src.main.python.plotlyst.core.client import json_client
+from src.main.python.plotlyst.core.domain import Character, DiagramNodeType, NODE_SUBTYPE_TOOL, NODE_SUBTYPE_COST
+from src.main.python.plotlyst.core.domain import Node
 from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
-from src.main.python.plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, CharacterItem, EventItem
+from src.main.python.plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, CharacterItem, EventItem, \
+    NodeItem
 from src.main.python.plotlyst.view.widget.graphics.editor import EventSelectorWidget, TextLineEditorPopup, \
-    EventItemEditor, ConnectorEditor
-from src.main.python.plotlyst.view.widget.story_map.controls import StickerSelectorWidget
-from src.main.python.plotlyst.view.widget.story_map.items import MindMapNode
-from src.main.python.plotlyst.view.widget.story_map.scene import EventsMindMapScene
+    EventItemEditor, ConnectorEditor, SecondarySelectorWidget
+
+
+class EventsMindMapScene(NetworkScene):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+
+        self.repo = RepositoryPersistenceManager.instance()
+
+    @overrides
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        super().keyPressEvent(event)
+        if not event.modifiers() and not event.key() == Qt.Key.Key_Escape and len(self.selectedItems()) == 1:
+            item = self.selectedItems()[0]
+            if isinstance(item, EventItem):
+                self.editItem.emit(item)
+
+    @overrides
+    def _character(self, node: Node) -> Optional[Character]:
+        return node.character(self._novel) if node.character_id else None
+
+    @overrides
+    def _load(self):
+        json_client.load_diagram(self._novel, self._diagram)
+
+    @overrides
+    def _save(self):
+        self.repo.update_diagram(self._novel, self._diagram)
 
 
 class EventsMindMapView(NetworkGraphicsView):
@@ -90,7 +122,7 @@ class EventsMindMapView(NetworkGraphicsView):
             self._wdgSecondaryEventSelector.setHidden(True)
 
     @overrides
-    def _endAddition(self, itemType: Optional[DiagramNodeType] = None, item: Optional[MindMapNode] = None):
+    def _endAddition(self, itemType: Optional[DiagramNodeType] = None, item: Optional[NodeItem] = None):
         super()._endAddition(itemType, item)
         self._wdgSecondaryEventSelector.setHidden(True)
         self._wdgSecondaryStickerSelector.setHidden(True)
@@ -143,3 +175,23 @@ class EventsMindMapView(NetworkGraphicsView):
     def _hideItemToolbar(self):
         super()._hideItemToolbar()
         self._itemEditor.setVisible(False)
+
+
+class StickerSelectorWidget(SecondarySelectorWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._btnComment = self.addItemTypeButton(DiagramNodeType.COMMENT,
+                                                  IconRegistry.from_name('mdi.comment-text-outline'),
+                                                  'Add new comment', 0, 0)
+        self._btnTool = self.addItemTypeButton(DiagramNodeType.STICKER, IconRegistry.tool_icon('black', 'black'),
+                                               'Add new tool',
+                                               0, 1, subType=NODE_SUBTYPE_TOOL)
+        self._btnCost = self.addItemTypeButton(DiagramNodeType.STICKER, IconRegistry.cost_icon('black', 'black'),
+                                               'Add new cost',
+                                               1, 0, subType=NODE_SUBTYPE_COST)
+
+        self._btnComment.setChecked(True)
+
+    @overrides
+    def showEvent(self, event: QShowEvent) -> None:
+        self._btnComment.setChecked(True)

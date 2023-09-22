@@ -31,15 +31,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.graphics import NodeItem
 
 
-class MindMapNode(NodeItem):
-    def mindMapScene(self) -> 'EventsMindMapScene':
-        return self.scene()
-
-    def linkMode(self) -> bool:
-        return self.mindMapScene().linkMode()
-
-
-class StickerItem(MindMapNode):
+class StickerItem(NodeItem):
     displayMessage = pyqtSignal()
 
     def __init__(self, node: Node, parent=None):
