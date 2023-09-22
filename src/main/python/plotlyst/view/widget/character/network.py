@@ -19,19 +19,128 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import QTimer, QPointF, pyqtSignal
 from PyQt6.QtGui import QAction, QColor
 from PyQt6.QtWidgets import QButtonGroup
+from overrides import overrides
 from qthandy import vline, retain_when_hidden
 from qtmenu import GridMenuWidget
 
-from src.main.python.plotlyst.core.domain import Diagram, Relation
+from src.main.python.plotlyst.core.client import json_client
+from src.main.python.plotlyst.core.domain import Diagram, Relation, Node, PlaceholderCharacter
+from src.main.python.plotlyst.core.domain import Novel, Character, DiagramNodeType
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import tool_btn, action
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
 from src.main.python.plotlyst.view.widget.graphics import BaseItemEditor, SolidPenStyleSelector, DashPenStyleSelector, \
-    DotPenStyleSelector, ConnectorItem, PenWidthEditor, RelationsButton, SecondarySelectorWidget
+    DotPenStyleSelector, ConnectorItem, PenWidthEditor, RelationsButton, SecondarySelectorWidget, CharacterItem
+from src.main.python.plotlyst.view.widget.graphics import NodeItem, NetworkGraphicsView, NetworkScene
 from src.main.python.plotlyst.view.widget.utility import ColorPicker
+
+
+class RelationsEditorScene(NetworkScene):
+    # charactersChanged = pyqtSignal(RelationsNetwork)
+    # charactersLinked = pyqtSignal(CharacterItem)
+
+    def __init__(self, novel: Novel, parent=None):
+        super(RelationsEditorScene, self).__init__(parent)
+        self._novel = novel
+
+        self.repo = RepositoryPersistenceManager.instance()
+
+    @staticmethod
+    def toCharacterNode(scenePos: QPointF) -> Node:
+        node = Node(scenePos.x(), scenePos.y(), type=DiagramNodeType.CHARACTER)
+        node.x = node.x - CharacterItem.Margin
+        node.y = node.y - CharacterItem.Margin
+        return node
+
+    @overrides
+    def _addNewItem(self, scenePos: QPointF, itemType: DiagramNodeType, subType: str = '') -> NodeItem:
+        if itemType == DiagramNodeType.CHARACTER:
+            item = CharacterItem(PlaceholderCharacter('Character'), self.toCharacterNode(scenePos))
+            self.addItem(item)
+            self.itemAdded.emit(itemType, item)
+        self.endAdditionMode()
+
+        return item
+
+    @overrides
+    def _addNode(self, node: Node):
+        character = node.character(self._novel) if node.character_id else PlaceholderCharacter('Character')
+        item = CharacterItem(character, node)
+        self.addItem(item)
+
+        return item
+
+    @overrides
+    def _load(self):
+        json_client.load_diagram(self._novel, self._diagram)
+
+    @overrides
+    def _save(self):
+        self.repo.update_diagram(self._novel, self._diagram)
+
+
+class CharacterNetworkView(NetworkGraphicsView):
+    def __init__(self, novel: Novel, parent=None):
+        self._novel = novel
+        super(CharacterNetworkView, self).__init__(parent)
+
+        self._btnAddCharacter = self._newControlButton(IconRegistry.character_icon('#040406'), 'Add new character',
+                                                       DiagramNodeType.CHARACTER)
+        self._btnAddSticker = self._newControlButton(IconRegistry.from_name('mdi6.sticker-circle-outline'),
+                                                     'Add new sticker', DiagramNodeType.STICKER)
+
+        self._connectorEditor = ConnectorEditor(self)
+        self._connectorEditor.setVisible(False)
+
+        self._scene.selectionChanged.connect(self._selectionChanged)
+
+    @overrides
+    def _initScene(self) -> NetworkScene:
+        return RelationsEditorScene(self._novel)
+
+    def refresh(self):
+        if not self._diagram:
+            self.setDiagram(self._novel.character_networks[0])
+            self._connectorEditor.setNetwork(self._diagram)
+
+    def relationsScene(self) -> RelationsEditorScene:
+        return self._scene
+
+    @overrides
+    def _startAddition(self, itemType: DiagramNodeType):
+        super()._startAddition(itemType)
+        self._scene.startAdditionMode(itemType)
+
+    @overrides
+    def _endAddition(self, itemType: Optional[DiagramNodeType] = None, item: Optional[NodeItem] = None):
+        super()._endAddition(itemType, item)
+        if itemType == DiagramNodeType.CHARACTER:
+            QTimer.singleShot(100, lambda: self._finishCharacterAddition(item))
+
+    def _finishCharacterAddition(self, item: CharacterItem):
+        def select(character: Character):
+            item.setCharacter(character)
+
+        popup = CharacterSelectorMenu(self._novel, parent=self)
+        popup.selected.connect(select)
+        view_pos = self.mapFromScene(item.sceneBoundingRect().topRight())
+        popup.exec(self.mapToGlobal(view_pos))
+
+    def _selectionChanged(self):
+        items = self._scene.selectedItems()
+        if len(items) == 1 and isinstance(items[0], ConnectorItem):
+            self._connectorSelected(items[0])
+        else:
+            self._connectorEditor.setVisible(False)
+
+    def _connectorSelected(self, connector: ConnectorItem):
+        self._connectorEditor.setItem(connector)
+        self._popupAbove(self._connectorEditor, connector)
 
 
 class RelationSelector(GridMenuWidget):
