@@ -158,7 +158,9 @@ class NetworkScene(QGraphicsScene):
             if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
                 pos = self._cursorScenePos()
                 if pos:
-                    self._addNewItem(pos, DiagramNodeType.EVENT)
+                    item = self._addNewItem(pos, DiagramNodeType.EVENT)
+                    self._diagram.data.nodes.append(item.node())
+                    self._save()
             else:
                 pass
             # self._selectionRect.start(event.scenePos())
@@ -239,7 +241,9 @@ class NetworkScene(QGraphicsScene):
         if self._copyDescriptor:
             pos = self._cursorScenePos()
             if pos:
-                self._addNewItem(pos, self._copyDescriptor.mode, self._copyDescriptor.subType)
+                item = self._addNewItem(pos, self._copyDescriptor.mode, self._copyDescriptor.subType)
+                self._diagram.data.nodes.append(item.node())
+                self._save()
 
     def _cursorScenePos(self) -> Optional[QPointF]:
         view = self.views()[0]
