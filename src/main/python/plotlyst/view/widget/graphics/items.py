@@ -677,6 +677,18 @@ class EventItem(NodeItem):
 
         self._refresh()
 
+    def fontSize(self) -> int:
+        return self._font.pointSize()
+
+    def bold(self) -> bool:
+        return self._font.bold()
+
+    def italic(self) -> bool:
+        return self._font.italic()
+
+    def underline(self) -> bool:
+        return self._font.underline()
+
     def textRect(self) -> QRect:
         return self._textRect
 

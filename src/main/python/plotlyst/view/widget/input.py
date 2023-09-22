@@ -736,6 +736,7 @@ class ButtonsOnlySpinBox(QSpinBox):
 
 
 class FontSizeSpinBox(QWidget):
+    DEFAULT_VALUE: int = 2
     fontChanged = pyqtSignal(int)
 
     def __init__(self, font_size_prefix: str = "Font Size:"):
@@ -745,7 +746,7 @@ class FontSizeSpinBox(QWidget):
         self._label = QLabel(font_size_prefix, self)
         self._font_size_spinner = ButtonsOnlySpinBox(self)
         self._font_size_spinner.setRange(0, len(self._font_sizes) - 1)
-        self._font_size_spinner.setValue(2)
+        self._font_size_spinner.setValue(self.DEFAULT_VALUE)
         self._font_size_spinner.setButtonSymbols(QSpinBox.ButtonSymbols.UpDownArrows)  # Show only up/down buttons
         self._font_size_spinner.valueChanged.connect(self._updateFontSize)
 
@@ -754,6 +755,13 @@ class FontSizeSpinBox(QWidget):
         self.layout().addWidget(self._font_size_spinner)
 
         self._updateFontSize()
+
+    def setValue(self, value: int):
+        try:
+            index = self._font_sizes.index(value)
+            self._font_size_spinner.setValue(index)
+        except ValueError:
+            self._font_size_spinner.setValue(self.DEFAULT_VALUE)
 
     def _updateFontSize(self):
         selected_index = self._font_size_spinner.value()

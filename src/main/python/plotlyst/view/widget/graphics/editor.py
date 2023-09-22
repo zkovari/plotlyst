@@ -353,8 +353,15 @@ class EventItemEditor(BaseItemEditor):
         self._toolbar.layout().addWidget(group(self._btnBold, self._btnItalic, self._btnUnderline, margin=0, spacing=2))
 
     def setItem(self, item: EventItem):
-        self._item = item
+        self._item = None
         self._hideSecondarySelectors()
+
+        self._sbFont.setValue(item.fontSize())
+        self._btnBold.setChecked(item.bold())
+        self._btnItalic.setChecked(item.italic())
+        self._btnUnderline.setChecked(item.underline())
+
+        self._item = item
 
     def _fontChanged(self, size: int):
         self._hideSecondarySelectors()
