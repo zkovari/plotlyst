@@ -25,11 +25,11 @@ from typing import Optional, Dict
 from PyQt6.QtCore import Qt, pyqtSignal, QPointF, QPoint
 from PyQt6.QtGui import QTransform, \
     QKeyEvent, QKeySequence, QCursor
-from PyQt6.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent
+from PyQt6.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QApplication
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Node, Diagram, DiagramNodeType, Connector, PlaceholderCharacter, \
-    Character
+    Character, NODE_SUBTYPE_BACKSTORY
 from src.main.python.plotlyst.view.widget.graphics import NodeItem, CharacterItem, PlaceholderSocketItem, ConnectorItem, \
     AbstractSocketItem, EventItem
 
@@ -213,6 +213,11 @@ class NetworkScene(QGraphicsScene):
         node = Node(scenePos.x(), scenePos.y(), itemType, subType)
         node.x = node.x - EventItem.Margin - EventItem.Padding
         node.y = node.y - EventItem.Margin - EventItem.Padding
+        default_size = QApplication.font().pointSize()
+        if itemType == DiagramNodeType.EVENT:
+            node.size = max(16, default_size)
+            if subType == NODE_SUBTYPE_BACKSTORY:
+                node.size = max(14, default_size - 1)
         return node
 
     def _removeItem(self, item: QGraphicsItem):
