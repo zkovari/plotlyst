@@ -589,6 +589,7 @@ class EventItem(NodeItem):
         super().__init__(node, parent)
         self._placeholderText: str = 'New event'
         self._text: str = self._node.text if self._node.text else ''
+        self._setTooltip()
 
         self._icon: Optional[QIcon] = None
         self._iconSize: int = 0
@@ -632,6 +633,7 @@ class EventItem(NodeItem):
     def setText(self, text: str):
         self._text = text
         self._node.text = text
+        self._setTooltip()
         self.setSelected(False)
         self._refresh()
         self.networkScene().nodeChangedEvent(self._node)
@@ -733,6 +735,9 @@ class EventItem(NodeItem):
     @overrides
     def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         self.networkScene().editItemEvent(self)
+
+    def _setTooltip(self):
+        self.setToolTip(self._text if self._text else self._placeholderText)
 
     def _setSocketsVisible(self, visible: bool = True):
         for socket in self._sockets:
