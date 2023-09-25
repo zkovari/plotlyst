@@ -77,6 +77,9 @@ class NetworkScene(QGraphicsScene):
             if source and target:
                 self._addConnector(connector, source, target)
 
+        # trigger scene calculation early so that the view won't jump around for the first click
+        self.sceneRect()
+
     def isAdditionMode(self) -> bool:
         return self._additionDescriptor is not None
 
