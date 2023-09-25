@@ -131,6 +131,7 @@ class NetworkGraphicsView(BaseGraphicsView):
             self._startAddition(itemType)
         else:
             self._endAddition()
+            self._scene.endAdditionMode()
 
     def _newControlButton(self, icon: QIcon, tooltip: str, itemType: DiagramNodeType) -> QToolButton:
         btn = tool_btn(icon, tooltip,
