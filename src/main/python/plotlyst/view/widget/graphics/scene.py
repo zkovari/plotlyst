@@ -29,7 +29,7 @@ from PyQt6.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEv
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Node, Diagram, DiagramNodeType, Connector, PlaceholderCharacter, \
-    Character, NODE_SUBTYPE_BACKSTORY
+    Character, to_node
 from src.main.python.plotlyst.view.widget.graphics import NodeItem, CharacterItem, PlaceholderSocketItem, ConnectorItem, \
     AbstractSocketItem, EventItem
 
@@ -210,27 +210,29 @@ class NetworkScene(QGraphicsScene):
 
     @staticmethod
     def toEventNode(scenePos: QPointF, itemType: DiagramNodeType, subType: str = '') -> Node:
-        node = Node(scenePos.x(), scenePos.y(), itemType, subType)
+        node: Node = to_node(scenePos.x(), scenePos.y(), itemType, subType,
+                             default_size=QApplication.font().pointSize())
         node.x = node.x - EventItem.Margin - EventItem.Padding
         node.y = node.y - EventItem.Margin - EventItem.Padding
-        default_size = QApplication.font().pointSize()
-        if itemType == DiagramNodeType.EVENT:
-            node.size = max(16, default_size)
-            if subType == NODE_SUBTYPE_BACKSTORY:
-                node.size = max(14, default_size - 1)
         return node
 
     def _removeItem(self, item: QGraphicsItem):
         if isinstance(item, NodeItem):
             for connectorItem in item.connectors():
-                self._diagram.data.connectors.remove(connectorItem.connector())
-                self.removeItem(connectorItem)
+                try:
+                    self._diagram.data.connectors.remove(connectorItem.connector())
+                    self.removeItem(connectorItem)
+                except ValueError:
+                    pass  # connector might have been already removed if a node was deleted first
             item.clearConnectors()
             self._diagram.data.nodes.remove(item.node())
         elif isinstance(item, ConnectorItem):
-            self._diagram.data.connectors.remove(item.connector())
-            item.source().removeConnector(item)
-            item.target().removeConnector(item)
+            try:
+                self._diagram.data.connectors.remove(item.connector())
+                item.source().removeConnector(item)
+                item.target().removeConnector(item)
+            except ValueError:
+                pass
 
         self.removeItem(item)
         self._save()

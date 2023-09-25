@@ -626,7 +626,9 @@ class EventItem(NodeItem):
         self._icon: Optional[QIcon] = None
         self._iconSize: int = 0
         self._iconTextSpacing: int = 3
-        self._updateIcon()
+
+        if self._node.icon:
+            self._icon = IconRegistry.from_name(self._node.icon, self._node.color)
 
         self._font = QApplication.font()
         self._metrics = QFontMetrics(self._font)
@@ -756,7 +758,7 @@ class EventItem(NodeItem):
             painter.setPen(QPen(Qt.GlobalColor.gray, 2, Qt.PenStyle.DashLine))
             painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 2, 2)
 
-        painter.setPen(QPen(Qt.GlobalColor.black, 1))
+        painter.setPen(QPen(QColor(self._node.color), 1))
         painter.setBrush(QColor(RELAXED_WHITE_COLOR))
         painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 24, 24)
         painter.setFont(self._font)
@@ -789,22 +791,6 @@ class EventItem(NodeItem):
         self.prepareGeometryChange()
         self.update()
         self.rearrangeConnectors()
-
-    def _updateIcon(self):
-        if self._node.subtype == NODE_SUBTYPE_GOAL:
-            self._icon = IconRegistry.goal_icon()
-        elif self._node.subtype == NODE_SUBTYPE_CONFLICT:
-            self._icon = IconRegistry.conflict_icon()
-        elif self._node.subtype == NODE_SUBTYPE_BACKSTORY:
-            self._icon = IconRegistry.backstory_icon()
-        elif self._node.subtype == NODE_SUBTYPE_DISTURBANCE:
-            self._icon = IconRegistry.inciting_incident_icon()
-        elif self._node.subtype == NODE_SUBTYPE_QUESTION:
-            self._icon = IconRegistry.from_name('ei.question-sign')
-        elif self._node.subtype == DiagramNodeType.SETUP:
-            self._icon = IconRegistry.from_name('ri.seedling-fill')
-        elif self._node.subtype == NODE_SUBTYPE_FORESHADOWING:
-            self._icon = IconRegistry.from_name('mdi6.crystal-ball')
 
     def _recalculateRect(self):
         self._textRect = self._metrics.boundingRect(self._text if self._text else self._placeholderText)

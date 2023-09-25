@@ -1834,6 +1834,33 @@ class Node(CharacterBased):
         self._character: Optional[Character] = None
 
 
+def to_node(x: float, y: float, type: DiagramNodeType, subtype: str = '', default_size: int = 12) -> Node:
+    node = Node(x, y, type=type, subtype=subtype)
+    if type == DiagramNodeType.EVENT:
+        node.size = max(16, default_size)
+        if subtype == NODE_SUBTYPE_BACKSTORY:
+            node.size = max(14, default_size - 1)
+
+    if subtype == NODE_SUBTYPE_GOAL:
+        node.icon = 'mdi.target'
+        node.color = 'darkBlue'
+    elif subtype == NODE_SUBTYPE_CONFLICT:
+        node.icon = 'mdi.sword-cross'
+        node.color = '#f3a712'
+    elif subtype == NODE_SUBTYPE_BACKSTORY:
+        node.icon = 'fa5s.archive'
+        node.color = '#9c6644'
+    elif subtype == NODE_SUBTYPE_DISTURBANCE:
+        node.icon = 'mdi.bell-alert-outline'
+        node.color = '#a2ad59'
+    elif subtype == NODE_SUBTYPE_QUESTION:
+        node.icon = 'ei.question-sign'
+    elif subtype == NODE_SUBTYPE_FORESHADOWING:
+        node.icon = 'mdi6.crystal-ball'
+
+    return node
+
+
 @dataclass
 class Connector:
     source_id: uuid.UUID
