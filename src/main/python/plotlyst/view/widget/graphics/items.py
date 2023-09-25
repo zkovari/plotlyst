@@ -26,7 +26,7 @@ from PyQt6.QtCore import Qt, QTimer, QRectF, QPointF, QPoint, QRect
 from PyQt6.QtGui import QPainter, QPen, QPainterPath, QColor, QIcon, QPolygonF, QBrush, QFontMetrics
 from PyQt6.QtWidgets import QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QGraphicsSceneMouseEvent, \
     QStyleOptionGraphicsItem, QWidget, \
-    QGraphicsRectItem, QGraphicsSceneHoverEvent, QGraphicsPolygonItem, QApplication
+    QGraphicsSceneHoverEvent, QGraphicsPolygonItem, QApplication
 from overrides import overrides
 from qthandy import pointy
 
@@ -393,31 +393,6 @@ class ConnectorItem(QGraphicsPathItem):
         arrowPen.setColor(self._color)
         self._arrowheadItem.setPen(arrowPen)
         self._arrowheadItem.setBrush(self._color)
-
-
-class SelectorRectItem(QGraphicsRectItem):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._startingPoint: QPointF = QPointF(0, 0)
-        self._rect = QRectF()
-
-        self.setPen(QPen(Qt.GlobalColor.gray, 1, Qt.PenStyle.DashLine))
-
-    def start(self, pos: QPointF):
-        self._startingPoint = pos
-        self._rect.setTopLeft(pos)
-        self.setRect(self._rect)
-
-    def adjust(self, pos: QPointF):
-        x1 = min(self._startingPoint.x(), pos.x())
-        y1 = min(self._startingPoint.y(), pos.y())
-        x2 = max(self._startingPoint.x(), pos.x())
-        y2 = max(self._startingPoint.y(), pos.y())
-
-        self._rect.setTopLeft(QPointF(x1, y1))
-        self._rect.setBottomRight(QPointF(x2, y2))
-
-        self.setRect(self._rect)
 
 
 class NodeItem(QAbstractGraphicsShapeItem):

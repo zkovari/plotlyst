@@ -41,6 +41,7 @@ from src.main.python.plotlyst.view.widget.graphics.scene import NetworkScene
 class BaseGraphicsView(QGraphicsView):
     def __init__(self, parent=None):
         super(BaseGraphicsView, self).__init__(parent)
+        self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
         self._moveOriginX = 0
         self._moveOriginY = 0
         self._scaledFactor: float = 1.0
@@ -52,8 +53,11 @@ class BaseGraphicsView(QGraphicsView):
     @overrides
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if event.button() == Qt.MouseButton.MiddleButton or event.button() == Qt.MouseButton.RightButton:
+            self.setDragMode(QGraphicsView.DragMode.NoDrag)
             self._moveOriginX = event.pos().x()
             self._moveOriginY = event.pos().y()
+        else:
+            self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
         super(BaseGraphicsView, self).mousePressEvent(event)
 
     @overrides
@@ -69,6 +73,12 @@ class BaseGraphicsView(QGraphicsView):
             self._moveOriginX = event.pos().x()
             self._moveOriginY = event.pos().y()
         super(BaseGraphicsView, self).mouseMoveEvent(event)
+
+    @overrides
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        if self.dragMode() != QGraphicsView.DragMode.RubberBandDrag:
+            self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
+        super().mouseReleaseEvent(event)
 
     @overrides
     def wheelEvent(self, event: QWheelEvent) -> None:

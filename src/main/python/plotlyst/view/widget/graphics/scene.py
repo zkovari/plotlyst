@@ -31,7 +31,7 @@ from overrides import overrides
 from src.main.python.plotlyst.core.domain import Node, Diagram, DiagramNodeType, Connector, PlaceholderCharacter, \
     Character
 from src.main.python.plotlyst.view.widget.graphics import NodeItem, CharacterItem, PlaceholderSocketItem, ConnectorItem, \
-    SelectorRectItem, AbstractSocketItem, EventItem
+    AbstractSocketItem, EventItem
 
 
 @dataclass
@@ -56,14 +56,9 @@ class NetworkScene(QGraphicsScene):
         self._placeholder: Optional[PlaceholderSocketItem] = None
         self._connectorPlaceholder: Optional[ConnectorItem] = None
 
-        self._selectionMode = False
-        self._selectionRect = SelectorRectItem()
-        self._selectionRect.setVisible(False)
-
     def setDiagram(self, diagram: Diagram):
         self._diagram = diagram
         self.clear()
-        self.addItem(self._selectionRect)
         if not self._diagram.loaded:
             self._load()
 
@@ -172,8 +167,6 @@ class NetworkScene(QGraphicsScene):
                     self._addNewItem(pos, DiagramNodeType.EVENT)
             else:
                 pass
-            # self._selectionRect.start(event.scenePos())
-            # self._selectionMode = True
         elif event.button() & Qt.MouseButton.RightButton or event.button() & Qt.MouseButton.MiddleButton:
             # disallow view movement to clear item selection
             return
@@ -184,10 +177,6 @@ class NetworkScene(QGraphicsScene):
         if self.linkMode():
             self._placeholder.setPos(event.scenePos())
             self._connectorPlaceholder.rearrange()
-        elif self._selectionMode:
-            self._selectionRect.adjust(event.scenePos())
-            self._selectionRect.setVisible(True)
-            self._updateSelection()
         super().mouseMoveEvent(event)
 
     @overrides
@@ -198,10 +187,6 @@ class NetworkScene(QGraphicsScene):
         elif self.isAdditionMode() and event.button() & Qt.MouseButton.RightButton:
             self.cancelItemAddition.emit()
             self.endAdditionMode()
-        elif self._selectionMode and event.button() & Qt.MouseButton.LeftButton:
-            self._selectionMode = False
-            self._selectionRect.setVisible(False)
-            self._updateSelection()
         elif self._additionDescriptor is not None:
             self._addNewItem(event.scenePos(), self._additionDescriptor.mode, self._additionDescriptor.subType)
 
@@ -323,9 +308,8 @@ class NetworkScene(QGraphicsScene):
             targetNode.addSocket(targetSocket)
 
     def _updateSelection(self):
-        if not self._selectionRect.rect().isValid():
-            return
-        self.clearSelection()
-        items_in_rect = self.items(self._selectionRect.rect(), Qt.ItemSelectionMode.IntersectsItemBoundingRect)
-        for item in items_in_rect:
-            item.setSelected(True)
+        pass
+        # self.clearSelection()
+        # items_in_rect = self.items(self._selectionRect.rect(), Qt.ItemSelectionMode.IntersectsItemBoundingRect)
+        # for item in items_in_rect:
+        #     item.setSelected(True)
