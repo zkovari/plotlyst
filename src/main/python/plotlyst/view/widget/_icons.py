@@ -218,7 +218,7 @@ objects = [
     "fa5s.cocktail", "fa5s.coffee", 'mdi.baby-bottle', 'mdi.baby-bottle-outline',
     "fa5s.flask", 'mdi.cup', 'mdi.cup-water',
     "fa5s.glass-cheers", "fa5s.glass-martini", "fa5s.glass-martini-alt", "fa5s.glass-whiskey",
-    "fa5s.mug-hot", "fa5s.wine-bottle", "fa5s.wine-glass", "fa5s.wine-glass-alt",
+    "fa5s.mug-hot", "fa5s.wine-bottle", "fa5s.wine-glass", "fa5s.wine-glass-alt", "mdi.mirror",
     "fa5s.binoculars",
     "mdi.binoculars",
     "mdi.camera", "mdi.camera-account", 'mdi.audio-video', 'mdi.audio-video-off', 'mdi.camcorder', "mdi.camera-enhance",
