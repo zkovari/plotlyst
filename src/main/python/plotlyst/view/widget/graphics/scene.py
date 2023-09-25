@@ -100,6 +100,7 @@ class NetworkScene(QGraphicsScene):
         self._placeholder.setEnabled(False)
         self.addItem(self._placeholder)
         self._connectorPlaceholder = ConnectorItem(source, self._placeholder)
+        self._connectorPlaceholder.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
         self.addItem(self._connectorPlaceholder)
 
         self._placeholder.setPos(source.scenePos())
