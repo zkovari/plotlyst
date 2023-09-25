@@ -68,8 +68,6 @@ class CharacterNetworkView(NetworkGraphicsView):
         self._connectorEditor = RelationConnectorEditor(self)
         self._connectorEditor.setVisible(False)
 
-        self._scene.selectionChanged.connect(self._selectionChanged)
-
     @overrides
     def _initScene(self) -> NetworkScene:
         return RelationsEditorScene(self._novel)
