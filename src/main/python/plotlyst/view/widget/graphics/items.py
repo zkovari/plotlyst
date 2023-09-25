@@ -668,6 +668,10 @@ class EventItem(NodeItem):
         if self.networkScene().linkMode() or alt_modifier(event):
             self._setSocketsVisible()
 
+    def hoverMoveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        if not self.networkScene().linkMode() and alt_modifier(event):
+            self._setSocketsVisible()
+
     @overrides
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         if not self.isSelected():
