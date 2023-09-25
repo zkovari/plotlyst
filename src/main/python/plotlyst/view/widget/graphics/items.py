@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import math
 from abc import abstractmethod
+from enum import Enum
 from typing import Any, Optional, List
 
 from PyQt6.QtCore import Qt, QTimer, QRectF, QPointF, QPoint, QRect
@@ -218,6 +219,11 @@ class PlaceholderSocketItem(AbstractSocketItem):
         pass
 
 
+class ConnectorType(Enum):
+    Linear = 0
+    Curved = 1
+
+
 class ConnectorItem(QGraphicsPathItem):
 
     def __init__(self, source: AbstractSocketItem, target: AbstractSocketItem,
@@ -230,6 +236,8 @@ class ConnectorItem(QGraphicsPathItem):
         self._color: QColor = QColor('darkblue')
         self._relation: Optional[Relation] = None
         self._icon: Optional[str] = None
+        self._defaultLineType: ConnectorType = ConnectorType.Curved
+        self._line: bool = True if self._defaultLineType == ConnectorType.Linear else False
         if pen:
             self.setPen(pen)
         else:
@@ -251,6 +259,12 @@ class ConnectorItem(QGraphicsPathItem):
 
     def networkScene(self) -> 'NetworkScene':
         return self.scene()
+
+    def source(self) -> AbstractSocketItem:
+        return self._source
+
+    def target(self) -> AbstractSocketItem:
+        return self._target
 
     def connector(self) -> Optional[Connector]:
         return self._connector
@@ -345,48 +359,60 @@ class ConnectorItem(QGraphicsPathItem):
     def rearrange(self):
         self.setPos(self._source.sceneBoundingRect().center())
 
-        path = QPainterPath()
+        start: QPointF = self.scenePos()
+        end: QPointF = self._target.sceneBoundingRect().center()
+        width: float = end.x() - start.x()
+        height: float = end.y() - start.y()
+        endPoint: QPointF = QPointF(width, height)
+        endArrowAngle = math.degrees(math.atan2(-height / 2, width))
 
-        start = self.scenePos()
-        end = self._target.sceneBoundingRect().center()
-        width = end.x() - start.x()
-        height = end.y() - start.y()
-
-        angle = math.degrees(math.atan2(-height / 2, width))
-        if abs(height) < 5:
-            line = True
-            path.lineTo(width, height)
+        if self._defaultLineType != ConnectorType.Linear and abs(height) < 5:
+            self._line = True
         else:
-            line = False
-            if self._source.angle() >= 0:
-                path.quadTo(0, height / 2, width, height)
-            else:
-                path.quadTo(width / 2, -height / 2, width, height)
-                angle = math.degrees(math.atan2(-height / 2, width / 2))
+            self._line = False
+
+        path = QPainterPath()
+        if self._line:
+            self._rearrangeLinearConnector(path, width, height, endArrowAngle)
+        else:
+            self._rearrangeCurvedConnector(path, width, height, endArrowAngle, endPoint)
 
         self._arrowheadItem.setPos(width, height)
-        self._arrowheadItem.setRotation(-angle)
+        self._rearrangeIcon(path)
+        self._rearrangeText(path)
 
+        self.setPath(path)
+
+    def _rearrangeLinearConnector(self, path: QPainterPath, width: float, height: float, endArrowAngle: float):
+        path.lineTo(width, height)
+        self._arrowheadItem.setRotation(-endArrowAngle)
+
+    def _rearrangeCurvedConnector(self, path: QPainterPath, width: float, height: float, endArrowAngle: float,
+                                  endPoint: QPointF):
+        if self._source.angle() >= 0:
+            controlPoint = QPointF(0, height / 2)
+        else:
+            controlPoint = QPointF(width / 2, -height / 2)
+            endArrowAngle = math.degrees(math.atan2(-height / 2, width / 2))
+        path.quadTo(controlPoint, endPoint)
+        self._arrowheadItem.setRotation(-endArrowAngle)
+
+    def _rearrangeIcon(self, path: QPainterPath):
         if self._icon:
-            if line:
+            if self._line:
                 point = path.pointAtPercent(0.4)
             else:
                 point = path.pointAtPercent(0.6)
             self._iconBadge.setPos(point.x() - self._iconBadge.boundingRect().width() / 2,
                                    point.y() - self._iconBadge.boundingRect().height() / 2)
 
+    def _rearrangeText(self, path: QPainterPath):
+        pass
         # if line:
         #     point = path.pointAtPercent(0.4)
         # else:
         #     point = path.pointAtPercent(0.6)
         # path.addText(point, QApplication.font(), 'Romance')
-        self.setPath(path)
-
-    def source(self) -> AbstractSocketItem:
-        return self._source
-
-    def target(self) -> AbstractSocketItem:
-        return self._target
 
     def _setColor(self, color: QColor):
         self._color = color
