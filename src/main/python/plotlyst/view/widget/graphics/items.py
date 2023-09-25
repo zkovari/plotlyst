@@ -62,6 +62,10 @@ def draw_helpers(painter: QPainter, item: QAbstractGraphicsShapeItem):
     draw_zero(painter)
 
 
+def alt_modifier(event: QGraphicsSceneHoverEvent) -> bool:
+    return event.modifiers() & Qt.KeyboardModifier.AltModifier
+
+
 class IconBadge(QAbstractGraphicsShapeItem):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -545,7 +549,7 @@ class CharacterItem(NodeItem):
 
     @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        if self.networkScene().linkMode() or event.modifiers() & Qt.KeyboardModifier.AltModifier:
+        if self.networkScene().linkMode() or alt_modifier(event):
             self._setConnectionEnabled(True)
             self.update()
 
@@ -557,6 +561,8 @@ class CharacterItem(NodeItem):
 
     @overrides
     def hoverMoveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        if not self._linkDisplayedMode and alt_modifier(event):
+            self._setConnectionEnabled(True)
         if self._linkDisplayedMode:
             angle = math.degrees(math.atan2(
                 event.pos().y() - self._center.y(), event.pos().x() - self._center.x()
@@ -659,7 +665,7 @@ class EventItem(NodeItem):
 
     @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        if self.networkScene().linkMode() or event.modifiers() & Qt.KeyboardModifier.AltModifier:
+        if self.networkScene().linkMode() or alt_modifier(event):
             self._setSocketsVisible()
 
     @overrides
