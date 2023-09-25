@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt6.QtCore import QTimer, pyqtSignal
+from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QAction
 from overrides import overrides
 from qtmenu import GridMenuWidget
@@ -31,8 +31,7 @@ from src.main.python.plotlyst.service.persistence import RepositoryPersistenceMa
 from src.main.python.plotlyst.view.common import action
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
-from src.main.python.plotlyst.view.widget.graphics import CharacterItem
-from src.main.python.plotlyst.view.widget.graphics import NodeItem, NetworkGraphicsView, NetworkScene
+from src.main.python.plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene
 from src.main.python.plotlyst.view.widget.graphics.editor import ConnectorEditor
 
 
@@ -81,24 +80,8 @@ class CharacterNetworkView(NetworkGraphicsView):
             self._connectorEditor.setNetwork(self._diagram)
 
     @overrides
-    def _startAddition(self, itemType: DiagramNodeType):
-        super()._startAddition(itemType)
-        self._scene.startAdditionMode(itemType)
-
-    @overrides
-    def _endAddition(self, itemType: Optional[DiagramNodeType] = None, item: Optional[NodeItem] = None):
-        super()._endAddition(itemType, item)
-        if itemType == DiagramNodeType.CHARACTER:
-            QTimer.singleShot(100, lambda: self._finishCharacterAddition(item))
-
-    def _finishCharacterAddition(self, item: CharacterItem):
-        def select(character: Character):
-            item.setCharacter(character)
-
-        popup = CharacterSelectorMenu(self._novel, parent=self)
-        popup.selected.connect(select)
-        view_pos = self.mapFromScene(item.sceneBoundingRect().topRight())
-        popup.exec(self.mapToGlobal(view_pos))
+    def _characterSelectorMenu(self) -> CharacterSelectorMenu:
+        return CharacterSelectorMenu(self._novel, parent=self)
 
 
 class RelationSelector(GridMenuWidget):

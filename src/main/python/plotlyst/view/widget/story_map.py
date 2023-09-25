@@ -20,7 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from typing import Optional
 
-from PyQt6.QtCore import QTimer
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtGui import QShowEvent
@@ -33,7 +32,7 @@ from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
-from src.main.python.plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, CharacterItem, EventItem, \
+from src.main.python.plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, EventItem, \
     NodeItem
 from src.main.python.plotlyst.view.widget.graphics.editor import EventSelectorWidget, TextLineEditorPopup, \
     EventItemEditor, ConnectorEditor, SecondarySelectorWidget
@@ -127,17 +126,9 @@ class EventsMindMapView(NetworkGraphicsView):
         self._wdgSecondaryEventSelector.setHidden(True)
         self._wdgSecondaryStickerSelector.setHidden(True)
 
-        if itemType == DiagramNodeType.CHARACTER:
-            QTimer.singleShot(100, lambda: self._finishCharacterAddition(item))
-
-    def _finishCharacterAddition(self, item: CharacterItem):
-        def select(character: Character):
-            item.setCharacter(character)
-
-        popup = CharacterSelectorMenu(self._novel, parent=self)
-        popup.selected.connect(select)
-        view_pos = self.mapFromScene(item.sceneBoundingRect().topRight())
-        popup.exec(self.mapToGlobal(view_pos))
+    @overrides
+    def _characterSelectorMenu(self) -> CharacterSelectorMenu:
+        return CharacterSelectorMenu(self._novel, parent=self)
 
     @overrides
     def _arrangeSideBars(self):

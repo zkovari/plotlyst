@@ -560,6 +560,10 @@ class CharacterItem(NodeItem):
             self.update()
 
     @overrides
+    def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        self.networkScene().editItemEvent(self)
+
+    @overrides
     def hoverMoveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         if not self._linkDisplayedMode and alt_modifier(event):
             self._setConnectionEnabled(True)

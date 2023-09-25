@@ -21,16 +21,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Optional
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QColor, QIcon, QResizeEvent
 from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QFrame, \
     QToolButton, QApplication, QWidget
 from overrides import overrides
 from qthandy import sp, incr_icon, vbox
 
-from src.main.python.plotlyst.core.domain import Diagram, DiagramNodeType
+from src.main.python.plotlyst.core.domain import Diagram, DiagramNodeType, Character
 from src.main.python.plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButtonGroup, \
     TooltipPositionEventFilter
+from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
 from src.main.python.plotlyst.view.widget.graphics import CharacterItem, ConnectorItem
 from src.main.python.plotlyst.view.widget.graphics.editor import ZoomBar, ConnectorEditor
 from src.main.python.plotlyst.view.widget.graphics.items import NodeItem, EventItem
@@ -168,6 +169,9 @@ class NetworkGraphicsView(BaseGraphicsView):
         QApplication.restoreOverrideCursor()
         self.setToolTip('')
 
+        if item is not None and isinstance(item, CharacterItem):
+            QTimer.singleShot(100, lambda: self._editCharacterItem(item))
+
     def _roundedFrame(self) -> QFrame:
         frame_ = frame(self)
         frame_.setProperty('relaxed-white-bg', True)
@@ -217,7 +221,13 @@ class NetworkGraphicsView(BaseGraphicsView):
             self._showEventItemToolbar(item)
 
     def _editCharacterItem(self, item: CharacterItem):
-        pass
+        def select(character: Character):
+            item.setCharacter(character)
+
+        popup = self._characterSelectorMenu()
+        popup.selected.connect(select)
+        view_pos = self.mapFromScene(item.sceneBoundingRect().topRight())
+        popup.exec(self.mapToGlobal(view_pos))
 
     def _editEventItem(self, item: EventItem):
         pass
@@ -236,3 +246,6 @@ class NetworkGraphicsView(BaseGraphicsView):
     def _hideItemToolbar(self):
         if self._connectorEditor:
             self._connectorEditor.setVisible(False)
+
+    def _characterSelectorMenu(self) -> CharacterSelectorMenu:
+        pass
