@@ -366,7 +366,7 @@ class ConnectorItem(QGraphicsPathItem):
         endPoint: QPointF = QPointF(width, height)
         endArrowAngle = math.degrees(math.atan2(-height / 2, width))
 
-        if self._defaultLineType != ConnectorType.Linear and abs(height) < 5:
+        if self._defaultLineType != ConnectorType.Linear and self._inProximity(width, height):
             self._line = True
         else:
             self._line = False
@@ -424,6 +424,9 @@ class ConnectorItem(QGraphicsPathItem):
         arrowPen.setColor(self._color)
         self._arrowheadItem.setPen(arrowPen)
         self._arrowheadItem.setBrush(self._color)
+
+    def _inProximity(self, width: float, height: float) -> bool:
+        return abs(height) < 5 or abs(width) < 100
 
 
 class NodeItem(QAbstractGraphicsShapeItem):
