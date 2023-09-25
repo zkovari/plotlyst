@@ -129,6 +129,9 @@ class AbstractSocketItem(QAbstractGraphicsShapeItem):
         self.prepareGeometryChange()
         self.update()
 
+        for connector in self._connectors:
+            connector.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
+
     @overrides
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         self._hovered = False
@@ -136,6 +139,9 @@ class AbstractSocketItem(QAbstractGraphicsShapeItem):
         self.setToolTip('Connect')
         self.prepareGeometryChange()
         self.update()
+
+        for connector in self._connectors:
+            connector.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
 
     @overrides
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
