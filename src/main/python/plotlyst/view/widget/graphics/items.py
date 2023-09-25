@@ -389,12 +389,25 @@ class ConnectorItem(QGraphicsPathItem):
 
     def _rearrangeCurvedConnector(self, path: QPainterPath, width: float, height: float, endArrowAngle: float,
                                   endPoint: QPointF):
+        downward = height >= 0
+
         if self._source.angle() >= 0:
-            controlPoint = QPointF(0, height / 2)
+            if downward:
+                controlPoint = QPointF(width / 3, -height / 2)
+                endArrowAngle = math.degrees(math.atan2(-height / 2, width / 3))
+            else:
+                controlPoint = QPointF(0, height / 2)
+                endArrowAngle = math.degrees(math.atan2(-height / 2, width))
         else:
-            controlPoint = QPointF(width / 2, -height / 2)
-            endArrowAngle = math.degrees(math.atan2(-height / 2, width / 2))
+            if downward:
+                controlPoint = QPointF(width / 3, height / 2)
+                endArrowAngle = math.degrees(math.atan2(-height / 2, width / 3))
+            else:
+                controlPoint = QPointF(width / 2, -height / 2)
+                endArrowAngle = math.degrees(math.atan2(-height / 2, width / 2))
+
         path.quadTo(controlPoint, endPoint)
+
         self._arrowheadItem.setRotation(-endArrowAngle)
 
     def _rearrangeIcon(self, path: QPainterPath):
