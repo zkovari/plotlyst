@@ -33,7 +33,8 @@ from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR
 from src.main.python.plotlyst.core.domain import DiagramNodeType, NODE_SUBTYPE_QUESTION, NODE_SUBTYPE_FORESHADOWING, \
-    NODE_SUBTYPE_DISTURBANCE, NODE_SUBTYPE_CONFLICT, NODE_SUBTYPE_GOAL, NODE_SUBTYPE_BACKSTORY, to_node
+    NODE_SUBTYPE_DISTURBANCE, NODE_SUBTYPE_CONFLICT, NODE_SUBTYPE_GOAL, NODE_SUBTYPE_BACKSTORY, \
+    NODE_SUBTYPE_INTERNAL_CONFLICT
 from src.main.python.plotlyst.view.common import shadow, tool_btn, ExclusiveOptionalButtonGroup
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -188,7 +189,7 @@ class EventSelectorWidget(SecondarySelectorWidget):
                                                   IconRegistry.from_name('mdi.square-rounded-outline'),
                                                   'General event', 1, 0)
         self._btnGoal = self.addItemTypeButton(DiagramNodeType.EVENT, IconRegistry.goal_icon('black', 'black'),
-                                               'Add new goal',
+                                               'Goal or action',
                                                1, 1, subType=NODE_SUBTYPE_GOAL)
         self._btnConflict = self.addItemTypeButton(DiagramNodeType.EVENT,
                                                    IconRegistry.conflict_icon('black', 'black'),
@@ -197,20 +198,26 @@ class EventSelectorWidget(SecondarySelectorWidget):
                                                       IconRegistry.inciting_incident_icon('black'),
                                                       'Inciting incident', 2,
                                                       0, subType=NODE_SUBTYPE_DISTURBANCE)
+
+        self._grid.addWidget(QLabel('Internal'), 3, 0, 1, 3)
+        self._btnInternalConflict = self.addItemTypeButton(DiagramNodeType.EVENT,
+                                                           IconRegistry.conflict_self_icon('black'),
+                                                           'Internal conflict', 4, 0,
+                                                           subType=NODE_SUBTYPE_INTERNAL_CONFLICT)
         self._btnBackstory = self.addItemTypeButton(DiagramNodeType.EVENT,
                                                     IconRegistry.backstory_icon('black', 'black'),
-                                                    'Backstory', 2, 1, subType=NODE_SUBTYPE_BACKSTORY)
+                                                    'Backstory', 4, 1, subType=NODE_SUBTYPE_BACKSTORY)
 
-        self._grid.addWidget(QLabel('Narrative'), 3, 0, 1, 3)
+        self._grid.addWidget(QLabel('Narrative'), 5, 0, 1, 3)
         self._btnQuestion = self.addItemTypeButton(DiagramNodeType.SETUP, IconRegistry.from_name('ei.question-sign'),
-                                                   "Reader's question", 4,
+                                                   "Reader's question", 6,
                                                    0, subType=NODE_SUBTYPE_QUESTION)
         self._btnSetup = self.addItemTypeButton(DiagramNodeType.SETUP, IconRegistry.from_name('ri.seedling-fill'),
-                                                'Setup and payoff', 4, 1)
+                                                'Setup and payoff', 6, 1)
         self._btnForeshadowing = self.addItemTypeButton(DiagramNodeType.SETUP,
                                                         IconRegistry.from_name('mdi6.crystal-ball'),
                                                         'Foreshadowing',
-                                                        4, 2, subType=NODE_SUBTYPE_FORESHADOWING)
+                                                        6, 2, subType=NODE_SUBTYPE_FORESHADOWING)
 
         self._btnGeneral.setChecked(True)
 

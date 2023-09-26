@@ -1808,6 +1808,7 @@ NODE_SUBTYPE_GOAL = 'goal'
 NODE_SUBTYPE_CONFLICT = 'conflict'
 NODE_SUBTYPE_DISTURBANCE = 'disturbance'
 NODE_SUBTYPE_BACKSTORY = 'backstory'
+NODE_SUBTYPE_INTERNAL_CONFLICT = 'internal_conflict'
 NODE_SUBTYPE_QUESTION = 'question'
 NODE_SUBTYPE_FORESHADOWING = 'foreshadowing'
 NODE_SUBTYPE_TOOL = 'tool'
@@ -1838,7 +1839,7 @@ def to_node(x: float, y: float, type: DiagramNodeType, subtype: str = '', defaul
     node = Node(x, y, type=type, subtype=subtype)
     if type == DiagramNodeType.EVENT:
         node.size = max(16, default_size)
-        if subtype == NODE_SUBTYPE_BACKSTORY:
+        if subtype in [NODE_SUBTYPE_BACKSTORY, NODE_SUBTYPE_INTERNAL_CONFLICT]:
             node.size = max(14, default_size - 1)
 
     if subtype == NODE_SUBTYPE_GOAL:
@@ -1850,6 +1851,9 @@ def to_node(x: float, y: float, type: DiagramNodeType, subtype: str = '', defaul
     elif subtype == NODE_SUBTYPE_BACKSTORY:
         node.icon = 'fa5s.archive'
         node.color = '#9c6644'
+    elif subtype == NODE_SUBTYPE_INTERNAL_CONFLICT:
+        node.icon = 'mdi.mirror'
+        node.color = '#94b0da'
     elif subtype == NODE_SUBTYPE_DISTURBANCE:
         node.icon = 'mdi.bell-alert-outline'
         node.color = '#a2ad59'
