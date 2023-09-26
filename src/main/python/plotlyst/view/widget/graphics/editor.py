@@ -124,7 +124,7 @@ class SecondarySelectorWidget(QFrame):
         return btn
 
 
-class BaseItemEditor(QWidget):
+class BaseItemToolbar(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         vbox(self, spacing=5)
@@ -219,7 +219,7 @@ class EventSelectorWidget(SecondarySelectorWidget):
         self._btnGeneral.setChecked(True)
 
 
-class ConnectorEditor(BaseItemEditor):
+class ConnectorToolbar(BaseItemToolbar):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._connector: Optional[ConnectorItem] = None
@@ -312,7 +312,7 @@ class ConnectorEditor(BaseItemEditor):
         self._btnColor.setIcon(IconRegistry.from_name('fa5s.circle', color))
 
 
-class EventItemEditor(BaseItemEditor):
+class EventItemToolbar(BaseItemToolbar):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._item: Optional[EventItem] = None

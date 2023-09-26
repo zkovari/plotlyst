@@ -32,7 +32,7 @@ from src.main.python.plotlyst.view.common import action
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
 from src.main.python.plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene
-from src.main.python.plotlyst.view.widget.graphics.editor import ConnectorEditor
+from src.main.python.plotlyst.view.widget.graphics.editor import ConnectorToolbar
 
 
 class RelationsEditorScene(NetworkScene):
@@ -65,7 +65,7 @@ class CharacterNetworkView(NetworkGraphicsView):
         self._btnAddSticker = self._newControlButton(IconRegistry.from_name('mdi6.sticker-circle-outline'),
                                                      'Add new sticker', DiagramNodeType.STICKER)
 
-        self._connectorEditor = RelationConnectorEditor(self)
+        self._connectorEditor = RelationConnectorToolbar(self)
         self._connectorEditor.setVisible(False)
 
     @overrides
@@ -134,7 +134,7 @@ class RelationSelector(GridMenuWidget):
         return action_
 
 
-class RelationConnectorEditor(ConnectorEditor):
+class RelationConnectorToolbar(ConnectorToolbar):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._relationSelector: Optional[RelationSelector] = None

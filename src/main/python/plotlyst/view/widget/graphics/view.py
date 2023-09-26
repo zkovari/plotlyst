@@ -33,7 +33,7 @@ from src.main.python.plotlyst.view.common import shadow, tool_btn, frame, Exclus
     TooltipPositionEventFilter
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
 from src.main.python.plotlyst.view.widget.graphics import CharacterItem, ConnectorItem
-from src.main.python.plotlyst.view.widget.graphics.editor import ZoomBar, ConnectorEditor
+from src.main.python.plotlyst.view.widget.graphics.editor import ZoomBar, ConnectorToolbar
 from src.main.python.plotlyst.view.widget.graphics.items import NodeItem, EventItem
 from src.main.python.plotlyst.view.widget.graphics.scene import NetworkScene
 
@@ -112,7 +112,7 @@ class NetworkGraphicsView(BaseGraphicsView):
         shadow(self._controlsNavBar)
         vbox(self._controlsNavBar, 5, 6)
 
-        self._connectorEditor: Optional[ConnectorEditor] = None
+        self._connectorEditor: Optional[ConnectorToolbar] = None
 
         self._btnGroup = ExclusiveOptionalButtonGroup()
 
