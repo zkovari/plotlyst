@@ -26,7 +26,7 @@ from PyQt6.QtCore import QObject, pyqtSignal, Qt
 from PyQt6.QtWidgets import QWidget, QTableView
 from overrides import overrides
 from qtanim import fade_in
-from qthandy import flow, underline, incr_font, margins
+from qthandy import underline, incr_font, margins
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
 from src.main.python.plotlyst.core.client import json_client
@@ -259,7 +259,7 @@ class SceneEditor(QObject, EventListener):
         self._update_pov_avatar()
         self._characters_model.update()
         self._character_changed()
-        self.ui.wdgSceneStructure.updateAgendaCharacter()
+        # self.ui.wdgSceneStructure.updateAgendaCharacter()
         self.ui.treeScenes.refreshScene(self.scene)
 
     def _update_pov_avatar(self):
@@ -280,7 +280,7 @@ class SceneEditor(QObject, EventListener):
         for character in self.scene.characters:
             self.ui.wdgCharacters.addLabel(CharacterLabel(character))
 
-        self.ui.wdgSceneStructure.updateAvailableAgendaCharacters()
+        # self.ui.wdgSceneStructure.updateAvailableAgendaCharacters()
 
     def _purposeSkipped(self):
         self.scene.purpose = ScenePurposeType.Other

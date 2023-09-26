@@ -29,25 +29,20 @@ from PyQt6.QtGui import QIcon, QColor, QPainter, QPen, \
 from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy, QTextEdit
 from overrides import overrides
 from qtanim import fade_in
-from qthandy import pointy, gc, translucent, bold, flow, clear_layout, decr_font, \
+from qthandy import pointy, gc, translucent, bold, clear_layout, decr_font, \
     margins, spacer, sp, curved_flow, incr_icon, vbox
-from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter, \
-    ObjectReferenceMimeData, DragEventFilter, DropEventFilter
+from qthandy.filter import OpacityEventFilter, ObjectReferenceMimeData, DragEventFilter, DropEventFilter
 from qtmenu import ScrollableMenuWidget, ActionTooltipDisplayMode, GridMenuWidget, MenuWidget
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Character, Novel, Scene, SceneStructureItemType, SceneType, \
-    SceneStructureItem, SceneOutcome, SceneStructureAgenda, CharacterGoal, GoalReference, Conflict, ConflictReference
-from src.main.python.plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter, \
-    insert_after
+from src.main.python.plotlyst.core.domain import Novel, Scene, SceneStructureItemType, SceneType, \
+    SceneStructureItem, SceneOutcome, SceneStructureAgenda
+from src.main.python.plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_white_menu
-from src.main.python.plotlyst.view.widget.button import FadeOutButtonGroup
-from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterEmotionButton
 from src.main.python.plotlyst.view.widget.input import RemovalButton
 from src.main.python.plotlyst.view.widget.list import ListView, ListItemWidget
-from src.main.python.plotlyst.view.widget.scene.goal import SceneGoalSelector
 from src.main.python.plotlyst.view.widget.scenes import SceneOutcomeSelector
 
 BeatDescriptions = {SceneStructureItemType.BEAT: 'New action, reaction, thought, or emotion',
@@ -1041,131 +1036,45 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.novel: Optional[Novel] = None
         self.scene: Optional[Scene] = None
 
-        self.btnScene = _SceneTypeButton(SceneType.ACTION)
-        self.btnSequel = _SceneTypeButton(SceneType.REACTION)
-        self.btnHappening = _SceneTypeButton(SceneType.HAPPENING)
-        self.btnExposition = _SceneTypeButton(SceneType.EXPOSITION)
-        self.btnSummary = _SceneTypeButton(SceneType.SUMMARY)
-
-        self.wdgTypes.layout().addWidget(self.btnScene)
-        self.wdgTypes.layout().addWidget(self.btnSequel)
-        self.wdgTypes.layout().addWidget(self.btnSummary)
-        self.wdgTypes.layout().addWidget(self.btnHappening)
-        self.wdgTypes.layout().addWidget(self.btnExposition)
-
-        flow(self.wdgGoalConflictContainer)
-        margins(self.wdgGoalConflictContainer, left=40)
-
         self.timeline = SceneStructureTimeline(self)
         self.scrollAreaTimeline.layout().addWidget(self.timeline)
 
         self.listEvents = SceneStructureList()
         self.pageList.layout().addWidget(self.listEvents)
 
-        self.btnScene.installEventFilter(OpacityEventFilter(parent=self.btnScene, ignoreCheckedButton=True))
-        self.btnSequel.installEventFilter(OpacityEventFilter(parent=self.btnSequel, ignoreCheckedButton=True))
-        self.btnScene.clicked.connect(partial(self._typeClicked, SceneType.ACTION))
-        self.btnSequel.clicked.connect(partial(self._typeClicked, SceneType.REACTION))
-        self.btnHappening.clicked.connect(partial(self._typeClicked, SceneType.HAPPENING))
-        self.btnExposition.clicked.connect(partial(self._typeClicked, SceneType.EXPOSITION))
-        self.btnSummary.clicked.connect(partial(self._typeClicked, SceneType.SUMMARY))
-
-        self._btnGroupType = FadeOutButtonGroup()
-        self._btnGroupType.addButton(self.btnScene)
-        self._btnGroupType.addButton(self.btnSequel)
-        self._btnGroupType.addButton(self.btnHappening)
-        self._btnGroupType.addButton(self.btnExposition)
-        self._btnGroupType.addButton(self.btnSummary)
-
-        self._emotionEnd = CharacterEmotionButton(self)
-        self._emotionEnd.setToolTip('How does the character feel in the end of the scene?')
-        self._emotionEnd.setVisible(False)
-        insert_after(self.wdgAgenda, self._emotionEnd, self.wdgAgendaCharacter)
-        self._emotionEnd.emotionChanged.connect(self._emotionChanged)
-
-        self.wdgAgendaCharacter.setDefaultText('Select character')
-        self.wdgAgendaCharacter.characterSelected.connect(self._agendaCharacterSelected)
-        self._disabledAgendaEventFilter = None
+        # self._disabledAgendaEventFilter = None
 
     def setUnsetCharacterSlot(self, unsetCharacterSlot):
-        if self._disabledAgendaEventFilter:
-            self.wdgAgendaCharacter.btnLinkCharacter.removeEventFilter(self._disabledAgendaEventFilter)
-
-        self._disabledAgendaEventFilter = DisabledClickEventFilter(self, unsetCharacterSlot)
-        self.wdgAgendaCharacter.btnLinkCharacter.installEventFilter(self._disabledAgendaEventFilter)
+        pass
+        # if self._disabledAgendaEventFilter:
+        #     self.wdgAgendaCharacter.btnLinkCharacter.removeEventFilter(self._disabledAgendaEventFilter)
+        #
+        # self._disabledAgendaEventFilter = DisabledClickEventFilter(self, unsetCharacterSlot)
+        # self.wdgAgendaCharacter.btnLinkCharacter.installEventFilter(self._disabledAgendaEventFilter)
 
     def setScene(self, novel: Novel, scene: Scene):
         self.novel = novel
         self.scene = scene
 
-        self.updateAvailableAgendaCharacters()
-        self._toggleCharacterStatus()
-
         self.timeline.setNovel(novel)
         self.timeline.clear()
-        self._initSelectors()
-
-        self._checkSceneType()
 
         self.timeline.setAgenda(scene.agendas[0], self.scene.type)
         self.listEvents.setAgenda(scene.agendas[0], self.scene.type)
-        self._emotionEnd.setValue(scene.agendas[0].ending_emotion)
         self._initEditor(self.scene.type)
 
     def updateAvailableAgendaCharacters(self):
-        chars = []
-        chars.extend(self.scene.characters)
-        if self.scene.pov:
-            chars.insert(0, self.scene.pov)
-        self.wdgAgendaCharacter.setAvailableCharacters(chars)
+        pass
+        # chars = []
+        # chars.extend(self.scene.characters)
+        # if self.scene.pov:
+        #     chars.insert(0, self.scene.pov)
+        # self.wdgAgendaCharacter.setAvailableCharacters(chars)
 
     def updateAgendaCharacter(self):
-        self._toggleCharacterStatus()
-        self._initSelectors()
-
-    def _toggleCharacterStatus(self):
-        if self.scene.agendas[0].character_id:
-            self.wdgAgendaCharacter.setEnabled(True)
-            char = self.scene.agendas[0].character(self.novel)
-            if char:
-                self.wdgAgendaCharacter.setCharacter(char)
-            self._emotionEnd.setVisible(True)
-        else:
-            self.wdgAgendaCharacter.reset()
-
-            self.wdgAgendaCharacter.setDisabled(True)
-            self.wdgAgendaCharacter.setToolTip('Select POV character first')
-            self._emotionEnd.setHidden(True)
-
-    def _agendaCharacterSelected(self, character: Character):
-        self.scene.agendas[0].set_character(character)
-        self.scene.agendas[0].conflict_references.clear()
-        self.updateAgendaCharacter()
-
-    def _checkSceneType(self):
-        if self.scene.type == SceneType.ACTION:
-            self._btnGroupType.setButtonChecked(self.btnScene, True)
-        elif self.scene.type == SceneType.REACTION:
-            self._btnGroupType.setButtonChecked(self.btnSequel, True)
-        elif self.scene.type == SceneType.HAPPENING:
-            self._btnGroupType.setButtonChecked(self.btnHappening, True)
-        elif self.scene.type == SceneType.EXPOSITION:
-            self._btnGroupType.setButtonChecked(self.btnExposition, True)
-        elif self.scene.type == SceneType.SUMMARY:
-            self._btnGroupType.setButtonChecked(self.btnSummary, True)
-        else:
-            self._btnGroupType.reset()
-
-    def _typeClicked(self, type: SceneType, checked: bool):
-        if not checked:
-            if type in [SceneType.EXPOSITION, SceneType.SUMMARY]:
-                self.timeline.setAgenda(self.scene.agendas[0], self.scene.type)
-            self.scene.type = SceneType.DEFAULT
-            self._initEditor(SceneType.DEFAULT)
-            return
-
-        self.scene.type = type
-        self._initEditor(type)
+        pass
+        # self._toggleCharacterStatus()
+        # self._initSelectors()
 
     def _initEditor(self, type: SceneType):
         if type == SceneType.EXPOSITION:
@@ -1181,49 +1090,3 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         else:
             self.stackStructure.setCurrentWidget(self.pageTimetilne)
             self.timeline.setSceneType(self.scene.type)
-
-        self.wdgAgenda.setHidden(type == SceneType.EXPOSITION)
-
-    def _initSelectors(self):
-        if not self.scene.agendas[0].character_id:
-            return
-        clear_layout(self.wdgGoalConflictContainer)
-        if self.scene.agendas[0].goal_references:
-            for goal_ref in self.scene.agendas[0].goal_references:
-                goal = goal_ref.goal(self.scene.agendas[0].character(self.novel))
-                if goal:
-                    self._addGoalSelector(goal, goal_ref)
-            self._addGoalSelector()
-        else:
-            self._addGoalSelector()
-
-        if self.scene.agendas[0].conflict_references:
-            for conflict_ref in self.scene.agendas[0].conflict_references:
-                conflict = conflict_ref.conflict(self.novel)
-                if conflict:
-                    self._addConfictSelector(conflict, conflict_ref)
-
-            self._addConfictSelector()
-        else:
-            self._addConfictSelector()
-
-    def _addGoalSelector(self, goal: Optional[CharacterGoal] = None, goalRef: Optional[GoalReference] = None):
-        simplified = len(self.scene.agendas[0].goal_references) > 0
-        selector = SceneGoalSelector(self.novel, self.scene, simplified=simplified)
-        self.wdgGoalConflictContainer.layout().addWidget(selector)
-        selector.goalSelected.connect(self._initSelectors)
-        if goal and goalRef:
-            selector.setGoal(goal, goalRef)
-
-    def _addConfictSelector(self, conflict: Optional[Conflict] = None,
-                            conflict_ref: Optional[ConflictReference] = None):
-        simplified = len(self.scene.agendas[0].conflict_references) > 0
-        conflict_selector = CharacterConflictSelector(self.novel, self.scene, simplified=simplified,
-                                                      parent=self.wdgGoalConflictContainer)
-        if conflict and conflict_ref:
-            conflict_selector.setConflict(conflict, conflict_ref)
-        self.wdgGoalConflictContainer.layout().addWidget(conflict_selector)
-        conflict_selector.conflictSelected.connect(self._initSelectors)
-
-    def _emotionChanged(self):
-        self.scene.agendas[0].ending_emotion = self._emotionEnd.value()
