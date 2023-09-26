@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from abc import abstractmethod
 from functools import partial
-from typing import Optional
+from typing import Optional, Any
 
 from PyQt6.QtCore import Qt, pyqtSignal, QRect
 from PyQt6.QtGui import QPainter, QPen, QColor, QIcon, QPaintEvent, QKeySequence, QShowEvent
@@ -31,7 +31,7 @@ from overrides import overrides
 from qthandy import hbox, margins, sp, vbox, grid, pointy, vline, decr_icon, transparent, retain_when_hidden
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR
+from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR
 from src.main.python.plotlyst.core.domain import DiagramNodeType, NODE_SUBTYPE_QUESTION, NODE_SUBTYPE_FORESHADOWING, \
     NODE_SUBTYPE_DISTURBANCE, NODE_SUBTYPE_CONFLICT, NODE_SUBTYPE_GOAL, NODE_SUBTYPE_BACKSTORY
 from src.main.python.plotlyst.view.common import shadow, tool_btn, ExclusiveOptionalButtonGroup
@@ -219,12 +219,11 @@ class EventSelectorWidget(SecondarySelectorWidget):
         self._btnGeneral.setChecked(True)
 
 
-class ConnectorToolbar(BaseItemToolbar):
+class PaintedItemBasedToolbar(BaseItemToolbar):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._connector: Optional[ConnectorItem] = None
+        self._item: Optional[Any] = None
 
-        self._btnRelationType = RelationsButton()
         self._btnColor = tool_btn(IconRegistry.from_name('fa5s.circle', color='darkBlue'), 'Change style',
                                   transparent_=True)
         self._colorPicker = ColorPicker(self, maxColumn=5)
@@ -234,6 +233,49 @@ class ConnectorToolbar(BaseItemToolbar):
         self.addSecondaryWidget(self._btnColor, self._colorSecondaryWidget)
         self._btnIcon = tool_btn(IconRegistry.from_name('mdi.emoticon-outline'), 'Change icon', transparent_=True)
         self._btnIcon.clicked.connect(self._showIconSelector)
+
+    def setItem(self, item: Any):
+        self._item = None
+        self._hideSecondarySelectors()
+
+        icon: str = item.icon()
+        self._updateColor(item.color().name())
+        if icon:
+            self._updateIcon(icon)
+        else:
+            self._resetIcon()
+
+        self._item = item
+
+    def _showIconSelector(self):
+        dialog = IconSelectorDialog()
+        retain_when_hidden(dialog.selector.colorPicker)
+        dialog.selector.colorPicker.setVisible(False)
+        result = dialog.display()
+        if result and self._item:
+            self._item.setIcon(result[0])
+            self._updateIcon(result[0])
+
+    def _colorChanged(self, color: QColor):
+        if self._item:
+            self._item.setColor(color)
+            self._updateColor(color.name())
+            pass
+
+    def _updateIcon(self, icon: str):
+        self._btnIcon.setIcon(IconRegistry.from_name(icon))
+
+    def _resetIcon(self):
+        self._btnIcon.setIcon(IconRegistry.from_name('mdi.emoticon-outline'))
+
+    def _updateColor(self, color: str):
+        self._btnColor.setIcon(IconRegistry.from_name('fa5s.circle', color))
+
+
+class ConnectorToolbar(PaintedItemBasedToolbar):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._btnRelationType = RelationsButton()
 
         self._solidLine = SolidPenStyleSelector()
         self._dashLine = DashPenStyleSelector()
@@ -258,70 +300,34 @@ class ConnectorToolbar(BaseItemToolbar):
         self._toolbar.layout().addWidget(vline())
         self._toolbar.layout().addWidget(self._sbWidth)
 
+    @overrides
     def setItem(self, connector: ConnectorItem):
-        self._connector = None
-        self._hideSecondarySelectors()
+        super().setItem(connector)
+        self._item = None
 
         self._sbWidth.setValue(connector.penWidth())
-
-        icon: str = connector.icon()
-        self._updateColor(connector.color().name())
-        if icon:
-            self._updateIcon(icon)
-        else:
-            self._resetIcon()
 
         penStyle = connector.penStyle()
         for line in [self._solidLine, self._dashLine, self._dotLine]:
             if penStyle == line.penStyle():
                 line.setChecked(True)
                 break
-        self._connector = connector
+        self._item = connector
 
     def _penStyleChanged(self):
         btn = self._lineBtnGroup.checkedButton()
-        if btn and self._connector:
-            self._connector.setPenStyle(btn.penStyle())
+        if btn and self._item:
+            self._item.setPenStyle(btn.penStyle())
 
     def _widthChanged(self, value: int):
-        if self._connector:
-            self._connector.setPenWidth(value)
-
-    def _colorChanged(self, color: QColor):
-        if self._connector:
-            self._connector.setColor(color)
-            self._updateColor(color.name())
-            pass
-
-    def _showIconSelector(self):
-        dialog = IconSelectorDialog()
-        retain_when_hidden(dialog.selector.colorPicker)
-        dialog.selector.colorPicker.setVisible(False)
-        result = dialog.display()
-        if result and self._connector:
-            self._connector.setIcon(result[0])
-            self._updateIcon(result[0])
-
-    def _updateIcon(self, icon: str):
-        self._btnIcon.setIcon(IconRegistry.from_name(icon))
-
-    def _resetIcon(self):
-        self._btnIcon.setIcon(IconRegistry.from_name('mdi.emoticon-outline'))
-
-    def _updateColor(self, color: str):
-        self._btnColor.setIcon(IconRegistry.from_name('fa5s.circle', color))
+        if self._item:
+            self._item.setPenWidth(value)
 
 
-class EventItemToolbar(BaseItemToolbar):
+class EventItemToolbar(PaintedItemBasedToolbar):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._item: Optional[EventItem] = None
-
         self._btnType = tool_btn(IconRegistry.from_name('mdi.square-rounded-outline'), 'Change type', transparent_=True)
-        self._btnColor = tool_btn(IconRegistry.from_name('fa5s.circle', color=PLOTLYST_SECONDARY_COLOR), 'Change style',
-                                  transparent_=True)
-        self._btnIcon = tool_btn(IconRegistry.from_name('mdi.emoticon-outline'), 'Change icon', transparent_=True)
-        self._btnIcon.clicked.connect(self._showIconSelector)
         self._sbFont = FontSizeSpinBox()
         self._sbFont.fontChanged.connect(self._fontChanged)
         self._btnBold = tool_btn(IconRegistry.from_name('fa5s.bold'), 'Bold', checkable=True, icon_resize=False,
@@ -345,16 +351,17 @@ class EventItemToolbar(BaseItemToolbar):
 
         self._toolbar.layout().addWidget(self._btnType)
         self._toolbar.layout().addWidget(vline())
-        self._toolbar.layout().addWidget(self._btnIcon)
         self._toolbar.layout().addWidget(self._btnColor)
+        self._toolbar.layout().addWidget(self._btnIcon)
         self._toolbar.layout().addWidget(vline())
         self._toolbar.layout().addWidget(self._sbFont)
         self._toolbar.layout().addWidget(vline())
         self._toolbar.layout().addWidget(group(self._btnBold, self._btnItalic, self._btnUnderline, margin=0, spacing=2))
 
+    @overrides
     def setItem(self, item: EventItem):
+        super().setItem(item)
         self._item = None
-        self._hideSecondarySelectors()
 
         self._sbFont.setValue(item.fontSize())
         self._btnBold.setChecked(item.bold())
@@ -377,11 +384,6 @@ class EventItemToolbar(BaseItemToolbar):
     def _typeChanged(self, itemType: DiagramNodeType):
         if self._item:
             self._item.setItemType(itemType)
-
-    def _showIconSelector(self):
-        result = IconSelectorDialog().display()
-        if result and self._item:
-            self._item.setIcon(IconRegistry.from_name(result[0], result[1].name()))
 
 
 class PenStyleSelector(QAbstractButton):

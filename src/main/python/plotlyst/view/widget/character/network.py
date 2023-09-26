@@ -144,7 +144,7 @@ class RelationConnectorToolbar(ConnectorToolbar):
         self._relationSelector.relationSelected.connect(self._relationChanged)
 
     def _relationChanged(self, relation: Relation):
-        if self._connector:
-            self._connector.setRelation(relation)
+        if self._item:
+            self._item.setRelation(relation)
             self._updateIcon(relation.icon)
             self._updateColor(relation.icon_color)

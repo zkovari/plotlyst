@@ -32,9 +32,7 @@ from overrides import overrides
 from qthandy import pointy
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
-from src.main.python.plotlyst.core.domain import Node, Relation, Connector, Character, NODE_SUBTYPE_GOAL, \
-    NODE_SUBTYPE_CONFLICT, NODE_SUBTYPE_BACKSTORY, NODE_SUBTYPE_DISTURBANCE, NODE_SUBTYPE_QUESTION, \
-    NODE_SUBTYPE_FORESHADOWING, DiagramNodeType
+from src.main.python.plotlyst.core.domain import Node, Relation, Connector, Character
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 
 
@@ -330,10 +328,8 @@ class ConnectorItem(QGraphicsPathItem):
     def icon(self) -> Optional[str]:
         return self._icon
 
-    def setIcon(self, icon: str, color: Optional[QColor] = None):
+    def setIcon(self, icon: str):
         self._icon = icon
-        if color:
-            self._color = color
         self._iconBadge.setIcon(IconRegistry.from_name(self._icon, self._color.name()), self._color)
         self._iconBadge.setVisible(True)
         self.rearrange()
@@ -705,11 +701,24 @@ class EventItem(NodeItem):
         if not self.isSelected():
             self._setSocketsVisible(False)
 
-    def setIcon(self, icon: QIcon):
-        self._icon = icon
+    def icon(self) -> Optional[str]:
+        return self._node.icon
+
+    def setIcon(self, icon: str):
+        self._node.icon = icon
+        self._icon = IconRegistry.from_name(self._node.icon, self._node.color)
         self._refresh()
-        if self._node:
-            self.networkScene().nodeChangedEvent(self._node)
+        self.networkScene().nodeChangedEvent(self._node)
+
+    def color(self) -> QColor:
+        return QColor(self._node.color)
+
+    def setColor(self, color: QColor):
+        self._node.color = color.name()
+        if self._icon:
+            self._icon = IconRegistry.from_name(self._node.icon, self._node.color)
+        self._refresh()
+        self.networkScene().nodeChangedEvent(self._node)
 
     def setFontSettings(self, size: Optional[int] = None, bold: Optional[bool] = None, italic: Optional[bool] = None,
                         underline: Optional[bool] = None):
