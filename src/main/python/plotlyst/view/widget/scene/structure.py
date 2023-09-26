@@ -320,8 +320,8 @@ class _SceneBeatPlaceholderButton(QPushButton):
         super(_SceneBeatPlaceholderButton, self).__init__(parent)
         self.setProperty('transparent', True)
         self.setIcon(IconRegistry.plus_circle_icon('grey'))
-        self.installEventFilter(OpacityEventFilter(self))
-        self.setIconSize(QSize(24, 24))
+        self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.3))
+        self.setIconSize(QSize(20, 20))
         pointy(self)
         self.setToolTip('Insert new beat')
 
@@ -482,14 +482,15 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
 
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
         super(SceneStructureBeatWidget, self).__init__(novel, scene_structure_item, parent)
-        self.setFixedWidth(190)
+        self.setFixedWidth(210)
 
         self._outcome = SceneOutcomeSelector(self.beat)
         self._outcome.selected.connect(self._outcomeChanged)
 
         self._text = QTextEdit()
         decr_font(self._text)
-        self._text.setFixedHeight(80)
+        self._text.setProperty('rounded', True)
+        self._text.setFixedHeight(100)
         self._text.setTabChangesFocus(True)
         self._text.setText(self.beat.text)
         self._text.textChanged.connect(self._textChanged)
@@ -578,11 +579,11 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
         self._btnIcon.setIcon(beat_icon(self.beat.type, resolved=self.beat.outcome == SceneOutcome.RESOLUTION,
                                         trade_off=self.beat.outcome == SceneOutcome.TRADE_OFF))
 
-        self._text.setStyleSheet(f'''
-                    border: 2px solid {self._color()};
-                    border-radius: 6px;
-                    padding: 4px;
-                    ''')
+        # self._text.setStyleSheet(f'''
+        #             border: 2px solid lightgrey;
+        #             border-radius: 6px;
+        #             padding: 4px;
+        #             ''')
 
     def _textChanged(self):
         self.beat.text = self._text.toPlainText()
@@ -699,12 +700,7 @@ class SceneStructureTimeline(QWidget):
         painter.setOpacity(0.5)
 
         pen = QPen()
-        if self._sceneType == SceneType.ACTION:
-            pen.setColor(QColor('red'))
-        elif self._sceneType == SceneType.REACTION:
-            pen.setColor(QColor('#4b86b4'))
-        else:
-            pen.setColor(QColor('grey'))
+        pen.setColor(QColor('grey'))
 
         pen.setWidth(3)
         painter.setPen(pen)

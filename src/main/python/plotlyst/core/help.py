@@ -114,11 +114,11 @@ plot_value_help = """<html>When associated with scenes, such plot value can be c
 <b style=color:#9d0208;>negatively</b>, thus depicting a 
 character's shift between the value's positive and negative spectrum, e.g., Love vs. Hate.</html>"""
 
-scene_disaster_outcome_help = """<html><head/><body><p>Scene ends with a <span style=" font-weight:600; color:#f4442e;">disaster</span>
-<span style=" color:#000000;">, so the agenda character's scene goal remains unachieved</span></p></body></html>"""
+scene_disaster_outcome_help = """<html><head/><body><p>Scene ends with a <span style=" font-weight:600; color:#f4442e;">disaster</span>,
+ so the agenda character's scene goal remains unachieved</p></body></html>"""
 
-scene_trade_off_outcome_help = """<html><head/><body><p>Scene ends with a bittersweet <span style=" font-weight:600; color:#832161;">trade-off</span>
-<span style=" color:#000000;">, so the agenda character's scene goal is achieved but not without a price</span></p></body></html>"""
+scene_trade_off_outcome_help = """<html><head/><body><p>Scene ends with a bittersweet <span style=" font-weight:600; color:#832161;">trade-off</span>,
+ so the agenda character's scene goal is achieved but not without a price</p></body></html>"""
 
-scene_resolution_outcome_help = """<html><head/><body><p>Scene ends with a <span style=" font-weight:600; color:#6ba368;">resolution</span><span style=" font-weight:600;">
-,</span> so the agenda character's scene goal is achieved</p></body></html>"""
+scene_resolution_outcome_help = """<html><head/><body><p>Scene ends with a <span style=" font-weight:600; color:#6ba368;">resolution</span>,
+ so the agenda character's scene goal is achieved</p></body></html>"""
