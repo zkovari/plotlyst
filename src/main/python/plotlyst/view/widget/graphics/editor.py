@@ -33,7 +33,7 @@ from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR
 from src.main.python.plotlyst.core.domain import DiagramNodeType, NODE_SUBTYPE_QUESTION, NODE_SUBTYPE_FORESHADOWING, \
-    NODE_SUBTYPE_DISTURBANCE, NODE_SUBTYPE_CONFLICT, NODE_SUBTYPE_GOAL, NODE_SUBTYPE_BACKSTORY
+    NODE_SUBTYPE_DISTURBANCE, NODE_SUBTYPE_CONFLICT, NODE_SUBTYPE_GOAL, NODE_SUBTYPE_BACKSTORY, to_node
 from src.main.python.plotlyst.view.common import shadow, tool_btn, ExclusiveOptionalButtonGroup
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -381,9 +381,9 @@ class EventItemToolbar(PaintedItemBasedToolbar):
             self._item.setFontSettings(bold=self._btnBold.isChecked(), italic=self._btnItalic.isChecked(),
                                        underline=self._btnUnderline.isChecked())
 
-    def _typeChanged(self, itemType: DiagramNodeType):
+    def _typeChanged(self, itemType: DiagramNodeType, subtype: str):
         if self._item:
-            self._item.setItemType(itemType)
+            self._item.setItemType(itemType, subtype)
 
 
 class PenStyleSelector(QAbstractButton):

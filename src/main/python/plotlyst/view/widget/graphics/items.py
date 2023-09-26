@@ -32,7 +32,7 @@ from overrides import overrides
 from qthandy import pointy
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
-from src.main.python.plotlyst.core.domain import Node, Relation, Connector, Character
+from src.main.python.plotlyst.core.domain import Node, Relation, Connector, Character, DiagramNodeType, to_node
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 
 
@@ -665,6 +665,24 @@ class EventItem(NodeItem):
         self._node.text = text
         self._setTooltip()
         self.setSelected(False)
+        self._refresh()
+        self.networkScene().nodeChangedEvent(self._node)
+
+    def setItemType(self, itemType: DiagramNodeType, subType: str = ''):
+        new_node = to_node(0, 0, itemType, subType, default_size=QApplication.font().pointSize())
+        self._node.type = new_node.type
+        self._node.subtype = new_node.subtype
+        self._node.icon = new_node.icon
+        self._node.color = new_node.color
+        self._node.size = new_node.size
+
+        self._font.setPointSize(self._node.size)
+        self._metrics = QFontMetrics(self._font)
+
+        if self._node.icon:
+            self._icon = IconRegistry.from_name(self._node.icon, self._node.color)
+        else:
+            self._icon = None
         self._refresh()
         self.networkScene().nodeChangedEvent(self._node)
 
