@@ -220,22 +220,25 @@ class NetworkScene(QGraphicsScene):
         if isinstance(item, NodeItem):
             for connectorItem in item.connectors():
                 try:
-                    self._diagram.data.connectors.remove(connectorItem.connector())
+                    self._clearUpConnectorItem(connectorItem)
                     self.removeItem(connectorItem)
                 except ValueError:
                     pass  # connector might have been already removed if a node was deleted first
             item.clearConnectors()
             self._diagram.data.nodes.remove(item.node())
         elif isinstance(item, ConnectorItem):
-            try:
-                self._diagram.data.connectors.remove(item.connector())
-                item.source().removeConnector(item)
-                item.target().removeConnector(item)
-            except ValueError:
-                pass
+            self._clearUpConnectorItem(item)
 
         self.removeItem(item)
         self._save()
+
+    def _clearUpConnectorItem(self, item: ConnectorItem):
+        try:
+            self._diagram.data.connectors.remove(item.connector())
+            item.source().removeConnector(item)
+            item.target().removeConnector(item)
+        except ValueError:
+            pass
 
     def _addConnector(self, connector: Connector, source: NodeItem, target: NodeItem):
         sourceSocket = source.socket(connector.source_angle)
