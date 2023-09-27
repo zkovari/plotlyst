@@ -23,7 +23,7 @@ from functools import partial
 from typing import Optional, List, Dict
 
 import qtanim
-from PyQt6.QtCore import Qt, pyqtSignal, QSize, QRectF, QEvent, QPoint, QMimeData
+from PyQt6.QtCore import Qt, pyqtSignal, QSize, QRectF, QEvent, QPoint, QMimeData, QObject
 from PyQt6.QtGui import QIcon, QColor, QPainter, QPen, \
     QPainterPath, QPaintEvent, QAction, QResizeEvent, QEnterEvent, QDragEnterEvent
 from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy, QTextEdit, QDialog, QApplication
@@ -352,9 +352,10 @@ class SceneStructureItemWidget(QWidget):
     removed = pyqtSignal(object)
     iconFixedSize: int = 36
 
-    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
+    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None, readOnly: bool = False):
         super(SceneStructureItemWidget, self).__init__(parent)
         self.novel = novel
+        self._readOnly = readOnly
         self.beat = scene_structure_item
         vbox(self, 0, 0)
 
@@ -362,9 +363,7 @@ class SceneStructureItemWidget(QWidget):
         bold(self._btnName)
 
         self._btnIcon = QToolButton(self)
-        pointy(self._btnIcon)
         self._btnIcon.setIconSize(QSize(24, 24))
-        self._btnIcon.setCursor(Qt.CursorShape.OpenHandCursor)
         self._btnIcon.setFixedSize(self.iconFixedSize, self.iconFixedSize)
 
         self._btnRemove = RemovalButton(self)
@@ -374,11 +373,12 @@ class SceneStructureItemWidget(QWidget):
         self.layout().addWidget(self._btnIcon, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self._btnName, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        self._btnIcon.installEventFilter(DragEventFilter(self, self.SceneBeatMimeType, self._beatDataFunc,
-                                                         grabbed=self._btnIcon, startedSlot=self.dragStarted.emit,
-                                                         finishedSlot=self.dragStopped.emit))
-
-        self.setAcceptDrops(True)
+        if not self._readOnly:
+            self._btnIcon.setCursor(Qt.CursorShape.OpenHandCursor)
+            self._btnIcon.installEventFilter(DragEventFilter(self, self.SceneBeatMimeType, self._beatDataFunc,
+                                                             grabbed=self._btnIcon, startedSlot=self.dragStarted.emit,
+                                                             finishedSlot=self.dragStopped.emit))
+            self.setAcceptDrops(True)
 
     def isEmotion(self) -> bool:
         return self.beat.type == SceneStructureItemType.EMOTION
@@ -401,7 +401,8 @@ class SceneStructureItemWidget(QWidget):
 
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
-        self._btnRemove.setVisible(True)
+        if not self._readOnly:
+            self._btnRemove.setVisible(True)
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
@@ -489,8 +490,8 @@ class SceneStructureItemWidget(QWidget):
 class SceneStructureBeatWidget(SceneStructureItemWidget):
     emotionChanged = pyqtSignal()
 
-    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
-        super(SceneStructureBeatWidget, self).__init__(novel, scene_structure_item, parent)
+    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None, readOnly: bool = False):
+        super(SceneStructureBeatWidget, self).__init__(novel, scene_structure_item, parent, readOnly)
         self.setFixedWidth(210)
 
         self._outcome = SceneOutcomeSelector(self.beat)
@@ -499,6 +500,7 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
         self._text = QTextEdit()
         decr_font(self._text)
         self._text.setProperty('rounded', True)
+        self._text.setReadOnly(self._readOnly)
         self._text.setFixedHeight(100)
         self._text.setTabChangesFocus(True)
         self._text.setText(self.beat.text)
@@ -611,8 +613,8 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
 
 class SceneStructureEmotionWidget(SceneStructureItemWidget):
 
-    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
-        super(SceneStructureEmotionWidget, self).__init__(novel, scene_structure_item, parent)
+    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None, readOnly: bool = False):
+        super(SceneStructureEmotionWidget, self).__init__(novel, scene_structure_item, parent, readOnly)
 
         self._initStyle()
 
@@ -648,6 +650,7 @@ class SceneStructureTimeline(QWidget):
     def __init__(self, parent=None):
         super(SceneStructureTimeline, self).__init__(parent)
         self._novel: Optional[Novel] = None
+        self._readOnly: bool = False
         sp(self).h_exp().v_exp()
         curved_flow(self, margin=10, spacing=10)
 
@@ -672,13 +675,16 @@ class SceneStructureTimeline(QWidget):
     def setNovel(self, novel: Novel):
         self._novel = novel
 
+    def setReadnOnly(self, readOnly: bool):
+        self._readOnly = readOnly
+
     def clear(self):
         clear_layout(self)
         for wdg in self._beatWidgets:
             gc(wdg)
         self._beatWidgets.clear()
         self._selectorMenu.setOutcomeEnabled(True)
-        self.update()
+        # self.update()
 
     def setSceneType(self, sceneType: SceneType):
         self._sceneType = sceneType
@@ -689,13 +695,26 @@ class SceneStructureTimeline(QWidget):
         self.clear()
 
         self._agenda = agenda
-        for item in agenda.items:
+        self.setStructure(self._agenda.items)
+        # for item in agenda.items:
+        #     self._addBeatWidget(item)
+        # if not agenda.items:
+        #     self.layout().addWidget(self._newPlaceholderWidget(displayText=True))
+        #
+        # self.update()
+        self.setSceneType(sceneType)
+
+    def setStructure(self, items: List[SceneStructureItem]):
+        self.clear()
+        # self._agenda.items.clear()
+        # self._agenda.items.extend(items)
+
+        for item in items:
             self._addBeatWidget(item)
-        if not agenda.items:
+        if not items:
             self.layout().addWidget(self._newPlaceholderWidget(displayText=True))
 
         self.update()
-        # self.setSceneType(sceneType)
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
@@ -743,6 +762,7 @@ class SceneStructureTimeline(QWidget):
                 x_arrow_diff = -10
             else:
                 x_arrow_diff = 10
+            print(f'x {pos.x()} y {y}')
             painter.drawLine(pos.x(), y, pos.x() + x_arrow_diff, y + 10)
             painter.drawLine(pos.x(), y, pos.x() + x_arrow_diff, y - 10)
 
@@ -798,17 +818,18 @@ class SceneStructureTimeline(QWidget):
             clazz = SceneStructureEmotionWidget
         else:
             clazz = SceneStructureBeatWidget
-        widget = clazz(self._novel, item, parent=self)
+        widget = clazz(self._novel, item, parent=self, readOnly=self._readOnly)
         widget.removed.connect(self._beatRemoved)
         if item.type == SceneStructureItemType.OUTCOME:
             self._selectorMenu.setOutcomeEnabled(False)
         widget.dragStarted.connect(partial(self._dragStarted, widget))
         widget.dragStopped.connect(self._dragFinished)
 
-        widget.installEventFilter(DropEventFilter(widget, [SceneStructureItemWidget.SceneBeatMimeType],
-                                                  motionDetection=Qt.Orientation.Horizontal,
-                                                  motionSlot=partial(self._dragMoved, widget),
-                                                  droppedSlot=self._dropped))
+        if not self._readOnly:
+            widget.installEventFilter(DropEventFilter(widget, [SceneStructureItemWidget.SceneBeatMimeType],
+                                                      motionDetection=Qt.Orientation.Horizontal,
+                                                      motionSlot=partial(self._dragMoved, widget),
+                                                      droppedSlot=self._dropped))
 
         return widget
 
@@ -817,6 +838,9 @@ class SceneStructureTimeline(QWidget):
         if displayText:
             parent.btn.setText('Insert beat')
         parent.btn.clicked.connect(partial(self._showBeatMenu, parent))
+
+        if self._readOnly:
+            parent.setHidden(True)
 
         return parent
 
@@ -1094,10 +1118,17 @@ class SceneStructureTemplateSelector(QDialog, Ui_SceneStructuteTemplateSelector)
         self._structure: SceneStructureAgenda = SceneStructureAgenda()
 
         self._timeline = SceneStructureTimeline()
-        self._timeline.setDisabled(True)
+        self._timeline.setReadnOnly(True)
+        # self._timeline.installEventFilter(self)
         self.scrollAreaTimeline.layout().addWidget(self._timeline)
 
         self.buttonGroup.buttonToggled.connect(self._templateToggled)
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        # if event.type() in [QEvent.Type.Enter]:
+        #     return False
+        return True
 
     def display(self) -> List[SceneStructureItem]:
         self.btnScene.setChecked(True)
@@ -1120,7 +1151,8 @@ class SceneStructureTemplateSelector(QDialog, Ui_SceneStructuteTemplateSelector)
         elif self.btnSequel.isChecked():
             self._fillInSequelTemplate()
 
-        self._timeline.setAgenda(self._structure)
+        self._timeline.setStructure(self._structure.items)
+        self._timeline.update()
 
     def _fillInSceneTemplate(self):
         self._structure.items.clear()
