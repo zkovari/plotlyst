@@ -23,7 +23,7 @@ from functools import partial
 from typing import Optional, List, Dict
 
 import qtanim
-from PyQt6.QtCore import Qt, pyqtSignal, QSize, QRectF, QEvent, QPoint, QMimeData, QObject
+from PyQt6.QtCore import Qt, pyqtSignal, QSize, QRectF, QEvent, QPoint, QMimeData, QTimer
 from PyQt6.QtGui import QIcon, QColor, QPainter, QPen, \
     QPainterPath, QPaintEvent, QAction, QResizeEvent, QEnterEvent, QDragEnterEvent
 from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy, QTextEdit, QDialog, QApplication
@@ -762,7 +762,6 @@ class SceneStructureTimeline(QWidget):
                 x_arrow_diff = -10
             else:
                 x_arrow_diff = 10
-            print(f'x {pos.x()} y {y}')
             painter.drawLine(pos.x(), y, pos.x() + x_arrow_diff, y + 10)
             painter.drawLine(pos.x(), y, pos.x() + x_arrow_diff, y - 10)
 
@@ -1119,16 +1118,9 @@ class SceneStructureTemplateSelector(QDialog, Ui_SceneStructuteTemplateSelector)
 
         self._timeline = SceneStructureTimeline()
         self._timeline.setReadnOnly(True)
-        # self._timeline.installEventFilter(self)
         self.scrollAreaTimeline.layout().addWidget(self._timeline)
 
         self.buttonGroup.buttonToggled.connect(self._templateToggled)
-
-    @overrides
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        # if event.type() in [QEvent.Type.Enter]:
-        #     return False
-        return True
 
     def display(self) -> List[SceneStructureItem]:
         self.btnScene.setChecked(True)
@@ -1152,7 +1144,8 @@ class SceneStructureTemplateSelector(QDialog, Ui_SceneStructuteTemplateSelector)
             self._fillInSequelTemplate()
 
         self._timeline.setStructure(self._structure.items)
-        self._timeline.update()
+
+        QTimer.singleShot(10, self._timeline.update)
 
     def _fillInSceneTemplate(self):
         self._structure.items.clear()
