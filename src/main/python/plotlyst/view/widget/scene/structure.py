@@ -30,9 +30,9 @@ from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy, QTex
 from overrides import overrides
 from qtanim import fade_in
 from qthandy import pointy, gc, translucent, bold, clear_layout, decr_font, \
-    margins, spacer, sp, curved_flow, incr_icon, vbox
+    margins, spacer, sp, curved_flow, incr_icon, vbox, vspacer
 from qthandy.filter import OpacityEventFilter, ObjectReferenceMimeData, DragEventFilter, DropEventFilter
-from qtmenu import ScrollableMenuWidget, ActionTooltipDisplayMode, GridMenuWidget, MenuWidget
+from qtmenu import ScrollableMenuWidget, ActionTooltipDisplayMode, MenuWidget, TabularGridMenuWidget
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Scene, SceneStructureItemType, SceneType, \
@@ -248,7 +248,7 @@ class _SceneTypeButton(QPushButton):
         self.setFont(font)
 
 
-class BeatSelectorMenu(GridMenuWidget):
+class BeatSelectorMenu(TabularGridMenuWidget):
     selected = pyqtSignal(SceneStructureItemType)
 
     def __init__(self, parent=None):
@@ -258,39 +258,46 @@ class BeatSelectorMenu(GridMenuWidget):
         self._outcomeEnabled: bool = True
 
         self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
-        self.setSearchEnabled(True)
         apply_white_menu(self)
 
-        self.addSection('Scene beats', 0, 0, icon=IconRegistry.action_scene_icon())
-        self.addSeparator(1, 0, colSpan=2)
-        self._addAction('Action', SceneStructureItemType.ACTION, 2, 0)
-        self._addAction('Hook', SceneStructureItemType.HOOK, 2, 1)
-        self._addAction('Inciting incident', SceneStructureItemType.INCITING_INCIDENT, 3, 0)
-        self._addAction('Mystery', SceneStructureItemType.MYSTERY, 3, 1)
-        self._addAction('Conflict', SceneStructureItemType.CONFLICT, 4, 0)
-        self._addAction('Rising action', SceneStructureItemType.RISING_ACTION, 4, 1)
-        self._addAction('Turn', SceneStructureItemType.TURN, 5, 0)
-        self._addAction('Choice', SceneStructureItemType.CHOICE, 5, 1)
-        self._addAction('Revelation', SceneStructureItemType.REVELATION, 6, 0)
-        self._addAction('Outcome', SceneStructureItemType.OUTCOME, 6, 1)
-        self.addSection('Sequel beats', 7, 0, icon=IconRegistry.reaction_scene_icon())
-        self.addSeparator(8, 0)
-        self._addAction('Reaction', SceneStructureItemType.REACTION, 9, 0)
-        self._addAction('Emotion', SceneStructureItemType.EMOTION, 10, 0)
-        self._addAction('Dilemma', SceneStructureItemType.DILEMMA, 11, 0)
-        self._addAction('Decision', SceneStructureItemType.DECISION, 12, 0)
-        self.addSection('General beats', 7, 1)
-        self.addSeparator(8, 1)
-        self._addAction('Beat', SceneStructureItemType.BEAT, 9, 1)
-        self._addAction('Exposition', SceneStructureItemType.EXPOSITION, 10, 1)
-        self._addAction('Summary', SceneStructureItemType.SUMMARY, 11, 1)
-        self._addAction('Setup', SceneStructureItemType.SETUP, 12, 1)
+        self._tabDrive = self.addTab('Drive', IconRegistry.action_scene_icon())
+        self._tabReaction = self.addTab('Reaction', IconRegistry.reaction_scene_icon())
+        self._tabGeneral = self.addTab('General', IconRegistry.beat_icon())
 
-    def _addAction(self, text: str, beat_type: SceneStructureItemType, row: int, column: int):
+        self.addSection(self._tabDrive, 'Beats that often advance the scene while creating narrative drive', 0, 0)
+        self.addSeparator(self._tabDrive, 1, 0, colSpan=2)
+        self._addAction(self._tabDrive, 'Action', SceneStructureItemType.ACTION, 2, 0)
+        self._addAction(self._tabDrive, 'Hook', SceneStructureItemType.HOOK, 2, 1)
+        self._addAction(self._tabDrive, 'Inciting incident', SceneStructureItemType.INCITING_INCIDENT, 3, 0)
+        self._addAction(self._tabDrive, 'Mystery', SceneStructureItemType.MYSTERY, 3, 1)
+        self._addAction(self._tabDrive, 'Conflict', SceneStructureItemType.CONFLICT, 4, 0)
+        self._addAction(self._tabDrive, 'Rising action', SceneStructureItemType.RISING_ACTION, 4, 1)
+        self._addAction(self._tabDrive, 'Turn', SceneStructureItemType.TURN, 5, 0)
+        self._addAction(self._tabDrive, 'Choice', SceneStructureItemType.CHOICE, 5, 1)
+        self._addAction(self._tabDrive, 'Revelation', SceneStructureItemType.REVELATION, 6, 0)
+        self._addAction(self._tabDrive, 'Outcome', SceneStructureItemType.OUTCOME, 6, 1)
+
+        self.addSection(self._tabReaction, 'Common reaction beats', 0, 0)
+        self.addSeparator(self._tabReaction, 1, 0)
+        self._addAction(self._tabReaction, 'Reaction', SceneStructureItemType.REACTION, 2, 0)
+        self._addAction(self._tabReaction, 'Emotion', SceneStructureItemType.EMOTION, 3, 0)
+        self._addAction(self._tabReaction, 'Dilemma', SceneStructureItemType.DILEMMA, 4, 0)
+        self._addAction(self._tabReaction, 'Decision', SceneStructureItemType.DECISION, 5, 0)
+        self.addWidget(self._tabReaction, vspacer(), 6, 0)
+
+        self.addSection(self._tabGeneral, 'General beats', 0, 0)
+        self.addSeparator(self._tabGeneral, 1, 0)
+        self._addAction(self._tabGeneral, 'Beat', SceneStructureItemType.BEAT, 2, 0)
+        self._addAction(self._tabGeneral, 'Exposition', SceneStructureItemType.EXPOSITION, 3, 0)
+        self._addAction(self._tabGeneral, 'Summary', SceneStructureItemType.SUMMARY, 4, 0)
+        self._addAction(self._tabGeneral, 'Setup', SceneStructureItemType.SETUP, 5, 0)
+        self.addWidget(self._tabGeneral, vspacer(), 6, 0)
+
+    def _addAction(self, tabWidget: QWidget, text: str, beat_type: SceneStructureItemType, row: int, column: int):
         description = BeatDescriptions[beat_type]
         action_ = action(text, beat_icon(beat_type), slot=lambda: self.selected.emit(beat_type), tooltip=description)
         self._actions[beat_type] = action_
-        self.addAction(action_, row, column)
+        self.addAction(tabWidget, action_, row, column)
 
     def setOutcomeEnabled(self, enabled: bool):
         self._outcomeEnabled = enabled
@@ -912,55 +919,6 @@ class SceneStructureTimeline(QWidget):
         self._dragged = None
         self._wasDropped = False
         self.update()
-
-
-# class _SceneStructureTimeline(QWidget):
-#     emotionChanged = pyqtSignal()
-#     timelineChanged = pyqtSignal()
-#
-#     def __init__(self, parent=None):
-#         super(_SceneStructureTimeline, self).__init__(parent)
-#         self._topMargin = 20
-#         self._margin = 80
-#         self._lineDistance = 170
-#         self._arcWidth = 80
-#         self._beatWidth: int = 180
-#         self._emotionSize: int = 32
-#         self._penSize: int = 10
-#         self._path: Optional[QPainterPath] = None
-#
-#         self._dragPlaceholder: Optional[SceneStructureBeatWidget] = None
-#
-#         self.setMouseTracking(True)
-#
-#
-#     @overrides
-#     def mouseMoveEvent(self, event: QMouseEvent) -> None:
-#         if not self._intersects(event.pos()):
-#             if self._placeholder.isVisible():
-#                 self._placeholder.setVisible(False)
-#                 self.update()
-#             return
-#
-#         self._placeholder.setVisible(True)
-#         vertical_index = self._verticalTimelineIndex(event.pos())
-#         self._placeholder.setGeometry(event.pos().x() - self._placeholder.width() / 2,
-#                                       vertical_index * self._lineDistance + self._lineDistance / 2 + self._penSize,
-#                                       self._placeholder.width(),
-#                                       self._placeholder.height())
-#         self.update()
-#
-#     def _initDragPlaceholder(self, widget: SceneStructureBeatWidget):
-#         self._dragPlaceholder = SceneStructureBeatWidget(self.novel, widget.sceneStructureItem(), parent=self)
-#         self._dragPlaceholder.setDisabled(True)
-#         translucent(self._dragPlaceholder)
-#         self._dragPlaceholder.setHidden(True)
-#
-#     def _resetDragPlaceholder(self):
-#         if self._dragPlaceholder is not None:
-#             self._dragPlaceholder.setHidden(True)
-#             gc(self._dragPlaceholder)
-#             self._dragPlaceholder = None
 
 
 class BeatListItemWidget(ListItemWidget):
