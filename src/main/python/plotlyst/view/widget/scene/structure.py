@@ -366,8 +366,7 @@ class SceneStructureItemWidget(QWidget):
 
         self._btnIcon.installEventFilter(DragEventFilter(self, self.SceneBeatMimeType, self._beatDataFunc,
                                                          grabbed=self._btnIcon, startedSlot=self.dragStarted.emit,
-                                                         finishedSlot=self.dragStopped.emit,
-                                                         hideTarget=True))
+                                                         finishedSlot=self.dragStopped.emit))
 
         self.setAcceptDrops(True)
 
@@ -578,12 +577,6 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
         self._btnName.setText(name.lower().capitalize().replace('_', ' '))
         self._btnIcon.setIcon(beat_icon(self.beat.type, resolved=self.beat.outcome == SceneOutcome.RESOLUTION,
                                         trade_off=self.beat.outcome == SceneOutcome.TRADE_OFF))
-
-        # self._text.setStyleSheet(f'''
-        #             border: 2px solid lightgrey;
-        #             border-radius: 6px;
-        #             padding: 4px;
-        #             ''')
 
     def _textChanged(self):
         self.beat.text = self._text.toPlainText()
@@ -843,6 +836,7 @@ class SceneStructureTimeline(QWidget):
     def _dragStarted(self, widget: SceneStructureBeatWidget):
         self._dragPlaceholder = widget.copy()
         self._dragged = widget
+        self._dragged.setHidden(True)
         translucent(self._dragPlaceholder)
         self._dragPlaceholder.setHidden(True)
         self._dragPlaceholder.setAcceptDrops(True)
@@ -910,6 +904,8 @@ class SceneStructureTimeline(QWidget):
             self._dragged.setHidden(True)
             self.layout().removeWidget(self._dragged)
             gc(self._dragged)
+        else:
+            self._dragged.setVisible(True)
 
         self._dragPlaceholder = None
         self._dragPlaceholderIndex = -1
