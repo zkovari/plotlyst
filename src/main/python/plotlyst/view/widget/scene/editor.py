@@ -438,7 +438,7 @@ class SceneElementWidget(QWidget):
         self._iconActive.setIcon(IconRegistry.from_name(icon, colorActive))
         self._iconIdle.setIcon(IconRegistry.from_name(icon, 'lightgrey'))
 
-    def setText(self, text: str):
+    def setTitle(self, text: str):
         self._titleActive.setText(text)
         self._titleIdle.setText(text)
 
@@ -447,7 +447,6 @@ class SceneElementWidget(QWidget):
 
         self._pageIdle.setDisabled(True)
         self._stackWidget.setCurrentWidget(self._pageEditor)
-        self._btnClose.setVisible(True)
 
     def reset(self):
         self._btnClose.setHidden(True)
@@ -459,6 +458,7 @@ class SceneElementWidget(QWidget):
     def _activate(self):
         element = StoryElement(self._type)
         self.setElement(element)
+        self._btnClose.setVisible(True)
 
         qtanim.glow(self._iconActive, duration=150, color=self._colorActive)
         self._elementCreated(element)
@@ -489,11 +489,21 @@ class TextBasedSceneElementWidget(SceneElementWidget):
         self._textEditor.verticalScrollBar().setHidden(True)
         self._textEditor.setProperty('rounded', True)
         self._textEditor.setProperty('white-bg', True)
+        self._textEditor.textChanged.connect(self._textChanged)
 
         self._pageEditor.layout().addWidget(self._textEditor)
 
     def setPlaceholderText(self, text: str):
         self._textEditor.setPlaceholderText(text)
+
+    @overrides
+    def setElement(self, element: StoryElement):
+        super().setElement(element)
+        self._textEditor.setText(element.text)
+
+    def _textChanged(self):
+        if self._element:
+            self._element.text = self._textEditor.toPlainText()
 
     @overrides
     def _activate(self):
@@ -648,11 +658,11 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         # self._themeElement.setIcon('mdi.butterfly-outline', '#9d4edd')
 
         self._outcomeElement = StorylineElementEditor(StoryElementType.Outcome)
-        self._outcomeElement.setText('Outcome')
+        self._outcomeElement.setTitle('Outcome')
         self._outcomeElement.setIcon('fa5s.bomb', '#f4442e')
 
         self._consequencesElement = StorylineElementEditor(StoryElementType.Consequences)
-        self._consequencesElement.setText('Consequences')
+        self._consequencesElement.setTitle('Consequences')
         self._consequencesElement.setIcon('mdi.ray-start-arrow')
 
         self._wdgElementsTopRow.layout().addWidget(self._plotElement)
@@ -687,7 +697,7 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
 
     def __newPlotElementEditor(self) -> PlotSceneElementEditor:
         elementEditor = PlotSceneElementEditor(self._novel)
-        elementEditor.setText('Storyline')
+        elementEditor.setTitle('Storyline')
         elementEditor.setIcon('fa5s.theater-masks')
         elementEditor.setPlaceholderText('Describe how this scene is related to the selected storyline')
         elementEditor.plotSelected.connect(partial(self._plotSelected, elementEditor))
