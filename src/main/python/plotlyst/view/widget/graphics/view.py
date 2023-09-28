@@ -45,7 +45,7 @@ class BaseGraphicsView(QGraphicsView):
         self._moveOriginX = 0
         self._moveOriginY = 0
         self._scaledFactor: float = 1.0
-        self.setTransformationAnchor(QGraphicsView.ViewportAnchor.NoAnchor)
+        self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
         self.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
         self.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
