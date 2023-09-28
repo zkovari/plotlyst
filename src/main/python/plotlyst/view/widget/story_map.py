@@ -23,6 +23,7 @@ from typing import Optional
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtGui import QShowEvent
+from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
@@ -152,6 +153,9 @@ class EventsMindMapView(NetworkGraphicsView):
             item.setText(text)
 
         popup = TextLineEditorPopup(item.text(), item.textRect(), parent=self)
+        font = QApplication.font()
+        font.setPointSize(max(int(item.fontSize() * self._scaledFactor), font.pointSize()))
+        popup.setFont(font)
         view_pos = self.mapFromScene(item.textSceneRect().topLeft())
         popup.exec(self.mapToGlobal(view_pos))
 

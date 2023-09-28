@@ -23,7 +23,7 @@ from functools import partial
 from typing import Optional, Any
 
 from PyQt6.QtCore import Qt, pyqtSignal, QRect
-from PyQt6.QtGui import QPainter, QPen, QColor, QIcon, QPaintEvent, QKeySequence, QShowEvent
+from PyQt6.QtGui import QPainter, QPen, QColor, QIcon, QPaintEvent, QKeySequence, QShowEvent, QFont
 from PyQt6.QtWidgets import QFrame, \
     QToolButton, QWidget, \
     QAbstractButton, QSlider, QButtonGroup, QPushButton, QLabel
@@ -175,6 +175,10 @@ class TextLineEditorPopup(MenuWidget):
     @overrides
     def showEvent(self, QShowEvent):
         self._lineEdit.setFocus()
+
+    @overrides
+    def setFont(self, font: QFont):
+        self._lineEdit.setFont(font)
 
     def text(self) -> str:
         return self._lineEdit.text()
