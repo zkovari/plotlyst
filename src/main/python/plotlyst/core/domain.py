@@ -816,6 +816,7 @@ class SceneStructureAgenda(CharacterBased):
     outcome: Optional[SceneOutcome] = None
     beginning_emotion: int = NEUTRAL
     ending_emotion: int = NEUTRAL
+    story_elements: List['StoryElement'] = field(default_factory=list)
 
     def __post_init__(self):
         self._character: Optional[Character] = None
@@ -926,6 +927,19 @@ scene_purposes: Dict[ScenePurposeType, ScenePurpose] = {
 }
 
 
+class StoryElementType(Enum):
+    Plot = 'plot'
+    Outcome = 'outcome'
+    Consequences = 'consequences'
+
+
+@dataclass
+class StoryElement:
+    type: StoryElementType
+    ref: Optional[uuid.UUID] = None
+    text: str = ''
+
+
 @dataclass
 class Scene:
     title: str
@@ -948,6 +962,7 @@ class Scene:
     manuscript: Optional['Document'] = None
     drive: SceneDrive = field(default_factory=SceneDrive)
     purpose: Optional[ScenePurposeType] = None
+    story_elements: List[StoryElement] = field(default_factory=list)
 
     def beat(self, novel: 'Novel') -> Optional[StoryBeat]:
         structure = novel.active_story_structure
