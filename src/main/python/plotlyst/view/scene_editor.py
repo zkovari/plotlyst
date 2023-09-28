@@ -148,7 +148,7 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgSceneStructure.setUnsetCharacterSlot(self._pov_not_selected_notification)
 
         self._update_view(scene)
-        self.ui.tabWidget.setCurrentWidget(self.ui.tabStructure)
+        self.ui.tabWidget.setCurrentWidget(self.ui.tabStorylines)
         self.ui.tabWidget.currentChanged.connect(self._page_toggled)
 
         self.repo = RepositoryPersistenceManager.instance()
