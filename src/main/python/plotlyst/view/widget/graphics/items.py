@@ -352,6 +352,24 @@ class ConnectorItem(QGraphicsPathItem):
             self._connector.color = color.name()
             self.networkScene().connectorChangedEvent(self)
 
+    @overrides
+    def shape(self) -> QPainterPath:
+        if self._line:
+            rect = self.path().boundingRect()
+            if rect.width() < 10:
+                rect.moveTopLeft(QPointF(rect.x() - 15, rect.y()))
+                rect.setWidth(30)
+            elif rect.height() < 10:
+                rect.moveTopLeft(QPointF(rect.x(), rect.y() - 15))
+                rect.setHeight(30)
+            else:
+                return super().shape()
+
+            path = QPainterPath()
+            path.addRect(rect)
+            return path
+        return super().shape()
+
     def rearrange(self):
         self.setPos(self._source.sceneBoundingRect().center())
 
