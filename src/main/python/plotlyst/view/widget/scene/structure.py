@@ -1103,7 +1103,11 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
     def _showTemplates(self):
         selector = SceneStructureTemplateSelector()
-        selector.display()
+        structure = selector.display()
+        if structure:
+            self.scene.agendas[0].items.clear()
+            self.scene.agendas[0].items.extend(structure)
+            self.timeline.setStructure(structure)
 
     def _reset(self):
         pass
