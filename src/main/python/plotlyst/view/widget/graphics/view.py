@@ -21,10 +21,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Optional
 
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import Qt, QTimer, QEvent
 from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QColor, QIcon, QResizeEvent
 from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QFrame, \
-    QToolButton, QApplication, QWidget
+    QToolButton, QApplication, QWidget, QPinchGesture
 from overrides import overrides
 from qthandy import sp, incr_icon, vbox
 
@@ -79,6 +79,16 @@ class BaseGraphicsView(QGraphicsView):
         if self.dragMode() != QGraphicsView.DragMode.RubberBandDrag:
             self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
         super().mouseReleaseEvent(event)
+
+    @overrides
+    def event(self, event):
+        if event.type() == QEvent.Type.Gesture:
+            pinch: QPinchGesture = event
+            if pinch.state() == Qt.GestureState.GestureUpdated:
+                scaleFactor = pinch.scaleFactor()
+                self._scale(scaleFactor)
+            return True
+        return super().event(event)
 
     @overrides
     def wheelEvent(self, event: QWheelEvent) -> None:
