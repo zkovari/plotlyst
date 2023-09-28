@@ -715,7 +715,7 @@ class SceneType(Enum):
 class SceneStructureItemType(Enum):
     ACTION = 0
     CONFLICT = 1
-    OUTCOME = 2
+    CLIMAX = 2
     REACTION = 3
     DILEMMA = 4
     DECISION = 5
@@ -734,6 +734,7 @@ class SceneStructureItemType(Enum):
     SUMMARY = 18
     PROGRESS = 19
     SETBACK = 20
+    RESOLUTION = 21
 
 
 class SceneOutcome(Enum):

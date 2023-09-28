@@ -51,7 +51,7 @@ from src.main.python.plotlyst.view.widget.scenes import SceneOutcomeSelector
 BeatDescriptions = {SceneStructureItemType.BEAT: 'New action, reaction, thought, or emotion',
                     SceneStructureItemType.ACTION: 'Character takes an action to achieve their goal',
                     SceneStructureItemType.CONFLICT: "Conflict hinders the character's goals",
-                    SceneStructureItemType.OUTCOME: 'Outcome of the scene, typically ending with disaster',
+                    SceneStructureItemType.CLIMAX: 'Outcome of the scene, typically ending with disaster',
                     SceneStructureItemType.REACTION: "Initial reaction to a prior scene's outcome",
                     SceneStructureItemType.EMOTION: "The character's emotional state",
                     SceneStructureItemType.DILEMMA: 'Dilemma throughout the scene. What to do next?',
@@ -69,6 +69,7 @@ BeatDescriptions = {SceneStructureItemType.BEAT: 'New action, reaction, thought,
                     SceneStructureItemType.MYSTERY: "An unanswered question raises reader's curiosity",
                     SceneStructureItemType.REVELATION: 'Key information is revealed or discovered',
                     SceneStructureItemType.SETUP: 'Event that sets up a later payoff. May put the scene in motion',
+                    SceneStructureItemType.RESOLUTION: "Provides closure. May reinforce the climax's outcome or its consequences"
                     }
 
 
@@ -77,7 +78,7 @@ def beat_icon(beat_type: SceneStructureItemType, resolved: bool = False, trade_o
         return IconRegistry.goal_icon()
     elif beat_type == SceneStructureItemType.CONFLICT:
         return IconRegistry.conflict_icon()
-    elif beat_type == SceneStructureItemType.OUTCOME:
+    elif beat_type == SceneStructureItemType.CLIMAX:
         return IconRegistry.action_scene_icon(resolved, trade_off)
     elif beat_type == SceneStructureItemType.REACTION:
         return IconRegistry.reaction_icon()
@@ -115,12 +116,10 @@ def beat_icon(beat_type: SceneStructureItemType, resolved: bool = False, trade_o
         return IconRegistry.from_name('fa5s.binoculars', '#588157')
     elif beat_type == SceneStructureItemType.SETUP:
         return IconRegistry.from_name('mdi.motion', '#ddbea9')
+    elif beat_type == SceneStructureItemType.RESOLUTION:
+        return IconRegistry.from_name('fa5s.water', '#7192be')
     else:
         return IconRegistry.circle_icon()
-
-
-HAPPENING_BEATS = (SceneStructureItemType.BEAT, SceneStructureItemType.EXPOSITION, SceneStructureItemType.SETUP,
-                   SceneStructureItemType.HOOK, SceneStructureItemType.MYSTERY, SceneStructureItemType.EXPOSITION)
 
 
 @dataclass
@@ -278,7 +277,7 @@ class BeatSelectorMenu(TabularGridMenuWidget):
         self._addAction(self._tabDrive, 'Turn', SceneStructureItemType.TURN, 5, 0)
         self._addAction(self._tabDrive, 'Choice', SceneStructureItemType.CHOICE, 5, 1)
         self._addAction(self._tabDrive, 'Revelation', SceneStructureItemType.REVELATION, 6, 0)
-        self._addAction(self._tabDrive, 'Outcome', SceneStructureItemType.OUTCOME, 6, 1)
+        self._addAction(self._tabDrive, 'Outcome', SceneStructureItemType.CLIMAX, 6, 1)
 
         self.addSection(self._tabReaction, 'Common reaction beats', 0, 0)
         self.addSeparator(self._tabReaction, 1, 0)
@@ -294,6 +293,7 @@ class BeatSelectorMenu(TabularGridMenuWidget):
         self._addAction(self._tabGeneral, 'Exposition', SceneStructureItemType.EXPOSITION, 3, 0)
         self._addAction(self._tabGeneral, 'Summary', SceneStructureItemType.SUMMARY, 4, 0)
         self._addAction(self._tabGeneral, 'Setup', SceneStructureItemType.SETUP, 5, 0)
+        self._addAction(self._tabGeneral, 'Resolution', SceneStructureItemType.RESOLUTION, 1, 1)
         self.addWidget(self._tabGeneral, vspacer(), 6, 0)
 
     def _addAction(self, tabWidget: QWidget, text: str, beat_type: SceneStructureItemType, row: int, column: int):
@@ -304,21 +304,21 @@ class BeatSelectorMenu(TabularGridMenuWidget):
 
     def setOutcomeEnabled(self, enabled: bool):
         self._outcomeEnabled = enabled
-        self._actions[SceneStructureItemType.OUTCOME].setEnabled(enabled)
+        self._actions[SceneStructureItemType.CLIMAX].setEnabled(enabled)
 
     def toggleSceneType(self, sceneType: SceneType):
         for action_ in self._actions.values():
             action_.setEnabled(True)
-        self._actions[SceneStructureItemType.OUTCOME].setEnabled(self._outcomeEnabled)
+        self._actions[SceneStructureItemType.CLIMAX].setEnabled(self._outcomeEnabled)
         if sceneType == SceneType.REACTION:
             for type_ in [SceneStructureItemType.ACTION, SceneStructureItemType.HOOK,
                           SceneStructureItemType.RISING_ACTION, SceneStructureItemType.INCITING_INCIDENT,
-                          SceneStructureItemType.CONFLICT, SceneStructureItemType.OUTCOME, SceneStructureItemType.TURN]:
+                          SceneStructureItemType.CONFLICT, SceneStructureItemType.CLIMAX, SceneStructureItemType.TURN]:
                 self._actions[type_].setEnabled(False)
         elif sceneType == SceneType.HAPPENING:
             for type_ in [SceneStructureItemType.ACTION, SceneStructureItemType.HOOK,
                           SceneStructureItemType.RISING_ACTION, SceneStructureItemType.INCITING_INCIDENT,
-                          SceneStructureItemType.CONFLICT, SceneStructureItemType.OUTCOME, SceneStructureItemType.TURN,
+                          SceneStructureItemType.CONFLICT, SceneStructureItemType.CLIMAX, SceneStructureItemType.TURN,
                           SceneStructureItemType.CHOICE, SceneStructureItemType.REACTION,
                           SceneStructureItemType.DILEMMA, SceneStructureItemType.DECISION]:
                 self._actions[type_].setEnabled(False)
@@ -438,7 +438,7 @@ class SceneStructureItemWidget(QWidget):
             return 'darkBlue'
         elif self.beat.type == SceneStructureItemType.CONFLICT:
             return '#f3a712'
-        elif self.beat.type == SceneStructureItemType.OUTCOME:
+        elif self.beat.type == SceneStructureItemType.CLIMAX:
             if self.beat.outcome == SceneOutcome.TRADE_OFF:
                 return '#832161'
             elif self.beat.outcome == SceneOutcome.RESOLUTION:
@@ -477,6 +477,8 @@ class SceneStructureItemWidget(QWidget):
             return '#ba6f4d'
         elif self.beat.type == SceneStructureItemType.SETUP:
             return '#ddbea9'
+        elif self.beat.type == SceneStructureItemType.RESOLUTION:
+            return '#7192be'
         else:
             return '#343a40'
 
@@ -555,7 +557,7 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
     def swap(self, beatType: SceneStructureItemType):
         if self.beat.type != beatType:
             self.beat.type = beatType
-            if self.beat.type == SceneStructureItemType.OUTCOME:
+            if self.beat.type == SceneStructureItemType.CLIMAX:
                 if self.beat.outcome is None:
                     self.beat.outcome = SceneOutcome.DISASTER
                 self._outcome.refresh()
@@ -566,7 +568,7 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
     def _initStyle(self):
         super(SceneStructureBeatWidget, self)._initStyle()
 
-        self._outcome.setVisible(self.beat.type == SceneStructureItemType.OUTCOME)
+        self._outcome.setVisible(self.beat.type == SceneStructureItemType.CLIMAX)
         if self.isEmotion():
             desc = "How is the character's emotion shown?"
         else:
@@ -577,7 +579,7 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
         self._btnIcon.setToolTip(desc)
 
         self._text.setHidden(self.isEmotion())
-        if self.beat.type == SceneStructureItemType.OUTCOME:
+        if self.beat.type == SceneStructureItemType.CLIMAX:
             if self.beat.outcome is None:
                 self.beat.outcome = SceneOutcome.DISASTER
             name = SceneOutcome.to_str(self.beat.outcome)
@@ -767,7 +769,7 @@ class SceneStructureTimeline(QWidget):
 
     def _addBeat(self, beatType: SceneStructureItemType):
         item = SceneStructureItem(beatType)
-        if beatType == SceneStructureItemType.OUTCOME:
+        if beatType == SceneStructureItemType.CLIMAX:
             item.outcome = SceneOutcome.DISASTER
         self._agenda.items.append(item)
         self._addBeatWidget(item)
@@ -819,7 +821,7 @@ class SceneStructureTimeline(QWidget):
             clazz = SceneStructureBeatWidget
         widget = clazz(self._novel, item, parent=self, readOnly=self._readOnly)
         widget.removed.connect(self._beatRemoved)
-        if item.type == SceneStructureItemType.OUTCOME:
+        if item.type == SceneStructureItemType.CLIMAX:
             self._selectorMenu.setOutcomeEnabled(False)
         widget.dragStarted.connect(partial(self._dragStarted, widget))
         widget.dragStopped.connect(self._dragFinished)
@@ -851,7 +853,7 @@ class SceneStructureTimeline(QWidget):
         i = self.layout().indexOf(wdg)
         self._agenda.items.remove(wdg.beat)
         self._beatWidgets.remove(wdg)
-        if wdg.beat.type == SceneStructureItemType.OUTCOME:
+        if wdg.beat.type == SceneStructureItemType.CLIMAX:
             self._selectorMenu.setOutcomeEnabled(True)
         placeholder_prev = self.layout().takeAt(i - 1).widget()
         gc(placeholder_prev)
@@ -1156,7 +1158,7 @@ class SceneStructureTemplateSelector(QDialog, Ui_SceneStructuteTemplateSelector)
         self._structure.items.extend([
             SceneStructureItem(SceneStructureItemType.ACTION),
             SceneStructureItem(SceneStructureItemType.CONFLICT),
-            SceneStructureItem(SceneStructureItemType.OUTCOME)
+            SceneStructureItem(SceneStructureItemType.CLIMAX)
         ])
 
         self.textBrowser.setText('Scene template')
