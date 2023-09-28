@@ -69,7 +69,8 @@ BeatDescriptions = {SceneStructureItemType.BEAT: 'New action, reaction, thought,
                     SceneStructureItemType.MYSTERY: "An unanswered question raises reader's curiosity",
                     SceneStructureItemType.REVELATION: 'Key information is revealed or discovered',
                     SceneStructureItemType.SETUP: 'Event that sets up a later payoff. May put the scene in motion',
-                    SceneStructureItemType.RESOLUTION: "Provides closure. May reinforce the climax's outcome or its consequences"
+                    SceneStructureItemType.RESOLUTION: "Provides closure. May reinforce the climax's outcome or its consequences",
+                    SceneStructureItemType.BUILDUP: "Escalates tension or anticipation leading toward a climactic moment"
                     }
 
 
@@ -118,6 +119,8 @@ def beat_icon(beat_type: SceneStructureItemType, resolved: bool = False, trade_o
         return IconRegistry.from_name('mdi.motion', '#ddbea9')
     elif beat_type == SceneStructureItemType.RESOLUTION:
         return IconRegistry.from_name('fa5s.water', '#7192be')
+    elif beat_type == SceneStructureItemType.BUILDUP:
+        return IconRegistry.from_name('mdi6.progress-upload', '#e76f51')
     else:
         return IconRegistry.circle_icon()
 
@@ -274,10 +277,11 @@ class BeatSelectorMenu(TabularGridMenuWidget):
         self._addAction(self._tabDrive, 'Mystery', SceneStructureItemType.MYSTERY, 3, 1)
         self._addAction(self._tabDrive, 'Conflict', SceneStructureItemType.CONFLICT, 4, 0)
         self._addAction(self._tabDrive, 'Rising action', SceneStructureItemType.RISING_ACTION, 4, 1)
-        self._addAction(self._tabDrive, 'Turn', SceneStructureItemType.TURN, 5, 0)
-        self._addAction(self._tabDrive, 'Choice', SceneStructureItemType.CHOICE, 5, 1)
+        self._addAction(self._tabDrive, 'Build-up', SceneStructureItemType.BUILDUP, 5, 0)
+        self._addAction(self._tabDrive, 'Turn', SceneStructureItemType.TURN, 5, 1)
         self._addAction(self._tabDrive, 'Revelation', SceneStructureItemType.REVELATION, 6, 0)
-        self._addAction(self._tabDrive, 'Outcome', SceneStructureItemType.CLIMAX, 6, 1)
+        self._addAction(self._tabDrive, 'Choice', SceneStructureItemType.CHOICE, 6, 1)
+        self._addAction(self._tabDrive, 'Outcome', SceneStructureItemType.CLIMAX, 7, 0)
 
         self.addSection(self._tabReaction, 'Common reaction beats', 0, 0)
         self.addSeparator(self._tabReaction, 1, 0)
@@ -293,7 +297,7 @@ class BeatSelectorMenu(TabularGridMenuWidget):
         self._addAction(self._tabGeneral, 'Exposition', SceneStructureItemType.EXPOSITION, 3, 0)
         self._addAction(self._tabGeneral, 'Summary', SceneStructureItemType.SUMMARY, 4, 0)
         self._addAction(self._tabGeneral, 'Setup', SceneStructureItemType.SETUP, 5, 0)
-        self._addAction(self._tabGeneral, 'Resolution', SceneStructureItemType.RESOLUTION, 1, 1)
+        self._addAction(self._tabGeneral, 'Resolution', SceneStructureItemType.RESOLUTION, 2, 1)
         self.addWidget(self._tabGeneral, vspacer(), 6, 0)
 
     def _addAction(self, tabWidget: QWidget, text: str, beat_type: SceneStructureItemType, row: int, column: int):
@@ -479,6 +483,8 @@ class SceneStructureItemWidget(QWidget):
             return '#ddbea9'
         elif self.beat.type == SceneStructureItemType.RESOLUTION:
             return '#7192be'
+        elif self.beat.type == SceneStructureItemType.BUILDUP:
+            return '#e76f51'
         else:
             return '#343a40'
 

@@ -735,6 +735,7 @@ class SceneStructureItemType(Enum):
     PROGRESS = 19
     SETBACK = 20
     RESOLUTION = 21
+    BUILDUP = 22
 
 
 class SceneOutcome(Enum):
