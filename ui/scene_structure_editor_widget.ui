@@ -49,6 +49,27 @@
         <number>0</number>
        </property>
        <item>
+        <widget class="QWidget" name="wdgTimelineHeader" native="true">
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="leftMargin">
+           <number>3</number>
+          </property>
+          <property name="topMargin">
+           <number>3</number>
+          </property>
+          <property name="rightMargin">
+           <number>3</number>
+          </property>
+          <property name="bottomMargin">
+           <number>3</number>
+          </property>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <widget class="QScrollArea" name="scrollArea">
          <property name="frameShape">
           <enum>QFrame::NoFrame</enum>
@@ -65,7 +86,7 @@
             <x>0</x>
             <y>0</y>
             <width>773</width>
-            <height>507</height>
+            <height>501</height>
            </rect>
           </property>
           <property name="sizePolicy">
