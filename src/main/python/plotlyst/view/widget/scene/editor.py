@@ -576,6 +576,11 @@ class PlotSceneElementEditor(StorylineElementEditor):
     def setElement(self, element: StoryElement):
         super().setElement(element)
 
+        if element.ref:
+            plot_ref = next((x for x in self._scene.plot_values if x.plot.id == element.ref), None)
+            if plot_ref:
+                self._setPlotRef(plot_ref)
+
     @overrides
     def _deactivate(self):
         super()._deactivate()
@@ -588,14 +593,24 @@ class PlotSceneElementEditor(StorylineElementEditor):
             self._btnPlotSelector.menuWidget().exec()
 
     def _plotSelected(self, plot: Plot):
-        self.setIcon(plot.icon, plot.icon_color)
+        plotRef = ScenePlotReference(plot)
+        self._scene.plot_values.append(plotRef)
+        self._element.ref = plotRef.plot.id
+
+        self._setPlotRef(plotRef)
+
+        self.plotSelected.emit()
+
+    def _setPlotRef(self, plotRef: ScenePlotReference):
+        self._plotRef = plotRef
+        self.setIcon(self._plotRef.plot.icon, self._plotRef.plot.icon_color)
         font = self._btnPlotSelector.font()
         font.setPointSize(self._titleActive.font().pointSize())
         self._btnPlotSelector.setFont(font)
+        self._btnPlotSelector.setPlot(plotRef.plot)
 
         self._wdgValues.setVisible(True)
 
-        self._plotRef = ScenePlotReference(plot)
         self._plotValueEditor = ScenePlotValueEditor(self._plotRef)
         self._plotValueMenu.clear()
         self._plotValueMenu.addWidget(self._plotValueEditor)
@@ -604,9 +619,6 @@ class PlotSceneElementEditor(StorylineElementEditor):
         self._plotValueEditor.charged.connect(self._plotValueDisplay.updateValue)
 
         self._wdgValues.layout().insertWidget(0, self._plotValueDisplay)
-        self._scene.plot_values.append(self._plotRef)
-
-        self.plotSelected.emit()
 
 
 class AbstractSceneElementsEditor(QWidget):
