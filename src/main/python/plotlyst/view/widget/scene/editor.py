@@ -618,6 +618,12 @@ class PlotSceneElementEditor(StorylineElementEditor):
         self._plotValueDisplay = PlotValuesDisplay(self._plotRef)
         self._plotValueEditor.charged.connect(self._plotValueDisplay.updateValue)
 
+        for value in plotRef.data.values:
+            plot_value = value.plot_value(self._plotRef.plot)
+            if plot_value:
+                self._plotValueDisplay.updateValue(plot_value, value)
+
+
         self._wdgValues.layout().insertWidget(0, self._plotValueDisplay)
 
 
