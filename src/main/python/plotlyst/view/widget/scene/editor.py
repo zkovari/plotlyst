@@ -413,6 +413,9 @@ class SceneElementWidget(QWidget):
 
         self.reset()
 
+    def element(self) -> Optional[StoryElement]:
+        return self._element
+
     @overrides
     def eventFilter(self, watched: 'QObject', event: 'QEvent') -> bool:
         if event.type() == QEvent.Type.MouseButtonRelease:
@@ -559,7 +562,6 @@ class PlotSceneElementEditor(StorylineElementEditor):
         self._wdgValues = QWidget()
         self._wdgValues.setHidden(True)
         vbox(self._wdgValues)
-        pointy(self._wdgValues)
         self._btnEditValues = QPushButton('Edit values')
         self._btnEditValues.installEventFilter(OpacityEventFilter(self._btnEditValues, enterOpacity=0.7))
         self._btnEditValues.installEventFilter(ButtonPressResizeEventFilter(self._btnEditValues))
@@ -628,7 +630,7 @@ class PlotSceneElementEditor(StorylineElementEditor):
             if plot_value:
                 self._plotValueDisplay.updateValue(plot_value, value)
 
-        self._wdgValues.layout().insertWidget(0, self._plotValueDisplay)
+        self._wdgValues.layout().addWidget(self._plotValueDisplay)
 
 
 class OutcomeSceneElementEditor(StorylineElementEditor):
@@ -767,6 +769,10 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
 
         for i, wdg in enumerate(self._plotElements):
             self._wdgElementsTopRow.layout().insertWidget(i + 2, wdg)
+
+        if self._plotElements[-1].element().ref:
+            insert_after(self._wdgElementsTopRow, self._wdgAddNewPlotParent, reference=self._plotElements[-1])
+        self._wdgAddNewPlotParent.setVisible(True)
 
     def _plotSelected(self, plotElement: PlotSceneElementEditor):
         insert_after(self._wdgElementsTopRow, self._wdgAddNewPlotParent, reference=plotElement)
