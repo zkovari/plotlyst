@@ -72,7 +72,7 @@ from src.main.python.plotlyst.view.widget.labels import SelectionItemLabel, Scen
 class SceneOutcomeSelector(QWidget):
     selected = pyqtSignal(SceneOutcome)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, autoSelect: bool = True):
         super().__init__(parent)
         self._outcome = SceneOutcome.DISASTER
         hbox(self)
@@ -87,17 +87,24 @@ class SceneOutcomeSelector(QWidget):
         self._initStyle(self.btnResolution, '#CDFAEC')
 
         self.btnGroupOutcome = QButtonGroup()
-        self.btnGroupOutcome.setExclusive(True)
-        self.btnGroupOutcome.addButton(self.btnDisaster)
-        self.btnGroupOutcome.addButton(self.btnTradeOff)
-        self.btnGroupOutcome.addButton(self.btnResolution)
-        self.btnDisaster.setChecked(True)
+        self._initButtonGroup()
+        if autoSelect:
+            self.btnDisaster.setChecked(True)
 
         self.layout().addWidget(self.btnDisaster)
         self.layout().addWidget(self.btnTradeOff)
         self.layout().addWidget(self.btnResolution)
 
-        self.btnGroupOutcome.buttonClicked.connect(self._clicked)
+    def reset(self):
+        btn = self.btnGroupOutcome.checkedButton()
+        if btn:
+            self.btnGroupOutcome.removeButton(self.btnDisaster)
+            self.btnGroupOutcome.removeButton(self.btnResolution)
+            self.btnGroupOutcome.removeButton(self.btnTradeOff)
+            btn.setChecked(False)
+
+            self.btnGroupOutcome = QButtonGroup()
+            self._initButtonGroup()
 
     def refresh(self, outcome: SceneOutcome):
         if outcome == SceneOutcome.DISASTER:
@@ -117,6 +124,14 @@ class SceneOutcomeSelector(QWidget):
         elif self.btnTradeOff.isChecked():
             self._outcome = SceneOutcome.TRADE_OFF
         self.selected.emit(self._outcome)
+
+    def _initButtonGroup(self):
+        self.btnGroupOutcome.setExclusive(True)
+        self.btnGroupOutcome.addButton(self.btnDisaster)
+        self.btnGroupOutcome.addButton(self.btnTradeOff)
+        self.btnGroupOutcome.addButton(self.btnResolution)
+
+        self.btnGroupOutcome.buttonClicked.connect(self._clicked)
 
     def _initStyle(self, btn: QToolButton, color: str):
         btn.setIconSize(QSize(20, 20))

@@ -27,7 +27,7 @@ from PyQt6.QtGui import QEnterEvent, QIcon, QMouseEvent, QColor
 from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QStackedWidget
 from overrides import overrides
 from qthandy import vbox, vspacer, transparent, sp, line, incr_font, hbox, pointy, vline, retain_when_hidden, margins, \
-    spacer, underline, bold, flow, gc
+    spacer, underline, bold, gc, curved_flow
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -35,7 +35,7 @@ from src.main.python.plotlyst.common import raise_unrecognized_arg
 from src.main.python.plotlyst.core.domain import Scene, Novel, ScenePurpose, advance_story_scene_purpose, \
     ScenePurposeType, reaction_story_scene_purpose, character_story_scene_purpose, setup_story_scene_purpose, \
     emotion_story_scene_purpose, exposition_story_scene_purpose, scene_purposes, Character, Plot, ScenePlotReference, \
-    StoryElement, StoryElementType
+    StoryElement, StoryElementType, SceneOutcome
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent
@@ -48,6 +48,7 @@ from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import RemovalButton
 from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotSelectorButton, ScenePlotValueEditor, \
     PlotValuesDisplay
+from src.main.python.plotlyst.view.widget.scenes import SceneOutcomeSelector
 
 
 class SceneMiniEditor(QWidget, EventListener):
@@ -438,9 +439,13 @@ class SceneElementWidget(QWidget):
         self._iconActive.setIcon(IconRegistry.from_name(icon, colorActive))
         self._iconIdle.setIcon(IconRegistry.from_name(icon, 'lightgrey'))
 
-    def setTitle(self, text: str):
+    def setTitle(self, text: str, color: Optional[str] = None):
         self._titleActive.setText(text)
         self._titleIdle.setText(text)
+        if color:
+            self._titleActive.setStyleSheet(f'color: {color};')
+        else:
+            self._titleActive.setStyleSheet('')
 
     def setElement(self, element: StoryElement):
         self._element = element
@@ -623,8 +628,52 @@ class PlotSceneElementEditor(StorylineElementEditor):
             if plot_value:
                 self._plotValueDisplay.updateValue(plot_value, value)
 
-
         self._wdgValues.layout().insertWidget(0, self._plotValueDisplay)
+
+
+class OutcomeSceneElementEditor(StorylineElementEditor):
+    def __init__(self, parent=None):
+        super().__init__(StoryElementType.Outcome, parent)
+        self.setPlaceholderText('Is there an imminent outcome in this scene?')
+
+        self._outcomeSelector = SceneOutcomeSelector(autoSelect=False)
+        self._pageEditor.layout().addWidget(self._outcomeSelector, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._outcomeSelector.selected.connect(self._outcomeSelected)
+
+    @overrides
+    def setElement(self, element: StoryElement):
+        super().setElement(element)
+        if element.outcome:
+            self._outcomeSelector.refresh(element.outcome)
+            self._outcomeSelected(element.outcome)
+        else:
+            self._outcomeSelector.reset()
+            self.setTitle('Outcome')
+            self.setIcon('fa5s.bomb', 'grey')
+
+    @overrides
+    def reset(self):
+        super().reset()
+        self.setTitle('Outcome')
+        self.setIcon('fa5s.bomb', 'grey')
+
+    def _outcomeSelected(self, outcome: SceneOutcome):
+        self._element.outcome = outcome
+        self._updateOutcome()
+
+    def _updateOutcome(self):
+        if self._element.outcome == SceneOutcome.DISASTER:
+            color = '#f4442e'
+            self.setIcon('fa5s.bomb', color)
+        elif self._element.outcome == SceneOutcome.RESOLUTION:
+            color = '#0b6e4f'
+            self.setIcon('mdi.bullseye-arrow', color)
+        elif self._element.outcome == SceneOutcome.TRADE_OFF:
+            color = '#832161'
+            self.setIcon('fa5s.balance-scale-left', color)
+        else:
+            return
+        self.setTitle(SceneOutcome.to_str(self._element.outcome), color)
 
 
 class AbstractSceneElementsEditor(QWidget):
@@ -639,9 +688,9 @@ class AbstractSceneElementsEditor(QWidget):
         vbox(self._wdgElementsParent)
 
         self._wdgElementsTopRow = QWidget()
-        flow(self._wdgElementsTopRow)
+        curved_flow(self._wdgElementsTopRow, spacing=8)
         self._wdgElementsBottomRow = QWidget()
-        flow(self._wdgElementsBottomRow)
+        curved_flow(self._wdgElementsBottomRow, spacing=8)
 
         self._lblBottom = label('', underline=True)
         self._wdgElementsParent.layout().addWidget(self._wdgElementsTopRow)
@@ -678,17 +727,19 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         # self._themeElement.setText('Theme')
         # self._themeElement.setIcon('mdi.butterfly-outline', '#9d4edd')
 
-        self._outcomeElement = StorylineElementEditor(StoryElementType.Outcome)
-        self._outcomeElement.setTitle('Outcome')
-        self._outcomeElement.setIcon('fa5s.bomb', '#f4442e')
+        self._outcomeElement = OutcomeSceneElementEditor()
 
         self._consequencesElement = StorylineElementEditor(StoryElementType.Consequences)
         self._consequencesElement.setTitle('Consequences')
         self._consequencesElement.setIcon('mdi.ray-start-arrow')
+        self._consequencesElement.setPlaceholderText("Are there any imminent or later consequences of this scene?")
 
-        self._wdgElementsTopRow.layout().addWidget(self._plotElements[0])
         # self._wdgElementsTopRow.layout().addWidget(self._themeElement)
         self._wdgElementsTopRow.layout().addWidget(self._outcomeElement)
+        self._wdgElementsTopRow.layout().addWidget(self.__newLine())
+        self._wdgElementsTopRow.layout().addWidget(self._plotElements[0])
+
+        self._wdgElementsTopRow.layout().addWidget(self.__newLine())
         self._wdgElementsTopRow.layout().addWidget(self._consequencesElement)
 
     @overrides
@@ -715,7 +766,7 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
             self.__newPlotElementEditor()
 
         for i, wdg in enumerate(self._plotElements):
-            self._wdgElementsTopRow.layout().insertWidget(i, wdg)
+            self._wdgElementsTopRow.layout().insertWidget(i + 2, wdg)
 
     def _plotSelected(self, plotElement: PlotSceneElementEditor):
         insert_after(self._wdgElementsTopRow, self._wdgAddNewPlotParent, reference=plotElement)
@@ -742,6 +793,12 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         self._plotElements.append(elementEditor)
 
         return elementEditor
+
+    def __newLine(self) -> QFrame:
+        line = vline()
+        line.setMinimumHeight(self._outcomeElement.sizeHint().height())
+
+        return line
 
 
 class SceneAgendaEditor(AbstractSceneElementsEditor):

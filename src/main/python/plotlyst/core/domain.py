@@ -938,6 +938,7 @@ class StoryElement:
     type: StoryElementType
     ref: Optional[uuid.UUID] = None
     text: str = ''
+    outcome: Optional[SceneOutcome] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass
