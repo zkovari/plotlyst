@@ -502,7 +502,7 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
         super(SceneStructureBeatWidget, self).__init__(novel, scene_structure_item, parent, readOnly)
         self.setFixedWidth(210)
 
-        self._outcome = SceneOutcomeSelector(self.beat)
+        self._outcome = SceneOutcomeSelector()
         self._outcome.selected.connect(self._outcomeChanged)
 
         self._text = QTextEdit()
@@ -589,7 +589,7 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
             if self.beat.outcome is None:
                 self.beat.outcome = SceneOutcome.DISASTER
             name = SceneOutcome.to_str(self.beat.outcome)
-            self._outcome.refresh()
+            self._outcome.refresh(self.beat.outcome)
         elif self.isEmotion():
             name = self.beat.emotion
         else:
@@ -601,7 +601,8 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
     def _textChanged(self):
         self.beat.text = self._text.toPlainText()
 
-    def _outcomeChanged(self):
+    def _outcomeChanged(self, outcome: SceneOutcome):
+        self.beat.outcome = outcome
         self._initStyle()
         self._glow()
 

@@ -41,7 +41,7 @@ from qtmenu import MenuWidget
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Scene, Novel, SceneStructureItem, SceneOutcome, StoryBeat, Plot, \
+from src.main.python.plotlyst.core.domain import Scene, Novel, SceneOutcome, StoryBeat, Plot, \
     ScenePlotReference, StoryBeatType, Tag, SceneStage, ReaderPosition, InformationAcquisition, Document, \
     StoryStructure
 from src.main.python.plotlyst.core.help import scene_disaster_outcome_help, scene_trade_off_outcome_help, \
@@ -72,9 +72,9 @@ from src.main.python.plotlyst.view.widget.labels import SelectionItemLabel, Scen
 class SceneOutcomeSelector(QWidget):
     selected = pyqtSignal(SceneOutcome)
 
-    def __init__(self, scene_structure_item: SceneStructureItem, parent=None):
-        super(SceneOutcomeSelector, self).__init__(parent)
-        self.scene_structure_item = scene_structure_item
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._outcome = SceneOutcome.DISASTER
         hbox(self)
         self.btnDisaster = tool_btn(IconRegistry.disaster_icon(color='grey'), scene_disaster_outcome_help,
                                     checkable=True)
@@ -86,7 +86,6 @@ class SceneOutcomeSelector(QWidget):
         self._initStyle(self.btnTradeOff, '#F0C4E1')
         self._initStyle(self.btnResolution, '#CDFAEC')
 
-        self.refresh()
         self.btnGroupOutcome = QButtonGroup()
         self.btnGroupOutcome.setExclusive(True)
         self.btnGroupOutcome.addButton(self.btnDisaster)
@@ -100,23 +99,24 @@ class SceneOutcomeSelector(QWidget):
 
         self.btnGroupOutcome.buttonClicked.connect(self._clicked)
 
-    def refresh(self):
-        if self.scene_structure_item.outcome == SceneOutcome.DISASTER:
+    def refresh(self, outcome: SceneOutcome):
+        if outcome == SceneOutcome.DISASTER:
             self.btnDisaster.setChecked(True)
-        elif self.scene_structure_item.outcome == SceneOutcome.RESOLUTION:
+        elif outcome == SceneOutcome.RESOLUTION:
             self.btnResolution.setChecked(True)
-        elif self.scene_structure_item.outcome == SceneOutcome.TRADE_OFF:
+        elif outcome == SceneOutcome.TRADE_OFF:
             self.btnTradeOff.setChecked(True)
 
-    def _clicked(self):
+    def _clicked(self, checked: bool):
+        if not checked:
+            return
         if self.btnDisaster.isChecked():
-            self.scene_structure_item.outcome = SceneOutcome.DISASTER
+            self._outcome = SceneOutcome.DISASTER
         elif self.btnResolution.isChecked():
-            self.scene_structure_item.outcome = SceneOutcome.RESOLUTION
+            self._outcome = SceneOutcome.RESOLUTION
         elif self.btnTradeOff.isChecked():
-            self.scene_structure_item.outcome = SceneOutcome.TRADE_OFF
-
-        self.selected.emit(self.scene_structure_item.outcome)
+            self._outcome = SceneOutcome.TRADE_OFF
+        self.selected.emit(self._outcome)
 
     def _initStyle(self, btn: QToolButton, color: str):
         btn.setIconSize(QSize(20, 20))
