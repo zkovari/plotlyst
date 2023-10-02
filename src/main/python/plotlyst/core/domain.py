@@ -596,6 +596,19 @@ def default_plot_value() -> PlotValue:
     return PlotValue('Progress', icon='fa5s.chart-line')
 
 
+class PlotProgressionItemType(Enum):
+    BEGINNING = 0
+    MIDDLE = 1
+    ENDING = 2
+    EVENT = 3
+
+
+@dataclass
+class PlotProgressionItem:
+    type: PlotProgressionItemType
+    text: str = ''
+
+
 @dataclass
 class Plot(SelectionItem, CharacterBased):
     id: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -607,6 +620,7 @@ class Plot(SelectionItem, CharacterBased):
     events: List[PlotEvent] = field(default_factory=list)
     default_value: PlotValue = field(default_factory=default_plot_value)
     default_value_enabled: bool = True
+    progression: List[PlotProgressionItem] = field(default_factory=list)
 
     def __post_init__(self):
         self._character: Optional[Character] = None

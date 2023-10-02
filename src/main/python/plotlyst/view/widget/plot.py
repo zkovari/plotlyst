@@ -19,11 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from functools import partial
-from typing import Set, Dict
+from typing import Set, Dict, List
 
 import qtanim
 from PyQt6.QtCharts import QSplineSeries, QValueAxis
-from PyQt6.QtCore import pyqtSignal, Qt, QSize
+from PyQt6.QtCore import pyqtSignal, Qt, QSize, QTimer
 from PyQt6.QtGui import QColor, QIcon, QPen, QCursor
 from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu, QPushButton, QTextEdit, QLabel
 from overrides import overrides
@@ -35,7 +35,8 @@ from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
-    PlotPrincipleType, PlotEvent, PlotEventType, SceneStructureItem, SceneStructureItemType
+    PlotPrincipleType, PlotEvent, PlotEventType, PlotProgressionItem, \
+    PlotProgressionItemType
 from src.main.python.plotlyst.core.template import antagonist_role
 from src.main.python.plotlyst.core.text import html
 from src.main.python.plotlyst.env import app_env
@@ -59,7 +60,7 @@ from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
 from src.main.python.plotlyst.view.widget.list import ListItemWidget
-from src.main.python.plotlyst.view.widget.scene.structure import SceneStructureTimeline
+from src.main.python.plotlyst.view.widget.scene.structure import SceneStructureTimeline, SceneStructureBeatWidget
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
 from src.main.python.plotlyst.view.widget.utility import ColorPicker
 
@@ -185,7 +186,7 @@ class PlotPrincipleSelectorMenu(MenuWidget):
             desc.setProperty('description', True)
             self._selectors.layout().addWidget(wrap(desc, margin_left=10, margin_bottom=5))
 
-        self.addSection('Select those principles that are relevant to this plot line')
+        self.addSection('Select principles that are relevant to this storyline')
         self.addSeparator()
         self.addWidget(self._selectors)
 
@@ -214,7 +215,8 @@ class PlotPrincipleEditor(QWidget):
         self._textedit.setToolTip(hint)
         self._textedit.setText(principle.value)
         self._textedit.setMinimumSize(175, 100)
-        self._textedit.setMaximumSize(200, 100)
+        self._textedit.setMaximumSize(200, 120)
+        self._textedit.verticalScrollBar().setVisible(False)
         shadow(self._textedit)
         self._textedit.textChanged.connect(self._valueChanged)
 
@@ -230,6 +232,26 @@ class PlotPrincipleEditor(QWidget):
     def _valueChanged(self):
         self._principle.value = self._textedit.toPlainText()
         self.principleEdited.emit()
+
+
+event_descriptions = {
+    PlotProgressionItemType.BEGINNING: 'Beginning',
+    PlotProgressionItemType.MIDDLE: 'Middle',
+    PlotProgressionItemType.ENDING: 'Ending',
+    PlotProgressionItemType.EVENT: 'Event'
+}
+
+
+class PlotProgressionEventWidget(SceneStructureBeatWidget):
+    def __init__(self, novel: Novel, item: PlotProgressionItem, parent=None):
+        super().__init__(novel, item, parent)
+
+    @overrides
+    def _descriptions(self) -> dict:
+        return event_descriptions
+
+    def _icon(self) -> QIcon:
+        return IconRegistry.beat_icon()
 
 
 class PlotEventsTimeline(SceneStructureTimeline):
@@ -387,7 +409,7 @@ class PlotList(TreeView):
         if selected:
             self.clearSelection()
             self._selectedPlots.add(wdg.plot())
-            self.plotSelected.emit(wdg.plot())
+            QTimer.singleShot(10, lambda: self.plotSelected.emit(wdg.plot()))
         elif wdg.plot() in self._selectedPlots:
             self._selectedPlots.remove(wdg.plot())
 
@@ -421,7 +443,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         super(PlotWidget, self).__init__(parent)
         self.setupUi(self)
         self.novel = novel
-        self.plot = plot
+        self.plot: Plot = plot
 
         incr_font(self.lineName, 6)
         bold(self.lineName)
@@ -448,7 +470,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.btnPrinciples.installEventFilter(OpacityEventFilter(self.btnPrinciples, leaveOpacity=0.7))
         self.btnPrinciples.clicked.connect(lambda: self._principleSelectorMenu.exec())
 
-        flow(self.wdgPrinciples)
+        flow(self.wdgPrinciples, spacing=6)
         for principle in self.plot.principles:
             self._initPrincipleEditor(principle)
 
@@ -492,9 +514,8 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
 
         self._timeline = PlotEventsTimeline(self.novel)
         self.wdgEventsParent.layout().addWidget(self._timeline)
-        self._timeline.setStructure(
-            [SceneStructureItem(SceneStructureItemType.BEAT), SceneStructureItem(SceneStructureItemType.BEAT),
-             SceneStructureItem(SceneStructureItemType.BEAT)])
+        self._timeline.setStructure(self.plot.progression)
+        self._timeline.timelineChanged.connect(self._timelineChanged)
 
         iconMenu = QMenu(self.btnPlotIcon)
 
@@ -602,7 +623,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
     def _save(self):
         self.repo.update_novel(self.novel)
 
-    def _eventsChanged(self):
+    def _timelineChanged(self):
         self._save()
 
     def _initFrameColor(self):
@@ -718,7 +739,10 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         else:
             name = 'Main plot'
             icon = 'fa5s.theater-masks'
-        plot = Plot(name, plot_type=plot_type, icon=icon)
+        plot = Plot(name, plot_type=plot_type, icon=icon,
+                    progression=[PlotProgressionItem(PlotProgressionItemType.BEGINNING),
+                                 PlotProgressionItem(PlotProgressionItemType.MIDDLE),
+                                 PlotProgressionItem(PlotProgressionItemType.ENDING)])
         self.novel.plots.append(plot)
 
         plot_colors = list(STORY_LINE_COLOR_CODES[plot_type.value])

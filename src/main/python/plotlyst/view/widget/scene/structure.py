@@ -48,30 +48,30 @@ from src.main.python.plotlyst.view.widget.input import RemovalButton
 from src.main.python.plotlyst.view.widget.list import ListView, ListItemWidget
 from src.main.python.plotlyst.view.widget.scenes import SceneOutcomeSelector
 
-BeatDescriptions = {SceneStructureItemType.BEAT: 'New action, reaction, thought, or emotion',
-                    SceneStructureItemType.ACTION: 'Character takes an action to achieve their goal',
-                    SceneStructureItemType.CONFLICT: "Conflict hinders the character's goals",
-                    SceneStructureItemType.CLIMAX: 'Outcome of the scene, typically ending with disaster',
-                    SceneStructureItemType.REACTION: "Initial reaction to a prior scene's outcome",
-                    SceneStructureItemType.EMOTION: "The character's emotional state",
-                    SceneStructureItemType.DILEMMA: 'Dilemma throughout the scene. What to do next?',
-                    SceneStructureItemType.DECISION: 'Character makes a decision and may act right away',
-                    SceneStructureItemType.HOOK: "Initial hook to raise readers' curiosity",
-                    SceneStructureItemType.INCITING_INCIDENT: 'Triggers events in this scene',
-                    SceneStructureItemType.TICKING_CLOCK: 'Ticking clock is activated to add urgency',
-                    SceneStructureItemType.RISING_ACTION: 'Increasing progress or setback throughout the scene',
-                    SceneStructureItemType.PROGRESS: 'Increasing progress throughout the scene',
-                    SceneStructureItemType.SETBACK: 'Increasing setback throughout the scene',
-                    SceneStructureItemType.CHOICE: 'Impossible choice between two equally good or bad outcomes',
-                    SceneStructureItemType.EXPOSITION: 'Description, explanation, or introduction of normal world',
-                    SceneStructureItemType.SUMMARY: 'A summary of events to quicken the pace',
-                    SceneStructureItemType.TURN: 'Shift in plot arc: small victory or setback',
-                    SceneStructureItemType.MYSTERY: "An unanswered question raises reader's curiosity",
-                    SceneStructureItemType.REVELATION: 'Key information is revealed or discovered',
-                    SceneStructureItemType.SETUP: 'Event that sets up a later payoff. May put the scene in motion',
-                    SceneStructureItemType.RESOLUTION: "Provides closure. May reinforce the climax's outcome or its consequences",
-                    SceneStructureItemType.BUILDUP: "Escalates tension or anticipation leading toward a climactic moment"
-                    }
+beat_descriptions = {SceneStructureItemType.BEAT: 'New action, reaction, thought, or emotion',
+                     SceneStructureItemType.ACTION: 'Character takes an action to achieve their goal',
+                     SceneStructureItemType.CONFLICT: "Conflict hinders the character's goals",
+                     SceneStructureItemType.CLIMAX: 'Outcome of the scene, typically ending with disaster',
+                     SceneStructureItemType.REACTION: "Initial reaction to a prior scene's outcome",
+                     SceneStructureItemType.EMOTION: "The character's emotional state",
+                     SceneStructureItemType.DILEMMA: 'Dilemma throughout the scene. What to do next?',
+                     SceneStructureItemType.DECISION: 'Character makes a decision and may act right away',
+                     SceneStructureItemType.HOOK: "Initial hook to raise readers' curiosity",
+                     SceneStructureItemType.INCITING_INCIDENT: 'Triggers events in this scene',
+                     SceneStructureItemType.TICKING_CLOCK: 'Ticking clock is activated to add urgency',
+                     SceneStructureItemType.RISING_ACTION: 'Increasing progress or setback throughout the scene',
+                     SceneStructureItemType.PROGRESS: 'Increasing progress throughout the scene',
+                     SceneStructureItemType.SETBACK: 'Increasing setback throughout the scene',
+                     SceneStructureItemType.CHOICE: 'Impossible choice between two equally good or bad outcomes',
+                     SceneStructureItemType.EXPOSITION: 'Description, explanation, or introduction of normal world',
+                     SceneStructureItemType.SUMMARY: 'A summary of events to quicken the pace',
+                     SceneStructureItemType.TURN: 'Shift in plot arc: small victory or setback',
+                     SceneStructureItemType.MYSTERY: "An unanswered question raises reader's curiosity",
+                     SceneStructureItemType.REVELATION: 'Key information is revealed or discovered',
+                     SceneStructureItemType.SETUP: 'Event that sets up a later payoff. May put the scene in motion',
+                     SceneStructureItemType.RESOLUTION: "Provides closure. May reinforce the climax's outcome or its consequences",
+                     SceneStructureItemType.BUILDUP: "Escalates tension or anticipation leading toward a climactic moment"
+                     }
 
 
 def beat_icon(beat_type: SceneStructureItemType, resolved: bool = False, trade_off: bool = False) -> QIcon:
@@ -301,7 +301,7 @@ class BeatSelectorMenu(TabularGridMenuWidget):
         self.addWidget(self._tabGeneral, vspacer(), 6, 0)
 
     def _addAction(self, tabWidget: QWidget, text: str, beat_type: SceneStructureItemType, row: int, column: int):
-        description = BeatDescriptions[beat_type]
+        description = beat_descriptions[beat_type]
         action_ = action(text, beat_icon(beat_type), slot=lambda: self.selected.emit(beat_type), tooltip=description)
         self._actions[beat_type] = action_
         self.addAction(tabWidget, action_, row, column)
@@ -571,6 +571,9 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
             self._initStyle()
         self._glow()
 
+    def _descriptions(self) -> dict:
+        return beat_descriptions
+
     @overrides
     def _initStyle(self):
         super(SceneStructureBeatWidget, self)._initStyle()
@@ -579,7 +582,7 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
         if self.isEmotion():
             desc = "How is the character's emotion shown?"
         else:
-            desc = BeatDescriptions[self.beat.type]
+            desc = self._descriptions()[self.beat.type]
         self._text.setPlaceholderText(desc)
         self._btnName.setToolTip(desc)
         self._text.setToolTip(desc)
@@ -596,8 +599,11 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
         else:
             name = self.beat.type.name
         self._btnName.setText(name.lower().capitalize().replace('_', ' '))
-        self._btnIcon.setIcon(beat_icon(self.beat.type, resolved=self.beat.outcome == SceneOutcome.RESOLUTION,
-                                        trade_off=self.beat.outcome == SceneOutcome.TRADE_OFF))
+        self._btnIcon.setIcon(self._icon())
+
+    def _icon(self) -> QIcon:
+        return beat_icon(self.beat.type, resolved=self.beat.outcome == SceneOutcome.RESOLUTION,
+                         trade_off=self.beat.outcome == SceneOutcome.TRADE_OFF)
 
     def _textChanged(self):
         self.beat.text = self._text.toPlainText()
