@@ -44,7 +44,8 @@ from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
-from src.main.python.plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter, wrap
+from src.main.python.plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter, wrap, \
+    insert_before_the_end
 from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
@@ -488,14 +489,16 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self._principles: Dict[PlotPrincipleType, PlotPrincipleEditor] = {}
 
         self._initFrameColor()
-        for lbl in [self.lblValues, self.lblPrinciples, self.lblProgression]:
+        for lbl in [self.lblPrinciples, self.lblProgression]:
             underline(lbl)
 
         flow(self.wdgPrinciples)
         for principle in self.plot.principles:
             self._initPrincipleEditor(principle)
 
-        flow(self.wdgValues)
+        self.btnValues.setIcon(IconRegistry.from_name('fa5s.chevron-circle-down', 'grey'))
+        self.btnValues.installEventFilter(OpacityEventFilter(self.btnValues, 0.9, 0.7))
+        hbox(self.wdgValues)
         self._btnAddValue = SecondaryActionPushButton(self)
         decr_font(self._btnAddValue)
         self._btnAddValue.setIconSize(QSize(14, 14))
@@ -509,14 +512,13 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self._characterSelectorMenu = CharacterSelectorMenu(self.novel, self._characterSelector.btnAvatar)
         self._characterSelectorMenu.selected.connect(self._characterSelected)
         self._characterSelector.setToolTip('Link character to this plot')
-        self._characterSelector.setGeometry(10, 10, 115, 115)
+        self._characterSelector.setGeometry(20, 20, 115, 115)
         character = self.plot.character(novel)
         if character is not None:
             self._characterSelector.setCharacter(character)
 
-        # self._characterSelector.characterSelected.connect(self._characterSelected)
-
         self.wdgValues.layout().addWidget(self._btnAddValue)
+        self.wdgValues.layout().addWidget(spacer())
         self._btnAddValue.clicked.connect(self._newValue)
 
         self._lstEvents = PlotEventsList(self.plot)
@@ -667,10 +669,11 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             self._save()
 
     def _addValue(self, value: PlotValue):
-        label = PlotValueLabel(value, parent=self.wdgValues)
+        label = PlotValueLabel(value, parent=self.wdgValues, simplified=True)
+        sp(label).h_max()
         label.installEventFilter(OpacityEventFilter(label, leaveOpacity=0.7))
         pointy(label)
-        self.wdgValues.layout().addWidget(label)
+        insert_before_the_end(self.wdgValues, label)
         label.removalRequested.connect(partial(self._removeValue, label))
         label.clicked.connect(partial(self._plotValueClicked, label))
 
