@@ -775,9 +775,10 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         for i, wdg in enumerate(self._plotElements):
             self._wdgElementsTopRow.layout().insertWidget(i + 2, wdg)
 
-        if self._plotElements[-1].element().ref:
+        last_plot_element = self._plotElements[-1].element()
+        if last_plot_element and last_plot_element.ref:
             insert_after(self._wdgElementsTopRow, self._wdgAddNewPlotParent, reference=self._plotElements[-1])
-        self._wdgAddNewPlotParent.setVisible(True)
+            self._wdgAddNewPlotParent.setVisible(True)
 
     def _plotSelected(self, plotElement: PlotSceneElementEditor):
         insert_after(self._wdgElementsTopRow, self._wdgAddNewPlotParent, reference=plotElement)
