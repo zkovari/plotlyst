@@ -1097,13 +1097,17 @@ class AvatarSelectors(QWidget, Ui_AvatarSelectors):
 class CharacterAvatar(QWidget):
     avatarUpdated = pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, defaultIconSize: int = 118, avatarSize: int = 168, customIconSize: int = 132,
+                 margins: int = 17):
         super().__init__(parent)
+        self._defaultIconSize = defaultIconSize
+        self._avatarSize = avatarSize
+        self._customIconSize = customIconSize
         self.wdgFrame = QWidget()
         self.wdgFrame.setProperty('border-image', True)
         hbox(self, 0, 0).addWidget(self.wdgFrame)
         self.btnAvatar = tool_btn(IconRegistry.character_icon(), transparent_=True)
-        hbox(self.wdgFrame, 17).addWidget(self.btnAvatar)
+        hbox(self.wdgFrame, margins).addWidget(self.btnAvatar)
         self.btnAvatar.installEventFilter(OpacityEventFilter(parent=self.btnAvatar, enterOpacity=0.7, leaveOpacity=1.0))
         apply_border_image(self.wdgFrame, resource_registry.circular_frame1)
 
@@ -1128,9 +1132,9 @@ class CharacterAvatar(QWidget):
     def updateAvatar(self):
         self.btnAvatar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         if self._character.prefs.avatar.use_role or self._character.prefs.avatar.use_custom_icon:
-            self.btnAvatar.setIconSize(QSize(132, 132))
+            self.btnAvatar.setIconSize(QSize(self._customIconSize, self._customIconSize))
         else:
-            self.btnAvatar.setIconSize(QSize(168, 168))
+            self.btnAvatar.setIconSize(QSize(self._avatarSize, self._avatarSize))
         avatar = avatars.avatar(self._character, fallback=False)
         if avatar:
             self.btnAvatar.setIcon(avatar)
@@ -1139,7 +1143,7 @@ class CharacterAvatar(QWidget):
         self.avatarUpdated.emit()
 
     def reset(self):
-        self.btnAvatar.setIconSize(QSize(118, 118))
+        self.btnAvatar.setIconSize(QSize(self._defaultIconSize, self._defaultIconSize))
         self.btnAvatar.setIcon(IconRegistry.character_icon(color='grey'))
         self.btnAvatar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
 

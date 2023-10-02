@@ -48,7 +48,7 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <property name="spacing">
-       <number>2</number>
+       <number>3</number>
       </property>
       <property name="leftMargin">
        <number>5</number>
@@ -77,28 +77,17 @@
         <property name="focusPolicy">
          <enum>Qt::ClickFocus</enum>
         </property>
-        <property name="styleSheet">
-         <string notr="true">QToolButton {
-	border: 1px dashed grey;
-	border-radius: 6px;
-}
-
-QToolButton:pressed {
-	border: 1px solid grey;
-}
-
-QToolButton:checked {
-		border: 2px solid black;	
-}</string>
-        </property>
         <property name="text">
          <string/>
         </property>
         <property name="iconSize">
          <size>
-          <width>36</width>
-          <height>36</height>
+          <width>60</width>
+          <height>60</height>
          </size>
+        </property>
+        <property name="transparent" stdset="0">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -136,7 +125,7 @@ QToolButton:checked {
            <x>0</x>
            <y>0</y>
            <width>555</width>
-           <height>338</height>
+           <height>308</height>
           </rect>
          </property>
          <property name="sizePolicy">
@@ -147,7 +136,7 @@ QToolButton:checked {
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <property name="spacing">
-           <number>3</number>
+           <number>5</number>
           </property>
           <property name="leftMargin">
            <number>0</number>
@@ -258,28 +247,6 @@ QToolButton:checked {
                     </property>
                    </widget>
                   </item>
-                  <item alignment="Qt::AlignRight">
-                   <widget class="QToolButton" name="btnArcToggle">
-                    <property name="cursor">
-                     <cursorShape>PointingHandCursor</cursorShape>
-                    </property>
-                    <property name="toolTip">
-                     <string>Toggle plot arc preview</string>
-                    </property>
-                    <property name="text">
-                     <string/>
-                    </property>
-                    <property name="checkable">
-                     <bool>true</bool>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                    <property name="base" stdset="0">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
                  </layout>
                 </item>
                 <item>
@@ -311,14 +278,6 @@ QToolButton:checked {
                 </item>
                </layout>
               </widget>
-              <widget class="ChartView" name="chartViewArcPreview">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-              </widget>
              </widget>
             </item>
            </layout>
@@ -337,11 +296,6 @@ QToolButton:checked {
    <class>DotsMenuButton</class>
    <extends>QToolButton</extends>
    <header>src.main.python.plotlyst.view.widget.button</header>
-  </customwidget>
-  <customwidget>
-   <class>ChartView</class>
-   <extends>QGraphicsView</extends>
-   <header>src.main.python.plotlyst.view.widget.display</header>
   </customwidget>
  </customwidgets>
  <resources/>

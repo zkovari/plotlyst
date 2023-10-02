@@ -33,7 +33,7 @@ from qthandy import bold, flow, incr_font, \
 from qthandy.filter import VisibilityToggleEventFilter, ObjectReferenceMimeData, OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
     PlotPrincipleType, PlotEvent, PlotEventType
 from src.main.python.plotlyst.core.template import antagonist_role
@@ -52,7 +52,7 @@ from src.main.python.plotlyst.view.generated.plot_widget_ui import Ui_PlotWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
-from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
+from src.main.python.plotlyst.view.widget.characters import CharacterAvatar, CharacterSelectorMenu
 from src.main.python.plotlyst.view.widget.chart import BaseChart
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import Toggle
@@ -468,17 +468,16 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.novel = novel
         self.plot = plot
 
-        incr_font(self.lineName, 2)
+        incr_font(self.lineName, 6)
         bold(self.lineName)
         self.lineName.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lineName.setText(self.plot.text)
         self.lineName.textChanged.connect(self._nameEdited)
+
         self.btnPincipleEditor.setIcon(IconRegistry.plus_edit_icon())
         transparent(self.btnPincipleEditor)
         retain_when_hidden(self.btnPincipleEditor)
         decr_icon(self.btnPincipleEditor)
-        self.btnArcToggle.setIcon(IconRegistry.rising_action_icon('black', color_on=PLOTLYST_SECONDARY_COLOR))
-        decr_icon(self.btnArcToggle, 2)
 
         self.splitter.setSizes([300, 300])
 
@@ -494,10 +493,6 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
 
         flow(self.wdgPrinciples)
         for principle in self.plot.principles:
-            # TODO remove later
-            if principle.type in [PlotPrincipleType.TURNS, PlotPrincipleType.CRISIS, PlotPrincipleType.PROGRESS,
-                                  PlotPrincipleType.SETBACK, PlotPrincipleType.CONSEQUENCES]:
-                continue
             self._initPrincipleEditor(principle)
 
         flow(self.wdgValues)
@@ -510,14 +505,16 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         for value in self.plot.values:
             self._addValue(value)
 
-        self._characterSelector = CharacterSelectorButton(novel, self)
+        self._characterSelector = CharacterAvatar(self, 88, 120, 92, 8)
+        self._characterSelectorMenu = CharacterSelectorMenu(self.novel, self._characterSelector.btnAvatar)
+        self._characterSelectorMenu.selected.connect(self._characterSelected)
         self._characterSelector.setToolTip('Link character to this plot')
-        self._characterSelector.setGeometry(10, 10, 40, 40)
+        self._characterSelector.setGeometry(10, 10, 115, 115)
         character = self.plot.character(novel)
         if character is not None:
             self._characterSelector.setCharacter(character)
 
-        self._characterSelector.characterSelected.connect(self._characterSelected)
+        # self._characterSelector.characterSelected.connect(self._characterSelected)
 
         self.wdgValues.layout().addWidget(self._btnAddValue)
         self._btnAddValue.clicked.connect(self._newValue)
@@ -527,17 +524,11 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self._lstEvents.eventsChanged.connect(self._eventsChanged)
         self.wdgEventsParent.layout().addWidget(self._lstEvents)
 
-        # self._arcChart = PlotEventsArcChart(self.plot)
-        # self.chartViewArcPreview.setChart(self._arcChart)
-        # self.chartViewArcPreview.setMinimumHeight(300)
-        # self._arcChart.refresh()
-        self.btnArcToggle.setHidden(True)
-        self.chartViewArcPreview.setHidden(True)
-
         self.installEventFilter(VisibilityToggleEventFilter(target=self.btnSettings, parent=self))
         self.installEventFilter(VisibilityToggleEventFilter(target=self._btnAddValue, parent=self))
         self.installEventFilter(VisibilityToggleEventFilter(target=self.btnPincipleEditor, parent=self))
 
+        self.btnPlotIcon.installEventFilter(OpacityEventFilter(self.btnPlotIcon, enterOpacity=0.7, leaveOpacity=1.0))
         self._updateIcon()
 
         iconMenu = QMenu(self.btnPlotIcon)
@@ -595,6 +586,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.titleChanged.emit()
 
     def _characterSelected(self, character: Character):
+        self._characterSelector.setCharacter(character)
         self.plot.set_character(character)
         self._save()
 
