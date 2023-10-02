@@ -508,6 +508,7 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
         self._text = QTextEdit()
         decr_font(self._text)
         self._text.setProperty('rounded', True)
+        self._text.setProperty('white-bg', True)
         self._text.setReadOnly(self._readOnly)
         self._text.setFixedHeight(100)
         self._text.setTabChangesFocus(True)
@@ -664,6 +665,7 @@ class SceneStructureTimeline(QWidget):
         curved_flow(self, margin=10, spacing=10)
 
         self._agenda: Optional[SceneStructureAgenda] = None
+        self._structure: List[SceneStructureItem] = []
         self._sceneType: Optional[SceneType] = None
         self._beatWidgets: List[SceneStructureItemWidget] = []
 
@@ -705,18 +707,12 @@ class SceneStructureTimeline(QWidget):
 
         self._agenda = agenda
         self.setStructure(self._agenda.items)
-        # for item in agenda.items:
-        #     self._addBeatWidget(item)
-        # if not agenda.items:
-        #     self.layout().addWidget(self._newPlaceholderWidget(displayText=True))
-        #
-        # self.update()
         self.setSceneType(sceneType)
 
     def setStructure(self, items: List[SceneStructureItem]):
         self.clear()
-        # self._agenda.items.clear()
-        # self._agenda.items.extend(items)
+
+        self._structure = items
 
         for item in items:
             self._addBeatWidget(item)
@@ -778,7 +774,7 @@ class SceneStructureTimeline(QWidget):
         item = SceneStructureItem(beatType)
         if beatType == SceneStructureItemType.CLIMAX:
             item.outcome = SceneOutcome.DISASTER
-        self._agenda.items.append(item)
+        self._structure.append(item)
         self._addBeatWidget(item)
 
     def _addBeatWidget(self, item: SceneStructureItem):
@@ -813,7 +809,7 @@ class SceneStructureTimeline(QWidget):
 
         beat_index = i // 2
         self._beatWidgets.insert(beat_index, widget)
-        self._agenda.items.insert(beat_index, item)
+        self._structure.insert(beat_index, item)
         self.layout().insertWidget(i, widget)
         self.layout().insertWidget(i + 1, self._newPlaceholderWidget())
         self.layout().insertWidget(i, self._newPlaceholderWidget())
@@ -858,7 +854,7 @@ class SceneStructureTimeline(QWidget):
 
     def _beatRemoved(self, wdg: SceneStructureBeatWidget):
         i = self.layout().indexOf(wdg)
-        self._agenda.items.remove(wdg.beat)
+        self._structure.remove(wdg.beat)
         self._beatWidgets.remove(wdg)
         if wdg.beat.type == SceneStructureItemType.CLIMAX:
             self._selectorMenu.setOutcomeEnabled(True)
@@ -935,7 +931,7 @@ class SceneStructureTimeline(QWidget):
             i += 1
 
         self._beatWidgets[:] = beats
-        self._agenda.items[:] = [x.beat for x in self._beatWidgets]
+        self._structure[:] = [x.beat for x in self._beatWidgets]
         self._wasDropped = True
 
     def _dragFinished(self):
@@ -1065,7 +1061,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.timeline.setNovel(novel)
         self.timeline.clear()
 
-        self.timeline.setAgenda(scene.agendas[0], self.scene.type)
+        self.timeline.setStructure(scene.agendas[0].items)
         self.listEvents.setAgenda(scene.agendas[0], self.scene.type)
         self._initEditor(self.scene.type)
 

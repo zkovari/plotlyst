@@ -54,7 +54,7 @@
        <number>5</number>
       </property>
       <property name="topMargin">
-       <number>2</number>
+       <number>0</number>
       </property>
       <property name="rightMargin">
        <number>2</number>
@@ -106,11 +106,20 @@
       </item>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <property name="spacing">
+         <number>0</number>
+        </property>
         <property name="leftMargin">
          <number>0</number>
         </property>
+        <property name="topMargin">
+         <number>2</number>
+        </property>
         <property name="rightMargin">
          <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>2</number>
         </property>
         <item>
          <spacer name="horizontalSpacer_2">
@@ -128,30 +137,54 @@
           </property>
          </spacer>
         </item>
-        <item>
-         <widget class="QPushButton" name="btnValues">
-          <property name="text">
-           <string>Values:</string>
-          </property>
-          <property name="transparent" stdset="0">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QWidget" name="wdgValues" native="true">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>300</width>
-            <height>25</height>
-           </size>
-          </property>
+        <item alignment="Qt::AlignHCenter">
+         <widget class="QWidget" name="widget_2" native="true">
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <property name="spacing">
+            <number>3</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QPushButton" name="btnValues">
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
+             <property name="text">
+              <string>Values</string>
+             </property>
+             <property name="transparent" stdset="0">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QWidget" name="wdgValues" native="true">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>25</width>
+               <height>25</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </item>
         <item>
@@ -207,29 +240,35 @@
            <number>5</number>
           </property>
           <property name="leftMargin">
-           <number>0</number>
+           <number>5</number>
           </property>
           <property name="topMargin">
            <number>0</number>
           </property>
           <property name="rightMargin">
-           <number>0</number>
+           <number>5</number>
           </property>
           <property name="bottomMargin">
            <number>0</number>
           </property>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout">
+            <property name="topMargin">
+             <number>5</number>
+            </property>
+            <property name="bottomMargin">
+             <number>10</number>
+            </property>
             <item alignment="Qt::AlignTop">
-             <widget class="QLabel" name="lblPrinciples">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
+             <widget class="QPushButton" name="btnPrinciples">
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
               </property>
               <property name="text">
                <string>Principles</string>
+              </property>
+              <property name="transparent" stdset="0">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
@@ -257,68 +296,56 @@
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>80</height>
+               </size>
+              </property>
              </widget>
             </item>
            </layout>
           </item>
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_4">
+            <property name="topMargin">
+             <number>3</number>
+            </property>
+            <item alignment="Qt::AlignLeft">
+             <widget class="QPushButton" name="btnProgression">
+              <property name="text">
+               <string>Progression</string>
+              </property>
+              <property name="transparent" stdset="0">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
             <item>
-             <widget class="QSplitter" name="splitter">
+             <widget class="QWidget" name="wdgEventsParent" native="true">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+               <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <widget class="QWidget" name="layoutWidget_4">
-               <layout class="QVBoxLayout" name="verticalLayout_5">
-                <property name="topMargin">
-                 <number>0</number>
-                </property>
-                <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_4">
-                  <item alignment="Qt::AlignLeft">
-                   <widget class="QLabel" name="lblProgression">
-                    <property name="text">
-                     <string>Progression</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <widget class="QWidget" name="wdgEventsParent" native="true">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <layout class="QVBoxLayout" name="verticalLayout_6">
-                   <property name="spacing">
-                    <number>0</number>
-                   </property>
-                   <property name="leftMargin">
-                    <number>0</number>
-                   </property>
-                   <property name="topMargin">
-                    <number>0</number>
-                   </property>
-                   <property name="rightMargin">
-                    <number>0</number>
-                   </property>
-                   <property name="bottomMargin">
-                    <number>0</number>
-                   </property>
-                  </layout>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
+              <layout class="QVBoxLayout" name="verticalLayout_6">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <property name="leftMargin">
+                <number>15</number>
+               </property>
+               <property name="topMargin">
+                <number>25</number>
+               </property>
+               <property name="rightMargin">
+                <number>15</number>
+               </property>
+               <property name="bottomMargin">
+                <number>10</number>
+               </property>
+              </layout>
              </widget>
             </item>
            </layout>

@@ -29,13 +29,13 @@ from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu, QPushButton, 
 from overrides import overrides
 from qthandy import bold, flow, incr_font, \
     margins, btn_popup_menu, ask_confirmation, italic, retain_when_hidden, vbox, transparent, \
-    clear_layout, vspacer, underline, decr_font, decr_icon, hbox, spacer, sp, pointy
-from qthandy.filter import VisibilityToggleEventFilter, ObjectReferenceMimeData, OpacityEventFilter
+    clear_layout, vspacer, decr_font, decr_icon, hbox, spacer, sp, pointy, incr_icon, translucent
+from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
-    PlotPrincipleType, PlotEvent, PlotEventType
+    PlotPrincipleType, PlotEvent, PlotEventType, SceneStructureItem, SceneStructureItemType
 from src.main.python.plotlyst.core.template import antagonist_role
 from src.main.python.plotlyst.core.text import html
 from src.main.python.plotlyst.env import app_env
@@ -45,7 +45,7 @@ from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDele
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter, wrap, \
-    insert_before_the_end
+    insert_before_the_end, shadow
 from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
@@ -58,7 +58,8 @@ from src.main.python.plotlyst.view.widget.chart import BaseChart
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
-from src.main.python.plotlyst.view.widget.list import ListItemWidget, ListView
+from src.main.python.plotlyst.view.widget.list import ListItemWidget
+from src.main.python.plotlyst.view.widget.scene.structure import SceneStructureTimeline
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
 from src.main.python.plotlyst.view.widget.utility import ColorPicker
 
@@ -214,6 +215,7 @@ class PlotPrincipleEditor(QWidget):
         self._textedit.setText(principle.value)
         self._textedit.setMinimumSize(175, 100)
         self._textedit.setMaximumSize(200, 100)
+        shadow(self._textedit)
         self._textedit.textChanged.connect(self._valueChanged)
 
         self.layout().addWidget(self._label, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -230,15 +232,10 @@ class PlotPrincipleEditor(QWidget):
         self.principleEdited.emit()
 
 
-class PlotListItemWidget(ListItemWidget):
-    def __init__(self, plot: Plot, parent=None):
-        super(PlotListItemWidget, self).__init__(parent)
-        self._plot = plot
-        self._lineEdit.setReadOnly(True)
-        self.refresh()
-
-    def refresh(self):
-        self._lineEdit.setText(self._plot.text)
+class PlotEventsTimeline(SceneStructureTimeline):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self.setNovel(novel)
 
 
 class PlotNode(ContainerNode):
@@ -345,49 +342,6 @@ class PlotEventSelectorMenu(MenuWidget):
             self.addAction(action_)
 
 
-class PlotEventsList(ListView):
-    eventsChanged = pyqtSignal()
-
-    def __init__(self, plot: Plot, parent=None):
-        super(PlotEventsList, self).__init__(parent)
-        margins(self._centralWidget, bottom=40)
-        self._plot = plot
-        self._btnAdd.setText('Add new event')
-        self._btnAdd.setToolTip('Add new event to reflect how the plot will progress or face setback')
-
-        self._centralWidget.setProperty('relaxed-white-bg', True)
-        menu = PlotEventSelectorMenu(self._btnAdd)
-        menu.eventSelected.connect(self._addNewItem)
-
-        for event in self._plot.events:
-            self.addItem(event)
-
-    @overrides
-    def _addNewItem(self, eventType: PlotEventType):
-        event = PlotEvent('', type=eventType)
-        self._plot.events.append(event)
-        self.addItem(event)
-
-        self.eventsChanged.emit()
-
-    @overrides
-    def _listItemWidgetClass(self):
-        return PlotEventItem
-
-    @overrides
-    def _deleteItemWidget(self, widget: ListItemWidget):
-        super(PlotEventsList, self)._deleteItemWidget(widget)
-        self._plot.events.remove(widget.item())
-        self.eventsChanged.emit()
-
-    @overrides
-    def _dropped(self, mimeData: ObjectReferenceMimeData):
-        super(PlotEventsList, self)._dropped(mimeData)
-        self._plot.events[:] = [x.item() for x in self.widgets()]
-
-        self.eventsChanged.emit()
-
-
 class PlotList(TreeView):
     plotSelected = pyqtSignal(Plot)
     plotRemoved = pyqtSignal(Plot)
@@ -475,12 +429,10 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.lineName.setText(self.plot.text)
         self.lineName.textChanged.connect(self._nameEdited)
 
-        self.btnPincipleEditor.setIcon(IconRegistry.plus_edit_icon())
+        self.btnPincipleEditor.setIcon(IconRegistry.plus_edit_icon('grey'))
         transparent(self.btnPincipleEditor)
         retain_when_hidden(self.btnPincipleEditor)
         decr_icon(self.btnPincipleEditor)
-
-        self.splitter.setSizes([300, 300])
 
         self._principleSelectorMenu = PlotPrincipleSelectorMenu(self.plot, self.btnPincipleEditor)
         self._principleSelectorMenu.principleToggled.connect(self._principleToggled)
@@ -489,20 +441,30 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self._principles: Dict[PlotPrincipleType, PlotPrincipleEditor] = {}
 
         self._initFrameColor()
-        for lbl in [self.lblPrinciples, self.lblProgression]:
-            underline(lbl)
+        self.btnPrinciples.setIcon(IconRegistry.from_name('mdi6.note-text-outline', 'grey'))
+        incr_icon(self.btnPrinciples, 2)
+        incr_font(self.btnPrinciples, 2)
+        self.btnPrinciples.installEventFilter(ButtonPressResizeEventFilter(self.btnPrinciples))
+        self.btnPrinciples.installEventFilter(OpacityEventFilter(self.btnPrinciples, leaveOpacity=0.7))
+        self.btnPrinciples.clicked.connect(lambda: self._principleSelectorMenu.exec())
 
         flow(self.wdgPrinciples)
         for principle in self.plot.principles:
             self._initPrincipleEditor(principle)
 
+        self.btnProgression.setIcon(IconRegistry.rising_action_icon('grey'))
+        translucent(self.btnProgression, 0.7)
+        incr_icon(self.btnProgression, 2)
+        incr_font(self.btnProgression, 2)
+
+        self.btnValues.setText('' if self.plot.values else 'Values')
         self.btnValues.setIcon(IconRegistry.from_name('fa5s.chevron-circle-down', 'grey'))
         self.btnValues.installEventFilter(OpacityEventFilter(self.btnValues, 0.9, 0.7))
+        self.btnValues.clicked.connect(self._newValue)
         hbox(self.wdgValues)
         self._btnAddValue = SecondaryActionPushButton(self)
         decr_font(self._btnAddValue)
         self._btnAddValue.setIconSize(QSize(14, 14))
-        self._btnAddValue.setText('' if self.plot.values else 'Attach story value')
         retain_when_hidden(self._btnAddValue)
         self._btnAddValue.setIcon(IconRegistry.plus_icon('grey'))
         for value in self.plot.values:
@@ -521,17 +483,18 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.wdgValues.layout().addWidget(spacer())
         self._btnAddValue.clicked.connect(self._newValue)
 
-        self._lstEvents = PlotEventsList(self.plot)
-        self._lstEvents.setMinimumHeight(300)
-        self._lstEvents.eventsChanged.connect(self._eventsChanged)
-        self.wdgEventsParent.layout().addWidget(self._lstEvents)
-
         self.installEventFilter(VisibilityToggleEventFilter(target=self.btnSettings, parent=self))
         self.installEventFilter(VisibilityToggleEventFilter(target=self._btnAddValue, parent=self))
         self.installEventFilter(VisibilityToggleEventFilter(target=self.btnPincipleEditor, parent=self))
 
         self.btnPlotIcon.installEventFilter(OpacityEventFilter(self.btnPlotIcon, enterOpacity=0.7, leaveOpacity=1.0))
         self._updateIcon()
+
+        self._timeline = PlotEventsTimeline(self.novel)
+        self.wdgEventsParent.layout().addWidget(self._timeline)
+        self._timeline.setStructure(
+            [SceneStructureItem(SceneStructureItemType.BEAT), SceneStructureItem(SceneStructureItemType.BEAT),
+             SceneStructureItem(SceneStructureItemType.BEAT)])
 
         iconMenu = QMenu(self.btnPlotIcon)
 
@@ -602,7 +565,6 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.plot.icon_color = color.name()
         self._updateIcon()
         self._initFrameColor()
-        # self._arcChart.refresh()
         self._save()
         self.iconChanged.emit()
 
@@ -641,7 +603,6 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.repo.update_novel(self.novel)
 
     def _eventsChanged(self):
-        # self._arcChart.refresh()
         self._save()
 
     def _initFrameColor(self):
@@ -677,7 +638,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         label.removalRequested.connect(partial(self._removeValue, label))
         label.clicked.connect(partial(self._plotValueClicked, label))
 
-        self._btnAddValue.setText('')
+        self.btnValues.setText('')
 
     def _removeValue(self, label: PlotValueLabel):
         if app_env.test_env():
@@ -707,8 +668,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.plot.values.remove(label.value)
         self._save()
         fade_out_and_gc(self.wdgValues, label)
-        has_values = len(self.plot.values) > 0
-        self._btnAddValue.setText('' if has_values else 'Attach story value')
+        self.btnValues.setText('' if self.plot.values else 'Values')
 
 
 class PlotEditor(QWidget, Ui_PlotEditor):
