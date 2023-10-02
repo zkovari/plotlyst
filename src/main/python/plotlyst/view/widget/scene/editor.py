@@ -24,7 +24,7 @@ from typing import List, Optional
 import qtanim
 from PyQt6.QtCore import Qt, QSize, QEvent, pyqtSignal, QObject
 from PyQt6.QtGui import QEnterEvent, QIcon, QMouseEvent, QColor
-from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QStackedWidget
+from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QStackedWidget, QTabBar
 from overrides import overrides
 from qthandy import vbox, vspacer, transparent, sp, line, incr_font, hbox, pointy, vline, retain_when_hidden, margins, \
     spacer, underline, bold, gc, curved_flow
@@ -678,6 +678,11 @@ class OutcomeSceneElementEditor(StorylineElementEditor):
         self.setTitle(SceneOutcome.to_str(self._element.outcome), color)
 
 
+class AgencyElementEditor(TextBasedSceneElementWidget):
+    def __init__(self, type: StoryElementType, parent=None):
+        super().__init__(type, parent)
+
+
 class AbstractSceneElementsEditor(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -807,6 +812,27 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         return line
 
 
+class CharacterTabBar(QTabBar):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+        self._character: Optional[Character] = None
+        sp(self).h_max()
+
+        self._btnCharacterSelector = CharacterSelectorButton(self._novel, parent=self)
+        self.addTab('')
+
+        self._btnCharacterSelector.characterSelected.connect(self._characterSelected)
+
+    @overrides
+    def tabSizeHint(self, index: int) -> QSize:
+        return QSize(100, self._btnCharacterSelector.sizeHint().height())
+
+    def _characterSelected(self, character: Character):
+        self._character = character
+        self.update()
+
+
 class SceneAgendaEditor(AbstractSceneElementsEditor):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -814,8 +840,27 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
 
         self._lblBottom.setText('Character changes')
 
-        self._btnCharacterSelector = CharacterSelectorButton(self._novel)
-        self.layout().insertWidget(0, self._btnCharacterSelector)
+        self._characterTabbat = CharacterTabBar(self._novel)
+        self.layout().insertWidget(0, self._characterTabbat)
+
+        self._goalElement = AgencyElementEditor(StoryElementType.Goal)
+        self._goalElement.setTitle('Goal')
+        self._goalElement.setIcon('mdi.target', 'darkBlue')
+        self._goalElement.setPlaceholderText("What's the character's goal in this scene?")
+
+        self._conflictElement = AgencyElementEditor(StoryElementType.Conflict)
+        self._conflictElement.setTitle('Conflict')
+        self._conflictElement.setIcon('mdi.sword-cross', '#f3a712')
+
+        self._wdgElementsTopRow.layout().addWidget(self._goalElement)
+        self._wdgElementsTopRow.layout().addWidget(self.__newLine())
+        self._wdgElementsTopRow.layout().addWidget(self._conflictElement)
 
     def updateAvailableCharacters(self, characters: List[Character]):
         pass
+
+    def __newLine(self) -> QFrame:
+        line = vline()
+        line.setMinimumHeight(self._goalElement.sizeHint().height())
+
+        return line

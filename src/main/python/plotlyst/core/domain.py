@@ -931,6 +931,8 @@ class StoryElementType(Enum):
     Plot = 'plot'
     Outcome = 'outcome'
     Consequences = 'consequences'
+    Goal = 'goal'
+    Conflict = 'conflict'
 
 
 @dataclass
