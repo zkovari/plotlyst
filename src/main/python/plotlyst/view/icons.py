@@ -553,11 +553,15 @@ class IconRegistry:
 
     @staticmethod
     def story_structure_icon(**kwargs) -> QIcon:
-        return IconRegistry.from_name('fa5s.theater-masks', **kwargs)
+        return IconRegistry.from_name('mdi6.bridge', **kwargs, scale=1.4)
 
     @staticmethod
     def plot_icon(**kwargs) -> QIcon:
         return IconRegistry.from_name('mdi.chart-bell-curve-cumulative', **kwargs)
+
+    @staticmethod
+    def storylines_icon(**kwargs) -> QIcon:
+        return IconRegistry.from_name('fa5s.theater-masks', **kwargs)
 
     @staticmethod
     def plot_type_icon(plot_type: PlotType) -> QIcon:

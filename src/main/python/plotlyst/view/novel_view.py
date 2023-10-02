@@ -53,7 +53,7 @@ class NovelView(AbstractNovelView):
                      IconRegistry.from_name('ri.mind-map', color_on=PLOTLYST_MAIN_COLOR))
         set_tab_icon(self.ui.tabWidget, self.ui.tabStructure,
                      IconRegistry.story_structure_icon(color_on=PLOTLYST_MAIN_COLOR))
-        set_tab_icon(self.ui.tabWidget, self.ui.tabPlot, IconRegistry.plot_icon(color_on=PLOTLYST_MAIN_COLOR))
+        set_tab_icon(self.ui.tabWidget, self.ui.tabPlot, IconRegistry.storylines_icon(color_on=PLOTLYST_MAIN_COLOR))
         set_tab_icon(self.ui.tabWidget, self.ui.tabSynopsis,
                      IconRegistry.from_name('fa5s.scroll', color_on=PLOTLYST_MAIN_COLOR))
         set_tab_icon(self.ui.tabWidget, self.ui.tabTags, IconRegistry.tags_icon(color_on=PLOTLYST_MAIN_COLOR))

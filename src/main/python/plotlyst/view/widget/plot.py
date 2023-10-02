@@ -733,10 +733,17 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         italic(self.btnAdd)
         self.btnAdd.setIcon(IconRegistry.plus_icon('white'))
         menu = MenuWidget(self.btnAdd)
-        menu.addAction(action('Main plot', IconRegistry.cause_and_effect_icon(), lambda: self.newPlot(PlotType.Main)))
+        menu.addAction(action('Main plot', IconRegistry.storylines_icon(), lambda: self.newPlot(PlotType.Main)))
         menu.addAction(
-            action('Internal plot', IconRegistry.conflict_self_icon(), lambda: self.newPlot(PlotType.Internal)))
+            action('Character arc', IconRegistry.conflict_self_icon(), lambda: self.newPlot(PlotType.Internal)))
         menu.addAction(action('Subplot', IconRegistry.subplot_icon(), lambda: self.newPlot(PlotType.Subplot)))
+
+        submenu = MenuWidget()
+        submenu.setTitle('Other')
+        submenu.addAction(action('Relationship plot'))
+        submenu.addAction(action('Global storyline'))
+        menu.addSeparator()
+        menu.addMenu(submenu)
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -748,14 +755,14 @@ class PlotEditor(QWidget, Ui_PlotEditor):
 
     def newPlot(self, plot_type: PlotType):
         if plot_type == PlotType.Internal:
-            name = 'Internal plot'
+            name = 'Character arc'
             icon = 'mdi.mirror'
         elif plot_type == PlotType.Subplot:
             name = 'Subplot'
             icon = 'mdi.source-branch'
         else:
             name = 'Main plot'
-            icon = 'mdi.ray-start-arrow'
+            icon = 'fa5s.theater-masks'
         plot = Plot(name, plot_type=plot_type, icon=icon)
         self.novel.plots.append(plot)
 

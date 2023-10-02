@@ -32,7 +32,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>4</number>
+      <number>2</number>
      </property>
      <property name="centered" stdset="0">
       <bool>true</bool>
@@ -397,7 +397,7 @@
      </widget>
      <widget class="QWidget" name="tabPlot">
       <attribute name="title">
-       <string>Plot</string>
+       <string>Storylines</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_12">
        <property name="spacing">
