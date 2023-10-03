@@ -79,17 +79,50 @@ class _TemplatePlotValueButton(QPushButton):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
 
+outer_plot_value_templates = [
+    PlotValue('Love', negative='Hate', icon='ei.heart', icon_color='#d1495b'),
+    PlotValue('Life', negative='Death', icon='mdi.pulse', icon_color='#ef233c'),
+    PlotValue('Truth', negative='Lie', icon='mdi.scale-balance', icon_color='#5390d9'),
+    PlotValue('Survival'),
+    PlotValue('Justice', negative='Injustice', icon='fa5s.gavel', icon_color='#a68a64'),
+    PlotValue('Unity'),
+    PlotValue('Victory'),
+    PlotValue('Honor', negative='Dishonor', icon='fa5s.award', icon_color='#40916c'),
+    PlotValue('Wealth', negative='Poverty', icon='fa5s.hand-holding-usd', icon_color='#e9c46a'),
+    PlotValue('Success'),
+
+]
+social_plot_value_templates = [
+    PlotValue('Poverty'),
+    PlotValue('Prejudice'),
+    PlotValue('Abuse'),
+    PlotValue('Power'),
+    PlotValue('Freedom'),
+    PlotValue('Ethics'),
+    PlotValue('Kindness'),
+    PlotValue('Truthful'),
+    PlotValue('Goodness'),
+    PlotValue(''),
+    PlotValue(''),
+    PlotValue('Morality', negative='Immorality', icon='ph.scales-bold', icon_color='#560bad'),
+]
+personal_plot_value_templates = [
+    PlotValue('Maturity', negative='Immaturity', icon='fa5s.seedling', icon_color='#95d5b2'),
+    PlotValue('Esteem', negative='Disrespect', icon='mdi.account-star', icon_color='#f72585'),
+    PlotValue('Meaning'),
+    PlotValue('Education'),
+    PlotValue('Self-respect'),
+    PlotValue(''),
+    PlotValue(''),
+    PlotValue(''),
+    PlotValue(''),
+
+]
+
 plot_value_templates = [
-    PlotValue(text='Love', negative='Hate', icon='ei.heart', icon_color='#d1495b'),
-    PlotValue(text='Life', negative='Death', icon='mdi.pulse', icon_color='#ef233c'),
-    PlotValue(text='Wealth', negative='Poverty', icon='fa5s.hand-holding-usd', icon_color='#e9c46a'),
-    PlotValue(text='Justice', negative='Injustice', icon='fa5s.gavel', icon_color='#a68a64'),
-    PlotValue(text='Maturity', negative='Immaturity', icon='fa5s.seedling', icon_color='#95d5b2'),
-    PlotValue(text='Truth', negative='Lie', icon='mdi.scale-balance', icon_color='#5390d9'),
-    PlotValue(text='Loyalty', negative='Betrayal', icon='fa5.handshake', icon_color='#5390d9'),
-    PlotValue(text='Honor', negative='Dishonor', icon='fa5s.award', icon_color='#40916c'),
-    PlotValue(text='Morality', negative='Immorality', icon='ph.scales-bold', icon_color='#560bad'),
-    PlotValue(text='Esteem', negative='Disrespect', icon='mdi.account-star', icon_color='#f72585'),
+
+    PlotValue('Loyalty', negative='Betrayal', icon='fa5.handshake', icon_color='#5390d9'),
+
 ]
 
 
@@ -100,9 +133,6 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
 
         self._value: Optional[PlotValue] = None
 
-        self.btnChargeUp.setIcon(IconRegistry.charge_icon(3))
-        self.btnChargeDown.setIcon(IconRegistry.charge_icon(-3))
-        self.btnVersusIcon.setIcon(IconRegistry.from_name('fa5s.arrows-alt-v'))
         self.subtitle.setHint(plot_value_help)
 
         decr_icon(self.btnIcon, 2)
@@ -130,12 +160,10 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
         result = self.exec()
         if result == QDialog.DialogCode.Accepted:
             self._value.text = self.linePositive.text()
-            self._value.negative = self.lineNegative.text()
             return self._value
 
     def _fillTemplate(self, value: PlotValue):
         self.linePositive.setText(value.text)
-        self.lineNegative.setText(value.negative)
         if value.icon:
             self.btnIcon.setIcon(IconRegistry.from_name(value.icon, value.icon_color))
             self._value.icon = value.icon
@@ -145,7 +173,6 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
         if self.isVisible():
             glow_color = QColor(value.icon_color)
             qtanim.glow(self.linePositive, color=glow_color)
-            qtanim.glow(self.lineNegative, color=glow_color)
             qtanim.glow(self.btnIcon, color=glow_color)
 
     def _changeIcon(self):
