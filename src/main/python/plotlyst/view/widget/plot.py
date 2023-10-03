@@ -350,6 +350,46 @@ class PlotEventsTimeline(SceneStructureTimeline):
         self._type = type
         self.setNovel(novel)
 
+    @overrides
+    def setStructure(self, items: List[PlotProgressionItem]):
+        super().setStructure(items)
+        self._hideFirstAndLastItems()
+
+    @overrides
+    def _newBeatWidget(self, item: PlotProgressionItem) -> PlotProgressionEventWidget:
+        widget = PlotProgressionEventWidget(self._novel, self._type, item, parent=self)
+        widget.removed.connect(self._beatRemoved)
+
+        return widget
+
+    # @overrides
+    # def _addBeatWidget(self, item: PlotProgressionItem):
+    #     super()._addBeatWidget(item)
+
+    @overrides
+    def _insertWidget(self, item: PlotProgressionItem, widget: PlotProgressionEventWidget):
+        super()._insertWidget(item, widget)
+        self._hideFirstAndLastItems()
+
+    @overrides
+    def _showBeatMenu(self, placeholder: QWidget):
+        self._currentPlaceholder = placeholder
+        self._insertBeat(PlotProgressionItemType.EVENT)
+
+    @overrides
+    def _insertBeat(self, beatType: PlotProgressionItemType):
+        item = PlotProgressionItem(beatType)
+        widget = self._newBeatWidget(item)
+        self._insertWidget(item, widget)
+
+    def _hideFirstAndLastItems(self):
+        for i in range(self.layout().count()):
+            item = self.layout().itemAt(i)
+            if i == 0 or i == self.layout().count() - 1:
+                item.widget().setVisible(False)
+            else:
+                item.widget().setVisible(True)
+
 
 class PlotNode(ContainerNode):
     def __init__(self, plot: Plot, parent=None):
