@@ -494,6 +494,8 @@ class PlotType(Enum):
     Main = 'main'
     Internal = 'internal'
     Subplot = 'subplot'
+    Relation = 'relation'
+    Global = 'global'
 
 
 @dataclass
@@ -516,14 +518,16 @@ class PlotPrincipleType(Enum):
     GOAL = 0
     ANTAGONIST = 1
     CONFLICT = 2
-    CONSEQUENCES = 3
-    PROGRESS = 4
-    SETBACK = 5
-    TURNS = 6
-    CRISIS = 7
     QUESTION = 8
     STAKES = 9
     THEME = 10
+    POSITIVE_CHANGE = 11
+    NEGATIVE_CHANGE = 12
+    DESIRE = 13
+    NEED = 14
+    INTERNAL_CONFLICT = 15
+    EXTERNAL_CONFLICT = 16
+    FLAW = 17
 
 
 @dataclass

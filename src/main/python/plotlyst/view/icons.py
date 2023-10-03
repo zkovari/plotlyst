@@ -416,8 +416,8 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.creation', color=CONFLICT_SUPERNATURAL_COLOR)
 
     @staticmethod
-    def conflict_self_icon(color: str = CONFLICT_SELF_COLOR) -> QIcon:
-        return IconRegistry.from_name('mdi.mirror', color=color)
+    def conflict_self_icon(color: str = CONFLICT_SELF_COLOR, color_on: str = CONFLICT_SELF_COLOR) -> QIcon:
+        return IconRegistry.from_name('mdi.mirror', color=color, color_on=color_on)
 
     @staticmethod
     def subplot_icon(color: str = 'black') -> QIcon:

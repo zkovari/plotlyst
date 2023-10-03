@@ -379,9 +379,10 @@ class SceneStructureItemWidget(QWidget):
 
         if not self._readOnly:
             self._btnIcon.setCursor(Qt.CursorShape.OpenHandCursor)
-            self._btnIcon.installEventFilter(DragEventFilter(self, self.SceneBeatMimeType, self._beatDataFunc,
+            self._dragEventFilter = DragEventFilter(self, self.SceneBeatMimeType, self._beatDataFunc,
                                                              grabbed=self._btnIcon, startedSlot=self.dragStarted.emit,
-                                                             finishedSlot=self.dragStopped.emit))
+                                                             finishedSlot=self.dragStopped.emit)
+            self._btnIcon.installEventFilter(self._dragEventFilter)
             self.setAcceptDrops(True)
 
     def isEmotion(self) -> bool:
