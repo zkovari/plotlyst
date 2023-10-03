@@ -90,6 +90,13 @@ STORY_LINE_COLOR_CODES: Dict[str, List[str]] = {
         '#D48172',  # coral pink
         '#93a8ac',  # cadet grey
     ],
+    'relation': [
+        '#cdb4db', # thistle
+        '#b56576' # china rose
+    ],
+    'global': [
+        'black'
+    ]
 
 }
 

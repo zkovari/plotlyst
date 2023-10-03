@@ -298,7 +298,13 @@ storyline_progression_steps_descriptions = {
         PlotProgressionItemType.MIDDLE: "The middle state of the relationship's evolution",
         PlotProgressionItemType.ENDING: 'The final state of the relationship',
         PlotProgressionItemType.EVENT: 'A change in the relationship where it gets either worse or better'
-    }
+    },
+    PlotType.Global: {
+        PlotProgressionItemType.BEGINNING: 'The initial state of the global storyline',
+        PlotProgressionItemType.MIDDLE: "The middle state of the global storyline's progression",
+        PlotProgressionItemType.ENDING: 'The resolution of the global storyline',
+        PlotProgressionItemType.EVENT: "A progress or setback in the global storyline"
+    },
 }
 
 
@@ -566,6 +572,8 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.btnProgression.setIcon(IconRegistry.rising_action_icon('grey'))
         if self.plot.plot_type == PlotType.Internal:
             self.btnProgression.setText('Transformation')
+        elif self.plot.plot_type == PlotType.Relation:
+            self.btnProgression.setText('Evolution')
 
         translucent(self.btnProgression, 0.7)
         incr_icon(self.btnProgression, 2)
@@ -808,8 +816,10 @@ class PlotEditor(QWidget, Ui_PlotEditor):
 
         submenu = MenuWidget()
         submenu.setTitle('Other')
-        submenu.addAction(action('Relationship plot'))
-        submenu.addAction(action('Global storyline'))
+        submenu.addAction(action('Relationship plot', IconRegistry.from_name('fa5s.people-arrows'),
+                                 slot=lambda: self.newPlot(PlotType.Relation)))
+        submenu.addAction(action('Global storyline', IconRegistry.from_name('fa5s.globe'),
+                                 slot=lambda: self.newPlot(PlotType.Global)))
         menu.addSeparator()
         menu.addMenu(submenu)
 
@@ -828,6 +838,12 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         elif plot_type == PlotType.Subplot:
             name = 'Subplot'
             icon = 'mdi.source-branch'
+        elif plot_type == PlotType.Relation:
+            name = 'Relationship'
+            icon = 'fa5s.people-arrows'
+        elif plot_type == PlotType.Global:
+            name = 'Global storyline'
+            icon = 'fa5s.globe'
         else:
             name = 'Main plot'
             icon = 'fa5s.theater-masks'
