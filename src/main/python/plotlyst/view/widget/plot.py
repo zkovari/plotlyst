@@ -592,14 +592,19 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         for value in self.plot.values:
             self._addValue(value)
 
-        self._characterSelector = CharacterAvatar(self, 88, 120, 92, 8)
-        self._characterSelectorMenu = CharacterSelectorMenu(self.novel, self._characterSelector.btnAvatar)
-        self._characterSelectorMenu.selected.connect(self._characterSelected)
-        self._characterSelector.setToolTip('Link character to this plot')
-        self._characterSelector.setGeometry(20, 20, 115, 115)
-        character = self.plot.character(novel)
-        if character is not None:
-            self._characterSelector.setCharacter(character)
+        if self.plot.plot_type == PlotType.Global:
+            pass
+        elif self.plot.plot_type == PlotType.Relation:
+            pass
+        else:
+            self._characterSelector = CharacterAvatar(self, 88, 120, 92, 8)
+            self._characterSelectorMenu = CharacterSelectorMenu(self.novel, self._characterSelector.btnAvatar)
+            self._characterSelectorMenu.selected.connect(self._characterSelected)
+            self._characterSelector.setToolTip('Link character to this plot')
+            self._characterSelector.setGeometry(20, 20, 115, 115)
+            character = self.plot.character(novel)
+            if character is not None:
+                self._characterSelector.setCharacter(character)
 
         self.wdgValues.layout().addWidget(self._btnAddValue)
         self.wdgValues.layout().addWidget(spacer())
