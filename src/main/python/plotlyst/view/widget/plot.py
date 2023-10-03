@@ -276,28 +276,28 @@ class PlotPrincipleEditor(QWidget):
 
 storyline_progression_steps_descriptions = {
     PlotType.Main: {
-        PlotProgressionItemType.BEGINNING: 'Beginning plot',
-        PlotProgressionItemType.MIDDLE: 'Middle',
-        PlotProgressionItemType.ENDING: 'Ending',
-        PlotProgressionItemType.EVENT: 'Event'
+        PlotProgressionItemType.BEGINNING: 'The initial state of the plot',
+        PlotProgressionItemType.MIDDLE: "The middle state of the plot's progression",
+        PlotProgressionItemType.ENDING: 'The resolution of the plot',
+        PlotProgressionItemType.EVENT: "A progress or setback in the plot"
     },
     PlotType.Internal: {
-        PlotProgressionItemType.BEGINNING: 'Beginning arc',
-        PlotProgressionItemType.MIDDLE: 'Middle',
-        PlotProgressionItemType.ENDING: 'Ending',
-        PlotProgressionItemType.EVENT: 'Event'
+        PlotProgressionItemType.BEGINNING: "The starting point of the character's change",
+        PlotProgressionItemType.MIDDLE: 'The middle stage of the character transformation',
+        PlotProgressionItemType.ENDING: 'How the character changed by the end of the story',
+        PlotProgressionItemType.EVENT: "A step towards or away from the character's change"
     },
     PlotType.Subplot: {
-        PlotProgressionItemType.BEGINNING: 'Beginning',
-        PlotProgressionItemType.MIDDLE: 'Middle',
-        PlotProgressionItemType.ENDING: 'Ending',
-        PlotProgressionItemType.EVENT: 'Event'
+        PlotProgressionItemType.BEGINNING: 'The initial state of the subplot',
+        PlotProgressionItemType.MIDDLE: "The middle state of the subplot's progression",
+        PlotProgressionItemType.ENDING: 'The resolution of the subplot',
+        PlotProgressionItemType.EVENT: 'A progress or setback in the subplot'
     },
     PlotType.Relation: {
-        PlotProgressionItemType.BEGINNING: 'Beginning',
-        PlotProgressionItemType.MIDDLE: 'Middle',
-        PlotProgressionItemType.ENDING: 'Ending',
-        PlotProgressionItemType.EVENT: 'Event'
+        PlotProgressionItemType.BEGINNING: 'The initial state of the relationship',
+        PlotProgressionItemType.MIDDLE: "The middle state of the relationship's evolution",
+        PlotProgressionItemType.ENDING: 'The final state of the relationship',
+        PlotProgressionItemType.EVENT: 'A change in the relationship where it gets either worse or better'
     }
 }
 
