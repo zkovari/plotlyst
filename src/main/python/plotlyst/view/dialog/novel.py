@@ -24,12 +24,12 @@ import qtanim
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QDialog, QPushButton, QDialogButtonBox, QApplication
-from qthandy import flow, decr_font, decr_icon
+from qthandy import flow, decr_font, decr_icon, pointy
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 
 from src.main.python.plotlyst.core.domain import NovelDescriptor, PlotValue, Novel
 from src.main.python.plotlyst.core.help import plot_value_help
-from src.main.python.plotlyst.view.common import link_editor_to_btn
+from src.main.python.plotlyst.view.common import link_editor_to_btn, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.novel_creation_dialog_ui import Ui_NovelCreationDialog
 from src.main.python.plotlyst.view.generated.plot_value_editor_dialog_ui import Ui_PlotValueEditorDialog
@@ -67,62 +67,109 @@ class _TemplatePlotValueButton(QPushButton):
 
         self.setStyleSheet(f'''
             QPushButton {{
-                border: 3px solid {value.icon_color};
-                border-radius: 6px;
-                padding: 2px;
+                border: 2px solid {value.icon_color};
+                border-radius: 12px;
+                padding: 4px;
             }}
             QPushButton:pressed {{
-                border: 3px solid black;
+                border: 3px solid {value.icon_color};
             }}
         ''')
-        self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.5))
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.6))
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
+        pointy(self)
 
 
-outer_plot_value_templates = [
-    PlotValue('Love', negative='Hate', icon='ei.heart', icon_color='#d1495b'),
-    PlotValue('Life', negative='Death', icon='mdi.pulse', icon_color='#ef233c'),
-    PlotValue('Truth', negative='Lie', icon='mdi.scale-balance', icon_color='#5390d9'),
-    PlotValue('Survival'),
-    PlotValue('Justice', negative='Injustice', icon='fa5s.gavel', icon_color='#a68a64'),
-    PlotValue('Unity'),
+love_value = PlotValue('Love', negative='Hate', icon='ei.heart', icon_color='#d1495b')
+life_value = PlotValue('Life', negative='Death', icon='mdi.pulse', icon_color='#ef233c')
+truth_value = PlotValue('Truth', negative='Lie', icon='mdi.scale-balance', icon_color='#5390d9')
+wealth_value = PlotValue('Wealth', negative='Poverty', icon='fa5s.hand-holding-usd', icon_color='#e9c46a')
+justice_value = PlotValue('Justice', negative='Injustice', icon='fa5s.gavel', icon_color='#a68a64')
+maturity_value = PlotValue('Maturity', negative='Immaturity', icon='fa5s.seedling', icon_color='#95d5b2')
+esteem_value = PlotValue('Esteem', negative='Disrespect', icon='mdi.account-star', icon_color='#f72585')
+morality_value = PlotValue('Morality', negative='Immorality', icon='ph.scales-bold', icon_color='#560bad')
+loyalty_value = PlotValue('Loyalty', negative='Betrayal', icon='fa5.handshake', icon_color='#5390d9')
+empathy_value = PlotValue('Empathy')
+survival_value = PlotValue('Survival')
+power_value = PlotValue('Power')
+freedom_value = PlotValue('Freedom')
+unity_value = PlotValue('Unity')
+
+popular_plot_value_templates = [
+    love_value,
+    life_value,
+    truth_value,
+    survival_value,
+    wealth_value,
+    justice_value,
+    maturity_value,
+    esteem_value,
+    morality_value,
+    loyalty_value,
+    freedom_value
+]
+foundational_plot_value_templates = [
+    love_value,
+    life_value,
+    truth_value,
+    survival_value,
+    power_value,
     PlotValue('Victory'),
-    PlotValue('Honor', negative='Dishonor', icon='fa5s.award', icon_color='#40916c'),
-    PlotValue('Wealth', negative='Poverty', icon='fa5s.hand-holding-usd', icon_color='#e9c46a'),
-    PlotValue('Success'),
+    freedom_value
 
 ]
-social_plot_value_templates = [
+societal_plot_value_templates = [
+    justice_value,
+    unity_value,
+    wealth_value,
     PlotValue('Poverty'),
     PlotValue('Prejudice'),
-    PlotValue('Abuse'),
-    PlotValue('Power'),
-    PlotValue('Freedom'),
     PlotValue('Ethics'),
-    PlotValue('Kindness'),
-    PlotValue('Truthful'),
-    PlotValue('Goodness'),
-    PlotValue(''),
-    PlotValue(''),
-    PlotValue('Morality', negative='Immorality', icon='ph.scales-bold', icon_color='#560bad'),
-]
-personal_plot_value_templates = [
-    PlotValue('Maturity', negative='Immaturity', icon='fa5s.seedling', icon_color='#95d5b2'),
-    PlotValue('Esteem', negative='Disrespect', icon='mdi.account-star', icon_color='#f72585'),
-    PlotValue('Meaning'),
+    PlotValue('Tradition'),
+    PlotValue('Tolerance'),
+    PlotValue('Diversity'),
+    PlotValue('Innovation'),
     PlotValue('Education'),
-    PlotValue('Self-respect'),
-    PlotValue(''),
-    PlotValue(''),
-    PlotValue(''),
-    PlotValue(''),
-
+]
+relational_plot_value_templates = [
+    love_value,
+    PlotValue('Trust'),
+    PlotValue('Friendship'),
+    PlotValue('Cooperation'),
+    PlotValue('Communication'),
+    power_value,
+    unity_value,
+    loyalty_value,
+    PlotValue('Collaboration'),
+    PlotValue('Responsibility'),
+    PlotValue('Respect'),
+    empathy_value,
+    PlotValue('Duty'),
+    PlotValue('Forgiveness')
 ]
 
-plot_value_templates = [
+personal_plot_value_templates = [
+    PlotValue('Honor', negative='Dishonor', icon='fa5s.award', icon_color='#40916c'),
+    PlotValue('Success'),
+    PlotValue('Kindness'),
+    PlotValue('Goodness'),
+    morality_value,
+    maturity_value,
+    esteem_value,
 
-    PlotValue('Loyalty', negative='Betrayal', icon='fa5.handshake', icon_color='#5390d9'),
-
+    PlotValue('Meaning'),
+    PlotValue('Self-respect'),
+    PlotValue('Courage'),
+    PlotValue('Resilience'),
+    PlotValue('Independence'),
+    empathy_value,
+    PlotValue('Compassion'),
+    PlotValue('Patience'),
+    PlotValue('Wisdom'),
+    PlotValue('Gratitude'),
+    PlotValue('Humility'),
+    PlotValue('Integrity'),
+    PlotValue('Perseverance'),
 ]
 
 
@@ -138,11 +185,20 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
         decr_icon(self.btnIcon, 2)
         self.btnIcon.clicked.connect(self._changeIcon)
 
-        flow(self.wdgTemplates, margin=5)
-        for value in plot_value_templates:
-            btn = _TemplatePlotValueButton(value)
-            self.wdgTemplates.layout().addWidget(btn)
-            btn.clicked.connect(partial(self._fillTemplate, value))
+        for tab in [self.tabPopular, self.tabFoundational, self.tabSocietal, self.tabPersonal,
+                    self.tabRelational]:
+            flow(tab, margin=15, spacing=6)
+
+        for pair in [(self.tabPopular, popular_plot_value_templates),
+                     (self.tabFoundational, foundational_plot_value_templates),
+                     (self.tabSocietal, societal_plot_value_templates),
+                     (self.tabPersonal, personal_plot_value_templates),
+                     (self.tabRelational, relational_plot_value_templates)]:
+            tab, values = pair
+            for value in values:
+                btn = _TemplatePlotValueButton(value)
+                tab.layout().addWidget(btn)
+                btn.clicked.connect(partial(self._fillTemplate, value))
 
         btnOk = self.buttonBox.button(QDialogButtonBox.StandardButton.Ok)
         btnOk.setEnabled(False)
