@@ -25,10 +25,10 @@ import qtanim
 from PyQt6.QtCharts import QSplineSeries, QValueAxis
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QTimer
 from PyQt6.QtGui import QColor, QIcon, QPen, QCursor, QEnterEvent
-from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu, QPushButton, QTextEdit, QLabel
+from PyQt6.QtWidgets import QWidget, QFrame, QPushButton, QTextEdit, QLabel
 from overrides import overrides
 from qthandy import bold, flow, incr_font, \
-    margins, btn_popup_menu, ask_confirmation, italic, retain_when_hidden, vbox, transparent, \
+    margins, ask_confirmation, italic, retain_when_hidden, vbox, transparent, \
     clear_layout, vspacer, decr_font, decr_icon, hbox, spacer, sp, pointy, incr_icon, translucent
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
@@ -677,25 +677,22 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self._timeline.setStructure(self.plot.progression)
         self._timeline.timelineChanged.connect(self._timelineChanged)
 
-        iconMenu = QMenu(self.btnPlotIcon)
+        iconMenu = MenuWidget(self.btnPlotIcon)
 
-        colorAction = QWidgetAction(iconMenu)
         colorPicker = ColorPicker(self)
         colorPicker.setFixedSize(300, 150)
         colorPicker.colorPicked.connect(self._colorChanged)
-        colorAction.setDefaultWidget(colorPicker)
-        colorMenu = QMenu('Color', iconMenu)
+        colorMenu = MenuWidget()
+        colorMenu.setTitle('Color')
         colorMenu.setIcon(IconRegistry.from_name('fa5s.palette'))
-        colorMenu.addAction(colorAction)
+        colorMenu.addWidget(colorPicker)
 
         iconMenu.addMenu(colorMenu)
         iconMenu.addSeparator()
         iconMenu.addAction(
             action('Change icon', icon=IconRegistry.icons_icon(), slot=self._changeIcon, parent=iconMenu))
-        btn_popup_menu(self.btnPlotIcon, iconMenu)
 
-        contextMenu = QMenu()
-        contextMenu.setToolTipsVisible(True)
+        contextMenu = MenuWidget(self.btnSettings)
         contextMenu.addMenu(colorMenu)
         contextMenu.addSeparator()
         progress_action = action('Track general progress',
@@ -706,8 +703,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         progress_action.setChecked(self.plot.default_value_enabled)
         contextMenu.addAction(progress_action)
         contextMenu.addSeparator()
-        contextMenu.addAction(IconRegistry.trash_can_icon(), 'Remove plot', self.removalRequested.emit)
-        btn_popup_menu(self.btnSettings, contextMenu)
+        contextMenu.addAction(action('Remove plot', IconRegistry.trash_can_icon(), self.removalRequested.emit))
 
         self.repo = RepositoryPersistenceManager.instance()
 
