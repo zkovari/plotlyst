@@ -511,7 +511,7 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
         self._text.setProperty('rounded', True)
         self._text.setProperty('white-bg', True)
         self._text.setReadOnly(self._readOnly)
-        self._text.setFixedHeight(100)
+        self._text.setMaximumHeight(100)
         self._text.setTabChangesFocus(True)
         self._text.setText(self.beat.text)
         self._text.textChanged.connect(self._textChanged)
