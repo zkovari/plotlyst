@@ -619,6 +619,7 @@ class Plot(SelectionItem, CharacterBased):
     plot_type: PlotType = PlotType.Main
     values: List[PlotValue] = field(default_factory=list)
     character_id: Optional[uuid.UUID] = None
+    relation_character_id: Optional[uuid.UUID] = None
     question: str = ''
     principles: List[PlotPrinciple] = field(default_factory=list)
     events: List[PlotEvent] = field(default_factory=list)
@@ -628,6 +629,31 @@ class Plot(SelectionItem, CharacterBased):
 
     def __post_init__(self):
         self._character: Optional[Character] = None
+        self._relation_character: Optional[Character] = None
+
+    def relation_character(self, novel: 'Novel') -> Optional[Character]:
+        if not self.relation_character_id:
+            return None
+        if not self._relation_character:
+            for c in novel.characters:
+                if c.id == self.relation_character_id:
+                    self._relation_character = c
+                    break
+
+        return self._relation_character
+
+    def set_relation_character(self, character: Optional[Character]):
+        if character is None:
+            self.reset_character()
+        else:
+            self.relation_character_id = character.id
+            self._relation_character = character
+
+    @overrides
+    def reset_character(self):
+        super().reset_character()
+        self.relation_character_id = None
+        self._relation_character = None
 
     @overrides
     def __eq__(self, other: 'Plot'):

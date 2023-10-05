@@ -592,15 +592,41 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         for value in self.plot.values:
             self._addValue(value)
 
+        self.btnRelationArrow.setHidden(True)
         if self.plot.plot_type == PlotType.Global:
             pass
         elif self.plot.plot_type == PlotType.Relation:
-            pass
+            self.btnRelationArrow.setVisible(True)
+            self.btnRelationArrow.setIcon(IconRegistry.from_name('ph.arrows-counter-clockwise-fill'))
+            self.btnPlotIcon.setIconSize(QSize(32, 32))
+
+            self._characterSelector = CharacterAvatar(self, 60, 100, 64, 8)
+            self._characterRelationSelector = CharacterAvatar(self, 60, 100, 64, 8)
+            self._characterSelector.setToolTip('Associate a character to this relationship plot')
+            self._characterRelationSelector.setToolTip('Associate a character to this relationship plot')
+            sourceMenu = CharacterSelectorMenu(self.novel, self._characterSelector.btnAvatar)
+            sourceMenu.selected.connect(self._characterSelected)
+            targetMenu = CharacterSelectorMenu(self.novel, self._characterRelationSelector.btnAvatar)
+            targetMenu.selected.connect(self._relationCharacterSelected)
+            self._characterSelector.setFixedSize(90, 90)
+            self._characterRelationSelector.setFixedSize(90, 90)
+            self.wdgHeader.layout().insertWidget(0, self._characterSelector,
+                                                 alignment=Qt.AlignmentFlag.AlignCenter)
+            self.wdgHeader.layout().insertWidget(0, spacer())
+            self.wdgHeader.layout().addWidget(self._characterRelationSelector, alignment=Qt.AlignmentFlag.AlignCenter)
+            self.wdgHeader.layout().addWidget(spacer())
+
+            character = self.plot.character(novel)
+            if character is not None:
+                self._characterSelector.setCharacter(character)
+            character = self.plot.relation_character(novel)
+            if character is not None:
+                self._characterRelationSelector.setCharacter(character)
         else:
             self._characterSelector = CharacterAvatar(self, 88, 120, 92, 8)
-            self._characterSelectorMenu = CharacterSelectorMenu(self.novel, self._characterSelector.btnAvatar)
-            self._characterSelectorMenu.selected.connect(self._characterSelected)
-            self._characterSelector.setToolTip('Link character to this plot')
+            menu = CharacterSelectorMenu(self.novel, self._characterSelector.btnAvatar)
+            menu.selected.connect(self._characterSelected)
+            self._characterSelector.setToolTip('Link character to this storyline')
             self._characterSelector.setGeometry(20, 20, 115, 115)
             character = self.plot.character(novel)
             if character is not None:
@@ -679,6 +705,11 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
     def _characterSelected(self, character: Character):
         self._characterSelector.setCharacter(character)
         self.plot.set_character(character)
+        self._save()
+
+    def _relationCharacterSelected(self, character: Character):
+        self._characterRelationSelector.setCharacter(character)
+        self.plot.set_relation_character(character)
         self._save()
 
     def _changeIcon(self):
