@@ -51,6 +51,9 @@ class NovelEditionDialog(QDialog, Ui_NovelCreationDialog):
         return self.lineTitle.text()
 
 
+DEFAULT_VALUE_ICON = 'fa5s.chevron-circle-down'
+
+
 class _TemplatePlotValueButton(QPushButton):
     def __init__(self, value: PlotValue, parent=None):
         super(_TemplatePlotValueButton, self).__init__(parent)
@@ -61,6 +64,8 @@ class _TemplatePlotValueButton(QPushButton):
             self.setToolTip(value.text)
         if value.icon:
             self.setIcon(IconRegistry.from_name(value.icon, value.icon_color))
+        else:
+            self.setIcon(IconRegistry.from_name(DEFAULT_VALUE_ICON, value.icon_color))
 
         decr_font(self)
         decr_icon(self)
@@ -89,11 +94,11 @@ maturity_value = PlotValue('Maturity', negative='Immaturity', icon='fa5s.seedlin
 esteem_value = PlotValue('Esteem', negative='Disrespect', icon='mdi.account-star', icon_color='#f72585')
 morality_value = PlotValue('Morality', negative='Immorality', icon='ph.scales-bold', icon_color='#560bad')
 loyalty_value = PlotValue('Loyalty', negative='Betrayal', icon='fa5.handshake', icon_color='#5390d9')
-empathy_value = PlotValue('Empathy')
-survival_value = PlotValue('Survival')
-power_value = PlotValue('Power')
-freedom_value = PlotValue('Freedom')
-unity_value = PlotValue('Unity')
+empathy_value = PlotValue('Empathy', icon_color='#FFB6C1')
+survival_value = PlotValue('Survival', icon_color='#F4A460')
+power_value = PlotValue('Power', icon_color='#FF0000')
+freedom_value = PlotValue('Freedom', icon_color='#023e8a')
+unity_value = PlotValue('Unity', icon_color='#52b69a')
 
 popular_plot_value_templates = [
     love_value,
@@ -114,7 +119,7 @@ foundational_plot_value_templates = [
     truth_value,
     survival_value,
     power_value,
-    PlotValue('Victory'),
+    PlotValue('Victory', icon_color='#ffbe0b'),
     freedom_value
 
 ]
@@ -122,54 +127,53 @@ societal_plot_value_templates = [
     justice_value,
     unity_value,
     wealth_value,
-    PlotValue('Poverty'),
-    PlotValue('Prejudice'),
-    PlotValue('Ethics'),
-    PlotValue('Tradition'),
-    PlotValue('Tolerance'),
-    PlotValue('Diversity'),
-    PlotValue('Innovation'),
-    PlotValue('Education'),
+    PlotValue('Poverty', icon_color='#8B4513'),
+    PlotValue('Prejudice', icon_color='#800000'),
+    PlotValue('Ethics', icon_color='#008000'),
+    PlotValue('Tradition', icon_color='#A0522D'),
+    PlotValue('Tolerance', icon_color='#FFD700'),
+    PlotValue('Diversity', icon_color='#800080'),
+    PlotValue('Innovation', icon_color='#5e548e'),
+    PlotValue('Education', icon_color='#008080'),
 ]
 relational_plot_value_templates = [
     love_value,
-    PlotValue('Trust'),
-    PlotValue('Friendship'),
-    PlotValue('Cooperation'),
-    PlotValue('Communication'),
+    PlotValue('Trust', icon_color='#34a0a4'),
+    PlotValue('Friendship', icon_color='#457b9d'),
+    PlotValue('Cooperation', icon_color='#32CD32'),
+    PlotValue('Communication', icon_color='#000080'),
     power_value,
     unity_value,
     loyalty_value,
-    PlotValue('Collaboration'),
-    PlotValue('Responsibility'),
-    PlotValue('Respect'),
+    PlotValue('Responsibility', icon_color='#FF4500'),
+    PlotValue('Respect', icon_color='#FFFF00'),
     empathy_value,
-    PlotValue('Duty'),
-    PlotValue('Forgiveness')
+    PlotValue('Duty', icon_color='#696969'),
+    PlotValue('Forgiveness', icon_color='#FF1493')
 ]
 
 personal_plot_value_templates = [
     PlotValue('Honor', negative='Dishonor', icon='fa5s.award', icon_color='#40916c'),
-    PlotValue('Success'),
-    PlotValue('Kindness'),
-    PlotValue('Goodness'),
+    PlotValue('Success', icon_color='#FFD700'),
+    PlotValue('Kindness', icon_color='#FFC0CB'),
+    PlotValue('Goodness', icon_color='#FF69B4'),
     morality_value,
     maturity_value,
     esteem_value,
 
-    PlotValue('Meaning'),
-    PlotValue('Self-respect'),
-    PlotValue('Courage'),
-    PlotValue('Resilience'),
-    PlotValue('Independence'),
+    PlotValue('Meaning', icon_color='#8A2BE2'),
+    PlotValue('Self-respect', icon_color='#B0C4DE'),
+    PlotValue('Courage', icon_color='#ca6702'),
+    PlotValue('Resilience', icon_color='#2E8B57'),
+    PlotValue('Independence', icon_color='#20B2AA'),
     empathy_value,
-    PlotValue('Compassion'),
-    PlotValue('Patience'),
-    PlotValue('Wisdom'),
-    PlotValue('Gratitude'),
-    PlotValue('Humility'),
-    PlotValue('Integrity'),
-    PlotValue('Perseverance'),
+    PlotValue('Compassion', icon_color='#FF4500'),
+    PlotValue('Patience', icon_color='#FFA500'),
+    PlotValue('Wisdom', icon_color='#000080'),
+    PlotValue('Gratitude', icon_color='#DAA520'),
+    PlotValue('Humility', icon_color='#a9def9'),
+    PlotValue('Integrity', icon_color='#000000'),
+    PlotValue('Perseverance', icon_color='#800000'),
 ]
 
 
@@ -206,7 +210,7 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
         link_editor_to_btn(self.linePositive, btnOk)
 
     def display(self, reference: Optional[PlotValue] = None) -> Optional[PlotValue]:
-        self._value = PlotValue('', icon='fa5s.chevron-circle-down', icon_color='grey')
+        self._value = PlotValue('', icon=DEFAULT_VALUE_ICON, icon_color='grey')
         if reference:
             self._fillTemplate(reference)
             self.linePositive.setFocus()
@@ -221,10 +225,14 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
     def _fillTemplate(self, value: PlotValue):
         self.linePositive.setText(value.text)
         if value.icon:
-            self.btnIcon.setIcon(IconRegistry.from_name(value.icon, value.icon_color))
-            self._value.icon = value.icon
-            self._value.icon_color = value.icon_color
-            self.btnIcon.setBorderColor(self._value.icon_color)
+            icon = value.icon
+        else:
+            icon = DEFAULT_VALUE_ICON
+
+        self.btnIcon.setIcon(IconRegistry.from_name(icon, value.icon_color))
+        self._value.icon = icon
+        self._value.icon_color = value.icon_color
+        self.btnIcon.setBorderColor(self._value.icon_color)
 
         if self.isVisible():
             glow_color = QColor(value.icon_color)
