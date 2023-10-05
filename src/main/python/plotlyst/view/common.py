@@ -357,6 +357,7 @@ def fade_out_and_gc(parent: QWidget, widget: QWidget, duration: int = 200):
         parent.layout().removeWidget(widget)
         gc(widget)
 
+    widget.setDisabled((True))
     anim = fade_out(widget, duration)
     anim.finished.connect(destroy)
 
