@@ -96,7 +96,7 @@ def principle_icon(type: PlotPrincipleType) -> QIcon:
         return QIcon()
 
 
-principle_hints = {
+_principle_hints = {
     PlotPrincipleType.GOAL: "Is there a main goal that drives this plot?",
     PlotPrincipleType.ANTAGONIST: "Is there an antagonistic force (human or otherwise) that confronts the plot?",
     PlotPrincipleType.CONFLICT: "Is there conflict that hinders the character's goal?",
@@ -112,10 +112,24 @@ principle_hints = {
     PlotPrincipleType.INTERNAL_CONFLICT: "Does the character face an internal dilemma?",
     PlotPrincipleType.FLAW: "Is there a major flaw, misbelief, or imperfection the character has to overcome?",
 }
-principle_placeholders = {
+
+
+def principle_hint(principle_type: PlotPrincipleType, plot_type: PlotType) -> str:
+    if plot_type == PlotType.Relation:
+        if principle_type == PlotPrincipleType.GOAL:
+            return "Is there a shared goal the characters aim for in this relationship plot?"
+        if principle_type == PlotPrincipleType.CONFLICT:
+            return "Is there any conflict that challenges the relationship?"
+        if principle_type == PlotPrincipleType.STAKES:
+            return "Is there anything at stake if the characters don't maintain or evolve their relation?"
+
+    return _principle_hints[principle_type]
+
+
+_principle_placeholders = {
     PlotPrincipleType.GOAL: "What's the main goal that drives this plot?",
     PlotPrincipleType.ANTAGONIST: "Who or what stands in opposition to resolve the storyline?",
-    PlotPrincipleType.CONFLICT: "How does conflict hinders the goal?",
+    PlotPrincipleType.CONFLICT: "How does conflict hinder the goal?",
     PlotPrincipleType.STAKES: "What's at stake if the storyline is not resolved?",
     PlotPrincipleType.QUESTION: "What is the major dramatic question of this storyline?",
     PlotPrincipleType.THEME: "How does the storyline express the theme?",
@@ -128,6 +142,18 @@ principle_placeholders = {
     PlotPrincipleType.INTERNAL_CONFLICT: "What internal dilemma of conflict the character has to face?",
     PlotPrincipleType.FLAW: "What kind of flaw the character has to overcome?",
 }
+
+
+def principle_placeholder(principle_type: PlotPrincipleType, plot_type: PlotType) -> str:
+    if plot_type == PlotType.Relation:
+        if principle_type == PlotPrincipleType.GOAL:
+            return "What is a shared goal the characters aim for?"
+        if principle_type == PlotPrincipleType.CONFLICT:
+            return "How does conflict challenge the relationship?"
+        if principle_type == PlotPrincipleType.STAKES:
+            return "What's at stake if the characters don't maintain or evolve their relation?"
+    return _principle_placeholders[principle_type]
+
 
 principle_type_index: Dict[PlotPrincipleType, int] = {
     PlotPrincipleType.QUESTION: 0,
@@ -170,8 +196,8 @@ plot_event_type_hint = {
 
 
 class _PlotPrincipleToggle(QWidget):
-    def __init__(self, pincipleType: PlotPrincipleType, parent=None):
-        super(_PlotPrincipleToggle, self).__init__(parent)
+    def __init__(self, pincipleType: PlotPrincipleType, plotType: PlotType, parent=None):
+        super().__init__(parent)
         hbox(self)
         margins(self, bottom=0)
         self._principleType = pincipleType
@@ -181,7 +207,7 @@ class _PlotPrincipleToggle(QWidget):
         self._label.setCheckable(True)
         bold(self._label)
         self._label.setText(self._principleType.name.lower().capitalize().replace('_', ' '))
-        self._label.setToolTip(principle_hints[self._principleType])
+        self._label.setToolTip(principle_hint(self._principleType, plotType))
         self._label.setIcon(principle_icon(self._principleType))
         self._label.setCheckable(True)
 
@@ -211,18 +237,21 @@ class PlotPrincipleSelectorMenu(MenuWidget):
             principles = [PlotPrincipleType.POSITIVE_CHANGE, PlotPrincipleType.NEGATIVE_CHANGE,
                           PlotPrincipleType.DESIRE, PlotPrincipleType.NEED, PlotPrincipleType.EXTERNAL_CONFLICT,
                           PlotPrincipleType.INTERNAL_CONFLICT, PlotPrincipleType.FLAW]
+        elif self._plot.plot_type == PlotType.Relation:
+            principles = [PlotPrincipleType.QUESTION, PlotPrincipleType.GOAL, PlotPrincipleType.CONFLICT,
+                          PlotPrincipleType.STAKES]
         else:
             principles = [PlotPrincipleType.QUESTION, PlotPrincipleType.GOAL, PlotPrincipleType.ANTAGONIST,
                           PlotPrincipleType.CONFLICT,
                           PlotPrincipleType.STAKES, PlotPrincipleType.THEME]
 
         for principle in principles:
-            wdg = _PlotPrincipleToggle(principle)
+            wdg = _PlotPrincipleToggle(principle, self._plot.plot_type)
             if principle in active_types:
                 wdg.toggle.setChecked(True)
             wdg.toggle.toggled.connect(partial(self.principleToggled.emit, principle))
             self._selectors.layout().addWidget(wdg)
-            desc = QLabel(principle_hints[principle])
+            desc = QLabel(principle_hint(principle, self._plot.plot_type))
             desc.setProperty('description', True)
             self._selectors.layout().addWidget(wrap(desc, margin_left=10, margin_bottom=5))
 
@@ -234,7 +263,7 @@ class PlotPrincipleSelectorMenu(MenuWidget):
 class PlotPrincipleEditor(QWidget):
     principleEdited = pyqtSignal()
 
-    def __init__(self, principle: PlotPrinciple, parent=None):
+    def __init__(self, principle: PlotPrinciple, plotType: PlotType, parent=None):
         super().__init__(parent)
         self._principle = principle
 
@@ -250,7 +279,7 @@ class PlotPrincipleEditor(QWidget):
         self._textedit = QTextEdit(self)
         self._textedit.setProperty('white-bg', True)
         self._textedit.setProperty('rounded', True)
-        hint = principle_placeholders[principle.type]
+        hint = principle_placeholder(principle.type, plotType)
         self._textedit.setPlaceholderText(hint)
         self._textedit.setToolTip(hint)
         self._textedit.setText(principle.value)
@@ -749,7 +778,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self._save()
 
     def _initPrincipleEditor(self, principle: PlotPrinciple):
-        editor = PlotPrincipleEditor(principle)
+        editor = PlotPrincipleEditor(principle, self.plot.plot_type)
         editor.principleEdited.connect(self._save)
         self.wdgPrinciples.layout().insertWidget(principle_type_index[principle.type], editor)
         self._principles[principle.type] = editor
