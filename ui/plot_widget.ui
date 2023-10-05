@@ -97,7 +97,7 @@
          <bool>false</bool>
         </property>
         <property name="placeholderText">
-         <string>Plot name</string>
+         <string>Storyline name</string>
         </property>
         <property name="transparent" stdset="0">
          <bool>true</bool>

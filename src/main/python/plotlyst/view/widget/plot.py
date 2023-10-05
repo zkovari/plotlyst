@@ -784,11 +784,11 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             self._save()
 
     def _plotValueClicked(self, label: PlotValueLabel):
-        menu = QMenu(label)
-        menu.addAction(IconRegistry.edit_icon(), 'Edit', partial(self._editValue, label))
+        menu = MenuWidget()
+        menu.addAction(action('Edit', IconRegistry.edit_icon(), partial(self._editValue, label)))
         menu.addSeparator()
-        menu.addAction(IconRegistry.trash_can_icon(), 'Remove', label.removalRequested.emit)
-        menu.popup(QCursor.pos())
+        menu.addAction(action('Remove', IconRegistry.trash_can_icon(), label.removalRequested.emit))
+        menu.exec(QCursor.pos())
 
     def __destroyValue(self, label: PlotValueLabel):
         self.plot.values.remove(label.value)
