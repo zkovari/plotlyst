@@ -362,10 +362,12 @@ class SceneStructureItemWidget(QWidget):
         self.novel = novel
         self._readOnly = readOnly
         self.beat = scene_structure_item
-        vbox(self, 0, 0)
+        vbox(self, 0, 2)
 
-        self._btnName = QPushButton()
+        self._btnName = QPushButton(self)
         bold(self._btnName)
+        if app_env.is_mac():
+            self._btnName.setFixedHeight(max(self._btnName.sizeHint().height() - 8, 24))
 
         self._btnIcon = QToolButton(self)
         self._btnIcon.setIconSize(QSize(24, 24))
@@ -507,7 +509,7 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
         self._outcome = SceneOutcomeSelector()
         self._outcome.selected.connect(self._outcomeChanged)
 
-        self._text = QTextEdit()
+        self._text = QTextEdit(self)
         if not app_env.is_mac():
             decr_font(self._text)
         self._text.setProperty('rounded', True)
@@ -1137,6 +1139,9 @@ class SceneStructureTemplateSelector(QDialog, Ui_SceneStructuteTemplateSelector)
         self._timeline = SceneStructureTimeline()
         self._timeline.setReadnOnly(True)
         self.scrollAreaTimeline.layout().addWidget(self._timeline)
+
+        sp(self.btnScene).v_fixed()
+        sp(self.btnSequel).v_fixed()
 
         self.buttonGroup.buttonToggled.connect(self._templateToggled)
 

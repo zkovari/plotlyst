@@ -122,6 +122,7 @@ QPushButton:checked[top-level-nav=true] {
 
 QPushButton[main-side-nav=true] {
     border: 0px;
+    margin: 5px;
     padding: 5px;
     padding-top: 6px;
     padding-bottom: 6px;
