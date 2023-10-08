@@ -37,6 +37,7 @@ from qtmenu import ScrollableMenuWidget, ActionTooltipDisplayMode, MenuWidget, T
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Scene, SceneStructureItemType, SceneType, \
     SceneStructureItem, SceneOutcome, SceneStructureAgenda
+from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.generated.scene_structure_template_selector_dialog_ui import \
@@ -380,8 +381,8 @@ class SceneStructureItemWidget(QWidget):
         if not self._readOnly:
             self._btnIcon.setCursor(Qt.CursorShape.OpenHandCursor)
             self._dragEventFilter = DragEventFilter(self, self.SceneBeatMimeType, self._beatDataFunc,
-                                                             grabbed=self._btnIcon, startedSlot=self.dragStarted.emit,
-                                                             finishedSlot=self.dragStopped.emit)
+                                                    grabbed=self._btnIcon, startedSlot=self.dragStarted.emit,
+                                                    finishedSlot=self.dragStopped.emit)
             self._btnIcon.installEventFilter(self._dragEventFilter)
             self.setAcceptDrops(True)
 
@@ -507,7 +508,8 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
         self._outcome.selected.connect(self._outcomeChanged)
 
         self._text = QTextEdit()
-        decr_font(self._text)
+        if not app_env.is_mac():
+            decr_font(self._text)
         self._text.setProperty('rounded', True)
         self._text.setProperty('white-bg', True)
         self._text.setReadOnly(self._readOnly)

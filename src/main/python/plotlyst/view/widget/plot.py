@@ -282,9 +282,11 @@ class PlotPrincipleEditor(QWidget):
         hint = principle_placeholder(principle.type, plotType)
         self._textedit.setPlaceholderText(hint)
         self._textedit.setToolTip(hint)
+        if app_env.is_mac():
+            incr_font(self._textedit)
         self._textedit.setText(principle.value)
         self._textedit.setMinimumSize(175, 100)
-        self._textedit.setMaximumSize(200, 120)
+        self._textedit.setMaximumSize(190, 120)
         self._textedit.verticalScrollBar().setVisible(False)
         shadow(self._textedit)
         self._textedit.textChanged.connect(self._valueChanged)
