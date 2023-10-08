@@ -21,10 +21,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Optional
 
-from PyQt6.QtCore import Qt, QTimer, QEvent
-from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QColor, QIcon, QResizeEvent
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QColor, QIcon, QResizeEvent, QNativeGestureEvent
 from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QFrame, \
-    QToolButton, QApplication, QWidget, QPinchGesture
+    QToolButton, QApplication, QWidget
 from overrides import overrides
 from qthandy import sp, incr_icon, vbox
 
@@ -82,10 +82,10 @@ class BaseGraphicsView(QGraphicsView):
 
     @overrides
     def event(self, event):
-        if event.type() == QEvent.Type.Gesture:
-            pinch: QPinchGesture = event
-            if pinch.state() == Qt.GestureState.GestureUpdated:
-                scaleFactor = pinch.scaleFactor()
+        if isinstance(event, QNativeGestureEvent):
+            pinch: QNativeGestureEvent = event
+            if pinch.gestureType() == Qt.NativeGestureType.ZoomNativeGesture:
+                scaleFactor = pinch.value()
                 self._scale(scaleFactor)
             return True
         return super().event(event)
