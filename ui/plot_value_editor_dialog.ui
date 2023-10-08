@@ -160,29 +160,47 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>4</number>
+     </property>
+     <property name="bg" stdset="0">
+      <bool>true</bool>
      </property>
      <widget class="QWidget" name="tabPopular">
+      <property name="bg" stdset="0">
+       <bool>true</bool>
+      </property>
       <attribute name="title">
        <string>Popular</string>
       </attribute>
      </widget>
      <widget class="QWidget" name="tabFoundational">
+      <property name="bg" stdset="0">
+       <bool>true</bool>
+      </property>
       <attribute name="title">
        <string>Foundational</string>
       </attribute>
      </widget>
      <widget class="QWidget" name="tabSocietal">
+      <property name="bg" stdset="0">
+       <bool>true</bool>
+      </property>
       <attribute name="title">
        <string>Societal</string>
       </attribute>
      </widget>
      <widget class="QWidget" name="tabPersonal">
+      <property name="bg" stdset="0">
+       <bool>true</bool>
+      </property>
       <attribute name="title">
        <string>Personal</string>
       </attribute>
      </widget>
      <widget class="QWidget" name="tabRelational">
+      <property name="bg" stdset="0">
+       <bool>true</bool>
+      </property>
       <attribute name="title">
        <string>Relational</string>
       </attribute>
