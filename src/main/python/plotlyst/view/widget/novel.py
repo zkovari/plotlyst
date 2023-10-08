@@ -154,7 +154,8 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
 
         self.installEventFilter(self)
 
-        DelayedSignalSlotConnector(self.textSynopsis.textChanged, self._synopsisEdited, parent=self)
+        self._synopsisConnector = DelayedSignalSlotConnector(self.textSynopsis.textChanged, self._synopsisEdited,
+                                                             parent=self)
         dispatcher = event_dispatchers.instance(self._novel)
         dispatcher.register(self, SceneChangedEvent, SceneDeletedEvent)
 
@@ -199,7 +200,9 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
 
     @overrides
     def event_received(self, event: Event):
+        self._synopsisConnector.freeze()
         self.refresh()
+        self._synopsisConnector.freeze(False)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:

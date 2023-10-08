@@ -469,7 +469,12 @@ class DelayedSignalSlotConnector(QObject):
         self._timer.setSingleShot(True)
         self._timer.timeout.connect(self._call)
 
+        self._frozen: bool = False
+
         signal.connect(self._on_signal_emitted)
+
+    def freeze(self, frozen: bool = True):
+        self._frozen = frozen
 
     def _call(self):
         self._timer.stop()
@@ -478,7 +483,8 @@ class DelayedSignalSlotConnector(QObject):
     def _on_signal_emitted(self, *args, **kwargs):
         self._signal_args = args
         self._signal_kwargs = kwargs
-        self._timer.start(self._delay)
+        if not self._frozen:
+            self._timer.start(self._delay)
 
 
 def spawn(cls):
