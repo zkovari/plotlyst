@@ -20,8 +20,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 import qtawesome
-from PyQt6.QtCore import Qt, QThreadPool
-from PyQt6.QtGui import QCloseEvent, QPalette, QColor, QKeyEvent, QResizeEvent
+from PyQt6.QtCore import Qt, QThreadPool, QEvent, QMimeData, QTimer
+from PyQt6.QtGui import QCloseEvent, QPalette, QColor, QKeyEvent, QResizeEvent, QDrag, QWindowStateChangeEvent
 from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup, \
     QProgressDialog, QAbstractButton
 from fbs_runtime import platform
@@ -226,6 +226,22 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             return
 
         event.ignore()
+
+    @overrides
+    def event(self, event: QEvent) -> bool:
+        def fake_drag():
+            drag = QDrag(self)
+            mimedate = QMimeData()
+            mimedate.setText('')
+            drag.setMimeData(mimedate)
+            QTimer.singleShot(100, lambda: gc(drag))
+            drag.exec()
+
+        if isinstance(event, QWindowStateChangeEvent):
+            if app_env.is_mac() and self.windowState() == Qt.WindowState.WindowFullScreen:
+                QTimer.singleShot(100, fake_drag)
+
+        return super(MainWindow, self).event(event)
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
