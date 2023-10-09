@@ -685,6 +685,7 @@ class AgencyElementEditor(TextBasedSceneElementWidget):
 
     def setAgenda(self, agenda: SceneStructureAgenda):
         self._agenda = agenda
+        self.reset()
 
     @overrides
     def _elementCreated(self, element: StoryElement):
@@ -716,8 +717,15 @@ class AbstractSceneElementsEditor(QWidget):
         self._wdgElementsParent.layout().addWidget(self._lblBottom)
         self._wdgElementsParent.layout().addWidget(self._wdgElementsBottomRow)
 
+        self._storylineElements: List[PlotSceneElementEditor] = []
+
     def setScene(self, scene: Scene):
         self._scene = scene
+
+        for wdg in self._storylineElements:
+            self._wdgElementsTopRow.layout().removeWidget(wdg)
+            gc(wdg)
+        self._storylineElements.clear()
 
 
 class SceneStorylineEditor(AbstractSceneElementsEditor):
@@ -725,7 +733,6 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         super().__init__(parent)
         self._novel = novel
 
-        self._plotElements: List[PlotSceneElementEditor] = []
         self.__newPlotElementEditor()
 
         self._btnAddNewPlot = tool_btn(IconRegistry.plus_circle_icon('grey'), 'Add new storyline', transparent_=True,
@@ -735,7 +742,7 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
 
         self._wdgAddNewPlotParent = QWidget()
         vbox(self._wdgAddNewPlotParent)
-        margins(self._wdgAddNewPlotParent, top=self._plotElements[0].sizeHint().height() // 2, left=5, right=5)
+        margins(self._wdgAddNewPlotParent, top=self._storylineElements[0].sizeHint().height() // 2, left=5, right=5)
         icon = Icon()
         icon.setIcon(IconRegistry.from_name('fa5s.theater-masks', 'lightgrey'))
         self._wdgAddNewPlotParent.layout().addWidget(icon)
@@ -755,7 +762,7 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
 
         self._wdgElementsTopRow.layout().addWidget(self._outcomeElement)
         self._wdgElementsTopRow.layout().addWidget(self.__newLine())
-        self._wdgElementsTopRow.layout().addWidget(self._plotElements[0])
+        self._wdgElementsTopRow.layout().addWidget(self._storylineElements[0])
 
         self._wdgElementsTopRow.layout().addWidget(self.__newLine())
         self._wdgElementsTopRow.layout().addWidget(self._consequencesElement)
@@ -766,11 +773,6 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         self._outcomeElement.setScene(scene)
         self._consequencesElement.setScene(scene)
 
-        for wdg in self._plotElements:
-            self._wdgElementsTopRow.layout().removeWidget(wdg)
-            gc(wdg)
-        self._plotElements.clear()
-
         for element in scene.story_elements:
             if element.type == StoryElementType.Outcome:
                 self._outcomeElement.setElement(element)
@@ -780,15 +782,15 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
                 wdg = self.__newPlotElementEditor()
                 wdg.setElement(element)
 
-        if not self._plotElements:
+        if not self._storylineElements:
             self.__newPlotElementEditor()
 
-        for i, wdg in enumerate(self._plotElements):
+        for i, wdg in enumerate(self._storylineElements):
             self._wdgElementsTopRow.layout().insertWidget(i + 2, wdg)
 
-        last_plot_element = self._plotElements[-1].element()
+        last_plot_element = self._storylineElements[-1].element()
         if last_plot_element and last_plot_element.ref:
-            insert_after(self._wdgElementsTopRow, self._wdgAddNewPlotParent, reference=self._plotElements[-1])
+            insert_after(self._wdgElementsTopRow, self._wdgAddNewPlotParent, reference=self._storylineElements[-1])
             self._wdgAddNewPlotParent.setVisible(True)
 
     def _plotSelected(self, plotElement: PlotSceneElementEditor):
@@ -813,7 +815,7 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         if self._scene:
             elementEditor.setScene(self._scene)
 
-        self._plotElements.append(elementEditor)
+        self._storylineElements.append(elementEditor)
 
         return elementEditor
 
@@ -850,7 +852,6 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         super().__init__(parent)
         self._novel = novel
 
-        self._storylineElements: List[PlotSceneElementEditor] = []
         self._lblBottom.setText('Character changes')
 
         self._characterTabbat = CharacterTabBar(self._novel)
@@ -868,6 +869,21 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         self._wdgElementsTopRow.layout().addWidget(self._goalElement)
         self._wdgElementsTopRow.layout().addWidget(self.__newLine())
         self._wdgElementsTopRow.layout().addWidget(self._conflictElement)
+
+    @overrides
+    def setScene(self, scene: Scene):
+        super().setScene(scene)
+        self._goalElement.setAgenda(scene.agendas[0])
+        self._conflictElement.setAgenda(scene.agendas[0])
+
+        for element in scene.agendas[0].story_elements:
+            if element.type == StoryElementType.Goal:
+                self._goalElement.setElement(element)
+            elif element.type == StoryElementType.Conflict:
+                self._conflictElement.setElement(element)
+            # elif element.type == StoryElementType.Plot:
+            #     wdg = self.__newPlotElementEditor()
+            #     wdg.setElement(element)
 
     def updateAvailableCharacters(self, characters: List[Character]):
         pass
