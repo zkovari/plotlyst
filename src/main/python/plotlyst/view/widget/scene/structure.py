@@ -893,7 +893,6 @@ class SceneStructureTimeline(QWidget):
                             droppedSlot=self._dropped))
 
     def _dragMoved(self, widget: QWidget, edge: Qt.Edge, _: QPoint):
-        self._dragPlaceholder.setVisible(True)
         i = self.layout().indexOf(widget)
         if edge == Qt.Edge.LeftEdge:
             new_index = i - 1
@@ -903,6 +902,7 @@ class SceneStructureTimeline(QWidget):
         if self._dragPlaceholderIndex != new_index:
             self._dragPlaceholderIndex = new_index
             self.layout().insertWidget(self._dragPlaceholderIndex, self._dragPlaceholder)
+            self._dragPlaceholder.setVisible(True)
             self.update()
 
     def _dropped(self, _: QMimeData):
