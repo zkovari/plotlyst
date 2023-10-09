@@ -701,10 +701,8 @@ class SceneStructureTimeline(QWidget):
         self._readOnly = readOnly
 
     def clear(self):
-        clear_layout(self)
-        for wdg in self._beatWidgets:
-            gc(wdg)
         self._beatWidgets.clear()
+        clear_layout(self)
         self._selectorMenu.setOutcomeEnabled(True)
         # self.update()
 
