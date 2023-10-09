@@ -34,7 +34,7 @@ from src.main.python.plotlyst.common import raise_unrecognized_arg, CONFLICT_SEL
 from src.main.python.plotlyst.core.domain import Scene, Novel, ScenePurpose, advance_story_scene_purpose, \
     ScenePurposeType, reaction_story_scene_purpose, character_story_scene_purpose, setup_story_scene_purpose, \
     emotion_story_scene_purpose, exposition_story_scene_purpose, scene_purposes, Character, Plot, ScenePlotReference, \
-    StoryElement, StoryElementType, SceneOutcome, SceneStructureAgenda
+    StoryElement, StoryElementType, SceneOutcome, SceneStructureAgenda, PlotType
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent
@@ -672,6 +672,11 @@ class PlotSceneElementEditor(StorylineElementEditor):
         self.setIcon('fa5s.theater-masks')
         self.setPlaceholderText('Describe how this scene is related to the selected storyline')
 
+        self._btnPlotSelector.menuWidget().filterAll(False)
+        self._btnPlotSelector.menuWidget().filterPlotType(PlotType.Main, True)
+        self._btnPlotSelector.menuWidget().filterPlotType(PlotType.Global, True)
+        self._btnPlotSelector.menuWidget().filterPlotType(PlotType.Subplot, True)
+
 
 class ArcSceneElementEditor(StorylineElementEditor):
     def __init__(self, novel: Novel, parent=None):
@@ -679,6 +684,9 @@ class ArcSceneElementEditor(StorylineElementEditor):
         super().__init__(novel, StoryElementType.Arc, parent)
         self._agenda: Optional[SceneStructureAgenda] = None
         self.setPlaceholderText('Describe how the character progresses in their character arc')
+
+        self._btnPlotSelector.menuWidget().filterAll(False)
+        self._btnPlotSelector.menuWidget().filterPlotType(PlotType.Internal, True)
 
     @overrides
     def setScene(self, scene: Scene):
