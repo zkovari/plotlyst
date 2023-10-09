@@ -35,7 +35,7 @@ from src.main.python.plotlyst.common import raise_unrecognized_arg
 from src.main.python.plotlyst.core.domain import Scene, Novel, ScenePurpose, advance_story_scene_purpose, \
     ScenePurposeType, reaction_story_scene_purpose, character_story_scene_purpose, setup_story_scene_purpose, \
     emotion_story_scene_purpose, exposition_story_scene_purpose, scene_purposes, Character, Plot, ScenePlotReference, \
-    StoryElement, StoryElementType, SceneOutcome
+    StoryElement, StoryElementType, SceneOutcome, SceneStructureAgenda
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent
@@ -681,6 +681,18 @@ class OutcomeSceneElementEditor(StorylineElementEditor):
 class AgencyElementEditor(TextBasedSceneElementWidget):
     def __init__(self, type: StoryElementType, parent=None):
         super().__init__(type, parent)
+        self._agenda: Optional[SceneStructureAgenda] = None
+
+    def setAgenda(self, agenda: SceneStructureAgenda):
+        self._agenda = agenda
+
+    @overrides
+    def _elementCreated(self, element: StoryElement):
+        self._agenda.story_elements.append(element)
+
+    @overrides
+    def _elementRemoved(self, element: StoryElement):
+        self._agenda.story_elements.remove(element)
 
 
 class AbstractSceneElementsEditor(QWidget):
@@ -741,7 +753,6 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         self._consequencesElement.setIcon('mdi.ray-start-arrow')
         self._consequencesElement.setPlaceholderText("Are there any imminent or later consequences of this scene?")
 
-        # self._wdgElementsTopRow.layout().addWidget(self._themeElement)
         self._wdgElementsTopRow.layout().addWidget(self._outcomeElement)
         self._wdgElementsTopRow.layout().addWidget(self.__newLine())
         self._wdgElementsTopRow.layout().addWidget(self._plotElements[0])
@@ -839,6 +850,7 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         super().__init__(parent)
         self._novel = novel
 
+        self._storylineElements: List[PlotSceneElementEditor] = []
         self._lblBottom.setText('Character changes')
 
         self._characterTabbat = CharacterTabBar(self._novel)
