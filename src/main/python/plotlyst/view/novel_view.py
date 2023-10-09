@@ -39,6 +39,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_border_image
 from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton
 from src.main.python.plotlyst.view.widget.plot import PlotEditor
+from src.main.python.plotlyst.view.widget.settings import NovelSettingsWidget
 from src.main.python.plotlyst.view.widget.story_map import EventsMindMapView
 
 
@@ -126,6 +127,11 @@ class NovelView(AbstractNovelView):
 
         self.ui.wdgTagsContainer.setNovel(self.novel)
         self.ui.tabWidget.setCurrentWidget(self.ui.tabPlot)
+
+        self._settings = NovelSettingsWidget(self.novel)
+        self.ui.wdgSettings.layout().addWidget(self._settings)
+
+        self.ui.tabWidget.setCurrentWidget(self.ui.tabSettings)
 
     @overrides
     def refresh(self):

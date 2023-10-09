@@ -17,9 +17,132 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from PyQt6.QtWidgets import QWidget
+from typing import Dict
+
+from PyQt6.QtCore import pyqtSignal, Qt, QEvent
+from PyQt6.QtGui import QIcon, QPalette, QColor, QEnterEvent
+from PyQt6.QtWidgets import QWidget, QPushButton
+from overrides import overrides
+from qthandy import transparent, sp, vbox, hbox, vspacer, incr_font
+
+from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from src.main.python.plotlyst.core.domain import Novel, NovelSetting
+from src.main.python.plotlyst.view.common import label
+from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.input import Toggle
+
+setting_titles: Dict[NovelSetting, str] = {
+    NovelSetting.Structure: 'Story structure',
+    NovelSetting.Mindmap: 'Events map',
+    NovelSetting.Storylines: 'Storylines',
+    NovelSetting.Characters: 'Characters',
+    NovelSetting.Scenes: 'Scenes revision',
+    NovelSetting.World_building: 'World-building',
+    NovelSetting.Manuscript: 'Manuscript',
+    NovelSetting.Documents: 'Documents',
+    NovelSetting.Management: 'Task management',
+}
+setting_descriptions: Dict[NovelSetting, str] = {
+    NovelSetting.Structure: "Follow a story structure to help you with your story's pacing",
+    NovelSetting.Mindmap: "",
+    NovelSetting.Storylines: "",
+    NovelSetting.Characters: "",
+    NovelSetting.Scenes: "",
+    NovelSetting.World_building: "",
+    NovelSetting.Manuscript: "",
+    NovelSetting.Documents: "",
+    NovelSetting.Management: "",
+}
 
 
-class NovelSettingWidget(QWidget):
-    def __init__(self, parent=None):
+def setting_icon(setting: NovelSetting) -> QIcon:
+    if setting == NovelSetting.Structure:
+        return IconRegistry.story_structure_icon(color=PLOTLYST_SECONDARY_COLOR)
+    elif setting == NovelSetting.Mindmap:
+        return IconRegistry.from_name('ri.mind-map', PLOTLYST_SECONDARY_COLOR)
+    elif setting == NovelSetting.Storylines:
+        return IconRegistry.storylines_icon(color=PLOTLYST_SECONDARY_COLOR)
+    elif setting == NovelSetting.Characters:
+        return IconRegistry.character_icon(color=PLOTLYST_SECONDARY_COLOR)
+    elif setting == NovelSetting.Scenes:
+        return IconRegistry.scene_icon(color=PLOTLYST_SECONDARY_COLOR)
+    elif setting == NovelSetting.World_building:
+        return IconRegistry.world_building_icon(color=PLOTLYST_SECONDARY_COLOR)
+    elif setting == NovelSetting.Manuscript:
+        return IconRegistry.manuscript_icon(color=PLOTLYST_SECONDARY_COLOR)
+    elif setting == NovelSetting.Documents:
+        return IconRegistry.document_edition_icon(color=PLOTLYST_SECONDARY_COLOR)
+    elif setting == NovelSetting.Management:
+        return IconRegistry.tasks_icon()
+    return QIcon()
+
+
+class NovelSettingToggle(QWidget):
+    settingToggled = pyqtSignal(NovelSetting, bool)
+
+    def __init__(self, novel: Novel, setting: NovelSetting, parent=None):
         super().__init__(parent)
+        self._novel = novel
+        self._setting = setting
+
+        self._title = QPushButton()
+        self._title.setText(setting_titles[setting])
+        self._title.setIcon(setting_icon(setting))
+        palette = self._title.palette()
+        palette.setColor(QPalette.ColorGroup.Active, QPalette.ColorRole.ButtonText, QColor(PLOTLYST_SECONDARY_COLOR))
+        self._title.setPalette(palette)
+        transparent(self._title)
+        incr_font(self._title, 2)
+
+        self._description = label(setting_descriptions[setting], description=True)
+        self._description.setWordWrap(True)
+        sp(self._description).h_exp()
+
+        self._toggle = Toggle()
+        self._toggle.setChecked(True)
+        self._toggle.toggled.connect(self._toggled)
+        self._toggle.setVisible(False)
+
+        self._wdgTitle = QWidget()
+        vbox(self._wdgTitle)
+        self._wdgTitle.layout().addWidget(self._title, alignment=Qt.AlignmentFlag.AlignLeft)
+        self._wdgTitle.layout().addWidget(self._description)
+
+        self._wdgHeader = QWidget()
+        self._wdgHeader.setObjectName('wdgHeader')
+        hbox(self._wdgHeader)
+        self._wdgHeader.layout().addWidget(self._wdgTitle)
+        self._wdgHeader.layout().addWidget(self._toggle)
+
+        hbox(self, 0, 0)
+        self.layout().addWidget(self._wdgHeader)
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        self._toggle.setVisible(True)
+
+    @overrides
+    def leaveEvent(self, a0: QEvent) -> None:
+        self._toggle.setVisible(False)
+
+    def _toggled(self, toggled: bool):
+        self._wdgTitle.setEnabled(toggled)
+        self.settingToggled.emit(self._setting, toggled)
+
+
+class NovelSettingsWidget(QWidget):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+
+        vbox(self)
+        self.layout().addWidget(NovelSettingToggle(self._novel, NovelSetting.Mindmap))
+        self.layout().addWidget(NovelSettingToggle(self._novel, NovelSetting.Structure))
+        self.layout().addWidget(NovelSettingToggle(self._novel, NovelSetting.Storylines))
+        self.layout().addWidget(NovelSettingToggle(self._novel, NovelSetting.Characters))
+        self.layout().addWidget(NovelSettingToggle(self._novel, NovelSetting.Scenes))
+        self.layout().addWidget(NovelSettingToggle(self._novel, NovelSetting.World_building))
+        self.layout().addWidget(NovelSettingToggle(self._novel, NovelSetting.Documents))
+        self.layout().addWidget(NovelSettingToggle(self._novel, NovelSetting.Manuscript))
+        self.layout().addWidget(NovelSettingToggle(self._novel, NovelSetting.Management))
+        self.layout().addWidget(vspacer())

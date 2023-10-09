@@ -26,6 +26,10 @@ QLabel[description=true] {
     color: #8d99ae;
 }
 
+QLabel[description=true]:!enabled {
+    color: #CED4DD;
+}
+
 QLabel[error=true] {
     color: #e76f51;
 }

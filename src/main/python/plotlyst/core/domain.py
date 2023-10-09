@@ -2018,11 +2018,26 @@ class PanelPreferences:
     scene_chapters_sidebar_toggled: bool = False
 
 
+class NovelSetting(Enum):
+    Structure = 'structure'
+    Storylines = 'storylines'
+    Mindmap = 'mindmap'
+    Characters = 'characters'
+    Scenes = 'scenes'
+    Track_emotion = 'track_emotion'
+    Track_conflict = 'track_conflict'
+    Documents = 'documents'
+    Manuscript = 'manuscript'
+    World_building = 'world_building'
+    Management = 'management'
+
+
 @dataclass
 class NovelPreferences:
     active_stage_id: Optional[uuid.UUID] = None
     docs: DocsPreferences = field(default_factory=DocsPreferences)
     panels: PanelPreferences = field(default_factory=PanelPreferences)
+    settings: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
