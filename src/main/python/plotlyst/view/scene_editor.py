@@ -63,7 +63,7 @@ class SceneEditor(QObject, EventListener):
         self._emoji_font = emoji_font()
 
         # self.ui.btnDrive.setIcon(IconRegistry.from_name('mdi.chemical-weapon'))
-        set_tab_icon(self.ui.tabWidget, self.ui.tabStorylines, IconRegistry.story_structure_icon())
+        set_tab_icon(self.ui.tabWidget, self.ui.tabStorylines, IconRegistry.storylines_icon())
         set_tab_icon(self.ui.tabWidget, self.ui.tabCharacter, IconRegistry.character_icon())
         set_tab_icon(self.ui.tabWidget, self.ui.tabStructure,
                      IconRegistry.from_name('mdi6.timeline-outline', rotated=90))
