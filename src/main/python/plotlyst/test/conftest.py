@@ -79,9 +79,9 @@ def init_project():
     char_e = Character(name='Edward')
     novel.characters.extend([char_a, char_b, char_c, char_d, char_e])
 
-    mainplot = Plot(text='Main')
-    internalplot = Plot(text='Lesser', plot_type=PlotType.Internal)
-    subplot = Plot(text='Love', plot_type=PlotType.Subplot)
+    mainplot = Plot(text='Main', icon='fa5s.theater-masks')
+    internalplot = Plot(text='Lesser', plot_type=PlotType.Internal, icon='mdi.mirror')
+    subplot = Plot(text='Love', plot_type=PlotType.Subplot, icon='mdi.source-branch')
     novel.plots.extend([mainplot, internalplot, subplot])
     conflict = Conflict('Test', ConflictType.SOCIETY, character_id=char_a.id)
     novel.conflicts.append(conflict)

@@ -29,7 +29,8 @@ from qthandy import vbox, hbox, transparent, retain_when_hidden, spacer, sp, dec
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.core.domain import Novel, Scene, ScenePlotReference, PlotValue, ScenePlotValueCharge, Plot
+from src.main.python.plotlyst.core.domain import Novel, Scene, ScenePlotReference, PlotValue, ScenePlotValueCharge, \
+    Plot, PlotType
 from src.main.python.plotlyst.view.common import action
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton
@@ -178,8 +179,22 @@ class ScenePlotSelectorMenu(MenuWidget):
         super().__init__(parent)
         self._novel = novel
         self._scene: Optional[Scene] = None
+        self._filters: Dict[PlotType, bool] = {
+            PlotType.Global: True,
+            PlotType.Main: True,
+            PlotType.Internal: True,
+            PlotType.Subplot: True,
+            PlotType.Relation: False,
+        }
 
         self.aboutToShow.connect(self._beforeShow)
+
+    def filterPlotType(self, plotType: PlotType, filtered: bool):
+        self._filters[plotType] = filtered
+
+    def filterAll(self, filtered: bool):
+        for k in self._filters.keys():
+            self._filters[k] = filtered
 
     def setScene(self, scene: Scene):
         self._scene = scene
@@ -192,11 +207,16 @@ class ScenePlotSelectorMenu(MenuWidget):
         self.addSection('Link storylines to this scene')
         self.addSeparator()
         for plot in self._novel.plots:
+            if not self._filters[plot.plot_type]:
+                continue
             action_ = action(plot.text, IconRegistry.from_name(plot.icon, plot.icon_color),
                              partial(self.plotSelected.emit, plot))
             if plot.id in occupied_plot_ids:
                 action_.setDisabled(True)
             self.addAction(action_)
+
+        if not self.actions():
+            self.addSection('No corresponding storylines were found')
 
 
 class ScenePlotSelectorButton(QPushButton):
@@ -222,7 +242,7 @@ class ScenePlotSelectorButton(QPushButton):
         else:
             self._menu.setDisabled(True)
 
-    def menuWidget(self) -> MenuWidget:
+    def menuWidget(self) -> ScenePlotSelectorMenu:
         return self._menu
 
     def setScene(self, scene: Scene):

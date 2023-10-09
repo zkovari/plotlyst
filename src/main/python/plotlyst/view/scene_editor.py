@@ -182,6 +182,7 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgSceneStructure.setScene(self.novel, self.scene)
         self.tag_selector.setScene(self.scene)
         self._storylineEditor.setScene(self.scene)
+        self._agencyEditor.setScene(self.scene)
 
         self.ui.lineTitle.setText(self.scene.title)
         self.ui.textSynopsis.setText(self.scene.synopsis)
