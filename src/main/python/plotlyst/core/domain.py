@@ -977,7 +977,10 @@ class StoryElementType(Enum):
     Outcome = 'outcome'
     Consequences = 'consequences'
     Goal = 'goal'
+    Motivation = 'motivation'
     Conflict = 'conflict'
+    Decision = 'decision'
+    Emotion = 'emotion'
 
 
 @dataclass

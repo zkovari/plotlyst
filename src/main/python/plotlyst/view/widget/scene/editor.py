@@ -870,46 +870,67 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         super().__init__(parent)
         self._novel = novel
 
-        self._lblBottom.setText('Character changes')
+        self._lblBottom.setText('Character relations')
 
-        self._characterTabbat = CharacterTabBar(self._novel)
-        self.layout().insertWidget(0, self._characterTabbat)
+        self._characterTabbar = CharacterTabBar(self._novel)
+        self.layout().insertWidget(0, self._characterTabbar)
+
+        self._arcElement = ArcSceneElementEditor(self._novel)
+        self._emotionElement = AgencyTextBasedElementEditor(StoryElementType.Emotion)
+        self._emotionElement.setTitle('Emotion')
+        self._emotionElement.setIcon('mdi.emoticon-neutral')
 
         self._goalElement = AgencyTextBasedElementEditor(StoryElementType.Goal)
         self._goalElement.setTitle('Goal')
         self._goalElement.setIcon('mdi.target', 'darkBlue')
         self._goalElement.setPlaceholderText("What's the character's goal in this scene?")
 
+        self._motivationElement = AgencyTextBasedElementEditor(StoryElementType.Motivation)
+        self._motivationElement.setTitle('Motivation')
+        self._motivationElement.setIcon('fa5s.fist-raised')
+
         self._conflictElement = AgencyTextBasedElementEditor(StoryElementType.Conflict)
         self._conflictElement.setTitle('Conflict')
         self._conflictElement.setIcon('mdi.sword-cross', '#f3a712')
         self._conflictElement.setPlaceholderText("What kind of conflict does the character have to face?")
 
-        self._arcElement = ArcSceneElementEditor(self._novel)
-        # self._arcElement.setTitle('Character arc')
-        # self._arcElement.setIcon('mdi.mirror', CONFLICT_SELF_COLOR)
-        # self._arcElement.setPlaceholderText('Describe how the character progresses in their character arc')
+        self._decisionElement = AgencyTextBasedElementEditor(StoryElementType.Decision)
+        self._decisionElement.setTitle('Decision')
+        self._decisionElement.setIcon('fa5s.map-signs', '#ba6f4d')
 
+        self._wdgElementsTopRow.layout().addWidget(self._arcElement)
+        self._wdgElementsTopRow.layout().addWidget(self._emotionElement)
+        self._wdgElementsTopRow.layout().addWidget(self._newLine())
         self._wdgElementsTopRow.layout().addWidget(self._goalElement)
+        self._wdgElementsTopRow.layout().addWidget(self._motivationElement)
         self._wdgElementsTopRow.layout().addWidget(self._newLine())
         self._wdgElementsTopRow.layout().addWidget(self._conflictElement)
-        self._wdgElementsTopRow.layout().addWidget(self._newLine())
-        self._wdgElementsTopRow.layout().addWidget(self._arcElement)
+        self._wdgElementsTopRow.layout().addWidget(self._decisionElement)
 
     @overrides
     def setScene(self, scene: Scene):
         super().setScene(scene)
-        self._goalElement.setAgenda(scene.agendas[0])
-        self._conflictElement.setAgenda(scene.agendas[0])
+        agenda = scene.agendas[0]
         self._arcElement.setScene(scene)
+        self._emotionElement.setAgenda(agenda)
+        self._goalElement.setAgenda(agenda)
+        self._motivationElement.setAgenda(agenda)
+        self._conflictElement.setAgenda(agenda)
+        self._decisionElement.setAgenda(agenda)
 
         for element in scene.agendas[0].story_elements:
             if element.type == StoryElementType.Goal:
                 self._goalElement.setElement(element)
+            elif element.type == StoryElementType.Motivation:
+                self._motivationElement.setElement(element)
             elif element.type == StoryElementType.Conflict:
                 self._conflictElement.setElement(element)
+            elif element.type == StoryElementType.Decision:
+                self._decisionElement.setElement(element)
             elif element.type == StoryElementType.Arc:
                 self._arcElement.setElement(element)
+            elif element.type == StoryElementType.Emotion:
+                self._emotionElement.setElement(element)
             #     wdg = self.__newPlotElementEditor()
             #     wdg.setElement(element)
 
