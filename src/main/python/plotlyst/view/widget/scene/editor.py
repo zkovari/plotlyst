@@ -718,6 +718,26 @@ class AgencyTextBasedElementEditor(TextBasedSceneElementWidget):
         return self._agenda.story_elements
 
 
+class ConflictIntensityEditor(QSlider):
+    intensityChanged = pyqtSignal(int)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setOrientation(Qt.Orientation.Horizontal)
+        self.setMinimum(0)
+        self.setMaximum(10)
+        self.setPageStep(1)
+        self.setValue(1)
+        self.valueChanged.connect(self._valueChanged)
+        self.setProperty('conflict', True)
+
+    def _valueChanged(self, value: int):
+        if value == 0:
+            self.setValue(1)
+            return
+        self.intensityChanged.emit(value)
+
+
 class ConflictElementEditor(AgencyTextBasedElementEditor):
     def __init__(self, parent=None):
         super().__init__(StoryElementType.Conflict, parent)
@@ -728,32 +748,7 @@ class ConflictElementEditor(AgencyTextBasedElementEditor):
         self._wdgTracking = QWidget()
         vbox(self._wdgTracking)
 
-        self._sliderIntensity = QSlider()
-        self._sliderIntensity.setOrientation(Qt.Orientation.Horizontal)
-        self._sliderIntensity.setStyleSheet('''
-            QSlider::groove:horizontal {
-    border: 1px solid #999999;
-    height: 6px;
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #B1B1B1, stop:1 #c4c4c4);
-    margin: 0px 0;
-}
-
-QSlider::handle:horizontal {
-    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #b4b4b4, stop:1 #8f8f8f);
-    border: 1px solid #5c5c5c;
-    width: 15px;
-    margin: -3px -1px;
-    border-radius: 3px;
-}
-
-QSlider::add-page:horizontal {
-    background: lightgray;
-}
-
-QSlider::sub-page:horizontal {
-    background: #f3a712;
-}
-        ''')
+        self._sliderIntensity = ConflictIntensityEditor()
 
         self._wdgTracking.layout().addWidget(self._sliderIntensity)
         self._pageEditor.layout().addWidget(self._wdgTracking)

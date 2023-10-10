@@ -28,9 +28,9 @@ import qtanim
 from PyQt6 import QtCore
 from PyQt6.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent, QByteArray, QBuffer, QIODevice
 from PyQt6.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor, QImageReader, QImage, QPixmap, \
-    QMouseEvent, QCursor, QAction, QShowEvent
+    QMouseEvent, QAction, QShowEvent
 from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel, QPushButton, \
-    QHeaderView, QFileDialog, QMessageBox, QGridLayout, QWidgetAction
+    QHeaderView, QFileDialog, QMessageBox, QGridLayout
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup, incr_font, \
     spacer, clear_layout, vbox, hbox, flow, translucent, margins, bold, pointy
@@ -66,7 +66,6 @@ from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import
 from src.main.python.plotlyst.view.generated.character_role_selector_ui import Ui_CharacterRoleSelector
 from src.main.python.plotlyst.view.generated.character_topic_editor_ui import Ui_CharacterTopicEditor
 from src.main.python.plotlyst.view.generated.characters_progress_widget_ui import Ui_CharactersProgressWidget
-from src.main.python.plotlyst.view.generated.scene_conflict_intensity_ui import Ui_ConflictReferenceEditor
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
 from src.main.python.plotlyst.view.style.base import apply_border_image
@@ -426,25 +425,6 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
         self.conflictSelectionChanged.emit()
 
 
-class ConflictIntensityEditor(QWidget, Ui_ConflictReferenceEditor):
-    def __init__(self, conflict_ref: ConflictReference, parent=None):
-        super(ConflictIntensityEditor, self).__init__(parent)
-        self.conflict_ref = conflict_ref
-        self.setupUi(self)
-        self.sliderIntensity.setValue(self.conflict_ref.intensity)
-        self.sliderIntensity.valueChanged.connect(self._valueChanged)
-
-    @overrides
-    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
-        pass
-
-    def _valueChanged(self, value: int):
-        if value == 0:
-            self.sliderIntensity.setValue(1)
-            return
-        self.conflict_ref.intensity = value
-
-
 class CharacterConflictSelector(QWidget):
     conflictSelected = pyqtSignal()
 
@@ -506,11 +486,7 @@ class CharacterConflictSelector(QWidget):
         self.conflictSelected.emit()
 
     def _conflictRefClicked(self):
-        menu = QMenu(self.label)
-        action = QWidgetAction(menu)
-        action.setDefaultWidget(ConflictIntensityEditor(self.conflict_ref))
-        menu.addAction(action)
-        menu.popup(QCursor.pos())
+        pass
 
     def _remove(self):
         if self.parent():
