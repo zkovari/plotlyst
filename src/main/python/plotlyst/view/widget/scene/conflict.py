@@ -24,8 +24,9 @@ from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtGui import QMouseEvent
 from PyQt6.QtWidgets import QWidget, QSlider, QPushButton, QHeaderView, QFrame
 from overrides import overrides
-from qthandy import hbox, pointy, btn_popup, gc
+from qthandy import hbox, gc
 from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter, InstantTooltipEventFilter
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.core.domain import Conflict, ConflictReference, Novel, Scene, ConflictType, \
     SceneStructureAgenda
@@ -207,6 +208,9 @@ class CharacterConflictSelector(QWidget):
         self.btnLinkConflict.setIcon(IconRegistry.conflict_icon())
         self.btnLinkConflict.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btnLinkConflict.setStyleSheet('''
+                        QPushButton::menu-indicator {
+                            width: 0px;
+                        }
                         QPushButton {
                             border: 2px dotted grey;
                             border-radius: 6px;
@@ -223,9 +227,9 @@ class CharacterConflictSelector(QWidget):
                     ''')
 
         self.btnLinkConflict.installEventFilter(OpacityEventFilter(parent=self.btnLinkConflict))
-        self.selectorWidget = CharacterConflictWidget(self.novel, self.scene, self.scene.agendas[0],
-                                                      self.btnLinkConflict)
-        btn_popup(self.btnLinkConflict, self.selectorWidget)
+        self.selectorWidget = CharacterConflictWidget(self.novel, self.scene, self.scene.agendas[0])
+        self._menu = MenuWidget(self.btnLinkConflict)
+        self._menu.addWidget(self.selectorWidget)
 
         self.selectorWidget.conflictSelectionChanged.connect(self._conflictSelected)
 
@@ -233,13 +237,13 @@ class CharacterConflictSelector(QWidget):
         self.conflict = conflict
         self.conflict_ref = conflict_ref
         self.label = ConflictLabel(self.novel, self.conflict)
-        pointy(self.label)
         self.label.removalRequested.connect(self._remove)
         self.label.clicked.connect(self._conflictRefClicked)
         self.layout().addWidget(self.label)
         self.btnLinkConflict.setHidden(True)
 
     def _conflictSelected(self):
+        self._menu.hide()
         new_conflict = self.scene.agendas[0].conflicts(self.novel)[-1]
         new_conflict_ref = self.scene.agendas[0].conflict_references[-1]
         # self.btnLinkConflict.menu().hide()
