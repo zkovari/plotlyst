@@ -731,6 +731,12 @@ class ConflictIntensityEditor(QSlider):
         self.valueChanged.connect(self._valueChanged)
         self.setProperty('conflict', True)
 
+    @overrides
+    def setValue(self, value: int) -> None:
+        if value == 0:
+            value = 1
+        super().setValue(value)
+
     def _valueChanged(self, value: int):
         if value == 0:
             self.setValue(1)
@@ -749,9 +755,18 @@ class ConflictElementEditor(AgencyTextBasedElementEditor):
         vbox(self._wdgTracking)
 
         self._sliderIntensity = ConflictIntensityEditor()
+        self._sliderIntensity.intensityChanged.connect(self._intensityChanged)
 
         self._wdgTracking.layout().addWidget(self._sliderIntensity)
         self._pageEditor.layout().addWidget(self._wdgTracking)
+
+    @overrides
+    def setElement(self, element: StoryElement):
+        super().setElement(element)
+        self._sliderIntensity.setValue(element.intensity)
+
+    def _intensityChanged(self, value: int):
+        self._element.intensity = value
 
 
 class AbstractSceneElementsEditor(QWidget):
