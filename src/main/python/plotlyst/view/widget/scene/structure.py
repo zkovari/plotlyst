@@ -478,6 +478,9 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
     def outcomeVisible(self) -> bool:
         return self._outcome.isVisible()
 
+    def setOutcome(self, outcome: SceneOutcome):
+        self._outcome.refresh(outcome)
+
     def activate(self):
         super(SceneStructureBeatWidget, self).activate()
         if self.isVisible():
@@ -610,6 +613,7 @@ class SceneStructureTimeline(QWidget):
     def __init__(self, parent=None):
         super(SceneStructureTimeline, self).__init__(parent)
         self._novel: Optional[Novel] = None
+        self._scene: Optional[Scene] = None
         self._readOnly: bool = False
         sp(self).h_exp().v_exp()
         curved_flow(self, margin=10, spacing=10)
@@ -635,6 +639,9 @@ class SceneStructureTimeline(QWidget):
     def setNovel(self, novel: Novel):
         self._novel = novel
 
+    def setScene(self, scene: Scene):
+        self._scene = scene
+
     def setReadnOnly(self, readOnly: bool):
         self._readOnly = readOnly
 
@@ -642,13 +649,6 @@ class SceneStructureTimeline(QWidget):
         self._beatWidgets.clear()
         clear_layout(self)
         self._selectorMenu.setOutcomeEnabled(True)
-        # self.update()
-
-    def setAgenda(self, agenda: SceneStructureAgenda):
-        self.clear()
-
-        self._agenda = agenda
-        self.setStructure(self._agenda.items)
 
     def setStructure(self, items: List[SceneStructureItem]):
         self.clear()
@@ -767,6 +767,7 @@ class SceneStructureTimeline(QWidget):
         widget.removed.connect(self._beatRemoved)
         if item.type == SceneStructureItemType.CLIMAX:
             self._selectorMenu.setOutcomeEnabled(False)
+            widget.setOutcome(self._scene.outcome)
         widget.dragStarted.connect(partial(self._dragStarted, widget))
         widget.dragStopped.connect(self._dragFinished)
 
@@ -1001,6 +1002,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.scene = scene
 
         self.timeline.setNovel(novel)
+        self.timeline.setScene(scene)
         self.timeline.clear()
 
         self.timeline.setStructure(scene.agendas[0].items)

@@ -155,54 +155,66 @@ def purpose_icon(purpose_type: ScenePurposeType) -> QIcon:
 
 
 class ScenePurposeTypeButton(QPushButton):
-    selectionRequested = pyqtSignal()
+    reset = pyqtSignal()
 
-    def __init__(self, type: ScenePurposeType, parent=None):
-        super(ScenePurposeTypeButton, self).__init__(parent)
-        self.type = type
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._scene: Optional[Scene] = None
         pointy(self)
         self._opacityFilter = OpacityEventFilter(self, 0.8, 1.0, ignoreCheckedButton=True)
         self.installEventFilter(self._opacityFilter)
 
         self._menu = MenuWidget(self)
-        self._menu.addAction(action('Select new purpose', slot=self.selectionRequested.emit))
+        self._menu.addAction(action('Select new purpose', slot=self.reset.emit))
 
         self.refresh()
 
-    def setPurposeType(self, type: ScenePurposeType):
-        self.type = type
+    def setScene(self, scene: Scene):
+        self._scene = scene
         self.refresh()
 
     def refresh(self):
-        if self.type == ScenePurposeType.Other:
+        if self._scene is None:
+            return
+        IconRegistry.action_scene_icon()
+        if self._scene.purpose == ScenePurposeType.Other:
             self.setText('')
             self.setToolTip('Scene purpose not selected')
         else:
-            purpose = scene_purposes.get(self.type)
+            purpose = scene_purposes.get(self._scene.purpose)
             tip = purpose.display_name.replace('\n', ' ')
             self.setText(tip)
             self.setToolTip(f'Scene purpose: {tip}')
 
-        if self.type == ScenePurposeType.Exposition:
+        if self._scene.purpose == ScenePurposeType.Exposition:
             self.setIcon(IconRegistry.exposition_scene_icon())
-        elif self.type == ScenePurposeType.Setup:
+        elif self._scene.purpose == ScenePurposeType.Setup:
             self.setIcon(IconRegistry.setup_scene_icon())
-        elif self.type == ScenePurposeType.Character:
+        elif self._scene.purpose == ScenePurposeType.Character:
             self.setIcon(IconRegistry.character_development_scene_icon())
-        elif self.type == ScenePurposeType.Emotion:
+        elif self._scene.purpose == ScenePurposeType.Emotion:
             self.setIcon(IconRegistry.emotion_scene_icon())
 
-        bold(self, self.type != ScenePurposeType.Other)
+        bold(self, self._scene.purpose != ScenePurposeType.Other)
 
-        if self.type == ScenePurposeType.Story:
+        if self._scene.purpose == ScenePurposeType.Story:
             bgColor = '#f4978e'
             borderColor = '#fb5607'
-            self.setIcon(IconRegistry.action_scene_icon())
-        elif self.type == ScenePurposeType.Reaction:
+            resolution = self._scene.outcome == SceneOutcome.RESOLUTION
+            trade_off = self._scene.outcome == SceneOutcome.TRADE_OFF
+
+            self.setIcon(IconRegistry.action_scene_icon(resolution, trade_off))
+            if resolution:
+                bgColor = '#12BB86'
+                borderColor = '#0b6e4f'
+            elif trade_off:
+                bgColor = '#E188C2'
+                borderColor = '#832161'
+        elif self._scene.purpose == ScenePurposeType.Reaction:
             bgColor = '#89c2d9'
             borderColor = '#1a759f'
             self.setIcon(IconRegistry.reaction_scene_icon())
-        elif self.type == ScenePurposeType.Other:
+        elif self._scene.purpose == ScenePurposeType.Other:
             bgColor = 'lightgrey'
             borderColor = 'grey'
         else:
@@ -530,48 +542,53 @@ class TextBasedSceneElementWidget(SceneElementWidget):
 
 
 class OutcomeSceneElementEditor(TextBasedSceneElementWidget):
+    outcomeChanged = pyqtSignal(SceneOutcome)
+
     def __init__(self, parent=None):
         super().__init__(StoryElementType.Outcome, parent)
+        self._outcomeSelector = SceneOutcomeSelector(autoSelect=False)
         self.setPlaceholderText('Is there an imminent outcome in this scene?')
 
-        self._outcomeSelector = SceneOutcomeSelector(autoSelect=False)
         self._pageEditor.layout().addWidget(self._outcomeSelector, alignment=Qt.AlignmentFlag.AlignCenter)
         self._outcomeSelector.selected.connect(self._outcomeSelected)
 
     @overrides
     def setElement(self, element: StoryElement):
         super().setElement(element)
-        if element.outcome:
-            self._outcomeSelector.refresh(element.outcome)
-            self._outcomeSelected(element.outcome)
+        if self._scene.outcome:
+            self._outcomeSelector.refresh(self._scene.outcome)
+            self._updateOutcome()
         else:
             self._outcomeSelector.reset()
-            self.setTitle('Outcome')
-            self.setIcon('fa5s.bomb', 'grey')
+            self._resetTitle()
 
     @overrides
     def reset(self):
         super().reset()
+        self._resetTitle()
+
+    def _resetTitle(self):
         self.setTitle('Outcome')
         self.setIcon('fa5s.bomb', 'grey')
 
     def _outcomeSelected(self, outcome: SceneOutcome):
-        self._element.outcome = outcome
+        self._scene.outcome = outcome
         self._updateOutcome()
+        self.outcomeChanged.emit(outcome)
 
     def _updateOutcome(self):
-        if self._element.outcome == SceneOutcome.DISASTER:
+        if self._scene.outcome == SceneOutcome.DISASTER:
             color = '#f4442e'
             self.setIcon('fa5s.bomb', color)
-        elif self._element.outcome == SceneOutcome.RESOLUTION:
+        elif self._scene.outcome == SceneOutcome.RESOLUTION:
             color = '#0b6e4f'
             self.setIcon('mdi.bullseye-arrow', color)
-        elif self._element.outcome == SceneOutcome.TRADE_OFF:
+        elif self._scene.outcome == SceneOutcome.TRADE_OFF:
             color = '#832161'
             self.setIcon('fa5s.balance-scale-left', color)
         else:
             return
-        self.setTitle(SceneOutcome.to_str(self._element.outcome), color)
+        self.setTitle(SceneOutcome.to_str(self._scene.outcome), color)
 
 
 class StorylineElementEditor(TextBasedSceneElementWidget):
@@ -817,6 +834,8 @@ class AbstractSceneElementsEditor(QWidget):
 
 
 class SceneStorylineEditor(AbstractSceneElementsEditor):
+    outcomeChanged = pyqtSignal(SceneOutcome)
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
@@ -842,6 +861,7 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         # self._themeElement.setIcon('mdi.butterfly-outline', '#9d4edd')
 
         self._outcomeElement = OutcomeSceneElementEditor()
+        self._outcomeElement.outcomeChanged.connect(self.outcomeChanged.emit)
 
         self._consequencesElement = TextBasedSceneElementWidget(StoryElementType.Consequences)
         self._consequencesElement.setTitle('Consequences')

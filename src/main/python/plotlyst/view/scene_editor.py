@@ -133,11 +133,12 @@ class SceneEditor(QObject, EventListener):
         self._purposeSelector.skipped.connect(self._purposeSkipped)
         self._purposeSelector.selected.connect(self._purposeChanged)
 
-        self._btnPurposeType = ScenePurposeTypeButton(ScenePurposeType.Other)
-        self._btnPurposeType.selectionRequested.connect(self._resetPurposeEditor)
+        self._btnPurposeType = ScenePurposeTypeButton()
+        self._btnPurposeType.reset.connect(self._resetPurposeEditor)
         self.ui.wdgMidbar.layout().insertWidget(0, self._btnPurposeType)
 
         self._storylineEditor = SceneStorylineEditor(self.novel)
+        self._storylineEditor.outcomeChanged.connect(self._btnPurposeType.refresh)
         self.ui.tabStorylines.layout().addWidget(self._storylineEditor)
 
         self._agencyEditor = SceneAgendaEditor(self.novel)
@@ -200,6 +201,7 @@ class SceneEditor(QObject, EventListener):
         else:
             self.ui.textNotes.clear()
 
+        self._btnPurposeType.setScene(self.scene)
         if self.scene.purpose is None:
             self._resetPurposeEditor()
         else:
@@ -294,7 +296,7 @@ class SceneEditor(QObject, EventListener):
         self._closePurposeEditor()
 
     def _closePurposeEditor(self):
-        self._btnPurposeType.setPurposeType(self.scene.purpose)
+        self._btnPurposeType.refresh()
         if not self._btnPurposeType.isVisible():
             fade_in(self._btnPurposeType)
         if not self.ui.btnInfo.isVisible():
