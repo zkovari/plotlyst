@@ -40,7 +40,7 @@ from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import DelayedSignalSlotConnector, action, wrap, label, scrolled, \
-    ButtonPressResizeEventFilter, insert_after, tool_btn
+    ButtonPressResizeEventFilter, insert_after, tool_btn, shadow
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
 from src.main.python.plotlyst.view.widget.display import Icon
@@ -718,29 +718,38 @@ class AgencyTextBasedElementEditor(TextBasedSceneElementWidget):
         return self._agenda.story_elements
 
 
-class ConflictIntensityEditor(QSlider):
+class ConflictIntensityEditor(QWidget):
     intensityChanged = pyqtSignal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setOrientation(Qt.Orientation.Horizontal)
-        self.setMinimum(0)
-        self.setMaximum(10)
-        self.setPageStep(1)
-        self.setValue(1)
-        self.valueChanged.connect(self._valueChanged)
-        self.setProperty('conflict', True)
+        hbox(self, 0)
+        self._slider = QSlider()
+        self._slider.setOrientation(Qt.Orientation.Horizontal)
+        self._slider.setMinimum(0)
+        self._slider.setMaximum(10)
+        self._slider.setPageStep(1)
+        self._slider.setValue(1)
+        self._slider.valueChanged.connect(self._valueChanged)
+        self._slider.setProperty('conflict', True)
 
-    @overrides
+        self._iconColor = '#f3a712'
+        self._icon = tool_btn(IconRegistry.from_name('mdi.battery-charging-10', self._iconColor), transparent_=True)
+
+        self.layout().addWidget(self._icon)
+        self.layout().addWidget(self._slider)
+
     def setValue(self, value: int) -> None:
         if value == 0:
             value = 1
-        super().setValue(value)
+        self._slider.setValue(value)
 
     def _valueChanged(self, value: int):
         if value == 0:
             self.setValue(1)
             return
+        iconName = f'mdi.battery-charging-{value * 10}'
+        self._icon.setIcon(IconRegistry.from_name(iconName, self._iconColor))
         self.intensityChanged.emit(value)
 
 
@@ -752,11 +761,12 @@ class ConflictElementEditor(AgencyTextBasedElementEditor):
         self.setPlaceholderText("What kind of conflict does the character have to face?")
 
         self._wdgTracking = QWidget()
-        vbox(self._wdgTracking)
+        vbox(self._wdgTracking, spacing=0)
 
         self._sliderIntensity = ConflictIntensityEditor()
         self._sliderIntensity.intensityChanged.connect(self._intensityChanged)
 
+        self._wdgTracking.layout().addWidget(label('Intensity'), alignment=Qt.AlignmentFlag.AlignCenter)
         self._wdgTracking.layout().addWidget(self._sliderIntensity)
         self._pageEditor.layout().addWidget(self._wdgTracking)
 
@@ -767,6 +777,9 @@ class ConflictElementEditor(AgencyTextBasedElementEditor):
 
     def _intensityChanged(self, value: int):
         self._element.intensity = value
+        shadow(self._iconActive, offset=0, radius=value * 2, color=QColor('#f3a712'))
+        shadow(self._titleActive, offset=0, radius=value * 2, color=QColor('#f3a712'))
+        shadow(self._textEditor, offset=0, radius=value * 2, color=QColor('#f3a712'))
 
 
 class AbstractSceneElementsEditor(QWidget):

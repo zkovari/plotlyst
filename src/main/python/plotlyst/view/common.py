@@ -287,11 +287,11 @@ def restyle(widget: QWidget):
     widget.style().polish(widget)
 
 
-def shadow(wdg: QWidget, offset: int = 2):
+def shadow(wdg: QWidget, offset: int = 2, radius: int = 0, color = Qt.GlobalColor.lightGray):
     effect = QGraphicsDropShadowEffect(wdg)
-    effect.setBlurRadius(0)
+    effect.setBlurRadius(radius)
     effect.setOffset(offset, offset)
-    effect.setColor(Qt.GlobalColor.lightGray)
+    effect.setColor(color)
     wdg.setGraphicsEffect(effect)
 
 
