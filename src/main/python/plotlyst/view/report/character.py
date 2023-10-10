@@ -179,7 +179,7 @@ class SceneArcWidget(QWidget):
     arcChanged = pyqtSignal(Scene)
 
     def __init__(self, scene: Scene, novel: Novel, parent=None):
-        super(SceneArcWidget, self).__init__(parent)
+        super().__init__(parent)
         hbox(self, 0, 2)
 
         self.scene = scene
@@ -205,7 +205,7 @@ class SceneArcWidget(QWidget):
 class CharacterArcReport(AbstractReport, Ui_CharacterArcReport):
 
     def __init__(self, novel: Novel, parent=None):
-        super(CharacterArcReport, self).__init__(novel, parent)
+        super().__init__(novel, parent)
         self.wdgCharacterSelector.characterToggled.connect(self._characterChanged)
         self.chart = CharacterArcChart(self.novel)
         self.chartView.setChart(self.chart)
