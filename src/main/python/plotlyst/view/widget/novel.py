@@ -35,7 +35,7 @@ from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import ACT_THREE_COLOR, act_color, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
-    SceneType, Scene, TagType, SelectionItem, Tag, \
+    Scene, TagType, SelectionItem, Tag, \
     StoryBeatType, save_the_cat, three_act_structure, heros_journey, hook_beat, motion_beat, \
     disturbance_beat, normal_world_beat, characteristic_moment_beat, midpoint, midpoint_ponr, midpoint_mirror, \
     midpoint_proactive, crisis, first_plot_point, first_plot_point_ponr
@@ -187,12 +187,8 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
             self.textSynopsis.setText(self.scene.synopsis)
             if self.scene.pov:
                 self.btnPov.setIcon(avatars.avatar(self.scene.pov))
-            if self.scene.type == SceneType.ACTION:
-                self.btnSceneType.setIcon(
-                    IconRegistry.action_scene_icon(self.scene.outcome_resolution(),
-                                                   self.scene.outcome_trade_off()))
-            elif self.scene.type == SceneType.REACTION:
-                self.btnSceneType.setIcon(IconRegistry.reaction_scene_icon())
+            if self.scene.purpose:
+                self.btnSceneType.setIcon(IconRegistry.scene_type_icon(self.scene))
         else:
             self.lblTitle.setDisabled(True)
             self.btnIcon.setDisabled(True)

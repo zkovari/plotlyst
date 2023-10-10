@@ -23,7 +23,7 @@ import pytest
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Character, Scene, Chapter, \
-    Novel, Conflict, ConflictType, Plot, PlotType, ScenePlotReference, SceneType, SceneStructureAgenda
+    Novel, Conflict, ConflictType, Plot, PlotType, ScenePlotReference, SceneStructureAgenda, ScenePurposeType
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.handler import global_event_dispatcher
 from src.main.python.plotlyst.view.main_window import MainWindow
@@ -91,11 +91,12 @@ def init_project():
     novel.chapters.append(chapter_1)
     novel.chapters.append(chapter_2)
     scene_1 = Scene(title='Scene 1', synopsis='Scene 1 synopsis', pov=char_a, characters=[char_b, char_c],
-                    plot_values=[ScenePlotReference(mainplot)], chapter=chapter_1, day=1, type=SceneType.ACTION,
+                    plot_values=[ScenePlotReference(mainplot)], chapter=chapter_1, day=1,
+                    purpose=ScenePurposeType.Story,
                     stage=novel.stages[1], agendas=[SceneStructureAgenda()])
     scene_2 = Scene(title='Scene 2', synopsis='Scene 2 synopsis', pov=char_d, characters=[char_c, char_a],
                     plot_values=[ScenePlotReference(internalplot), ScenePlotReference(subplot)], chapter=chapter_2,
-                    day=2, type=SceneType.REACTION, agendas=[SceneStructureAgenda()])
+                    day=2, purpose=ScenePurposeType.Reaction, agendas=[SceneStructureAgenda()])
     novel.scenes.append(scene_1)
     novel.scenes.append(scene_2)
 

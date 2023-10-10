@@ -747,15 +747,6 @@ class ScenePlotReference:
     data: ScenePlotReferenceData = field(default_factory=ScenePlotReferenceData)
 
 
-class SceneType(Enum):
-    DEFAULT = ''
-    ACTION = 'action'
-    REACTION = 'reaction'
-    HAPPENING = 'happening'
-    EXPOSITION = 'exposition'
-    SUMMARY = 'summary'
-
-
 class SceneStructureItemType(Enum):
     ACTION = 0
     CONFLICT = 1
@@ -857,7 +848,6 @@ class SceneStructureAgenda(CharacterBased):
     items: List[SceneStructureItem] = field(default_factory=list)
     conflict_references: List[ConflictReference] = field(default_factory=list)
     goal_references: List[GoalReference] = field(default_factory=list)
-    outcome: Optional[SceneOutcome] = None
     beginning_emotion: int = NEUTRAL
     ending_emotion: int = NEUTRAL
     story_elements: List['StoryElement'] = field(default_factory=list)
@@ -997,7 +987,6 @@ class Scene:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     synopsis: str = ''
-    type: SceneType = SceneType.DEFAULT
     pov: Optional[Character] = None
     characters: List[Character] = field(default_factory=list)
     agendas: List[SceneStructureAgenda] = field(default_factory=list)
@@ -1014,6 +1003,7 @@ class Scene:
     manuscript: Optional['Document'] = None
     drive: SceneDrive = field(default_factory=SceneDrive)
     purpose: Optional[ScenePurposeType] = None
+    outcome: Optional[SceneOutcome] = None
     story_elements: List[StoryElement] = field(default_factory=list)
 
     def beat(self, novel: 'Novel') -> Optional[StoryBeat]:
@@ -1071,10 +1061,8 @@ class Scene:
         return self.title if self.title else f'Scene {novel.scenes.index(self) + 1}'
 
     def __is_outcome(self, expected) -> bool:
-        if self.agendas:
-            for item_ in reversed(self.agendas[0].items):
-                if item_.outcome is not None:
-                    return item_.outcome == expected
+        if self.outcome and self.outcome == expected:
+            return True
 
         return False
 

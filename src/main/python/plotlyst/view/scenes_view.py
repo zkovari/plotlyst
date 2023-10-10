@@ -32,7 +32,7 @@ from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
-from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, SceneType
+from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, ScenePurposeType
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
@@ -98,8 +98,8 @@ class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
 
     def refresh(self):
         self.btnCount.setText(f'#{len(self.novel.scenes)}')
-        self.btnScene.setText(f'{len([x for x in self.novel.scenes if x.type == SceneType.ACTION])}')
-        self.btnSequel.setText(f'{len([x for x in self.novel.scenes if x.type == SceneType.REACTION])}')
+        self.btnScene.setText(f'{len([x for x in self.novel.scenes if x.purpose == ScenePurposeType.Story])}')
+        self.btnSequel.setText(f'{len([x for x in self.novel.scenes if x.purpose == ScenePurposeType.Reaction])}')
 
         self._chartDistribution.refresh(self.novel)
 

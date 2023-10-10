@@ -26,7 +26,7 @@ import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QSize, QRectF, QEvent, QPoint, QMimeData, QTimer
 from PyQt6.QtGui import QIcon, QColor, QPainter, QPen, \
     QPainterPath, QPaintEvent, QAction, QResizeEvent, QEnterEvent, QDragEnterEvent
-from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy, QTextEdit, QDialog, QApplication
+from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QTextEdit, QDialog, QApplication
 from overrides import overrides
 from qtanim import fade_in
 from qthandy import pointy, gc, translucent, bold, clear_layout, decr_font, \
@@ -35,8 +35,8 @@ from qthandy.filter import OpacityEventFilter, ObjectReferenceMimeData, DragEven
 from qtmenu import ScrollableMenuWidget, ActionTooltipDisplayMode, MenuWidget, TabularGridMenuWidget
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Novel, Scene, SceneStructureItemType, SceneType, \
-    SceneStructureItem, SceneOutcome, SceneStructureAgenda
+from src.main.python.plotlyst.core.domain import Novel, Scene, SceneStructureItemType, SceneStructureItem, SceneOutcome, \
+    SceneStructureAgenda, ScenePurposeType
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
@@ -193,67 +193,6 @@ class EmotionSelectorButton(QToolButton):
         self.installEventFilter(ButtonPressResizeEventFilter(self))
 
 
-class _SceneTypeButton(QPushButton):
-    def __init__(self, type: SceneType, parent=None):
-        super(_SceneTypeButton, self).__init__(parent)
-        self.type = type
-        self.setCheckable(True)
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-
-        if type == SceneType.ACTION:
-            bgColor = '#eae4e9'
-            borderColor = '#f94144'
-            bgColorChecked = '#f4978e'
-            borderColorChecked = '#fb5607'
-            self.setText('Scene (action)')
-            self.setIcon(IconRegistry.action_scene_icon())
-        elif type == SceneType.REACTION:
-            bgColor = '#bee1e6'
-            borderColor = '#168aad'
-            bgColorChecked = '#89c2d9'
-            borderColorChecked = '#1a759f'
-            self.setText('Sequel (reaction)')
-            self.setIcon(IconRegistry.reaction_scene_icon())
-        else:
-            bgColor = 'lightgrey'
-            borderColor = 'grey'
-            bgColorChecked = 'darkGrey'
-            borderColorChecked = 'grey'
-            self.setText(type.name.capitalize())
-        if type == SceneType.EXPOSITION:
-            self.setIcon(IconRegistry.exposition_scene_icon())
-        elif type == SceneType.SUMMARY:
-            self.setIcon(IconRegistry.summary_scene_icon())
-        elif type == SceneType.HAPPENING:
-            self.setIcon(IconRegistry.happening_scene_icon())
-
-        self.setStyleSheet(f'''
-            QPushButton {{
-                background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 0,
-                                      stop: 0 {bgColor};);
-                border: 2px dashed {borderColor};
-                border-radius: 8px;
-                padding: 2px;
-            }}
-            QPushButton:checked {{
-                background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 0,
-                                      stop: 0 {bgColorChecked});
-                border: 3px solid {borderColorChecked};
-                padding: 1px;
-            }}
-            ''')
-        self._toggled(self.isChecked())
-        self.installEventFilter(OpacityEventFilter(self, 0.7, 0.5, ignoreCheckedButton=True))
-        self.toggled.connect(self._toggled)
-
-    def _toggled(self, toggled: bool):
-        translucent(self, 1.0 if toggled else 0.5)
-        font = self.font()
-        font.setBold(toggled)
-        self.setFont(font)
-
-
 class BeatSelectorMenu(TabularGridMenuWidget):
     selected = pyqtSignal(SceneStructureItemType)
 
@@ -311,22 +250,22 @@ class BeatSelectorMenu(TabularGridMenuWidget):
         self._outcomeEnabled = enabled
         self._actions[SceneStructureItemType.CLIMAX].setEnabled(enabled)
 
-    def toggleSceneType(self, sceneType: SceneType):
-        for action_ in self._actions.values():
-            action_.setEnabled(True)
-        self._actions[SceneStructureItemType.CLIMAX].setEnabled(self._outcomeEnabled)
-        if sceneType == SceneType.REACTION:
-            for type_ in [SceneStructureItemType.ACTION, SceneStructureItemType.HOOK,
-                          SceneStructureItemType.RISING_ACTION, SceneStructureItemType.INCITING_INCIDENT,
-                          SceneStructureItemType.CONFLICT, SceneStructureItemType.CLIMAX, SceneStructureItemType.TURN]:
-                self._actions[type_].setEnabled(False)
-        elif sceneType == SceneType.HAPPENING:
-            for type_ in [SceneStructureItemType.ACTION, SceneStructureItemType.HOOK,
-                          SceneStructureItemType.RISING_ACTION, SceneStructureItemType.INCITING_INCIDENT,
-                          SceneStructureItemType.CONFLICT, SceneStructureItemType.CLIMAX, SceneStructureItemType.TURN,
-                          SceneStructureItemType.CHOICE, SceneStructureItemType.REACTION,
-                          SceneStructureItemType.DILEMMA, SceneStructureItemType.DECISION]:
-                self._actions[type_].setEnabled(False)
+    # def toggleSceneType(self, sceneType: SceneType):
+    #     for action_ in self._actions.values():
+    #         action_.setEnabled(True)
+    #     self._actions[SceneStructureItemType.CLIMAX].setEnabled(self._outcomeEnabled)
+    #     if sceneType == SceneType.REACTION:
+    #         for type_ in [SceneStructureItemType.ACTION, SceneStructureItemType.HOOK,
+    #                       SceneStructureItemType.RISING_ACTION, SceneStructureItemType.INCITING_INCIDENT,
+    #                       SceneStructureItemType.CONFLICT, SceneStructureItemType.CLIMAX, SceneStructureItemType.TURN]:
+    #             self._actions[type_].setEnabled(False)
+    #     elif sceneType == SceneType.HAPPENING:
+    #         for type_ in [SceneStructureItemType.ACTION, SceneStructureItemType.HOOK,
+    #                       SceneStructureItemType.RISING_ACTION, SceneStructureItemType.INCITING_INCIDENT,
+    #                       SceneStructureItemType.CONFLICT, SceneStructureItemType.CLIMAX, SceneStructureItemType.TURN,
+    #                       SceneStructureItemType.CHOICE, SceneStructureItemType.REACTION,
+    #                       SceneStructureItemType.DILEMMA, SceneStructureItemType.DECISION]:
+    #             self._actions[type_].setEnabled(False)
 
 
 class _SceneBeatPlaceholderButton(QPushButton):
@@ -677,7 +616,6 @@ class SceneStructureTimeline(QWidget):
 
         self._agenda: Optional[SceneStructureAgenda] = None
         self._structure: List[SceneStructureItem] = []
-        self._sceneType: Optional[SceneType] = None
         self._beatWidgets: List[SceneStructureItemWidget] = []
 
         self._currentPlaceholder: Optional[QWidget] = None
@@ -706,17 +644,11 @@ class SceneStructureTimeline(QWidget):
         self._selectorMenu.setOutcomeEnabled(True)
         # self.update()
 
-    def setSceneType(self, sceneType: SceneType):
-        self._sceneType = sceneType
-        self._selectorMenu.toggleSceneType(sceneType)
-        self.update()
-
-    def setAgenda(self, agenda: SceneStructureAgenda, sceneType: Optional[SceneType] = None):
+    def setAgenda(self, agenda: SceneStructureAgenda):
         self.clear()
 
         self._agenda = agenda
         self.setStructure(self._agenda.items)
-        self.setSceneType(sceneType)
 
     def setStructure(self, items: List[SceneStructureItem]):
         self.clear()
@@ -983,12 +915,13 @@ class SceneStructureList(ListView):
     def __init__(self, parent=None):
         super(SceneStructureList, self).__init__(parent)
         self._agenda: Optional[SceneStructureAgenda] = None
+        self._centralWidget.setProperty('relaxed-white-bg', True)
 
-    def setAgenda(self, agenda: SceneStructureAgenda, sceneType: SceneType):
+    def setAgenda(self, agenda: SceneStructureAgenda, purpose: Optional[ScenePurposeType] = None):
         self._agenda = agenda
-        self.refresh(sceneType)
+        self.refresh()
 
-    def refresh(self, sceneType: SceneType):
+    def refresh(self):
         self.clear()
 
         for beat in self._agenda.items:
@@ -1071,8 +1004,8 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.timeline.clear()
 
         self.timeline.setStructure(scene.agendas[0].items)
-        self.listEvents.setAgenda(scene.agendas[0], self.scene.type)
-        self._initEditor(self.scene.type)
+        self.listEvents.setAgenda(scene.agendas[0], self.scene.purpose)
+        self._initEditor(self.scene.purpose)
 
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
@@ -1100,20 +1033,19 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         # self._toggleCharacterStatus()
         # self._initSelectors()
 
-    def _initEditor(self, type: SceneType):
-        if type == SceneType.EXPOSITION:
+    def _initEditor(self, purpose: ScenePurposeType):
+        if purpose == ScenePurposeType.Exposition:
             self.stackStructure.setCurrentWidget(self.pageList)
             self.lblSummary.setHidden(True)
             self.lblExposition.setVisible(True)
-            self.listEvents.refresh(type)
-        elif type == SceneType.SUMMARY:
-            self.stackStructure.setCurrentWidget(self.pageList)
-            self.lblSummary.setVisible(True)
-            self.lblExposition.setHidden(True)
-            self.listEvents.refresh(type)
+            self.listEvents.refresh()
+        # elif purpose == SceneType.SUMMARY:
+        #     self.stackStructure.setCurrentWidget(self.pageList)
+        #     self.lblSummary.setVisible(True)
+        #     self.lblExposition.setHidden(True)
+        #     self.listEvents.refresh()
         else:
             self.stackStructure.setCurrentWidget(self.pageTimetilne)
-            self.timeline.setSceneType(self.scene.type)
 
     def _showTemplates(self):
         selector = SceneStructureTemplateSelector()
