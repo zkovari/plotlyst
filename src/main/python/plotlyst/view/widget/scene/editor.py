@@ -736,8 +736,9 @@ class ConflictElementEditor(AgencyTextBasedElementEditor):
 
         self._wdgTracking = QWidget()
         vbox(self._wdgTracking, spacing=0)
-        self._wdgTracking.layout().addWidget(label('Intensity'), alignment=Qt.AlignmentFlag.AlignCenter)
+        self._wdgTracking.layout().addWidget(label('Intensity'), alignment=Qt.AlignmentFlag.AlignLeft)
         self._wdgTracking.layout().addWidget(self._sliderIntensity)
+        self._wdgTracking.layout().addWidget(line())
         self._wdgTracking.layout().addWidget(self._wdgConflicts)
 
         self._pageEditor.layout().addWidget(self._wdgTracking)
@@ -756,6 +757,11 @@ class ConflictElementEditor(AgencyTextBasedElementEditor):
             conflictSelector.setConflict(ref.conflict(self._novel), ref)
             self._wdgConflicts.layout().addWidget(conflictSelector)
 
+        conflictSelector = CharacterConflictSelector(self._novel, self._scene,
+                                                     simplified=len(agenda.conflict_references) > 0)
+        conflictSelector.conflictSelected.connect(self._conflictSelected)
+        self._wdgConflicts.layout().addWidget(conflictSelector)
+
     @overrides
     def setElement(self, element: StoryElement):
         super().setElement(element)
@@ -766,6 +772,11 @@ class ConflictElementEditor(AgencyTextBasedElementEditor):
         shadow(self._iconActive, offset=0, radius=value * 2, color=QColor('#f3a712'))
         shadow(self._titleActive, offset=0, radius=value, color=QColor('#f3a712'))
         shadow(self._textEditor, offset=0, radius=value * 2, color=QColor('#f3a712'))
+
+    def _conflictSelected(self):
+        conflictSelector = CharacterConflictSelector(self._novel, self._scene, simplified=True)
+        conflictSelector.conflictSelected.connect(self._conflictSelected)
+        self._wdgConflicts.layout().addWidget(conflictSelector)
 
 
 class AbstractSceneElementsEditor(QWidget):
