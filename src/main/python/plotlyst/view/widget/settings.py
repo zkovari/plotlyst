@@ -20,16 +20,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Dict, Optional
 
+import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QSize
 from PyQt6.QtGui import QIcon, QPalette, QColor
 from PyQt6.QtWidgets import QWidget, QPushButton, QToolButton
 from qthandy import transparent, sp, vbox, hbox, vspacer, incr_font, pointy, grid
+from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel, NovelSetting
 from src.main.python.plotlyst.view.common import label, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.input import Toggle
 
 setting_titles: Dict[NovelSetting, str] = {
@@ -131,25 +134,60 @@ class NovelPanelCustomizationToggle(QToolButton):
         self.setCheckable(True)
         self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
 
-        self.setIcon(setting_icon(self._setting))
+        self.setIcon(setting_icon(self._setting, 'grey', PLOTLYST_SECONDARY_COLOR))
         transparent(self)
         self.setIconSize(QSize(30, 30))
         self.setText(setting_titles[self._setting])
         incr_font(self, 2)
 
+        sp(self).h_exp().v_exp()
+
+        self.setMinimumWidth(150)
+
         self.installEventFilter(ButtonPressResizeEventFilter(self))
+        self.installEventFilter(OpacityEventFilter(self, ignoreCheckedButton=True))
+
+        self.setStyleSheet(f'''
+            QToolButton {{
+                color: grey;
+                background: lightgrey;
+                border: 1px solid lightgrey;
+                border-radius: 2px;
+            }}
+            QToolButton:checked {{
+                color: black;
+                background: {PLOTLYST_TERTIARY_COLOR};
+            }}
+        ''')
+
+        self.clicked.connect(self._glow)
+
+    def _glow(self, checked: bool):
+        if checked:
+            qtanim.glow(self, 150, color=QColor(PLOTLYST_SECONDARY_COLOR), radius=12)
+        else:
+            qtanim.glow(self, 150, color=QColor('grey'), radius=5)
 
 
 class NovelQuickPanelCustomizationWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._novel: Optional[Novel] = None
+        self.setProperty('relaxed-white-bg', True)
 
         self._grid = grid(self)
 
         self._addSetting(NovelSetting.Manuscript, 0, 0)
         self._addSetting(NovelSetting.Characters, 0, 1)
         self._addSetting(NovelSetting.Scenes, 0, 2)
+
+        self._addSetting(NovelSetting.Mindmap, 1, 0)
+        self._addSetting(NovelSetting.Storylines, 1, 1)
+        self._addSetting(NovelSetting.Structure, 1, 2)
+
+        self._addSetting(NovelSetting.Documents, 2, 0)
+        self._addSetting(NovelSetting.World_building, 2, 1)
+        self._addSetting(NovelSetting.Management, 2, 2)
 
     def setNovel(self, novel: Novel):
         self._novel = novel
@@ -160,6 +198,7 @@ class NovelQuickPanelCustomizationWidget(QWidget):
     def _addSetting(self, setting: NovelSetting, row: int, col: int):
         toggle = NovelPanelCustomizationToggle(setting)
         toggle.clicked.connect(partial(self._settingChanged, setting))
+        # self._grid.addWidget(toggle, row, col, 1, 1, alignment=Qt.AlignmentFlag.AlignCenter)
         self._grid.addWidget(toggle, row, col, 1, 1)
 
     def _settingChanged(self, setting: NovelSetting, toggled: bool):
@@ -176,6 +215,7 @@ class NovelQuickPanelCustomizationButton(QToolButton):
 
         self._menu = MenuWidget(self)
         self._customizationWidget = NovelQuickPanelCustomizationWidget()
+        apply_white_menu(self._menu)
         self._menu.addWidget(self._customizationWidget)
 
     def setNovel(self, novel: Novel):
