@@ -254,9 +254,9 @@ class NovelQuickPanelCustomizationWidget(QWidget, EventListener):
 
         event_dispatchers.instance(self._novel).register(self, *panel_events)
 
-    def reset(self):
-        event_dispatchers.instance(self._novel).deregister(self, *panel_events)
-        self._novel = None
+    # def reset(self):
+    #     event_dispatchers.instance(self._novel).deregister(self, *panel_events)
+    #     self._novel = None
 
     @overrides
     def eventFilter(self, watched: 'QObject', event: QEvent) -> bool:
@@ -291,8 +291,8 @@ class NovelQuickPanelCustomizationButton(QToolButton):
     def setNovel(self, novel: Novel):
         self._customizationWidget.setNovel(novel)
 
-    def reset(self):
-        self._customizationWidget.reset()
+    # def reset(self):
+    #     self._customizationWidget.reset()
 
 
 class NovelSettingsWidget(QWidget, EventListener):
