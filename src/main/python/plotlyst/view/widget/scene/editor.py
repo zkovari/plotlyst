@@ -174,7 +174,7 @@ class ScenePurposeTypeButton(QPushButton):
         self.refresh()
 
     def refresh(self):
-        if self._scene is None:
+        if self._scene is None or self._scene.purpose is None:
             return
         IconRegistry.action_scene_icon()
         if self._scene.purpose == ScenePurposeType.Other:
