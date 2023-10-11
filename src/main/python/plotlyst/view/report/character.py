@@ -27,7 +27,7 @@ from PyQt6.QtWidgets import QLabel, QWidget, QToolButton
 from overrides import overrides
 from qthandy import clear_layout, vspacer, hbox, transparent, vbox, margins, flow
 
-from src.main.python.plotlyst.core.domain import Novel, Character, Scene, SceneType
+from src.main.python.plotlyst.core.domain import Novel, Character, Scene
 from src.main.python.plotlyst.view.common import icon_to_html_img
 from src.main.python.plotlyst.view.generated.report.character_arc_report_ui import Ui_CharacterArcReport
 from src.main.python.plotlyst.view.generated.report.character_report_ui import Ui_CharacterReport
@@ -179,14 +179,14 @@ class SceneArcWidget(QWidget):
     arcChanged = pyqtSignal(Scene)
 
     def __init__(self, scene: Scene, novel: Novel, parent=None):
-        super(SceneArcWidget, self).__init__(parent)
+        super().__init__(parent)
         hbox(self, 0, 2)
 
         self.scene = scene
 
         self.btnSceneType = QToolButton()
         transparent(self.btnSceneType)
-        if scene.type != SceneType.DEFAULT:
+        if scene.purpose:
             self.btnSceneType.setIcon(IconRegistry.scene_type_icon(scene))
         self.lblTitle = QLabel(scene.title_or_index(novel))
         self.btnEndingEmotion = CharacterEmotionButton()
@@ -205,7 +205,7 @@ class SceneArcWidget(QWidget):
 class CharacterArcReport(AbstractReport, Ui_CharacterArcReport):
 
     def __init__(self, novel: Novel, parent=None):
-        super(CharacterArcReport, self).__init__(novel, parent)
+        super().__init__(novel, parent)
         self.wdgCharacterSelector.characterToggled.connect(self._characterChanged)
         self.chart = CharacterArcChart(self.novel)
         self.chartView.setChart(self.chart)

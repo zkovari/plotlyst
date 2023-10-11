@@ -39,12 +39,12 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     default_stages, StoryStructure, \
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
     Conflict, BackstoryEvent, Comment, Document, default_documents, DocumentType, Causality, \
-    Plot, ScenePlotReference, SceneType, SceneStructureAgenda, \
+    Plot, ScenePlotReference, SceneStructureAgenda, \
     three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
     default_tag_types, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterPreferences, TagReference, \
     ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding, Board, \
     default_big_five_values, CharacterPlan, ManuscriptGoals, Diagram, DiagramData, default_events_map, \
-    default_character_networks, ScenePurposeType, StoryElement
+    default_character_networks, ScenePurposeType, StoryElement, SceneOutcome
 from src.main.python.plotlyst.core.template import Role, exclude_if_empty, exclude_if_black
 from src.main.python.plotlyst.env import app_env
 
@@ -155,7 +155,6 @@ class SceneInfo:
     title: str
     id: uuid.UUID
     synopsis: str = ''
-    type: SceneType = SceneType.ACTION
     pov: Optional[uuid.UUID] = None
     characters: List[uuid.UUID] = field(default_factory=list)
     agendas: List[SceneStructureAgenda] = field(default_factory=list)
@@ -171,6 +170,7 @@ class SceneInfo:
     manuscript: Optional[Document] = None
     drive: SceneDrive = field(default_factory=SceneDrive)
     purpose: Optional[ScenePurposeType] = None
+    outcome: Optional[SceneOutcome] = None
     story_elements: List[StoryElement] = field(default_factory=list)
 
 
@@ -518,13 +518,13 @@ class JsonClient:
                     if match:
                         stage = match[0]
 
-                scene = Scene(title=info.title, id=info.id, synopsis=info.synopsis, type=info.type,
+                scene = Scene(title=info.title, id=info.id, synopsis=info.synopsis,
                               wip=info.wip, day=info.day,
                               plot_values=scene_plots, pov=pov, characters=scene_characters, agendas=info.agendas,
                               chapter=chapter, stage=stage, beats=info.beats,
                               comments=info.comments, tag_references=info.tag_references,
                               document=info.document, manuscript=info.manuscript, drive=info.drive,
-                              purpose=info.purpose, story_elements=info.story_elements)
+                              purpose=info.purpose, outcome=info.outcome, story_elements=info.story_elements)
                 scenes.append(scene)
 
         tag_types = novel_info.tag_types
@@ -627,7 +627,7 @@ class JsonClient:
     def _persist_scene(self, scene: Scene, novel: Optional[Novel] = None):
         plots = [ScenePlotReferenceInfo(x.plot.id, x.data) for x in scene.plot_values]
         characters = [x.id for x in scene.characters]
-        info = SceneInfo(id=scene.id, title=scene.title, synopsis=scene.synopsis, type=scene.type,
+        info = SceneInfo(id=scene.id, title=scene.title, synopsis=scene.synopsis,
                          wip=scene.wip, day=scene.day,
                          pov=self.__id_or_none(scene.pov), plots=plots, characters=characters,
                          agendas=scene.agendas,
@@ -635,7 +635,8 @@ class JsonClient:
                          stage=self.__id_or_none(scene.stage),
                          beats=scene.beats, comments=scene.comments,
                          tag_references=scene.tag_references, document=scene.document, manuscript=scene.manuscript,
-                         drive=scene.drive, purpose=scene.purpose, story_elements=scene.story_elements)
+                         drive=scene.drive, purpose=scene.purpose, outcome=scene.outcome,
+                         story_elements=scene.story_elements)
         self.__persist_info(self.scenes_dir(novel), info)
 
     def _persist_diagram(self, novel: Novel, diagram: Diagram):

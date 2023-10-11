@@ -29,7 +29,7 @@ from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_TH
     CONFLICT_SELF_COLOR, CHARACTER_MAJOR_COLOR, CHARACTER_MINOR_COLOR, CHARACTER_SECONDARY_COLOR, \
     PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY, ConflictType, \
-    Scene, SceneType, PlotType, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS
+    Scene, PlotType, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS, ScenePurposeType
 from src.main.python.plotlyst.core.template import SelectionItem
 from src.main.python.plotlyst.settings import CHARACTER_INITIAL_AVATAR_COLOR_CODES
 from src.main.python.plotlyst.view.common import rounded_pixmap
@@ -188,16 +188,18 @@ class IconRegistry:
 
     @staticmethod
     def scene_type_icon(scene: Scene) -> Optional[QIcon]:
-        if scene.type == SceneType.ACTION:
+        if scene.purpose == ScenePurposeType.Story:
             return IconRegistry.action_scene_icon(scene.outcome_resolution(), scene.outcome_trade_off())
-        elif scene.type == SceneType.REACTION:
+        elif scene.purpose == ScenePurposeType.Reaction:
             return IconRegistry.reaction_scene_icon()
-        elif scene.type == SceneType.HAPPENING:
-            return IconRegistry.happening_scene_icon()
-        elif scene.type == SceneType.EXPOSITION:
+        elif scene.purpose == ScenePurposeType.Character:
+            return IconRegistry.character_development_scene_icon()
+        elif scene.purpose == ScenePurposeType.Emotion:
+            return IconRegistry.emotion_scene_icon()
+        elif scene.purpose == ScenePurposeType.Setup:
+            return IconRegistry.setup_scene_icon()
+        elif scene.purpose == ScenePurposeType.Exposition:
             return IconRegistry.exposition_scene_icon()
-        elif scene.type == SceneType.SUMMARY:
-            return IconRegistry.summary_scene_icon()
         else:
             return IconRegistry.empty_icon()
 

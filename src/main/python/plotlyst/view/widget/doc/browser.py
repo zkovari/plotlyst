@@ -23,7 +23,7 @@ from typing import Set, Optional, Dict
 from PyQt6.QtCore import pyqtSignal, Qt, QMimeData, QPointF, QModelIndex
 from PyQt6.QtWidgets import QListView
 from overrides import overrides
-from qthandy import clear_layout, vspacer, translucent, gc, ask_confirmation, pointy
+from qthandy import clear_layout, vspacer, translucent, gc, ask_confirmation, pointy, retain_when_hidden
 from qthandy.filter import DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget
 
@@ -79,6 +79,8 @@ class DocumentWidget(ContainerNode):
         super(DocumentWidget, self).__init__(doc.title, parent, settings=settings)
         self._novel = novel
         self._doc = doc
+
+        retain_when_hidden(self._icon)
 
         self._actionChangeIcon.setVisible(True)
         menu = DocumentAdditionMenu(self._novel, self._btnAdd)

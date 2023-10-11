@@ -26,7 +26,7 @@ from PyQt6.QtGui import QEnterEvent, QIcon, QMouseEvent, QColor
 from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QStackedWidget, QTabBar
 from overrides import overrides
 from qthandy import vbox, vspacer, transparent, sp, line, incr_font, hbox, pointy, vline, retain_when_hidden, margins, \
-    spacer, underline, bold, gc, curved_flow
+    spacer, underline, bold, gc, curved_flow, flow, clear_layout
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -40,11 +40,12 @@ from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import DelayedSignalSlotConnector, action, wrap, label, scrolled, \
-    ButtonPressResizeEventFilter, insert_after, tool_btn
+    ButtonPressResizeEventFilter, insert_after, tool_btn, shadow
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import RemovalButton
+from src.main.python.plotlyst.view.widget.scene.conflict import ConflictIntensityEditor, CharacterConflictSelector
 from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotSelectorButton, ScenePlotValueEditor, \
     PlotValuesDisplay
 from src.main.python.plotlyst.view.widget.scenes import SceneOutcomeSelector
@@ -154,54 +155,66 @@ def purpose_icon(purpose_type: ScenePurposeType) -> QIcon:
 
 
 class ScenePurposeTypeButton(QPushButton):
-    selectionRequested = pyqtSignal()
+    reset = pyqtSignal()
 
-    def __init__(self, type: ScenePurposeType, parent=None):
-        super(ScenePurposeTypeButton, self).__init__(parent)
-        self.type = type
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._scene: Optional[Scene] = None
         pointy(self)
         self._opacityFilter = OpacityEventFilter(self, 0.8, 1.0, ignoreCheckedButton=True)
         self.installEventFilter(self._opacityFilter)
 
         self._menu = MenuWidget(self)
-        self._menu.addAction(action('Select new purpose', slot=self.selectionRequested.emit))
+        self._menu.addAction(action('Select new purpose', slot=self.reset.emit))
 
         self.refresh()
 
-    def setPurposeType(self, type: ScenePurposeType):
-        self.type = type
+    def setScene(self, scene: Scene):
+        self._scene = scene
         self.refresh()
 
     def refresh(self):
-        if self.type == ScenePurposeType.Other:
+        if self._scene is None or self._scene.purpose is None:
+            return
+        IconRegistry.action_scene_icon()
+        if self._scene.purpose == ScenePurposeType.Other:
             self.setText('')
             self.setToolTip('Scene purpose not selected')
         else:
-            purpose = scene_purposes.get(self.type)
+            purpose = scene_purposes.get(self._scene.purpose)
             tip = purpose.display_name.replace('\n', ' ')
             self.setText(tip)
             self.setToolTip(f'Scene purpose: {tip}')
 
-        if self.type == ScenePurposeType.Exposition:
+        if self._scene.purpose == ScenePurposeType.Exposition:
             self.setIcon(IconRegistry.exposition_scene_icon())
-        elif self.type == ScenePurposeType.Setup:
+        elif self._scene.purpose == ScenePurposeType.Setup:
             self.setIcon(IconRegistry.setup_scene_icon())
-        elif self.type == ScenePurposeType.Character:
+        elif self._scene.purpose == ScenePurposeType.Character:
             self.setIcon(IconRegistry.character_development_scene_icon())
-        elif self.type == ScenePurposeType.Emotion:
+        elif self._scene.purpose == ScenePurposeType.Emotion:
             self.setIcon(IconRegistry.emotion_scene_icon())
 
-        bold(self, self.type != ScenePurposeType.Other)
+        bold(self, self._scene.purpose != ScenePurposeType.Other)
 
-        if self.type == ScenePurposeType.Story:
+        if self._scene.purpose == ScenePurposeType.Story:
             bgColor = '#f4978e'
             borderColor = '#fb5607'
-            self.setIcon(IconRegistry.action_scene_icon())
-        elif self.type == ScenePurposeType.Reaction:
+            resolution = self._scene.outcome == SceneOutcome.RESOLUTION
+            trade_off = self._scene.outcome == SceneOutcome.TRADE_OFF
+
+            self.setIcon(IconRegistry.action_scene_icon(resolution, trade_off))
+            if resolution:
+                bgColor = '#12BB86'
+                borderColor = '#0b6e4f'
+            elif trade_off:
+                bgColor = '#E188C2'
+                borderColor = '#832161'
+        elif self._scene.purpose == ScenePurposeType.Reaction:
             bgColor = '#89c2d9'
             borderColor = '#1a759f'
             self.setIcon(IconRegistry.reaction_scene_icon())
-        elif self.type == ScenePurposeType.Other:
+        elif self._scene.purpose == ScenePurposeType.Other:
             bgColor = 'lightgrey'
             borderColor = 'grey'
         else:
@@ -529,48 +542,57 @@ class TextBasedSceneElementWidget(SceneElementWidget):
 
 
 class OutcomeSceneElementEditor(TextBasedSceneElementWidget):
+    outcomeChanged = pyqtSignal(SceneOutcome)
+
     def __init__(self, parent=None):
         super().__init__(StoryElementType.Outcome, parent)
+        self._outcomeSelector = SceneOutcomeSelector(autoSelect=False)
         self.setPlaceholderText('Is there an imminent outcome in this scene?')
 
-        self._outcomeSelector = SceneOutcomeSelector(autoSelect=False)
         self._pageEditor.layout().addWidget(self._outcomeSelector, alignment=Qt.AlignmentFlag.AlignCenter)
         self._outcomeSelector.selected.connect(self._outcomeSelected)
 
     @overrides
     def setElement(self, element: StoryElement):
         super().setElement(element)
-        if element.outcome:
-            self._outcomeSelector.refresh(element.outcome)
-            self._outcomeSelected(element.outcome)
+        if self._scene.outcome:
+            self._outcomeSelector.refresh(self._scene.outcome)
+            self._updateOutcome()
         else:
             self._outcomeSelector.reset()
-            self.setTitle('Outcome')
-            self.setIcon('fa5s.bomb', 'grey')
+            self._resetTitle()
 
     @overrides
     def reset(self):
         super().reset()
+        self._resetTitle()
+
+    def refresh(self):
+        self._outcomeSelector.refresh(self._scene.outcome)
+        self._updateOutcome()
+
+    def _resetTitle(self):
         self.setTitle('Outcome')
         self.setIcon('fa5s.bomb', 'grey')
 
     def _outcomeSelected(self, outcome: SceneOutcome):
-        self._element.outcome = outcome
+        self._scene.outcome = outcome
         self._updateOutcome()
+        self.outcomeChanged.emit(outcome)
 
     def _updateOutcome(self):
-        if self._element.outcome == SceneOutcome.DISASTER:
+        if self._scene.outcome == SceneOutcome.DISASTER:
             color = '#f4442e'
             self.setIcon('fa5s.bomb', color)
-        elif self._element.outcome == SceneOutcome.RESOLUTION:
+        elif self._scene.outcome == SceneOutcome.RESOLUTION:
             color = '#0b6e4f'
             self.setIcon('mdi.bullseye-arrow', color)
-        elif self._element.outcome == SceneOutcome.TRADE_OFF:
+        elif self._scene.outcome == SceneOutcome.TRADE_OFF:
             color = '#832161'
             self.setIcon('fa5s.balance-scale-left', color)
         else:
             return
-        self.setTitle(SceneOutcome.to_str(self._element.outcome), color)
+        self.setTitle(SceneOutcome.to_str(self._scene.outcome), color)
 
 
 class StorylineElementEditor(TextBasedSceneElementWidget):
@@ -718,6 +740,66 @@ class AgencyTextBasedElementEditor(TextBasedSceneElementWidget):
         return self._agenda.story_elements
 
 
+class ConflictElementEditor(AgencyTextBasedElementEditor):
+    def __init__(self, parent=None):
+        super().__init__(StoryElementType.Conflict, parent)
+        self._novel: Optional[Novel] = None
+
+        self.setTitle('Conflict')
+        self.setIcon('mdi.sword-cross', '#f3a712')
+        self.setPlaceholderText("What kind of conflict does the character have to face?")
+
+        self._sliderIntensity = ConflictIntensityEditor()
+        self._sliderIntensity.intensityChanged.connect(self._intensityChanged)
+
+        self._wdgConflicts = QWidget()
+        flow(self._wdgConflicts)
+
+        self._wdgTracking = QWidget()
+        vbox(self._wdgTracking, spacing=0)
+        self._wdgTracking.layout().addWidget(label('Intensity'), alignment=Qt.AlignmentFlag.AlignLeft)
+        self._wdgTracking.layout().addWidget(self._sliderIntensity)
+        self._wdgTracking.layout().addWidget(line())
+        self._wdgTracking.layout().addWidget(self._wdgConflicts)
+
+        self._pageEditor.layout().addWidget(self._wdgTracking)
+
+    @overrides
+    def setScene(self, scene: Scene, novel: Novel):
+        super().setScene(scene)
+        self._novel = novel
+        clear_layout(self._wdgConflicts)
+
+    @overrides
+    def setAgenda(self, agenda: SceneStructureAgenda):
+        super().setAgenda(agenda)
+        for ref in agenda.conflict_references:
+            conflictSelector = CharacterConflictSelector(self._novel, self._scene)
+            conflictSelector.setConflict(ref.conflict(self._novel), ref)
+            self._wdgConflicts.layout().addWidget(conflictSelector)
+
+        conflictSelector = CharacterConflictSelector(self._novel, self._scene,
+                                                     simplified=len(agenda.conflict_references) > 0)
+        conflictSelector.conflictSelected.connect(self._conflictSelected)
+        self._wdgConflicts.layout().addWidget(conflictSelector)
+
+    @overrides
+    def setElement(self, element: StoryElement):
+        super().setElement(element)
+        self._sliderIntensity.setValue(element.intensity)
+
+    def _intensityChanged(self, value: int):
+        self._element.intensity = value
+        shadow(self._iconActive, offset=0, radius=value * 2, color=QColor('#f3a712'))
+        shadow(self._titleActive, offset=0, radius=value, color=QColor('#f3a712'))
+        shadow(self._textEditor, offset=0, radius=value * 2, color=QColor('#f3a712'))
+
+    def _conflictSelected(self):
+        conflictSelector = CharacterConflictSelector(self._novel, self._scene, simplified=True)
+        conflictSelector.conflictSelected.connect(self._conflictSelected)
+        self._wdgConflicts.layout().addWidget(conflictSelector)
+
+
 class AbstractSceneElementsEditor(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -756,6 +838,8 @@ class AbstractSceneElementsEditor(QWidget):
 
 
 class SceneStorylineEditor(AbstractSceneElementsEditor):
+    outcomeChanged = pyqtSignal(SceneOutcome)
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
@@ -781,6 +865,7 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         # self._themeElement.setIcon('mdi.butterfly-outline', '#9d4edd')
 
         self._outcomeElement = OutcomeSceneElementEditor()
+        self._outcomeElement.outcomeChanged.connect(self.outcomeChanged.emit)
 
         self._consequencesElement = TextBasedSceneElementWidget(StoryElementType.Consequences)
         self._consequencesElement.setTitle('Consequences')
@@ -819,6 +904,9 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         if last_plot_element and last_plot_element.ref:
             insert_after(self._wdgElementsTopRow, self._wdgAddNewPlotParent, reference=self._storylineElements[-1])
             self._wdgAddNewPlotParent.setVisible(True)
+
+    def refresh(self):
+        self._outcomeElement.refresh()
 
     def _plotSelected(self, plotElement: PlotSceneElementEditor):
         insert_after(self._wdgElementsTopRow, self._wdgAddNewPlotParent, reference=plotElement)
@@ -889,10 +977,7 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         self._motivationElement.setTitle('Motivation')
         self._motivationElement.setIcon('fa5s.fist-raised')
 
-        self._conflictElement = AgencyTextBasedElementEditor(StoryElementType.Conflict)
-        self._conflictElement.setTitle('Conflict')
-        self._conflictElement.setIcon('mdi.sword-cross', '#f3a712')
-        self._conflictElement.setPlaceholderText("What kind of conflict does the character have to face?")
+        self._conflictElement = ConflictElementEditor()
 
         self._decisionElement = AgencyTextBasedElementEditor(StoryElementType.Decision)
         self._decisionElement.setTitle('Decision')
@@ -915,6 +1000,7 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         self._emotionElement.setAgenda(agenda)
         self._goalElement.setAgenda(agenda)
         self._motivationElement.setAgenda(agenda)
+        self._conflictElement.setScene(scene, self._novel)
         self._conflictElement.setAgenda(agenda)
         self._decisionElement.setAgenda(agenda)
 

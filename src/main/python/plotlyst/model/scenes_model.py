@@ -27,7 +27,7 @@ from PyQt6.QtGui import QFont, QBrush, QColor
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, Scene, CharacterArc, Character, \
-    SelectionItem, SceneStage, SceneType, SceneStructureAgenda
+    SelectionItem, SceneStage, SceneStructureAgenda, ScenePurposeType
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import SceneStatusChangedEvent
 from src.main.python.plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel, SelectionItemsModel
@@ -112,13 +112,13 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
             if index.column() == self.ColType:
                 if scene.wip:
                     return IconRegistry.wip_icon()
-                elif scene.type == SceneType.ACTION:
+                elif scene.purpose == ScenePurposeType.Story:
                     if scene.outcome_resolution():
                         return self._resolved_action_icon
                     if scene.outcome_trade_off():
                         return self._trade_off_action_icon
                     return self._action_icon
-                elif scene.type == SceneType.REACTION:
+                elif scene.purpose == ScenePurposeType.Reaction:
                     return self._reaction_icon
             elif index.column() == self.ColPov:
                 if scene.pov:

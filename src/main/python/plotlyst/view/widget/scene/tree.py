@@ -31,8 +31,7 @@ from qthandy import vspacer
 from qthandy.filter import DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
-    Chapter
+from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter
 from src.main.python.plotlyst.event.core import Event, EventListener, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneDeletedEvent, \
@@ -70,9 +69,9 @@ class SceneWidget(ContainerNode):
         return self._novel
 
     def refresh(self):
-        if self._scene.type != SceneType.DEFAULT:
+        if self._scene.purpose:
             self._icon.setIcon(IconRegistry.scene_type_icon(self._scene))
-        self._icon.setVisible(self._scene.type != SceneType.DEFAULT)
+        self._icon.setVisible(self._scene.purpose is not None)
 
         if self._scene.pov:
             avatar = avatars.avatar(self._scene.pov, fallback=False)

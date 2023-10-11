@@ -6,7 +6,6 @@ from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QMessageBox, QSpinBox
 
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import SceneType
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesStageTableModel
 from src.main.python.plotlyst.test.common import create_character, start_new_scene_editor, assert_data, go_to_scenes, \
     click_on_item, popup_actions_on_item, trigger_popup_action_on_item, patch_confirmed
@@ -27,7 +26,7 @@ def test_create_new_scene(qtbot, filled_window: MainWindow):
     assert_data(scenes.ui.tblScenes.model(), 'New scene', row, 1)
     assert filled_window.novel.scenes
     assert filled_window.novel.scenes[row].title == 'New scene'
-    assert filled_window.novel.scenes[row].type == SceneType.DEFAULT
+    assert filled_window.novel.scenes[row].purpose is None
     assert filled_window.novel.scenes[row].day == 1
 
 
