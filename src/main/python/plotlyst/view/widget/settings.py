@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QEvent
@@ -123,6 +123,7 @@ class NovelSettingToggle(QWidget):
         self._toggle = Toggle()
         self._toggle.setChecked(True)
         self._toggle.clicked.connect(self._toggled)
+        self._toggle.setChecked(self._novel.prefs.settings.get(self._setting.value, True))
 
         self._wdgTitle = QWidget()
         vbox(self._wdgTitle)
@@ -213,6 +214,7 @@ class NovelQuickPanelCustomizationWidget(QWidget):
         self.layout().addWidget(self._wdgBottom)
         self._grid: QGridLayout = grid(self._wdgCenter)
 
+        self._settings: List[NovelPanelCustomizationToggle] = []
         self._addSetting(NovelSetting.Manuscript, 0, 0)
         self._addSetting(NovelSetting.Characters, 0, 1)
         self._addSetting(NovelSetting.Scenes, 0, 2)
@@ -227,6 +229,8 @@ class NovelQuickPanelCustomizationWidget(QWidget):
 
     def setNovel(self, novel: Novel):
         self._novel = novel
+        for toggle in self._settings:
+            toggle.setChecked(self._novel.prefs.settings.get(toggle.setting().value, True))
 
     def reset(self):
         self._novel = None
@@ -239,6 +243,7 @@ class NovelQuickPanelCustomizationWidget(QWidget):
 
     def _addSetting(self, setting: NovelSetting, row: int, col: int):
         toggle = NovelPanelCustomizationToggle(setting)
+        self._settings.append(toggle)
         toggle.clicked.connect(partial(self._settingChanged, setting))
         toggle.installEventFilter(self)
         self._grid.addWidget(toggle, row, col, 1, 1)
