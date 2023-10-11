@@ -253,7 +253,7 @@ class NovelQuickPanelCustomizationWidget(QWidget, EventListener):
     def setNovel(self, novel: Novel):
         self._novel = novel
         for toggle in self._settings.values():
-            toggle.setChecked(self._novel.prefs.settings.get(toggle.setting().value, True))
+            toggle.setChecked(self._novel.prefs.toggled(toggle.setting()))
 
         event_dispatchers.instance(self._novel).register(self, *panel_events)
 
