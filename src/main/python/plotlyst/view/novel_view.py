@@ -26,13 +26,14 @@ from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Document
-from src.main.python.plotlyst.event.core import emit_global_event
+from src.main.python.plotlyst.core.domain import Novel, Document, NovelSetting
+from src.main.python.plotlyst.event.core import emit_global_event, Event
 from src.main.python.plotlyst.events import NovelUpdatedEvent, \
-    SceneChangedEvent
+    SceneChangedEvent, NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelMindmapToggleEvent, \
+    NovelPanelCustomizationEvent
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon
+from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon, set_tab_visible
 from src.main.python.plotlyst.view.dialog.novel import NovelEditionDialog, SynopsisEditorDialog
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -46,7 +47,8 @@ from src.main.python.plotlyst.view.widget.story_map import EventsMindMapView
 class NovelView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        super().__init__(novel, [SceneChangedEvent], global_event_types=[NovelUpdatedEvent])
+        super().__init__(novel, [SceneChangedEvent, NovelMindmapToggleEvent, NovelStorylinesToggleEvent,
+                                 NovelStructureToggleEvent], global_event_types=[NovelUpdatedEvent])
         self.ui = Ui_NovelView()
         self.ui.setupUi(self.widget)
 
@@ -59,6 +61,10 @@ class NovelView(AbstractNovelView):
                      IconRegistry.from_name('fa5s.scroll', color_on=PLOTLYST_MAIN_COLOR))
         set_tab_icon(self.ui.tabWidget, self.ui.tabTags, IconRegistry.tags_icon(color_on=PLOTLYST_MAIN_COLOR))
         set_tab_icon(self.ui.tabWidget, self.ui.tabSettings, IconRegistry.cog_icon(color_on=PLOTLYST_MAIN_COLOR))
+
+        set_tab_visible(self.ui.tabWidget, self.ui.tabEvents, self.novel.prefs.toggled(NovelSetting.Mindmap))
+        set_tab_visible(self.ui.tabWidget, self.ui.tabPlot, self.novel.prefs.toggled(NovelSetting.Storylines))
+        set_tab_visible(self.ui.tabWidget, self.ui.tabStructure, self.novel.prefs.toggled(NovelSetting.Structure))
 
         self.ui.btnEditNovel.setIcon(IconRegistry.edit_icon(color_on='darkBlue'))
         self.ui.btnEditNovel.installEventFilter(OpacityEventFilter(parent=self.ui.btnEditNovel))
@@ -132,6 +138,18 @@ class NovelView(AbstractNovelView):
         self.ui.wdgSettings.layout().addWidget(self._settings)
 
         self.ui.tabWidget.setCurrentWidget(self.ui.tabSettings)
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, NovelPanelCustomizationEvent):
+            if isinstance(event, NovelMindmapToggleEvent):
+                set_tab_visible(self.ui.tabWidget, self.ui.tabEvents, event.toggled)
+            elif isinstance(event, NovelStorylinesToggleEvent):
+                set_tab_visible(self.ui.tabWidget, self.ui.tabPlot, event.toggled)
+            elif isinstance(event, NovelStructureToggleEvent):
+                set_tab_visible(self.ui.tabWidget, self.ui.tabStructure, event.toggled)
+        else:
+            super().event_received(event)
 
     @overrides
     def refresh(self):

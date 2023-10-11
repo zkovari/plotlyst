@@ -2027,6 +2027,9 @@ class NovelPreferences:
     panels: PanelPreferences = field(default_factory=PanelPreferences)
     settings: Dict[str, Any] = field(default_factory=dict)
 
+    def toggled(self, setting: NovelSetting) -> bool:
+        return self.settings.get(setting.value, True)
+
 
 @dataclass
 class ManuscriptGoals:
