@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Dict, Optional, List
+from typing import Dict, Optional
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QEvent
@@ -36,6 +36,7 @@ from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import NovelMindmapToggleEvent, NovelPanelCustomizationEvent, \
     NovelStructureToggleEvent, NovelStorylinesToggleEvent, NovelCharactersToggleEvent, NovelScenesToggleEvent, \
     NovelWorldBuildingToggleEvent, NovelManuscriptToggleEvent, NovelDocumentsToggleEvent, NovelManagementToggleEvent
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import label, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_white_menu
@@ -63,6 +64,12 @@ setting_descriptions: Dict[NovelSetting, str] = {
     NovelSetting.Documents: "Add documents for your planning or research",
     NovelSetting.Management: "Stay organized by tracking your tasks in a simple Kanban board",
 }
+
+panel_events = [NovelMindmapToggleEvent, NovelCharactersToggleEvent,
+                NovelManuscriptToggleEvent, NovelScenesToggleEvent,
+                NovelDocumentsToggleEvent, NovelStructureToggleEvent,
+                NovelStorylinesToggleEvent, NovelWorldBuildingToggleEvent,
+                NovelManagementToggleEvent]
 
 setting_events: Dict[NovelSetting, NovelPanelCustomizationEvent] = {
     NovelSetting.Structure: NovelStructureToggleEvent,
@@ -97,6 +104,14 @@ def setting_icon(setting: NovelSetting, color=PLOTLYST_SECONDARY_COLOR, color_on
     elif setting == NovelSetting.Management:
         return IconRegistry.board_icon(color, color_on)
     return QIcon()
+
+
+def toggle_setting(source, novel: Novel, setting: NovelSetting, toggled: bool):
+    novel.prefs.settings[setting.value] = toggled
+    RepositoryPersistenceManager.instance().update_novel(novel)
+
+    event_clazz = setting_events[setting]
+    emit_event(novel, event_clazz(source, setting, toggled))
 
 
 class NovelSettingToggle(QWidget):
@@ -194,7 +209,7 @@ class NovelPanelCustomizationToggle(QToolButton):
             qtanim.glow(self, 150, color=QColor('grey'), radius=5)
 
 
-class NovelQuickPanelCustomizationWidget(QWidget):
+class NovelQuickPanelCustomizationWidget(QWidget, EventListener):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._novel: Optional[Novel] = None
@@ -214,7 +229,7 @@ class NovelQuickPanelCustomizationWidget(QWidget):
         self.layout().addWidget(self._wdgBottom)
         self._grid: QGridLayout = grid(self._wdgCenter)
 
-        self._settings: List[NovelPanelCustomizationToggle] = []
+        self._settings: Dict[NovelSetting, NovelPanelCustomizationToggle] = {}
         self._addSetting(NovelSetting.Manuscript, 0, 0)
         self._addSetting(NovelSetting.Characters, 0, 1)
         self._addSetting(NovelSetting.Scenes, 0, 2)
@@ -227,12 +242,20 @@ class NovelQuickPanelCustomizationWidget(QWidget):
         self._addSetting(NovelSetting.World_building, 2, 1)
         self._addSetting(NovelSetting.Management, 2, 2)
 
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, NovelPanelCustomizationEvent):
+            self._settings[event.setting].setChecked(event.toggled)
+
     def setNovel(self, novel: Novel):
         self._novel = novel
-        for toggle in self._settings:
+        for toggle in self._settings.values():
             toggle.setChecked(self._novel.prefs.settings.get(toggle.setting().value, True))
 
+        event_dispatchers.instance(self._novel).register(self, *panel_events)
+
     def reset(self):
+        event_dispatchers.instance(self._novel).deregister(self, *panel_events)
         self._novel = None
 
     @overrides
@@ -243,14 +266,13 @@ class NovelQuickPanelCustomizationWidget(QWidget):
 
     def _addSetting(self, setting: NovelSetting, row: int, col: int):
         toggle = NovelPanelCustomizationToggle(setting)
-        self._settings.append(toggle)
+        self._settings[setting] = toggle
         toggle.clicked.connect(partial(self._settingChanged, setting))
         toggle.installEventFilter(self)
         self._grid.addWidget(toggle, row, col, 1, 1)
 
     def _settingChanged(self, setting: NovelSetting, toggled: bool):
-        event_clazz = setting_events[setting]
-        emit_event(self._novel, event_clazz(self, setting, toggled))
+        toggle_setting(self, self._novel, setting, toggled)
 
 
 class NovelQuickPanelCustomizationButton(QToolButton):
@@ -291,11 +313,7 @@ class NovelSettingsWidget(QWidget, EventListener):
         self._addSettingToggle(NovelSetting.Management)
         self.layout().addWidget(vspacer())
 
-        event_dispatchers.instance(self._novel).register(self, NovelMindmapToggleEvent, NovelCharactersToggleEvent,
-                                                         NovelManuscriptToggleEvent, NovelScenesToggleEvent,
-                                                         NovelDocumentsToggleEvent, NovelStructureToggleEvent,
-                                                         NovelStorylinesToggleEvent, NovelWorldBuildingToggleEvent,
-                                                         NovelManagementToggleEvent)
+        event_dispatchers.instance(self._novel).register(self, *panel_events)
 
     @overrides
     def event_received(self, event: Event):
@@ -303,6 +321,10 @@ class NovelSettingsWidget(QWidget, EventListener):
             self._settings[event.setting].setChecked(event.toggled)
 
     def _addSettingToggle(self, setting: NovelSetting):
-        toggle = NovelSettingToggle(self._novel, NovelSetting.Mindmap)
+        toggle = NovelSettingToggle(self._novel, setting)
+        toggle.settingToggled.connect(self._toggled)
         self._settings[setting] = toggle
         self.layout().addWidget(toggle)
+
+    def _toggled(self, setting: NovelSetting, toggled: bool):
+        toggle_setting(self, self._novel, setting, toggled)
