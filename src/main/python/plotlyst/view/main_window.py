@@ -21,7 +21,7 @@ from typing import Optional
 
 import qtawesome
 from PyQt6.QtCore import Qt, QThreadPool, QEvent, QMimeData, QTimer
-from PyQt6.QtGui import QCloseEvent, QPalette, QColor, QKeyEvent, QResizeEvent, QDrag, QWindowStateChangeEvent
+from PyQt6.QtGui import QCloseEvent, QPalette, QColor, QKeyEvent, QResizeEvent, QDrag, QWindowStateChangeEvent, QAction
 from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup, \
     QProgressDialog, QAbstractButton
 from fbs_runtime import platform
@@ -72,6 +72,7 @@ from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 from src.main.python.plotlyst.view.widget.button import ToolbarButton, NovelSyncButton
 from src.main.python.plotlyst.view.widget.hint import reset_hints
 from src.main.python.plotlyst.view.widget.input import CapitalizationEventFilter
+from src.main.python.plotlyst.view.widget.settings import NovelQuickPanelCustomizationButton
 from src.main.python.plotlyst.view.widget.tour.core import TutorialNovelOpenTourEvent, tutorial_novel, \
     TutorialNovelCloseTourEvent, NovelTopLevelButtonTourEvent, HomeTopLevelButtonTourEvent, NovelEditorDisplayTourEvent, \
     AllNovelViewsTourEvent, GeneralNovelViewTourEvent, CharacterViewTourEvent, ScenesViewTourEvent, \
@@ -109,6 +110,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self.novel = None
         self._current_text_widget = None
+        self._actionScrivener: Optional[QAction] = None
+        self._actionSettings: Optional[QAction] = None
         last_novel_id = settings.last_novel_id()
         if last_novel_id is not None:
             has_novel = client.has_novel(last_novel_id)
@@ -324,6 +327,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if not self.novel:
             for btn in self.buttonGroup.buttons():
                 btn.setHidden(True)
+            self._actionSettings.setVisible(False)
+            self.btnSettings.reset()
             return
 
         sender: EventSender = event_senders.instance(self.novel)
@@ -333,6 +338,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         for btn in self.buttonGroup.buttons():
             btn.setVisible(True)
 
+        self._actionSettings.setVisible(True)
+        self.btnSettings.setNovel(self.novel)
         self.outline_mode.setEnabled(True)
         self.outline_mode.setVisible(True)
 
@@ -472,6 +479,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self._mode_btn_group.setExclusive(True)
         self._mode_btn_group.buttonToggled.connect(self._panel_toggled)
 
+        self.btnSettings = NovelQuickPanelCustomizationButton()
+
         self.btnComments = QToolButton(self.toolBar)
         self.btnComments.setIcon(IconRegistry.from_name('mdi.comment-outline', color='#2e86ab'))
         self.btnComments.setMinimumWidth(50)
@@ -491,6 +500,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.toolBar.addWidget(self.outline_mode)
         self.toolBar.addWidget(spacer())
         self._actionScrivener = self.toolBar.addWidget(self.btnScrivener)
+        self._actionSettings = self.toolBar.addWidget(self.btnSettings)
         self.toolBar.addWidget(self.btnComments)
 
         self.wdgSidebar.setHidden(True)

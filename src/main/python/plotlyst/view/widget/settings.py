@@ -17,16 +17,18 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Dict
+from functools import partial
+from typing import Dict, Optional
 
-from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtCore import pyqtSignal, Qt, QSize
 from PyQt6.QtGui import QIcon, QPalette, QColor
-from PyQt6.QtWidgets import QWidget, QPushButton
-from qthandy import transparent, sp, vbox, hbox, vspacer, incr_font
+from PyQt6.QtWidgets import QWidget, QPushButton, QToolButton
+from qthandy import transparent, sp, vbox, hbox, vspacer, incr_font, pointy, grid
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel, NovelSetting
-from src.main.python.plotlyst.view.common import label
+from src.main.python.plotlyst.view.common import label, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.input import Toggle
 
@@ -54,25 +56,25 @@ setting_descriptions: Dict[NovelSetting, str] = {
 }
 
 
-def setting_icon(setting: NovelSetting) -> QIcon:
+def setting_icon(setting: NovelSetting, color=PLOTLYST_SECONDARY_COLOR, color_on=PLOTLYST_SECONDARY_COLOR) -> QIcon:
     if setting == NovelSetting.Structure:
-        return IconRegistry.story_structure_icon(color=PLOTLYST_SECONDARY_COLOR)
+        return IconRegistry.story_structure_icon(color=color, color_on=color_on)
     elif setting == NovelSetting.Mindmap:
-        return IconRegistry.from_name('ri.mind-map', PLOTLYST_SECONDARY_COLOR)
+        return IconRegistry.from_name('ri.mind-map', color, color_on=color_on)
     elif setting == NovelSetting.Storylines:
-        return IconRegistry.storylines_icon(color=PLOTLYST_SECONDARY_COLOR)
+        return IconRegistry.storylines_icon(color=color, color_on=color_on)
     elif setting == NovelSetting.Characters:
-        return IconRegistry.character_icon(color=PLOTLYST_SECONDARY_COLOR)
+        return IconRegistry.character_icon(color=color, color_on=color_on)
     elif setting == NovelSetting.Scenes:
-        return IconRegistry.scene_icon(color=PLOTLYST_SECONDARY_COLOR)
+        return IconRegistry.scene_icon(color=color, color_on=color_on)
     elif setting == NovelSetting.World_building:
-        return IconRegistry.world_building_icon(color=PLOTLYST_SECONDARY_COLOR)
+        return IconRegistry.world_building_icon(color=color, color_on=color_on)
     elif setting == NovelSetting.Manuscript:
-        return IconRegistry.manuscript_icon(color=PLOTLYST_SECONDARY_COLOR)
+        return IconRegistry.manuscript_icon(color=color, color_on=color_on)
     elif setting == NovelSetting.Documents:
-        return IconRegistry.document_edition_icon(color=PLOTLYST_SECONDARY_COLOR)
+        return IconRegistry.document_edition_icon(color=color, color_on=color_on)
     elif setting == NovelSetting.Management:
-        return IconRegistry.board_icon()
+        return IconRegistry.board_icon(color, color_on)
     return QIcon()
 
 
@@ -115,17 +117,72 @@ class NovelSettingToggle(QWidget):
         hbox(self, 0, 0)
         self.layout().addWidget(self._wdgHeader)
 
-    # @overrides
-    # def enterEvent(self, event: QEnterEvent) -> None:
-    #     self._toggle.setVisible(True)
-    #
-    # @overrides
-    # def leaveEvent(self, a0: QEvent) -> None:
-    #     self._toggle.setVisible(False)
-
     def _toggled(self, toggled: bool):
         self._wdgTitle.setEnabled(toggled)
         self.settingToggled.emit(self._setting, toggled)
+
+
+class NovelPanelCustomizationToggle(QToolButton):
+    def __init__(self, setting: NovelSetting, parent=None):
+        super().__init__(parent)
+        self._setting = setting
+
+        pointy(self)
+        self.setCheckable(True)
+        self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+
+        self.setIcon(setting_icon(self._setting))
+        transparent(self)
+        self.setIconSize(QSize(30, 30))
+        self.setText(setting_titles[self._setting])
+        incr_font(self, 2)
+
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
+
+
+class NovelQuickPanelCustomizationWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._novel: Optional[Novel] = None
+
+        self._grid = grid(self)
+
+        self._addSetting(NovelSetting.Manuscript, 0, 0)
+        self._addSetting(NovelSetting.Characters, 0, 1)
+        self._addSetting(NovelSetting.Scenes, 0, 2)
+
+    def setNovel(self, novel: Novel):
+        self._novel = novel
+
+    def reset(self):
+        self._novel = None
+
+    def _addSetting(self, setting: NovelSetting, row: int, col: int):
+        toggle = NovelPanelCustomizationToggle(setting)
+        toggle.clicked.connect(partial(self._settingChanged, setting))
+        self._grid.addWidget(toggle, row, col, 1, 1)
+
+    def _settingChanged(self, setting: NovelSetting, toggled: bool):
+        pass
+
+
+class NovelQuickPanelCustomizationButton(QToolButton):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setIcon(IconRegistry.from_name('fa5s.cubes'))
+        self.setToolTip('Customize what panels are visible')
+        pointy(self)
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
+
+        self._menu = MenuWidget(self)
+        self._customizationWidget = NovelQuickPanelCustomizationWidget()
+        self._menu.addWidget(self._customizationWidget)
+
+    def setNovel(self, novel: Novel):
+        self._customizationWidget.setNovel(novel)
+
+    def reset(self):
+        self._customizationWidget.reset()
 
 
 class NovelSettingsWidget(QWidget):
