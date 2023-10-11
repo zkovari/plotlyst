@@ -26,6 +26,7 @@ from overrides import overrides
 from qthandy import busy
 
 from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import global_event_dispatcher, event_dispatchers
 from src.main.python.plotlyst.events import CharacterDeletedEvent, NovelSyncEvent
@@ -64,7 +65,10 @@ class AbstractView(QObject, EventListener):
 
     def activate(self):
         if self._refresh_on_activation:
-            QTimer.singleShot(10, self.refresh)
+            if app_env.test_env():
+                self.refresh()
+            else:
+                QTimer.singleShot(10, self.refresh)
             self._refresh_on_activation = False
 
     @abstractmethod
