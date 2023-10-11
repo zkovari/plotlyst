@@ -135,15 +135,16 @@ class NovelSettingToggle(QWidget):
         self._description.setWordWrap(True)
         sp(self._description).h_exp()
 
-        self._toggle = Toggle()
-        self._toggle.setChecked(True)
-        self._toggle.clicked.connect(self._toggled)
-        self._toggle.setChecked(self._novel.prefs.settings.get(self._setting.value, True))
-
         self._wdgTitle = QWidget()
         vbox(self._wdgTitle)
         self._wdgTitle.layout().addWidget(self._title, alignment=Qt.AlignmentFlag.AlignLeft)
         self._wdgTitle.layout().addWidget(self._description)
+
+        self._toggle = Toggle()
+        self._toggle.setChecked(True)
+        self._toggle.toggled.connect(self._toggled)
+        self._toggle.clicked.connect(self._clicked)
+        self._toggle.setChecked(self._novel.prefs.toggled(self._setting))
 
         self._wdgHeader = QWidget()
         self._wdgHeader.setObjectName('wdgHeader')
@@ -159,6 +160,8 @@ class NovelSettingToggle(QWidget):
 
     def _toggled(self, toggled: bool):
         self._wdgTitle.setEnabled(toggled)
+
+    def _clicked(self, toggled: bool):
         self.settingToggled.emit(self._setting, toggled)
 
 
