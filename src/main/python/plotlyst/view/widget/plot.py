@@ -871,6 +871,9 @@ class PlotEditor(QWidget, Ui_PlotEditor):
 
         italic(self.btnAdd)
         self.btnAdd.setIcon(IconRegistry.plus_icon('white'))
+        self.btnImpactMatrix.setIcon(IconRegistry.from_name('mdi6.camera-metering-matrix'))
+        self.btnImpactMatrix.clicked.connect(self._displayImpactMatrix)
+
         menu = MenuWidget(self.btnAdd)
         menu.addAction(action('Main plot', IconRegistry.storylines_icon(), lambda: self.newPlot(PlotType.Main)))
         menu.addAction(
@@ -932,6 +935,8 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         self._wdgList.selectPlot(plot)
 
     def _plotSelected(self, plot: Plot) -> PlotWidget:
+        self.stack.setCurrentWidget(self.pageDisplay)
+
         widget = PlotWidget(self.novel, plot, self.pageDisplay)
         widget.removalRequested.connect(partial(self._remove, widget))
         widget.titleChanged.connect(partial(self._wdgList.refreshPlot, widget.plot))
@@ -953,14 +958,8 @@ class PlotEditor(QWidget, Ui_PlotEditor):
                     clear_layout(self.pageDisplay)
         delete_plot(self.novel, plot)
 
-    # def _remove(self, widget: PlotWidget):
-    #     if ask_confirmation(f'Are you sure you want to delete the plot {widget.plot.text}?'):
-    #         if app_env.test_env():
-    #             self.__destroy(widget)
-    #         else:
-    #             anim = qtanim.fade_out(widget, duration=150)
-    #             anim.finished.connect(partial(self.__destroy, widget))
-    #
-    # def __destroy(self, widget: PlotWidget):
-    #     delete_plot(self.novel, widget.plot)
-    #     self.scrollAreaWidgetContents.layout().removeWidget(widget.parent())
+    def _displayImpactMatrix(self, checked: bool):
+        if checked:
+            self.stack.setCurrentWidget(self.pageMatrix)
+        else:
+            self.stack.setCurrentWidget(self.pageDisplay)
