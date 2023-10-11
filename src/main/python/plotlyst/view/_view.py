@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from abc import abstractmethod
 from typing import List, Any, Optional
 
-from PyQt6.QtCore import QObject
+from PyQt6.QtCore import QObject, QTimer
 from PyQt6.QtWidgets import QWidget, QButtonGroup
 from overrides import overrides
 from qthandy import busy
@@ -64,7 +64,7 @@ class AbstractView(QObject, EventListener):
 
     def activate(self):
         if self._refresh_on_activation:
-            self.refresh()
+            QTimer.singleShot(10, self.refresh)
             self._refresh_on_activation = False
 
     @abstractmethod
