@@ -440,6 +440,7 @@ class SceneStructureItemWidget(QWidget):
 
 class SceneStructureBeatWidget(SceneStructureItemWidget):
     emotionChanged = pyqtSignal()
+    outcomeChanged = pyqtSignal(SceneOutcome)
 
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None, readOnly: bool = False):
         super(SceneStructureBeatWidget, self).__init__(novel, scene_structure_item, parent, readOnly)
@@ -475,11 +476,13 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
 
         self._initStyle()
 
-    def outcomeVisible(self) -> bool:
-        return self._outcome.isVisible()
+    def hasOutcome(self) -> bool:
+        return self.beat.type == SceneStructureItemType.CLIMAX
 
     def setOutcome(self, outcome: SceneOutcome):
+        self.beat.outcome = outcome
         self._outcome.refresh(outcome)
+        self._initStyle()
 
     def activate(self):
         super(SceneStructureBeatWidget, self).activate()
@@ -559,6 +562,7 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
         self.beat.outcome = outcome
         self._initStyle()
         self._glow()
+        self.outcomeChanged.emit(outcome)
 
     def _changeProgress(self, progress: bool):
         if progress:
@@ -608,10 +612,11 @@ class SceneStructureEmotionWidget(SceneStructureItemWidget):
 
 class SceneStructureTimeline(QWidget):
     emotionChanged = pyqtSignal()
+    outcomeChanged = pyqtSignal()
     timelineChanged = pyqtSignal()
 
     def __init__(self, parent=None):
-        super(SceneStructureTimeline, self).__init__(parent)
+        super().__init__(parent)
         self._novel: Optional[Novel] = None
         self._scene: Optional[Scene] = None
         self._readOnly: bool = False
@@ -661,6 +666,12 @@ class SceneStructureTimeline(QWidget):
             self.layout().addWidget(self._newPlaceholderWidget(displayText=True))
 
         self.update()
+
+    def refreshOutcome(self):
+        for wdg in self._beatWidgets:
+            if isinstance(wdg, SceneStructureBeatWidget):
+                if wdg.hasOutcome():
+                    wdg.setOutcome(self._scene.outcome)
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
@@ -768,6 +779,7 @@ class SceneStructureTimeline(QWidget):
         if item.type == SceneStructureItemType.CLIMAX:
             self._selectorMenu.setOutcomeEnabled(False)
             widget.setOutcome(self._scene.outcome)
+            widget.outcomeChanged.connect(self._outcomeChanged)
         widget.dragStarted.connect(partial(self._dragStarted, widget))
         widget.dragStopped.connect(self._dragFinished)
 
@@ -806,6 +818,10 @@ class SceneStructureTimeline(QWidget):
         self.update()
 
         self.timelineChanged.emit()
+
+    def _outcomeChanged(self, outcome: SceneOutcome):
+        self._scene.outcome = outcome
+        self.outcomeChanged.emit()
 
     @overrides
     def dragEnterEvent(self, event: QDragEnterEvent) -> None:
@@ -1008,6 +1024,9 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.timeline.setStructure(scene.agendas[0].items)
         self.listEvents.setAgenda(scene.agendas[0], self.scene.purpose)
         self._initEditor(self.scene.purpose)
+
+    def refreshOutcome(self):
+        self.timeline.refreshOutcome()
 
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:

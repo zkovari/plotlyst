@@ -139,6 +139,7 @@ class SceneEditor(QObject, EventListener):
 
         self._storylineEditor = SceneStorylineEditor(self.novel)
         self._storylineEditor.outcomeChanged.connect(self._btnPurposeType.refresh)
+        self._storylineEditor.outcomeChanged.connect(self.ui.wdgSceneStructure.refreshOutcome)
         self.ui.tabStorylines.layout().addWidget(self._storylineEditor)
 
         self._agencyEditor = SceneAgendaEditor(self.novel)
@@ -147,6 +148,8 @@ class SceneEditor(QObject, EventListener):
         self.ui.btnClose.clicked.connect(self._on_close)
 
         self.ui.wdgSceneStructure.setUnsetCharacterSlot(self._pov_not_selected_notification)
+        self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._btnPurposeType.refresh)
+        self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._storylineEditor.refresh)
 
         self._update_view(scene)
         self.ui.tabWidget.setCurrentWidget(self.ui.tabCharacter)

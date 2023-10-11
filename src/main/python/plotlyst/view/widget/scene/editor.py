@@ -567,6 +567,10 @@ class OutcomeSceneElementEditor(TextBasedSceneElementWidget):
         super().reset()
         self._resetTitle()
 
+    def refresh(self):
+        self._outcomeSelector.refresh(self._scene.outcome)
+        self._updateOutcome()
+
     def _resetTitle(self):
         self.setTitle('Outcome')
         self.setIcon('fa5s.bomb', 'grey')
@@ -900,6 +904,9 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         if last_plot_element and last_plot_element.ref:
             insert_after(self._wdgElementsTopRow, self._wdgAddNewPlotParent, reference=self._storylineElements[-1])
             self._wdgAddNewPlotParent.setVisible(True)
+
+    def refresh(self):
+        self._outcomeElement.refresh()
 
     def _plotSelected(self, plotElement: PlotSceneElementEditor):
         insert_after(self._wdgElementsTopRow, self._wdgAddNewPlotParent, reference=plotElement)
