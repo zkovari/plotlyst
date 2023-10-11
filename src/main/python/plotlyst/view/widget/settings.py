@@ -19,10 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Dict
 
-from PyQt6.QtCore import pyqtSignal, Qt, QEvent
-from PyQt6.QtGui import QIcon, QPalette, QColor, QEnterEvent
+from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtGui import QIcon, QPalette, QColor
 from PyQt6.QtWidgets import QWidget, QPushButton
-from overrides import overrides
 from qthandy import transparent, sp, vbox, hbox, vspacer, incr_font
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
@@ -36,22 +35,22 @@ setting_titles: Dict[NovelSetting, str] = {
     NovelSetting.Mindmap: 'Events map',
     NovelSetting.Storylines: 'Storylines',
     NovelSetting.Characters: 'Characters',
-    NovelSetting.Scenes: 'Scenes revision',
+    NovelSetting.Scenes: 'Scenes',
     NovelSetting.World_building: 'World-building',
     NovelSetting.Manuscript: 'Manuscript',
     NovelSetting.Documents: 'Documents',
     NovelSetting.Management: 'Task management',
 }
 setting_descriptions: Dict[NovelSetting, str] = {
-    NovelSetting.Structure: "Follow a story structure to help you with your story's pacing",
+    NovelSetting.Structure: "Follow a story structure to help you with your story's pacing and escalation",
     NovelSetting.Mindmap: "Visualize your story's events in a mindmap. Ideal for brainstorming or any other stage in writing",
-    NovelSetting.Storylines: "",
-    NovelSetting.Characters: "",
-    NovelSetting.Scenes: "",
-    NovelSetting.World_building: "",
-    NovelSetting.Manuscript: "",
-    NovelSetting.Documents: "",
-    NovelSetting.Management: "",
+    NovelSetting.Storylines: "Create separate storylines for plot, character's change, subplots, or relationship plots",
+    NovelSetting.Characters: "Create a cast of characters with different roles, personalities, backstories, goals, and relationships among them",
+    NovelSetting.Scenes: "Create scene cards for early outlining or later revision purposes to have characters, conflicts, or storylines associated to the scenes",
+    NovelSetting.World_building: "[BETA] Develop your story's world by creating fictional settings and lore",
+    NovelSetting.Manuscript: "Write your story in Plotlyst using the manuscript panel",
+    NovelSetting.Documents: "Add documents for your planning or research",
+    NovelSetting.Management: "Stay organized by tracking your tasks in a simple Kanban board",
 }
 
 
@@ -73,7 +72,7 @@ def setting_icon(setting: NovelSetting) -> QIcon:
     elif setting == NovelSetting.Documents:
         return IconRegistry.document_edition_icon(color=PLOTLYST_SECONDARY_COLOR)
     elif setting == NovelSetting.Management:
-        return IconRegistry.tasks_icon()
+        return IconRegistry.board_icon()
     return QIcon()
 
 
@@ -111,7 +110,7 @@ class NovelSettingToggle(QWidget):
         self._wdgHeader.setObjectName('wdgHeader')
         hbox(self._wdgHeader)
         self._wdgHeader.layout().addWidget(self._wdgTitle)
-        self._wdgHeader.layout().addWidget(self._toggle)
+        self._wdgHeader.layout().addWidget(self._toggle, alignment=Qt.AlignmentFlag.AlignTop)
 
         hbox(self, 0, 0)
         self.layout().addWidget(self._wdgHeader)
@@ -134,7 +133,7 @@ class NovelSettingsWidget(QWidget):
         super().__init__(parent)
         self._novel = novel
 
-        vbox(self)
+        vbox(self, spacing=10)
         self.layout().addWidget(NovelSettingToggle(self._novel, NovelSetting.Mindmap))
         self.layout().addWidget(NovelSettingToggle(self._novel, NovelSetting.Structure))
         self.layout().addWidget(NovelSettingToggle(self._novel, NovelSetting.Storylines))
