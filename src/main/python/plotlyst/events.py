@@ -21,7 +21,7 @@ from dataclasses import dataclass
 
 from language_tool_python import LanguageTool
 
-from src.main.python.plotlyst.core.domain import Character, NovelDescriptor, Scene, SceneStage, Task
+from src.main.python.plotlyst.core.domain import Character, NovelDescriptor, Scene, SceneStage, Task, NovelSetting
 from src.main.python.plotlyst.event.core import Event
 
 
@@ -123,6 +123,57 @@ class NovelSyncEvent(Event):
 @dataclass
 class CloseNovelEvent(Event):
     novel: NovelDescriptor
+
+
+@dataclass
+class NovelPanelCustomizationEvent(Event):
+    setting: NovelSetting
+    toggled: bool
+
+
+@dataclass
+class NovelMindmapToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
+class NovelManuscriptToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
+class NovelCharactersToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
+class NovelScenesToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
+class NovelStructureToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
+class NovelStorylinesToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
+class NovelDocumentsToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
+class NovelManagementToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
+class NovelWorldBuildingToggleEvent(NovelPanelCustomizationEvent):
+    pass
 
 
 @dataclass

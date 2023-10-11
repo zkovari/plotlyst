@@ -23,7 +23,7 @@ from typing import Dict, Optional
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QEvent
 from PyQt6.QtGui import QIcon, QPalette, QColor
-from PyQt6.QtWidgets import QWidget, QPushButton, QToolButton
+from PyQt6.QtWidgets import QWidget, QPushButton, QToolButton, QGridLayout
 from overrides import overrides
 from qthandy import transparent, sp, vbox, hbox, vspacer, incr_font, pointy, grid
 from qthandy.filter import OpacityEventFilter
@@ -31,6 +31,11 @@ from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel, NovelSetting
+from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
+from src.main.python.plotlyst.event.handler import event_dispatchers
+from src.main.python.plotlyst.events import NovelMindmapToggleEvent, NovelPanelCustomizationEvent, \
+    NovelStructureToggleEvent, NovelStorylinesToggleEvent, NovelCharactersToggleEvent, NovelScenesToggleEvent, \
+    NovelWorldBuildingToggleEvent, NovelManuscriptToggleEvent, NovelDocumentsToggleEvent, NovelManagementToggleEvent
 from src.main.python.plotlyst.view.common import label, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_white_menu
@@ -57,6 +62,18 @@ setting_descriptions: Dict[NovelSetting, str] = {
     NovelSetting.Manuscript: "Write your story in Plotlyst using the manuscript panel",
     NovelSetting.Documents: "Add documents for your planning or research",
     NovelSetting.Management: "Stay organized by tracking your tasks in a simple Kanban board",
+}
+
+setting_events: Dict[NovelSetting, NovelPanelCustomizationEvent] = {
+    NovelSetting.Structure: NovelStructureToggleEvent,
+    NovelSetting.Mindmap: NovelMindmapToggleEvent,
+    NovelSetting.Storylines: NovelStorylinesToggleEvent,
+    NovelSetting.Characters: NovelCharactersToggleEvent,
+    NovelSetting.Scenes: NovelScenesToggleEvent,
+    NovelSetting.World_building: NovelWorldBuildingToggleEvent,
+    NovelSetting.Manuscript: NovelManuscriptToggleEvent,
+    NovelSetting.Documents: NovelDocumentsToggleEvent,
+    NovelSetting.Management: NovelManagementToggleEvent
 }
 
 
@@ -105,7 +122,7 @@ class NovelSettingToggle(QWidget):
 
         self._toggle = Toggle()
         self._toggle.setChecked(True)
-        self._toggle.toggled.connect(self._toggled)
+        self._toggle.clicked.connect(self._toggled)
 
         self._wdgTitle = QWidget()
         vbox(self._wdgTitle)
@@ -120,6 +137,9 @@ class NovelSettingToggle(QWidget):
 
         hbox(self, 0, 0)
         self.layout().addWidget(self._wdgHeader)
+
+    def setChecked(self, checked: bool):
+        self._toggle.setChecked(checked)
 
     def _toggled(self, toggled: bool):
         self._wdgTitle.setEnabled(toggled)
@@ -191,7 +211,7 @@ class NovelQuickPanelCustomizationWidget(QWidget):
                                 alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self._wdgCenter)
         self.layout().addWidget(self._wdgBottom)
-        self._grid = grid(self._wdgCenter)
+        self._grid: QGridLayout = grid(self._wdgCenter)
 
         self._addSetting(NovelSetting.Manuscript, 0, 0)
         self._addSetting(NovelSetting.Characters, 0, 1)
@@ -224,7 +244,8 @@ class NovelQuickPanelCustomizationWidget(QWidget):
         self._grid.addWidget(toggle, row, col, 1, 1)
 
     def _settingChanged(self, setting: NovelSetting, toggled: bool):
-        pass
+        event_clazz = setting_events[setting]
+        emit_event(self._novel, event_clazz(self, setting, toggled))
 
 
 class NovelQuickPanelCustomizationButton(QToolButton):
@@ -247,19 +268,36 @@ class NovelQuickPanelCustomizationButton(QToolButton):
         self._customizationWidget.reset()
 
 
-class NovelSettingsWidget(QWidget):
+class NovelSettingsWidget(QWidget, EventListener):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
 
         vbox(self, spacing=10)
-        self.layout().addWidget(NovelSettingToggle(self._novel, NovelSetting.Mindmap))
-        self.layout().addWidget(NovelSettingToggle(self._novel, NovelSetting.Structure))
-        self.layout().addWidget(NovelSettingToggle(self._novel, NovelSetting.Storylines))
-        self.layout().addWidget(NovelSettingToggle(self._novel, NovelSetting.Characters))
-        self.layout().addWidget(NovelSettingToggle(self._novel, NovelSetting.Scenes))
-        self.layout().addWidget(NovelSettingToggle(self._novel, NovelSetting.World_building))
-        self.layout().addWidget(NovelSettingToggle(self._novel, NovelSetting.Documents))
-        self.layout().addWidget(NovelSettingToggle(self._novel, NovelSetting.Manuscript))
-        self.layout().addWidget(NovelSettingToggle(self._novel, NovelSetting.Management))
+        self._settings: Dict[NovelSetting, NovelSettingToggle] = {}
+        self._addSettingToggle(NovelSetting.Mindmap)
+        self._addSettingToggle(NovelSetting.Structure)
+        self._addSettingToggle(NovelSetting.Storylines)
+        self._addSettingToggle(NovelSetting.Characters)
+        self._addSettingToggle(NovelSetting.Scenes)
+        self._addSettingToggle(NovelSetting.World_building)
+        self._addSettingToggle(NovelSetting.Documents)
+        self._addSettingToggle(NovelSetting.Manuscript)
+        self._addSettingToggle(NovelSetting.Management)
         self.layout().addWidget(vspacer())
+
+        event_dispatchers.instance(self._novel).register(self, NovelMindmapToggleEvent, NovelCharactersToggleEvent,
+                                                         NovelManuscriptToggleEvent, NovelScenesToggleEvent,
+                                                         NovelDocumentsToggleEvent, NovelStructureToggleEvent,
+                                                         NovelStorylinesToggleEvent, NovelWorldBuildingToggleEvent,
+                                                         NovelManagementToggleEvent)
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, NovelPanelCustomizationEvent):
+            self._settings[event.setting].setChecked(event.toggled)
+
+    def _addSettingToggle(self, setting: NovelSetting):
+        toggle = NovelSettingToggle(self._novel, NovelSetting.Mindmap)
+        self._settings[setting] = toggle
+        self.layout().addWidget(toggle)
