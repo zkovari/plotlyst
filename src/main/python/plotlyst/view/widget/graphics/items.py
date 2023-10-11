@@ -31,7 +31,8 @@ from PyQt6.QtWidgets import QAbstractGraphicsShapeItem, QGraphicsItem, QGraphics
 from overrides import overrides
 from qthandy import pointy
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR, \
+    WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Node, Relation, Connector, Character, DiagramNodeType, to_node
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 
@@ -804,7 +805,7 @@ class EventItem(NodeItem):
             painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 2, 2)
 
         painter.setPen(QPen(QColor(self._node.color), 1))
-        painter.setBrush(QColor(RELAXED_WHITE_COLOR))
+        painter.setBrush(QColor(WHITE_COLOR))
         painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 24, 24)
         painter.setFont(self._font)
         painter.drawText(self._textRect, Qt.AlignmentFlag.AlignCenter,

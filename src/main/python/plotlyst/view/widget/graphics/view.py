@@ -28,6 +28,7 @@ from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QFrame, \
 from overrides import overrides
 from qthandy import sp, incr_icon, vbox
 
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Diagram, DiagramNodeType, Character
 from src.main.python.plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButtonGroup, \
     TooltipPositionEventFilter
@@ -109,7 +110,8 @@ class BaseGraphicsView(QGraphicsView):
 class NetworkGraphicsView(BaseGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setBackgroundBrush(QColor('#e9ecef'))
+        # self.setBackgroundBrush(QColor('#e9ecef'))
+        self.setBackgroundBrush(QColor(RELAXED_WHITE_COLOR))
         self._diagram: Optional[Diagram] = None
         self._scene = self._initScene()
         self.setScene(self._scene)
