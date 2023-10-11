@@ -75,7 +75,7 @@ from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 from src.main.python.plotlyst.view.widget.button import ToolbarButton, NovelSyncButton
 from src.main.python.plotlyst.view.widget.hint import reset_hints
 from src.main.python.plotlyst.view.widget.input import CapitalizationEventFilter
-from src.main.python.plotlyst.view.widget.settings import NovelQuickPanelCustomizationButton, panel_events
+from src.main.python.plotlyst.view.widget.settings import NovelQuickPanelCustomizationButton
 from src.main.python.plotlyst.view.widget.tour.core import TutorialNovelOpenTourEvent, tutorial_novel, \
     TutorialNovelCloseTourEvent, NovelTopLevelButtonTourEvent, HomeTopLevelButtonTourEvent, NovelEditorDisplayTourEvent, \
     AllNovelViewsTourEvent, GeneralNovelViewTourEvent, CharacterViewTourEvent, ScenesViewTourEvent, \
@@ -338,7 +338,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         sender: EventSender = event_senders.instance(self.novel)
         dispatcher: EventDispatcher = event_dispatchers.instance(self.novel)
         sender.send.connect(dispatcher.dispatch)
-        dispatcher.register(self, *panel_events)
+        dispatcher.register(self, NovelCharactersToggleEvent, NovelScenesToggleEvent, NovelWorldBuildingToggleEvent,
+                            NovelDocumentsToggleEvent, NovelManuscriptToggleEvent, NovelManagementToggleEvent)
 
         for btn in self.buttonGroup.buttons():
             btn.setVisible(True)
@@ -396,12 +397,12 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         else:
             self.btnNovel.setChecked(True)
 
-        self.btnCharacters.setVisible(self.novel.prefs.settings.get(NovelSetting.Characters.value, True))
-        self.btnScenes.setVisible(self.novel.prefs.settings.get(NovelSetting.Scenes.value, True))
-        self.btnWorld.setVisible(self.novel.prefs.settings.get(NovelSetting.World_building.value, True))
-        self.btnNotes.setVisible(self.novel.prefs.settings.get(NovelSetting.Documents.value, True))
-        self.btnManuscript.setVisible(self.novel.prefs.settings.get(NovelSetting.Manuscript.value, True))
-        self.btnBoard.setVisible(self.novel.prefs.settings.get(NovelSetting.Management.value, True))
+        self.btnCharacters.setVisible(self.novel.prefs.toggled(NovelSetting.Characters))
+        self.btnScenes.setVisible(self.novel.prefs.toggled(NovelSetting.Scenes))
+        self.btnWorld.setVisible(self.novel.prefs.toggled(NovelSetting.World_building))
+        self.btnNotes.setVisible(self.novel.prefs.toggled(NovelSetting.Documents))
+        self.btnManuscript.setVisible(self.novel.prefs.toggled(NovelSetting.Manuscript))
+        self.btnBoard.setVisible(self.novel.prefs.toggled(NovelSetting.Management))
 
     def _on_view_changed(self, btn=None, checked: bool = True):
         if not checked:
