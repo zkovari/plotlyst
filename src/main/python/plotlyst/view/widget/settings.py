@@ -21,9 +21,10 @@ from functools import partial
 from typing import Dict, Optional
 
 import qtanim
-from PyQt6.QtCore import pyqtSignal, Qt, QSize
+from PyQt6.QtCore import pyqtSignal, Qt, QSize, QEvent
 from PyQt6.QtGui import QIcon, QPalette, QColor
 from PyQt6.QtWidgets import QWidget, QPushButton, QToolButton
+from overrides import overrides
 from qthandy import transparent, sp, vbox, hbox, vspacer, incr_font, pointy, grid
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
@@ -162,6 +163,9 @@ class NovelPanelCustomizationToggle(QToolButton):
 
         self.clicked.connect(self._glow)
 
+    def setting(self) -> NovelSetting:
+        return self._setting
+
     def _glow(self, checked: bool):
         if checked:
             qtanim.glow(self, 150, color=QColor(PLOTLYST_SECONDARY_COLOR), radius=12)
@@ -175,7 +179,19 @@ class NovelQuickPanelCustomizationWidget(QWidget):
         self._novel: Optional[Novel] = None
         self.setProperty('relaxed-white-bg', True)
 
-        self._grid = grid(self)
+        vbox(self)
+        self._wdgCenter = QWidget()
+        self._wdgBottom = QWidget()
+        self._lblDesc = label('', wordWrap=True, description=True)
+        self._lblDesc.setMinimumSize(400, 100)
+        self._lblDesc.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        hbox(self._wdgBottom, margin=15).addWidget(self._lblDesc, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self.layout().addWidget(label('Customize your experience:'),
+                                alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self._wdgCenter)
+        self.layout().addWidget(self._wdgBottom)
+        self._grid = grid(self._wdgCenter)
 
         self._addSetting(NovelSetting.Manuscript, 0, 0)
         self._addSetting(NovelSetting.Characters, 0, 1)
@@ -195,10 +211,16 @@ class NovelQuickPanelCustomizationWidget(QWidget):
     def reset(self):
         self._novel = None
 
+    @overrides
+    def eventFilter(self, watched: 'QObject', event: QEvent) -> bool:
+        if event.type() == QEvent.Type.Enter:
+            self._lblDesc.setText(setting_descriptions[watched.setting()])
+        return super().eventFilter(watched, event)
+
     def _addSetting(self, setting: NovelSetting, row: int, col: int):
         toggle = NovelPanelCustomizationToggle(setting)
         toggle.clicked.connect(partial(self._settingChanged, setting))
-        # self._grid.addWidget(toggle, row, col, 1, 1, alignment=Qt.AlignmentFlag.AlignCenter)
+        toggle.installEventFilter(self)
         self._grid.addWidget(toggle, row, col, 1, 1)
 
     def _settingChanged(self, setting: NovelSetting, toggled: bool):
