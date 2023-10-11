@@ -44,7 +44,7 @@ setting_titles: Dict[NovelSetting, str] = {
 }
 setting_descriptions: Dict[NovelSetting, str] = {
     NovelSetting.Structure: "Follow a story structure to help you with your story's pacing",
-    NovelSetting.Mindmap: "",
+    NovelSetting.Mindmap: "Visualize your story's events in a mindmap. Ideal for brainstorming or any other stage in writing",
     NovelSetting.Storylines: "",
     NovelSetting.Characters: "",
     NovelSetting.Scenes: "",
@@ -101,7 +101,6 @@ class NovelSettingToggle(QWidget):
         self._toggle = Toggle()
         self._toggle.setChecked(True)
         self._toggle.toggled.connect(self._toggled)
-        self._toggle.setVisible(False)
 
         self._wdgTitle = QWidget()
         vbox(self._wdgTitle)
@@ -117,13 +116,13 @@ class NovelSettingToggle(QWidget):
         hbox(self, 0, 0)
         self.layout().addWidget(self._wdgHeader)
 
-    @overrides
-    def enterEvent(self, event: QEnterEvent) -> None:
-        self._toggle.setVisible(True)
-
-    @overrides
-    def leaveEvent(self, a0: QEvent) -> None:
-        self._toggle.setVisible(False)
+    # @overrides
+    # def enterEvent(self, event: QEnterEvent) -> None:
+    #     self._toggle.setVisible(True)
+    #
+    # @overrides
+    # def leaveEvent(self, a0: QEvent) -> None:
+    #     self._toggle.setVisible(False)
 
     def _toggled(self, toggled: bool):
         self._wdgTitle.setEnabled(toggled)
