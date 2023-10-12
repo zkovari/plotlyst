@@ -848,8 +848,7 @@ class SceneStructureAgenda(CharacterBased):
     items: List[SceneStructureItem] = field(default_factory=list)
     conflict_references: List[ConflictReference] = field(default_factory=list)
     goal_references: List[GoalReference] = field(default_factory=list)
-    beginning_emotion: int = NEUTRAL
-    ending_emotion: int = NEUTRAL
+    emotion: Optional[int] = None
     story_elements: List['StoryElement'] = field(default_factory=list)
 
     def __post_init__(self):

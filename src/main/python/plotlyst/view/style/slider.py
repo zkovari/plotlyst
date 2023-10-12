@@ -53,6 +53,83 @@ QSlider::add-page:horizontal[conflict=true] {
 QSlider::sub-page:horizontal[conflict=true] {
     background: #f3a712;
 }
+
+QSlider::add-page:horizontal[emotion_0=true] {
+    background: #f25c54;
+}
+QSlider::sub-page:horizontal[emotion_0=true] {
+    background: lightgray;
+}
+
+QSlider::add-page:horizontal[emotion_1=true] {
+    background: #f25c54;
+}
+QSlider::sub-page:horizontal[emotion_1=true] {
+    background: lightgray;
+}
+
+QSlider::add-page:horizontal[emotion_2=true] {
+    background: #f27059;
+}
+QSlider::sub-page:horizontal[emotion_2=true] {
+    background: lightgray;
+}
+
+QSlider::add-page:horizontal[emotion_3=true] {
+    background: #f4845f;
+}
+QSlider::sub-page:horizontal[emotion_3=true] {
+    background: lightgray;
+}
+
+QSlider::add-page:horizontal[emotion_4=true] {
+    background: #f79d65;
+}
+QSlider::sub-page:horizontal[emotion_4=true] {
+    background: lightgray;
+}
+
+QSlider::add-page:horizontal[emotion_5=true] {
+    background: lightgray;
+}
+QSlider::sub-page:horizontal[emotion_5=true] {
+    background: lightgray;
+}
+
+QSlider::add-page:horizontal[emotion_6=true] {
+    background: lightgray;
+}
+QSlider::sub-page:horizontal[emotion_6=true] {
+    background: #74c69d;
+}
+
+QSlider::add-page:horizontal[emotion_7=true] {
+    background: lightgray;
+}
+QSlider::sub-page:horizontal[emotion_7=true] {
+    background: #52b788;
+}
+
+QSlider::add-page:horizontal[emotion_8=true] {
+    background: lightgray;
+}
+QSlider::sub-page:horizontal[emotion_8=true] {
+    background: #40916c;
+}
+
+QSlider::add-page:horizontal[emotion_9=true] {
+    background: lightgray;
+}
+QSlider::sub-page:horizontal[emotion_9=true] {
+    background: #2d6a4f;
+}
+
+QSlider::add-page:horizontal[emotion_10=true] {
+    background: lightgray;
+}
+QSlider::sub-page:horizontal[emotion_10=true] {
+    background: #2d6a4f;
+}
 '''
 
 

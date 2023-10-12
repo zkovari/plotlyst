@@ -45,6 +45,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import RemovalButton
+from src.main.python.plotlyst.view.widget.scene.agency import SceneAgendaEmotionEditor
 from src.main.python.plotlyst.view.widget.scene.conflict import ConflictIntensityEditor, CharacterConflictSelector
 from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotSelectorButton, ScenePlotValueEditor, \
     PlotValuesDisplay
@@ -241,7 +242,7 @@ class ScenePurposeWidget(QFrame):
         super().__init__(parent)
         self._purpose = purpose
         self.setMinimumWidth(150)
-        self.setMaximumWidth(170)
+        self.setMaximumWidth(190)
 
         self._icon = Icon()
         self._icon.setIcon(purpose_icon(self._purpose.type))
@@ -592,7 +593,7 @@ class OutcomeSceneElementEditor(TextBasedSceneElementWidget):
             self.setIcon('fa5s.balance-scale-left', color)
         else:
             return
-        self.setTitle(SceneOutcome.to_str(self._scene.outcome), color)
+        self.setTitle(f'{SceneOutcome.to_str(self._scene.outcome)} outcome', color)
 
 
 class StorylineElementEditor(TextBasedSceneElementWidget):
@@ -718,7 +719,7 @@ class ArcSceneElementEditor(StorylineElementEditor):
     @overrides
     def reset(self):
         super().reset()
-        self.setTitle('Character arc')
+        self.setTitle('Character change')
         self.setIcon('mdi.mirror', CONFLICT_SELF_COLOR)
 
     @overrides
@@ -806,18 +807,21 @@ class AbstractSceneElementsEditor(QWidget):
         self._scene: Optional[Scene] = None
         self._storylineElements: List[PlotSceneElementEditor] = []
 
-        vbox(self)
+        hbox(self)
         sp(self).h_exp()
         self._scrollarea, self._wdgElementsParent = scrolled(self, frameless=True)
         self._wdgElementsParent.setProperty('relaxed-white-bg', True)
         vbox(self._wdgElementsParent)
 
+        self._wdgHeader = QWidget()
+        hbox(self._wdgHeader)
         self._wdgElementsTopRow = QWidget()
         curved_flow(self._wdgElementsTopRow, spacing=8)
         self._wdgElementsBottomRow = QWidget()
         curved_flow(self._wdgElementsBottomRow, spacing=8)
 
         self._lblBottom = label('', underline=True)
+        self._wdgElementsParent.layout().addWidget(self._wdgHeader)
         self._wdgElementsParent.layout().addWidget(self._wdgElementsTopRow)
         self._wdgElementsParent.layout().addWidget(self._lblBottom)
         self._wdgElementsParent.layout().addWidget(self._wdgElementsBottomRow)
@@ -938,6 +942,7 @@ class CharacterTabBar(QTabBar):
         self._novel = novel
         self._character: Optional[Character] = None
         sp(self).h_max()
+        self.setShape(QTabBar.Shape.RoundedWest)
 
         self._btnCharacterSelector = CharacterSelectorButton(self._novel, parent=self)
         self.addTab('')
@@ -946,11 +951,10 @@ class CharacterTabBar(QTabBar):
 
     @overrides
     def tabSizeHint(self, index: int) -> QSize:
-        return QSize(100, self._btnCharacterSelector.sizeHint().height())
+        return QSize(self._btnCharacterSelector.sizeHint().width(), 80)
 
     def _characterSelected(self, character: Character):
         self._character = character
-        self.update()
 
 
 class SceneAgendaEditor(AbstractSceneElementsEditor):
@@ -961,12 +965,17 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         self._lblBottom.setText('Character relations')
 
         self._characterTabbar = CharacterTabBar(self._novel)
-        self.layout().insertWidget(0, self._characterTabbar)
+        self.layout().insertWidget(0, self._characterTabbar, alignment=Qt.AlignmentFlag.AlignTop)
+
+        self._emotionSelector = SceneAgendaEmotionEditor()
+        self._emotionSelector.emotionChanged.connect(self._emotionChanged)
+        self._emotionSelector.emotionReset.connect(self._emotionReset)
+        margins(self._wdgHeader, left=25)
+        self._wdgHeader.layout().addWidget(self._emotionSelector)
+        self._wdgHeader.layout().addWidget(spacer())
+        self._wdgElementsParent.layout().insertWidget(1, line())
 
         self._arcElement = ArcSceneElementEditor(self._novel)
-        self._emotionElement = AgencyTextBasedElementEditor(StoryElementType.Emotion)
-        self._emotionElement.setTitle('Emotion')
-        self._emotionElement.setIcon('mdi.emoticon-neutral')
 
         self._goalElement = AgencyTextBasedElementEditor(StoryElementType.Goal)
         self._goalElement.setTitle('Goal')
@@ -983,21 +992,22 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         self._decisionElement.setTitle('Decision')
         self._decisionElement.setIcon('fa5s.map-signs', '#ba6f4d')
 
-        self._wdgElementsTopRow.layout().addWidget(self._arcElement)
-        self._wdgElementsTopRow.layout().addWidget(self._emotionElement)
-        self._wdgElementsTopRow.layout().addWidget(self._newLine())
         self._wdgElementsTopRow.layout().addWidget(self._goalElement)
-        self._wdgElementsTopRow.layout().addWidget(self._motivationElement)
-        self._wdgElementsTopRow.layout().addWidget(self._newLine())
         self._wdgElementsTopRow.layout().addWidget(self._conflictElement)
+        self._wdgElementsTopRow.layout().addWidget(self._newLine())
         self._wdgElementsTopRow.layout().addWidget(self._decisionElement)
+        self._wdgElementsTopRow.layout().addWidget(self._newLine())
+        self._wdgElementsTopRow.layout().addWidget(self._arcElement)
 
     @overrides
     def setScene(self, scene: Scene):
         super().setScene(scene)
         agenda = scene.agendas[0]
         self._arcElement.setScene(scene)
-        self._emotionElement.setAgenda(agenda)
+        if agenda.emotion is None:
+            self._emotionSelector.reset()
+        else:
+            self._emotionSelector.setValue(agenda.emotion)
         self._goalElement.setAgenda(agenda)
         self._motivationElement.setAgenda(agenda)
         self._conflictElement.setScene(scene, self._novel)
@@ -1015,10 +1025,14 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
                 self._decisionElement.setElement(element)
             elif element.type == StoryElementType.Arc:
                 self._arcElement.setElement(element)
-            elif element.type == StoryElementType.Emotion:
-                self._emotionElement.setElement(element)
             #     wdg = self.__newPlotElementEditor()
             #     wdg.setElement(element)
 
     def updateAvailableCharacters(self, characters: List[Character]):
         pass
+
+    def _emotionChanged(self, emotion: int):
+        self._scene.agendas[0].emotion = emotion
+
+    def _emotionReset(self):
+        self._scene.agendas[0].emotion = None
