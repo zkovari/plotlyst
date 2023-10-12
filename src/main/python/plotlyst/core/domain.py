@@ -815,7 +815,7 @@ class ConflictReference:
                 return conflict
 
 
-class Stake:
+class Motivation(Enum):
     PHYSIOLOGICAL = 0
     SAFETY = 1
     BELONGING = 2
@@ -849,6 +849,8 @@ class SceneStructureAgenda(CharacterBased):
     conflict_references: List[ConflictReference] = field(default_factory=list)
     goal_references: List[GoalReference] = field(default_factory=list)
     emotion: Optional[int] = None
+    motivations: Dict[int, int] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
+
     story_elements: List['StoryElement'] = field(default_factory=list)
 
     def __post_init__(self):

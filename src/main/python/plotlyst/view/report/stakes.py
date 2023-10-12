@@ -24,7 +24,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPen, QColor
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel, Character, Stake
+from src.main.python.plotlyst.core.domain import Novel, Character, Motivation
 from src.main.python.plotlyst.core.text import html
 from src.main.python.plotlyst.view.common import icon_to_html_img
 from src.main.python.plotlyst.view.generated.report.stakes_report_ui import Ui_StakesReport
@@ -103,27 +103,27 @@ class StakesChart(BaseChart):
         series = QSplineSeries()
         splines[stake] = series
 
-        if stake == Stake.PHYSIOLOGICAL:
+        if stake == Motivation.PHYSIOLOGICAL:
             text = 'Physiological'
             icon_name = 'mdi.water'
             color = '#023e8a'
-        elif stake == Stake.SAFETY:
+        elif stake == Motivation.SAFETY:
             text = 'Security'
             icon_name = 'mdi.shield-half-full'
             color = '#8900f2'
-        elif stake == Stake.BELONGING:
+        elif stake == Motivation.BELONGING:
             text = 'Belonging'
             icon_name = 'fa5s.hand-holding-heart'
             color = '#d00000'
-        elif stake == Stake.ESTEEM:
+        elif stake == Motivation.ESTEEM:
             text = 'Esteem'
             icon_name = 'fa5s.award'
             color = '#00b4d8'
-        elif stake == Stake.SELF_ACTUALIZATION:
+        elif stake == Motivation.SELF_ACTUALIZATION:
             text = 'Self-actualization'
             icon_name = 'mdi.yoga'
             color = '#52b788'
-        elif stake == Stake.SELF_TRANSCENDENCE:
+        elif stake == Motivation.SELF_TRANSCENDENCE:
             text = 'Self-transcendence'
             icon_name = 'mdi6.meditation'
             color = '#c38e70'

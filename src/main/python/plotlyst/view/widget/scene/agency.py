@@ -17,16 +17,22 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+
 import qtanim
 from PyQt6.QtCore import Qt, QEvent, pyqtSignal, QSize
-from PyQt6.QtGui import QEnterEvent
+from PyQt6.QtGui import QEnterEvent, QMouseEvent, QIcon
 from PyQt6.QtWidgets import QWidget, QSlider
 from overrides import overrides
-from qthandy import hbox, spacer
+from qthandy import hbox, spacer, sp, retain_when_hidden, bold, vbox, decr_icon
 from qthandy.filter import OpacityEventFilter
+from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.view.common import push_btn, restyle
+from src.main.python.plotlyst.core.domain import Motivation
+from src.main.python.plotlyst.view.common import push_btn, restyle, label
+from src.main.python.plotlyst.view.generated.scene_goal_stakes_ui import Ui_GoalReferenceStakesEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.style.base import apply_white_menu
+from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton
 from src.main.python.plotlyst.view.widget.input import RemovalButton
 
 
@@ -37,7 +43,7 @@ class SceneAgendaEmotionEditor(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         hbox(self)
-
+        sp(self).h_max()
         self._activated: bool = False
 
         self._icon = push_btn(IconRegistry.from_name('mdi.emoticon-neutral', 'lightgrey'),
@@ -57,12 +63,13 @@ class SceneAgendaEmotionEditor(QWidget):
 
         self._btnReset = RemovalButton()
         self._btnReset.clicked.connect(self._resetClicked)
+        retain_when_hidden(self._btnReset)
 
         self.layout().addWidget(self._icon)
         self.layout().addWidget(self._slider)
         self.layout().addWidget(spacer(max_stretch=5))
         self.layout().addWidget(self._btnReset, alignment=Qt.AlignmentFlag.AlignTop)
-        self.layout().addWidget(spacer())
+        # self.layout().addWidget(spacer())
 
         self.reset()
 
@@ -138,6 +145,166 @@ class SceneAgendaEmotionEditor(QWidget):
         self.emotionChanged.emit(value)
 
 
-class SceneAgendaMotivationEditor(QWidget):
+def motivation_icon(motivation: Motivation) -> QIcon:
+    if motivation == Motivation.PHYSIOLOGICAL:
+        return IconRegistry.from_name('mdi.water')
+    elif motivation == Motivation.SAFETY:
+        return IconRegistry.from_name('mdi.shield-half-full')
+    elif motivation == Motivation.BELONGING:
+        return IconRegistry.from_name('fa5s.hand-holding-heart')
+    elif motivation == Motivation.ESTEEM:
+        return IconRegistry.from_name('fa5s.award')
+    elif motivation == Motivation.SELF_ACTUALIZATION:
+        return IconRegistry.from_name('mdi.yoga')
+    elif motivation == Motivation.SELF_TRANSCENDENCE:
+        return IconRegistry.from_name('mdi6.meditation')
+
+
+class MotivationDisplay(QWidget, Ui_GoalReferenceStakesEditor):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setupUi(self)
+        self.refresh()
+        bold(self.lblTitle)
+
+        # self.sliderPhysiological.valueChanged.connect(partial(self._stakeChanged, Motivation.PHYSIOLOGICAL))
+        # self.sliderSecurity.valueChanged.connect(partial(self._stakeChanged, Motivation.SAFETY))
+        # self.sliderBelonging.valueChanged.connect(partial(self._stakeChanged, Motivation.BELONGING))
+        # self.sliderEsteem.valueChanged.connect(partial(self._stakeChanged, Motivation.ESTEEM))
+        # self.sliderActualization.valueChanged.connect(partial(self._stakeChanged, Motivation.SELF_ACTUALIZATION))
+        # self.sliderTranscendence.valueChanged.connect(partial(self._stakeChanged, Motivation.SELF_TRANSCENDENCE))
+
+    @overrides
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        pass
+
+    def refresh(self):
+        pass
+        # for k, v in self.goalRef.stakes.items():
+        #     if k == Motivation.PHYSIOLOGICAL:
+        #         self.sliderPhysiological.setValue(v)
+        #     elif k == Motivation.SAFETY:
+        #         self.sliderSecurity.setValue(v)
+        #     elif k == Motivation.BELONGING:
+        #         self.sliderBelonging.setValue(v)
+        #     elif k == Motivation.ESTEEM:
+        #         self.sliderEsteem.setValue(v)
+        #     elif k == Motivation.SELF_ACTUALIZATION:
+        #         self.sliderActualization.setValue(v)
+        #     elif k == Motivation.SELF_TRANSCENDENCE:
+        #         self.sliderTranscendence.setValue(v)
+
+    # def _stakeChanged(self, stake: int, value: int):
+    #     self.goalRef.stakes[stake] = value
+
+
+class MotivationCharge(QWidget):
+    def __init__(self, motivation: Motivation, parent=None):
+        super().__init__(parent)
+        hbox(self)
+
+        self._btn = push_btn(motivation_icon(motivation), text=motivation.name.lower().replace('_', '-').capitalize(),
+                             transparent_=True)
+        self._posCharge = SecondaryActionToolButton()
+        self._posCharge.setIcon(IconRegistry.plus_circle_icon('grey'))
+        decr_icon(self._posCharge, 4)
+        # self.posCharge.clicked.connect(lambda: self._changeCharge(1))
+        retain_when_hidden(self._posCharge)
+        self._negCharge = SecondaryActionToolButton()
+        self._negCharge.setIcon(IconRegistry.minus_icon('grey'))
+        decr_icon(self._negCharge, 4)
+        # self.negCharge.clicked.connect(lambda: self._changeCharge(-1))
+        retain_when_hidden(self._negCharge)
+
+        self.layout().addWidget(self._btn)
+        self.layout().addWidget(spacer())
+        self.layout().addWidget(self._negCharge)
+        self.layout().addWidget(self._posCharge)
+
+
+class MotivationEditor(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        vbox(self)
+        # self._motivationDisplay = MotivationDisplay()
+        # self.layout().addWidget(self._motivationDisplay)
+
+        # self.layout().addWidget(line())
+        self.layout().addWidget(label("Does the character's motivation change?"))
+
+        self._addEditor(Motivation.PHYSIOLOGICAL)
+        self._addEditor(Motivation.SAFETY)
+        self._addEditor(Motivation.BELONGING)
+        self._addEditor(Motivation.ESTEEM)
+        self._addEditor(Motivation.SELF_ACTUALIZATION)
+        self._addEditor(Motivation.SELF_TRANSCENDENCE)
+
+    def _addEditor(self, motivation: Motivation):
+        wdg = MotivationCharge(motivation)
+        self.layout().addWidget(wdg)
+
+
+class SceneAgendaMotivationEditor(QWidget):
+    motivationChanged = pyqtSignal(Motivation, int)
+    motivationReset = pyqtSignal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        hbox(self)
+        sp(self).h_max()
+        self._activated: bool = False
+
+        self._motivationDisplay = MotivationDisplay()
+        self._motivationDisplay.setDisabled(True)
+        self._motivationEditor = MotivationEditor()
+
+        self._icon = push_btn(IconRegistry.from_name('fa5s.fist-raised', 'lightgrey'),
+                              transparent_=True)
+        self._icon.setIconSize(QSize(32, 32))
+        self._opacityFilter = OpacityEventFilter(self._icon)
+
+        self._menu = MenuWidget(self._icon)
+        apply_white_menu(self._menu)
+        self._menu.addWidget(self._motivationDisplay)
+        self._menu.addSeparator()
+        self._menu.addWidget(self._motivationEditor)
+
+        self._btnReset = RemovalButton()
+        self._btnReset.clicked.connect(self._resetClicked)
+        retain_when_hidden(self._btnReset)
+
+        self.layout().addWidget(self._icon)
+        self.layout().addWidget(self._btnReset, alignment=Qt.AlignmentFlag.AlignTop)
+
+        self.reset()
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        if self._activated:
+            self._btnReset.setVisible(True)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self._btnReset.setVisible(False)
+
+    def activate(self):
+        self._activated = True
+        self._btnReset.setVisible(True)
+        self._icon.setText('')
+        self._icon.removeEventFilter(self._opacityFilter)
+
+    def reset(self):
+        self._activated = False
+        self._btnReset.setVisible(False)
+        self._icon.setIcon(IconRegistry.from_name('fa5s.fist-raised', 'lightgrey'))
+        self._icon.setText('Motivation')
+        self._icon.installEventFilter(self._opacityFilter)
+
+    def setValue(self, motivation: Motivation, value: int):
+        self.activate()
+        self._btnReset.setHidden(True)
+
+    def _resetClicked(self):
+        self.reset()
+        self.motivationReset.emit()

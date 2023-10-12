@@ -37,7 +37,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Motivation</string>
+      <string>Current motivation</string>
      </property>
     </widget>
    </item>
