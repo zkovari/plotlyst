@@ -23,13 +23,12 @@ from dataclasses import dataclass
 from functools import partial
 from typing import Iterable, List, Optional, Dict, Union
 
-import emoji
 import qtanim
 from PyQt6 import QtCore
 from PyQt6.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent, QByteArray, QBuffer, QIODevice
 from PyQt6.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor, QImageReader, QImage, QPixmap, \
     QMouseEvent, QAction, QShowEvent
-from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel, QPushButton, \
+from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QSizePolicy, QLabel, QPushButton, \
     QFileDialog, QMessageBox, QGridLayout
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup, incr_font, \
@@ -37,10 +36,9 @@ from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup,
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, emotion_color, \
-    CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character, BackstoryEvent, \
-    VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, NEUTRAL, Topic, TemplateValue
+    VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, Topic, TemplateValue
 from src.main.python.plotlyst.core.template import secondary_role, guide_role, love_interest_role, sidekick_role, \
     contagonist_role, confidant_role, foil_role, supporter_role, adversary_role, antagonist_role, henchmen_role, \
     tertiary_role, SelectionItem, Role, TemplateFieldType, TemplateField, protagonist_role, RoleImportance, \
@@ -53,8 +51,7 @@ from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
 from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
     ConflictScenesDistributionTableModel, TagScenesDistributionTableModel, GoalScenesDistributionTableModel
 from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.view.common import emoji_font, \
-    link_buttons_to_pages, action, ButtonPressResizeEventFilter, tool_btn
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, action, ButtonPressResizeEventFilter, tool_btn
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog, ArtbreederDialog, ImageCropDialog
 from src.main.python.plotlyst.view.generated.avatar_selectors_ui import Ui_AvatarSelectors
@@ -717,64 +714,6 @@ class CharacterTimelineWidget(QWidget):
         control = _ControlButtons(self)
         control.btnPlus.clicked.connect(partial(self.add, pos))
         self._layout.addWidget(control, alignment=Qt.AlignmentFlag.AlignHCenter)
-
-
-class CharacterEmotionButton(QToolButton):
-    emotionChanged = pyqtSignal()
-
-    def __init__(self, parent=None):
-        super(CharacterEmotionButton, self).__init__(parent)
-        self._value = NEUTRAL
-        self._color = NEUTRAL_EMOTION_COLOR
-        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        self.setFixedSize(32, 32)
-        pointy(self)
-        transparent(self)
-
-        menu = QMenu(self)
-        self.setMenu(menu)
-        menu.setMaximumWidth(64)
-        self.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
-        self._emoji_font = emoji_font()
-        self.setFont(self._emoji_font)
-        menu.setFont(self._emoji_font)
-        menu.addAction(emoji.emojize(':smiling_face_with_smiling_eyes:'), lambda: self._emotionClicked(VERY_HAPPY))
-        menu.addAction(emoji.emojize(':slightly_smiling_face:'), lambda: self._emotionClicked(HAPPY))
-        menu.addAction(emoji.emojize(':neutral_face:'), lambda: self._emotionClicked(NEUTRAL))
-        menu.addAction(emoji.emojize(':worried_face:'), lambda: self._emotionClicked(UNHAPPY))
-        menu.addAction(emoji.emojize(':fearful_face:'), lambda: self._emotionClicked(VERY_UNHAPPY))
-
-        self._setAlready: bool = False
-
-    def value(self) -> int:
-        return self._value
-
-    def setValue(self, value: int):
-        if value == VERY_UNHAPPY:
-            self.setText(emoji.emojize(":fearful_face:"))
-        elif value == UNHAPPY:
-            self.setText(emoji.emojize(":worried_face:"))
-        elif value == NEUTRAL:
-            self.setText(emoji.emojize(":neutral_face:"))
-        elif value == HAPPY:
-            self.setText(emoji.emojize(":slightly_smiling_face:"))
-        elif value == VERY_HAPPY:
-            self.setText(emoji.emojize(":smiling_face_with_smiling_eyes:"))
-
-        self._color = emotion_color(value)
-
-        self._value = value
-        if self._setAlready:
-            qtanim.glow(self, duration=300, radius=100, color=QColor(self._color))
-        else:
-            self._setAlready = True
-
-    def color(self) -> str:
-        return self._color
-
-    def _emotionClicked(self, value: int):
-        self.setValue(value)
-        self.emotionChanged.emit()
 
 
 class AvatarSelectors(QWidget, Ui_AvatarSelectors):
