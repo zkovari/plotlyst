@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Dict
+from typing import Dict, Optional
 
 import qtanim
 from PyQt6.QtCore import Qt, QEvent, pyqtSignal, QSize
@@ -30,7 +30,7 @@ from qthandy import hbox, spacer, sp, retain_when_hidden, bold, vbox, translucen
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.core.domain import Motivation
+from src.main.python.plotlyst.core.domain import Motivation, Novel, Scene
 from src.main.python.plotlyst.view.common import push_btn, restyle, label, fade_out_and_gc, tool_btn
 from src.main.python.plotlyst.view.generated.scene_goal_stakes_ui import Ui_GoalReferenceStakesEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -152,11 +152,20 @@ class MotivationDisplay(QWidget, Ui_GoalReferenceStakesEditor):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
-        self.refresh()
+        self._novel: Optional[Novel] = None
+        self._scene: Optional[Scene] = None
         bold(self.lblTitle)
 
-        for slider in [self.sliderPhysiological, self.sliderSecurity, self.sliderBelonging,
-                       self.sliderEsteem, self.sliderActualization, self.sliderTranscendence]:
+        self._sliders: Dict[Motivation, QSlider] = {
+            Motivation.PHYSIOLOGICAL: self.sliderPhysiological,
+            Motivation.SAFETY: self.sliderSecurity,
+            Motivation.BELONGING: self.sliderBelonging,
+            Motivation.ESTEEM: self.sliderEsteem,
+            Motivation.SELF_ACTUALIZATION: self.sliderActualization,
+            Motivation.SELF_TRANSCENDENCE: self.sliderTranscendence,
+        }
+
+        for slider in self._sliders.values():
             slider.setEnabled(False)
         translucent(self)
 
@@ -164,8 +173,23 @@ class MotivationDisplay(QWidget, Ui_GoalReferenceStakesEditor):
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         pass
 
-    def refresh(self):
-        self.sliderPhysiological.setValue(5)
+    def setNovel(self, novel: Novel):
+        self._novel = novel
+
+    def setScene(self, scene: Scene):
+        self._scene = scene
+        self._refresh()
+
+    def _refresh(self):
+        for slider in self._sliders.values():
+            slider.setValue(0)
+        for scene in self._novel.scenes:
+            if scene.agendas and scene.agendas[0].motivations:
+                for mot, v in scene.agendas[0].motivations.items():
+                    slider = self._sliders[Motivation(mot)]
+                    slider.setValue(slider.value() + v)
+            if scene is self._scene:
+                break
 
 
 class MotivationChargeLabel(QWidget):
@@ -283,7 +307,6 @@ class SceneAgendaMotivationEditor(QWidget):
         self._activated: bool = False
 
         self._motivationDisplay = MotivationDisplay()
-        self._motivationDisplay.refresh()
         self._motivationEditor = MotivationEditor()
         self._motivationEditor.motivationChanged.connect(self._valueChanged)
 
@@ -321,6 +344,12 @@ class SceneAgendaMotivationEditor(QWidget):
     def leaveEvent(self, event: QEvent) -> None:
         self._btnReset.setVisible(False)
 
+    def setNovel(self, novel: Novel):
+        self._motivationDisplay.setNovel(novel)
+
+    def setScene(self, scene: Scene):
+        self._motivationDisplay.setScene(scene)
+
     def activate(self):
         print('activate')
         self._activated = True
@@ -352,7 +381,6 @@ class SceneAgendaMotivationEditor(QWidget):
             self._updateLabels(mot, v)
 
     def _valueChanged(self, motivation: Motivation, value: int):
-        print('value changed')
         self.motivationChanged.emit(motivation, value)
         self._updateLabels(motivation, value)
 

@@ -971,6 +971,7 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         self._emotionEditor.emotionChanged.connect(self._emotionChanged)
         self._emotionEditor.emotionReset.connect(self._emotionReset)
         self._motivationEditor = SceneAgendaMotivationEditor()
+        self._motivationEditor.setNovel(novel)
         self._motivationEditor.motivationChanged.connect(self._motivationChanged)
         self._motivationEditor.motivationReset.connect(self._motivationReset)
 
@@ -1006,11 +1007,14 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
     def setScene(self, scene: Scene):
         super().setScene(scene)
         agenda = scene.agendas[0]
+
         self._arcElement.setScene(scene)
         if agenda.emotion is None:
             self._emotionEditor.reset()
         else:
             self._emotionEditor.setValue(agenda.emotion)
+
+        self._motivationEditor.setScene(scene)
         if agenda.motivations:
             print('has moti')
             values: Dict[Motivation, int] = {}
