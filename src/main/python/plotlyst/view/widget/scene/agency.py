@@ -17,18 +17,21 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from functools import partial
+from typing import Dict
 
 import qtanim
 from PyQt6.QtCore import Qt, QEvent, pyqtSignal, QSize
 from PyQt6.QtGui import QEnterEvent, QMouseEvent
 from PyQt6.QtWidgets import QWidget, QSlider
 from overrides import overrides
+from qtanim import fade_in
 from qthandy import hbox, spacer, sp, retain_when_hidden, bold, vbox, translucent
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.core.domain import Motivation
-from src.main.python.plotlyst.view.common import push_btn, restyle, label
+from src.main.python.plotlyst.view.common import push_btn, restyle, label, insert_before, fade_out_and_gc, tool_btn
 from src.main.python.plotlyst.view.generated.scene_goal_stakes_ui import Ui_GoalReferenceStakesEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_white_menu
@@ -165,6 +168,33 @@ class MotivationDisplay(QWidget, Ui_GoalReferenceStakesEditor):
         self.sliderPhysiological.setValue(5)
 
 
+class MotivationChargeLabel(QWidget):
+    def __init__(self, motivation: Motivation, simplified: bool = False, parent=None):
+        super().__init__(parent)
+        self._motivation = motivation
+        hbox(self, margin=0 if simplified else 1, spacing=0)
+        if simplified:
+            self._btn = tool_btn(IconRegistry.from_name(self._motivation.icon(), self._motivation.color()),
+                                 icon_resize=False, transparent_=True)
+        else:
+            self._btn = push_btn(IconRegistry.from_name(self._motivation.icon(), self._motivation.color()),
+                                 text=motivation.display_name(), icon_resize=False,
+                                 transparent_=True)
+        if simplified:
+            self._btn.setText('')
+        self._lblCharge = label('', description=True, italic=True)
+
+        self.layout().addWidget(self._btn)
+        self.layout().addWidget(self._lblCharge)
+
+    def setCharge(self, charge: int):
+        bold(self._btn, charge > 0)
+        if charge == 0:
+            self._lblCharge.clear()
+        else:
+            self._lblCharge.setText(f'+{charge}')
+
+
 class MotivationCharge(QWidget):
     charged = pyqtSignal(int)
     MAX_CHARGE: int = 5
@@ -174,47 +204,45 @@ class MotivationCharge(QWidget):
         hbox(self)
         self._motivation = motivation
         self._charge = 0
-        print(self._motivation.display_name())
 
-        self._btn = push_btn(IconRegistry.from_name(self._motivation.icon(), self._motivation.color()),
-                             text=motivation.display_name(),
-                             transparent_=True)
-        self._lblCharge = label('', description=True, italic=True)
+        self._label = MotivationChargeLabel(self._motivation)
         self._posCharge = ChargeButton(positive=True)
         self._posCharge.clicked.connect(lambda: self._changeCharge(1))
         self._negCharge = ChargeButton(positive=False)
         self._negCharge.clicked.connect(lambda: self._changeCharge(-1))
         self._negCharge.setHidden(True)
 
-        self.layout().addWidget(self._btn)
-        self.layout().addWidget(self._lblCharge)
+        self.layout().addWidget(self._label)
         self.layout().addWidget(spacer())
         self.layout().addWidget(self._negCharge)
         self.layout().addWidget(self._posCharge)
 
     def _changeCharge(self, charge: int):
         self._charge += charge
-        bold(self._btn, charge > 0)
+        self._label.setCharge(self._charge)
         if self._charge == 0:
             self._negCharge.setHidden(True)
-            self._lblCharge.clear()
         else:
             self._negCharge.setVisible(True)
-            self._lblCharge.setText(f'+{self._charge}')
 
         if self._charge == self.MAX_CHARGE:
             self._posCharge.setHidden(True)
         else:
             self._posCharge.setVisible(True)
 
+        self.charged.emit(self._charge)
+
 
 class MotivationEditor(QWidget):
+    motivationChanged = pyqtSignal(Motivation, int)
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
         vbox(self)
         self.layout().addWidget(label("Does the character's motivation change?"))
 
+        self._editors: Dict[Motivation, MotivationCharge] = {}
         self._addEditor(Motivation.PHYSIOLOGICAL)
         self._addEditor(Motivation.SAFETY)
         self._addEditor(Motivation.BELONGING)
@@ -224,7 +252,16 @@ class MotivationEditor(QWidget):
 
     def _addEditor(self, motivation: Motivation):
         wdg = MotivationCharge(motivation)
+        self._editors[motivation] = wdg
+        wdg.charged.connect(partial(self.motivationChanged.emit, motivation))
         self.layout().addWidget(wdg)
+
+    def reset(self):
+        for editor in self._editors.values():
+            editor.reset()
+
+    def setMotivations(self, motivations: Dict[Motivation, int]):
+        pass
 
 
 class SceneAgendaMotivationEditor(QWidget):
@@ -240,6 +277,9 @@ class SceneAgendaMotivationEditor(QWidget):
         self._motivationDisplay = MotivationDisplay()
         self._motivationDisplay.refresh()
         self._motivationEditor = MotivationEditor()
+        self._motivationEditor.motivationChanged.connect(self._valueChanged)
+
+        self._labels: Dict[Motivation, MotivationChargeLabel] = {}
 
         self._icon = push_btn(IconRegistry.from_name('fa5s.fist-raised', 'lightgrey'),
                               properties=['transparent', 'no-menu'])
@@ -279,13 +319,35 @@ class SceneAgendaMotivationEditor(QWidget):
     def reset(self):
         self._activated = False
         self._btnReset.setVisible(False)
-        self._icon.setIcon(IconRegistry.from_name('fa5s.fist-raised', 'lightgrey'))
+        # self._icon.setIcon(IconRegistry.from_name('fa5s.fist-raised', 'lightgrey'))
         self._icon.setText('Motivation')
         self._icon.installEventFilter(self._opacityFilter)
 
     def setValue(self, motivation: Motivation, value: int):
         self.activate()
         self._btnReset.setHidden(True)
+
+    def _valueChanged(self, motivation: Motivation, value: int):
+        self.motivationChanged.emit(motivation, value)
+
+        if motivation not in self._labels.keys():
+            lbl = MotivationChargeLabel(motivation, simplified=True)
+            self._labels[motivation] = lbl
+            translucent(lbl, 0.8)
+            insert_before(self, lbl, self._btnReset)
+            fade_in(lbl, 150)
+
+        if value:
+            self._labels[motivation].setCharge(value)
+        else:
+            fade_out_and_gc(self, self._labels.pop(motivation))
+
+        if self._labels and not self._activated:
+            self.activate()
+            # self._icon.setText('')
+        elif self._activated:
+            self.reset()
+            # self._icon.setText('Motivation')
 
     def _resetClicked(self):
         self.reset()
