@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 import qtanim
 from PyQt6.QtCore import Qt, QSize, QEvent, pyqtSignal, QObject
@@ -1012,9 +1012,15 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         else:
             self._emotionEditor.setValue(agenda.emotion)
         if agenda.motivations:
-            # self._motivationEditor.setValue()
-            pass
+            print('has moti')
+            values: Dict[Motivation, int] = {}
+            for k, v in agenda.motivations.items():
+                motivation = Motivation(k)
+                values[motivation] = v
+
+            self._motivationEditor.setValues(values)
         else:
+            print('no moti')
             self._motivationEditor.reset()
 
         self._goalElement.setAgenda(agenda)
@@ -1025,8 +1031,6 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         for element in scene.agendas[0].story_elements:
             if element.type == StoryElementType.Goal:
                 self._goalElement.setElement(element)
-            elif element.type == StoryElementType.Motivation:
-                self._motivationElement.setElement(element)
             elif element.type == StoryElementType.Conflict:
                 self._conflictElement.setElement(element)
             elif element.type == StoryElementType.Decision:
