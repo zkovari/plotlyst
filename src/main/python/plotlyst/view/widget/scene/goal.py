@@ -17,61 +17,20 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from functools import partial
 from typing import Optional
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QMouseEvent, QCursor
+from PyQt6.QtGui import QCursor
 from PyQt6.QtWidgets import QWidget, QPushButton, QMenu, QWidgetAction
-from overrides import overrides
-from qthandy import hbox, pointy, gc, bold
+from qthandy import hbox, pointy, gc
 from qthandy.filter import OpacityEventFilter
 from qtmenu import ScrollableMenuWidget
 
-from src.main.python.plotlyst.core.domain import Novel, Scene, GoalReference, Stake, CharacterGoal
-from src.main.python.plotlyst.view.generated.scene_goal_stakes_ui import Ui_GoalReferenceStakesEditor
+from src.main.python.plotlyst.core.domain import Novel, Scene, GoalReference, CharacterGoal
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.character.plan import CharacterPlansSelectorWidget
 from src.main.python.plotlyst.view.widget.labels import CharacterGoalLabel
-
-
-class GoalStakesEditor(QWidget, Ui_GoalReferenceStakesEditor):
-    def __init__(self, goalRef: GoalReference, parent=None):
-        super(GoalStakesEditor, self).__init__(parent)
-        self.setupUi(self)
-        self.goalRef = goalRef
-        self.refresh()
-        bold(self.lblTitle)
-
-        self.sliderPhysiological.valueChanged.connect(partial(self._stakeChanged, Stake.PHYSIOLOGICAL))
-        self.sliderSecurity.valueChanged.connect(partial(self._stakeChanged, Stake.SAFETY))
-        self.sliderBelonging.valueChanged.connect(partial(self._stakeChanged, Stake.BELONGING))
-        self.sliderEsteem.valueChanged.connect(partial(self._stakeChanged, Stake.ESTEEM))
-        self.sliderActualization.valueChanged.connect(partial(self._stakeChanged, Stake.SELF_ACTUALIZATION))
-        self.sliderTranscendence.valueChanged.connect(partial(self._stakeChanged, Stake.SELF_TRANSCENDENCE))
-
-    @overrides
-    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
-        pass
-
-    def refresh(self):
-        for k, v in self.goalRef.stakes.items():
-            if k == Stake.PHYSIOLOGICAL:
-                self.sliderPhysiological.setValue(v)
-            elif k == Stake.SAFETY:
-                self.sliderSecurity.setValue(v)
-            elif k == Stake.BELONGING:
-                self.sliderBelonging.setValue(v)
-            elif k == Stake.ESTEEM:
-                self.sliderEsteem.setValue(v)
-            elif k == Stake.SELF_ACTUALIZATION:
-                self.sliderActualization.setValue(v)
-            elif k == Stake.SELF_TRANSCENDENCE:
-                self.sliderTranscendence.setValue(v)
-
-    def _stakeChanged(self, stake: int, value: int):
-        self.goalRef.stakes[stake] = value
 
 
 class SceneGoalSelector(QWidget):

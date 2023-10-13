@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 import qtanim
 from PyQt6.QtCore import Qt, QSize, QEvent, pyqtSignal, QObject
@@ -34,7 +34,7 @@ from src.main.python.plotlyst.common import raise_unrecognized_arg, CONFLICT_SEL
 from src.main.python.plotlyst.core.domain import Scene, Novel, ScenePurpose, advance_story_scene_purpose, \
     ScenePurposeType, reaction_story_scene_purpose, character_story_scene_purpose, setup_story_scene_purpose, \
     emotion_story_scene_purpose, exposition_story_scene_purpose, scene_purposes, Character, Plot, ScenePlotReference, \
-    StoryElement, StoryElementType, SceneOutcome, SceneStructureAgenda, PlotType
+    StoryElement, StoryElementType, SceneOutcome, SceneStructureAgenda, PlotType, Motivation
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent
@@ -45,7 +45,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import RemovalButton
-from src.main.python.plotlyst.view.widget.scene.agency import SceneAgendaEmotionEditor
+from src.main.python.plotlyst.view.widget.scene.agency import SceneAgendaEmotionEditor, SceneAgendaMotivationEditor
 from src.main.python.plotlyst.view.widget.scene.conflict import ConflictIntensityEditor, CharacterConflictSelector
 from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotSelectorButton, ScenePlotValueEditor, \
     PlotValuesDisplay
@@ -967,11 +967,19 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         self._characterTabbar = CharacterTabBar(self._novel)
         self.layout().insertWidget(0, self._characterTabbar, alignment=Qt.AlignmentFlag.AlignTop)
 
-        self._emotionSelector = SceneAgendaEmotionEditor()
-        self._emotionSelector.emotionChanged.connect(self._emotionChanged)
-        self._emotionSelector.emotionReset.connect(self._emotionReset)
+        self._emotionEditor = SceneAgendaEmotionEditor()
+        self._emotionEditor.emotionChanged.connect(self._emotionChanged)
+        self._emotionEditor.emotionReset.connect(self._emotionReset)
+        self._motivationEditor = SceneAgendaMotivationEditor()
+        self._motivationEditor.setNovel(novel)
+        self._motivationEditor.motivationChanged.connect(self._motivationChanged)
+        self._motivationEditor.motivationReset.connect(self._motivationReset)
+
         margins(self._wdgHeader, left=25)
-        self._wdgHeader.layout().addWidget(self._emotionSelector)
+        self._wdgHeader.layout().setSpacing(10)
+        self._wdgHeader.layout().addWidget(self._emotionEditor)
+        self._wdgHeader.layout().addWidget(vline())
+        self._wdgHeader.layout().addWidget(self._motivationEditor)
         self._wdgHeader.layout().addWidget(spacer())
         self._wdgElementsParent.layout().insertWidget(1, line())
 
@@ -981,10 +989,6 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         self._goalElement.setTitle('Goal')
         self._goalElement.setIcon('mdi.target', 'darkBlue')
         self._goalElement.setPlaceholderText("What's the character's goal in this scene?")
-
-        self._motivationElement = AgencyTextBasedElementEditor(StoryElementType.Motivation)
-        self._motivationElement.setTitle('Motivation')
-        self._motivationElement.setIcon('fa5s.fist-raised')
 
         self._conflictElement = ConflictElementEditor()
 
@@ -1003,13 +1007,25 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
     def setScene(self, scene: Scene):
         super().setScene(scene)
         agenda = scene.agendas[0]
+
         self._arcElement.setScene(scene)
         if agenda.emotion is None:
-            self._emotionSelector.reset()
+            self._emotionEditor.reset()
         else:
-            self._emotionSelector.setValue(agenda.emotion)
+            self._emotionEditor.setValue(agenda.emotion)
+
+        self._motivationEditor.setScene(scene)
+        if agenda.motivations:
+            values: Dict[Motivation, int] = {}
+            for k, v in agenda.motivations.items():
+                motivation = Motivation(k)
+                values[motivation] = v
+
+            self._motivationEditor.setValues(values)
+        else:
+            self._motivationEditor.reset()
+
         self._goalElement.setAgenda(agenda)
-        self._motivationElement.setAgenda(agenda)
         self._conflictElement.setScene(scene, self._novel)
         self._conflictElement.setAgenda(agenda)
         self._decisionElement.setAgenda(agenda)
@@ -1017,8 +1033,6 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         for element in scene.agendas[0].story_elements:
             if element.type == StoryElementType.Goal:
                 self._goalElement.setElement(element)
-            elif element.type == StoryElementType.Motivation:
-                self._motivationElement.setElement(element)
             elif element.type == StoryElementType.Conflict:
                 self._conflictElement.setElement(element)
             elif element.type == StoryElementType.Decision:
@@ -1036,3 +1050,9 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
 
     def _emotionReset(self):
         self._scene.agendas[0].emotion = None
+
+    def _motivationChanged(self, motivation: Motivation, value: int):
+        self._scene.agendas[0].motivations[motivation.value] = value
+
+    def _motivationReset(self):
+        self._scene.agendas[0].motivations.clear()
