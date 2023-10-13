@@ -351,14 +351,12 @@ class SceneAgendaMotivationEditor(QWidget):
         self._motivationDisplay.setScene(scene)
 
     def activate(self):
-        print('activate')
         self._activated = True
         self._btnReset.setVisible(True)
         self._icon.setText('')
         self._icon.removeEventFilter(self._opacityFilter)
 
     def reset(self):
-        print('reset')
         self._activated = False
         self._btnReset.setVisible(False)
         self._icon.setText('Motivation')
@@ -370,7 +368,6 @@ class SceneAgendaMotivationEditor(QWidget):
         clear_layout(self._wdgLabels)
 
     def setValues(self, motivations: Dict[Motivation, int]):
-        print(f'set values {motivations}')
         self.activate()
         self._motivationEditor.setMotivations(motivations)
         self._btnReset.setHidden(True)

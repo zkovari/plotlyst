@@ -1016,7 +1016,6 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
 
         self._motivationEditor.setScene(scene)
         if agenda.motivations:
-            print('has moti')
             values: Dict[Motivation, int] = {}
             for k, v in agenda.motivations.items():
                 motivation = Motivation(k)
@@ -1024,7 +1023,6 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
 
             self._motivationEditor.setValues(values)
         else:
-            print('no moti')
             self._motivationEditor.reset()
 
         self._goalElement.setAgenda(agenda)
