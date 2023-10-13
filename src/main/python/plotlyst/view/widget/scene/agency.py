@@ -20,10 +20,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import qtanim
 from PyQt6.QtCore import Qt, QEvent, pyqtSignal, QSize
-from PyQt6.QtGui import QEnterEvent, QMouseEvent, QIcon
+from PyQt6.QtGui import QEnterEvent, QMouseEvent
 from PyQt6.QtWidgets import QWidget, QSlider
 from overrides import overrides
-from qthandy import hbox, spacer, sp, retain_when_hidden, bold, vbox, decr_icon
+from qthandy import hbox, spacer, sp, retain_when_hidden, bold, vbox, translucent
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -32,7 +32,7 @@ from src.main.python.plotlyst.view.common import push_btn, restyle, label
 from src.main.python.plotlyst.view.generated.scene_goal_stakes_ui import Ui_GoalReferenceStakesEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_white_menu
-from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton
+from src.main.python.plotlyst.view.widget.button import ChargeButton
 from src.main.python.plotlyst.view.widget.input import RemovalButton
 
 
@@ -145,21 +145,6 @@ class SceneAgendaEmotionEditor(QWidget):
         self.emotionChanged.emit(value)
 
 
-def motivation_icon(motivation: Motivation) -> QIcon:
-    if motivation == Motivation.PHYSIOLOGICAL:
-        return IconRegistry.from_name('mdi.water')
-    elif motivation == Motivation.SAFETY:
-        return IconRegistry.from_name('mdi.shield-half-full')
-    elif motivation == Motivation.BELONGING:
-        return IconRegistry.from_name('fa5s.hand-holding-heart')
-    elif motivation == Motivation.ESTEEM:
-        return IconRegistry.from_name('fa5s.award')
-    elif motivation == Motivation.SELF_ACTUALIZATION:
-        return IconRegistry.from_name('mdi.yoga')
-    elif motivation == Motivation.SELF_TRANSCENDENCE:
-        return IconRegistry.from_name('mdi6.meditation')
-
-
 class MotivationDisplay(QWidget, Ui_GoalReferenceStakesEditor):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -167,59 +152,60 @@ class MotivationDisplay(QWidget, Ui_GoalReferenceStakesEditor):
         self.refresh()
         bold(self.lblTitle)
 
-        # self.sliderPhysiological.valueChanged.connect(partial(self._stakeChanged, Motivation.PHYSIOLOGICAL))
-        # self.sliderSecurity.valueChanged.connect(partial(self._stakeChanged, Motivation.SAFETY))
-        # self.sliderBelonging.valueChanged.connect(partial(self._stakeChanged, Motivation.BELONGING))
-        # self.sliderEsteem.valueChanged.connect(partial(self._stakeChanged, Motivation.ESTEEM))
-        # self.sliderActualization.valueChanged.connect(partial(self._stakeChanged, Motivation.SELF_ACTUALIZATION))
-        # self.sliderTranscendence.valueChanged.connect(partial(self._stakeChanged, Motivation.SELF_TRANSCENDENCE))
+        for slider in [self.sliderPhysiological, self.sliderSecurity, self.sliderBelonging,
+                       self.sliderEsteem, self.sliderActualization, self.sliderTranscendence]:
+            slider.setEnabled(False)
+        translucent(self)
 
     @overrides
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         pass
 
     def refresh(self):
-        pass
-        # for k, v in self.goalRef.stakes.items():
-        #     if k == Motivation.PHYSIOLOGICAL:
-        #         self.sliderPhysiological.setValue(v)
-        #     elif k == Motivation.SAFETY:
-        #         self.sliderSecurity.setValue(v)
-        #     elif k == Motivation.BELONGING:
-        #         self.sliderBelonging.setValue(v)
-        #     elif k == Motivation.ESTEEM:
-        #         self.sliderEsteem.setValue(v)
-        #     elif k == Motivation.SELF_ACTUALIZATION:
-        #         self.sliderActualization.setValue(v)
-        #     elif k == Motivation.SELF_TRANSCENDENCE:
-        #         self.sliderTranscendence.setValue(v)
-
-    # def _stakeChanged(self, stake: int, value: int):
-    #     self.goalRef.stakes[stake] = value
+        self.sliderPhysiological.setValue(5)
 
 
 class MotivationCharge(QWidget):
+    charged = pyqtSignal(int)
+    MAX_CHARGE: int = 5
+
     def __init__(self, motivation: Motivation, parent=None):
         super().__init__(parent)
         hbox(self)
+        self._motivation = motivation
+        self._charge = 0
+        print(self._motivation.display_name())
 
-        self._btn = push_btn(motivation_icon(motivation), text=motivation.name.lower().replace('_', '-').capitalize(),
+        self._btn = push_btn(IconRegistry.from_name(self._motivation.icon(), self._motivation.color()),
+                             text=motivation.display_name(),
                              transparent_=True)
-        self._posCharge = SecondaryActionToolButton()
-        self._posCharge.setIcon(IconRegistry.plus_circle_icon('grey'))
-        decr_icon(self._posCharge, 4)
-        # self.posCharge.clicked.connect(lambda: self._changeCharge(1))
-        retain_when_hidden(self._posCharge)
-        self._negCharge = SecondaryActionToolButton()
-        self._negCharge.setIcon(IconRegistry.minus_icon('grey'))
-        decr_icon(self._negCharge, 4)
-        # self.negCharge.clicked.connect(lambda: self._changeCharge(-1))
-        retain_when_hidden(self._negCharge)
+        self._lblCharge = label('', description=True, italic=True)
+        self._posCharge = ChargeButton(positive=True)
+        self._posCharge.clicked.connect(lambda: self._changeCharge(1))
+        self._negCharge = ChargeButton(positive=False)
+        self._negCharge.clicked.connect(lambda: self._changeCharge(-1))
+        self._negCharge.setHidden(True)
 
         self.layout().addWidget(self._btn)
+        self.layout().addWidget(self._lblCharge)
         self.layout().addWidget(spacer())
         self.layout().addWidget(self._negCharge)
         self.layout().addWidget(self._posCharge)
+
+    def _changeCharge(self, charge: int):
+        self._charge += charge
+        bold(self._btn, charge > 0)
+        if self._charge == 0:
+            self._negCharge.setHidden(True)
+            self._lblCharge.clear()
+        else:
+            self._negCharge.setVisible(True)
+            self._lblCharge.setText(f'+{self._charge}')
+
+        if self._charge == self.MAX_CHARGE:
+            self._posCharge.setHidden(True)
+        else:
+            self._posCharge.setVisible(True)
 
 
 class MotivationEditor(QWidget):
@@ -227,10 +213,6 @@ class MotivationEditor(QWidget):
         super().__init__(parent)
 
         vbox(self)
-        # self._motivationDisplay = MotivationDisplay()
-        # self.layout().addWidget(self._motivationDisplay)
-
-        # self.layout().addWidget(line())
         self.layout().addWidget(label("Does the character's motivation change?"))
 
         self._addEditor(Motivation.PHYSIOLOGICAL)
@@ -256,11 +238,11 @@ class SceneAgendaMotivationEditor(QWidget):
         self._activated: bool = False
 
         self._motivationDisplay = MotivationDisplay()
-        self._motivationDisplay.setDisabled(True)
+        self._motivationDisplay.refresh()
         self._motivationEditor = MotivationEditor()
 
         self._icon = push_btn(IconRegistry.from_name('fa5s.fist-raised', 'lightgrey'),
-                              transparent_=True)
+                              properties=['transparent', 'no-menu'])
         self._icon.setIconSize(QSize(32, 32))
         self._opacityFilter = OpacityEventFilter(self._icon)
 

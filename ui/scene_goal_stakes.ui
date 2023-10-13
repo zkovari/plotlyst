@@ -37,7 +37,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Current motivation</string>
+      <string>Currently known motivation</string>
      </property>
     </widget>
    </item>

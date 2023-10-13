@@ -823,6 +823,46 @@ class Motivation(Enum):
     SELF_ACTUALIZATION = 4
     SELF_TRANSCENDENCE = 5
 
+    def display_name(self) -> str:
+        if self == Motivation.PHYSIOLOGICAL:
+            return 'Physiological needs'
+        elif self == Motivation.SAFETY:
+            return 'Security and safety'
+        elif self == Motivation.BELONGING:
+            return 'Belonging and love'
+        elif self == Motivation.ESTEEM:
+            return 'Esteem and success'
+        else:
+            return self.name.lower().replace('_', '-').capitalize()
+
+    def icon(self) -> str:
+        if self == Motivation.PHYSIOLOGICAL:
+            return 'mdi.water'
+        elif self == Motivation.SAFETY:
+            return 'mdi.shield-half-full'
+        elif self == Motivation.BELONGING:
+            return 'fa5s.hand-holding-heart'
+        elif self == Motivation.ESTEEM:
+            return 'fa5s.award'
+        elif self == Motivation.SELF_ACTUALIZATION:
+            return 'mdi.yoga'
+        elif self == Motivation.SELF_TRANSCENDENCE:
+            return 'mdi6.meditation'
+
+    def color(self) -> str:
+        if self == Motivation.PHYSIOLOGICAL:
+            return '#023e8a'
+        elif self == Motivation.SAFETY:
+            return '#8900f2'
+        elif self == Motivation.BELONGING:
+            return '#d00000'
+        elif self == Motivation.ESTEEM:
+            return '#00b4d8'
+        elif self == Motivation.SELF_ACTUALIZATION:
+            return '#52b788'
+        elif self == Motivation.SELF_TRANSCENDENCE:
+            return '#c38e70'
+
 
 @dataclass
 class GoalReference:

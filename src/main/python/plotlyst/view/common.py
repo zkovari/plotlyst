@@ -384,11 +384,11 @@ def tool_btn(icon: QIcon, tooltip: str = '', checkable: bool = False, base: bool
 
 
 def push_btn(icon: QIcon, text: str = '', tooltip: str = '', checkable: bool = False, base: bool = False,
-             icon_resize: bool = True,
-             transparent_: bool = False) -> QPushButton:
+             icon_resize: bool = True, transparent_: bool = False, properties: List[str] = None,
+             parent=None) -> QPushButton:
     btn = QPushButton()
     btn.setText(text)
-    _init_btn(btn, icon, tooltip, checkable, base, icon_resize, transparent_)
+    _init_btn(btn, icon, tooltip, checkable, base, icon_resize, transparent_, properties, parent)
 
     return btn
 
