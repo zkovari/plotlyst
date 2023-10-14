@@ -71,7 +71,8 @@ beat_descriptions = {SceneStructureItemType.BEAT: 'New action, reaction, thought
                      SceneStructureItemType.REVELATION: 'Key information is revealed or discovered',
                      SceneStructureItemType.SETUP: 'Event that sets up a later payoff. May put the scene in motion',
                      SceneStructureItemType.RESOLUTION: "Provides closure. May reinforce the climax's outcome or its consequences",
-                     SceneStructureItemType.BUILDUP: "Escalates tension or anticipation leading toward a climactic moment"
+                     SceneStructureItemType.BUILDUP: "Escalates tension or anticipation leading toward a climactic moment",
+                     SceneStructureItemType.DISTURBANCE: "Introduces conflict or tension that sets the scene in motion",
                      }
 
 
@@ -122,6 +123,8 @@ def beat_icon(beat_type: SceneStructureItemType, resolved: bool = False, trade_o
         return IconRegistry.from_name('fa5s.water', '#7192be')
     elif beat_type == SceneStructureItemType.BUILDUP:
         return IconRegistry.from_name('mdi6.progress-upload', '#e76f51')
+    elif beat_type == SceneStructureItemType.DISTURBANCE:
+        return IconRegistry.from_name('mdi.chemical-weapon', '#e63946')
     else:
         return IconRegistry.circle_icon()
 
@@ -213,15 +216,16 @@ class BeatSelectorMenu(TabularGridMenuWidget):
         self.addSeparator(self._tabDrive, 1, 0, colSpan=2)
         self._addAction(self._tabDrive, 'Action', SceneStructureItemType.ACTION, 2, 0)
         self._addAction(self._tabDrive, 'Hook', SceneStructureItemType.HOOK, 2, 1)
-        self._addAction(self._tabDrive, 'Inciting incident', SceneStructureItemType.INCITING_INCIDENT, 3, 0)
-        self._addAction(self._tabDrive, 'Mystery', SceneStructureItemType.MYSTERY, 3, 1)
-        self._addAction(self._tabDrive, 'Conflict', SceneStructureItemType.CONFLICT, 4, 0)
-        self._addAction(self._tabDrive, 'Rising action', SceneStructureItemType.RISING_ACTION, 4, 1)
-        self._addAction(self._tabDrive, 'Build-up', SceneStructureItemType.BUILDUP, 5, 0)
-        self._addAction(self._tabDrive, 'Turn', SceneStructureItemType.TURN, 5, 1)
-        self._addAction(self._tabDrive, 'Revelation', SceneStructureItemType.REVELATION, 6, 0)
-        self._addAction(self._tabDrive, 'Choice', SceneStructureItemType.CHOICE, 6, 1)
-        self._addAction(self._tabDrive, 'Outcome', SceneStructureItemType.CLIMAX, 7, 0)
+        self._addAction(self._tabDrive, 'Disturbance', SceneStructureItemType.DISTURBANCE, 3, 1)
+        self._addAction(self._tabDrive, 'Inciting incident', SceneStructureItemType.INCITING_INCIDENT, 4, 1)
+        self._addAction(self._tabDrive, 'Conflict', SceneStructureItemType.CONFLICT, 3, 0)
+        self._addAction(self._tabDrive, 'Mystery', SceneStructureItemType.MYSTERY, 4, 0)
+        self._addAction(self._tabDrive, 'Rising action', SceneStructureItemType.RISING_ACTION, 5, 0)
+        self._addAction(self._tabDrive, 'Build-up', SceneStructureItemType.BUILDUP, 5, 1)
+        self._addAction(self._tabDrive, 'Turn', SceneStructureItemType.TURN, 6, 0)
+        self._addAction(self._tabDrive, 'Revelation', SceneStructureItemType.REVELATION, 6, 1)
+        self._addAction(self._tabDrive, 'Choice', SceneStructureItemType.CHOICE, 7, 0)
+        self._addAction(self._tabDrive, 'Outcome', SceneStructureItemType.CLIMAX, 7, 1)
 
         self.addSection(self._tabReaction, 'Common reaction beats', 0, 0)
         self.addSeparator(self._tabReaction, 1, 0)
@@ -428,6 +432,8 @@ class SceneStructureItemWidget(QWidget):
             return '#7192be'
         elif self.beat.type == SceneStructureItemType.BUILDUP:
             return '#e76f51'
+        elif self.beat.type == SceneStructureItemType.DISTURBANCE:
+            return '#e63946'
         else:
             return '#343a40'
 

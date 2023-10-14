@@ -771,6 +771,7 @@ class SceneStructureItemType(Enum):
     SETBACK = 20
     RESOLUTION = 21
     BUILDUP = 22
+    DISTURBANCE = 23
 
 
 class SceneOutcome(Enum):
@@ -1290,7 +1291,7 @@ disturbance_beat = StoryBeat(text='Disturbance',
                              id=uuid.UUID('a954f949-8be9-46d6-8ebf-f9f76f482944'),
                              icon='mdi.chemical-weapon',
                              icon_color='#e63946',
-                             description="An initial disturbance that already upends the protagonist's life early on.",
+                             description="Disturbs the protagonist's life and sets the story in motion.",
                              act=1, percentage=1)
 characteristic_moment_beat = StoryBeat(text='Characteristic Moment',
                                        id=uuid.UUID('b50c32e4-1927-4633-b5a3-9765aeaee7ad'),
