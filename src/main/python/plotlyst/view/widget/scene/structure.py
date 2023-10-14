@@ -73,6 +73,7 @@ beat_descriptions = {SceneStructureItemType.BEAT: 'New action, reaction, thought
                      SceneStructureItemType.RESOLUTION: "Provides closure. May reinforce the climax's outcome or its consequences",
                      SceneStructureItemType.BUILDUP: "Escalates tension or anticipation leading toward a climactic moment",
                      SceneStructureItemType.DISTURBANCE: "Introduces conflict or tension that sets the scene in motion",
+                     SceneStructureItemType.FALSE_VICTORY: "A deceptive false victory moment that leads to a disaster outcome",
                      }
 
 
@@ -125,6 +126,8 @@ def beat_icon(beat_type: SceneStructureItemType, resolved: bool = False, trade_o
         return IconRegistry.from_name('mdi6.progress-upload', '#e76f51')
     elif beat_type == SceneStructureItemType.DISTURBANCE:
         return IconRegistry.from_name('mdi.chemical-weapon', '#e63946')
+    elif beat_type == SceneStructureItemType.FALSE_VICTORY:
+        return IconRegistry.from_name('mdi.trophy-broken', '#b5838d')
     else:
         return IconRegistry.circle_icon()
 
@@ -211,6 +214,7 @@ class BeatSelectorMenu(TabularGridMenuWidget):
         self._tabDrive = self.addTab('Drive', IconRegistry.action_scene_icon())
         self._tabReaction = self.addTab('Reaction', IconRegistry.reaction_scene_icon())
         self._tabGeneral = self.addTab('General', IconRegistry.beat_icon())
+        self._tabMisc = self.addTab('Misc', IconRegistry.from_name('mdi.dots-horizontal-circle-outline'))
 
         self.addSection(self._tabDrive, 'Beats that often advance the scene while creating narrative drive', 0, 0)
         self.addSeparator(self._tabDrive, 1, 0, colSpan=2)
@@ -236,13 +240,18 @@ class BeatSelectorMenu(TabularGridMenuWidget):
         self.addWidget(self._tabReaction, vspacer(), 6, 0)
 
         self.addSection(self._tabGeneral, 'General beats', 0, 0)
-        self.addSeparator(self._tabGeneral, 1, 0)
+        self.addSeparator(self._tabGeneral, 1, 0, colSpan=2)
         self._addAction(self._tabGeneral, 'Beat', SceneStructureItemType.BEAT, 2, 0)
         self._addAction(self._tabGeneral, 'Exposition', SceneStructureItemType.EXPOSITION, 3, 0)
         self._addAction(self._tabGeneral, 'Summary', SceneStructureItemType.SUMMARY, 4, 0)
         self._addAction(self._tabGeneral, 'Setup', SceneStructureItemType.SETUP, 5, 0)
         self._addAction(self._tabGeneral, 'Resolution', SceneStructureItemType.RESOLUTION, 2, 1)
         self.addWidget(self._tabGeneral, vspacer(), 6, 0)
+
+        self.addSection(self._tabMisc, 'Miscellaneous', 0, 0)
+        self.addSeparator(self._tabMisc, 1, 0)
+        self._addAction(self._tabMisc, 'False victory', SceneStructureItemType.FALSE_VICTORY, 2, 0)
+        self.addWidget(self._tabMisc, vspacer(), 6, 0)
 
     def _addAction(self, tabWidget: QWidget, text: str, beat_type: SceneStructureItemType, row: int, column: int):
         description = beat_descriptions[beat_type]
@@ -434,6 +443,8 @@ class SceneStructureItemWidget(QWidget):
             return '#e76f51'
         elif self.beat.type == SceneStructureItemType.DISTURBANCE:
             return '#e63946'
+        elif self.beat.type == SceneStructureItemType.FALSE_VICTORY:
+            return '#b5838d'
         else:
             return '#343a40'
 

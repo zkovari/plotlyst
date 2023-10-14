@@ -772,6 +772,7 @@ class SceneStructureItemType(Enum):
     RESOLUTION = 21
     BUILDUP = 22
     DISTURBANCE = 23
+    FALSE_VICTORY = 24
 
 
 class SceneOutcome(Enum):
