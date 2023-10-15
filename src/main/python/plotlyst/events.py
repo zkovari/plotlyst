@@ -21,7 +21,8 @@ from dataclasses import dataclass
 
 from language_tool_python import LanguageTool
 
-from src.main.python.plotlyst.core.domain import Character, NovelDescriptor, Scene, SceneStage, Task, NovelSetting
+from src.main.python.plotlyst.core.domain import Character, NovelDescriptor, Scene, SceneStage, Task, NovelSetting, \
+    StoryStructure, Novel
 from src.main.python.plotlyst.event.core import Event
 
 
@@ -108,6 +109,12 @@ class NovelDeletedEvent(Event):
 @dataclass
 class NovelStoryStructureUpdated(Event):
     pass
+
+
+@dataclass
+class NovelStoryStructureActivationRequest(Event):
+    novel: Novel
+    structure: StoryStructure
 
 
 @dataclass

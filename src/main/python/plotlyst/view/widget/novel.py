@@ -43,14 +43,14 @@ from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import NovelStoryStructureUpdated, SceneChangedEvent, SceneDeletedEvent, \
-    CharacterChangedEvent, CharacterDeletedEvent, NovelSyncEvent
+    CharacterChangedEvent, CharacterDeletedEvent, NovelSyncEvent, NovelStoryStructureActivationRequest
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelTagsModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, \
-    ExclusiveOptionalButtonGroup, DelayedSignalSlotConnector
+    ExclusiveOptionalButtonGroup, DelayedSignalSlotConnector, action
 from src.main.python.plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
 from src.main.python.plotlyst.view.generated.imported_novel_overview_ui import Ui_ImportedNovelOverview
 from src.main.python.plotlyst.view.generated.story_structure_selector_dialog_ui import Ui_StoryStructureSelectorDialog
@@ -840,6 +840,14 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
                     structure.reset_character()
                     btn.refresh()
                     self.repo.update_novel(self.novel)
+        elif isinstance(event, NovelStoryStructureActivationRequest):
+            for btn in self.btnGroupStructure.buttons():
+                if btn.structure() is event.structure:
+                    btn.setChecked(True)
+            self.repo.update_novel(self.novel)
+            emit_event(self.novel, NovelStoryStructureUpdated(self))
+            return
+
         self._activeStructureToggled(self.novel.active_story_structure, True)
 
     @overrides
@@ -852,7 +860,8 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
     def setNovel(self, novel: Novel):
         self.novel = novel
         dispatcher = event_dispatchers.instance(self.novel)
-        dispatcher.register(self, CharacterChangedEvent, CharacterDeletedEvent, NovelSyncEvent)
+        dispatcher.register(self, CharacterChangedEvent, CharacterDeletedEvent, NovelSyncEvent,
+                            NovelStoryStructureActivationRequest)
 
         self._characterMenu = CharacterSelectorMenu(self.novel, self.btnLinkCharacter)
         self._characterMenu.selected.connect(self._characterLinked)
@@ -1082,3 +1091,30 @@ class ImportedNovelOverview(QWidget, Ui_ImportedNovelOverview):
 
     def _syncClicked(self, checked: bool):
         self._novel.import_origin.sync = checked
+
+
+class StoryStructureSelectorMenu(MenuWidget):
+    selected = pyqtSignal(StoryStructure)
+
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+
+        self.aboutToShow.connect(self._fillUpMenu)
+
+    def _fillUpMenu(self):
+        self.clear()
+        self.addSection('Select a story structure to be displayed')
+        self.addSeparator()
+
+        for structure in self._novel.story_structures:
+            if structure.character_id:
+                icon = avatars.avatar(structure.character(self._novel))
+            elif structure:
+                icon = IconRegistry.from_name(structure.icon, structure.icon_color)
+            else:
+                icon = None
+            action_ = action(structure.title, icon, slot=partial(self.selected.emit, structure), checkable=True,
+                             parent=self)
+            action_.setChecked(structure.active)
+            self.addAction(action_)
