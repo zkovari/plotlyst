@@ -38,7 +38,7 @@ from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBea
     Scene, TagType, SelectionItem, Tag, \
     StoryBeatType, save_the_cat, three_act_structure, heros_journey, hook_beat, motion_beat, \
     disturbance_beat, normal_world_beat, characteristic_moment_beat, midpoint, midpoint_ponr, midpoint_mirror, \
-    midpoint_proactive, crisis, first_plot_point, first_plot_point_ponr
+    midpoint_proactive, crisis, first_plot_point, first_plot_point_ponr, Character
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
@@ -58,6 +58,7 @@ from src.main.python.plotlyst.view.generated.story_structure_settings_ui import 
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.base import apply_white_menu
+from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
 from src.main.python.plotlyst.view.widget.display import Subtitle, IconText
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
@@ -74,10 +75,6 @@ class _StoryStructureButton(QPushButton):
         self.setCheckable(True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Maximum)
-        if self._structure.character_id:
-            self.setIcon(avatars.avatar(self._structure.character(self.novel)))
-        elif self._structure.icon:
-            self.setIcon(IconRegistry.from_name(self._structure.icon, self._structure.icon_color))
 
         self.setStyleSheet('''
             QPushButton {
@@ -94,12 +91,24 @@ class _StoryStructureButton(QPushButton):
                 padding: 1px;
             }
             ''')
+
+        self.refresh()
+
         self._toggled(self.isChecked())
         self.installEventFilter(OpacityEventFilter(self, 0.7, 0.5, ignoreCheckedButton=True))
         self.toggled.connect(self._toggled)
 
     def structure(self) -> StoryStructure:
         return self._structure
+
+    def refresh(self, animated: bool = False):
+        if self._structure.character_id:
+            self.setIcon(avatars.avatar(self._structure.character(self.novel)))
+        elif self._structure.icon:
+            self.setIcon(IconRegistry.from_name(self._structure.icon, self._structure.icon_color))
+
+        if animated:
+            qtanim.glow(self, radius=15, loop=3)
 
     def _toggled(self, toggled: bool):
         translucent(self, 1.0 if toggled else 0.5)
@@ -795,15 +804,24 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.btnNew.installEventFilter(ButtonPressResizeEventFilter(self.btnNew))
         self.btnNew.clicked.connect(self._selectTemplateStructure)
 
-        self.btnDelete.setIcon(IconRegistry.minus_icon())
+        self.btnDelete.setIcon(IconRegistry.trash_can_icon())
         self.btnDelete.installEventFilter(ButtonPressResizeEventFilter(self.btnDelete))
+        self.btnDelete.installEventFilter(OpacityEventFilter(self.btnDelete, leaveOpacity=0.8))
         self.btnDelete.clicked.connect(self._removeStructure)
         self.btnCopy.setIcon(IconRegistry.copy_icon())
         self.btnCopy.installEventFilter(ButtonPressResizeEventFilter(self.btnCopy))
+        self.btnCopy.installEventFilter(OpacityEventFilter(self.btnCopy, leaveOpacity=0.8))
         self.btnCopy.clicked.connect(self._duplicateStructure)
         self.btnEdit.setIcon(IconRegistry.edit_icon())
         self.btnEdit.installEventFilter(ButtonPressResizeEventFilter(self.btnEdit))
+        self.btnEdit.installEventFilter(OpacityEventFilter(self.btnEdit, leaveOpacity=0.8))
         self.btnEdit.clicked.connect(self._editStructure)
+        self.btnLinkCharacter.setIcon(IconRegistry.character_icon())
+        self.btnLinkCharacter.installEventFilter(ButtonPressResizeEventFilter(self.btnLinkCharacter))
+        self.btnLinkCharacter.installEventFilter(OpacityEventFilter(self.btnLinkCharacter, leaveOpacity=0.8))
+
+        self._characterMenu: Optional[CharacterSelectorMenu] = None
+
         self.btnGroupStructure = QButtonGroup()
         self.btnGroupStructure.setExclusive(True)
 
@@ -815,6 +833,13 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
 
     @overrides
     def event_received(self, event: Event):
+        if isinstance(event, CharacterDeletedEvent):
+            for btn in self.btnGroupStructure.buttons():
+                structure: StoryStructure = btn.structure()
+                if structure.character_id == event.character.id:
+                    structure.reset_character()
+                    btn.refresh()
+                    self.repo.update_novel(self.novel)
         self._activeStructureToggled(self.novel.active_story_structure, True)
 
     @overrides
@@ -828,6 +853,9 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.novel = novel
         dispatcher = event_dispatchers.instance(self.novel)
         dispatcher.register(self, CharacterChangedEvent, CharacterDeletedEvent, NovelSyncEvent)
+
+        self._characterMenu = CharacterSelectorMenu(self.novel, self.btnLinkCharacter)
+        self._characterMenu.selected.connect(self._characterLinked)
 
         for structure in self.novel.story_structures:
             self._addStructureWidget(structure)
@@ -883,6 +911,13 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
 
     def _editStructure(self):
         StoryStructureSelectorDialog.display(self.novel, self.novel.active_story_structure)
+        self._activeStructureToggled(self.novel.active_story_structure, True)
+        emit_event(self.novel, NovelStoryStructureUpdated(self))
+
+    def _characterLinked(self, character: Character):
+        self.novel.active_story_structure.set_character(character)
+        self.btnGroupStructure.checkedButton().refresh(True)
+        self.repo.update_novel(self.novel)
         self._activeStructureToggled(self.novel.active_story_structure, True)
         emit_event(self.novel, NovelStoryStructureUpdated(self))
 
