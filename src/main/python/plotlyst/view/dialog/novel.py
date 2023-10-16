@@ -24,6 +24,7 @@ import qtanim
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QDialog, QPushButton, QDialogButtonBox, QApplication
+from overrides import overrides
 from qthandy import flow, decr_font, decr_icon, pointy
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 
@@ -249,31 +250,47 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
 
 
 class SynopsisEditorDialog(QDialog, Ui_SynopsisEditorDialog):
-    def __init__(self, parent=None):
+    def __init__(self, novel: Novel, parent=None):
         super(SynopsisEditorDialog, self).__init__(parent,
                                                    Qt.WindowType.CustomizeWindowHint
                                                    | Qt.WindowType.Window
                                                    | Qt.WindowType.WindowMaximizeButtonHint
                                                    | Qt.WindowType.WindowCloseButtonHint)
         self.setupUi(self)
+        self._novel = novel
+
         self.textSynopsis.setPlaceholderText("Write down your story's main events")
         self.textSynopsis.setMargins(0, 10, 0, 10)
-        self.textSynopsis.setGrammarCheckEnabled(True)
+        self.textSynopsis.setGrammarCheckEnabled(False)
 
         self.textSynopsis.setToolbarVisible(False)
         self.textSynopsis.setTitleVisible(False)
 
-    @staticmethod
-    def display(novel: Novel) -> str:
-        dialog = SynopsisEditorDialog()
-        dialog.textSynopsis.setText(novel.synopsis.content)
+        self.textSynopsis.setText(novel.synopsis.content)
 
-        screen = QApplication.screenAt(dialog.pos())
+    def synopsis(self) -> str:
+        return self.textSynopsis.textEdit.toHtml()
+
+    @overrides
+    def show(self) -> None:
+        screen = QApplication.screenAt(self.pos())
         if screen:
-            dialog.resize(screen.size().width(), screen.size().height())
+            self.resize(screen.size().width(), screen.size().height())
         else:
-            dialog.resize(600, 500)
+            self.resize(600, 500)
+        super().show()
 
-        dialog.exec()
-
-        return dialog.textSynopsis.textEdit.toHtml()
+    # @staticmethod
+    # def display(novel: Novel) -> str:
+    #     dialog = SynopsisEditorDialog()
+    #     dialog.textSynopsis.setText(novel.synopsis.content)
+    #
+    #     screen = QApplication.screenAt(dialog.pos())
+    #     if screen:
+    #         dialog.resize(screen.size().width(), screen.size().height())
+    #     else:
+    #         dialog.resize(600, 500)
+    #
+    #     dialog.show()
+    #
+    #     return dialog.textSynopsis.textEdit.toHtml()
