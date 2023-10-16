@@ -88,7 +88,8 @@ class ReportPage(QWidget, EventListener):
             self._refreshNext = True
 
     def refresh(self):
-        self._report.refresh()
+        if self._report:
+            self._report.refresh()
 
     @abstractmethod
     def _initReport(self) -> AbstractReport:
@@ -140,7 +141,8 @@ class ArcReportPage(ReportPage):
     @overrides
     def event_received(self, event: Event):
         if isinstance(event, StorylineRemovedEvent):
-            self._report.removeStoryline(event.storyline)
+            if self._report:
+                self._report.removeStoryline(event.storyline)
         else:
             super().event_received(event)
 
