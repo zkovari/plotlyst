@@ -17,17 +17,17 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 import qtanim
-from PyQt6.QtCharts import QSplineSeries, QValueAxis, QLegend, QAbstractSeries
+from PyQt6.QtCharts import QSplineSeries, QValueAxis, QLegend, QAbstractSeries, QLineSeries
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QPen, QColor, QShowEvent
 from overrides import overrides
 from qthandy import clear_layout, vspacer, gc
 
 from src.main.python.plotlyst.common import clamp
-from src.main.python.plotlyst.core.domain import Novel, Plot
+from src.main.python.plotlyst.core.domain import Novel, Plot, Character
 from src.main.python.plotlyst.view.common import icon_to_html_img
 from src.main.python.plotlyst.view.generated.report.plot_report_ui import Ui_PlotReport
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -156,6 +156,7 @@ class StoryArcChart(BaseChart):
         self._axisY.setVisible(False)
 
         self._overallConflict: bool = False
+        self._overallConflictSeries: Optional[QAbstractSeries] = None
         self._plots: Dict[Plot, List[QAbstractSeries]] = {}
 
         self.setTitle('Story arc')
@@ -172,6 +173,14 @@ class StoryArcChart(BaseChart):
                 self.removeSeries(serie)
 
     def setConflictVisible(self, visible: bool):
+        if visible:
+            self._overallConflictSeries = self._conflictSeries()
+            self.addSeries(self._overallConflictSeries)
+            self._overallConflictSeries.attachAxis(self._axisY)
+        else:
+            self.removeSeries(self._overallConflictSeries)
+            self._overallConflictSeries = None
+
         self._overallConflict = visible
 
     def refresh(self):
@@ -203,27 +212,17 @@ class StoryArcChart(BaseChart):
 
         return all_series
 
-    # def refreshStorylines(self):
-    #
-    #     for plot in self._plots:
-    #         for value in plot.values:
-    #             charge = 0
-    #             series = QSplineSeries()
-    #             series.setName(icon_to_html_img(IconRegistry.from_name(value.icon, value.icon_color)) + value.text)
-    #             pen = QPen()
-    #             pen.setColor(QColor(value.icon_color))
-    #             pen.setWidth(2)
-    #             series.setPen(pen)
-    #             series.append(0, charge)
-    #
-    #             for i, scene in enumerate(self.novel.scenes):
-    #                 for scene_ref in scene.plot_values:
-    #                     if scene_ref.plot.id != plot.id:
-    #                         continue
-    #                     for scene_p_value in scene_ref.data.values:
-    #                         if scene_p_value.plot_value_id == value.id:
-    #                             charge += scene_p_value.charge
-    #                             series.append(i + 1, clamp(charge, self.MIN, self.MAX))
-    #
-    #             self.addSeries(series)
-    #             series.attachAxis(self._axisY)
+    def _conflictSeries(self, character: Optional[Character] = None) -> QAbstractSeries:
+        series = QLineSeries()
+        series.setName(icon_to_html_img(IconRegistry.conflict_icon()) + 'Conflict intensity')
+        pen = QPen()
+        pen.setColor(QColor('#f3a712'))
+        pen.setWidth(2)
+        series.setPen(pen)
+
+        for i, scene in enumerate(self.novel.scenes):
+            intensity = max([x.intensity for x in scene.agendas[0].conflict_references], default=0)
+            if intensity > 0:
+                series.append(i + 1, intensity)
+
+        return series
