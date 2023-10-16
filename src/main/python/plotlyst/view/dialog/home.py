@@ -30,7 +30,7 @@ from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.core.scrivener import ScrivenerParser
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.handler import global_event_dispatcher
 from src.main.python.plotlyst.resources import resource_registry, ResourceType
 from src.main.python.plotlyst.service.tour import TourService
 from src.main.python.plotlyst.view.common import link_buttons_to_pages, link_editor_to_btn, ButtonPressResizeEventFilter
@@ -80,7 +80,7 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         self._tour_service: TourService = TourService.instance()
         self._eventTypes = [NewStoryTitleInDialogTourEvent, NewStoryTitleFillInDialogTourEvent,
                             NewStoryDialogOkayButtonTourEvent]
-        event_dispatcher.register(self, *self._eventTypes)
+        global_event_dispatcher.register(self, *self._eventTypes)
 
     def display(self) -> Optional[Novel]:
         self._scrivenerNovel = None
@@ -96,7 +96,7 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         return None
 
     def hideEvent(self, event):
-        event_dispatcher.deregister(self, *self._eventTypes)
+        global_event_dispatcher.deregister(self, *self._eventTypes)
         super(StoryCreationDialog, self).hideEvent(event)
 
     def event_received(self, event: Event):

@@ -31,10 +31,9 @@ from qthandy import vspacer
 from qthandy.filter import DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
-    Chapter
-from src.main.python.plotlyst.event.core import emit_event, Event, EventListener
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter
+from src.main.python.plotlyst.event.core import Event, EventListener, emit_event
+from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneDeletedEvent, \
     SceneChangedEvent
 from src.main.python.plotlyst.events import SceneOrderChangedEvent, ChapterChangedEvent
@@ -70,9 +69,9 @@ class SceneWidget(ContainerNode):
         return self._novel
 
     def refresh(self):
-        if self._scene.type != SceneType.DEFAULT:
+        if self._scene.purpose:
             self._icon.setIcon(IconRegistry.scene_type_icon(self._scene))
-        self._icon.setVisible(self._scene.type != SceneType.DEFAULT)
+        self._icon.setVisible(self._scene.purpose is not None)
 
         if self._scene.pov:
             avatar = avatars.avatar(self._scene.pov, fallback=False)
@@ -130,6 +129,7 @@ class ScenesTreeView(TreeView, EventListener):
     CHAPTER_MIME_TYPE = 'application/tree-chapter-widget'
     sceneSelected = pyqtSignal(Scene)
     chapterSelected = pyqtSignal(Chapter)
+    sceneAdded = pyqtSignal(Scene)
 
     # noinspection PyTypeChecker
     def __init__(self, parent=None, settings: Optional[TreeSettings] = None):
@@ -157,9 +157,6 @@ class ScenesTreeView(TreeView, EventListener):
         self._centralWidget.installEventFilter(DropEventFilter(self, [self.SCENE_MIME_TYPE, self.CHAPTER_MIME_TYPE],
                                                                leftSlot=lambda: self._dummyWdg.setHidden(True)))
 
-        event_dispatcher.register(self, SceneOrderChangedEvent)
-        event_dispatcher.register(self, SceneDeletedEvent)
-        event_dispatcher.register(self, SceneChangedEvent)
         self.repo = RepositoryPersistenceManager.instance()
 
     def setSettings(self, settings: TreeSettings):
@@ -167,6 +164,8 @@ class ScenesTreeView(TreeView, EventListener):
 
     def setNovel(self, novel: Novel, readOnly: bool = False):
         self._novel = novel
+        dispatcher = event_dispatchers.instance(self._novel)
+        dispatcher.register(self, SceneOrderChangedEvent, SceneDeletedEvent, SceneChangedEvent)
         self._readOnly = readOnly
         self.refresh()
 
@@ -240,7 +239,7 @@ class ScenesTreeView(TreeView, EventListener):
         self._centralWidget.layout().insertWidget(i, wdg)
 
         self.repo.update_novel(self._novel)
-        emit_event(ChapterChangedEvent(self))
+        emit_event(self._novel, ChapterChangedEvent(self))
 
     def addScene(self):
         scene = self._novel.new_scene()
@@ -248,8 +247,9 @@ class ScenesTreeView(TreeView, EventListener):
         wdg = self.__initSceneWidget(scene)
         insert_before_the_end(self._centralWidget, wdg)
 
-        self.repo.update_novel(self._novel)
-        emit_event(SceneChangedEvent(self, scene))
+        self.repo.insert_scene(self._novel, scene)
+        emit_event(self._novel, SceneChangedEvent(self, scene))
+        self.sceneAdded.emit(scene)
 
     def selectChapter(self, chapter: Chapter):
         self.clearSelection()
@@ -293,11 +293,13 @@ class ScenesTreeView(TreeView, EventListener):
         scene = self._novel.new_scene()
         scene.chapter = chapterWdg.chapter()
         self._novel.scenes.append(scene)
+
         self.repo.insert_scene(self._novel, scene)
         sceneWdg = self.__initSceneWidget(scene)
         chapterWdg.addChild(sceneWdg)
 
         self._reorderScenes()
+        self.sceneAdded.emit(scene)
 
     def _insertChapter(self, chapterWdg: ChapterWidget):
         i = self._centralWidget.layout().indexOf(chapterWdg) + 1
@@ -349,7 +351,7 @@ class ScenesTreeView(TreeView, EventListener):
 
         self._refreshChapterTitles()
 
-        emit_event(ChapterChangedEvent(self))
+        emit_event(self._novel, ChapterChangedEvent(self))
 
     def _deleteScene(self, sceneWdg: SceneWidget):
         scene = sceneWdg.scene()
@@ -362,14 +364,14 @@ class ScenesTreeView(TreeView, EventListener):
             gc(sceneWdg)
 
             self._refreshSceneTitles()
-            emit_event(SceneDeletedEvent(self, scene))
+            emit_event(self._novel, SceneDeletedEvent(self, scene))
 
     def _dragStarted(self, wdg: QWidget):
         wdg.setHidden(True)
         if isinstance(wdg, SceneWidget):
-            self._dummyWdg = SceneWidget(wdg.scene(), wdg.novel())
+            self._dummyWdg = SceneWidget(wdg.scene(), wdg.novel(), settings=self._settings)
         elif isinstance(wdg, ChapterWidget):
-            self._dummyWdg = ChapterWidget(wdg.chapter(), wdg.novel())
+            self._dummyWdg = ChapterWidget(wdg.chapter(), wdg.novel(), settings=self._settings)
             for v in self._scenes.values():
                 v.setDisabled(True)
         else:
@@ -408,11 +410,7 @@ class ScenesTreeView(TreeView, EventListener):
         self._dummyWdg.setParent(self._centralWidget)
 
     def _dragMovedOnChapter(self, chapterWdg: ChapterWidget, edge: Qt.Edge, _: QPointF):
-        i = self._centralWidget.layout().indexOf(chapterWdg)
-        if edge == Qt.Edge.TopEdge:
-            self._centralWidget.layout().insertWidget(i, self._dummyWdg)
-        else:
-            chapterWdg.insertChild(0, self._dummyWdg)
+        chapterWdg.insertChild(0, self._dummyWdg)
         self._dummyWdg.setVisible(True)
 
     def _drop(self, mimeData: QMimeData):
@@ -486,7 +484,7 @@ class ScenesTreeView(TreeView, EventListener):
         self._refreshChapterTitles()
         self._refreshSceneTitles()
 
-        emit_event(SceneOrderChangedEvent(self))
+        emit_event(self._novel, SceneOrderChangedEvent(self))
         self.repo.update_novel(self._novel)
 
     def _dragMovedOnScene(self, sceneWdg: SceneWidget, edge: Qt.Edge, _: QPointF):

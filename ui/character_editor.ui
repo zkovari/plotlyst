@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1067</width>
-    <height>610</height>
+    <width>1206</width>
+    <height>630</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -491,7 +491,7 @@ border: 0px;
        <enum>Qt::ClickFocus</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tabTopics">
        <property name="relaxed-white-bg" stdset="0">
@@ -653,28 +653,6 @@ border: 0px;
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tabBigFive">
-       <attribute name="title">
-        <string>Big Five</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_10">
-        <property name="spacing">
-         <number>3</number>
-        </property>
-        <property name="leftMargin">
-         <number>2</number>
-        </property>
-        <property name="topMargin">
-         <number>2</number>
-        </property>
-        <property name="rightMargin">
-         <number>2</number>
-        </property>
-        <property name="bottomMargin">
-         <number>2</number>
-        </property>
-       </layout>
-      </widget>
       <widget class="QWidget" name="tabGoals">
        <property name="relaxed-white-bg" stdset="0">
         <bool>true</bool>
@@ -711,8 +689,8 @@ border: 0px;
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>100</width>
-             <height>30</height>
+             <width>326</width>
+             <height>594</height>
             </rect>
            </property>
            <property name="relaxed-white-bg" stdset="0">
@@ -738,6 +716,28 @@ border: 0px;
           </widget>
          </widget>
         </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tabBigFive">
+       <attribute name="title">
+        <string>Big Five</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_10">
+        <property name="spacing">
+         <number>3</number>
+        </property>
+        <property name="leftMargin">
+         <number>2</number>
+        </property>
+        <property name="topMargin">
+         <number>2</number>
+        </property>
+        <property name="rightMargin">
+         <number>2</number>
+        </property>
+        <property name="bottomMargin">
+         <number>2</number>
+        </property>
        </layout>
       </widget>
       <widget class="QWidget" name="tabNotes">

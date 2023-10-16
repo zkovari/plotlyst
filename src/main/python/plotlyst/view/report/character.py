@@ -17,24 +17,21 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional, List
+from typing import List
 
 from PyQt6.QtCharts import QPolarChart, QCategoryAxis, QLineSeries, QAreaSeries
-from PyQt6.QtCharts import QValueAxis, QSplineSeries
-from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtCharts import QValueAxis
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPen
-from PyQt6.QtWidgets import QLabel, QWidget, QToolButton
 from overrides import overrides
-from qthandy import clear_layout, vspacer, hbox, transparent, vbox, margins, flow
+from qthandy import hbox, vbox, margins, flow
 
-from src.main.python.plotlyst.core.domain import Novel, Character, Scene, SceneType
+from src.main.python.plotlyst.core.domain import Novel, Character
 from src.main.python.plotlyst.view.common import icon_to_html_img
-from src.main.python.plotlyst.view.generated.report.character_arc_report_ui import Ui_CharacterArcReport
 from src.main.python.plotlyst.view.generated.report.character_report_ui import Ui_CharacterReport
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.report import AbstractReport
-from src.main.python.plotlyst.view.widget.characters import CharacterEmotionButton
-from src.main.python.plotlyst.view.widget.chart import BaseChart, SupporterRoleChart, GenderCharacterChart, \
+from src.main.python.plotlyst.view.widget.chart import SupporterRoleChart, GenderCharacterChart, \
     PolarBaseChart, RoleChart, EnneagramChart
 from src.main.python.plotlyst.view.widget.display import ChartView
 
@@ -173,102 +170,3 @@ class AgeChart(PolarBaseChart):
         self.addSeries(series)
         series.attachAxis(self._rad_axis)
         series.attachAxis(self._angular_axis)
-
-
-class SceneArcWidget(QWidget):
-    arcChanged = pyqtSignal(Scene)
-
-    def __init__(self, scene: Scene, novel: Novel, parent=None):
-        super(SceneArcWidget, self).__init__(parent)
-        hbox(self, 0, 2)
-
-        self.scene = scene
-
-        self.btnSceneType = QToolButton()
-        transparent(self.btnSceneType)
-        if scene.type != SceneType.DEFAULT:
-            self.btnSceneType.setIcon(IconRegistry.scene_type_icon(scene))
-        self.lblTitle = QLabel(scene.title_or_index(novel))
-        self.btnEndingEmotion = CharacterEmotionButton()
-        self.btnEndingEmotion.setValue(scene.agendas[0].ending_emotion)
-        self.btnEndingEmotion.emotionChanged.connect(self._emotionChanged)
-
-        self.layout().addWidget(self.btnSceneType)
-        self.layout().addWidget(self.lblTitle)
-        self.layout().addWidget(self.btnEndingEmotion)
-
-    def _emotionChanged(self):
-        self.scene.agendas[0].ending_emotion = self.btnEndingEmotion.value()
-        self.arcChanged.emit(self.scene)
-
-
-class CharacterArcReport(AbstractReport, Ui_CharacterArcReport):
-
-    def __init__(self, novel: Novel, parent=None):
-        super(CharacterArcReport, self).__init__(novel, parent)
-        self.wdgCharacterSelector.characterToggled.connect(self._characterChanged)
-        self.chart = CharacterArcChart(self.novel)
-        self.chartView.setChart(self.chart)
-        vbox(self.wdgScenes)
-        self.btnScenes.setIcon(IconRegistry.scene_icon())
-
-        self.character: Optional[Character] = None
-
-        self.refresh()
-
-    @overrides
-    def refresh(self):
-        self.wdgCharacterSelector.setCharacters(self.novel.agenda_characters(), checkAll=False)
-
-    def _characterChanged(self, character: Character, toggled: bool):
-        if not toggled:
-            return
-        self.character = character
-        self.chart.refresh(character)
-        clear_layout(self.wdgScenes)
-        for scene in self.novel.scenes:
-            if scene.agendas[0].character_id != character.id:
-                continue
-            wdgArc = SceneArcWidget(scene, self.novel)
-            wdgArc.arcChanged.connect(self._arcChanged)
-            self.wdgScenes.layout().addWidget(wdgArc)
-        self.wdgScenes.layout().addWidget(vspacer())
-
-    def _arcChanged(self, scene: Scene):
-        self.repo.update_scene(scene)
-        self.chart.refresh(self.character)
-
-
-class CharacterArcChart(BaseChart):
-    def __init__(self, novel: Novel, parent=None):
-        super().__init__(parent)
-        self.novel = novel
-        self.createDefaultAxes()
-        self.axis: Optional[QValueAxis] = None
-
-    def refresh(self, character: Character):
-        self.removeAllSeries()
-        if self.axis:
-            self.removeAxis(self.axis)
-        self.setTitle(f'<b>Emotional arc of {character.name}</b>')
-
-        series = QSplineSeries()
-        arc_value: int = 0
-        series.append(0, 0)
-        for scene in self.novel.scenes:
-            if scene.agendas[0].character_id != character.id:
-                continue
-            arc_value += scene.agendas[0].ending_emotion
-            series.append(len(series), arc_value)
-
-        # if not series.count():
-        #     return
-
-        # min_ = min([x.y() for x in points])
-        # max_ = max([x.y() for x in points])
-        # limit = max(abs(min_), max_)
-        # self.axis = QValueAxis()
-        # self.axis.setRange(-limit - 3, limit + 3)
-        self.addSeries(series)
-        # self.addAxis(self.axis, Qt.AlignmentFlag.AlignLeft)
-        # self.axis.setVisible(False)

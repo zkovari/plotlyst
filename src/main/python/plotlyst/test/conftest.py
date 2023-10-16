@@ -23,9 +23,9 @@ import pytest
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Character, Scene, Chapter, \
-    Novel, Conflict, ConflictType, Plot, PlotType, ScenePlotReference, SceneType, SceneStructureAgenda
+    Novel, Conflict, ConflictType, Plot, PlotType, ScenePlotReference, SceneStructureAgenda, ScenePurposeType
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.handler import global_event_dispatcher
 from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.stylesheet import APP_STYLESHEET
 
@@ -58,7 +58,7 @@ def filled_window(qtbot, test_client):
 
 
 def get_main_window(qtbot):
-    event_dispatcher.clear()
+    global_event_dispatcher.clear()
 
     main_window = MainWindow()
     main_window.setStyleSheet(APP_STYLESHEET)
@@ -79,9 +79,9 @@ def init_project():
     char_e = Character(name='Edward')
     novel.characters.extend([char_a, char_b, char_c, char_d, char_e])
 
-    mainplot = Plot(text='Main')
-    internalplot = Plot(text='Lesser', plot_type=PlotType.Internal)
-    subplot = Plot(text='Love', plot_type=PlotType.Subplot)
+    mainplot = Plot(text='Main', icon='fa5s.theater-masks')
+    internalplot = Plot(text='Lesser', plot_type=PlotType.Internal, icon='mdi.mirror')
+    subplot = Plot(text='Love', plot_type=PlotType.Subplot, icon='mdi.source-branch')
     novel.plots.extend([mainplot, internalplot, subplot])
     conflict = Conflict('Test', ConflictType.SOCIETY, character_id=char_a.id)
     novel.conflicts.append(conflict)
@@ -91,11 +91,12 @@ def init_project():
     novel.chapters.append(chapter_1)
     novel.chapters.append(chapter_2)
     scene_1 = Scene(title='Scene 1', synopsis='Scene 1 synopsis', pov=char_a, characters=[char_b, char_c],
-                    plot_values=[ScenePlotReference(mainplot)], chapter=chapter_1, day=1, type=SceneType.ACTION,
+                    plot_values=[ScenePlotReference(mainplot)], chapter=chapter_1, day=1,
+                    purpose=ScenePurposeType.Story,
                     stage=novel.stages[1], agendas=[SceneStructureAgenda()])
     scene_2 = Scene(title='Scene 2', synopsis='Scene 2 synopsis', pov=char_d, characters=[char_c, char_a],
                     plot_values=[ScenePlotReference(internalplot), ScenePlotReference(subplot)], chapter=chapter_2,
-                    day=2, type=SceneType.REACTION, agendas=[SceneStructureAgenda()])
+                    day=2, purpose=ScenePurposeType.Reaction, agendas=[SceneStructureAgenda()])
     novel.scenes.append(scene_1)
     novel.scenes.append(scene_2)
 

@@ -30,8 +30,8 @@ from fbs_runtime.application_context.PyQt6 import ApplicationContext
 from overrides import overrides
 
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.core import EventListener, Event, emit_global_event
+from src.main.python.plotlyst.event.handler import global_event_dispatcher
 
 
 class ResourceRegistry:
@@ -183,8 +183,8 @@ class ResourceManager(EventListener):
         os.environ.setdefault('PYPANDOC_PANDOC',
                               os.path.join(app_env.cache_dir, _pandoc_resource.folder, _pandoc_resource.name, 'pandoc'))
 
-        event_dispatcher.register(self, ResourceDownloadedEvent)
-        event_dispatcher.register(self, ResourceRemovedEvent)
+        global_event_dispatcher.register(self, ResourceDownloadedEvent)
+        global_event_dispatcher.register(self, ResourceRemovedEvent)
 
     @overrides
     def event_received(self, event: Event):
@@ -233,7 +233,7 @@ class ResourceManager(EventListener):
         info.status = status
         self.save()
 
-        emit_event(ResourceStatusChangedEvent(self, type_, status))
+        emit_global_event(ResourceStatusChangedEvent(self, type_, status))
 
     def __get_resource_info(self, resource_type: ResourceType) -> ResourceInfo:
         if resource_type not in self._resources_config.resources.keys():

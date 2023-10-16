@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import math
 from enum import Enum
 from functools import partial
 from typing import Optional
@@ -27,23 +28,23 @@ from PyQt6.QtGui import QFont, QTextCursor, QTextCharFormat, QKeyEvent, QPaintEv
     QColor, QSyntaxHighlighter, \
     QTextDocument, QTextBlockUserData, QIcon
 from PyQt6.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QMenu, \
-    QApplication, QToolButton, QLineEdit, QWidgetAction, QListView
+    QApplication, QToolButton, QLineEdit, QWidgetAction, QListView, QSpinBox, QWidget, QLabel
 from language_tool_python import LanguageTool
 from overrides import overrides
-from qthandy import transparent, hbox, margins
+from qthandy import transparent, hbox, margins, pointy
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
 
 from src.main.python.plotlyst.core.domain import TextStatistics, Character
 from src.main.python.plotlyst.core.text import wc
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.handler import global_event_dispatcher
 from src.main.python.plotlyst.events import LanguageToolSet
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.service.grammar import language_tool_proxy, dictionary
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import action, pointy
+from src.main.python.plotlyst.view.common import action
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.text import apply_texteditor_toolbar_style
@@ -56,6 +57,7 @@ class AutoAdjustableTextEdit(QTextEdit):
         super(AutoAdjustableTextEdit, self).__init__(parent)
         self.textChanged.connect(self._resizeToContent)
         self._minHeight = height
+        self._resizedOnShow: bool = False
         self.setAcceptRichText(False)
         self.setFixedHeight(self._minHeight)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -66,11 +68,38 @@ class AutoAdjustableTextEdit(QTextEdit):
 
     @overrides
     def showEvent(self, a0: QtGui.QShowEvent) -> None:
-        self._resizeToContent()
+        if not self._resizedOnShow:
+            self._resizeToContent()
+            self._resizedOnShow = True
 
     def _resizeToContent(self):
         size = self.document().size()
-        self.setFixedHeight(max(self._minHeight, size.height()))
+        self.setFixedHeight(max(self._minHeight, math.ceil(size.height())))
+
+
+class AutoAdjustableLineEdit(QLineEdit):
+    def __init__(self, parent=None, defaultWidth: int = 200):
+        super(AutoAdjustableLineEdit, self).__init__(parent)
+        self._padding = 10
+        self._defaultWidth = defaultWidth + self._padding
+        self._resizedOnShow: bool = False
+        self.setFixedWidth(self._defaultWidth)
+        self.textChanged.connect(self._resizeToContent)
+
+    @overrides
+    def showEvent(self, a0: QtGui.QShowEvent) -> None:
+        if not self._resizedOnShow:
+            self._resizeToContent()
+            self._resizedOnShow = True
+
+    def _resizeToContent(self):
+        text = self.text().strip()
+        if text:
+            text_width = self.fontMetrics().boundingRect(text).width()
+            width = max(text_width + self._padding, self._defaultWidth)
+            self.setFixedWidth(width)
+        else:
+            self.setFixedWidth(self._defaultWidth)
 
 
 class TextBlockData(QTextBlockUserData):
@@ -149,7 +178,7 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
         self._asyncTimer.setInterval(20)
         self._asyncTimer.timeout.connect(self._highlightNextBlock)
 
-        event_dispatcher.register(self, LanguageToolSet)
+        global_event_dispatcher.register(self, LanguageToolSet)
 
     def checkEnabled(self) -> bool:
         return self._checkEnabled
@@ -454,7 +483,7 @@ class DocumentTextEditor(RichTextEditor):
             family = 'Helvetica'
         self.textEdit.setFont(QFont(family))
         self.textEdit.setProperty('transparent', True)
-        self.textEdit.zoomIn(self.textEdit.font().pointSize() * 0.34)
+        self.textEdit.zoomIn(int(self.textEdit.font().pointSize() * 0.34))
         self.textEdit.setBlockFormat(lineSpacing=120)
         self.textEdit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
         self.textEdit.setPlaceholderText('Write your notes...')
@@ -696,3 +725,48 @@ class RemovalButton(QToolButton):
         elif event.type() == QEvent.Type.Leave:
             self.setIcon(IconRegistry.close_icon('grey'))
         return super(RemovalButton, self).eventFilter(watched, event)
+
+
+class ButtonsOnlySpinBox(QSpinBox):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.lineEdit().setVisible(False)
+        self.setFixedWidth(18)
+        self.setFrame(False)
+
+
+class FontSizeSpinBox(QWidget):
+    DEFAULT_VALUE: int = 2
+    fontChanged = pyqtSignal(int)
+
+    def __init__(self, font_size_prefix: str = "Font Size:"):
+        super().__init__()
+        self._font_sizes = [8, 10, 12, 13, 14, 16, 18, 20, 24, 28, 32, 48, 64]
+
+        self._label = QLabel(font_size_prefix, self)
+        self._font_size_spinner = ButtonsOnlySpinBox(self)
+        self._font_size_spinner.setRange(0, len(self._font_sizes) - 1)
+        self._font_size_spinner.setValue(self.DEFAULT_VALUE)
+        self._font_size_spinner.setButtonSymbols(QSpinBox.ButtonSymbols.UpDownArrows)  # Show only up/down buttons
+        self._font_size_spinner.valueChanged.connect(self._updateFontSize)
+
+        hbox(self)
+        self.layout().addWidget(self._label)
+        self.layout().addWidget(self._font_size_spinner)
+
+        self._updateFontSize()
+
+    def setValue(self, value: int):
+        try:
+            index = self._font_sizes.index(value)
+            self._font_size_spinner.setValue(index)
+        except ValueError:
+            self._font_size_spinner.setValue(self.DEFAULT_VALUE)
+
+    def _updateFontSize(self):
+        selected_index = self._font_size_spinner.value()
+        font_size = self._font_sizes[selected_index]
+
+        self._label.setText(f"{font_size} pt")
+
+        self.fontChanged.emit(font_size)

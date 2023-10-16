@@ -213,6 +213,9 @@ class SelectionItemLabel(Label):
                                 QLabel {{
                                     color: {text_color};
                                 }}
+                                SelectionItemLabel:disabled {{
+                                    border: 2px solid lightgrey;
+                                }}
                                 ''')
 
     def _borderColor(self) -> str:
@@ -223,24 +226,27 @@ class SelectionItemLabel(Label):
 
 class PlotValueLabel(SelectionItemLabel):
 
-    def __init__(self, item: PlotValue, parent=None, removalEnabled: bool = False):
+    def __init__(self, item: PlotValue, parent=None, removalEnabled: bool = False, simplified: bool = False):
         super(PlotValueLabel, self).__init__(item, parent, removalEnabled)
         self.value = item
+        self._simplified = simplified
 
-        self._versusIcon = QToolButton(self)
-        transparent(self._versusIcon)
-        self._versusIcon.setIcon(IconRegistry.from_name('fa5s.arrows-alt-h'))
-        self.layout().insertWidget(2, self._versusIcon)
-        self.lblNegative = QLabel()
-        self.layout().insertWidget(3, self.lblNegative)
+        if not simplified:
+            self._versusIcon = QToolButton(self)
+            transparent(self._versusIcon)
+            self._versusIcon.setIcon(IconRegistry.from_name('fa5s.arrows-alt-h'))
+            self.layout().insertWidget(2, self._versusIcon)
+            self.lblNegative = QLabel()
+            self.layout().insertWidget(3, self.lblNegative)
 
         self.refresh()
 
     def refresh(self):
         self._initLabel()
-        self.lblNegative.setText(self.value.negative)
-        self.lblNegative.setVisible(True if self.value.negative else False)
-        self._versusIcon.setVisible(True if self.value.negative else False)
+        if not self._simplified:
+            self.lblNegative.setText(self.value.negative)
+            self.lblNegative.setVisible(True if self.value.negative else False)
+            self._versusIcon.setVisible(True if self.value.negative else False)
 
     @overrides
     def _borderColor(self):
@@ -319,7 +325,7 @@ class LabelsEditorWidget(QFrame):
 
         self.checkable = checkable
         self.setLineWidth(1)
-        self.setFrameShape(QFrame.Shape.Box)
+        self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setProperty('relaxed-white-bg', True)
         if alignment == Qt.Orientation.Horizontal:
             hbox(self, 2, 1)

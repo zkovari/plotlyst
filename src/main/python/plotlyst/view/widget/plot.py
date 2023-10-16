@@ -19,44 +19,46 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from functools import partial
-from typing import Set, Dict
+from typing import Set, Dict, List
 
 import qtanim
 from PyQt6.QtCharts import QSplineSeries, QValueAxis
-from PyQt6.QtCore import pyqtSignal, Qt, QSize
-from PyQt6.QtGui import QColor, QIcon, QPen, QCursor
-from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu, QPushButton, QTextEdit
+from PyQt6.QtCore import pyqtSignal, Qt, QSize, QTimer
+from PyQt6.QtGui import QColor, QIcon, QPen, QCursor, QEnterEvent
+from PyQt6.QtWidgets import QWidget, QFrame, QPushButton, QTextEdit, QLabel
 from overrides import overrides
 from qthandy import bold, flow, incr_font, \
-    margins, btn_popup_menu, ask_confirmation, italic, retain_when_hidden, vbox, transparent, \
-    clear_layout, vspacer, underline, decr_font, decr_icon, hbox, spacer, sp
-from qthandy.filter import VisibilityToggleEventFilter, ObjectReferenceMimeData, OpacityEventFilter
-from qtmenu import MenuWidget, ActionTooltipDisplayMode
+    margins, ask_confirmation, italic, retain_when_hidden, vbox, transparent, \
+    clear_layout, vspacer, decr_font, decr_icon, hbox, spacer, sp, pointy, incr_icon, translucent
+from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
+from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
-    PlotPrincipleType, PlotEvent, PlotEventType
+    PlotPrincipleType, PlotEventType, PlotProgressionItem, \
+    PlotProgressionItemType
 from src.main.python.plotlyst.core.template import antagonist_role
 from src.main.python.plotlyst.core.text import html
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
-from src.main.python.plotlyst.view.common import action, fade_out_and_gc, pointy, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter, wrap, \
+    insert_before_the_end, shadow
 from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
 from src.main.python.plotlyst.view.generated.plot_widget_ui import Ui_PlotWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
-from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
+from src.main.python.plotlyst.view.widget.characters import CharacterAvatar, CharacterSelectorMenu
 from src.main.python.plotlyst.view.widget.chart import BaseChart
-from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
-from src.main.python.plotlyst.view.widget.list import ListItemWidget, ListView
+from src.main.python.plotlyst.view.widget.scene.structure import SceneStructureTimeline, SceneStructureBeatWidget
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
 from src.main.python.plotlyst.view.widget.utility import ColorPicker
 
@@ -68,16 +70,6 @@ def principle_icon(type: PlotPrincipleType) -> QIcon:
         return IconRegistry.from_name(antagonist_role.icon, 'grey', antagonist_role.icon_color)
     elif type == PlotPrincipleType.CONFLICT:
         return IconRegistry.conflict_icon('grey')
-    elif type == PlotPrincipleType.CONSEQUENCES:
-        return IconRegistry.cause_and_effect_icon('grey', '#3a5a40')
-    elif type == PlotPrincipleType.PROGRESS:
-        return IconRegistry.rising_action_icon('grey', '#0096c7')
-    elif type == PlotPrincipleType.SETBACK:
-        return IconRegistry.from_name('mdi6.slope-downhill', 'grey', '#ae2012')
-    elif type == PlotPrincipleType.TURNS:
-        return IconRegistry.from_name('mdi.boom-gate-up-outline', 'grey', '#8338ec')
-    elif type == PlotPrincipleType.CRISIS:
-        return IconRegistry.crisis_icon('grey')
     elif type == PlotPrincipleType.STAKES:
         return IconRegistry.from_name('mdi.sack', 'grey', '#e9c46a')
     elif type == PlotPrincipleType.QUESTION:
@@ -85,20 +77,83 @@ def principle_icon(type: PlotPrincipleType) -> QIcon:
     elif type == PlotPrincipleType.THEME:
         return IconRegistry.theme_icon('grey')
 
+    elif type == PlotPrincipleType.POSITIVE_CHANGE:
+        return IconRegistry.from_name('mdi.emoticon-happy', 'grey', '#588157')
+    elif type == PlotPrincipleType.NEGATIVE_CHANGE:
+        return IconRegistry.from_name('mdi6.emoticon-devil', 'grey', '#c1121f')
+    elif type == PlotPrincipleType.DESIRE:
+        return IconRegistry.from_name('ei.star-alt', 'grey', '#e9c46a')
+    elif type == PlotPrincipleType.NEED:
+        return IconRegistry.from_name('mdi.key', 'grey', '#cbc0d3')
+    elif type == PlotPrincipleType.EXTERNAL_CONFLICT:
+        return IconRegistry.conflict_icon('grey')
+    elif type == PlotPrincipleType.INTERNAL_CONFLICT:
+        return IconRegistry.conflict_self_icon('grey')
+    elif type == PlotPrincipleType.FLAW:
+        return IconRegistry.from_name('mdi.virus', 'grey', '#b5179e')
 
-principle_hints = {PlotPrincipleType.GOAL: "What's the main goal that drives this plot?",
-                   PlotPrincipleType.ANTAGONIST: "Who or what is against achieving that goal?",
-                   PlotPrincipleType.CONFLICT: "How the antagonist creates conflict and hinders the goal?",
-                   PlotPrincipleType.CONSEQUENCES: "What if the goal won't be achieved? What is at stake?",
-                   PlotPrincipleType.PROGRESS: "How the character makes progress and gets closer to accomplishing the goal?",
-                   PlotPrincipleType.SETBACK: "How the character gets further away from accomplishing the goal.",
-                   PlotPrincipleType.TURNS: "When progress suddenly turns to setback or vice versa.",
-                   PlotPrincipleType.CRISIS: "The lowest moment." +
-                                             " Often an impossible choice between two equally good or bad outcomes.",
-                   PlotPrincipleType.STAKES: "What's at stake if the plot goal is not accomplished?",
-                   PlotPrincipleType.QUESTION: "What is the main dramatic question of this plot?",
-                   PlotPrincipleType.THEME: "How does this plot express the theme?",
-                   }
+    else:
+        return QIcon()
+
+
+_principle_hints = {
+    PlotPrincipleType.GOAL: "Is there a main goal that drives this plot?",
+    PlotPrincipleType.ANTAGONIST: "Is there an antagonistic force (human or otherwise) that confronts the plot?",
+    PlotPrincipleType.CONFLICT: "Is there conflict that hinders the character's goal?",
+    PlotPrincipleType.STAKES: "Is there anything at stake if the storyline is not resolved?",
+    PlotPrincipleType.QUESTION: "Is there a major dramatic question associated to this storyline?",
+    PlotPrincipleType.THEME: "Is there thematic relevance associated to this storyline?",
+
+    PlotPrincipleType.POSITIVE_CHANGE: "Does the character change positively?",
+    PlotPrincipleType.NEGATIVE_CHANGE: "Does the character change negatively?",
+    PlotPrincipleType.DESIRE: "Is there an - often wrong - desire that drives the character's decisions?",
+    PlotPrincipleType.NEED: "Is there a need that the character does not pursuit yet could solve their problems?",
+    PlotPrincipleType.EXTERNAL_CONFLICT: "Are there external obstacles that force the character to change?",
+    PlotPrincipleType.INTERNAL_CONFLICT: "Does the character face an internal dilemma?",
+    PlotPrincipleType.FLAW: "Is there a major flaw, misbelief, or imperfection the character has to overcome?",
+}
+
+
+def principle_hint(principle_type: PlotPrincipleType, plot_type: PlotType) -> str:
+    if plot_type == PlotType.Relation:
+        if principle_type == PlotPrincipleType.GOAL:
+            return "Is there a shared goal the characters aim for in this relationship plot?"
+        if principle_type == PlotPrincipleType.CONFLICT:
+            return "Is there any conflict that challenges the relationship?"
+        if principle_type == PlotPrincipleType.STAKES:
+            return "Is there anything at stake if the characters don't maintain or evolve their relation?"
+
+    return _principle_hints[principle_type]
+
+
+_principle_placeholders = {
+    PlotPrincipleType.GOAL: "What's the main goal that drives this plot?",
+    PlotPrincipleType.ANTAGONIST: "Who or what stands in opposition to resolve the storyline?",
+    PlotPrincipleType.CONFLICT: "How does conflict hinder the goal?",
+    PlotPrincipleType.STAKES: "What's at stake if the storyline is not resolved?",
+    PlotPrincipleType.QUESTION: "What is the major dramatic question of this storyline?",
+    PlotPrincipleType.THEME: "How does the storyline express the theme?",
+
+    PlotPrincipleType.POSITIVE_CHANGE: "How does the character change positively?",
+    PlotPrincipleType.NEGATIVE_CHANGE: "How does the character change negatively?",
+    PlotPrincipleType.DESIRE: "What does the character want?",
+    PlotPrincipleType.NEED: "What does the character actually need?",
+    PlotPrincipleType.EXTERNAL_CONFLICT: "What external obstacles force the character to change?",
+    PlotPrincipleType.INTERNAL_CONFLICT: "What internal dilemma of conflict the character has to face?",
+    PlotPrincipleType.FLAW: "What kind of flaw the character has to overcome?",
+}
+
+
+def principle_placeholder(principle_type: PlotPrincipleType, plot_type: PlotType) -> str:
+    if plot_type == PlotType.Relation:
+        if principle_type == PlotPrincipleType.GOAL:
+            return "What is a shared goal the characters aim for?"
+        if principle_type == PlotPrincipleType.CONFLICT:
+            return "How does conflict challenge the relationship?"
+        if principle_type == PlotPrincipleType.STAKES:
+            return "What's at stake if the characters don't maintain or evolve their relation?"
+    return _principle_placeholders[principle_type]
+
 
 principle_type_index: Dict[PlotPrincipleType, int] = {
     PlotPrincipleType.QUESTION: 0,
@@ -107,6 +162,14 @@ principle_type_index: Dict[PlotPrincipleType, int] = {
     PlotPrincipleType.CONFLICT: 3,
     PlotPrincipleType.STAKES: 4,
     PlotPrincipleType.THEME: 5,
+
+    PlotPrincipleType.POSITIVE_CHANGE: 0,
+    PlotPrincipleType.NEGATIVE_CHANGE: 1,
+    PlotPrincipleType.DESIRE: 2,
+    PlotPrincipleType.NEED: 3,
+    PlotPrincipleType.EXTERNAL_CONFLICT: 4,
+    PlotPrincipleType.INTERNAL_CONFLICT: 5,
+    PlotPrincipleType.FLAW: 6,
 }
 
 
@@ -118,9 +181,9 @@ def plot_event_icon(type: PlotEventType) -> QIcon:
     elif type == PlotEventType.CRISIS:
         return IconRegistry.crisis_icon()
     elif type == PlotEventType.COST:
-        return IconRegistry.from_name('ph.coin-bold', '#e9c46a')
+        return IconRegistry.cost_icon()
     elif type == PlotEventType.TOOL:
-        return IconRegistry.from_name('fa5s.hammer', '#d4a373')
+        return IconRegistry.tool_icon()
 
 
 plot_event_type_hint = {
@@ -133,17 +196,18 @@ plot_event_type_hint = {
 
 
 class _PlotPrincipleToggle(QWidget):
-    def __init__(self, pincipleType: PlotPrincipleType, parent=None):
-        super(_PlotPrincipleToggle, self).__init__(parent)
+    def __init__(self, pincipleType: PlotPrincipleType, plotType: PlotType, parent=None):
+        super().__init__(parent)
         hbox(self)
+        margins(self, bottom=0)
         self._principleType = pincipleType
 
         self._label = QPushButton()
         transparent(self._label)
         self._label.setCheckable(True)
         bold(self._label)
-        self._label.setText(self._principleType.name.lower().capitalize())
-        self._label.setToolTip(principle_hints[self._principleType])
+        self._label.setText(self._principleType.name.lower().capitalize().replace('_', ' '))
+        self._label.setToolTip(principle_hint(self._principleType, plotType))
         self._label.setIcon(principle_icon(self._principleType))
         self._label.setCheckable(True)
 
@@ -156,36 +220,50 @@ class _PlotPrincipleToggle(QWidget):
         self.toggle.toggled.connect(self._label.setChecked)
 
 
-class PlotPrincipleSelectorMenu(QMenu):
+class PlotPrincipleSelectorMenu(MenuWidget):
     principleToggled = pyqtSignal(PlotPrincipleType, bool)
 
     def __init__(self, plot: Plot, parent=None):
         super(PlotPrincipleSelectorMenu, self).__init__(parent)
         self._plot = plot
 
-        self._selector = QWidget()
-        vbox(self._selector)
+        self._selectors = QWidget()
+        apply_white_menu(self)
+        vbox(self._selectors, spacing=0)
 
         active_types = set([x.type for x in self._plot.principles])
 
-        for principle in [PlotPrincipleType.QUESTION, PlotPrincipleType.GOAL, PlotPrincipleType.ANTAGONIST,
+        if self._plot.plot_type == PlotType.Internal:
+            principles = [PlotPrincipleType.POSITIVE_CHANGE, PlotPrincipleType.NEGATIVE_CHANGE,
+                          PlotPrincipleType.DESIRE, PlotPrincipleType.NEED, PlotPrincipleType.EXTERNAL_CONFLICT,
+                          PlotPrincipleType.INTERNAL_CONFLICT, PlotPrincipleType.FLAW]
+        elif self._plot.plot_type == PlotType.Relation:
+            principles = [PlotPrincipleType.QUESTION, PlotPrincipleType.GOAL, PlotPrincipleType.CONFLICT,
+                          PlotPrincipleType.STAKES]
+        else:
+            principles = [PlotPrincipleType.QUESTION, PlotPrincipleType.GOAL, PlotPrincipleType.ANTAGONIST,
                           PlotPrincipleType.CONFLICT,
-                          PlotPrincipleType.STAKES, PlotPrincipleType.THEME]:
-            wdg = _PlotPrincipleToggle(principle)
+                          PlotPrincipleType.STAKES, PlotPrincipleType.THEME]
+
+        for principle in principles:
+            wdg = _PlotPrincipleToggle(principle, self._plot.plot_type)
             if principle in active_types:
                 wdg.toggle.setChecked(True)
             wdg.toggle.toggled.connect(partial(self.principleToggled.emit, principle))
-            self._selector.layout().addWidget(wdg)
+            self._selectors.layout().addWidget(wdg)
+            desc = QLabel(principle_hint(principle, self._plot.plot_type))
+            desc.setProperty('description', True)
+            self._selectors.layout().addWidget(wrap(desc, margin_left=10, margin_bottom=5))
 
-        action = QWidgetAction(self)
-        action.setDefaultWidget(self._selector)
-        self.addAction(action)
+        self.addSection('Select principles that are relevant to this storyline')
+        self.addSeparator()
+        self.addWidget(self._selectors)
 
 
 class PlotPrincipleEditor(QWidget):
     principleEdited = pyqtSignal()
 
-    def __init__(self, principle: PlotPrinciple, parent=None):
+    def __init__(self, principle: PlotPrinciple, plotType: PlotType, parent=None):
         super().__init__(parent)
         self._principle = principle
 
@@ -193,19 +271,24 @@ class PlotPrincipleEditor(QWidget):
         self._label = QPushButton()
         transparent(self._label)
         bold(self._label)
-        self._label.setText(principle.type.name.lower().capitalize())
+        self._label.setText(principle.type.name.lower().capitalize().replace('_', ' '))
         self._label.setIcon(principle_icon(principle.type))
         self._label.setCheckable(True)
         self._label.setChecked(True)
 
         self._textedit = QTextEdit(self)
         self._textedit.setProperty('white-bg', True)
-        hint = principle_hints[principle.type]
+        self._textedit.setProperty('rounded', True)
+        hint = principle_placeholder(principle.type, plotType)
         self._textedit.setPlaceholderText(hint)
         self._textedit.setToolTip(hint)
+        if app_env.is_mac():
+            incr_font(self._textedit)
         self._textedit.setText(principle.value)
         self._textedit.setMinimumSize(175, 100)
-        self._textedit.setMaximumSize(200, 100)
+        self._textedit.setMaximumSize(190, 120)
+        self._textedit.verticalScrollBar().setVisible(False)
+        shadow(self._textedit)
         self._textedit.textChanged.connect(self._valueChanged)
 
         self.layout().addWidget(self._label, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -222,15 +305,127 @@ class PlotPrincipleEditor(QWidget):
         self.principleEdited.emit()
 
 
-class PlotListItemWidget(ListItemWidget):
-    def __init__(self, plot: Plot, parent=None):
-        super(PlotListItemWidget, self).__init__(parent)
-        self._plot = plot
-        self._lineEdit.setReadOnly(True)
-        self.refresh()
+storyline_progression_steps_descriptions = {
+    PlotType.Main: {
+        PlotProgressionItemType.BEGINNING: 'The initial state of the plot',
+        PlotProgressionItemType.MIDDLE: "The middle state of the plot's progression",
+        PlotProgressionItemType.ENDING: 'The resolution of the plot',
+        PlotProgressionItemType.EVENT: "A progress or setback in the plot"
+    },
+    PlotType.Internal: {
+        PlotProgressionItemType.BEGINNING: "The starting point of the character's change",
+        PlotProgressionItemType.MIDDLE: 'The middle stage of the character transformation',
+        PlotProgressionItemType.ENDING: 'How the character changed by the end of the story',
+        PlotProgressionItemType.EVENT: "A step towards or away from the character's change"
+    },
+    PlotType.Subplot: {
+        PlotProgressionItemType.BEGINNING: 'The initial state of the subplot',
+        PlotProgressionItemType.MIDDLE: "The middle state of the subplot's progression",
+        PlotProgressionItemType.ENDING: 'The resolution of the subplot',
+        PlotProgressionItemType.EVENT: 'A progress or setback in the subplot'
+    },
+    PlotType.Relation: {
+        PlotProgressionItemType.BEGINNING: 'The initial state of the relationship',
+        PlotProgressionItemType.MIDDLE: "The middle state of the relationship's evolution",
+        PlotProgressionItemType.ENDING: 'The final state of the relationship',
+        PlotProgressionItemType.EVENT: 'A change in the relationship where it gets either worse or better'
+    },
+    PlotType.Global: {
+        PlotProgressionItemType.BEGINNING: 'The initial state of the global storyline',
+        PlotProgressionItemType.MIDDLE: "The middle state of the global storyline's progression",
+        PlotProgressionItemType.ENDING: 'The resolution of the global storyline',
+        PlotProgressionItemType.EVENT: "A progress or setback in the global storyline"
+    },
+}
 
-    def refresh(self):
-        self._lineEdit.setText(self._plot.text)
+
+class PlotProgressionEventWidget(SceneStructureBeatWidget):
+    def __init__(self, novel: Novel, type: PlotType, item: PlotProgressionItem, parent=None):
+        self._type = type
+        super().__init__(novel, item, parent)
+        self._btnIcon.removeEventFilter(self._dragEventFilter)
+        self._btnIcon.setCursor(Qt.CursorShape.ArrowCursor)
+        self.setAcceptDrops(False)
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        if self.beat.type == PlotProgressionItemType.EVENT:
+            self._btnRemove.setVisible(True)
+
+    @overrides
+    def _descriptions(self) -> dict:
+        return storyline_progression_steps_descriptions[self._type]
+
+    @overrides
+    def _icon(self) -> QIcon:
+        color = self._color()
+        if self.beat.type == PlotProgressionItemType.BEGINNING:
+            return IconRegistry.cause_icon(color)
+        elif self.beat.type == PlotProgressionItemType.MIDDLE:
+            return IconRegistry.from_name('mdi.middleware-outline', color)
+        elif self.beat.type == PlotProgressionItemType.ENDING:
+            return IconRegistry.from_name('mdi.ray-end', color)
+        else:
+            return IconRegistry.from_name('msc.debug-stackframe-dot', color)
+
+    @overrides
+    def _color(self) -> str:
+        return 'grey'
+
+    @overrides
+    def _initStyle(self):
+        super()._initStyle()
+        if self.beat.type == PlotProgressionItemType.ENDING:
+            self._btnName.setText('End')
+        elif self.beat.type == PlotProgressionItemType.EVENT:
+            self._btnName.setText('')
+
+
+class PlotEventsTimeline(SceneStructureTimeline):
+    def __init__(self, novel: Novel, type: PlotType, parent=None):
+        super().__init__(parent)
+        self._type = type
+        self.setNovel(novel)
+
+    @overrides
+    def setStructure(self, items: List[PlotProgressionItem]):
+        super().setStructure(items)
+        self._hideFirstAndLastItems()
+
+    @overrides
+    def _newBeatWidget(self, item: PlotProgressionItem) -> PlotProgressionEventWidget:
+        widget = PlotProgressionEventWidget(self._novel, self._type, item, parent=self)
+        widget.removed.connect(self._beatRemoved)
+
+        return widget
+
+    # @overrides
+    # def _addBeatWidget(self, item: PlotProgressionItem):
+    #     super()._addBeatWidget(item)
+
+    @overrides
+    def _insertWidget(self, item: PlotProgressionItem, widget: PlotProgressionEventWidget):
+        super()._insertWidget(item, widget)
+        self._hideFirstAndLastItems()
+
+    @overrides
+    def _showBeatMenu(self, placeholder: QWidget):
+        self._currentPlaceholder = placeholder
+        self._insertBeat(PlotProgressionItemType.EVENT)
+
+    @overrides
+    def _insertBeat(self, beatType: PlotProgressionItemType):
+        item = PlotProgressionItem(beatType)
+        widget = self._newBeatWidget(item)
+        self._insertWidget(item, widget)
+
+    def _hideFirstAndLastItems(self):
+        for i in range(self.layout().count()):
+            item = self.layout().itemAt(i)
+            if i == 0 or i == self.layout().count() - 1:
+                item.widget().setVisible(False)
+            else:
+                item.widget().setVisible(True)
 
 
 class PlotNode(ContainerNode):
@@ -295,90 +490,6 @@ class PlotEventsArcChart(BaseChart):
         axis.setVisible(False)
 
 
-class PlotEventItem(ListItemWidget):
-    def __init__(self, event: PlotEvent, parent=None):
-        super(PlotEventItem, self).__init__(event, parent)
-        self._event = event
-        self._lineEdit.setMaximumWidth(800)
-        hint = plot_event_type_hint[event.type]
-        self._lineEdit.setPlaceholderText(hint)
-        self._lineEdit.setToolTip(hint)
-        _spacer = spacer()
-        sp(_spacer).h_preferred()
-        self.layout().addWidget(_spacer)
-        margins(self, right=15)
-
-        self._icon = Icon()
-        self._icon.setIcon(plot_event_icon(event.type))
-        self._icon.setToolTip(hint)
-        self.layout().insertWidget(1, self._icon)
-        self.refresh()
-
-    def refresh(self):
-        self._lineEdit.setText(self._event.text)
-
-    @overrides
-    def _textChanged(self, text: str):
-        super(PlotEventItem, self)._textChanged(text)
-        self._event.text = text
-
-
-class PlotEventSelectorMenu(MenuWidget):
-    eventSelected = pyqtSignal(PlotEventType)
-
-    def __init__(self, parent=None):
-        super(PlotEventSelectorMenu, self).__init__(parent)
-        self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
-
-        for type_ in PlotEventType:
-            action_ = action(type_.name.lower().capitalize(), plot_event_icon(type_),
-                             partial(self.eventSelected.emit, type_))
-            action_.setToolTip(plot_event_type_hint[type_])
-            self.addAction(action_)
-
-
-class PlotEventsList(ListView):
-    eventsChanged = pyqtSignal()
-
-    def __init__(self, plot: Plot, parent=None):
-        super(PlotEventsList, self).__init__(parent)
-        self._plot = plot
-        self._btnAdd.setText('Add new event')
-        self._btnAdd.setToolTip('Add new event to reflect how the plot will progress or face setback')
-
-        self._centralWidget.setProperty('relaxed-white-bg', True)
-        menu = PlotEventSelectorMenu(self._btnAdd)
-        menu.eventSelected.connect(self._addNewItem)
-
-        for event in self._plot.events:
-            self.addItem(event)
-
-    @overrides
-    def _addNewItem(self, eventType: PlotEventType):
-        event = PlotEvent('', type=eventType)
-        self._plot.events.append(event)
-        self.addItem(event)
-
-        self.eventsChanged.emit()
-
-    @overrides
-    def _listItemWidgetClass(self):
-        return PlotEventItem
-
-    @overrides
-    def _deleteItemWidget(self, widget: ListItemWidget):
-        super(PlotEventsList, self)._deleteItemWidget(widget)
-        self._plot.events.remove(widget.item())
-        self.eventsChanged.emit()
-
-    @overrides
-    def _dropped(self, mimeData: ObjectReferenceMimeData):
-        super(PlotEventsList, self)._dropped(mimeData)
-        self._plot.events[:] = [x.item() for x in self.widgets()]
-
-        self.eventsChanged.emit()
-
-
 class PlotList(TreeView):
     plotSelected = pyqtSignal(Plot)
     plotRemoved = pyqtSignal(Plot)
@@ -424,7 +535,7 @@ class PlotList(TreeView):
         if selected:
             self.clearSelection()
             self._selectedPlots.add(wdg.plot())
-            self.plotSelected.emit(wdg.plot())
+            QTimer.singleShot(10, lambda: self.plotSelected.emit(wdg.plot()))
         elif wdg.plot() in self._selectedPlots:
             self._selectedPlots.remove(wdg.plot())
 
@@ -458,108 +569,148 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         super(PlotWidget, self).__init__(parent)
         self.setupUi(self)
         self.novel = novel
-        self.plot = plot
+        self.plot: Plot = plot
 
-        incr_font(self.lineName, 2)
+        incr_font(self.lineName, 6)
         bold(self.lineName)
         self.lineName.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lineName.setText(self.plot.text)
         self.lineName.textChanged.connect(self._nameEdited)
-        self.btnPincipleEditor.setIcon(IconRegistry.plus_edit_icon())
+
+        self.btnPincipleEditor.setIcon(IconRegistry.plus_edit_icon('grey'))
         transparent(self.btnPincipleEditor)
         retain_when_hidden(self.btnPincipleEditor)
         decr_icon(self.btnPincipleEditor)
-        self.btnArcToggle.setIcon(IconRegistry.rising_action_icon('black', color_on=PLOTLYST_SECONDARY_COLOR))
-        decr_icon(self.btnArcToggle, 2)
-
-        self.splitter.setSizes([300, 300])
 
         self._principleSelectorMenu = PlotPrincipleSelectorMenu(self.plot, self.btnPincipleEditor)
         self._principleSelectorMenu.principleToggled.connect(self._principleToggled)
-        btn_popup_menu(self.btnPincipleEditor, self._principleSelectorMenu)
         self.btnPincipleEditor.installEventFilter(ButtonPressResizeEventFilter(self.btnPincipleEditor))
         self.btnPincipleEditor.installEventFilter(OpacityEventFilter(self.btnPincipleEditor, leaveOpacity=0.7))
         self._principles: Dict[PlotPrincipleType, PlotPrincipleEditor] = {}
 
         self._initFrameColor()
-        for lbl in [self.lblValues, self.lblPrinciples, self.lblProgression]:
-            underline(lbl)
+        self.btnPrinciples.setIcon(IconRegistry.from_name('mdi6.note-text-outline', 'grey'))
+        incr_icon(self.btnPrinciples, 2)
+        incr_font(self.btnPrinciples, 2)
+        self.btnPrinciples.installEventFilter(ButtonPressResizeEventFilter(self.btnPrinciples))
+        self.btnPrinciples.installEventFilter(OpacityEventFilter(self.btnPrinciples, leaveOpacity=0.7))
+        self.btnPrinciples.clicked.connect(lambda: self._principleSelectorMenu.exec())
 
-        flow(self.wdgPrinciples)
+        flow(self.wdgPrinciples, spacing=6)
         for principle in self.plot.principles:
-            # TODO remove later
-            if principle.type in [PlotPrincipleType.TURNS, PlotPrincipleType.CRISIS, PlotPrincipleType.PROGRESS,
-                                  PlotPrincipleType.SETBACK, PlotPrincipleType.CONSEQUENCES]:
-                continue
             self._initPrincipleEditor(principle)
 
-        flow(self.wdgValues)
+        self.btnProgression.setIcon(IconRegistry.rising_action_icon('grey'))
+        if self.plot.plot_type == PlotType.Internal:
+            self.btnProgression.setText('Transformation')
+        elif self.plot.plot_type == PlotType.Relation:
+            self.btnProgression.setText('Evolution')
+
+        translucent(self.btnProgression, 0.7)
+        incr_icon(self.btnProgression, 2)
+        incr_font(self.btnProgression, 2)
+
+        self.btnValues.setText('' if self.plot.values else 'Values')
+        self.btnValues.setIcon(IconRegistry.from_name('fa5s.chevron-circle-down', 'grey'))
+        self.btnValues.installEventFilter(OpacityEventFilter(self.btnValues, 0.9, 0.7))
+        self.btnValues.clicked.connect(self._newValue)
+        hbox(self.wdgValues)
         self._btnAddValue = SecondaryActionPushButton(self)
         decr_font(self._btnAddValue)
         self._btnAddValue.setIconSize(QSize(14, 14))
-        self._btnAddValue.setText('' if self.plot.values else 'Attach story value')
         retain_when_hidden(self._btnAddValue)
         self._btnAddValue.setIcon(IconRegistry.plus_icon('grey'))
         for value in self.plot.values:
             self._addValue(value)
 
-        self._characterSelector = CharacterSelectorButton(novel, self)
-        self._characterSelector.setToolTip('Link character to this plot')
-        self._characterSelector.setGeometry(10, 10, 40, 40)
-        character = self.plot.character(novel)
-        if character is not None:
-            self._characterSelector.setCharacter(character)
+        self.btnRelationArrow.setHidden(True)
+        if self.plot.plot_type == PlotType.Global:
+            pass
+        elif self.plot.plot_type == PlotType.Relation:
+            self.btnRelationArrow.setVisible(True)
+            self.btnRelationArrow.setIcon(IconRegistry.from_name('ph.arrows-counter-clockwise-fill'))
+            self.btnPlotIcon.setIconSize(QSize(32, 32))
 
-        self._characterSelector.characterSelected.connect(self._characterSelected)
+            self._characterSelector = CharacterAvatar(self, 60, 100, 64, 8)
+            self._characterRelationSelector = CharacterAvatar(self, 60, 100, 64, 8)
+            self._characterSelector.setToolTip('Associate a character to this relationship plot')
+            self._characterRelationSelector.setToolTip('Associate a character to this relationship plot')
+            sourceMenu = CharacterSelectorMenu(self.novel, self._characterSelector.btnAvatar)
+            sourceMenu.selected.connect(self._characterSelected)
+            targetMenu = CharacterSelectorMenu(self.novel, self._characterRelationSelector.btnAvatar)
+            targetMenu.selected.connect(self._relationCharacterSelected)
+            self._characterSelector.setFixedSize(90, 90)
+            self._characterRelationSelector.setFixedSize(90, 90)
+            self.wdgHeader.layout().insertWidget(0, self._characterSelector,
+                                                 alignment=Qt.AlignmentFlag.AlignCenter)
+            self.wdgHeader.layout().insertWidget(0, spacer())
+            self.wdgHeader.layout().addWidget(self._characterRelationSelector, alignment=Qt.AlignmentFlag.AlignCenter)
+            self.wdgHeader.layout().addWidget(spacer())
+
+            character = self.plot.character(novel)
+            if character is not None:
+                self._characterSelector.setCharacter(character)
+            character = self.plot.relation_character(novel)
+            if character is not None:
+                self._characterRelationSelector.setCharacter(character)
+        else:
+            self._characterSelector = CharacterAvatar(self, 88, 120, 92, 8)
+            menu = CharacterSelectorMenu(self.novel, self._characterSelector.btnAvatar)
+            menu.selected.connect(self._characterSelected)
+            self._characterSelector.setToolTip('Link character to this storyline')
+            self._characterSelector.setGeometry(20, 20, 115, 115)
+            character = self.plot.character(novel)
+            if character is not None:
+                self._characterSelector.setCharacter(character)
 
         self.wdgValues.layout().addWidget(self._btnAddValue)
+        self.wdgValues.layout().addWidget(spacer())
         self._btnAddValue.clicked.connect(self._newValue)
-
-        self._lstEvents = PlotEventsList(self.plot)
-        self._lstEvents.setMinimumHeight(300)
-        self._lstEvents.eventsChanged.connect(self._eventsChanged)
-        self.wdgEventsParent.layout().addWidget(self._lstEvents)
-
-        # self._arcChart = PlotEventsArcChart(self.plot)
-        # self.chartViewArcPreview.setChart(self._arcChart)
-        # self.chartViewArcPreview.setMinimumHeight(300)
-        # self._arcChart.refresh()
-        self.btnArcToggle.setHidden(True)
-        self.chartViewArcPreview.setHidden(True)
 
         self.installEventFilter(VisibilityToggleEventFilter(target=self.btnSettings, parent=self))
         self.installEventFilter(VisibilityToggleEventFilter(target=self._btnAddValue, parent=self))
         self.installEventFilter(VisibilityToggleEventFilter(target=self.btnPincipleEditor, parent=self))
 
+        self.btnPlotIcon.installEventFilter(OpacityEventFilter(self.btnPlotIcon, enterOpacity=0.7, leaveOpacity=1.0))
         self._updateIcon()
 
-        iconMenu = QMenu(self.btnPlotIcon)
+        self._timeline = PlotEventsTimeline(self.novel, self.plot.plot_type)
+        self.wdgEventsParent.layout().addWidget(self._timeline)
+        self._timeline.setStructure(self.plot.progression)
+        self._timeline.timelineChanged.connect(self._timelineChanged)
 
-        colorAction = QWidgetAction(iconMenu)
+        iconMenu = MenuWidget(self.btnPlotIcon)
+
         colorPicker = ColorPicker(self)
         colorPicker.setFixedSize(300, 150)
         colorPicker.colorPicked.connect(self._colorChanged)
-        colorAction.setDefaultWidget(colorPicker)
-        colorMenu = QMenu('Color', iconMenu)
+        colorMenu = MenuWidget()
+        colorMenu.setTitle('Color')
         colorMenu.setIcon(IconRegistry.from_name('fa5s.palette'))
-        colorMenu.addAction(colorAction)
+        colorMenu.addWidget(colorPicker)
 
         iconMenu.addMenu(colorMenu)
         iconMenu.addSeparator()
         iconMenu.addAction(
             action('Change icon', icon=IconRegistry.icons_icon(), slot=self._changeIcon, parent=iconMenu))
-        btn_popup_menu(self.btnPlotIcon, iconMenu)
 
-        contextMenu = QMenu()
+        contextMenu = MenuWidget(self.btnSettings)
         contextMenu.addMenu(colorMenu)
         contextMenu.addSeparator()
-        contextMenu.addAction(IconRegistry.trash_can_icon(), 'Remove plot', self.removalRequested.emit)
-        btn_popup_menu(self.btnSettings, contextMenu)
+        progress_action = action('Track general progress',
+                                 slot=self._trackGeneralProgressChanged,
+                                 checkable=True,
+                                 tooltip='Enable tracking a general progression value besides the custom plot values',
+                                 parent=contextMenu)
+        progress_action.setChecked(self.plot.default_value_enabled)
+        contextMenu.addAction(progress_action)
+        contextMenu.addSeparator()
+        contextMenu.addAction(action('Remove plot', IconRegistry.trash_can_icon(), self.removalRequested.emit))
 
         self.repo = RepositoryPersistenceManager.instance()
 
-        event_dispatcher.register(self, CharacterChangedEvent)
-        event_dispatcher.register(self, CharacterDeletedEvent)
+        dispatcher = event_dispatchers.instance(self.novel)
+        dispatcher.register(self, CharacterChangedEvent, CharacterDeletedEvent)
 
     @overrides
     def event_received(self, event: Event):
@@ -579,7 +730,13 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.titleChanged.emit()
 
     def _characterSelected(self, character: Character):
+        self._characterSelector.setCharacter(character)
         self.plot.set_character(character)
+        self._save()
+
+    def _relationCharacterSelected(self, character: Character):
+        self._characterRelationSelector.setCharacter(character)
+        self.plot.set_relation_character(character)
         self._save()
 
     def _changeIcon(self):
@@ -592,9 +749,12 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.plot.icon_color = color.name()
         self._updateIcon()
         self._initFrameColor()
-        # self._arcChart.refresh()
         self._save()
         self.iconChanged.emit()
+
+    def _trackGeneralProgressChanged(self, toggled: bool):
+        self.plot.default_value_enabled = toggled
+        self._save()
 
     def _principleToggled(self, principleType: PlotPrincipleType, toggled: bool):
         if toggled:
@@ -616,7 +776,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self._save()
 
     def _initPrincipleEditor(self, principle: PlotPrinciple):
-        editor = PlotPrincipleEditor(principle)
+        editor = PlotPrincipleEditor(principle, self.plot.plot_type)
         editor.principleEdited.connect(self._save)
         self.wdgPrinciples.layout().insertWidget(principle_type_index[principle.type], editor)
         self._principles[principle.type] = editor
@@ -626,8 +786,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
     def _save(self):
         self.repo.update_novel(self.novel)
 
-    def _eventsChanged(self):
-        # self._arcChart.refresh()
+    def _timelineChanged(self):
         self._save()
 
     def _initFrameColor(self):
@@ -655,14 +814,15 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             self._save()
 
     def _addValue(self, value: PlotValue):
-        label = PlotValueLabel(value, parent=self.wdgValues)
+        label = PlotValueLabel(value, parent=self.wdgValues, simplified=True)
+        sp(label).h_max()
         label.installEventFilter(OpacityEventFilter(label, leaveOpacity=0.7))
         pointy(label)
-        self.wdgValues.layout().addWidget(label)
+        insert_before_the_end(self.wdgValues, label)
         label.removalRequested.connect(partial(self._removeValue, label))
         label.clicked.connect(partial(self._plotValueClicked, label))
 
-        self._btnAddValue.setText('')
+        self.btnValues.setText('')
 
     def _removeValue(self, label: PlotValueLabel):
         if app_env.test_env():
@@ -682,18 +842,17 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             self._save()
 
     def _plotValueClicked(self, label: PlotValueLabel):
-        menu = QMenu(label)
-        menu.addAction(IconRegistry.edit_icon(), 'Edit', partial(self._editValue, label))
+        menu = MenuWidget()
+        menu.addAction(action('Edit', IconRegistry.edit_icon(), partial(self._editValue, label)))
         menu.addSeparator()
-        menu.addAction(IconRegistry.trash_can_icon(), 'Remove', label.removalRequested.emit)
-        menu.popup(QCursor.pos())
+        menu.addAction(action('Remove', IconRegistry.trash_can_icon(), label.removalRequested.emit))
+        menu.exec(QCursor.pos())
 
     def __destroyValue(self, label: PlotValueLabel):
         self.plot.values.remove(label.value)
         self._save()
         fade_out_and_gc(self.wdgValues, label)
-        has_values = len(self.plot.values) > 0
-        self._btnAddValue.setText('' if has_values else 'Attach story value')
+        self.btnValues.setText('' if self.plot.values else 'Values')
 
 
 class PlotEditor(QWidget, Ui_PlotEditor):
@@ -713,10 +872,19 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         italic(self.btnAdd)
         self.btnAdd.setIcon(IconRegistry.plus_icon('white'))
         menu = MenuWidget(self.btnAdd)
-        menu.addAction(action('Main plot', IconRegistry.cause_and_effect_icon(), lambda: self.newPlot(PlotType.Main)))
+        menu.addAction(action('Main plot', IconRegistry.storylines_icon(), lambda: self.newPlot(PlotType.Main)))
         menu.addAction(
-            action('Internal plot', IconRegistry.conflict_self_icon(), lambda: self.newPlot(PlotType.Internal)))
+            action('Character arc', IconRegistry.conflict_self_icon(), lambda: self.newPlot(PlotType.Internal)))
         menu.addAction(action('Subplot', IconRegistry.subplot_icon(), lambda: self.newPlot(PlotType.Subplot)))
+
+        submenu = MenuWidget()
+        submenu.setTitle('Other')
+        submenu.addAction(action('Relationship plot', IconRegistry.from_name('fa5s.people-arrows'),
+                                 slot=lambda: self.newPlot(PlotType.Relation)))
+        submenu.addAction(action('Global storyline', IconRegistry.from_name('fa5s.globe'),
+                                 slot=lambda: self.newPlot(PlotType.Global)))
+        menu.addSeparator()
+        menu.addMenu(submenu)
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -728,15 +896,24 @@ class PlotEditor(QWidget, Ui_PlotEditor):
 
     def newPlot(self, plot_type: PlotType):
         if plot_type == PlotType.Internal:
-            name = 'Internal plot'
+            name = 'Character arc'
             icon = 'mdi.mirror'
         elif plot_type == PlotType.Subplot:
             name = 'Subplot'
             icon = 'mdi.source-branch'
+        elif plot_type == PlotType.Relation:
+            name = 'Relationship'
+            icon = 'fa5s.people-arrows'
+        elif plot_type == PlotType.Global:
+            name = 'Global storyline'
+            icon = 'fa5s.globe'
         else:
             name = 'Main plot'
-            icon = 'mdi.ray-start-arrow'
-        plot = Plot(name, plot_type=plot_type, icon=icon)
+            icon = 'fa5s.theater-masks'
+        plot = Plot(name, plot_type=plot_type, icon=icon,
+                    progression=[PlotProgressionItem(PlotProgressionItemType.BEGINNING),
+                                 PlotProgressionItem(PlotProgressionItemType.MIDDLE),
+                                 PlotProgressionItem(PlotProgressionItemType.ENDING)])
         self.novel.plots.append(plot)
 
         plot_colors = list(STORY_LINE_COLOR_CODES[plot_type.value])

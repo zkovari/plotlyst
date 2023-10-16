@@ -392,71 +392,110 @@
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_3">
              <property name="spacing">
-              <number>3</number>
+              <number>0</number>
              </property>
              <property name="leftMargin">
-              <number>2</number>
+              <number>0</number>
              </property>
              <property name="topMargin">
-              <number>2</number>
+              <number>0</number>
              </property>
              <property name="rightMargin">
-              <number>9</number>
+              <number>0</number>
              </property>
              <property name="bottomMargin">
-              <number>2</number>
+              <number>0</number>
              </property>
              <item>
               <widget class="QStackedWidget" name="stackSide">
                <widget class="QWidget" name="pageInfo">
                 <layout class="QVBoxLayout" name="verticalLayout_11">
                  <property name="spacing">
-                  <number>3</number>
+                  <number>6</number>
                  </property>
                  <property name="leftMargin">
                   <number>5</number>
                  </property>
                  <property name="topMargin">
-                  <number>5</number>
+                  <number>15</number>
                  </property>
                  <property name="rightMargin">
-                  <number>2</number>
+                  <number>5</number>
                  </property>
                  <property name="bottomMargin">
                   <number>2</number>
                  </property>
-                 <item>
-                  <spacer name="verticalSpacer_3">
-                   <property name="orientation">
-                    <enum>Qt::Vertical</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>20</width>
-                     <height>40</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
                 </layout>
                </widget>
                <widget class="QWidget" name="pageGoal">
+                <property name="cursor">
+                 <cursorShape>UpArrowCursor</cursorShape>
+                </property>
                 <layout class="QVBoxLayout" name="verticalLayout_13">
                  <property name="spacing">
-                  <number>3</number>
+                  <number>0</number>
                  </property>
                  <property name="leftMargin">
-                  <number>5</number>
+                  <number>0</number>
                  </property>
                  <property name="topMargin">
                   <number>5</number>
                  </property>
                  <property name="rightMargin">
-                  <number>2</number>
+                  <number>0</number>
                  </property>
                  <property name="bottomMargin">
-                  <number>2</number>
+                  <number>0</number>
                  </property>
+                 <item alignment="Qt::AlignHCenter">
+                  <widget class="QWidget" name="wdgGoalTitle" native="true">
+                   <layout class="QHBoxLayout" name="horizontalLayout_5">
+                    <item>
+                     <widget class="Emoji" name="emojiGoal">
+                      <property name="toolTip">
+                       <string>Manuscript word count target</string>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="emoji" stdset="0">
+                       <string>bullseye</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="lblGoal">
+                      <property name="toolTip">
+                       <string>Manuscript word count target</string>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QToolButton" name="btnEditGoal">
+                      <property name="cursor">
+                       <cursorShape>PointingHandCursor</cursorShape>
+                      </property>
+                      <property name="toolTip">
+                       <string>Edit manuscript word count goal</string>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="Line" name="line_2">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                  </widget>
+                 </item>
                 </layout>
                </widget>
                <widget class="QWidget" name="pageReadability">
@@ -905,6 +944,11 @@
    <class>ManuscriptTextEditor</class>
    <extends>QTextEdit</extends>
    <header>src.main.python.plotlyst.view.widget.manuscript</header>
+  </customwidget>
+  <customwidget>
+   <class>Emoji</class>
+   <extends>QLabel</extends>
+   <header>src.main.python.plotlyst.view.widget.display</header>
   </customwidget>
  </customwidgets>
  <resources/>

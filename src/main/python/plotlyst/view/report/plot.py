@@ -17,34 +17,73 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import List, Optional
+from typing import List
 
+import qtanim
 from PyQt6.QtCharts import QSplineSeries, QValueAxis, QLegend
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QPen, QColor
-from PyQt6.QtWidgets import QPushButton, QButtonGroup
 from overrides import overrides
-from qthandy import flow, clear_layout
+from qthandy import clear_layout, vspacer, bold
 
 from src.main.python.plotlyst.core.domain import Novel, Plot
-from src.main.python.plotlyst.view.common import pointy, icon_to_html_img
+from src.main.python.plotlyst.view.common import icon_to_html_img
 from src.main.python.plotlyst.view.generated.report.plot_report_ui import Ui_PlotReport
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.report import AbstractReport
+from src.main.python.plotlyst.view.widget.button import EyeToggle
 from src.main.python.plotlyst.view.widget.chart import BaseChart
+from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
 
 
-class _PlotButton(QPushButton):
+class PlotArcNode(ContainerNode):
+    plotToggled = pyqtSignal(Plot, bool)
+
     def __init__(self, plot: Plot, parent=None):
-        super(_PlotButton, self).__init__(parent)
-        self.plot = plot
+        super(PlotArcNode, self).__init__(plot.text, parent)
+        self._plot = plot
 
-        self.setText(plot.text)
-        if plot.icon:
-            self.setIcon(IconRegistry.from_name(plot.icon, plot.icon_color))
+        self.setPlusButtonEnabled(False)
+        self.setMenuEnabled(False)
+        self.setSelectionEnabled(False)
 
-        self.setCheckable(True)
-        pointy(self)
+        self._btnVisible = EyeToggle()
+        self._btnVisible.setToolTip('Toggle arc')
+        self._btnVisible.toggled.connect(self._toggled)
+        self._wdgTitle.layout().addWidget(self._btnVisible)
+
+        self.refresh()
+
+    def refresh(self):
+        self._lblTitle.setText(self._plot.text)
+        if self._plot.icon:
+            self._icon.setIcon(IconRegistry.from_name(self._plot.icon, self._plot.icon_color))
+            self._icon.setVisible(True)
+        else:
+            self._icon.setHidden(True)
+
+    def _toggled(self, toggled: bool):
+        bold(self._lblTitle, toggled)
+        self.plotToggled.emit(self._plot, toggled)
+
+
+class ArcsTreeView(TreeView):
+    plotToggled = pyqtSignal(Plot, bool)
+
+    def __init__(self, novel: Novel, parent=None):
+        super(ArcsTreeView, self).__init__(parent)
+        self._novel = novel
+        self._centralWidget.setProperty('relaxed-white-bg', True)
+
+    def refresh(self):
+        clear_layout(self._centralWidget)
+
+        for plot in self._novel.plots:
+            node = PlotArcNode(plot)
+            node.plotToggled.connect(self.plotToggled.emit)
+            self._centralWidget.layout().addWidget(node)
+
+        self._centralWidget.layout().addWidget(vspacer())
 
 
 class PlotReport(AbstractReport, Ui_PlotReport):
@@ -54,31 +93,24 @@ class PlotReport(AbstractReport, Ui_PlotReport):
 
         self.chartValues = PlotValuesArcChart(self.novel)
         self.chartViewPlotValues.setChart(self.chartValues)
-        flow(self.wdgPlotContainer)
-        self._btnGroupPlots: Optional[QButtonGroup] = None
+        self._treeView = ArcsTreeView(novel)
+        self._treeView.plotToggled.connect(self._plotToggled)
+        self.wdgTreeParent.layout().addWidget(self._treeView)
+        self.splitter.setSizes([150, 500])
+
+        self.btnArcsToggle.clicked.connect(self._arcsSelectorClicked)
 
         self.refresh()
 
     @overrides
     def refresh(self):
-        clear_layout(self.wdgPlotContainer)
-        self._btnGroupPlots = QButtonGroup()
-        self._btnGroupPlots.setExclusive(False)
+        self._treeView.refresh()
 
-        for plot in self.novel.plots:
-            btn = _PlotButton(plot)
-            self._btnGroupPlots.addButton(btn)
-            self.wdgPlotContainer.layout().addWidget(btn)
+    def _arcsSelectorClicked(self, toggled: bool):
+        qtanim.toggle_expansion(self.wdgTreeParent, toggled)
 
-        self._btnGroupPlots.buttonToggled.connect(self._plotToggled)
-
-    def _plotToggled(self):
-        plots = []
-        for btn in self._btnGroupPlots.buttons():
-            if btn.isChecked():
-                plots.append(btn.plot)
-
-        self.chartValues.refresh(plots)
+    def _plotToggled(self, plot: Plot, toggled: bool):
+        self.chartValues.setPlotVisible(plot, toggled)
 
 
 class PlotValuesArcChart(BaseChart):
@@ -89,9 +121,19 @@ class PlotValuesArcChart(BaseChart):
         self.legend().setMarkerShape(QLegend.MarkerShape.MarkerShapeCircle)
         self.legend().show()
 
+        self._plots: List[Plot] = []
+
         self.setTitle('Plot value charges')
 
-    def refresh(self, plots: List[Plot]):
+    def setPlotVisible(self, plot: Plot, visible: bool):
+        if visible:
+            self._plots.append(plot)
+        else:
+            self._plots.remove(plot)
+
+        self.refresh()
+
+    def refresh(self):
         self.reset()
 
         axisX = QValueAxis()
@@ -104,7 +146,7 @@ class PlotValuesArcChart(BaseChart):
 
         min_ = 0
         max_ = 0
-        for plot in plots:
+        for plot in self._plots:
             for value in plot.values:
                 charge = 0
                 series = QSplineSeries()
@@ -124,15 +166,13 @@ class PlotValuesArcChart(BaseChart):
                                 charge += scene_p_value.charge
                                 series.append(i + 1, charge)
 
-                # points = series.point
-                # min_ = min(min([x.y() for x in points]), min_)
-                # max_ = max(max([x.y() for x in points]), max_)
+                points = series.points()
+                min_ = min(min([x.y() for x in points]), min_)
+                max_ = max(max([x.y() for x in points]), max_)
 
                 self.addSeries(series)
-                # series.attachAxis(axisX)
-                # series.attachAxis(axisY)
+                series.attachAxis(axisY)
 
         limit = max(abs(min_), max_)
-
-        axisY.setRange(-limit - 3, limit + 3)
+        axisY.setRange(-limit - 1, limit + 1)
         axisY.setVisible(False)

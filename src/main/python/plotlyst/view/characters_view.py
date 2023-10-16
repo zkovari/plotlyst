@@ -17,21 +17,23 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from functools import partial
 from typing import Optional, List
 
+import qtanim
 from PyQt6.QtCore import QItemSelection, QPoint
 from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import busy, gc, incr_font, bold, vbox, vspacer, transparent, underline
-from qthandy.filter import InstantTooltipEventFilter
+from qthandy import busy, gc, incr_font, bold
+from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
-from src.main.python.plotlyst.core.domain import Novel, Character, RelationsNetwork, CharacterNode
+from src.main.python.plotlyst.core.domain import Novel, Character
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
+from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent, NovelSyncEvent
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import proxy
@@ -48,7 +50,8 @@ from src.main.python.plotlyst.view.style.base import apply_bg_image
 from src.main.python.plotlyst.view.widget.cards import CharacterCard, CardSizeRatio
 from src.main.python.plotlyst.view.widget.character import CharacterComparisonWidget, LayoutType, \
     CharacterComparisonAttribute
-from src.main.python.plotlyst.view.widget.character.relations import RelationsView, RelationsSelectorBox
+from src.main.python.plotlyst.view.widget.character.comp import CharactersTreeView
+from src.main.python.plotlyst.view.widget.character.network import CharacterNetworkView
 from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget, CharactersProgressWidget
 
 
@@ -64,9 +67,10 @@ class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
 
         self.refresh()
 
-        event_dispatcher.register(self, CharacterChangedEvent)
-        event_dispatcher.register(self, CharacterDeletedEvent)
-        event_dispatcher.register(self, NovelSyncEvent)
+        dispatcher = event_dispatchers.instance(self.novel)
+        dispatcher.register(self, CharacterChangedEvent)
+        dispatcher.register(self, CharacterDeletedEvent)
+        dispatcher.register(self, NovelSyncEvent)
 
     @overrides
     def event_received(self, event: Event):
@@ -141,46 +145,37 @@ class CharactersView(AbstractNovelView):
         self.ui.cards.setCardsWidth(142)
         self._init_cards()
 
-        self.ui.wdgComparisonCharacterSelector.setExclusive(False)
-        transparent(self.ui.btnCharactersLabel)
-        self.ui.btnCharactersLabel.setIcon(IconRegistry.character_icon())
-        underline(self.ui.btnCharactersLabel)
-        transparent(self.ui.btnComparisonLabel)
-        underline(self.ui.btnComparisonLabel)
-        self.ui.btnComparisonLabel.setIcon(IconRegistry.from_name('mdi.compare-horizontal'))
         self.ui.btnHorizontalComparison.setIcon(IconRegistry.from_name('ph.columns-bold'))
         self.ui.btnVerticalComparison.setIcon(IconRegistry.from_name('ph.rows-bold'))
         self.ui.btnGridComparison.setIcon(IconRegistry.from_name('ph.grid-four-bold'))
-        self.ui.btnSummaryComparison.setIcon(IconRegistry.synopsis_icon())
-        self.ui.btnBigFiveComparison.setIcon(IconRegistry.big_five_icon())
+        self.ui.btnSummaryComparison.setIcon(IconRegistry.synopsis_icon(color_on=PLOTLYST_SECONDARY_COLOR))
+        self.ui.btnBigFiveComparison.setIcon(IconRegistry.big_five_icon(color_on=PLOTLYST_SECONDARY_COLOR))
 
-        self._wdgComparison = CharacterComparisonWidget(self.ui.pageComparison)
+        self.ui.splitterCompTree.setSizes([150, 500])
+        self._wdgComparison = CharacterComparisonWidget(self.novel, self.ui.pageComparison)
         self.ui.scrollAreaComparisonContent.layout().addWidget(self._wdgComparison)
-        self.ui.wdgComparisonCharacterSelector.characterToggled.connect(self._wdgComparison.updateCharacter)
+        self._wdgCharactersCompTree = CharactersTreeView(self.novel)
+        self.ui.wdgCharactersCompTreeParent.layout().addWidget(self._wdgCharactersCompTree)
+        self.ui.btnCharactersToggle.setIcon(IconRegistry.character_icon())
+        self.ui.btnCharactersToggle.clicked.connect(
+            partial(qtanim.toggle_expansion, self.ui.wdgCharactersCompTreeParent))
+
+        self._wdgCharactersCompTree.characterToggled.connect(self._wdgComparison.updateCharacter)
         self.ui.btnHorizontalComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.HORIZONTAL))
         self.ui.btnVerticalComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.VERTICAL))
         self.ui.btnGridComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.FLOW))
         self.ui.btnSummaryComparison.clicked.connect(
             lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.SUMMARY))
+        self.ui.btnFacultiesComparison.clicked.connect(
+            lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.FACULTIES))
         self.ui.btnBigFiveComparison.clicked.connect(
             lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.BIG_FIVE))
+        for btn in self.ui.btnGroupComparison.buttons():
+            btn.installEventFilter(OpacityEventFilter(btn, ignoreCheckedButton=True))
 
-        self._relations = RelationsView(self.novel)
+        self._relations = CharacterNetworkView(self.novel)
         self.ui.relationsParent.layout().addWidget(self._relations)
-
-        self._relationsSelector = RelationsSelectorBox(self.novel)
-        vbox(self.ui.wdgGraphSelectorParent).addWidget(self._relationsSelector)
-        self.ui.wdgGraphSelectorParent.layout().addWidget(vspacer())
-        self._relationsSelector.currentChanged.connect(lambda i, w: self._relations.refresh(w.network()))
-
-        self._relations.relationsScene().charactersChanged.connect(self._relationsSelector.refreshCharacters)
-
-        node = CharacterNode(50, 50)
-        if self.novel.characters:
-            node.set_character(self.novel.characters[0])
-        network1 = RelationsNetwork('Network 1', icon='ph.share-network-bold', nodes=[node])
-        self._relationsSelector.addNetwork(network1)
-        self._relationsSelector.addNetwork(RelationsNetwork('Network 2', icon='ph.share-network-bold'))
+        self.ui.wdgGraphSelectorParent.setVisible(False)
 
         self.ui.networkSplitter.setSizes([100, 500])
 
@@ -210,6 +205,7 @@ class CharactersView(AbstractNovelView):
 
         self._init_cards()
         self._progress.refresh()
+        self._wdgCharactersCompTree.refresh()
 
     def _show_card_menu(self, card: CharacterCard, pos: QPoint):
         menu = MenuWidget()
@@ -260,9 +256,11 @@ class CharactersView(AbstractNovelView):
         elif self.ui.btnBackstoryView.isChecked():
             self.ui.wdgToolbar.setVisible(False)
             self.ui.wdgCharacterSelector.updateCharacters(self.novel.characters, checkAll=False)
+        elif self.ui.btnRelationsView.isChecked():
+            self._relations.refresh()
+            self.ui.wdgToolbar.setVisible(False)
         elif self.ui.btnComparison.isChecked():
             self.ui.wdgToolbar.setVisible(False)
-            self.ui.wdgComparisonCharacterSelector.updateCharacters(self.novel.characters, checkAll=False)
         else:
             self.ui.wdgToolbar.setVisible(False)
 
@@ -297,7 +295,7 @@ class CharactersView(AbstractNovelView):
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
         self.title.setVisible(True)
 
-        emit_event(CharacterChangedEvent(self, character))
+        emit_event(self.novel, CharacterChangedEvent(self, character))
         gc(self.editor.widget)
         gc(self.editor)
         self.editor = None
@@ -322,7 +320,7 @@ class CharactersView(AbstractNovelView):
 
         if character and delete_character(self.novel, character):
             self.ui.wdgCharacterSelector.removeCharacter(character)
-            emit_event(CharacterDeletedEvent(self, character))
+            emit_event(self.novel, CharacterDeletedEvent(self, character))
             self.refresh()
 
     @busy

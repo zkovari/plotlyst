@@ -27,13 +27,13 @@ from PyQt6.QtCore import pyqtProperty, QSize
 from PyQt6.QtGui import QPainter, QShowEvent, QColor
 from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy, QTextBrowser
 from overrides import overrides
-from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon
+from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon, pointy
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.core.template import Role, protagonist_role
 from src.main.python.plotlyst.core.text import wc
-from src.main.python.plotlyst.view.common import emoji_font, insert_before_the_end, pointy, \
+from src.main.python.plotlyst.view.common import emoji_font, insert_before_the_end, \
     ButtonPressResizeEventFilter, restyle
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
@@ -157,6 +157,7 @@ class WordsDisplay(QLabel):
             self._text = f'{count} word{"s" if count > 1 else ""}'
             self.setText(self._text)
         else:
+            self._text = ''
             self.clear()
 
     def calculateSecondaryWordCount(self, text: str):

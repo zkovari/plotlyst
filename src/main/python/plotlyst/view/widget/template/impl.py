@@ -30,7 +30,7 @@ from PyQt6.QtWidgets import QFrame, QHBoxLayout, QWidget, QLineEdit, QToolButton
     QSpinBox, QButtonGroup, QSizePolicy, QListView, QPushButton, QMenu, QVBoxLayout, QSlider
 from overrides import overrides
 from qthandy import spacer, hbox, vbox, bold, line, underline, transparent, margins, \
-    decr_font, retain_when_hidden, btn_popup_menu, vspacer, gc, italic, sp
+    decr_font, retain_when_hidden, btn_popup_menu, vspacer, gc, italic, sp, pointy
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
@@ -42,7 +42,7 @@ from src.main.python.plotlyst.core.template import TemplateField, SelectionItem,
     demon_field
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
-from src.main.python.plotlyst.view.common import pointy, wrap, emoji_font, hmax, action, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import wrap, emoji_font, hmax, action, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui import Ui_FieldTextSelectionWidget
 from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -92,6 +92,9 @@ class TextSelectionWidget(SecondaryActionPushButton):
         if self._ignored_field:
             return None
         return self._selected.text if self._selected else ''
+
+    def setIgnoredTooltip(self, tooltip: str):
+        self._popup.setIgnoredTooltip(tooltip)
 
     def setValue(self, value: Optional[str]):
         self._selected = self._items.get(value)
@@ -145,10 +148,13 @@ class TextSelectionWidget(SecondaryActionPushButton):
             self.tblItems.setColumnWidth(TemplateFieldSelectionModel.ColIcon, 26)
             self.tblItems.hideColumn(TemplateFieldSelectionModel.ColBgColor)
 
+            underline(self.btnIgnore)
             transparent(self.btnIgnore)
-            self.btnIgnore.setIcon(IconRegistry.from_name('ei.remove-circle', 'red'))
-            self.btnIgnore.clicked.connect(self.ignored.emit)
+            self.btnIgnore.setIcon(IconRegistry.from_name('ri.share-forward-fill'))
+            self.btnIgnore.installEventFilter(OpacityEventFilter(self.btnIgnore))
             self.btnIgnore.installEventFilter(ButtonPressResizeEventFilter(self.btnIgnore))
+            self.btnIgnore.clicked.connect(self.ignored.emit)
+
             self.btnSelect.setIcon(IconRegistry.ok_icon('white'))
             self.tblItems.selectionModel().selectionChanged.connect(self._selection_changed)
             self.tblItems.doubleClicked.connect(self._select)
@@ -159,6 +165,9 @@ class TextSelectionWidget(SecondaryActionPushButton):
         @overrides
         def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
             pass  # catch event not to close the popup
+
+        def setIgnoredTooltip(self, tooltip: str):
+            self.btnIgnore.setToolTip(tooltip)
 
         def setValue(self, value: str):
             if not value:
@@ -490,6 +499,8 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
         super(SmallTextTemplateFieldWidget, self).__init__(field, parent)
         _layout = vbox(self, margin=self._boxMargin, spacing=self._boxSpacing)
         self.wdgEditor = AutoAdjustableTextEdit(height=minHeight)
+        self.wdgEditor.setProperty('white-bg', True)
+        self.wdgEditor.setProperty('rounded', True)
         self.wdgEditor.setAcceptRichText(False)
         self.wdgEditor.setTabChangesFocus(True)
         self.wdgEditor.setPlaceholderText(field.placeholder)
@@ -622,6 +633,7 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super(EnneagramFieldWidget, self).__init__(field, parent)
         self.wdgEditor = TextSelectionWidget(field, enneagram_help)
+        self.wdgEditor.setIgnoredTooltip('Ignore Enneagram personality type for this character')
         self._defaultTooltip: str = 'Select Enneagram personality'
         _layout = hbox(self)
         _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignTop)
@@ -702,6 +714,7 @@ class MbtiFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super(MbtiFieldWidget, self).__init__(field, parent)
         self.wdgEditor = TextSelectionWidget(field, mbti_help)
+        self.wdgEditor.setIgnoredTooltip('Ignore MBTI personality type for this character')
         self._defaultTooltip: str = 'Select MBTI personality type'
         self.wdgEditor.setToolTip(self._defaultTooltip)
 

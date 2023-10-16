@@ -26,6 +26,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Any, Dict
 
+from PyQt6.QtCore import Qt
 from dataclasses_json import dataclass_json, Undefined, config
 from overrides import overrides
 
@@ -364,7 +365,7 @@ class Character:
         return hash(str(self.id))
 
 
-class NpcCharacter(Character):
+class PlaceholderCharacter(Character):
     pass
 
 
@@ -493,6 +494,8 @@ class PlotType(Enum):
     Main = 'main'
     Internal = 'internal'
     Subplot = 'subplot'
+    Relation = 'relation'
+    Global = 'global'
 
 
 @dataclass
@@ -515,14 +518,16 @@ class PlotPrincipleType(Enum):
     GOAL = 0
     ANTAGONIST = 1
     CONFLICT = 2
-    CONSEQUENCES = 3
-    PROGRESS = 4
-    SETBACK = 5
-    TURNS = 6
-    CRISIS = 7
     QUESTION = 8
     STAKES = 9
     THEME = 10
+    POSITIVE_CHANGE = 11
+    NEGATIVE_CHANGE = 12
+    DESIRE = 13
+    NEED = 14
+    INTERNAL_CONFLICT = 15
+    EXTERNAL_CONFLICT = 16
+    FLAW = 17
 
 
 @dataclass
@@ -591,18 +596,64 @@ class SceneBased(ABC):
                     return s
 
 
+def default_plot_value() -> PlotValue:
+    return PlotValue('Progress', icon='fa5s.chart-line')
+
+
+class PlotProgressionItemType(Enum):
+    BEGINNING = 0
+    MIDDLE = 1
+    ENDING = 2
+    EVENT = 3
+
+
+@dataclass
+class PlotProgressionItem:
+    type: PlotProgressionItemType
+    text: str = ''
+
+
 @dataclass
 class Plot(SelectionItem, CharacterBased):
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     plot_type: PlotType = PlotType.Main
     values: List[PlotValue] = field(default_factory=list)
     character_id: Optional[uuid.UUID] = None
+    relation_character_id: Optional[uuid.UUID] = None
     question: str = ''
     principles: List[PlotPrinciple] = field(default_factory=list)
     events: List[PlotEvent] = field(default_factory=list)
+    default_value: PlotValue = field(default_factory=default_plot_value)
+    default_value_enabled: bool = True
+    progression: List[PlotProgressionItem] = field(default_factory=list)
 
     def __post_init__(self):
         self._character: Optional[Character] = None
+        self._relation_character: Optional[Character] = None
+
+    def relation_character(self, novel: 'Novel') -> Optional[Character]:
+        if not self.relation_character_id:
+            return None
+        if not self._relation_character:
+            for c in novel.characters:
+                if c.id == self.relation_character_id:
+                    self._relation_character = c
+                    break
+
+        return self._relation_character
+
+    def set_relation_character(self, character: Optional[Character]):
+        if character is None:
+            self.reset_character()
+        else:
+            self.relation_character_id = character.id
+            self._relation_character = character
+
+    @overrides
+    def reset_character(self):
+        super().reset_character()
+        self.relation_character_id = None
+        self._relation_character = None
 
     @overrides
     def __eq__(self, other: 'Plot'):
@@ -696,19 +747,10 @@ class ScenePlotReference:
     data: ScenePlotReferenceData = field(default_factory=ScenePlotReferenceData)
 
 
-class SceneType(Enum):
-    DEFAULT = ''
-    ACTION = 'action'
-    REACTION = 'reaction'
-    HAPPENING = 'happening'
-    EXPOSITION = 'exposition'
-    SUMMARY = 'summary'
-
-
 class SceneStructureItemType(Enum):
     ACTION = 0
     CONFLICT = 1
-    OUTCOME = 2
+    CLIMAX = 2
     REACTION = 3
     DILEMMA = 4
     DECISION = 5
@@ -727,6 +769,10 @@ class SceneStructureItemType(Enum):
     SUMMARY = 18
     PROGRESS = 19
     SETBACK = 20
+    RESOLUTION = 21
+    BUILDUP = 22
+    DISTURBANCE = 23
+    FALSE_VICTORY = 24
 
 
 class SceneOutcome(Enum):
@@ -771,13 +817,53 @@ class ConflictReference:
                 return conflict
 
 
-class Stake:
+class Motivation(Enum):
     PHYSIOLOGICAL = 0
     SAFETY = 1
     BELONGING = 2
     ESTEEM = 3
     SELF_ACTUALIZATION = 4
     SELF_TRANSCENDENCE = 5
+
+    def display_name(self) -> str:
+        if self == Motivation.PHYSIOLOGICAL:
+            return 'Physiological needs'
+        elif self == Motivation.SAFETY:
+            return 'Security and safety'
+        elif self == Motivation.BELONGING:
+            return 'Belonging and love'
+        elif self == Motivation.ESTEEM:
+            return 'Esteem and success'
+        else:
+            return self.name.lower().replace('_', '-').capitalize()
+
+    def icon(self) -> str:
+        if self == Motivation.PHYSIOLOGICAL:
+            return 'mdi.water'
+        elif self == Motivation.SAFETY:
+            return 'mdi.shield-half-full'
+        elif self == Motivation.BELONGING:
+            return 'fa5s.hand-holding-heart'
+        elif self == Motivation.ESTEEM:
+            return 'fa5s.award'
+        elif self == Motivation.SELF_ACTUALIZATION:
+            return 'mdi.yoga'
+        elif self == Motivation.SELF_TRANSCENDENCE:
+            return 'mdi6.meditation'
+
+    def color(self) -> str:
+        if self == Motivation.PHYSIOLOGICAL:
+            return '#023e8a'
+        elif self == Motivation.SAFETY:
+            return '#8900f2'
+        elif self == Motivation.BELONGING:
+            return '#d00000'
+        elif self == Motivation.ESTEEM:
+            return '#00b4d8'
+        elif self == Motivation.SELF_ACTUALIZATION:
+            return '#52b788'
+        elif self == Motivation.SELF_TRANSCENDENCE:
+            return '#c38e70'
 
 
 @dataclass
@@ -804,9 +890,10 @@ class SceneStructureAgenda(CharacterBased):
     items: List[SceneStructureItem] = field(default_factory=list)
     conflict_references: List[ConflictReference] = field(default_factory=list)
     goal_references: List[GoalReference] = field(default_factory=list)
-    outcome: Optional[SceneOutcome] = None
-    beginning_emotion: int = NEUTRAL
-    ending_emotion: int = NEUTRAL
+    emotion: Optional[int] = None
+    motivations: Dict[int, int] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
+
+    story_elements: List['StoryElement'] = field(default_factory=list)
 
     def __post_init__(self):
         self._character: Optional[Character] = None
@@ -866,12 +953,82 @@ class SceneDrive:
     deus_ex_machina: bool = field(default=False, metadata=config(exclude=exclude_if_false))
 
 
+class ScenePurposeType(Enum):
+    Story = 'story'
+    Reaction = 'reaction'
+    Character = 'character'
+    Emotion = 'emotion'
+    Setup = 'setup'
+    Exposition = 'exposition'
+    Other = 'other'
+
+
+@dataclass
+class ScenePurpose:
+    type: ScenePurposeType
+    display_name: str
+    keywords: List[str] = field(default_factory=list)
+    include: List[ScenePurposeType] = field(default_factory=list)
+    help_include: str = ''
+    pacing: str = ''
+
+
+advance_story_scene_purpose = ScenePurpose(ScenePurposeType.Story, 'Advance\nstory',
+                                           keywords=['goal', 'conflict', 'action', 'outcome', 'tension', 'revelation',
+                                                     'mystery', 'catalyst'],
+                                           include=[ScenePurposeType.Character, ScenePurposeType.Emotion,
+                                                    ScenePurposeType.Setup],
+                                           pacing='fast-medium')
+reaction_story_scene_purpose = ScenePurpose(ScenePurposeType.Reaction, 'Reaction',
+                                            keywords=['reflection', 'dilemma', 'decision', 'introspection', 'analysis',
+                                                      'new goal'],
+                                            include=[ScenePurposeType.Character, ScenePurposeType.Emotion],
+                                            pacing='medium-slow')
+character_story_scene_purpose = ScenePurpose(ScenePurposeType.Character, 'Character\ndevelopment',
+                                             keywords=['internal conflict', 'relations'],
+                                             include=[ScenePurposeType.Emotion])
+emotion_story_scene_purpose = ScenePurpose(ScenePurposeType.Emotion, 'Emotion',
+                                           keywords=['mood', 'atmosphere', 'emotion'])
+setup_story_scene_purpose = ScenePurpose(ScenePurposeType.Setup, 'Setup',
+                                         keywords=['plant', 'foreshadowing', 'setup', 'happening', 'transition'])
+exposition_story_scene_purpose = ScenePurpose(ScenePurposeType.Exposition, 'Exposition',
+                                              keywords=['introduction', 'description', 'information'])
+
+scene_purposes: Dict[ScenePurposeType, ScenePurpose] = {
+    ScenePurposeType.Story: advance_story_scene_purpose,
+    ScenePurposeType.Reaction: reaction_story_scene_purpose,
+    ScenePurposeType.Character: character_story_scene_purpose,
+    ScenePurposeType.Emotion: emotion_story_scene_purpose,
+    ScenePurposeType.Setup: setup_story_scene_purpose,
+    ScenePurposeType.Exposition: exposition_story_scene_purpose,
+}
+
+
+class StoryElementType(Enum):
+    Plot = 'plot'
+    Arc = 'arc'
+    Outcome = 'outcome'
+    Consequences = 'consequences'
+    Goal = 'goal'
+    Motivation = 'motivation'
+    Conflict = 'conflict'
+    Decision = 'decision'
+    Emotion = 'emotion'
+
+
+@dataclass
+class StoryElement:
+    type: StoryElementType
+    ref: Optional[uuid.UUID] = None
+    text: str = ''
+    intensity: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+
+
 @dataclass
 class Scene:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     synopsis: str = ''
-    type: SceneType = SceneType.DEFAULT
     pov: Optional[Character] = None
     characters: List[Character] = field(default_factory=list)
     agendas: List[SceneStructureAgenda] = field(default_factory=list)
@@ -886,7 +1043,10 @@ class Scene:
     tag_references: List[TagReference] = field(default_factory=list)
     document: Optional['Document'] = None
     manuscript: Optional['Document'] = None
-    drive: SceneDrive = SceneDrive()
+    drive: SceneDrive = field(default_factory=SceneDrive)
+    purpose: Optional[ScenePurposeType] = None
+    outcome: Optional[SceneOutcome] = None
+    story_elements: List[StoryElement] = field(default_factory=list)
 
     def beat(self, novel: 'Novel') -> Optional[StoryBeat]:
         structure = novel.active_story_structure
@@ -943,10 +1103,8 @@ class Scene:
         return self.title if self.title else f'Scene {novel.scenes.index(self) + 1}'
 
     def __is_outcome(self, expected) -> bool:
-        if self.agendas:
-            for item_ in reversed(self.agendas[0].items):
-                if item_.outcome is not None:
-                    return item_.outcome == expected
+        if self.outcome and self.outcome == expected:
+            return True
 
         return False
 
@@ -972,6 +1130,7 @@ class WorldBuildingEntityType(Enum):
     SETTING = 2
     GROUP = 3
     ITEM = 4
+    CONTAINER = 5
 
 
 @dataclass
@@ -1024,6 +1183,33 @@ class TaskStatus(SelectionItem):
         return hash(str(id))
 
 
+tag_characterization = SelectionItem('Characterization', icon='fa5s.user', icon_color='darkBlue')
+tag_worldbuilding = SelectionItem('Worldbuilding', icon='mdi.globe-model', icon_color='#2d6a4f')
+tag_brainstorming = SelectionItem('Brainstorming', icon='fa5s.brain', icon_color='#FF5733')
+tag_research = SelectionItem('Research', icon='mdi.library', icon_color='#0066CC')
+tag_writing = SelectionItem('Writing', icon='mdi.typewriter', icon_color='#9933CC')
+tag_plotting = SelectionItem('Plotting', icon='fa5s.theater-masks', icon_color='#FF6666')
+tag_theme = SelectionItem('Theme', icon='mdi.butterfly-outline', icon_color='#9d4edd')
+tag_outlining = SelectionItem('Outlining', icon='fa5s.list', icon_color='#99CC00')
+tag_revision = SelectionItem('Revision', icon='mdi.clipboard-edit-outline', icon_color='#FF9933')
+tag_drafting = SelectionItem('Drafting', icon='fa5s.dog', icon_color='#66CC33')
+tag_editing = SelectionItem('Editing', icon='fa5s.cat', icon_color='#ff758f')
+tag_collect_feedback = SelectionItem('Collect feedback', icon='msc.feedback', icon_color='#5e60ce')
+tag_publishing = SelectionItem('Publishing', icon='fa5s.cloud-upload-alt', icon_color='#FF9900')
+tag_marketing = SelectionItem('Marketing', icon='fa5s.bullhorn', icon_color='#FF3366')
+tag_book_cover_design = SelectionItem('Book cover design', icon='fa5s.book', icon_color='#FF66CC')
+tag_formatting = SelectionItem('Formatting', icon='mdi.format-pilcrow', icon_color='#006600')
+
+_tags = [
+    tag_characterization, tag_worldbuilding, tag_brainstorming, tag_research, tag_writing,
+    tag_plotting, tag_theme, tag_outlining, tag_revision, tag_drafting, tag_editing,
+    tag_collect_feedback, tag_publishing, tag_marketing, tag_book_cover_design, tag_formatting
+]
+task_tags: Dict[str, SelectionItem] = {}
+for tag in _tags:
+    task_tags[tag.text] = tag
+
+
 @dataclass
 class Task(CharacterBased):
     title: str
@@ -1033,6 +1219,7 @@ class Task(CharacterBased):
     resolved_date: Optional[datetime] = None
     summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
     character_id: Optional[uuid.UUID] = None
+    tags: List[str] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
 
     def __post_init__(self):
         if self.creation_date is None:
@@ -1105,7 +1292,7 @@ disturbance_beat = StoryBeat(text='Disturbance',
                              id=uuid.UUID('a954f949-8be9-46d6-8ebf-f9f76f482944'),
                              icon='mdi.chemical-weapon',
                              icon_color='#e63946',
-                             description="An initial disturbance that already upends the protagonist's life early on.",
+                             description="Disturbs the protagonist's life and sets the story in motion.",
                              act=1, percentage=1)
 characteristic_moment_beat = StoryBeat(text='Characteristic Moment',
                                        id=uuid.UUID('b50c32e4-1927-4633-b5a3-9765aeaee7ad'),
@@ -1477,7 +1664,7 @@ class ImportOrigin:
 class NovelDescriptor:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
-    lang_settings: LanguageSettings = LanguageSettings()
+    lang_settings: LanguageSettings = field(default_factory=LanguageSettings)
     import_origin: Optional[ImportOrigin] = None
     subtitle: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
@@ -1708,25 +1895,129 @@ def default_tags() -> Dict[TagType, List[Tag]]:
     return tags
 
 
+class DiagramNodeType(Enum):
+    CHARACTER = 'character'
+    STICKER = 'sticker'
+    EVENT = 'event'
+    COMMENT = 'comment'
+    SETUP = 'setup'
+
+
+NODE_SUBTYPE_GOAL = 'goal'
+NODE_SUBTYPE_CONFLICT = 'conflict'
+NODE_SUBTYPE_DISTURBANCE = 'disturbance'
+NODE_SUBTYPE_BACKSTORY = 'backstory'
+NODE_SUBTYPE_INTERNAL_CONFLICT = 'internal_conflict'
+NODE_SUBTYPE_QUESTION = 'question'
+NODE_SUBTYPE_FORESHADOWING = 'foreshadowing'
+NODE_SUBTYPE_TOOL = 'tool'
+NODE_SUBTYPE_COST = 'cost'
+
+
 @dataclass
-class Node:
+class Node(CharacterBased):
     x: float
     y: float
-
-
-@dataclass
-class CharacterNode(Node, CharacterBased):
+    type: DiagramNodeType
+    subtype: str = field(default='', metadata=config(exclude=exclude_if_empty))
     id: uuid.UUID = field(default_factory=uuid.uuid4)
-    character_id: Optional[uuid.UUID] = None
+    character_id: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
+    icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    color: str = field(default='black', metadata=config(exclude=exclude_if_black))
+    text: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    size: int = 12
+    bold: bool = field(default=False, metadata=config(exclude=exclude_if_false))
+    italic: bool = field(default=False, metadata=config(exclude=exclude_if_false))
+    underline: bool = field(default=False, metadata=config(exclude=exclude_if_false))
+
+    def __post_init__(self):
+        self._character: Optional[Character] = None
+
+
+def to_node(x: float, y: float, type: DiagramNodeType, subtype: str = '', default_size: int = 12) -> Node:
+    node = Node(x, y, type=type, subtype=subtype)
+    if type == DiagramNodeType.EVENT:
+        node.size = max(16, default_size)
+        if subtype in [NODE_SUBTYPE_BACKSTORY, NODE_SUBTYPE_INTERNAL_CONFLICT]:
+            node.size = max(14, default_size - 1)
+
+    if subtype == NODE_SUBTYPE_GOAL:
+        node.icon = 'mdi.target'
+        node.color = 'darkBlue'
+    elif subtype == NODE_SUBTYPE_CONFLICT:
+        node.icon = 'mdi.sword-cross'
+        node.color = '#f3a712'
+    elif subtype == NODE_SUBTYPE_BACKSTORY:
+        node.icon = 'fa5s.archive'
+        node.color = '#9c6644'
+    elif subtype == NODE_SUBTYPE_INTERNAL_CONFLICT:
+        node.icon = 'mdi.mirror'
+        node.color = '#94b0da'
+    elif subtype == NODE_SUBTYPE_DISTURBANCE:
+        node.icon = 'mdi.bell-alert-outline'
+        node.color = '#a2ad59'
+    elif subtype == NODE_SUBTYPE_QUESTION:
+        node.icon = 'ei.question-sign'
+    elif subtype == NODE_SUBTYPE_FORESHADOWING:
+        node.icon = 'mdi6.crystal-ball'
+
+    return node
 
 
 @dataclass
-class RelationsNetwork:
+class Connector:
+    source_id: uuid.UUID
+    target_id: uuid.UUID
+    source_angle: float
+    target_angle: float
+    type: str = ''
+    pen: Qt.PenStyle = Qt.PenStyle.SolidLine
+    width: int = 1
+    icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    color: str = field(default='black', metadata=config(exclude=exclude_if_black))
+    text: str = field(default='', metadata=config(exclude=exclude_if_empty))
+
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class DiagramData:
+    nodes: List[Node] = field(default_factory=list)
+    connectors: List[Connector] = field(default_factory=list)
+
+
+@dataclass
+class Diagram:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
-    nodes: List[CharacterNode] = field(default_factory=list)
+
+    def __post_init__(self):
+        self.loaded: bool = False
+        self.data: Optional[DiagramData] = None
+
+    @overrides
+    def __eq__(self, other: 'Diagram'):
+        if isinstance(other, Diagram):
+            return self.id == other.id
+        return False
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
+
+def default_events_map() -> Diagram:
+    return Diagram('Events', id=uuid.UUID('6c74e40f-d3de-4c83-bcd2-0ca5e626081d'))
+
+
+def default_character_networks() -> List[Diagram]:
+    return [Diagram('Character relations', id=uuid.UUID('bfd1f2d3-cb33-48a6-a09e-b4332c3d1ed1'))]
+
+
+@dataclass
+class Relation(SelectionItem):
+    pass
 
 
 @dataclass
@@ -1758,11 +2049,34 @@ class PanelPreferences:
     scene_chapters_sidebar_toggled: bool = False
 
 
+class NovelSetting(Enum):
+    Structure = 'structure'
+    Storylines = 'storylines'
+    Mindmap = 'mindmap'
+    Characters = 'characters'
+    Scenes = 'scenes'
+    Track_emotion = 'track_emotion'
+    Track_conflict = 'track_conflict'
+    Documents = 'documents'
+    Manuscript = 'manuscript'
+    World_building = 'world_building'
+    Management = 'management'
+
+
 @dataclass
 class NovelPreferences:
     active_stage_id: Optional[uuid.UUID] = None
     docs: DocsPreferences = field(default_factory=DocsPreferences)
     panels: PanelPreferences = field(default_factory=PanelPreferences)
+    settings: Dict[str, Any] = field(default_factory=dict)
+
+    def toggled(self, setting: NovelSetting) -> bool:
+        return self.settings.get(setting.value, True)
+
+
+@dataclass
+class ManuscriptGoals:
+    target_wc: int = 80000
 
 
 @dataclass
@@ -1782,8 +2096,11 @@ class Novel(NovelDescriptor):
     premise: str = ''
     synopsis: Optional['Document'] = None
     prefs: NovelPreferences = field(default_factory=NovelPreferences)
-    world: WorldBuilding = WorldBuilding()
-    board: Board = Board()
+    world: WorldBuilding = field(default_factory=WorldBuilding)
+    board: Board = field(default_factory=Board)
+    manuscript_goals: ManuscriptGoals = field(default_factory=ManuscriptGoals)
+    events_map: Diagram = field(default_factory=default_events_map)
+    character_networks: List[Diagram] = field(default_factory=default_character_networks)
 
     def pov_characters(self) -> List[Character]:
         pov_ids = set()

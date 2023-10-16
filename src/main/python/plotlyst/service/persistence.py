@@ -29,7 +29,7 @@ from overrides import overrides
 from qthandy import ask_confirmation
 
 from src.main.python.plotlyst.core.client import client, json_client
-from src.main.python.plotlyst.core.domain import Novel, Character, Scene, NovelDescriptor, Document, Plot
+from src.main.python.plotlyst.core.domain import Novel, Character, Scene, NovelDescriptor, Document, Plot, Diagram
 from src.main.python.plotlyst.env import app_env
 
 
@@ -48,6 +48,7 @@ class Operation:
     scene: Optional[Scene] = None
     update_image: bool = False
     doc: Optional[Document] = None
+    diagram: Optional[Diagram] = None
 
 
 class RepositoryPersistenceManager(QObject):
@@ -147,6 +148,11 @@ class RepositoryPersistenceManager(QObject):
             self._operations.append(Operation(OperationType.UPDATE, novel=novel, doc=document))
             self._persist_if_test_env()
 
+    def update_diagram(self, novel: Novel, diagram: Diagram):
+        if self._persistence_enabled:
+            self._operations.append(Operation(OperationType.UPDATE, novel=novel, diagram=diagram))
+            self._persist_if_test_env()
+
     def delete_doc(self, novel: Novel, document: Document):
         if self._persistence_enabled:
             self._operations.append(Operation(OperationType.DELETE, novel=novel, doc=document))
@@ -187,6 +193,7 @@ def _persist_operations(operations: List[Operation]):
     updated_novel_cache: Set[Novel] = set()
     updated_scene_cache: Set[Scene] = set()
     updated_character_cache: Set[Character] = set()
+    updated_diagram_cache: Set[Diagram] = set()
 
     for op in operations:
         # scenes
@@ -209,13 +216,19 @@ def _persist_operations(operations: List[Operation]):
         elif op.character and op.novel and op.type == OperationType.DELETE:
             client.delete_character(op.novel, op.character)
 
-        # novel and document
+        # novel, document, diagram
         elif op.doc and op.type == OperationType.UPDATE:
             if op.doc not in updated_doc_cache:
-                json_client.save_document(op.novel, op.doc)
+                json_client.update_document(op.novel, op.doc)
                 updated_doc_cache.add(op.doc)
         elif op.doc and op.type == OperationType.DELETE:
             json_client.delete_document(op.novel, op.doc)
+
+        elif op.diagram and op.type == OperationType.UPDATE:
+            if op.diagram not in updated_diagram_cache:
+                json_client.update_diagram(op.novel, op.diagram)
+                updated_diagram_cache.add(op.diagram)
+
         elif op.novel and op.type == OperationType.UPDATE:
             if op.novel not in updated_novel_cache:
                 client.update_novel(op.novel)

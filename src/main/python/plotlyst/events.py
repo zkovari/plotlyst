@@ -21,7 +21,8 @@ from dataclasses import dataclass
 
 from language_tool_python import LanguageTool
 
-from src.main.python.plotlyst.core.domain import Character, NovelDescriptor, Scene, SceneStage, Task
+from src.main.python.plotlyst.core.domain import Character, NovelDescriptor, Scene, SceneStage, Task, NovelSetting, \
+    StoryStructure, Novel
 from src.main.python.plotlyst.event.core import Event
 
 
@@ -111,6 +112,12 @@ class NovelStoryStructureUpdated(Event):
 
 
 @dataclass
+class NovelStoryStructureActivationRequest(Event):
+    novel: Novel
+    structure: StoryStructure
+
+
+@dataclass
 class NovelAboutToSyncEvent(Event):
     novel: NovelDescriptor
 
@@ -118,6 +125,62 @@ class NovelAboutToSyncEvent(Event):
 @dataclass
 class NovelSyncEvent(Event):
     novel: NovelDescriptor
+
+
+@dataclass
+class CloseNovelEvent(Event):
+    novel: NovelDescriptor
+
+
+@dataclass
+class NovelPanelCustomizationEvent(Event):
+    setting: NovelSetting
+    toggled: bool
+
+
+@dataclass
+class NovelMindmapToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
+class NovelManuscriptToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
+class NovelCharactersToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
+class NovelScenesToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
+class NovelStructureToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
+class NovelStorylinesToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
+class NovelDocumentsToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
+class NovelManagementToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
+class NovelWorldBuildingToggleEvent(NovelPanelCustomizationEvent):
+    pass
 
 
 @dataclass

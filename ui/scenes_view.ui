@@ -572,26 +572,49 @@
            </widget>
           </item>
           <item>
-           <widget class="QToolButton" name="btnStoryStructure">
-            <property name="cursor">
-             <cursorShape>PointingHandCursor</cursorShape>
+           <layout class="QHBoxLayout" name="horizontalLayout_9">
+            <property name="spacing">
+             <number>0</number>
             </property>
-            <property name="toolTip">
-             <string>Toggle story structure display</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
-            <property name="base" stdset="0">
-             <bool>true</bool>
-            </property>
-           </widget>
+            <item>
+             <widget class="QToolButton" name="btnStoryStructure">
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="toolTip">
+               <string>Toggle story structure display</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="checked">
+               <bool>false</bool>
+              </property>
+              <property name="base" stdset="0">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="btnStoryStructureSelector">
+              <property name="maximumSize">
+               <size>
+                <width>13</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="base" stdset="0">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
           <item>
            <spacer name="horizontalSpacer_10">
@@ -702,7 +725,7 @@
            <item>
             <widget class="QStackedWidget" name="stackScenes">
              <property name="currentIndex">
-              <number>0</number>
+              <number>2</number>
              </property>
              <widget class="QWidget" name="pageCards">
               <property name="relaxed-white-bg" stdset="0">
@@ -734,8 +757,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>479</width>
-                    <height>582</height>
+                    <width>98</width>
+                    <height>28</height>
                    </rect>
                   </property>
                   <layout class="QHBoxLayout" name="horizontalLayout_8">
@@ -940,10 +963,13 @@
                       </property>
                      </spacer>
                     </item>
-                    <item alignment="Qt::AlignLeft|Qt::AlignBottom">
+                    <item alignment="Qt::AlignLeft|Qt::AlignTop">
                      <widget class="QToolButton" name="btnStageCustomize">
                       <property name="cursor">
                        <cursorShape>PointingHandCursor</cursorShape>
+                      </property>
+                      <property name="toolTip">
+                       <string>Customize stages</string>
                       </property>
                       <property name="text">
                        <string/>
@@ -1155,8 +1181,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>98</width>
-                    <height>28</height>
+                    <width>84</width>
+                    <height>16</height>
                    </rect>
                   </property>
                   <property name="sizePolicy">
@@ -1220,15 +1246,15 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>CardsView</class>
-   <extends>QFrame</extends>
-   <header>src.main.python.plotlyst.view.widget.cards</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>SceneStoryStructureWidget</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.scenes</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>CardsView</class>
+   <extends>QFrame</extends>
+   <header>src.main.python.plotlyst.view.widget.cards</header>
    <container>1</container>
   </customwidget>
   <customwidget>
@@ -1244,22 +1270,6 @@
  </customwidgets>
  <resources/>
  <connections>
-  <connection>
-   <sender>btnStoryStructure</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>wdgStoryStructureParent</receiver>
-   <slot>setVisible(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>517</x>
-     <y>58</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>595</x>
-     <y>67</y>
-    </hint>
-   </hints>
-  </connection>
   <connection>
    <sender>rbDetailed</sender>
    <signal>toggled(bool)</signal>
@@ -1310,7 +1320,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="btnGroupStoryMapView"/>
   <buttongroup name="btnGroupViews"/>
+  <buttongroup name="btnGroupStoryMapView"/>
  </buttongroups>
 </ui>

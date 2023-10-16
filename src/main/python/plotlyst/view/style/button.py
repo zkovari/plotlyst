@@ -17,11 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Union
-
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QAbstractButton
 
 style = '''
 QPushButton::menu-indicator[no-menu] {
@@ -108,6 +103,8 @@ QPushButton[top-level-nav=true] {
     border-radius: 6px;
     color: white;
     padding: 2px;
+    padding-left: 4px;
+    padding-right: 4px;
     font: bold;
 }
 QPushButton:disabled[top-level-nav=true] {
@@ -125,6 +122,7 @@ QPushButton:checked[top-level-nav=true] {
 
 QPushButton[main-side-nav=true] {
     border: 0px;
+    margin: 5px;
     padding: 5px;
     padding-top: 6px;
     padding-bottom: 6px;
@@ -255,12 +253,35 @@ QToolButton[transparent-circle-bg-on-hover=true][large=true] {
     padding: 4px;
 }
 
-QToolButton:hover[analysis-top-selector=true] {
+QAbstractButton[transparent-rounded-bg-on-hover=true] {
+    border-radius: 4px;
+    border: 1px hidden lightgrey;
+    padding: 2px;
+}
+QAbstractButton::menu-indicator[transparent-rounded-bg-on-hover=true] {
+    width:0px;
+}
+QAbstractButton:hover[transparent-rounded-bg-on-hover=true] {
+    background: #EDEDED;
+}
+
+QAbstractButton:hover[top-selector=true] {
     background: lightgrey;
 }
 
-QToolButton:checked[analysis-top-selector=true] {
-    background: #D4B8E0
+QAbstractButton:checked[top-selector=true] {
+    background: #D4B8E0;
+}
+
+QAbstractButton:hover[secondary-selector=true] {
+    border-bottom: 1px solid lightgrey;
+}
+
+QAbstractButton:checked[secondary-selector=true] {
+    border-bottom: 2px solid #4B0763;
+    border-radius: 0px;
+    color: #4B0763;
+    
 }
 
 QToolButton:checked[emotion-very-unhappy=true] {
@@ -397,16 +418,3 @@ QToolButton:checked[main-navbar=true] {
 }
 
 '''
-
-
-def apply_button_color(button: QAbstractButton, color: Union[str, QColor, Qt.GlobalColor]):
-    if isinstance(color, QColor):
-        color = color.name()
-    button.setStyleSheet(f'''
-                    QToolButton {{
-                        background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1,
-                                              stop: 0 {color});
-                        border: 1px solid darkGrey;
-                        border-radius: 12px;
-                    }}
-                    ''')

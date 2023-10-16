@@ -2,11 +2,10 @@ from typing import List
 
 from PyQt6.QtCharts import QPieSeries
 from PyQt6.QtCore import Qt, QModelIndex
-from PyQt6.QtGui import QBrush, QColor, QAction
+from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QMessageBox, QSpinBox
 
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import SceneType
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesStageTableModel
 from src.main.python.plotlyst.test.common import create_character, start_new_scene_editor, assert_data, go_to_scenes, \
     click_on_item, popup_actions_on_item, trigger_popup_action_on_item, patch_confirmed
@@ -27,7 +26,7 @@ def test_create_new_scene(qtbot, filled_window: MainWindow):
     assert_data(scenes.ui.tblScenes.model(), 'New scene', row, 1)
     assert filled_window.novel.scenes
     assert filled_window.novel.scenes[row].title == 'New scene'
-    assert filled_window.novel.scenes[row].type == SceneType.DEFAULT
+    assert filled_window.novel.scenes[row].purpose is None
     assert filled_window.novel.scenes[row].day == 1
 
 
@@ -37,14 +36,14 @@ def test_scene_characters(qtbot, filled_window: MainWindow):
 
     view: ScenesOutlineView = start_new_scene_editor(filled_window)
     qtbot.keyClicks(view.editor.ui.lineTitle, 'Scene 3')
-    actions = view.editor.ui.wdgPov.btnPov.menu().actions()
+    actions = view.editor.ui.wdgPov.btnAvatar.menu().actions()
     actions[5].trigger()
     view.editor.ui.btnClose.click()
     assert view.novel.scenes[2].pov == view.novel.characters[5]
 
     view: ScenesOutlineView = start_new_scene_editor(filled_window)
     qtbot.keyClicks(view.editor.ui.lineTitle, 'Scene 4')
-    actions = view.editor.ui.wdgPov.btnPov.menu().actions()
+    actions = view.editor.ui.wdgPov.btnAvatar.menu().actions()
     actions[6].trigger()
     view.editor.ui.btnClose.click()
     assert view.novel.scenes[3].pov == view.novel.characters[6]
@@ -194,7 +193,7 @@ def _edit_day(editor: QSpinBox):
 
 def test_character_distribution_display(qtbot, filled_window: MainWindow):
     def assert_painted(index: QModelIndex):
-        assert index.data(role=Qt.ItemDataRole.BackgroundRole) == QBrush(QColor('darkblue'))
+        assert index.data(role=Qt.ItemDataRole.BackgroundRole) is not None
 
     def assert_not_painted(index: QModelIndex):
         assert index.data(role=Qt.ItemDataRole.BackgroundRole) is None

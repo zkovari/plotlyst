@@ -30,7 +30,7 @@ from qthandy.filter import OpacityEventFilter
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.event.core import EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent, \
     PlotCreatedEvent, CharacterDeletedEvent, NovelSyncEvent
 from src.main.python.plotlyst.view._view import AbstractNovelView
@@ -68,7 +68,8 @@ class ReportPage(QWidget, EventListener):
         vbox(self._wdgCenter)
         self._wdgCenter.setProperty('white-bg', True)
 
-        event_dispatcher.register(self, NovelSyncEvent)
+        self._dispatcher = event_dispatchers.instance(self._novel)
+        self._dispatcher.register(self, NovelSyncEvent)
 
     @overrides
     def showEvent(self, event: QShowEvent) -> None:
@@ -98,8 +99,7 @@ class CharactersReportPage(ReportPage):
 
     def __init__(self, novel: Novel, parent=None):
         super(CharactersReportPage, self).__init__(novel, parent)
-        event_dispatcher.register(self, CharacterChangedEvent)
-        event_dispatcher.register(self, CharacterDeletedEvent)
+        self._dispatcher.register(self, CharacterChangedEvent, CharacterDeletedEvent)
 
     @overrides
     def _initReport(self):
@@ -109,10 +109,8 @@ class CharactersReportPage(ReportPage):
 class ScenesReportPage(ReportPage):
     def __init__(self, novel: Novel, parent=None):
         super(ScenesReportPage, self).__init__(novel, parent)
-        event_dispatcher.register(self, SceneChangedEvent)
-        event_dispatcher.register(self, SceneDeletedEvent)
-        event_dispatcher.register(self, CharacterChangedEvent)
-        event_dispatcher.register(self, CharacterDeletedEvent)
+        self._dispatcher.register(self, SceneChangedEvent, SceneDeletedEvent, CharacterChangedEvent,
+                                  CharacterDeletedEvent)
 
     @overrides
     def _initReport(self):
@@ -122,10 +120,8 @@ class ScenesReportPage(ReportPage):
 class ConflictsReportPage(ReportPage):
     def __init__(self, novel: Novel, parent=None):
         super(ConflictsReportPage, self).__init__(novel, parent)
-        event_dispatcher.register(self, SceneChangedEvent)
-        event_dispatcher.register(self, SceneDeletedEvent)
-        event_dispatcher.register(self, CharacterChangedEvent)
-        event_dispatcher.register(self, CharacterDeletedEvent)
+        self._dispatcher.register(self, SceneChangedEvent, SceneDeletedEvent, CharacterChangedEvent,
+                                  CharacterDeletedEvent)
 
     @overrides
     def _initReport(self):
@@ -144,8 +140,7 @@ class ArcReportPage(ReportPage):
 class ManuscriptReportPage(ReportPage):
     def __init__(self, novel: Novel, parent=None):
         super(ManuscriptReportPage, self).__init__(novel, parent)
-        event_dispatcher.register(self, SceneChangedEvent)
-        event_dispatcher.register(self, SceneDeletedEvent)
+        self._dispatcher.register(self, SceneChangedEvent, SceneDeletedEvent)
         self._wc_cache: List[int] = []
 
     @overrides
@@ -195,7 +190,7 @@ class ReportsView(AbstractNovelView):
             btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.7, ignoreCheckedButton=True))
             btn.setProperty('transparent-circle-bg-on-hover', True)
             btn.setProperty('large', True)
-            btn.setProperty('analysis-top-selector', True)
+            btn.setProperty('top-selector', True)
 
         self._page_characters = CharactersReportPage(self.novel)
         self.ui.stackedWidget.addWidget(self._page_characters)

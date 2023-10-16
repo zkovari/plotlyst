@@ -21,137 +21,28 @@ from typing import Optional, List
 
 from PyQt6.QtCore import Qt, QRectF, QRect, QPoint, pyqtSignal
 from PyQt6.QtGui import QMouseEvent, QPainter, QColor, QPen, QFontMetrics, QFont, QIcon, QKeyEvent, \
-    QPainterPath, QResizeEvent
+    QResizeEvent
 from PyQt6.QtWidgets import QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
     QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent, QGraphicsLineItem, \
-    QMenu, QTabWidget, QWidgetAction, QGraphicsPathItem, QTextEdit, QFrame, QToolButton
+    QMenu, QTabWidget, QWidgetAction, QTextEdit, QToolButton
 from overrides import overrides
 from qtemoji import EmojiPicker
 from qthandy import transparent, busy
 from qthandy.filter import OpacityEventFilter
 
-from src.main.python.plotlyst.core.domain import WorldBuildingEntity, WorldBuildingEntityType, Novel
-from src.main.python.plotlyst.core.template import ProfileTemplate
+from src.main.python.plotlyst.core.domain import WorldBuildingEntity, WorldBuildingEntityType
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import pointy, set_tab_icon, link_buttons_to_pages, emoji_font
 from src.main.python.plotlyst.view.generated.world_building_item_editor_ui import Ui_WorldBuildingItemEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView
 from src.main.python.plotlyst.view.widget.input import TextEditBase
-from src.main.python.plotlyst.view.widget.template.base import EditableTemplateWidget
-from src.main.python.plotlyst.view.widget.template.profile import ProfileTemplateView
 from src.main.python.plotlyst.view.widget.utility import ColorPicker, IconSelectorWidget
 
 LINE_WIDTH: int = 4
 DEFAULT_COLOR: str = '#219ebc'
 ITEM_HORIZONTAL_DISTANCE = 20
 ITEM_VERTICAL_DISTANCE = 80
-
-
-class WorldBuildingProfileTemplateView(ProfileTemplateView):
-    def __init__(self, novel: Novel, profile: ProfileTemplate):
-        super().__init__([], profile, {})
-        self.novel = novel
-        self._entity: Optional[WorldBuildingEntity] = None
-        self.scrollArea.setFrameShape(QFrame.Shape.NoFrame)
-        for wdg in self.widgets:
-            if isinstance(wdg, EditableTemplateWidget):
-                wdg.valueFilled.connect(self._save)
-                wdg.valueReset.connect(self._save)
-
-        self.repo = RepositoryPersistenceManager.instance()
-
-    def setLocation(self, entity: WorldBuildingEntity):
-        self._entity = entity
-        self.setValues(entity.template_values)
-
-    @overrides
-    def clearValues(self):
-        self._entity = None
-        super(WorldBuildingProfileTemplateView, self).clearValues()
-
-    def _save(self):
-        if self._entity:
-            self._entity.template_values = self.values()
-            self.repo.update_novel(self.novel)
-
-
-class ConnectorItem(QGraphicsPathItem):
-
-    def __init__(self, source: 'WorldBuildingItemGroup', target: 'WorldBuildingItemGroup'):
-        super(ConnectorItem, self).__init__(source)
-        self._source = source
-        self._collapseItem = source.collapseItem()
-        self._target = target
-        if self._target.entity().bg_color:
-            self.setPen(QPen(QColor(self._target.entity().bg_color), LINE_WIDTH))
-        else:
-            self.setPen(QPen(source.connectorColor(), LINE_WIDTH))
-        self.updatePos()
-        source.addOutputConnector(self)
-        target.setInputConnector(self)
-
-    def updatePos(self):
-        self.setPos(self._collapseItem.pos().x() + self._collapseItem.boundingRect().width() - LINE_WIDTH - 1,
-                    self._collapseItem.y() + self._collapseItem.radius() - LINE_WIDTH)
-        self.rearrange()
-
-    def rearrange(self):
-        path = QPainterPath()
-        target_x = self._target.pos().x() - self.pos().x()
-        target_y = self._target.pos().y()
-        if self._target.pos().y() < 0:
-            path.quadTo(0, target_y / 2, target_x, target_y)
-        elif self._target.pos().y() > 0:
-            path.quadTo(0, target_y / 2, target_x, target_y)
-        else:
-            path.lineTo(target_x, target_y)
-
-        self.setPath(path)
-
-    def source(self) -> 'WorldBuildingItemGroup':
-        return self._source
-
-    def target(self) -> 'WorldBuildingItemGroup':
-        return self._target
-
-
-class PlusItem(QAbstractGraphicsShapeItem):
-    def __init__(self, parent: 'WorldBuildingItemGroup'):
-        super(PlusItem, self).__init__(parent)
-        self._parent = parent
-        self._plusIcon = IconRegistry.plus_circle_icon('lightgrey')
-        self._iconSize = 25
-        self.setAcceptHoverEvents(True)
-        pointy(self)
-        self.setToolTip('Add new child')
-
-    @overrides
-    def boundingRect(self):
-        return QRectF(0, 0, self._iconSize, self._iconSize)
-
-    @overrides
-    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
-        self._plusIcon.paint(painter, 0, 0, self._iconSize, self._iconSize)
-
-    @overrides
-    def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        self._plusIcon = IconRegistry.plus_circle_icon('#457b9d')
-        self.update()
-
-    @overrides
-    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        self._plusIcon = IconRegistry.plus_circle_icon('lightgrey')
-        self.update()
-
-    @overrides
-    def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        event.accept()
-
-    @overrides
-    def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        self._parent.addNewChild()
 
 
 class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):

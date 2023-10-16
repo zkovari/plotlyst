@@ -18,33 +18,34 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Dict, Set, Optional
+from typing import Dict
 
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QMimeData, QObject, QEvent
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QWidget, QFrame, QSizePolicy, QLabel, QToolButton, QPushButton, \
-    QLineEdit, QMenu
+from PyQt6.QtWidgets import QWidget, QFrame, QSizePolicy, QLabel, QToolButton, QPushButton
 from overrides import overrides
 from qthandy import vbox, hbox, transparent, vspacer, margins, spacer, bold, retain_when_hidden, incr_font, \
-    btn_popup_menu, gc, vline
+    gc, decr_icon, pointy
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import TaskStatus, Task, Novel, Character
+from src.main.python.plotlyst.core.domain import TaskStatus, Task, Novel, Character, task_tags
+from src.main.python.plotlyst.core.template import SelectionItem
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import Event, emit_event, EventListener
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.core import Event, emit_event
+from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import CharacterDeletedEvent, TaskChanged, TaskDeleted, TaskChangedToWip, \
     TaskChangedFromWip
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, pointy, shadow, action
+from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, shadow, action, tool_btn, \
+    any_menu_visible
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
-from src.main.python.plotlyst.view.widget.button import CollapseButton
+from src.main.python.plotlyst.view.widget.button import CollapseButton, TaskTagSelector
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
-from src.main.python.plotlyst.view.widget.display import Icon
+from src.main.python.plotlyst.view.widget.input import AutoAdjustableLineEdit
 
 TASK_WIDGET_MAX_WIDTH = 350
 
@@ -65,17 +66,18 @@ class TaskWidget(QFrame):
         self.setMinimumHeight(75)
         shadow(self, 3)
 
-        self._lineTitle = QLineEdit(self)
+        self._lineTitle = AutoAdjustableLineEdit(self, defaultWidth=100)
         self._lineTitle.setPlaceholderText('New task')
         self._lineTitle.setText(task.title)
         self._lineTitle.setFrame(False)
-        font = QFont('Arial')
+        font = QFont('Helvetica')
         font.setWeight(QFont.Weight.Medium)
         self._lineTitle.setFont(font)
         incr_font(self._lineTitle)
 
         self._charSelector = CharacterSelectorButton(app_env.novel, self, opacityEffectEnabled=False, iconSize=24)
         self._charSelector.setToolTip('Link character')
+        decr_icon(self._charSelector)
         if self._task.character_id:
             self._charSelector.setCharacter(self._task.character(app_env.novel))
         else:
@@ -83,35 +85,41 @@ class TaskWidget(QFrame):
         retain_when_hidden(self._charSelector)
         self._charSelector.characterSelected.connect(self._linkCharacter)
         self._charSelector.menu().aboutToHide.connect(self._onLeave)
-        top_wdg = group(self._lineTitle, self._charSelector, margin=0, spacing=1)
+        top_wdg = group(self._lineTitle, spacer(), self._charSelector, margin=0, spacing=1)
         self.layout().addWidget(top_wdg, alignment=Qt.AlignmentFlag.AlignTop)
 
         self._wdgBottom = QWidget()
         retain_when_hidden(self._wdgBottom)
         hbox(self._wdgBottom)
-        self._btnResolve = QToolButton(self._wdgBottom)
-        self._btnResolve.setIcon(IconRegistry.from_name('fa5s.check', 'grey'))
-        self._btnResolve.setToolTip('Resolve task')
-        pointy(self._btnResolve)
-        self._btnResolve.setProperty('transparent-circle-bg-on-hover', True)
-        self._btnResolve.setProperty('positive', True)
-        self._btnResolve.installEventFilter(ButtonPressResizeEventFilter(self._btnResolve))
+
+        self._btnTags = TaskTagSelector(self._wdgBottom)
+        self._btnTags.tagSelected.connect(self._tagChanged)
+
+        self._btnResolve = tool_btn(IconRegistry.from_name('fa5s.check', 'grey'), 'Resolve task',
+                                    properties=['transparent-circle-bg-on-hover', 'positive'], parent=self._wdgBottom)
+        decr_icon(self._btnResolve)
         self._btnResolve.clicked.connect(self.resolved.emit)
 
-        self._btnMenu = QToolButton(self._wdgBottom)
-        self._btnMenu.setIcon(IconRegistry.dots_icon('grey'))
-        self._btnMenu.setProperty('transparent-circle-bg-on-hover', True)
-        pointy(self._btnMenu)
+        self._btnMenu = tool_btn(IconRegistry.dots_icon('grey'), 'Menu', properties=['transparent-circle-bg-on-hover'],
+                                 parent=self._wdgBottom)
+        decr_icon(self._btnMenu)
         menu = MenuWidget(self._btnMenu)
         menu.addAction(action('Rename', IconRegistry.edit_icon(), self._lineTitle.setFocus))
         menu.addSeparator()
         menu.addAction(action('Delete', IconRegistry.trash_can_icon(), lambda: self.removalRequested.emit(self)))
         menu.aboutToHide.connect(self._onLeave)
+        self._wdgBottom.layout().addWidget(self._btnTags)
         self._wdgBottom.layout().addWidget(spacer())
         self._wdgBottom.layout().addWidget(self._btnResolve, alignment=Qt.AlignmentFlag.AlignRight)
         self._wdgBottom.layout().addWidget(self._btnMenu, alignment=Qt.AlignmentFlag.AlignRight)
         self.layout().addWidget(self._wdgBottom, alignment=Qt.AlignmentFlag.AlignBottom)
 
+        if self._task.tags:
+            tag = task_tags.get(self._task.tags[0], None)
+            if tag:
+                self._btnTags.select(tag)
+        else:
+            self._btnTags.setHidden(True)
         self._btnResolve.setHidden(True)
         self._btnMenu.setHidden(True)
 
@@ -126,8 +134,9 @@ class TaskWidget(QFrame):
                 self._charSelector.setVisible(True)
             self._btnMenu.setVisible(True)
             self._btnResolve.setVisible(True)
+            self._btnTags.setVisible(True)
         elif event.type() == QEvent.Type.Leave:
-            if self._charSelector.menu().isVisible() or self._btnMenu.menu().isVisible():
+            if any_menu_visible(self._charSelector, self._btnMenu, self._btnTags):
                 return True
             self._onLeave()
         return super(TaskWidget, self).eventFilter(watched, event)
@@ -151,9 +160,15 @@ class TaskWidget(QFrame):
         self._lineTitle.setFocus()
         shadow(self, 3)
 
+    def _tagChanged(self, tag: SelectionItem):
+        self._task.tags.clear()
+        self._task.tags.append(tag.text)
+
     def _onLeave(self):
         if not self._task.character_id:
             self._charSelector.setHidden(True)
+        if not self._task.tags:
+            self._btnTags.setHidden(True)
         self._btnMenu.setVisible(False)
         self._btnResolve.setVisible(False)
 
@@ -261,7 +276,8 @@ class StatusColumnWidget(QFrame):
         self._btnAdd.clicked.connect(self._addNewTask)
         self._header.addTask.connect(self._addNewTask)
 
-        event_dispatcher.register(self, CharacterDeletedEvent)
+        dispatcher = event_dispatchers.instance(self._novel)
+        dispatcher.register(self, CharacterDeletedEvent)
 
     def event_received(self, event: Event):
         if isinstance(event, CharacterDeletedEvent):
@@ -292,7 +308,7 @@ class StatusColumnWidget(QFrame):
             wdg.activate()
 
         if self._status.wip:
-            emit_event(TaskChangedToWip(self, task))
+            emit_event(self._novel, TaskChangedToWip(self, task))
 
         self._header.updateTitle(self._container.layout().count() - 1)
         return wdg
@@ -344,7 +360,7 @@ class StatusColumnWidget(QFrame):
 
     def __removeTaskWidget(self, taskWidget):
         if self._status.wip:
-            emit_event(TaskChangedFromWip(self, taskWidget.task()))
+            emit_event(self._novel, TaskChangedFromWip(self, taskWidget.task()))
 
         taskWidget.setHidden(True)
         self._container.layout().removeWidget(taskWidget)
@@ -395,11 +411,11 @@ class BoardWidget(QWidget):
 
     def _taskChanged(self, task: Task):
         self._saveBoard()
-        emit_event(TaskChanged(self, task))
+        emit_event(self._novel, TaskChanged(self, task))
 
     def _taskDeleted(self, task: Task):
         self._saveBoard()
-        emit_event(TaskDeleted(self, task))
+        emit_event(self._novel, TaskDeleted(self, task))
 
     def _taskResolved(self, task: Task):
         for status in self._novel.board.statuses:
@@ -414,90 +430,89 @@ class BoardWidget(QWidget):
     def _saveBoard(self):
         self.repo.update_novel(self._novel)
 
-
-class TasksQuickAccessWidget(QWidget, EventListener):
-    def __init__(self, parent=None):
-        super(TasksQuickAccessWidget, self).__init__(parent)
-        hbox(self)
-        self._title = QLabel('Test')
-        self._icon = Icon()
-        self._icon.setIcon(IconRegistry.board_icon())
-        self._icon.setToolTip('Pinned in-progress task')
-        self._btnSelector = QToolButton()
-        self._btnSelector.setProperty('transparent', True)
-        pointy(self._btnSelector)
-        self._btnSelector.setToolTip('Select an other in-progress task')
-        self._btnSelector.setIcon(IconRegistry.from_name('fa5s.tasks'))
-        self._menu = QMenu(self._btnSelector)
-        btn_popup_menu(self._btnSelector, self._menu)
-        self._menu.aboutToShow.connect(self._fillSelectorPopup)
-
-        self.layout().addWidget(self._icon)
-        self.layout().addWidget(vline())
-        self.layout().addWidget(self._btnSelector)
-        self.layout().addWidget(self._title)
-
-        self._tasks: Set[Task] = set()
-        self._currentTask: Optional[Task] = None
-        self._updateCurrentTask()
-
-        event_dispatcher.register(self, TaskChanged)
-        event_dispatcher.register(self, TaskDeleted)
-        event_dispatcher.register(self, TaskChangedToWip)
-        event_dispatcher.register(self, TaskChangedFromWip)
-
-    @overrides
-    def event_received(self, event: Event):
-        if isinstance(event, TaskChangedToWip):
-            self.addTask(event.task)
-        elif isinstance(event, TaskChangedFromWip):
-            self.removeTask(event.task)
-        elif isinstance(event, TaskChanged):
-            if event.task not in self._tasks:
-                return
-            if event.task == self._currentTask:
-                self._updateCurrentTask()
-
-        elif isinstance(event, TaskDeleted):
-            self.removeTask(event.task)
-
-    def addTask(self, task: Task):
-        self._tasks.add(task)
-        if self._currentTask is None:
-            self._updateCurrentTask(task)
-
-        self._toggleSelector()
-
-    def removeTask(self, task: Task):
-        if task in self._tasks:
-            self._tasks.remove(task)
-        if self._currentTask == task:
-            self._updateCurrentTask()
-
-        self._toggleSelector()
-
-    def reset(self):
-        self._currentTask = None
-        self._tasks.clear()
-        self._updateCurrentTask()
-
-    def _updateCurrentTask(self, task: Optional[Task] = None):
-        if task:
-            self._currentTask = task
-        else:
-            self._currentTask = next(iter(self._tasks), None)
-
-        if self._currentTask:
-            self._title.setText(self._currentTask.title)
-        else:
-            self._title.clear()
-
-        self.setHidden(self._currentTask is None)
-
-    def _toggleSelector(self):
-        self._btnSelector.setVisible(len(self._tasks) > 1)
-
-    def _fillSelectorPopup(self):
-        self._menu.clear()
-        for task in self._tasks:
-            self._menu.addAction(task.title, partial(self._updateCurrentTask, task))
+# class TasksQuickAccessWidget(QWidget, EventListener):
+#     def __init__(self, parent=None):
+#         super(TasksQuickAccessWidget, self).__init__(parent)
+#         hbox(self)
+#         self._title = QLabel('Test')
+#         self._icon = Icon()
+#         self._icon.setIcon(IconRegistry.board_icon())
+#         self._icon.setToolTip('Pinned in-progress task')
+#         self._btnSelector = QToolButton()
+#         self._btnSelector.setProperty('transparent', True)
+#         pointy(self._btnSelector)
+#         self._btnSelector.setToolTip('Select an other in-progress task')
+#         self._btnSelector.setIcon(IconRegistry.from_name('fa5s.tasks'))
+#         self._menu = QMenu(self._btnSelector)
+#         btn_popup_menu(self._btnSelector, self._menu)
+#         self._menu.aboutToShow.connect(self._fillSelectorPopup)
+#
+#         self.layout().addWidget(self._icon)
+#         self.layout().addWidget(vline())
+#         self.layout().addWidget(self._btnSelector)
+#         self.layout().addWidget(self._title)
+#
+#         self._tasks: Set[Task] = set()
+#         self._currentTask: Optional[Task] = None
+#         self._updateCurrentTask()
+#
+#         dispatcher.register(self, TaskChanged)
+#         dispatcher.register(self, TaskDeleted)
+#         dispatcher.register(self, TaskChangedToWip)
+#         dispatcher.register(self, TaskChangedFromWip)
+#
+#     @overrides
+#     def event_received(self, event: Event):
+#         if isinstance(event, TaskChangedToWip):
+#             self.addTask(event.task)
+#         elif isinstance(event, TaskChangedFromWip):
+#             self.removeTask(event.task)
+#         elif isinstance(event, TaskChanged):
+#             if event.task not in self._tasks:
+#                 return
+#             if event.task == self._currentTask:
+#                 self._updateCurrentTask()
+#
+#         elif isinstance(event, TaskDeleted):
+#             self.removeTask(event.task)
+#
+#     def addTask(self, task: Task):
+#         self._tasks.add(task)
+#         if self._currentTask is None:
+#             self._updateCurrentTask(task)
+#
+#         self._toggleSelector()
+#
+#     def removeTask(self, task: Task):
+#         if task in self._tasks:
+#             self._tasks.remove(task)
+#         if self._currentTask == task:
+#             self._updateCurrentTask()
+#
+#         self._toggleSelector()
+#
+#     def reset(self):
+#         self._currentTask = None
+#         self._tasks.clear()
+#         self._updateCurrentTask()
+#
+#     def _updateCurrentTask(self, task: Optional[Task] = None):
+#         if task:
+#             self._currentTask = task
+#         else:
+#             self._currentTask = next(iter(self._tasks), None)
+#
+#         if self._currentTask:
+#             self._title.setText(self._currentTask.title)
+#         else:
+#             self._title.clear()
+#
+#         self.setHidden(self._currentTask is None)
+#
+#     def _toggleSelector(self):
+#         self._btnSelector.setVisible(len(self._tasks) > 1)
+#
+#     def _fillSelectorPopup(self):
+#         self._menu.clear()
+#         for task in self._tasks:
+#             self._menu.addAction(task.title, partial(self._updateCurrentTask, task))

@@ -26,7 +26,7 @@ from PyQt6.QtWidgets import QWidget
 style = '''
 QSlider::groove:horizontal {
     border: 1px solid #999999;
-    height: 6px; /* the groove expands to the size of the slider by default. by giving it a height, it has a fixed size */
+    height: 6px;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #B1B1B1, stop:1 #c4c4c4);
     margin: 0px 0;
 }
@@ -37,6 +37,98 @@ QSlider::handle:horizontal {
     width: 15px;
     margin: -3px -1px;
     border-radius: 3px;
+}
+
+QSlider::handle:horizontal[conflict=true] {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #b4b4b4, stop:1 #8f8f8f);
+    border: 1px solid #5c5c5c;
+    width: 15px;
+    margin: -3px -1px;
+    border-radius: 3px;
+}
+
+QSlider::add-page:horizontal[conflict=true] {
+    background: lightgray;
+}
+QSlider::sub-page:horizontal[conflict=true] {
+    background: #f3a712;
+}
+
+QSlider::add-page:horizontal[emotion_0=true] {
+    background: #f25c54;
+}
+QSlider::sub-page:horizontal[emotion_0=true] {
+    background: lightgray;
+}
+
+QSlider::add-page:horizontal[emotion_1=true] {
+    background: #f25c54;
+}
+QSlider::sub-page:horizontal[emotion_1=true] {
+    background: lightgray;
+}
+
+QSlider::add-page:horizontal[emotion_2=true] {
+    background: #f27059;
+}
+QSlider::sub-page:horizontal[emotion_2=true] {
+    background: lightgray;
+}
+
+QSlider::add-page:horizontal[emotion_3=true] {
+    background: #f4845f;
+}
+QSlider::sub-page:horizontal[emotion_3=true] {
+    background: lightgray;
+}
+
+QSlider::add-page:horizontal[emotion_4=true] {
+    background: #f79d65;
+}
+QSlider::sub-page:horizontal[emotion_4=true] {
+    background: lightgray;
+}
+
+QSlider::add-page:horizontal[emotion_5=true] {
+    background: lightgray;
+}
+QSlider::sub-page:horizontal[emotion_5=true] {
+    background: lightgray;
+}
+
+QSlider::add-page:horizontal[emotion_6=true] {
+    background: lightgray;
+}
+QSlider::sub-page:horizontal[emotion_6=true] {
+    background: #74c69d;
+}
+
+QSlider::add-page:horizontal[emotion_7=true] {
+    background: lightgray;
+}
+QSlider::sub-page:horizontal[emotion_7=true] {
+    background: #52b788;
+}
+
+QSlider::add-page:horizontal[emotion_8=true] {
+    background: lightgray;
+}
+QSlider::sub-page:horizontal[emotion_8=true] {
+    background: #40916c;
+}
+
+QSlider::add-page:horizontal[emotion_9=true] {
+    background: lightgray;
+}
+QSlider::sub-page:horizontal[emotion_9=true] {
+    background: #2d6a4f;
+}
+
+QSlider::add-page:horizontal[emotion_10=true] {
+    background: lightgray;
+}
+QSlider::sub-page:horizontal[emotion_10=true] {
+    background: #2d6a4f;
 }
 '''
 

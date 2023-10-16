@@ -74,6 +74,11 @@ QFrame[relaxed-white-bg=true] {
     background-color: #f8f9fa;
 }
 
+QFrame[rounded=true] {
+    border: 1px solid lightgrey;
+    border-radius: 6px;
+}
+
 QDialog[relaxed-white-bg] {
     background-color: #f8f9fa;
 }
@@ -115,11 +120,11 @@ def apply_color(wdg: QWidget, color: Union[str, QColor, Qt.GlobalColor]):
 
 
 def apply_bg_image(wdg: QWidget, resource_url: str):
-    wdg.setStyleSheet(f'QWidget[bg-image=true] {{background-image: url({resource_url});}}')
+    wdg.setStyleSheet(f'.QWidget[bg-image=true] {{background-image: url({resource_url});}}')
 
 
 def apply_border_image(wdg: QWidget, resource_url: str):
-    wdg.setStyleSheet(f'QWidget[border-image=true] {{border-image: url({resource_url}) 0 0 0 0 stretch stretch;}}')
+    wdg.setStyleSheet(f'.QWidget[border-image=true] {{border-image: url({resource_url}) 0 0 0 0 stretch stretch;}}')
 
 
 def apply_white_menu(menu: MenuWidget):
@@ -127,7 +132,7 @@ def apply_white_menu(menu: MenuWidget):
                         MenuWidget {{
                             background-color: {RELAXED_WHITE_COLOR};
                         }}
-                        QFrame {{
+                        .QFrame {{
                             background-color: {RELAXED_WHITE_COLOR};
                             padding-left: 2px;
                             padding-right: 2px;

@@ -23,57 +23,48 @@ from dataclasses import dataclass
 from functools import partial
 from typing import Iterable, List, Optional, Dict, Union
 
-import emoji
 import qtanim
 from PyQt6 import QtCore
 from PyQt6.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent, QByteArray, QBuffer, QIODevice
 from PyQt6.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor, QImageReader, QImage, QPixmap, \
-    QMouseEvent, QCursor, QAction, QShowEvent
-from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel, QPushButton, \
-    QHeaderView, QFileDialog, QMessageBox, QGridLayout, QWidgetAction
+    QMouseEvent, QAction, QShowEvent
+from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QSizePolicy, QLabel, QPushButton, \
+    QFileDialog, QMessageBox, QGridLayout
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup, incr_font, \
-    spacer, clear_layout, vbox, hbox, flow, translucent, margins, bold
-from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter, OpacityEventFilter
+    spacer, clear_layout, vbox, hbox, flow, translucent, margins, bold, pointy
+from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, emotion_color, \
-    CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR
-from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
-    VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, Scene, NEUTRAL, SceneStructureAgenda, ConflictReference, \
-    Topic, TemplateValue
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR
+from src.main.python.plotlyst.core.domain import Novel, Character, BackstoryEvent, \
+    VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, Topic, TemplateValue
 from src.main.python.plotlyst.core.template import secondary_role, guide_role, love_interest_role, sidekick_role, \
     contagonist_role, confidant_role, foil_role, supporter_role, adversary_role, antagonist_role, henchmen_role, \
     tertiary_role, SelectionItem, Role, TemplateFieldType, TemplateField, protagonist_role, RoleImportance, \
     promote_role, demote_role
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import emit_critical, EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.core import EventListener, Event
+from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import CharacterSummaryChangedEvent
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
 from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
     ConflictScenesDistributionTableModel, TagScenesDistributionTableModel, GoalScenesDistributionTableModel
-from src.main.python.plotlyst.model.scenes_model import SceneConflictsModel
 from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import emoji_font, \
-    link_buttons_to_pages, pointy, action, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, action, ButtonPressResizeEventFilter, tool_btn
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog, ArtbreederDialog, ImageCropDialog
 from src.main.python.plotlyst.view.generated.avatar_selectors_ui import Ui_AvatarSelectors
-from src.main.python.plotlyst.view.generated.character_avatar_ui import Ui_CharacterAvatar
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
-from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
 from src.main.python.plotlyst.view.generated.character_role_selector_ui import Ui_CharacterRoleSelector
 from src.main.python.plotlyst.view.generated.character_topic_editor_ui import Ui_CharacterTopicEditor
 from src.main.python.plotlyst.view.generated.characters_progress_widget_ui import Ui_CharactersProgressWidget
-from src.main.python.plotlyst.view.generated.scene_conflict_intensity_ui import Ui_ConflictReferenceEditor
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
-from src.main.python.plotlyst.view.style.base import apply_bg_image
+from src.main.python.plotlyst.view.style.base import apply_border_image
 from src.main.python.plotlyst.view.widget.button import SelectionItemPushButton
 from src.main.python.plotlyst.view.widget.display import IconText, Icon
-from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel
+from src.main.python.plotlyst.view.widget.labels import CharacterLabel
 from src.main.python.plotlyst.view.widget.progress import CircularProgressBar, ProgressTooltipMode, \
     CharacterRoleProgressChart
 from src.main.python.plotlyst.view.widget.topic import TopicsEditor
@@ -313,215 +304,20 @@ class CharacterSelectorButtons(QWidget):
         self._buttonsPerCharacters.clear()
 
 
-class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
-    conflictSelectionChanged = pyqtSignal()
+class CharacterSelectorMenu(MenuWidget):
+    selected = pyqtSignal(Character)
 
-    def __init__(self, novel: Novel, scene: Scene, agenda: SceneStructureAgenda, parent=None):
-        super(CharacterConflictWidget, self).__init__(parent)
-        self.novel = novel
-        self.scene = scene
-        self.agenda = agenda
-        self.setupUi(self)
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+        self.aboutToShow.connect(self._fillUpMenu)
 
-        self.repo = RepositoryPersistenceManager.instance()
+    def _fillUpMenu(self):
+        self.clear()
 
-        self.btnCharacter.setIcon(IconRegistry.conflict_character_icon())
-        self.btnCharacter.setToolTip('<b style="color:#c1666b">Character</b>')
-        self.btnCharacter.installEventFilter(InstantTooltipEventFilter(parent=self.btnCharacter))
-        self.btnSociety.setIcon(IconRegistry.conflict_society_icon())
-        self.btnSociety.setToolTip('<b style="color:#69306d">Society</b>')
-        self.btnSociety.installEventFilter(InstantTooltipEventFilter(parent=self.btnSociety))
-        self.btnNature.setIcon(IconRegistry.conflict_nature_icon())
-        self.btnNature.setToolTip('<b style="color:#157a6e">Nature</b>')
-        self.btnNature.installEventFilter(InstantTooltipEventFilter(parent=self.btnNature))
-        self.btnTechnology.setIcon(IconRegistry.conflict_technology_icon())
-        self.btnTechnology.setToolTip('<b style="color:#4a5859">Technology</b>')
-        self.btnTechnology.installEventFilter(InstantTooltipEventFilter(parent=self.btnTechnology))
-        self.btnSupernatural.setIcon(IconRegistry.conflict_supernatural_icon())
-        self.btnSupernatural.setToolTip('<b style="color:#ac7b84">Supernatural</b>')
-        self.btnSupernatural.installEventFilter(InstantTooltipEventFilter(parent=self.btnSupernatural))
-        self.btnSelf.setIcon(IconRegistry.conflict_self_icon())
-        self.btnSelf.setToolTip('<b style="color:#94b0da">Self</b>')
-        self.btnSelf.installEventFilter(InstantTooltipEventFilter(parent=self.btnSelf))
-
-        self._model = SceneConflictsModel(self.novel, self.scene, self.agenda)
-        self._model.setCheckable(True, SceneConflictsModel.ColName)
-        self._model.selection_changed.connect(self._previousConflictSelected)
-        self.tblConflicts.setModel(self._model)
-        self.tblConflicts.horizontalHeader().hideSection(SceneConflictsModel.ColBgColor)
-        self.tblConflicts.horizontalHeader().setSectionResizeMode(SceneConflictsModel.ColIcon,
-                                                                  QHeaderView.ResizeMode.ResizeToContents)
-        self.tblConflicts.horizontalHeader().setSectionResizeMode(SceneConflictsModel.ColName,
-                                                                  QHeaderView.ResizeMode.Stretch)
-        self._update_characters()
-        self.btnAddNew.setIcon(IconRegistry.ok_icon())
-        self.btnAddNew.installEventFilter(DisabledClickEventFilter(self, lambda: qtanim.shake(self.lineKey)))
-        self.btnAddNew.setDisabled(True)
-
-        self.lineKey.textChanged.connect(self._keyphrase_edited)
-
-        self.btnGroupConflicts.buttonToggled.connect(self._type_toggled)
-        self._type = ConflictType.CHARACTER
-        self.btnCharacter.setChecked(True)
-
-        self.btnAddNew.clicked.connect(self._add_new)
-
-    def refresh(self):
-        self.cbCharacter.clear()
-        self._update_characters()
-        self.tblConflicts.model().update()
-        self.tblConflicts.model().modelReset.emit()
-
-    @overrides
-    def mousePressEvent(self, event: QMouseEvent) -> None:
-        pass
-
-    def _update_characters(self):
-        for char in self.novel.characters:
-            if self.agenda.character_id and char.id != self.agenda.character_id:
-                self.cbCharacter.addItem(avatars.avatar(char), char.name, char)
-
-    def _type_toggled(self):
-        lbl_prefix = 'Character vs.'
-        self.cbCharacter.setVisible(self.btnCharacter.isChecked())
-        if self.btnCharacter.isChecked():
-            self.lblConflictType.setText(f'{lbl_prefix} <b style="color:#c1666b">Character</b>')
-            self._type = ConflictType.CHARACTER
-        elif self.btnSociety.isChecked():
-            self.lblConflictType.setText(f'{lbl_prefix} <b style="color:#69306d">Society</b>')
-            self._type = ConflictType.SOCIETY
-        elif self.btnNature.isChecked():
-            self.lblConflictType.setText(f'{lbl_prefix} <b style="color:#157a6e">Nature</b>')
-            self._type = ConflictType.NATURE
-        elif self.btnTechnology.isChecked():
-            self.lblConflictType.setText(f'{lbl_prefix} <b style="color:#4a5859">Technology</b>')
-            self._type = ConflictType.TECHNOLOGY
-        elif self.btnSupernatural.isChecked():
-            self.lblConflictType.setText(f'{lbl_prefix} <b style="color:#ac7b84">Supernatural</b>')
-            self._type = ConflictType.SUPERNATURAL
-        elif self.btnSelf.isChecked():
-            self.lblConflictType.setText(f'{lbl_prefix} <b style="color:#94b0da">Self</b>')
-            self._type = ConflictType.SELF
-
-    def _keyphrase_edited(self, text: str):
-        self.btnAddNew.setEnabled(len(text) > 0)
-
-    def _add_new(self):
-        if not self.agenda.character_id:
-            return emit_critical('Select agenda or POV character first')
-        conflict = Conflict(self.lineKey.text(), self._type, character_id=self.agenda.character_id)
-        if self._type == ConflictType.CHARACTER:
-            conflict.conflicting_character_id = self.cbCharacter.currentData().id
-
-        self.novel.conflicts.append(conflict)
-        self.agenda.conflict_references.append(ConflictReference(conflict.id))
-        self.repo.update_novel(self.novel)
-        self.conflictSelectionChanged.emit()
-        self.refresh()
-        self.lineKey.clear()
-
-    def _previousConflictSelected(self):
-        conflicts = self._model.selections()
-        conflict: Conflict = conflicts.pop()
-        self.agenda.conflict_references.append(ConflictReference(conflict.id))
-        self.conflictSelectionChanged.emit()
-
-
-class ConflictIntensityEditor(QWidget, Ui_ConflictReferenceEditor):
-    def __init__(self, conflict_ref: ConflictReference, parent=None):
-        super(ConflictIntensityEditor, self).__init__(parent)
-        self.conflict_ref = conflict_ref
-        self.setupUi(self)
-        self.sliderIntensity.setValue(self.conflict_ref.intensity)
-        self.sliderIntensity.valueChanged.connect(self._valueChanged)
-
-    @overrides
-    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
-        pass
-
-    def _valueChanged(self, value: int):
-        if value == 0:
-            self.sliderIntensity.setValue(1)
-            return
-        self.conflict_ref.intensity = value
-
-
-class CharacterConflictSelector(QWidget):
-    conflictSelected = pyqtSignal()
-
-    def __init__(self, novel: Novel, scene: Scene, simplified: bool = False, parent=None):
-        super(CharacterConflictSelector, self).__init__(parent)
-        self.novel = novel
-        self.scene = scene
-        self.conflict: Optional[Conflict] = None
-        self.conflict_ref: Optional[ConflictReference] = None
-        hbox(self)
-
-        self.label: Optional[ConflictLabel] = None
-
-        self.btnLinkConflict = QPushButton(self)
-        if not simplified:
-            self.btnLinkConflict.setText('Track conflict')
-        self.layout().addWidget(self.btnLinkConflict)
-        self.btnLinkConflict.setIcon(IconRegistry.conflict_icon())
-        self.btnLinkConflict.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btnLinkConflict.setStyleSheet('''
-                        QPushButton {
-                            border: 2px dotted grey;
-                            border-radius: 6px;
-                            font: italic;
-                        }
-                        QPushButton:hover {
-                            border: 2px dotted orange;
-                            color: orange;
-                            font: normal;
-                        }
-                        QPushButton:pressed {
-                            border: 2px solid white;
-                        }
-                    ''')
-
-        self.btnLinkConflict.installEventFilter(OpacityEventFilter(parent=self.btnLinkConflict))
-        self.selectorWidget = CharacterConflictWidget(self.novel, self.scene, self.scene.agendas[0],
-                                                      self.btnLinkConflict)
-        btn_popup(self.btnLinkConflict, self.selectorWidget)
-
-        self.selectorWidget.conflictSelectionChanged.connect(self._conflictSelected)
-
-    def setConflict(self, conflict: Conflict, conflict_ref: ConflictReference):
-        self.conflict = conflict
-        self.conflict_ref = conflict_ref
-        self.label = ConflictLabel(self.novel, self.conflict)
-        pointy(self.label)
-        self.label.removalRequested.connect(self._remove)
-        self.label.clicked.connect(self._conflictRefClicked)
-        self.layout().addWidget(self.label)
-        self.btnLinkConflict.setHidden(True)
-
-    def _conflictSelected(self):
-        new_conflict = self.scene.agendas[0].conflicts(self.novel)[-1]
-        new_conflict_ref = self.scene.agendas[0].conflict_references[-1]
-        # self.btnLinkConflict.menu().hide()
-        self.setConflict(new_conflict, new_conflict_ref)
-
-        self.conflictSelected.emit()
-
-    def _conflictRefClicked(self):
-        menu = QMenu(self.label)
-        action = QWidgetAction(menu)
-        action.setDefaultWidget(ConflictIntensityEditor(self.conflict_ref))
-        menu.addAction(action)
-        menu.popup(QCursor.pos())
-
-    def _remove(self):
-        if self.parent():
-            anim = qtanim.fade_out(self, duration=150)
-            anim.finished.connect(self.__destroy)
-
-    def __destroy(self):
-        self.scene.agendas[0].remove_conflict(self.conflict)
-        self.parent().layout().removeWidget(self)
-        gc(self)
+        for char in self._novel.characters:
+            self.addAction(
+                action(char.name, avatars.avatar(char), slot=partial(self.selected.emit, char), parent=self))
 
 
 class CharacterSelectorButton(QToolButton):
@@ -538,8 +334,9 @@ class CharacterSelectorButton(QToolButton):
             self._opacityFilter = OpacityEventFilter(self)
         else:
             self._opacityFilter = None
-        self._menu = MenuWidget(self)
-        self._menu.aboutToShow.connect(self._fillUpMenu)
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
+        self._menu = CharacterSelectorMenu(self._novel, self)
+        self._menu.selected.connect(self._selected)
         self.clear()
 
     def setCharacter(self, character: Character):
@@ -568,13 +365,6 @@ class CharacterSelectorButton(QToolButton):
     def _selected(self, character: Character):
         self.setCharacter(character)
         self.characterSelected.emit(character)
-
-    def _fillUpMenu(self):
-        self._menu.clear()
-
-        for char in self._novel.characters:
-            self._menu.addAction(
-                action(char.name, avatars.avatar(char), slot=partial(self._selected, char), parent=self._menu))
 
 
 class CharacterLinkWidget(QWidget):
@@ -895,7 +685,7 @@ class CharacterTimelineWidget(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setBrush(QBrush(QColor('#1d3557')))
-        painter.drawRect(self.width() / 2 - 3, 64, 6, self.height() - 64)
+        painter.drawRect(int(self.width() / 2) - 3, 64, 6, self.height() - 64)
 
         painter.end()
 
@@ -924,64 +714,6 @@ class CharacterTimelineWidget(QWidget):
         control = _ControlButtons(self)
         control.btnPlus.clicked.connect(partial(self.add, pos))
         self._layout.addWidget(control, alignment=Qt.AlignmentFlag.AlignHCenter)
-
-
-class CharacterEmotionButton(QToolButton):
-    emotionChanged = pyqtSignal()
-
-    def __init__(self, parent=None):
-        super(CharacterEmotionButton, self).__init__(parent)
-        self._value = NEUTRAL
-        self._color = NEUTRAL_EMOTION_COLOR
-        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        self.setFixedSize(32, 32)
-        pointy(self)
-        transparent(self)
-
-        menu = QMenu(self)
-        self.setMenu(menu)
-        menu.setMaximumWidth(64)
-        self.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
-        self._emoji_font = emoji_font()
-        self.setFont(self._emoji_font)
-        menu.setFont(self._emoji_font)
-        menu.addAction(emoji.emojize(':smiling_face_with_smiling_eyes:'), lambda: self._emotionClicked(VERY_HAPPY))
-        menu.addAction(emoji.emojize(':slightly_smiling_face:'), lambda: self._emotionClicked(HAPPY))
-        menu.addAction(emoji.emojize(':neutral_face:'), lambda: self._emotionClicked(NEUTRAL))
-        menu.addAction(emoji.emojize(':worried_face:'), lambda: self._emotionClicked(UNHAPPY))
-        menu.addAction(emoji.emojize(':fearful_face:'), lambda: self._emotionClicked(VERY_UNHAPPY))
-
-        self._setAlready: bool = False
-
-    def value(self) -> int:
-        return self._value
-
-    def setValue(self, value: int):
-        if value == VERY_UNHAPPY:
-            self.setText(emoji.emojize(":fearful_face:"))
-        elif value == UNHAPPY:
-            self.setText(emoji.emojize(":worried_face:"))
-        elif value == NEUTRAL:
-            self.setText(emoji.emojize(":neutral_face:"))
-        elif value == HAPPY:
-            self.setText(emoji.emojize(":slightly_smiling_face:"))
-        elif value == VERY_HAPPY:
-            self.setText(emoji.emojize(":smiling_face_with_smiling_eyes:"))
-
-        self._color = emotion_color(value)
-
-        self._value = value
-        if self._setAlready:
-            qtanim.glow(self, duration=300, radius=100, color=QColor(self._color))
-        else:
-            self._setAlready = True
-
-    def color(self) -> str:
-        return self._color
-
-    def _emotionClicked(self, value: int):
-        self.setValue(value)
-        self.emotionChanged.emit()
 
 
 class AvatarSelectors(QWidget, Ui_AvatarSelectors):
@@ -1085,15 +817,22 @@ class AvatarSelectors(QWidget, Ui_AvatarSelectors):
             self._update_avatar(pixmap)
 
 
-class CharacterAvatar(QWidget, Ui_CharacterAvatar):
+class CharacterAvatar(QWidget):
     avatarUpdated = pyqtSignal()
 
-    def __init__(self, parent=None):
-        super(CharacterAvatar, self).__init__(parent)
-        self.setupUi(self)
-        apply_bg_image(self.wdgPovFrame, resource_registry.circular_frame1)
-        self.wdgPovFrame.setFixedSize(190, 190)
-        self.btnPov.installEventFilter(OpacityEventFilter(parent=self.btnPov, enterOpacity=0.7, leaveOpacity=1.0))
+    def __init__(self, parent=None, defaultIconSize: int = 118, avatarSize: int = 168, customIconSize: int = 132,
+                 margins: int = 17):
+        super().__init__(parent)
+        self._defaultIconSize = defaultIconSize
+        self._avatarSize = avatarSize
+        self._customIconSize = customIconSize
+        self.wdgFrame = QWidget()
+        self.wdgFrame.setProperty('border-image', True)
+        hbox(self, 0, 0).addWidget(self.wdgFrame)
+        self.btnAvatar = tool_btn(IconRegistry.character_icon(), transparent_=True)
+        hbox(self.wdgFrame, margins).addWidget(self.btnAvatar)
+        self.btnAvatar.installEventFilter(OpacityEventFilter(parent=self.btnAvatar, enterOpacity=0.7, leaveOpacity=1.0))
+        apply_border_image(self.wdgFrame, resource_registry.circular_frame1)
 
         self._character: Optional[Character] = None
         self._uploaded: bool = False
@@ -1107,29 +846,29 @@ class CharacterAvatar(QWidget, Ui_CharacterAvatar):
         wdg = AvatarSelectors(self._character)
         wdg.updated.connect(self._uploadedAvatar)
         wdg.selectorChanged.connect(self.updateAvatar)
-        btn_popup(self.btnPov, wdg)
+        btn_popup(self.btnAvatar, wdg)
 
     def setCharacter(self, character: Character):
         self._character = character
         self.updateAvatar()
 
     def updateAvatar(self):
-        self.btnPov.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
+        self.btnAvatar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         if self._character.prefs.avatar.use_role or self._character.prefs.avatar.use_custom_icon:
-            self.btnPov.setIconSize(QSize(132, 132))
+            self.btnAvatar.setIconSize(QSize(self._customIconSize, self._customIconSize))
         else:
-            self.btnPov.setIconSize(QSize(168, 168))
+            self.btnAvatar.setIconSize(QSize(self._avatarSize, self._avatarSize))
         avatar = avatars.avatar(self._character, fallback=False)
         if avatar:
-            self.btnPov.setIcon(avatar)
+            self.btnAvatar.setIcon(avatar)
         else:
             self.reset()
         self.avatarUpdated.emit()
 
     def reset(self):
-        self.btnPov.setIconSize(QSize(118, 118))
-        self.btnPov.setIcon(IconRegistry.character_icon(color='grey'))
-        self.btnPov.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        self.btnAvatar.setIconSize(QSize(self._defaultIconSize, self._defaultIconSize))
+        self.btnAvatar.setIcon(IconRegistry.character_icon(color='grey'))
+        self.btnAvatar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
 
     def imageUploaded(self) -> bool:
         return self._uploaded
@@ -1311,10 +1050,10 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
         self._chartSecondary.refresh()
         self._chartMinor.refresh()
 
-        event_dispatcher.register(self, CharacterSummaryChangedEvent)
-
     def setNovel(self, novel: Novel):
         self.novel = novel
+        dispatcher = event_dispatchers.instance(self.novel)
+        dispatcher.register(self, CharacterSummaryChangedEvent)
 
     @overrides
     def event_received(self, event: Event):
@@ -1505,7 +1244,7 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
 
 default_topics: List[Topic] = [
     Topic('Family', uuid.UUID('2ce9c3b4-1dd9-4f88-a16e-b8dc507633b7'), 'mdi6.human-male-female-child', '#457b9d'),
-    Topic('Job', uuid.UUID('19d9bfe9-5432-42d8-a444-0bd849720b2d'), 'fa5s.briefcase', '9c6644'),
+    Topic('Job', uuid.UUID('19d9bfe9-5432-42d8-a444-0bd849720b2d'), 'fa5s.briefcase', '#9c6644'),
     Topic('Education', uuid.UUID('01e9ef93-7a71-4b2d-af88-53b30d3947cb'), 'fa5s.graduation-cap'),
     Topic('Hometown', uuid.UUID('1ac1eec9-7953-419c-a265-88a0723a64ea'), 'ei.home-alt', '#4c334d'),
     Topic('Physical appearance', uuid.UUID('3c1a00d2-5085-47f0-8fe5-6d253e708999'), 'ri.body-scan-fill', ''),

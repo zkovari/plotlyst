@@ -17,44 +17,55 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import Optional
 
 from PyQt6.QtCore import QObject, QEvent
 from PyQt6.QtGui import QFont
 from overrides import overrides
-from qthandy import retain_when_hidden, transparent, decr_icon, incr_font
-from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
+from qthandy import retain_when_hidden, transparent, decr_icon
+from qthandy.filter import OpacityEventFilter
 
+from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Document
-from src.main.python.plotlyst.event.core import emit_event
+from src.main.python.plotlyst.core.domain import Novel, Document, NovelSetting
+from src.main.python.plotlyst.event.core import emit_global_event, Event
 from src.main.python.plotlyst.events import NovelUpdatedEvent, \
-    SceneChangedEvent
+    SceneChangedEvent, NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelMindmapToggleEvent, \
+    NovelPanelCustomizationEvent
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon, set_tab_visible, tool_btn
 from src.main.python.plotlyst.view.dialog.novel import NovelEditionDialog, SynopsisEditorDialog
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_border_image
 from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton
 from src.main.python.plotlyst.view.widget.plot import PlotEditor
+from src.main.python.plotlyst.view.widget.settings import NovelSettingsWidget
+from src.main.python.plotlyst.view.widget.story_map import EventsMindMapView
 
 
 class NovelView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        super().__init__(novel, [NovelUpdatedEvent, SceneChangedEvent])
+        super().__init__(novel, [SceneChangedEvent, NovelMindmapToggleEvent, NovelStorylinesToggleEvent,
+                                 NovelStructureToggleEvent], global_event_types=[NovelUpdatedEvent])
         self.ui = Ui_NovelView()
         self.ui.setupUi(self.widget)
 
-        self.ui.btnStructure.setIcon(IconRegistry.story_structure_icon(color='white'))
-        self.ui.btnPlot.setIcon(IconRegistry.plot_icon(color='white'))
-        self.ui.btnSynopsis.setIcon(IconRegistry.from_name('fa5s.scroll', 'white'))
-        self.ui.btnTags.setIcon(IconRegistry.tags_icon('white'))
-        self.ui.btnSettings.setIcon(IconRegistry.cog_icon('white'))
-        self.ui.btnSettings.setToolTip('Novel settings are not available yet')
-        self.ui.btnSettings.installEventFilter(InstantTooltipEventFilter(self.ui.btnSettings))
-        self.setNavigableButtonGroup(self.ui.buttonGroup)
+        set_tab_icon(self.ui.tabWidget, self.ui.tabEvents,
+                     IconRegistry.from_name('ri.mind-map', color_on=PLOTLYST_MAIN_COLOR))
+        set_tab_icon(self.ui.tabWidget, self.ui.tabStructure,
+                     IconRegistry.story_structure_icon(color_on=PLOTLYST_MAIN_COLOR))
+        set_tab_icon(self.ui.tabWidget, self.ui.tabPlot, IconRegistry.storylines_icon(color_on=PLOTLYST_MAIN_COLOR))
+        set_tab_icon(self.ui.tabWidget, self.ui.tabSynopsis,
+                     IconRegistry.from_name('fa5s.scroll', color_on=PLOTLYST_MAIN_COLOR))
+        set_tab_icon(self.ui.tabWidget, self.ui.tabTags, IconRegistry.tags_icon(color_on=PLOTLYST_MAIN_COLOR))
+        set_tab_icon(self.ui.tabWidget, self.ui.tabSettings, IconRegistry.cog_icon(color_on=PLOTLYST_MAIN_COLOR))
+
+        set_tab_visible(self.ui.tabWidget, self.ui.tabEvents, self.novel.prefs.toggled(NovelSetting.Mindmap))
+        set_tab_visible(self.ui.tabWidget, self.ui.tabPlot, self.novel.prefs.toggled(NovelSetting.Storylines))
+        set_tab_visible(self.ui.tabWidget, self.ui.tabStructure, self.novel.prefs.toggled(NovelSetting.Structure))
 
         self.ui.btnEditNovel.setIcon(IconRegistry.edit_icon(color_on='darkBlue'))
         self.ui.btnEditNovel.installEventFilter(OpacityEventFilter(parent=self.ui.btnEditNovel))
@@ -81,16 +92,16 @@ class NovelView(AbstractNovelView):
         self._btnPremiseVariants.setHidden(True)
         self.ui.subtitlePremise.addWidget(self._btnPremiseVariants)
 
-        self._btnSynopsisExtendEdit = SecondaryActionToolButton()
-        self._btnSynopsisExtendEdit.setToolTip('Edit in full view')
-        self._btnSynopsisExtendEdit.setIcon(IconRegistry.expand_icon())
-        decr_icon(self._btnSynopsisExtendEdit, 3)
+        self._dialogSynopsisEditor: Optional[SynopsisEditorDialog] = None
+
+        self._btnSynopsisExtendEdit = tool_btn(IconRegistry.expand_icon(), tooltip='Edit in full view',
+                                               transparent_=True)
+        decr_icon(self._btnSynopsisExtendEdit, 2)
         self._btnSynopsisExtendEdit.installEventFilter(
             OpacityEventFilter(self._btnSynopsisExtendEdit, leaveOpacity=0.55))
         self.ui.subtitleSynopsis.addWidget(self._btnSynopsisExtendEdit)
         self._btnSynopsisExtendEdit.clicked.connect(self._expandSynopsisEditor)
 
-        incr_font(self.ui.lblTitle, 10)
         self.ui.lblTitle.setText(self.novel.title)
         self.ui.textPremise.textEdit.insertPlainText(self.novel.premise)
         self.ui.textPremise.textEdit.textChanged.connect(self._premise_changed)
@@ -112,6 +123,9 @@ class NovelView(AbstractNovelView):
             self.ui.lblSynopsisWords.setWordCount(self.ui.textSynopsis.textEdit.statistics().word_count)
         self.ui.textSynopsis.textEdit.textChanged.connect(self._synopsis_changed)
 
+        self._eventsMap = EventsMindMapView(self.novel)
+        self.ui.wdgEventsMapParent.layout().addWidget(self._eventsMap)
+
         self.ui.wdgStructure.setNovel(self.novel)
         self.ui.wdgTitle.setFixedHeight(150)
         apply_border_image(self.ui.wdgTitle, resource_registry.frame1)
@@ -120,16 +134,24 @@ class NovelView(AbstractNovelView):
         self.ui.wdgPlotContainer.layout().addWidget(self.plot_editor)
 
         self.ui.wdgTagsContainer.setNovel(self.novel)
+        self.ui.tabWidget.setCurrentWidget(self.ui.tabPlot)
 
-        link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnStructure, self.ui.pageStructure),
-                                                      (self.ui.btnPlot, self.ui.pagePlot),
-                                                      (self.ui.btnSynopsis, self.ui.pageSynopsis),
-                                                      (self.ui.btnTags, self.ui.pageTags),
-                                                      (self.ui.btnSettings, self.ui.pageSettings)])
-        self.ui.btnStructure.setChecked(True)
+        self._settings = NovelSettingsWidget(self.novel)
+        self.ui.wdgSettings.layout().addWidget(self._settings)
 
-        for btn in self.ui.buttonGroup.buttons():
-            btn.installEventFilter(OpacityEventFilter(parent=btn, leaveOpacity=0.7, ignoreCheckedButton=True))
+        self.ui.tabWidget.setCurrentWidget(self.ui.tabSynopsis)
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, NovelPanelCustomizationEvent):
+            if isinstance(event, NovelMindmapToggleEvent):
+                set_tab_visible(self.ui.tabWidget, self.ui.tabEvents, event.toggled)
+            elif isinstance(event, NovelStorylinesToggleEvent):
+                set_tab_visible(self.ui.tabWidget, self.ui.tabPlot, event.toggled)
+            elif isinstance(event, NovelStructureToggleEvent):
+                set_tab_visible(self.ui.tabWidget, self.ui.tabStructure, event.toggled)
+        else:
+            super().event_received(event)
 
     @overrides
     def refresh(self):
@@ -150,7 +172,7 @@ class NovelView(AbstractNovelView):
             self.novel.title = title
             self.repo.update_project_novel(self.novel)
             self.ui.lblTitle.setText(self.novel.title)
-            emit_event(NovelUpdatedEvent(self, self.novel))
+            emit_global_event(NovelUpdatedEvent(self, self.novel))
 
     def _premise_changed(self):
         text = self.ui.textPremise.textEdit.toPlainText()
@@ -166,8 +188,18 @@ class NovelView(AbstractNovelView):
         self.repo.update_novel(self.novel)
 
     def _expandSynopsisEditor(self):
-        synopsis = SynopsisEditorDialog.display(self.novel)
-        self.ui.textSynopsis.setText(synopsis)
+        self._dialogSynopsisEditor = SynopsisEditorDialog(self.novel)
+        self.ui.textSynopsis.setDisabled(True)
+        self._btnSynopsisExtendEdit.setDisabled(True)
+        self._dialogSynopsisEditor.accepted.connect(self._closeSynopsisEditor)
+        self._dialogSynopsisEditor.rejected.connect(self._closeSynopsisEditor)
+        self._dialogSynopsisEditor.show()
+
+    def _closeSynopsisEditor(self):
+        self.ui.textSynopsis.setText(self._dialogSynopsisEditor.synopsis())
+        self._dialogSynopsisEditor = None
+        self.ui.textSynopsis.setEnabled(True)
+        self._btnSynopsisExtendEdit.setEnabled(True)
 
     def _synopsis_changed(self):
         if self.novel.synopsis is None:

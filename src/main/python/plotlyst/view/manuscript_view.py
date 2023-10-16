@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import qtanim
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QInputDialog
 from overrides import overrides
 from qthandy import translucent, bold, margins, spacer, vline, transparent, vspacer, decr_icon
 from qthandy.filter import OpacityEventFilter
@@ -30,23 +30,25 @@ from qttextedit.ops import TextEditorSettingsWidget, TextEditorSettingsSection
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Document, Chapter
 from src.main.python.plotlyst.core.domain import Scene
-from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info, Event
+from src.main.python.plotlyst.event.core import emit_global_event, emit_critical, emit_info, Event, emit_event
 from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode, \
-    ChapterChangedEvent, SceneDeletedEvent, ExitDistractionFreeMode, NovelSyncEvent
+    ChapterChangedEvent, SceneDeletedEvent, ExitDistractionFreeMode, NovelSyncEvent, CloseNovelEvent
 from src.main.python.plotlyst.resources import ResourceType
 from src.main.python.plotlyst.service.grammar import language_tool_proxy
 from src.main.python.plotlyst.service.persistence import flush_or_fail
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import tool_btn, ButtonPressResizeEventFilter, action, \
-    ExclusiveOptionalButtonGroup, link_buttons_to_pages
+    ExclusiveOptionalButtonGroup, link_buttons_to_pages, icon_to_html_img
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
+from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.display import Icon, ChartView
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
     DistractionFreeManuscriptEditor, SprintWidget, ReadabilityWidget
 from src.main.python.plotlyst.view.widget.progress import ProgressChart
+from src.main.python.plotlyst.view.widget.scene.editor import SceneMiniEditor
 from src.main.python.plotlyst.view.widget.scenes import SceneNotesEditor
 from src.main.python.plotlyst.view.widget.tree import TreeSettings
 from src.main.python.plotlyst.view.widget.utility import ask_for_resource
@@ -58,12 +60,10 @@ class ManuscriptView(AbstractNovelView):
         super().__init__(novel, [NovelUpdatedEvent, SceneChangedEvent, ChapterChangedEvent, SceneDeletedEvent])
         self.ui = Ui_ManuscriptView()
         self.ui.setupUi(self.widget)
-        self.ui.splitter.setSizes([100, 500])
+        self.ui.splitter.setSizes([150, 500])
         self.ui.splitterEditor.setSizes([400, 150])
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageOverview)
 
-        # self.ui.btnTitle.setText(self.novel.title)
-        # self.ui.btnTitle.clicked.connect(self._homepage)
         self.ui.lblWc.setAlignment(Qt.AlignmentFlag.AlignRight)
 
         self.ui.btnAdd.setIcon(IconRegistry.plus_icon('white'))
@@ -75,6 +75,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnGoals.setIcon(IconRegistry.goal_icon('black', PLOTLYST_MAIN_COLOR))
         self.ui.btnReadability.setIcon(IconRegistry.from_name('fa5s.glasses', 'black', PLOTLYST_MAIN_COLOR))
         self.ui.btnLengthCharts.setIcon(IconRegistry.from_name('ri.bar-chart-2-fill', 'black', PLOTLYST_MAIN_COLOR))
+        self.ui.btnLengthCharts.setHidden(True)
         self.ui.btnExport.setIcon(IconRegistry.from_name('ei.download-alt', 'black', PLOTLYST_MAIN_COLOR))
 
         self._btnGroupSideBar = ExclusiveOptionalButtonGroup()
@@ -94,13 +95,12 @@ class ManuscriptView(AbstractNovelView):
                                (self.ui.btnLengthCharts, self.ui.pageCharts),
                                (self.ui.btnReadability, self.ui.pageReadability)])
 
-        # bold(self.ui.lineSceneTitle)
-        # incr_font(self.ui.lineSceneTitle)
-        # transparent(self.ui.lineSceneTitle)
-        # self.ui.lineSceneTitle.textEdited.connect(self._scene_title_edited)
-        # self.ui.lineSceneTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
         bold(self.ui.lblWordCount)
+
+        self._miniSceneEditor = SceneMiniEditor(self.novel)
+        self.ui.pageInfo.layout().addWidget(self._miniSceneEditor)
+        self.ui.pageInfo.layout().addWidget(vspacer())
+        self.ui.textEdit.manuscriptTextEdit().sceneSeparatorClicked.connect(self._scene_separator_clicked)
 
         self._btnDistractionFree = tool_btn(IconRegistry.expand_icon(), 'Enter distraction-free mode', base=True)
         transparent(self._btnDistractionFree)
@@ -110,16 +110,29 @@ class ManuscriptView(AbstractNovelView):
         decr_icon(self._wdgSprint.btnTimer)
         self._spellCheckIcon = Icon()
         self._spellCheckIcon.setIcon(IconRegistry.from_name('fa5s.spell-check'))
+        self._spellCheckIcon.setToolTip('Spellcheck')
         self._cbSpellCheck = Toggle()
+        self._cbSpellCheck.setToolTip('Toggle spellcheck')
         self._btnContext = tool_btn(IconRegistry.context_icon(), 'Manuscript settings')
         transparent(self._btnContext)
 
-        self._chartProgress = ProgressChart(maxValue=80000, emptySliceColor=RELAXED_WHITE_COLOR)
+        self.ui.btnEditGoal.setIcon(IconRegistry.edit_icon())
+        transparent(self.ui.btnEditGoal)
+        decr_icon(self.ui.btnEditGoal, 2)
+        self.ui.btnEditGoal.installEventFilter(OpacityEventFilter(self.ui.btnEditGoal))
+        self.ui.btnEditGoal.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnEditGoal))
+        self.ui.btnEditGoal.clicked.connect(self._edit_wc_goal)
+
+        self._chartProgress = ProgressChart(maxValue=self.novel.manuscript_goals.target_wc,
+                                            title_prefix=icon_to_html_img(IconRegistry.goal_icon(PLOTLYST_MAIN_COLOR)),
+                                            color=PLOTLYST_MAIN_COLOR,
+                                            titleColor=PLOTLYST_MAIN_COLOR,
+                                            emptySliceColor=RELAXED_WHITE_COLOR)
         self._chartProgress.setBackgroundBrush(QColor(RELAXED_WHITE_COLOR))
         self._chartProgressView = ChartView()
-        self._chartProgressView.setMaximumSize(200, 200)
+        self._chartProgressView.setFixedSize(200, 200)
         self._chartProgressView.setChart(self._chartProgress)
-        self.ui.pageGoal.layout().addWidget(self._chartProgressView, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.ui.pageGoal.layout().addWidget(self._chartProgressView, alignment=Qt.AlignmentFlag.AlignTop)
         self.ui.pageGoal.layout().addWidget(vspacer())
 
         self._wdgReadability = ReadabilityWidget()
@@ -141,6 +154,7 @@ class ManuscriptView(AbstractNovelView):
         self._contextMenuWidget = TextEditorSettingsWidget()
         self._contextMenuWidget.addTab(self._langSelectionWidget, IconRegistry.from_name('fa5s.spell-check'), '')
         menu = MenuWidget(self._btnContext)
+        apply_white_menu(menu)
         menu.addWidget(self._contextMenuWidget)
         self._contextMenuWidget.setSectionVisible(TextEditorSettingsSection.WIDTH, False)
         self.ui.textEdit.attachSettingsWidget(self._contextMenuWidget)
@@ -159,6 +173,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.treeChapters.setNovel(self.novel, readOnly=self.novel.is_readonly())
         self.ui.treeChapters.sceneSelected.connect(self._editScene)
         self.ui.treeChapters.chapterSelected.connect(self._editChapter)
+        self.ui.treeChapters.sceneAdded.connect(self._scene_added)
         self.ui.treeChapters.centralWidget().setProperty('bg', True)
 
         self.ui.wdgSide.setHidden(True)
@@ -195,7 +210,13 @@ class ManuscriptView(AbstractNovelView):
         if isinstance(event, NovelSyncEvent):
             self.ui.textEdit.refresh()
             self._text_changed()
-
+        elif isinstance(event, SceneDeletedEvent):
+            if event.scene in self.ui.textEdit.scenes():
+                if len(self.ui.textEdit.scenes()) == 1:
+                    self.ui.textEdit.clear()
+                    self._empty_page()
+                else:
+                    self._editChapter(event.scene.chapter)
         super(ManuscriptView, self).event_received(event)
 
     @overrides
@@ -203,7 +224,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.treeChapters.refresh()
 
     def _enter_distraction_free(self):
-        emit_event(OpenDistractionFreeMode(self))
+        emit_global_event(OpenDistractionFreeMode(self))
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageDistractionFree)
         margins(self.widget, 0, 0, 0, 0)
         self.ui.wdgTitle.setHidden(True)
@@ -212,7 +233,7 @@ class ManuscriptView(AbstractNovelView):
         self._dist_free_editor.setWordDisplay(self.ui.lblWordCount)
 
     def _exit_distraction_free(self):
-        emit_event(ExitDistractionFreeMode(self))
+        emit_global_event(ExitDistractionFreeMode(self))
         self._dist_free_editor.deactivate()
         margins(self.widget, 4, 2, 2, 2)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageText)
@@ -240,6 +261,7 @@ class ManuscriptView(AbstractNovelView):
             self.repo.update_scene(scene)
 
         self.ui.textEdit.setScene(scene)
+        self._miniSceneEditor.setScene(scene)
 
         # if scene.title:
         #     self.ui.lineSceneTitle.setText(scene.title)
@@ -263,7 +285,7 @@ class ManuscriptView(AbstractNovelView):
         self.notesEditor.setScene(scene)
         self.ui.btnNotes.setEnabled(True)
         self.ui.btnStage.setEnabled(True)
-        self.ui.btnStage.setScene(scene)
+        self.ui.btnStage.setScene(scene, self.novel)
 
         self._recheckDocument()
 
@@ -280,18 +302,22 @@ class ManuscriptView(AbstractNovelView):
                 self.repo.update_scene(scene)
         if scenes:
             self.ui.textEdit.setChapterScenes(scenes, chapter.title_index(self.novel))
+            self._miniSceneEditor.setScenes(scenes)
         else:
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
+            self._miniSceneEditor.reset()
 
-        # self.ui.lineSceneTitle.setText(chapter.title_index(self.novel))
-        # self.ui.btnPov.setHidden(True)
-        # self.ui.btnSceneType.setHidden(True)
         self.ui.btnNotes.setChecked(False)
         self.ui.btnNotes.setDisabled(True)
         self.ui.btnStage.setDisabled(True)
 
         self._recheckDocument()
         self.ui.textEdit.setFocus()
+
+    def _scene_added(self, scene: Scene):
+        if self._is_empty_page():
+            self._editScene(scene)
+            self.ui.treeChapters.selectScene(scene)
 
     def _recheckDocument(self):
         if self.ui.stackedWidget.currentWidget() == self.ui.pageText:
@@ -310,17 +336,31 @@ class ManuscriptView(AbstractNovelView):
         self._wdgReadability.setTextDocumentUpdated(self.ui.textEdit.document())
 
     def _text_selection_changed(self):
-        fragment = self.ui.textEdit.textEdit.textCursor().selection()
-        if fragment:
+        if self.ui.textEdit.textEdit.textCursor().hasSelection():
+            fragment = self.ui.textEdit.textEdit.textCursor().selection()
             self.ui.lblWordCount.calculateSecondaryWordCount(fragment.toPlainText())
         else:
             self.ui.lblWordCount.clearSecondaryWordCount()
 
     def _scene_title_changed(self, scene: Scene):
         self.repo.update_scene(scene)
-        emit_event(SceneChangedEvent(self, scene))
+        emit_event(self.novel, SceneChangedEvent(self, scene))
 
-    def _side_bar_toggled(self, btn, toggled: bool):
+    def _edit_wc_goal(self):
+        goal, changed = QInputDialog.getInt(self.ui.btnEditGoal, 'Word count goal', 'Edit word count target',
+                                            value=self.novel.manuscript_goals.target_wc,
+                                            min=1000, max=10000000, step=1000)
+        if changed:
+            self.novel.manuscript_goals.target_wc = goal
+            self.repo.update_novel(self.novel)
+            self._refresh_target_wc()
+
+    def _refresh_target_wc(self):
+        self.ui.lblGoal.setText(f'<html><b>{self.novel.manuscript_goals.target_wc}</b> words')
+        self._chartProgress.setMaxValue(self.novel.manuscript_goals.target_wc)
+        self._chartProgress.refresh()
+
+    def _side_bar_toggled(self, _, toggled: bool):
         btn = self._btnGroupSideBar.checkedButton()
         if btn is None:
             qtanim.collapse(self.ui.wdgSide)
@@ -330,17 +370,9 @@ class ManuscriptView(AbstractNovelView):
             qtanim.expand(self.ui.wdgSide)
 
         if btn is self.ui.btnReadability:
-            # self.ui.stackSide.setCurrentWidget(self.ui.pageReadability)
             self._analysis_clicked(self.ui.btnReadability.isChecked())
-        # elif btn is self.ui.btnSceneInfo:
-        #     self.ui.stackSide.setCurrentWidget(self.ui.pageInfo)
-
-    def _scene_title_edited(self, text: str):
-        pass
-
-    def _homepage(self):
-        self.ui.stackedWidget.setCurrentWidget(self.ui.pageOverview)
-        self.ui.treeChapters.clearSelection()
+        elif btn is self.ui.btnGoals:
+            self._refresh_target_wc()
 
     def _spellcheck_toggled(self, toggled: bool):
         translucent(self._spellCheckIcon, 1 if toggled else 0.4)
@@ -376,9 +408,20 @@ class ManuscriptView(AbstractNovelView):
                 self.ui.textEdit.checkGrammar()
         self.ui.textEdit.setWordTagHighlighterEnabled(toggled)
 
+    def _scene_separator_clicked(self, scene: Scene):
+        if not self.ui.btnSceneInfo.isChecked():
+            self.ui.btnSceneInfo.setChecked(True)
+        self._miniSceneEditor.selectScene(scene)
+
     def _language_changed(self, lang: str):
-        emit_info('Application is shutting down. Persist workspace...')
+        emit_info('Novel is getting closed. Persist workspace...')
         self.novel.lang_settings.lang = lang
         self.repo.update_project_novel(self.novel)
         flush_or_fail()
-        QTimer.singleShot(1000, QApplication.exit)
+        emit_global_event(CloseNovelEvent(self, self.novel))
+
+    def _is_empty_page(self) -> bool:
+        return self.ui.stackedWidget.currentWidget() == self.ui.pageEmpty
+
+    def _empty_page(self):
+        self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)

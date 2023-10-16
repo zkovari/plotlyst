@@ -18,22 +18,25 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import math
+import sys
 from functools import partial
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Union
 
 import qtawesome
-from PyQt6.QtCore import QRectF, QModelIndex, QRect, QPoint, QBuffer, QIODevice, QSize, QObject, QEvent, Qt
+from PyQt6.QtCore import QRectF, QModelIndex, QRect, QPoint, QBuffer, QIODevice, QSize, QObject, QEvent, Qt, QTimer
 from PyQt6.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon, QAction
 from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemView, \
     QMenu, QAbstractButton, \
     QStackedWidget, QAbstractScrollArea, QLineEdit, QHeaderView, QScrollArea, QFrame, QTabWidget, \
-    QGraphicsDropShadowEffect, QTableView, QPushButton, QToolButton, QButtonGroup, QToolTip
+    QGraphicsDropShadowEffect, QTableView, QPushButton, QToolButton, QButtonGroup, QToolTip, QApplication, QMainWindow, \
+    QLabel
 from fbs_runtime import platform
 from overrides import overrides
 from qtanim import fade_out
-from qthandy import hbox, vbox, margins, gc
+from qthandy import hbox, vbox, margins, gc, transparent, spacer, sp, pointy
 
 from src.main.python.plotlyst.env import app_env
+from src.main.python.plotlyst.view.stylesheet import APP_STYLESHEET
 
 
 def rounded_pixmap(original: QPixmap) -> QPixmap:
@@ -275,20 +278,16 @@ def icon_to_html_img(icon: QIcon, size: int = 20) -> str:
     return f"<img src='data:image/png;base64, {bytes(buffer.data().toBase64()).decode()}'>"
 
 
-def pointy(widget):
-    widget.setCursor(Qt.CursorShape.PointingHandCursor)
-
-
 def restyle(widget: QWidget):
     widget.style().unpolish(widget)
     widget.style().polish(widget)
 
 
-def shadow(wdg: QWidget, offset: int = 2):
+def shadow(wdg: QWidget, offset: int = 2, radius: int = 0, color=Qt.GlobalColor.lightGray):
     effect = QGraphicsDropShadowEffect(wdg)
-    effect.setBlurRadius(0)
+    effect.setBlurRadius(radius)
     effect.setOffset(offset, offset)
-    effect.setColor(Qt.GlobalColor.lightGray)
+    effect.setColor(color)
     wdg.setGraphicsEffect(effect)
 
 
@@ -301,6 +300,7 @@ def stretch_col(view: QTableView, col: int):
 
 
 def scrolled(parent: QWidget, frameless: bool = False) -> Tuple[QScrollArea, QWidget]:
+    """Usage: self._scrollarea, self._wdgCenter = scrolled(self)"""
     scrollArea = QScrollArea(parent)
     scrollArea.setFocusPolicy(Qt.FocusPolicy.NoFocus)
     scrollArea.setWidgetResizable(True)
@@ -322,12 +322,38 @@ def set_tab_icon(tabs: QTabWidget, widget: QWidget, icon: QIcon):
     tabs.setTabIcon(i, icon)
 
 
+def set_tab_visible(tabs: QTabWidget, widget: QWidget, visible: bool = True):
+    i = tabs.indexOf(widget)
+    tabs.setTabVisible(i, visible)
+
+
+def set_tab_enabled(tabs: QTabWidget, widget: QWidget, enabled: bool = True):
+    i = tabs.indexOf(widget)
+    tabs.setTabEnabled(i, enabled)
+
+
+def set_tab_settings(tabs: QTabWidget, widget: QWidget, text: Optional[str] = None, icon: Optional[QIcon] = None,
+                     tooltip: Optional[str] = None, visible: Optional[bool] = None, enabled: Optional[bool] = None):
+    i = tabs.indexOf(widget)
+    if text is not None:
+        tabs.setTabText(i, text)
+    if icon is not None:
+        tabs.setTabIcon(i, icon)
+    if tooltip is not None:
+        tabs.setTabToolTip(i, tooltip)
+    if visible is not None:
+        tabs.setTabVisible(i, visible)
+    if enabled is not None:
+        tabs.setTabEnabled(i, enabled)
+
+
 def fade_out_and_gc(parent: QWidget, widget: QWidget, duration: int = 200):
     def destroy():
         widget.setHidden(True)
         parent.layout().removeWidget(widget)
         gc(widget)
 
+    widget.setDisabled((True))
     anim = fade_out(widget, duration)
     anim.finished.connect(destroy)
 
@@ -341,14 +367,35 @@ def insert_before(parent: QWidget, widget: QWidget, reference: QWidget):
     parent.layout().insertWidget(i, widget)
 
 
-def insert_after(parent: QWidget, widget: QWidget, reference: QWidget):
+def insert_after(parent: QWidget, widget: QWidget, reference: QWidget, alignment=None):
     i = parent.layout().indexOf(reference)
-    parent.layout().insertWidget(i + 1, widget)
+    if alignment is not None:
+        parent.layout().insertWidget(i + 1, widget, alignment=alignment)
+    else:
+        parent.layout().insertWidget(i + 1, widget)
 
 
 def tool_btn(icon: QIcon, tooltip: str = '', checkable: bool = False, base: bool = False,
-             icon_resize: bool = True) -> QToolButton:
+             icon_resize: bool = True, transparent_: bool = False, properties: List[str] = None,
+             parent=None) -> QToolButton:
     btn = QToolButton()
+    _init_btn(btn, icon, tooltip, checkable, base, icon_resize, transparent_, properties, parent)
+    return btn
+
+
+def push_btn(icon: QIcon, text: str = '', tooltip: str = '', checkable: bool = False, base: bool = False,
+             icon_resize: bool = True, transparent_: bool = False, properties: List[str] = None,
+             parent=None) -> QPushButton:
+    btn = QPushButton()
+    btn.setText(text)
+    _init_btn(btn, icon, tooltip, checkable, base, icon_resize, transparent_, properties, parent)
+
+    return btn
+
+
+def _init_btn(btn: QAbstractButton, icon: QIcon, tooltip: str = '', checkable: bool = False, base: bool = False,
+              icon_resize: bool = True, transparent_: bool = False, properties: List[str] = None,
+              parent=None):
     btn.setIcon(icon)
     btn.setToolTip(tooltip)
     btn.setCheckable(checkable)
@@ -357,8 +404,49 @@ def tool_btn(icon: QIcon, tooltip: str = '', checkable: bool = False, base: bool
         btn.setProperty('base', True)
     if icon_resize:
         btn.installEventFilter(ButtonPressResizeEventFilter(btn))
+    if transparent_:
+        transparent(btn)
+    if properties:
+        for prop in properties:
+            btn.setProperty(prop, True)
+    if parent:
+        btn.setParent(parent)
 
-    return btn
+
+def frame(parent=None):
+    frame_ = QFrame(parent)
+    frame_.setFrameShape(QFrame.Shape.StyledPanel)
+    return frame_
+
+
+def label(text: str = '', bold: Optional[bool] = None, italic: Optional[bool] = None, underline: Optional[bool] = None,
+          description: Optional[bool] = None, wordWrap: Optional[bool] = None, h1: Optional[bool] = None,
+          h2: Optional[bool] = None, h3: Optional[bool] = None, h4: Optional[bool] = None) -> QLabel:
+    lbl = QLabel(text)
+    font = lbl.font()
+    if bold:
+        font.setBold(bold)
+    if italic:
+        font.setItalic(italic)
+    if underline:
+        font.setUnderline(underline)
+    lbl.setFont(font)
+
+    if description:
+        lbl.setProperty('description', description)
+    if h1:
+        lbl.setProperty('h1', h1)
+    elif h2:
+        lbl.setProperty('h2', h2)
+    elif h3:
+        lbl.setProperty('h3', h3)
+    elif h4:
+        lbl.setProperty('h4', h4)
+
+    if wordWrap:
+        lbl.setWordWrap(wordWrap)
+
+    return lbl
 
 
 class ExclusiveOptionalButtonGroup(QButtonGroup):
@@ -379,3 +467,69 @@ class ExclusiveOptionalButtonGroup(QButtonGroup):
 
         if toggled:
             self._checkedButton = button
+
+
+class DelayedSignalSlotConnector(QObject):
+    def __init__(self, signal, slot, delay: int = 1000, parent=None):
+        super().__init__(parent)
+        self._slot = slot
+        self._delay = delay
+        self._signal_args = ()
+        self._signal_kwargs = {}
+
+        self._timer = QTimer()
+        self._timer.setSingleShot(True)
+        self._timer.timeout.connect(self._call)
+
+        self._frozen: bool = False
+
+        signal.connect(self._on_signal_emitted)
+
+    def freeze(self, frozen: bool = True):
+        self._frozen = frozen
+
+    def _call(self):
+        self._timer.stop()
+        self._slot(*self._signal_args, **self._signal_kwargs)
+
+    def _on_signal_emitted(self, *args, **kwargs):
+        self._signal_args = args
+        self._signal_kwargs = kwargs
+        if not self._frozen:
+            self._timer.start(self._delay)
+
+
+def spawn(cls):
+    app = QApplication(sys.argv)
+    app.setStyleSheet(APP_STYLESHEET)
+    main_window = QMainWindow()
+    wdgCentral = QWidget()
+    vbox(wdgCentral)
+    main_window.setCentralWidget(wdgCentral)
+
+    widget = cls()
+    wdgDisplay = QWidget()
+    hbox(wdgDisplay)
+    wdgDisplay.layout().addWidget(spacer())
+    wdgDisplay.layout().addWidget(widget)
+    wdgDisplay.layout().addWidget(spacer())
+
+    btnClose = QPushButton("Close")
+    sp(btnClose).h_max()
+    btnClose.clicked.connect(main_window.close)
+    wdgCentral.layout().addWidget(spacer())
+    wdgCentral.layout().addWidget(wdgDisplay)
+    wdgCentral.layout().addWidget(btnClose, alignment=Qt.AlignmentFlag.AlignCenter)
+    wdgCentral.layout().addWidget(spacer())
+
+    main_window.show()
+
+    sys.exit(app.exec())
+
+
+def any_menu_visible(*buttons: Union[QPushButton, QToolButton]) -> bool:
+    for btn in buttons:
+        if btn.menu().isVisible():
+            return True
+
+    return False

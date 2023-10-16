@@ -268,6 +268,7 @@ class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
             self.cbUkrainian.setChecked(True)
 
         self.btnShutDown.clicked.connect(self._languageChanged)
+        self.btnShutDown.installEventFilter(ButtonPressResizeEventFilter(self.btnShutDown))
 
     @overrides
     def mouseReleaseEvent(self, a0: QtGui.QMouseEvent) -> None:
@@ -293,7 +294,7 @@ class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
         qtanim.glow(self.btnShutDown, loop=3)
 
     def _languageChanged(self):
-        self.btnShutDown.setText('Shutting down ...')
+        self.btnShutDown.setText('Closing...')
         self.lblShutdownHint.setHidden(True)
         spin(self.btnShutDown, color='white')
         qtanim.glow(self.btnShutDown, loop=15)
@@ -366,6 +367,8 @@ class WordTagHighlighter(QSyntaxHighlighter):
 
 
 class ManuscriptTextEdit(TextEditBase):
+    sceneSeparatorClicked = pyqtSignal(Scene)
+
     def __init__(self, parent=None):
         super(ManuscriptTextEdit, self).__init__(parent)
         self.highlighter = GrammarHighlighter(self.document(), checkEnabled=False,
@@ -418,6 +421,9 @@ class ManuscriptTextEdit(TextEditBase):
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         anchor = self.anchorAt(event.pos())
         if anchor and anchor.startswith(SceneSeparatorTextFormatPrefix):
+            scene = self._sceneTextObject.scene(anchor.replace(SceneSeparatorTextFormatPrefix, ''))
+            if scene:
+                self.sceneSeparatorClicked.emit(scene)
             return
 
         super(ManuscriptTextEdit, self).mouseReleaseEvent(event)
@@ -539,6 +545,9 @@ class SceneSeparatorTextObject(QObject, QTextObjectInterface):
         else:
             return ''
 
+    def scene(self, id_str: str) -> Optional[Scene]:
+        return self._scenes.get(id_str)
+
     @overrides
     def intrinsicSize(self, doc: QTextDocument, posInDocument: int, format_: QTextFormat) -> QSizeF:
         metrics = QFontMetrics(self._textedit.font())
@@ -590,12 +599,15 @@ class ManuscriptTextEditor(RichTextEditor):
     @overrides
     def _initTextEdit(self) -> ManuscriptTextEdit:
         _textedit = ManuscriptTextEdit()
-        _textedit.zoomIn(_textedit.font().pointSize() * 0.34)
+        _textedit.zoomIn(int(_textedit.font().pointSize() * 0.34))
         _textedit.setBlockFormat(DEFAULT_MANUSCRIPT_LINE_SPACE, textIndent=DEFAULT_MANUSCRIPT_INDENT)
         _textedit.selectionChanged.connect(self.selectionChanged.emit)
         _textedit.textChanged.connect(self._textChanged)
         _textedit.setProperty('borderless', True)
         return _textedit
+
+    def manuscriptTextEdit(self) -> ManuscriptTextEdit:
+        return self._textedit
 
     def refresh(self):
         if len(self._scenes) == 1:
@@ -615,6 +627,9 @@ class ManuscriptTextEditor(RichTextEditor):
 
     def asyncCheckGrammer(self):
         self.textEdit.asyncCheckGrammer()
+
+    def scenes(self) -> List[Scene]:
+        return self._scenes
 
     def setScene(self, scene: Scene):
         self.clear()
@@ -819,8 +834,8 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         self.lblWords: Optional[WordsDisplay] = None
 
         self.sliderDocWidth.valueChanged.connect(
-            lambda x: self.wdgDistractionFreeEditor.layout().setContentsMargins(self.width() / 3 - x, 0,
-                                                                                self.width() / 3 - x, 0))
+            lambda x: self.wdgDistractionFreeEditor.layout().setContentsMargins(int(self.width() / 3) - x, 0,
+                                                                                int(self.width() / 3) - x, 0))
         self.wdgSprint = SprintWidget(self)
         self.wdgSprint.setCompactMode(True)
         self.wdgHeader.layout().insertWidget(0, self.wdgSprint, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -857,7 +872,7 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         self.editor.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
         self.wdgBottom.setVisible(True)
-        self.sliderDocWidth.setMaximum(self.width() / 3)
+        self.sliderDocWidth.setMaximum(int(self.width() / 3))
         if self.sliderDocWidth.value() <= 2:
             self.sliderDocWidth.setValue(self.sliderDocWidth.maximum() // 2)
 

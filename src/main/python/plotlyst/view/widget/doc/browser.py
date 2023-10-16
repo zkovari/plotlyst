@@ -23,7 +23,7 @@ from typing import Set, Optional, Dict
 from PyQt6.QtCore import pyqtSignal, Qt, QMimeData, QPointF, QModelIndex
 from PyQt6.QtWidgets import QListView
 from overrides import overrides
-from qthandy import clear_layout, vspacer, translucent, gc, ask_confirmation
+from qthandy import clear_layout, vspacer, translucent, gc, ask_confirmation, pointy, retain_when_hidden
 from qthandy.filter import DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget
 
@@ -32,7 +32,7 @@ from src.main.python.plotlyst.core.domain import Document, Novel, DocumentType, 
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import fade_out_and_gc, pointy, action
+from src.main.python.plotlyst.view.common import fade_out_and_gc, action
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
@@ -80,6 +80,8 @@ class DocumentWidget(ContainerNode):
         self._novel = novel
         self._doc = doc
 
+        retain_when_hidden(self._icon)
+
         self._actionChangeIcon.setVisible(True)
         menu = DocumentAdditionMenu(self._novel, self._btnAdd)
         menu.documentTriggered.connect(self.added.emit)
@@ -90,7 +92,7 @@ class DocumentWidget(ContainerNode):
 
     def refresh(self):
         self._lblTitle.setText(self._doc.title)
-        
+
         if self._doc.icon:
             self._icon.setIcon(IconRegistry.from_name(self._doc.icon, self._doc.icon_color))
             self._icon.setVisible(True)
@@ -177,7 +179,7 @@ class DocumentsTreeView(TreeView):
 
     def _dragStarted(self, wdg: DocumentWidget):
         wdg.setHidden(True)
-        self._dummyWdg = DocumentWidget(self._novel, wdg.doc())
+        self._dummyWdg = DocumentWidget(self._novel, wdg.doc(), settings=self._settings)
         self._dummyWdg.setPlusButtonEnabled(False)
         self._dummyWdg.setMenuEnabled(False)
         translucent(self._dummyWdg)

@@ -24,7 +24,7 @@ from qthandy.filter import InstantTooltipEventFilter
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import scroll_to_bottom
+from src.main.python.plotlyst.view.common import scroll_to_bottom, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.board_view_ui import Ui_BoardView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.task import BoardWidget
@@ -38,6 +38,7 @@ class BoardView(AbstractNovelView):
         self.ui.setupUi(self.widget)
 
         self.ui.btnNew.setIcon(IconRegistry.plus_icon('white'))
+        self.ui.btnNew.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnNew))
         self.ui.btnBoard.setIcon(IconRegistry.from_name('fa5s.columns', color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnChart.setIcon(IconRegistry.from_name('mdi.chart-areaspline', color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnSettings.setIcon(IconRegistry.cog_icon())

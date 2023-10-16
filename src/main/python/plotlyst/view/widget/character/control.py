@@ -20,9 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QWidget, QDial, QSpinBox
-from qthandy import vbox, line, vspacer
+from qthandy import vbox, line, vspacer, pointy
 
-from src.main.python.plotlyst.view.common import pointy, wrap
+from src.main.python.plotlyst.view.common import  wrap
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.display import Icon

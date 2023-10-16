@@ -32,7 +32,7 @@ from PyQt6.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter
     QPushButton, QTreeView, QTextEdit, QLabel, QTableView, \
     QAbstractItemView, QButtonGroup, QAbstractButton
 from overrides import overrides
-from qthandy import busy, margins, vspacer, bold, incr_font, gc
+from qthandy import busy, margins, vspacer, bold, incr_font, gc, pointy
 from qthandy import decr_font, transparent, translucent, underline, flow, \
     clear_layout, hbox, spacer, btn_popup, vbox, italic
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter, DragEventFilter
@@ -41,21 +41,21 @@ from qtmenu import MenuWidget
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Scene, Novel, SceneStructureItem, SceneOutcome, StoryBeat, Plot, \
+from src.main.python.plotlyst.core.domain import Scene, Novel, SceneOutcome, StoryBeat, Plot, \
     ScenePlotReference, StoryBeatType, Tag, SceneStage, ReaderPosition, InformationAcquisition, Document, \
     StoryStructure
 from src.main.python.plotlyst.core.help import scene_disaster_outcome_help, scene_trade_off_outcome_help, \
     scene_resolution_outcome_help
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import emit_critical, emit_event, Event, EventListener
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.core import emit_critical, Event, EventListener, emit_event
+from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneStatusChangedEvent, \
     ActiveSceneStageChanged, AvailableSceneStagesChanged, SceneOrderChangedEvent
 from src.main.python.plotlyst.model.novel import NovelTagsTreeModel, TagNode
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import PopupMenuBuilder, hmax, pointy, action, stretch_col, \
+from src.main.python.plotlyst.view.common import PopupMenuBuilder, hmax, action, stretch_col, \
     ButtonPressResizeEventFilter, tool_btn
 from src.main.python.plotlyst.view.generated.scene_drive_editor_ui import Ui_SceneDriveTrackingEditor
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
@@ -72,9 +72,9 @@ from src.main.python.plotlyst.view.widget.labels import SelectionItemLabel, Scen
 class SceneOutcomeSelector(QWidget):
     selected = pyqtSignal(SceneOutcome)
 
-    def __init__(self, scene_structure_item: SceneStructureItem, parent=None):
-        super(SceneOutcomeSelector, self).__init__(parent)
-        self.scene_structure_item = scene_structure_item
+    def __init__(self, parent=None, autoSelect: bool = True):
+        super().__init__(parent)
+        self._outcome = SceneOutcome.DISASTER
         hbox(self)
         self.btnDisaster = tool_btn(IconRegistry.disaster_icon(color='grey'), scene_disaster_outcome_help,
                                     checkable=True)
@@ -86,37 +86,52 @@ class SceneOutcomeSelector(QWidget):
         self._initStyle(self.btnTradeOff, '#F0C4E1')
         self._initStyle(self.btnResolution, '#CDFAEC')
 
-        self.refresh()
         self.btnGroupOutcome = QButtonGroup()
-        self.btnGroupOutcome.setExclusive(True)
-        self.btnGroupOutcome.addButton(self.btnDisaster)
-        self.btnGroupOutcome.addButton(self.btnTradeOff)
-        self.btnGroupOutcome.addButton(self.btnResolution)
-        self.btnDisaster.setChecked(True)
+        self._initButtonGroup()
+        if autoSelect:
+            self.btnDisaster.setChecked(True)
 
         self.layout().addWidget(self.btnDisaster)
         self.layout().addWidget(self.btnTradeOff)
         self.layout().addWidget(self.btnResolution)
 
-        self.btnGroupOutcome.buttonClicked.connect(self._clicked)
+    def reset(self):
+        btn = self.btnGroupOutcome.checkedButton()
+        if btn:
+            self.btnGroupOutcome.removeButton(self.btnDisaster)
+            self.btnGroupOutcome.removeButton(self.btnResolution)
+            self.btnGroupOutcome.removeButton(self.btnTradeOff)
+            btn.setChecked(False)
 
-    def refresh(self):
-        if self.scene_structure_item.outcome == SceneOutcome.DISASTER:
+            self.btnGroupOutcome = QButtonGroup()
+            self._initButtonGroup()
+
+    def refresh(self, outcome: SceneOutcome):
+        if outcome == SceneOutcome.DISASTER:
             self.btnDisaster.setChecked(True)
-        elif self.scene_structure_item.outcome == SceneOutcome.RESOLUTION:
+        elif outcome == SceneOutcome.RESOLUTION:
             self.btnResolution.setChecked(True)
-        elif self.scene_structure_item.outcome == SceneOutcome.TRADE_OFF:
+        elif outcome == SceneOutcome.TRADE_OFF:
             self.btnTradeOff.setChecked(True)
 
-    def _clicked(self):
+    def _clicked(self, checked: bool):
+        if not checked:
+            return
         if self.btnDisaster.isChecked():
-            self.scene_structure_item.outcome = SceneOutcome.DISASTER
+            self._outcome = SceneOutcome.DISASTER
         elif self.btnResolution.isChecked():
-            self.scene_structure_item.outcome = SceneOutcome.RESOLUTION
+            self._outcome = SceneOutcome.RESOLUTION
         elif self.btnTradeOff.isChecked():
-            self.scene_structure_item.outcome = SceneOutcome.TRADE_OFF
+            self._outcome = SceneOutcome.TRADE_OFF
+        self.selected.emit(self._outcome)
 
-        self.selected.emit(self.scene_structure_item.outcome)
+    def _initButtonGroup(self):
+        self.btnGroupOutcome.setExclusive(True)
+        self.btnGroupOutcome.addButton(self.btnDisaster)
+        self.btnGroupOutcome.addButton(self.btnTradeOff)
+        self.btnGroupOutcome.addButton(self.btnResolution)
+
+        self.btnGroupOutcome.buttonClicked.connect(self._clicked)
 
     def _initStyle(self, btn: QToolButton, color: str):
         btn.setIconSize(QSize(20, 20))
@@ -469,10 +484,11 @@ class SceneStoryStructureWidget(QWidget):
                             self._beatHeight)
         self._wdgLine.setGeometry(0, 0, self.width(), self._lineHeight)
         if self.btnCurrentScene:
-            self.btnCurrentScene.setGeometry(self.width() * self._currentScenePercentage / 100 - self._lineHeight // 2,
-                                             self._lineHeight,
-                                             self._beatHeight,
-                                             self._beatHeight)
+            self.btnCurrentScene.setGeometry(
+                int(self.width() * self._currentScenePercentage / 100 - self._lineHeight // 2),
+                self._lineHeight,
+                self._beatHeight,
+                self._beatHeight)
 
     def _xForPercentage(self, percentage: int) -> int:
         return int(self.width() * percentage / 100 - self._lineHeight // 2)
@@ -568,10 +584,11 @@ class SceneStoryStructureWidget(QWidget):
                     max_index - min_index) * (index - min_index)
 
             self.btnCurrentScene.setVisible(True)
-            self.btnCurrentScene.setGeometry(self.width() * self._currentScenePercentage / 100 - self._lineHeight // 2,
-                                             self._lineHeight,
-                                             self._beatHeight,
-                                             self._beatHeight)
+            self.btnCurrentScene.setGeometry(
+                int(self.width() * self._currentScenePercentage / 100 - self._lineHeight // 2),
+                self._lineHeight,
+                self._beatHeight,
+                self._beatHeight)
 
     def unhighlightBeats(self):
         for btn in self._beats.values():
@@ -1120,10 +1137,11 @@ class StoryMap(QWidget, EventListener):
         self.setStyleSheet(f'QWidget {{background-color: {RELAXED_WHITE_COLOR};}}')
 
         self._refreshOnShow = False
-        event_dispatcher.register(self, SceneOrderChangedEvent)
 
     def setNovel(self, novel: Novel):
         self.novel = novel
+        dispatcher = event_dispatchers.instance(self.novel)
+        dispatcher.register(self, SceneOrderChangedEvent)
         self.refresh()
 
     @overrides
@@ -1239,7 +1257,7 @@ class SceneNotesEditor(DocumentTextEditor):
 
 class SceneStageButton(QToolButton, EventListener):
     def __init__(self, parent=None):
-        super(SceneStageButton, self).__init__(parent)
+        super().__init__(parent)
         self._scene: Optional[Scene] = None
         self._novel: Optional[Novel] = None
         self._stageOk: bool = False
@@ -1250,10 +1268,6 @@ class SceneStageButton(QToolButton, EventListener):
 
         self.repo = RepositoryPersistenceManager.instance()
 
-        event_dispatcher.register(self, ActiveSceneStageChanged)
-        event_dispatcher.register(self, SceneStatusChangedEvent)
-        event_dispatcher.register(self, AvailableSceneStagesChanged)
-
     @overrides
     def event_received(self, event: Event):
         if isinstance(event, (ActiveSceneStageChanged, AvailableSceneStagesChanged)):
@@ -1261,9 +1275,13 @@ class SceneStageButton(QToolButton, EventListener):
         elif isinstance(event, SceneStatusChangedEvent) and event.scene == self._scene:
             self.updateStage()
 
-    def setScene(self, scene: Scene):
+    def setScene(self, scene: Scene, novel: Novel):
         self._scene = scene
-        self._novel = app_env.novel
+        self._novel = novel
+
+        dispatcher = event_dispatchers.instance(self._novel)
+        dispatcher.register(self, ActiveSceneStageChanged, SceneStatusChangedEvent, AvailableSceneStagesChanged)
+
         self.updateStage()
 
     def stageOk(self) -> bool:
@@ -1296,7 +1314,7 @@ class SceneStageButton(QToolButton, EventListener):
         self.updateStage()
         self.repo.update_scene(self._scene)
 
-        emit_event(SceneStatusChangedEvent(self, self._scene))
+        emit_event(self._novel, SceneStatusChangedEvent(self, self._scene))
 
 
 class SceneDriveTrackingEditor(QWidget, Ui_SceneDriveTrackingEditor):

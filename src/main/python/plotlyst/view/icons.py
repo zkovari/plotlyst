@@ -29,7 +29,7 @@ from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_TH
     CONFLICT_SELF_COLOR, CHARACTER_MAJOR_COLOR, CHARACTER_MINOR_COLOR, CHARACTER_SECONDARY_COLOR, \
     PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY, ConflictType, \
-    Scene, SceneType, PlotType, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS
+    Scene, PlotType, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS, ScenePurposeType
 from src.main.python.plotlyst.core.template import SelectionItem
 from src.main.python.plotlyst.settings import CHARACTER_INITIAL_AVATAR_COLOR_CODES
 from src.main.python.plotlyst.view.common import rounded_pixmap
@@ -99,8 +99,8 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.pencil', color, color_on=color_on)
 
     @staticmethod
-    def plus_edit_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.pencil-plus', color='#004385')
+    def plus_edit_icon(color: str = '#004385') -> QIcon:
+        return IconRegistry.from_name('mdi.pencil-plus', color=color)
 
     @staticmethod
     def plus_icon(color: str = 'green') -> QIcon:
@@ -152,7 +152,7 @@ class IconRegistry:
 
     @staticmethod
     def scene_icon(color: str = 'black', color_on: str = PLOTLYST_SECONDARY_COLOR) -> QIcon:
-        return IconRegistry.from_name('mdi.movie-open', color, color_on=color_on, mdi_scale=1.1)
+        return IconRegistry.from_name('mdi.movie-open', color, color_on=color_on, scale=1.1)
 
     @staticmethod
     def manuscript_icon(color: str = 'black', color_on: str = PLOTLYST_SECONDARY_COLOR) -> QIcon:
@@ -167,8 +167,8 @@ class IconRegistry:
         return qtawesome.icon('fa5s.book-open', color_on=color_on, color=color)
 
     @staticmethod
-    def synopsis_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.file-document')
+    def synopsis_icon(**kwargs) -> QIcon:
+        return IconRegistry.from_name('mdi.file-document', **kwargs)
 
     @staticmethod
     def general_info_icon() -> QIcon:
@@ -183,35 +183,51 @@ class IconRegistry:
         else:
             color = '#fe4a49'
         return qtawesome.icon('fa5s.circle', 'fa5s.yin-yang',
-                              options=[{'color': 'white', 'scale_factor': 1}, {'color': color}])
+                              options=[{'color': 'white', 'scale_factor': 1},
+                                       {'color': color, 'color_disabled': 'black'}])
 
     @staticmethod
     def scene_type_icon(scene: Scene) -> Optional[QIcon]:
-        if scene.type == SceneType.ACTION:
+        if scene.purpose == ScenePurposeType.Story:
             return IconRegistry.action_scene_icon(scene.outcome_resolution(), scene.outcome_trade_off())
-        elif scene.type == SceneType.REACTION:
+        elif scene.purpose == ScenePurposeType.Reaction:
             return IconRegistry.reaction_scene_icon()
-        elif scene.type == SceneType.HAPPENING:
-            return IconRegistry.happening_scene_icon()
-        elif scene.type == SceneType.EXPOSITION:
+        elif scene.purpose == ScenePurposeType.Character:
+            return IconRegistry.character_development_scene_icon()
+        elif scene.purpose == ScenePurposeType.Emotion:
+            return IconRegistry.emotion_scene_icon()
+        elif scene.purpose == ScenePurposeType.Setup:
+            return IconRegistry.setup_scene_icon()
+        elif scene.purpose == ScenePurposeType.Exposition:
             return IconRegistry.exposition_scene_icon()
-        elif scene.type == SceneType.SUMMARY:
-            return IconRegistry.summary_scene_icon()
         else:
             return IconRegistry.empty_icon()
 
     @staticmethod
     def reaction_scene_icon() -> QIcon:
         return qtawesome.icon('fa5s.circle', 'fa5s.yin-yang',
-                              options=[{'color': 'white', 'scale_factor': 1}, {'color': '#4b86b4'}])
+                              options=[{'color': 'white', 'scale_factor': 1},
+                                       {'color': '#4b86b4', 'color_disabled': 'black'}])
 
     @staticmethod
     def happening_scene_icon() -> QIcon:
         return IconRegistry.from_name('mdi.motion-outline', 'grey', 'black')
 
     @staticmethod
+    def setup_scene_icon() -> QIcon:
+        return IconRegistry.from_name('fa5s.seedling', 'grey')
+
+    @staticmethod
     def exposition_scene_icon() -> QIcon:
         return IconRegistry.from_name('mdi.information-outline', 'grey', 'black')
+
+    @staticmethod
+    def character_development_scene_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.account-cog', 'grey', 'black')
+
+    @staticmethod
+    def emotion_scene_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.emoticon-outline', 'grey', 'black')
 
     @staticmethod
     def summary_scene_icon() -> QIcon:
@@ -226,12 +242,12 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.tag-plus')
 
     @staticmethod
-    def tags_icon(color: str = 'black') -> QIcon:
-        return qtawesome.icon('ei.tags', color=color)
+    def tags_icon(**kwargs) -> QIcon:
+        return IconRegistry.from_name('ei.tags', **kwargs)
 
     @staticmethod
     def graph_icon() -> QIcon:
-        return qtawesome.icon('ei.graph')
+        return IconRegistry.from_name('ei.graph')
 
     @staticmethod
     def wip_icon() -> QIcon:
@@ -243,7 +259,7 @@ class IconRegistry:
 
     @staticmethod
     def reports_icon(color: str = 'black', color_on: str = PLOTLYST_SECONDARY_COLOR) -> QIcon:
-        return IconRegistry.from_name('mdi.chart-arc', color=color, color_on=color_on, mdi_scale=1.4)
+        return IconRegistry.from_name('mdi.chart-arc', color=color, color_on=color_on, scale=1.4)
 
     @staticmethod
     def document_edition_icon(color: str = 'black', color_on=PLOTLYST_SECONDARY_COLOR) -> QIcon:
@@ -402,8 +418,8 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.creation', color=CONFLICT_SUPERNATURAL_COLOR)
 
     @staticmethod
-    def conflict_self_icon(color: str = CONFLICT_SELF_COLOR) -> QIcon:
-        return IconRegistry.from_name('mdi.mirror', color=color)
+    def conflict_self_icon(color: str = CONFLICT_SELF_COLOR, color_on: str = CONFLICT_SELF_COLOR) -> QIcon:
+        return IconRegistry.from_name('mdi.mirror', color=color, color_on=color_on)
 
     @staticmethod
     def subplot_icon(color: str = 'black') -> QIcon:
@@ -430,8 +446,8 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.human-cane')
 
     @staticmethod
-    def cog_icon(color: str = 'black') -> QIcon:
-        return IconRegistry.from_name('fa5s.cog', color=color)
+    def cog_icon(**kwargs) -> QIcon:
+        return IconRegistry.from_name('fa5s.cog', **kwargs)
 
     @staticmethod
     def cause_icon(color: str = 'black') -> QIcon:
@@ -455,7 +471,7 @@ class IconRegistry:
 
     @staticmethod
     def heading_1_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.format-header-1', mdi_scale=1.4)
+        return IconRegistry.from_name('mdi.format-header-1', scale=1.4)
 
     @staticmethod
     def heading_2_icon() -> QIcon:
@@ -478,8 +494,8 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.circle-medium', **kwargs)
 
     @staticmethod
-    def inciting_incident_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.bell-alert-outline', '#a2ad59')
+    def inciting_incident_icon(color: str = '#a2ad59') -> QIcon:
+        return IconRegistry.from_name('mdi.bell-alert-outline', color)
 
     @staticmethod
     def hook_icon() -> QIcon:
@@ -496,6 +512,14 @@ class IconRegistry:
     @staticmethod
     def crisis_icon(color: str = '#ce2d4f', color_on: str = '#ce2d4f') -> QIcon:
         return IconRegistry.from_name('mdi.arrow-decision-outline', color=color, color_on=color_on)
+
+    @staticmethod
+    def tool_icon(color: str = '#d4a373', color_on: str = '#d4a373') -> QIcon:
+        return IconRegistry.from_name('fa5s.hammer', color, color_on)
+
+    @staticmethod
+    def cost_icon(color: str = '#e9c46a', color_on: str = '#e9c46a') -> QIcon:
+        return IconRegistry.from_name('ph.coin-bold', color, color_on)
 
     @staticmethod
     def ticking_clock_icon() -> QIcon:
@@ -531,11 +555,15 @@ class IconRegistry:
 
     @staticmethod
     def story_structure_icon(**kwargs) -> QIcon:
-        return IconRegistry.from_name('fa5s.theater-masks', **kwargs)
+        return IconRegistry.from_name('mdi6.bridge', **kwargs, scale=1.4)
 
     @staticmethod
     def plot_icon(**kwargs) -> QIcon:
         return IconRegistry.from_name('mdi.chart-bell-curve-cumulative', **kwargs)
+
+    @staticmethod
+    def storylines_icon(**kwargs) -> QIcon:
+        return IconRegistry.from_name('fa5s.theater-masks', **kwargs)
 
     @staticmethod
     def plot_type_icon(plot_type: PlotType) -> QIcon:
@@ -613,6 +641,10 @@ class IconRegistry:
         return IconRegistry.from_name('fa5s.expand-alt', vflip=True)
 
     @staticmethod
+    def group_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.account-group')
+
+    @staticmethod
     def docx_icon() -> QIcon:
         return IconRegistry.from_name('mdi.file-word-outline')
 
@@ -625,13 +657,32 @@ class IconRegistry:
         return IconRegistry.from_name(item.icon, item.icon_color)
 
     @staticmethod
-    def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2, hflip: bool = False,
-                  vflip: bool = False) -> QIcon:
+    def from_name(name: str, color: str = 'black', color_on: str = '', scale: Optional[float] = None,
+                  hflip: bool = False,
+                  vflip: bool = False, rotated: int = 0) -> QIcon:
         _color_on = color_on if color_on else color
-        if name.startswith('md') or name.startswith('ri') or name.startswith('ph'):
-            return QIcon(qtawesome.icon(name, color=color, color_on=_color_on, hflip=hflip, vflip=vflip,
-                                        options=[{'scale_factor': mdi_scale}]))
-        return QIcon(qtawesome.icon(name, color=color, color_on=_color_on, hflip=hflip, vflip=vflip))
+
+        icon_args = {
+            'color': color,
+            'color_on': _color_on
+        }
+
+        if (scale is not None) or (
+                name.startswith('md') or name.startswith('ri') or name.startswith('ph') or name.startswith('msc')):
+            if scale is not None:
+                icon_args['options'] = [{'scale_factor': scale}]
+            elif scale is None and (
+                    name.startswith('md') or name.startswith('ri') or name.startswith('ph') or name.startswith('msc')):
+                icon_args['options'] = [{'scale_factor': 1.2}]
+
+        if hflip is not None:
+            icon_args['hflip'] = hflip
+        if vflip is not None:
+            icon_args['vflip'] = vflip
+        if rotated != 0:
+            icon_args['rotated'] = rotated
+
+        return QIcon(qtawesome.icon(name, **icon_args))
 
 
 class AvatarsRegistry:

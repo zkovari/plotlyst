@@ -20,9 +20,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from abc import abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, Any
+from typing import Optional, Any, Dict
 
 from PyQt6.QtCore import pyqtSignal, QObject
+
+from src.main.python.plotlyst.core.domain import Novel
 
 
 class Severity(Enum):
@@ -64,7 +66,23 @@ class EventSender(QObject):
     send = pyqtSignal(Event)
 
 
-event_sender = EventSender()
+class EventSendersRepository:
+    def __init__(self):
+        self._senders: Dict[Novel, EventSender] = {}
+
+    def instance(self, novel: Novel) -> EventSender:
+        if novel not in self._senders.keys():
+            self._senders[novel] = EventSender()
+
+        return self._senders[novel]
+
+    def pop(self, novel: Novel):
+        self._senders.pop(novel, None)
+
+
+event_senders = EventSendersRepository()
+
+global_event_sender = EventSender()
 
 
 class EventListener:
@@ -74,5 +92,9 @@ class EventListener:
         pass
 
 
-def emit_event(event: Event):
-    event_sender.send.emit(event)
+def emit_global_event(event: Event):
+    global_event_sender.send.emit(event)
+
+
+def emit_event(novel: Novel, event: Event):
+    event_senders.instance(novel).send.emit(event)

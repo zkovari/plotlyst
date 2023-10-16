@@ -26,9 +26,8 @@ from PyQt6.QtCore import QModelIndex, Qt, QVariant, QSortFilterProxyModel, QMime
 from PyQt6.QtGui import QFont, QBrush, QColor
 from overrides import overrides
 
-from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Scene, CharacterArc, Character, \
-    SelectionItem, SceneStage, SceneType, SceneStructureAgenda
+    SelectionItem, SceneStage, SceneStructureAgenda, ScenePurposeType
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import SceneStatusChangedEvent
 from src.main.python.plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel, SelectionItemsModel
@@ -81,8 +80,6 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
         self._resolved_action_icon = IconRegistry.action_scene_icon(resolved=True)
         self._trade_off_action_icon = IconRegistry.action_scene_icon(trade_off=True)
         self._reaction_icon = IconRegistry.reaction_scene_icon()
-        self._wip_brush = QBrush(QColor(WIP_COLOR))
-        self._pivotal_brush = QBrush(QColor(PIVOTAL_COLOR))
 
     def setDragEnabled(self, enabled: bool):
         self._dragEnabled = enabled
@@ -104,12 +101,6 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
                 font = QFont()
                 font.setItalic(True)
                 return font
-        elif role == Qt.ItemDataRole.BackgroundRole:
-            if not self._relax_colors or index.column() == self.ColTitle or index.column() == self.ColPov:
-                if scene.wip:
-                    return self._wip_brush
-                elif scene.beat(self.novel):
-                    return self._pivotal_brush
         elif role == Qt.ItemDataRole.DisplayRole:
             if index.column() == self.ColTitle:
                 return scene.title_or_index(self.novel)
@@ -121,13 +112,13 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
             if index.column() == self.ColType:
                 if scene.wip:
                     return IconRegistry.wip_icon()
-                elif scene.type == SceneType.ACTION:
+                elif scene.purpose == ScenePurposeType.Story:
                     if scene.outcome_resolution():
                         return self._resolved_action_icon
                     if scene.outcome_trade_off():
                         return self._trade_off_action_icon
                     return self._action_icon
-                elif scene.type == SceneType.REACTION:
+                elif scene.purpose == ScenePurposeType.Reaction:
                     return self._reaction_icon
             elif index.column() == self.ColPov:
                 if scene.pov:
@@ -303,7 +294,7 @@ class ScenesStageTableModel(QAbstractTableModel, BaseScenesTableModel):
             if self.novel.stages[index.column() - 2] == self._highlighted_stage:
                 return QBrush(QColor('#c1e0f7'))
         if role == Qt.ItemDataRole.DisplayRole and index.column() == self.ColTitle:
-            return self._scene(index).title
+            return self._scene(index).title_or_index(self.novel)
 
     @overrides
     def flags(self, index: QModelIndex) -> Qt.ItemFlag:
@@ -334,7 +325,7 @@ class ScenesStageTableModel(QAbstractTableModel, BaseScenesTableModel):
 
         RepositoryPersistenceManager.instance().update_scene(scene)
         self.modelReset.emit()
-        emit_event(SceneStatusChangedEvent(self, scene))
+        emit_event(self.novel, SceneStatusChangedEvent(self, scene))
 
     def setHighlightedStage(self, stage: SceneStage):
         self._highlighted_stage = stage

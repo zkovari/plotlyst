@@ -18,13 +18,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from timeit import default_timer as timer
+from typing import Any, NoReturn
 
 from src.main.python.plotlyst.core.domain import VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY
 
 EXIT_CODE_RESTART = 10
 
 WIP_COLOR: str = '#f6cd61'
-PIVOTAL_COLOR: str = '#3da4ab'
 
 ACT_ONE_COLOR: str = '#02bcd4'
 TRANS_ACT_ONE_COLOR: str = 'rgba(2, 188, 212, 45)'
@@ -56,6 +56,7 @@ PLOTLYST_SECONDARY_COLOR: str = '#4B0763'  # indigo
 PLOTLYST_TERTIARY_COLOR: str = '#D4B8E0'  # Thistle
 
 RELAXED_WHITE_COLOR: str = '#f8f9fa'
+WHITE_COLOR: str = '#FcFcFc'
 
 NAV_BAR_BUTTON_DEFAULT_COLOR: str = '#A89BC7'
 NAV_BAR_BUTTON_CHECKED_COLOR: str = '#F9F9F9'
@@ -139,3 +140,7 @@ def camel_to_whitespace(text: str) -> str:
     new_text = ' '.join(words)
     new_text = new_text.strip()
     return new_text
+
+
+def raise_unrecognized_arg(arg: Any) -> NoReturn:
+    raise ValueError(f'Unrecognized argument {arg}')
