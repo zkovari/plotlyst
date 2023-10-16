@@ -68,7 +68,7 @@ class PlotArcNode(ContainerNode):
 
 
 class ArcsTreeView(TreeView):
-    plotToggled = pyqtSignal(Plot, bool)
+    storylineToggled = pyqtSignal(Plot, bool)
 
     def __init__(self, novel: Novel, parent=None):
         super(ArcsTreeView, self).__init__(parent)
@@ -78,26 +78,30 @@ class ArcsTreeView(TreeView):
     def refresh(self):
         clear_layout(self._centralWidget)
 
+        storylinesNode = ContainerNode('Storylines', IconRegistry.storylines_icon(color='grey'), readOnly=True)
+
         for plot in self._novel.plots:
             node = PlotArcNode(plot)
-            node.plotToggled.connect(self.plotToggled.emit)
-            self._centralWidget.layout().addWidget(node)
+            node.plotToggled.connect(self.storylineToggled.emit)
+            storylinesNode.addChild(node)
 
+        self._centralWidget.layout().addWidget(storylinesNode)
         self._centralWidget.layout().addWidget(vspacer())
 
 
-class PlotReport(AbstractReport, Ui_PlotReport):
+class ArcReport(AbstractReport, Ui_PlotReport):
 
     def __init__(self, novel: Novel, parent=None):
-        super(PlotReport, self).__init__(novel, parent)
+        super(ArcReport, self).__init__(novel, parent)
 
-        self.chartValues = PlotValuesArcChart(self.novel)
+        self.chartValues = StoryArcChart(self.novel)
         self.chartViewPlotValues.setChart(self.chartValues)
         self._treeView = ArcsTreeView(novel)
-        self._treeView.plotToggled.connect(self._plotToggled)
+        self._treeView.storylineToggled.connect(self._plotToggled)
         self.wdgTreeParent.layout().addWidget(self._treeView)
         self.splitter.setSizes([150, 500])
 
+        self.btnArcsToggle.setIcon(IconRegistry.from_name('mdi.file-tree'))
         self.btnArcsToggle.clicked.connect(self._arcsSelectorClicked)
 
         self.refresh()
@@ -110,10 +114,10 @@ class PlotReport(AbstractReport, Ui_PlotReport):
         qtanim.toggle_expansion(self.wdgTreeParent, toggled)
 
     def _plotToggled(self, plot: Plot, toggled: bool):
-        self.chartValues.setPlotVisible(plot, toggled)
+        self.chartValues.setStorylineVisible(plot, toggled)
 
 
-class PlotValuesArcChart(BaseChart):
+class StoryArcChart(BaseChart):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self.novel = novel
@@ -123,9 +127,9 @@ class PlotValuesArcChart(BaseChart):
 
         self._plots: List[Plot] = []
 
-        self.setTitle('Plot value charges')
+        self.setTitle('Story arc')
 
-    def setPlotVisible(self, plot: Plot, visible: bool):
+    def setStorylineVisible(self, plot: Plot, visible: bool):
         if visible:
             self._plots.append(plot)
         else:

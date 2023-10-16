@@ -41,7 +41,7 @@ from src.main.python.plotlyst.view.report import AbstractReport
 from src.main.python.plotlyst.view.report.character import CharacterReport
 from src.main.python.plotlyst.view.report.conflict import ConflictReport
 from src.main.python.plotlyst.view.report.manuscript import ManuscriptReport
-from src.main.python.plotlyst.view.report.plot import PlotReport
+from src.main.python.plotlyst.view.report.plot import ArcReport
 from src.main.python.plotlyst.view.report.scene import SceneReport
 
 
@@ -134,7 +134,7 @@ class ArcReportPage(ReportPage):
 
     @overrides
     def _initReport(self):
-        return PlotReport(self._novel)
+        return ArcReport(self._novel)
 
 
 class ManuscriptReportPage(ReportPage):
@@ -209,7 +209,7 @@ class ReportsView(AbstractNovelView):
                                                       (self.ui.btnArc, self._page_arc),
                                                       (self.ui.btnManuscript, self._page_manuscript)])
 
-        self.ui.btnCharacters.setChecked(True)
+        self.ui.btnArc.setChecked(True)
 
     @overrides
     def refresh(self):
