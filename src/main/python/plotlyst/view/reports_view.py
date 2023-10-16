@@ -137,6 +137,13 @@ class ArcReportPage(ReportPage):
     def _initReport(self):
         return ArcReport(self._novel)
 
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, StorylineRemovedEvent):
+            self._report.removeStoryline(event.storyline)
+        else:
+            super().event_received(event)
+
 
 class ManuscriptReportPage(ReportPage):
     def __init__(self, novel: Novel, parent=None):

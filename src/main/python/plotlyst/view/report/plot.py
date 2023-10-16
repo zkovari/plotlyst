@@ -17,14 +17,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import List
+from typing import List, Dict
 
 import qtanim
 from PyQt6.QtCharts import QSplineSeries, QValueAxis, QLegend
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QPen, QColor, QShowEvent
 from overrides import overrides
-from qthandy import clear_layout, vspacer, bold
+from qthandy import clear_layout, vspacer, bold, gc
 
 from src.main.python.plotlyst.core.domain import Novel, Plot
 from src.main.python.plotlyst.view.common import icon_to_html_img
@@ -66,6 +66,9 @@ class PlotArcNode(ContainerNode):
         else:
             self._icon.setHidden(True)
 
+    def isToggled(self):
+        return self._btnVisible.isChecked()
+
     def _toggled(self, toggled: bool):
         bold(self._lblTitle, toggled)
         self.plotToggled.emit(self._plot, toggled)
@@ -79,18 +82,27 @@ class ArcsTreeView(TreeView):
         self._novel = novel
         self._centralWidget.setProperty('relaxed-white-bg', True)
 
-    def refresh(self):
-        clear_layout(self._centralWidget)
+        self._storylineNodes: Dict[Plot, PlotArcNode] = {}
+        self._storylinesNode = ContainerNode('Storylines', IconRegistry.storylines_icon(color='grey'), readOnly=True)
 
-        storylinesNode = ContainerNode('Storylines', IconRegistry.storylines_icon(color='grey'), readOnly=True)
+    def refresh(self):
+        clear_layout(self._centralWidget, auto_delete=False)
 
         for plot in self._novel.plots:
-            node = PlotArcNode(plot)
-            node.plotToggled.connect(self.storylineToggled.emit)
-            storylinesNode.addChild(node)
+            if plot not in self._storylineNodes.keys():
+                node = PlotArcNode(plot)
+                self._storylineNodes[plot] = node
+                node.plotToggled.connect(self.storylineToggled.emit)
+                self._storylinesNode.addChild(node)
 
-        self._centralWidget.layout().addWidget(storylinesNode)
+        self._centralWidget.layout().addWidget(self._storylinesNode)
         self._centralWidget.layout().addWidget(vspacer())
+
+    def removeStoryline(self, plot: Plot):
+        node = self._storylineNodes.pop(plot)
+        if node.isToggled():
+            self.storylineToggled.emit(plot, False)
+        gc(node)
 
 
 class ArcReport(AbstractReport, Ui_PlotReport):
@@ -113,6 +125,9 @@ class ArcReport(AbstractReport, Ui_PlotReport):
     @overrides
     def refresh(self):
         self._treeView.refresh()
+
+    def removeStoryline(self, plot: Plot):
+        self._treeView.removeStoryline(plot)
 
     def _arcsSelectorClicked(self, toggled: bool):
         qtanim.toggle_expansion(self.wdgTreeParent, toggled)

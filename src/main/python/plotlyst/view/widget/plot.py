@@ -955,7 +955,7 @@ class PlotEditor(QWidget, Ui_PlotEditor):
                 if item.widget().plot == plot:
                     clear_layout(self.pageDisplay)
         delete_plot(self.novel, plot)
-        emit_event(self.novel, StorylineRemovedEvent(self))
+        emit_event(self.novel, StorylineRemovedEvent(self, plot))
 
     # def _remove(self, widget: PlotWidget):
     #     if ask_confirmation(f'Are you sure you want to delete the plot {widget.plot.text}?'):
