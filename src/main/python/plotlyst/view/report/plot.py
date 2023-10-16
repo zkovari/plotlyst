@@ -22,7 +22,7 @@ from typing import List
 import qtanim
 from PyQt6.QtCharts import QSplineSeries, QValueAxis, QLegend
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QPen, QColor
+from PyQt6.QtGui import QPen, QColor, QShowEvent
 from overrides import overrides
 from qthandy import clear_layout, vspacer, bold
 
@@ -52,6 +52,10 @@ class PlotArcNode(ContainerNode):
         self._btnVisible.toggled.connect(self._toggled)
         self._wdgTitle.layout().addWidget(self._btnVisible)
 
+        self.refresh()
+
+    @overrides
+    def showEvent(self, event: QShowEvent) -> None:
         self.refresh()
 
     def refresh(self):
@@ -101,7 +105,7 @@ class ArcReport(AbstractReport, Ui_PlotReport):
         self.wdgTreeParent.layout().addWidget(self._treeView)
         self.splitter.setSizes([150, 500])
 
-        self.btnArcsToggle.setIcon(IconRegistry.from_name('mdi.file-tree'))
+        self.btnArcsToggle.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
         self.btnArcsToggle.clicked.connect(self._arcsSelectorClicked)
 
         self.refresh()

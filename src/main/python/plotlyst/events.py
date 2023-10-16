@@ -184,7 +184,12 @@ class NovelWorldBuildingToggleEvent(NovelPanelCustomizationEvent):
 
 
 @dataclass
-class PlotCreatedEvent(Event):
+class StorylineCreatedEvent(Event):
+    pass
+
+
+@dataclass
+class StorylineRemovedEvent(Event):
     pass
 
 

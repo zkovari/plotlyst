@@ -32,7 +32,7 @@ from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent, \
-    PlotCreatedEvent, CharacterDeletedEvent, NovelSyncEvent
+    CharacterDeletedEvent, NovelSyncEvent, StorylineCreatedEvent, StorylineRemovedEvent
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import link_buttons_to_pages, scrolled
 from src.main.python.plotlyst.view.generated.reports_view_ui import Ui_ReportsView
@@ -131,6 +131,7 @@ class ConflictsReportPage(ReportPage):
 class ArcReportPage(ReportPage):
     def __init__(self, novel: Novel, parent=None):
         super(ArcReportPage, self).__init__(novel, parent)
+        self._dispatcher.register(self, StorylineCreatedEvent, StorylineRemovedEvent, CharacterChangedEvent)
 
     @overrides
     def _initReport(self):
@@ -173,7 +174,7 @@ class ManuscriptReportPage(ReportPage):
 
 class ReportsView(AbstractNovelView):
     def __init__(self, novel: Novel):
-        super().__init__(novel, [CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent, PlotCreatedEvent])
+        super().__init__(novel)
         self.ui = Ui_ReportsView()
         self.ui.setupUi(self.widget)
 
