@@ -30,7 +30,7 @@ from src.main.python.plotlyst.common import clamp
 from src.main.python.plotlyst.core.domain import Novel, Plot, Character
 from src.main.python.plotlyst.view.common import icon_to_html_img
 from src.main.python.plotlyst.view.generated.report.plot_report_ui import Ui_PlotReport
-from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.report import AbstractReport
 from src.main.python.plotlyst.view.widget.chart import BaseChart
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, EyeToggleNode
@@ -74,12 +74,16 @@ class ArcsTreeView(TreeView):
 
         self._storylineNodes: Dict[Plot, PlotArcNode] = {}
         self._storylinesNode = ContainerNode('Storylines', IconRegistry.storylines_icon(color='grey'), readOnly=True)
+
         self._conflictNode = EyeToggleNode('Conflict', IconRegistry.conflict_icon())
         self._conflictNode.setToggleTooltip('Toggle overall conflict intensity')
         self._conflictNode.toggled.connect(self.conflictToggled)
 
+        self._agendaCharactersNode = ContainerNode('Characters', IconRegistry.character_icon('grey'), readOnly=True)
+
     def refresh(self):
         clear_layout(self._centralWidget, auto_delete=False)
+        self._agendaCharactersNode.clearChildren()
 
         for plot in self._novel.plots:
             if plot not in self._storylineNodes.keys():
@@ -88,8 +92,17 @@ class ArcsTreeView(TreeView):
                 node.plotToggled.connect(self.storylineToggled.emit)
                 self._storylinesNode.addChild(node)
 
+        characters = set()
+        for scene in self._novel.scenes:
+            if scene.agendas and scene.agendas[0].character_id:
+                characters.add(scene.agendas[0].character(self._novel))
+
+        for character in characters:
+            self._addCharacterAgendaNodes(character)
+
         self._centralWidget.layout().addWidget(self._storylinesNode)
         self._centralWidget.layout().addWidget(self._conflictNode)
+        self._centralWidget.layout().addWidget(self._agendaCharactersNode)
         self._centralWidget.layout().addWidget(vspacer())
 
     def removeStoryline(self, plot: Plot):
@@ -97,6 +110,17 @@ class ArcsTreeView(TreeView):
         if node.isToggled():
             self.storylineToggled.emit(plot, False)
         gc(node)
+
+    def _addCharacterAgendaNodes(self, character: Character):
+        agendaNode = ContainerNode(character.name, avatars.avatar(character), readOnly=True)
+        emotionNode = EyeToggleNode('Emotion')
+        motivationNode = EyeToggleNode('Motivation')
+        conflictNode = EyeToggleNode('Conflict')
+        agendaNode.addChild(emotionNode)
+        agendaNode.addChild(motivationNode)
+        agendaNode.addChild(conflictNode)
+
+        self._agendaCharactersNode.addChild(agendaNode)
 
 
 class ArcReport(AbstractReport, Ui_PlotReport):
