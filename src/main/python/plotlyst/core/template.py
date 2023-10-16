@@ -581,7 +581,7 @@ def default_character_profiles() -> List[ProfileTemplate]:
     personality_title = TemplateField('Personality', type=TemplateFieldType.DISPLAY_HEADER, required=True)
     gmc_title = TemplateField('Goals', type=TemplateFieldType.DISPLAY_HEADER)
     baggage_title = TemplateField('Baggage', type=TemplateFieldType.DISPLAY_HEADER)
-    arcs_title = TemplateField('Arc', type=TemplateFieldType.DISPLAY_HEADER)
+    # arcs_title = TemplateField('Arc', type=TemplateFieldType.DISPLAY_HEADER)
     philosophy_title = TemplateField('Philosophy', type=TemplateFieldType.DISPLAY_HEADER)
     faculties = TemplateField('Faculties', type=TemplateFieldType.DISPLAY_HEADER)
 
@@ -595,8 +595,8 @@ def default_character_profiles() -> List[ProfileTemplate]:
               ProfileElement(gmc_field, 7, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(baggage_title, 8, 0, col_span=2),
               ProfileElement(baggage_field, 9, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(arcs_title, 10, 0, col_span=2),
-              ProfileElement(arcs_field, 11, 0, col_span=2, margins=Margins(left=15)),
+              # ProfileElement(arcs_title, 10, 0, col_span=2),
+              # ProfileElement(arcs_field, 11, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(philosophy_title, 12, 0, col_span=2),
               ProfileElement(values_field, 13, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(faculties, 14, 0, col_span=2),
