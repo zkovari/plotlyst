@@ -937,6 +937,8 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
 
 
 class CharacterTabBar(QTabBar):
+    characterChanged = pyqtSignal(Character)
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
@@ -955,6 +957,7 @@ class CharacterTabBar(QTabBar):
 
     def _characterSelected(self, character: Character):
         self._character = character
+        self.characterChanged.emit(self._character)
 
 
 class SceneAgendaEditor(AbstractSceneElementsEditor):
