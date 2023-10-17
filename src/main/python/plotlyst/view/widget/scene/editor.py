@@ -955,11 +955,14 @@ class CharacterTabBar(QTabBar):
     def tabSizeHint(self, index: int) -> QSize:
         return QSize(self._btnCharacterSelector.sizeHint().width(), 80)
 
+    def setCharacter(self, character: Character):
+        self._btnCharacterSelector.setCharacter(character)
+
     def setCharacters(self, characters: List[Character]):
         self._btnCharacterSelector.characterSelectorMenu().setCharacters(characters)
 
-    def setCharacterSelectorEnabled(self, enabled: bool):
-        self._btnCharacterSelector.setEnabled(enabled)
+    def reset(self):
+        self._btnCharacterSelector.clear()
 
     def popup(self):
         self._btnCharacterSelector.characterSelectorMenu().exec()
@@ -977,6 +980,7 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         self._lblBottom.setText('Character relations')
 
         self._characterTabbar = CharacterTabBar(self._novel)
+        self._characterTabbar.characterChanged.connect(self._characterSelected)
         self.layout().insertWidget(0, self._characterTabbar, alignment=Qt.AlignmentFlag.AlignTop)
 
         self._unsetCharacterSlot = None
@@ -1063,14 +1067,11 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
             #     wdg = self.__newPlotElementEditor()
             #     wdg.setElement(element)
 
-        elements_visible = agenda.character_id is not None
-        self._btnCharacterDelegate.setVisible(not elements_visible)
-        self._wdgElementsTopRow.setVisible(elements_visible)
-        self._wdgElementsBottomRow.setVisible(elements_visible)
-        self._lblBottom.setVisible(elements_visible)
-
-        self._emotionEditor.setVisible(elements_visible)
-        self._motivationEditor.setVisible(elements_visible)
+        if scene.agendas[0].character_id:
+            self._characterTabbar.setCharacter(scene.agendas[0].character(self._novel))
+        else:
+            self._characterTabbar.reset()
+        self._updateElementsVisibility(agenda)
 
     def updateAvailableCharacters(self):
         characters = []
@@ -1082,6 +1083,15 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
 
     def setUnsetCharacterSlot(self, func):
         self._unsetCharacterSlot = func
+
+    def povChangedEvent(self, pov: Character):
+        self._scene.agendas[0].set_character(pov)
+        self._updateElementsVisibility(self._scene.agendas[0])
+        self._characterTabbar.setCharacter(pov)
+
+    def _characterSelected(self, character: Character):
+        self._scene.agendas[0].set_character(character)
+        self._updateElementsVisibility(self._scene.agendas[0])
 
     def _emotionChanged(self, emotion: int):
         self._scene.agendas[0].emotion = emotion
@@ -1100,3 +1110,12 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
             self._unsetCharacterSlot()
         else:
             self._characterTabbar.popup()
+
+    def _updateElementsVisibility(self, agenda):
+        elements_visible = agenda.character_id is not None
+        self._btnCharacterDelegate.setVisible(not elements_visible)
+        self._wdgElementsTopRow.setVisible(elements_visible)
+        self._wdgElementsBottomRow.setVisible(elements_visible)
+        self._lblBottom.setVisible(elements_visible)
+        self._emotionEditor.setVisible(elements_visible)
+        self._motivationEditor.setVisible(elements_visible)
