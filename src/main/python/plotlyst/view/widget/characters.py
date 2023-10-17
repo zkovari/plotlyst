@@ -311,10 +311,11 @@ class CharacterSelectorMenu(MenuWidget):
         super().__init__(parent)
         self._novel = novel
         self._characters: Optional[List[Character]] = None
-        self.aboutToShow.connect(self._fillUpMenu)
+        self.aboutToShow.connect(self._beforeShow)
 
     def setCharacters(self, character: List[Character]):
         self._characters = character
+        self._fillUpMenu()
 
     def characters(self) -> List[Character]:
         if self._characters is not None:
@@ -322,12 +323,18 @@ class CharacterSelectorMenu(MenuWidget):
         else:
             return self._novel.characters
 
+    def _beforeShow(self):
+        if self._characters is None:
+            self._fillUpMenu()
+
     def _fillUpMenu(self):
         self.clear()
 
         for char in self.characters():
             self.addAction(
                 action(char.name, avatars.avatar(char), slot=partial(self.selected.emit, char), parent=self))
+
+        self._frame.updateGeometry()
 
 
 class CharacterSelectorButton(QToolButton):
