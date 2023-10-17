@@ -251,6 +251,12 @@ class ScenesTreeView(TreeView, EventListener):
         emit_event(self._novel, SceneChangedEvent(self, scene))
         self.sceneAdded.emit(scene)
 
+    def addPrologue(self):
+        pass
+
+    def addEpilogue(self):
+        pass
+
     def selectChapter(self, chapter: Chapter):
         self.clearSelection()
         self._chapters[chapter].select()
@@ -496,7 +502,7 @@ class ScenesTreeView(TreeView, EventListener):
         self._dummyWdg.setVisible(True)
 
     # noinspection PyTypeChecker
-    def __initChapterWidget(self, chapter):
+    def __initChapterWidget(self, chapter: Chapter):
         chapterWdg = ChapterWidget(chapter, self._novel, readOnly=self._readOnly, settings=self._settings)
         chapterWdg.selectionChanged.connect(partial(self._chapterSelectionChanged, chapterWdg))
         if not self._readOnly:

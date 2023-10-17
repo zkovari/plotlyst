@@ -160,7 +160,15 @@ class IconRegistry:
 
     @staticmethod
     def chapter_icon() -> QIcon:
-        return qtawesome.icon('ei.book')
+        return IconRegistry.from_name('ei.book')
+
+    @staticmethod
+    def prologue_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.alpha-p-box-outline', color='#669bbc')
+
+    @staticmethod
+    def epilogue_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.alpha-e-box-outline', color='#e76f51')
 
     @staticmethod
     def book_icon(color='black', color_on=PLOTLYST_SECONDARY_COLOR) -> QIcon:

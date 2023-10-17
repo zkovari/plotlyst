@@ -156,6 +156,12 @@ class ScenesOutlineView(AbstractNovelView):
         self._addSceneMenu.addAction(action('Add scene', IconRegistry.scene_icon(), self._new_scene))
         self._addSceneMenu.addAction(
             action('Add chapter', IconRegistry.chapter_icon(), self.ui.treeChapters.addChapter))
+        prologues = MenuWidget()
+        prologues.setTitle('Other')
+        prologues.addAction(action('Prologue', IconRegistry.prologue_icon(), self.ui.treeChapters.addPrologue))
+        prologues.addAction(action('Epilogue', IconRegistry.epilogue_icon(), self.ui.treeChapters.addEpilogue))
+        self._addSceneMenu.addSeparator()
+        self._addSceneMenu.addMenu(prologues)
 
         self.ui.treeChapters.setSettings(TreeSettings(font_incr=2))
         self.ui.treeChapters.setNovel(self.novel, readOnly=self.novel.is_readonly())
