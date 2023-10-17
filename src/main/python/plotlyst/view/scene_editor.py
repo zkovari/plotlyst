@@ -22,11 +22,11 @@ from typing import Optional
 
 import emoji
 import qtanim
-from PyQt6.QtCore import QObject, pyqtSignal, Qt
+from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtWidgets import QWidget, QTableView
 from overrides import overrides
 from qtanim import fade_in
-from qthandy import underline, incr_font, margins
+from qthandy import underline, incr_font, margins, pointy
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
 from src.main.python.plotlyst.core.client import json_client
@@ -108,7 +108,7 @@ class SceneEditor(QObject, EventListener):
         self.tblCharacters.verticalHeader().setVisible(False)
         self.tblCharacters.horizontalHeader().setVisible(False)
         self.tblCharacters.horizontalHeader().setDefaultSectionSize(200)
-        self.tblCharacters.setCursor(Qt.CursorShape.PointingHandCursor)
+        pointy(self.tblCharacters)
 
         self._characters_model = CharactersSceneAssociationTableModel(self.novel)
         self._characters_model.selection_changed.connect(self._character_changed)
@@ -143,11 +143,11 @@ class SceneEditor(QObject, EventListener):
         self.ui.tabStorylines.layout().addWidget(self._storylineEditor)
 
         self._agencyEditor = SceneAgendaEditor(self.novel)
+        self._agencyEditor.setUnsetCharacterSlot(self._pov_not_selected_notification)
         self.ui.tabCharacter.layout().addWidget(self._agencyEditor)
 
         self.ui.btnClose.clicked.connect(self._on_close)
 
-        self.ui.wdgSceneStructure.setUnsetCharacterSlot(self._pov_not_selected_notification)
         self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._btnPurposeType.refresh)
         self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._storylineEditor.refresh)
 
@@ -253,8 +253,8 @@ class SceneEditor(QObject, EventListener):
             self.ui.textNotes.clear()
 
     def _pov_not_selected_notification(self):
-        emit_info('POV character must be selected first')
         qtanim.shake(self.ui.wdgPov)
+        qtanim.shake(self.ui.btnStageCharacterLabel)
 
     def _on_pov_changed(self, pov: Character):
         self.scene.pov = pov
@@ -265,7 +265,6 @@ class SceneEditor(QObject, EventListener):
         self._update_pov_avatar()
         self._characters_model.update()
         self._character_changed()
-        # self.ui.wdgSceneStructure.updateAgendaCharacter()
         self.ui.treeScenes.refreshScene(self.scene)
 
     def _update_pov_avatar(self):
@@ -281,12 +280,13 @@ class SceneEditor(QObject, EventListener):
         self.ui.treeScenes.refreshScene(self.scene)
 
     def _character_changed(self):
+        print('char changed')
         self.ui.wdgCharacters.clear()
 
         for character in self.scene.characters:
             self.ui.wdgCharacters.addLabel(CharacterLabel(character))
 
-        # self.ui.wdgSceneStructure.updateAvailableAgendaCharacters()
+        self._agencyEditor.updateAvailableCharacters()
 
     def _purposeSkipped(self):
         self.scene.purpose = ScenePurposeType.Other
