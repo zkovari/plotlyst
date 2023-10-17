@@ -22,11 +22,11 @@ from typing import Optional
 
 import emoji
 import qtanim
-from PyQt6.QtCore import QObject, pyqtSignal, Qt
+from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtWidgets import QWidget, QTableView
 from overrides import overrides
 from qtanim import fade_in
-from qthandy import underline, incr_font, margins
+from qthandy import underline, incr_font, margins, pointy
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
 from src.main.python.plotlyst.core.client import json_client
@@ -96,7 +96,7 @@ class SceneEditor(QObject, EventListener):
 
         self._povMenu = ScrollableMenuWidget(self.ui.wdgPov.btnAvatar)
         for char in self.novel.characters:
-            self._povMenu.addAction(action(char.name, avatars.avatar(char), partial(self._on_pov_changed, char)))
+            self._povMenu.addAction(action(char.name, avatars.avatar(char), partial(self._pov_changed, char)))
         self.ui.wdgPov.btnAvatar.setText('POV')
         self.ui.wdgPov.setFixedSize(170, 170)
 
@@ -108,7 +108,7 @@ class SceneEditor(QObject, EventListener):
         self.tblCharacters.verticalHeader().setVisible(False)
         self.tblCharacters.horizontalHeader().setVisible(False)
         self.tblCharacters.horizontalHeader().setDefaultSectionSize(200)
-        self.tblCharacters.setCursor(Qt.CursorShape.PointingHandCursor)
+        pointy(self.tblCharacters)
 
         self._characters_model = CharactersSceneAssociationTableModel(self.novel)
         self._characters_model.selection_changed.connect(self._character_changed)
@@ -130,11 +130,11 @@ class SceneEditor(QObject, EventListener):
         self._purposeSelector = ScenePurposeSelectorWidget()
         margins(self._purposeSelector, top=25)
         self.ui.pagePurpose.layout().addWidget(self._purposeSelector)
-        self._purposeSelector.skipped.connect(self._purposeSkipped)
-        self._purposeSelector.selected.connect(self._purposeChanged)
+        self._purposeSelector.skipped.connect(self._purpose_skipped)
+        self._purposeSelector.selected.connect(self._purpose_changed)
 
         self._btnPurposeType = ScenePurposeTypeButton()
-        self._btnPurposeType.reset.connect(self._resetPurposeEditor)
+        self._btnPurposeType.reset.connect(self._reset_purpose_editor)
         self.ui.wdgMidbar.layout().insertWidget(0, self._btnPurposeType)
 
         self._storylineEditor = SceneStorylineEditor(self.novel)
@@ -143,11 +143,11 @@ class SceneEditor(QObject, EventListener):
         self.ui.tabStorylines.layout().addWidget(self._storylineEditor)
 
         self._agencyEditor = SceneAgendaEditor(self.novel)
+        self._agencyEditor.setUnsetCharacterSlot(self._character_not_selected_notification)
         self.ui.tabCharacter.layout().addWidget(self._agencyEditor)
 
         self.ui.btnClose.clicked.connect(self._on_close)
 
-        self.ui.wdgSceneStructure.setUnsetCharacterSlot(self._pov_not_selected_notification)
         self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._btnPurposeType.refresh)
         self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._storylineEditor.refresh)
 
@@ -206,9 +206,9 @@ class SceneEditor(QObject, EventListener):
 
         self._btnPurposeType.setScene(self.scene)
         if self.scene.purpose is None:
-            self._resetPurposeEditor()
+            self._reset_purpose_editor()
         else:
-            self._closePurposeEditor()
+            self._close_purpose_editor()
 
         self._characters_model.setScene(self.scene)
         self._character_changed()
@@ -252,20 +252,21 @@ class SceneEditor(QObject, EventListener):
         else:
             self.ui.textNotes.clear()
 
-    def _pov_not_selected_notification(self):
-        emit_info('POV character must be selected first')
+    def _character_not_selected_notification(self):
         qtanim.shake(self.ui.wdgPov)
+        qtanim.shake(self.ui.btnStageCharacterLabel)
 
-    def _on_pov_changed(self, pov: Character):
+    def _pov_changed(self, pov: Character):
         self.scene.pov = pov
 
-        self.scene.agendas[0].set_character(self.scene.pov)
-        self.scene.agendas[0].conflict_references.clear()
+        # self.scene.agendas[0].set_character(self.scene.pov)
+        # self.scene.agendas[0].conflict_references.clear()
+
+        self._agencyEditor.povChangedEvent(pov)
 
         self._update_pov_avatar()
         self._characters_model.update()
         self._character_changed()
-        # self.ui.wdgSceneStructure.updateAgendaCharacter()
         self.ui.treeScenes.refreshScene(self.scene)
 
     def _update_pov_avatar(self):
@@ -286,19 +287,19 @@ class SceneEditor(QObject, EventListener):
         for character in self.scene.characters:
             self.ui.wdgCharacters.addLabel(CharacterLabel(character))
 
-        # self.ui.wdgSceneStructure.updateAvailableAgendaCharacters()
+        self._agencyEditor.updateAvailableCharacters()
 
-    def _purposeSkipped(self):
+    def _purpose_skipped(self):
         self.scene.purpose = ScenePurposeType.Other
-        self._closePurposeEditor()
+        self._close_purpose_editor()
 
-    def _purposeChanged(self, purpose: ScenePurpose):
+    def _purpose_changed(self, purpose: ScenePurpose):
         self.scene.purpose = purpose.type
         if purpose.type == ScenePurposeType.Story:
             pass
-        self._closePurposeEditor()
+        self._close_purpose_editor()
 
-    def _closePurposeEditor(self):
+    def _close_purpose_editor(self):
         self._btnPurposeType.refresh()
         if not self._btnPurposeType.isVisible():
             fade_in(self._btnPurposeType)
@@ -308,7 +309,7 @@ class SceneEditor(QObject, EventListener):
         self._purposeSelector.setDisabled(True)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
 
-    def _resetPurposeEditor(self):
+    def _reset_purpose_editor(self):
         self.scene.purpose = None
         self._btnPurposeType.setHidden(True)
         self.ui.btnInfo.setHidden(True)
