@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from dataclasses import dataclass, field
 from functools import partial
 from typing import List, Dict, Optional
 
@@ -122,8 +123,8 @@ class ArcsTreeView(TreeView):
         conflictNode = EyeToggleNode('Conflict', IconRegistry.conflict_icon())
 
         emotionNode.toggled.connect(partial(self.characterEmotionToggled.emit, character))
-        motivationNode.toggled.connect(partial(self.characterEmotionToggled.emit, character))
-        conflictNode.toggled.connect(partial(self.characterEmotionToggled.emit, character))
+        motivationNode.toggled.connect(partial(self.characterMotivationToggled.emit, character))
+        conflictNode.toggled.connect(partial(self.characterConflictToggled.emit, character))
         agendaNode.addChild(emotionNode)
         agendaNode.addChild(motivationNode)
         agendaNode.addChild(conflictNode)
@@ -169,6 +170,13 @@ class ArcReport(AbstractReport, Ui_PlotReport):
     #     self.chartValues.setConflictVisible(toggled)
 
 
+@dataclass
+class CharacterArcs:
+    emotion: Optional[QAbstractSeries] = None
+    conflict: Optional[QAbstractSeries] = None
+    motivation: List[QAbstractSeries] = field(default_factory=list)
+
+
 class StoryArcChart(BaseChart):
     MIN: int = -10
     MAX: int = 10
@@ -193,6 +201,8 @@ class StoryArcChart(BaseChart):
         self._overallConflict: bool = False
         self._overallConflictSeries: Optional[QAbstractSeries] = None
         self._plots: Dict[Plot, List[QAbstractSeries]] = {}
+
+        self._characters: Dict[Character, CharacterArcs] = {}
 
         self.setTitle('Story arc')
 
@@ -219,17 +229,41 @@ class StoryArcChart(BaseChart):
         self._overallConflict = visible
 
     def setCharacterEmotionVisible(self, character: Character, visible: bool):
-        pass
+        arcs = self._characterArcs(character)
+        if visible:
+            pass
+        else:
+            self.removeSeries(arcs.emotion)
+            arcs.emotion = None
 
     def setCharacterMotivationVisible(self, character: Character, visible: bool):
-        pass
+        arcs = self._characterArcs(character)
+        if visible:
+            pass
+        else:
+            for serie in arcs.motivation:
+                self.removeSeries(serie)
+            arcs.motivation.clear()
 
     def setCharacterConflictVisible(self, character: Character, visible: bool):
-        pass
+        arcs = self._characterArcs(character)
+        if visible:
+            arcs.conflict = self._conflictSeries(character)
+            self.addSeries(arcs.conflict)
+            arcs.conflict.attachAxis(self._axisY)
+        else:
+            self.removeSeries(arcs.conflict)
+            arcs.conflict = None
 
     def refresh(self):
         self.reset()
         self._axisX.setRange(0, len(self.novel.scenes))
+
+    def _characterArcs(self, character: Character) -> CharacterArcs:
+        if character not in self._characters.keys():
+            self._characters[character] = CharacterArcs()
+
+        return self._characters[character]
 
     def _storylineSeries(self, storyline: Plot) -> List[QAbstractSeries]:
         all_series = []
@@ -258,13 +292,19 @@ class StoryArcChart(BaseChart):
 
     def _conflictSeries(self, character: Optional[Character] = None) -> QAbstractSeries:
         series = QLineSeries()
-        series.setName(icon_to_html_img(IconRegistry.conflict_icon()) + 'Conflict intensity')
+        if character:
+            avatar = icon_to_html_img(avatars.avatar(character))
+        else:
+            avatar = ''
+        series.setName(avatar + icon_to_html_img(IconRegistry.conflict_icon()) + 'Conflict intensity')
         pen = QPen()
         pen.setColor(QColor('#f3a712'))
         pen.setWidth(2)
         series.setPen(pen)
 
         for i, scene in enumerate(self.novel.scenes):
+            if character and scene.agendas[0].character_id != character.id:
+                continue
             intensity = max([x.intensity for x in scene.agendas[0].conflict_references], default=0)
             if intensity > 0:
                 series.append(i + 1, intensity)
