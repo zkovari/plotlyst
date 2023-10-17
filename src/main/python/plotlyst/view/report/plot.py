@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from functools import partial
 from typing import List, Dict, Optional
 
 import qtanim
@@ -66,6 +67,9 @@ class PlotArcNode(EyeToggleNode):
 class ArcsTreeView(TreeView):
     storylineToggled = pyqtSignal(Plot, bool)
     conflictToggled = pyqtSignal(bool)
+    characterConflictToggled = pyqtSignal(Character, bool)
+    characterEmotionToggled = pyqtSignal(Character, bool)
+    characterMotivationToggled = pyqtSignal(Character, bool)
 
     def __init__(self, novel: Novel, parent=None):
         super(ArcsTreeView, self).__init__(parent)
@@ -113,9 +117,13 @@ class ArcsTreeView(TreeView):
 
     def _addCharacterAgendaNodes(self, character: Character):
         agendaNode = ContainerNode(character.name, avatars.avatar(character), readOnly=True)
-        emotionNode = EyeToggleNode('Emotion')
-        motivationNode = EyeToggleNode('Motivation')
-        conflictNode = EyeToggleNode('Conflict')
+        emotionNode = EyeToggleNode('Emotion', IconRegistry.from_name('mdi.emoticon-neutral'))
+        motivationNode = EyeToggleNode('Motivation', IconRegistry.from_name('fa5s.fist-raised'))
+        conflictNode = EyeToggleNode('Conflict', IconRegistry.conflict_icon())
+
+        emotionNode.toggled.connect(partial(self.characterEmotionToggled.emit, character))
+        motivationNode.toggled.connect(partial(self.characterEmotionToggled.emit, character))
+        conflictNode.toggled.connect(partial(self.characterEmotionToggled.emit, character))
         agendaNode.addChild(emotionNode)
         agendaNode.addChild(motivationNode)
         agendaNode.addChild(conflictNode)
@@ -131,8 +139,11 @@ class ArcReport(AbstractReport, Ui_PlotReport):
         self.chartValues = StoryArcChart(self.novel)
         self.chartViewPlotValues.setChart(self.chartValues)
         self._treeView = ArcsTreeView(novel)
-        self._treeView.storylineToggled.connect(self._plotToggled)
-        self._treeView.conflictToggled.connect(self._conflictToggled)
+        self._treeView.storylineToggled.connect(self.chartValues.setStorylineVisible)
+        self._treeView.conflictToggled.connect(self.chartValues.setConflictVisible)
+        self._treeView.characterEmotionToggled.connect(self.chartValues.setCharacterEmotionVisible)
+        self._treeView.characterMotivationToggled.connect(self.chartValues.setCharacterMotivationVisible)
+        self._treeView.characterConflictToggled.connect(self.chartValues.setCharacterConflictVisible)
         self.wdgTreeParent.layout().addWidget(self._treeView)
         self.splitter.setSizes([150, 500])
 
@@ -151,11 +162,11 @@ class ArcReport(AbstractReport, Ui_PlotReport):
     def _arcsSelectorClicked(self, toggled: bool):
         qtanim.toggle_expansion(self.wdgTreeParent, toggled)
 
-    def _plotToggled(self, plot: Plot, toggled: bool):
-        self.chartValues.setStorylineVisible(plot, toggled)
+    # def _plotToggled(self, plot: Plot, toggled: bool):
+    #     self.chartValues.setStorylineVisible(plot, toggled)
 
-    def _conflictToggled(self, toggled: bool):
-        self.chartValues.setConflictVisible(toggled)
+    # def _conflictToggled(self, toggled: bool):
+    #     self.chartValues.setConflictVisible(toggled)
 
 
 class StoryArcChart(BaseChart):
@@ -206,6 +217,15 @@ class StoryArcChart(BaseChart):
             self._overallConflictSeries = None
 
         self._overallConflict = visible
+
+    def setCharacterEmotionVisible(self, character: Character, visible: bool):
+        pass
+
+    def setCharacterMotivationVisible(self, character: Character, visible: bool):
+        pass
+
+    def setCharacterConflictVisible(self, character: Character, visible: bool):
+        pass
 
     def refresh(self):
         self.reset()
