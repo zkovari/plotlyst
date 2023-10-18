@@ -369,10 +369,17 @@ class PlaceholderCharacter(Character):
     pass
 
 
+class ChapterType(Enum):
+    Prologue = 0
+    Epilogue = 1
+    Interlude = 2
+
+
 @dataclass
 class Chapter:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
+    type: Optional[ChapterType] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
     def sid(self) -> str:
         return str(self.id)
@@ -2086,6 +2093,7 @@ class Novel(NovelDescriptor):
     scenes: List[Scene] = field(default_factory=list)
     plots: List[Plot] = field(default_factory=list)
     chapters: List[Chapter] = field(default_factory=list)
+    custom_chapters: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     stages: List[SceneStage] = field(default_factory=default_stages)
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
     character_topics: List[Topic] = field(default_factory=list)

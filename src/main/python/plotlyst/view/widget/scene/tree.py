@@ -123,6 +123,18 @@ class ChapterWidget(ContainerNode):
     def sceneWidgets(self) -> List[SceneWidget]:
         return self.childrenWidgets()
 
+    @overrides
+    def _initMenuActions(self, menu: MenuWidget):
+        convertMenu = MenuWidget()
+        convertMenu.setTitle('Convert into')
+        convertMenu.setIcon(IconRegistry.from_name('ph.arrows-left-right'))
+        convertMenu.addAction(action('Prologue', IconRegistry.prologue_icon()))
+        convertMenu.addAction(action('Epilogue', IconRegistry.epilogue_icon()))
+        convertMenu.addAction(action('Interlude', IconRegistry.interlude_icon()))
+        menu.addMenu(convertMenu)
+        menu.addSeparator()
+        menu.addAction(self._actionDelete)
+
 
 class ScenesTreeView(TreeView, EventListener):
     SCENE_MIME_TYPE = 'application/tree-scene-widget'

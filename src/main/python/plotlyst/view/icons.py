@@ -171,6 +171,10 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.alpha-e-box-outline', color='#e76f51')
 
     @staticmethod
+    def interlude_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.information-variant', color='grey')
+
+    @staticmethod
     def book_icon(color='black', color_on=PLOTLYST_SECONDARY_COLOR) -> QIcon:
         return qtawesome.icon('fa5s.book-open', color_on=color_on, color=color)
 
