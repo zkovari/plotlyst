@@ -29,7 +29,7 @@ from overrides import overrides
 from qthandy import clear_layout, vspacer, gc
 
 from src.main.python.plotlyst.common import clamp
-from src.main.python.plotlyst.core.domain import Novel, Plot, Character
+from src.main.python.plotlyst.core.domain import Novel, Plot, Character, Motivation
 from src.main.python.plotlyst.view.common import icon_to_html_img
 from src.main.python.plotlyst.view.generated.report.plot_report_ui import Ui_PlotReport
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
@@ -231,7 +231,9 @@ class StoryArcChart(BaseChart):
     def setCharacterEmotionVisible(self, character: Character, visible: bool):
         arcs = self._characterArcs(character)
         if visible:
-            pass
+            arcs.emotion = self._characterEmotionSeries(character)
+            self.addSeries(arcs.emotion)
+            arcs.emotion.attachAxis(self._axisY)
         else:
             self.removeSeries(arcs.emotion)
             arcs.emotion = None
@@ -239,7 +241,10 @@ class StoryArcChart(BaseChart):
     def setCharacterMotivationVisible(self, character: Character, visible: bool):
         arcs = self._characterArcs(character)
         if visible:
-            pass
+            arcs.motivation = self._characterMotivationSeries(character)
+            for serie in arcs.motivation:
+                self.addSeries(serie)
+                serie.attachAxis(self._axisY)
         else:
             for serie in arcs.motivation:
                 self.removeSeries(serie)
@@ -310,3 +315,46 @@ class StoryArcChart(BaseChart):
                 series.append(i + 1, intensity)
 
         return series
+
+    def _characterEmotionSeries(self, character: Character) -> QAbstractSeries:
+        series = QSplineSeries()
+        series.setName(icon_to_html_img(avatars.avatar(character)) + 'Emotion')
+        for i, scene in enumerate(self.novel.scenes):
+            if character and scene.agendas[0].character_id != character.id:
+                continue
+            if scene.agendas[0].emotion:
+                series.append(i + 1, scene.agendas[0].emotion)
+        return series
+
+    def _characterMotivationSeries(self, character: Character) -> List[QAbstractSeries]:
+        def spline(motivation: str):
+            if motivation not in splines.keys():
+                mot = Motivation(motivation)
+                series = QSplineSeries()
+                series.setName(mot.display_name())
+                pen = QPen()
+                pen.setColor(QColor(mot.color()))
+                pen.setWidth(2)
+                series.setPen(pen)
+                splines[motivation] = series
+
+            return splines[motivation]
+
+        def value(motivation: str):
+            if motivation not in values.keys():
+                values[motivation] = 0
+            return values[motivation]
+
+        splines: Dict[str, QSplineSeries] = {}
+        values: Dict[str, int] = {}
+        for i, scene in enumerate(self.novel.scenes):
+            if character and scene.agendas[0].character_id != character.id:
+                continue
+            for motivation, v in scene.agendas[0].motivations.items():
+                prev_value = value(motivation)
+                values[motivation] = prev_value + v
+                if values[motivation] > self.MAX:
+                    values[motivation] = self.MAX
+                spline(motivation).append(i, values[motivation])
+
+        return list(splines.values())
