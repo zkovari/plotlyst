@@ -439,7 +439,7 @@ class JsonClient:
         chapters = []
         chapters_ids = {}
         for chapter_info in novel_info.chapters:
-            chapter = Chapter(title=chapter_info.title, id=chapter_info.id)
+            chapter = Chapter(title=chapter_info.title, id=chapter_info.id, type=chapter_info.type)
             chapters.append(chapter)
             chapters_ids[str(chapter.id)] = chapter
 

@@ -384,8 +384,11 @@ class Chapter:
     def sid(self) -> str:
         return str(self.id)
 
-    def title_index(self, novel: 'Novel') -> str:
-        return f'Chapter {novel.chapters.index(self) + 1}'
+    def display_name(self) -> str:
+        if self.type is None:
+            return self.title
+        else:
+            return self.type.name
 
     @overrides
     def __eq__(self, other: 'Chapter'):
@@ -2181,6 +2184,13 @@ class Novel(NovelDescriptor):
         self.scenes.insert(i + 1, new_scene)
 
         return new_scene
+
+    def update_chapter_titles(self):
+        i = 1
+        for chapter in self.chapters:
+            if chapter.type is None:
+                chapter.title = f'Chapter {i}'
+                i += 1
 
     @overrides
     def __eq__(self, other: 'Novel'):
