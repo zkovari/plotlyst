@@ -257,17 +257,22 @@ class ScenesTreeView(TreeView, EventListener):
             self._scenes[scene].refresh()
 
     def addChapter(self):
-        if self._novel.chapters:
-            last_chapter = self._novel.chapters[-1]
-            i = self._centralWidget.layout().indexOf(self._chapters[last_chapter]) + 1
-        else:
-            i = 0
-        chapter = Chapter('')
-        self._novel.chapters.append(chapter)
-        wdg = self.__initChapterWidget(chapter)
-        self._centralWidget.layout().insertWidget(i, wdg)
+        wdg_i = 0
+        chapter_i = -1
 
+        if self._novel.chapters:
+            for chapter in reversed(self._novel.chapters):
+                if chapter.type != ChapterType.Epilogue:
+                    wdg_i = self._centralWidget.layout().indexOf(self._chapters[chapter]) + 1
+                    chapter_i = self._novel.chapters.index(chapter)
+                    break
+
+        chapter = Chapter('')
+        self._novel.chapters.insert(chapter_i + 1, chapter)
         self._novel.update_chapter_titles()
+        wdg = self.__initChapterWidget(chapter)
+        self._centralWidget.layout().insertWidget(wdg_i, wdg)
+
         self.repo.update_novel(self._novel)
         self._emitChapterChange()
 
