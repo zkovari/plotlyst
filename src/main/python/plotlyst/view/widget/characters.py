@@ -310,14 +310,31 @@ class CharacterSelectorMenu(MenuWidget):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
-        self.aboutToShow.connect(self._fillUpMenu)
+        self._characters: Optional[List[Character]] = None
+        self.aboutToShow.connect(self._beforeShow)
+
+    def setCharacters(self, character: List[Character]):
+        self._characters = character
+        self._fillUpMenu()
+
+    def characters(self) -> List[Character]:
+        if self._characters is not None:
+            return self._characters
+        else:
+            return self._novel.characters
+
+    def _beforeShow(self):
+        if self._characters is None:
+            self._fillUpMenu()
 
     def _fillUpMenu(self):
         self.clear()
 
-        for char in self._novel.characters:
+        for char in self.characters():
             self.addAction(
                 action(char.name, avatars.avatar(char), slot=partial(self.selected.emit, char), parent=self))
+
+        self._frame.updateGeometry()
 
 
 class CharacterSelectorButton(QToolButton):
@@ -338,6 +355,9 @@ class CharacterSelectorButton(QToolButton):
         self._menu = CharacterSelectorMenu(self._novel, self)
         self._menu.selected.connect(self._selected)
         self.clear()
+
+    def characterSelectorMenu(self) -> CharacterSelectorMenu:
+        return self._menu
 
     def setCharacter(self, character: Character):
         self.setIcon(avatars.avatar(character))

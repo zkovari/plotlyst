@@ -40,7 +40,7 @@ from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import DelayedSignalSlotConnector, action, wrap, label, scrolled, \
-    ButtonPressResizeEventFilter, insert_after, tool_btn, shadow
+    ButtonPressResizeEventFilter, insert_after, tool_btn, shadow, push_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
 from src.main.python.plotlyst.view.widget.display import Icon
@@ -937,6 +937,8 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
 
 
 class CharacterTabBar(QTabBar):
+    characterChanged = pyqtSignal(Character)
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
@@ -953,8 +955,21 @@ class CharacterTabBar(QTabBar):
     def tabSizeHint(self, index: int) -> QSize:
         return QSize(self._btnCharacterSelector.sizeHint().width(), 80)
 
+    def setCharacter(self, character: Character):
+        self._btnCharacterSelector.setCharacter(character)
+
+    def setCharacters(self, characters: List[Character]):
+        self._btnCharacterSelector.characterSelectorMenu().setCharacters(characters)
+
+    def reset(self):
+        self._btnCharacterSelector.clear()
+
+    def popup(self):
+        self._btnCharacterSelector.characterSelectorMenu().exec()
+
     def _characterSelected(self, character: Character):
         self._character = character
+        self.characterChanged.emit(self._character)
 
 
 class SceneAgendaEditor(AbstractSceneElementsEditor):
@@ -965,7 +980,13 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         self._lblBottom.setText('Character relations')
 
         self._characterTabbar = CharacterTabBar(self._novel)
+        self._characterTabbar.characterChanged.connect(self._characterSelected)
         self.layout().insertWidget(0, self._characterTabbar, alignment=Qt.AlignmentFlag.AlignTop)
+
+        self._unsetCharacterSlot = None
+        self._btnCharacterDelegate = push_btn(IconRegistry.from_name('fa5s.arrow-circle-left'),
+                                              'Select character first', transparent_=True)
+        self._btnCharacterDelegate.clicked.connect(self._characterDelegateClicked)
 
         self._emotionEditor = SceneAgendaEmotionEditor()
         self._emotionEditor.emotionChanged.connect(self._emotionChanged)
@@ -977,6 +998,7 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
 
         margins(self._wdgHeader, left=25)
         self._wdgHeader.layout().setSpacing(10)
+        self._wdgHeader.layout().addWidget(self._btnCharacterDelegate)
         self._wdgHeader.layout().addWidget(self._emotionEditor)
         self._wdgHeader.layout().addWidget(vline())
         self._wdgHeader.layout().addWidget(self._motivationEditor)
@@ -995,6 +1017,9 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         self._decisionElement = AgencyTextBasedElementEditor(StoryElementType.Decision)
         self._decisionElement.setTitle('Decision')
         self._decisionElement.setIcon('fa5s.map-signs', '#ba6f4d')
+
+        retain_when_hidden(self._wdgElementsTopRow)
+        retain_when_hidden(self._wdgElementsBottomRow)
 
         self._wdgElementsTopRow.layout().addWidget(self._goalElement)
         self._wdgElementsTopRow.layout().addWidget(self._conflictElement)
@@ -1042,8 +1067,31 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
             #     wdg = self.__newPlotElementEditor()
             #     wdg.setElement(element)
 
-    def updateAvailableCharacters(self, characters: List[Character]):
-        pass
+        if scene.agendas[0].character_id:
+            self._characterTabbar.setCharacter(scene.agendas[0].character(self._novel))
+        else:
+            self._characterTabbar.reset()
+        self._updateElementsVisibility(agenda)
+
+    def updateAvailableCharacters(self):
+        characters = []
+        if self._scene.pov:
+            characters.append(self._scene.pov)
+        characters.extend(self._scene.characters)
+
+        self._characterTabbar.setCharacters(characters)
+
+    def setUnsetCharacterSlot(self, func):
+        self._unsetCharacterSlot = func
+
+    def povChangedEvent(self, pov: Character):
+        self._scene.agendas[0].set_character(pov)
+        self._updateElementsVisibility(self._scene.agendas[0])
+        self._characterTabbar.setCharacter(pov)
+
+    def _characterSelected(self, character: Character):
+        self._scene.agendas[0].set_character(character)
+        self._updateElementsVisibility(self._scene.agendas[0])
 
     def _emotionChanged(self, emotion: int):
         self._scene.agendas[0].emotion = emotion
@@ -1056,3 +1104,18 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
 
     def _motivationReset(self):
         self._scene.agendas[0].motivations.clear()
+
+    def _characterDelegateClicked(self):
+        if not self._scene.characters or self._scene.pov:
+            self._unsetCharacterSlot()
+        else:
+            self._characterTabbar.popup()
+
+    def _updateElementsVisibility(self, agenda):
+        elements_visible = agenda.character_id is not None
+        self._btnCharacterDelegate.setVisible(not elements_visible)
+        self._wdgElementsTopRow.setVisible(elements_visible)
+        self._wdgElementsBottomRow.setVisible(elements_visible)
+        self._lblBottom.setVisible(elements_visible)
+        self._emotionEditor.setVisible(elements_visible)
+        self._motivationEditor.setVisible(elements_visible)
