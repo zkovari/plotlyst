@@ -269,7 +269,7 @@ class ScenesTreeView(TreeView, EventListener):
 
         self._novel.update_chapter_titles()
         self.repo.update_novel(self._novel)
-        emit_event(self._novel, ChapterChangedEvent(self))
+        self._emitChapterChange()
 
     def addScene(self):
         scene = self._novel.new_scene()
@@ -278,7 +278,7 @@ class ScenesTreeView(TreeView, EventListener):
         insert_before_the_end(self._centralWidget, wdg)
 
         self.repo.insert_scene(self._novel, scene)
-        emit_event(self._novel, SceneChangedEvent(self, scene))
+        emit_event(self._novel, SceneChangedEvent(self, scene), delay=10)
         self.sceneAdded.emit(scene)
 
     def addPrologue(self):
@@ -389,7 +389,7 @@ class ScenesTreeView(TreeView, EventListener):
 
         self._refreshChapterTitles()
 
-        emit_event(self._novel, ChapterChangedEvent(self))
+        self._emitChapterChange()
 
     def _convertChapter(self, chapterWdg: ChapterWidget, chapterType: ChapterType):
         chapterWdg.chapter().type = chapterType
@@ -397,7 +397,10 @@ class ScenesTreeView(TreeView, EventListener):
 
         self.repo.update_novel(self._novel)
         self._refreshChapterTitles()
-        emit_event(self._novel, ChapterChangedEvent(self))
+        self._emitChapterChange()
+
+    def _emitChapterChange(self):
+        emit_event(self._novel, ChapterChangedEvent(self), delay=10)
 
     def _deleteScene(self, sceneWdg: SceneWidget):
         scene = sceneWdg.scene()
@@ -410,7 +413,7 @@ class ScenesTreeView(TreeView, EventListener):
             gc(sceneWdg)
 
             self._refreshSceneTitles()
-            emit_event(self._novel, SceneDeletedEvent(self, scene))
+            emit_event(self._novel, SceneDeletedEvent(self, scene), delay=10)
 
     def _dragStarted(self, wdg: QWidget):
         wdg.setHidden(True)
@@ -462,7 +465,6 @@ class ScenesTreeView(TreeView, EventListener):
                 self._centralWidget.layout().insertWidget(i, self._dummyWdg)
             else:
                 return
-            #     chapterWdg.insertChild(0, self._dummyWdg)
         else:
             chapterWdg.insertChild(0, self._dummyWdg)
         self._dummyWdg.setVisible(True)
@@ -535,11 +537,12 @@ class ScenesTreeView(TreeView, EventListener):
         self._novel.chapters[:] = chapters
         self._novel.scenes[:] = scenes
 
+        self._novel.update_chapter_titles()
         self._refreshChapterTitles()
         self._refreshSceneTitles()
 
-        emit_event(self._novel, SceneOrderChangedEvent(self))
         self.repo.update_novel(self._novel)
+        emit_event(self._novel, SceneOrderChangedEvent(self), delay=10)
 
     def _dragMovedOnScene(self, sceneWdg: SceneWidget, edge: Qt.Edge, _: QPointF):
         i = sceneWdg.parent().layout().indexOf(sceneWdg)
