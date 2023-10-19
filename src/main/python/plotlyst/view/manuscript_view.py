@@ -301,7 +301,7 @@ class ManuscriptView(AbstractNovelView):
                 scene.manuscript = Document('', scene_id=scene.id)
                 self.repo.update_scene(scene)
         if scenes:
-            self.ui.textEdit.setChapterScenes(scenes, chapter.title_index(self.novel))
+            self.ui.textEdit.setChapterScenes(scenes, chapter.display_name())
             self._miniSceneEditor.setScenes(scenes)
         else:
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
