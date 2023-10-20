@@ -261,7 +261,6 @@ class StoryArcChart(BaseChart):
             arcs.conflict = None
 
     def refresh(self):
-        self.reset()
         self._axisX.setRange(0, len(self.novel.scenes))
 
     def _characterArcs(self, character: Character) -> CharacterArcs:
