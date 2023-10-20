@@ -24,12 +24,12 @@ from typing import Set, Dict, List
 import qtanim
 from PyQt6.QtCharts import QSplineSeries, QValueAxis
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QTimer
-from PyQt6.QtGui import QColor, QIcon, QPen, QCursor, QEnterEvent
-from PyQt6.QtWidgets import QWidget, QFrame, QPushButton, QTextEdit, QLabel
+from PyQt6.QtGui import QColor, QIcon, QPen, QCursor, QEnterEvent, QShowEvent
+from PyQt6.QtWidgets import QWidget, QFrame, QPushButton, QTextEdit, QLabel, QGridLayout
 from overrides import overrides
 from qthandy import bold, flow, incr_font, \
     margins, ask_confirmation, italic, retain_when_hidden, vbox, transparent, \
-    clear_layout, vspacer, decr_font, decr_icon, hbox, spacer, sp, pointy, incr_icon, translucent
+    clear_layout, vspacer, decr_font, decr_icon, hbox, spacer, sp, pointy, incr_icon, translucent, grid
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -46,7 +46,7 @@ from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDele
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter, wrap, \
-    insert_before_the_end, shadow
+    insert_before_the_end, shadow, label
 from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
@@ -56,6 +56,7 @@ from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.characters import CharacterAvatar, CharacterSelectorMenu
 from src.main.python.plotlyst.view.widget.chart import BaseChart
+from src.main.python.plotlyst.view.widget.display import Icon, IdleWidget
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
 from src.main.python.plotlyst.view.widget.scene.structure import SceneStructureTimeline, SceneStructureBeatWidget
@@ -867,6 +868,9 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         self._wdgList.plotRemoved.connect(self._plotRemoved)
         self.stack.setCurrentWidget(self.pageDisplay)
 
+        self._wdgImpactMatrix = StorylinesImpactMatrix(self.novel)
+        self.scrollMatrix.layout().addWidget(self._wdgImpactMatrix)
+
         self.splitter.setSizes([150, 550])
 
         italic(self.btnAdd)
@@ -933,8 +937,10 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         self._wdgList.addPlot(plot)
         self.repo.update_novel(self.novel)
         self._wdgList.selectPlot(plot)
+        self._wdgImpactMatrix.refresh()
 
     def _plotSelected(self, plot: Plot) -> PlotWidget:
+        self.btnImpactMatrix.setChecked(False)
         self.stack.setCurrentWidget(self.pageDisplay)
 
         widget = PlotWidget(self.novel, plot, self.pageDisplay)
@@ -957,9 +963,66 @@ class PlotEditor(QWidget, Ui_PlotEditor):
                 if item.widget().plot == plot:
                     clear_layout(self.pageDisplay)
         delete_plot(self.novel, plot)
+        self._wdgImpactMatrix.refresh()
 
     def _displayImpactMatrix(self, checked: bool):
+        self._wdgList.clearSelection()
         if checked:
             self.stack.setCurrentWidget(self.pageMatrix)
         else:
             self.stack.setCurrentWidget(self.pageDisplay)
+
+
+class StorylinesImpactMatrix(QWidget):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+        self._refreshOnShown = True
+
+        self._grid: QGridLayout = grid(self)
+
+    @overrides
+    def showEvent(self, event: QShowEvent) -> None:
+        if self._refreshOnShown:
+            self._refreshMatrix()
+
+    def refresh(self):
+        if self.isVisible():
+            self._refreshMatrix()
+        else:
+            self._refreshOnShown = True
+
+    def _refreshMatrix(self):
+        clear_layout(self)
+
+        for i, storyline in enumerate(self._novel.plots):
+            header = self._storylineHeaderWidget(storyline)
+            self._grid.addWidget(header, 0, i + 1, alignment=Qt.AlignmentFlag.AlignCenter)
+
+            row = self._storylineHeaderWidget(storyline)
+            row.setMinimumHeight(70)
+            self._grid.addWidget(row, i + 1, 0, alignment=Qt.AlignmentFlag.AlignVCenter)
+
+            self._grid.addWidget(self._emptyCellWidget(), i + 1, i + 1)
+
+        self._grid.addWidget(vspacer(), len(self._novel.plots) + 1, 0)
+
+    def _storylineHeaderWidget(self, storyline: Plot) -> QWidget:
+        wdg = QWidget()
+        vbox(wdg, 5)
+        icon = Icon()
+        if storyline.icon:
+            icon.setIcon(IconRegistry.from_name(storyline.icon, storyline.icon_color))
+        lbl = label(storyline.text, wordWrap=True)
+        lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        wdg.layout().addWidget(icon, alignment=Qt.AlignmentFlag.AlignCenter)
+        wdg.layout().addWidget(lbl, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        return wdg
+
+    def _emptyCellWidget(self) -> QWidget:
+        wdg = IdleWidget()
+        wdg.setMinimumSize(50, 50)
+        sp(wdg).h_exp().v_exp()
+
+        return wdg

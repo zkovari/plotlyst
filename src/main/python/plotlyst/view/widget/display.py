@@ -23,14 +23,15 @@ from typing import Optional
 import emoji
 import qtanim
 from PyQt6.QtCharts import QChartView
-from PyQt6.QtCore import pyqtProperty, QSize
-from PyQt6.QtGui import QPainter, QShowEvent, QColor
+from PyQt6.QtCore import pyqtProperty, QSize, Qt
+from PyQt6.QtGui import QPainter, QShowEvent, QColor, QPaintEvent, QBrush, QPen
 from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy, QTextBrowser
 from overrides import overrides
 from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon, pointy
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
+from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR
 from src.main.python.plotlyst.core.template import Role, protagonist_role
 from src.main.python.plotlyst.core.text import wc
 from src.main.python.plotlyst.view.common import emoji_font, insert_before_the_end, \
@@ -298,3 +299,15 @@ class HintButton(QToolButton):
             textedit = QTextBrowser()
             textedit.setText(self._hint)
             self._menu.addWidget(textedit)
+
+
+class IdleWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    @overrides
+    def paintEvent(self, event: QPaintEvent) -> None:
+        painter = QPainter(self)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QBrush(QColor(PLOTLYST_TERTIARY_COLOR), Qt.BrushStyle.Dense5Pattern))
+        painter.drawRect(event.rect())
