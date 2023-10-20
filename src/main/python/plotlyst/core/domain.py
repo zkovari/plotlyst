@@ -623,6 +623,17 @@ class PlotProgressionItem:
     text: str = ''
 
 
+class StorylineLinkType(Enum):
+    Catalyst = 0
+
+
+@dataclass
+class StorylineLink:
+    source_id: uuid.UUID
+    target_id: uuid.UUID
+    type: StorylineLinkType
+
+
 @dataclass
 class Plot(SelectionItem, CharacterBased):
     id: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -636,6 +647,7 @@ class Plot(SelectionItem, CharacterBased):
     default_value: PlotValue = field(default_factory=default_plot_value)
     default_value_enabled: bool = True
     progression: List[PlotProgressionItem] = field(default_factory=list)
+    links: List[StorylineLink] = field(default_factory=list)
 
     def __post_init__(self):
         self._character: Optional[Character] = None

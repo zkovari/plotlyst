@@ -36,7 +36,7 @@ from qtmenu import MenuWidget
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
     PlotPrincipleType, PlotEventType, PlotProgressionItem, \
-    PlotProgressionItemType
+    PlotProgressionItemType, StorylineLink
 from src.main.python.plotlyst.core.template import antagonist_role
 from src.main.python.plotlyst.core.text import html
 from src.main.python.plotlyst.env import app_env
@@ -973,6 +973,14 @@ class PlotEditor(QWidget, Ui_PlotEditor):
             self.stack.setCurrentWidget(self.pageDisplay)
 
 
+class StorylinesConnectionWidget(QWidget):
+    def __init__(self, source: Plot, target: Plot, parent=None):
+        super().__init__(parent)
+
+        vbox(self)
+        self.layout().addWidget(label(f'{source.text}-{target.text}'))
+
+
 class StorylinesImpactMatrix(QWidget):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -996,6 +1004,10 @@ class StorylinesImpactMatrix(QWidget):
         clear_layout(self)
 
         for i, storyline in enumerate(self._novel.plots):
+            refs: Dict[str, StorylineLink] = {}
+            for ref in storyline.links:
+                refs[str(ref.target_id)] = ref
+
             header = self._storylineHeaderWidget(storyline)
             self._grid.addWidget(header, 0, i + 1, alignment=Qt.AlignmentFlag.AlignCenter)
 
@@ -1004,6 +1016,16 @@ class StorylinesImpactMatrix(QWidget):
             self._grid.addWidget(row, i + 1, 0, alignment=Qt.AlignmentFlag.AlignVCenter)
 
             self._grid.addWidget(self._emptyCellWidget(), i + 1, i + 1)
+
+            for j, ref_storyline in enumerate(self._novel.plots):
+                if storyline is ref_storyline:
+                    continue
+                wdg = StorylinesConnectionWidget(storyline, ref_storyline)
+                if str(ref_storyline.id) in refs.keys():
+                    pass
+                else:
+                    pass
+                self._grid.addWidget(wdg, i + 1, j + 1)
 
         self._grid.addWidget(vspacer(), len(self._novel.plots) + 1, 0)
 
