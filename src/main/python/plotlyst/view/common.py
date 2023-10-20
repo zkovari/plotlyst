@@ -278,16 +278,12 @@ def icon_to_html_img(icon: QIcon, size: int = 20) -> str:
     return f"<img src='data:image/png;base64, {bytes(buffer.data().toBase64()).decode()}'>"
 
 
-# def pointy(widget):
-#     widget.setCursor(Qt.CursorShape.PointingHandCursor)
-
-
 def restyle(widget: QWidget):
     widget.style().unpolish(widget)
     widget.style().polish(widget)
 
 
-def shadow(wdg: QWidget, offset: int = 2, radius: int = 0, color = Qt.GlobalColor.lightGray):
+def shadow(wdg: QWidget, offset: int = 2, radius: int = 0, color=Qt.GlobalColor.lightGray):
     effect = QGraphicsDropShadowEffect(wdg)
     effect.setBlurRadius(radius)
     effect.setOffset(offset, offset)
@@ -383,6 +379,23 @@ def tool_btn(icon: QIcon, tooltip: str = '', checkable: bool = False, base: bool
              icon_resize: bool = True, transparent_: bool = False, properties: List[str] = None,
              parent=None) -> QToolButton:
     btn = QToolButton()
+    _init_btn(btn, icon, tooltip, checkable, base, icon_resize, transparent_, properties, parent)
+    return btn
+
+
+def push_btn(icon: QIcon, text: str = '', tooltip: str = '', checkable: bool = False, base: bool = False,
+             icon_resize: bool = True, transparent_: bool = False, properties: List[str] = None,
+             parent=None) -> QPushButton:
+    btn = QPushButton()
+    btn.setText(text)
+    _init_btn(btn, icon, tooltip, checkable, base, icon_resize, transparent_, properties, parent)
+
+    return btn
+
+
+def _init_btn(btn: QAbstractButton, icon: QIcon, tooltip: str = '', checkable: bool = False, base: bool = False,
+              icon_resize: bool = True, transparent_: bool = False, properties: List[str] = None,
+              parent=None):
     btn.setIcon(icon)
     btn.setToolTip(tooltip)
     btn.setCheckable(checkable)
@@ -398,7 +411,6 @@ def tool_btn(icon: QIcon, tooltip: str = '', checkable: bool = False, base: bool
             btn.setProperty(prop, True)
     if parent:
         btn.setParent(parent)
-    return btn
 
 
 def frame(parent=None):

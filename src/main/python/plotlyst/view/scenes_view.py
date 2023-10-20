@@ -32,14 +32,15 @@ from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
-from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, ScenePurposeType
+from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, ScenePurposeType, \
+    StoryStructure
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
     SceneSelectedEvent, SceneSelectionClearedEvent, ActiveSceneStageChanged, \
     ChapterChangedEvent, AvailableSceneStagesChanged, CharacterChangedEvent, CharacterDeletedEvent, \
-    NovelAboutToSyncEvent, NovelSyncEvent
+    NovelAboutToSyncEvent, NovelSyncEvent, NovelStoryStructureActivationRequest
 from src.main.python.plotlyst.events import SceneOrderChangedEvent
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
@@ -58,6 +59,7 @@ from src.main.python.plotlyst.view.widget.characters import CharactersScenesDist
 from src.main.python.plotlyst.view.widget.chart import ActDistributionChart
 from src.main.python.plotlyst.view.widget.display import ChartView
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
+from src.main.python.plotlyst.view.widget.novel import StoryStructureSelectorMenu
 from src.main.python.plotlyst.view.widget.progress import SceneStageProgressCharts
 from src.main.python.plotlyst.view.widget.scenes import SceneFilterWidget, SceneStoryStructureWidget, \
     ScenesPreferencesWidget, StoryMap, StoryMapDisplayMode
@@ -176,6 +178,10 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnCardsView.setIcon(IconRegistry.cards_icon())
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
         self.ui.btnStoryStructure.setIcon(IconRegistry.story_structure_icon(color_on=PLOTLYST_SECONDARY_COLOR))
+        self.ui.btnStoryStructureSelector.setIcon(IconRegistry.from_name('mdi.chevron-down'))
+        self._structureSelectorMenu = StoryStructureSelectorMenu(self.novel, self.ui.btnStoryStructureSelector)
+        self._structureSelectorMenu.selected.connect(self._active_story_structure_changed)
+        self.ui.btnStoryStructureSelector.setHidden(True)
         self.ui.btnStatusView.setIcon(IconRegistry.progress_check_icon('black'))
         self.ui.btnCharactersDistributionView.setIcon(
             IconRegistry.from_name('fa5s.chess-board', color_on=PLOTLYST_SECONDARY_COLOR))
@@ -201,6 +207,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnAct1.toggled.connect(self._filter_cards)
         self.ui.btnAct2.toggled.connect(self._filter_cards)
         self.ui.btnAct3.toggled.connect(self._filter_cards)
+        self.ui.btnStoryStructure.toggled.connect(self._story_structure_toggled)
         self.ui.cards.selectionCleared.connect(self._selection_cleared)
         self.ui.cards.cardSelected.connect(self._card_selected)
         self.ui.cards.cardDoubleClicked.connect(self._on_edit)
@@ -260,9 +267,11 @@ class ScenesOutlineView(AbstractNovelView):
     def event_received(self, event: Event):
         if isinstance(event, (CharacterChangedEvent, CharacterDeletedEvent)):
             self._scene_filter.povFilter.updateCharacters(self.novel.pov_characters(), checkAll=True)
-            self.refresh()
-        else:
-            super(ScenesOutlineView, self).event_received(event)
+        elif isinstance(event, NovelStoryStructureUpdated):
+            if self.ui.btnStoryStructure.isChecked():
+                self.ui.btnStoryStructureSelector.setVisible(len(self.novel.story_structures) > 1)
+
+        super(ScenesOutlineView, self).event_received(event)
 
     @overrides
     def refresh(self):
@@ -394,6 +403,17 @@ class ScenesOutlineView(AbstractNovelView):
             {1: self.ui.btnAct1.isChecked(), 2: self.ui.btnAct2.isChecked(), 3: self.ui.btnAct3.isChecked()})
         self._card_filter.setActivePovs(self._scene_filter.povFilter.characters(all=False))
         self.ui.cards.applyFilter(self._card_filter)
+
+    def _story_structure_toggled(self, toggled: bool):
+        self.ui.wdgStoryStructureParent.setVisible(toggled)
+        if toggled:
+            self.ui.btnStoryStructureSelector.setVisible(len(self.novel.story_structures) > 1)
+        else:
+            self.ui.btnStoryStructureSelector.setHidden(True)
+
+    @busy
+    def _active_story_structure_changed(self, structure: StoryStructure):
+        emit_event(self.novel, NovelStoryStructureActivationRequest(self, self.novel, structure))
 
     def _card_selected(self, card: SceneCard):
         if self.selected_card and self.selected_card is not card:

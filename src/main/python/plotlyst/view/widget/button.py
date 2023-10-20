@@ -572,3 +572,14 @@ class TaskTagSelector(QToolButton):
         self.setIcon(IconRegistry.from_selection_item(tag))
         self.setToolTip(tag.text)
         self._selected = True
+
+
+class ChargeButton(SecondaryActionToolButton):
+    def __init__(self, positive: bool, parent=None):
+        super().__init__(parent)
+        if positive:
+            self.setIcon(IconRegistry.plus_circle_icon('grey'))
+        else:
+            self.setIcon(IconRegistry.minus_icon('grey'))
+        decr_icon(self, 4)
+        retain_when_hidden(self)

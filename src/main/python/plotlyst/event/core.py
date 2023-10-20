@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Any, Dict
 
-from PyQt6.QtCore import pyqtSignal, QObject
+from PyQt6.QtCore import pyqtSignal, QObject, QTimer
 
 from src.main.python.plotlyst.core.domain import Novel
 
@@ -96,5 +96,11 @@ def emit_global_event(event: Event):
     global_event_sender.send.emit(event)
 
 
-def emit_event(novel: Novel, event: Event):
-    event_senders.instance(novel).send.emit(event)
+def emit_event(novel: Novel, event: Event, delay: int = 0):
+    def func():
+        event_senders.instance(novel).send.emit(event)
+
+    if delay:
+        QTimer.singleShot(10, func)
+    else:
+        func()

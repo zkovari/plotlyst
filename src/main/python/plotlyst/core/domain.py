@@ -369,16 +369,26 @@ class PlaceholderCharacter(Character):
     pass
 
 
+class ChapterType(Enum):
+    Prologue = 0
+    Epilogue = 1
+    Interlude = 2
+
+
 @dataclass
 class Chapter:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
+    type: Optional[ChapterType] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
     def sid(self) -> str:
         return str(self.id)
 
-    def title_index(self, novel: 'Novel') -> str:
-        return f'Chapter {novel.chapters.index(self) + 1}'
+    def display_name(self) -> str:
+        if self.type is None:
+            return self.title
+        else:
+            return self.type.name
 
     @overrides
     def __eq__(self, other: 'Chapter'):
@@ -771,6 +781,8 @@ class SceneStructureItemType(Enum):
     SETBACK = 20
     RESOLUTION = 21
     BUILDUP = 22
+    DISTURBANCE = 23
+    FALSE_VICTORY = 24
 
 
 class SceneOutcome(Enum):
@@ -815,13 +827,53 @@ class ConflictReference:
                 return conflict
 
 
-class Stake:
+class Motivation(Enum):
     PHYSIOLOGICAL = 0
     SAFETY = 1
     BELONGING = 2
     ESTEEM = 3
     SELF_ACTUALIZATION = 4
     SELF_TRANSCENDENCE = 5
+
+    def display_name(self) -> str:
+        if self == Motivation.PHYSIOLOGICAL:
+            return 'Physiological needs'
+        elif self == Motivation.SAFETY:
+            return 'Security and safety'
+        elif self == Motivation.BELONGING:
+            return 'Belonging and love'
+        elif self == Motivation.ESTEEM:
+            return 'Esteem and success'
+        else:
+            return self.name.lower().replace('_', '-').capitalize()
+
+    def icon(self) -> str:
+        if self == Motivation.PHYSIOLOGICAL:
+            return 'mdi.water'
+        elif self == Motivation.SAFETY:
+            return 'mdi.shield-half-full'
+        elif self == Motivation.BELONGING:
+            return 'fa5s.hand-holding-heart'
+        elif self == Motivation.ESTEEM:
+            return 'fa5s.award'
+        elif self == Motivation.SELF_ACTUALIZATION:
+            return 'mdi.yoga'
+        elif self == Motivation.SELF_TRANSCENDENCE:
+            return 'mdi6.meditation'
+
+    def color(self) -> str:
+        if self == Motivation.PHYSIOLOGICAL:
+            return '#023e8a'
+        elif self == Motivation.SAFETY:
+            return '#8900f2'
+        elif self == Motivation.BELONGING:
+            return '#d00000'
+        elif self == Motivation.ESTEEM:
+            return '#00b4d8'
+        elif self == Motivation.SELF_ACTUALIZATION:
+            return '#52b788'
+        elif self == Motivation.SELF_TRANSCENDENCE:
+            return '#c38e70'
 
 
 @dataclass
@@ -848,8 +900,9 @@ class SceneStructureAgenda(CharacterBased):
     items: List[SceneStructureItem] = field(default_factory=list)
     conflict_references: List[ConflictReference] = field(default_factory=list)
     goal_references: List[GoalReference] = field(default_factory=list)
-    beginning_emotion: int = NEUTRAL
-    ending_emotion: int = NEUTRAL
+    emotion: Optional[int] = None
+    motivations: Dict[int, int] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
+
     story_elements: List['StoryElement'] = field(default_factory=list)
 
     def __post_init__(self):
@@ -1249,7 +1302,7 @@ disturbance_beat = StoryBeat(text='Disturbance',
                              id=uuid.UUID('a954f949-8be9-46d6-8ebf-f9f76f482944'),
                              icon='mdi.chemical-weapon',
                              icon_color='#e63946',
-                             description="An initial disturbance that already upends the protagonist's life early on.",
+                             description="Disturbs the protagonist's life and sets the story in motion.",
                              act=1, percentage=1)
 characteristic_moment_beat = StoryBeat(text='Characteristic Moment',
                                        id=uuid.UUID('b50c32e4-1927-4633-b5a3-9765aeaee7ad'),
@@ -2043,6 +2096,7 @@ class Novel(NovelDescriptor):
     scenes: List[Scene] = field(default_factory=list)
     plots: List[Plot] = field(default_factory=list)
     chapters: List[Chapter] = field(default_factory=list)
+    custom_chapters: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     stages: List[SceneStage] = field(default_factory=default_stages)
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
     character_topics: List[Topic] = field(default_factory=list)
@@ -2130,6 +2184,13 @@ class Novel(NovelDescriptor):
         self.scenes.insert(i + 1, new_scene)
 
         return new_scene
+
+    def update_chapter_titles(self):
+        i = 1
+        for chapter in self.chapters:
+            if chapter.type is None:
+                chapter.title = f'Chapter {i}'
+                i += 1
 
     @overrides
     def __eq__(self, other: 'Novel'):

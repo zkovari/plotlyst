@@ -222,6 +222,7 @@ class NovelQuickPanelCustomizationWidget(QWidget, EventListener):
         self._wdgCenter = QWidget()
         self._wdgBottom = QWidget()
         self._lblDesc = label('', wordWrap=True, description=True)
+        incr_font(self._lblDesc, 2)
         self._lblDesc.setMinimumSize(400, 100)
         self._lblDesc.setAlignment(Qt.AlignmentFlag.AlignCenter)
         hbox(self._wdgBottom, margin=15).addWidget(self._lblDesc, alignment=Qt.AlignmentFlag.AlignCenter)

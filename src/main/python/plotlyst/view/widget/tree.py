@@ -88,14 +88,17 @@ class BaseTreeWidget(QWidget):
 
     def _initMenu(self):
         menu = MenuWidget(self._btnMenu)
-        menu.addAction(self._actionChangeIcon)
-        menu.addSeparator()
-        menu.addAction(self._actionDelete)
+        self._initMenuActions(menu)
         menu.aboutToHide.connect(self._hideAll)
 
         self._actionChangeIcon.setVisible(False)
 
         self._btnMenu.installEventFilter(ButtonPressResizeEventFilter(self._btnMenu))
+
+    def _initMenuActions(self, menu: MenuWidget):
+        menu.addAction(self._actionChangeIcon)
+        menu.addSeparator()
+        menu.addAction(self._actionDelete)
 
     def titleWidget(self) -> QWidget:
         return self._wdgTitle
