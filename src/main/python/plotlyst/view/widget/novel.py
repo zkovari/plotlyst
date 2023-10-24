@@ -833,6 +833,8 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.btnGroupStructure = QButtonGroup()
         self.btnGroupStructure.setExclusive(True)
 
+        self._beatsPreview: Optional[BeatsPreview] = None
+
         self.__initWdgPreview()
 
         self.novel: Optional[Novel] = None
@@ -873,6 +875,10 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
 
         self._characterMenu = CharacterSelectorMenu(self.novel, self.btnLinkCharacter)
         self._characterMenu.selected.connect(self._characterLinked)
+
+        self._beatsPreview = BeatsPreview(self.novel)
+        hbox(self.beats, 0, 0).addWidget(self._beatsPreview)
+        self._beatsPreview.attachStructurePreview(self.wdgPreview)
 
         for structure in self.novel.story_structures:
             self._addStructureWidget(structure)
@@ -946,12 +952,12 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
     def _activeStructureToggled(self, structure: StoryStructure, toggled: bool):
         if not toggled:
             return
-        clear_layout(self.beats.layout())
 
         for struct in self.novel.story_structures:
             struct.active = False
         structure.active = True
         acts_registry.refresh()
+        self._beatsPreview.setStructure(structure)
 
         if self.wdgPreview.novel is not None:
             item = self.layoutPreview.takeAt(0)
@@ -960,20 +966,13 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
             self.__initWdgPreview()
             self.layoutPreview.addWidget(self.wdgPreview)
         self.wdgPreview.setStructure(self.novel)
-        row = 0
-        col = 0
-        for beat in structure.beats:
-            if beat.type != StoryBeatType.BEAT or not beat.enabled:
-                continue
-            wdg = BeatWidget(self.novel, beat, toggleEnabled=False)
-            if beat.act - 1 > col:  # new act
-                self.beats.layout().addWidget(vspacer(), row + 1, col)
-                col = beat.act - 1
-                row = 0
-            self.beats.layout().addWidget(wdg, row, col)
-            row += 1
-            wdg.beatHighlighted.connect(self.wdgPreview.highlightBeat)
-            wdg.beatToggled.connect(self._beatToggled)
+
+    def _activeStructureClicked(self, _: StoryStructure, toggled: bool):
+        if not toggled:
+            return
+
+        self.repo.update_novel(self.novel)
+        emit_event(self.novel, NovelStoryStructureUpdated(self))
 
     def __initWdgPreview(self):
         self.wdgPreview.setCheckOccupiedBeats(False)
@@ -983,13 +982,6 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.wdgPreview.setActsResizeable(True)
         self.wdgPreview.actsResized.connect(lambda: emit_event(self.novel, NovelStoryStructureUpdated(self)))
         self.wdgPreview.beatMoved.connect(lambda: emit_event(self.novel, NovelStoryStructureUpdated(self)))
-
-    def _activeStructureClicked(self, _: StoryStructure, toggled: bool):
-        if not toggled:
-            return
-
-        self.repo.update_novel(self.novel)
-        emit_event(self.novel, NovelStoryStructureUpdated(self))
 
     def _beatToggled(self, beat: StoryBeat):
         self.wdgPreview.toggleBeatVisibility(beat)

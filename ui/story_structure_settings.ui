@@ -259,20 +259,6 @@
           <property name="relaxed-white-bg" stdset="0">
            <bool>true</bool>
           </property>
-          <layout class="QGridLayout" name="gridLayout" rowstretch="0" columnstretch="0">
-           <property name="leftMargin">
-            <number>2</number>
-           </property>
-           <property name="topMargin">
-            <number>2</number>
-           </property>
-           <property name="bottomMargin">
-            <number>2</number>
-           </property>
-           <property name="spacing">
-            <number>3</number>
-           </property>
-          </layout>
          </widget>
         </widget>
        </item>
