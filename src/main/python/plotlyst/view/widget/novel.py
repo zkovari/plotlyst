@@ -794,6 +794,14 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
             return self.pageHerosJourney, _HerosJourneyStructureEditorWidget
 
 
+class StoryStructureNotes(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def setStructure(self, structure: StoryStructure):
+        pass
+
+
 class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
     def __init__(self, parent=None):
         super(StoryStructureEditor, self).__init__(parent)
@@ -946,11 +954,11 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         acts_registry.refresh()
 
         if self.wdgPreview.novel is not None:
-            item = self.layout().takeAt(1)
+            item = self.layoutPreview.takeAt(0)
             gc(item.widget())
             self.wdgPreview = SceneStoryStructureWidget(self)
             self.__initWdgPreview()
-            self.layout().insertWidget(1, self.wdgPreview)
+            self.layoutPreview.addWidget(self.wdgPreview)
         self.wdgPreview.setStructure(self.novel)
         row = 0
         col = 0

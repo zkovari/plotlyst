@@ -401,9 +401,9 @@ class SceneStoryStructureWidget(QWidget):
         if not len(beats) == 2:
             return emit_critical('Only 3 acts are supported at the moment for story structure widget')
 
-        self._actsSplitter.setSizes([10 * beats[0].percentage,
-                                     10 * (beats[1].percentage - beats[0].percentage),
-                                     10 * (100 - beats[1].percentage)])
+        self._actsSplitter.setSizes([int(10 * beats[0].percentage),
+                                     int(10 * (beats[1].percentage - beats[0].percentage)),
+                                     int(10 * (100 - beats[1].percentage))])
         self._actsSplitter.setEnabled(self._actsResizeable)
         self._actsSplitter.splitterMoved.connect(self._actResized)
         self.update()
