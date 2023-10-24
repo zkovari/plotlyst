@@ -461,7 +461,7 @@ class DocumentTextEditor(RichTextEditor):
         title_font = self._textTitle.font()
         title_font.setBold(True)
         title_font.setPointSize(40)
-        title_font.setFamily('Arial')
+        title_font.setFamily('Helvetica')
         self._textTitle.setFont(title_font)
         self._textTitle.returnPressed.connect(self.textEdit.setFocus)
         self._textTitle.textChanged.connect(self.titleChanged.emit)

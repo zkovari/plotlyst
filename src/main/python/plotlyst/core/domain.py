@@ -458,6 +458,7 @@ class StoryBeat:
     percentage: int = 0
     percentage_end: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     enabled: bool = True
+    notes: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
     @overrides
     def __eq__(self, other: 'StoryBeat'):
@@ -1278,6 +1279,7 @@ class StoryStructure(CharacterBased):
     custom: bool = False
     active: bool = False
     character_id: Optional[uuid.UUID] = None
+    acts_text: Dict[int, str] = field(default_factory=dict)
 
     def __post_init__(self):
         self._character: Optional[Character] = None
@@ -1377,6 +1379,9 @@ crisis = StoryBeat(text='Crisis',
                    description="The protagonist must decide between two equally bad or two irreconcilable good choices.",
                    id=uuid.UUID('466688f7-ebee-4d36-a655-83ff40e1c46d'),
                    act=3, percentage=95)
+
+first_plot_points = (first_plot_point, first_plot_point_ponr)
+midpoints = (midpoint, midpoint_ponr, midpoint_mirror, midpoint_proactive)
 
 three_act_structure = StoryStructure(title='Three Act Structure',
                                      id=uuid.UUID('58013be5-1efb-4de4-9dd2-1433ce6edf90'),
