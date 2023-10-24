@@ -190,7 +190,7 @@ class SceneCard(Ui_SceneCard, Card):
             self.wdgCharacters.addLabel(CharacterAvatarLabel(char, 20))
 
         self.btnBeat = QToolButton(self)
-        self.btnBeat.setIconSize(QSize(32, 32))
+        self.btnBeat.setIconSize(QSize(28, 28))
         transparent(self.btnBeat)
 
         beat = self.scene.beat(self.novel)
