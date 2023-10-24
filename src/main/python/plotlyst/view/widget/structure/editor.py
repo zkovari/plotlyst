@@ -166,7 +166,7 @@ class ActNotesWidget(QWidget):
         self._wdgActEditor.setMaximumWidth(800)
         vbox(self._wdgActEditor)
         margins(self._wdgActEditor, left=15)
-        self._wdgActEditor.layout().addWidget(label(f'Act {act}', h4=True), alignment=Qt.AlignmentFlag.AlignLeft)
+        self._wdgActEditor.layout().addWidget(label(f'Act {act}', h3=True), alignment=Qt.AlignmentFlag.AlignLeft)
         self._wdgActEditor.layout().addWidget(self._text)
         self._wdgActEditor.layout().addWidget(vspacer())
 
