@@ -194,6 +194,9 @@
      <property name="leftMargin">
       <number>40</number>
      </property>
+     <property name="topMargin">
+      <number>25</number>
+     </property>
      <property name="rightMargin">
       <number>5</number>
      </property>
@@ -247,7 +250,7 @@
             <x>0</x>
             <y>0</y>
             <width>565</width>
-            <height>270</height>
+            <height>256</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -265,6 +268,9 @@
       </layout>
      </widget>
      <widget class="QWidget" name="tabNotes">
+      <property name="relaxed-white-bg" stdset="0">
+       <bool>true</bool>
+      </property>
       <attribute name="title">
        <string>Notes</string>
       </attribute>
@@ -276,7 +282,7 @@
         <number>0</number>
        </property>
        <property name="topMargin">
-        <number>0</number>
+        <number>20</number>
        </property>
        <property name="rightMargin">
         <number>0</number>
@@ -284,6 +290,29 @@
        <property name="bottomMargin">
         <number>0</number>
        </property>
+       <item>
+        <widget class="QScrollArea" name="scrollArea_2">
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="widgetResizable">
+          <bool>true</bool>
+         </property>
+         <widget class="QWidget" name="notes">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>565</width>
+            <height>260</height>
+           </rect>
+          </property>
+          <property name="relaxed-white-bg" stdset="0">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </widget>
+       </item>
       </layout>
      </widget>
     </widget>

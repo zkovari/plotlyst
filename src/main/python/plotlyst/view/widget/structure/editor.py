@@ -26,9 +26,11 @@ import qtanim
 from PyQt6.QtCore import Qt, QEvent, QObject
 from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QButtonGroup
 from overrides import overrides
-from qthandy import translucent, gc, flow, ask_confirmation, hbox
+from qthandy import translucent, gc, flow, ask_confirmation, hbox, clear_layout, vbox, sp, margins, vspacer, spacer, \
+    retain_when_hidden
 from qthandy.filter import OpacityEventFilter
 
+from src.main.python.plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     Character
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
@@ -37,10 +39,13 @@ from src.main.python.plotlyst.events import NovelStoryStructureUpdated, Characte
     NovelSyncEvent, NovelStoryStructureActivationRequest
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon
+from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon, label, frame
 from src.main.python.plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+from src.main.python.plotlyst.view.widget.button import CollapseButton
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
+from src.main.python.plotlyst.view.widget.display import IconText
+from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
 from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget
 from src.main.python.plotlyst.view.widget.structure.beat import BeatsPreview
 from src.main.python.plotlyst.view.widget.structure.selector import StoryStructureSelectorDialog
@@ -97,12 +102,100 @@ class _StoryStructureButton(QPushButton):
         self.setFont(font)
 
 
+class BestNotesWidget(QWidget):
+    def __init__(self, beat: StoryBeat, parent=None):
+        super().__init__(parent)
+        self._beat = beat
+
+        vbox(self)
+        self._text = AutoAdjustableTextEdit(height=80)
+        self._text.setProperty('rounded', True)
+        self._text.setProperty('white-bg', True)
+        self._text.setPlaceholderText(f'Describe {beat.text}')
+        self._text.setMaximumWidth(400)
+
+        self._title = IconText()
+        self._title.setText(beat.text)
+        self._title.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
+        self.layout().addWidget(self._title, alignment=Qt.AlignmentFlag.AlignLeft)
+        # self.layout().addWidget(label(beat.description, description=True, wordWrap=True))
+        self.layout().addWidget(self._text)
+
+
+class ActNotesWidget(QWidget):
+    def __init__(self, act: int, structure: StoryStructure, parent=None):
+        super().__init__(parent)
+
+        hbox(self, spacing=15)
+
+        self._wdgContainer = QWidget()
+        hbox(self._wdgContainer, spacing=15)
+
+        self._wdgBeatContainer = QWidget()
+        vbox(self._wdgBeatContainer)
+
+        self._text = AutoAdjustableTextEdit(height=300)
+        # self._text.setMinimumWidth(500)
+        self._text.setMaximumWidth(600)
+        self._text.setPlaceholderText(f'Describe the events in act {act}')
+        # self._text.setProperty('rounded', True)
+        # self._text.setProperty('white-bg', True)
+        self._text.setProperty('transparent', True)
+        color = act_color(act)
+
+        self._wdgBar = QWidget()
+        self._wdgBar.setStyleSheet(f'background: {color}')
+        self._wdgBar.setFixedWidth(6)
+        sp(self._wdgBar).v_exp()
+
+        self._wdgActEditor = frame()
+        self._wdgActEditor.setProperty('white-bg', True)
+        self._wdgActEditor.setMaximumWidth(600)
+        vbox(self._wdgActEditor)
+        margins(self._wdgActEditor, left=15)
+        self._wdgActEditor.layout().addWidget(label(f'Act {act}', h4=True), alignment=Qt.AlignmentFlag.AlignLeft)
+        self._wdgActEditor.layout().addWidget(self._text)
+        self._wdgActEditor.layout().addWidget(vspacer())
+
+        self._btnCollapseBeats = CollapseButton(Qt.Edge.RightEdge, Qt.Edge.LeftEdge)
+        retain_when_hidden(self._wdgBeatContainer)
+        self._btnCollapseBeats.toggled.connect(self._wdgBeatContainer.setHidden)
+
+        for beat in structure.beats:
+            if beat.act == act:
+                wdg = BestNotesWidget(beat)
+                self._wdgBeatContainer.layout().addWidget(wdg)
+        self._wdgBeatContainer.layout().addWidget(vspacer())
+
+        self._wdgContainer.layout().addWidget(self._wdgActEditor)
+        self._wdgContainer.layout().addWidget(self._btnCollapseBeats)
+        self._wdgContainer.layout().addWidget(self._wdgBeatContainer)
+        # self._wdgContainer.layout().addWidget(spacer())
+
+        self.layout().addWidget(self._wdgBar)
+        self.layout().addWidget(self._wdgContainer)
+
+
 class StoryStructureNotes(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._structure: Optional[StoryStructure] = None
+        vbox(self)
 
     def setStructure(self, structure: StoryStructure):
-        pass
+        self._structure = structure
+        self.refresh()
+
+    def refresh(self):
+        clear_layout(self)
+
+        act1 = ActNotesWidget(1, self._structure)
+        act2 = ActNotesWidget(2, self._structure)
+        act3 = ActNotesWidget(3, self._structure)
+
+        self.layout().addWidget(act1)
+        self.layout().addWidget(act2)
+        self.layout().addWidget(act3)
 
 
 class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
@@ -137,6 +230,9 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
 
         self.btnGroupStructure = QButtonGroup()
         self.btnGroupStructure.setExclusive(True)
+
+        self._structureNotes = StoryStructureNotes()
+        hbox(self.notes).addWidget(self._structureNotes)
 
         self._beatsPreview: Optional[BeatsPreview] = None
 
@@ -263,12 +359,13 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         structure.active = True
         acts_registry.refresh()
         self._beatsPreview.setStructure(structure)
+        self._structureNotes.setStructure(structure)
 
-        set_tab_icon(self.tabWidget, self.tabOverview, IconRegistry.from_name(structure.icon, structure.icon_color))
+        set_tab_icon(self.tabWidget, self.tabOverview,
+                     IconRegistry.from_name(structure.icon, 'black', color_on=PLOTLYST_SECONDARY_COLOR))
 
         if self.wdgPreview.novel is not None:
-            item = self.layoutPreview.takeAt(0)
-            gc(item.widget())
+            clear_layout(self.layoutPreview)
             self.wdgPreview = SceneStoryStructureWidget(self)
             self.__initWdgPreview()
             self.layoutPreview.addWidget(self.wdgPreview)
