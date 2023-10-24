@@ -27,7 +27,7 @@ from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QButtonGroup
 from overrides import overrides
 from qthandy import translucent, gc, flow, ask_confirmation, hbox, clear_layout, vbox, sp, margins, vspacer, \
-    retain_when_hidden
+    retain_when_hidden, incr_font
 from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR
@@ -111,6 +111,7 @@ class BestNotesWidget(QWidget):
 
         vbox(self)
         self._text = AutoAdjustableTextEdit(height=80)
+        incr_font(self._text, 3)
         self._text.setProperty('rounded', True)
         self._text.setProperty('white-bg', True)
         self._text.setPlaceholderText(f'Describe {beat.text}')
@@ -147,6 +148,7 @@ class ActNotesWidget(QWidget):
         vbox(self._wdgBeatContainer)
 
         self._text = AutoAdjustableTextEdit(height=300)
+        incr_font(self._text, 3)
         self._text.setMaximumWidth(800)
         self._text.setPlaceholderText(f'Describe the events in act {act}')
         self._text.setProperty('transparent', True)
