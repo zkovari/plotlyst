@@ -39,7 +39,7 @@ from src.main.python.plotlyst.events import NovelStoryStructureUpdated, Characte
     NovelSyncEvent, NovelStoryStructureActivationRequest
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon, label, frame
+from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon, label, frame, shadow
 from src.main.python.plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.button import CollapseButton
@@ -116,6 +116,7 @@ class BestNotesWidget(QWidget):
         self._text.setProperty('white-bg', True)
         self._text.setPlaceholderText(f'Describe {beat.text}')
         self._text.setMaximumWidth(400)
+        shadow(self._text)
         self._text.setMarkdown(self._beat.notes)
         self._text.textChanged.connect(self._textChanged)
 
