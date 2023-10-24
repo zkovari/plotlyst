@@ -135,8 +135,6 @@ class ScenesOutlineView(AbstractNovelView):
         self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.ui.tblScenes.setModel(self._proxy)
-        self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColTitle,
-                                                                  QHeaderView.ResizeMode.Fixed)
         self.ui.tblScenes.horizontalHeader().setFixedHeight(30)
         self.ui.tblScenes.horizontalHeader().setProperty('main-header', True)
         self.ui.tblScenes.verticalHeader().setFixedWidth(40)
