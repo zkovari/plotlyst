@@ -37,7 +37,7 @@ from src.main.python.plotlyst.events import NovelStoryStructureUpdated, Characte
     NovelSyncEvent, NovelStoryStructureActivationRequest
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon
 from src.main.python.plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
@@ -130,6 +130,8 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.btnLinkCharacter.setIcon(IconRegistry.character_icon())
         self.btnLinkCharacter.installEventFilter(ButtonPressResizeEventFilter(self.btnLinkCharacter))
         self.btnLinkCharacter.installEventFilter(OpacityEventFilter(self.btnLinkCharacter, leaveOpacity=0.8))
+
+        set_tab_icon(self.tabWidget, self.tabNotes, IconRegistry.document_edition_icon())
 
         self._characterMenu: Optional[CharacterSelectorMenu] = None
 
@@ -261,6 +263,8 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         structure.active = True
         acts_registry.refresh()
         self._beatsPreview.setStructure(structure)
+
+        set_tab_icon(self.tabWidget, self.tabOverview, IconRegistry.from_name(structure.icon, structure.icon_color))
 
         if self.wdgPreview.novel is not None:
             item = self.layoutPreview.takeAt(0)

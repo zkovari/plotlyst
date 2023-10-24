@@ -42,6 +42,7 @@ from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.display import IconText
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget
+from src.main.python.plotlyst.view.widget.structure.beat import BeatsPreview
 
 
 class _AbstractStructureEditorWidget(QWidget):
