@@ -21,7 +21,6 @@ from functools import partial
 from typing import Optional
 
 import qtanim
-from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QDialog, QPushButton, QDialogButtonBox, QApplication
 from overrides import overrides
@@ -251,11 +250,7 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
 
 class SynopsisEditorDialog(QDialog, Ui_SynopsisEditorDialog):
     def __init__(self, novel: Novel, parent=None):
-        super(SynopsisEditorDialog, self).__init__(parent,
-                                                   Qt.WindowType.CustomizeWindowHint
-                                                   | Qt.WindowType.Window
-                                                   | Qt.WindowType.WindowMaximizeButtonHint
-                                                   | Qt.WindowType.WindowCloseButtonHint)
+        super(SynopsisEditorDialog, self).__init__(parent)
         self.setupUi(self)
         self._novel = novel
 

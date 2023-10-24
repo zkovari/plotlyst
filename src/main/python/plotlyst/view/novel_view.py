@@ -22,7 +22,7 @@ from typing import Optional
 from PyQt6.QtCore import QObject, QEvent
 from PyQt6.QtGui import QFont
 from overrides import overrides
-from qthandy import retain_when_hidden, transparent, decr_icon
+from qthandy import retain_when_hidden, transparent, decr_icon, gc
 from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
@@ -196,10 +196,11 @@ class NovelView(AbstractNovelView):
         self._dialogSynopsisEditor.show()
 
     def _closeSynopsisEditor(self):
-        self.ui.textSynopsis.setText(self._dialogSynopsisEditor.synopsis())
-        self._dialogSynopsisEditor = None
         self.ui.textSynopsis.setEnabled(True)
+        self.ui.textSynopsis.setText(self._dialogSynopsisEditor.synopsis())
         self._btnSynopsisExtendEdit.setEnabled(True)
+        gc(self._dialogSynopsisEditor)
+        self._dialogSynopsisEditor = None
 
     def _synopsis_changed(self):
         if self.novel.synopsis is None:
