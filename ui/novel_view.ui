@@ -668,7 +668,7 @@
   <customwidget>
    <class>StoryStructureEditor</class>
    <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.novel</header>
+   <header>src.main.python.plotlyst.view.widget.structure</header>
    <container>1</container>
   </customwidget>
   <customwidget>

@@ -1378,6 +1378,9 @@ crisis = StoryBeat(text='Crisis',
                    id=uuid.UUID('466688f7-ebee-4d36-a655-83ff40e1c46d'),
                    act=3, percentage=95)
 
+first_plot_points = (first_plot_point, first_plot_point_ponr)
+midpoints = (midpoint, midpoint_ponr, midpoint_mirror, midpoint_proactive)
+
 three_act_structure = StoryStructure(title='Three Act Structure',
                                      id=uuid.UUID('58013be5-1efb-4de4-9dd2-1433ce6edf90'),
                                      icon='mdi.numeric-3-circle-outline',
