@@ -26,7 +26,7 @@ import qtanim
 from PyQt6.QtCore import Qt, QEvent, QObject
 from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QButtonGroup
 from overrides import overrides
-from qthandy import translucent, gc, flow, ask_confirmation, hbox, clear_layout, vbox, sp, margins, vspacer, spacer, \
+from qthandy import translucent, gc, flow, ask_confirmation, hbox, clear_layout, vbox, sp, margins, vspacer, \
     retain_when_hidden
 from qthandy.filter import OpacityEventFilter
 
@@ -135,11 +135,8 @@ class ActNotesWidget(QWidget):
         vbox(self._wdgBeatContainer)
 
         self._text = AutoAdjustableTextEdit(height=300)
-        # self._text.setMinimumWidth(500)
-        self._text.setMaximumWidth(600)
+        self._text.setMaximumWidth(800)
         self._text.setPlaceholderText(f'Describe the events in act {act}')
-        # self._text.setProperty('rounded', True)
-        # self._text.setProperty('white-bg', True)
         self._text.setProperty('transparent', True)
         color = act_color(act)
 
@@ -150,7 +147,7 @@ class ActNotesWidget(QWidget):
 
         self._wdgActEditor = frame()
         self._wdgActEditor.setProperty('white-bg', True)
-        self._wdgActEditor.setMaximumWidth(600)
+        self._wdgActEditor.setMaximumWidth(800)
         vbox(self._wdgActEditor)
         margins(self._wdgActEditor, left=15)
         self._wdgActEditor.layout().addWidget(label(f'Act {act}', h4=True), alignment=Qt.AlignmentFlag.AlignLeft)
