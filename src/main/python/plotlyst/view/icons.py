@@ -663,6 +663,12 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.file-word-outline')
 
     @staticmethod
+    def scene_beat_badge_icon(name: str, color: str, act_color: str) -> QIcon:
+        return qtawesome.icon('mdi6.checkbox-blank-badge-outline', name,
+                              options=[{'color': act_color, 'scale_factor': 1.5},
+                                       {'color': color, 'color_disabled': 'lightgrey', 'scale_factor': 0.7}])
+
+    @staticmethod
     def refresh_icon(color: str = PLOTLYST_MAIN_COLOR) -> QIcon:
         return IconRegistry.from_name('ei.refresh', color=color)
 
