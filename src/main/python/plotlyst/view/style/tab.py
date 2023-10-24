@@ -40,6 +40,10 @@ QTabWidget::tab-bar:right[centered=false] {
     left: 1px;
 }
 
+QTabWidget::tab-bar {
+    alignment: left;
+}
+
 QTabWidget::tab-bar[centered=true] {
     alignment: center;
 }
