@@ -383,7 +383,8 @@ def tool_btn(icon: QIcon, tooltip: str = '', checkable: bool = False, base: bool
     return btn
 
 
-def push_btn(icon: QIcon, text: str = '', tooltip: str = '', checkable: bool = False, base: bool = False,
+def push_btn(icon: Optional[QIcon] = None, text: str = '', tooltip: str = '', checkable: bool = False,
+             base: bool = False,
              icon_resize: bool = True, transparent_: bool = False, properties: List[str] = None,
              parent=None) -> QPushButton:
     btn = QPushButton()
@@ -393,10 +394,12 @@ def push_btn(icon: QIcon, text: str = '', tooltip: str = '', checkable: bool = F
     return btn
 
 
-def _init_btn(btn: QAbstractButton, icon: QIcon, tooltip: str = '', checkable: bool = False, base: bool = False,
+def _init_btn(btn: QAbstractButton, icon: Optional[QIcon] = None, tooltip: str = '', checkable: bool = False,
+              base: bool = False,
               icon_resize: bool = True, transparent_: bool = False, properties: List[str] = None,
               parent=None):
-    btn.setIcon(icon)
+    if icon:
+        btn.setIcon(icon)
     btn.setToolTip(tooltip)
     btn.setCheckable(checkable)
     pointy(btn)

@@ -23,13 +23,13 @@ from typing import Set, Dict, List
 
 import qtanim
 from PyQt6.QtCharts import QSplineSeries, QValueAxis
-from PyQt6.QtCore import pyqtSignal, Qt, QSize, QTimer
+from PyQt6.QtCore import pyqtSignal, Qt, QSize, QTimer, QEvent
 from PyQt6.QtGui import QColor, QIcon, QPen, QCursor, QEnterEvent, QShowEvent
-from PyQt6.QtWidgets import QWidget, QFrame, QPushButton, QTextEdit, QLabel, QGridLayout
+from PyQt6.QtWidgets import QWidget, QFrame, QPushButton, QTextEdit, QLabel, QGridLayout, QStackedWidget
 from overrides import overrides
 from qthandy import bold, flow, incr_font, \
     margins, ask_confirmation, italic, retain_when_hidden, vbox, transparent, \
-    clear_layout, vspacer, decr_font, decr_icon, hbox, spacer, sp, pointy, incr_icon, translucent, grid
+    clear_layout, vspacer, decr_font, decr_icon, hbox, spacer, sp, pointy, incr_icon, translucent, grid, underline
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -46,7 +46,7 @@ from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDele
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter, wrap, \
-    insert_before_the_end, shadow, label
+    insert_before_the_end, shadow, label, push_btn, tool_btn
 from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
@@ -976,9 +976,43 @@ class PlotEditor(QWidget, Ui_PlotEditor):
 class StorylinesConnectionWidget(QWidget):
     def __init__(self, source: Plot, target: Plot, parent=None):
         super().__init__(parent)
+        self._source = source
+        self._target = target
 
-        vbox(self)
-        self.layout().addWidget(label(f'{source.text}-{target.text}'))
+        self.stack = QStackedWidget()
+        self._wdgIdle = IdleWidget()
+        self.stack.addWidget(self._wdgIdle)
+        self._wdgDefault = QWidget()
+
+        self._btnLink = tool_btn(IconRegistry.from_name('fa5s.link'), transparent_=True)
+        self._btnLink.setIconSize(QSize(32, 32))
+        self._btnLink.installEventFilter(OpacityEventFilter(self._btnLink))
+        vbox(self._wdgDefault)
+        self._wdgDefault.layout().addWidget(self._btnLink, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        menu = MenuWidget(self._btnLink)
+        menu.addAction(action('Catalyst'))
+        menu.addAction(action('Express change'))
+        menu.addAction(action('Impact'))
+
+
+        self.stack.addWidget(self._wdgDefault)
+        self.stack.setCurrentWidget(self._wdgDefault)
+        self._wdgDefault.setHidden(True)
+
+        vbox(self, 0, 0)
+        self.layout().addWidget(self.stack)
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        self._wdgDefault.setVisible(True)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self._wdgDefault.setHidden(True)
+
+    def activate(self, link: StorylineLink):
+        pass
 
 
 class StorylinesImpactMatrix(QWidget):
@@ -993,6 +1027,7 @@ class StorylinesImpactMatrix(QWidget):
     def showEvent(self, event: QShowEvent) -> None:
         if self._refreshOnShown:
             self._refreshMatrix()
+            self._refreshOnShown = False
 
     def refresh(self):
         if self.isVisible():
