@@ -27,7 +27,7 @@ from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QButtonGroup
 from overrides import overrides
 from qthandy import translucent, gc, flow, ask_confirmation, hbox, clear_layout, vbox, sp, margins, vspacer, \
-    retain_when_hidden, incr_font
+    retain_when_hidden, incr_font, bold
 from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR
@@ -111,7 +111,7 @@ class BestNotesWidget(QWidget):
 
         vbox(self)
         self._text = AutoAdjustableTextEdit(height=80)
-        incr_font(self._text, 3)
+        incr_font(self._text, 2)
         self._text.setProperty('rounded', True)
         self._text.setProperty('white-bg', True)
         self._text.setPlaceholderText(f'Describe {beat.text}')
@@ -121,8 +121,10 @@ class BestNotesWidget(QWidget):
         self._text.textChanged.connect(self._textChanged)
 
         self._title = IconText()
+        bold(self._title)
         self._title.setText(beat.text)
         self._title.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
+        incr_font(self._title, 2)
         self.layout().addWidget(self._title, alignment=Qt.AlignmentFlag.AlignLeft)
         # self.layout().addWidget(label(beat.description, description=True, wordWrap=True))
         self.layout().addWidget(self._text)
