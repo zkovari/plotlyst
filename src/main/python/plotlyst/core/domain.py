@@ -458,6 +458,7 @@ class StoryBeat:
     percentage: int = 0
     percentage_end: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     enabled: bool = True
+    notes: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
     @overrides
     def __eq__(self, other: 'StoryBeat'):
@@ -1278,6 +1279,7 @@ class StoryStructure(CharacterBased):
     custom: bool = False
     active: bool = False
     character_id: Optional[uuid.UUID] = None
+    acts_text: Dict[int, str] = field(default_factory=dict)
 
     def __post_init__(self):
         self._character: Optional[Character] = None

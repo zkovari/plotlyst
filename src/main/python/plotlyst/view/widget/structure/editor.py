@@ -23,7 +23,7 @@ from functools import partial
 from typing import Optional
 
 import qtanim
-from PyQt6.QtCore import Qt, QEvent, QObject
+from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QButtonGroup
 from overrides import overrides
 from qthandy import translucent, gc, flow, ask_confirmation, hbox, clear_layout, vbox, sp, margins, vspacer, \
@@ -103,6 +103,8 @@ class _StoryStructureButton(QPushButton):
 
 
 class BestNotesWidget(QWidget):
+    notesChanged = pyqtSignal()
+
     def __init__(self, beat: StoryBeat, parent=None):
         super().__init__(parent)
         self._beat = beat
@@ -113,6 +115,8 @@ class BestNotesWidget(QWidget):
         self._text.setProperty('white-bg', True)
         self._text.setPlaceholderText(f'Describe {beat.text}')
         self._text.setMaximumWidth(400)
+        self._text.setMarkdown(self._beat.notes)
+        self._text.textChanged.connect(self._textChanged)
 
         self._title = IconText()
         self._title.setText(beat.text)
@@ -121,10 +125,18 @@ class BestNotesWidget(QWidget):
         # self.layout().addWidget(label(beat.description, description=True, wordWrap=True))
         self.layout().addWidget(self._text)
 
+    def _textChanged(self):
+        self._beat.notes = self._text.toMarkdown()
+        self.notesChanged.emit()
+
 
 class ActNotesWidget(QWidget):
+    notesChanged = pyqtSignal()
+
     def __init__(self, act: int, structure: StoryStructure, parent=None):
         super().__init__(parent)
+        self._act = act
+        self._structure = structure
 
         hbox(self, spacing=15)
 
@@ -138,6 +150,8 @@ class ActNotesWidget(QWidget):
         self._text.setMaximumWidth(800)
         self._text.setPlaceholderText(f'Describe the events in act {act}')
         self._text.setProperty('transparent', True)
+        self._text.setMarkdown(structure.acts_text.get(act, ''))
+        self._text.textChanged.connect(self._textChanged)
         color = act_color(act)
 
         self._wdgBar = QWidget()
@@ -161,6 +175,7 @@ class ActNotesWidget(QWidget):
         for beat in structure.beats:
             if beat.act == act:
                 wdg = BestNotesWidget(beat)
+                wdg.notesChanged.connect(self.notesChanged)
                 self._wdgBeatContainer.layout().addWidget(wdg)
         self._wdgBeatContainer.layout().addWidget(vspacer())
 
@@ -172,12 +187,22 @@ class ActNotesWidget(QWidget):
         self.layout().addWidget(self._wdgBar)
         self.layout().addWidget(self._wdgContainer)
 
+    def _textChanged(self):
+        self._structure.acts_text[self._act] = self._text.toMarkdown()
+        self.notesChanged.emit()
+
 
 class StoryStructureNotes(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._structure: Optional[StoryStructure] = None
         vbox(self)
+        self._novel: Optional[Novel] = None
+
+        self.repo = RepositoryPersistenceManager.instance()
+
+    def setNovel(self, novel: Novel):
+        self._novel = novel
 
     def setStructure(self, structure: StoryStructure):
         self._structure = structure
@@ -187,12 +212,18 @@ class StoryStructureNotes(QWidget):
         clear_layout(self)
 
         act1 = ActNotesWidget(1, self._structure)
+        act1.notesChanged.connect(self._save)
         act2 = ActNotesWidget(2, self._structure)
+        act2.notesChanged.connect(self._save)
         act3 = ActNotesWidget(3, self._structure)
+        act3.notesChanged.connect(self._save)
 
         self.layout().addWidget(act1)
         self.layout().addWidget(act2)
         self.layout().addWidget(act3)
+
+    def _save(self):
+        self.repo.update_novel(self._novel)
 
 
 class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
@@ -278,6 +309,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         hbox(self.beats, 0, 0).addWidget(self._beatsPreview)
         self._beatsPreview.attachStructurePreview(self.wdgPreview)
 
+        self._structureNotes.setNovel(self.novel)
         for structure in self.novel.story_structures:
             self._addStructureWidget(structure)
 
