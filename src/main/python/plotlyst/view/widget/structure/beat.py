@@ -191,10 +191,11 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
 
 
 class BeatsPreview(QFrame):
-    def __init__(self, novel: Novel, checkOccupiedBeats: bool = True, parent=None):
+    def __init__(self, novel: Novel, checkOccupiedBeats: bool = True, toggleBeats: bool = True, parent=None):
         super().__init__(parent)
         self._novel = novel
         self._checkOccupiedBeats = checkOccupiedBeats
+        self._toggleBeats = toggleBeats
         self._layout: QGridLayout = grid(self)
         self._beats: Dict[StoryBeat, BeatWidget] = {}
         self._structurePreview: Optional[SceneStoryStructureWidget] = None
@@ -262,7 +263,7 @@ class BeatsPreview(QFrame):
         self._structurePreview.insertBeat(newBeat)
 
     def __initBeatWidget(self, beat: StoryBeat) -> BeatWidget:
-        wdg = BeatWidget(self._novel, beat, self._checkOccupiedBeats)
+        wdg = BeatWidget(self._novel, beat, self._checkOccupiedBeats, toggleEnabled=self._toggleBeats)
         wdg.setMinimumSize(200, 50)
         wdg.beatHighlighted.connect(self._structurePreview.highlightBeat)
         wdg.beatToggled.connect(partial(self._structurePreview.toggleBeatVisibility, beat))

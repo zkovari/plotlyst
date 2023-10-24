@@ -181,7 +181,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self._characterMenu = CharacterSelectorMenu(self.novel, self.btnLinkCharacter)
         self._characterMenu.selected.connect(self._characterLinked)
 
-        self._beatsPreview = BeatsPreview(self.novel)
+        self._beatsPreview = BeatsPreview(self.novel, toggleBeats=False)
         hbox(self.beats, 0, 0).addWidget(self._beatsPreview)
         self._beatsPreview.attachStructurePreview(self.wdgPreview)
 
