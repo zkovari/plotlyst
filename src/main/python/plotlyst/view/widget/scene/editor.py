@@ -737,7 +737,6 @@ class AgencyTextBasedElementEditor(TextBasedSceneElementWidget):
     def __init__(self, parent=None):
         super().__init__(StoryElementType.Agency, parent)
         self._agenda: Optional[SceneStructureAgenda] = None
-        # self.setTitle('Agency')
         self.setIcon('msc.debug-stackframe-dot')
 
         self._menu = MenuWidget()
@@ -753,12 +752,23 @@ class AgencyTextBasedElementEditor(TextBasedSceneElementWidget):
         else:
             super().activate()
 
+    @overrides
+    def _deactivate(self):
+        super()._deactivate()
+        self.setType(StoryElementType.Agency)
+
     def setAgenda(self, agenda: SceneStructureAgenda):
         self._agenda = agenda
         self.reset()
 
     def setType(self, type: StoryElementType):
         self._type = type
+        if type == StoryElementType.Agency:
+            self.setTitle('')
+            self.setIcon('msc.debug-stackframe-dot')
+            self.reset()
+            return
+
         if type == StoryElementType.Goal:
             self.setTitle('Goal')
             self.setIcon('mdi.target', 'darkBlue')
