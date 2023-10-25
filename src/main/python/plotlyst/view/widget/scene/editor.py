@@ -42,6 +42,7 @@ from src.main.python.plotlyst.service.persistence import RepositoryPersistenceMa
 from src.main.python.plotlyst.view.common import DelayedSignalSlotConnector, action, wrap, label, scrolled, \
     ButtonPressResizeEventFilter, insert_after, tool_btn, shadow, push_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import RemovalButton
@@ -621,6 +622,7 @@ class StorylineElementEditor(TextBasedSceneElementWidget):
         self._btnEditValues.installEventFilter(ButtonPressResizeEventFilter(self._btnEditValues))
         self._btnEditValues.setIcon(IconRegistry.from_name('fa5s.chevron-circle-down', 'grey'))
         self._plotValueMenu = MenuWidget(self._btnEditValues)
+        apply_white_menu(self._plotValueMenu)
         self._btnEditValues.setProperty('no-menu', True)
         transparent(self._btnEditValues)
         self._wdgValues.layout().addWidget(self._btnEditValues)
