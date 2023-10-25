@@ -903,7 +903,6 @@ class SceneStructureAgenda(CharacterBased):
     goal_references: List[GoalReference] = field(default_factory=list)
     emotion: Optional[int] = None
     motivations: Dict[int, int] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
-
     story_elements: List['StoryElement'] = field(default_factory=list)
 
     def __post_init__(self):
@@ -1025,6 +1024,7 @@ class StoryElementType(Enum):
     Conflict = 'conflict'
     Decision = 'decision'
     Emotion = 'emotion'
+    Agency = 'agency'
 
 
 @dataclass
@@ -1033,6 +1033,8 @@ class StoryElement:
     ref: Optional[uuid.UUID] = None
     text: str = ''
     intensity: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    row: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    col: int = field(default=0, metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass

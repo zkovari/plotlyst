@@ -33,7 +33,7 @@ from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, Document, StoryBeat, \
     Character, TagReference, ScenePurposeType, ScenePurpose
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import emit_info, EventListener, Event, emit_event
+from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import NovelAboutToSyncEvent, SceneStoryBeatChangedEvent
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel

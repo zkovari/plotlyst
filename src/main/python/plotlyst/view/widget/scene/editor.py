@@ -22,11 +22,11 @@ from typing import List, Optional, Dict
 
 import qtanim
 from PyQt6.QtCore import Qt, QSize, QEvent, pyqtSignal, QObject
-from PyQt6.QtGui import QEnterEvent, QIcon, QMouseEvent, QColor
+from PyQt6.QtGui import QEnterEvent, QIcon, QMouseEvent, QColor, QCursor
 from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QStackedWidget, QTabBar
 from overrides import overrides
 from qthandy import vbox, vspacer, transparent, sp, line, incr_font, hbox, pointy, vline, retain_when_hidden, margins, \
-    spacer, underline, bold, gc, curved_flow, flow, clear_layout
+    spacer, underline, bold, gc, curved_flow, flow, clear_layout, grid
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -42,6 +42,7 @@ from src.main.python.plotlyst.service.persistence import RepositoryPersistenceMa
 from src.main.python.plotlyst.view.common import DelayedSignalSlotConnector, action, wrap, label, scrolled, \
     ButtonPressResizeEventFilter, insert_after, tool_btn, shadow, push_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
 from src.main.python.plotlyst.view.widget.display import Icon
@@ -404,7 +405,7 @@ class SceneElementWidget(QWidget):
 
         self._colorActive: Optional[QColor] = None
         self._iconActive = Icon()
-        self._iconActive.setIconSize(QSize(48, 48))
+        # self._iconActive.setIconSize(QSize(48, 48))
         self._iconIdle = Icon()
         self._iconIdle.setIconSize(QSize(48, 48))
         self._iconIdle.clicked.connect(self.activate)
@@ -414,8 +415,9 @@ class SceneElementWidget(QWidget):
         vbox(self._pageIdle)
         vbox(self._pageEditor)
 
-        self._pageEditor.layout().addWidget(self._iconActive, alignment=Qt.AlignmentFlag.AlignCenter)
-        self._pageEditor.layout().addWidget(self._titleActive, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._pageEditor.layout().addWidget(group(self._iconActive, self._titleActive),
+                                            alignment=Qt.AlignmentFlag.AlignCenter)
+        # self._pageEditor.layout().addWidget(self._titleActive, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self._pageIdle.layout().addWidget(self._iconIdle, alignment=Qt.AlignmentFlag.AlignCenter)
         self._pageIdle.layout().addWidget(self._titleIdle, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -507,10 +509,12 @@ class SceneElementWidget(QWidget):
 class TextBasedSceneElementWidget(SceneElementWidget):
     def __init__(self, type: StoryElementType, parent=None):
         super().__init__(type, parent)
+        self.setMaximumWidth(210)
 
         self._textEditor = QTextEdit()
         self._textEditor.setMinimumWidth(170)
         self._textEditor.setMaximumWidth(200)
+        self._textEditor.setMinimumHeight(80)
         self._textEditor.setMaximumHeight(100)
         self._textEditor.setTabChangesFocus(True)
         self._textEditor.setAcceptRichText(False)
@@ -519,7 +523,7 @@ class TextBasedSceneElementWidget(SceneElementWidget):
         self._textEditor.setProperty('white-bg', True)
         self._textEditor.textChanged.connect(self._textChanged)
 
-        self._pageEditor.layout().addWidget(self._textEditor)
+        self._pageEditor.layout().addWidget(self._textEditor, alignment=Qt.AlignmentFlag.AlignCenter)
 
     def setPlaceholderText(self, text: str):
         self._textEditor.setPlaceholderText(text)
@@ -730,13 +734,37 @@ class ArcSceneElementEditor(StorylineElementEditor):
 
 
 class AgencyTextBasedElementEditor(TextBasedSceneElementWidget):
-    def __init__(self, type: StoryElementType, parent=None):
-        super().__init__(type, parent)
+    def __init__(self, parent=None):
+        super().__init__(StoryElementType.Agency, parent)
         self._agenda: Optional[SceneStructureAgenda] = None
+        # self.setTitle('Agency')
+        self.setIcon('msc.debug-stackframe-dot')
+
+        self._menu = MenuWidget()
+        self._menu.addAction(
+            action('Goal', IconRegistry.goal_icon(), slot=partial(self.setType, StoryElementType.Goal)))
+        self._menu.addAction(action('Conflict'))
+        self._menu.addAction(action('Decision'))
+
+    @overrides
+    def activate(self):
+        if self._type == StoryElementType.Agency:
+            self._menu.exec(QCursor.pos())
+        else:
+            super().activate()
 
     def setAgenda(self, agenda: SceneStructureAgenda):
         self._agenda = agenda
         self.reset()
+
+    def setType(self, type: StoryElementType):
+        self._type = type
+        if type == StoryElementType.Goal:
+            self.setTitle('Goal')
+            self.setIcon('mdi.target', 'darkBlue')
+            self.setPlaceholderText("What's the character's goal in this scene?")
+
+        self.activate()
 
     @overrides
     def _storyElements(self) -> List[StoryElement]:
@@ -817,22 +845,16 @@ class AbstractSceneElementsEditor(QWidget):
 
         self._wdgHeader = QWidget()
         hbox(self._wdgHeader)
-        self._wdgElementsTopRow = QWidget()
-        curved_flow(self._wdgElementsTopRow, spacing=8)
-        self._wdgElementsBottomRow = QWidget()
-        curved_flow(self._wdgElementsBottomRow, spacing=8)
+        self._wdgElements = QWidget()
 
-        self._lblBottom = label('', underline=True)
         self._wdgElementsParent.layout().addWidget(self._wdgHeader)
-        self._wdgElementsParent.layout().addWidget(self._wdgElementsTopRow)
-        self._wdgElementsParent.layout().addWidget(self._lblBottom)
-        self._wdgElementsParent.layout().addWidget(self._wdgElementsBottomRow)
+        self._wdgElementsParent.layout().addWidget(self._wdgElements)
 
     def setScene(self, scene: Scene):
         self._scene = scene
 
         for wdg in self._storylineElements:
-            self._wdgElementsTopRow.layout().removeWidget(wdg)
+            self._wdgElements.layout().removeWidget(wdg)
             gc(wdg)
         self._storylineElements.clear()
 
@@ -849,11 +871,12 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
+        curved_flow(self._wdgElements, spacing=8)
 
         self.__newPlotElementEditor()
 
         self._btnAddNewPlot = tool_btn(IconRegistry.plus_circle_icon('grey'), 'Add new storyline', transparent_=True,
-                                       parent=self._wdgElementsTopRow)
+                                       parent=self._wdgElements)
         self._btnAddNewPlot.installEventFilter(OpacityEventFilter(self._btnAddNewPlot))
         self._btnAddNewPlot.clicked.connect(self._addNewPlot)
 
@@ -878,12 +901,12 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         self._consequencesElement.setIcon('mdi.ray-start-arrow')
         self._consequencesElement.setPlaceholderText("Are there any imminent or later consequences of this scene?")
 
-        self._wdgElementsTopRow.layout().addWidget(self._outcomeElement)
-        self._wdgElementsTopRow.layout().addWidget(self._newLine())
-        self._wdgElementsTopRow.layout().addWidget(self._storylineElements[0])
+        self._wdgElements.layout().addWidget(self._outcomeElement)
+        self._wdgElements.layout().addWidget(self._newLine())
+        self._wdgElements.layout().addWidget(self._storylineElements[0])
 
-        self._wdgElementsTopRow.layout().addWidget(self._newLine())
-        self._wdgElementsTopRow.layout().addWidget(self._consequencesElement)
+        self._wdgElements.layout().addWidget(self._newLine())
+        self._wdgElements.layout().addWidget(self._consequencesElement)
 
     @overrides
     def setScene(self, scene: Scene):
@@ -904,25 +927,25 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
             self.__newPlotElementEditor()
 
         for i, wdg in enumerate(self._storylineElements):
-            self._wdgElementsTopRow.layout().insertWidget(i + 2, wdg)
+            self._wdgElements.layout().insertWidget(i + 2, wdg)
 
         last_plot_element = self._storylineElements[-1].element()
         if last_plot_element and last_plot_element.ref:
-            insert_after(self._wdgElementsTopRow, self._wdgAddNewPlotParent, reference=self._storylineElements[-1])
+            insert_after(self._wdgElements, self._wdgAddNewPlotParent, reference=self._storylineElements[-1])
             self._wdgAddNewPlotParent.setVisible(True)
 
     def refresh(self):
         self._outcomeElement.refresh()
 
     def _plotSelected(self, plotElement: PlotSceneElementEditor):
-        insert_after(self._wdgElementsTopRow, self._wdgAddNewPlotParent, reference=plotElement)
+        insert_after(self._wdgElements, self._wdgAddNewPlotParent, reference=plotElement)
         self._wdgAddNewPlotParent.setVisible(True)
 
     def _addNewPlot(self):
         elementEditor = self.__newPlotElementEditor()
-        insert_after(self._wdgElementsTopRow, elementEditor, reference=self._wdgAddNewPlotParent)
+        insert_after(self._wdgElements, elementEditor, reference=self._wdgAddNewPlotParent)
         self._wdgAddNewPlotParent.setHidden(True)
-        self._wdgElementsTopRow.layout().removeWidget(self._wdgAddNewPlotParent)
+        self._wdgElements.layout().removeWidget(self._wdgAddNewPlotParent)
 
         elementEditor.activate()
 
@@ -978,8 +1001,7 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
-
-        self._lblBottom.setText('Character relations')
+        grid(self._wdgElements)
 
         self._characterTabbar = CharacterTabBar(self._novel)
         self._characterTabbar.characterChanged.connect(self._characterSelected)
@@ -1007,35 +1029,43 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         self._wdgHeader.layout().addWidget(spacer())
         self._wdgElementsParent.layout().insertWidget(1, line())
 
-        self._arcElement = ArcSceneElementEditor(self._novel)
+        self._row = 3
+        self._col = 4
+        for row in range(self._row):
+            for col in range(self._col):
+                # placeholder = PlaceholderAgencyElementEditor()
+                placeholder = AgencyTextBasedElementEditor()
+                self._wdgElements.layout().addWidget(placeholder, row, col, 1, 1)
+        self._wdgElements.layout().addWidget(spacer(), 0, self._col, 1, 1)
+        self._wdgElements.layout().addWidget(vspacer(), self._row, 0, 1, 1)
+        # self._arcElement = ArcSceneElementEditor(self._novel)
+        #
+        # self._goalElement = AgencyTextBasedElementEditor(StoryElementType.Goal)
+        # self._goalElement.setTitle('Goal')
+        # self._goalElement.setIcon('mdi.target', 'darkBlue')
+        # self._goalElement.setPlaceholderText("What's the character's goal in this scene?")
 
-        self._goalElement = AgencyTextBasedElementEditor(StoryElementType.Goal)
-        self._goalElement.setTitle('Goal')
-        self._goalElement.setIcon('mdi.target', 'darkBlue')
-        self._goalElement.setPlaceholderText("What's the character's goal in this scene?")
+        # self._conflictElement = ConflictElementEditor()
+        #
+        # self._decisionElement = AgencyTextBasedElementEditor(StoryElementType.Decision)
+        # self._decisionElement.setTitle('Decision')
+        # self._decisionElement.setIcon('fa5s.map-signs', '#ba6f4d')
 
-        self._conflictElement = ConflictElementEditor()
+        retain_when_hidden(self._wdgElements)
 
-        self._decisionElement = AgencyTextBasedElementEditor(StoryElementType.Decision)
-        self._decisionElement.setTitle('Decision')
-        self._decisionElement.setIcon('fa5s.map-signs', '#ba6f4d')
-
-        retain_when_hidden(self._wdgElementsTopRow)
-        retain_when_hidden(self._wdgElementsBottomRow)
-
-        self._wdgElementsTopRow.layout().addWidget(self._goalElement)
-        self._wdgElementsTopRow.layout().addWidget(self._conflictElement)
-        self._wdgElementsTopRow.layout().addWidget(self._newLine())
-        self._wdgElementsTopRow.layout().addWidget(self._decisionElement)
-        self._wdgElementsTopRow.layout().addWidget(self._newLine())
-        self._wdgElementsTopRow.layout().addWidget(self._arcElement)
+        # self._wdgElementsTopRow.layout().addWidget(self._goalElement)
+        # self._wdgElementsTopRow.layout().addWidget(self._conflictElement)
+        # self._wdgElementsTopRow.layout().addWidget(self._newLine())
+        # self._wdgElementsTopRow.layout().addWidget(self._decisionElement)
+        # self._wdgElementsTopRow.layout().addWidget(self._newLine())
+        # self._wdgElementsTopRow.layout().addWidget(self._arcElement)
 
     @overrides
     def setScene(self, scene: Scene):
         super().setScene(scene)
         agenda = scene.agendas[0]
 
-        self._arcElement.setScene(scene)
+        # self._arcElement.setScene(scene)
         if agenda.emotion is None:
             self._emotionEditor.reset()
         else:
@@ -1052,22 +1082,28 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         else:
             self._motivationEditor.reset()
 
-        self._goalElement.setAgenda(agenda)
-        self._conflictElement.setScene(scene, self._novel)
-        self._conflictElement.setAgenda(agenda)
-        self._decisionElement.setAgenda(agenda)
+        for row in range(self._row):
+            for col in range(self._col):
+                item = self._wdgElements.layout().itemAtPosition(row, col)
+                if item and item.widget():
+                    item.widget().setAgenda(agenda)
 
-        for element in scene.agendas[0].story_elements:
-            if element.type == StoryElementType.Goal:
-                self._goalElement.setElement(element)
-            elif element.type == StoryElementType.Conflict:
-                self._conflictElement.setElement(element)
-            elif element.type == StoryElementType.Decision:
-                self._decisionElement.setElement(element)
-            elif element.type == StoryElementType.Arc:
-                self._arcElement.setElement(element)
-            #     wdg = self.__newPlotElementEditor()
-            #     wdg.setElement(element)
+        # self._goalElement.setAgenda(agenda)
+        # self._conflictElement.setScene(scene, self._novel)
+        # self._conflictElement.setAgenda(agenda)
+        # self._decisionElement.setAgenda(agenda)
+
+        # for element in scene.agendas[0].story_elements:
+        #     if element.type == StoryElementType.Goal:
+        #         self._goalElement.setElement(element)
+        #     elif element.type == StoryElementType.Conflict:
+        #         self._conflictElement.setElement(element)
+        #     elif element.type == StoryElementType.Decision:
+        #         self._decisionElement.setElement(element)
+        #     elif element.type == StoryElementType.Arc:
+        #         self._arcElement.setElement(element)
+        #     wdg = self.__newPlotElementEditor()
+        #     wdg.setElement(element)
 
         if scene.agendas[0].character_id:
             self._characterTabbar.setCharacter(scene.agendas[0].character(self._novel))
@@ -1113,11 +1149,11 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         else:
             self._characterTabbar.popup()
 
-    def _updateElementsVisibility(self, agenda):
+    def _updateElementsVisibility(self, agenda: SceneStructureAgenda):
         elements_visible = agenda.character_id is not None
         self._btnCharacterDelegate.setVisible(not elements_visible)
-        self._wdgElementsTopRow.setVisible(elements_visible)
-        self._wdgElementsBottomRow.setVisible(elements_visible)
-        self._lblBottom.setVisible(elements_visible)
+        self._wdgElements.setVisible(elements_visible)
+        # self._wdgElementsBottomRow.setVisible(elements_visible)
+        # self._lblBottom.setVisible(elements_visible)
         self._emotionEditor.setVisible(elements_visible)
         self._motivationEditor.setVisible(elements_visible)
