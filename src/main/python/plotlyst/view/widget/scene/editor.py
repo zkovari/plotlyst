@@ -391,12 +391,12 @@ class ArrowButton(QToolButton):
         self._state: int = 0
         self._edge = edge
         if edge == Qt.Edge.RightEdge:
-            self._icons = ['ei.arrow-right', 'ei.arrow-right', 'ei.arrow-left', 'fa5s.arrows-alt-h']
+            self._icons = ['fa5s.arrow-right', 'fa5s.arrow-right', 'fa5s.arrow-left', 'fa5s.arrows-alt-h']
         elif edge == Qt.Edge.BottomEdge:
-            self._icons = ['ei.arrow-down', 'ei.arrow-down', 'ei.arrow-up', 'fa5s.arrows-alt-v']
+            self._icons = ['fa5s.arrow-down', 'fa5s.arrow-down', 'fa5s.arrow-up', 'fa5s.arrows-alt-v']
         pointy(self)
-        self.installEventFilter(ButtonPressResizeEventFilter(self))
         transparent(self)
+        self.setToolTip('Click to change direction')
         self.setCheckable(True)
 
         self.clicked.connect(self._clicked)
