@@ -1010,66 +1010,6 @@ class AgencyTextBasedElementEditor(TextBasedSceneElementWidget):
         return self._agenda.story_elements
 
 
-# class ConflictElementEditor(AgencyTextBasedElementEditor):
-#     def __init__(self, parent=None):
-#         super().__init__(StoryElementType.Conflict, parent)
-#         self._novel: Optional[Novel] = None
-#
-#         self.setTitle('Conflict')
-#         self.setIcon('mdi.sword-cross', '#f3a712')
-#         self.setPlaceholderText("What kind of conflict does the character have to face?")
-#
-#         self._sliderIntensity = ConflictIntensityEditor()
-#         self._sliderIntensity.intensityChanged.connect(self._intensityChanged)
-#
-#         self._wdgConflicts = QWidget()
-#         flow(self._wdgConflicts)
-#
-#         self._wdgTracking = QWidget()
-#         vbox(self._wdgTracking, spacing=0)
-#         self._wdgTracking.layout().addWidget(label('Intensity'), alignment=Qt.AlignmentFlag.AlignLeft)
-#         self._wdgTracking.layout().addWidget(self._sliderIntensity)
-#         self._wdgTracking.layout().addWidget(line())
-#         self._wdgTracking.layout().addWidget(self._wdgConflicts)
-#
-#         self._pageEditor.layout().addWidget(self._wdgTracking)
-#
-#     @overrides
-#     def setScene(self, scene: Scene, novel: Novel):
-#         super().setScene(scene)
-#         self._novel = novel
-#         clear_layout(self._wdgConflicts)
-#
-#     @overrides
-#     def setAgenda(self, agenda: SceneStructureAgenda):
-#         super().setAgenda(agenda)
-#         for ref in agenda.conflict_references:
-#             conflictSelector = CharacterConflictSelector(self._novel, self._scene)
-#             conflictSelector.setConflict(ref.conflict(self._novel), ref)
-#             self._wdgConflicts.layout().addWidget(conflictSelector)
-#
-#         conflictSelector = CharacterConflictSelector(self._novel, self._scene,
-#                                                      simplified=len(agenda.conflict_references) > 0)
-#         conflictSelector.conflictSelected.connect(self._conflictSelected)
-#         self._wdgConflicts.layout().addWidget(conflictSelector)
-#
-#     @overrides
-#     def setElement(self, element: StoryElement):
-#         super().setElement(element)
-#         self._sliderIntensity.setValue(element.intensity)
-#
-#     def _intensityChanged(self, value: int):
-#         self._element.intensity = value
-#         shadow(self._iconActive, offset=0, radius=value * 2, color=QColor('#f3a712'))
-#         shadow(self._titleActive, offset=0, radius=value, color=QColor('#f3a712'))
-#         shadow(self._textEditor, offset=0, radius=value * 2, color=QColor('#f3a712'))
-#
-#     def _conflictSelected(self):
-#         conflictSelector = CharacterConflictSelector(self._novel, self._scene, simplified=True)
-#         conflictSelector.conflictSelected.connect(self._conflictSelected)
-#         self._wdgConflicts.layout().addWidget(conflictSelector)
-
-
 class AbstractSceneElementsEditor(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
