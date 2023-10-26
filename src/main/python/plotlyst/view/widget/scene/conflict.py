@@ -24,7 +24,7 @@ from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtGui import QMouseEvent
 from PyQt6.QtWidgets import QWidget, QSlider, QPushButton, QHeaderView, QFrame
 from overrides import overrides
-from qthandy import hbox, gc
+from qthandy import hbox, gc, sp
 from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget
 
@@ -51,6 +51,8 @@ class ConflictIntensityEditor(QWidget):
         self._slider.setMaximum(10)
         self._slider.setPageStep(1)
         self._slider.setValue(1)
+        self._slider.setMinimumWidth(100)
+        self._slider.setMaximumWidth(200)
         self._slider.valueChanged.connect(self._valueChanged)
         self._slider.setProperty('conflict', True)
 
@@ -59,6 +61,9 @@ class ConflictIntensityEditor(QWidget):
 
         self.layout().addWidget(self._icon)
         self.layout().addWidget(self._slider)
+
+    def value(self) -> int:
+        return self._slider.value()
 
     def setValue(self, value: int) -> None:
         if value == 0:

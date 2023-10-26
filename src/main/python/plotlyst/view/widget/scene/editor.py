@@ -48,7 +48,8 @@ from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import RemovalButton
-from src.main.python.plotlyst.view.widget.scene.agency import SceneAgendaEmotionEditor, SceneAgendaMotivationEditor
+from src.main.python.plotlyst.view.widget.scene.agency import SceneAgendaEmotionEditor, SceneAgendaMotivationEditor, \
+    SceneAgendaConflictEditor
 from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotSelectorButton, ScenePlotValueEditor, \
     PlotValuesDisplay
 from src.main.python.plotlyst.view.widget.scenes import SceneOutcomeSelector
@@ -1258,11 +1259,13 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
 
         self._emotionEditor = SceneAgendaEmotionEditor()
         self._emotionEditor.emotionChanged.connect(self._emotionChanged)
-        self._emotionEditor.emotionReset.connect(self._emotionReset)
+        self._emotionEditor.deactivated.connect(self._emotionReset)
         self._motivationEditor = SceneAgendaMotivationEditor()
         self._motivationEditor.setNovel(novel)
         self._motivationEditor.motivationChanged.connect(self._motivationChanged)
-        self._motivationEditor.motivationReset.connect(self._motivationReset)
+        self._motivationEditor.deactivated.connect(self._motivationReset)
+
+        self._conflictEditor = SceneAgendaConflictEditor()
 
         margins(self._wdgHeader, left=25)
         self._wdgHeader.layout().setSpacing(10)
@@ -1270,6 +1273,8 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         self._wdgHeader.layout().addWidget(self._emotionEditor)
         self._wdgHeader.layout().addWidget(vline())
         self._wdgHeader.layout().addWidget(self._motivationEditor)
+        self._wdgHeader.layout().addWidget(vline())
+        self._wdgHeader.layout().addWidget(self._conflictEditor)
         self._wdgHeader.layout().addWidget(spacer())
         self._wdgElementsParent.layout().insertWidget(1, line())
 
