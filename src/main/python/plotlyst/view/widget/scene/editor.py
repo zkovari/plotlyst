@@ -386,7 +386,8 @@ class SceneElementWidget(QWidget):
         self._type = type
         self._scene: Optional[Scene] = None
         self._element: Optional[StoryElement] = None
-        self._gridLayout: QGridLayout = grid(self, 0, 0, 0)
+        self._gridLayout: QGridLayout = grid(self, 0, 2, 2)
+        # margins(self._gridLayout, left=0, top=0)
 
         self._btnClose = RemovalButton()
         retain_when_hidden(self._btnClose)
@@ -430,7 +431,7 @@ class SceneElementWidget(QWidget):
         self._iconIdle = Icon()
         self._iconIdle.setIconSize(QSize(48, 48))
         self._iconIdle.clicked.connect(self.activate)
-        self._titleActive = label('', h4=True)
+        self._titleActive = label('', bold=True)
         self._titleIdle = label('', description=True, italic=True, h4=True)
 
         vbox(self._pageIdle)
@@ -1156,7 +1157,7 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
-        grid(self._wdgElements)
+        grid(self._wdgElements, 2, 2, 2)
 
         self._characterTabbar = CharacterTabBar(self._novel)
         self._characterTabbar.characterChanged.connect(self._characterSelected)
