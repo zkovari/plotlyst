@@ -1034,6 +1034,8 @@ class StoryElementType(Enum):
     Plan_change = 'plan_change'
     Collaboration = 'collaboration'
     Subtext = 'subtext'
+    Event = 'event'
+    Effect = 'effect'
 
 
 @dataclass
