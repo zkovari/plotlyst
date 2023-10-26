@@ -391,7 +391,7 @@ class SceneElementWidget(QWidget):
         self._btnClose = RemovalButton()
         retain_when_hidden(self._btnClose)
         self._btnClose.clicked.connect(self._deactivate)
-        self._gridLayout.addWidget(self._btnClose, 0, 2, alignment=Qt.AlignmentFlag.AlignRight)
+        self._gridLayout.addWidget(self._btnClose, 1, 2, alignment=Qt.AlignmentFlag.AlignTop)
 
         self._arrows: Dict[int, QToolButton] = {
             # 0: tool_btn(IconRegistry.from_name('ei.arrow-up', 'lightgrey', 'black'), transparent_=True, checkable=True),
@@ -508,6 +508,10 @@ class SceneElementWidget(QWidget):
         self._stackWidget.setCurrentWidget(self._pageIdle)
         pointy(self._pageIdle)
         self._element = None
+
+        for arrow in self._arrows.values():
+            arrow.setChecked(False)
+            arrow.setHidden(True)
 
     def activate(self):
         element = StoryElement(self._type)
