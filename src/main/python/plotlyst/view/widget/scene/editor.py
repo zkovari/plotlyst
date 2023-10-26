@@ -394,20 +394,26 @@ class SceneElementWidget(QWidget):
         self._gridLayout.addWidget(self._btnClose, 0, 2, alignment=Qt.AlignmentFlag.AlignRight)
 
         self._arrows: Dict[int, QToolButton] = {
-            0: tool_btn(IconRegistry.from_name('ei.arrow-up'), transparent_=True),
-            90: tool_btn(IconRegistry.from_name('ei.arrow-right'), transparent_=True),
-            180: tool_btn(IconRegistry.from_name('ei.arrow-down'), transparent_=True),
-            270: tool_btn(IconRegistry.from_name('ei.arrow-left'), transparent_=True),
+            # 0: tool_btn(IconRegistry.from_name('ei.arrow-up', 'lightgrey', 'black'), transparent_=True, checkable=True),
+            90: tool_btn(IconRegistry.from_name('ei.arrow-right', 'lightgrey', 'black'), transparent_=True,
+                         checkable=True),
+            180: tool_btn(IconRegistry.from_name('ei.arrow-down', 'lightgrey', 'black'), transparent_=True,
+                          checkable=True),
+            # 270: tool_btn(IconRegistry.from_name('ei.arrow-left', 'lightgrey', 'black'), transparent_=True,
+            #               checkable=True),
             # 0: tool_btn(IconRegistry.from_name('ei.arrow-down')),
             # 0: tool_btn(IconRegistry.from_name('ei.arrow-down')),
             # 0: tool_btn(IconRegistry.from_name('ei.arrow-down')),
         }
-        for arrow in self._arrows.values():
+        for degree, arrow in self._arrows.items():
             arrow.setIconSize(QSize(15, 15))
-        self._gridLayout.addWidget(self._arrows[0], 0, 1, alignment=Qt.AlignmentFlag.AlignCenter)
-        self._gridLayout.addWidget(self._arrows[90], 1, 2, alignment=Qt.AlignmentFlag.AlignCenter)
+            retain_when_hidden(arrow)
+            arrow.setHidden(True)
+            arrow.toggled.connect(partial(self._arrowToggled, arrow, degree))
+        # self._gridLayout.addWidget(self._arrows[0], 0, 1, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._gridLayout.addWidget(self._arrows[90], 1, 2, 2, 1, alignment=Qt.AlignmentFlag.AlignCenter)
         self._gridLayout.addWidget(self._arrows[180], 2, 1, alignment=Qt.AlignmentFlag.AlignCenter)
-        self._gridLayout.addWidget(self._arrows[270], 1, 0, alignment=Qt.AlignmentFlag.AlignCenter)
+        # self._gridLayout.addWidget(self._arrows[270], 1, 0, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self._stackWidget = QStackedWidget(self)
         self._gridLayout.addWidget(self._stackWidget, 1, 1)
@@ -421,7 +427,6 @@ class SceneElementWidget(QWidget):
 
         self._colorActive: Optional[QColor] = None
         self._iconActive = Icon()
-        # self._iconActive.setIconSize(QSize(48, 48))
         self._iconIdle = Icon()
         self._iconIdle.setIconSize(QSize(48, 48))
         self._iconIdle.clicked.connect(self.activate)
@@ -465,12 +470,17 @@ class SceneElementWidget(QWidget):
             self._lblClick.setVisible(True)
         else:
             self._btnClose.setVisible(True)
+            for arrow in self._arrows.values():
+                arrow.setVisible(True)
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
         if self._stackWidget.currentWidget() == self._pageIdle:
             self._lblClick.setVisible(False)
         else:
+            for arrow in self._arrows.values():
+                if not arrow.isChecked():
+                    arrow.setHidden(True)
             self._btnClose.setVisible(False)
 
     def setIcon(self, icon: str, colorActive: str = 'black'):
@@ -519,6 +529,9 @@ class SceneElementWidget(QWidget):
 
     def _elementRemoved(self, element: StoryElement):
         self._storyElements().remove(element)
+
+    def _arrowToggled(self, arrow: QToolButton, degree: int, toggled: bool):
+        arrow.setIconSize(QSize(22, 22) if toggled else QSize(15, 15))
 
 
 class TextBasedSceneElementWidget(SceneElementWidget):
@@ -757,10 +770,57 @@ class AgencyTextBasedElementEditor(TextBasedSceneElementWidget):
         self.setIcon('msc.debug-stackframe-dot')
 
         self._menu = MenuWidget()
-        self._menu.addAction(
-            action('Goal', IconRegistry.goal_icon(), slot=partial(self._typeActivated, StoryElementType.Goal)))
-        self._menu.addAction(action('Conflict'))
-        self._menu.addAction(action('Decision'))
+        goal_action = action('Goal', IconRegistry.goal_icon(), slot=partial(self._typeActivated, StoryElementType.Goal))
+        self._menu.addAction(goal_action)
+        conflict_action = action('Conflict', IconRegistry.conflict_icon(),
+                                 slot=partial(self._typeActivated, StoryElementType.Conflict))
+        self._menu.addAction(conflict_action)
+        decision_action = action('Decision', IconRegistry.crisis_icon(),
+                                 slot=partial(self._typeActivated, StoryElementType.Decision))
+        self._menu.addAction(decision_action)
+        self._menu.addAction(action('Character change', IconRegistry.from_name('mdi.account-cog', '#cdb4db'),
+                                    slot=partial(self._typeActivated, StoryElementType.Arc)))
+        consequences_action = action('Consequences', IconRegistry.cause_and_effect_icon(),
+                                     slot=partial(self._typeActivated, StoryElementType.Consequences))
+        self._menu.addAction(consequences_action)
+
+        initiativeMenu = MenuWidget()
+        initiativeMenu.setTitle('Initiative and decision-making')
+        initiativeMenu.addAction(action('Motivation', IconRegistry.from_name('fa5s.fist-raised', '#94d2bd'),
+                                        slot=partial(self._typeActivated, StoryElementType.Motivation)))
+        initiativeMenu.addAction(action('Initiative', IconRegistry.decision_icon(),
+                                        slot=partial(self._typeActivated, StoryElementType.Initiative)))
+        initiativeMenu.addAction(goal_action)
+        initiativeMenu.addAction(decision_action)
+        initiativeMenu.addAction(action('Plan change', IconRegistry.from_name('mdi.calendar-refresh-outline'),
+                                        slot=partial(self._typeActivated, StoryElementType.Plan_change)))
+
+        conflict_menu = MenuWidget()
+        conflict_menu.setTitle('Conflict and consequence')
+        conflict_menu.addAction(conflict_action)
+        conflict_menu.addAction(action('Internal conflict', IconRegistry.conflict_self_icon(),
+                                       slot=partial(self._typeActivated, StoryElementType.Internal_conflict)))
+        conflict_menu.addAction(action('Dilemma', IconRegistry.dilemma_icon(),
+                                       slot=partial(self._typeActivated, StoryElementType.Dilemma)))
+        conflict_menu.addSeparator()
+        conflict_menu.addAction(consequences_action)
+        conflict_menu.addAction(action('Impact on plot', IconRegistry.from_name('mdi.motion-outline', '#d4a373'),
+                                       slot=partial(self._typeActivated, StoryElementType.Impact)))
+        conflict_menu.addAction(action('Responsibility', IconRegistry.from_name('fa5s.hand-holding-water', '#457b9d'),
+                                       slot=partial(self._typeActivated, StoryElementType.Responsibility)))
+
+        interpersonal_menu = MenuWidget()
+        interpersonal_menu.setTitle('Interpersonal dynamics')
+        interpersonal_menu.addAction(action('Collaboration', IconRegistry.from_name('fa5.handshake', '#03045e'),
+                                            slot=partial(self._typeActivated, StoryElementType.Collaboration)))
+        interpersonal_menu.addAction(
+            action('Subtext', IconRegistry.from_name('mdi6.speaker-off', '#f4a261'),
+                   slot=partial(self._typeActivated, StoryElementType.Subtext)))
+
+        self._menu.addSeparator()
+        self._menu.addMenu(initiativeMenu)
+        self._menu.addMenu(conflict_menu)
+        self._menu.addMenu(interpersonal_menu)
 
     @overrides
     def setElement(self, element: StoryElement):
@@ -789,6 +849,58 @@ class AgencyTextBasedElementEditor(TextBasedSceneElementWidget):
             self.setTitle('Goal')
             self.setIcon('mdi.target', 'darkBlue')
             self.setPlaceholderText("What's the character's goal in this scene?")
+        elif type == StoryElementType.Conflict:
+            self.setTitle('Conflict')
+            self.setIcon('mdi.sword-cross', '#f3a712')
+            self.setPlaceholderText("What kind of conflict does the character have to face?")
+        elif type == StoryElementType.Internal_conflict:
+            self.setTitle('Internal conflict')
+            self.setIcon('mdi.mirror', CONFLICT_SELF_COLOR)
+            self.setPlaceholderText("What internal struggles, dilemmas, doubts does the character have to face?")
+        elif type == StoryElementType.Dilemma:
+            self.setTitle('Dilemma')
+            self.setIcon('fa5s.map-signs', '#ba6f4d')
+            self.setPlaceholderText("What difficult choice does the character have to face?")
+        elif type == StoryElementType.Decision:
+            self.setTitle('Decision')
+            self.setIcon('mdi.arrow-decision-outline', '#ce2d4f')
+            self.setPlaceholderText("What decision does the character have to make?")
+        elif type == StoryElementType.Consequences:
+            self.setTitle('Consequences')
+            self.setIcon('mdi.ray-start-arrow')
+            self.setPlaceholderText("What consequences does the character have to face?")
+        elif type == StoryElementType.Motivation:
+            self.setTitle('Motivation')
+            self.setIcon('fa5s.fist-raised', '#94d2bd')
+            self.setPlaceholderText("What's the character's motivation?")
+        elif type == StoryElementType.Initiative:
+            self.setTitle('Initiative')
+            self.setIcon('fa5.lightbulb', '#219ebc')
+            self.setPlaceholderText("How does the character proactively take action?")
+        elif type == StoryElementType.Plan_change:
+            self.setTitle('Change of plan')
+            self.setIcon('mdi.calendar-refresh-outline')
+            self.setPlaceholderText("What new plan does the character come up with?")
+        elif type == StoryElementType.Impact:
+            self.setTitle('Impact')
+            self.setIcon('mdi.motion-outline', '#d4a373')
+            self.setPlaceholderText("How does the character's choices or actions impact the plot?")
+        elif type == StoryElementType.Responsibility:
+            self.setTitle('Responsibility')
+            self.setIcon('fa5s.hand-holding-water', '#457b9d')
+            self.setPlaceholderText("Does the character have to take responsibility or accountability?")
+        elif type == StoryElementType.Arc:
+            self.setTitle('Character change')
+            self.setIcon('mdi.account-cog', '#cdb4db')
+            self.setPlaceholderText("Does the character grow or change?")
+        elif type == StoryElementType.Collaboration:
+            self.setTitle('Collaboration')
+            self.setIcon('fa5.handshake', '#03045e')
+            self.setPlaceholderText("Does the character collaborate with someone?")
+        elif type == StoryElementType.Subtext:
+            self.setTitle('Subtext')
+            self.setIcon('mdi6.speaker-off', '#f4a261')
+            self.setPlaceholderText("What kind of emotions, thoughts are hidden below the surface?")
 
     def _typeActivated(self, type: StoryElementType):
         self.setType(type)

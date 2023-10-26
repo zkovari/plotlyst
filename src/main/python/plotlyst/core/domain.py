@@ -1022,9 +1022,17 @@ class StoryElementType(Enum):
     Goal = 'goal'
     Motivation = 'motivation'
     Conflict = 'conflict'
+    Internal_conflict = 'internal_conflict'
+    Dilemma = 'dilemma'
+    Impact = 'impact'
+    Responsibility = 'responsibility'
     Decision = 'decision'
     Emotion = 'emotion'
     Agency = 'agency'
+    Initiative = 'initiative'
+    Plan_change = 'plan_change'
+    Collaboration = 'collaboration'
+    Subtext = 'subtext'
 
 
 @dataclass
