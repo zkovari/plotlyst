@@ -23,7 +23,8 @@ from typing import List, Optional, Dict
 import qtanim
 from PyQt6.QtCore import Qt, QSize, QEvent, pyqtSignal, QObject
 from PyQt6.QtGui import QEnterEvent, QIcon, QMouseEvent, QColor, QCursor
-from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QStackedWidget, QTabBar
+from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QStackedWidget, QTabBar, QGridLayout, \
+    QToolButton
 from overrides import overrides
 from qthandy import vbox, vspacer, transparent, sp, line, incr_font, hbox, pointy, vline, retain_when_hidden, margins, \
     spacer, underline, bold, gc, curved_flow, grid
@@ -385,15 +386,31 @@ class SceneElementWidget(QWidget):
         self._type = type
         self._scene: Optional[Scene] = None
         self._element: Optional[StoryElement] = None
-        vbox(self, 0, 0)
+        self._gridLayout: QGridLayout = grid(self, 0, 0, 0)
 
         self._btnClose = RemovalButton()
         retain_when_hidden(self._btnClose)
         self._btnClose.clicked.connect(self._deactivate)
-        self.layout().addWidget(self._btnClose, alignment=Qt.AlignmentFlag.AlignRight)
+        self._gridLayout.addWidget(self._btnClose, 0, 2, alignment=Qt.AlignmentFlag.AlignRight)
+
+        self._arrows: Dict[int, QToolButton] = {
+            0: tool_btn(IconRegistry.from_name('ei.arrow-up'), transparent_=True),
+            90: tool_btn(IconRegistry.from_name('ei.arrow-right'), transparent_=True),
+            180: tool_btn(IconRegistry.from_name('ei.arrow-down'), transparent_=True),
+            270: tool_btn(IconRegistry.from_name('ei.arrow-left'), transparent_=True),
+            # 0: tool_btn(IconRegistry.from_name('ei.arrow-down')),
+            # 0: tool_btn(IconRegistry.from_name('ei.arrow-down')),
+            # 0: tool_btn(IconRegistry.from_name('ei.arrow-down')),
+        }
+        for arrow in self._arrows.values():
+            arrow.setIconSize(QSize(15, 15))
+        self._gridLayout.addWidget(self._arrows[0], 0, 1, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._gridLayout.addWidget(self._arrows[90], 1, 2, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._gridLayout.addWidget(self._arrows[180], 2, 1, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._gridLayout.addWidget(self._arrows[270], 1, 0, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self._stackWidget = QStackedWidget(self)
-        self.layout().addWidget(self._stackWidget)
+        self._gridLayout.addWidget(self._stackWidget, 1, 1)
 
         self._pageIdle = QWidget()
         self._pageIdle.installEventFilter(OpacityEventFilter(self._pageIdle))
@@ -416,7 +433,6 @@ class SceneElementWidget(QWidget):
 
         self._pageEditor.layout().addWidget(group(self._iconActive, self._titleActive),
                                             alignment=Qt.AlignmentFlag.AlignCenter)
-        # self._pageEditor.layout().addWidget(self._titleActive, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self._pageIdle.layout().addWidget(self._iconIdle, alignment=Qt.AlignmentFlag.AlignCenter)
         self._pageIdle.layout().addWidget(self._titleIdle, alignment=Qt.AlignmentFlag.AlignCenter)
