@@ -901,6 +901,7 @@ class SceneStructureAgenda(CharacterBased):
     items: List[SceneStructureItem] = field(default_factory=list)
     conflict_references: List[ConflictReference] = field(default_factory=list)
     goal_references: List[GoalReference] = field(default_factory=list)
+    intensity: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     emotion: Optional[int] = None
     motivations: Dict[int, int] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
     story_elements: List['StoryElement'] = field(default_factory=list)

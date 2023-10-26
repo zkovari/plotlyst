@@ -48,7 +48,8 @@ from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import RemovalButton
-from src.main.python.plotlyst.view.widget.scene.agency import SceneAgendaEmotionEditor, SceneAgendaMotivationEditor
+from src.main.python.plotlyst.view.widget.scene.agency import SceneAgendaEmotionEditor, SceneAgendaMotivationEditor, \
+    SceneAgendaConflictEditor
 from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotSelectorButton, ScenePlotValueEditor, \
     PlotValuesDisplay
 from src.main.python.plotlyst.view.widget.scenes import SceneOutcomeSelector
@@ -854,6 +855,8 @@ class AgencyTextBasedElementEditor(TextBasedSceneElementWidget):
         self.setIcon('msc.debug-stackframe-dot')
 
         self._menu = MenuWidget()
+        self._menu.addSection('Common')
+        self._menu.addSeparator()
         goal_action = action('Goal', IconRegistry.goal_icon(), slot=partial(self._typeActivated, StoryElementType.Goal))
         self._menu.addAction(goal_action)
         conflict_action = action('Conflict', IconRegistry.conflict_icon(),
@@ -1005,66 +1008,6 @@ class AgencyTextBasedElementEditor(TextBasedSceneElementWidget):
     @overrides
     def _storyElements(self) -> List[StoryElement]:
         return self._agenda.story_elements
-
-
-# class ConflictElementEditor(AgencyTextBasedElementEditor):
-#     def __init__(self, parent=None):
-#         super().__init__(StoryElementType.Conflict, parent)
-#         self._novel: Optional[Novel] = None
-#
-#         self.setTitle('Conflict')
-#         self.setIcon('mdi.sword-cross', '#f3a712')
-#         self.setPlaceholderText("What kind of conflict does the character have to face?")
-#
-#         self._sliderIntensity = ConflictIntensityEditor()
-#         self._sliderIntensity.intensityChanged.connect(self._intensityChanged)
-#
-#         self._wdgConflicts = QWidget()
-#         flow(self._wdgConflicts)
-#
-#         self._wdgTracking = QWidget()
-#         vbox(self._wdgTracking, spacing=0)
-#         self._wdgTracking.layout().addWidget(label('Intensity'), alignment=Qt.AlignmentFlag.AlignLeft)
-#         self._wdgTracking.layout().addWidget(self._sliderIntensity)
-#         self._wdgTracking.layout().addWidget(line())
-#         self._wdgTracking.layout().addWidget(self._wdgConflicts)
-#
-#         self._pageEditor.layout().addWidget(self._wdgTracking)
-#
-#     @overrides
-#     def setScene(self, scene: Scene, novel: Novel):
-#         super().setScene(scene)
-#         self._novel = novel
-#         clear_layout(self._wdgConflicts)
-#
-#     @overrides
-#     def setAgenda(self, agenda: SceneStructureAgenda):
-#         super().setAgenda(agenda)
-#         for ref in agenda.conflict_references:
-#             conflictSelector = CharacterConflictSelector(self._novel, self._scene)
-#             conflictSelector.setConflict(ref.conflict(self._novel), ref)
-#             self._wdgConflicts.layout().addWidget(conflictSelector)
-#
-#         conflictSelector = CharacterConflictSelector(self._novel, self._scene,
-#                                                      simplified=len(agenda.conflict_references) > 0)
-#         conflictSelector.conflictSelected.connect(self._conflictSelected)
-#         self._wdgConflicts.layout().addWidget(conflictSelector)
-#
-#     @overrides
-#     def setElement(self, element: StoryElement):
-#         super().setElement(element)
-#         self._sliderIntensity.setValue(element.intensity)
-#
-#     def _intensityChanged(self, value: int):
-#         self._element.intensity = value
-#         shadow(self._iconActive, offset=0, radius=value * 2, color=QColor('#f3a712'))
-#         shadow(self._titleActive, offset=0, radius=value, color=QColor('#f3a712'))
-#         shadow(self._textEditor, offset=0, radius=value * 2, color=QColor('#f3a712'))
-#
-#     def _conflictSelected(self):
-#         conflictSelector = CharacterConflictSelector(self._novel, self._scene, simplified=True)
-#         conflictSelector.conflictSelected.connect(self._conflictSelected)
-#         self._wdgConflicts.layout().addWidget(conflictSelector)
 
 
 class AbstractSceneElementsEditor(QWidget):
@@ -1258,11 +1201,14 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
 
         self._emotionEditor = SceneAgendaEmotionEditor()
         self._emotionEditor.emotionChanged.connect(self._emotionChanged)
-        self._emotionEditor.emotionReset.connect(self._emotionReset)
+        self._emotionEditor.deactivated.connect(self._emotionReset)
         self._motivationEditor = SceneAgendaMotivationEditor()
         self._motivationEditor.setNovel(novel)
         self._motivationEditor.motivationChanged.connect(self._motivationChanged)
-        self._motivationEditor.motivationReset.connect(self._motivationReset)
+        self._motivationEditor.deactivated.connect(self._motivationReset)
+
+        self._conflictEditor = SceneAgendaConflictEditor()
+        self._conflictEditor.setNovel(self._novel)
 
         margins(self._wdgHeader, left=25)
         self._wdgHeader.layout().setSpacing(10)
@@ -1270,6 +1216,8 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         self._wdgHeader.layout().addWidget(self._emotionEditor)
         self._wdgHeader.layout().addWidget(vline())
         self._wdgHeader.layout().addWidget(self._motivationEditor)
+        self._wdgHeader.layout().addWidget(vline())
+        self._wdgHeader.layout().addWidget(self._conflictEditor)
         self._wdgHeader.layout().addWidget(spacer())
         self._wdgElementsParent.layout().insertWidget(1, line())
 
@@ -1304,6 +1252,9 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
             self._motivationEditor.setValues(values)
         else:
             self._motivationEditor.reset()
+
+        self._conflictEditor.setScene(scene)
+        self._conflictEditor.setAgenda(agenda)
 
         for row in range(self._row):
             for col in range(self._col):

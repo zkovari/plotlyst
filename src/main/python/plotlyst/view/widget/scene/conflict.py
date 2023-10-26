@@ -22,7 +22,7 @@ from typing import Optional
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtGui import QMouseEvent
-from PyQt6.QtWidgets import QWidget, QSlider, QPushButton, QHeaderView, QFrame
+from PyQt6.QtWidgets import QWidget, QSlider, QHeaderView, QFrame
 from overrides import overrides
 from qthandy import hbox, gc
 from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter, InstantTooltipEventFilter
@@ -51,6 +51,8 @@ class ConflictIntensityEditor(QWidget):
         self._slider.setMaximum(10)
         self._slider.setPageStep(1)
         self._slider.setValue(1)
+        self._slider.setMinimumWidth(100)
+        self._slider.setMaximumWidth(200)
         self._slider.valueChanged.connect(self._valueChanged)
         self._slider.setProperty('conflict', True)
 
@@ -59,6 +61,9 @@ class ConflictIntensityEditor(QWidget):
 
         self.layout().addWidget(self._icon)
         self.layout().addWidget(self._slider)
+
+    def value(self) -> int:
+        return self._slider.value()
 
     def setValue(self, value: int) -> None:
         if value == 0:
@@ -191,7 +196,7 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
 class CharacterConflictSelector(QWidget):
     conflictSelected = pyqtSignal()
 
-    def __init__(self, novel: Novel, scene: Scene, simplified: bool = False, parent=None):
+    def __init__(self, novel: Novel, scene: Scene, parent=None):
         super().__init__(parent)
         self.novel = novel
         self.scene = scene
@@ -201,12 +206,9 @@ class CharacterConflictSelector(QWidget):
 
         self.label: Optional[ConflictLabel] = None
 
-        self.btnLinkConflict = QPushButton(self)
-        if not simplified:
-            self.btnLinkConflict.setText('Track conflict')
+        self.btnLinkConflict = tool_btn(IconRegistry.conflict_icon())
         self.layout().addWidget(self.btnLinkConflict)
         self.btnLinkConflict.setIcon(IconRegistry.conflict_icon())
-        self.btnLinkConflict.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btnLinkConflict.setStyleSheet('''
                         QPushButton::menu-indicator {
                             width: 0px;
