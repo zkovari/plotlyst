@@ -380,6 +380,56 @@ class ScenePurposeSelectorWidget(QWidget):
         self._wdgPurposes.layout().addWidget(spacer())
 
 
+class ArrowButton(QToolButton):
+    stateChanged = pyqtSignal(int)
+    stateReset = pyqtSignal()
+
+    STATE_MAX: int = 3
+
+    def __init__(self, edge: Qt.Edge, parent=None):
+        super().__init__(parent)
+        self._state: int = 0
+        self._edge = edge
+        if edge == Qt.Edge.RightEdge:
+            self._icons = ['ei.arrow-right', 'ei.arrow-right', 'ei.arrow-left', 'fa5s.arrows-alt-h']
+        elif edge == Qt.Edge.BottomEdge:
+            self._icons = ['ei.arrow-down', 'ei.arrow-down', 'ei.arrow-up', 'fa5s.arrows-alt-v']
+        pointy(self)
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
+        transparent(self)
+        self.setCheckable(True)
+
+        self.clicked.connect(self._clicked)
+        self.reset()
+
+    def setState(self, state: int):
+        self._state = state
+        self._handleNewState()
+
+    def reset(self):
+        self._state = 0
+        self.setIconSize(QSize(15, 15))
+        self.setIcon(IconRegistry.from_name(self._icons[self._state], 'lightgrey'))
+        self.setChecked(False)
+
+    def _increaseState(self):
+        self._state += 1
+        self._handleNewState()
+        self.stateChanged.emit(self._state)
+
+    def _handleNewState(self):
+        self.setIconSize(QSize(22, 22))
+        self.setIcon(IconRegistry.from_name(self._icons[self._state], 'black'))
+        self.setChecked(True)
+
+    def _clicked(self):
+        if self._state == self.STATE_MAX:
+            self.reset()
+            self.stateReset.emit()
+        else:
+            self._increaseState()
+
+
 class SceneElementWidget(QWidget):
     def __init__(self, type: StoryElementType, parent=None):
         super().__init__(parent)
@@ -387,34 +437,23 @@ class SceneElementWidget(QWidget):
         self._scene: Optional[Scene] = None
         self._element: Optional[StoryElement] = None
         self._gridLayout: QGridLayout = grid(self, 0, 2, 2)
-        # margins(self._gridLayout, left=0, top=0)
 
         self._btnClose = RemovalButton()
         retain_when_hidden(self._btnClose)
         self._btnClose.clicked.connect(self._deactivate)
         self._gridLayout.addWidget(self._btnClose, 1, 2, alignment=Qt.AlignmentFlag.AlignTop)
 
-        self._arrows: Dict[int, QToolButton] = {
-            # 0: tool_btn(IconRegistry.from_name('ei.arrow-up', 'lightgrey', 'black'), transparent_=True, checkable=True),
-            90: tool_btn(IconRegistry.from_name('ei.arrow-right', 'lightgrey', 'black'), transparent_=True,
-                         checkable=True),
-            180: tool_btn(IconRegistry.from_name('ei.arrow-down', 'lightgrey', 'black'), transparent_=True,
-                          checkable=True),
-            # 270: tool_btn(IconRegistry.from_name('ei.arrow-left', 'lightgrey', 'black'), transparent_=True,
-            #               checkable=True),
-            # 0: tool_btn(IconRegistry.from_name('ei.arrow-down')),
-            # 0: tool_btn(IconRegistry.from_name('ei.arrow-down')),
-            # 0: tool_btn(IconRegistry.from_name('ei.arrow-down')),
+        self._arrows: Dict[int, ArrowButton] = {
+            90: ArrowButton(Qt.Edge.RightEdge),
+            180: ArrowButton(Qt.Edge.BottomEdge),
         }
         for degree, arrow in self._arrows.items():
-            arrow.setIconSize(QSize(15, 15))
             retain_when_hidden(arrow)
             arrow.setHidden(True)
-            arrow.toggled.connect(partial(self._arrowToggled, arrow, degree))
-        # self._gridLayout.addWidget(self._arrows[0], 0, 1, alignment=Qt.AlignmentFlag.AlignCenter)
+            arrow.stateChanged.connect(partial(self._arrowToggled, degree))
+            arrow.stateReset.connect(partial(self._arrowReset, degree))
         self._gridLayout.addWidget(self._arrows[90], 1, 2, 2, 1, alignment=Qt.AlignmentFlag.AlignCenter)
         self._gridLayout.addWidget(self._arrows[180], 2, 1, alignment=Qt.AlignmentFlag.AlignCenter)
-        # self._gridLayout.addWidget(self._arrows[270], 1, 0, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self._stackWidget = QStackedWidget(self)
         self._gridLayout.addWidget(self._stackWidget, 1, 1)
@@ -503,6 +542,14 @@ class SceneElementWidget(QWidget):
         self._pageIdle.setDisabled(True)
         self._stackWidget.setCurrentWidget(self._pageEditor)
 
+        for arrow in self._arrows.values():
+            arrow.reset()
+
+        for degree, state in self._element.arrows.items():
+            if state > 0:
+                self._arrows[degree].setState(state)
+                self._arrows[degree].setVisible(True)
+
     def reset(self):
         self._btnClose.setHidden(True)
         self._pageIdle.setEnabled(True)
@@ -511,7 +558,7 @@ class SceneElementWidget(QWidget):
         self._element = None
 
         for arrow in self._arrows.values():
-            arrow.setChecked(False)
+            arrow.reset()
             arrow.setHidden(True)
 
     def activate(self):
@@ -535,8 +582,11 @@ class SceneElementWidget(QWidget):
     def _elementRemoved(self, element: StoryElement):
         self._storyElements().remove(element)
 
-    def _arrowToggled(self, arrow: QToolButton, degree: int, toggled: bool):
-        arrow.setIconSize(QSize(22, 22) if toggled else QSize(15, 15))
+    def _arrowToggled(self, degree: int, state: int):
+        self._element.arrows[degree] = state
+
+    def _arrowReset(self, degree: int):
+        self._element.arrows[degree] = 0
 
 
 class TextBasedSceneElementWidget(SceneElementWidget):

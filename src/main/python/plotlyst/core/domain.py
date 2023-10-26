@@ -1043,6 +1043,7 @@ class StoryElement:
     intensity: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     row: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     col: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    arrows: Dict[int, int] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass
