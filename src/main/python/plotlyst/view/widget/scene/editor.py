@@ -465,13 +465,16 @@ class SceneElementWidget(QWidget):
         self._stackWidget.addWidget(self._pageIdle)
         self._stackWidget.addWidget(self._pageEditor)
 
+        self._icon: Optional[QIcon] = None
         self._colorActive: Optional[QColor] = None
         self._iconActive = Icon()
         self._iconIdle = Icon()
         self._iconIdle.setIconSize(QSize(48, 48))
+        self._iconIdle.setIcon(IconRegistry.from_name('msc.debug-stackframe-dot', 'lightgrey'))
         self._iconIdle.clicked.connect(self.activate)
         self._titleActive = label('', bold=True)
         self._titleIdle = label('', description=True, italic=True, h4=True)
+        self._titleIdle.setHidden(True)
 
         vbox(self._pageIdle)
         vbox(self._pageEditor)
@@ -508,6 +511,8 @@ class SceneElementWidget(QWidget):
     def enterEvent(self, event: QEnterEvent) -> None:
         if self._stackWidget.currentWidget() == self._pageIdle:
             self._lblClick.setVisible(True)
+            self._titleIdle.setVisible(True)
+            self._iconIdle.setIcon(self._icon)
         else:
             self._btnClose.setVisible(True)
             for arrow in self._arrows.values():
@@ -517,6 +522,8 @@ class SceneElementWidget(QWidget):
     def leaveEvent(self, event: QEvent) -> None:
         if self._stackWidget.currentWidget() == self._pageIdle:
             self._lblClick.setVisible(False)
+            self._titleIdle.setVisible(False)
+            self._iconIdle.setIcon(IconRegistry.from_name('msc.debug-stackframe-dot', 'lightgrey'))
         else:
             for arrow in self._arrows.values():
                 if not arrow.isChecked():
@@ -524,9 +531,9 @@ class SceneElementWidget(QWidget):
             self._btnClose.setVisible(False)
 
     def setIcon(self, icon: str, colorActive: str = 'black'):
+        self._icon = IconRegistry.from_name(icon, 'lightgrey')
         self._colorActive = QColor(colorActive)
         self._iconActive.setIcon(IconRegistry.from_name(icon, colorActive))
-        self._iconIdle.setIcon(IconRegistry.from_name(icon, 'lightgrey'))
 
     def setTitle(self, text: str, color: Optional[str] = None):
         self._titleActive.setText(text)
@@ -842,6 +849,7 @@ class AgencyTextBasedElementEditor(TextBasedSceneElementWidget):
         self._row = row
         self._col = col
         self._agenda: Optional[SceneStructureAgenda] = None
+        self.setTitle('Agency')
         self.setIcon('msc.debug-stackframe-dot')
 
         self._menu = MenuWidget()
@@ -920,7 +928,7 @@ class AgencyTextBasedElementEditor(TextBasedSceneElementWidget):
     def setType(self, type: StoryElementType):
         self._type = type
         if type == StoryElementType.Agency:
-            self.setTitle('')
+            self.setTitle('Agency')
             self.setIcon('msc.debug-stackframe-dot')
             self.setPlaceholderText('Character agency')
         elif type == StoryElementType.Goal:
@@ -1111,6 +1119,7 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
                 else:
                     placeholder = EffectElementEditor(row, col)
                 self._wdgElements.layout().addWidget(placeholder, row, col, 1, 1)
+        self._wdgElements.layout().addWidget(vline(), 0, 3, 3, 1)
         self._wdgElements.layout().addWidget(spacer(), 0, self._col, 1, 1)
         self._wdgElements.layout().addWidget(vspacer(), self._row, 0, 1, 1)
         # self.__newPlotElementEditor()
@@ -1153,6 +1162,17 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         super().setScene(scene)
         # self._outcomeElement.setScene(scene)
         # self._consequencesElement.setScene(scene)
+
+        for row in range(self._row):
+            for col in range(self._col):
+                item = self._wdgElements.layout().itemAtPosition(row, col)
+                if item and item.widget() and isinstance(item.widget(), SceneElementWidget):
+                    item.widget().setScene(scene)
+
+        for element in scene.story_elements:
+            item = self._wdgElements.layout().itemAtPosition(element.row, element.col)
+            if item and item.widget():
+                item.widget().setElement(element)
 
         # for element in scene.story_elements:
         #     if element.type == StoryElementType.Outcome:
