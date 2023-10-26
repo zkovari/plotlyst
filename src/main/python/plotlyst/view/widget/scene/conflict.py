@@ -196,7 +196,7 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
 class CharacterConflictSelector(QWidget):
     conflictSelected = pyqtSignal()
 
-    def __init__(self, novel: Novel, scene: Scene, simplified: bool = False, parent=None):
+    def __init__(self, novel: Novel, scene: Scene, parent=None):
         super().__init__(parent)
         self.novel = novel
         self.scene = scene
@@ -207,11 +207,8 @@ class CharacterConflictSelector(QWidget):
         self.label: Optional[ConflictLabel] = None
 
         self.btnLinkConflict = tool_btn(IconRegistry.conflict_icon())
-        # if not simplified:
-        #     self.btnLinkConflict.setText('Track conflict')
         self.layout().addWidget(self.btnLinkConflict)
         self.btnLinkConflict.setIcon(IconRegistry.conflict_icon())
-        # self.btnLinkConflict.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btnLinkConflict.setStyleSheet('''
                         QPushButton::menu-indicator {
                             width: 0px;

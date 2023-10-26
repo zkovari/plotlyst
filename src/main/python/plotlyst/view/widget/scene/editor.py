@@ -855,6 +855,8 @@ class AgencyTextBasedElementEditor(TextBasedSceneElementWidget):
         self.setIcon('msc.debug-stackframe-dot')
 
         self._menu = MenuWidget()
+        self._menu.addSection('Common')
+        self._menu.addSeparator()
         goal_action = action('Goal', IconRegistry.goal_icon(), slot=partial(self._typeActivated, StoryElementType.Goal))
         self._menu.addAction(goal_action)
         conflict_action = action('Conflict', IconRegistry.conflict_icon(),

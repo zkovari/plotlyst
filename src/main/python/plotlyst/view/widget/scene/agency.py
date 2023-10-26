@@ -426,7 +426,7 @@ class SceneAgendaConflictEditor(AbstractAgencyEditor):
         self.layout().addWidget(self._icon, alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(self._sliderIntensity, alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(self._wdgConflicts)
-        self.layout().addWidget(self._btnReset)
+        self.layout().addWidget(self._btnReset, alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(spacer())
 
         self.reset()
@@ -442,23 +442,25 @@ class SceneAgendaConflictEditor(AbstractAgencyEditor):
         clear_layout(self._wdgConflicts)
 
         if agenda.intensity > 0 or agenda.conflict_references:
+            print(agenda.intensity)
+            print(len(agenda.conflict_references))
             self.setValue(agenda.intensity)
+        else:
+            self.reset()
 
         for ref in agenda.conflict_references:
             conflictSelector = CharacterConflictSelector(self._novel, self._scene)
             conflictSelector.setConflict(ref.conflict(self._novel), ref)
             self._wdgConflicts.layout().addWidget(conflictSelector)
 
-        conflictSelector = CharacterConflictSelector(self._novel, self._scene,
-                                                     simplified=len(agenda.conflict_references) > 0)
+        conflictSelector = CharacterConflictSelector(self._novel, self._scene)
         conflictSelector.conflictSelected.connect(self._conflictSelected)
-        self._wdgConflicts.layout().addWidget(conflictSelector)
+        self._wdgConflicts.layout().addWidget(conflictSelector, alignment=Qt.AlignmentFlag.AlignLeft)
 
     def activate(self):
         self._activated = True
         self._sliderIntensity.setVisible(True)
         self._wdgConflicts.setVisible(True)
-        self._btnReset.setVisible(True)
         self._icon.setHidden(True)
 
     @overrides
@@ -469,6 +471,7 @@ class SceneAgendaConflictEditor(AbstractAgencyEditor):
         self._icon.setVisible(True)
         if self._agenda:
             self._agenda.intensity = 0
+            self._agenda.conflict_references.clear()
 
     def setValue(self, value: int):
         self._sliderIntensity.setValue(value)
@@ -479,6 +482,7 @@ class SceneAgendaConflictEditor(AbstractAgencyEditor):
         if not self._activated:
             self.setValue(1)
             qtanim.fade_in(self._sliderIntensity, 150)
+            self._btnReset.setVisible(True)
 
     def _intensityChanged(self, value: int):
         if self._agenda:
@@ -489,6 +493,6 @@ class SceneAgendaConflictEditor(AbstractAgencyEditor):
         # shadow(self._textEditor, offset=0, radius=value * 2, color=QColor('#f3a712'))
 
     def _conflictSelected(self):
-        conflictSelector = CharacterConflictSelector(self._novel, self._scene, simplified=True)
+        conflictSelector = CharacterConflictSelector(self._novel, self._scene)
         conflictSelector.conflictSelected.connect(self._conflictSelected)
         self._wdgConflicts.layout().addWidget(conflictSelector)
