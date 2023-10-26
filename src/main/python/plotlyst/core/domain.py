@@ -1030,6 +1030,7 @@ class StoryElementType(Enum):
     Emotion = 'emotion'
     Agency = 'agency'
     Initiative = 'initiative'
+    Catalyst = 'catalyst'
     Plan_change = 'plan_change'
     Collaboration = 'collaboration'
     Subtext = 'subtext'

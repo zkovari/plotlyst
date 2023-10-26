@@ -846,6 +846,9 @@ class AgencyTextBasedElementEditor(TextBasedSceneElementWidget):
         initiativeMenu.addAction(action('Initiative', IconRegistry.decision_icon(),
                                         slot=partial(self._typeActivated, StoryElementType.Initiative)))
         initiativeMenu.addAction(goal_action)
+        initiativeMenu.addSeparator()
+        initiativeMenu.addAction(action('Catalyst', IconRegistry.from_name('fa5s.vial', '#822faf'),
+                                        slot=partial(self._typeActivated, StoryElementType.Catalyst)))
         initiativeMenu.addAction(decision_action)
         initiativeMenu.addAction(action('Plan change', IconRegistry.from_name('mdi.calendar-refresh-outline'),
                                         slot=partial(self._typeActivated, StoryElementType.Plan_change)))
@@ -956,6 +959,10 @@ class AgencyTextBasedElementEditor(TextBasedSceneElementWidget):
             self.setTitle('Subtext')
             self.setIcon('mdi6.speaker-off', '#f4a261')
             self.setPlaceholderText("What kind of emotions, thoughts are hidden below the surface?")
+        elif type == StoryElementType.Catalyst:
+            self.setTitle('Catalyst')
+            self.setIcon('fa5s.vial', '#822faf')
+            self.setPlaceholderText("What disrupts the character's life and forces them to act?")
 
     def _typeActivated(self, type: StoryElementType):
         self.setType(type)
