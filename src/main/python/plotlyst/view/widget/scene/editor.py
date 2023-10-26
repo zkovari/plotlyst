@@ -563,6 +563,9 @@ class SceneElementWidget(QWidget):
         self._btnClose.setHidden(True)
         self._pageIdle.setEnabled(True)
         self._stackWidget.setCurrentWidget(self._pageIdle)
+        self._lblClick.setVisible(False)
+        self._titleIdle.setVisible(False)
+        self._iconIdle.setIcon(IconRegistry.from_name('msc.debug-stackframe-dot', 'lightgrey'))
         pointy(self._pageIdle)
         self._element = None
 
