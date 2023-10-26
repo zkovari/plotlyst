@@ -431,9 +431,11 @@ class ArrowButton(QToolButton):
 
 
 class SceneElementWidget(QWidget):
-    def __init__(self, type: StoryElementType, parent=None):
+    def __init__(self, type: StoryElementType, row: int, col: int, parent=None):
         super().__init__(parent)
         self._type = type
+        self._row = row
+        self._col = col
         self._scene: Optional[Scene] = None
         self._element: Optional[StoryElement] = None
         self._gridLayout: QGridLayout = grid(self, 0, 2, 2)
@@ -584,6 +586,8 @@ class SceneElementWidget(QWidget):
         return self._scene.story_elements
 
     def _elementCreated(self, element: StoryElement):
+        element.row = self._row
+        element.col = self._col
         self._storyElements().append(element)
 
     def _elementRemoved(self, element: StoryElement):
@@ -597,8 +601,8 @@ class SceneElementWidget(QWidget):
 
 
 class TextBasedSceneElementWidget(SceneElementWidget):
-    def __init__(self, type: StoryElementType, parent=None):
-        super().__init__(type, parent)
+    def __init__(self, type: StoryElementType, row: int, col: int, parent=None):
+        super().__init__(type, row, col, parent)
         self.setMaximumWidth(210)
 
         self._textEditor = QTextEdit()
@@ -825,9 +829,7 @@ class ArcSceneElementEditor(StorylineElementEditor):
 
 class EventElementEditor(TextBasedSceneElementWidget):
     def __init__(self, row: int, col: int, parent=None):
-        super().__init__(StoryElementType.Event, parent)
-        self._row = row
-        self._col = col
+        super().__init__(StoryElementType.Event, row, col, parent)
         self.setTitle('Event')
         self.setIcon('mdi.lightning-bolt-outline')
         self.setPlaceholderText("A pivotal event")
@@ -835,9 +837,7 @@ class EventElementEditor(TextBasedSceneElementWidget):
 
 class EffectElementEditor(TextBasedSceneElementWidget):
     def __init__(self, row: int, col: int, parent=None):
-        super().__init__(StoryElementType.Event, parent)
-        self._row = row
-        self._col = col
+        super().__init__(StoryElementType.Event, row, col, parent)
         self.setTitle('Effect')
         self.setIcon('fa5s.tachometer-alt')
         self.setPlaceholderText("An effect caused by the event")
@@ -845,9 +845,7 @@ class EffectElementEditor(TextBasedSceneElementWidget):
 
 class AgencyTextBasedElementEditor(TextBasedSceneElementWidget):
     def __init__(self, row: int, col: int, parent=None):
-        super().__init__(StoryElementType.Agency, parent)
-        self._row = row
-        self._col = col
+        super().__init__(StoryElementType.Agency, row, col, parent)
         self._agenda: Optional[SceneStructureAgenda] = None
         self.setTitle('Agency')
         self.setIcon('msc.debug-stackframe-dot')
@@ -1004,12 +1002,6 @@ class AgencyTextBasedElementEditor(TextBasedSceneElementWidget):
     @overrides
     def _storyElements(self) -> List[StoryElement]:
         return self._agenda.story_elements
-
-    @overrides
-    def _elementCreated(self, element: StoryElement):
-        super()._elementCreated(element)
-        element.row = self._row
-        element.col = self._col
 
 
 # class ConflictElementEditor(AgencyTextBasedElementEditor):
