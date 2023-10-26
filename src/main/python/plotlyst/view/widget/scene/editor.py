@@ -1266,6 +1266,7 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         self._motivationEditor.deactivated.connect(self._motivationReset)
 
         self._conflictEditor = SceneAgendaConflictEditor()
+        self._conflictEditor.setNovel(self._novel)
 
         margins(self._wdgHeader, left=25)
         self._wdgHeader.layout().setSpacing(10)
@@ -1309,6 +1310,9 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
             self._motivationEditor.setValues(values)
         else:
             self._motivationEditor.reset()
+
+        self._conflictEditor.setScene(scene)
+        self._conflictEditor.setAgenda(agenda)
 
         for row in range(self._row):
             for col in range(self._col):
