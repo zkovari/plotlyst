@@ -47,7 +47,7 @@ from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
 from src.main.python.plotlyst.view.widget.display import Icon
-from src.main.python.plotlyst.view.widget.input import RemovalButton
+from src.main.python.plotlyst.view.widget.input import RemovalButton, AutoAdjustableLineEdit
 from src.main.python.plotlyst.view.widget.scene.agency import SceneAgendaEmotionEditor, SceneAgendaMotivationEditor, \
     SceneAgendaConflictEditor
 from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotSelectorButton, ScenePlotValueEditor, \
@@ -656,8 +656,7 @@ class SceneOutcomeEditor(QWidget):
 
         self._icon = push_btn(IconRegistry.disaster_icon('lightgrey', 'lightgrey'), transparent_=True)
         self._icon.setIconSize(QSize(28, 28))
-        self._opacityFilter = OpacityEventFilter(self._icon, leaveOpacity=0.8)
-        self._icon.installEventFilter(self._opacityFilter)
+        self._icon.installEventFilter(OpacityEventFilter(self._icon, leaveOpacity=0.8))
         self._icon.clicked.connect(self._iconClicked)
 
         self._btnReset = RemovalButton()
@@ -671,6 +670,7 @@ class SceneOutcomeEditor(QWidget):
         self.layout().addWidget(self._icon)
         self.layout().addWidget(self._outcomeSelector)
         self.layout().addWidget(self._btnReset, alignment=Qt.AlignmentFlag.AlignTop)
+        self.layout().addWidget(spacer())
 
         self.reset()
 
