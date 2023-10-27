@@ -205,7 +205,8 @@ class IconRegistry:
     @staticmethod
     def scene_type_icon(scene: Scene) -> Optional[QIcon]:
         if scene.purpose == ScenePurposeType.Story:
-            return IconRegistry.action_scene_icon(scene.outcome_resolution(), scene.outcome_trade_off())
+            return IconRegistry.action_scene_icon(scene.outcome_resolution(), scene.outcome_trade_off(),
+                                                  motion=scene.outcome_motion())
         elif scene.purpose == ScenePurposeType.Reaction:
             return IconRegistry.reaction_scene_icon()
         elif scene.purpose == ScenePurposeType.Character:

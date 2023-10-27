@@ -1128,6 +1128,9 @@ class Scene:
     def outcome_trade_off(self) -> bool:
         return self.__is_outcome(SceneOutcome.TRADE_OFF)
 
+    def outcome_motion(self) -> bool:
+        return self.__is_outcome(SceneOutcome.MOTION)
+
     def title_or_index(self, novel: 'Novel') -> str:
         return self.title if self.title else f'Scene {novel.scenes.index(self) + 1}'
 
