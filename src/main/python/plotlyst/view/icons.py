@@ -189,11 +189,13 @@ class IconRegistry:
         return IconRegistry.from_name('fa5s.info-circle', color=PLOTLYST_SECONDARY_COLOR)
 
     @staticmethod
-    def action_scene_icon(resolved: bool = False, trade_off: bool = False) -> QIcon:
+    def action_scene_icon(resolved: bool = False, trade_off: bool = False, motion: bool = False) -> QIcon:
         if resolved:
             color = '#0b6e4f'
         elif trade_off:
             color = '#832161'
+        elif motion:
+            color = '#d4a373'
         else:
             color = '#fe4a49'
         return qtawesome.icon('fa5s.circle', 'fa5s.yin-yang',
@@ -330,6 +332,10 @@ class IconRegistry:
     @staticmethod
     def tradeoff_icon(color: str = '#832161', color_on: str = '#832161') -> QIcon:
         return IconRegistry.from_name('fa5s.balance-scale-left', color=color, color_on=color_on)
+
+    @staticmethod
+    def motion_icon(color: str = '#d4a373', color_on: str = '#d4a373') -> QIcon:
+        return IconRegistry.from_name('mdi.motion-outline', color=color, color_on=color_on)
 
     @staticmethod
     def home_icon(color_on: str = 'darkBlue') -> QIcon:

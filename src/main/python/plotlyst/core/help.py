@@ -122,3 +122,5 @@ scene_trade_off_outcome_help = """<html><head/><body><p>Scene ends with a bitter
 
 scene_resolution_outcome_help = """<html><head/><body><p>Scene ends with a <span style=" font-weight:600; color:#6ba368;">resolution</span>,
  so the agenda character's scene goal is achieved</p></body></html>"""
+
+scene_motion_outcome_help = """<html><head/><body><p>Scene sets the story in motion without delivering any imminent disaster or resolution outcome</p></body></html>"""

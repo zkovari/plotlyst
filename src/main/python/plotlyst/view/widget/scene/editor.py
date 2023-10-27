@@ -206,14 +206,18 @@ class ScenePurposeTypeButton(QPushButton):
             borderColor = '#fb5607'
             resolution = self._scene.outcome == SceneOutcome.RESOLUTION
             trade_off = self._scene.outcome == SceneOutcome.TRADE_OFF
+            motion = self._scene.outcome == SceneOutcome.MOTION
 
-            self.setIcon(IconRegistry.action_scene_icon(resolution, trade_off))
+            self.setIcon(IconRegistry.action_scene_icon(resolution, trade_off, motion))
             if resolution:
                 bgColor = '#12BB86'
                 borderColor = '#0b6e4f'
             elif trade_off:
                 bgColor = '#E188C2'
                 borderColor = '#832161'
+            elif motion:
+                bgColor = '#E0BD9B'
+                borderColor = '#D7AA7D'
         elif self._scene.purpose == ScenePurposeType.Reaction:
             bgColor = '#89c2d9'
             borderColor = '#1a759f'
@@ -663,7 +667,7 @@ class SceneOutcomeEditor(QWidget):
         self._btnReset.clicked.connect(self._resetClicked)
         retain_when_hidden(self._btnReset)
 
-        self._outcomeSelector = SceneOutcomeSelector(autoSelect=False)
+        self._outcomeSelector = SceneOutcomeSelector(autoSelect=False, extended=True)
         self._outcomeSelector.selected.connect(self._outcomeSelected)
 
         self.layout().addWidget(self._icon)
@@ -732,6 +736,9 @@ class SceneOutcomeEditor(QWidget):
         elif self._scene.outcome == SceneOutcome.TRADE_OFF:
             color = '#832161'
             self._icon.setIcon(IconRegistry.tradeoff_icon())
+        elif self._scene.outcome == SceneOutcome.MOTION:
+            color = '#d4a373'
+            self._icon.setIcon(IconRegistry.motion_icon())
         else:
             return
         self._icon.setText(f'{SceneOutcome.to_str(self._scene.outcome)} outcome')
