@@ -35,7 +35,7 @@ from src.main.python.plotlyst.common import raise_unrecognized_arg, CONFLICT_SEL
 from src.main.python.plotlyst.core.domain import Scene, Novel, ScenePurpose, advance_story_scene_purpose, \
     ScenePurposeType, reaction_story_scene_purpose, character_story_scene_purpose, setup_story_scene_purpose, \
     emotion_story_scene_purpose, exposition_story_scene_purpose, scene_purposes, Character, Plot, ScenePlotReference, \
-    StoryElement, StoryElementType, SceneOutcome, SceneStructureAgenda, PlotType, Motivation
+    StoryElement, StoryElementType, SceneOutcome, SceneStructureAgenda, Motivation
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent
@@ -840,46 +840,6 @@ class StorylineElementEditor(TextBasedSceneElementWidget):
                 self._plotValueDisplay.updateValue(plot_value, value)
 
         self._wdgValues.layout().addWidget(self._plotValueDisplay)
-
-
-class PlotSceneElementEditor(StorylineElementEditor):
-    def __init__(self, novel: Novel, parent=None):
-        self._plotRef: Optional[ScenePlotReference] = None
-        super().__init__(novel, StoryElementType.Plot, parent)
-        self.setTitle('Storyline')
-        self.setIcon('fa5s.theater-masks')
-        self.setPlaceholderText('Describe how this scene is related to the selected storyline')
-
-        self._btnPlotSelector.menuWidget().filterAll(False)
-        self._btnPlotSelector.menuWidget().filterPlotType(PlotType.Main, True)
-        self._btnPlotSelector.menuWidget().filterPlotType(PlotType.Global, True)
-        self._btnPlotSelector.menuWidget().filterPlotType(PlotType.Subplot, True)
-
-
-class ArcSceneElementEditor(StorylineElementEditor):
-    def __init__(self, novel: Novel, parent=None):
-        self._plotRef: Optional[ScenePlotReference] = None
-        super().__init__(novel, StoryElementType.Arc, parent)
-        self._agenda: Optional[SceneStructureAgenda] = None
-        self.setPlaceholderText('Describe how the character progresses in their character arc')
-
-        self._btnPlotSelector.menuWidget().filterAll(False)
-        self._btnPlotSelector.menuWidget().filterPlotType(PlotType.Internal, True)
-
-    @overrides
-    def setScene(self, scene: Scene):
-        super().setScene(scene)
-        self._agenda = scene.agendas[0]
-
-    @overrides
-    def reset(self):
-        super().reset()
-        self.setTitle('Character change')
-        self.setIcon('mdi.mirror', CONFLICT_SELF_COLOR)
-
-    @overrides
-    def _storyElements(self) -> List[StoryElement]:
-        return self._agenda.story_elements
 
 
 class EventElementEditor(TextBasedSceneElementWidget):

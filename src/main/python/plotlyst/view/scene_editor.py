@@ -41,7 +41,7 @@ from src.main.python.plotlyst.model.characters_model import CharactersSceneAssoc
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, action, set_tab_icon, \
-    push_btn
+    push_btn, fade_out_and_gc
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
@@ -145,7 +145,7 @@ class SceneEditor(QObject, EventListener):
                                          tooltip='Link storylines to this scene', transparent_=True)
         self._btnPlotSelector.installEventFilter(OpacityEventFilter(self._btnPlotSelector, leaveOpacity=0.8))
         self._plotSelectorMenu = ScenePlotSelectorMenu(self.novel, self._btnPlotSelector)
-        self._plotSelectorMenu.plotSelected.connect(self._plotSelected)
+        self._plotSelectorMenu.plotSelected.connect(self._plot_selected)
         hbox(self.ui.wdgStorylines)
         self.ui.wdgMidbar.layout().insertWidget(1, self._btnPlotSelector)
 
@@ -225,8 +225,7 @@ class SceneEditor(QObject, EventListener):
         self._plotSelectorMenu.setScene(self.scene)
         clear_layout(self.ui.wdgStorylines)
         for ref in self.scene.plot_values:
-            labels = ScenePlotLabels(ref)
-            self.ui.wdgStorylines.layout().addWidget(labels)
+            self._add_plot_ref(ref)
 
         self._characters_model.setScene(self.scene)
         self._character_changed()
@@ -295,10 +294,18 @@ class SceneEditor(QObject, EventListener):
             self.ui.wdgPov.reset()
             self.ui.wdgPov.btnAvatar.setToolTip('Select point of view character')
 
-    def _plotSelected(self, plot: Plot):
+    def _plot_selected(self, plot: Plot):
         plotRef = ScenePlotReference(plot)
         self.scene.plot_values.append(plotRef)
+        self._add_plot_ref(plotRef)
+
+    def _plot_removed(self, labels: ScenePlotLabels, plotRef: ScenePlotReference):
+        fade_out_and_gc(self.ui.wdgStorylines.layout(), labels)
+        self.scene.plot_values.remove(plotRef)
+
+    def _add_plot_ref(self, plotRef: ScenePlotReference):
         labels = ScenePlotLabels(plotRef)
+        labels.reset.connect(partial(self._plot_removed, labels, plotRef))
         self.ui.wdgStorylines.layout().addWidget(labels)
 
     def _title_edited(self, text: str):

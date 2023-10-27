@@ -36,6 +36,7 @@ from src.main.python.plotlyst.view.common import action, tool_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton
+from src.main.python.plotlyst.view.widget.input import RemovalButton
 from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
 
 
@@ -223,6 +224,8 @@ class ScenePlotSelectorMenu(MenuWidget):
 
 
 class ScenePlotLabels(QWidget):
+    reset = pyqtSignal()
+
     def __init__(self, plotref: ScenePlotReference, parent=None):
         super().__init__(parent)
         self._plotref = plotref
@@ -231,9 +234,8 @@ class ScenePlotLabels(QWidget):
         self._icon = tool_btn(IconRegistry.from_name(self._plotref.plot.icon, self._plotref.plot.icon_color),
                               transparent_=True)
 
-        self._btnEditValues = tool_btn(IconRegistry.from_name('fa5s.chevron-circle-down', 'grey'), transparent_=True)
-        self._btnEditValues.installEventFilter(OpacityEventFilter(self._btnEditValues, enterOpacity=0.7))
-        self._plotValueMenu = MenuWidget(self._btnEditValues)
+        self._icon.installEventFilter(OpacityEventFilter(self._icon, leaveOpacity=1.0, enterOpacity=0.7))
+        self._plotValueMenu = MenuWidget(self._icon)
         apply_white_menu(self._plotValueMenu)
 
         self._plotValueEditor = ScenePlotValueEditor(self._plotref)
@@ -247,9 +249,13 @@ class ScenePlotLabels(QWidget):
             if plot_value:
                 self._plotValueDisplay.updateValue(plot_value, value)
 
+        self._btnReset = RemovalButton()
+        self._btnReset.clicked.connect(self.reset.emit)
+        retain_when_hidden(self._btnReset)
+
         self.layout().addWidget(vline())
         self.layout().addWidget(self._icon)
-        self.layout().addWidget(self._btnEditValues)
         self.layout().addWidget(self._plotValueDisplay)
+        self.layout().addWidget(self._btnReset)
 
-        self.installEventFilter(VisibilityToggleEventFilter(self._btnEditValues, self))
+        self.installEventFilter(VisibilityToggleEventFilter(self._btnReset, self))
