@@ -47,7 +47,7 @@ from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
 from src.main.python.plotlyst.view.widget.display import Icon
-from src.main.python.plotlyst.view.widget.input import RemovalButton, AutoAdjustableLineEdit
+from src.main.python.plotlyst.view.widget.input import RemovalButton
 from src.main.python.plotlyst.view.widget.scene.agency import SceneAgendaEmotionEditor, SceneAgendaMotivationEditor, \
     SceneAgendaConflictEditor
 from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotSelectorButton, ScenePlotValueEditor, \
@@ -662,7 +662,6 @@ class SceneOutcomeEditor(QWidget):
         self._btnReset = RemovalButton()
         self._btnReset.clicked.connect(self._resetClicked)
         retain_when_hidden(self._btnReset)
-        # self.setPlaceholderText('Is there an imminent outcome in this scene?')
 
         self._outcomeSelector = SceneOutcomeSelector(autoSelect=False)
         self._outcomeSelector.selected.connect(self._outcomeSelected)
