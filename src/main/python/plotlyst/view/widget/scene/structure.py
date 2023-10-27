@@ -496,9 +496,12 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
     def hasOutcome(self) -> bool:
         return self.beat.type == SceneStructureItemType.CLIMAX
 
-    def setOutcome(self, outcome: SceneOutcome):
-        self.beat.outcome = outcome
-        self._outcome.refresh(outcome)
+    def setOutcome(self, outcome: Optional[SceneOutcome]):
+        if outcome:
+            self.beat.outcome = outcome
+            self._outcome.refresh(outcome)
+        # else:
+        #     self._outcome.reset()
         self._initStyle()
 
     def activate(self):

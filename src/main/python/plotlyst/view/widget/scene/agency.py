@@ -196,7 +196,7 @@ class AbstractAgencyEditor(QWidget):
         self._activated: bool = False
 
         self._icon = push_btn(QIcon(), transparent_=True)
-        self._icon.setIconSize(QSize(32, 32))
+        self._icon.setIconSize(QSize(28, 28))
         self._opacityFilter = OpacityEventFilter(self._icon)
         self._icon.clicked.connect(self._iconClicked)
 
@@ -442,8 +442,6 @@ class SceneAgendaConflictEditor(AbstractAgencyEditor):
         clear_layout(self._wdgConflicts)
 
         if agenda.intensity > 0 or agenda.conflict_references:
-            print(agenda.intensity)
-            print(len(agenda.conflict_references))
             self.setValue(agenda.intensity)
         else:
             self.reset()

@@ -152,7 +152,7 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._storylineEditor.refresh)
 
         self._update_view(scene)
-        self.ui.tabWidget.setCurrentWidget(self.ui.tabCharacter)
+        self.ui.tabWidget.setCurrentWidget(self.ui.tabStorylines)
         self.ui.tabWidget.currentChanged.connect(self._page_toggled)
 
         self.repo = RepositoryPersistenceManager.instance()
@@ -308,6 +308,7 @@ class SceneEditor(QObject, EventListener):
         # to avoid segfault for some reason, we disable it first before changing the stack widget
         self._purposeSelector.setDisabled(True)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
+        self._storylineEditor.purposeChangedEvent()
 
     def _reset_purpose_editor(self):
         self.scene.purpose = None

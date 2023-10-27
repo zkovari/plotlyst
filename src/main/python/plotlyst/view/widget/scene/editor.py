@@ -22,7 +22,7 @@ from typing import List, Optional, Dict
 
 import qtanim
 from PyQt6.QtCore import Qt, QSize, QEvent, pyqtSignal, QObject
-from PyQt6.QtGui import QEnterEvent, QIcon, QMouseEvent, QColor, QCursor
+from PyQt6.QtGui import QEnterEvent, QIcon, QMouseEvent, QColor, QCursor, QPalette
 from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QStackedWidget, QTabBar, QGridLayout, \
     QToolButton
 from overrides import overrides
@@ -47,7 +47,7 @@ from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
 from src.main.python.plotlyst.view.widget.display import Icon
-from src.main.python.plotlyst.view.widget.input import RemovalButton
+from src.main.python.plotlyst.view.widget.input import RemovalButton, AutoAdjustableLineEdit
 from src.main.python.plotlyst.view.widget.scene.agency import SceneAgendaEmotionEditor, SceneAgendaMotivationEditor, \
     SceneAgendaConflictEditor
 from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotSelectorButton, ScenePlotValueEditor, \
@@ -645,58 +645,103 @@ class TextBasedSceneElementWidget(SceneElementWidget):
         qtanim.glow(self._textEditor, color=self._colorActive)
 
 
-class OutcomeSceneElementEditor(TextBasedSceneElementWidget):
-    outcomeChanged = pyqtSignal(SceneOutcome)
+class SceneOutcomeEditor(QWidget):
+    outcomeChanged = pyqtSignal()
 
     def __init__(self, parent=None):
-        super().__init__(StoryElementType.Outcome, parent)
-        self._outcomeSelector = SceneOutcomeSelector(autoSelect=False)
-        self.setPlaceholderText('Is there an imminent outcome in this scene?')
+        super().__init__(parent)
+        self._scene: Optional[Scene] = None
 
-        self._pageEditor.layout().addWidget(self._outcomeSelector, alignment=Qt.AlignmentFlag.AlignCenter)
+        hbox(self)
+
+        self._icon = push_btn(IconRegistry.disaster_icon('lightgrey', 'lightgrey'), transparent_=True)
+        self._icon.setIconSize(QSize(28, 28))
+        self._icon.installEventFilter(OpacityEventFilter(self._icon, leaveOpacity=0.8))
+        self._icon.clicked.connect(self._iconClicked)
+
+        self._btnReset = RemovalButton()
+        self._btnReset.clicked.connect(self._resetClicked)
+        retain_when_hidden(self._btnReset)
+        # self.setPlaceholderText('Is there an imminent outcome in this scene?')
+
+        self._outcomeSelector = SceneOutcomeSelector(autoSelect=False)
         self._outcomeSelector.selected.connect(self._outcomeSelected)
 
+        self.layout().addWidget(self._icon)
+        self.layout().addWidget(self._outcomeSelector)
+        self.layout().addWidget(self._btnReset, alignment=Qt.AlignmentFlag.AlignTop)
+        self.layout().addWidget(spacer())
+
+        self.reset()
+
     @overrides
-    def setElement(self, element: StoryElement):
-        super().setElement(element)
+    def enterEvent(self, event: QEnterEvent) -> None:
+        if self._scene.outcome is not None:
+            self._btnReset.setVisible(True)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self._btnReset.setVisible(False)
+
+    def setScene(self, scene: Scene):
+        self._scene = scene
         if self._scene.outcome:
             self._outcomeSelector.refresh(self._scene.outcome)
             self._updateOutcome()
         else:
             self._outcomeSelector.reset()
-            self._resetTitle()
 
-    @overrides
     def reset(self):
-        super().reset()
-        self._resetTitle()
+        self._icon.setIcon(IconRegistry.disaster_icon('lightgrey'))
+        self._icon.setText('Outcome')
+        palette = self._icon.palette()
+        palette.setColor(QPalette.ColorGroup.Active, QPalette.ColorRole.ButtonText, QColor('lightgrey'))
+        self._icon.setPalette(palette)
+        self._icon.setVisible(True)
+
+        self._outcomeSelector.setHidden(True)
+        self._btnReset.setHidden(True)
 
     def refresh(self):
         self._outcomeSelector.refresh(self._scene.outcome)
         self._updateOutcome()
 
-    def _resetTitle(self):
-        self.setTitle('Outcome')
-        self.setIcon('fa5s.bomb', 'grey')
+    def _iconClicked(self):
+        self._icon.setHidden(True)
+        self._outcomeSelector.reset()
+        qtanim.fade_in(self._outcomeSelector, 150)
+        self._btnReset.setVisible(True)
+
+    def _resetClicked(self):
+        self._scene.outcome = None
+        self._outcomeSelector.reset()
+        self.reset()
+        self.outcomeChanged.emit()
 
     def _outcomeSelected(self, outcome: SceneOutcome):
         self._scene.outcome = outcome
         self._updateOutcome()
-        self.outcomeChanged.emit(outcome)
+        self.outcomeChanged.emit()
 
     def _updateOutcome(self):
         if self._scene.outcome == SceneOutcome.DISASTER:
             color = '#f4442e'
-            self.setIcon('fa5s.bomb', color)
+            self._icon.setIcon(IconRegistry.disaster_icon())
         elif self._scene.outcome == SceneOutcome.RESOLUTION:
             color = '#0b6e4f'
-            self.setIcon('mdi.bullseye-arrow', color)
+            self._icon.setIcon(IconRegistry.success_icon())
         elif self._scene.outcome == SceneOutcome.TRADE_OFF:
             color = '#832161'
-            self.setIcon('fa5s.balance-scale-left', color)
+            self._icon.setIcon(IconRegistry.tradeoff_icon())
         else:
             return
-        self.setTitle(f'{SceneOutcome.to_str(self._scene.outcome)} outcome', color)
+        self._icon.setText(f'{SceneOutcome.to_str(self._scene.outcome)} outcome')
+        palette = self._icon.palette()
+        palette.setColor(QPalette.ColorGroup.Active, QPalette.ColorRole.ButtonText, QColor(color))
+        self._icon.setPalette(palette)
+
+        self._icon.setVisible(True)
+        self._outcomeSelector.setHidden(True)
 
 
 class StorylineElementEditor(TextBasedSceneElementWidget):
@@ -1040,11 +1085,20 @@ class AbstractSceneElementsEditor(QWidget):
 
 
 class SceneStorylineEditor(AbstractSceneElementsEditor):
-    outcomeChanged = pyqtSignal(SceneOutcome)
+    outcomeChanged = pyqtSignal()
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
+
+        self._outcomeEditor = SceneOutcomeEditor()
+        self._outcomeEditor.outcomeChanged.connect(self.outcomeChanged)
+        margins(self._wdgHeader, left=25)
+        self._wdgHeader.layout().setSpacing(5)
+        self._wdgHeader.layout().addWidget(self._outcomeEditor)
+        self._wdgHeader.layout().addWidget(spacer())
+        self._headerLine = line()
+        self._wdgElementsParent.layout().insertWidget(1, self._headerLine)
 
         self._row = 3
         self._col = 5
@@ -1098,8 +1152,8 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
     @overrides
     def setScene(self, scene: Scene):
         super().setScene(scene)
-        # self._outcomeElement.setScene(scene)
-        # self._consequencesElement.setScene(scene)
+        self.purposeChangedEvent()
+        self._outcomeEditor.setScene(scene)
 
         for row in range(self._row):
             for col in range(self._col):
@@ -1112,18 +1166,16 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
             if item and item.widget():
                 item.widget().setElement(element)
 
-        # for element in scene.story_elements:
-        #     if element.type == StoryElementType.Outcome:
-        #         self._outcomeElement.setElement(element)
-        #     elif element.type == StoryElementType.Consequences:
-        #         self._consequencesElement.setElement(element)
-        #     elif element.type == StoryElementType.Plot:
-        #         wdg = self.__newPlotElementEditor()
-        #         wdg.setElement(element)
-
     def refresh(self):
-        pass
-        # self._outcomeElement.refresh()
+        self._outcomeEditor.refresh()
+
+    def purposeChangedEvent(self):
+        if self._scene.purpose and self._scene.purpose == ScenePurposeType.Story:
+            self._wdgHeader.setVisible(True)
+            self._headerLine.setVisible(True)
+        else:
+            self._wdgHeader.setHidden(True)
+            self._headerLine.setHidden(True)
 
     # def _plotSelected(self, plotElement: PlotSceneElementEditor):
     #     insert_after(self._wdgElements, self._wdgAddNewPlotParent, reference=plotElement)
@@ -1211,7 +1263,7 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         self._conflictEditor.setNovel(self._novel)
 
         margins(self._wdgHeader, left=25)
-        self._wdgHeader.layout().setSpacing(10)
+        self._wdgHeader.layout().setSpacing(5)
         self._wdgHeader.layout().addWidget(self._btnCharacterDelegate)
         self._wdgHeader.layout().addWidget(self._emotionEditor)
         self._wdgHeader.layout().addWidget(vline())
