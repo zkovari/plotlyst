@@ -795,10 +795,10 @@ class SceneOutcome(Enum):
     @staticmethod
     def to_str(outcome: 'SceneOutcome') -> str:
         if outcome == SceneOutcome.TRADE_OFF:
-            return 'Trade-off'
+            return 'Trade-off outcome'
         elif outcome == SceneOutcome.MOTION:
-            return 'Set-into-motion'
-        return outcome.name.lower().capitalize()
+            return 'Set into motion'
+        return outcome.name.lower().capitalize() + ' outcome'
 
 
 @dataclass
