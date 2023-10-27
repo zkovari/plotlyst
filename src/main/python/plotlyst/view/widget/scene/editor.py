@@ -34,24 +34,21 @@ from qtmenu import MenuWidget
 from src.main.python.plotlyst.common import raise_unrecognized_arg, CONFLICT_SELF_COLOR
 from src.main.python.plotlyst.core.domain import Scene, Novel, ScenePurpose, advance_story_scene_purpose, \
     ScenePurposeType, reaction_story_scene_purpose, character_story_scene_purpose, setup_story_scene_purpose, \
-    emotion_story_scene_purpose, exposition_story_scene_purpose, scene_purposes, Character, Plot, ScenePlotReference, \
-    StoryElement, StoryElementType, SceneOutcome, SceneStructureAgenda, Motivation
+    emotion_story_scene_purpose, exposition_story_scene_purpose, scene_purposes, Character, StoryElement, \
+    StoryElementType, SceneOutcome, SceneStructureAgenda, Motivation
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import DelayedSignalSlotConnector, action, wrap, label, scrolled, \
-    ButtonPressResizeEventFilter, insert_after, push_btn, tool_btn
+    ButtonPressResizeEventFilter, push_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
-from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import RemovalButton
 from src.main.python.plotlyst.view.widget.scene.agency import SceneAgendaEmotionEditor, SceneAgendaMotivationEditor, \
     SceneAgendaConflictEditor
-from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotValueEditor, \
-    PlotValuesDisplay
 from src.main.python.plotlyst.view.widget.scenes import SceneOutcomeSelector
 
 
@@ -748,98 +745,6 @@ class SceneOutcomeEditor(QWidget):
 
         self._icon.setVisible(True)
         self._outcomeSelector.setHidden(True)
-
-
-class StorylineElementEditor(TextBasedSceneElementWidget):
-    plotSelected = pyqtSignal()
-
-    def __init__(self, novel: Novel, type: StoryElementType, parent=None):
-        super().__init__(type, parent)
-        self._novel = novel
-
-        self._plotValueEditor: Optional[ScenePlotValueEditor] = None
-        self._plotValueDisplay: Optional[PlotValuesDisplay] = None
-
-        self._btnPlotSelector = tool_btn(self._novel)
-        self._btnPlotSelector.plotSelected.connect(self._plotSelected)
-        self._btnPlotSelector.setFixedHeight(self._titleActive.sizeHint().height())
-        self._titleActive.setHidden(True)
-        insert_after(self._pageEditor, self._btnPlotSelector, reference=self._titleActive,
-                     alignment=Qt.AlignmentFlag.AlignCenter)
-
-        self._wdgValues = QWidget()
-        self._wdgValues.setHidden(True)
-        vbox(self._wdgValues)
-        self._btnEditValues = QPushButton('Edit values')
-        self._btnEditValues.installEventFilter(OpacityEventFilter(self._btnEditValues, enterOpacity=0.7))
-        self._btnEditValues.installEventFilter(ButtonPressResizeEventFilter(self._btnEditValues))
-        self._btnEditValues.setIcon(IconRegistry.from_name('fa5s.chevron-circle-down', 'grey'))
-        self._plotValueMenu = MenuWidget(self._btnEditValues)
-        apply_white_menu(self._plotValueMenu)
-        self._btnEditValues.setProperty('no-menu', True)
-        transparent(self._btnEditValues)
-        self._wdgValues.layout().addWidget(self._btnEditValues)
-
-        self._pageEditor.layout().addWidget(self._wdgValues)
-
-    @overrides
-    def setScene(self, scene: Scene):
-        super().setScene(scene)
-        self._btnPlotSelector.setScene(scene)
-        self._plotRef = None
-
-    @overrides
-    def setElement(self, element: StoryElement):
-        super().setElement(element)
-
-        if element.ref:
-            plot_ref = next((x for x in self._scene.plot_values if x.plot.id == element.ref), None)
-            if plot_ref:
-                self._setPlotRef(plot_ref)
-
-    @overrides
-    def _deactivate(self):
-        super()._deactivate()
-        if self._plotRef:
-            self._scene.plot_values.remove(self._plotRef)
-
-    @overrides
-    def _activateFinished(self):
-        if self._novel.plots:
-            self._btnPlotSelector.menuWidget().exec()
-
-    def _plotSelected(self, plot: Plot):
-        plotRef = ScenePlotReference(plot)
-        self._scene.plot_values.append(plotRef)
-        self._element.ref = plotRef.plot.id
-
-        self._setPlotRef(plotRef)
-
-        self.plotSelected.emit()
-
-    def _setPlotRef(self, plotRef: ScenePlotReference):
-        self._plotRef = plotRef
-        self.setIcon(self._plotRef.plot.icon, self._plotRef.plot.icon_color)
-        font = self._btnPlotSelector.font()
-        font.setPointSize(self._titleActive.font().pointSize())
-        self._btnPlotSelector.setFont(font)
-        self._btnPlotSelector.setPlot(plotRef.plot)
-
-        self._wdgValues.setVisible(True)
-
-        self._plotValueEditor = ScenePlotValueEditor(self._plotRef)
-        self._plotValueMenu.clear()
-        self._plotValueMenu.addWidget(self._plotValueEditor)
-
-        self._plotValueDisplay = PlotValuesDisplay(self._plotRef)
-        self._plotValueEditor.charged.connect(self._plotValueDisplay.updateValue)
-
-        for value in plotRef.data.values:
-            plot_value = value.plot_value(self._plotRef.plot)
-            if plot_value:
-                self._plotValueDisplay.updateValue(plot_value, value)
-
-        self._wdgValues.layout().addWidget(self._plotValueDisplay)
 
 
 class EventElementEditor(TextBasedSceneElementWidget):

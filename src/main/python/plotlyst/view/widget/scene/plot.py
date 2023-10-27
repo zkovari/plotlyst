@@ -234,6 +234,9 @@ class ScenePlotLabels(QWidget):
         self._icon = tool_btn(IconRegistry.from_name(self._plotref.plot.icon, self._plotref.plot.icon_color),
                               transparent_=True)
 
+        tooltip = f'{self._plotref.plot.text}<hr><i>Click to charge storyline values</p>'
+        self._icon.setToolTip(tooltip)
+
         self._icon.installEventFilter(OpacityEventFilter(self._icon, leaveOpacity=1.0, enterOpacity=0.7))
         self._plotValueMenu = MenuWidget(self._icon)
         apply_white_menu(self._plotValueMenu)
@@ -259,3 +262,6 @@ class ScenePlotLabels(QWidget):
         self.layout().addWidget(self._btnReset)
 
         self.installEventFilter(VisibilityToggleEventFilter(self._btnReset, self))
+
+    def activate(self):
+        self._plotValueMenu.exec()
