@@ -41,7 +41,7 @@ from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import DelayedSignalSlotConnector, action, wrap, label, scrolled, \
-    ButtonPressResizeEventFilter, insert_after, push_btn
+    ButtonPressResizeEventFilter, insert_after, push_btn, tool_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.base import apply_white_menu
@@ -50,7 +50,7 @@ from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import RemovalButton
 from src.main.python.plotlyst.view.widget.scene.agency import SceneAgendaEmotionEditor, SceneAgendaMotivationEditor, \
     SceneAgendaConflictEditor
-from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotSelectorButton, ScenePlotValueEditor, \
+from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotValueEditor, \
     PlotValuesDisplay
 from src.main.python.plotlyst.view.widget.scenes import SceneOutcomeSelector
 
@@ -741,7 +741,7 @@ class SceneOutcomeEditor(QWidget):
             self._icon.setIcon(IconRegistry.motion_icon())
         else:
             return
-        self._icon.setText(f'{SceneOutcome.to_str(self._scene.outcome)} outcome')
+        self._icon.setText(SceneOutcome.to_str(self._scene.outcome))
         palette = self._icon.palette()
         palette.setColor(QPalette.ColorGroup.Active, QPalette.ColorRole.ButtonText, QColor(color))
         self._icon.setPalette(palette)
@@ -760,7 +760,7 @@ class StorylineElementEditor(TextBasedSceneElementWidget):
         self._plotValueEditor: Optional[ScenePlotValueEditor] = None
         self._plotValueDisplay: Optional[PlotValuesDisplay] = None
 
-        self._btnPlotSelector = ScenePlotSelectorButton(self._novel)
+        self._btnPlotSelector = tool_btn(self._novel)
         self._btnPlotSelector.plotSelected.connect(self._plotSelected)
         self._btnPlotSelector.setFixedHeight(self._titleActive.sizeHint().height())
         self._titleActive.setHidden(True)
