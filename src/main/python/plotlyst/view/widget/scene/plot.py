@@ -23,17 +23,20 @@ from typing import Optional, Dict
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QMouseEvent
-from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QGraphicsDropShadowEffect
+from PyQt6.QtWidgets import QWidget, QToolButton, QGraphicsDropShadowEffect
 from overrides import overrides
-from qthandy import vbox, hbox, transparent, retain_when_hidden, spacer, sp, decr_icon, line, pointy, underline, flow
-from qthandy.filter import OpacityEventFilter
+from qthandy import vbox, hbox, transparent, retain_when_hidden, spacer, sp, decr_icon, line, vline, \
+    margins
+from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.core.domain import Novel, Scene, ScenePlotReference, PlotValue, ScenePlotValueCharge, \
     Plot, PlotType
-from src.main.python.plotlyst.view.common import action
+from src.main.python.plotlyst.view.common import action, tool_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton
+from src.main.python.plotlyst.view.widget.input import RemovalButton
 from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
 
 
@@ -43,7 +46,8 @@ class PlotValuesDisplay(QWidget):
         self._plotReference = plotReference
         self._values: Dict[PlotValue, PlotValueLabel] = {}
 
-        flow(self, spacing=9)
+        hbox(self, spacing=9)
+        margins(self, right=8)
         for value in self._plotReference.plot.values:
             lbl = PlotValueLabel(value, simplified=True)
             sp(lbl).h_max()
@@ -219,40 +223,45 @@ class ScenePlotSelectorMenu(MenuWidget):
             self.addSection('No corresponding storylines were found')
 
 
-class ScenePlotSelectorButton(QPushButton):
-    plotSelected = pyqtSignal(Plot)
+class ScenePlotLabels(QWidget):
+    reset = pyqtSignal()
 
-    def __init__(self, novel: Novel, parent=None):
+    def __init__(self, plotref: ScenePlotReference, parent=None):
         super().__init__(parent)
-        self._novel = novel
-        self._scene: Optional[Scene] = None
+        self._plotref = plotref
+        hbox(self)
 
-        transparent(self)
-        self.setProperty('no-menu', True)
-        self.setText('Storyline')
+        self._icon = tool_btn(IconRegistry.from_name(self._plotref.plot.icon, self._plotref.plot.icon_color),
+                              transparent_=True)
 
-        self.installEventFilter(OpacityEventFilter(parent=self, leaveOpacity=0.7))
+        tooltip = f'{self._plotref.plot.text}<hr><i>Click to charge storyline values</p>'
+        self._icon.setToolTip(tooltip)
 
-        self._menu = ScenePlotSelectorMenu(self._novel, self)
-        self._menu.plotSelected.connect(self._plotSelected)
+        self._icon.installEventFilter(OpacityEventFilter(self._icon, leaveOpacity=1.0, enterOpacity=0.7))
+        self._plotValueMenu = MenuWidget(self._icon)
+        apply_white_menu(self._plotValueMenu)
 
-        if self._novel.plots:
-            pointy(self)
-            underline(self)
-        else:
-            self._menu.setDisabled(True)
+        self._plotValueEditor = ScenePlotValueEditor(self._plotref)
+        self._plotValueMenu.addWidget(self._plotValueEditor)
 
-    def menuWidget(self) -> ScenePlotSelectorMenu:
-        return self._menu
+        self._plotValueDisplay = PlotValuesDisplay(self._plotref)
+        self._plotValueEditor.charged.connect(self._plotValueDisplay.updateValue)
 
-    def setScene(self, scene: Scene):
-        self._scene = scene
-        self._menu.setScene(scene)
+        for value in self._plotref.data.values:
+            plot_value = value.plot_value(self._plotref.plot)
+            if plot_value:
+                self._plotValueDisplay.updateValue(plot_value, value)
 
-    def setPlot(self, plot: Plot):
-        self.setText(plot.text)
-        underline(self, False)
+        self._btnReset = RemovalButton()
+        self._btnReset.clicked.connect(self.reset.emit)
+        retain_when_hidden(self._btnReset)
 
-    def _plotSelected(self, plot: Plot):
-        self.setPlot(plot)
-        self.plotSelected.emit(plot)
+        self.layout().addWidget(vline())
+        self.layout().addWidget(self._icon)
+        self.layout().addWidget(self._plotValueDisplay)
+        self.layout().addWidget(self._btnReset)
+
+        self.installEventFilter(VisibilityToggleEventFilter(self._btnReset, self))
+
+    def activate(self):
+        self._plotValueMenu.exec()

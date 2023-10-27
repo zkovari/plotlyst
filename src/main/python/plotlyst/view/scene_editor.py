@@ -26,12 +26,13 @@ from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtWidgets import QWidget, QTableView
 from overrides import overrides
 from qtanim import fade_in
-from qthandy import underline, incr_font, margins, pointy
+from qthandy import underline, incr_font, margins, pointy, hbox, clear_layout
+from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, Document, StoryBeat, \
-    Character, TagReference, ScenePurposeType, ScenePurpose
+    Character, TagReference, ScenePurposeType, ScenePurpose, Plot, ScenePlotReference
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
@@ -39,12 +40,15 @@ from src.main.python.plotlyst.events import NovelAboutToSyncEvent, SceneStoryBea
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, action, set_tab_icon
+from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, action, set_tab_icon, \
+    push_btn, fade_out_and_gc
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
 from src.main.python.plotlyst.view.widget.scene.editor import ScenePurposeSelectorWidget, ScenePurposeTypeButton, \
     SceneStorylineEditor, SceneAgendaEditor
+from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotLabels, \
+    ScenePlotSelectorMenu
 from src.main.python.plotlyst.view.widget.scenes import SceneTagSelector
 
 
@@ -62,7 +66,6 @@ class SceneEditor(QObject, EventListener):
 
         self._emoji_font = emoji_font()
 
-        # self.ui.btnDrive.setIcon(IconRegistry.from_name('mdi.chemical-weapon'))
         set_tab_icon(self.ui.tabWidget, self.ui.tabStorylines, IconRegistry.storylines_icon())
         set_tab_icon(self.ui.tabWidget, self.ui.tabCharacter, IconRegistry.character_icon())
         set_tab_icon(self.ui.tabWidget, self.ui.tabStructure,
@@ -137,6 +140,14 @@ class SceneEditor(QObject, EventListener):
         self._btnPurposeType.reset.connect(self._reset_purpose_editor)
         self.ui.wdgMidbar.layout().insertWidget(0, self._btnPurposeType)
 
+        self._btnPlotSelector = push_btn(IconRegistry.storylines_icon(), 'Storylines',
+                                         tooltip='Link storylines to this scene', transparent_=True)
+        self._btnPlotSelector.installEventFilter(OpacityEventFilter(self._btnPlotSelector, leaveOpacity=0.8))
+        self._plotSelectorMenu = ScenePlotSelectorMenu(self.novel, self._btnPlotSelector)
+        self._plotSelectorMenu.plotSelected.connect(self._plot_selected)
+        hbox(self.ui.wdgStorylines)
+        self.ui.wdgMidbar.layout().insertWidget(1, self._btnPlotSelector)
+
         self._storylineEditor = SceneStorylineEditor(self.novel)
         self._storylineEditor.outcomeChanged.connect(self._btnPurposeType.refresh)
         self._storylineEditor.outcomeChanged.connect(self.ui.wdgSceneStructure.refreshOutcome)
@@ -210,6 +221,11 @@ class SceneEditor(QObject, EventListener):
         else:
             self._close_purpose_editor()
 
+        self._plotSelectorMenu.setScene(self.scene)
+        clear_layout(self.ui.wdgStorylines)
+        for ref in self.scene.plot_values:
+            self._add_plot_ref(ref)
+
         self._characters_model.setScene(self.scene)
         self._character_changed()
 
@@ -277,6 +293,20 @@ class SceneEditor(QObject, EventListener):
             self.ui.wdgPov.reset()
             self.ui.wdgPov.btnAvatar.setToolTip('Select point of view character')
 
+    def _plot_selected(self, plot: Plot):
+        plotRef = ScenePlotReference(plot)
+        self.scene.plot_values.append(plotRef)
+        self._add_plot_ref(plotRef)
+
+    def _plot_removed(self, labels: ScenePlotLabels, plotRef: ScenePlotReference):
+        fade_out_and_gc(self.ui.wdgStorylines.layout(), labels)
+        self.scene.plot_values.remove(plotRef)
+
+    def _add_plot_ref(self, plotRef: ScenePlotReference):
+        labels = ScenePlotLabels(plotRef)
+        labels.reset.connect(partial(self._plot_removed, labels, plotRef))
+        self.ui.wdgStorylines.layout().addWidget(labels)
+
     def _title_edited(self, text: str):
         self.scene.title = text
         self.ui.treeScenes.refreshScene(self.scene)
@@ -295,8 +325,6 @@ class SceneEditor(QObject, EventListener):
 
     def _purpose_changed(self, purpose: ScenePurpose):
         self.scene.purpose = purpose.type
-        if purpose.type == ScenePurposeType.Story:
-            pass
         self._close_purpose_editor()
 
     def _close_purpose_editor(self):
@@ -305,6 +333,8 @@ class SceneEditor(QObject, EventListener):
             fade_in(self._btnPurposeType)
         if not self.ui.btnInfo.isVisible():
             fade_in(self.ui.btnInfo)
+        self.ui.wdgStorylines.setVisible(True)
+        self._btnPlotSelector.setVisible(True)
         # to avoid segfault for some reason, we disable it first before changing the stack widget
         self._purposeSelector.setDisabled(True)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
@@ -314,6 +344,8 @@ class SceneEditor(QObject, EventListener):
         self.scene.purpose = None
         self._btnPurposeType.setHidden(True)
         self.ui.btnInfo.setHidden(True)
+        self.ui.wdgStorylines.setHidden(True)
+        self._btnPlotSelector.setHidden(True)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pagePurpose)
         self._purposeSelector.setEnabled(True)
 
