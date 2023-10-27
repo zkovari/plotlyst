@@ -41,7 +41,7 @@ from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import DelayedSignalSlotConnector, action, wrap, label, scrolled, \
-    ButtonPressResizeEventFilter, push_btn
+    ButtonPressResizeEventFilter, push_btn, tool_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
@@ -446,6 +446,8 @@ class SceneElementWidget(QWidget):
         retain_when_hidden(self._btnClose)
         self._btnClose.clicked.connect(self._deactivate)
         self._gridLayout.addWidget(self._btnClose, 1, 2, alignment=Qt.AlignmentFlag.AlignTop)
+
+        self._btnStorylineLink = tool_btn(IconRegistry.storylines_icon(color='lightgrey'), transparent_=True)
 
         self._arrows: Dict[int, ArrowButton] = {
             90: ArrowButton(Qt.Edge.RightEdge),
