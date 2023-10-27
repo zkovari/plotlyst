@@ -306,6 +306,7 @@ class SceneEditor(QObject, EventListener):
         labels = ScenePlotLabels(plotRef)
         labels.reset.connect(partial(self._plot_removed, labels, plotRef))
         self.ui.wdgStorylines.layout().addWidget(labels)
+        self._btnPlotSelector.setText('')
 
     def _title_edited(self, text: str):
         self.scene.title = text
