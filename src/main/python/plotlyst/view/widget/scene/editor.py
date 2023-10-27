@@ -645,30 +645,28 @@ class TextBasedSceneElementWidget(SceneElementWidget):
         qtanim.glow(self._textEditor, color=self._colorActive)
 
 
-class OutcomeSceneElementEditor(TextBasedSceneElementWidget):
+class SceneOutcomeEditor(QWidget):
     outcomeChanged = pyqtSignal(SceneOutcome)
 
     def __init__(self, parent=None):
-        super().__init__(StoryElementType.Outcome, parent)
+        super().__init__(parent)
+        self._scene: Optional[Scene] = None
         self._outcomeSelector = SceneOutcomeSelector(autoSelect=False)
-        self.setPlaceholderText('Is there an imminent outcome in this scene?')
+        # self.setPlaceholderText('Is there an imminent outcome in this scene?')
 
-        self._pageEditor.layout().addWidget(self._outcomeSelector, alignment=Qt.AlignmentFlag.AlignCenter)
+        # self._pageEditor.layout().addWidget(self._outcomeSelector, alignment=Qt.AlignmentFlag.AlignCenter)
         self._outcomeSelector.selected.connect(self._outcomeSelected)
 
-    @overrides
-    def setElement(self, element: StoryElement):
-        super().setElement(element)
+    def setScene(self, scene: Scene):
+        self._scene = scene
         if self._scene.outcome:
             self._outcomeSelector.refresh(self._scene.outcome)
             self._updateOutcome()
         else:
             self._outcomeSelector.reset()
-            self._resetTitle()
+            # self._resetTitle()
 
-    @overrides
     def reset(self):
-        super().reset()
         self._resetTitle()
 
     def refresh(self):
