@@ -44,7 +44,7 @@ from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEdit
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
 from src.main.python.plotlyst.view.widget.scene.editor import ScenePurposeSelectorWidget, ScenePurposeTypeButton, \
-    SceneStorylineEditor, SceneAgendaEditor
+    SceneStorylineEditor, SceneAgendaEditor, SceneReaderInfoWidget
 from src.main.python.plotlyst.view.widget.scenes import SceneTagSelector
 
 
@@ -136,6 +136,10 @@ class SceneEditor(QObject, EventListener):
         self._btnPurposeType = ScenePurposeTypeButton()
         self._btnPurposeType.reset.connect(self._reset_purpose_editor)
         self.ui.wdgMidbar.layout().insertWidget(0, self._btnPurposeType)
+
+        self._menuInfo = MenuWidget(self.ui.btnInfo)
+        self._wdgInfo = SceneReaderInfoWidget()
+        self._menuInfo.addWidget(self._wdgInfo)
 
         self._storylineEditor = SceneStorylineEditor(self.novel)
         self._storylineEditor.outcomeChanged.connect(self._btnPurposeType.refresh)

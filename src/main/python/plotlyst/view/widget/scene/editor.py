@@ -48,6 +48,7 @@ from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import RemovalButton
+from src.main.python.plotlyst.view.widget.list import ListItemWidget, ListView
 from src.main.python.plotlyst.view.widget.scene.agency import SceneAgendaEmotionEditor, SceneAgendaMotivationEditor, \
     SceneAgendaConflictEditor
 from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotSelectorButton, ScenePlotValueEditor, \
@@ -1317,7 +1318,51 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         elements_visible = agenda.character_id is not None
         self._btnCharacterDelegate.setVisible(not elements_visible)
         self._wdgElements.setVisible(elements_visible)
-        # self._wdgElementsBottomRow.setVisible(elements_visible)
-        # self._lblBottom.setVisible(elements_visible)
         self._emotionEditor.setVisible(elements_visible)
         self._motivationEditor.setVisible(elements_visible)
+
+
+class SceneReaderInfoListItemWidget(ListItemWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._lineEdit.setMinimumWidth(400)
+        self._lineEdit.setMaximumWidth(600)
+        self.layout().addWidget(spacer())
+
+
+class SceneReaderInfoList(ListView):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._scene: Optional[Scene] = None
+
+    def setScene(self, scene: Scene):
+        self._scene = scene
+
+    @overrides
+    def _listItemWidgetClass(self):
+        return SceneReaderInfoListItemWidget
+
+    @overrides
+    def _addNewItem(self):
+        item = SceneReaderInfoListItemWidget()
+        self.addItem(item)
+        self.updateGeometry()
+
+    # @overrides
+    # def _addNewItem(self):
+    #     beat = SceneStructureItem(SceneStructureItemType.EXPOSITION)
+    #     self._agenda.items.append(beat)
+    #     self.addItem(beat)
+
+
+class SceneReaderInfoWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.setMinimumWidth(500)
+        self.setMinimumHeight(400)
+
+        self._list = SceneReaderInfoList()
+
+        vbox(self)
+        self.layout().addWidget(self._list)
