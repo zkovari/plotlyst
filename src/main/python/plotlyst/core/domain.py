@@ -790,11 +790,14 @@ class SceneOutcome(Enum):
     DISASTER = 0
     RESOLUTION = 1
     TRADE_OFF = 2
+    MOTION = 3
 
     @staticmethod
     def to_str(outcome: 'SceneOutcome') -> str:
         if outcome == SceneOutcome.TRADE_OFF:
             return 'Trade-off'
+        elif outcome == SceneOutcome.MOTION:
+            return 'Set-into-motion'
         return outcome.name.lower().capitalize()
 
 
@@ -1124,6 +1127,9 @@ class Scene:
 
     def outcome_trade_off(self) -> bool:
         return self.__is_outcome(SceneOutcome.TRADE_OFF)
+
+    def outcome_motion(self) -> bool:
+        return self.__is_outcome(SceneOutcome.MOTION)
 
     def title_or_index(self, novel: 'Novel') -> str:
         return self.title if self.title else f'Scene {novel.scenes.index(self) + 1}'

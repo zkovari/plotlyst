@@ -79,6 +79,7 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
         self._action_icon = IconRegistry.action_scene_icon()
         self._resolved_action_icon = IconRegistry.action_scene_icon(resolved=True)
         self._trade_off_action_icon = IconRegistry.action_scene_icon(trade_off=True)
+        self._motion_action_icon = IconRegistry.action_scene_icon(motion=True)
         self._reaction_icon = IconRegistry.reaction_scene_icon()
 
     def setDragEnabled(self, enabled: bool):
@@ -115,8 +116,10 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
                 elif scene.purpose == ScenePurposeType.Story:
                     if scene.outcome_resolution():
                         return self._resolved_action_icon
-                    if scene.outcome_trade_off():
+                    elif scene.outcome_trade_off():
                         return self._trade_off_action_icon
+                    elif scene.outcome_motion():
+                        return self._motion_action_icon
                     return self._action_icon
                 elif scene.purpose == ScenePurposeType.Reaction:
                     return self._reaction_icon
