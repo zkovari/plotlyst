@@ -140,7 +140,6 @@ class SceneEditor(QObject, EventListener):
         self._btnPurposeType.reset.connect(self._reset_purpose_editor)
         self.ui.wdgMidbar.layout().insertWidget(0, self._btnPurposeType)
 
-        # self._wdgStorylineEditor = ScenePlotEditorWidget(self.novel)
         self._btnPlotSelector = push_btn(IconRegistry.storylines_icon(), 'Storylines',
                                          tooltip='Link storylines to this scene', transparent_=True)
         self._btnPlotSelector.installEventFilter(OpacityEventFilter(self._btnPlotSelector, leaveOpacity=0.8))
@@ -322,7 +321,6 @@ class SceneEditor(QObject, EventListener):
 
     def _purpose_skipped(self):
         self.scene.purpose = ScenePurposeType.Other
-        self._wdgStorylineEditor.setVisible(True)
         self._close_purpose_editor()
 
     def _purpose_changed(self, purpose: ScenePurpose):
