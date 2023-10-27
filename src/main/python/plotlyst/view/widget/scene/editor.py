@@ -1097,7 +1097,8 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         self._wdgHeader.layout().setSpacing(5)
         self._wdgHeader.layout().addWidget(self._outcomeEditor)
         self._wdgHeader.layout().addWidget(spacer())
-        self._wdgElementsParent.layout().insertWidget(1, line())
+        self._headerLine = line()
+        self._wdgElementsParent.layout().insertWidget(1, self._headerLine)
 
         self._row = 3
         self._col = 5
@@ -1151,6 +1152,7 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
     @overrides
     def setScene(self, scene: Scene):
         super().setScene(scene)
+        self.purposeChangedEvent()
         self._outcomeEditor.setScene(scene)
 
         for row in range(self._row):
@@ -1166,6 +1168,14 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
 
     def refresh(self):
         self._outcomeEditor.refresh()
+
+    def purposeChangedEvent(self):
+        if self._scene.purpose and self._scene.purpose == ScenePurposeType.Story:
+            self._wdgHeader.setVisible(True)
+            self._headerLine.setVisible(True)
+        else:
+            self._wdgHeader.setHidden(True)
+            self._headerLine.setHidden(True)
 
     # def _plotSelected(self, plotElement: PlotSceneElementEditor):
     #     insert_after(self._wdgElements, self._wdgAddNewPlotParent, reference=plotElement)
