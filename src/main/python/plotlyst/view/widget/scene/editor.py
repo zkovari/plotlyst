@@ -22,9 +22,9 @@ from typing import List, Optional, Dict
 
 import qtanim
 from PyQt6.QtCore import Qt, QSize, QEvent, pyqtSignal, QObject
-from PyQt6.QtGui import QEnterEvent, QIcon, QMouseEvent, QColor, QCursor, QPalette
-from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QStackedWidget, QTabBar, QGridLayout, \
-    QToolButton
+from PyQt6.QtGui import QEnterEvent, QIcon, QMouseEvent, QColor, QCursor, QPalette, QPaintEvent
+from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QStackedWidget, QGridLayout, \
+    QToolButton, QAbstractButton, QScrollArea
 from overrides import overrides
 from qthandy import vbox, vspacer, transparent, sp, line, incr_font, hbox, pointy, vline, retain_when_hidden, margins, \
     spacer, underline, bold, grid, gc
@@ -1135,33 +1135,71 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
     #     return elementEditor
 
 
-class CharacterTabBar(QTabBar):
+class CharacterTab(QAbstractButton):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+        self._character: Optional[Character] = None
+        vbox(self, 0, 2)
+
+        self._btnCharacterSelector = CharacterSelectorButton(self._novel, parent=self)
+        self.layout().addWidget(self._btnCharacterSelector, alignment=Qt.AlignmentFlag.AlignTop)
+        self.setMinimumHeight(80)
+
+    @overrides
+    def paintEvent(self, event: QPaintEvent) -> None:
+        pass
+
+
+class CharacterTabBar(QScrollArea):
     characterChanged = pyqtSignal(Character)
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
         self._character: Optional[Character] = None
+        self.setWidgetResizable(True)
+        # sp(self).v_max()
+        # self.setShape(QTabBar.Shape.RoundedWest)
+        self._wdgCentral = QWidget()
+        self.setWidget(self._wdgCentral)
+        vbox(self._wdgCentral)
+        self._tabs: List[CharacterTab] = []
+
+        self._count = 2
+
+        # self.setMaximumWidth(40)
         sp(self).h_max()
-        self.setShape(QTabBar.Shape.RoundedWest)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        # self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-        self._btnCharacterSelector = CharacterSelectorButton(self._novel, parent=self)
-        self.addTab('')
+        # self._btnCharacterSelector = CharacterSelectorButton(self._novel, parent=self)
+        self.addNewTab()
+        self.addNewTab()
+        self.addNewTab()
 
-        self._btnCharacterSelector.characterSelected.connect(self._characterSelected)
+        # self._btnCharacterSelector.characterSelected.connect(self._characterSelected)
 
-    @overrides
-    def tabSizeHint(self, index: int) -> QSize:
-        return QSize(self._btnCharacterSelector.sizeHint().width(), 80)
+    # @overrides
+    # def tabSizeHint(self, index: int) -> QSize:
+    #     return QSize(self._btnCharacterSelector.sizeHint().width(), 80)
+
+    def addNewTab(self):
+        tab = CharacterTab(self._novel)
+        self._tabs.append(tab)
+        self._wdgCentral.layout().addWidget(tab)
 
     def setCharacter(self, character: Character):
-        self._btnCharacterSelector.setCharacter(character)
+        pass
+        # self._btnCharacterSelector.setCharacter(character)
 
     def setCharacters(self, characters: List[Character]):
-        self._btnCharacterSelector.characterSelectorMenu().setCharacters(characters)
+        pass
+        # self._btnCharacterSelector.characterSelectorMenu().setCharacters(characters)
 
     def reset(self):
-        self._btnCharacterSelector.clear()
+        pass
+        # self._btnCharacterSelector.clear()
 
     def popup(self):
         self._btnCharacterSelector.characterSelectorMenu().exec()
@@ -1178,7 +1216,12 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
 
         self._characterTabbar = CharacterTabBar(self._novel)
         self._characterTabbar.characterChanged.connect(self._characterSelected)
-        self.layout().insertWidget(0, self._characterTabbar, alignment=Qt.AlignmentFlag.AlignTop)
+        self._btnAddAgency = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True)
+        self._btnAddAgency.clicked.connect(self._characterTabbar.addNewTab)
+        # self.layout().insertWidget(0, group(self._characterTabbar, self._btnAddAgency, vertical=False),
+        #                            alignment=Qt.AlignmentFlag.AlignTop)
+        self.layout().insertWidget(0, self._characterTabbar,
+                                   alignment=Qt.AlignmentFlag.AlignTop)
 
         self._unsetCharacterSlot = None
         self._btnCharacterDelegate = push_btn(IconRegistry.from_name('fa5s.arrow-circle-left'),
