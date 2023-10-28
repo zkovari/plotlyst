@@ -144,3 +144,7 @@ def camel_to_whitespace(text: str) -> str:
 
 def raise_unrecognized_arg(arg: Any) -> NoReturn:
     raise ValueError(f'Unrecognized argument {arg}')
+
+
+def clamp(value, min_n, max_n):
+    return max(min(max_n, value), min_n)

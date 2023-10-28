@@ -31,6 +31,7 @@ from qtmenu import MenuWidget
 from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, action
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.button import EyeToggle
 from src.main.python.plotlyst.view.widget.display import Icon
 
 
@@ -168,7 +169,8 @@ class BaseTreeWidget(QWidget):
 
 class ContainerNode(BaseTreeWidget):
 
-    def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None, settings: Optional[TreeSettings] = None):
+    def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None, settings: Optional[TreeSettings] = None,
+                 readOnly: bool = False):
         super(ContainerNode, self).__init__(title, icon, parent)
         vbox(self, 0, 0)
 
@@ -183,8 +185,9 @@ class ContainerNode(BaseTreeWidget):
         if settings:
             incr_font(self._lblTitle, settings.font_incr)
 
-        self._icon.installEventFilter(self)
-        self._wdgTitle.installEventFilter(self)
+        if not readOnly:
+            self._icon.installEventFilter(self)
+            self._wdgTitle.installEventFilter(self)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
@@ -234,6 +237,31 @@ class ContainerNode(BaseTreeWidget):
             widgets.append(item.widget())
 
         return widgets
+
+
+class EyeToggleNode(ContainerNode):
+    toggled = pyqtSignal(bool)
+
+    def __init__(self, title: str = '', icon: Optional[QIcon] = None, parent=None):
+        super().__init__(title, icon, parent)
+
+        self.setPlusButtonEnabled(False)
+        self.setMenuEnabled(False)
+        self.setSelectionEnabled(False)
+
+        self._btnVisible = EyeToggle()
+        self._btnVisible.toggled.connect(self._toggled)
+        self._wdgTitle.layout().addWidget(self._btnVisible)
+
+    def setToggleTooltip(self, tooltip: str):
+        self._btnVisible.setToolTip(tooltip)
+
+    def isToggled(self):
+        return self._btnVisible.isChecked()
+
+    def _toggled(self, toggled: bool):
+        bold(self._lblTitle, toggled)
+        self.toggled.emit(toggled)
 
 
 class TreeView(QScrollArea):

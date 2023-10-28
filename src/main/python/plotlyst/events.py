@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from language_tool_python import LanguageTool
 
 from src.main.python.plotlyst.core.domain import Character, NovelDescriptor, Scene, SceneStage, Task, NovelSetting, \
-    StoryStructure, Novel
+    StoryStructure, Novel, Plot
 from src.main.python.plotlyst.event.core import Event
 
 
@@ -184,8 +184,13 @@ class NovelWorldBuildingToggleEvent(NovelPanelCustomizationEvent):
 
 
 @dataclass
-class PlotCreatedEvent(Event):
+class StorylineCreatedEvent(Event):
     pass
+
+
+@dataclass
+class StorylineRemovedEvent(Event):
+    storyline: Plot
 
 
 @dataclass

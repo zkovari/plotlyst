@@ -40,9 +40,10 @@ from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotTyp
 from src.main.python.plotlyst.core.template import antagonist_role
 from src.main.python.plotlyst.core.text import html
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import EventListener, Event
+from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
-from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent
+from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent, StorylineCreatedEvent, \
+    StorylineRemovedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter, wrap, \
@@ -931,6 +932,8 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         self.repo.update_novel(self.novel)
         self._wdgList.selectPlot(plot)
 
+        emit_event(self.novel, StorylineCreatedEvent(self))
+
     def _plotSelected(self, plot: Plot) -> PlotWidget:
         widget = PlotWidget(self.novel, plot, self.pageDisplay)
         widget.removalRequested.connect(partial(self._remove, widget))
@@ -952,6 +955,7 @@ class PlotEditor(QWidget, Ui_PlotEditor):
                 if item.widget().plot == plot:
                     clear_layout(self.pageDisplay)
         delete_plot(self.novel, plot)
+        emit_event(self.novel, StorylineRemovedEvent(self, plot))
 
     # def _remove(self, widget: PlotWidget):
     #     if ask_confirmation(f'Are you sure you want to delete the plot {widget.plot.text}?'):
