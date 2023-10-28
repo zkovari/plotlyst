@@ -589,8 +589,9 @@ class SceneElementWidget(QWidget):
 
         if self._element.ref:
             storyline = next((x for x in self._novel.plots if x.id == self._element.ref), None)
-            self._btnStorylineLink.setIcon(IconRegistry.from_name(storyline.icon, storyline.icon_color))
-            self._btnStorylineLink.setVisible(True)
+            if storyline is not None:
+                self._btnStorylineLink.setIcon(IconRegistry.from_name(storyline.icon, storyline.icon_color))
+                self._btnStorylineLink.setVisible(True)
 
     def reset(self):
         self._btnClose.setHidden(True)
