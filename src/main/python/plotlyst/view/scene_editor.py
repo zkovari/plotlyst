@@ -45,6 +45,7 @@ from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEv
     push_btn, fade_out_and_gc
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
 from src.main.python.plotlyst.view.widget.scene.editor import ScenePurposeSelectorWidget, ScenePurposeTypeButton, \
     SceneStorylineEditor, SceneAgendaEditor, SceneElementWidget
@@ -97,9 +98,8 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgStructure.setRemovalContextMenuEnabled(True)
         self.ui.wdgStructure.beatRemovalRequested.connect(self._beat_removed)
 
-        self._povMenu = ScrollableMenuWidget(self.ui.wdgPov.btnAvatar)
-        for char in self.novel.characters:
-            self._povMenu.addAction(action(char.name, avatars.avatar(char), partial(self._pov_changed, char)))
+        self._povMenu = CharacterSelectorMenu(self.novel, self.ui.wdgPov.btnAvatar)
+        self._povMenu.selected.connect(self._pov_changed)
         self.ui.wdgPov.btnAvatar.setText('POV')
         self.ui.wdgPov.setFixedSize(170, 170)
 
@@ -268,9 +268,6 @@ class SceneEditor(QObject, EventListener):
 
     def _pov_changed(self, pov: Character):
         self.scene.pov = pov
-
-        # self.scene.agendas[0].set_character(self.scene.pov)
-        # self.scene.agendas[0].conflict_references.clear()
 
         self._agencyEditor.povChangedEvent(pov)
 

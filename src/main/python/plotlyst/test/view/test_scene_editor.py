@@ -1,14 +1,10 @@
-from typing import Optional
-
-from PyQt6.QtCore import Qt
-
-from src.main.python.plotlyst.core.domain import Novel, Scene, default_story_structures
+from src.main.python.plotlyst.core.domain import Novel, default_story_structures
 from src.main.python.plotlyst.view.scene_editor import SceneEditor
 from src.main.python.plotlyst.view.stylesheet import APP_STYLESHEET
 
 
-def editor(qtbot, novel: Novel, scene: Optional[Scene] = None):
-    editor = SceneEditor(novel, scene)
+def editor(qtbot, novel: Novel):
+    editor = SceneEditor(novel)
     editor.widget.setStyleSheet(APP_STYLESHEET)
     editor.widget.show()
     qtbot.addWidget(editor.widget)
@@ -21,6 +17,8 @@ def test_editor_with_new_scene(qtbot):
     novel = Novel('Test-novel', story_structures=default_story_structures)
     novel.story_structures[0].active = True
     view: SceneEditor = editor(qtbot, novel)
+    scene = novel.new_scene()
+    novel.scenes.append(scene)
+    view.set_scene(scene)
 
     assert view.ui.wdgPov.btnAvatar.text() == 'POV'
-    assert view.ui.wdgPov.btnAvatar.toolButtonStyle() == Qt.ToolButtonStyle.ToolButtonTextUnderIcon
