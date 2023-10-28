@@ -22,7 +22,7 @@ from typing import Optional
 
 import emoji
 import qtanim
-from PyQt6.QtCore import QObject, pyqtSignal, QTimer
+from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QTableView
 from overrides import overrides
@@ -153,6 +153,7 @@ class SceneEditor(QObject, EventListener):
         self._storylineEditor.outcomeChanged.connect(self._btnPurposeType.refresh)
         self._storylineEditor.outcomeChanged.connect(self.ui.wdgSceneStructure.refreshOutcome)
         self._storylineEditor.storylineLinked.connect(self._storyline_linked)
+        self._storylineEditor.storylineEditRequested.connect(self._storyline_edit)
         self.ui.tabStorylines.layout().addWidget(self._storylineEditor)
 
         self._agencyEditor = SceneAgendaEditor(self.novel)
@@ -309,6 +310,12 @@ class SceneEditor(QObject, EventListener):
             labels = self._storyline_selected(storyline)
             qtanim.glow(labels.icon(), loop=3, color=QColor(storyline.icon_color))
 
+    def _storyline_edit(self, element: SceneElementWidget, storyline: Plot):
+        for i in range(self.ui.wdgStorylines.layout().count()):
+            item = self.ui.wdgStorylines.layout().itemAt(i)
+            if item and isinstance(item.widget(),
+                                   ScenePlotLabels) and item.widget().storylineRef().plot.id == storyline.id:
+                item.widget().activate()
 
     def _add_plot_ref(self, plotRef: ScenePlotReference) -> ScenePlotLabels:
         labels = ScenePlotLabels(plotRef)

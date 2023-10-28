@@ -27,7 +27,7 @@ from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QSt
     QToolButton
 from overrides import overrides
 from qthandy import vbox, vspacer, transparent, sp, line, incr_font, hbox, pointy, vline, retain_when_hidden, margins, \
-    spacer, underline, bold, grid
+    spacer, underline, bold, grid, gc
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -435,6 +435,7 @@ class ArrowButton(QToolButton):
 
 class SceneElementWidget(QWidget):
     storylineSelected = pyqtSignal(Plot)
+    storylineEditRequested = pyqtSignal(Plot)
 
     def __init__(self, novel: Novel, type: StoryElementType, row: int, col: int, parent=None):
         super().__init__(parent)
@@ -632,6 +633,23 @@ class SceneElementWidget(QWidget):
         qtanim.glow(self._btnStorylineLink, color=QColor(storyline.icon_color))
 
         self.storylineSelected.emit(storyline)
+
+        self._btnStorylineLink.clicked.disconnect()
+        gc(self._storylineMenu)
+        self._storylineMenu = MenuWidget(self._btnStorylineLink)
+        self._storylineMenu.addAction(
+            action('Edit', IconRegistry.edit_icon(), slot=partial(self.storylineEditRequested.emit, storyline)))
+        self._storylineMenu.addSeparator()
+        self._storylineMenu.addAction(action('Remove', IconRegistry.trash_can_icon(), slot=self._storylineRemoved))
+
+    def _storylineRemoved(self):
+        self._element.ref = None
+        self._btnStorylineLink.setIcon(IconRegistry.storylines_icon(color='lightgrey'))
+
+        self._btnStorylineLink.clicked.disconnect()
+        gc(self._storylineMenu)
+        self._storylineMenu = StorylineSelectorMenu(self._novel, self._btnStorylineLink)
+        self._storylineMenu.storylineSelected.connect(self._storylineSelected)
 
     def _arrowToggled(self, degree: int, state: int):
         self._element.arrows[degree] = state
@@ -993,6 +1011,7 @@ class AbstractSceneElementsEditor(QWidget):
 class SceneStorylineEditor(AbstractSceneElementsEditor):
     outcomeChanged = pyqtSignal()
     storylineLinked = pyqtSignal(SceneElementWidget, Plot)
+    storylineEditRequested = pyqtSignal(SceneElementWidget, Plot)
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -1018,6 +1037,7 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
                 else:
                     placeholder = EffectElementEditor(self._novel, row, col)
                 placeholder.storylineSelected.connect(partial(self.storylineLinked.emit, placeholder))
+                placeholder.storylineEditRequested.connect(partial(self.storylineEditRequested.emit, placeholder))
                 self._wdgElements.layout().addWidget(placeholder, row, col, 1, 1)
         self._wdgElements.layout().addWidget(vline(), 0, 3, 3, 1)
         self._wdgElements.layout().addWidget(spacer(), 0, self._col, 1, 1)

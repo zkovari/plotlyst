@@ -266,5 +266,8 @@ class ScenePlotLabels(QWidget):
     def icon(self) -> QToolButton:
         return self._icon
 
+    def storylineRef(self) -> ScenePlotReference:
+        return self._plotref
+
     def activate(self):
         self._plotValueMenu.exec()
