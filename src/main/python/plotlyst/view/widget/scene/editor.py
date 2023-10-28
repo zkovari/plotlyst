@@ -451,15 +451,18 @@ class SceneElementWidget(QWidget):
         retain_when_hidden(self._btnClose)
         self._btnClose.clicked.connect(self._deactivate)
 
+        self._storylineLinkEnabled = self._type in [StoryElementType.Event, StoryElementType.Effect]
+
         self._btnStorylineLink = tool_btn(IconRegistry.storylines_icon(color='lightgrey'), transparent_=True,
                                           tooltip='Link storyline to this element',
                                           parent=self)
         self._btnStorylineLink.installEventFilter(OpacityEventFilter(self._btnStorylineLink, leaveOpacity=0.7))
         self._btnStorylineLink.setVisible(False)
-
         retain_when_hidden(self._btnStorylineLink)
-        self._storylineMenu = StorylineSelectorMenu(self._novel, self._btnStorylineLink)
-        self._storylineMenu.storylineSelected.connect(self._storylineSelected)
+
+        if self._storylineLinkEnabled:
+            self._storylineMenu = StorylineSelectorMenu(self._novel, self._btnStorylineLink)
+            self._storylineMenu.storylineSelected.connect(self._storylineSelected)
 
         self._arrows: Dict[int, ArrowButton] = {
             90: ArrowButton(Qt.Edge.RightEdge),
@@ -537,7 +540,8 @@ class SceneElementWidget(QWidget):
             self._titleIdle.setVisible(True)
             self._iconIdle.setIcon(self._icon)
         else:
-            self._btnStorylineLink.setVisible(True)
+            if self._storylineLinkEnabled:
+                self._btnStorylineLink.setVisible(True)
             self._btnClose.setVisible(True)
             for arrow in self._arrows.values():
                 arrow.setVisible(True)
@@ -607,7 +611,8 @@ class SceneElementWidget(QWidget):
         element = StoryElement(self._type)
         self.setElement(element)
         self._btnClose.setVisible(True)
-        self._btnStorylineLink.setVisible(True)
+        if self._storylineLinkEnabled:
+            self._btnStorylineLink.setVisible(True)
 
         qtanim.glow(self._iconActive, duration=150, color=self._colorActive)
         self._elementCreated(element)
