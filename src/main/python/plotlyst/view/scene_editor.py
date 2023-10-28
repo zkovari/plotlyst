@@ -22,18 +22,18 @@ from typing import Optional
 
 import emoji
 import qtanim
-from PyQt6.QtCore import QObject, pyqtSignal
+from PyQt6.QtCore import QObject, pyqtSignal, QTimer
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QTableView
 from overrides import overrides
 from qtanim import fade_in
-from qthandy import underline, incr_font, margins, pointy, hbox, clear_layout
+from qthandy import underline, incr_font, margins, pointy, hbox, clear_layout, busy
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, Document, StoryBeat, \
-    Character, TagReference, ScenePurposeType, ScenePurpose, Plot, ScenePlotReference
+    Character, ScenePurposeType, ScenePurpose, Plot, ScenePlotReference
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
@@ -45,18 +45,18 @@ from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEv
     push_btn, fade_out_and_gc
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
 from src.main.python.plotlyst.view.widget.scene.editor import ScenePurposeSelectorWidget, ScenePurposeTypeButton, \
     SceneStorylineEditor, SceneAgendaEditor, SceneElementWidget
 from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotLabels, \
     ScenePlotSelectorMenu
-from src.main.python.plotlyst.view.widget.scenes import SceneTagSelector
 
 
 class SceneEditor(QObject, EventListener):
     close = pyqtSignal()
 
-    def __init__(self, novel: Novel, scene: Optional[Scene] = None):
+    def __init__(self, novel: Novel):
         super().__init__()
         self.widget = QWidget()
         self.ui = Ui_SceneEditor()
@@ -98,9 +98,8 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgStructure.setRemovalContextMenuEnabled(True)
         self.ui.wdgStructure.beatRemovalRequested.connect(self._beat_removed)
 
-        self._povMenu = ScrollableMenuWidget(self.ui.wdgPov.btnAvatar)
-        for char in self.novel.characters:
-            self._povMenu.addAction(action(char.name, avatars.avatar(char), partial(self._pov_changed, char)))
+        self._povMenu = CharacterSelectorMenu(self.novel, self.ui.wdgPov.btnAvatar)
+        self._povMenu.selected.connect(self._pov_changed)
         self.ui.wdgPov.btnAvatar.setText('POV')
         self.ui.wdgPov.setFixedSize(170, 170)
 
@@ -125,8 +124,8 @@ class SceneEditor(QObject, EventListener):
         self.ui.btnEditCharacters.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnEditCharacters))
         self.ui.btnStageCharacterLabel.clicked.connect(lambda: menu.exec())
 
-        self.tag_selector = SceneTagSelector(self.novel, self.scene)
-        self.ui.wdgTags.layout().addWidget(self.tag_selector)
+        # self.tag_selector = SceneTagSelector(self.novel, self.scene)
+        # self.ui.wdgTags.layout().addWidget(self.tag_selector)
 
         self.ui.treeScenes.setNovel(self.novel, readOnly=True)
         self.ui.treeScenes.sceneSelected.connect(self._scene_selected)
@@ -165,7 +164,6 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._btnPurposeType.refresh)
         self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._storylineEditor.refresh)
 
-        self._update_view(scene)
         self.ui.tabWidget.setCurrentWidget(self.ui.tabStorylines)
         self.ui.tabWidget.currentChanged.connect(self._page_toggled)
 
@@ -179,16 +177,10 @@ class SceneEditor(QObject, EventListener):
         if isinstance(event, NovelAboutToSyncEvent):
             self._on_close()
 
-    def _update_view(self, scene: Optional[Scene] = None):
-        if scene:
-            self.scene = scene
-            self._new_scene = False
-            self.ui.treeScenes.selectScene(self.scene)
-        else:
-            self.scene = self.novel.new_scene()
-            if len(self.novel.scenes) > 1:
-                self.scene.day = self.novel.scenes[-1].day
-            self._new_scene = True
+    def set_scene(self, scene: Scene):
+        self.scene = scene
+        self.ui.treeScenes.refresh()
+        self.ui.treeScenes.selectScene(self.scene)
 
         if self.scene.pov:
             for agenda in self.scene.agendas:
@@ -198,7 +190,7 @@ class SceneEditor(QObject, EventListener):
         self.ui.sbDay.setValue(self.scene.day)
 
         self.ui.wdgSceneStructure.setScene(self.novel, self.scene)
-        self.tag_selector.setScene(self.scene)
+        # self.tag_selector.setScene(self.scene)
         self._storylineEditor.setScene(self.scene)
         self._agencyEditor.setScene(self.scene)
 
@@ -206,8 +198,7 @@ class SceneEditor(QObject, EventListener):
         self.ui.textSynopsis.setText(self.scene.synopsis)
 
         self.ui.wdgStructure.unhighlightBeats()
-        if not self._new_scene:
-            self.ui.wdgStructure.highlightScene(self.scene)
+        self.ui.wdgStructure.highlightScene(self.scene)
         self.ui.wdgStructure.uncheckActs()
         self.ui.wdgStructure.setActChecked(acts_registry.act(self.scene))
 
@@ -277,9 +268,6 @@ class SceneEditor(QObject, EventListener):
 
     def _pov_changed(self, pov: Character):
         self.scene.pov = pov
-
-        # self.scene.agendas[0].set_character(self.scene.pov)
-        # self.scene.agendas[0].conflict_references.clear()
 
         self._agencyEditor.povChangedEvent(pov)
 
@@ -373,14 +361,13 @@ class SceneEditor(QObject, EventListener):
         self.scene.day = self.ui.sbDay.value()
 
         self.scene.tag_references.clear()
-        for tag in self.tag_selector.tags():
-            self.scene.tag_references.append(TagReference(tag.id))
+        # for tag in self.tag_selector.tags():
+        #     self.scene.tag_references.append(TagReference(tag.id))
 
-        if self._new_scene:
-            self.novel.scenes.append(self.scene)
-            self.repo.insert_scene(self.novel, self.scene)
-        else:
-            self.repo.update_scene(self.scene)
+        #     self.novel.scenes.append(self.scene)
+        #     self.repo.insert_scene(self.novel, self.scene)
+        # else:
+        self.repo.update_scene(self.scene)
 
         if not self.scene.document:
             self.scene.document = Document('', scene_id=self.scene.id)
@@ -389,12 +376,12 @@ class SceneEditor(QObject, EventListener):
         if self.scene.document.loaded:
             self.scene.document.content = self.ui.textNotes.textEdit.toHtml()
             self.repo.update_doc(self.novel, self.scene.document)
-        self._new_scene = False
 
     def _on_close(self):
         self._save_scene()
         self.close.emit()
 
+    @busy
     def _scene_selected(self, scene: Scene):
         self._save_scene()
-        self._update_view(scene)
+        QTimer.singleShot(10, lambda: self.set_scene(scene))

@@ -596,6 +596,9 @@ class SceneStoryStructureWidget(QWidget):
             min_index = self.novel.scenes.index(previous_beat_scene) if previous_beat_scene else 0
             max_index = self.novel.scenes.index(next_beat_scene) if next_beat_scene else len(self.novel.scenes) - 1
 
+            if max_index - min_index == 0:
+                return
+
             self._currentScenePercentage = min_percentage + (max_percentage - min_percentage) / (
                     max_index - min_index) * (index - min_index)
 

@@ -27,7 +27,7 @@ from PyQt6.QtCore import Qt, QModelIndex, \
 from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget, QHeaderView
 from overrides import overrides
-from qthandy import incr_font, translucent, btn_popup, clear_layout, busy, bold, gc, sp, transparent
+from qthandy import incr_font, translucent, btn_popup, clear_layout, busy, bold, sp, transparent
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -120,6 +120,10 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.wdgTitleParent.layout().addWidget(self.title)
 
         self.editor: Optional[SceneEditor] = None
+        self.editor = SceneEditor(self.novel)
+        self.editor.close.connect(self._on_close_editor)
+        self.ui.pageEditor.layout().addWidget(self.editor.widget)
+
         self.storymap_view: Optional[StoryLinesMapWidget] = None
         self.stagesModel: Optional[ScenesStageTableModel] = None
         self.stagesProgress: Optional[SceneStageProgressCharts] = None
@@ -342,30 +346,26 @@ class ScenesOutlineView(AbstractNovelView):
                 return None
 
     @busy
-    def _switch_to_editor(self, scene: Optional[Scene] = None):
-        self.editor = SceneEditor(self.novel, scene)
+    def _switch_to_editor(self, scene: Scene):
         self.title.setHidden(True)
-        self.ui.pageEditor.layout().addWidget(self.editor.widget)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
-
-        self.editor.close.connect(self._on_close_editor)
+        self.editor.set_scene(scene)
 
     @busy
     def _on_close_editor(self):
-        self.ui.pageEditor.layout().removeWidget(self.editor.widget)
-        self._scene_filter.povFilter.updateCharacters(self.novel.pov_characters(), checkAll=True)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
         self.title.setVisible(True)
+        self._scene_filter.povFilter.updateCharacters(self.novel.pov_characters(), checkAll=True)
 
         emit_event(self.novel, SceneChangedEvent(self, self.editor.scene))
-        gc(self.editor.widget)
-        gc(self.editor)
-        self.editor = None
         self.refresh()
 
     @busy
     def _new_scene(self, _):
-        self._switch_to_editor()
+        scene = self.novel.new_scene()
+        self.novel.scenes.append(scene)
+        self.repo.insert_scene(self.novel, scene)
+        self._switch_to_editor(scene)
 
     def _show_card_menu(self, card: SceneCard, _: QPoint):
         menu = MenuWidget(card)
