@@ -262,3 +262,9 @@ class ScenePlotLabels(QWidget):
         self.layout().addWidget(self._btnReset)
 
         self.installEventFilter(VisibilityToggleEventFilter(self._btnReset, self))
+
+    def icon(self) -> QToolButton:
+        return self._icon
+
+    def activate(self):
+        self._plotValueMenu.exec()

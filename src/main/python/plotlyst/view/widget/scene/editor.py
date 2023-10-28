@@ -434,6 +434,8 @@ class ArrowButton(QToolButton):
 
 
 class SceneElementWidget(QWidget):
+    storylineSelected = pyqtSignal(Plot)
+
     def __init__(self, novel: Novel, type: StoryElementType, row: int, col: int, parent=None):
         super().__init__(parent)
         self._novel = novel
@@ -604,6 +606,7 @@ class SceneElementWidget(QWidget):
         element = StoryElement(self._type)
         self.setElement(element)
         self._btnClose.setVisible(True)
+        self._btnStorylineLink.setVisible(True)
 
         qtanim.glow(self._iconActive, duration=150, color=self._colorActive)
         self._elementCreated(element)
@@ -627,6 +630,8 @@ class SceneElementWidget(QWidget):
         self._element.ref = storyline.id
         self._btnStorylineLink.setIcon(IconRegistry.from_name(storyline.icon, storyline.icon_color))
         qtanim.glow(self._btnStorylineLink, color=QColor(storyline.icon_color))
+
+        self.storylineSelected.emit(storyline)
 
     def _arrowToggled(self, degree: int, state: int):
         self._element.arrows[degree] = state
@@ -987,6 +992,7 @@ class AbstractSceneElementsEditor(QWidget):
 
 class SceneStorylineEditor(AbstractSceneElementsEditor):
     outcomeChanged = pyqtSignal()
+    storylineLinked = pyqtSignal(SceneElementWidget, Plot)
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -1011,6 +1017,7 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
                     continue
                 else:
                     placeholder = EffectElementEditor(self._novel, row, col)
+                placeholder.storylineSelected.connect(partial(self.storylineLinked.emit, placeholder))
                 self._wdgElements.layout().addWidget(placeholder, row, col, 1, 1)
         self._wdgElements.layout().addWidget(vline(), 0, 3, 3, 1)
         self._wdgElements.layout().addWidget(spacer(), 0, self._col, 1, 1)
