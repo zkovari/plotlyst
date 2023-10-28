@@ -23,6 +23,7 @@ from typing import Optional
 import emoji
 import qtanim
 from PyQt6.QtCore import QObject, pyqtSignal
+from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QTableView
 from overrides import overrides
 from qtanim import fade_in
@@ -46,7 +47,7 @@ from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEdit
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
 from src.main.python.plotlyst.view.widget.scene.editor import ScenePurposeSelectorWidget, ScenePurposeTypeButton, \
-    SceneStorylineEditor, SceneAgendaEditor
+    SceneStorylineEditor, SceneAgendaEditor, SceneElementWidget
 from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotLabels, \
     ScenePlotSelectorMenu
 from src.main.python.plotlyst.view.widget.scenes import SceneTagSelector
@@ -144,13 +145,15 @@ class SceneEditor(QObject, EventListener):
                                          tooltip='Link storylines to this scene', transparent_=True)
         self._btnPlotSelector.installEventFilter(OpacityEventFilter(self._btnPlotSelector, leaveOpacity=0.8))
         self._plotSelectorMenu = ScenePlotSelectorMenu(self.novel, self._btnPlotSelector)
-        self._plotSelectorMenu.plotSelected.connect(self._plot_selected)
+        self._plotSelectorMenu.plotSelected.connect(self._storyline_selected)
         hbox(self.ui.wdgStorylines)
         self.ui.wdgMidbar.layout().insertWidget(1, self._btnPlotSelector)
 
         self._storylineEditor = SceneStorylineEditor(self.novel)
         self._storylineEditor.outcomeChanged.connect(self._btnPurposeType.refresh)
         self._storylineEditor.outcomeChanged.connect(self.ui.wdgSceneStructure.refreshOutcome)
+        self._storylineEditor.storylineLinked.connect(self._storyline_linked)
+        self._storylineEditor.storylineEditRequested.connect(self._storyline_edit)
         self.ui.tabStorylines.layout().addWidget(self._storylineEditor)
 
         self._agencyEditor = SceneAgendaEditor(self.novel)
@@ -293,19 +296,34 @@ class SceneEditor(QObject, EventListener):
             self.ui.wdgPov.reset()
             self.ui.wdgPov.btnAvatar.setToolTip('Select point of view character')
 
-    def _plot_selected(self, plot: Plot):
-        plotRef = ScenePlotReference(plot)
+    def _storyline_selected(self, storyline: Plot) -> ScenePlotLabels:
+        plotRef = ScenePlotReference(storyline)
         self.scene.plot_values.append(plotRef)
-        self._add_plot_ref(plotRef)
+        return self._add_plot_ref(plotRef)
 
-    def _plot_removed(self, labels: ScenePlotLabels, plotRef: ScenePlotReference):
+    def _storyline_removed(self, labels: ScenePlotLabels, plotRef: ScenePlotReference):
         fade_out_and_gc(self.ui.wdgStorylines.layout(), labels)
         self.scene.plot_values.remove(plotRef)
 
-    def _add_plot_ref(self, plotRef: ScenePlotReference):
+    def _storyline_linked(self, element: SceneElementWidget, storyline: Plot):
+        if next((x for x in self.scene.plot_values if x.plot.id == storyline.id), None) is None:
+            labels = self._storyline_selected(storyline)
+            qtanim.glow(labels.icon(), loop=3, color=QColor(storyline.icon_color))
+
+    def _storyline_edit(self, element: SceneElementWidget, storyline: Plot):
+        for i in range(self.ui.wdgStorylines.layout().count()):
+            item = self.ui.wdgStorylines.layout().itemAt(i)
+            if item and isinstance(item.widget(),
+                                   ScenePlotLabels) and item.widget().storylineRef().plot.id == storyline.id:
+                item.widget().activate()
+
+    def _add_plot_ref(self, plotRef: ScenePlotReference) -> ScenePlotLabels:
         labels = ScenePlotLabels(plotRef)
-        labels.reset.connect(partial(self._plot_removed, labels, plotRef))
+        labels.reset.connect(partial(self._storyline_removed, labels, plotRef))
         self.ui.wdgStorylines.layout().addWidget(labels)
+        self._btnPlotSelector.setText('')
+
+        return labels
 
     def _title_edited(self, text: str):
         self.scene.title = text
