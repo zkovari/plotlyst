@@ -164,7 +164,7 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._btnPurposeType.refresh)
         self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._storylineEditor.refresh)
 
-        self.ui.tabWidget.setCurrentWidget(self.ui.tabStorylines)
+        self.ui.tabWidget.setCurrentWidget(self.ui.tabCharacter)
         self.ui.tabWidget.currentChanged.connect(self._page_toggled)
 
         self.repo = RepositoryPersistenceManager.instance()

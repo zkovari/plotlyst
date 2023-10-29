@@ -1147,7 +1147,7 @@ class CharacterTab(QAbstractButton):
         self._btnCharacterSelector = CharacterSelectorButton(self._novel, parent=self)
         self.layout().addWidget(self._btnCharacterSelector, alignment=Qt.AlignmentFlag.AlignTop)
         self.setMinimumHeight(80)
-        self.setMaximumWidth(self._btnCharacterSelector.sizeHint().width() + 5)
+        # self.setMaximumWidth(self._btnCharacterSelector.sizeHint().width() + 5)
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
@@ -1159,6 +1159,9 @@ class CharacterTab(QAbstractButton):
             painter.setBrush(QColor(RELAXED_WHITE_COLOR))
 
         painter.drawRoundedRect(event.rect(), 4, 4)
+
+    def updateAvailableCharacters(self, characters: List[Character]):
+        self._btnCharacterSelector.characterSelectorMenu().setCharacters(characters)
 
 
 class CharacterTabBar(QScrollArea):
@@ -1186,8 +1189,8 @@ class CharacterTabBar(QScrollArea):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         # self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-    def addNewTab(self):
-        tab = CharacterTab(self._novel)
+    def addNewTab(self, *args):
+        tab = self._newTab(*args)
         self._tabs.append(tab)
         self._tabGroup.addButton(tab)
         if len(self._tabs) == 1:
@@ -1199,16 +1202,16 @@ class CharacterTabBar(QScrollArea):
         pass
         # self._btnCharacterSelector.setCharacter(character)
 
-    def setCharacters(self, characters: List[Character]):
-        pass
-        # self._btnCharacterSelector.characterSelectorMenu().setCharacters(characters)
+    def updateAvailableCharacters(self, characters: List[Character]):
+        for tab in self._tabs:
+            tab.updateAvailableCharacters(characters)
 
     def reset(self):
         self._tabs.clear()
         clear_layout(self._wdgCentral)
         btnPlus = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True, tooltip=self._btnPlusTooltip)
         btnPlus.installEventFilter(OpacityEventFilter(btnPlus))
-        btnPlus.clicked.connect(self.addNewTab)
+        btnPlus.clicked.connect(self._addNewClicked)
         self._wdgCentral.layout().addWidget(btnPlus, alignment=Qt.AlignmentFlag.AlignCenter)
         self._wdgCentral.layout().addWidget(vspacer())
 
@@ -1219,8 +1222,28 @@ class CharacterTabBar(QScrollArea):
         self._character = character
         self.characterChanged.emit(self._character)
 
+    def _addNewClicked(self):
+        self.addNewTab()
+
+    def _newTab(self, *args) -> CharacterTab:
+        return CharacterTab(*args, novel=self._novel)
+
+
+class SceneAgendaTab(CharacterTab):
+    def __init__(self, agenda: SceneStructureAgenda, novel: Novel, parent=None):
+        super().__init__(novel, parent)
+        self._agenda = agenda
+        if self._agenda.character_id:
+            self._btnCharacterSelector.setCharacter(self._agenda.character(self._novel))
+
+
+    def agenda(self) -> SceneStructureAgenda:
+        return self._agenda
+
 
 class SceneAgendasTabBar(CharacterTabBar):
+    agendaToggled = pyqtSignal(SceneStructureAgenda, bool)
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(novel, parent)
         self._scene: Optional[Scene] = None
@@ -1231,7 +1254,20 @@ class SceneAgendasTabBar(CharacterTabBar):
         self.reset()
 
         for agenda in self._scene.agendas:
-            self.addNewTab()
+            self.addNewTab(agenda)
+
+    @overrides
+    def _addNewClicked(self):
+        agenda = SceneStructureAgenda()
+        self._scene.agendas.append(agenda)
+        self.addNewTab(agenda)
+
+    @overrides
+    def _newTab(self, *args) -> CharacterTab:
+        tab = SceneAgendaTab(*args, novel=self._novel)
+        tab.toggled.connect(partial(self.agendaToggled.emit, tab.agenda()))
+
+        return tab
 
 
 class SceneAgendaEditor(AbstractSceneElementsEditor):
@@ -1324,10 +1360,6 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
                 wdg: AgencyTextBasedElementEditor = item.widget()
                 wdg.setElement(element)
 
-        # if scene.agendas[0].character_id:
-        #     self._characterTabbar.setCharacter(scene.agendas[0].character(self._novel))
-        # else:
-        #     self._characterTabbar.reset()
         self._updateElementsVisibility(agenda)
 
     def updateAvailableCharacters(self):
@@ -1336,7 +1368,7 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
             characters.append(self._scene.pov)
         characters.extend(self._scene.characters)
 
-        self._characterTabbar.setCharacters(characters)
+        self._characterTabbar.updateAvailableCharacters(characters)
 
     def setUnsetCharacterSlot(self, func):
         self._unsetCharacterSlot = func
@@ -1372,7 +1404,6 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         elements_visible = agenda.character_id is not None
         self._btnCharacterDelegate.setVisible(not elements_visible)
         self._wdgElements.setVisible(elements_visible)
-        # self._wdgElementsBottomRow.setVisible(elements_visible)
-        # self._lblBottom.setVisible(elements_visible)
         self._emotionEditor.setVisible(elements_visible)
         self._motivationEditor.setVisible(elements_visible)
+        self._conflictEditor.setVisible(elements_visible)
