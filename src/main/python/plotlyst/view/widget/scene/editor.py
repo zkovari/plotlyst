@@ -22,16 +22,16 @@ from typing import List, Optional, Dict
 
 import qtanim
 from PyQt6.QtCore import Qt, QSize, QEvent, pyqtSignal, QObject
-from PyQt6.QtGui import QEnterEvent, QIcon, QMouseEvent, QColor, QCursor, QPalette, QPaintEvent
+from PyQt6.QtGui import QEnterEvent, QIcon, QMouseEvent, QColor, QCursor, QPalette, QPaintEvent, QPainter, QPen
 from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QStackedWidget, QGridLayout, \
-    QToolButton, QAbstractButton, QScrollArea
+    QToolButton, QAbstractButton, QScrollArea, QButtonGroup
 from overrides import overrides
 from qthandy import vbox, vspacer, transparent, sp, line, incr_font, hbox, pointy, vline, retain_when_hidden, margins, \
-    spacer, underline, bold, grid, gc
+    spacer, underline, bold, grid, gc, clear_layout
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import raise_unrecognized_arg, CONFLICT_SELF_COLOR
+from src.main.python.plotlyst.common import raise_unrecognized_arg, CONFLICT_SELF_COLOR, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Scene, Novel, ScenePurpose, advance_story_scene_purpose, \
     ScenePurposeType, reaction_story_scene_purpose, character_story_scene_purpose, setup_story_scene_purpose, \
     emotion_story_scene_purpose, exposition_story_scene_purpose, scene_purposes, Character, StoryElement, \
@@ -41,7 +41,7 @@ from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import DelayedSignalSlotConnector, action, wrap, label, scrolled, \
-    ButtonPressResizeEventFilter, push_btn, tool_btn
+    ButtonPressResizeEventFilter, push_btn, tool_btn, insert_before_the_end
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
@@ -1142,13 +1142,23 @@ class CharacterTab(QAbstractButton):
         self._character: Optional[Character] = None
         vbox(self, 0, 2)
 
+        self.setCheckable(True)
+
         self._btnCharacterSelector = CharacterSelectorButton(self._novel, parent=self)
         self.layout().addWidget(self._btnCharacterSelector, alignment=Qt.AlignmentFlag.AlignTop)
         self.setMinimumHeight(80)
+        self.setMaximumWidth(self._btnCharacterSelector.sizeHint().width() + 5)
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
-        pass
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        painter.setPen(QPen(Qt.GlobalColor.lightGray, 1))
+        if self.isChecked():
+            painter.setBrush(QColor(RELAXED_WHITE_COLOR))
+
+        painter.drawRoundedRect(event.rect(), 4, 4)
 
 
 class CharacterTabBar(QScrollArea):
@@ -1159,35 +1169,31 @@ class CharacterTabBar(QScrollArea):
         self._novel = novel
         self._character: Optional[Character] = None
         self.setWidgetResizable(True)
-        # sp(self).v_max()
-        # self.setShape(QTabBar.Shape.RoundedWest)
+        self._btnPlusTooltip = 'Add new character tab'
+
         self._wdgCentral = QWidget()
-        self.setWidget(self._wdgCentral)
         vbox(self._wdgCentral)
+        self.setWidget(self._wdgCentral)
+        sp(self).v_exp()
+        sp(self._wdgCentral).v_exp()
         self._tabs: List[CharacterTab] = []
+        self._tabGroup = QButtonGroup()
+        self._tabGroup.setExclusive(True)
 
         self._count = 2
 
-        # self.setMaximumWidth(40)
         sp(self).h_max()
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         # self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-        # self._btnCharacterSelector = CharacterSelectorButton(self._novel, parent=self)
-        self.addNewTab()
-        self.addNewTab()
-        self.addNewTab()
-
-        # self._btnCharacterSelector.characterSelected.connect(self._characterSelected)
-
-    # @overrides
-    # def tabSizeHint(self, index: int) -> QSize:
-    #     return QSize(self._btnCharacterSelector.sizeHint().width(), 80)
-
     def addNewTab(self):
         tab = CharacterTab(self._novel)
         self._tabs.append(tab)
-        self._wdgCentral.layout().addWidget(tab)
+        self._tabGroup.addButton(tab)
+        if len(self._tabs) == 1:
+            tab.setChecked(True)
+
+        insert_before_the_end(self._wdgCentral, tab, 2)
 
     def setCharacter(self, character: Character):
         pass
@@ -1198,8 +1204,13 @@ class CharacterTabBar(QScrollArea):
         # self._btnCharacterSelector.characterSelectorMenu().setCharacters(characters)
 
     def reset(self):
-        pass
-        # self._btnCharacterSelector.clear()
+        self._tabs.clear()
+        clear_layout(self._wdgCentral)
+        btnPlus = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True, tooltip=self._btnPlusTooltip)
+        btnPlus.installEventFilter(OpacityEventFilter(btnPlus))
+        btnPlus.clicked.connect(self.addNewTab)
+        self._wdgCentral.layout().addWidget(btnPlus, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._wdgCentral.layout().addWidget(vspacer())
 
     def popup(self):
         self._btnCharacterSelector.characterSelectorMenu().exec()
@@ -1209,19 +1220,32 @@ class CharacterTabBar(QScrollArea):
         self.characterChanged.emit(self._character)
 
 
+class SceneAgendasTabBar(CharacterTabBar):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(novel, parent)
+        self._scene: Optional[Scene] = None
+        self._btnPlusTooltip = 'Add new character agency'
+
+    def setScene(self, scene: Scene):
+        self._scene = scene
+        self.reset()
+
+        for agenda in self._scene.agendas:
+            self.addNewTab()
+
+
 class SceneAgendaEditor(AbstractSceneElementsEditor):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
 
-        self._characterTabbar = CharacterTabBar(self._novel)
+        self._characterTabbar = SceneAgendasTabBar(self._novel)
         self._characterTabbar.characterChanged.connect(self._characterSelected)
         self._btnAddAgency = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True)
         self._btnAddAgency.clicked.connect(self._characterTabbar.addNewTab)
         # self.layout().insertWidget(0, group(self._characterTabbar, self._btnAddAgency, vertical=False),
         #                            alignment=Qt.AlignmentFlag.AlignTop)
-        self.layout().insertWidget(0, self._characterTabbar,
-                                   alignment=Qt.AlignmentFlag.AlignTop)
+        self.layout().insertWidget(0, self._characterTabbar)
 
         self._unsetCharacterSlot = None
         self._btnCharacterDelegate = push_btn(IconRegistry.from_name('fa5s.arrow-circle-left'),
@@ -1266,6 +1290,8 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         super().setScene(scene)
         agenda = scene.agendas[0]
 
+        self._characterTabbar.setScene(scene)
+
         if agenda.emotion is None:
             self._emotionEditor.reset()
         else:
@@ -1298,10 +1324,10 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
                 wdg: AgencyTextBasedElementEditor = item.widget()
                 wdg.setElement(element)
 
-        if scene.agendas[0].character_id:
-            self._characterTabbar.setCharacter(scene.agendas[0].character(self._novel))
-        else:
-            self._characterTabbar.reset()
+        # if scene.agendas[0].character_id:
+        #     self._characterTabbar.setCharacter(scene.agendas[0].character(self._novel))
+        # else:
+        #     self._characterTabbar.reset()
         self._updateElementsVisibility(agenda)
 
     def updateAvailableCharacters(self):
