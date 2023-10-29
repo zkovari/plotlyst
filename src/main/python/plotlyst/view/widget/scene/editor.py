@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QSt
 from overrides import overrides
 from qthandy import vbox, vspacer, transparent, sp, line, incr_font, hbox, pointy, vline, retain_when_hidden, margins, \
     spacer, underline, bold, grid, gc, clear_layout
-from qthandy.filter import OpacityEventFilter
+from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import raise_unrecognized_arg, CONFLICT_SELF_COLOR, RELAXED_WHITE_COLOR
@@ -1247,6 +1247,15 @@ class SceneAgendaTab(CharacterTab):
         return self._agenda
 
     @overrides
+    def updateAvailableCharacters(self, characters: List[Character]):
+        super().updateAvailableCharacters(characters)
+        if not characters:
+            self._btnCharacterSelector.setDisabled(True)
+
+    def setUnsetCharacterSlot(self, slot):
+        self._btnCharacterSelector.installEventFilter(DisabledClickEventFilter(self._btnCharacterSelector, slot))
+
+    @overrides
     def _characterSelected(self, character: Character):
         super()._characterSelected(character)
         self._agenda.set_character(character)
@@ -1270,6 +1279,8 @@ class SceneAgendasTabBar(CharacterTabBar):
 
     def setUnsetCharacterSlot(self, slot):
         self._unsetCharacterSlot = slot
+        for tab in self._tabs:
+            tab.setUnsetCharacterSlot(self._unsetCharacterSlot)
 
     @overrides
     def _addNewClicked(self):
@@ -1281,6 +1292,7 @@ class SceneAgendasTabBar(CharacterTabBar):
     def _newTab(self, *args) -> CharacterTab:
         tab = SceneAgendaTab(*args, novel=self._novel)
         tab.toggled.connect(partial(self.agendaToggled.emit, tab.agenda()))
+        tab.setUnsetCharacterSlot(self._unsetCharacterSlot)
 
         return tab
 
