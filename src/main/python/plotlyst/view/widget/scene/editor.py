@@ -1136,6 +1136,8 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
 
 
 class CharacterTab(QAbstractButton):
+    characterChanged = pyqtSignal(Character)
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
@@ -1145,9 +1147,9 @@ class CharacterTab(QAbstractButton):
         self.setCheckable(True)
 
         self._btnCharacterSelector = CharacterSelectorButton(self._novel, parent=self)
+        self._btnCharacterSelector.characterSelected.connect(self._characterSelected)
         self.layout().addWidget(self._btnCharacterSelector, alignment=Qt.AlignmentFlag.AlignTop)
         self.setMinimumHeight(80)
-        # self.setMaximumWidth(self._btnCharacterSelector.sizeHint().width() + 5)
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
@@ -1163,6 +1165,13 @@ class CharacterTab(QAbstractButton):
     def updateAvailableCharacters(self, characters: List[Character]):
         self._btnCharacterSelector.characterSelectorMenu().setCharacters(characters)
 
+    def popup(self):
+        self._btnCharacterSelector.characterSelectorMenu().exec()
+
+    def _characterSelected(self, character: Character):
+        self._character = character
+        self.characterChanged.emit(self._character)
+
 
 class CharacterTabBar(QScrollArea):
     characterChanged = pyqtSignal(Character)
@@ -1170,9 +1179,9 @@ class CharacterTabBar(QScrollArea):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
-        self._character: Optional[Character] = None
         self.setWidgetResizable(True)
         self._btnPlusTooltip = 'Add new character tab'
+        self._availableCharacter: List[Character] = []
 
         self._wdgCentral = QWidget()
         vbox(self._wdgCentral)
@@ -1183,14 +1192,13 @@ class CharacterTabBar(QScrollArea):
         self._tabGroup = QButtonGroup()
         self._tabGroup.setExclusive(True)
 
-        self._count = 2
-
         sp(self).h_max()
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         # self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
     def addNewTab(self, *args):
         tab = self._newTab(*args)
+        tab.updateAvailableCharacters(self._availableCharacter)
         self._tabs.append(tab)
         self._tabGroup.addButton(tab)
         if len(self._tabs) == 1:
@@ -1203,6 +1211,7 @@ class CharacterTabBar(QScrollArea):
         # self._btnCharacterSelector.setCharacter(character)
 
     def updateAvailableCharacters(self, characters: List[Character]):
+        self._availableCharacter = characters
         for tab in self._tabs:
             tab.updateAvailableCharacters(characters)
 
@@ -1216,11 +1225,9 @@ class CharacterTabBar(QScrollArea):
         self._wdgCentral.layout().addWidget(vspacer())
 
     def popup(self):
-        self._btnCharacterSelector.characterSelectorMenu().exec()
-
-    def _characterSelected(self, character: Character):
-        self._character = character
-        self.characterChanged.emit(self._character)
+        btn = self._tabGroup.checkedButton()
+        if btn:
+            btn.popup()
 
     def _addNewClicked(self):
         self.addNewTab()
@@ -1236,9 +1243,13 @@ class SceneAgendaTab(CharacterTab):
         if self._agenda.character_id:
             self._btnCharacterSelector.setCharacter(self._agenda.character(self._novel))
 
-
     def agenda(self) -> SceneStructureAgenda:
         return self._agenda
+
+    @overrides
+    def _characterSelected(self, character: Character):
+        super()._characterSelected(character)
+        self._agenda.set_character(character)
 
 
 class SceneAgendasTabBar(CharacterTabBar):
@@ -1247,6 +1258,7 @@ class SceneAgendasTabBar(CharacterTabBar):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(novel, parent)
         self._scene: Optional[Scene] = None
+        self._unsetCharacterSlot = None
         self._btnPlusTooltip = 'Add new character agency'
 
     def setScene(self, scene: Scene):
@@ -1255,6 +1267,9 @@ class SceneAgendasTabBar(CharacterTabBar):
 
         for agenda in self._scene.agendas:
             self.addNewTab(agenda)
+
+    def setUnsetCharacterSlot(self, slot):
+        self._unsetCharacterSlot = slot
 
     @overrides
     def _addNewClicked(self):
@@ -1372,6 +1387,7 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
 
     def setUnsetCharacterSlot(self, func):
         self._unsetCharacterSlot = func
+        self._characterTabbar.setUnsetCharacterSlot(self._unsetCharacterSlot)
 
     def povChangedEvent(self, pov: Character):
         self._scene.agendas[0].set_character(pov)
