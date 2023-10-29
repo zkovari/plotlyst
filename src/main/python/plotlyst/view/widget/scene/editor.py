@@ -1187,6 +1187,10 @@ class CharacterTab(QAbstractButton):
     def popup(self):
         self._btnCharacterSelector.characterSelectorMenu().exec()
 
+    def setCharacter(self, character: Character):
+        self._characterSelected(character)
+        self._btnCharacterSelector.setCharacter(character)
+
     def _characterSelected(self, character: Character):
         self._character = character
         self.characterChanged.emit(self._character)
@@ -1231,7 +1235,8 @@ class CharacterTabBar(QScrollArea):
         insert_before_the_end(self._wdgCentral, tab, 2)
 
     def setCharacter(self, character: Character):
-        pass
+        tab: CharacterTab = self._tabGroup.checkedButton()
+        tab.setCharacter(character)
 
     def updateAvailableCharacters(self, characters: List[Character]):
         self._availableCharacter = characters
@@ -1279,7 +1284,6 @@ class SceneAgendaTab(CharacterTab):
 
     @overrides
     def _characterSelected(self, character: Character):
-        print(f'char selected {character.name}')
         self._agenda.set_character(character)
         super()._characterSelected(character)
 
@@ -1395,7 +1399,8 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         self._characterTabbar.setUnsetCharacterSlot(self._unsetCharacterSlot)
 
     def povChangedEvent(self, pov: Character):
-        self._characterTabbar.setCharacter(pov)
+        if self._agenda.character_id is None:
+            self._characterTabbar.setCharacter(pov)
 
     def _characterSelected(self, character: Character):
         self._updateElementsVisibility()
@@ -1403,8 +1408,6 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
     def _agendaToggled(self, agenda: SceneStructureAgenda, toggled: bool):
         if not toggled:
             return
-
-        print(f'agenda toggled {agenda.character_id}')
 
         self._agenda = agenda
         if agenda.emotion is None:
@@ -1450,7 +1453,6 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
 
     def _updateElementsVisibility(self):
         elements_visible = self._agenda.character_id is not None
-        print(f'update visib {self._agenda.character_id}')
         self._btnCharacterDelegate.setVisible(not elements_visible)
         self._wdgElements.setVisible(elements_visible)
         self._emotionEditor.setVisible(elements_visible)
