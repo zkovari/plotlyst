@@ -1222,6 +1222,7 @@ class CharacterTabBar(QScrollArea):
     def addNewTab(self, *args):
         tab = self._newTab(*args)
         tab.updateAvailableCharacters(self._availableCharacter)
+        tab.characterChanged.connect(self.characterChanged)
         self._tabs.append(tab)
         self._tabGroup.addButton(tab)
         if len(self._tabs) == 1:
@@ -1231,7 +1232,6 @@ class CharacterTabBar(QScrollArea):
 
     def setCharacter(self, character: Character):
         pass
-        # self._btnCharacterSelector.setCharacter(character)
 
     def updateAvailableCharacters(self, characters: List[Character]):
         self._availableCharacter = characters
@@ -1272,16 +1272,16 @@ class SceneAgendaTab(CharacterTab):
     @overrides
     def updateAvailableCharacters(self, characters: List[Character]):
         super().updateAvailableCharacters(characters)
-        if not characters:
-            self._btnCharacterSelector.setDisabled(True)
+        self._btnCharacterSelector.setEnabled(len(characters) > 0)
 
     def setUnsetCharacterSlot(self, slot):
         self._btnCharacterSelector.installEventFilter(DisabledClickEventFilter(self._btnCharacterSelector, slot))
 
     @overrides
     def _characterSelected(self, character: Character):
-        super()._characterSelected(character)
+        print(f'char selected {character.name}')
         self._agenda.set_character(character)
+        super()._characterSelected(character)
 
 
 class SceneAgendasTabBar(CharacterTabBar):
@@ -1395,8 +1395,6 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         self._characterTabbar.setUnsetCharacterSlot(self._unsetCharacterSlot)
 
     def povChangedEvent(self, pov: Character):
-        self._agenda.set_character(pov)
-        self._updateElementsVisibility()
         self._characterTabbar.setCharacter(pov)
 
     def _characterSelected(self, character: Character):
@@ -1405,6 +1403,8 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
     def _agendaToggled(self, agenda: SceneStructureAgenda, toggled: bool):
         if not toggled:
             return
+
+        print(f'agenda toggled {agenda.character_id}')
 
         self._agenda = agenda
         if agenda.emotion is None:
@@ -1450,6 +1450,7 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
 
     def _updateElementsVisibility(self):
         elements_visible = self._agenda.character_id is not None
+        print(f'update visib {self._agenda.character_id}')
         self._btnCharacterDelegate.setVisible(not elements_visible)
         self._wdgElements.setVisible(elements_visible)
         self._emotionEditor.setVisible(elements_visible)

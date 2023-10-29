@@ -29,7 +29,7 @@ from overrides import overrides
 from qtanim import fade_in
 from qthandy import underline, incr_font, margins, pointy, hbox, clear_layout, busy
 from qthandy.filter import OpacityEventFilter
-from qtmenu import MenuWidget, ScrollableMenuWidget
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, Document, StoryBeat, \
@@ -41,10 +41,10 @@ from src.main.python.plotlyst.events import NovelAboutToSyncEvent, SceneStoryBea
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, action, set_tab_icon, \
+from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, set_tab_icon, \
     push_btn, fade_out_and_gc
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
-from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
 from src.main.python.plotlyst.view.widget.scene.editor import ScenePurposeSelectorWidget, ScenePurposeTypeButton, \
@@ -182,10 +182,6 @@ class SceneEditor(QObject, EventListener):
         self.ui.treeScenes.refresh()
         self.ui.treeScenes.selectScene(self.scene)
 
-        if self.scene.pov:
-            for agenda in self.scene.agendas:
-                if not agenda.character_id:
-                    agenda.character_id = self.scene.pov.id
         self._update_pov_avatar()
         self.ui.sbDay.setValue(self.scene.day)
 
