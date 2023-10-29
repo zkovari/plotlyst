@@ -46,6 +46,7 @@ class MotivationDisplay(QWidget, Ui_GoalReferenceStakesEditor):
         self.setupUi(self)
         self._novel: Optional[Novel] = None
         self._scene: Optional[Scene] = None
+        self._agenda: Optional[SceneStructureAgenda] = None
         bold(self.lblTitle)
 
         self._sliders: Dict[Motivation, QSlider] = {
@@ -70,18 +71,22 @@ class MotivationDisplay(QWidget, Ui_GoalReferenceStakesEditor):
 
     def setScene(self, scene: Scene):
         self._scene = scene
+
+    def setAgenda(self, agenda: SceneStructureAgenda):
+        self._agenda = agenda
         self._refresh()
 
     def _refresh(self):
         for slider in self._sliders.values():
             slider.setValue(0)
         for scene in self._novel.scenes:
-            if scene.agendas and scene.agendas[0].motivations:
-                for mot, v in scene.agendas[0].motivations.items():
-                    slider = self._sliders[Motivation(mot)]
-                    slider.setValue(slider.value() + v)
             if scene is self._scene:
                 break
+            for agenda in scene.agendas:
+                if agenda.character_id and agenda.character_id == self._agenda.character_id:
+                    for mot, v in agenda.motivations.items():
+                        slider = self._sliders[Motivation(mot)]
+                        slider.setValue(slider.value() + v)
 
 
 class MotivationChargeLabel(QWidget):
@@ -348,6 +353,19 @@ class SceneAgendaMotivationEditor(AbstractAgencyEditor):
     def setScene(self, scene: Scene):
         self._motivationDisplay.setScene(scene)
 
+    def setAgenda(self, agenda: SceneStructureAgenda):
+        self._motivationDisplay.setAgenda(agenda)
+
+        if agenda.motivations:
+            values: Dict[Motivation, int] = {}
+            for k, v in agenda.motivations.items():
+                motivation = Motivation(k)
+                values[motivation] = v
+
+            self.setValues(values)
+        else:
+            self.reset()
+
     def activate(self):
         self._activated = True
         self._btnReset.setVisible(True)
@@ -447,11 +465,11 @@ class SceneAgendaConflictEditor(AbstractAgencyEditor):
             self.reset()
 
         for ref in agenda.conflict_references:
-            conflictSelector = CharacterConflictSelector(self._novel, self._scene)
+            conflictSelector = CharacterConflictSelector(self._novel, self._scene, self._agenda)
             conflictSelector.setConflict(ref.conflict(self._novel), ref)
             self._wdgConflicts.layout().addWidget(conflictSelector)
 
-        conflictSelector = CharacterConflictSelector(self._novel, self._scene)
+        conflictSelector = CharacterConflictSelector(self._novel, self._scene, self._agenda)
         conflictSelector.conflictSelected.connect(self._conflictSelected)
         self._wdgConflicts.layout().addWidget(conflictSelector, alignment=Qt.AlignmentFlag.AlignLeft)
 

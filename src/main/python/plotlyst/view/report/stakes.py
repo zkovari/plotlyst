@@ -35,7 +35,7 @@ from src.main.python.plotlyst.view.widget.chart import BaseChart
 
 class StakesReport(AbstractReport, Ui_StakesReport):
     def __init__(self, novel: Novel, parent=None):
-        super(StakesReport, self).__init__(novel, parent)
+        super().__init__(novel, parent)
         self.wdgCharacterSelector.characterToggled.connect(self._characterChanged)
         self.chartStakes = StakesChart(self.novel)
         self.chartViewStakes.setChart(self.chartStakes)
@@ -78,18 +78,19 @@ class StakesChart(BaseChart):
         char_goals: Dict[str, Dict[int, int]] = {}
 
         for i, scene in enumerate(self.novel.scenes):
-            if scene.agendas[0].character_id == character.id:
-                for goal_ref in scene.agendas[0].goal_references:
-                    stakes = goal_ref.stakes
-                    if stakes.keys():
-                        char_goals[str(goal_ref.character_goal_id)] = stakes
-                    elif str(goal_ref.character_goal_id) in char_goals.keys():
-                        stakes = char_goals[str(goal_ref.character_goal_id)]
+            for agenda in scene.agendas:
+                if agenda.character_id == character.id:
+                    for goal_ref in scene.agendas[0].goal_references:
+                        stakes = goal_ref.stakes
+                        if stakes.keys():
+                            char_goals[str(goal_ref.character_goal_id)] = stakes
+                        elif str(goal_ref.character_goal_id) in char_goals.keys():
+                            stakes = char_goals[str(goal_ref.character_goal_id)]
 
-                    for k, v in stakes.items():
-                        if v == 0:
-                            continue
-                        self._spline(splines, k).append(i + 1, v)
+                        for k, v in stakes.items():
+                            if v == 0:
+                                continue
+                            self._spline(splines, k).append(i + 1, v)
 
         for series in splines.values():
             self.addSeries(series)

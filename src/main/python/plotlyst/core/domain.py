@@ -901,7 +901,6 @@ class TagReference:
 @dataclass
 class SceneStructureAgenda(CharacterBased):
     character_id: Optional[uuid.UUID] = None
-    items: List[SceneStructureItem] = field(default_factory=list)
     conflict_references: List[ConflictReference] = field(default_factory=list)
     goal_references: List[GoalReference] = field(default_factory=list)
     intensity: int = field(default=0, metadata=config(exclude=exclude_if_empty))
@@ -1076,6 +1075,7 @@ class Scene:
     purpose: Optional[ScenePurposeType] = None
     outcome: Optional[SceneOutcome] = None
     story_elements: List[StoryElement] = field(default_factory=list)
+    structure: List[SceneStructureItem] = field(default_factory=list)
 
     def beat(self, novel: 'Novel') -> Optional[StoryBeat]:
         structure = novel.active_story_structure
@@ -2153,11 +2153,12 @@ class Novel(NovelDescriptor):
         char_ids = set()
         chars: List[Character] = []
         for scene in self.scenes:
-            if scene.agendas and scene.agendas[0].character_id and str(scene.agendas[0].character_id) not in char_ids:
-                character = scene.agendas[0].character(self)
-                if character:
-                    chars.append(character)
-                    char_ids.add(str(scene.agendas[0].character_id))
+            for agenda in scene.agendas:
+                if agenda.character_id and str(agenda.character_id) not in char_ids:
+                    character: Character = agenda.character(self)
+                    if character:
+                        chars.append(character)
+                        char_ids.add(str(character.id))
 
         return chars
 

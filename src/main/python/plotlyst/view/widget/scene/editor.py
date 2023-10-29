@@ -22,16 +22,16 @@ from typing import List, Optional, Dict
 
 import qtanim
 from PyQt6.QtCore import Qt, QSize, QEvent, pyqtSignal, QObject
-from PyQt6.QtGui import QEnterEvent, QIcon, QMouseEvent, QColor, QCursor, QPalette
-from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QStackedWidget, QTabBar, QGridLayout, \
-    QToolButton
+from PyQt6.QtGui import QEnterEvent, QIcon, QMouseEvent, QColor, QCursor, QPalette, QPaintEvent, QPainter, QPen
+from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QStackedWidget, QGridLayout, \
+    QToolButton, QAbstractButton, QScrollArea, QButtonGroup
 from overrides import overrides
 from qthandy import vbox, vspacer, transparent, sp, line, incr_font, hbox, pointy, vline, retain_when_hidden, margins, \
-    spacer, underline, bold, grid, gc
-from qthandy.filter import OpacityEventFilter
+    spacer, underline, bold, grid, gc, clear_layout, ask_confirmation
+from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import raise_unrecognized_arg, CONFLICT_SELF_COLOR
+from src.main.python.plotlyst.common import raise_unrecognized_arg, CONFLICT_SELF_COLOR, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Scene, Novel, ScenePurpose, advance_story_scene_purpose, \
     ScenePurposeType, reaction_story_scene_purpose, character_story_scene_purpose, setup_story_scene_purpose, \
     emotion_story_scene_purpose, exposition_story_scene_purpose, scene_purposes, Character, StoryElement, \
@@ -41,7 +41,7 @@ from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import DelayedSignalSlotConnector, action, wrap, label, scrolled, \
-    ButtonPressResizeEventFilter, push_btn, tool_btn
+    ButtonPressResizeEventFilter, push_btn, tool_btn, insert_before_the_end, fade_out_and_gc
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
@@ -1135,50 +1135,275 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
     #     return elementEditor
 
 
-class CharacterTabBar(QTabBar):
+class CharacterTab(QAbstractButton):
     characterChanged = pyqtSignal(Character)
+    removed = pyqtSignal()
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
         self._character: Optional[Character] = None
-        sp(self).h_max()
-        self.setShape(QTabBar.Shape.RoundedWest)
+        vbox(self, 0, 2)
+
+        self.setCheckable(True)
+        self._hovered: bool = False
+
+        self._btnRemoval = RemovalButton()
+        self._btnRemoval.setHidden(True)
+        self._removalEnabled: bool = False
+        self._btnRemoval.clicked.connect(self.removed)
 
         self._btnCharacterSelector = CharacterSelectorButton(self._novel, parent=self)
-        self.addTab('')
-
         self._btnCharacterSelector.characterSelected.connect(self._characterSelected)
+        self._wdgTop = QWidget()
+        hbox(self._wdgTop, 0)
+        self._wdgTop.layout().addWidget(self._btnCharacterSelector, alignment=Qt.AlignmentFlag.AlignLeft)
+        self._wdgTop.layout().addWidget(self._btnRemoval,
+                                        alignment=Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight)
+        self.layout().addWidget(self._wdgTop, alignment=Qt.AlignmentFlag.AlignTop)
+        self.setMinimumHeight(80)
+
+        self.toggled.connect(self._toggled)
 
     @overrides
-    def tabSizeHint(self, index: int) -> QSize:
-        return QSize(self._btnCharacterSelector.sizeHint().width(), 80)
+    def enterEvent(self, event: QEnterEvent) -> None:
+        if not self.isChecked():
+            margins(self, left=1)
+            self._hovered = True
+            self.update()
+        self._btnRemoval.setVisible(self._removalEnabled)
 
-    def setCharacter(self, character: Character):
-        self._btnCharacterSelector.setCharacter(character)
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        if not self.isChecked():
+            margins(self, left=0)
+            self._hovered = False
+            self.update()
+        self._btnRemoval.setHidden(True)
 
-    def setCharacters(self, characters: List[Character]):
+    @overrides
+    def paintEvent(self, event: QPaintEvent) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        painter.setPen(QPen(Qt.GlobalColor.lightGray, 1))
+        if self.isChecked():
+            painter.setBrush(QColor(RELAXED_WHITE_COLOR))
+        elif self._hovered:
+            painter.setBrush(QColor('lightgrey'))
+
+        painter.drawRoundedRect(event.rect(), 4, 4)
+
+    def setRemovalEnabled(self, enabled: bool):
+        self._removalEnabled = enabled
+
+    def updateAvailableCharacters(self, characters: List[Character]):
         self._btnCharacterSelector.characterSelectorMenu().setCharacters(characters)
-
-    def reset(self):
-        self._btnCharacterSelector.clear()
 
     def popup(self):
         self._btnCharacterSelector.characterSelectorMenu().exec()
 
+    def setCharacter(self, character: Character):
+        self._characterSelected(character)
+        self._btnCharacterSelector.setCharacter(character)
+
     def _characterSelected(self, character: Character):
         self._character = character
         self.characterChanged.emit(self._character)
+
+    def _toggled(self, _: bool):
+        margins(self, left=0)
+        self._hovered = False
+
+
+class CharacterTabBar(QScrollArea):
+    characterChanged = pyqtSignal(Character)
+
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+        self.setWidgetResizable(True)
+        self._btnPlusTooltip = 'Add new character tab'
+        self._removalConfirmationText = 'Remove character tab?'
+        self._availableCharacter: List[Character] = []
+
+        self._wdgCentral = QWidget()
+        vbox(self._wdgCentral)
+        self.setWidget(self._wdgCentral)
+        sp(self).v_exp()
+        sp(self._wdgCentral).v_exp()
+        self._tabs: List[CharacterTab] = []
+        self._tabGroup = QButtonGroup()
+        self._tabGroup.setExclusive(True)
+
+        sp(self).h_max()
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        # self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+    def addNewTab(self, *args):
+        tab = self._newTab(*args)
+        tab.updateAvailableCharacters(self._availableCharacter)
+        tab.characterChanged.connect(self.characterChanged)
+        tab.removed.connect(partial(self._removeTab, tab))
+        self._tabs.append(tab)
+        self._tabGroup.addButton(tab)
+        self._tabsNumberChanged()
+
+        insert_before_the_end(self._wdgCentral, tab, 2)
+
+    def setCharacter(self, character: Character):
+        tab: CharacterTab = self._tabGroup.checkedButton()
+        tab.setCharacter(character)
+
+    def updateAvailableCharacters(self, characters: List[Character]):
+        self._availableCharacter = characters
+        for tab in self._tabs:
+            tab.updateAvailableCharacters(characters)
+
+    def reset(self):
+        self._tabs.clear()
+        clear_layout(self._wdgCentral)
+        btnPlus = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True, tooltip=self._btnPlusTooltip)
+        btnPlus.installEventFilter(OpacityEventFilter(btnPlus))
+        btnPlus.clicked.connect(self._addNewClicked)
+        self._wdgCentral.layout().addWidget(btnPlus, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._wdgCentral.layout().addWidget(vspacer())
+
+    def popup(self):
+        btn = self._tabGroup.checkedButton()
+        if btn:
+            btn.popup()
+
+    def _tabsNumberChanged(self):
+        if len(self._tabs) == 1:
+            self._tabs[0].setChecked(True)
+            self._tabs[0].setRemovalEnabled(False)
+        else:
+            for tab in self._tabs:
+                tab.setRemovalEnabled(True)
+
+    def _addNewClicked(self):
+        self.addNewTab()
+
+    def _newTab(self, *args) -> CharacterTab:
+        return CharacterTab(*args, novel=self._novel)
+
+    def _removeTab(self, tab: CharacterTab) -> bool:
+        if ask_confirmation(self._removalConfirmationText):
+            self._tabs.remove(tab)
+            self._tabGroup.removeButton(tab)
+            fade_out_and_gc(self._wdgCentral, tab)
+            self._tabsNumberChanged()
+
+            return True
+
+        return False
+
+
+class SceneAgendaTab(CharacterTab):
+    resetAgenda = pyqtSignal()
+
+    def __init__(self, agenda: SceneStructureAgenda, novel: Novel, parent=None):
+        super().__init__(novel, parent)
+        self._agenda = agenda
+        if self._agenda.character_id:
+            self._btnCharacterSelector.setCharacter(self._agenda.character(self._novel))
+
+    def agenda(self) -> SceneStructureAgenda:
+        return self._agenda
+
+    @overrides
+    def updateAvailableCharacters(self, characters: List[Character]):
+        super().updateAvailableCharacters(characters)
+        self._btnCharacterSelector.setEnabled(len(characters) > 0)
+
+    def setUnsetCharacterSlot(self, slot):
+        self._btnCharacterSelector.installEventFilter(DisabledClickEventFilter(self._btnCharacterSelector, slot))
+
+    @overrides
+    def _characterSelected(self, character: Character):
+        if self._agenda.character_id != character.id:
+            if not ask_confirmation("Replace character and reset the current agency?"):
+                self._btnCharacterSelector.setCharacter(self._agenda.character(self._novel))
+                return
+
+            self.resetAgenda.emit()
+        self._agenda.set_character(character)
+        super()._characterSelected(character)
+
+
+class SceneAgendasTabBar(CharacterTabBar):
+    agendaToggled = pyqtSignal(SceneStructureAgenda, bool)
+    resetAgenda = pyqtSignal(SceneStructureAgenda)
+
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(novel, parent)
+        self._scene: Optional[Scene] = None
+        self._unsetCharacterSlot = None
+        self._btnPlusTooltip = 'Add new character agency'
+        self._removalConfirmationText = 'Remove character agency?'
+
+    def setScene(self, scene: Scene):
+        self._scene = scene
+        self.reset()
+
+        for agenda in self._scene.agendas:
+            self.addNewTab(agenda)
+
+    def setUnsetCharacterSlot(self, slot):
+        self._unsetCharacterSlot = slot
+        for tab in self._tabs:
+            tab.setUnsetCharacterSlot(self._unsetCharacterSlot)
+
+    @overrides
+    def _addNewClicked(self):
+        agenda = SceneStructureAgenda()
+        self._scene.agendas.append(agenda)
+        self.addNewTab(agenda)
+
+    @overrides
+    def _newTab(self, *args) -> CharacterTab:
+        tab = SceneAgendaTab(*args, novel=self._novel)
+        tab.toggled.connect(partial(self.agendaToggled.emit, tab.agenda()))
+        tab.resetAgenda.connect(partial(self._resetAgenda, tab.agenda()))
+        tab.setUnsetCharacterSlot(self._unsetCharacterSlot)
+
+        return tab
+
+    @overrides
+    def _removeTab(self, tab: SceneAgendaTab) -> bool:
+        agenda = tab.agenda()
+        removed = super()._removeTab(tab)
+        if removed:
+            self._scene.agendas.remove(agenda)
+
+        return removed
+
+    def _resetAgenda(self, agenda: SceneStructureAgenda):
+        agenda.emotion = None
+        agenda.intensity = 0
+        agenda.motivations.clear()
+        agenda.conflict_references.clear()
+        agenda.story_elements.clear()
+
+        self.resetAgenda.emit(agenda)
 
 
 class SceneAgendaEditor(AbstractSceneElementsEditor):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
+        self._agenda: Optional[SceneStructureAgenda] = None
 
-        self._characterTabbar = CharacterTabBar(self._novel)
+        self._characterTabbar = SceneAgendasTabBar(self._novel)
         self._characterTabbar.characterChanged.connect(self._characterSelected)
-        self.layout().insertWidget(0, self._characterTabbar, alignment=Qt.AlignmentFlag.AlignTop)
+        self._characterTabbar.agendaToggled.connect(self._agendaToggled)
+        self._characterTabbar.resetAgenda.connect(self._agendaReset)
+        self._btnAddAgency = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True)
+        self._btnAddAgency.clicked.connect(self._characterTabbar.addNewTab)
+        # self.layout().insertWidget(0, group(self._characterTabbar, self._btnAddAgency, vertical=False),
+        #                            alignment=Qt.AlignmentFlag.AlignTop)
+        self.layout().insertWidget(0, self._characterTabbar)
 
         self._unsetCharacterSlot = None
         self._btnCharacterDelegate = push_btn(IconRegistry.from_name('fa5s.arrow-circle-left'),
@@ -1221,25 +1446,46 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
     @overrides
     def setScene(self, scene: Scene):
         super().setScene(scene)
-        agenda = scene.agendas[0]
 
+        self._conflictEditor.setScene(scene)
+        self._motivationEditor.setScene(scene)
+
+        self._characterTabbar.setScene(scene)
+
+    def updateAvailableCharacters(self):
+        characters = []
+        if self._scene.pov:
+            characters.append(self._scene.pov)
+        characters.extend(self._scene.characters)
+
+        self._characterTabbar.updateAvailableCharacters(characters)
+
+    def setUnsetCharacterSlot(self, func):
+        self._unsetCharacterSlot = func
+        self._characterTabbar.setUnsetCharacterSlot(self._unsetCharacterSlot)
+
+    def povChangedEvent(self, pov: Character):
+        if self._agenda.character_id is None:
+            self._characterTabbar.setCharacter(pov)
+
+    def _characterSelected(self, character: Character):
+        self._updateElementsVisibility()
+
+    def _agendaReset(self, agenda: SceneStructureAgenda):
+        if self._agenda is agenda:
+            self._agendaToggled(agenda, True)
+
+    def _agendaToggled(self, agenda: SceneStructureAgenda, toggled: bool):
+        if not toggled:
+            return
+
+        self._agenda = agenda
         if agenda.emotion is None:
             self._emotionEditor.reset()
         else:
             self._emotionEditor.setValue(agenda.emotion)
 
-        self._motivationEditor.setScene(scene)
-        if agenda.motivations:
-            values: Dict[Motivation, int] = {}
-            for k, v in agenda.motivations.items():
-                motivation = Motivation(k)
-                values[motivation] = v
-
-            self._motivationEditor.setValues(values)
-        else:
-            self._motivationEditor.reset()
-
-        self._conflictEditor.setScene(scene)
+        self._motivationEditor.setAgenda(agenda)
         self._conflictEditor.setAgenda(agenda)
 
         for row in range(self._row):
@@ -1249,49 +1495,25 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
                     wdg: AgencyTextBasedElementEditor = item.widget()
                     wdg.setAgenda(agenda)
 
-        for element in scene.agendas[0].story_elements:
+        for element in agenda.story_elements:
             item = self._wdgElements.layout().itemAtPosition(element.row, element.col)
             if item and item.widget():
                 wdg: AgencyTextBasedElementEditor = item.widget()
                 wdg.setElement(element)
 
-        if scene.agendas[0].character_id:
-            self._characterTabbar.setCharacter(scene.agendas[0].character(self._novel))
-        else:
-            self._characterTabbar.reset()
-        self._updateElementsVisibility(agenda)
-
-    def updateAvailableCharacters(self):
-        characters = []
-        if self._scene.pov:
-            characters.append(self._scene.pov)
-        characters.extend(self._scene.characters)
-
-        self._characterTabbar.setCharacters(characters)
-
-    def setUnsetCharacterSlot(self, func):
-        self._unsetCharacterSlot = func
-
-    def povChangedEvent(self, pov: Character):
-        self._scene.agendas[0].set_character(pov)
-        self._updateElementsVisibility(self._scene.agendas[0])
-        self._characterTabbar.setCharacter(pov)
-
-    def _characterSelected(self, character: Character):
-        self._scene.agendas[0].set_character(character)
-        self._updateElementsVisibility(self._scene.agendas[0])
+        self._updateElementsVisibility()
 
     def _emotionChanged(self, emotion: int):
-        self._scene.agendas[0].emotion = emotion
+        self._agenda.emotion = emotion
 
     def _emotionReset(self):
-        self._scene.agendas[0].emotion = None
+        self._agenda.emotion = None
 
     def _motivationChanged(self, motivation: Motivation, value: int):
-        self._scene.agendas[0].motivations[motivation.value] = value
+        self._agenda.motivations[motivation.value] = value
 
     def _motivationReset(self):
-        self._scene.agendas[0].motivations.clear()
+        self._agenda.motivations.clear()
 
     def _characterDelegateClicked(self):
         if not self._scene.characters or self._scene.pov:
@@ -1299,11 +1521,10 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         else:
             self._characterTabbar.popup()
 
-    def _updateElementsVisibility(self, agenda: SceneStructureAgenda):
-        elements_visible = agenda.character_id is not None
+    def _updateElementsVisibility(self):
+        elements_visible = self._agenda.character_id is not None
         self._btnCharacterDelegate.setVisible(not elements_visible)
         self._wdgElements.setVisible(elements_visible)
-        # self._wdgElementsBottomRow.setVisible(elements_visible)
-        # self._lblBottom.setVisible(elements_visible)
         self._emotionEditor.setVisible(elements_visible)
         self._motivationEditor.setVisible(elements_visible)
+        self._conflictEditor.setVisible(elements_visible)

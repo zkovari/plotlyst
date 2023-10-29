@@ -196,10 +196,11 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
 class CharacterConflictSelector(QWidget):
     conflictSelected = pyqtSignal()
 
-    def __init__(self, novel: Novel, scene: Scene, parent=None):
+    def __init__(self, novel: Novel, scene: Scene, agenda: SceneStructureAgenda, parent=None):
         super().__init__(parent)
         self.novel = novel
         self.scene = scene
+        self.agenda = agenda
         self.conflict: Optional[Conflict] = None
         self.conflict_ref: Optional[ConflictReference] = None
         hbox(self)
@@ -229,7 +230,7 @@ class CharacterConflictSelector(QWidget):
                     ''')
 
         self.btnLinkConflict.installEventFilter(OpacityEventFilter(parent=self.btnLinkConflict))
-        self.selectorWidget = CharacterConflictWidget(self.novel, self.scene, self.scene.agendas[0])
+        self.selectorWidget = CharacterConflictWidget(self.novel, self.scene, self.agenda)
         self._menu = MenuWidget(self.btnLinkConflict)
         self._menu.addWidget(self.selectorWidget)
 
@@ -246,8 +247,8 @@ class CharacterConflictSelector(QWidget):
 
     def _conflictSelected(self):
         self._menu.hide()
-        new_conflict = self.scene.agendas[0].conflicts(self.novel)[-1]
-        new_conflict_ref = self.scene.agendas[0].conflict_references[-1]
+        new_conflict = self.agenda.conflicts(self.novel)[-1]
+        new_conflict_ref = self.agenda.conflict_references[-1]
         # self.btnLinkConflict.menu().hide()
         self.setConflict(new_conflict, new_conflict_ref)
 
@@ -262,6 +263,6 @@ class CharacterConflictSelector(QWidget):
             anim.finished.connect(self.__destroy)
 
     def __destroy(self):
-        self.scene.agendas[0].remove_conflict(self.conflict)
+        self.agenda.remove_conflict(self.conflict)
         self.parent().layout().removeWidget(self)
         gc(self)
