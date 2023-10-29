@@ -1327,6 +1327,7 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
 
         self._characterTabbar = SceneAgendasTabBar(self._novel)
         self._characterTabbar.characterChanged.connect(self._characterSelected)
+        self._characterTabbar.agendaToggled.connect(self._agendaToggled)
         self._btnAddAgency = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True)
         self._btnAddAgency.clicked.connect(self._characterTabbar.addNewTab)
         # self.layout().insertWidget(0, group(self._characterTabbar, self._btnAddAgency, vertical=False),
@@ -1374,43 +1375,11 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
     @overrides
     def setScene(self, scene: Scene):
         super().setScene(scene)
-        agenda = scene.agendas[0]
-
-        self._characterTabbar.setScene(scene)
-
-        if agenda.emotion is None:
-            self._emotionEditor.reset()
-        else:
-            self._emotionEditor.setValue(agenda.emotion)
-
-        self._motivationEditor.setScene(scene)
-        if agenda.motivations:
-            values: Dict[Motivation, int] = {}
-            for k, v in agenda.motivations.items():
-                motivation = Motivation(k)
-                values[motivation] = v
-
-            self._motivationEditor.setValues(values)
-        else:
-            self._motivationEditor.reset()
 
         self._conflictEditor.setScene(scene)
-        self._conflictEditor.setAgenda(agenda)
+        self._motivationEditor.setScene(scene)
 
-        for row in range(self._row):
-            for col in range(self._col):
-                item = self._wdgElements.layout().itemAtPosition(row, col)
-                if item and item.widget():
-                    wdg: AgencyTextBasedElementEditor = item.widget()
-                    wdg.setAgenda(agenda)
-
-        for element in scene.agendas[0].story_elements:
-            item = self._wdgElements.layout().itemAtPosition(element.row, element.col)
-            if item and item.widget():
-                wdg: AgencyTextBasedElementEditor = item.widget()
-                wdg.setElement(element)
-
-        self._updateElementsVisibility(agenda)
+        self._characterTabbar.setScene(scene)
 
     def updateAvailableCharacters(self):
         characters = []
@@ -1432,6 +1401,42 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
     def _characterSelected(self, character: Character):
         self._scene.agendas[0].set_character(character)
         self._updateElementsVisibility(self._scene.agendas[0])
+
+    def _agendaToggled(self, agenda: SceneStructureAgenda, toggled: bool):
+        if not toggled:
+            return
+
+        if agenda.emotion is None:
+            self._emotionEditor.reset()
+        else:
+            self._emotionEditor.setValue(agenda.emotion)
+
+        if agenda.motivations:
+            values: Dict[Motivation, int] = {}
+            for k, v in agenda.motivations.items():
+                motivation = Motivation(k)
+                values[motivation] = v
+
+            self._motivationEditor.setValues(values)
+        else:
+            self._motivationEditor.reset()
+
+        self._conflictEditor.setAgenda(agenda)
+
+        for row in range(self._row):
+            for col in range(self._col):
+                item = self._wdgElements.layout().itemAtPosition(row, col)
+                if item and item.widget():
+                    wdg: AgencyTextBasedElementEditor = item.widget()
+                    wdg.setAgenda(agenda)
+
+        for element in agenda.story_elements:
+            item = self._wdgElements.layout().itemAtPosition(element.row, element.col)
+            if item and item.widget():
+                wdg: AgencyTextBasedElementEditor = item.widget()
+                wdg.setElement(element)
+
+        self._updateElementsVisibility(agenda)
 
     def _emotionChanged(self, emotion: int):
         self._scene.agendas[0].emotion = emotion
