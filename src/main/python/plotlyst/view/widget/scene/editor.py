@@ -27,7 +27,7 @@ from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QSt
     QToolButton, QAbstractButton, QScrollArea, QButtonGroup
 from overrides import overrides
 from qthandy import vbox, vspacer, transparent, sp, line, incr_font, hbox, pointy, vline, retain_when_hidden, margins, \
-    spacer, underline, bold, grid, gc, clear_layout, ask_confirmation
+    spacer, underline, bold, grid, gc, clear_layout, ask_confirmation, decr_icon
 from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
@@ -70,6 +70,11 @@ class SceneMiniEditor(QWidget, EventListener):
         sp(self._lblScene).h_max()
         self._menuScenes = MenuWidget(self._btnScenes)
 
+        self._charSelector = CharacterSelectorButton(self._novel, self, opacityEffectEnabled=False, iconSize=24)
+        self._charSelector.setToolTip('Point of view character')
+        decr_icon(self._charSelector)
+        self._charSelector.characterSelected.connect(self._povChanged)
+
         self._textSynopsis = QTextEdit()
         self._textSynopsis.setProperty('white-bg', True)
         self._textSynopsis.setProperty('rounded', True)
@@ -77,10 +82,11 @@ class SceneMiniEditor(QWidget, EventListener):
         self._textSynopsis.setMaximumSize(200, 200)
 
         self._layout = vbox(self)
+        self._layout.addWidget(self._charSelector, alignment=Qt.AlignmentFlag.AlignLeft)
         self._layout.addWidget(self._btnScenes, alignment=Qt.AlignmentFlag.AlignCenter)
         self._layout.addWidget(self._lblScene, alignment=Qt.AlignmentFlag.AlignCenter)
         self._layout.addWidget(line())
-        self._layout.addWidget(QLabel('Synopsis:'), alignment=Qt.AlignmentFlag.AlignLeft)
+        self._layout.addWidget(label('Synopsis:', underline=True), alignment=Qt.AlignmentFlag.AlignLeft)
         self._layout.addWidget(self._textSynopsis)
         self._layout.addWidget(vspacer())
 
@@ -117,12 +123,17 @@ class SceneMiniEditor(QWidget, EventListener):
         else:
             self._lblScene.setText(scene.title_or_index(self._novel))
         self._textSynopsis.setText(scene.synopsis)
+        if scene.pov:
+            self._charSelector.setCharacter(scene.pov)
+        else:
+            self._charSelector.clear()
         self._currentScene = scene
 
     def reset(self):
         self._save()
         self._currentScene = None
         self._scenes.clear()
+        self._charSelector.clear()
         self._btnScenes.setText('')
         self._menuScenes.clear()
         self._textSynopsis.clear()
@@ -132,6 +143,11 @@ class SceneMiniEditor(QWidget, EventListener):
         if isinstance(event, SceneChangedEvent):
             if event.scene is self._currentScene:
                 self.selectScene(self._currentScene)
+
+    def _povChanged(self, character: Character):
+        self._currentScene.pov = character
+        self._repo.update_scene(self._currentScene)
+        emit_event(self._novel, SceneChangedEvent(self, self._currentScene))
 
     def _save(self):
         if self._currentScene and self._currentScene.synopsis != self._textSynopsis.toPlainText():
