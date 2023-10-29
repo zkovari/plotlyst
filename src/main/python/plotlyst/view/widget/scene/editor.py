@@ -1301,6 +1301,8 @@ class CharacterTabBar(QScrollArea):
 
 
 class SceneAgendaTab(CharacterTab):
+    resetAgenda = pyqtSignal()
+
     def __init__(self, agenda: SceneStructureAgenda, novel: Novel, parent=None):
         super().__init__(novel, parent)
         self._agenda = agenda
@@ -1320,12 +1322,19 @@ class SceneAgendaTab(CharacterTab):
 
     @overrides
     def _characterSelected(self, character: Character):
+        if self._agenda.character_id != character.id:
+            if not ask_confirmation("Replace character and reset the current agency?"):
+                self._btnCharacterSelector.setCharacter(self._agenda.character(self._novel))
+                return
+
+            self.resetAgenda.emit()
         self._agenda.set_character(character)
         super()._characterSelected(character)
 
 
 class SceneAgendasTabBar(CharacterTabBar):
     agendaToggled = pyqtSignal(SceneStructureAgenda, bool)
+    resetAgenda = pyqtSignal(SceneStructureAgenda)
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(novel, parent)
@@ -1356,6 +1365,7 @@ class SceneAgendasTabBar(CharacterTabBar):
     def _newTab(self, *args) -> CharacterTab:
         tab = SceneAgendaTab(*args, novel=self._novel)
         tab.toggled.connect(partial(self.agendaToggled.emit, tab.agenda()))
+        tab.resetAgenda.connect(partial(self._resetAgenda, tab.agenda()))
         tab.setUnsetCharacterSlot(self._unsetCharacterSlot)
 
         return tab
@@ -1369,6 +1379,15 @@ class SceneAgendasTabBar(CharacterTabBar):
 
         return removed
 
+    def _resetAgenda(self, agenda: SceneStructureAgenda):
+        agenda.emotion = None
+        agenda.intensity = 0
+        agenda.motivations.clear()
+        agenda.conflict_references.clear()
+        agenda.story_elements.clear()
+
+        self.resetAgenda.emit(agenda)
+
 
 class SceneAgendaEditor(AbstractSceneElementsEditor):
     def __init__(self, novel: Novel, parent=None):
@@ -1379,6 +1398,7 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         self._characterTabbar = SceneAgendasTabBar(self._novel)
         self._characterTabbar.characterChanged.connect(self._characterSelected)
         self._characterTabbar.agendaToggled.connect(self._agendaToggled)
+        self._characterTabbar.resetAgenda.connect(self._agendaReset)
         self._btnAddAgency = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True)
         self._btnAddAgency.clicked.connect(self._characterTabbar.addNewTab)
         # self.layout().insertWidget(0, group(self._characterTabbar, self._btnAddAgency, vertical=False),
@@ -1450,6 +1470,10 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
 
     def _characterSelected(self, character: Character):
         self._updateElementsVisibility()
+
+    def _agendaReset(self, agenda: SceneStructureAgenda):
+        if self._agenda is agenda:
+            self._agendaToggled(agenda, True)
 
     def _agendaToggled(self, agenda: SceneStructureAgenda, toggled: bool):
         if not toggled:
