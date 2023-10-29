@@ -44,7 +44,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     default_tag_types, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterPreferences, TagReference, \
     ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding, Board, \
     default_big_five_values, CharacterPlan, ManuscriptGoals, Diagram, DiagramData, default_events_map, \
-    default_character_networks, ScenePurposeType, StoryElement, SceneOutcome, ChapterType
+    default_character_networks, ScenePurposeType, StoryElement, SceneOutcome, ChapterType, SceneStructureItem
 from src.main.python.plotlyst.core.template import Role, exclude_if_empty, exclude_if_black
 from src.main.python.plotlyst.env import app_env
 
@@ -172,6 +172,7 @@ class SceneInfo:
     purpose: Optional[ScenePurposeType] = None
     outcome: Optional[SceneOutcome] = None
     story_elements: List[StoryElement] = field(default_factory=list)
+    structure: List[SceneStructureItem] = field(default_factory=list)
 
 
 @dataclass
@@ -526,7 +527,7 @@ class JsonClient:
                               chapter=chapter, stage=stage, beats=info.beats,
                               comments=info.comments, tag_references=info.tag_references,
                               document=info.document, manuscript=info.manuscript, drive=info.drive,
-                              purpose=info.purpose, outcome=info.outcome, story_elements=info.story_elements)
+                              purpose=info.purpose, outcome=info.outcome, story_elements=info.story_elements, structure=info.structure)
                 scenes.append(scene)
 
         tag_types = novel_info.tag_types
@@ -640,7 +641,8 @@ class JsonClient:
                          beats=scene.beats, comments=scene.comments,
                          tag_references=scene.tag_references, document=scene.document, manuscript=scene.manuscript,
                          drive=scene.drive, purpose=scene.purpose, outcome=scene.outcome,
-                         story_elements=scene.story_elements)
+                         story_elements=scene.story_elements,
+                         structure=scene.structure)
         self.__persist_info(self.scenes_dir(novel), info)
 
     def _persist_diagram(self, novel: Novel, diagram: Diagram):

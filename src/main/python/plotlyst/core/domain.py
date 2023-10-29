@@ -901,7 +901,6 @@ class TagReference:
 @dataclass
 class SceneStructureAgenda(CharacterBased):
     character_id: Optional[uuid.UUID] = None
-    items: List[SceneStructureItem] = field(default_factory=list)
     conflict_references: List[ConflictReference] = field(default_factory=list)
     goal_references: List[GoalReference] = field(default_factory=list)
     intensity: int = field(default=0, metadata=config(exclude=exclude_if_empty))
@@ -1076,6 +1075,7 @@ class Scene:
     purpose: Optional[ScenePurposeType] = None
     outcome: Optional[SceneOutcome] = None
     story_elements: List[StoryElement] = field(default_factory=list)
+    structure: List[SceneStructureItem] = field(default_factory=list)
 
     def beat(self, novel: 'Novel') -> Optional[StoryBeat]:
         structure = novel.active_story_structure
