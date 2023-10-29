@@ -66,14 +66,15 @@ class SceneMiniEditor(QWidget, EventListener):
         self._btnScenes = QPushButton()
         incr_font(self._btnScenes, 2)
         transparent(self._btnScenes)
-        sp(self._btnScenes).h_exp()
+        sp(self._btnScenes).h_max()
+        sp(self._lblScene).h_max()
         self._menuScenes = MenuWidget(self._btnScenes)
 
         self._textSynopsis = QTextEdit()
         self._textSynopsis.setProperty('white-bg', True)
         self._textSynopsis.setProperty('rounded', True)
         self._textSynopsis.setPlaceholderText('Write a short summary of this scene')
-        self._textSynopsis.setMaximumHeight(200)
+        self._textSynopsis.setMaximumSize(200, 200)
 
         self._layout = vbox(self)
         self._layout.addWidget(self._btnScenes, alignment=Qt.AlignmentFlag.AlignCenter)
