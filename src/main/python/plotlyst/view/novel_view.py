@@ -110,8 +110,7 @@ class NovelView(AbstractNovelView):
         self.ui.textSynopsis.setMargins(0, 10, 0, 10)
         self.ui.textSynopsis.textEdit.setSidebarEnabled(False)
         self.ui.textSynopsis.textEdit.setTabChangesFocus(True)
-        self.ui.textSynopsis.setGrammarCheckEnabled(True)
-        self.ui.textPremise.setGrammarCheckEnabled(True)
+        self.ui.textSynopsis.setGrammarCheckEnabled(self.novel.prefs.docs.grammar_check)
 
         self.ui.textPremise.setToolbarVisible(False)
         self.ui.textPremise.setTitleVisible(False)
