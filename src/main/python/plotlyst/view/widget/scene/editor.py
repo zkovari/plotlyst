@@ -27,7 +27,7 @@ from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QSt
     QToolButton, QAbstractButton, QScrollArea, QButtonGroup
 from overrides import overrides
 from qthandy import vbox, vspacer, transparent, sp, line, incr_font, hbox, pointy, vline, retain_when_hidden, margins, \
-    spacer, underline, bold, grid, gc, clear_layout
+    spacer, underline, bold, grid, gc, clear_layout, ask_confirmation
 from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
@@ -41,7 +41,7 @@ from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import DelayedSignalSlotConnector, action, wrap, label, scrolled, \
-    ButtonPressResizeEventFilter, push_btn, tool_btn, insert_before_the_end
+    ButtonPressResizeEventFilter, push_btn, tool_btn, insert_before_the_end, fade_out_and_gc
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
@@ -1137,6 +1137,7 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
 
 class CharacterTab(QAbstractButton):
     characterChanged = pyqtSignal(Character)
+    removed = pyqtSignal()
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -1147,9 +1148,19 @@ class CharacterTab(QAbstractButton):
         self.setCheckable(True)
         self._hovered: bool = False
 
+        self._btnRemoval = RemovalButton()
+        self._btnRemoval.setHidden(True)
+        self._removalEnabled: bool = False
+        self._btnRemoval.clicked.connect(self.removed)
+
         self._btnCharacterSelector = CharacterSelectorButton(self._novel, parent=self)
         self._btnCharacterSelector.characterSelected.connect(self._characterSelected)
-        self.layout().addWidget(self._btnCharacterSelector, alignment=Qt.AlignmentFlag.AlignTop)
+        self._wdgTop = QWidget()
+        hbox(self._wdgTop, 0)
+        self._wdgTop.layout().addWidget(self._btnCharacterSelector, alignment=Qt.AlignmentFlag.AlignLeft)
+        self._wdgTop.layout().addWidget(self._btnRemoval,
+                                        alignment=Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight)
+        self.layout().addWidget(self._wdgTop, alignment=Qt.AlignmentFlag.AlignTop)
         self.setMinimumHeight(80)
 
         self.toggled.connect(self._toggled)
@@ -1160,6 +1171,7 @@ class CharacterTab(QAbstractButton):
             margins(self, left=1)
             self._hovered = True
             self.update()
+        self._btnRemoval.setVisible(self._removalEnabled)
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
@@ -1167,6 +1179,7 @@ class CharacterTab(QAbstractButton):
             margins(self, left=0)
             self._hovered = False
             self.update()
+        self._btnRemoval.setHidden(True)
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
@@ -1180,6 +1193,9 @@ class CharacterTab(QAbstractButton):
             painter.setBrush(QColor('lightgrey'))
 
         painter.drawRoundedRect(event.rect(), 4, 4)
+
+    def setRemovalEnabled(self, enabled: bool):
+        self._removalEnabled = enabled
 
     def updateAvailableCharacters(self, characters: List[Character]):
         self._btnCharacterSelector.characterSelectorMenu().setCharacters(characters)
@@ -1195,7 +1211,7 @@ class CharacterTab(QAbstractButton):
         self._character = character
         self.characterChanged.emit(self._character)
 
-    def _toggled(self, toggled: bool):
+    def _toggled(self, _: bool):
         margins(self, left=0)
         self._hovered = False
 
@@ -1208,6 +1224,7 @@ class CharacterTabBar(QScrollArea):
         self._novel = novel
         self.setWidgetResizable(True)
         self._btnPlusTooltip = 'Add new character tab'
+        self._removalConfirmationText = 'Remove character tab?'
         self._availableCharacter: List[Character] = []
 
         self._wdgCentral = QWidget()
@@ -1227,10 +1244,10 @@ class CharacterTabBar(QScrollArea):
         tab = self._newTab(*args)
         tab.updateAvailableCharacters(self._availableCharacter)
         tab.characterChanged.connect(self.characterChanged)
+        tab.removed.connect(partial(self._removeTab, tab))
         self._tabs.append(tab)
         self._tabGroup.addButton(tab)
-        if len(self._tabs) == 1:
-            tab.setChecked(True)
+        self._tabsNumberChanged()
 
         insert_before_the_end(self._wdgCentral, tab, 2)
 
@@ -1257,11 +1274,30 @@ class CharacterTabBar(QScrollArea):
         if btn:
             btn.popup()
 
+    def _tabsNumberChanged(self):
+        if len(self._tabs) == 1:
+            self._tabs[0].setChecked(True)
+            self._tabs[0].setRemovalEnabled(False)
+        else:
+            for tab in self._tabs:
+                tab.setRemovalEnabled(True)
+
     def _addNewClicked(self):
         self.addNewTab()
 
     def _newTab(self, *args) -> CharacterTab:
         return CharacterTab(*args, novel=self._novel)
+
+    def _removeTab(self, tab: CharacterTab) -> bool:
+        if ask_confirmation(self._removalConfirmationText):
+            self._tabs.remove(tab)
+            self._tabGroup.removeButton(tab)
+            fade_out_and_gc(self._wdgCentral, tab)
+            self._tabsNumberChanged()
+
+            return True
+
+        return False
 
 
 class SceneAgendaTab(CharacterTab):
@@ -1296,6 +1332,7 @@ class SceneAgendasTabBar(CharacterTabBar):
         self._scene: Optional[Scene] = None
         self._unsetCharacterSlot = None
         self._btnPlusTooltip = 'Add new character agency'
+        self._removalConfirmationText = 'Remove character agency?'
 
     def setScene(self, scene: Scene):
         self._scene = scene
@@ -1322,6 +1359,15 @@ class SceneAgendasTabBar(CharacterTabBar):
         tab.setUnsetCharacterSlot(self._unsetCharacterSlot)
 
         return tab
+
+    @overrides
+    def _removeTab(self, tab: SceneAgendaTab) -> bool:
+        agenda = tab.agenda()
+        removed = super()._removeTab(tab)
+        if removed:
+            self._scene.agendas.remove(agenda)
+
+        return removed
 
 
 class SceneAgendaEditor(AbstractSceneElementsEditor):
