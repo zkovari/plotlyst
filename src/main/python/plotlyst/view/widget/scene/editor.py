@@ -1324,6 +1324,7 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
+        self._agenda: Optional[SceneStructureAgenda] = None
 
         self._characterTabbar = SceneAgendasTabBar(self._novel)
         self._characterTabbar.characterChanged.connect(self._characterSelected)
@@ -1394,33 +1395,24 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         self._characterTabbar.setUnsetCharacterSlot(self._unsetCharacterSlot)
 
     def povChangedEvent(self, pov: Character):
-        self._scene.agendas[0].set_character(pov)
-        self._updateElementsVisibility(self._scene.agendas[0])
+        self._agenda.set_character(pov)
+        self._updateElementsVisibility()
         self._characterTabbar.setCharacter(pov)
 
     def _characterSelected(self, character: Character):
-        self._scene.agendas[0].set_character(character)
-        self._updateElementsVisibility(self._scene.agendas[0])
+        self._updateElementsVisibility()
 
     def _agendaToggled(self, agenda: SceneStructureAgenda, toggled: bool):
         if not toggled:
             return
 
+        self._agenda = agenda
         if agenda.emotion is None:
             self._emotionEditor.reset()
         else:
             self._emotionEditor.setValue(agenda.emotion)
 
-        if agenda.motivations:
-            values: Dict[Motivation, int] = {}
-            for k, v in agenda.motivations.items():
-                motivation = Motivation(k)
-                values[motivation] = v
-
-            self._motivationEditor.setValues(values)
-        else:
-            self._motivationEditor.reset()
-
+        self._motivationEditor.setAgenda(agenda)
         self._conflictEditor.setAgenda(agenda)
 
         for row in range(self._row):
@@ -1436,19 +1428,19 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
                 wdg: AgencyTextBasedElementEditor = item.widget()
                 wdg.setElement(element)
 
-        self._updateElementsVisibility(agenda)
+        self._updateElementsVisibility()
 
     def _emotionChanged(self, emotion: int):
-        self._scene.agendas[0].emotion = emotion
+        self._agenda.emotion = emotion
 
     def _emotionReset(self):
-        self._scene.agendas[0].emotion = None
+        self._agenda.emotion = None
 
     def _motivationChanged(self, motivation: Motivation, value: int):
-        self._scene.agendas[0].motivations[motivation.value] = value
+        self._agenda.motivations[motivation.value] = value
 
     def _motivationReset(self):
-        self._scene.agendas[0].motivations.clear()
+        self._agenda.motivations.clear()
 
     def _characterDelegateClicked(self):
         if not self._scene.characters or self._scene.pov:
@@ -1456,8 +1448,8 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         else:
             self._characterTabbar.popup()
 
-    def _updateElementsVisibility(self, agenda: SceneStructureAgenda):
-        elements_visible = agenda.character_id is not None
+    def _updateElementsVisibility(self):
+        elements_visible = self._agenda.character_id is not None
         self._btnCharacterDelegate.setVisible(not elements_visible)
         self._wdgElements.setVisible(elements_visible)
         self._emotionEditor.setVisible(elements_visible)

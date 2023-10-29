@@ -37,7 +37,7 @@ class SceneGoalSelector(QWidget):
     goalSelected = pyqtSignal()
 
     def __init__(self, novel: Novel, scene: Scene, simplified: bool = False, parent=None):
-        super(SceneGoalSelector, self).__init__(parent)
+        super().__init__(parent)
         self.novel = novel
         self.scene = scene
         self.characterGoal: Optional[CharacterGoal] = None

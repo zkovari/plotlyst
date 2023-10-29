@@ -99,8 +99,9 @@ class ArcsTreeView(TreeView):
 
         characters = set()
         for scene in self._novel.scenes:
-            if scene.agendas and scene.agendas[0].character_id:
-                characters.add(scene.agendas[0].character(self._novel))
+            for agenda in scene.agendas:
+                if agenda.character_id:
+                    characters.add(agenda.character(self._novel))
 
         for character in characters:
             self._addCharacterAgendaNodes(character)
@@ -307,9 +308,12 @@ class StoryArcChart(BaseChart):
         series.setPen(pen)
 
         for i, scene in enumerate(self.novel.scenes):
-            if character and scene.agendas[0].character_id != character.id:
-                continue
-            intensity = max([x.intensity for x in scene.agendas[0].conflict_references], default=0)
+            intensity = 0
+            for agenda in scene.agendas:
+                if character and agenda.character_id != character.id:
+                    continue
+                agenda_intensity = max([x.intensity for x in agenda.conflict_references], default=0)
+                intensity = max([intensity, agenda_intensity])
             if intensity > 0:
                 series.append(i + 1, intensity)
 
@@ -319,10 +323,11 @@ class StoryArcChart(BaseChart):
         series = QSplineSeries()
         series.setName(icon_to_html_img(avatars.avatar(character)) + 'Emotion')
         for i, scene in enumerate(self.novel.scenes):
-            if character and scene.agendas[0].character_id != character.id:
-                continue
-            if scene.agendas[0].emotion:
-                series.append(i + 1, scene.agendas[0].emotion)
+            for agenda in scene.agendas:
+                if character and agenda.character_id != character.id:
+                    continue
+                if agenda.emotion:
+                    series.append(i + 1, agenda.emotion)
         return series
 
     def _characterMotivationSeries(self, character: Character) -> List[QAbstractSeries]:
@@ -347,13 +352,14 @@ class StoryArcChart(BaseChart):
         splines: Dict[str, QSplineSeries] = {}
         values: Dict[str, int] = {}
         for i, scene in enumerate(self.novel.scenes):
-            if character and scene.agendas[0].character_id != character.id:
-                continue
-            for motivation, v in scene.agendas[0].motivations.items():
-                prev_value = value(motivation)
-                values[motivation] = prev_value + v
-                if values[motivation] > self.MAX:
-                    values[motivation] = self.MAX
-                spline(motivation).append(i, values[motivation])
+            for agenda in scene.agendas:
+                if character and agenda.character_id != character.id:
+                    continue
+                for motivation, v in agenda.motivations.items():
+                    prev_value = value(motivation)
+                    values[motivation] = prev_value + v
+                    if values[motivation] > self.MAX:
+                        values[motivation] = self.MAX
+                    spline(motivation).append(i, values[motivation])
 
         return list(splines.values())

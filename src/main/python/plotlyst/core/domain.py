@@ -2153,11 +2153,12 @@ class Novel(NovelDescriptor):
         char_ids = set()
         chars: List[Character] = []
         for scene in self.scenes:
-            if scene.agendas and scene.agendas[0].character_id and str(scene.agendas[0].character_id) not in char_ids:
-                character = scene.agendas[0].character(self)
-                if character:
-                    chars.append(character)
-                    char_ids.add(str(scene.agendas[0].character_id))
+            for agenda in scene.agendas:
+                if agenda.character_id and str(agenda.character_id) not in char_ids:
+                    character: Character = agenda.character(self)
+                    if character:
+                        chars.append(character)
+                        char_ids.add(str(character.id))
 
         return chars
 
