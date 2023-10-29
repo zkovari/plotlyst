@@ -1145,11 +1145,28 @@ class CharacterTab(QAbstractButton):
         vbox(self, 0, 2)
 
         self.setCheckable(True)
+        self._hovered: bool = False
 
         self._btnCharacterSelector = CharacterSelectorButton(self._novel, parent=self)
         self._btnCharacterSelector.characterSelected.connect(self._characterSelected)
         self.layout().addWidget(self._btnCharacterSelector, alignment=Qt.AlignmentFlag.AlignTop)
         self.setMinimumHeight(80)
+
+        self.toggled.connect(self._toggled)
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        if not self.isChecked():
+            margins(self, left=1)
+            self._hovered = True
+            self.update()
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        if not self.isChecked():
+            margins(self, left=0)
+            self._hovered = False
+            self.update()
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
@@ -1159,6 +1176,8 @@ class CharacterTab(QAbstractButton):
         painter.setPen(QPen(Qt.GlobalColor.lightGray, 1))
         if self.isChecked():
             painter.setBrush(QColor(RELAXED_WHITE_COLOR))
+        elif self._hovered:
+            painter.setBrush(QColor('lightgrey'))
 
         painter.drawRoundedRect(event.rect(), 4, 4)
 
@@ -1171,6 +1190,10 @@ class CharacterTab(QAbstractButton):
     def _characterSelected(self, character: Character):
         self._character = character
         self.characterChanged.emit(self._character)
+
+    def _toggled(self, toggled: bool):
+        margins(self, left=0)
+        self._hovered = False
 
 
 class CharacterTabBar(QScrollArea):
