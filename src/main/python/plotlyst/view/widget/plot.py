@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from functools import partial
-from typing import Set, Dict, List
+from typing import Set, Dict, List, Optional
 
 import qtanim
 from PyQt6.QtCharts import QSplineSeries, QValueAxis
@@ -991,10 +991,15 @@ class PlotEditor(QWidget, Ui_PlotEditor):
 
 
 class StorylinesConnectionWidget(QWidget):
+    linked = pyqtSignal()
+    linkChanged = pyqtSignal()
+    unlinked = pyqtSignal()
+
     def __init__(self, source: Plot, target: Plot, parent=None):
         super().__init__(parent)
         self._source = source
         self._target = target
+        self._link: Optional[StorylineLink] = None
 
         self.stack = QStackedWidget()
         self._wdgActive = QWidget()
@@ -1015,9 +1020,10 @@ class StorylinesConnectionWidget(QWidget):
         self._text = QTextEdit()
         self._text.setProperty('rounded', True)
         self._text.setProperty('white-bg', True)
-        self._text.setMinimumSize(175, 90)
-        self._text.setMaximumSize(200, 100)
+        self._text.setMinimumSize(175, 100)
+        self._text.setMaximumSize(200, 120)
         self._text.verticalScrollBar().setVisible(False)
+        self._text.textChanged.connect(self._textChanged)
         vbox(self._wdgActive)
         self._wdgActive.layout().addWidget(self._icon, alignment=Qt.AlignmentFlag.AlignCenter)
         self._wdgActive.layout().addWidget(self._text, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -1033,14 +1039,7 @@ class StorylinesConnectionWidget(QWidget):
         self._addAction(StorylineLinkType.Contrast)
 
         if self._source.plot_type in self._plotTypes:
-            # if self._target.plot_type == PlotType.Relation:
-            #     self._addAction(StorylineLinkType.Reveal)
-            # elif self._target.plot_type == PlotType.Internal:
-            #     self._addAction(StorylineLinkType.Reveal)
             if self._target.plot_type in self._plotTypes:
-                # self._menu.addSeparator()
-                # self._addAction(StorylineLinkType.Parallel)
-                # self._addAction(StorylineLinkType.Converge)
                 self._addAction(StorylineLinkType.Compete)
 
         elif self._source.plot_type == PlotType.Internal:
@@ -1062,18 +1061,35 @@ class StorylinesConnectionWidget(QWidget):
     def activate(self):
         QTimer.singleShot(10, self._menu.exec)
 
+    def setLink(self, link: StorylineLink):
+        self._link = None
+        self._text.setText(link.text)
+        self._link = link
+        self._updateType()
+        self.stack.setCurrentWidget(self._wdgActive)
+
     def _linkClicked(self):
         link = StorylineLink(self._source.id, self._target.id, StorylineLinkType.Connection)
-        self._typeChanged(StorylineLinkType.Connection)
-        # self._source.links.append(link)
-        self.stack.setCurrentWidget(self._wdgActive)
+        self._source.links.append(link)
+
+        self.setLink(link)
         qtanim.fade_in(self._wdgActive, teardown=self.activate)
 
     def _typeChanged(self, type: StorylineLinkType):
-        self._icon.setIcon(IconRegistry.from_name(type.icon()))
-        self._icon.setText(type.name)
-        self._icon.setToolTip(type.desc())
-        self._text.setPlaceholderText(type.desc())
+        self._link.type = type
+        self._updateType()
+        self.linkChanged.emit()
+
+    def _textChanged(self):
+        if self._link:
+            self._link.text = self._text.toPlainText()
+            self.linkChanged.emit()
+
+    def _updateType(self):
+        self._icon.setIcon(IconRegistry.from_name(self._link.type.icon()))
+        self._icon.setText(self._link.type.name)
+        self._icon.setToolTip(self._link.type.desc())
+        self._text.setPlaceholderText(self._link.type.desc())
 
     def _addAction(self, type: StorylineLinkType):
         self._menu.addAction(action(type.name, IconRegistry.from_name(type.icon())
@@ -1087,6 +1103,7 @@ class StorylinesImpactMatrix(QWidget):
         self._refreshOnShown = True
 
         self._grid: QGridLayout = grid(self)
+        self.repo = RepositoryPersistenceManager.instance()
 
     @overrides
     def showEvent(self, event: QShowEvent) -> None:
@@ -1121,10 +1138,12 @@ class StorylinesImpactMatrix(QWidget):
                 if storyline is ref_storyline:
                     continue
                 wdg = StorylinesConnectionWidget(storyline, ref_storyline)
+                wdg.linked.connect(self._save)
+                wdg.linkChanged.connect(self._save)
                 if str(ref_storyline.id) in refs.keys():
-                    pass
-                else:
-                    pass
+                    wdg.setLink(refs[str(ref_storyline.id)])
+                # else:
+                #     pass
                 self._grid.addWidget(wdg, i + 1, j + 1)
 
         self._grid.addWidget(line(), 0, 1, 1, len(self._novel.plots), alignment=Qt.AlignmentFlag.AlignBottom)
@@ -1151,6 +1170,9 @@ class StorylinesImpactMatrix(QWidget):
         sp(wdg).h_exp().v_exp()
 
         return wdg
+
+    def _save(self):
+        self.repo.update_novel(self._novel)
 
 
 class StorylineSelectorMenu(MenuWidget):

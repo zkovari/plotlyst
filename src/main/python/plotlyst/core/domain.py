@@ -633,12 +633,7 @@ class StorylineLinkType(Enum):
     Reflect_plot = auto()
     Reveal = auto()
     Resolve = auto()
-    # Parallel = auto()
     Compete = auto()
-
-    # Complicate = auto()
-
-    # Converge = auto()
 
     def icon(self) -> str:
         if self == StorylineLinkType.Catalyst:
@@ -680,9 +675,7 @@ class StorylineLinkType(Enum):
             return "Only through the character's changes the plot can be resolved"
         elif self == StorylineLinkType.Compete:
             return 'Two storylines compete against each other, often for a common goal'
-        # elif self == StorylineLinkType.Complicate:
-        #     return ''
-        return ''
+        return 'How does the storyline connect to the other one?'
 
     def placeholder(self) -> str:
         if self == StorylineLinkType.Catalyst:
@@ -697,15 +690,9 @@ class StorylineLinkType(Enum):
             return ''
         elif self == StorylineLinkType.Resolve:
             return ''
-        # elif self == StorylineLinkType.Parallel:
-        #     return ''
         elif self == StorylineLinkType.Compete:
             return ''
-        # elif self == StorylineLinkType.Complicate:
-        #     return ''
-        # elif self == StorylineLinkType.Converge:
-        #     return ''
-        return ''
+        return 'How does the storyline connect to the other one?'
 
 
 @dataclass
@@ -713,6 +700,7 @@ class StorylineLink:
     source_id: uuid.UUID
     target_id: uuid.UUID
     type: StorylineLinkType
+    text: str = ''
 
 
 @dataclass
