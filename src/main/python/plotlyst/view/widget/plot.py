@@ -990,6 +990,24 @@ class PlotEditor(QWidget, Ui_PlotEditor):
             self.stack.setCurrentWidget(self.pageDisplay)
 
 
+class StorylineHeaderWidget(QWidget):
+    def __init__(self, storyline: Plot, parent=None):
+        super().__init__(parent)
+        self._storyline = storyline
+
+        vbox(self, 5)
+        self._icon = Icon()
+        self._lbl = label(storyline.text, wordWrap=True)
+        self._lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self._icon, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self._lbl, alignment=Qt.AlignmentFlag.AlignCenter)
+
+    @overrides
+    def showEvent(self, event: QShowEvent) -> None:
+        self._lbl.setText(self._storyline.text)
+        self._icon.setIcon(IconRegistry.from_name(self._storyline.icon, self._storyline.icon_color))
+
+
 class StorylinesConnectionWidget(QWidget):
     linked = pyqtSignal()
     linkChanged = pyqtSignal()
@@ -1136,10 +1154,10 @@ class StorylinesImpactMatrix(QWidget):
             for ref in storyline.links:
                 refs[str(ref.target_id)] = ref
 
-            header = self._storylineHeaderWidget(storyline)
+            header = StorylineHeaderWidget(storyline)
             self._grid.addWidget(header, 0, i + 1, alignment=Qt.AlignmentFlag.AlignCenter)
 
-            row = self._storylineHeaderWidget(storyline)
+            row = StorylineHeaderWidget(storyline)
             row.setMinimumHeight(70)
             self._grid.addWidget(row, i + 1, 0, alignment=Qt.AlignmentFlag.AlignVCenter)
 
@@ -1160,19 +1178,6 @@ class StorylinesImpactMatrix(QWidget):
         self._grid.addWidget(vline(), 1, 0, len(self._novel.plots), 1, alignment=Qt.AlignmentFlag.AlignRight)
 
         self._grid.addWidget(vspacer(), len(self._novel.plots) + 1, 0)
-
-    def _storylineHeaderWidget(self, storyline: Plot) -> QWidget:
-        wdg = QWidget()
-        vbox(wdg, 5)
-        icon = Icon()
-        if storyline.icon:
-            icon.setIcon(IconRegistry.from_name(storyline.icon, storyline.icon_color))
-        lbl = label(storyline.text, wordWrap=True)
-        lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        wdg.layout().addWidget(icon, alignment=Qt.AlignmentFlag.AlignCenter)
-        wdg.layout().addWidget(lbl, alignment=Qt.AlignmentFlag.AlignCenter)
-
-        return wdg
 
     def _emptyCellWidget(self) -> QWidget:
         wdg = IdleWidget()
