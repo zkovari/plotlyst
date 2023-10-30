@@ -103,7 +103,7 @@
          <string>Display how the storylines impact each other</string>
         </property>
         <property name="text">
-         <string>Impact matrix</string>
+         <string>Storylines impact</string>
         </property>
         <property name="checkable">
          <bool>true</bool>
@@ -234,8 +234,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>390</width>
-             <height>265</height>
+             <width>98</width>
+             <height>28</height>
             </rect>
            </property>
            <property name="sizePolicy">

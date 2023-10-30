@@ -23,20 +23,20 @@ from typing import Set, Dict, List
 
 import qtanim
 from PyQt6.QtCharts import QSplineSeries, QValueAxis
-from PyQt6.QtCore import pyqtSignal, Qt, QSize, QTimer, QEvent
+from PyQt6.QtCore import pyqtSignal, Qt, QSize, QTimer
 from PyQt6.QtGui import QColor, QIcon, QPen, QCursor, QEnterEvent, QShowEvent
 from PyQt6.QtWidgets import QWidget, QFrame, QPushButton, QTextEdit, QLabel, QGridLayout, QStackedWidget
 from overrides import overrides
 from qthandy import bold, flow, incr_font, \
     margins, ask_confirmation, italic, retain_when_hidden, vbox, transparent, \
-    clear_layout, vspacer, decr_font, decr_icon, hbox, spacer, sp, pointy, incr_icon, translucent, grid, underline
+    clear_layout, vspacer, decr_font, decr_icon, hbox, spacer, sp, pointy, incr_icon, translucent, grid, line, vline
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
-from qtmenu import MenuWidget
+from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
     PlotPrincipleType, PlotEventType, PlotProgressionItem, \
-    PlotProgressionItemType, StorylineLink
+    PlotProgressionItemType, StorylineLink, StorylineLinkType
 from src.main.python.plotlyst.core.template import antagonist_role
 from src.main.python.plotlyst.core.text import html
 from src.main.python.plotlyst.env import app_env
@@ -47,7 +47,7 @@ from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDele
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter, wrap, \
-    insert_before_the_end, shadow, label, push_btn, tool_btn
+    insert_before_the_end, shadow, label, tool_btn, push_btn
 from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
@@ -966,10 +966,10 @@ class PlotEditor(QWidget, Ui_PlotEditor):
                 if item.widget().plot == plot:
                     clear_layout(self.pageDisplay)
         delete_plot(self.novel, plot)
-        
+
         self._wdgImpactMatrix.refresh()
         emit_event(self.novel, StorylineRemovedEvent(self, plot))
-    
+
     # def _remove(self, widget: PlotWidget):
     #     if ask_confirmation(f'Are you sure you want to delete the plot {widget.plot.text}?'):
     #         if app_env.test_env():
@@ -981,7 +981,6 @@ class PlotEditor(QWidget, Ui_PlotEditor):
     # def __destroy(self, widget: PlotWidget):
     #     delete_plot(self.novel, widget.plot)
     #     self.scrollAreaWidgetContents.layout().removeWidget(widget.parent())
-    
 
     def _displayImpactMatrix(self, checked: bool):
         self._wdgList.clearSelection()
@@ -998,39 +997,87 @@ class StorylinesConnectionWidget(QWidget):
         self._target = target
 
         self.stack = QStackedWidget()
-        self._wdgIdle = IdleWidget()
-        self.stack.addWidget(self._wdgIdle)
+        self._wdgActive = QWidget()
         self._wdgDefault = QWidget()
+        self.stack.addWidget(self._wdgActive)
+        self.stack.addWidget(self._wdgDefault)
 
         self._btnLink = tool_btn(IconRegistry.from_name('fa5s.link'), transparent_=True)
         self._btnLink.setIconSize(QSize(32, 32))
         self._btnLink.installEventFilter(OpacityEventFilter(self._btnLink))
+        self._btnLink.clicked.connect(self._linkClicked)
+        self._btnLink.setHidden(True)
         vbox(self._wdgDefault)
         self._wdgDefault.layout().addWidget(self._btnLink, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._wdgDefault.installEventFilter(VisibilityToggleEventFilter(self._btnLink, self._wdgDefault))
 
-        menu = MenuWidget(self._btnLink)
-        menu.addAction(action('Catalyst'))
-        menu.addAction(action('Express change'))
-        menu.addAction(action('Impact'))
+        self._icon = push_btn(transparent_=True)
+        self._text = QTextEdit()
+        self._text.setProperty('rounded', True)
+        self._text.setProperty('white-bg', True)
+        self._text.setMinimumSize(175, 90)
+        self._text.setMaximumSize(200, 100)
+        self._text.verticalScrollBar().setVisible(False)
+        vbox(self._wdgActive)
+        self._wdgActive.layout().addWidget(self._icon, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._wdgActive.layout().addWidget(self._text, alignment=Qt.AlignmentFlag.AlignCenter)
 
+        self._plotTypes = (PlotType.Main, PlotType.Subplot)
 
-        self.stack.addWidget(self._wdgDefault)
+        self._menu = MenuWidget(self._icon)
+        self._menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+        self._menu.addSection('Connection type')
+        self._menu.addSeparator()
+        self._addAction(StorylineLinkType.Catalyst)
+        self._addAction(StorylineLinkType.Impact)
+        self._addAction(StorylineLinkType.Contrast)
+
+        if self._source.plot_type in self._plotTypes:
+            # if self._target.plot_type == PlotType.Relation:
+            #     self._addAction(StorylineLinkType.Reveal)
+            # elif self._target.plot_type == PlotType.Internal:
+            #     self._addAction(StorylineLinkType.Reveal)
+            if self._target.plot_type in self._plotTypes:
+                # self._menu.addSeparator()
+                # self._addAction(StorylineLinkType.Parallel)
+                # self._addAction(StorylineLinkType.Converge)
+                self._addAction(StorylineLinkType.Compete)
+
+        elif self._source.plot_type == PlotType.Internal:
+            if self._target.plot_type in self._plotTypes:
+                self._addAction(StorylineLinkType.Resolve)
+            elif self._target.plot_type == PlotType.Relation:
+                self._addAction(StorylineLinkType.Reveal)
+        elif self._source.plot_type == PlotType.Relation:
+            if self._target.plot_type == PlotType.Internal:
+                self._addAction(StorylineLinkType.Reflect_char)
+            elif self._target.plot_type != PlotType.Relation:
+                self._addAction(StorylineLinkType.Reflect_plot)
+
         self.stack.setCurrentWidget(self._wdgDefault)
-        self._wdgDefault.setHidden(True)
 
         vbox(self, 0, 0)
         self.layout().addWidget(self.stack)
 
-    @overrides
-    def enterEvent(self, event: QEnterEvent) -> None:
-        self._wdgDefault.setVisible(True)
+    def activate(self):
+        QTimer.singleShot(10, self._menu.exec)
 
-    @overrides
-    def leaveEvent(self, event: QEvent) -> None:
-        self._wdgDefault.setHidden(True)
+    def _linkClicked(self):
+        link = StorylineLink(self._source.id, self._target.id, StorylineLinkType.Connection)
+        self._typeChanged(StorylineLinkType.Connection)
+        # self._source.links.append(link)
+        self.stack.setCurrentWidget(self._wdgActive)
+        qtanim.fade_in(self._wdgActive, teardown=self.activate)
 
-    def activate(self, link: StorylineLink):
-        pass
+    def _typeChanged(self, type: StorylineLinkType):
+        self._icon.setIcon(IconRegistry.from_name(type.icon()))
+        self._icon.setText(type.name)
+        self._icon.setToolTip(type.desc())
+        self._text.setPlaceholderText(type.desc())
+
+    def _addAction(self, type: StorylineLinkType):
+        self._menu.addAction(action(type.name, IconRegistry.from_name(type.icon())
+                                    , tooltip=type.desc(), slot=partial(self._typeChanged, type)))
 
 
 class StorylinesImpactMatrix(QWidget):
@@ -1079,6 +1126,9 @@ class StorylinesImpactMatrix(QWidget):
                 else:
                     pass
                 self._grid.addWidget(wdg, i + 1, j + 1)
+
+        self._grid.addWidget(line(), 0, 1, 1, len(self._novel.plots), alignment=Qt.AlignmentFlag.AlignBottom)
+        self._grid.addWidget(vline(), 1, 0, len(self._novel.plots), 1, alignment=Qt.AlignmentFlag.AlignRight)
 
         self._grid.addWidget(vspacer(), len(self._novel.plots) + 1, 0)
 
