@@ -1016,7 +1016,7 @@ class StorylinesConnectionWidget(QWidget):
         self._wdgDefault.layout().addWidget(self._btnLink, alignment=Qt.AlignmentFlag.AlignCenter)
         self._wdgDefault.installEventFilter(VisibilityToggleEventFilter(self._btnLink, self._wdgDefault))
 
-        self._icon = push_btn(transparent_=True)
+        self._icon = push_btn(properties=['transparent', 'no-menu'])
         self._text = QTextEdit()
         self._text.setProperty('rounded', True)
         self._text.setProperty('white-bg', True)
