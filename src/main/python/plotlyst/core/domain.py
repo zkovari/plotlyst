@@ -23,7 +23,7 @@ import uuid
 from abc import ABC
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
+from enum import Enum, auto
 from typing import List, Optional, Any, Dict
 
 from PyQt6.QtCore import Qt
@@ -624,6 +624,85 @@ class PlotProgressionItem:
     text: str = ''
 
 
+class StorylineLinkType(Enum):
+    Connection = auto()
+    Catalyst = auto()
+    Impact = auto()
+    Contrast = auto()
+    Reflect_char = auto()
+    Reflect_plot = auto()
+    Reveal = auto()
+    Resolve = auto()
+    Compete = auto()
+
+    def icon(self) -> str:
+        if self == StorylineLinkType.Catalyst:
+            return 'fa5s.vial'
+        elif self == StorylineLinkType.Impact:
+            return 'mdi.motion-outline'
+        elif self == StorylineLinkType.Contrast:
+            return 'ei.adjust'
+        elif self == StorylineLinkType.Reflect_char:
+            return 'msc.mirror'
+        elif self == StorylineLinkType.Reflect_plot:
+            return 'msc.mirror'
+        elif self == StorylineLinkType.Resolve:
+            return 'mdi.bullseye-arrow'
+        # elif self == StorylineLinkType.Parallel:
+        #     return 'fa5s.grip-lines'
+        elif self == StorylineLinkType.Compete:
+            return 'ph.arrows-in-line-horizontal'
+        # elif self == StorylineLinkType.Complicate:
+        #     return 'mdi.sword-cross'
+        # elif self == StorylineLinkType.Converge:
+        #     return 'ri.git-pull-request-fill'
+        return 'fa5s.link'
+
+    def desc(self) -> str:
+        if self == StorylineLinkType.Catalyst:
+            return 'A storyline triggers the events in an other storyline'
+        elif self == StorylineLinkType.Impact:
+            return 'A storyline impacts or influences the events in an other storyline'
+        elif self == StorylineLinkType.Contrast:
+            return 'The storylines contrast each other in any way, e.g.,theme, tone, or pacing'
+        elif self == StorylineLinkType.Reflect_char:
+            return "The relationship plot reflects the character's changes"
+        elif self == StorylineLinkType.Reflect_plot:
+            return "The relationship plot reflects larger plot themes of conflicts through character interactions"
+        elif self == StorylineLinkType.Reveal:
+            return "The character's changes reveal the true nature of a relationship plot"
+        elif self == StorylineLinkType.Resolve:
+            return "Only through the character's changes the plot can be resolved"
+        elif self == StorylineLinkType.Compete:
+            return 'Two storylines compete against each other, often for a common goal'
+        return 'How does the storyline connect to the other one?'
+
+    def placeholder(self) -> str:
+        if self == StorylineLinkType.Catalyst:
+            return ''
+        elif self == StorylineLinkType.Impact:
+            return ''
+        elif self == StorylineLinkType.Contrast:
+            return ''
+        elif self == StorylineLinkType.Reflect_char:
+            return ''
+        elif self == StorylineLinkType.Reflect_plot:
+            return ''
+        elif self == StorylineLinkType.Resolve:
+            return ''
+        elif self == StorylineLinkType.Compete:
+            return ''
+        return 'How does the storyline connect to the other one?'
+
+
+@dataclass
+class StorylineLink:
+    source_id: uuid.UUID
+    target_id: uuid.UUID
+    type: StorylineLinkType
+    text: str = ''
+
+
 @dataclass
 class Plot(SelectionItem, CharacterBased):
     id: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -637,6 +716,7 @@ class Plot(SelectionItem, CharacterBased):
     default_value: PlotValue = field(default_factory=default_plot_value)
     default_value_enabled: bool = True
     progression: List[PlotProgressionItem] = field(default_factory=list)
+    links: List[StorylineLink] = field(default_factory=list)
 
     def __post_init__(self):
         self._character: Optional[Character] = None

@@ -1339,7 +1339,7 @@ class SceneAgendaTab(CharacterTab):
 
     @overrides
     def _characterSelected(self, character: Character):
-        if self._agenda.character_id != character.id:
+        if self._agenda.character_id and self._agenda.character_id != character.id:
             if not ask_confirmation("Replace character and reset the current agency?"):
                 self._btnCharacterSelector.setCharacter(self._agenda.character(self._novel))
                 return
