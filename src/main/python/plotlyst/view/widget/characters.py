@@ -323,6 +323,9 @@ class CharacterSelectorMenu(MenuWidget):
         else:
             return self._novel.characters
 
+    def refresh(self):
+        self._fillUpMenu()
+
     def _beforeShow(self):
         if self._characters is None:
             self._fillUpMenu()

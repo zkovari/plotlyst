@@ -40,9 +40,10 @@ from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotTyp
 from src.main.python.plotlyst.core.template import antagonist_role
 from src.main.python.plotlyst.core.text import html
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import EventListener, Event
+from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
-from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent
+from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent, StorylineCreatedEvent, \
+    StorylineRemovedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter, wrap, \
@@ -939,6 +940,8 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         self._wdgList.selectPlot(plot)
         self._wdgImpactMatrix.refresh()
 
+        emit_event(self.novel, StorylineCreatedEvent(self))
+
     def _plotSelected(self, plot: Plot) -> PlotWidget:
         self.btnImpactMatrix.setChecked(False)
         self.stack.setCurrentWidget(self.pageDisplay)
@@ -963,7 +966,22 @@ class PlotEditor(QWidget, Ui_PlotEditor):
                 if item.widget().plot == plot:
                     clear_layout(self.pageDisplay)
         delete_plot(self.novel, plot)
+        
         self._wdgImpactMatrix.refresh()
+        emit_event(self.novel, StorylineRemovedEvent(self, plot))
+    
+    # def _remove(self, widget: PlotWidget):
+    #     if ask_confirmation(f'Are you sure you want to delete the plot {widget.plot.text}?'):
+    #         if app_env.test_env():
+    #             self.__destroy(widget)
+    #         else:
+    #             anim = qtanim.fade_out(widget, duration=150)
+    #             anim.finished.connect(partial(self.__destroy, widget))
+    #
+    # def __destroy(self, widget: PlotWidget):
+    #     delete_plot(self.novel, widget.plot)
+    #     self.scrollAreaWidgetContents.layout().removeWidget(widget.parent())
+    
 
     def _displayImpactMatrix(self, checked: bool):
         self._wdgList.clearSelection()
@@ -1083,3 +1101,37 @@ class StorylinesImpactMatrix(QWidget):
         sp(wdg).h_exp().v_exp()
 
         return wdg
+
+
+class StorylineSelectorMenu(MenuWidget):
+    storylineSelected = pyqtSignal(Plot)
+
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+        self._filters: Dict[PlotType, bool] = {
+            PlotType.Global: True,
+            PlotType.Main: True,
+            PlotType.Internal: True,
+            PlotType.Subplot: True,
+            PlotType.Relation: False,
+        }
+        self.aboutToShow.connect(self._beforeShow)
+
+    def filterPlotType(self, plotType: PlotType, filtered: bool):
+        self._filters[plotType] = filtered
+
+    def filterAll(self, filtered: bool):
+        for k in self._filters.keys():
+            self._filters[k] = filtered
+
+    def _beforeShow(self):
+        self.clear()
+        for plot in self._novel.plots:
+            if not self._filters[plot.plot_type]:
+                continue
+            action_ = action(plot.text, IconRegistry.from_name(plot.icon, plot.icon_color),
+                             partial(self.storylineSelected.emit, plot))
+            self.addAction(action_)
+        if not self.actions():
+            self.addSection('No corresponding storylines were found')

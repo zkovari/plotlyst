@@ -17,41 +17,38 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import List
+from dataclasses import dataclass, field
+from functools import partial
+from typing import List, Dict, Optional
 
 import qtanim
-from PyQt6.QtCharts import QSplineSeries, QValueAxis, QLegend
+from PyQt6.QtCharts import QSplineSeries, QValueAxis, QLegend, QAbstractSeries, QLineSeries
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QPen, QColor
+from PyQt6.QtGui import QPen, QColor, QShowEvent
 from overrides import overrides
-from qthandy import clear_layout, vspacer, bold
+from qthandy import clear_layout, vspacer, gc
 
-from src.main.python.plotlyst.core.domain import Novel, Plot
+from src.main.python.plotlyst.common import clamp
+from src.main.python.plotlyst.core.domain import Novel, Plot, Character, Motivation
 from src.main.python.plotlyst.view.common import icon_to_html_img
 from src.main.python.plotlyst.view.generated.report.plot_report_ui import Ui_PlotReport
-from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.report import AbstractReport
-from src.main.python.plotlyst.view.widget.button import EyeToggle
 from src.main.python.plotlyst.view.widget.chart import BaseChart
-from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
+from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, EyeToggleNode
 
 
-class PlotArcNode(ContainerNode):
+class PlotArcNode(EyeToggleNode):
     plotToggled = pyqtSignal(Plot, bool)
 
     def __init__(self, plot: Plot, parent=None):
         super(PlotArcNode, self).__init__(plot.text, parent)
         self._plot = plot
+        self.setToggleTooltip('Toggle arc')
+        self.refresh()
 
-        self.setPlusButtonEnabled(False)
-        self.setMenuEnabled(False)
-        self.setSelectionEnabled(False)
-
-        self._btnVisible = EyeToggle()
-        self._btnVisible.setToolTip('Toggle arc')
-        self._btnVisible.toggled.connect(self._toggled)
-        self._wdgTitle.layout().addWidget(self._btnVisible)
-
+    @overrides
+    def showEvent(self, event: QShowEvent) -> None:
         self.refresh()
 
     def refresh(self):
@@ -62,42 +59,97 @@ class PlotArcNode(ContainerNode):
         else:
             self._icon.setHidden(True)
 
+    @overrides
     def _toggled(self, toggled: bool):
-        bold(self._lblTitle, toggled)
+        super()._toggled(toggled)
         self.plotToggled.emit(self._plot, toggled)
 
 
 class ArcsTreeView(TreeView):
-    plotToggled = pyqtSignal(Plot, bool)
+    storylineToggled = pyqtSignal(Plot, bool)
+    conflictToggled = pyqtSignal(bool)
+    characterConflictToggled = pyqtSignal(Character, bool)
+    characterEmotionToggled = pyqtSignal(Character, bool)
+    characterMotivationToggled = pyqtSignal(Character, bool)
 
     def __init__(self, novel: Novel, parent=None):
         super(ArcsTreeView, self).__init__(parent)
         self._novel = novel
         self._centralWidget.setProperty('relaxed-white-bg', True)
 
+        self._storylineNodes: Dict[Plot, PlotArcNode] = {}
+        self._storylinesNode = ContainerNode('Storylines', IconRegistry.storylines_icon(color='grey'), readOnly=True)
+
+        self._conflictNode = EyeToggleNode('Conflict', IconRegistry.conflict_icon())
+        self._conflictNode.setToggleTooltip('Toggle overall conflict intensity')
+        self._conflictNode.toggled.connect(self.conflictToggled)
+
+        self._agendaCharactersNode = ContainerNode('Characters', IconRegistry.character_icon('grey'), readOnly=True)
+
     def refresh(self):
-        clear_layout(self._centralWidget)
+        clear_layout(self._centralWidget, auto_delete=False)
+        self._agendaCharactersNode.clearChildren()
 
         for plot in self._novel.plots:
-            node = PlotArcNode(plot)
-            node.plotToggled.connect(self.plotToggled.emit)
-            self._centralWidget.layout().addWidget(node)
+            if plot not in self._storylineNodes.keys():
+                node = PlotArcNode(plot)
+                self._storylineNodes[plot] = node
+                node.plotToggled.connect(self.storylineToggled.emit)
+                self._storylinesNode.addChild(node)
 
+        characters = set()
+        for scene in self._novel.scenes:
+            for agenda in scene.agendas:
+                if agenda.character_id:
+                    characters.add(agenda.character(self._novel))
+
+        for character in characters:
+            self._addCharacterAgendaNodes(character)
+
+        self._centralWidget.layout().addWidget(self._storylinesNode)
+        self._centralWidget.layout().addWidget(self._conflictNode)
+        self._centralWidget.layout().addWidget(self._agendaCharactersNode)
         self._centralWidget.layout().addWidget(vspacer())
 
+    def removeStoryline(self, plot: Plot):
+        node = self._storylineNodes.pop(plot)
+        if node.isToggled():
+            self.storylineToggled.emit(plot, False)
+        gc(node)
 
-class PlotReport(AbstractReport, Ui_PlotReport):
+    def _addCharacterAgendaNodes(self, character: Character):
+        agendaNode = ContainerNode(character.name, avatars.avatar(character), readOnly=True)
+        emotionNode = EyeToggleNode('Emotion', IconRegistry.from_name('mdi.emoticon-neutral'))
+        motivationNode = EyeToggleNode('Motivation', IconRegistry.from_name('fa5s.fist-raised'))
+        conflictNode = EyeToggleNode('Conflict', IconRegistry.conflict_icon())
+
+        emotionNode.toggled.connect(partial(self.characterEmotionToggled.emit, character))
+        motivationNode.toggled.connect(partial(self.characterMotivationToggled.emit, character))
+        conflictNode.toggled.connect(partial(self.characterConflictToggled.emit, character))
+        agendaNode.addChild(emotionNode)
+        agendaNode.addChild(motivationNode)
+        agendaNode.addChild(conflictNode)
+
+        self._agendaCharactersNode.addChild(agendaNode)
+
+
+class ArcReport(AbstractReport, Ui_PlotReport):
 
     def __init__(self, novel: Novel, parent=None):
-        super(PlotReport, self).__init__(novel, parent)
+        super(ArcReport, self).__init__(novel, parent)
 
-        self.chartValues = PlotValuesArcChart(self.novel)
+        self.chartValues = StoryArcChart(self.novel)
         self.chartViewPlotValues.setChart(self.chartValues)
         self._treeView = ArcsTreeView(novel)
-        self._treeView.plotToggled.connect(self._plotToggled)
+        self._treeView.storylineToggled.connect(self.chartValues.setStorylineVisible)
+        self._treeView.conflictToggled.connect(self.chartValues.setConflictVisible)
+        self._treeView.characterEmotionToggled.connect(self.chartValues.setCharacterEmotionVisible)
+        self._treeView.characterMotivationToggled.connect(self.chartValues.setCharacterMotivationVisible)
+        self._treeView.characterConflictToggled.connect(self.chartValues.setCharacterConflictVisible)
         self.wdgTreeParent.layout().addWidget(self._treeView)
         self.splitter.setSizes([150, 500])
 
+        self.btnArcsToggle.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
         self.btnArcsToggle.clicked.connect(self._arcsSelectorClicked)
 
         self.refresh()
@@ -106,14 +158,30 @@ class PlotReport(AbstractReport, Ui_PlotReport):
     def refresh(self):
         self._treeView.refresh()
 
+    def removeStoryline(self, plot: Plot):
+        self._treeView.removeStoryline(plot)
+
     def _arcsSelectorClicked(self, toggled: bool):
         qtanim.toggle_expansion(self.wdgTreeParent, toggled)
 
-    def _plotToggled(self, plot: Plot, toggled: bool):
-        self.chartValues.setPlotVisible(plot, toggled)
+    # def _plotToggled(self, plot: Plot, toggled: bool):
+    #     self.chartValues.setStorylineVisible(plot, toggled)
+
+    # def _conflictToggled(self, toggled: bool):
+    #     self.chartValues.setConflictVisible(toggled)
 
 
-class PlotValuesArcChart(BaseChart):
+@dataclass
+class CharacterArcs:
+    emotion: Optional[QAbstractSeries] = None
+    conflict: Optional[QAbstractSeries] = None
+    motivation: List[QAbstractSeries] = field(default_factory=list)
+
+
+class StoryArcChart(BaseChart):
+    MIN: int = -10
+    MAX: int = 10
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self.novel = novel
@@ -121,58 +189,177 @@ class PlotValuesArcChart(BaseChart):
         self.legend().setMarkerShape(QLegend.MarkerShape.MarkerShapeCircle)
         self.legend().show()
 
-        self._plots: List[Plot] = []
+        self._axisX = QValueAxis()
+        self._axisX.setRange(0, len(self.novel.scenes))
+        self.addAxis(self._axisX, Qt.AlignmentFlag.AlignBottom)
+        self._axisX.setVisible(False)
 
-        self.setTitle('Plot value charges')
+        self._axisY = QValueAxis()
+        self.addAxis(self._axisY, Qt.AlignmentFlag.AlignLeft)
+        self._axisY.setRange(self.MIN - 1, self.MAX + 1)
+        self._axisY.setVisible(False)
 
-    def setPlotVisible(self, plot: Plot, visible: bool):
+        self._overallConflict: bool = False
+        self._overallConflictSeries: Optional[QAbstractSeries] = None
+        self._plots: Dict[Plot, List[QAbstractSeries]] = {}
+
+        self._characters: Dict[Character, CharacterArcs] = {}
+
+        self.setTitle('Story arc')
+
+    def setStorylineVisible(self, plot: Plot, visible: bool):
         if visible:
-            self._plots.append(plot)
+            series = self._storylineSeries(plot)
+            for serie in series:
+                self.addSeries(serie)
+                serie.attachAxis(self._axisY)
+            self._plots[plot] = series
         else:
-            self._plots.remove(plot)
+            for serie in self._plots.pop(plot):
+                self.removeSeries(serie)
 
-        self.refresh()
+    def setConflictVisible(self, visible: bool):
+        if visible:
+            self._overallConflictSeries = self._conflictSeries()
+            self.addSeries(self._overallConflictSeries)
+            self._overallConflictSeries.attachAxis(self._axisY)
+        else:
+            self.removeSeries(self._overallConflictSeries)
+            self._overallConflictSeries = None
+
+        self._overallConflict = visible
+
+    def setCharacterEmotionVisible(self, character: Character, visible: bool):
+        arcs = self._characterArcs(character)
+        if visible:
+            arcs.emotion = self._characterEmotionSeries(character)
+            self.addSeries(arcs.emotion)
+            arcs.emotion.attachAxis(self._axisY)
+        else:
+            self.removeSeries(arcs.emotion)
+            arcs.emotion = None
+
+    def setCharacterMotivationVisible(self, character: Character, visible: bool):
+        arcs = self._characterArcs(character)
+        if visible:
+            arcs.motivation = self._characterMotivationSeries(character)
+            for serie in arcs.motivation:
+                self.addSeries(serie)
+                serie.attachAxis(self._axisY)
+        else:
+            for serie in arcs.motivation:
+                self.removeSeries(serie)
+            arcs.motivation.clear()
+
+    def setCharacterConflictVisible(self, character: Character, visible: bool):
+        arcs = self._characterArcs(character)
+        if visible:
+            arcs.conflict = self._conflictSeries(character)
+            self.addSeries(arcs.conflict)
+            arcs.conflict.attachAxis(self._axisY)
+        else:
+            self.removeSeries(arcs.conflict)
+            arcs.conflict = None
 
     def refresh(self):
-        self.reset()
+        self._axisX.setRange(0, len(self.novel.scenes))
 
-        axisX = QValueAxis()
-        axisX.setRange(0, len(self.novel.scenes))
-        self.addAxis(axisX, Qt.AlignmentFlag.AlignBottom)
-        axisX.setVisible(False)
+    def _characterArcs(self, character: Character) -> CharacterArcs:
+        if character not in self._characters.keys():
+            self._characters[character] = CharacterArcs()
 
-        axisY = QValueAxis()
-        self.addAxis(axisY, Qt.AlignmentFlag.AlignLeft)
+        return self._characters[character]
 
-        min_ = 0
-        max_ = 0
-        for plot in self._plots:
-            for value in plot.values:
-                charge = 0
+    def _storylineSeries(self, storyline: Plot) -> List[QAbstractSeries]:
+        all_series = []
+
+        for value in storyline.values:
+            charge = 0
+            series = QSplineSeries()
+            all_series.append(series)
+            series.setName(icon_to_html_img(IconRegistry.from_name(value.icon, value.icon_color)) + value.text)
+            pen = QPen()
+            pen.setColor(QColor(value.icon_color))
+            pen.setWidth(2)
+            series.setPen(pen)
+            series.append(0, charge)
+
+            for i, scene in enumerate(self.novel.scenes):
+                for scene_ref in scene.plot_values:
+                    if scene_ref.plot.id != storyline.id:
+                        continue
+                    for scene_p_value in scene_ref.data.values:
+                        if scene_p_value.plot_value_id == value.id:
+                            charge += scene_p_value.charge
+                            series.append(i + 1, clamp(charge, self.MIN, self.MAX))
+
+        return all_series
+
+    def _conflictSeries(self, character: Optional[Character] = None) -> QAbstractSeries:
+        series = QLineSeries()
+        if character:
+            avatar = icon_to_html_img(avatars.avatar(character))
+        else:
+            avatar = ''
+        series.setName(avatar + icon_to_html_img(IconRegistry.conflict_icon()) + 'Conflict intensity')
+        pen = QPen()
+        pen.setColor(QColor('#f3a712'))
+        pen.setWidth(2)
+        series.setPen(pen)
+
+        for i, scene in enumerate(self.novel.scenes):
+            intensity = 0
+            for agenda in scene.agendas:
+                if character and agenda.character_id != character.id:
+                    continue
+                agenda_intensity = max([x.intensity for x in agenda.conflict_references], default=0)
+                intensity = max([intensity, agenda_intensity])
+            if intensity > 0:
+                series.append(i + 1, intensity)
+
+        return series
+
+    def _characterEmotionSeries(self, character: Character) -> QAbstractSeries:
+        series = QSplineSeries()
+        series.setName(icon_to_html_img(avatars.avatar(character)) + 'Emotion')
+        for i, scene in enumerate(self.novel.scenes):
+            for agenda in scene.agendas:
+                if character and agenda.character_id != character.id:
+                    continue
+                if agenda.emotion:
+                    series.append(i + 1, agenda.emotion)
+        return series
+
+    def _characterMotivationSeries(self, character: Character) -> List[QAbstractSeries]:
+        def spline(motivation: str):
+            if motivation not in splines.keys():
+                mot = Motivation(motivation)
                 series = QSplineSeries()
-                series.setName(icon_to_html_img(IconRegistry.from_name(value.icon, value.icon_color)) + value.text)
+                series.setName(mot.display_name())
                 pen = QPen()
-                pen.setColor(QColor(value.icon_color))
+                pen.setColor(QColor(mot.color()))
                 pen.setWidth(2)
                 series.setPen(pen)
-                series.append(0, charge)
+                splines[motivation] = series
 
-                for i, scene in enumerate(self.novel.scenes):
-                    for scene_ref in scene.plot_values:
-                        if scene_ref.plot.id != plot.id:
-                            continue
-                        for scene_p_value in scene_ref.data.values:
-                            if scene_p_value.plot_value_id == value.id:
-                                charge += scene_p_value.charge
-                                series.append(i + 1, charge)
+            return splines[motivation]
 
-                points = series.points()
-                min_ = min(min([x.y() for x in points]), min_)
-                max_ = max(max([x.y() for x in points]), max_)
+        def value(motivation: str):
+            if motivation not in values.keys():
+                values[motivation] = 0
+            return values[motivation]
 
-                self.addSeries(series)
-                series.attachAxis(axisY)
+        splines: Dict[str, QSplineSeries] = {}
+        values: Dict[str, int] = {}
+        for i, scene in enumerate(self.novel.scenes):
+            for agenda in scene.agendas:
+                if character and agenda.character_id != character.id:
+                    continue
+                for motivation, v in agenda.motivations.items():
+                    prev_value = value(motivation)
+                    values[motivation] = prev_value + v
+                    if values[motivation] > self.MAX:
+                        values[motivation] = self.MAX
+                    spline(motivation).append(i, values[motivation])
 
-        limit = max(abs(min_), max_)
-        axisY.setRange(-limit - 1, limit + 1)
-        axisY.setVisible(False)
+        return list(splines.values())

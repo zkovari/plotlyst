@@ -257,7 +257,7 @@
             <property name="maximumSize">
              <size>
               <width>16777215</width>
-              <height>50</height>
+              <height>150</height>
              </size>
             </property>
             <property name="placeholderText" stdset="0">
@@ -502,8 +502,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>100</width>
-            <height>30</height>
+            <width>624</width>
+            <height>517</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -587,8 +587,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>546</width>
-            <height>512</height>
+            <width>544</width>
+            <height>517</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -668,7 +668,7 @@
   <customwidget>
    <class>StoryStructureEditor</class>
    <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.novel</header>
+   <header>src.main.python.plotlyst.view.widget.structure</header>
    <container>1</container>
   </customwidget>
   <customwidget>

@@ -41,7 +41,8 @@ from src.main.python.plotlyst.core.template import TemplateField, SelectionItem,
     healing_field, methods_field, misbelief_field, positive_arc, negative_arc, need_field, ghost_field, desire_field
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
-from src.main.python.plotlyst.view.common import wrap, emoji_font, hmax, action, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import wrap, emoji_font, hmax, action, ButtonPressResizeEventFilter, \
+    insert_before_the_end
 from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui import Ui_FieldTextSelectionWidget
 from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -510,7 +511,8 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
 
         # self.btnNotes = QToolButton()
 
-        _layout.addWidget(group(self.lblEmoji, self.lblName, spacer()))
+        self.wdgTop = group(self.lblEmoji, self.lblName, spacer())
+        _layout.addWidget(self.wdgTop)
         _layout.addWidget(self.wdgEditor)
 
         self.wdgEditor.textChanged.connect(self._textChanged)
@@ -861,15 +863,18 @@ class _SecondaryFieldSelectorButton(QToolButton):
         super(_SecondaryFieldSelectorButton, self).__init__(parent)
         self._field = field
         self._selector = selector
+
         retain_when_hidden(self)
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         transparent(self)
         pointy(self)
         self.setIconSize(QSize(22, 22))
         self.setIcon(IconRegistry.plus_edit_icon())
+
         menu = MenuWidget(self)
         menu.addWidget(self._selector)
         menu.addSeparator()
+
         btnRemove = QPushButton(f'Remove {self._field.name}')
         transparent(btnRemove)
         pointy(btnRemove)
@@ -878,6 +883,7 @@ class _SecondaryFieldSelectorButton(QToolButton):
         hmax(btnRemove)
         italic(btnRemove)
         btnRemove.clicked.connect(self.removalRequested.emit)
+
         menu.addWidget(btnRemove)
         self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.7))
 
@@ -903,6 +909,7 @@ class _PrimaryFieldWidget(QWidget):
         btnSecondary.removalRequested.connect(self.removed.emit)
         self._selector.toggled.connect(self._toggleSecondaryField)
         self._selector.clicked.connect(self._clickSecondaryField)
+        insert_before_the_end(self._primaryWdg.wdgTop, btnSecondary)
 
         self._secondaryWdgContainer = QWidget()
         vbox(self._secondaryWdgContainer, 0, 2)
@@ -913,7 +920,6 @@ class _PrimaryFieldWidget(QWidget):
         top = QWidget()
         hbox(top)
         top.layout().addWidget(self._primaryWdg)
-        top.layout().addWidget(btnSecondary, alignment=Qt.AlignmentFlag.AlignTop)
         spacer_ = spacer()
         sp(spacer_).h_preferred()
         top.layout().addWidget(spacer_)
@@ -953,7 +959,9 @@ class _PrimaryFieldWidget(QWidget):
             wdg.valueReset.connect(self.valueChanged.emit)
             self._secondaryFieldWidgets[secondary] = wdg
             item = self._secondaryWdgContainer.layout().itemAt(i)
-            self._secondaryWdgContainer.layout().replaceWidget(item.widget(), wdg)
+            icon = Icon()
+            icon.setIcon(IconRegistry.from_name('msc.dash', 'grey'))
+            self._secondaryWdgContainer.layout().replaceWidget(item.widget(), group(icon, wdg))
         else:
             self._secondaryWdgContainer.layout().replaceWidget(self._secondaryFieldWidgets[secondary], spacer())
             gc(self._secondaryFieldWidgets[secondary])

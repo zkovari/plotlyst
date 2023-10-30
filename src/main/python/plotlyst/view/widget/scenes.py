@@ -32,7 +32,7 @@ from PyQt6.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter
     QPushButton, QTreeView, QTextEdit, QLabel, QTableView, \
     QAbstractItemView, QButtonGroup, QAbstractButton
 from overrides import overrides
-from qthandy import busy, margins, vspacer, bold, incr_font, gc, pointy
+from qthandy import busy, margins, vspacer, bold, incr_font, gc, pointy, vline
 from qthandy import decr_font, transparent, translucent, underline, flow, \
     clear_layout, hbox, spacer, btn_popup, vbox, italic
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter, DragEventFilter
@@ -45,7 +45,7 @@ from src.main.python.plotlyst.core.domain import Scene, Novel, SceneOutcome, Sto
     ScenePlotReference, StoryBeatType, Tag, SceneStage, ReaderPosition, InformationAcquisition, Document, \
     StoryStructure
 from src.main.python.plotlyst.core.help import scene_disaster_outcome_help, scene_trade_off_outcome_help, \
-    scene_resolution_outcome_help
+    scene_resolution_outcome_help, scene_motion_outcome_help
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical, Event, EventListener, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
@@ -72,7 +72,7 @@ from src.main.python.plotlyst.view.widget.labels import SelectionItemLabel, Scen
 class SceneOutcomeSelector(QWidget):
     selected = pyqtSignal(SceneOutcome)
 
-    def __init__(self, parent=None, autoSelect: bool = True):
+    def __init__(self, parent=None, autoSelect: bool = True, extended: bool = False):
         super().__init__(parent)
         self._outcome = SceneOutcome.DISASTER
         hbox(self)
@@ -82,9 +82,12 @@ class SceneOutcomeSelector(QWidget):
                                       checkable=True)
         self.btnTradeOff = tool_btn(IconRegistry.tradeoff_icon(color='grey'), scene_trade_off_outcome_help,
                                     checkable=True)
+        self.btnMotion = tool_btn(IconRegistry.motion_icon(color='grey'), scene_motion_outcome_help,
+                                  checkable=True)
         self._initStyle(self.btnDisaster, '#FDD7D2')
         self._initStyle(self.btnTradeOff, '#F0C4E1')
         self._initStyle(self.btnResolution, '#CDFAEC')
+        self._initStyle(self.btnMotion, '#E6CBAF')
 
         self.btnGroupOutcome = QButtonGroup()
         self._initButtonGroup()
@@ -95,12 +98,19 @@ class SceneOutcomeSelector(QWidget):
         self.layout().addWidget(self.btnTradeOff)
         self.layout().addWidget(self.btnResolution)
 
+        self._lineMotion = vline()
+        self.layout().addWidget(self._lineMotion)
+        self.layout().addWidget(self.btnMotion)
+        self._lineMotion.setVisible(extended)
+        self.btnMotion.setVisible(extended)
+
     def reset(self):
         btn = self.btnGroupOutcome.checkedButton()
         if btn:
             self.btnGroupOutcome.removeButton(self.btnDisaster)
             self.btnGroupOutcome.removeButton(self.btnResolution)
             self.btnGroupOutcome.removeButton(self.btnTradeOff)
+            self.btnGroupOutcome.removeButton(self.btnMotion)
             btn.setChecked(False)
 
             self.btnGroupOutcome = QButtonGroup()
@@ -113,6 +123,8 @@ class SceneOutcomeSelector(QWidget):
             self.btnResolution.setChecked(True)
         elif outcome == SceneOutcome.TRADE_OFF:
             self.btnTradeOff.setChecked(True)
+        elif outcome == SceneOutcome.MOTION:
+            self.btnMotion.setChecked(True)
 
     def _clicked(self, checked: bool):
         if not checked:
@@ -123,6 +135,9 @@ class SceneOutcomeSelector(QWidget):
             self._outcome = SceneOutcome.RESOLUTION
         elif self.btnTradeOff.isChecked():
             self._outcome = SceneOutcome.TRADE_OFF
+        elif self.btnMotion.isChecked():
+            self._outcome = SceneOutcome.MOTION
+
         self.selected.emit(self._outcome)
 
     def _initButtonGroup(self):
@@ -130,6 +145,7 @@ class SceneOutcomeSelector(QWidget):
         self.btnGroupOutcome.addButton(self.btnDisaster)
         self.btnGroupOutcome.addButton(self.btnTradeOff)
         self.btnGroupOutcome.addButton(self.btnResolution)
+        self.btnGroupOutcome.addButton(self.btnMotion)
 
         self.btnGroupOutcome.buttonClicked.connect(self._clicked)
 
@@ -401,9 +417,9 @@ class SceneStoryStructureWidget(QWidget):
         if not len(beats) == 2:
             return emit_critical('Only 3 acts are supported at the moment for story structure widget')
 
-        self._actsSplitter.setSizes([10 * beats[0].percentage,
-                                     10 * (beats[1].percentage - beats[0].percentage),
-                                     10 * (100 - beats[1].percentage)])
+        self._actsSplitter.setSizes([int(10 * beats[0].percentage),
+                                     int(10 * (beats[1].percentage - beats[0].percentage)),
+                                     int(10 * (100 - beats[1].percentage))])
         self._actsSplitter.setEnabled(self._actsResizeable)
         self._actsSplitter.splitterMoved.connect(self._actResized)
         self.update()
@@ -579,6 +595,9 @@ class SceneStoryStructureWidget(QWidget):
             max_percentage = next_beat.percentage if next_beat else 99
             min_index = self.novel.scenes.index(previous_beat_scene) if previous_beat_scene else 0
             max_index = self.novel.scenes.index(next_beat_scene) if next_beat_scene else len(self.novel.scenes) - 1
+
+            if max_index - min_index == 0:
+                return
 
             self._currentScenePercentage = min_percentage + (max_percentage - min_percentage) / (
                     max_index - min_index) * (index - min_index)

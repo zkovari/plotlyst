@@ -22,7 +22,7 @@ from typing import Optional
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtGui import QMouseEvent
-from PyQt6.QtWidgets import QWidget, QSlider, QPushButton, QHeaderView, QFrame
+from PyQt6.QtWidgets import QWidget, QSlider, QHeaderView, QFrame
 from overrides import overrides
 from qthandy import hbox, gc
 from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter, InstantTooltipEventFilter
@@ -51,6 +51,8 @@ class ConflictIntensityEditor(QWidget):
         self._slider.setMaximum(10)
         self._slider.setPageStep(1)
         self._slider.setValue(1)
+        self._slider.setMinimumWidth(100)
+        self._slider.setMaximumWidth(200)
         self._slider.valueChanged.connect(self._valueChanged)
         self._slider.setProperty('conflict', True)
 
@@ -59,6 +61,9 @@ class ConflictIntensityEditor(QWidget):
 
         self.layout().addWidget(self._icon)
         self.layout().addWidget(self._slider)
+
+    def value(self) -> int:
+        return self._slider.value()
 
     def setValue(self, value: int) -> None:
         if value == 0:
@@ -191,22 +196,20 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
 class CharacterConflictSelector(QWidget):
     conflictSelected = pyqtSignal()
 
-    def __init__(self, novel: Novel, scene: Scene, simplified: bool = False, parent=None):
+    def __init__(self, novel: Novel, scene: Scene, agenda: SceneStructureAgenda, parent=None):
         super().__init__(parent)
         self.novel = novel
         self.scene = scene
+        self.agenda = agenda
         self.conflict: Optional[Conflict] = None
         self.conflict_ref: Optional[ConflictReference] = None
         hbox(self)
 
         self.label: Optional[ConflictLabel] = None
 
-        self.btnLinkConflict = QPushButton(self)
-        if not simplified:
-            self.btnLinkConflict.setText('Track conflict')
+        self.btnLinkConflict = tool_btn(IconRegistry.conflict_icon())
         self.layout().addWidget(self.btnLinkConflict)
         self.btnLinkConflict.setIcon(IconRegistry.conflict_icon())
-        self.btnLinkConflict.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btnLinkConflict.setStyleSheet('''
                         QPushButton::menu-indicator {
                             width: 0px;
@@ -227,7 +230,7 @@ class CharacterConflictSelector(QWidget):
                     ''')
 
         self.btnLinkConflict.installEventFilter(OpacityEventFilter(parent=self.btnLinkConflict))
-        self.selectorWidget = CharacterConflictWidget(self.novel, self.scene, self.scene.agendas[0])
+        self.selectorWidget = CharacterConflictWidget(self.novel, self.scene, self.agenda)
         self._menu = MenuWidget(self.btnLinkConflict)
         self._menu.addWidget(self.selectorWidget)
 
@@ -244,8 +247,8 @@ class CharacterConflictSelector(QWidget):
 
     def _conflictSelected(self):
         self._menu.hide()
-        new_conflict = self.scene.agendas[0].conflicts(self.novel)[-1]
-        new_conflict_ref = self.scene.agendas[0].conflict_references[-1]
+        new_conflict = self.agenda.conflicts(self.novel)[-1]
+        new_conflict_ref = self.agenda.conflict_references[-1]
         # self.btnLinkConflict.menu().hide()
         self.setConflict(new_conflict, new_conflict_ref)
 
@@ -260,6 +263,6 @@ class CharacterConflictSelector(QWidget):
             anim.finished.connect(self.__destroy)
 
     def __destroy(self):
-        self.scene.agendas[0].remove_conflict(self.conflict)
+        self.agenda.remove_conflict(self.conflict)
         self.parent().layout().removeWidget(self)
         gc(self)

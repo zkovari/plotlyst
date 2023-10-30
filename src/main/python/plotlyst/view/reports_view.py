@@ -32,7 +32,7 @@ from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent, \
-    PlotCreatedEvent, CharacterDeletedEvent, NovelSyncEvent
+    CharacterDeletedEvent, NovelSyncEvent, StorylineCreatedEvent, StorylineRemovedEvent
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import link_buttons_to_pages, scrolled
 from src.main.python.plotlyst.view.generated.reports_view_ui import Ui_ReportsView
@@ -41,7 +41,7 @@ from src.main.python.plotlyst.view.report import AbstractReport
 from src.main.python.plotlyst.view.report.character import CharacterReport
 from src.main.python.plotlyst.view.report.conflict import ConflictReport
 from src.main.python.plotlyst.view.report.manuscript import ManuscriptReport
-from src.main.python.plotlyst.view.report.plot import PlotReport
+from src.main.python.plotlyst.view.report.plot import ArcReport
 from src.main.python.plotlyst.view.report.scene import SceneReport
 
 
@@ -88,7 +88,8 @@ class ReportPage(QWidget, EventListener):
             self._refreshNext = True
 
     def refresh(self):
-        self._report.refresh()
+        if self._report:
+            self._report.refresh()
 
     @abstractmethod
     def _initReport(self) -> AbstractReport:
@@ -131,10 +132,19 @@ class ConflictsReportPage(ReportPage):
 class ArcReportPage(ReportPage):
     def __init__(self, novel: Novel, parent=None):
         super(ArcReportPage, self).__init__(novel, parent)
+        self._dispatcher.register(self, StorylineCreatedEvent, StorylineRemovedEvent, CharacterChangedEvent)
 
     @overrides
     def _initReport(self):
-        return PlotReport(self._novel)
+        return ArcReport(self._novel)
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, StorylineRemovedEvent):
+            if self._report:
+                self._report.removeStoryline(event.storyline)
+        else:
+            super().event_received(event)
 
 
 class ManuscriptReportPage(ReportPage):
@@ -173,7 +183,7 @@ class ManuscriptReportPage(ReportPage):
 
 class ReportsView(AbstractNovelView):
     def __init__(self, novel: Novel):
-        super().__init__(novel, [CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent, PlotCreatedEvent])
+        super().__init__(novel)
         self.ui = Ui_ReportsView()
         self.ui.setupUi(self.widget)
 
@@ -209,7 +219,7 @@ class ReportsView(AbstractNovelView):
                                                       (self.ui.btnArc, self._page_arc),
                                                       (self.ui.btnManuscript, self._page_manuscript)])
 
-        self.ui.btnCharacters.setChecked(True)
+        self.ui.btnArc.setChecked(True)
 
     @overrides
     def refresh(self):

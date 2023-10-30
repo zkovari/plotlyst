@@ -22,7 +22,7 @@ from typing import Optional
 from PyQt6.QtCore import QObject, QEvent
 from PyQt6.QtGui import QFont
 from overrides import overrides
-from qthandy import retain_when_hidden, transparent, decr_icon
+from qthandy import retain_when_hidden, transparent, decr_icon, gc
 from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
@@ -110,8 +110,7 @@ class NovelView(AbstractNovelView):
         self.ui.textSynopsis.setMargins(0, 10, 0, 10)
         self.ui.textSynopsis.textEdit.setSidebarEnabled(False)
         self.ui.textSynopsis.textEdit.setTabChangesFocus(True)
-        self.ui.textSynopsis.setGrammarCheckEnabled(True)
-        self.ui.textPremise.setGrammarCheckEnabled(True)
+        self.ui.textSynopsis.setGrammarCheckEnabled(self.novel.prefs.docs.grammar_check)
 
         self.ui.textPremise.setToolbarVisible(False)
         self.ui.textPremise.setTitleVisible(False)
@@ -196,10 +195,11 @@ class NovelView(AbstractNovelView):
         self._dialogSynopsisEditor.show()
 
     def _closeSynopsisEditor(self):
-        self.ui.textSynopsis.setText(self._dialogSynopsisEditor.synopsis())
-        self._dialogSynopsisEditor = None
         self.ui.textSynopsis.setEnabled(True)
+        self.ui.textSynopsis.setText(self._dialogSynopsisEditor.synopsis())
         self._btnSynopsisExtendEdit.setEnabled(True)
+        gc(self._dialogSynopsisEditor)
+        self._dialogSynopsisEditor = None
 
     def _synopsis_changed(self):
         if self.novel.synopsis is None:

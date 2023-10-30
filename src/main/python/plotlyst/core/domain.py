@@ -458,6 +458,7 @@ class StoryBeat:
     percentage: int = 0
     percentage_end: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     enabled: bool = True
+    notes: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
     @overrides
     def __eq__(self, other: 'StoryBeat'):
@@ -801,12 +802,15 @@ class SceneOutcome(Enum):
     DISASTER = 0
     RESOLUTION = 1
     TRADE_OFF = 2
+    MOTION = 3
 
     @staticmethod
     def to_str(outcome: 'SceneOutcome') -> str:
         if outcome == SceneOutcome.TRADE_OFF:
-            return 'Trade-off'
-        return outcome.name.lower().capitalize()
+            return 'Trade-off outcome'
+        elif outcome == SceneOutcome.MOTION:
+            return 'Set into motion'
+        return outcome.name.lower().capitalize() + ' outcome'
 
 
 @dataclass
@@ -909,12 +913,11 @@ class TagReference:
 @dataclass
 class SceneStructureAgenda(CharacterBased):
     character_id: Optional[uuid.UUID] = None
-    items: List[SceneStructureItem] = field(default_factory=list)
     conflict_references: List[ConflictReference] = field(default_factory=list)
     goal_references: List[GoalReference] = field(default_factory=list)
+    intensity: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     emotion: Optional[int] = None
     motivations: Dict[int, int] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
-
     story_elements: List['StoryElement'] = field(default_factory=list)
 
     def __post_init__(self):
@@ -1034,8 +1037,20 @@ class StoryElementType(Enum):
     Goal = 'goal'
     Motivation = 'motivation'
     Conflict = 'conflict'
+    Internal_conflict = 'internal_conflict'
+    Dilemma = 'dilemma'
+    Impact = 'impact'
+    Responsibility = 'responsibility'
     Decision = 'decision'
     Emotion = 'emotion'
+    Agency = 'agency'
+    Initiative = 'initiative'
+    Catalyst = 'catalyst'
+    Plan_change = 'plan_change'
+    Collaboration = 'collaboration'
+    Subtext = 'subtext'
+    Event = 'event'
+    Effect = 'effect'
 
 
 @dataclass
@@ -1044,6 +1059,9 @@ class StoryElement:
     ref: Optional[uuid.UUID] = None
     text: str = ''
     intensity: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    row: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    col: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    arrows: Dict[int, int] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass
@@ -1069,6 +1087,7 @@ class Scene:
     purpose: Optional[ScenePurposeType] = None
     outcome: Optional[SceneOutcome] = None
     story_elements: List[StoryElement] = field(default_factory=list)
+    structure: List[SceneStructureItem] = field(default_factory=list)
 
     def beat(self, novel: 'Novel') -> Optional[StoryBeat]:
         structure = novel.active_story_structure
@@ -1120,6 +1139,9 @@ class Scene:
 
     def outcome_trade_off(self) -> bool:
         return self.__is_outcome(SceneOutcome.TRADE_OFF)
+
+    def outcome_motion(self) -> bool:
+        return self.__is_outcome(SceneOutcome.MOTION)
 
     def title_or_index(self, novel: 'Novel') -> str:
         return self.title if self.title else f'Scene {novel.scenes.index(self) + 1}'
@@ -1290,6 +1312,7 @@ class StoryStructure(CharacterBased):
     custom: bool = False
     active: bool = False
     character_id: Optional[uuid.UUID] = None
+    acts_text: Dict[int, str] = field(default_factory=dict)
 
     def __post_init__(self):
         self._character: Optional[Character] = None
@@ -1389,6 +1412,9 @@ crisis = StoryBeat(text='Crisis',
                    description="The protagonist must decide between two equally bad or two irreconcilable good choices.",
                    id=uuid.UUID('466688f7-ebee-4d36-a655-83ff40e1c46d'),
                    act=3, percentage=95)
+
+first_plot_points = (first_plot_point, first_plot_point_ponr)
+midpoints = (midpoint, midpoint_ponr, midpoint_mirror, midpoint_proactive)
 
 three_act_structure = StoryStructure(title='Three Act Structure',
                                      id=uuid.UUID('58013be5-1efb-4de4-9dd2-1433ce6edf90'),
@@ -2139,11 +2165,12 @@ class Novel(NovelDescriptor):
         char_ids = set()
         chars: List[Character] = []
         for scene in self.scenes:
-            if scene.agendas and scene.agendas[0].character_id and str(scene.agendas[0].character_id) not in char_ids:
-                character = scene.agendas[0].character(self)
-                if character:
-                    chars.append(character)
-                    char_ids.add(str(scene.agendas[0].character_id))
+            for agenda in scene.agendas:
+                if agenda.character_id and str(agenda.character_id) not in char_ids:
+                    character: Character = agenda.character(self)
+                    if character:
+                        chars.append(character)
+                        char_ids.add(str(character.id))
 
         return chars
 

@@ -496,9 +496,12 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
     def hasOutcome(self) -> bool:
         return self.beat.type == SceneStructureItemType.CLIMAX
 
-    def setOutcome(self, outcome: SceneOutcome):
-        self.beat.outcome = outcome
-        self._outcome.refresh(outcome)
+    def setOutcome(self, outcome: Optional[SceneOutcome]):
+        if outcome:
+            self.beat.outcome = outcome
+            self._outcome.refresh(outcome)
+        # else:
+        #     self._outcome.reset()
         self._initStyle()
 
     def activate(self):
@@ -948,23 +951,23 @@ class BeatListItemWidget(ListItemWidget):
 class SceneStructureList(ListView):
     def __init__(self, parent=None):
         super(SceneStructureList, self).__init__(parent)
-        self._agenda: Optional[SceneStructureAgenda] = None
+        self._items: List[SceneStructureItem] = []
         self._centralWidget.setProperty('relaxed-white-bg', True)
 
-    def setAgenda(self, agenda: SceneStructureAgenda, purpose: Optional[ScenePurposeType] = None):
-        self._agenda = agenda
+    def setStructure(self, items: List[SceneStructureItem], purpose: Optional[ScenePurposeType] = None):
+        self._items = items
         self.refresh()
 
     def refresh(self):
         self.clear()
 
-        for beat in self._agenda.items:
+        for beat in self._items:
             self.addItem(beat)
 
     @overrides
     def _addNewItem(self):
         beat = SceneStructureItem(SceneStructureItemType.EXPOSITION)
-        self._agenda.items.append(beat)
+        self._items.append(beat)
         self.addItem(beat)
 
     @overrides
@@ -974,15 +977,15 @@ class SceneStructureList(ListView):
     @overrides
     def _deleteItemWidget(self, widget: ListItemWidget):
         super(SceneStructureList, self)._deleteItemWidget(widget)
-        self._agenda.items.remove(widget.item())
+        self._items.remove(widget.item())
 
     @overrides
     def _dropped(self, mimeData: ObjectReferenceMimeData):
         super(SceneStructureList, self)._dropped(mimeData)
-        self._agenda.items.clear()
+        self._items.clear()
 
         for wdg in self.widgets():
-            self._agenda.items.append(wdg.item())
+            self._items.append(wdg.item())
 
 
 class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
@@ -1038,8 +1041,8 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.timeline.setScene(scene)
         self.timeline.clear()
 
-        self.timeline.setStructure(scene.agendas[0].items)
-        self.listEvents.setAgenda(scene.agendas[0], self.scene.purpose)
+        self.timeline.setStructure(scene.structure)
+        self.listEvents.setStructure(scene.structure, self.scene.purpose)
         self._initEditor(self.scene.purpose)
 
     def refreshOutcome(self):
@@ -1047,7 +1050,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
-        if not any([x for x in self.scene.agendas[0].items if x.text]):
+        if not any([x for x in self.scene.structure if x.text]):
             self._btnTemplates.setVisible(True)
 
         self._btnMenu.setVisible(True)
@@ -1089,8 +1092,8 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         selector = SceneStructureTemplateSelector()
         structure = selector.display()
         if structure:
-            self.scene.agendas[0].items.clear()
-            self.scene.agendas[0].items.extend(structure)
+            self.scene.structure.clear()
+            self.scene.structure.extend(structure)
             self.timeline.setStructure(structure)
 
     def _reset(self):
@@ -1102,7 +1105,7 @@ class SceneStructureTemplateSelector(QDialog, Ui_SceneStructuteTemplateSelector)
         super().__init__(parent)
         self.setupUi(self)
 
-        self._structure: SceneStructureAgenda = SceneStructureAgenda()
+        self._structure: List[SceneStructureItem] = []
 
         self._timeline = SceneStructureTimeline()
         self._timeline.setReadnOnly(True)
@@ -1124,7 +1127,7 @@ class SceneStructureTemplateSelector(QDialog, Ui_SceneStructuteTemplateSelector)
 
         result = self.exec()
         if result == QDialog.DialogCode.Accepted:
-            return self._structure.items
+            return self._structure
         else:
             return []
 
@@ -1134,13 +1137,13 @@ class SceneStructureTemplateSelector(QDialog, Ui_SceneStructuteTemplateSelector)
         elif self.btnSequel.isChecked():
             self._fillInSequelTemplate()
 
-        self._timeline.setStructure(self._structure.items)
+        self._timeline.setStructure(self._structure)
 
         QTimer.singleShot(10, self._timeline.update)
 
     def _fillInSceneTemplate(self):
-        self._structure.items.clear()
-        self._structure.items.extend([
+        self._structure.clear()
+        self._structure.extend([
             SceneStructureItem(SceneStructureItemType.ACTION),
             SceneStructureItem(SceneStructureItemType.CONFLICT),
             SceneStructureItem(SceneStructureItemType.CLIMAX)
@@ -1149,8 +1152,8 @@ class SceneStructureTemplateSelector(QDialog, Ui_SceneStructuteTemplateSelector)
         self.textBrowser.setText('Scene template')
 
     def _fillInSequelTemplate(self):
-        self._structure.items.clear()
-        self._structure.items.extend([
+        self._structure.clear()
+        self._structure.extend([
             SceneStructureItem(SceneStructureItemType.REACTION),
             SceneStructureItem(SceneStructureItemType.DILEMMA),
             SceneStructureItem(SceneStructureItemType.DECISION)

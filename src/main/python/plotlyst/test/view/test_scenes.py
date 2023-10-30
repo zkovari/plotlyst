@@ -36,6 +36,7 @@ def test_scene_characters(qtbot, filled_window: MainWindow):
 
     view: ScenesOutlineView = start_new_scene_editor(filled_window)
     qtbot.keyClicks(view.editor.ui.lineTitle, 'Scene 3')
+    view.editor._povMenu.refresh()
     actions = view.editor.ui.wdgPov.btnAvatar.menu().actions()
     actions[5].trigger()
     view.editor.ui.btnClose.click()
@@ -82,7 +83,6 @@ def test_scene_edition(qtbot, filled_window: MainWindow):
     view.editor.ui.lineTitle.clear()
     qtbot.keyClicks(view.editor.ui.lineTitle, title)
     view.editor.ui.btnClose.click()
-    assert not view.editor
 
     assert_data(view.tblModel, title, 0, ScenesTableModel.ColTitle)
 
