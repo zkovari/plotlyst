@@ -1053,6 +1053,10 @@ class StorylinesConnectionWidget(QWidget):
             elif self._target.plot_type != PlotType.Relation:
                 self._addAction(StorylineLinkType.Reflect_plot)
 
+        self._menu.addSeparator()
+        self._menu.addAction(
+            action('Remove', IconRegistry.trash_can_icon(), tooltip='Remove connection', slot=self._remove))
+
         self.stack.setCurrentWidget(self._wdgDefault)
 
         vbox(self, 0, 0)
@@ -1090,6 +1094,13 @@ class StorylinesConnectionWidget(QWidget):
         self._icon.setText(self._link.type.name)
         self._icon.setToolTip(self._link.type.desc())
         self._text.setPlaceholderText(self._link.type.desc())
+
+    def _remove(self):
+        self._source.links.remove(self._link)
+        self._link = None
+        self._text.clear()
+        self.stack.setCurrentWidget(self._wdgDefault)
+        self.unlinked.emit()
 
     def _addAction(self, type: StorylineLinkType):
         self._menu.addAction(action(type.name, IconRegistry.from_name(type.icon())
@@ -1140,10 +1151,9 @@ class StorylinesImpactMatrix(QWidget):
                 wdg = StorylinesConnectionWidget(storyline, ref_storyline)
                 wdg.linked.connect(self._save)
                 wdg.linkChanged.connect(self._save)
+                wdg.unlinked.connect(self._save)
                 if str(ref_storyline.id) in refs.keys():
                     wdg.setLink(refs[str(ref_storyline.id)])
-                # else:
-                #     pass
                 self._grid.addWidget(wdg, i + 1, j + 1)
 
         self._grid.addWidget(line(), 0, 1, 1, len(self._novel.plots), alignment=Qt.AlignmentFlag.AlignBottom)
