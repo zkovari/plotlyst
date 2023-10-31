@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from builtins import staticmethod
 from dataclasses import dataclass
 
 from PyQt6.QtCore import Qt, QSize, QPoint
@@ -84,21 +85,25 @@ class ConfirmationDialog(QDialog):
         if event.key() == Qt.Key.Key_Escape:
             self.reject()
 
+    @staticmethod
+    def confirm(message: str, title: str = 'Confirm?') -> bool:
+        dialog = ConfirmationDialog()
+        dialog.title.setText(title)
+        dialog.text.setText(message)
+
+        window = QApplication.activeWindow()
+        overlay = OverlayWidget(window)
+        overlay.show()
+
+        dialog.move(
+            window.frameGeometry().center() - QPoint(dialog.sizeHint().width() // 2, dialog.sizeHint().height() // 2))
+
+        result = dialog.display().confirmed
+
+        overlay.setHidden(True)
+
+        return result
+
 
 def confirmed(message: str, title: str = 'Confirm?') -> bool:
-    dialog = ConfirmationDialog()
-    dialog.title.setText(title)
-    dialog.text.setText(message)
-
-    window = QApplication.activeWindow()
-    overlay = OverlayWidget(window)
-    overlay.show()
-
-    center = window.frameGeometry().center()
-    dialog.move(window.frameGeometry().center() - QPoint(dialog.sizeHint().width() // 2, dialog.sizeHint().height() // 2))
-
-    result = dialog.display().confirmed
-
-    overlay.setHidden(True)
-
-    return result
+    return ConfirmationDialog.confirm(message, title)
