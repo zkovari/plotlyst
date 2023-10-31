@@ -58,7 +58,7 @@ def test_scene_deletion(qtbot, filled_window: MainWindow, monkeypatch):
     assert view.ui.btnEdit.isEnabled()
     assert view.ui.btnDelete.isEnabled()
 
-    patch_confirmed(monkeypatch, QMessageBox.StandardButton.No)
+    patch_confirmed(monkeypatch, False)
     view.ui.btnDelete.click()
     assert len(view.novel.scenes) == 2
     assert_data(view.tblModel, 'Scene 1', 0, ScenesTableModel.ColTitle)

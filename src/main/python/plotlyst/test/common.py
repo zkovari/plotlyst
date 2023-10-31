@@ -34,6 +34,7 @@ from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
+from src.main.python.plotlyst.view.widget.confirm import ConfirmationDialog
 
 
 def show_widget(qtbot, widget):
@@ -105,8 +106,9 @@ def popup_actions_on_item(qtbot, view: QAbstractItemView, row: int, column: int)
     return menu.actions()
 
 
-def patch_confirmed(monkeypatch, answer=QMessageBox.StandardButton.Yes):
-    monkeypatch.setattr(QMessageBox, "question", lambda *args: answer)  # confirm
+def patch_confirmed(monkeypatch, confirmed: bool = True):
+    monkeypatch.setattr(QMessageBox, "question", lambda *args: QMessageBox.StandardButton.Yes)
+    monkeypatch.setattr(ConfirmationDialog, "confirm", lambda *args: confirmed)
 
 
 def edit_item(qtbot, view: QAbstractItemView, row: int, col: int, type, set_value_func):

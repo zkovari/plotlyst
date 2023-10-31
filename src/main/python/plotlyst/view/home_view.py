@@ -22,7 +22,7 @@ from typing import List, Optional
 from PyQt6.QtCore import pyqtSignal, QSize, Qt, QTimer
 from PyQt6.QtGui import QPixmap, QColor, QTextDocument
 from overrides import overrides
-from qthandy import ask_confirmation, transparent, incr_font, italic, busy, retain_when_hidden, incr_icon, bold
+from qthandy import transparent, incr_font, italic, busy, retain_when_hidden, incr_icon, bold
 from qthandy.filter import VisibilityToggleEventFilter, InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -43,6 +43,7 @@ from src.main.python.plotlyst.view.dialog.home import StoryCreationDialog
 from src.main.python.plotlyst.view.generated.home_view_ui import Ui_HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_border_image
+from src.main.python.plotlyst.view.widget.confirm import confirmed
 from src.main.python.plotlyst.view.widget.library import ShelvesTreeView
 from src.main.python.plotlyst.view.widget.tour import TutorialsTreeView, Tutorial
 from src.main.python.plotlyst.view.widget.tour.content import tutorial_titles, tutorial_descriptions
@@ -284,7 +285,9 @@ class HomeView(AbstractView):
     def _on_delete(self, novel: Optional[NovelDescriptor] = None):
         if novel is None:
             novel = self._selected_novel
-        if ask_confirmation(f'Are you sure you want to delete the novel "{novel.title}"?'):
+        title = f'Delete the novel "{novel.title}"?'
+        msg = '<html>This cannot be undone.<br>All characters and scenes will be lost.'
+        if confirmed(msg, title):
             self.repo.delete_novel(novel)
             self._novels.remove(novel)
             emit_global_event(NovelDeletedEvent(self, novel))
