@@ -31,6 +31,7 @@ from qthandy import ask_confirmation
 from src.main.python.plotlyst.core.client import client, json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, NovelDescriptor, Document, Plot, Diagram
 from src.main.python.plotlyst.env import app_env
+from src.main.python.plotlyst.view.widget.confirm import confirmed
 
 
 class OperationType(Enum):
@@ -259,7 +260,7 @@ def delete_plot(novel: Novel, plot: Plot):
 
 
 def delete_scene(novel: Novel, scene: Scene, forced: bool = False) -> bool:
-    if forced or ask_confirmation(f'Are you sure you want to delete scene "{scene.title_or_index(novel)}"?'):
+    if forced or confirmed(f'Are you sure you want to delete scene "{scene.title_or_index(novel)}"?'):
         novel.scenes.remove(scene)
         repo = RepositoryPersistenceManager.instance()
         repo.delete_scene(novel, scene)

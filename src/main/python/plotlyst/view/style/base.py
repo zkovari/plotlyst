@@ -79,6 +79,11 @@ QFrame[rounded=true] {
     border-radius: 6px;
 }
 
+QFrame[large-rounded=true] {
+    border: 1px solid lightgrey;
+    border-radius: 15px;
+}
+
 QDialog[relaxed-white-bg] {
     background-color: #f8f9fa;
 }
