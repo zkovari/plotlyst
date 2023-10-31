@@ -19,15 +19,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from dataclasses import dataclass
 
-import overrides
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QCloseEvent
-from PyQt6.QtWidgets import QDialog, QWidget, QFrame
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QKeyEvent
+from PyQt6.QtWidgets import QDialog, QWidget
 from overrides import overrides
 from qthandy import vbox, line, hbox, sp
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.view.common import label, push_btn, frame, shadow
+from src.main.python.plotlyst.view.common import label, push_btn, frame, shadow, tool_btn
+from src.main.python.plotlyst.view.icons import IconRegistry
 
 
 @dataclass
@@ -38,7 +37,7 @@ class ConfirmationResult:
 class ConfirmationDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowFlags(Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         vbox(self)
         self.frame = frame()
@@ -50,18 +49,23 @@ class ConfirmationDialog(QDialog):
         shadow(self.frame)
 
         self.title = label('Confirm', h4=True)
+        self.btnReset = tool_btn(IconRegistry.close_icon('grey'), tooltip='Cancel', transparent_=True)
+        self.btnReset.setIconSize(QSize(12, 12))
+        self.btnReset.clicked.connect(self.reject)
         sp(self.title).v_max()
-        self.text = label('Do you conform?', wordWrap=True)
-        self.btnConfirm = push_btn(text='Confirm')
-        # self.btnCancel = push_btn(text='Cancel')
-        #
-        # self.wdgButton = QWidget()
-        # hbox(self.wdgButton)
+        self.wdgTitle = QWidget()
+        hbox(self.wdgTitle)
+        self.wdgTitle.layout().addWidget(self.title, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgTitle.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
+        self.text = label('Do you confirm?', wordWrap=True)
+        self.btnConfirm = push_btn(text='Confirm', properties=['base', 'deconstructive'])
+        sp(self.btnConfirm).h_exp()
+        self.btnConfirm.clicked.connect(self.accept)
 
-        self.frame.layout().addWidget(self.title)
+        self.frame.layout().addWidget(self.wdgTitle)
         self.frame.layout().addWidget(line())
         self.frame.layout().addWidget(self.text)
-        self.frame.layout().addWidget(self.btnConfirm, alignment=Qt.AlignmentFlag.AlignRight)
+        self.frame.layout().addWidget(self.btnConfirm)
 
     def display(self) -> ConfirmationResult:
         result = self.exec()
@@ -72,9 +76,9 @@ class ConfirmationDialog(QDialog):
         return ConfirmationResult(False)
 
     @overrides
-    def closeEvent(self, event: QCloseEvent) -> None:
-        print(event)
-        event.accept()
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_Escape:
+            self.reject()
 
 
 def confirmed(message: str) -> bool:
