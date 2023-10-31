@@ -599,6 +599,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.btnPrinciples.clicked.connect(lambda: self._principleSelectorMenu.exec())
 
         flow(self.wdgPrinciples, spacing=6)
+        margins(self.wdgPrinciples, left=30)
         for principle in self.plot.principles:
             self._initPrincipleEditor(principle)
 
