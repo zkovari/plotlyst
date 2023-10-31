@@ -26,6 +26,7 @@ class AppSettings:
     WORKSPACE = 'workspace'
     LAUNCHED_BEFORE = 'launchedBefore'
     LAST_NOVEL_ID = 'lastNovelId'
+    TOOLBAR_QUICK_SETTINGS = 'toolbarQuickSettings'
 
     def __init__(self):
         self._settings: QSettings = QSettings()
@@ -66,6 +67,12 @@ class AppSettings:
     def reset_hint_showed(self, hint_id: str):
         self._settings.remove(hint_id)
 
+    def toolbar_quick_settings(self) -> bool:
+        return self._settings.value(self.TOOLBAR_QUICK_SETTINGS, True, type=bool)
+
+    def set_toolbar_quick_settings(self, visible: bool):
+        self._settings.setValue(self.TOOLBAR_QUICK_SETTINGS, visible)
+
 
 settings = AppSettings()
 
@@ -91,8 +98,8 @@ STORY_LINE_COLOR_CODES: Dict[str, List[str]] = {
         '#93a8ac',  # cadet grey
     ],
     'relation': [
-        '#cdb4db', # thistle
-        '#b56576' # china rose
+        '#cdb4db',  # thistle
+        '#b56576'  # china rose
     ],
     'global': [
         'black'

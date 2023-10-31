@@ -810,9 +810,15 @@
     <property name="title">
      <string>File</string>
     </property>
+    <property name="toolTipsVisible">
+     <bool>true</bool>
+    </property>
     <widget class="QMenu" name="menuProject">
      <property name="title">
       <string>Project</string>
+     </property>
+     <property name="toolTipsVisible">
+      <bool>true</bool>
      </property>
      <addaction name="actionDirPlaceholder"/>
      <addaction name="actionOpenProjectDir"/>
@@ -822,6 +828,9 @@
     <widget class="QMenu" name="menuExport">
      <property name="title">
       <string>Export</string>
+     </property>
+     <property name="toolTipsVisible">
+      <bool>true</bool>
      </property>
      <addaction name="actionExportToDocx"/>
     </widget>
@@ -833,15 +842,27 @@
     <property name="title">
      <string>View</string>
     </property>
-    <addaction name="actionIncreaseFontSize"/>
-    <addaction name="actionDecreaseFontSize"/>
-    <addaction name="actionPreview"/>
+    <property name="toolTipsVisible">
+     <bool>true</bool>
+    </property>
+    <widget class="QMenu" name="menuToolbar">
+     <property name="title">
+      <string>Toolbar</string>
+     </property>
+     <property name="toolTipsVisible">
+      <bool>true</bool>
+     </property>
+     <addaction name="actionQuickCustomization"/>
+    </widget>
+    <addaction name="menuToolbar"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>Help</string>
     </property>
-    <addaction name="actionResetHints"/>
+    <property name="toolTipsVisible">
+     <bool>true</bool>
+    </property>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
    </widget>
@@ -856,6 +877,9 @@
    <widget class="QMenu" name="menuTools">
     <property name="title">
      <string>Tools</string>
+    </property>
+    <property name="toolTipsVisible">
+     <bool>true</bool>
     </property>
     <addaction name="actionCharacterTemplateEditor"/>
     <addaction name="actionResourceManager"/>
@@ -993,6 +1017,17 @@
   <action name="actionExportToDocx">
    <property name="text">
     <string>Export to Docx</string>
+   </property>
+  </action>
+  <action name="actionQuickCustomization">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Quick panel customization</string>
+   </property>
+   <property name="toolTip">
+    <string>Display quick panel customization in the toolbar</string>
    </property>
   </action>
  </widget>
