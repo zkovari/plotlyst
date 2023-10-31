@@ -19,14 +19,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from dataclasses import dataclass
 
-from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtCore import Qt, QSize, QPoint
 from PyQt6.QtGui import QKeyEvent
-from PyQt6.QtWidgets import QDialog, QWidget
+from PyQt6.QtWidgets import QDialog, QWidget, QApplication
 from overrides import overrides
 from qthandy import vbox, line, hbox, sp, vspacer
 
 from src.main.python.plotlyst.view.common import label, push_btn, frame, shadow, tool_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.display import OverlayWidget
 
 
 @dataclass
@@ -43,7 +44,7 @@ class ConfirmationDialog(QDialog):
         self.frame = frame()
         self.frame.setProperty('relaxed-white-bg', True)
         self.frame.setProperty('large-rounded', True)
-        vbox(self.frame, 5, 5)
+        vbox(self.frame, 10, 10)
         self.layout().addWidget(self.frame)
         self.setMinimumSize(200, 150)
         shadow(self.frame)
@@ -88,4 +89,16 @@ def confirmed(message: str, title: str = 'Confirm?') -> bool:
     dialog = ConfirmationDialog()
     dialog.title.setText(title)
     dialog.text.setText(message)
-    return dialog.display().confirmed
+
+    window = QApplication.activeWindow()
+    overlay = OverlayWidget(window)
+    overlay.show()
+
+    center = window.frameGeometry().center()
+    dialog.move(window.frameGeometry().center() - QPoint(dialog.sizeHint().width() // 2, dialog.sizeHint().height() // 2))
+
+    result = dialog.display().confirmed
+
+    overlay.setHidden(True)
+
+    return result
