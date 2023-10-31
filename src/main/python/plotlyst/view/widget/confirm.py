@@ -23,7 +23,7 @@ from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import QDialog, QWidget
 from overrides import overrides
-from qthandy import vbox, line, hbox, sp
+from qthandy import vbox, line, hbox, sp, vspacer
 
 from src.main.python.plotlyst.view.common import label, push_btn, frame, shadow, tool_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -50,6 +50,7 @@ class ConfirmationDialog(QDialog):
 
         self.title = label('Confirm', h4=True)
         self.btnReset = tool_btn(IconRegistry.close_icon('grey'), tooltip='Cancel', transparent_=True)
+        self.btnReset.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.btnReset.setIconSize(QSize(12, 12))
         self.btnReset.clicked.connect(self.reject)
         sp(self.title).v_max()
@@ -61,10 +62,12 @@ class ConfirmationDialog(QDialog):
         self.btnConfirm = push_btn(text='Confirm', properties=['base', 'deconstructive'])
         sp(self.btnConfirm).h_exp()
         self.btnConfirm.clicked.connect(self.accept)
+        self.btnConfirm.setFocus()
 
         self.frame.layout().addWidget(self.wdgTitle)
         self.frame.layout().addWidget(line())
         self.frame.layout().addWidget(self.text)
+        self.frame.layout().addWidget(vspacer())
         self.frame.layout().addWidget(self.btnConfirm)
 
     def display(self) -> ConfirmationResult:
@@ -81,5 +84,8 @@ class ConfirmationDialog(QDialog):
             self.reject()
 
 
-def confirmed(message: str) -> bool:
-    return ConfirmationDialog().display().confirmed
+def confirmed(message: str, title: str = 'Confirm?') -> bool:
+    dialog = ConfirmationDialog()
+    dialog.title.setText(title)
+    dialog.text.setText(message)
+    return dialog.display().confirmed
