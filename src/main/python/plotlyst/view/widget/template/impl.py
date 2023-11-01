@@ -445,10 +445,6 @@ class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
         self.progressStatuses[widget] = value
         self.progress.setValue(sum(self.progressStatuses.values()))
 
-        # toggle collapse before display when editor is opened
-        if not self.isVisible():
-            self.collapse(self.progress.isFinished())
-
     def _valueReset(self, widget: TemplateWidgetBase):
         if not self.progressStatuses[widget]:
             return
