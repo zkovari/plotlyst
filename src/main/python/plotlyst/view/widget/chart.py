@@ -317,6 +317,8 @@ class ManuscriptLengthChart(BaseChart):
 
         series = QBarSeries()
         series.append(set_)
+        if len(novel.chapters) < 5:
+            series.setBarWidth(0.1)
 
         axis_x = QBarCategoryAxis()
         axis_x_values = [*range(1, len(novel.chapters) + 1)]
