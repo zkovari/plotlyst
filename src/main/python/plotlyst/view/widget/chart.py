@@ -27,7 +27,7 @@ from PyQt6.QtWidgets import QToolTip
 from overrides import overrides
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, CHARACTER_MAJOR_COLOR, \
-    CHARACTER_SECONDARY_COLOR, CHARACTER_MINOR_COLOR
+    CHARACTER_SECONDARY_COLOR, CHARACTER_MINOR_COLOR, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Character, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS, Novel
 from src.main.python.plotlyst.core.template import enneagram_choices, supporter_role, guide_role, sidekick_role, \
     antagonist_role, contagonist_role, adversary_role, henchmen_role, confidant_role, tertiary_role, SelectionItem, \
@@ -54,6 +54,7 @@ class _AbstractChart:
 class BaseChart(QChart, _AbstractChart):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setBackgroundBrush(QColor(RELAXED_WHITE_COLOR))
 
     @overrides
     def reset(self):
@@ -69,6 +70,7 @@ class BaseChart(QChart, _AbstractChart):
 class PolarBaseChart(QPolarChart, _AbstractChart):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setBackgroundBrush(QColor(RELAXED_WHITE_COLOR))
 
     @overrides
     def reset(self):

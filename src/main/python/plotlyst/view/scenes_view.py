@@ -299,6 +299,67 @@ class ScenesOutlineView(AbstractNovelView):
 
         self._init_cards()
 
+    def _switch_view(self):
+        height = 50
+        relax_colors = False
+        columns = self._default_columns
+
+        if self.ui.btnStatusView.isChecked():
+            self.ui.stackScenes.setCurrentWidget(self.ui.pageStages)
+            self.ui.tblScenes.clearSelection()
+            if not self.stagesModel:
+                self._init_stages_view()
+        elif self.ui.btnCardsView.isChecked():
+            self.ui.stackScenes.setCurrentWidget(self.ui.pageCards)
+            self.ui.tblScenes.clearSelection()
+        elif self.ui.btnStorymap.isChecked():
+            self.ui.stackScenes.setCurrentWidget(self.ui.pageStorymap)
+            self.ui.tblScenes.clearSelection()
+            self.ui.tblSceneStages.clearSelection()
+            if not self.storymap_view:
+                self.storymap_view = StoryMap()
+                self.ui.scrollAreaStoryMap.layout().addWidget(self.storymap_view)
+                self.ui.rbDots.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.DOTS))
+                self.ui.rbTitles.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.TITLE))
+                self.ui.rbDetailed.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.DETAILED))
+                self.ui.rbHorizontal.clicked.connect(
+                    lambda: self.storymap_view.setOrientation(Qt.Orientation.Horizontal))
+                self.ui.rbVertical.clicked.connect(lambda: self.storymap_view.setOrientation(Qt.Orientation.Vertical))
+                self.ui.btnAct1.toggled.connect(partial(self.storymap_view.setActsFilter, 1))
+                self.ui.btnAct2.toggled.connect(partial(self.storymap_view.setActsFilter, 2))
+                self.ui.btnAct3.toggled.connect(partial(self.storymap_view.setActsFilter, 3))
+                self.storymap_view.setActsFilter(1, self.ui.btnAct1.isChecked())
+                self.storymap_view.setActsFilter(2, self.ui.btnAct2.isChecked())
+                self.storymap_view.setActsFilter(3, self.ui.btnAct3.isChecked())
+                self.storymap_view.sceneSelected.connect(self.ui.wdgStoryStructure.highlightScene)
+                self.storymap_view.setNovel(self.novel)
+        elif self.ui.btnCharactersDistributionView.isChecked():
+            self.ui.stackScenes.setCurrentWidget(self.ui.pageCharactersDistribution)
+            self.ui.tblScenes.clearSelection()
+            self.ui.tblSceneStages.clearSelection()
+            if not self.characters_distribution:
+                self.characters_distribution = CharactersScenesDistributionWidget(self.novel)
+                self.ui.pageCharactersDistribution.layout().addWidget(self.characters_distribution)
+                self.ui.btnAct1.toggled.connect(partial(self.characters_distribution.setActsFilter, 1))
+                self.ui.btnAct2.toggled.connect(partial(self.characters_distribution.setActsFilter, 2))
+                self.ui.btnAct3.toggled.connect(partial(self.characters_distribution.setActsFilter, 3))
+                self.characters_distribution.setActsFilter(1, self.ui.btnAct1.isChecked())
+                self.characters_distribution.setActsFilter(2, self.ui.btnAct2.isChecked())
+                self.characters_distribution.setActsFilter(3, self.ui.btnAct3.isChecked())
+        else:
+            self.ui.stackScenes.setCurrentWidget(self.ui.pageDefault)
+            self.ui.tblSceneStages.clearSelection()
+
+        self.tblModel.setRelaxColors(relax_colors)
+        for col in range(self.tblModel.columnCount()):
+            if col in columns:
+                self.ui.tblScenes.showColumn(col)
+                continue
+            self.ui.tblScenes.hideColumn(col)
+        self.ui.tblScenes.verticalHeader().setDefaultSectionSize(height)
+
+        emit_event(self.novel, SceneSelectionClearedEvent(self))
+
     def _on_scene_selected(self):
         indexes = self.ui.tblScenes.selectedIndexes()
         selection = len(indexes) > 0
@@ -429,67 +490,6 @@ class ScenesOutlineView(AbstractNovelView):
         if not self.novel.is_readonly():
             self.ui.btnDelete.setEnabled(enabled)
         self.ui.btnEdit.setEnabled(enabled)
-
-    def _switch_view(self):
-        height = 50
-        relax_colors = False
-        columns = self._default_columns
-
-        if self.ui.btnStatusView.isChecked():
-            self.ui.stackScenes.setCurrentWidget(self.ui.pageStages)
-            self.ui.tblScenes.clearSelection()
-            if not self.stagesModel:
-                self._init_stages_view()
-        elif self.ui.btnCardsView.isChecked():
-            self.ui.stackScenes.setCurrentWidget(self.ui.pageCards)
-            self.ui.tblScenes.clearSelection()
-        elif self.ui.btnStorymap.isChecked():
-            self.ui.stackScenes.setCurrentWidget(self.ui.pageStorymap)
-            self.ui.tblScenes.clearSelection()
-            self.ui.tblSceneStages.clearSelection()
-            if not self.storymap_view:
-                self.storymap_view = StoryMap()
-                self.ui.scrollAreaStoryMap.layout().addWidget(self.storymap_view)
-                self.ui.rbDots.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.DOTS))
-                self.ui.rbTitles.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.TITLE))
-                self.ui.rbDetailed.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.DETAILED))
-                self.ui.rbHorizontal.clicked.connect(
-                    lambda: self.storymap_view.setOrientation(Qt.Orientation.Horizontal))
-                self.ui.rbVertical.clicked.connect(lambda: self.storymap_view.setOrientation(Qt.Orientation.Vertical))
-                self.ui.btnAct1.toggled.connect(partial(self.storymap_view.setActsFilter, 1))
-                self.ui.btnAct2.toggled.connect(partial(self.storymap_view.setActsFilter, 2))
-                self.ui.btnAct3.toggled.connect(partial(self.storymap_view.setActsFilter, 3))
-                self.storymap_view.setActsFilter(1, self.ui.btnAct1.isChecked())
-                self.storymap_view.setActsFilter(2, self.ui.btnAct2.isChecked())
-                self.storymap_view.setActsFilter(3, self.ui.btnAct3.isChecked())
-                self.storymap_view.sceneSelected.connect(self.ui.wdgStoryStructure.highlightScene)
-                self.storymap_view.setNovel(self.novel)
-        elif self.ui.btnCharactersDistributionView.isChecked():
-            self.ui.stackScenes.setCurrentWidget(self.ui.pageCharactersDistribution)
-            self.ui.tblScenes.clearSelection()
-            self.ui.tblSceneStages.clearSelection()
-            if not self.characters_distribution:
-                self.characters_distribution = CharactersScenesDistributionWidget(self.novel)
-                self.ui.pageCharactersDistribution.layout().addWidget(self.characters_distribution)
-                self.ui.btnAct1.toggled.connect(partial(self.characters_distribution.setActsFilter, 1))
-                self.ui.btnAct2.toggled.connect(partial(self.characters_distribution.setActsFilter, 2))
-                self.ui.btnAct3.toggled.connect(partial(self.characters_distribution.setActsFilter, 3))
-                self.characters_distribution.setActsFilter(1, self.ui.btnAct1.isChecked())
-                self.characters_distribution.setActsFilter(2, self.ui.btnAct2.isChecked())
-                self.characters_distribution.setActsFilter(3, self.ui.btnAct3.isChecked())
-        else:
-            self.ui.stackScenes.setCurrentWidget(self.ui.pageDefault)
-            self.ui.tblSceneStages.clearSelection()
-
-        self.tblModel.setRelaxColors(relax_colors)
-        for col in range(self.tblModel.columnCount()):
-            if col in columns:
-                self.ui.tblScenes.showColumn(col)
-                continue
-            self.ui.tblScenes.hideColumn(col)
-        self.ui.tblScenes.verticalHeader().setDefaultSectionSize(height)
-
-        emit_event(self.novel, SceneSelectionClearedEvent(self))
 
     def _customize_stages(self):
         diag = ItemsEditorDialog(NovelStagesModel(copy.deepcopy(self.novel.stages)))

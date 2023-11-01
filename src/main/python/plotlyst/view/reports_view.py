@@ -66,7 +66,7 @@ class ReportPage(QWidget, EventListener):
 
         self._scrollarea, self._wdgCenter = scrolled(self)
         vbox(self._wdgCenter)
-        self._wdgCenter.setProperty('white-bg', True)
+        self._wdgCenter.setProperty('relaxed-white-bg', True)
 
         self._dispatcher = event_dispatchers.instance(self._novel)
         self._dispatcher.register(self, NovelSyncEvent)

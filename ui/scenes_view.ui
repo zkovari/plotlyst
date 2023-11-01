@@ -757,8 +757,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>98</width>
-                    <height>28</height>
+                    <width>479</width>
+                    <height>580</height>
                    </rect>
                   </property>
                   <layout class="QHBoxLayout" name="horizontalLayout_8">
@@ -900,7 +900,7 @@
                  </property>
                  <item>
                   <widget class="QWidget" name="wdgProgressTop" native="true">
-                   <property name="white-bg" stdset="0">
+                   <property name="relaxed-white-bg" stdset="0">
                     <bool>true</bool>
                    </property>
                    <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -1181,8 +1181,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>84</width>
-                    <height>16</height>
+                    <width>98</width>
+                    <height>28</height>
                    </rect>
                   </property>
                   <property name="sizePolicy">
@@ -1320,7 +1320,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="btnGroupViews"/>
   <buttongroup name="btnGroupStoryMapView"/>
+  <buttongroup name="btnGroupViews"/>
  </buttongroups>
 </ui>

@@ -50,6 +50,7 @@ class ProgressChartView(ChartView):
         self.setChart(self.chart)
         self.setMaximumHeight(200)
         self.setMaximumWidth(250)
+        self.chart.setBackgroundBrush(QColor(RELAXED_WHITE_COLOR))
 
         self.refresh(value, maxValue)
 
@@ -126,7 +127,7 @@ class SceneStageProgressCharts(EventListener):
 class ProgressChart(BaseChart):
 
     def __init__(self, value: int = 0, maxValue: int = 1, title_prefix: str = 'Progress', color=Qt.GlobalColor.darkBlue,
-                 titleColor=Qt.GlobalColor.black, emptySliceColor=Qt.GlobalColor.white,
+                 titleColor=Qt.GlobalColor.black, emptySliceColor=RELAXED_WHITE_COLOR,
                  emptySliceBorder=Qt.GlobalColor.lightGray, parent=None):
         super(ProgressChart, self).__init__(parent)
         self._title_prefix = title_prefix
@@ -186,7 +187,6 @@ class CharacterRoleProgressChart(ProgressChart):
             color = CHARACTER_MINOR_COLOR
             title = icon_to_html_img(IconRegistry.minor_character_icon())
         super(CharacterRoleProgressChart, self).__init__(title_prefix=title, color=color, titleColor=color,
-                                                         emptySliceColor=RELAXED_WHITE_COLOR,
                                                          parent=parent)
 
 
