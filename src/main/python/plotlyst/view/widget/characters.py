@@ -869,7 +869,9 @@ class CharacterAvatar(QWidget):
         wdg = AvatarSelectors(self._character)
         wdg.updated.connect(self._uploadedAvatar)
         wdg.selectorChanged.connect(self.updateAvatar)
-        btn_popup(self.btnAvatar, wdg)
+
+        menu = MenuWidget(self.btnAvatar)
+        menu.addWidget(wdg)
 
     def setCharacter(self, character: Character):
         self._character = character
