@@ -342,6 +342,11 @@ class CardsView(QFrame):
         self._initCardWidget(card)
         self._layout.addWidget(card)
 
+    def selectCard(self, ref: Any):
+        card = self._cards.get(ref, None)
+        if card is not None:
+            card.select()
+
     def cardAt(self, pos: int) -> Optional[Card]:
         item = self._layout.itemAt(pos)
         if item and item.widget():
