@@ -18,11 +18,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Optional
+from typing import Optional, List, Any
 
 import qtanim
+from PyQt6.QtCore import QAbstractListModel, QModelIndex, Qt, QVariant, pyqtSignal
 from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QDialog, QPushButton, QDialogButtonBox, QApplication
+from PyQt6.QtWidgets import QDialog, QPushButton, QDialogButtonBox, QApplication, QCompleter
 from overrides import overrides
 from qthandy import flow, decr_font, decr_icon, pointy
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
@@ -178,6 +179,50 @@ personal_plot_value_templates = [
 ]
 
 
+class StoryValueCompleterModel(QAbstractListModel):
+    ValueRole = Qt.ItemDataRole.UserRole + 1
+
+    def __init__(self, values: List[PlotValue], parent=None):
+        super().__init__(parent)
+        self._values = values
+
+    @overrides
+    def rowCount(self, parent=QModelIndex()):
+        return len(self._values)
+
+    @overrides
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole) -> Any:
+        if role == Qt.ItemDataRole.EditRole or role == Qt.ItemDataRole.DisplayRole:
+            return self._values[index.row()].text
+        elif role == Qt.ItemDataRole.DecorationRole:
+            if self._values[index.row()].icon:
+                return IconRegistry.from_name(self._values[index.row()].icon)
+            else:
+                return IconRegistry.from_name(DEFAULT_VALUE_ICON)
+        elif role == self.ValueRole:
+            return self._values[index.row()]
+        return QVariant()
+
+
+class StoryValueCompleter(QCompleter):
+    valueSelected = pyqtSignal(PlotValue)
+
+    def __init__(self, values: List[PlotValue], parent=None):
+        super().__init__(parent)
+        self._model = StoryValueCompleterModel(values)
+        self.setModel(self._model)
+
+        self.activated.connect(self._activated)
+
+    def _activated(self, text: str):
+        indexes = self._model.match(self._model.index(0, 0),
+                                    Qt.ItemDataRole.DisplayRole, text)
+        if indexes:
+            value = self._model.data(indexes[0], role=StoryValueCompleterModel.ValueRole)
+            if value:
+                self.valueSelected.emit(value)
+
+
 class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
     def __init__(self, parent=None):
         super(PlotValueEditorDialog, self).__init__(parent)
@@ -205,6 +250,7 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
         set_tab_icon(self.tabWidget, self.tabRelational,
                      IconRegistry.from_name('fa5s.people-arrows', color_on=PLOTLYST_SECONDARY_COLOR))
 
+        all_values = set()
         for pair in [(self.tabPopular, popular_plot_value_templates),
                      (self.tabFoundational, foundational_plot_value_templates),
                      (self.tabSocietal, societal_plot_value_templates),
@@ -212,9 +258,14 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
                      (self.tabRelational, relational_plot_value_templates)]:
             tab, values = pair
             for value in values:
+                all_values.add(value)
                 btn = _TemplatePlotValueButton(value)
                 tab.layout().addWidget(btn)
                 btn.clicked.connect(partial(self._fillTemplate, value))
+
+        completer = StoryValueCompleter(list(all_values))
+        completer.valueSelected.connect(self._fillTemplate)
+        self.linePositive.setCompleter(completer)
 
         btnOk = self.buttonBox.button(QDialogButtonBox.StandardButton.Ok)
         btnOk.setEnabled(False)
