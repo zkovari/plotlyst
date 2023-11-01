@@ -197,7 +197,7 @@ class IconRegistry:
         elif motion:
             color = '#d4a373'
         else:
-            color = '#fe4a49'
+            color = '#CB4D4D'
         return qtawesome.icon('fa5s.circle', 'fa5s.yin-yang',
                               options=[{'color': 'white', 'scale_factor': 1},
                                        {'color': color, 'color_disabled': 'black'}])

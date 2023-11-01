@@ -404,7 +404,7 @@ class SceneStructureItemWidget(QWidget):
             elif self.beat.outcome == SceneOutcome.RESOLUTION:
                 return '#0b6e4f'
             else:
-                return '#fe4a49'
+                return '#CB4D4D'
         elif self.beat.type == SceneStructureItemType.DECISION:
             return '#219ebc'
         elif self.beat.type == SceneStructureItemType.HOOK:
