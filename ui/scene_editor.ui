@@ -550,14 +550,14 @@
             <enum>QTabWidget::West</enum>
            </property>
            <property name="currentIndex">
-            <number>1</number>
+            <number>0</number>
            </property>
            <widget class="QWidget" name="tabStorylines">
             <property name="relaxed-white-bg" stdset="0">
              <bool>true</bool>
             </property>
             <attribute name="title">
-             <string>Storylines</string>
+             <string>Events</string>
             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_9">
              <property name="spacing">
@@ -751,6 +751,17 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>SceneStoryStructureWidget</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.scenes</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ScenesTreeView</class>
+   <extends>QTreeView</extends>
+   <header>src.main.python.plotlyst.view.widget.scene</header>
+  </customwidget>
+  <customwidget>
    <class>DocumentTextEditor</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
@@ -764,17 +775,6 @@
    <class>ReturnButton</class>
    <extends>QPushButton</extends>
    <header>src.main.python.plotlyst.view.widget.button</header>
-  </customwidget>
-  <customwidget>
-   <class>SceneStoryStructureWidget</class>
-   <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.scenes</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>ScenesTreeView</class>
-   <extends>QTreeView</extends>
-   <header>src.main.python.plotlyst.view.widget.scene</header>
   </customwidget>
   <customwidget>
    <class>LabelsWidget</class>
