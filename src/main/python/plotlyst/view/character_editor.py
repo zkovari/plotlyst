@@ -153,6 +153,7 @@ class CharacterEditor(QObject, EventListener):
         self.ui.wdgAvatar.setCharacter(self.character)
         self.ui.wdgAvatar.setUploadPopupMenu()
         self.ui.wdgAvatar.avatarUpdated.connect(self.ui.wdgBackstory.refreshCharacter)
+        self.ui.wdgAvatar.setFixedSize(180, 180)
 
         self.ui.splitter.setSizes([400, 400])
 
