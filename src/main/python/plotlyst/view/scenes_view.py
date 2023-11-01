@@ -162,6 +162,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.treeChapters.setSettings(TreeSettings(font_incr=2))
         self.ui.treeChapters.setNovel(self.novel, readOnly=self.novel.is_readonly())
         self.ui.treeChapters.chapterSelected.connect(self._on_chapter_selected)
+        self.ui.treeChapters.sceneDoubleClicked.connect(self._switch_to_editor)
 
         self.ui.wgtChapters.setVisible(self.ui.btnChaptersToggle.isChecked())
         self.ui.btnNewWithMenu.setVisible(self.ui.btnChaptersToggle.isChecked())

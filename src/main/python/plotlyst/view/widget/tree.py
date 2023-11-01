@@ -168,6 +168,7 @@ class BaseTreeWidget(QWidget):
 
 
 class ContainerNode(BaseTreeWidget):
+    doubleClicked = pyqtSignal()
 
     def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None, settings: Optional[TreeSettings] = None,
                  readOnly: bool = False):
@@ -211,6 +212,8 @@ class ContainerNode(BaseTreeWidget):
             if not self._selected:
                 self.select()
                 self.selectionChanged.emit(self._selected)
+        elif event.type() == QEvent.Type.MouseButtonDblClick and self.isEnabled():
+            self.doubleClicked.emit()
         return super(ContainerNode, self).eventFilter(watched, event)
 
     def containerWidget(self) -> QWidget:

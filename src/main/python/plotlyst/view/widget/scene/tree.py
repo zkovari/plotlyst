@@ -156,6 +156,7 @@ class ScenesTreeView(TreeView, EventListener):
     SCENE_MIME_TYPE = 'application/tree-scene-widget'
     CHAPTER_MIME_TYPE = 'application/tree-chapter-widget'
     sceneSelected = pyqtSignal(Scene)
+    sceneDoubleClicked = pyqtSignal(Scene)
     chapterSelected = pyqtSignal(Chapter)
     sceneAdded = pyqtSignal(Scene)
 
@@ -588,6 +589,7 @@ class ScenesTreeView(TreeView, EventListener):
         sceneWdg = SceneWidget(scene, self._novel, readOnly=self._readOnly, settings=self._settings)
         self._scenes[scene] = sceneWdg
         sceneWdg.selectionChanged.connect(partial(self._sceneSelectionChanged, sceneWdg))
+        sceneWdg.doubleClicked.connect(partial(self.sceneDoubleClicked.emit, scene))
         if not self._readOnly:
             sceneWdg.deleted.connect(partial(self._deleteScene, sceneWdg))
             sceneWdg.installEventFilter(
