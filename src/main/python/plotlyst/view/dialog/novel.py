@@ -27,9 +27,10 @@ from overrides import overrides
 from qthandy import flow, decr_font, decr_icon, pointy
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 
+from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import NovelDescriptor, PlotValue, Novel
 from src.main.python.plotlyst.core.help import plot_value_help
-from src.main.python.plotlyst.view.common import link_editor_to_btn, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import link_editor_to_btn, ButtonPressResizeEventFilter, set_tab_icon
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.novel_creation_dialog_ui import Ui_NovelCreationDialog
 from src.main.python.plotlyst.view.generated.plot_value_editor_dialog_ui import Ui_PlotValueEditorDialog
@@ -192,6 +193,17 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
         for tab in [self.tabPopular, self.tabFoundational, self.tabSocietal, self.tabPersonal,
                     self.tabRelational]:
             flow(tab, margin=15, spacing=6)
+
+        set_tab_icon(self.tabWidget, self.tabPopular,
+                     IconRegistry.from_name('fa5s.star', color_on=PLOTLYST_SECONDARY_COLOR))
+        set_tab_icon(self.tabWidget, self.tabFoundational,
+                     IconRegistry.from_name('fa5s.cube', color_on=PLOTLYST_SECONDARY_COLOR))
+        set_tab_icon(self.tabWidget, self.tabSocietal,
+                     IconRegistry.from_name('mdi.account-group', color_on=PLOTLYST_SECONDARY_COLOR))
+        set_tab_icon(self.tabWidget, self.tabPersonal,
+                     IconRegistry.from_name('mdi.head-heart-outline', color_on=PLOTLYST_SECONDARY_COLOR))
+        set_tab_icon(self.tabWidget, self.tabRelational,
+                     IconRegistry.from_name('fa5s.people-arrows', color_on=PLOTLYST_SECONDARY_COLOR))
 
         for pair in [(self.tabPopular, popular_plot_value_templates),
                      (self.tabFoundational, foundational_plot_value_templates),
