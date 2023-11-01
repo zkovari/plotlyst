@@ -392,7 +392,6 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
             struct.active = False
         structure.active = True
         acts_registry.refresh()
-        self._beatsPreview.setStructure(structure)
         self._structureNotes.setStructure(structure)
 
         set_tab_icon(self.tabWidget, self.tabOverview,
@@ -404,6 +403,8 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
             self.__initWdgPreview()
             self.layoutPreview.addWidget(self.wdgPreview)
         self.wdgPreview.setStructure(self.novel)
+        self._beatsPreview.attachStructurePreview(self.wdgPreview)
+        self._beatsPreview.setStructure(structure)
 
     def _activeStructureClicked(self, _: StoryStructure, toggled: bool):
         if not toggled:
