@@ -234,9 +234,18 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.cards.setCardsWidth(self.prefs_widget.sliderCards.value())
 
         self._scene_filter = SceneFilterWidget(self.novel)
-        btn_popup(self.ui.btnFilter, self._scene_filter)
+        filterMenu = MenuWidget(self.ui.btnFilter)
+        filterMenu.addWidget(self._scene_filter)
         self._scene_filter.povFilter.characterToggled.connect(self._proxy.setCharacterFilter)
         self._scene_filter.povFilter.characterToggled.connect(self._filter_cards)
+
+        self.ui.btnAct1.clicked.connect(self._scene_filter.btnAct1.setChecked)
+        self.ui.btnAct2.clicked.connect(self._scene_filter.btnAct2.setChecked)
+        self.ui.btnAct3.clicked.connect(self._scene_filter.btnAct3.setChecked)
+
+        self._scene_filter.btnAct1.clicked.connect(self.ui.btnAct1.setChecked)
+        self._scene_filter.btnAct2.clicked.connect(self.ui.btnAct2.setChecked)
+        self._scene_filter.btnAct3.clicked.connect(self.ui.btnAct3.setChecked)
 
         self._init_cards()
 
