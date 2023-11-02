@@ -32,7 +32,7 @@ from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QSizePol
     QFileDialog, QMessageBox, QGridLayout
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup, incr_font, \
-    spacer, clear_layout, vbox, hbox, flow, translucent, margins, bold, pointy
+    spacer, clear_layout, vbox, hbox, flow, translucent, margins, bold, pointy, retain_when_hidden
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
@@ -71,7 +71,7 @@ from src.main.python.plotlyst.view.widget.topic import TopicsEditor
 
 
 class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributionWidget):
-    avg_text: str = 'Average characters per scenes: '
+    avg_text: str = 'Characters per scene: '
     common_text: str = 'Common scenes: '
 
     def __init__(self, novel: Novel, parent=None):
@@ -81,7 +81,6 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
         self.average = 0
 
         self.btnCharacters.setIcon(IconRegistry.character_icon())
-        self.btnGoals.setIcon(IconRegistry.goal_icon())
         self.btnConflicts.setIcon(IconRegistry.conflict_icon())
         self.btnTags.setIcon(IconRegistry.tags_icon())
 
@@ -105,11 +104,11 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
         self.tblSceneDistribution.selectionModel().selectionChanged.connect(self._on_scene_selected)
 
         self.btnCharacters.toggled.connect(self._toggle_characters)
-        self.btnGoals.toggled.connect(self._toggle_goals)
         self.btnConflicts.toggled.connect(self._toggle_conflicts)
         self.btnTags.toggled.connect(self._toggle_tags)
 
         transparent(self.spinAverage)
+        retain_when_hidden(self.spinAverage)
 
         self.btnCharacters.setChecked(True)
 
@@ -141,15 +140,15 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
 
             self.spinAverage.setVisible(True)
 
-    def _toggle_goals(self, toggled: bool):
-        if toggled:
-            self._model = GoalScenesDistributionTableModel(self.novel)
-            self._scenes_proxy.setSourceModel(self._model)
-            self.tblCharacters.hideColumn(0)
-            self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexTags, 170)
-            self.tblCharacters.setMaximumWidth(170)
-
-            self.spinAverage.setVisible(False)
+    # def _toggle_goals(self, toggled: bool):
+    #     if toggled:
+    #         self._model = GoalScenesDistributionTableModel(self.novel)
+    #         self._scenes_proxy.setSourceModel(self._model)
+    #         self.tblCharacters.hideColumn(0)
+    #         self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexTags, 170)
+    #         self.tblCharacters.setMaximumWidth(170)
+    #
+    #         self.spinAverage.setVisible(False)
 
     def _toggle_conflicts(self, toggled: bool):
         if toggled:

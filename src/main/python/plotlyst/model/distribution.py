@@ -21,7 +21,7 @@ from PyQt6.QtCore import QModelIndex, Qt
 from PyQt6.QtGui import QBrush, QColor
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Conflict, ConflictType, Tag, Goal
+from src.main.python.plotlyst.core.domain import Conflict, ConflictType, Tag, Goal, Novel
 from src.main.python.plotlyst.model.common import DistributionModel
 from src.main.python.plotlyst.view.common import text_color_with_bg_color
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry
@@ -84,6 +84,10 @@ class GoalScenesDistributionTableModel(DistributionModel):
 
 
 class ConflictScenesDistributionTableModel(DistributionModel):
+
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(novel, parent)
+        self._active_brush = QBrush(QColor('#E09C14'))
 
     @overrides
     def rowCount(self, parent: QModelIndex = None) -> int:
