@@ -39,6 +39,7 @@ from src.main.python.plotlyst.view.common import fade_out_and_gc
 from src.main.python.plotlyst.view.icons import set_avatar, avatars
 from src.main.python.plotlyst.view.widget.big_five import BigFiveChart, dimension_from
 from src.main.python.plotlyst.view.widget.button import EyeToggle
+from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget
 from src.main.python.plotlyst.view.widget.display import RoleIcon, ChartView
 from src.main.python.plotlyst.view.widget.template.impl import BarTemplateFieldWidget
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
@@ -48,6 +49,7 @@ class CharacterComparisonAttribute(Enum):
     SUMMARY = 0
     BIG_FIVE = 1
     FACULTIES = 2
+    BACKSTORY = 3
 
 
 class BaseDisplay:
@@ -181,6 +183,13 @@ class FacultiesDisplay(QWidget, BaseDisplay):
             self._display.save()
 
 
+class BackstoryDisplay(CharacterTimelineWidget, BaseDisplay):
+    def __init__(self, character: Character, parent=None):
+        super().__init__(parent)
+        self._character = character
+        self.setCharacter(self._character)
+
+
 class CharacterOverviewWidget(QWidget, EventListener):
     def __init__(self, novel: Novel, character: Character, parent=None):
         super().__init__(parent)
@@ -229,6 +238,9 @@ class CharacterOverviewWidget(QWidget, EventListener):
             self._displayContainer.layout().addWidget(self._display, alignment=Qt.AlignmentFlag.AlignCenter)
         elif attribute == CharacterComparisonAttribute.FACULTIES:
             self._display = FacultiesDisplay(self._character)
+            self._displayContainer.layout().addWidget(self._display)
+        elif attribute == CharacterComparisonAttribute.BACKSTORY:
+            self._display = BackstoryDisplay(self._character)
             self._displayContainer.layout().addWidget(self._display)
 
 

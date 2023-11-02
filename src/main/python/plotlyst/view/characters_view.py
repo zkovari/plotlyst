@@ -170,6 +170,8 @@ class CharactersView(AbstractNovelView):
             lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.FACULTIES))
         self.ui.btnBigFiveComparison.clicked.connect(
             lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.BIG_FIVE))
+        self.ui.btnBackstoryComparison.clicked.connect(
+            lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.BACKSTORY))
         for btn in self.ui.btnGroupComparison.buttons():
             btn.installEventFilter(OpacityEventFilter(btn, ignoreCheckedButton=True))
 
