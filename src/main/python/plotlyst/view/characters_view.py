@@ -25,7 +25,7 @@ from PyQt6.QtCore import QItemSelection, QPoint
 from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import busy, gc, incr_font, bold
+from qthandy import busy, gc, incr_font, bold, retain_when_hidden
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -37,6 +37,7 @@ from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent, NovelSyncEvent
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import proxy
+from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import delete_character
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.character_editor import CharacterEditor
@@ -45,6 +46,7 @@ from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPr
 from src.main.python.plotlyst.view.generated.characters_title_ui import Ui_CharactersTitle
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.style.base import apply_bg_image
 from src.main.python.plotlyst.view.widget.cards import CharacterCard, CardSizeRatio
 from src.main.python.plotlyst.view.widget.character import CharacterComparisonWidget, LayoutType, \
     CharacterComparisonAttribute
@@ -156,6 +158,7 @@ class CharactersView(AbstractNovelView):
             partial(qtanim.toggle_expansion, self.ui.wdgCharactersCompTreeParent))
 
         self._wdgCharactersCompTree.characterToggled.connect(self._wdgComparison.updateCharacter)
+        retain_when_hidden(self.ui.wdgComparisonLayout)
         self.ui.btnHorizontalComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.HORIZONTAL))
         self.ui.btnVerticalComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.VERTICAL))
         self.ui.btnGridComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.FLOW))
@@ -169,6 +172,7 @@ class CharactersView(AbstractNovelView):
             lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.BACKSTORY))
         for btn in self.ui.btnGroupComparison.buttons():
             btn.installEventFilter(OpacityEventFilter(btn, ignoreCheckedButton=True))
+        self.ui.btnGroupComparison.buttonClicked.connect(self._comparison_type_clicked)
 
         self._relations = CharacterNetworkView(self.novel)
         self.ui.relationsParent.layout().addWidget(self._relations)
@@ -312,6 +316,15 @@ class CharactersView(AbstractNovelView):
             character = self.selected_card.character
 
         if character and delete_character(self.novel, character):
-            self.ui.wdgCharacterSelector.removeCharacter(character)
             emit_event(self.novel, CharacterDeletedEvent(self, character))
             self.refresh()
+
+    def _comparison_type_clicked(self):
+        btn = self.ui.btnGroupComparison.checkedButton()
+        if btn is self.ui.btnBackstoryComparison:
+            self.ui.btnHorizontalComparison.setChecked(True)
+            self.ui.wdgComparisonLayout.setHidden(True)
+            apply_bg_image(self.ui.scrollAreaComparisonContent, resource_registry.cover1)
+        else:
+            self.ui.scrollAreaComparisonContent.setStyleSheet('')
+            self.ui.wdgComparisonLayout.setVisible(True)
