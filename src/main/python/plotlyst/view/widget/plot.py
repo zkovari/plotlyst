@@ -52,7 +52,7 @@ from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
 from src.main.python.plotlyst.view.generated.plot_widget_ui import Ui_PlotWidget
-from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.characters import CharacterAvatar, CharacterSelectorMenu
@@ -492,29 +492,50 @@ class PlotEventsArcChart(BaseChart):
         axis.setVisible(False)
 
 
-class PlotList(TreeView):
+class PlotTreeView(TreeView):
     plotSelected = pyqtSignal(Plot)
     plotRemoved = pyqtSignal(Plot)
 
     def __init__(self, novel: Novel, parent=None):
-        super(PlotList, self).__init__(parent)
+        super().__init__(parent)
         self._novel = novel
         self._plots: Dict[Plot, PlotNode] = {}
+        self._characterNodes: Dict[Character, ContainerNode] = {}
         self._selectedPlots: Set[Plot] = set()
 
         self.refresh()
 
     def refresh(self):
-        clear_layout(self._centralWidget, auto_delete=False)
+        self._selectedPlots.clear()
+        self._characterNodes.clear()
+        self._plots.clear()
+        clear_layout(self._centralWidget)
+
+        characters = [x.character(self._novel) for x in self._novel.plots if x.character_id]
+        characters_set = set(characters)
+        if len(characters_set) > 1:
+            for character in characters:
+                if character in self._characterNodes.keys():
+                    continue
+                self._characterNodes[character] = ContainerNode(character.name, avatars.avatar(character),
+                                                                readOnly=True)
+                self._centralWidget.layout().addWidget(self._characterNodes[character])
 
         for plot in self._novel.plots:
             wdg = self.__initPlotWidget(plot)
-            self._centralWidget.layout().addWidget(wdg)
+            if plot.character_id and self._characterNodes:
+                character = plot.character(self._novel)
+                self._characterNodes[character].addChild(wdg)
+            else:
+                self._centralWidget.layout().addWidget(wdg)
 
         self._centralWidget.layout().addWidget(vspacer())
 
     def refreshPlot(self, plot: Plot):
         self._plots[plot].refresh()
+
+    def refreshCharacters(self):
+        self.refresh()
 
     def addPlot(self, plot: Plot):
         wdg = self.__initPlotWidget(plot)
@@ -549,22 +570,35 @@ class PlotList(TreeView):
             self._selectedPlots.remove(plot)
         self._plots.pop(plot)
 
+        characterNode = None
+        if plot.character_id and self._characterNodes:
+            character = plot.character(self._novel)
+            characterNode = self._characterNodes[character]
+            if len(characterNode.childrenWidgets()) == 1:
+                self._characterNodes.pop(character)  # remove parent too
+            else:
+                characterNode = None  # keep parent
+
         fade_out_and_gc(wdg.parent(), wdg)
+        if characterNode:
+            fade_out_and_gc(self._centralWidget, characterNode)
 
         self.plotRemoved.emit(wdg.plot())
 
     def __initPlotWidget(self, plot: Plot) -> PlotNode:
-        wdg = PlotNode(plot)
-        wdg.selectionChanged.connect(partial(self._plotSelectionChanged, wdg))
-        wdg.deleted.connect(partial(self._removePlot, wdg))
+        if plot not in self._plots.keys():
+            wdg = PlotNode(plot)
+            wdg.selectionChanged.connect(partial(self._plotSelectionChanged, wdg))
+            wdg.deleted.connect(partial(self._removePlot, wdg))
+            self._plots[plot] = wdg
 
-        self._plots[plot] = wdg
-        return wdg
+        return self._plots[plot]
 
 
 class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
     titleChanged = pyqtSignal()
     iconChanged = pyqtSignal()
+    characterChanged = pyqtSignal()
     removalRequested = pyqtSignal()
 
     def __init__(self, novel: Novel, plot: Plot, parent=None):
@@ -736,6 +770,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self._characterSelector.setCharacter(character)
         self.plot.set_character(character)
         self._save()
+        self.characterChanged.emit()
 
     def _relationCharacterSelected(self, character: Character):
         self._characterRelationSelector.setCharacter(character)
@@ -864,7 +899,7 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         self.setupUi(self)
         self.novel = novel
 
-        self._wdgList = PlotList(self.novel)
+        self._wdgList = PlotTreeView(self.novel)
         self.wdgPlotListParent.layout().addWidget(self._wdgList)
         self._wdgList.plotSelected.connect(self._plotSelected)
         self._wdgList.plotRemoved.connect(self._plotRemoved)
@@ -900,7 +935,7 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         if self.novel.plots:
             self._wdgList.selectPlot(self.novel.plots[0])
 
-    def widgetList(self) -> PlotList:
+    def widgetList(self) -> PlotTreeView:
         return self._wdgList
 
     def newPlot(self, plot_type: PlotType):
@@ -951,6 +986,7 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         widget.removalRequested.connect(partial(self._remove, widget))
         widget.titleChanged.connect(partial(self._wdgList.refreshPlot, widget.plot))
         widget.iconChanged.connect(partial(self._wdgList.refreshPlot, widget.plot))
+        widget.characterChanged.connect(self._wdgList.refreshCharacters)
 
         clear_layout(self.pageDisplay)
         self.pageDisplay.layout().addWidget(widget)
