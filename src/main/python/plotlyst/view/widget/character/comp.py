@@ -210,14 +210,17 @@ class CharacterOverviewWidget(QWidget, EventListener):
             self._roleIcon.setRole(self._character.role, showText=True)
 
         vbox(self, 0)
-        self.layout().addWidget(self._avatar, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.layout().addWidget(self._roleIcon, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.layout().addWidget(line())
+        self._wdgHeader = QWidget()
+        vbox(self._wdgHeader, 0)
+        self._wdgHeader.layout().addWidget(self._avatar, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._wdgHeader.layout().addWidget(self._roleIcon, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._wdgHeader.layout().addWidget(line())
 
         self._display: Optional[BaseDisplay] = None
         self._displayContainer = QWidget()
         hbox(self._displayContainer, 0, 0)
 
+        self.layout().addWidget(self._wdgHeader)
         self.layout().addWidget(self._displayContainer)
         self.layout().addWidget(vspacer())
 
@@ -236,6 +239,8 @@ class CharacterOverviewWidget(QWidget, EventListener):
             gc(self._display)
             self._display = None
 
+        self._wdgHeader.setVisible(True)
+
         if attribute == CharacterComparisonAttribute.BIG_FIVE:
             self._display = BigFiveDisplay(self._character)
             self._displayContainer.layout().addWidget(self._display)
@@ -246,6 +251,7 @@ class CharacterOverviewWidget(QWidget, EventListener):
             self._display = FacultiesDisplay(self._character)
             self._displayContainer.layout().addWidget(self._display)
         elif attribute == CharacterComparisonAttribute.BACKSTORY:
+            self._wdgHeader.setHidden(True)
             self._display = BackstoryDisplay(self._character)
             self._displayContainer.layout().addWidget(self._display)
 
