@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from overrides import overrides
-from qthandy import clear_layout, margins
+from qthandy import clear_layout, margins, bold
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document, DocumentType
@@ -42,6 +42,9 @@ class DocumentsView(AbstractNovelView):
         self.ui = Ui_NotesView()
         self.ui.setupUi(self.widget)
         self._current_doc: Optional[Document] = None
+
+        self.ui.btnDocuments.setIcon(IconRegistry.document_edition_icon())
+        bold(self.ui.lblTitle)
 
         self.ui.splitter.setSizes([150, 500])
 
