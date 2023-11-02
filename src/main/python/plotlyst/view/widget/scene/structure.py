@@ -30,7 +30,7 @@ from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QTextEdit, QDialo
 from overrides import overrides
 from qtanim import fade_in
 from qthandy import pointy, gc, translucent, bold, clear_layout, decr_font, \
-    margins, spacer, sp, curved_flow, incr_icon, vbox, vspacer, transparent
+    margins, spacer, sp, curved_flow, incr_icon, vbox, vspacer, transparent, underline
 from qthandy.filter import OpacityEventFilter, ObjectReferenceMimeData, DragEventFilter, DropEventFilter
 from qtmenu import ScrollableMenuWidget, ActionTooltipDisplayMode, MenuWidget, TabularGridMenuWidget
 
@@ -45,6 +45,7 @@ from src.main.python.plotlyst.view.generated.scene_structure_template_selector_d
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import DotsMenuButton
+from src.main.python.plotlyst.view.widget.display import StageRecommendationBadge
 from src.main.python.plotlyst.view.widget.input import RemovalButton
 from src.main.python.plotlyst.view.widget.list import ListView, ListItemWidget
 from src.main.python.plotlyst.view.widget.scenes import SceneOutcomeSelector
@@ -996,11 +997,14 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
         self._btnTemplates = QPushButton('Apply template', self)
         self._btnTemplates.setIcon(IconRegistry.from_name('ei.magic'))
+        underline(self._btnTemplates)
         transparent(self._btnTemplates)
         pointy(self._btnTemplates)
         self._btnTemplates.installEventFilter(ButtonPressResizeEventFilter(self._btnTemplates))
         self._btnTemplates.installEventFilter(OpacityEventFilter(self._btnTemplates))
         self._btnTemplates.clicked.connect(self._showTemplates)
+
+        self._stageBadge = StageRecommendationBadge()
 
         self._btnMenu = DotsMenuButton(self)
         self._contextMenu = MenuWidget(self._btnMenu)
@@ -1012,26 +1016,18 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         margins(self.wdgTimelineHeader, top=5, left=10)
         self.wdgTimelineHeader.layout().addWidget(self._btnTemplates)
         self.wdgTimelineHeader.layout().addWidget(spacer())
+        self.wdgTimelineHeader.layout().addWidget(self._stageBadge)
         self.wdgTimelineHeader.layout().addWidget(self._btnMenu)
 
         self.novel: Optional[Novel] = None
         self.scene: Optional[Scene] = None
 
         self.timeline = SceneStructureTimeline(self)
+        self.timeline.timelineChanged.connect(self._timelineChanged)
         self.scrollAreaTimeline.layout().addWidget(self.timeline)
 
         self.listEvents = SceneStructureList()
         self.pageList.layout().addWidget(self.listEvents)
-
-        # self._disabledAgendaEventFilter = None
-
-    def setUnsetCharacterSlot(self, unsetCharacterSlot):
-        pass
-        # if self._disabledAgendaEventFilter:
-        #     self.wdgAgendaCharacter.btnLinkCharacter.removeEventFilter(self._disabledAgendaEventFilter)
-        #
-        # self._disabledAgendaEventFilter = DisabledClickEventFilter(self, unsetCharacterSlot)
-        # self.wdgAgendaCharacter.btnLinkCharacter.installEventFilter(self._disabledAgendaEventFilter)
 
     def setScene(self, novel: Novel, scene: Scene):
         self.novel = novel
@@ -1040,6 +1036,13 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.timeline.setNovel(novel)
         self.timeline.setScene(scene)
         self.timeline.clear()
+
+        if scene.structure:
+            self._stageBadge.setHidden(True)
+        elif scene.manuscript and scene.manuscript.statistics and scene.manuscript.statistics.wc > 50:
+            self._stageBadge.setHidden(True)
+        else:
+            self._stageBadge.setVisible(True)
 
         self.timeline.setStructure(scene.structure)
         self.listEvents.setStructure(scene.structure, self.scene.purpose)
@@ -1061,21 +1064,9 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             self._btnMenu.setHidden(True)
         self._btnTemplates.setHidden(True)
 
-    def updateAvailableAgendaCharacters(self):
-        pass
-        # chars = []
-        # chars.extend(self.scene.characters)
-        # if self.scene.pov:
-        #     chars.insert(0, self.scene.pov)
-        # self.wdgAgendaCharacter.setAvailableCharacters(chars)
-
-    def updateAgendaCharacter(self):
-        pass
-        # self._toggleCharacterStatus()
-        # self._initSelectors()
-
     def _initEditor(self, purpose: ScenePurposeType):
         if purpose == ScenePurposeType.Exposition:
+            self._stageBadge.setHidden(True)
             self.stackStructure.setCurrentWidget(self.pageList)
             self.lblSummary.setHidden(True)
             self.lblExposition.setVisible(True)
@@ -1098,6 +1089,9 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
     def _reset(self):
         pass
+
+    def _timelineChanged(self):
+        self._stageBadge.setHidden(True)
 
 
 class SceneStructureTemplateSelector(QDialog, Ui_SceneStructuteTemplateSelector):

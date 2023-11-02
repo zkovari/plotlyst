@@ -124,3 +124,7 @@ scene_resolution_outcome_help = """<html><head/><body><p>Scene ends with a <span
  so the agenda character's scene goal is achieved</p></body></html>"""
 
 scene_motion_outcome_help = """<html><head/><body><p>Scene sets the story in motion without delivering any imminent disaster or resolution outcome</p></body></html>"""
+
+mid_revision_scene_structure_help = """<html>This panel is recommended for <b>mid-revision</b> stage after the writer has already completed the first draft and implemented early, high-level developmental changes.
+<br/>During mid-revision, the writer might refine scene structure to ensure tension, escalation, and reader engagement.
+"""
