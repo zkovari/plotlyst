@@ -37,7 +37,6 @@ from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent, NovelSyncEvent
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import proxy
-from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import delete_character
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.character_editor import CharacterEditor
@@ -46,13 +45,12 @@ from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPr
 from src.main.python.plotlyst.view.generated.characters_title_ui import Ui_CharactersTitle
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.style.base import apply_bg_image
 from src.main.python.plotlyst.view.widget.cards import CharacterCard, CardSizeRatio
 from src.main.python.plotlyst.view.widget.character import CharacterComparisonWidget, LayoutType, \
     CharacterComparisonAttribute
 from src.main.python.plotlyst.view.widget.character.comp import CharactersTreeView
 from src.main.python.plotlyst.view.widget.character.network import CharacterNetworkView
-from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget, CharactersProgressWidget
+from src.main.python.plotlyst.view.widget.characters import CharactersProgressWidget
 
 
 class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
@@ -107,16 +105,12 @@ class CharactersView(AbstractNovelView):
         self.ui.tblCharacters.doubleClicked.connect(self.ui.btnEdit.click)
         self.ui.btnCardsView.setIcon(IconRegistry.cards_icon())
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
-        self.ui.btnBackstoryView.setIcon(IconRegistry.from_name('mdi.timeline', color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnComparison.setIcon(
             IconRegistry.from_name('mdi.compare-horizontal', color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnRelationsView.setIcon(
             IconRegistry.from_name('ph.share-network-bold', color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnProgressView.setIcon(IconRegistry.progress_check_icon('black'))
         self.setNavigableButtonGroup(self.ui.btnGroupViews)
-
-        self.ui.wdgCharacterSelector.setExclusive(False)
-        self.ui.wdgCharacterSelector.characterToggled.connect(self._backstory_character_toggled)
 
         self.ui.btnEdit.setIcon(IconRegistry.edit_icon())
         self.ui.btnEdit.clicked.connect(self._on_edit)
@@ -134,8 +128,6 @@ class CharactersView(AbstractNovelView):
                 btn.setToolTip('Option disabled in Scrivener synchronization mode')
                 btn.installEventFilter(InstantTooltipEventFilter(btn))
 
-        apply_bg_image(self.ui.scrollAreaBackstoryContent, resource_registry.cover1)
-
         self.selected_card: Optional[CharacterCard] = None
         self.ui.cards.selectionCleared.connect(lambda: self._enable_action_buttons(False))
         self.ui.cards.cardSelected.connect(self._card_selected)
@@ -150,6 +142,9 @@ class CharactersView(AbstractNovelView):
         self.ui.btnGridComparison.setIcon(IconRegistry.from_name('ph.grid-four-bold'))
         self.ui.btnSummaryComparison.setIcon(IconRegistry.synopsis_icon(color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnBigFiveComparison.setIcon(IconRegistry.big_five_icon(color_on=PLOTLYST_SECONDARY_COLOR))
+        self.ui.btnFacultiesComparison.setIcon(
+            IconRegistry.from_name('mdi6.head-lightbulb', color_on=PLOTLYST_SECONDARY_COLOR))
+        self.ui.btnBackstoryComparison.setIcon(IconRegistry.backstory_icon('black', color_on=PLOTLYST_SECONDARY_COLOR))
 
         self.ui.splitterCompTree.setSizes([150, 500])
         self._wdgComparison = CharacterComparisonWidget(self.novel, self.ui.pageComparison)
@@ -190,7 +185,6 @@ class CharactersView(AbstractNovelView):
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
         link_buttons_to_pages(self.ui.stackCharacters, [(self.ui.btnCardsView, self.ui.pageCardsView),
                                                         (self.ui.btnTableView, self.ui.pageTableView),
-                                                        (self.ui.btnBackstoryView, self.ui.pageBackstory),
                                                         (self.ui.btnRelationsView, self.ui.pageRelationsView),
                                                         (self.ui.btnComparison, self.ui.pageComparison),
                                                         (self.ui.btnProgressView, self.ui.pageProgressView)])
@@ -255,9 +249,6 @@ class CharactersView(AbstractNovelView):
         elif self.ui.btnTableView.isChecked():
             self._enable_action_buttons(len(self.ui.tblCharacters.selectedIndexes()) > 0)
             self.ui.wdgToolbar.setVisible(True)
-        elif self.ui.btnBackstoryView.isChecked():
-            self.ui.wdgToolbar.setVisible(False)
-            self.ui.wdgCharacterSelector.updateCharacters(self.novel.characters, checkAll=False)
         elif self.ui.btnRelationsView.isChecked():
             self._relations.refresh()
             self.ui.wdgToolbar.setVisible(False)
@@ -324,17 +315,3 @@ class CharactersView(AbstractNovelView):
             self.ui.wdgCharacterSelector.removeCharacter(character)
             emit_event(self.novel, CharacterDeletedEvent(self, character))
             self.refresh()
-
-    @busy
-    def _backstory_character_toggled(self, character: Character, toggled: bool):
-        if toggled:
-            wdg = CharacterTimelineWidget(self.ui.scrollAreaBackstoryContent)
-            wdg.setCharacter(character)
-            self.ui.scrollAreaBackstoryContent.layout().addWidget(wdg)
-            wdg.changed.connect(lambda: self.repo.update_character(character))
-        else:
-            for i in range(self.ui.scrollAreaBackstoryContent.layout().count()):
-                wdg = self.ui.scrollAreaBackstoryContent.layout().itemAt(i).widget()
-                if isinstance(wdg, CharacterTimelineWidget) and wdg.character.id == character.id:
-                    self.ui.scrollAreaBackstoryContent.layout().removeWidget(wdg)
-                    return gc(wdg)

@@ -242,6 +242,7 @@ class CharacterOverviewWidget(QWidget, EventListener):
         elif attribute == CharacterComparisonAttribute.BACKSTORY:
             self._display = BackstoryDisplay(self._character)
             self._displayContainer.layout().addWidget(self._display)
+            # apply_bg_image(self.ui.scrollAreaBackstoryContent, resource_registry.cover1)
 
 
 class LayoutType(Enum):
