@@ -54,6 +54,9 @@ class CharacterComparisonAttribute(Enum):
 
 class BaseDisplay:
 
+    def __init__(self):
+        self.repo = RepositoryPersistenceManager.instance()
+
     @abstractmethod
     def refresh(self):
         pass
@@ -92,7 +95,6 @@ class SummaryDisplay(QTextEdit, BaseDisplay):
         self.setMinimumWidth(200)
         self.setTabChangesFocus(True)
 
-        self.repo = RepositoryPersistenceManager.instance()
         self.refresh()
 
         self.textChanged.connect(self._save)
@@ -136,7 +138,6 @@ class FacultiesDisplay(QWidget, BaseDisplay):
         self.setMaximumWidth(300)
         self.setMinimumWidth(250)
 
-        self.repo = RepositoryPersistenceManager.instance()
         self.refresh()
 
     @overrides
@@ -188,6 +189,11 @@ class BackstoryDisplay(CharacterTimelineWidget, BaseDisplay):
         super().__init__(parent)
         self._character = character
         self.setCharacter(self._character)
+
+        self.changed.connect(self._save)
+
+    def _save(self):
+        self.repo.update_character(self._character)
 
 
 class CharacterOverviewWidget(QWidget, EventListener):
