@@ -213,6 +213,7 @@ class StoryArcChart(BaseChart):
             for serie in series:
                 self.addSeries(serie)
                 serie.attachAxis(self._axisY)
+                serie.attachAxis(self._axisX)
             self._plots[plot] = series
         else:
             for serie in self._plots.pop(plot):
@@ -223,6 +224,7 @@ class StoryArcChart(BaseChart):
             self._overallConflictSeries = self._conflictSeries()
             self.addSeries(self._overallConflictSeries)
             self._overallConflictSeries.attachAxis(self._axisY)
+            self._overallConflictSeries.attachAxis(self._axisX)
         else:
             self.removeSeries(self._overallConflictSeries)
             self._overallConflictSeries = None
@@ -235,6 +237,7 @@ class StoryArcChart(BaseChart):
             arcs.emotion = self._characterEmotionSeries(character)
             self.addSeries(arcs.emotion)
             arcs.emotion.attachAxis(self._axisY)
+            arcs.emotion.attachAxis(self._axisX)
         else:
             self.removeSeries(arcs.emotion)
             arcs.emotion = None
@@ -246,6 +249,7 @@ class StoryArcChart(BaseChart):
             for serie in arcs.motivation:
                 self.addSeries(serie)
                 serie.attachAxis(self._axisY)
+                serie.attachAxis(self._axisX)
         else:
             for serie in arcs.motivation:
                 self.removeSeries(serie)
@@ -257,6 +261,7 @@ class StoryArcChart(BaseChart):
             arcs.conflict = self._conflictSeries(character)
             self.addSeries(arcs.conflict)
             arcs.conflict.attachAxis(self._axisY)
+            arcs.conflict.attachAxis(self._axisX)
         else:
             self.removeSeries(arcs.conflict)
             arcs.conflict = None
@@ -312,10 +317,8 @@ class StoryArcChart(BaseChart):
             for agenda in scene.agendas:
                 if character and agenda.character_id != character.id:
                     continue
-                agenda_intensity = max([x.intensity for x in agenda.conflict_references], default=0)
-                intensity = max([intensity, agenda_intensity])
-            if intensity > 0:
-                series.append(i + 1, intensity)
+                intensity = max([intensity, agenda.intensity])
+            series.append(i + 1, intensity)
 
         return series
 
@@ -361,5 +364,8 @@ class StoryArcChart(BaseChart):
                     if values[motivation] > self.MAX:
                         values[motivation] = self.MAX
                     spline(motivation).append(i, values[motivation])
+
+        for motivation, value in values.items():
+            spline(motivation).append(len(self.novel.scenes), value)
 
         return list(splines.values())
