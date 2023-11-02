@@ -64,7 +64,6 @@ class DocumentsView(AbstractNovelView):
 
     def _add_doc(self, doc: Document):
         self.ui.treeDocuments.addDocument(doc)
-        self._edit(doc)
 
     def _init_text_editor(self):
         self._clear_text_editor()

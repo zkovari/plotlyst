@@ -142,6 +142,8 @@ class DocumentsTreeView(TreeView):
         self._novel.documents.append(doc)
         wdg = self.__initDocWidget(doc)
         self._centralWidget.layout().insertWidget(self._centralWidget.layout().count() - 1, wdg)
+        wdg.select()
+        self._docSelectionChanged(wdg, wdg.isSelected())
 
         self._save()
 
