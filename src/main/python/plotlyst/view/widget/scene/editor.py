@@ -27,7 +27,7 @@ from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QSt
     QToolButton, QAbstractButton, QScrollArea, QButtonGroup
 from overrides import overrides
 from qthandy import vbox, vspacer, transparent, sp, line, incr_font, hbox, pointy, vline, retain_when_hidden, margins, \
-    spacer, underline, bold, grid, gc, clear_layout, ask_confirmation, decr_icon
+    spacer, underline, bold, grid, gc, clear_layout, ask_confirmation, decr_icon, italic
 from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
@@ -197,8 +197,9 @@ class ScenePurposeTypeButton(QPushButton):
             return
         IconRegistry.action_scene_icon()
         if self._scene.purpose == ScenePurposeType.Other:
-            self.setText('')
+            self.setText('Purpose...')
             self.setToolTip('Scene purpose not selected')
+            self.setIcon(QIcon())
         else:
             purpose = scene_purposes.get(self._scene.purpose)
             tip = purpose.display_name.replace('\n', ' ')
@@ -214,7 +215,12 @@ class ScenePurposeTypeButton(QPushButton):
         elif self._scene.purpose == ScenePurposeType.Emotion:
             self.setIcon(IconRegistry.emotion_scene_icon())
 
-        bold(self, self._scene.purpose != ScenePurposeType.Other)
+        if self._scene.purpose == ScenePurposeType.Other:
+            italic(self, True)
+            bold(self, False)
+        else:
+            bold(self, True)
+            italic(self, False)
 
         if self._scene.purpose == ScenePurposeType.Story:
             bgColor = '#f4978e'
