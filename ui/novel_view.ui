@@ -49,7 +49,7 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <property name="spacing">
-        <number>0</number>
+        <number>12</number>
        </property>
        <property name="leftMargin">
         <number>0</number>
@@ -179,91 +179,129 @@
         </widget>
        </item>
        <item>
-        <widget class="QWidget" name="widget_5" native="true">
-         <layout class="QHBoxLayout" name="horizontalLayout_12">
+        <widget class="QWidget" name="wdgAttributesParent" native="true">
+         <layout class="QHBoxLayout" name="horizontalLayout_6">
           <property name="spacing">
            <number>3</number>
           </property>
           <property name="leftMargin">
-           <number>0</number>
+           <number>2</number>
           </property>
           <property name="topMargin">
-           <number>0</number>
+           <number>15</number>
           </property>
           <property name="rightMargin">
-           <number>0</number>
+           <number>2</number>
           </property>
           <property name="bottomMargin">
-           <number>0</number>
+           <number>2</number>
           </property>
           <item>
-           <widget class="Subtitle" name="subtitlePremise" native="true">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
+           <spacer name="horizontalSpacer_5">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
             </property>
-            <property name="title" stdset="0">
-             <string>Premise</string>
+            <property name="sizeType">
+             <enum>QSizePolicy::Fixed</enum>
             </property>
-            <property name="description" stdset="0">
-             <string>Summarize your story in one or two sentences</string>
-            </property>
-            <property name="icon" stdset="0">
-             <string>ph.megaphone-bold</string>
-            </property>
-            <property name="top-level-nav" stdset="0">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item alignment="Qt::AlignRight|Qt::AlignBottom">
-           <widget class="WordsDisplay" name="lblLoglineWords">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QWidget" name="widget_3" native="true">
-         <layout class="QHBoxLayout" name="horizontalLayout_4">
-          <property name="spacing">
-           <number>0</number>
-          </property>
-          <property name="leftMargin">
-           <number>20</number>
-          </property>
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <property name="rightMargin">
-           <number>0</number>
-          </property>
-          <property name="bottomMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="DocumentTextEditor" name="textPremise" native="true">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="maximumSize">
+            <property name="sizeHint" stdset="0">
              <size>
-              <width>16777215</width>
-              <height>150</height>
+              <width>40</width>
+              <height>20</height>
              </size>
             </property>
-            <property name="placeholderText" stdset="0">
-             <string>Describe your story ...</string>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QWidget" name="wdgSubtitleParent" native="true">
+            <property name="maximumSize">
+             <size>
+              <width>1000</width>
+              <height>16777215</height>
+             </size>
             </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_7">
+             <property name="spacing">
+              <number>3</number>
+             </property>
+             <property name="leftMargin">
+              <number>100</number>
+             </property>
+             <property name="topMargin">
+              <number>2</number>
+             </property>
+             <property name="rightMargin">
+              <number>100</number>
+             </property>
+             <property name="bottomMargin">
+              <number>2</number>
+             </property>
+             <item>
+              <spacer name="horizontalSpacer_6">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Fixed</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+              <widget class="QToolButton" name="btnPremiseIcon">
+               <property name="text">
+                <string/>
+               </property>
+               <property name="transparent" stdset="0">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="AutoAdjustableTextEdit" name="textPremise">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="verticalScrollBarPolicy">
+                <enum>Qt::ScrollBarAlwaysOff</enum>
+               </property>
+               <property name="horizontalScrollBarPolicy">
+                <enum>Qt::ScrollBarAlwaysOff</enum>
+               </property>
+               <property name="placeholderText">
+                <string>Premise: summarize your story in 1-2 sentences</string>
+               </property>
+               <property name="transparent" stdset="0">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_7">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Fixed</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </widget>
@@ -279,7 +317,7 @@
             <string>Synopsis</string>
            </property>
            <property name="description" stdset="0">
-            <string>Summarize your whole story in 500 words.</string>
+            <string>Summarize your story's core events</string>
            </property>
            <property name="icon" stdset="0">
             <string>fa5s.scroll</string>
@@ -319,7 +357,7 @@
           <item>
            <widget class="DocumentTextEditor" name="textSynopsis" native="true">
             <property name="placeholderText" stdset="0">
-             <string>Write down your novel's main events</string>
+             <string>Synopsis: summarize your story's core events</string>
             </property>
            </widget>
           </item>
@@ -502,8 +540,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>624</width>
-            <height>517</height>
+            <width>626</width>
+            <height>512</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -587,8 +625,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>544</width>
-            <height>517</height>
+            <width>546</width>
+            <height>512</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -676,6 +714,11 @@
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.novel</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>AutoAdjustableTextEdit</class>
+   <extends>QTextEdit</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
  </customwidgets>
  <resources/>

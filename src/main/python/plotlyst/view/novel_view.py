@@ -19,10 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt6.QtCore import QObject, QEvent
-from PyQt6.QtGui import QFont
+from PyQt6.QtCore import QObject, QEvent, Qt
 from overrides import overrides
-from qthandy import retain_when_hidden, transparent, decr_icon, gc
+from qthandy import retain_when_hidden, decr_icon, gc
 from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
@@ -39,7 +38,6 @@ from src.main.python.plotlyst.view.dialog.novel import NovelEditionDialog, Synop
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_border_image
-from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton
 from src.main.python.plotlyst.view.widget.plot import PlotEditor
 from src.main.python.plotlyst.view.widget.settings import NovelSettingsWidget
 from src.main.python.plotlyst.view.widget.story_map import EventsMindMapView
@@ -75,23 +73,10 @@ class NovelView(AbstractNovelView):
         self.ui.wdgTitle.installEventFilter(self)
         self.ui.btnEditNovel.setHidden(True)
 
-        self.ui.textPremise.textEdit.setPlaceholderText('Premise')
-        font = self.ui.textPremise.textEdit.font()
-        font.setFamily('Garamond')
-        font.setPointSize(16)
-        self.ui.textPremise.textEdit.setFont(font)
-        self.ui.textPremise.textEdit.setAcceptRichText(False)
-        self.ui.textPremise.textEdit.setSidebarEnabled(False)
-        self.ui.textPremise.textEdit.setDocumentMargin(0)
-
-        self._btnPremiseVariants = SecondaryActionToolButton()
-        self._btnPremiseVariants.setToolTip('Premise variants')
-        self._btnPremiseVariants.setIcon(IconRegistry.from_name('mdi.list-status'))
-        self._btnPremiseVariants.installEventFilter(OpacityEventFilter(self._btnPremiseVariants, leaveOpacity=0.55))
-        self._btnPremiseVariants.setDisabled(True)
-        self._btnPremiseVariants.setHidden(True)
-        self.ui.subtitlePremise.addWidget(self._btnPremiseVariants)
-
+        self.ui.textPremise.setStyleSheet('font-size: 16pt;')
+        self.ui.textPremise.setToolTip('Premise')
+        self.ui.textPremise.setFontItalic(True)
+        self.ui.btnPremiseIcon.setIcon(IconRegistry.from_name('mdi.label-variant'))
         self._dialogSynopsisEditor: Optional[SynopsisEditorDialog] = None
 
         self._btnSynopsisExtendEdit = tool_btn(IconRegistry.expand_icon(), tooltip='Edit in full view',
@@ -103,17 +88,14 @@ class NovelView(AbstractNovelView):
         self._btnSynopsisExtendEdit.clicked.connect(self._expandSynopsisEditor)
 
         self.ui.lblTitle.setText(self.novel.title)
-        self.ui.textPremise.textEdit.insertPlainText(self.novel.premise)
-        self.ui.textPremise.textEdit.textChanged.connect(self._premise_changed)
-        self._premise_changed()
+        self.ui.textPremise.setText(self.novel.premise)
+        self.ui.textPremise.textChanged.connect(self._premise_changed)
         self.ui.textSynopsis.setPlaceholderText("Write down your story's main events")
         self.ui.textSynopsis.setMargins(0, 10, 0, 10)
         self.ui.textSynopsis.textEdit.setSidebarEnabled(False)
         self.ui.textSynopsis.textEdit.setTabChangesFocus(True)
         self.ui.textSynopsis.setGrammarCheckEnabled(self.novel.prefs.docs.grammar_check)
 
-        self.ui.textPremise.setToolbarVisible(False)
-        self.ui.textPremise.setTitleVisible(False)
         self.ui.textSynopsis.setToolbarVisible(False)
         self.ui.textSynopsis.setTitleVisible(False)
         if self.novel.synopsis:
@@ -133,12 +115,11 @@ class NovelView(AbstractNovelView):
         self.ui.wdgPlotContainer.layout().addWidget(self.plot_editor)
 
         self.ui.wdgTagsContainer.setNovel(self.novel)
-        self.ui.tabWidget.setCurrentWidget(self.ui.tabPlot)
 
         self._settings = NovelSettingsWidget(self.novel)
         self.ui.wdgSettings.layout().addWidget(self._settings)
 
-        self.ui.tabWidget.setCurrentWidget(self.ui.tabPlot)
+        self.ui.tabWidget.setCurrentWidget(self.ui.tabSynopsis)
 
     @overrides
     def event_received(self, event: Event):
@@ -174,16 +155,8 @@ class NovelView(AbstractNovelView):
             emit_global_event(NovelUpdatedEvent(self, self.novel))
 
     def _premise_changed(self):
-        text = self.ui.textPremise.textEdit.toPlainText()
-        if not text:
-            self.ui.textPremise.textEdit.setFontWeight(QFont.Weight.Bold)
-            self.ui.textPremise.textEdit.setStyleSheet(
-                'border: 1px dashed darkBlue; border-radius: 6px; background-color: rgba(0, 0, 0, 0);')
-        elif not self.novel.premise:
-            transparent(self.ui.textPremise.textEdit)
-
+        text = self.ui.textPremise.toPlainText()
         self.novel.premise = text
-        self.ui.lblLoglineWords.calculateWordCount(self.novel.premise)
         self.repo.update_novel(self.novel)
 
     def _expandSynopsisEditor(self):
