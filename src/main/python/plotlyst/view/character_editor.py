@@ -25,6 +25,7 @@ from PyQt6.QtWidgets import QWidget, QAbstractButton, QLineEdit, QCompleter
 from overrides import overrides
 from qthandy import translucent, btn_popup, incr_font, bold, italic, margins
 from qthandy.filter import OpacityEventFilter
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.client import json_client
@@ -39,7 +40,7 @@ from src.main.python.plotlyst.view.common import emoji_font, set_tab_icon, wrap,
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.style.base import apply_bg_image
+from src.main.python.plotlyst.view.style.base import apply_bg_image, apply_white_menu
 from src.main.python.plotlyst.view.widget.big_five import BigFivePersonalityWidget
 from src.main.python.plotlyst.view.widget.character.control import CharacterAgeEditor
 from src.main.python.plotlyst.view.widget.character.plan import CharacterPlansWidget
@@ -102,7 +103,10 @@ class CharacterEditor(QObject, EventListener):
 
         self._ageEditor = CharacterAgeEditor()
         self._ageEditor.valueChanged.connect(self._age_changed)
-        menu = btn_popup(self.ui.btnAge, wrap(self._ageEditor, margin_bottom=4))
+        menu = MenuWidget(self.ui.btnAge)
+        menu.addWidget(self._ageEditor)
+        apply_white_menu(menu)
+        # menu = btn_popup(self.ui.btnAge, wrap(self._ageEditor, margin_bottom=4))
         menu.aboutToShow.connect(self._ageEditor.setFocus)
 
         self._lineOccupation = QLineEdit()
