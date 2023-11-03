@@ -35,7 +35,7 @@ from src.main.python.plotlyst.common import raise_unrecognized_arg, CONFLICT_SEL
 from src.main.python.plotlyst.core.domain import Scene, Novel, ScenePurpose, advance_story_scene_purpose, \
     ScenePurposeType, reaction_story_scene_purpose, character_story_scene_purpose, setup_story_scene_purpose, \
     emotion_story_scene_purpose, exposition_story_scene_purpose, scene_purposes, Character, StoryElement, \
-    StoryElementType, SceneOutcome, SceneStructureAgenda, Motivation, Plot
+    StoryElementType, SceneOutcome, SceneStructureAgenda, Motivation, Plot, NovelSetting
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent
@@ -475,6 +475,7 @@ class SceneElementWidget(QWidget):
         self._btnClose.clicked.connect(self._deactivate)
 
         self._storylineLinkEnabled = self._type in [StoryElementType.Event, StoryElementType.Effect]
+        self._storylineVisible: bool = True
 
         self._btnStorylineLink = tool_btn(IconRegistry.storylines_icon(color='lightgrey'), transparent_=True,
                                           tooltip='Link storyline to this element',
@@ -486,6 +487,7 @@ class SceneElementWidget(QWidget):
         if self._storylineLinkEnabled:
             self._storylineMenu = StorylineSelectorMenu(self._novel, self._btnStorylineLink)
             self._storylineMenu.storylineSelected.connect(self._storylineSelected)
+
 
         self._arrows: Dict[int, ArrowButton] = {
             90: ArrowButton(Qt.Edge.RightEdge),
@@ -549,6 +551,10 @@ class SceneElementWidget(QWidget):
         self._scene = scene
         self.reset()
 
+    def setStorylineVisible(self, visible: bool):
+        self._storylineVisible = visible
+        self._btnStorylineLink.setVisible(visible)
+
     @overrides
     def eventFilter(self, watched: 'QObject', event: 'QEvent') -> bool:
         if event.type() == QEvent.Type.MouseButtonRelease:
@@ -563,7 +569,7 @@ class SceneElementWidget(QWidget):
             self._titleIdle.setVisible(True)
             self._iconIdle.setIcon(self._icon)
         else:
-            if self._storylineLinkEnabled:
+            if self._storylineLinkEnabled and self._storylineVisible:
                 self._btnStorylineLink.setVisible(True)
             self._btnClose.setVisible(True)
             for arrow in self._arrows.values():
@@ -580,7 +586,7 @@ class SceneElementWidget(QWidget):
                 if not arrow.isChecked():
                     arrow.setHidden(True)
             self._btnClose.setVisible(False)
-            if not self._element.ref:
+            if not self._element.ref or not self._storylineVisible:
                 self._btnStorylineLink.setVisible(False)
 
     def setIcon(self, icon: str, colorActive: str = 'black'):
@@ -614,7 +620,8 @@ class SceneElementWidget(QWidget):
             storyline = next((x for x in self._novel.plots if x.id == self._element.ref), None)
             if storyline is not None:
                 self._btnStorylineLink.setIcon(IconRegistry.from_name(storyline.icon, storyline.icon_color))
-                self._btnStorylineLink.setVisible(True)
+                if self._storylineVisible:
+                    self._btnStorylineLink.setVisible(True)
 
     def reset(self):
         self._btnClose.setHidden(True)
@@ -635,7 +642,7 @@ class SceneElementWidget(QWidget):
         element = StoryElement(self._type)
         self.setElement(element)
         self._btnClose.setVisible(True)
-        if self._storylineLinkEnabled:
+        if self._storylineLinkEnabled and self._storylineVisible:
             self._btnStorylineLink.setVisible(True)
 
         qtanim.glow(self._iconActive, duration=150, color=self._colorActive)
@@ -1117,6 +1124,7 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
                 item = self._wdgElements.layout().itemAtPosition(row, col)
                 if item and item.widget() and isinstance(item.widget(), SceneElementWidget):
                     item.widget().setScene(scene)
+                    item.widget().setStorylineVisible(self._novel.prefs.toggled(NovelSetting.Storylines))
 
         for element in scene.story_elements:
             item = self._wdgElements.layout().itemAtPosition(element.row, element.col)
@@ -1133,6 +1141,13 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         else:
             self._wdgHeader.setHidden(True)
             self._headerLine.setHidden(True)
+
+    def storylinesSettingToggledEvent(self, toggled: bool):
+        for row in range(self._row):
+            for col in range(self._col):
+                item = self._wdgElements.layout().itemAtPosition(row, col)
+                if item and item.widget() and isinstance(item.widget(), SceneElementWidget):
+                    item.widget().setStorylineVisible(toggled)
 
     # def _plotSelected(self, plotElement: PlotSceneElementEditor):
     #     insert_after(self._wdgElements, self._wdgAddNewPlotParent, reference=plotElement)

@@ -33,11 +33,12 @@ from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, Document, StoryBeat, \
-    Character, ScenePurposeType, ScenePurpose, Plot, ScenePlotReference
+    Character, ScenePurposeType, ScenePurpose, Plot, ScenePlotReference, NovelSetting
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
-from src.main.python.plotlyst.events import NovelAboutToSyncEvent, SceneStoryBeatChangedEvent
+from src.main.python.plotlyst.events import NovelAboutToSyncEvent, SceneStoryBeatChangedEvent, \
+    NovelStorylinesToggleEvent
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
@@ -171,11 +172,17 @@ class SceneEditor(QObject, EventListener):
 
         dispatcher = event_dispatchers.instance(self.novel)
         dispatcher.register(self, NovelAboutToSyncEvent)
+        dispatcher.register(self, NovelStorylinesToggleEvent)
 
     @overrides
     def event_received(self, event: Event):
         if isinstance(event, NovelAboutToSyncEvent):
             self._on_close()
+        elif isinstance(event, NovelStorylinesToggleEvent):
+            self.ui.wdgStorylines.setVisible(event.toggled)
+            self._btnPlotSelector.setVisible(event.toggled)
+            self._storylineEditor.storylinesSettingToggledEvent(event.toggled)
+
 
     def set_scene(self, scene: Scene):
         self.scene = scene
@@ -335,8 +342,8 @@ class SceneEditor(QObject, EventListener):
             fade_in(self._btnPurposeType)
         if not self.ui.btnInfo.isVisible():
             fade_in(self.ui.btnInfo)
-        self.ui.wdgStorylines.setVisible(True)
-        self._btnPlotSelector.setVisible(True)
+        self.ui.wdgStorylines.setVisible(self.novel.prefs.toggled(NovelSetting.Storylines))
+        self._btnPlotSelector.setVisible(self.novel.prefs.toggled(NovelSetting.Storylines))
         # to avoid segfault for some reason, we disable it first before changing the stack widget
         self._purposeSelector.setDisabled(True)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
