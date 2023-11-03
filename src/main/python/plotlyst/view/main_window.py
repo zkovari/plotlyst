@@ -51,7 +51,6 @@ from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.dir import select_new_project_directory
 from src.main.python.plotlyst.service.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
 from src.main.python.plotlyst.service.importer import ScrivenerSyncImporter
-from src.main.python.plotlyst.service.manuscript import export_manuscript_to_docx
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.service.resource import download_resource, download_nltk_resources
 from src.main.python.plotlyst.service.tour import TourService
@@ -465,9 +464,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionOpenProjectDir.triggered.connect(lambda: open_location(settings.workspace()))
         self.actionChangeDir.setIcon(IconRegistry.from_name('fa5s.folder-open'))
         self.actionChangeDir.triggered.connect(self._change_project_dir)
-
-        self.actionExportToDocx.setIcon(IconRegistry.docx_icon())
-        self.actionExportToDocx.triggered.connect(lambda: export_manuscript_to_docx(self.novel))
 
         self.actionCharacterTemplateEditor.triggered.connect(lambda: customize_character_profile(self.novel, 0, self))
 

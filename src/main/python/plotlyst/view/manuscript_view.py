@@ -46,7 +46,7 @@ from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.display import Icon, ChartView
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
-    DistractionFreeManuscriptEditor, SprintWidget, ReadabilityWidget
+    DistractionFreeManuscriptEditor, SprintWidget, ReadabilityWidget, ManuscriptExportWidget
 from src.main.python.plotlyst.view.widget.progress import ProgressChart
 from src.main.python.plotlyst.view.widget.scene.editor import SceneMiniEditor
 from src.main.python.plotlyst.view.widget.scenes import SceneNotesEditor
@@ -76,7 +76,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnReadability.setIcon(IconRegistry.from_name('fa5s.glasses', 'black', PLOTLYST_MAIN_COLOR))
         self.ui.btnLengthCharts.setIcon(IconRegistry.from_name('ri.bar-chart-2-fill', 'black', PLOTLYST_MAIN_COLOR))
         self.ui.btnLengthCharts.setHidden(True)
-        self.ui.btnExport.setIcon(IconRegistry.from_name('ei.download-alt', 'black', PLOTLYST_MAIN_COLOR))
+        self.ui.btnExport.setIcon(IconRegistry.from_name('mdi.file-export-outline', 'black', PLOTLYST_MAIN_COLOR))
 
         self._btnGroupSideBar = ExclusiveOptionalButtonGroup()
         self._btnGroupSideBar.addButton(self.ui.btnSceneInfo)
@@ -138,6 +138,10 @@ class ManuscriptView(AbstractNovelView):
         self._wdgReadability = ReadabilityWidget()
         self.ui.pageReadability.layout().addWidget(self._wdgReadability, alignment=Qt.AlignmentFlag.AlignCenter)
         self.ui.pageReadability.layout().addWidget(vspacer())
+
+        self._exportWidget = ManuscriptExportWidget(self.novel)
+        self.ui.pageExport.layout().addWidget(self._exportWidget)
+        self.ui.pageExport.layout().addWidget(vspacer())
 
         self._wdgToolbar = group(self._btnDistractionFree, self._wdgSprint, spacer(), self._spellCheckIcon,
                                  self._cbSpellCheck,

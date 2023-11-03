@@ -29,10 +29,10 @@ from PyQt6.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyn
     QMouseEvent, QTextCursor, QFont, QScreen, QTextFormat, QTextObjectInterface, QPainter, QTextBlockFormat, \
     QFontMetrics
 from PyQt6.QtMultimedia import QSoundEffect
-from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit
+from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit, QButtonGroup
 from nltk import WhitespaceTokenizer
 from overrides import overrides
-from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins
+from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins, vbox, line
 from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget, group
 from qttextedit import RichTextEditor, TextBlockState, remove_font, OBJECT_REPLACEMENT_CHARACTER
@@ -46,8 +46,9 @@ from src.main.python.plotlyst.core.sprint import TimerModel
 from src.main.python.plotlyst.core.text import wc, sentence_count, clean_text
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.resources import resource_registry
+from src.main.python.plotlyst.service.manuscript import export_manuscript_to_docx
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import scroll_to_top, spin, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import scroll_to_top, spin, ButtonPressResizeEventFilter, label, push_btn
 from src.main.python.plotlyst.view.generated.distraction_free_manuscript_editor_ui import \
     Ui_DistractionFreeManuscriptEditor
 from src.main.python.plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget
@@ -952,3 +953,39 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
     def _autoHideBottomBar(self):
         if not self.wdgBottom.underMouse():
             self.wdgBottom.setHidden(True)
+
+
+class ManuscriptExportWidget(QWidget):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+
+        vbox(self, spacing=15)
+        self.layout().addWidget(label('Export manuscript', bold=True), alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(line())
+
+        self._btnDocx = push_btn(IconRegistry.docx_icon(), 'Word (.docx)', checkable=True,
+                                 properties=['transparent-rounded-bg-on-hover', 'secondary-selector'])
+        self._btnDocx.setChecked(True)
+        self._btnPdf = push_btn(IconRegistry.from_name('fa5.file-pdf'), 'PDF', checkable=True,
+                                tooltip='PDF export not available yet',
+                                properties=['transparent-rounded-bg-on-hover', 'secondary-selector'])
+
+        self._btnGroup = QButtonGroup()
+        self._btnGroup.setExclusive(True)
+        self._btnGroup.addButton(self._btnDocx)
+        self._btnGroup.addButton(self._btnPdf)
+        self._btnPdf.setDisabled(True)
+        self.layout().addWidget(self._btnDocx, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self._btnPdf, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self._btnExport = push_btn(IconRegistry.from_name('mdi.file-export-outline', RELAXED_WHITE_COLOR), 'Export',
+                                   tooltip='Export manuscript',
+                                   properties=['base', 'positive'])
+        self.layout().addWidget(self._btnExport)
+
+        self._btnExport.clicked.connect(self._export)
+
+    def _export(self):
+        if self._btnDocx.isChecked():
+            export_manuscript_to_docx(self._novel)
