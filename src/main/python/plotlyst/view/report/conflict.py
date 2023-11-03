@@ -98,6 +98,7 @@ class ConflictTypeChart(BaseChart):
                     for conflict in agenda.conflicts(self.novel):
                         conflicts[conflict.type] = conflicts[conflict.type] + 1
         series = QPieSeries()
+        series.setHoleSize(0.45)
         for k, v in conflicts.items():
             if v:
                 slice_ = series.append(k.name, v)
