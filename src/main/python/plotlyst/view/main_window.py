@@ -581,7 +581,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.outline_mode.setText(self.novel.title)
         self.outline_mode.setChecked(True)
 
-        self.menuExport.setEnabled(True)
         self.actionPreview.setEnabled(True)
 
     def _clear_novel(self):
@@ -638,7 +637,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.outline_mode.setDisabled(True)
         self.outline_mode.setText('')
 
-        self.menuExport.setDisabled(True)
         self.actionPreview.setDisabled(True)
 
     def _focus_changed(self, old_widget: QWidget, current_widget: QWidget):
