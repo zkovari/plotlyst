@@ -42,7 +42,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, BackstoryEven
 from src.main.python.plotlyst.core.template import secondary_role, guide_role, love_interest_role, sidekick_role, \
     contagonist_role, confidant_role, foil_role, supporter_role, adversary_role, antagonist_role, henchmen_role, \
     tertiary_role, SelectionItem, Role, TemplateFieldType, TemplateField, protagonist_role, RoleImportance, \
-    promote_role, demote_role
+    promote_role, demote_role, major_role
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatchers
@@ -915,6 +915,7 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
         self.btnItemAntagonist.setSelectionItem(copy.deepcopy(antagonist_role))
         self.btnItemContagonist.setSelectionItem(copy.deepcopy(contagonist_role))
         self.btnItemSecondary.setSelectionItem(copy.deepcopy(secondary_role))
+        self.btnItemMajor.setSelectionItem(copy.deepcopy(major_role))
         self.btnItemGuide.setSelectionItem(copy.deepcopy(guide_role))
         self.btnItemLoveInterest.setSelectionItem(copy.deepcopy(love_interest_role))
         self.btnItemSidekick.setSelectionItem(copy.deepcopy(sidekick_role))
@@ -938,6 +939,7 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
                                                    (self.btnItemAntagonist, self.pageAntagonist),
                                                    (self.btnItemContagonist, self.pageContagonist),
                                                    (self.btnItemSecondary, self.pageSecondary),
+                                                   (self.btnItemMajor, self.pageMajor),
                                                    (self.btnItemGuide, self.pageGuide),
                                                    (self.btnItemLoveInterest, self.pageLoveInterest),
                                                    (self.btnItemSidekick, self.pageSidekick),
