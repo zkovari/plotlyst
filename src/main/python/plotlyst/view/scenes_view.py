@@ -41,7 +41,7 @@ from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
     SceneSelectedEvent, SceneSelectionClearedEvent, ActiveSceneStageChanged, \
     ChapterChangedEvent, AvailableSceneStagesChanged, CharacterChangedEvent, CharacterDeletedEvent, \
     NovelAboutToSyncEvent, NovelSyncEvent, NovelStoryStructureActivationRequest, NovelPanelCustomizationEvent, \
-    NovelStorylinesToggleEvent
+    NovelStorylinesToggleEvent, NovelStructureToggleEvent
 from src.main.python.plotlyst.events import SceneOrderChangedEvent
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
@@ -113,7 +113,8 @@ class ScenesOutlineView(AbstractNovelView):
         super().__init__(novel,
                          [NovelStoryStructureUpdated, CharacterChangedEvent, SceneChangedEvent, ChapterChangedEvent,
                           SceneDeletedEvent,
-                          SceneOrderChangedEvent, NovelAboutToSyncEvent, NovelStorylinesToggleEvent])
+                          SceneOrderChangedEvent, NovelAboutToSyncEvent, NovelStorylinesToggleEvent,
+                          NovelStructureToggleEvent])
         self.ui = Ui_ScenesView()
         self.ui.setupUi(self.widget)
 
@@ -194,8 +195,10 @@ class ScenesOutlineView(AbstractNovelView):
             IconRegistry.from_name('mdi.transit-connection-horizontal', color_on=PLOTLYST_SECONDARY_COLOR))
         self.setNavigableButtonGroup(self.ui.btnGroupViews)
 
-        storylines_visible = self.novel.prefs.toggled(NovelSetting.Storylines)
-        self.ui.btnStorymap.setVisible(storylines_visible)
+        self.ui.btnStorymap.setVisible(self.novel.prefs.toggled(NovelSetting.Storylines))
+        structure_visible = self.novel.prefs.toggled(NovelSetting.Structure)
+        self.ui.btnStoryStructure.setVisible(structure_visible)
+        self.ui.wdgStoryStructure.setVisible(structure_visible)
 
         self.ui.rbDots.setIcon(IconRegistry.from_name('fa5s.circle'))
         self.ui.rbTitles.setIcon(IconRegistry.from_name('ei.text-width'))
@@ -292,6 +295,9 @@ class ScenesOutlineView(AbstractNovelView):
                 self.ui.btnStorymap.setVisible(event.toggled)
                 if self.ui.btnStorymap.isChecked():
                     self.ui.btnCardsView.setChecked(True)
+            elif isinstance(event, NovelStructureToggleEvent):
+                self.ui.btnStoryStructure.setVisible(event.toggled)
+                self.ui.wdgStoryStructure.setVisible(event.toggled)
             return
 
         super(ScenesOutlineView, self).event_received(event)
