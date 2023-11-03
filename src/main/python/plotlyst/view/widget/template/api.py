@@ -44,7 +44,8 @@ class CharacterProfileTemplateView(ProfileTemplateView):
                 self._traits_widget = widget.wdgEditor
 
         if self._enneagram_widget:
-            self._enneagram_widget.selectionChanged.connect(self._enneagram_changed)
+            pass
+            # self._enneagram_widget.selectionChanged.connect(self._enneagram_changed)
 
     def toggleRequiredHeaders(self, toggled: bool):
         if self._required_headers_toggled == toggled:

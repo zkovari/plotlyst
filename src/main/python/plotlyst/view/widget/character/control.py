@@ -22,9 +22,10 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QWidget, QDial, QSpinBox
 from qthandy import vbox, line, vspacer, pointy
 
-from src.main.python.plotlyst.view.common import  wrap
+from src.main.python.plotlyst.view.common import wrap, label
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
+from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.display import Icon
 
 
@@ -98,3 +99,17 @@ class CharacterAgeEditor(QWidget):
                 self._dial.setValue(value)
 
         self.valueChanged.emit(value)
+
+
+class EnneagramSelector(SecondaryActionPushButton):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        vbox(self)
+        self.layout().addWidget(label('Test'))
+
+    def value(self):
+        pass
+
+    def setValue(self, value):
+        pass

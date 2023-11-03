@@ -48,7 +48,7 @@ from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_Charac
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_bg_image
 from src.main.python.plotlyst.view.widget.cards import CharacterCard, CardSizeRatio
-from src.main.python.plotlyst.view.widget.character import CharacterComparisonWidget, LayoutType, \
+from src.main.python.plotlyst.view.widget.character.comp import CharacterComparisonWidget, LayoutType, \
     CharacterComparisonAttribute
 from src.main.python.plotlyst.view.widget.character.comp import CharactersTreeView
 from src.main.python.plotlyst.view.widget.character.network import CharacterNetworkView

@@ -49,6 +49,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.slider import apply_slider_color
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton, CollapseButton
+from src.main.python.plotlyst.view.widget.character.control import EnneagramSelector
 from src.main.python.plotlyst.view.widget.display import Subtitle, Emoji, Icon
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
@@ -629,8 +630,9 @@ class BarTemplateFieldWidget(TemplateFieldWidgetBase):
 class EnneagramFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super(EnneagramFieldWidget, self).__init__(field, parent)
-        self.wdgEditor = TextSelectionWidget(field, enneagram_help)
-        self.wdgEditor.setIgnoredTooltip('Ignore Enneagram personality type for this character')
+        # self.wdgEditor = TextSelectionWidget(field, enneagram_help)
+        self.wdgEditor = EnneagramSelector()
+        # self.wdgEditor.setIgnoredTooltip('Ignore Enneagram personality type for this character')
         self._defaultTooltip: str = 'Select Enneagram personality'
         _layout = hbox(self)
         _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignTop)
@@ -662,8 +664,8 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
         if self.field.compact:
             _layout.addWidget(spacer())
 
-        self.wdgEditor.selectionChanged.connect(self._selectionChanged)
-        self.wdgEditor.ignored.connect(self._ignored)
+        # self.wdgEditor.selectionChanged.connect(self._selectionChanged)
+        # self.wdgEditor.ignored.connect(self._ignored)
 
     @overrides
     def value(self) -> Any:
