@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import datetime
+from typing import Optional
 
 import pypandoc
 from PyQt6.QtCore import Qt
@@ -146,21 +147,34 @@ def format_document(doc: Document, char_format: QTextCharFormat) -> QTextDocumen
 
 def today_str() -> str:
     today = datetime.date.today()
-    return today.strftime("%d/%m/%Y")
+    return today.strftime("%Y/%m/%d")
+
+
+def find_daily_progress(scene: Scene, date: Optional[str] = None) -> Optional[DocumentProgress]:
+    if scene.manuscript.statistics is None:
+        scene.manuscript.statistics = DocumentStatistics()
+    if date is None:
+        date = today_str()
+
+    if scene.manuscript.statistics.progress:
+        if scene.manuscript.statistics.progress[-1].date == date:
+            return scene.manuscript.statistics.progress[-1]
 
 
 def daily_progress(scene: Scene) -> DocumentProgress:
-    if scene.manuscript.statistics is None:
-        scene.manuscript.statistics = DocumentStatistics()
+    date = today_str()
+    progress = find_daily_progress(scene, date)
+    # if scene.manuscript.statistics is None:
+    #     scene.manuscript.statistics = DocumentStatistics()
+    #
+    # if scene.manuscript.statistics.daily and scene.manuscript.statistics.daily.date != today_str():
+    #     scene.manuscript.statistics.daily = None
 
-    if scene.manuscript.statistics.daily and scene.manuscript.statistics.daily.date != today_str():
-        scene.manuscript.statistics.daily = None
-
-    if scene.manuscript.statistics.daily is None:
-        scene.manuscript.statistics.daily = DocumentProgress(date=today_str())
-        scene.manuscript.statistics.progress.append(scene.manuscript.statistics.daily)
+    if progress is None:
+        progress = DocumentProgress(date)
+        scene.manuscript.statistics.progress.append(progress)
 
         repo = RepositoryPersistenceManager.instance()
         repo.update_scene(scene)
 
-    return scene.manuscript.statistics.daily
+    return progress

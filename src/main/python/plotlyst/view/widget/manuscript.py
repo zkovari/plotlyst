@@ -33,7 +33,7 @@ from PyQt6.QtMultimedia import QSoundEffect
 from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit, QButtonGroup, QCalendarWidget
 from nltk import WhitespaceTokenizer
 from overrides import overrides
-from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins, vbox, line, bold
+from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins, vbox, line, bold, vline
 from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget, group
 from qttextedit import RichTextEditor, TextBlockState, remove_font, OBJECT_REPLACEMENT_CHARACTER
@@ -47,7 +47,7 @@ from src.main.python.plotlyst.core.sprint import TimerModel
 from src.main.python.plotlyst.core.text import wc, sentence_count, clean_text
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.service.manuscript import export_manuscript_to_docx, daily_progress
+from src.main.python.plotlyst.service.manuscript import export_manuscript_to_docx, daily_progress, find_daily_progress
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import scroll_to_top, spin, ButtonPressResizeEventFilter, label, push_btn
 from src.main.python.plotlyst.view.generated.distraction_free_manuscript_editor_ui import \
@@ -1000,12 +1000,40 @@ class ManuscriptExportWidget(QWidget):
             export_manuscript_to_docx(self._novel)
 
 
+class ManuscriptDailyProgress(QWidget):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+        vbox(self)
+
+        self.lblAdded = label('', color='darkgreen', h3=True)
+        self.lblRemoved = label('', color='grey', h3=True)
+
+        self.layout().addWidget(group(self.lblAdded, vline(), self.lblRemoved), alignment=Qt.AlignmentFlag.AlignRight)
+        self.layout().addWidget(label('Added/Removed', description=True), alignment=Qt.AlignmentFlag.AlignRight)
+
+    def refresh(self):
+        added = 0
+        removed = 0
+
+        for scene in self._novel.scenes:
+            if scene.manuscript:
+                progress = find_daily_progress(scene)
+                if progress:
+                    added += progress.added
+                    removed += progress.removed
+        self.lblAdded.setText(f'+{added}')
+        self.lblRemoved.setText(f'-{removed}')
+
+
 class ManuscriptProgressCalendar(QCalendarWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setVerticalHeaderFormat(QCalendarWidget.VerticalHeaderFormat.NoVerticalHeader)
         self.setHorizontalHeaderFormat(QCalendarWidget.HorizontalHeaderFormat.NoHorizontalHeader)
         self.setNavigationBarVisible(False)
+        # self.setSelectionMode(QCalendarWidget.SelectionMode.NoSelection)
+        print(self.layout().count())
 
         today = QDate.currentDate()
         self.setMaximumDate(today)

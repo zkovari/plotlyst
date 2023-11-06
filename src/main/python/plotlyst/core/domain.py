@@ -1899,7 +1899,7 @@ class DocumentProgress:
 @dataclass
 class DocumentStatistics:
     wc: int = 0
-    daily: Optional[DocumentProgress] = field(default=None, metadata=config(exclude=exclude_if_empty))
+    # daily: Optional[DocumentProgress] = field(default=None, metadata=config(exclude=exclude_if_empty))
     progress: List[DocumentProgress] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
 
 

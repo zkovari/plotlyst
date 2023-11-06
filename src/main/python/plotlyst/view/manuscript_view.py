@@ -38,7 +38,7 @@ from src.main.python.plotlyst.service.grammar import language_tool_proxy
 from src.main.python.plotlyst.service.persistence import flush_or_fail
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import tool_btn, ButtonPressResizeEventFilter, action, \
-    ExclusiveOptionalButtonGroup, link_buttons_to_pages, icon_to_html_img
+    ExclusiveOptionalButtonGroup, link_buttons_to_pages, icon_to_html_img, label
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
@@ -46,7 +46,8 @@ from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.display import Icon, ChartView
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
-    DistractionFreeManuscriptEditor, SprintWidget, ReadabilityWidget, ManuscriptExportWidget, ManuscriptProgressCalendar
+    DistractionFreeManuscriptEditor, SprintWidget, ReadabilityWidget, ManuscriptExportWidget, \
+    ManuscriptProgressCalendar, ManuscriptDailyProgress
 from src.main.python.plotlyst.view.widget.progress import ProgressChart
 from src.main.python.plotlyst.view.widget.scene.editor import SceneMiniEditor
 from src.main.python.plotlyst.view.widget.scenes import SceneNotesEditor
@@ -74,7 +75,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnSceneInfo.setIcon(IconRegistry.scene_icon())
         self.ui.btnGoals.setIcon(IconRegistry.goal_icon('black', PLOTLYST_MAIN_COLOR))
         self.ui.btnReadability.setIcon(IconRegistry.from_name('fa5s.glasses', 'black', PLOTLYST_MAIN_COLOR))
-        self.ui.btnProgress.setIcon(IconRegistry.from_name('ri.bar-chart-2-fill', 'black', PLOTLYST_MAIN_COLOR))
+        self.ui.btnProgress.setIcon(IconRegistry.from_name('mdi.calendar-month-outline', 'black', PLOTLYST_MAIN_COLOR))
         self.ui.btnExport.setIcon(IconRegistry.from_name('mdi.file-export-outline', 'black', PLOTLYST_MAIN_COLOR))
 
         self._btnGroupSideBar = ExclusiveOptionalButtonGroup()
@@ -101,7 +102,14 @@ class ManuscriptView(AbstractNovelView):
         self.ui.pageInfo.layout().addWidget(vspacer())
         self.ui.textEdit.manuscriptTextEdit().sceneSeparatorClicked.connect(self._scene_separator_clicked)
 
+        self._manuscriptDailyProgressDisplay = ManuscriptDailyProgress(self.novel)
+        self._manuscriptDailyProgressDisplay.refresh()
+
         self._progressCalendar = ManuscriptProgressCalendar()
+        self.ui.pageProgress.layout().addWidget(label('Progress today', bold=True),
+                                                alignment=Qt.AlignmentFlag.AlignLeft)
+        self.ui.pageProgress.layout().addWidget(self._manuscriptDailyProgressDisplay)
+        self.ui.pageProgress.layout().addWidget(vspacer(20))
         self.ui.pageProgress.layout().addWidget(self._progressCalendar)
         self.ui.pageProgress.layout().addWidget(vspacer())
 
