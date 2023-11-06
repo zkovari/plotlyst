@@ -24,15 +24,16 @@ from typing import Optional, List, Dict
 import nltk
 import qtanim
 from PyQt6 import QtGui
-from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent, QSize, QSizeF, QRectF
+from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent, QSize, QSizeF, QRectF, \
+    QRect, QDate
 from PyQt6.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter, QKeyEvent, \
     QMouseEvent, QTextCursor, QFont, QScreen, QTextFormat, QTextObjectInterface, QPainter, QTextBlockFormat, \
-    QFontMetrics
+    QFontMetrics, QTextOption, QShowEvent
 from PyQt6.QtMultimedia import QSoundEffect
-from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit, QButtonGroup
+from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit, QButtonGroup, QCalendarWidget
 from nltk import WhitespaceTokenizer
 from overrides import overrides
-from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins, vbox, line
+from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins, vbox, line, bold
 from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget, group
 from qttextedit import RichTextEditor, TextBlockState, remove_font, OBJECT_REPLACEMENT_CHARACTER
@@ -41,12 +42,12 @@ from textstat import textstat
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, DEFAULT_MANUSCRIPT_LINE_SPACE, \
     DEFAULT_MANUSCRIPT_INDENT, PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Scene, TextStatistics, DocumentStatistics
+from src.main.python.plotlyst.core.domain import Novel, Scene, TextStatistics, DocumentStatistics, DocumentProgress
 from src.main.python.plotlyst.core.sprint import TimerModel
 from src.main.python.plotlyst.core.text import wc, sentence_count, clean_text
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.service.manuscript import export_manuscript_to_docx
+from src.main.python.plotlyst.service.manuscript import export_manuscript_to_docx, daily_progress
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import scroll_to_top, spin, ButtonPressResizeEventFilter, label, push_btn
 from src.main.python.plotlyst.view.generated.distraction_free_manuscript_editor_ui import \
@@ -633,6 +634,7 @@ class ManuscriptTextEditor(RichTextEditor):
         return self._scenes
 
     def setScene(self, scene: Scene):
+        print(scene.manuscript.statistics.daily)
         self.clear()
         self._textedit.setScene(scene)
 
@@ -701,6 +703,13 @@ class ManuscriptTextEditor(RichTextEditor):
             wc = self.textEdit.statistics().word_count
             scene = self._scenes[0]
             if scene.manuscript.statistics.wc != wc:
+                diff = wc - scene.manuscript.statistics.wc
+                progress: DocumentProgress = daily_progress(scene)
+                if diff > 0:
+                    progress.added += diff
+                else:
+                    progress.removed += abs(diff)
+
                 scene.manuscript.statistics.wc = wc
                 self.repo.update_scene(scene)
             scene.manuscript.content = self.textEdit.toHtml()
@@ -989,3 +998,30 @@ class ManuscriptExportWidget(QWidget):
     def _export(self):
         if self._btnDocx.isChecked():
             export_manuscript_to_docx(self._novel)
+
+
+class ManuscriptProgressCalendar(QCalendarWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setVerticalHeaderFormat(QCalendarWidget.VerticalHeaderFormat.NoVerticalHeader)
+        self.setHorizontalHeaderFormat(QCalendarWidget.HorizontalHeaderFormat.NoHorizontalHeader)
+        self.setNavigationBarVisible(False)
+
+        today = QDate.currentDate()
+        self.setMaximumDate(today)
+
+    @overrides
+    def showEvent(self, event: QShowEvent) -> None:
+        if QDate.currentDate() != self.maximumDate():
+            self.setMaximumDate(QDate.currentDate())
+
+    @overrides
+    def paintCell(self, painter: QtGui.QPainter, rect: QRect, date: QDate) -> None:
+        if date.month() == self.monthShown():
+            option = QTextOption()
+            option.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            if date == self.maximumDate():
+                bold(painter)
+            else:
+                bold(painter, False)
+            painter.drawText(rect.toRectF(), str(date.day()), option)

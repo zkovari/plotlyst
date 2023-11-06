@@ -46,7 +46,7 @@ from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.display import Icon, ChartView
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
-    DistractionFreeManuscriptEditor, SprintWidget, ReadabilityWidget, ManuscriptExportWidget
+    DistractionFreeManuscriptEditor, SprintWidget, ReadabilityWidget, ManuscriptExportWidget, ManuscriptProgressCalendar
 from src.main.python.plotlyst.view.widget.progress import ProgressChart
 from src.main.python.plotlyst.view.widget.scene.editor import SceneMiniEditor
 from src.main.python.plotlyst.view.widget.scenes import SceneNotesEditor
@@ -74,15 +74,14 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnSceneInfo.setIcon(IconRegistry.scene_icon())
         self.ui.btnGoals.setIcon(IconRegistry.goal_icon('black', PLOTLYST_MAIN_COLOR))
         self.ui.btnReadability.setIcon(IconRegistry.from_name('fa5s.glasses', 'black', PLOTLYST_MAIN_COLOR))
-        self.ui.btnLengthCharts.setIcon(IconRegistry.from_name('ri.bar-chart-2-fill', 'black', PLOTLYST_MAIN_COLOR))
-        self.ui.btnLengthCharts.setHidden(True)
+        self.ui.btnProgress.setIcon(IconRegistry.from_name('ri.bar-chart-2-fill', 'black', PLOTLYST_MAIN_COLOR))
         self.ui.btnExport.setIcon(IconRegistry.from_name('mdi.file-export-outline', 'black', PLOTLYST_MAIN_COLOR))
 
         self._btnGroupSideBar = ExclusiveOptionalButtonGroup()
         self._btnGroupSideBar.addButton(self.ui.btnSceneInfo)
         self._btnGroupSideBar.addButton(self.ui.btnGoals)
         self._btnGroupSideBar.addButton(self.ui.btnReadability)
-        self._btnGroupSideBar.addButton(self.ui.btnLengthCharts)
+        self._btnGroupSideBar.addButton(self.ui.btnProgress)
         self._btnGroupSideBar.addButton(self.ui.btnExport)
         for btn in self._btnGroupSideBar.buttons():
             btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.5, ignoreCheckedButton=True))
@@ -92,7 +91,7 @@ class ManuscriptView(AbstractNovelView):
         link_buttons_to_pages(self.ui.stackSide,
                               [(self.ui.btnSceneInfo, self.ui.pageInfo), (self.ui.btnGoals, self.ui.pageGoal),
                                (self.ui.btnExport, self.ui.pageExport),
-                               (self.ui.btnLengthCharts, self.ui.pageCharts),
+                               (self.ui.btnProgress, self.ui.pageProgress),
                                (self.ui.btnReadability, self.ui.pageReadability)])
 
         bold(self.ui.lblWordCount)
@@ -101,6 +100,10 @@ class ManuscriptView(AbstractNovelView):
         self.ui.pageInfo.layout().addWidget(self._miniSceneEditor)
         self.ui.pageInfo.layout().addWidget(vspacer())
         self.ui.textEdit.manuscriptTextEdit().sceneSeparatorClicked.connect(self._scene_separator_clicked)
+
+        self._progressCalendar = ManuscriptProgressCalendar()
+        self.ui.pageProgress.layout().addWidget(self._progressCalendar)
+        self.ui.pageProgress.layout().addWidget(vspacer())
 
         self._btnDistractionFree = tool_btn(IconRegistry.expand_icon(), 'Enter distraction-free mode', base=True)
         transparent(self._btnDistractionFree)

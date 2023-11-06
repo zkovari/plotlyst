@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import datetime
 
 import pypandoc
 from PyQt6.QtCore import Qt
@@ -26,9 +27,10 @@ from qthandy import ask_confirmation
 from slugify import slugify
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Document
+from src.main.python.plotlyst.core.domain import Novel, Document, DocumentProgress, Scene, DocumentStatistics
 from src.main.python.plotlyst.env import open_location, app_env
 from src.main.python.plotlyst.resources import resource_registry, ResourceType
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.widget.utility import ask_for_resource
 
 
@@ -140,3 +142,25 @@ def format_document(doc: Document, char_format: QTextCharFormat) -> QTextDocumen
     cursor.clearSelection()
 
     return text_doc
+
+
+def today_str() -> str:
+    today = datetime.date.today()
+    return today.strftime("%d/%m/%Y")
+
+
+def daily_progress(scene: Scene) -> DocumentProgress:
+    if scene.manuscript.statistics is None:
+        scene.manuscript.statistics = DocumentStatistics()
+
+    if scene.manuscript.statistics.daily and scene.manuscript.statistics.daily.date != today_str():
+        scene.manuscript.statistics.daily = None
+
+    if scene.manuscript.statistics.daily is None:
+        scene.manuscript.statistics.daily = DocumentProgress(date=today_str())
+        scene.manuscript.statistics.progress.append(scene.manuscript.statistics.daily)
+
+        repo = RepositoryPersistenceManager.instance()
+        repo.update_scene(scene)
+
+    return scene.manuscript.statistics.daily

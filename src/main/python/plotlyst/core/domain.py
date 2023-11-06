@@ -22,7 +22,7 @@ import copy
 import uuid
 from abc import ABC
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, date
 from enum import Enum, auto
 from typing import List, Optional, Any, Dict
 
@@ -1890,8 +1890,17 @@ class TextStatistics:
 
 
 @dataclass
+class DocumentProgress:
+    date: str
+    added: int = 0
+    removed: int = 0
+
+
+@dataclass
 class DocumentStatistics:
     wc: int = 0
+    daily: Optional[DocumentProgress] = field(default=None, metadata=config(exclude=exclude_if_empty))
+    progress: List[DocumentProgress] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass
