@@ -151,7 +151,6 @@ def today_str() -> str:
 
 
 def find_daily_overall_progress(novel: Novel, date: Optional[str] = None) -> Optional[DocumentProgress]:
-    print(today_str())
     if novel.manuscript_progress:
         if date is None:
             date = today_str()

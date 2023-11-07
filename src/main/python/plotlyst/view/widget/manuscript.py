@@ -1057,21 +1057,16 @@ class ManuscriptProgressCalendar(QCalendarWidget):
         super().__init__(parent)
         self._novel = novel
 
-        self._novel.manuscript_progress['2023-11-06'] = DocumentProgress(400)
-        self._novel.manuscript_progress['2023-11-02'] = DocumentProgress(450)
-        self._novel.manuscript_progress['2023-11-01'] = DocumentProgress(1250, 425)
-
         self.setVerticalHeaderFormat(QCalendarWidget.VerticalHeaderFormat.NoVerticalHeader)
         self.setHorizontalHeaderFormat(QCalendarWidget.HorizontalHeaderFormat.NoHorizontalHeader)
         self.setNavigationBarVisible(False)
-        # self.setSelectionMode(QCalendarWidget.SelectionMode.NoSelection)
-        item1 = self.layout().itemAt(0)
-        item2 = self.layout().itemAt(1)
-        if isinstance(item2.widget(), QTableView):
-            item2.widget().setStyleSheet(f'''
+        self.setSelectionMode(QCalendarWidget.SelectionMode.NoSelection)
+        item = self.layout().itemAt(1)
+        if isinstance(item.widget(), QTableView):
+            item.widget().setStyleSheet(f'''
             QTableView {{
-        selection-background-color: {RELAXED_WHITE_COLOR};
-    }}
+                selection-background-color: {RELAXED_WHITE_COLOR};
+            }}
             ''')
 
         today = QDate.currentDate()
