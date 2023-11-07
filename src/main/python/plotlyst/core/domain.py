@@ -22,7 +22,7 @@ import copy
 import uuid
 from abc import ABC
 from dataclasses import dataclass, field
-from datetime import datetime, date
+from datetime import datetime
 from enum import Enum, auto
 from typing import List, Optional, Any, Dict
 
@@ -1891,16 +1891,14 @@ class TextStatistics:
 
 @dataclass
 class DocumentProgress:
-    date: str
-    added: int = 0
-    removed: int = 0
+    added: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    removed: int = field(default=0, metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass
 class DocumentStatistics:
     wc: int = 0
-    # daily: Optional[DocumentProgress] = field(default=None, metadata=config(exclude=exclude_if_empty))
-    progress: List[DocumentProgress] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    progress: Dict[str, DocumentProgress] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass
@@ -2228,6 +2226,8 @@ class Novel(NovelDescriptor):
     manuscript_goals: ManuscriptGoals = field(default_factory=ManuscriptGoals)
     events_map: Diagram = field(default_factory=default_events_map)
     character_networks: List[Diagram] = field(default_factory=default_character_networks)
+    manuscript_progress: Dict[str, DocumentProgress] = field(default_factory=dict,
+                                                             metadata=config(exclude=exclude_if_empty))
 
     def pov_characters(self) -> List[Character]:
         pov_ids = set()

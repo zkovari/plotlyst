@@ -28,7 +28,7 @@ from qtmenu import MenuWidget
 from qttextedit.ops import TextEditorSettingsWidget, TextEditorSettingsSection
 
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR, RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Novel, Document, Chapter
+from src.main.python.plotlyst.core.domain import Novel, Document, Chapter, DocumentProgress
 from src.main.python.plotlyst.core.domain import Scene
 from src.main.python.plotlyst.event.core import emit_global_event, emit_critical, emit_info, Event, emit_event
 from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode, \
@@ -105,9 +105,7 @@ class ManuscriptView(AbstractNovelView):
         self._manuscriptDailyProgressDisplay = ManuscriptDailyProgress(self.novel)
         self._manuscriptDailyProgressDisplay.refresh()
 
-        self._progressCalendar = ManuscriptProgressCalendar()
-        self.ui.pageProgress.layout().addWidget(label('Progress today', bold=True),
-                                                alignment=Qt.AlignmentFlag.AlignLeft)
+        self._progressCalendar = ManuscriptProgressCalendar(self.novel)
         self.ui.pageProgress.layout().addWidget(self._manuscriptDailyProgressDisplay)
         self.ui.pageProgress.layout().addWidget(vspacer(20))
         self.ui.pageProgress.layout().addWidget(self._progressCalendar)
@@ -202,6 +200,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnNotes.setHidden(True)
         # self.ui.btnNotes.toggled.connect(self.ui.wdgAddon.setVisible)
 
+        self.ui.textEdit.setNovel(self.novel)
         self.ui.textEdit.setMargins(30, 30, 30, 30)
         self.ui.textEdit.textEdit.setPlaceholderText('Write your story...')
         self.ui.textEdit.textEdit.setSidebarEnabled(False)
@@ -209,6 +208,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.textEdit.textChanged.connect(self._text_changed)
         self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
         self.ui.textEdit.sceneTitleChanged.connect(self._scene_title_changed)
+        self.ui.textEdit.progressChanged.connect(self._progress_changed)
         self._btnDistractionFree.clicked.connect(self._enter_distraction_free)
 
         if self.novel.chapters:
@@ -361,6 +361,10 @@ class ManuscriptView(AbstractNovelView):
         self.repo.update_scene(scene)
         emit_event(self.novel, SceneChangedEvent(self, scene))
 
+    def _progress_changed(self, progress: DocumentProgress):
+        if self.ui.btnProgress.isChecked():
+            self._manuscriptDailyProgressDisplay.setProgress(progress)
+
     def _edit_wc_goal(self):
         goal, changed = QInputDialog.getInt(self.ui.btnEditGoal, 'Word count goal', 'Edit word count target',
                                             value=self.novel.manuscript_goals.target_wc,
@@ -386,8 +390,11 @@ class ManuscriptView(AbstractNovelView):
 
         if btn is self.ui.btnReadability:
             self._analysis_clicked(self.ui.btnReadability.isChecked())
+        elif btn is self.ui.btnProgress:
+            self._manuscriptDailyProgressDisplay.refresh()
         elif btn is self.ui.btnGoals:
             self._refresh_target_wc()
+
 
     def _spellcheck_toggled(self, toggled: bool):
         translucent(self._spellCheckIcon, 1 if toggled else 0.4)

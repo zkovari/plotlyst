@@ -147,34 +147,47 @@ def format_document(doc: Document, char_format: QTextCharFormat) -> QTextDocumen
 
 def today_str() -> str:
     today = datetime.date.today()
-    return today.strftime("%Y/%m/%d")
+    return today.strftime("%Y-%m-%d")
+
+
+def find_daily_overall_progress(novel: Novel, date: Optional[str] = None) -> Optional[DocumentProgress]:
+    print(today_str())
+    if novel.manuscript_progress:
+        if date is None:
+            date = today_str()
+        return novel.manuscript_progress.get(date, None)
+
+
+def daily_overall_progress(novel: Novel) -> DocumentProgress:
+    date = today_str()
+    progress = find_daily_overall_progress(novel, date)
+    if progress is None:
+        progress = DocumentProgress()
+        novel.manuscript_progress[date] = progress
+
+        RepositoryPersistenceManager.instance().update_novel(novel)
+
+    return progress
 
 
 def find_daily_progress(scene: Scene, date: Optional[str] = None) -> Optional[DocumentProgress]:
     if scene.manuscript.statistics is None:
         scene.manuscript.statistics = DocumentStatistics()
-    if date is None:
-        date = today_str()
 
     if scene.manuscript.statistics.progress:
-        if scene.manuscript.statistics.progress[-1].date == date:
-            return scene.manuscript.statistics.progress[-1]
+        if date is None:
+            date = today_str()
+        return scene.manuscript.statistics.progress.get(date, None)
 
 
 def daily_progress(scene: Scene) -> DocumentProgress:
     date = today_str()
     progress = find_daily_progress(scene, date)
-    # if scene.manuscript.statistics is None:
-    #     scene.manuscript.statistics = DocumentStatistics()
-    #
-    # if scene.manuscript.statistics.daily and scene.manuscript.statistics.daily.date != today_str():
-    #     scene.manuscript.statistics.daily = None
 
     if progress is None:
-        progress = DocumentProgress(date)
-        scene.manuscript.statistics.progress.append(progress)
+        progress = DocumentProgress()
+        scene.manuscript.statistics.progress[date] = progress
 
-        repo = RepositoryPersistenceManager.instance()
-        repo.update_scene(scene)
+        RepositoryPersistenceManager.instance().update_scene(scene)
 
     return progress

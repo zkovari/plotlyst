@@ -30,10 +30,11 @@ from PyQt6.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyn
     QMouseEvent, QTextCursor, QFont, QScreen, QTextFormat, QTextObjectInterface, QPainter, QTextBlockFormat, \
     QFontMetrics, QTextOption, QShowEvent
 from PyQt6.QtMultimedia import QSoundEffect
-from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit, QButtonGroup, QCalendarWidget
+from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit, QButtonGroup, QCalendarWidget, QTableView
 from nltk import WhitespaceTokenizer
 from overrides import overrides
-from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins, vbox, line, bold, vline
+from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins, vbox, line, bold, vline, decr_font, \
+    underline
 from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget, group
 from qttextedit import RichTextEditor, TextBlockState, remove_font, OBJECT_REPLACEMENT_CHARACTER
@@ -47,7 +48,8 @@ from src.main.python.plotlyst.core.sprint import TimerModel
 from src.main.python.plotlyst.core.text import wc, sentence_count, clean_text
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.service.manuscript import export_manuscript_to_docx, daily_progress, find_daily_progress
+from src.main.python.plotlyst.service.manuscript import export_manuscript_to_docx, daily_progress, \
+    daily_overall_progress, find_daily_overall_progress
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import scroll_to_top, spin, ButtonPressResizeEventFilter, label, push_btn
 from src.main.python.plotlyst.view.generated.distraction_free_manuscript_editor_ui import \
@@ -57,7 +59,7 @@ from src.main.python.plotlyst.view.generated.readability_widget_ui import Ui_Rea
 from src.main.python.plotlyst.view.generated.sprint_widget_ui import Ui_SprintWidget
 from src.main.python.plotlyst.view.generated.timer_setup_widget_ui import Ui_TimerSetupWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.display import WordsDisplay
+from src.main.python.plotlyst.view.widget.display import WordsDisplay, IconText
 from src.main.python.plotlyst.view.widget.input import TextEditBase, GrammarHighlighter, GrammarHighlightStyle
 
 
@@ -571,9 +573,11 @@ class ManuscriptTextEditor(RichTextEditor):
     textChanged = pyqtSignal()
     selectionChanged = pyqtSignal()
     sceneTitleChanged = pyqtSignal(Scene)
+    progressChanged = pyqtSignal(DocumentProgress)
 
     def __init__(self, parent=None):
         super(ManuscriptTextEditor, self).__init__(parent)
+        self._novel: Optional[Novel] = None
         self.toolbar().setHidden(True)
         self._titleVisible: bool = True
         self.setCharacterWidth(50)
@@ -611,6 +615,9 @@ class ManuscriptTextEditor(RichTextEditor):
     def manuscriptTextEdit(self) -> ManuscriptTextEdit:
         return self._textedit
 
+    def setNovel(self, novel: Novel):
+        self._novel = novel
+
     def refresh(self):
         if len(self._scenes) == 1:
             self.setScene(self._scenes[0])
@@ -634,7 +641,6 @@ class ManuscriptTextEditor(RichTextEditor):
         return self._scenes
 
     def setScene(self, scene: Scene):
-        print(scene.manuscript.statistics.daily)
         self.clear()
         self._textedit.setScene(scene)
 
@@ -705,10 +711,15 @@ class ManuscriptTextEditor(RichTextEditor):
             if scene.manuscript.statistics.wc != wc:
                 diff = wc - scene.manuscript.statistics.wc
                 progress: DocumentProgress = daily_progress(scene)
+                overall_progress = daily_overall_progress(self._novel)
                 if diff > 0:
                     progress.added += diff
+                    overall_progress.added += diff
                 else:
                     progress.removed += abs(diff)
+                    overall_progress.removed += abs(diff)
+
+                self.progressChanged.emit(overall_progress)
 
                 scene.manuscript.statistics.wc = wc
                 self.repo.update_scene(scene)
@@ -1006,34 +1017,53 @@ class ManuscriptDailyProgress(QWidget):
         self._novel = novel
         vbox(self)
 
+        self.btnDay = IconText()
+        self.btnDay.setText('Today')
+        self.btnDay.setIcon(IconRegistry.from_name('mdi.calendar-month-outline'))
+
         self.lblAdded = label('', color='darkgreen', h3=True)
         self.lblRemoved = label('', color='grey', h3=True)
 
+        self.layout().addWidget(self.btnDay, alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(group(self.lblAdded, vline(), self.lblRemoved), alignment=Qt.AlignmentFlag.AlignRight)
-        self.layout().addWidget(label('Added/Removed', description=True), alignment=Qt.AlignmentFlag.AlignRight)
+        lbl = label('Added/Removed', description=True)
+        decr_font(lbl)
+        self.layout().addWidget(lbl, alignment=Qt.AlignmentFlag.AlignRight)
 
     def refresh(self):
-        added = 0
-        removed = 0
+        progress = find_daily_overall_progress(self._novel)
+        if progress:
+            self.setProgress(progress)
+        else:
+            self.lblAdded.setText('+')
+            self.lblRemoved.setText('-')
 
-        for scene in self._novel.scenes:
-            if scene.manuscript:
-                progress = find_daily_progress(scene)
-                if progress:
-                    added += progress.added
-                    removed += progress.removed
-        self.lblAdded.setText(f'+{added}')
-        self.lblRemoved.setText(f'-{removed}')
+    def setProgress(self, progress: DocumentProgress):
+        self.lblAdded.setText(f'+{progress.added}')
+        self.lblRemoved.setText(f'-{progress.removed}')
 
 
 class ManuscriptProgressCalendar(QCalendarWidget):
-    def __init__(self, parent=None):
+    def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
+        self._novel = novel
+
+        self._novel.manuscript_progress['2023-11-06'] = DocumentProgress(400)
+        self._novel.manuscript_progress['2023-11-02'] = DocumentProgress(450)
+        self._novel.manuscript_progress['2023-11-01'] = DocumentProgress(1250, 425)
+
         self.setVerticalHeaderFormat(QCalendarWidget.VerticalHeaderFormat.NoVerticalHeader)
         self.setHorizontalHeaderFormat(QCalendarWidget.HorizontalHeaderFormat.NoHorizontalHeader)
         self.setNavigationBarVisible(False)
         # self.setSelectionMode(QCalendarWidget.SelectionMode.NoSelection)
-        print(self.layout().count())
+        item1 = self.layout().itemAt(0)
+        item2 = self.layout().itemAt(1)
+        if isinstance(item2.widget(), QTableView):
+            item2.widget().setStyleSheet(f'''
+            QTableView {{
+        selection-background-color: {RELAXED_WHITE_COLOR};
+    }}
+            ''')
 
         today = QDate.currentDate()
         self.setMaximumDate(today)
@@ -1045,11 +1075,28 @@ class ManuscriptProgressCalendar(QCalendarWidget):
 
     @overrides
     def paintCell(self, painter: QtGui.QPainter, rect: QRect, date: QDate) -> None:
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
         if date.month() == self.monthShown():
             option = QTextOption()
             option.setAlignment(Qt.AlignmentFlag.AlignCenter)
             if date == self.maximumDate():
                 bold(painter)
+                underline(painter)
             else:
                 bold(painter, False)
+                underline(painter, False)
+            progress = find_daily_overall_progress(self._novel, date.toString(Qt.DateFormat.ISODate))
+            if progress:
+                painter.save()
+                painter.setPen(QColor('#E6D6ED'))
+                if progress.added + progress.removed >= 1500:
+                    painter.setBrush(QColor('#C8A4D7'))
+                elif progress.added + progress.removed >= 450:
+                    painter.setBrush(QColor('#EDE1F2'))
+                else:
+                    painter.setBrush(QColor(RELAXED_WHITE_COLOR))
+                rad = rect.width() // 2 - 1
+                painter.drawEllipse(rect.center(), rad, rad)
+                painter.restore()
             painter.drawText(rect.toRectF(), str(date.day()), option)
