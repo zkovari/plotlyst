@@ -25,7 +25,7 @@ import nltk
 import qtanim
 from PyQt6 import QtGui
 from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent, QSize, QSizeF, QRectF, \
-    QRect, QDate
+    QRect, QDate, QPoint
 from PyQt6.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter, QKeyEvent, \
     QMouseEvent, QTextCursor, QFont, QScreen, QTextFormat, QTextObjectInterface, QPainter, QTextBlockFormat, \
     QFontMetrics, QTextOption, QShowEvent
@@ -1089,7 +1089,7 @@ class ManuscriptProgressCalendar(QCalendarWidget):
             progress = find_daily_overall_progress(self._novel, date.toString(Qt.DateFormat.ISODate))
             if progress:
                 painter.save()
-                painter.setPen(QColor('#E6D6ED'))
+                painter.setPen(QColor('#BB90CE'))
                 if progress.added + progress.removed >= 1500:
                     painter.setBrush(QColor('#C8A4D7'))
                 elif progress.added + progress.removed >= 450:
@@ -1097,6 +1097,6 @@ class ManuscriptProgressCalendar(QCalendarWidget):
                 else:
                     painter.setBrush(QColor(RELAXED_WHITE_COLOR))
                 rad = rect.width() // 2 - 1
-                painter.drawEllipse(rect.center(), rad, rad)
+                painter.drawEllipse(rect.center() + QPoint(1, 1), rad, rad)
                 painter.restore()
             painter.drawText(rect.toRectF(), str(date.day()), option)
