@@ -1890,8 +1890,15 @@ class TextStatistics:
 
 
 @dataclass
+class DocumentProgress:
+    added: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    removed: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+
+
+@dataclass
 class DocumentStatistics:
     wc: int = 0
+    progress: Dict[str, DocumentProgress] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass
@@ -2219,6 +2226,8 @@ class Novel(NovelDescriptor):
     manuscript_goals: ManuscriptGoals = field(default_factory=ManuscriptGoals)
     events_map: Diagram = field(default_factory=default_events_map)
     character_networks: List[Diagram] = field(default_factory=default_character_networks)
+    manuscript_progress: Dict[str, DocumentProgress] = field(default_factory=dict,
+                                                             metadata=config(exclude=exclude_if_empty))
 
     def pov_characters(self) -> List[Character]:
         pov_ids = set()
