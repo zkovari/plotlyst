@@ -708,23 +708,12 @@ class ManuscriptTextEditor(RichTextEditor):
         if len(self._scenes) == 1:
             wc = self.textEdit.statistics().word_count
             scene = self._scenes[0]
-            if scene.manuscript.statistics.wc != wc:
-                diff = wc - scene.manuscript.statistics.wc
-                progress: DocumentProgress = daily_progress(scene)
-                overall_progress = daily_overall_progress(self._novel)
-                if diff > 0:
-                    progress.added += diff
-                    overall_progress.added += diff
-                else:
-                    progress.removed += abs(diff)
-                    overall_progress.removed += abs(diff)
-
-                self.progressChanged.emit(overall_progress)
-
-                scene.manuscript.statistics.wc = wc
-                self.repo.update_scene(scene)
+            updated_progress = self._updateProgress(scene, wc)
             scene.manuscript.content = self.textEdit.toHtml()
             self.repo.update_doc(app_env.novel, scene.manuscript)
+            if updated_progress:
+                self.repo.update_scene(scene)
+                self.repo.update_novel(self._novel)
         else:
             scene_i = 0
             block: QTextBlock = self.textEdit.document().begin()
@@ -751,10 +740,30 @@ class ManuscriptTextEditor(RichTextEditor):
         scene.manuscript.content = cursor.selection().toHtml()
         wc_ = wc(cursor.selection().toPlainText())
         if scene.manuscript.statistics.wc != wc_:
+            self._updateProgress(scene, wc_)
             scene.manuscript.statistics.wc = wc_
             self.repo.update_scene(scene)
+            self.repo.update_novel(self._novel)
 
         self.repo.update_doc(app_env.novel, scene.manuscript)
+
+    def _updateProgress(self, scene, wc) -> bool:
+        if scene.manuscript.statistics.wc == wc:
+            return False
+
+        diff = wc - scene.manuscript.statistics.wc
+        progress: DocumentProgress = daily_progress(scene)
+        overall_progress = daily_overall_progress(self._novel)
+        if diff > 0:
+            progress.added += diff
+            overall_progress.added += diff
+        else:
+            progress.removed += abs(diff)
+            overall_progress.removed += abs(diff)
+        self.progressChanged.emit(overall_progress)
+        scene.manuscript.statistics.wc = wc
+
+        return True
 
     def _titleChanged(self, text: str):
         if len(self._scenes) == 1:
