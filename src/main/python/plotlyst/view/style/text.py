@@ -58,6 +58,12 @@ QTextBrowser {
     background-color: #f8f9fa;
 }
 
+QTextBrowser[rounded=true] {
+    border-radius: 6px;
+    padding: 4px;
+    border: 1px solid lightgrey;
+}
+
 QLineEdit {
     background-color: #f8f9fa;
 }

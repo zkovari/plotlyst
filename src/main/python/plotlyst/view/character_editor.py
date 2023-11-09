@@ -23,7 +23,7 @@ import qtanim
 from PyQt6.QtCore import pyqtSignal, QObject
 from PyQt6.QtWidgets import QWidget, QAbstractButton, QLineEdit, QCompleter
 from overrides import overrides
-from qthandy import translucent, btn_popup, incr_font, bold, italic, margins
+from qthandy import translucent, btn_popup, bold, italic, margins
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -118,6 +118,9 @@ class CharacterEditor(QObject, EventListener):
         menu = btn_popup(self.ui.btnOccupation, wrap(self._lineOccupation, margin_bottom=2))
         menu.aboutToShow.connect(self._lineOccupation.setFocus)
         self._lineOccupation.editingFinished.connect(menu.hide)
+
+        # incr_font(self.ui.btnAge, 2)
+        # incr_font(self.ui.btnOccupation, 2)
 
         if self.character.age:
             self._ageEditor.setValue(self.character.age)
@@ -233,7 +236,6 @@ class CharacterEditor(QObject, EventListener):
 
     def _age_changed(self, age: int):
         if self._ageEditor.minimum() == 0:
-            incr_font(self.ui.btnAge, 2)
             italic(self.ui.btnAge, False)
             bold(self.ui.btnAge)
             self.ui.btnAge.iconColor = '#343a40'
@@ -244,7 +246,6 @@ class CharacterEditor(QObject, EventListener):
         if self.ui.btnOccupation.font().italic():  # first setup
             italic(self.ui.btnOccupation, False)
             bold(self.ui.btnOccupation)
-            incr_font(self.ui.btnOccupation, 2)
             self.ui.btnOccupation.iconColor = '#343a40'
         self.ui.btnOccupation.setText(occupation)
         self.character.occupation = occupation
