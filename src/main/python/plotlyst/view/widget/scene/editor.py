@@ -488,7 +488,6 @@ class SceneElementWidget(QWidget):
             self._storylineMenu = StorylineSelectorMenu(self._novel, self._btnStorylineLink)
             self._storylineMenu.storylineSelected.connect(self._storylineSelected)
 
-
         self._arrows: Dict[int, ArrowButton] = {
             90: ArrowButton(Qt.Edge.RightEdge),
             180: ArrowButton(Qt.Edge.BottomEdge),
@@ -1110,8 +1109,6 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         # self._wdgElements.layout().addWidget(self._newLine())
         # self._wdgElements.layout().addWidget(self._storylineElements[0])
         #
-        # self._wdgElements.layout().addWidget(self._newLine())
-        # self._wdgElements.layout().addWidget(self._consequencesElement)
 
     @overrides
     def setScene(self, scene: Scene):
