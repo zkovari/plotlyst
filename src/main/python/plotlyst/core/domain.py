@@ -2098,7 +2098,7 @@ class Connector:
     pen: Qt.PenStyle = Qt.PenStyle.SolidLine
     width: int = 1
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
-    color: str = field(default='black', metadata=config(exclude=exclude_if_black))
+    color: str = field(default='', metadata=config(exclude=exclude_if_empty))
     text: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
 
