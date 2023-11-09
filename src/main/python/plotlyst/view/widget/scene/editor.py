@@ -27,7 +27,7 @@ from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QSt
     QToolButton, QAbstractButton, QScrollArea, QButtonGroup
 from overrides import overrides
 from qthandy import vbox, vspacer, transparent, sp, line, incr_font, hbox, pointy, vline, retain_when_hidden, margins, \
-    spacer, underline, bold, grid, gc, clear_layout, ask_confirmation, decr_icon, italic
+    spacer, underline, bold, grid, gc, clear_layout, ask_confirmation, decr_icon, italic, translucent
 from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
@@ -454,6 +454,65 @@ class ArrowButton(QToolButton):
             self.stateReset.emit()
         else:
             self._increaseState()
+
+
+class LineElementWidget(QWidget):
+    def __init__(self, novel: Novel, type: StoryElementType, row: int, col: int, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+        self._type = type
+        self._row = row
+        self._col = col
+        self._scene: Optional[Scene] = None
+        self._element: Optional[StoryElement] = None
+
+        pointy(self)
+
+        hbox(self, 3)
+        if self._type == StoryElementType.H_line:
+            self._line = line()
+        else:
+            self._line = vline()
+
+        retain_when_hidden(self._line)
+        self.layout().addWidget(self._line)
+
+    def setElement(self, element: StoryElement):
+        self._element = element
+        self._line.setVisible(True)
+
+    def setScene(self, scene: Scene):
+        self._scene = scene
+        self.reset()
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        if self._element is None:
+            self._line.setVisible(True)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        if self._element is None:
+            self._line.setVisible(False)
+
+    @overrides
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        if self._element is None:
+            self.activate()
+        else:
+            self._scene.story_elements.remove(self._element)
+            self.reset()
+
+    def activate(self):
+        self._element = StoryElement(self._type, row=self._row, col=self._col)
+        self._line.setVisible(True)
+        self._line.setGraphicsEffect(None)
+        self._scene.story_elements.append(self._element)
+
+    def reset(self):
+        self._line.setVisible(False)
+        translucent(self._line)
+        self._element = None
 
 
 class SceneElementWidget(QWidget):
@@ -1061,20 +1120,27 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         self._headerLine = line()
         self._wdgElementsParent.layout().insertWidget(1, self._headerLine)
 
-        self._row = 3
-        self._col = 5
+        self._row = 5
+        self._col = 7
         for row in range(self._row):
+            if row % 2 == 1:
+                continue
             for col in range(self._col):
                 if col == 0:
                     placeholder = EventElementEditor(self._novel, row, col)
-                elif col == 4:
+                elif col % 2 == 1:
                     continue
                 else:
                     placeholder = EffectElementEditor(self._novel, row, col)
                 placeholder.storylineSelected.connect(partial(self.storylineLinked.emit, placeholder))
                 placeholder.storylineEditRequested.connect(partial(self.storylineEditRequested.emit, placeholder))
                 self._wdgElements.layout().addWidget(placeholder, row, col, 1, 1)
-        self._wdgElements.layout().addWidget(vline(), 0, 3, 3, 1)
+
+        self._addLine(0, 1, True)
+        self._addLine(0, 3, True)
+        self._addLine(0, 5, True)
+        self._addLine(1, 0, False)
+        self._addLine(3, 0, False)
         self._wdgElements.layout().addWidget(spacer(), 0, self._col, 1, 1)
         self._wdgElements.layout().addWidget(vspacer(), self._row, 0, 1, 1)
         # self.__newPlotElementEditor()
@@ -1119,11 +1185,26 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         for row in range(self._row):
             for col in range(self._col):
                 item = self._wdgElements.layout().itemAtPosition(row, col)
-                if item and item.widget() and isinstance(item.widget(), SceneElementWidget):
-                    item.widget().setScene(scene)
-                    item.widget().setStorylineVisible(self._novel.prefs.toggled(NovelSetting.Storylines))
+                if item and item.widget():
+                    if isinstance(item.widget(), SceneElementWidget):
+                        item.widget().setScene(scene)
+                        item.widget().setStorylineVisible(self._novel.prefs.toggled(NovelSetting.Storylines))
+                    elif isinstance(item.widget(), LineElementWidget):
+                        item.widget().setScene(scene)
 
         for element in scene.story_elements:
+            if element.type in [StoryElementType.Effect, StoryElementType.Event]:
+                if element.row == 1:
+                    element.row = 2
+                elif element.row == 2:
+                    element.row = 4
+                if element.col == 1:
+                    element.col = 2
+                elif element.col == 2:
+                    element.col = 4
+                elif element.col == 3:
+                    element.col = 6
+
             item = self._wdgElements.layout().itemAtPosition(element.row, element.col)
             if item and item.widget():
                 item.widget().setElement(element)
@@ -1146,6 +1227,11 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
                 if item and item.widget() and isinstance(item.widget(), SceneElementWidget):
                     item.widget().setStorylineVisible(toggled)
 
+    def _addLine(self, row, col, vertical: bool):
+        lineElement = LineElementWidget(self._novel, StoryElementType.V_line if vertical else StoryElementType.H_line,
+                                        row, col)
+        self._wdgElements.layout().addWidget(lineElement, row, col, self._row if vertical else 1,
+                                             1 if vertical else self._col)
     # def _plotSelected(self, plotElement: PlotSceneElementEditor):
     #     insert_after(self._wdgElements, self._wdgAddNewPlotParent, reference=plotElement)
     #     self._wdgAddNewPlotParent.setVisible(True)
