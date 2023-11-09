@@ -66,6 +66,7 @@ class PovDistributionChart(BaseChart):
                 self.pov_number[scene.pov.name] += 1
 
         series = QPieSeries()
+        series.setHoleSize(0.45)
         for k, v in self.pov_number.items():
             if v:
                 slice = series.append(k, v)

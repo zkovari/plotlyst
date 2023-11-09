@@ -98,9 +98,6 @@ if __name__ == '__main__':
         if platform.is_linux() and QApplication.font().pointSize() < 12:
             font = QFont('Helvetica', 12)
             QApplication.setFont(font)
-        elif platform.is_mac():
-            font = QFont('Helvetica Neue', 13)
-            QApplication.setFont(font)
 
         app.setStyleSheet(APP_STYLESHEET)
         settings.init_org()

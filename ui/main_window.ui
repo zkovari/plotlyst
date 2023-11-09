@@ -825,17 +825,7 @@
      <addaction name="separator"/>
      <addaction name="actionChangeDir"/>
     </widget>
-    <widget class="QMenu" name="menuExport">
-     <property name="title">
-      <string>Export</string>
-     </property>
-     <property name="toolTipsVisible">
-      <bool>true</bool>
-     </property>
-     <addaction name="actionExportToDocx"/>
-    </widget>
     <addaction name="menuProject"/>
-    <addaction name="menuExport"/>
     <addaction name="actionRestart"/>
    </widget>
    <widget class="QMenu" name="menuView">

@@ -96,6 +96,7 @@ class GenderCharacterChart(BaseChart):
 
     def refresh(self, characters: List[Character]):
         series = QPieSeries()
+        series.setHoleSize(0.45)
 
         genders: Dict[str, int] = {}
         for char in characters:
@@ -162,6 +163,7 @@ class RoleChart(BaseChart):
     def refresh(self, characters: List[Character]):
         self.reset()
         series = QPieSeries()
+        series.setHoleSize(0.45)
         major = 0
         secondary = 0
         minor = 0
@@ -212,6 +214,7 @@ class SupporterRoleChart(BaseChart):
 
     def refresh(self, characters: List[Character]):
         series = QPieSeries()
+        series.setHoleSize(0.45)
 
         supporter = 0
         adversary = 0
@@ -266,6 +269,7 @@ class EnneagramChart(BaseChart):
 
     def refresh(self, characters: List[Character]):
         series = QPieSeries()
+        series.setHoleSize(0.45)
 
         enneagrams: Dict[str, int] = {}
         for char in characters:
@@ -346,6 +350,7 @@ class ActDistributionChart(BaseChart):
         self.reset()
 
         series = QPieSeries()
+        series.setHoleSize(0.45)
 
         acts: Dict[int, int] = {}
         for scene in novel.scenes:

@@ -23,7 +23,7 @@ from typing import Optional, Dict
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QMouseEvent
-from PyQt6.QtWidgets import QWidget, QToolButton, QGraphicsDropShadowEffect
+from PyQt6.QtWidgets import QWidget, QToolButton, QGraphicsDropShadowEffect, QTextEdit
 from overrides import overrides
 from qthandy import vbox, hbox, transparent, retain_when_hidden, spacer, sp, decr_icon, line, vline, \
     margins
@@ -156,6 +156,16 @@ class ScenePlotValueEditor(QWidget):
         self.setProperty('relaxed-white-bg', True)
         vbox(self)
 
+        self._text = QTextEdit()
+        self._text.setProperty('rounded', True)
+        self._text.setProperty('white-bg', True)
+        self._text.setPlaceholderText('Describe how the scene is related to this storyline')
+        self._text.setMaximumSize(200, 180)
+        self._text.setText(self.plotReference.data.comment)
+        self._text.textChanged.connect(self._textChanged)
+        self.layout().addWidget(self._text)
+        self.layout().addWidget(line(color='lightgrey'))
+
         if self.plotReference.plot.default_value_enabled:
             wdg = ScenePlotValueChargeWidget(self.plotReference, self.plotReference.plot.default_value)
             wdg.charged.connect(self.charged.emit)
@@ -174,6 +184,9 @@ class ScenePlotValueEditor(QWidget):
     @overrides
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         pass
+
+    def _textChanged(self):
+        self.plotReference.data.comment = self._text.toPlainText()
 
 
 class ScenePlotSelectorMenu(MenuWidget):

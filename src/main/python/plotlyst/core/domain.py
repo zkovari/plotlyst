@@ -33,6 +33,7 @@ from overrides import overrides
 from src.main.python.plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_field, \
     mbti_field, ProfileTemplate, default_character_profiles, default_location_profiles, enneagram_choices, \
     mbti_choices, Role, summary_field, exclude_if_false
+from src.main.python.plotlyst.env import app_env
 
 
 @dataclass
@@ -1890,8 +1891,15 @@ class TextStatistics:
 
 
 @dataclass
+class DocumentProgress:
+    added: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    removed: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+
+
+@dataclass
 class DocumentStatistics:
     wc: int = 0
+    progress: Dict[str, DocumentProgress] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass
@@ -2054,9 +2062,9 @@ class Node(CharacterBased):
 def to_node(x: float, y: float, type: DiagramNodeType, subtype: str = '', default_size: int = 12) -> Node:
     node = Node(x, y, type=type, subtype=subtype)
     if type == DiagramNodeType.EVENT:
-        node.size = max(16, default_size)
+        node.size = max(20 if app_env.is_mac() else 16, default_size)
         if subtype in [NODE_SUBTYPE_BACKSTORY, NODE_SUBTYPE_INTERNAL_CONFLICT]:
-            node.size = max(14, default_size - 1)
+            node.size = max(16 if app_env.is_mac() else 14, default_size - 1)
 
     if subtype == NODE_SUBTYPE_GOAL:
         node.icon = 'mdi.target'
@@ -2091,7 +2099,7 @@ class Connector:
     pen: Qt.PenStyle = Qt.PenStyle.SolidLine
     width: int = 1
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
-    color: str = field(default='black', metadata=config(exclude=exclude_if_black))
+    color: str = field(default='', metadata=config(exclude=exclude_if_empty))
     text: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
 
@@ -2219,6 +2227,8 @@ class Novel(NovelDescriptor):
     manuscript_goals: ManuscriptGoals = field(default_factory=ManuscriptGoals)
     events_map: Diagram = field(default_factory=default_events_map)
     character_networks: List[Diagram] = field(default_factory=default_character_networks)
+    manuscript_progress: Dict[str, DocumentProgress] = field(default_factory=dict,
+                                                             metadata=config(exclude=exclude_if_empty))
 
     def pov_characters(self) -> List[Character]:
         pov_ids = set()

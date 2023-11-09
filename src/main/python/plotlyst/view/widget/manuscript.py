@@ -24,15 +24,17 @@ from typing import Optional, List, Dict
 import nltk
 import qtanim
 from PyQt6 import QtGui
-from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent, QSize, QSizeF, QRectF
+from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent, QSize, QSizeF, QRectF, \
+    QRect, QDate, QPoint
 from PyQt6.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter, QKeyEvent, \
     QMouseEvent, QTextCursor, QFont, QScreen, QTextFormat, QTextObjectInterface, QPainter, QTextBlockFormat, \
-    QFontMetrics
+    QFontMetrics, QTextOption, QShowEvent
 from PyQt6.QtMultimedia import QSoundEffect
-from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit
+from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit, QButtonGroup, QCalendarWidget, QTableView
 from nltk import WhitespaceTokenizer
 from overrides import overrides
-from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins
+from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins, vbox, line, bold, vline, decr_font, \
+    underline
 from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget, group
 from qttextedit import RichTextEditor, TextBlockState, remove_font, OBJECT_REPLACEMENT_CHARACTER
@@ -41,13 +43,15 @@ from textstat import textstat
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, DEFAULT_MANUSCRIPT_LINE_SPACE, \
     DEFAULT_MANUSCRIPT_INDENT, PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Scene, TextStatistics, DocumentStatistics
+from src.main.python.plotlyst.core.domain import Novel, Scene, TextStatistics, DocumentStatistics, DocumentProgress
 from src.main.python.plotlyst.core.sprint import TimerModel
 from src.main.python.plotlyst.core.text import wc, sentence_count, clean_text
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.resources import resource_registry
+from src.main.python.plotlyst.service.manuscript import export_manuscript_to_docx, daily_progress, \
+    daily_overall_progress, find_daily_overall_progress
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import scroll_to_top, spin, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import scroll_to_top, spin, ButtonPressResizeEventFilter, label, push_btn
 from src.main.python.plotlyst.view.generated.distraction_free_manuscript_editor_ui import \
     Ui_DistractionFreeManuscriptEditor
 from src.main.python.plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget
@@ -55,7 +59,7 @@ from src.main.python.plotlyst.view.generated.readability_widget_ui import Ui_Rea
 from src.main.python.plotlyst.view.generated.sprint_widget_ui import Ui_SprintWidget
 from src.main.python.plotlyst.view.generated.timer_setup_widget_ui import Ui_TimerSetupWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.display import WordsDisplay
+from src.main.python.plotlyst.view.widget.display import WordsDisplay, IconText
 from src.main.python.plotlyst.view.widget.input import TextEditBase, GrammarHighlighter, GrammarHighlightStyle
 
 
@@ -569,9 +573,11 @@ class ManuscriptTextEditor(RichTextEditor):
     textChanged = pyqtSignal()
     selectionChanged = pyqtSignal()
     sceneTitleChanged = pyqtSignal(Scene)
+    progressChanged = pyqtSignal(DocumentProgress)
 
     def __init__(self, parent=None):
         super(ManuscriptTextEditor, self).__init__(parent)
+        self._novel: Optional[Novel] = None
         self.toolbar().setHidden(True)
         self._titleVisible: bool = True
         self.setCharacterWidth(50)
@@ -608,6 +614,9 @@ class ManuscriptTextEditor(RichTextEditor):
 
     def manuscriptTextEdit(self) -> ManuscriptTextEdit:
         return self._textedit
+
+    def setNovel(self, novel: Novel):
+        self._novel = novel
 
     def refresh(self):
         if len(self._scenes) == 1:
@@ -699,11 +708,12 @@ class ManuscriptTextEditor(RichTextEditor):
         if len(self._scenes) == 1:
             wc = self.textEdit.statistics().word_count
             scene = self._scenes[0]
-            if scene.manuscript.statistics.wc != wc:
-                scene.manuscript.statistics.wc = wc
-                self.repo.update_scene(scene)
+            updated_progress = self._updateProgress(scene, wc)
             scene.manuscript.content = self.textEdit.toHtml()
             self.repo.update_doc(app_env.novel, scene.manuscript)
+            if updated_progress:
+                self.repo.update_scene(scene)
+                self.repo.update_novel(self._novel)
         else:
             scene_i = 0
             block: QTextBlock = self.textEdit.document().begin()
@@ -730,10 +740,30 @@ class ManuscriptTextEditor(RichTextEditor):
         scene.manuscript.content = cursor.selection().toHtml()
         wc_ = wc(cursor.selection().toPlainText())
         if scene.manuscript.statistics.wc != wc_:
+            self._updateProgress(scene, wc_)
             scene.manuscript.statistics.wc = wc_
             self.repo.update_scene(scene)
+            self.repo.update_novel(self._novel)
 
         self.repo.update_doc(app_env.novel, scene.manuscript)
+
+    def _updateProgress(self, scene, wc) -> bool:
+        if scene.manuscript.statistics.wc == wc:
+            return False
+
+        diff = wc - scene.manuscript.statistics.wc
+        progress: DocumentProgress = daily_progress(scene)
+        overall_progress = daily_overall_progress(self._novel)
+        if diff > 0:
+            progress.added += diff
+            overall_progress.added += diff
+        else:
+            progress.removed += abs(diff)
+            overall_progress.removed += abs(diff)
+        self.progressChanged.emit(overall_progress)
+        scene.manuscript.statistics.wc = wc
+
+        return True
 
     def _titleChanged(self, text: str):
         if len(self._scenes) == 1:
@@ -952,3 +982,125 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
     def _autoHideBottomBar(self):
         if not self.wdgBottom.underMouse():
             self.wdgBottom.setHidden(True)
+
+
+class ManuscriptExportWidget(QWidget):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+
+        vbox(self, spacing=15)
+        self.layout().addWidget(label('Export manuscript', bold=True), alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(line())
+
+        self._btnDocx = push_btn(IconRegistry.docx_icon(), 'Word (.docx)', checkable=True,
+                                 properties=['transparent-rounded-bg-on-hover', 'secondary-selector'])
+        self._btnDocx.setChecked(True)
+        self._btnPdf = push_btn(IconRegistry.from_name('fa5.file-pdf'), 'PDF', checkable=True,
+                                tooltip='PDF export not available yet',
+                                properties=['transparent-rounded-bg-on-hover', 'secondary-selector'])
+
+        self._btnGroup = QButtonGroup()
+        self._btnGroup.setExclusive(True)
+        self._btnGroup.addButton(self._btnDocx)
+        self._btnGroup.addButton(self._btnPdf)
+        self._btnPdf.setDisabled(True)
+        self.layout().addWidget(self._btnDocx, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self._btnPdf, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self._btnExport = push_btn(IconRegistry.from_name('mdi.file-export-outline', RELAXED_WHITE_COLOR), 'Export',
+                                   tooltip='Export manuscript',
+                                   properties=['base', 'positive'])
+        self.layout().addWidget(self._btnExport)
+
+        self._btnExport.clicked.connect(self._export)
+
+    def _export(self):
+        if self._btnDocx.isChecked():
+            export_manuscript_to_docx(self._novel)
+
+
+class ManuscriptDailyProgress(QWidget):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+        vbox(self)
+
+        self.btnDay = IconText()
+        self.btnDay.setText('Today')
+        self.btnDay.setIcon(IconRegistry.from_name('mdi.calendar-month-outline'))
+
+        self.lblAdded = label('', color='darkgreen', h3=True)
+        self.lblRemoved = label('', color='grey', h3=True)
+
+        self.layout().addWidget(self.btnDay, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(group(self.lblAdded, vline(), self.lblRemoved), alignment=Qt.AlignmentFlag.AlignRight)
+        lbl = label('Added/Removed', description=True)
+        decr_font(lbl)
+        self.layout().addWidget(lbl, alignment=Qt.AlignmentFlag.AlignRight)
+
+    def refresh(self):
+        progress = find_daily_overall_progress(self._novel)
+        if progress:
+            self.setProgress(progress)
+        else:
+            self.lblAdded.setText('+')
+            self.lblRemoved.setText('-')
+
+    def setProgress(self, progress: DocumentProgress):
+        self.lblAdded.setText(f'+{progress.added}')
+        self.lblRemoved.setText(f'-{progress.removed}')
+
+
+class ManuscriptProgressCalendar(QCalendarWidget):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+
+        self.setVerticalHeaderFormat(QCalendarWidget.VerticalHeaderFormat.NoVerticalHeader)
+        self.setHorizontalHeaderFormat(QCalendarWidget.HorizontalHeaderFormat.NoHorizontalHeader)
+        self.setNavigationBarVisible(False)
+        self.setSelectionMode(QCalendarWidget.SelectionMode.NoSelection)
+        item = self.layout().itemAt(1)
+        if isinstance(item.widget(), QTableView):
+            item.widget().setStyleSheet(f'''
+            QTableView {{
+                selection-background-color: {RELAXED_WHITE_COLOR};
+            }}
+            ''')
+
+        today = QDate.currentDate()
+        self.setMaximumDate(today)
+
+    @overrides
+    def showEvent(self, event: QShowEvent) -> None:
+        if QDate.currentDate() != self.maximumDate():
+            self.setMaximumDate(QDate.currentDate())
+
+    @overrides
+    def paintCell(self, painter: QtGui.QPainter, rect: QRect, date: QDate) -> None:
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        if date.month() == self.monthShown():
+            option = QTextOption()
+            option.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            if date == self.maximumDate():
+                bold(painter)
+                underline(painter)
+            else:
+                bold(painter, False)
+                underline(painter, False)
+            progress = find_daily_overall_progress(self._novel, date.toString(Qt.DateFormat.ISODate))
+            if progress:
+                painter.save()
+                painter.setPen(QColor('#BB90CE'))
+                if progress.added + progress.removed >= 1500:
+                    painter.setBrush(QColor('#C8A4D7'))
+                elif progress.added + progress.removed >= 450:
+                    painter.setBrush(QColor('#EDE1F2'))
+                else:
+                    painter.setBrush(QColor(RELAXED_WHITE_COLOR))
+                rad = rect.width() // 2 - 1
+                painter.drawEllipse(rect.center() + QPoint(1, 1), rad, rad)
+                painter.restore()
+            painter.drawText(rect.toRectF(), str(date.day()), option)

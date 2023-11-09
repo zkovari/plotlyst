@@ -56,14 +56,14 @@ from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import PopupMenuBuilder, hmax, action, stretch_col, \
-    ButtonPressResizeEventFilter, tool_btn
+    ButtonPressResizeEventFilter, tool_btn, label
 from src.main.python.plotlyst.view.generated.scene_drive_editor_ui import Ui_SceneDriveTrackingEditor
-from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui import Ui_ScenesViewPreferences
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton, SecondaryActionPushButton, \
     FadeOutButtonGroup
+from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButtons
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation, RotatedButton, DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import SelectionItemLabel, SceneLabel
@@ -281,15 +281,34 @@ class SceneLabelLinkWidget(QWidget):
         self.btnSelect.setHidden(True)
 
 
-class SceneFilterWidget(QFrame, Ui_SceneFilterWidget):
+class SceneFilterWidget(QWidget):
     def __init__(self, novel: Novel, parent=None):
         super(SceneFilterWidget, self).__init__(parent)
-        self.setupUi(self)
         self.novel = novel
+        self.povFilter = CharacterSelectorButtons()
+        margins(self.povFilter, left=15)
         self.povFilter.setExclusive(False)
         self.povFilter.setCharacters(self.novel.pov_characters())
 
-        self.tabWidget.setTabIcon(self.tabWidget.indexOf(self.tabPov), IconRegistry.character_icon())
+        self.btnAct1 = tool_btn(IconRegistry.act_one_icon(), base=True, checkable=True)
+        self.btnAct2 = tool_btn(IconRegistry.act_two_icon(), base=True, checkable=True)
+        self.btnAct3 = tool_btn(IconRegistry.act_three_icon(), base=True, checkable=True)
+        self.btnAct1.setChecked(True)
+        self.btnAct2.setChecked(True)
+        self.btnAct3.setChecked(True)
+        self.wdgActs = QWidget()
+        hbox(self.wdgActs)
+        margins(self.wdgActs, left=15)
+        self.wdgActs.layout().addWidget(self.btnAct1)
+        self.wdgActs.layout().addWidget(self.btnAct2)
+        self.wdgActs.layout().addWidget(self.btnAct3)
+
+        vbox(self, 3)
+        self.layout().addWidget(label('Point of view', underline=True), alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self.povFilter)
+        self.layout().addWidget(self.povFilter)
+        self.layout().addWidget(label('Acts', underline=True), alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self.wdgActs, alignment=Qt.AlignmentFlag.AlignLeft)
 
 
 class _BeatButton(QToolButton):

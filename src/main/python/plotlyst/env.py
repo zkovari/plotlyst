@@ -20,12 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
 import subprocess
 from enum import Enum
-from typing import Optional
 
 import nltk
 from fbs_runtime import platform
-
-from src.main.python.plotlyst.core.domain import Novel
 
 
 class AppMode(Enum):
@@ -36,7 +33,7 @@ class AppMode(Enum):
 class AppEnvironment:
     def __init__(self):
         self._mode: AppMode = AppMode.PROD
-        self._novel: Optional[Novel] = None
+        self._novel = None
         self._plotlyst_cache_dir = os.path.join(os.path.expanduser('~'), '.cache', 'plotlyst')
         self._nltk_data = os.path.join(self._plotlyst_cache_dir, 'nltk')
         nltk.data.path.insert(0, self._nltk_data)
@@ -55,7 +52,7 @@ class AppEnvironment:
         return self._novel
 
     @novel.setter
-    def novel(self, novel: Novel):
+    def novel(self, novel):
         self._novel = novel
 
     @property
