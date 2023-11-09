@@ -143,7 +143,9 @@ class AgeChart(PolarBaseChart):
 
         ages = {}
         for char in characters:
-            if not char.age:
+            if char.age is None:
+                continue
+            if char.age_infinite:
                 continue
             age = 45 if char.age > 45 else char.age
             if age not in ages.keys():
