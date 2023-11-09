@@ -103,6 +103,7 @@ class CharacterEditor(QObject, EventListener):
 
         self._ageEditor = CharacterAgeEditor()
         self._ageEditor.valueChanged.connect(self._age_changed)
+        self._ageEditor.infiniteToggled.connect(self._age_infinite_toggled)
         menu = MenuWidget(self.ui.btnAge)
         menu.addWidget(self._ageEditor)
         apply_white_menu(menu)
@@ -124,6 +125,7 @@ class CharacterEditor(QObject, EventListener):
 
         if self.character.age:
             self._ageEditor.setValue(self.character.age)
+        self._ageEditor.setInfinite(self.character.age_infinite)
         if self.character.occupation:
             self._lineOccupation.setText(self.character.occupation)
 
@@ -241,6 +243,17 @@ class CharacterEditor(QObject, EventListener):
             self.ui.btnAge.iconColor = '#343a40'
         self.ui.btnAge.setText(str(age))
         self.character.age = age
+
+    def _age_infinite_toggled(self, toggled: bool):
+        if toggled:
+            self.ui.btnAge.setIcon(IconRegistry.from_name('mdi.infinity', 'gray'))
+            self.ui.btnAge.setText('')
+        else:
+            self.ui.btnAge.setIcon(IconRegistry.from_name('fa5s.birthday-cake', 'gray'))
+            if self.character.age is not None:
+                self.ui.btnAge.setText(str(self.character.age))
+
+        self.character.age_infinite = toggled
 
     def _occupation_changed(self, occupation: str):
         if self.ui.btnOccupation.font().italic():  # first setup

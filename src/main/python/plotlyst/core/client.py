@@ -45,7 +45,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding, Board, \
     default_big_five_values, CharacterPlan, ManuscriptGoals, Diagram, DiagramData, default_events_map, \
     default_character_networks, ScenePurposeType, StoryElement, SceneOutcome, ChapterType, SceneStructureItem
-from src.main.python.plotlyst.core.template import Role, exclude_if_empty, exclude_if_black
+from src.main.python.plotlyst.core.template import Role, exclude_if_empty, exclude_if_black, exclude_if_false
 from src.main.python.plotlyst.env import app_env
 
 
@@ -124,6 +124,7 @@ class CharacterInfo:
     gender: str = ''
     role: Optional[Role] = None
     age: Optional[int] = None
+    age_infinite: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     occupation: Optional[str] = None
     avatar_id: Optional[uuid.UUID] = None
     template_values: List[TemplateValue] = field(default_factory=list)
@@ -454,6 +455,7 @@ class JsonClient:
                 data = json_file.read()
                 info: CharacterInfo = CharacterInfo.from_json(data)
                 character = Character(name=info.name, id=info.id, gender=info.gender, role=info.role, age=info.age,
+                                      age_infinite=info.age_infinite,
                                       occupation=info.occupation,
                                       template_values=info.template_values,
                                       disabled_template_headers=info.disabled_template_headers,
@@ -621,6 +623,7 @@ class JsonClient:
 
     def _persist_character(self, char: Character, avatar_id: Optional[uuid.UUID] = None, novel: Optional[Novel] = None):
         char_info = CharacterInfo(id=char.id, name=char.name, gender=char.gender, role=char.role, age=char.age,
+                                  age_infinite=char.age_infinite,
                                   occupation=char.occupation,
                                   template_values=char.template_values,
                                   disabled_template_headers=char.disabled_template_headers,

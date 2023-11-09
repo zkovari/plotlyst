@@ -300,6 +300,7 @@ class Character:
     gender: str = ''
     role: Optional[Role] = None
     age: Optional[int] = None
+    age_infinite: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     occupation: Optional[str] = None
     avatar: Optional[Any] = None
     template_values: List[TemplateValue] = field(default_factory=list)
