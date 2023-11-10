@@ -516,6 +516,29 @@ class LineElementWidget(QWidget):
         self._element = None
 
 
+class _CornerIcon(QToolButton):
+    hovered = pyqtSignal(StoryElementType)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        transparent(self)
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
+        self._type = None
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        if self._type:
+            self.hovered.emit(self._type)
+
+    # @overrides
+    # def leaveEvent(self, event: QEvent) -> None:
+    #     if self._type:
+    #         decr_icon(self)
+
+    def setType(self, type_: StoryElementType):
+        self._type = type_
+
+
 class SceneElementWidget(QWidget):
     storylineSelected = pyqtSignal(Plot)
     storylineEditRequested = pyqtSignal(Plot)
@@ -592,12 +615,22 @@ class SceneElementWidget(QWidget):
         self._wdgTitle.layout().addWidget(self._btnClose, alignment=Qt.AlignmentFlag.AlignRight)
         self._pageEditor.layout().addWidget(self._wdgTitle)
 
+        self._corners: List[_CornerIcon] = []
+        self._cornerTopLeft = _CornerIcon()
+        self._corners.append(self._cornerTopLeft)
+        self._cornerTopRight = _CornerIcon()
+        self._corners.append(self._cornerTopRight)
+        self._cornerBottomLeft = _CornerIcon()
+        self._corners.append(self._cornerBottomLeft)
+        self._cornerBottomRight = _CornerIcon()
+        self._corners.append(self._cornerBottomRight)
+
         self._wdgIdleTop = QWidget()
         hbox(self._wdgIdleTop, 0, 0)
-        self._wdgIdleTop.layout().addWidget(tool_btn(IconRegistry.goal_icon(), transparent_=True),
+        self._wdgIdleTop.layout().addWidget(self._cornerTopLeft,
                                             alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         self._wdgIdleTop.layout().addWidget(self._iconIdle, alignment=Qt.AlignmentFlag.AlignCenter)
-        self._wdgIdleTop.layout().addWidget(tool_btn(IconRegistry.goal_icon(), transparent_=True),
+        self._wdgIdleTop.layout().addWidget(self._cornerTopRight,
                                             alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
 
         self._pageIdle.layout().addWidget(self._wdgIdleTop)
@@ -608,13 +641,19 @@ class SceneElementWidget(QWidget):
         self._lblClick.setHidden(True)
         self._wdgIdleBottom = QWidget()
         hbox(self._wdgIdleBottom, 0, 0)
-        self._wdgIdleBottom.layout().addWidget(tool_btn(IconRegistry.goal_icon(), transparent_=True),
+        self._wdgIdleBottom.layout().addWidget(self._cornerBottomLeft,
                                                alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignBottom)
         self._wdgIdleBottom.layout().addWidget(self._lblClick, alignment=Qt.AlignmentFlag.AlignCenter)
-        self._wdgIdleBottom.layout().addWidget(tool_btn(IconRegistry.goal_icon(), transparent_=True),
+        self._wdgIdleBottom.layout().addWidget(self._cornerBottomRight,
                                                alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignBottom)
         self._pageIdle.layout().addWidget(self._wdgIdleBottom)
         self._pageIdle.layout().addWidget(vspacer())
+
+        for corner in self._corners:
+            corner.setDisabled(True)
+            corner.setVisible(False)
+            retain_when_hidden(corner)
+            corner.hovered.connect(self._typeChanged)
 
         self.reset()
 
@@ -627,7 +666,6 @@ class SceneElementWidget(QWidget):
 
     def setStorylineVisible(self, visible: bool):
         self._storylineVisible = visible
-        self._btnStorylineLink.setVisible(visible)
 
     @overrides
     def eventFilter(self, watched: 'QObject', event: 'QEvent') -> bool:
@@ -642,6 +680,11 @@ class SceneElementWidget(QWidget):
             self._lblClick.setVisible(True)
             self._titleIdle.setVisible(True)
             self._iconIdle.setIcon(self._icon)
+
+            for corner in self._corners:
+                if corner.isEnabled():
+                    corner.setVisible(True)
+
         else:
             if self._storylineLinkEnabled and self._storylineVisible:
                 self._btnStorylineLink.setVisible(True)
@@ -655,6 +698,9 @@ class SceneElementWidget(QWidget):
             self._lblClick.setVisible(False)
             self._titleIdle.setVisible(False)
             self._iconIdle.setIcon(IconRegistry.from_name('msc.debug-stackframe-dot', 'lightgrey'))
+
+            for corner in self._corners:
+                corner.setVisible(False)
         else:
             for arrow in self._arrows.values():
                 if not arrow.isChecked():
@@ -705,6 +751,9 @@ class SceneElementWidget(QWidget):
         self._titleIdle.setVisible(False)
         self._iconIdle.setIcon(IconRegistry.from_name('msc.debug-stackframe-dot', 'lightgrey'))
         self._btnStorylineLink.setIcon(IconRegistry.storylines_icon(color='lightgrey'))
+        self._btnStorylineLink.setHidden(True)
+        for corner in self._corners:
+            corner.setHidden(True)
         pointy(self._pageIdle)
         self._element = None
 
@@ -732,6 +781,7 @@ class SceneElementWidget(QWidget):
     def _elementCreated(self, element: StoryElement):
         element.row = self._row
         element.col = self._col
+        print(f'created {element}')
         self._storyElements().append(element)
 
     def _elementRemoved(self, element: StoryElement):
@@ -766,6 +816,10 @@ class SceneElementWidget(QWidget):
 
     def _arrowReset(self, degree: int):
         self._element.arrows[degree] = 0
+
+    def _typeChanged(self, type_: StoryElementType):
+        self._type = type_
+        self._iconIdle.setIcon(self._icon)
 
 
 class TextBasedSceneElementWidget(SceneElementWidget):
@@ -917,10 +971,31 @@ class EventElementEditor(TextBasedSceneElementWidget):
         self.setIcon('mdi.lightning-bolt-outline')
         self.setPlaceholderText("A pivotal event")
 
+        self._cornerTopLeft.setIcon(IconRegistry.from_name('mdi.lightning-bolt-outline', 'lightgrey'))
+        self._cornerTopLeft.setType(StoryElementType.Event)
+        self._cornerTopLeft.setEnabled(True)
+
+        self._cornerTopRight.setIcon(IconRegistry.from_name('fa5s.tachometer-alt', 'lightgrey'))
+        self._cornerTopRight.setType(StoryElementType.Effect)
+        self._cornerTopRight.setEnabled(True)
+
+    @overrides
+    def _typeChanged(self, type_: StoryElementType):
+        if type_ == StoryElementType.Event:
+            self.setTitle('Event')
+            self.setIcon('mdi.lightning-bolt-outline')
+            self.setPlaceholderText("A pivotal event")
+        elif type_ == StoryElementType.Effect:
+            self.setTitle('Effect')
+            self.setIcon('fa5s.tachometer-alt')
+            self.setPlaceholderText("An effect caused by the event")
+
+        super()._typeChanged(type_)
+
 
 class EffectElementEditor(TextBasedSceneElementWidget):
     def __init__(self, novel: Novel, row: int, col: int, parent=None):
-        super().__init__(novel, StoryElementType.Event, row, col, parent)
+        super().__init__(novel, StoryElementType.Effect, row, col, parent)
         self.setTitle('Delayed effect')
         self.setIcon('fa5s.tachometer-alt')
         self.setPlaceholderText("An effect caused by the event")
@@ -1209,17 +1284,18 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
                         item.widget().setScene(scene)
 
         for element in scene.story_elements:
-            if element.type in [StoryElementType.Effect, StoryElementType.Event]:
-                if element.row == 1:
-                    element.row = 2
-                elif element.row == 2:
-                    element.row = 4
-                if element.col == 1:
-                    element.col = 2
-                elif element.col == 2:
-                    element.col = 4
-                elif element.col == 3:
-                    element.col = 6
+            print(element)
+            # if element.type in [StoryElementType.Effect, StoryElementType.Event]:
+            #     if element.row == 1:
+            #         element.row = 2
+            #     elif element.row == 2:
+            #         element.row = 4
+            #     if element.col == 1:
+            #         element.col = 2
+            #     elif element.col == 2:
+            #         element.col = 4
+            #     elif element.col == 3:
+            #         element.col = 6
 
             item = self._wdgElements.layout().itemAtPosition(element.row, element.col)
             if item and item.widget():
