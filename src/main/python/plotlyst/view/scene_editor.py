@@ -142,6 +142,8 @@ class SceneEditor(QObject, EventListener):
         self._btnPurposeType.reset.connect(self._reset_purpose_editor)
         self.ui.wdgMidbar.layout().insertWidget(0, self._btnPurposeType)
 
+        self.ui.btnInfo.setHidden(True)
+
         self._btnPlotSelector = push_btn(IconRegistry.storylines_icon(), 'Storylines',
                                          tooltip='Link storylines to this scene', transparent_=True)
         self._btnPlotSelector.installEventFilter(OpacityEventFilter(self._btnPlotSelector, leaveOpacity=0.8))
@@ -166,7 +168,7 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._btnPurposeType.refresh)
         self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._storylineEditor.refresh)
 
-        self.ui.tabWidget.setCurrentWidget(self.ui.tabCharacter)
+        self.ui.tabWidget.setCurrentWidget(self.ui.tabStorylines)
         self.ui.tabWidget.currentChanged.connect(self._page_toggled)
 
         self.repo = RepositoryPersistenceManager.instance()
@@ -341,8 +343,8 @@ class SceneEditor(QObject, EventListener):
         self._btnPurposeType.refresh()
         if not self._btnPurposeType.isVisible():
             fade_in(self._btnPurposeType)
-        if not self.ui.btnInfo.isVisible():
-            fade_in(self.ui.btnInfo)
+        # if not self.ui.btnInfo.isVisible():
+        #     fade_in(self.ui.btnInfo)
         self.ui.wdgStorylines.setVisible(self.novel.prefs.toggled(NovelSetting.Storylines))
         self._btnPlotSelector.setVisible(self.novel.prefs.toggled(NovelSetting.Storylines))
         # to avoid segfault for some reason, we disable it first before changing the stack widget

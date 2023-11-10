@@ -1119,8 +1119,12 @@ class StoryElementType(Enum):
     Plan_change = 'plan_change'
     Collaboration = 'collaboration'
     Subtext = 'subtext'
+    H_line = 'h_line'
+    V_line = 'v_line'
     Event = 'event'
     Effect = 'effect'
+    Delayed_effect = 'delayed_effect'
+    Thematic_effect = 'thematic_effect'
 
 
 @dataclass
