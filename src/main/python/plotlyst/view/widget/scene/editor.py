@@ -22,7 +22,8 @@ from typing import List, Optional, Dict
 
 import qtanim
 from PyQt6.QtCore import Qt, QSize, QEvent, pyqtSignal, QObject, QTimer
-from PyQt6.QtGui import QEnterEvent, QIcon, QMouseEvent, QColor, QCursor, QPalette, QPaintEvent, QPainter, QPen
+from PyQt6.QtGui import QEnterEvent, QIcon, QMouseEvent, QColor, QCursor, QPalette, QPaintEvent, QPainter, QPen, \
+    QShowEvent
 from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QStackedWidget, QGridLayout, \
     QToolButton, QAbstractButton, QScrollArea, QButtonGroup
 from overrides import overrides
@@ -31,7 +32,8 @@ from qthandy import vbox, vspacer, transparent, sp, line, incr_font, hbox, point
 from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import raise_unrecognized_arg, CONFLICT_SELF_COLOR, RELAXED_WHITE_COLOR
+from src.main.python.plotlyst.common import raise_unrecognized_arg, CONFLICT_SELF_COLOR, RELAXED_WHITE_COLOR, \
+    PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Scene, Novel, ScenePurpose, advance_story_scene_purpose, \
     ScenePurposeType, reaction_story_scene_purpose, character_story_scene_purpose, setup_story_scene_purpose, \
     emotion_story_scene_purpose, exposition_story_scene_purpose, scene_purposes, Character, StoryElement, \
@@ -523,17 +525,21 @@ class _CornerIcon(QToolButton):
         super().__init__(parent)
         transparent(self)
         self.installEventFilter(ButtonPressResizeEventFilter(self))
+        self.setCheckable(True)
         self._type = None
 
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
         if self._type:
+            self.setChecked(True)
             self.hovered.emit(self._type)
 
-    # @overrides
-    # def leaveEvent(self, event: QEvent) -> None:
-    #     if self._type:
-    #         decr_icon(self)
+    def showEvent(self, a0: QShowEvent) -> None:
+        self.setChecked(False)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self.setChecked(False)
 
     def setType(self, type_: StoryElementType):
         self._type = type_
@@ -610,7 +616,7 @@ class SceneElementWidget(QWidget):
         self._wdgTitle = QWidget()
         hbox(self._wdgTitle)
         self._wdgTitle.layout().addWidget(self._btnStorylineLink, alignment=Qt.AlignmentFlag.AlignLeft)
-        self._wdgTitle.layout().addWidget(group(self._iconActive, self._titleActive),
+        self._wdgTitle.layout().addWidget(group(self._iconActive, self._titleActive, margin=0, spacing=1),
                                           alignment=Qt.AlignmentFlag.AlignCenter)
         self._wdgTitle.layout().addWidget(self._btnClose, alignment=Qt.AlignmentFlag.AlignRight)
         self._pageEditor.layout().addWidget(self._wdgTitle)
@@ -833,9 +839,9 @@ class TextBasedSceneElementWidget(SceneElementWidget):
         self.setMaximumWidth(210)
 
         self._textEditor = QTextEdit()
-        self._textEditor.setMinimumWidth(170)
+        self._textEditor.setMinimumWidth(180)
         self._textEditor.setMaximumWidth(200)
-        self._textEditor.setMinimumHeight(80)
+        self._textEditor.setMinimumHeight(90)
         self._textEditor.setMaximumHeight(100)
         self._textEditor.setTabChangesFocus(True)
         self._textEditor.setAcceptRichText(False)
@@ -974,21 +980,29 @@ class EventElementEditor(TextBasedSceneElementWidget):
         super().__init__(novel, StoryElementType.Event, row, col, parent)
         self._typeChanged(defaultType)
 
-        self._cornerTopLeft.setIcon(IconRegistry.from_name('mdi.lightning-bolt-outline', 'lightgrey'))
+        self._cornerTopLeft.setIcon(
+            IconRegistry.from_name('mdi.lightning-bolt-outline', 'lightgrey', PLOTLYST_SECONDARY_COLOR))
         self._cornerTopLeft.setType(StoryElementType.Event)
         self._cornerTopLeft.setEnabled(True)
 
-        self._cornerTopRight.setIcon(IconRegistry.from_name('fa5s.tachometer-alt', 'lightgrey'))
+        self._cornerTopRight.setIcon(
+            IconRegistry.from_name('fa5s.tachometer-alt', 'lightgrey', PLOTLYST_SECONDARY_COLOR))
         self._cornerTopRight.setType(StoryElementType.Effect)
         self._cornerTopRight.setEnabled(True)
 
-        self._cornerBottomRight.setIcon(IconRegistry.from_name('ri.timer-flash-line', 'lightgrey'))
+        self._cornerBottomRight.setIcon(
+            IconRegistry.from_name('ri.timer-flash-line', 'lightgrey', PLOTLYST_SECONDARY_COLOR))
         self._cornerBottomRight.setType(StoryElementType.Delayed_effect)
         self._cornerBottomRight.setEnabled(True)
 
-        self._cornerBottomLeft.setIcon(IconRegistry.theme_icon('lightgrey'))
+        self._cornerBottomLeft.setIcon(IconRegistry.theme_icon('lightgrey', PLOTLYST_SECONDARY_COLOR))
         self._cornerBottomLeft.setType(StoryElementType.Thematic_effect)
         self._cornerBottomLeft.setEnabled(True)
+
+    @overrides
+    def setElement(self, element: StoryElement):
+        super().setElement(element)
+        self._typeChanged(element.type)
 
     @overrides
     def _typeChanged(self, type_: StoryElementType):
@@ -996,18 +1010,22 @@ class EventElementEditor(TextBasedSceneElementWidget):
             self.setTitle('Event')
             self.setIcon('mdi.lightning-bolt-outline')
             self.setPlaceholderText("A pivotal event")
+            self.setStorylineVisible(True)
         elif type_ == StoryElementType.Effect:
             self.setTitle('Effect')
             self.setIcon('fa5s.tachometer-alt')
             self.setPlaceholderText("An immediate effect caused by an event")
+            self.setStorylineVisible(True)
         elif type_ == StoryElementType.Delayed_effect:
             self.setTitle('Delayed effect')
             self.setIcon('ri.timer-flash-line')
             self.setPlaceholderText("A delayed effect happening in a later scene")
+            self.setStorylineVisible(False)
         elif type_ == StoryElementType.Thematic_effect:
             self.setTitle('Thematic effect')
             self.setIcon('mdi.butterfly-outline')
             self.setPlaceholderText("Events that contribute to, symbolize, or align with the theme")
+            self.setStorylineVisible(False)
 
         super()._typeChanged(type_)
 
