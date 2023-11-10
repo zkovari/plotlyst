@@ -592,13 +592,28 @@ class SceneElementWidget(QWidget):
         self._wdgTitle.layout().addWidget(self._btnClose, alignment=Qt.AlignmentFlag.AlignRight)
         self._pageEditor.layout().addWidget(self._wdgTitle)
 
-        self._pageIdle.layout().addWidget(self._iconIdle, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._wdgIdleTop = QWidget()
+        hbox(self._wdgIdleTop, 0, 0)
+        self._wdgIdleTop.layout().addWidget(tool_btn(IconRegistry.goal_icon(), transparent_=True),
+                                            alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        self._wdgIdleTop.layout().addWidget(self._iconIdle, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._wdgIdleTop.layout().addWidget(tool_btn(IconRegistry.goal_icon(), transparent_=True),
+                                            alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+
+        self._pageIdle.layout().addWidget(self._wdgIdleTop)
         self._pageIdle.layout().addWidget(self._titleIdle, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self._lblClick = label('Click to add', underline=True, description=True)
         retain_when_hidden(self._lblClick)
         self._lblClick.setHidden(True)
-        self._pageIdle.layout().addWidget(self._lblClick, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._wdgIdleBottom = QWidget()
+        hbox(self._wdgIdleBottom, 0, 0)
+        self._wdgIdleBottom.layout().addWidget(tool_btn(IconRegistry.goal_icon(), transparent_=True),
+                                               alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignBottom)
+        self._wdgIdleBottom.layout().addWidget(self._lblClick, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._wdgIdleBottom.layout().addWidget(tool_btn(IconRegistry.goal_icon(), transparent_=True),
+                                               alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignBottom)
+        self._pageIdle.layout().addWidget(self._wdgIdleBottom)
         self._pageIdle.layout().addWidget(vspacer())
 
         self.reset()
@@ -906,7 +921,7 @@ class EventElementEditor(TextBasedSceneElementWidget):
 class EffectElementEditor(TextBasedSceneElementWidget):
     def __init__(self, novel: Novel, row: int, col: int, parent=None):
         super().__init__(novel, StoryElementType.Event, row, col, parent)
-        self.setTitle('Effect')
+        self.setTitle('Delayed effect')
         self.setIcon('fa5s.tachometer-alt')
         self.setPlaceholderText("An effect caused by the event")
 
