@@ -1123,6 +1123,8 @@ class StoryElementType(Enum):
     V_line = 'v_line'
     Event = 'event'
     Effect = 'effect'
+    Delayed_effect = 'delayed_effect'
+    Thematic_effect = 'thematic_effect'
 
 
 @dataclass

@@ -982,6 +982,14 @@ class EventElementEditor(TextBasedSceneElementWidget):
         self._cornerTopRight.setType(StoryElementType.Effect)
         self._cornerTopRight.setEnabled(True)
 
+        self._cornerBottomRight.setIcon(IconRegistry.from_name('ri.timer-flash-line', 'lightgrey'))
+        self._cornerBottomRight.setType(StoryElementType.Delayed_effect)
+        self._cornerBottomRight.setEnabled(True)
+
+        self._cornerBottomLeft.setIcon(IconRegistry.theme_icon('lightgrey'))
+        self._cornerBottomLeft.setType(StoryElementType.Thematic_effect)
+        self._cornerBottomLeft.setEnabled(True)
+
     @overrides
     def _typeChanged(self, type_: StoryElementType):
         if type_ == StoryElementType.Event:
@@ -991,7 +999,15 @@ class EventElementEditor(TextBasedSceneElementWidget):
         elif type_ == StoryElementType.Effect:
             self.setTitle('Effect')
             self.setIcon('fa5s.tachometer-alt')
-            self.setPlaceholderText("An effect caused by the event")
+            self.setPlaceholderText("An immediate effect caused by an event")
+        elif type_ == StoryElementType.Delayed_effect:
+            self.setTitle('Delayed effect')
+            self.setIcon('ri.timer-flash-line')
+            self.setPlaceholderText("A delayed effect happening in a later scene")
+        elif type_ == StoryElementType.Thematic_effect:
+            self.setTitle('Thematic effect')
+            self.setIcon('mdi.butterfly-outline')
+            self.setPlaceholderText("Events that contribute to, symbolize, or align with the theme")
 
         super()._typeChanged(type_)
 
