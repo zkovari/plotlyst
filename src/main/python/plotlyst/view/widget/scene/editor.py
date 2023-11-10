@@ -467,6 +467,7 @@ class LineElementWidget(QWidget):
         self._element: Optional[StoryElement] = None
 
         pointy(self)
+        self.setToolTip('Toggle a visual separator')
 
         hbox(self, 3)
         if self._type == StoryElementType.H_line:
