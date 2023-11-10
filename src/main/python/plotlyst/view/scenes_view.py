@@ -27,20 +27,21 @@ from PyQt6.QtCore import Qt, QModelIndex, \
 from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget, QHeaderView
 from overrides import overrides
-from qthandy import incr_font, translucent, btn_popup, clear_layout, busy, bold, gc, sp, transparent
+from qthandy import incr_font, translucent, btn_popup, clear_layout, busy, bold, sp, transparent
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, ScenePurposeType, \
-    StoryStructure
+    StoryStructure, NovelSetting
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
     SceneSelectedEvent, SceneSelectionClearedEvent, ActiveSceneStageChanged, \
     ChapterChangedEvent, AvailableSceneStagesChanged, CharacterChangedEvent, CharacterDeletedEvent, \
-    NovelAboutToSyncEvent, NovelSyncEvent, NovelStoryStructureActivationRequest
+    NovelAboutToSyncEvent, NovelSyncEvent, NovelStoryStructureActivationRequest, NovelPanelCustomizationEvent, \
+    NovelStorylinesToggleEvent, NovelStructureToggleEvent
 from src.main.python.plotlyst.events import SceneOrderChangedEvent
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
@@ -112,7 +113,8 @@ class ScenesOutlineView(AbstractNovelView):
         super().__init__(novel,
                          [NovelStoryStructureUpdated, CharacterChangedEvent, SceneChangedEvent, ChapterChangedEvent,
                           SceneDeletedEvent,
-                          SceneOrderChangedEvent, NovelAboutToSyncEvent])
+                          SceneOrderChangedEvent, NovelAboutToSyncEvent, NovelStorylinesToggleEvent,
+                          NovelStructureToggleEvent])
         self.ui = Ui_ScenesView()
         self.ui.setupUi(self.widget)
 
@@ -120,6 +122,10 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.wdgTitleParent.layout().addWidget(self.title)
 
         self.editor: Optional[SceneEditor] = None
+        self.editor = SceneEditor(self.novel)
+        self.editor.close.connect(self._on_close_editor)
+        self.ui.pageEditor.layout().addWidget(self.editor.widget)
+
         self.storymap_view: Optional[StoryLinesMapWidget] = None
         self.stagesModel: Optional[ScenesStageTableModel] = None
         self.stagesProgress: Optional[SceneStageProgressCharts] = None
@@ -135,8 +141,6 @@ class ScenesOutlineView(AbstractNovelView):
         self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.ui.tblScenes.setModel(self._proxy)
-        self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColTitle,
-                                                                  QHeaderView.ResizeMode.Fixed)
         self.ui.tblScenes.horizontalHeader().setFixedHeight(30)
         self.ui.tblScenes.horizontalHeader().setProperty('main-header', True)
         self.ui.tblScenes.verticalHeader().setFixedWidth(40)
@@ -160,6 +164,8 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.treeChapters.setSettings(TreeSettings(font_incr=2))
         self.ui.treeChapters.setNovel(self.novel, readOnly=self.novel.is_readonly())
         self.ui.treeChapters.chapterSelected.connect(self._on_chapter_selected)
+        self.ui.treeChapters.sceneSelected.connect(self.ui.cards.selectCard)
+        self.ui.treeChapters.sceneDoubleClicked.connect(self._switch_to_editor)
 
         self.ui.wgtChapters.setVisible(self.ui.btnChaptersToggle.isChecked())
         self.ui.btnNewWithMenu.setVisible(self.ui.btnChaptersToggle.isChecked())
@@ -188,6 +194,11 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnStorymap.setIcon(
             IconRegistry.from_name('mdi.transit-connection-horizontal', color_on=PLOTLYST_SECONDARY_COLOR))
         self.setNavigableButtonGroup(self.ui.btnGroupViews)
+
+        self.ui.btnStorymap.setVisible(self.novel.prefs.toggled(NovelSetting.Storylines))
+        structure_visible = self.novel.prefs.toggled(NovelSetting.Structure)
+        self.ui.btnStoryStructure.setVisible(structure_visible)
+        self.ui.wdgStoryStructure.setVisible(structure_visible)
 
         self.ui.rbDots.setIcon(IconRegistry.from_name('fa5s.circle'))
         self.ui.rbTitles.setIcon(IconRegistry.from_name('ei.text-width'))
@@ -230,9 +241,18 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.cards.setCardsWidth(self.prefs_widget.sliderCards.value())
 
         self._scene_filter = SceneFilterWidget(self.novel)
-        btn_popup(self.ui.btnFilter, self._scene_filter)
+        filterMenu = MenuWidget(self.ui.btnFilter)
+        filterMenu.addWidget(self._scene_filter)
         self._scene_filter.povFilter.characterToggled.connect(self._proxy.setCharacterFilter)
         self._scene_filter.povFilter.characterToggled.connect(self._filter_cards)
+
+        self.ui.btnAct1.clicked.connect(self._scene_filter.btnAct1.setChecked)
+        self.ui.btnAct2.clicked.connect(self._scene_filter.btnAct2.setChecked)
+        self.ui.btnAct3.clicked.connect(self._scene_filter.btnAct3.setChecked)
+
+        self._scene_filter.btnAct1.clicked.connect(self.ui.btnAct1.setChecked)
+        self._scene_filter.btnAct2.clicked.connect(self.ui.btnAct2.setChecked)
+        self._scene_filter.btnAct3.clicked.connect(self.ui.btnAct3.setChecked)
 
         self._init_cards()
 
@@ -270,6 +290,15 @@ class ScenesOutlineView(AbstractNovelView):
         elif isinstance(event, NovelStoryStructureUpdated):
             if self.ui.btnStoryStructure.isChecked():
                 self.ui.btnStoryStructureSelector.setVisible(len(self.novel.story_structures) > 1)
+        elif isinstance(event, NovelPanelCustomizationEvent):
+            if isinstance(event, NovelStorylinesToggleEvent):
+                self.ui.btnStorymap.setVisible(event.toggled)
+                if self.ui.btnStorymap.isChecked():
+                    self.ui.btnCardsView.setChecked(True)
+            elif isinstance(event, NovelStructureToggleEvent):
+                self.ui.btnStoryStructure.setVisible(event.toggled)
+                self.ui.wdgStoryStructure.setVisible(event.toggled)
+            return
 
         super(ScenesOutlineView, self).event_received(event)
 
@@ -296,6 +325,67 @@ class ScenesOutlineView(AbstractNovelView):
             self.characters_distribution.refresh()
 
         self._init_cards()
+
+    def _switch_view(self):
+        height = 50
+        relax_colors = False
+        columns = self._default_columns
+
+        if self.ui.btnStatusView.isChecked():
+            self.ui.stackScenes.setCurrentWidget(self.ui.pageStages)
+            self.ui.tblScenes.clearSelection()
+            if not self.stagesModel:
+                self._init_stages_view()
+        elif self.ui.btnCardsView.isChecked():
+            self.ui.stackScenes.setCurrentWidget(self.ui.pageCards)
+            self.ui.tblScenes.clearSelection()
+        elif self.ui.btnStorymap.isChecked():
+            self.ui.stackScenes.setCurrentWidget(self.ui.pageStorymap)
+            self.ui.tblScenes.clearSelection()
+            self.ui.tblSceneStages.clearSelection()
+            if not self.storymap_view:
+                self.storymap_view = StoryMap()
+                self.ui.scrollAreaStoryMap.layout().addWidget(self.storymap_view)
+                self.ui.rbDots.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.DOTS))
+                self.ui.rbTitles.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.TITLE))
+                self.ui.rbDetailed.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.DETAILED))
+                self.ui.rbHorizontal.clicked.connect(
+                    lambda: self.storymap_view.setOrientation(Qt.Orientation.Horizontal))
+                self.ui.rbVertical.clicked.connect(lambda: self.storymap_view.setOrientation(Qt.Orientation.Vertical))
+                self.ui.btnAct1.toggled.connect(partial(self.storymap_view.setActsFilter, 1))
+                self.ui.btnAct2.toggled.connect(partial(self.storymap_view.setActsFilter, 2))
+                self.ui.btnAct3.toggled.connect(partial(self.storymap_view.setActsFilter, 3))
+                self.storymap_view.setActsFilter(1, self.ui.btnAct1.isChecked())
+                self.storymap_view.setActsFilter(2, self.ui.btnAct2.isChecked())
+                self.storymap_view.setActsFilter(3, self.ui.btnAct3.isChecked())
+                self.storymap_view.sceneSelected.connect(self.ui.wdgStoryStructure.highlightScene)
+                self.storymap_view.setNovel(self.novel)
+        elif self.ui.btnCharactersDistributionView.isChecked():
+            self.ui.stackScenes.setCurrentWidget(self.ui.pageCharactersDistribution)
+            self.ui.tblScenes.clearSelection()
+            self.ui.tblSceneStages.clearSelection()
+            if not self.characters_distribution:
+                self.characters_distribution = CharactersScenesDistributionWidget(self.novel)
+                self.ui.pageCharactersDistribution.layout().addWidget(self.characters_distribution)
+                self.ui.btnAct1.toggled.connect(partial(self.characters_distribution.setActsFilter, 1))
+                self.ui.btnAct2.toggled.connect(partial(self.characters_distribution.setActsFilter, 2))
+                self.ui.btnAct3.toggled.connect(partial(self.characters_distribution.setActsFilter, 3))
+                self.characters_distribution.setActsFilter(1, self.ui.btnAct1.isChecked())
+                self.characters_distribution.setActsFilter(2, self.ui.btnAct2.isChecked())
+                self.characters_distribution.setActsFilter(3, self.ui.btnAct3.isChecked())
+        else:
+            self.ui.stackScenes.setCurrentWidget(self.ui.pageDefault)
+            self.ui.tblSceneStages.clearSelection()
+
+        self.tblModel.setRelaxColors(relax_colors)
+        for col in range(self.tblModel.columnCount()):
+            if col in columns:
+                self.ui.tblScenes.showColumn(col)
+                continue
+            self.ui.tblScenes.hideColumn(col)
+        self.ui.tblScenes.verticalHeader().setDefaultSectionSize(height)
+
+        emit_event(self.novel, SceneSelectionClearedEvent(self))
 
     def _on_scene_selected(self):
         indexes = self.ui.tblScenes.selectedIndexes()
@@ -344,30 +434,26 @@ class ScenesOutlineView(AbstractNovelView):
                 return None
 
     @busy
-    def _switch_to_editor(self, scene: Optional[Scene] = None):
-        self.editor = SceneEditor(self.novel, scene)
+    def _switch_to_editor(self, scene: Scene):
         self.title.setHidden(True)
-        self.ui.pageEditor.layout().addWidget(self.editor.widget)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
-
-        self.editor.close.connect(self._on_close_editor)
+        self.editor.set_scene(scene)
 
     @busy
     def _on_close_editor(self):
-        self.ui.pageEditor.layout().removeWidget(self.editor.widget)
-        self._scene_filter.povFilter.updateCharacters(self.novel.pov_characters(), checkAll=True)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
         self.title.setVisible(True)
+        self._scene_filter.povFilter.updateCharacters(self.novel.pov_characters(), checkAll=True)
 
         emit_event(self.novel, SceneChangedEvent(self, self.editor.scene))
-        gc(self.editor.widget)
-        gc(self.editor)
-        self.editor = None
         self.refresh()
 
     @busy
     def _new_scene(self, _):
-        self._switch_to_editor()
+        scene = self.novel.new_scene()
+        self.novel.scenes.append(scene)
+        self.repo.insert_scene(self.novel, scene)
+        self._switch_to_editor(scene)
 
     def _show_card_menu(self, card: SceneCard, _: QPoint):
         menu = MenuWidget(card)
@@ -431,67 +517,6 @@ class ScenesOutlineView(AbstractNovelView):
         if not self.novel.is_readonly():
             self.ui.btnDelete.setEnabled(enabled)
         self.ui.btnEdit.setEnabled(enabled)
-
-    def _switch_view(self):
-        height = 50
-        relax_colors = False
-        columns = self._default_columns
-
-        if self.ui.btnStatusView.isChecked():
-            self.ui.stackScenes.setCurrentWidget(self.ui.pageStages)
-            self.ui.tblScenes.clearSelection()
-            if not self.stagesModel:
-                self._init_stages_view()
-        elif self.ui.btnCardsView.isChecked():
-            self.ui.stackScenes.setCurrentWidget(self.ui.pageCards)
-            self.ui.tblScenes.clearSelection()
-        elif self.ui.btnStorymap.isChecked():
-            self.ui.stackScenes.setCurrentWidget(self.ui.pageStorymap)
-            self.ui.tblScenes.clearSelection()
-            self.ui.tblSceneStages.clearSelection()
-            if not self.storymap_view:
-                self.storymap_view = StoryMap()
-                self.ui.scrollAreaStoryMap.layout().addWidget(self.storymap_view)
-                self.ui.rbDots.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.DOTS))
-                self.ui.rbTitles.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.TITLE))
-                self.ui.rbDetailed.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.DETAILED))
-                self.ui.rbHorizontal.clicked.connect(
-                    lambda: self.storymap_view.setOrientation(Qt.Orientation.Horizontal))
-                self.ui.rbVertical.clicked.connect(lambda: self.storymap_view.setOrientation(Qt.Orientation.Vertical))
-                self.ui.btnAct1.toggled.connect(partial(self.storymap_view.setActsFilter, 1))
-                self.ui.btnAct2.toggled.connect(partial(self.storymap_view.setActsFilter, 2))
-                self.ui.btnAct3.toggled.connect(partial(self.storymap_view.setActsFilter, 3))
-                self.storymap_view.setActsFilter(1, self.ui.btnAct1.isChecked())
-                self.storymap_view.setActsFilter(2, self.ui.btnAct2.isChecked())
-                self.storymap_view.setActsFilter(3, self.ui.btnAct3.isChecked())
-                self.storymap_view.sceneSelected.connect(self.ui.wdgStoryStructure.highlightScene)
-                self.storymap_view.setNovel(self.novel)
-        elif self.ui.btnCharactersDistributionView.isChecked():
-            self.ui.stackScenes.setCurrentWidget(self.ui.pageCharactersDistribution)
-            self.ui.tblScenes.clearSelection()
-            self.ui.tblSceneStages.clearSelection()
-            if not self.characters_distribution:
-                self.characters_distribution = CharactersScenesDistributionWidget(self.novel)
-                self.ui.pageCharactersDistribution.layout().addWidget(self.characters_distribution)
-                self.ui.btnAct1.toggled.connect(partial(self.characters_distribution.setActsFilter, 1))
-                self.ui.btnAct2.toggled.connect(partial(self.characters_distribution.setActsFilter, 2))
-                self.ui.btnAct3.toggled.connect(partial(self.characters_distribution.setActsFilter, 3))
-                self.characters_distribution.setActsFilter(1, self.ui.btnAct1.isChecked())
-                self.characters_distribution.setActsFilter(2, self.ui.btnAct2.isChecked())
-                self.characters_distribution.setActsFilter(3, self.ui.btnAct3.isChecked())
-        else:
-            self.ui.stackScenes.setCurrentWidget(self.ui.pageDefault)
-            self.ui.tblSceneStages.clearSelection()
-
-        self.tblModel.setRelaxColors(relax_colors)
-        for col in range(self.tblModel.columnCount()):
-            if col in columns:
-                self.ui.tblScenes.showColumn(col)
-                continue
-            self.ui.tblScenes.hideColumn(col)
-        self.ui.tblScenes.verticalHeader().setDefaultSectionSize(height)
-
-        emit_event(self.novel, SceneSelectionClearedEvent(self))
 
     def _customize_stages(self):
         diag = ItemsEditorDialog(NovelStagesModel(copy.deepcopy(self.novel.stages)))

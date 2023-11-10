@@ -422,7 +422,7 @@ values_items = [SelectionItem('Altruism', icon='fa5s.hand-holding-heart'),
                 SelectionItem('Popularity', icon='fa5s.thumbs-up'), SelectionItem('Recognition', icon='ri.award-fill'),
                 SelectionItem('Religion', icon='fa5s.praying-hands'),
                 SelectionItem('Reputation', icon='fa5s.star'), SelectionItem('Respect', icon='ph.handshake-bold'),
-                SelectionItem('Responsibility', icon='mdi.cog-clockwise'),
+                SelectionItem('Responsibility', icon='fa5s.hand-holding-water'),
                 SelectionItem('Security', icon='mdi.security'), SelectionItem('Service', icon='mdi.room-service'),
                 SelectionItem('Spirituality', icon='mdi6.meditation'),
                 SelectionItem('Stability', icon='fa.balance-scale'),
@@ -498,6 +498,7 @@ love_interest_role = Role('Love Interest', icon='ei.heart', icon_color='#d1495b'
 supporter_role = Role('Supporter', icon='fa5s.thumbs-up', icon_color='#266dd3')
 foil_role = Role('Foil', icon='fa5s.yin-yang', icon_color='#947eb0', can_be_promoted=True)
 secondary_role = Role('Secondary', icon='fa5s.chess-knight', icon_color='#619b8a', can_be_promoted=True)
+major_role = Role('Major', icon='fa5s.chess-rook', icon_color='#00798c', importance=RoleImportance.MAJOR)
 henchmen_role = Role('Heckler', icon='mdi.shuriken', icon_color='#596475', importance=RoleImportance.MINOR)
 tertiary_role = Role('Tertiary', icon='mdi.chess-pawn', icon_color='#886f68', importance=RoleImportance.MINOR)
 

@@ -68,12 +68,12 @@ class ConflictReport(AbstractReport, Ui_ConflictReport):
 
         conflicting_characters = []
         for scene in self.novel.scenes:
-            agenda = scene.agendas[0]
-            for conflict in agenda.conflicts(self.novel):
-                if conflict.character_id == character.id and conflict.type == ConflictType.CHARACTER:
-                    char = conflict.conflicting_character(self.novel)
-                    if char:
-                        conflicting_characters.append(char)
+            for agenda in scene.agendas:
+                for conflict in agenda.conflicts(self.novel):
+                    if conflict.character_id == character.id and conflict.type == ConflictType.CHARACTER:
+                        char = conflict.conflicting_character(self.novel)
+                        if char:
+                            conflicting_characters.append(char)
 
         self.chartGender.refresh(conflicting_characters)
         self.chartRole.refresh(conflicting_characters)
@@ -93,11 +93,12 @@ class ConflictTypeChart(BaseChart):
             conflicts[type_] = 0
 
         for scene in self.novel.scenes:
-            agenda = scene.agendas[0]
-            if agenda.character_id == character.id:
-                for conflict in agenda.conflicts(self.novel):
-                    conflicts[conflict.type] = conflicts[conflict.type] + 1
+            for agenda in scene.agendas:
+                if agenda.character_id == character.id:
+                    for conflict in agenda.conflicts(self.novel):
+                        conflicts[conflict.type] = conflicts[conflict.type] + 1
         series = QPieSeries()
+        series.setHoleSize(0.45)
         for k, v in conflicts.items():
             if v:
                 slice_ = series.append(k.name, v)
@@ -159,7 +160,11 @@ class ConflictIntensityChart(BaseChart):
         series.setPen(pen)
 
         for i, scene in enumerate(self.novel.scenes):
-            intensity = max([x.intensity for x in scene.agendas[0].conflict_references], default=0)
+            intensity = 0
+            agenda_intensity = 0
+            for agenda in scene.agendas:
+                agenda_intensity = max([x.intensity for x in agenda.conflict_references], default=0)
+            intensity = max([intensity, agenda_intensity])
             if intensity > 0:
                 series.append(i + 1, intensity)
 

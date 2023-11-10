@@ -44,8 +44,9 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     default_tag_types, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterPreferences, TagReference, \
     ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding, Board, \
     default_big_five_values, CharacterPlan, ManuscriptGoals, Diagram, DiagramData, default_events_map, \
-    default_character_networks, ScenePurposeType, StoryElement, SceneOutcome
-from src.main.python.plotlyst.core.template import Role, exclude_if_empty, exclude_if_black
+    default_character_networks, ScenePurposeType, StoryElement, SceneOutcome, ChapterType, SceneStructureItem, \
+    DocumentProgress
+from src.main.python.plotlyst.core.template import Role, exclude_if_empty, exclude_if_black, exclude_if_false
 from src.main.python.plotlyst.env import app_env
 
 
@@ -124,6 +125,7 @@ class CharacterInfo:
     gender: str = ''
     role: Optional[Role] = None
     age: Optional[int] = None
+    age_infinite: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     occupation: Optional[str] = None
     avatar_id: Optional[uuid.UUID] = None
     template_values: List[TemplateValue] = field(default_factory=list)
@@ -172,12 +174,14 @@ class SceneInfo:
     purpose: Optional[ScenePurposeType] = None
     outcome: Optional[SceneOutcome] = None
     story_elements: List[StoryElement] = field(default_factory=list)
+    structure: List[SceneStructureItem] = field(default_factory=list)
 
 
 @dataclass
 class ChapterInfo:
     title: str
     id: uuid.UUID
+    type: Optional[ChapterType] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -189,6 +193,7 @@ class NovelInfo:
     characters: List[uuid.UUID] = field(default_factory=list)
     plots: List[Plot] = field(default_factory=list)
     chapters: List[ChapterInfo] = field(default_factory=list)
+    custom_chapters: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     stages: List[SceneStage] = field(default_factory=default_stages)
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
     conflicts: List[Conflict] = field(default_factory=list)
@@ -205,6 +210,8 @@ class NovelInfo:
     manuscript_goals: ManuscriptGoals = field(default_factory=ManuscriptGoals)
     events_map: Diagram = field(default_factory=default_events_map)
     character_networks: List[Diagram] = field(default_factory=default_character_networks)
+    manuscript_progress: Dict[str, DocumentProgress] = field(default_factory=dict,
+                                                             metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass
@@ -437,7 +444,7 @@ class JsonClient:
         chapters = []
         chapters_ids = {}
         for chapter_info in novel_info.chapters:
-            chapter = Chapter(title=chapter_info.title, id=chapter_info.id)
+            chapter = Chapter(title=chapter_info.title, id=chapter_info.id, type=chapter_info.type)
             chapters.append(chapter)
             chapters_ids[str(chapter.id)] = chapter
 
@@ -451,6 +458,7 @@ class JsonClient:
                 data = json_file.read()
                 info: CharacterInfo = CharacterInfo.from_json(data)
                 character = Character(name=info.name, id=info.id, gender=info.gender, role=info.role, age=info.age,
+                                      age_infinite=info.age_infinite,
                                       occupation=info.occupation,
                                       template_values=info.template_values,
                                       disabled_template_headers=info.disabled_template_headers,
@@ -524,7 +532,8 @@ class JsonClient:
                               chapter=chapter, stage=stage, beats=info.beats,
                               comments=info.comments, tag_references=info.tag_references,
                               document=info.document, manuscript=info.manuscript, drive=info.drive,
-                              purpose=info.purpose, outcome=info.outcome, story_elements=info.story_elements)
+                              purpose=info.purpose, outcome=info.outcome, story_elements=info.story_elements,
+                              structure=info.structure)
                 scenes.append(scene)
 
         tag_types = novel_info.tag_types
@@ -549,13 +558,15 @@ class JsonClient:
                       subtitle=project_novel_info.subtitle, icon=project_novel_info.icon,
                       icon_color=project_novel_info.icon_color, creation_date=project_novel_info.creation_date,
                       plots=novel_info.plots, characters=characters,
-                      scenes=scenes, chapters=chapters, stages=novel_info.stages,
+                      scenes=scenes, chapters=chapters, custom_chapters=novel_info.custom_chapters,
+                      stages=novel_info.stages,
                       story_structures=novel_info.story_structures, character_profiles=novel_info.character_profiles,
                       conflicts=conflicts, goals=[x for x in novel_info.goals if str(x.id) in goal_ids], tags=tags_dict,
                       documents=novel_info.documents, premise=novel_info.premise, synopsis=novel_info.synopsis,
                       prefs=novel_info.prefs, manuscript_goals=novel_info.manuscript_goals,
                       events_map=novel_info.events_map,
-                      character_networks=novel_info.character_networks)
+                      character_networks=novel_info.character_networks,
+                      manuscript_progress=novel_info.manuscript_progress)
 
         world_path = self.novels_dir.joinpath(str(novel_info.id)).joinpath('world.json')
         if os.path.exists(world_path):
@@ -584,7 +595,8 @@ class JsonClient:
         novel_info = NovelInfo(id=novel.id, scenes=[x.id for x in novel.scenes],
                                plots=novel.plots,
                                characters=[x.id for x in novel.characters],
-                               chapters=[ChapterInfo(title=x.title, id=x.id) for x in novel.chapters],
+                               chapters=[ChapterInfo(title=x.title, id=x.id, type=x.type) for x in novel.chapters],
+                               custom_chapters=novel.custom_chapters,
                                stages=novel.stages, story_structures=novel.story_structures,
                                character_profiles=novel.character_profiles,
                                conflicts=novel.conflicts,
@@ -594,7 +606,8 @@ class JsonClient:
                                documents=novel.documents,
                                premise=novel.premise, synopsis=novel.synopsis,
                                version=LATEST_VERSION, prefs=novel.prefs, manuscript_goals=novel.manuscript_goals,
-                               events_map=novel.events_map, character_networks=novel.character_networks)
+                               events_map=novel.events_map, character_networks=novel.character_networks,
+                               manuscript_progress=novel.manuscript_progress)
 
         self.__persist_info(self.novels_dir, novel_info)
         self._persist_world(novel.id, novel.world)
@@ -616,6 +629,7 @@ class JsonClient:
 
     def _persist_character(self, char: Character, avatar_id: Optional[uuid.UUID] = None, novel: Optional[Novel] = None):
         char_info = CharacterInfo(id=char.id, name=char.name, gender=char.gender, role=char.role, age=char.age,
+                                  age_infinite=char.age_infinite,
                                   occupation=char.occupation,
                                   template_values=char.template_values,
                                   disabled_template_headers=char.disabled_template_headers,
@@ -636,7 +650,8 @@ class JsonClient:
                          beats=scene.beats, comments=scene.comments,
                          tag_references=scene.tag_references, document=scene.document, manuscript=scene.manuscript,
                          drive=scene.drive, purpose=scene.purpose, outcome=scene.outcome,
-                         story_elements=scene.story_elements)
+                         story_elements=scene.story_elements,
+                         structure=scene.structure)
         self.__persist_info(self.scenes_dir(novel), info)
 
     def _persist_diagram(self, novel: Novel, diagram: Diagram):

@@ -27,7 +27,7 @@ from PyQt6.QtWidgets import QToolTip
 from overrides import overrides
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, CHARACTER_MAJOR_COLOR, \
-    CHARACTER_SECONDARY_COLOR, CHARACTER_MINOR_COLOR
+    CHARACTER_SECONDARY_COLOR, CHARACTER_MINOR_COLOR, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Character, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS, Novel
 from src.main.python.plotlyst.core.template import enneagram_choices, supporter_role, guide_role, sidekick_role, \
     antagonist_role, contagonist_role, adversary_role, henchmen_role, confidant_role, tertiary_role, SelectionItem, \
@@ -54,6 +54,7 @@ class _AbstractChart:
 class BaseChart(QChart, _AbstractChart):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setBackgroundBrush(QColor(RELAXED_WHITE_COLOR))
 
     @overrides
     def reset(self):
@@ -69,6 +70,7 @@ class BaseChart(QChart, _AbstractChart):
 class PolarBaseChart(QPolarChart, _AbstractChart):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setBackgroundBrush(QColor(RELAXED_WHITE_COLOR))
 
     @overrides
     def reset(self):
@@ -94,6 +96,7 @@ class GenderCharacterChart(BaseChart):
 
     def refresh(self, characters: List[Character]):
         series = QPieSeries()
+        series.setHoleSize(0.45)
 
         genders: Dict[str, int] = {}
         for char in characters:
@@ -160,6 +163,7 @@ class RoleChart(BaseChart):
     def refresh(self, characters: List[Character]):
         self.reset()
         series = QPieSeries()
+        series.setHoleSize(0.45)
         major = 0
         secondary = 0
         minor = 0
@@ -210,6 +214,7 @@ class SupporterRoleChart(BaseChart):
 
     def refresh(self, characters: List[Character]):
         series = QPieSeries()
+        series.setHoleSize(0.45)
 
         supporter = 0
         adversary = 0
@@ -264,6 +269,7 @@ class EnneagramChart(BaseChart):
 
     def refresh(self, characters: List[Character]):
         series = QPieSeries()
+        series.setHoleSize(0.45)
 
         enneagrams: Dict[str, int] = {}
         for char in characters:
@@ -315,6 +321,8 @@ class ManuscriptLengthChart(BaseChart):
 
         series = QBarSeries()
         series.append(set_)
+        if len(novel.chapters) < 5:
+            series.setBarWidth(0.1)
 
         axis_x = QBarCategoryAxis()
         axis_x_values = [*range(1, len(novel.chapters) + 1)]
@@ -342,6 +350,7 @@ class ActDistributionChart(BaseChart):
         self.reset()
 
         series = QPieSeries()
+        series.setHoleSize(0.45)
 
         acts: Dict[int, int] = {}
         for scene in novel.scenes:

@@ -25,7 +25,7 @@ from PyQt6.QtCore import QItemSelection, QPoint
 from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import busy, gc, incr_font, bold
+from qthandy import busy, gc, incr_font, bold, retain_when_hidden
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -52,7 +52,7 @@ from src.main.python.plotlyst.view.widget.character import CharacterComparisonWi
     CharacterComparisonAttribute
 from src.main.python.plotlyst.view.widget.character.comp import CharactersTreeView
 from src.main.python.plotlyst.view.widget.character.network import CharacterNetworkView
-from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget, CharactersProgressWidget
+from src.main.python.plotlyst.view.widget.characters import CharactersProgressWidget
 
 
 class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
@@ -107,16 +107,12 @@ class CharactersView(AbstractNovelView):
         self.ui.tblCharacters.doubleClicked.connect(self.ui.btnEdit.click)
         self.ui.btnCardsView.setIcon(IconRegistry.cards_icon())
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
-        self.ui.btnBackstoryView.setIcon(IconRegistry.from_name('mdi.timeline', color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnComparison.setIcon(
             IconRegistry.from_name('mdi.compare-horizontal', color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnRelationsView.setIcon(
             IconRegistry.from_name('ph.share-network-bold', color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnProgressView.setIcon(IconRegistry.progress_check_icon('black'))
         self.setNavigableButtonGroup(self.ui.btnGroupViews)
-
-        self.ui.wdgCharacterSelector.setExclusive(False)
-        self.ui.wdgCharacterSelector.characterToggled.connect(self._backstory_character_toggled)
 
         self.ui.btnEdit.setIcon(IconRegistry.edit_icon())
         self.ui.btnEdit.clicked.connect(self._on_edit)
@@ -134,8 +130,6 @@ class CharactersView(AbstractNovelView):
                 btn.setToolTip('Option disabled in Scrivener synchronization mode')
                 btn.installEventFilter(InstantTooltipEventFilter(btn))
 
-        apply_bg_image(self.ui.scrollAreaBackstoryContent, resource_registry.cover1)
-
         self.selected_card: Optional[CharacterCard] = None
         self.ui.cards.selectionCleared.connect(lambda: self._enable_action_buttons(False))
         self.ui.cards.cardSelected.connect(self._card_selected)
@@ -150,6 +144,9 @@ class CharactersView(AbstractNovelView):
         self.ui.btnGridComparison.setIcon(IconRegistry.from_name('ph.grid-four-bold'))
         self.ui.btnSummaryComparison.setIcon(IconRegistry.synopsis_icon(color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnBigFiveComparison.setIcon(IconRegistry.big_five_icon(color_on=PLOTLYST_SECONDARY_COLOR))
+        self.ui.btnFacultiesComparison.setIcon(
+            IconRegistry.from_name('mdi6.head-lightbulb', color_on=PLOTLYST_SECONDARY_COLOR))
+        self.ui.btnBackstoryComparison.setIcon(IconRegistry.backstory_icon('black', color_on=PLOTLYST_SECONDARY_COLOR))
 
         self.ui.splitterCompTree.setSizes([150, 500])
         self._wdgComparison = CharacterComparisonWidget(self.novel, self.ui.pageComparison)
@@ -161,6 +158,7 @@ class CharactersView(AbstractNovelView):
             partial(qtanim.toggle_expansion, self.ui.wdgCharactersCompTreeParent))
 
         self._wdgCharactersCompTree.characterToggled.connect(self._wdgComparison.updateCharacter)
+        retain_when_hidden(self.ui.wdgComparisonLayout)
         self.ui.btnHorizontalComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.HORIZONTAL))
         self.ui.btnVerticalComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.VERTICAL))
         self.ui.btnGridComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.FLOW))
@@ -170,8 +168,11 @@ class CharactersView(AbstractNovelView):
             lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.FACULTIES))
         self.ui.btnBigFiveComparison.clicked.connect(
             lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.BIG_FIVE))
+        self.ui.btnBackstoryComparison.clicked.connect(
+            lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.BACKSTORY))
         for btn in self.ui.btnGroupComparison.buttons():
             btn.installEventFilter(OpacityEventFilter(btn, ignoreCheckedButton=True))
+        self.ui.btnGroupComparison.buttonClicked.connect(self._comparison_type_clicked)
 
         self._relations = CharacterNetworkView(self.novel)
         self.ui.relationsParent.layout().addWidget(self._relations)
@@ -188,7 +189,6 @@ class CharactersView(AbstractNovelView):
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
         link_buttons_to_pages(self.ui.stackCharacters, [(self.ui.btnCardsView, self.ui.pageCardsView),
                                                         (self.ui.btnTableView, self.ui.pageTableView),
-                                                        (self.ui.btnBackstoryView, self.ui.pageBackstory),
                                                         (self.ui.btnRelationsView, self.ui.pageRelationsView),
                                                         (self.ui.btnComparison, self.ui.pageComparison),
                                                         (self.ui.btnProgressView, self.ui.pageProgressView)])
@@ -253,9 +253,6 @@ class CharactersView(AbstractNovelView):
         elif self.ui.btnTableView.isChecked():
             self._enable_action_buttons(len(self.ui.tblCharacters.selectedIndexes()) > 0)
             self.ui.wdgToolbar.setVisible(True)
-        elif self.ui.btnBackstoryView.isChecked():
-            self.ui.wdgToolbar.setVisible(False)
-            self.ui.wdgCharacterSelector.updateCharacters(self.novel.characters, checkAll=False)
         elif self.ui.btnRelationsView.isChecked():
             self._relations.refresh()
             self.ui.wdgToolbar.setVisible(False)
@@ -319,20 +316,15 @@ class CharactersView(AbstractNovelView):
             character = self.selected_card.character
 
         if character and delete_character(self.novel, character):
-            self.ui.wdgCharacterSelector.removeCharacter(character)
             emit_event(self.novel, CharacterDeletedEvent(self, character))
             self.refresh()
 
-    @busy
-    def _backstory_character_toggled(self, character: Character, toggled: bool):
-        if toggled:
-            wdg = CharacterTimelineWidget(self.ui.scrollAreaBackstoryContent)
-            wdg.setCharacter(character)
-            self.ui.scrollAreaBackstoryContent.layout().addWidget(wdg)
-            wdg.changed.connect(lambda: self.repo.update_character(character))
+    def _comparison_type_clicked(self):
+        btn = self.ui.btnGroupComparison.checkedButton()
+        if btn is self.ui.btnBackstoryComparison:
+            self.ui.btnHorizontalComparison.setChecked(True)
+            self.ui.wdgComparisonLayout.setHidden(True)
+            apply_bg_image(self.ui.scrollAreaComparisonContent, resource_registry.cover1)
         else:
-            for i in range(self.ui.scrollAreaBackstoryContent.layout().count()):
-                wdg = self.ui.scrollAreaBackstoryContent.layout().itemAt(i).widget()
-                if isinstance(wdg, CharacterTimelineWidget) and wdg.character.id == character.id:
-                    self.ui.scrollAreaBackstoryContent.layout().removeWidget(wdg)
-                    return gc(wdg)
+            self.ui.scrollAreaComparisonContent.setStyleSheet('')
+            self.ui.wdgComparisonLayout.setVisible(True)

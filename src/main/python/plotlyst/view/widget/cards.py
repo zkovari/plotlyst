@@ -28,8 +28,7 @@ from PyQt6.QtCore import pyqtSignal, QSize, Qt, QEvent, QPoint, QMimeData, QTime
 from PyQt6.QtGui import QDragEnterEvent, QDragMoveEvent, QColor, QAction
 from PyQt6.QtWidgets import QFrame, QApplication, QToolButton
 from overrides import overrides
-from qtframes import Frame
-from qthandy import clear_layout, retain_when_hidden, transparent, margins, flow, translucent, gc
+from qthandy import clear_layout, retain_when_hidden, transparent, flow, translucent, gc
 from qthandy.filter import DragEventFilter, DropEventFilter
 
 from src.main.python.plotlyst.common import act_color
@@ -190,22 +189,16 @@ class SceneCard(Ui_SceneCard, Card):
         for char in scene.characters:
             self.wdgCharacters.addLabel(CharacterAvatarLabel(char, 20))
 
-        self._beatFrame = Frame(self)
-        self._beatFrame.setNestedFrameEnabled(False)
-        self._beatFrame.setOuterFrameWidth(3)
-        self.btnBeat = QToolButton()
+        self.btnBeat = QToolButton(self)
+        self.btnBeat.setIconSize(QSize(28, 28))
         transparent(self.btnBeat)
-        self.btnBeat.setIconSize(QSize(24, 24))
-        self._beatFrame.setWidget(self.btnBeat)
 
         beat = self.scene.beat(self.novel)
         if beat and beat.icon:
-            self.btnBeat.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
-            self._beatFrame.setFrameColor(QColor(act_color(beat.act)))
-            self._beatFrame.setBackgroundColor(Qt.GlobalColor.white)
-            margins(self._beatFrame, 0, 0, 0, 0)
+            self.btnBeat.setIcon(IconRegistry.scene_beat_badge_icon(beat.icon, beat.icon_color, act_color(beat.act)))
+            self.btnBeat.setToolTip(beat.text)
         else:
-            self._beatFrame.setHidden(True)
+            self.btnBeat.setHidden(True)
 
         icon = IconRegistry.scene_type_icon(self.scene)
         if icon:
@@ -263,7 +256,8 @@ class SceneCard(Ui_SceneCard, Card):
         self.lineAfterTitle.setVisible(w > 170)
         self.lineAfterTitle.setFixedWidth(w - 30)
 
-        self._beatFrame.setGeometry(w - 40, 0, 40, 50)
+        self.btnBeat.setGeometry(w - self.btnBeat.sizeHint().width(), 0, self.btnBeat.sizeHint().width(),
+                                 self.btnBeat.sizeHint().height() + 5)
 
 
 class CardSizeRatio(Enum):
@@ -347,6 +341,11 @@ class CardsView(QFrame):
     def addCard(self, card: Card):
         self._initCardWidget(card)
         self._layout.addWidget(card)
+
+    def selectCard(self, ref: Any):
+        card = self._cards.get(ref, None)
+        if card is not None:
+            card.select()
 
     def cardAt(self, pos: int) -> Optional[Card]:
         item = self._layout.itemAt(pos)

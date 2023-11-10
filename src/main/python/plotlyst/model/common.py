@@ -25,7 +25,7 @@ from PyQt6.QtCore import QAbstractTableModel, QModelIndex, Qt, QAbstractItemMode
 from PyQt6.QtGui import QFont, QColor, QBrush
 from overrides import overrides
 
-from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
+from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import SelectionItem, Novel, Scene
 from src.main.python.plotlyst.model.tree_model import TreeItemModel
 from src.main.python.plotlyst.service.cache import acts_registry
@@ -289,7 +289,7 @@ class DistributionModel(QAbstractTableModel):
         self.novel = novel
         self._highlighted_scene: Optional[QModelIndex] = None
         self._highlighted_tags: List[QModelIndex] = []
-        self._active_brush = QBrush(QColor(PLOTLYST_MAIN_COLOR))
+        self._active_brush = QBrush(QColor(PLOTLYST_SECONDARY_COLOR))
         self._inactive_brush = QBrush(QColor(Qt.GlobalColor.lightGray))
 
     @overrides

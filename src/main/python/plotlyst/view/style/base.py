@@ -79,6 +79,18 @@ QFrame[rounded=true] {
     border-radius: 6px;
 }
 
+QFrame[revision-badge=true] {
+    border: 3px solid #622675;
+    background: #f8f9fa;
+    padding: 6px;
+    border-radius: 12px;
+}
+
+QFrame[large-rounded=true] {
+    border: 1px solid lightgrey;
+    border-radius: 15px;
+}
+
 QDialog[relaxed-white-bg] {
     background-color: #f8f9fa;
 }

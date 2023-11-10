@@ -39,6 +39,7 @@ from src.main.python.plotlyst.view.common import fade_out_and_gc
 from src.main.python.plotlyst.view.icons import set_avatar, avatars
 from src.main.python.plotlyst.view.widget.big_five import BigFiveChart, dimension_from
 from src.main.python.plotlyst.view.widget.button import EyeToggle
+from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget
 from src.main.python.plotlyst.view.widget.display import RoleIcon, ChartView
 from src.main.python.plotlyst.view.widget.template.impl import BarTemplateFieldWidget
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
@@ -48,9 +49,13 @@ class CharacterComparisonAttribute(Enum):
     SUMMARY = 0
     BIG_FIVE = 1
     FACULTIES = 2
+    BACKSTORY = 3
 
 
 class BaseDisplay:
+
+    def __init__(self):
+        self.repo = RepositoryPersistenceManager.instance()
 
     @abstractmethod
     def refresh(self):
@@ -90,7 +95,6 @@ class SummaryDisplay(QTextEdit, BaseDisplay):
         self.setMinimumWidth(200)
         self.setTabChangesFocus(True)
 
-        self.repo = RepositoryPersistenceManager.instance()
         self.refresh()
 
         self.textChanged.connect(self._save)
@@ -134,7 +138,6 @@ class FacultiesDisplay(QWidget, BaseDisplay):
         self.setMaximumWidth(300)
         self.setMinimumWidth(250)
 
-        self.repo = RepositoryPersistenceManager.instance()
         self.refresh()
 
     @overrides
@@ -181,6 +184,18 @@ class FacultiesDisplay(QWidget, BaseDisplay):
             self._display.save()
 
 
+class BackstoryDisplay(CharacterTimelineWidget, BaseDisplay):
+    def __init__(self, character: Character, parent=None):
+        super().__init__(parent)
+        self._character = character
+        self.setCharacter(self._character)
+
+        self.changed.connect(self._save)
+
+    def _save(self):
+        self.repo.update_character(self._character)
+
+
 class CharacterOverviewWidget(QWidget, EventListener):
     def __init__(self, novel: Novel, character: Character, parent=None):
         super().__init__(parent)
@@ -195,14 +210,17 @@ class CharacterOverviewWidget(QWidget, EventListener):
             self._roleIcon.setRole(self._character.role, showText=True)
 
         vbox(self, 0)
-        self.layout().addWidget(self._avatar, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.layout().addWidget(self._roleIcon, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.layout().addWidget(line())
+        self._wdgHeader = QWidget()
+        vbox(self._wdgHeader, 0)
+        self._wdgHeader.layout().addWidget(self._avatar, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._wdgHeader.layout().addWidget(self._roleIcon, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._wdgHeader.layout().addWidget(line())
 
         self._display: Optional[BaseDisplay] = None
         self._displayContainer = QWidget()
         hbox(self._displayContainer, 0, 0)
 
+        self.layout().addWidget(self._wdgHeader)
         self.layout().addWidget(self._displayContainer)
         self.layout().addWidget(vspacer())
 
@@ -221,6 +239,8 @@ class CharacterOverviewWidget(QWidget, EventListener):
             gc(self._display)
             self._display = None
 
+        self._wdgHeader.setVisible(True)
+
         if attribute == CharacterComparisonAttribute.BIG_FIVE:
             self._display = BigFiveDisplay(self._character)
             self._displayContainer.layout().addWidget(self._display)
@@ -229,6 +249,10 @@ class CharacterOverviewWidget(QWidget, EventListener):
             self._displayContainer.layout().addWidget(self._display, alignment=Qt.AlignmentFlag.AlignCenter)
         elif attribute == CharacterComparisonAttribute.FACULTIES:
             self._display = FacultiesDisplay(self._character)
+            self._displayContainer.layout().addWidget(self._display)
+        elif attribute == CharacterComparisonAttribute.BACKSTORY:
+            self._wdgHeader.setHidden(True)
+            self._display = BackstoryDisplay(self._character)
             self._displayContainer.layout().addWidget(self._display)
 
 
@@ -278,6 +302,9 @@ class CharacterComparisonWidget(QWidget):
             wdg.display(self._currentDisplay)
 
     def displayAttribute(self, attribute: CharacterComparisonAttribute):
+        if attribute == CharacterComparisonAttribute.BACKSTORY:
+            self.updateLayout(LayoutType.HORIZONTAL)
+
         for wdg in self._characters.values():
             wdg.display(attribute)
 

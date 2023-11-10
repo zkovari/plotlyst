@@ -23,18 +23,20 @@ from typing import Optional
 import emoji
 import qtanim
 from PyQt6.QtCharts import QChartView
-from PyQt6.QtCore import pyqtProperty, QSize
-from PyQt6.QtGui import QPainter, QShowEvent, QColor
-from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy, QTextBrowser
+from PyQt6.QtCore import pyqtProperty, QSize, Qt
+from PyQt6.QtGui import QPainter, QShowEvent, QColor, QPaintEvent, QBrush
+from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy, QTextBrowser, QFrame
 from overrides import overrides
-from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon, pointy
+from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon, pointy, hbox
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
+from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR
+from src.main.python.plotlyst.core.help import mid_revision_scene_structure_help
 from src.main.python.plotlyst.core.template import Role, protagonist_role
 from src.main.python.plotlyst.core.text import wc
 from src.main.python.plotlyst.view.common import emoji_font, insert_before_the_end, \
-    ButtonPressResizeEventFilter, restyle
+    ButtonPressResizeEventFilter, restyle, label
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 
@@ -298,3 +300,37 @@ class HintButton(QToolButton):
             textedit = QTextBrowser()
             textedit.setText(self._hint)
             self._menu.addWidget(textedit)
+
+
+class IdleWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    @overrides
+    def paintEvent(self, event: QPaintEvent) -> None:
+        painter = QPainter(self)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QBrush(QColor(PLOTLYST_TERTIARY_COLOR), Qt.BrushStyle.Dense5Pattern))
+        painter.drawRect(event.rect())
+
+
+class OverlayWidget(QFrame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.setStyleSheet("background-color: rgba(0, 0, 0, 100);")
+        self.setFixedSize(self.parent().size())
+
+
+class StageRecommendationBadge(QFrame):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        hbox(self)
+        self.setProperty('revision-badge', True)
+        self.label = label('Recommended stage: Mid-revision', color='#622675')
+        self.info = HintButton()
+        self.info.setHint(mid_revision_scene_structure_help)
+
+        self.layout().addWidget(self.label)
+        self.layout().addWidget(self.info)

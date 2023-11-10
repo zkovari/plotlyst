@@ -272,7 +272,7 @@
            <x>0</x>
            <y>0</y>
            <width>555</width>
-           <height>251</height>
+           <height>243</height>
           </rect>
          </property>
          <property name="sizePolicy">
@@ -283,7 +283,7 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <property name="spacing">
-           <number>5</number>
+           <number>2</number>
           </property>
           <property name="leftMargin">
            <number>5</number>
@@ -306,7 +306,7 @@
              <number>5</number>
             </property>
             <property name="bottomMargin">
-             <number>10</number>
+             <number>5</number>
             </property>
             <item alignment="Qt::AlignTop">
              <widget class="QPushButton" name="btnPrinciples">
@@ -338,22 +338,35 @@
              </widget>
             </item>
             <item>
-             <widget class="QWidget" name="wdgPrinciples" native="true">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
+             <spacer name="horizontalSpacer_3">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
               </property>
-              <property name="minimumSize">
+              <property name="sizeHint" stdset="0">
                <size>
-                <width>0</width>
-                <height>80</height>
+                <width>40</width>
+                <height>20</height>
                </size>
               </property>
-             </widget>
+             </spacer>
             </item>
            </layout>
+          </item>
+          <item>
+           <widget class="QWidget" name="wdgPrinciples" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>80</height>
+             </size>
+            </property>
+           </widget>
           </item>
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_4">

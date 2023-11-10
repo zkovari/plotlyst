@@ -51,7 +51,6 @@ from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.dir import select_new_project_directory
 from src.main.python.plotlyst.service.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
 from src.main.python.plotlyst.service.importer import ScrivenerSyncImporter
-from src.main.python.plotlyst.service.manuscript import export_manuscript_to_docx
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.service.resource import download_resource, download_nltk_resources
 from src.main.python.plotlyst.service.tour import TourService
@@ -73,7 +72,6 @@ from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 from src.main.python.plotlyst.view.widget.button import ToolbarButton, NovelSyncButton
-from src.main.python.plotlyst.view.widget.hint import reset_hints
 from src.main.python.plotlyst.view.widget.input import CapitalizationEventFilter
 from src.main.python.plotlyst.view.widget.settings import NovelQuickPanelCustomizationButton
 from src.main.python.plotlyst.view.widget.tour.core import TutorialNovelOpenTourEvent, tutorial_novel, \
@@ -344,7 +342,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         for btn in self.buttonGroup.buttons():
             btn.setVisible(True)
 
-        self._actionSettings.setVisible(True)
+        self._actionSettings.setVisible(settings.toolbar_quick_settings())
         self.btnSettings.setNovel(self.novel)
         self.outline_mode.setEnabled(True)
         self.outline_mode.setVisible(True)
@@ -447,12 +445,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.actionRestart.setIcon(qtawesome.icon('mdi.restart'))
             self.actionRestart.triggered.connect(self._restart)
 
-        self.actionResetHints.triggered.connect(lambda: reset_hints())
         self.actionAbout.triggered.connect(lambda: AboutDialog().exec())
-        self.actionIncreaseFontSize.setIcon(IconRegistry.increase_font_size_icon())
-        self.actionIncreaseFontSize.setDisabled(True)
-        self.actionDecreaseFontSize.setIcon(IconRegistry.decrease_font_size_icon())
-        self.actionDecreaseFontSize.setDisabled(True)
         self.actionPreview.triggered.connect(lambda: ManuscriptPreviewDialog().display(app_env.novel))
         self.actionCut.setIcon(IconRegistry.cut_icon())
         self.actionCut.triggered.connect(self._cut_text)
@@ -461,6 +454,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionPaste.setIcon(IconRegistry.paste_icon())
         self.actionPaste.triggered.connect(self._paste_text)
 
+        self.actionQuickCustomization.setChecked(settings.toolbar_quick_settings())
+        self.actionQuickCustomization.toggled.connect(self._toggle_quick_settings)
+
         self.actionResourceManager.triggered.connect(lambda: ResourceManagerDialog().display())
 
         self.actionDirPlaceholder.setText(settings.workspace())
@@ -468,9 +464,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionOpenProjectDir.triggered.connect(lambda: open_location(settings.workspace()))
         self.actionChangeDir.setIcon(IconRegistry.from_name('fa5s.folder-open'))
         self.actionChangeDir.triggered.connect(self._change_project_dir)
-
-        self.actionExportToDocx.setIcon(IconRegistry.docx_icon())
-        self.actionExportToDocx.triggered.connect(lambda: export_manuscript_to_docx(self.novel))
 
         self.actionCharacterTemplateEditor.triggered.connect(lambda: customize_character_profile(self.novel, 0, self))
 
@@ -502,6 +495,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.btnComments.setDisabled(True)
         self.btnComments.setToolTip('Comments are not available yet')
         self.btnComments.installEventFilter(InstantTooltipEventFilter(self.btnComments))
+        self.btnComments.setHidden(True)
 
         self.btnScrivener = NovelSyncButton()
 
@@ -514,7 +508,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.toolBar.addWidget(spacer())
         self._actionScrivener = self.toolBar.addWidget(self.btnScrivener)
         self._actionSettings = self.toolBar.addWidget(self.btnSettings)
-        self.toolBar.addWidget(self.btnComments)
+        self._actionSettings.setVisible(settings.toolbar_quick_settings())
+        # self.toolBar.addWidget(self.btnComments)
+        self.toolBar.addWidget(spacer(10))
 
         self.wdgSidebar.setHidden(True)
         self.wdgDocs.setHidden(True)
@@ -550,25 +546,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.home_view.refresh()
             self.actionDirPlaceholder.setText(settings.workspace())
 
-    def _increase_font_size(self):
-        current_font = QApplication.font()
-        self._set_font_size(current_font.pointSize() + 1)
-
-    def decrease_font_size(self):
-        current_font = QApplication.font()
-        self._set_font_size(current_font.pointSize() - 1)
-
-    def _set_font_size(self, value: int):
-        current_font = QApplication.font()
-        current_font.setPointSizeF(value)
-        QApplication.instance().setFont(current_font)
-
-        for widget in QApplication.allWidgets():
-            if widget is self.menubar:
-                continue
-            font = widget.font()
-            font.setPointSizeF(value)
-            widget.setFont(font)
+    def _toggle_quick_settings(self, toggled: bool):
+        self._actionSettings.setVisible(toggled)
+        settings.set_toolbar_quick_settings(toggled)
 
     @busy
     def _load_new_novel(self, novel: Novel):
@@ -601,7 +581,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.outline_mode.setText(self.novel.title)
         self.outline_mode.setChecked(True)
 
-        self.menuExport.setEnabled(True)
         self.actionPreview.setEnabled(True)
 
     def _clear_novel(self):
@@ -658,7 +637,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.outline_mode.setDisabled(True)
         self.outline_mode.setText('')
 
-        self.menuExport.setDisabled(True)
         self.actionPreview.setDisabled(True)
 
     def _focus_changed(self, old_widget: QWidget, current_widget: QWidget):

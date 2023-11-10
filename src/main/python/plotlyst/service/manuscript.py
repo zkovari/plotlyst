@@ -17,6 +17,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import datetime
+from typing import Optional
 
 import pypandoc
 from PyQt6.QtCore import Qt
@@ -26,9 +28,10 @@ from qthandy import ask_confirmation
 from slugify import slugify
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Document
+from src.main.python.plotlyst.core.domain import Novel, Document, DocumentProgress, Scene, DocumentStatistics
 from src.main.python.plotlyst.env import open_location, app_env
 from src.main.python.plotlyst.resources import resource_registry, ResourceType
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.widget.utility import ask_for_resource
 
 
@@ -140,3 +143,50 @@ def format_document(doc: Document, char_format: QTextCharFormat) -> QTextDocumen
     cursor.clearSelection()
 
     return text_doc
+
+
+def today_str() -> str:
+    today = datetime.date.today()
+    return today.strftime("%Y-%m-%d")
+
+
+def find_daily_overall_progress(novel: Novel, date: Optional[str] = None) -> Optional[DocumentProgress]:
+    if novel.manuscript_progress:
+        if date is None:
+            date = today_str()
+        return novel.manuscript_progress.get(date, None)
+
+
+def daily_overall_progress(novel: Novel) -> DocumentProgress:
+    date = today_str()
+    progress = find_daily_overall_progress(novel, date)
+    if progress is None:
+        progress = DocumentProgress()
+        novel.manuscript_progress[date] = progress
+
+        RepositoryPersistenceManager.instance().update_novel(novel)
+
+    return progress
+
+
+def find_daily_progress(scene: Scene, date: Optional[str] = None) -> Optional[DocumentProgress]:
+    if scene.manuscript.statistics is None:
+        scene.manuscript.statistics = DocumentStatistics()
+
+    if scene.manuscript.statistics.progress:
+        if date is None:
+            date = today_str()
+        return scene.manuscript.statistics.progress.get(date, None)
+
+
+def daily_progress(scene: Scene) -> DocumentProgress:
+    date = today_str()
+    progress = find_daily_progress(scene, date)
+
+    if progress is None:
+        progress = DocumentProgress()
+        scene.manuscript.statistics.progress[date] = progress
+
+        RepositoryPersistenceManager.instance().update_scene(scene)
+
+    return progress

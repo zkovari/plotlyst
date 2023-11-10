@@ -23,8 +23,9 @@ import qtanim
 from PyQt6.QtCore import pyqtSignal, QObject
 from PyQt6.QtWidgets import QWidget, QAbstractButton, QLineEdit, QCompleter
 from overrides import overrides
-from qthandy import translucent, btn_popup, incr_font, bold, italic, margins
+from qthandy import translucent, btn_popup, bold, italic, margins
 from qthandy.filter import OpacityEventFilter
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.client import json_client
@@ -39,7 +40,7 @@ from src.main.python.plotlyst.view.common import emoji_font, set_tab_icon, wrap,
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.style.base import apply_bg_image
+from src.main.python.plotlyst.view.style.base import apply_bg_image, apply_white_menu
 from src.main.python.plotlyst.view.widget.big_five import BigFivePersonalityWidget
 from src.main.python.plotlyst.view.widget.character.control import CharacterAgeEditor
 from src.main.python.plotlyst.view.widget.character.plan import CharacterPlansWidget
@@ -102,7 +103,11 @@ class CharacterEditor(QObject, EventListener):
 
         self._ageEditor = CharacterAgeEditor()
         self._ageEditor.valueChanged.connect(self._age_changed)
-        menu = btn_popup(self.ui.btnAge, wrap(self._ageEditor, margin_bottom=4))
+        self._ageEditor.infiniteToggled.connect(self._age_infinite_toggled)
+        menu = MenuWidget(self.ui.btnAge)
+        menu.addWidget(self._ageEditor)
+        apply_white_menu(menu)
+        # menu = btn_popup(self.ui.btnAge, wrap(self._ageEditor, margin_bottom=4))
         menu.aboutToShow.connect(self._ageEditor.setFocus)
 
         self._lineOccupation = QLineEdit()
@@ -115,8 +120,12 @@ class CharacterEditor(QObject, EventListener):
         menu.aboutToShow.connect(self._lineOccupation.setFocus)
         self._lineOccupation.editingFinished.connect(menu.hide)
 
+        # incr_font(self.ui.btnAge, 2)
+        # incr_font(self.ui.btnOccupation, 2)
+
         if self.character.age:
             self._ageEditor.setValue(self.character.age)
+        self._ageEditor.setInfinite(self.character.age_infinite)
         if self.character.occupation:
             self._lineOccupation.setText(self.character.occupation)
 
@@ -153,6 +162,7 @@ class CharacterEditor(QObject, EventListener):
         self.ui.wdgAvatar.setCharacter(self.character)
         self.ui.wdgAvatar.setUploadPopupMenu()
         self.ui.wdgAvatar.avatarUpdated.connect(self.ui.wdgBackstory.refreshCharacter)
+        self.ui.wdgAvatar.setFixedSize(180, 180)
 
         self.ui.splitter.setSizes([400, 400])
 
@@ -228,18 +238,27 @@ class CharacterEditor(QObject, EventListener):
 
     def _age_changed(self, age: int):
         if self._ageEditor.minimum() == 0:
-            incr_font(self.ui.btnAge, 2)
             italic(self.ui.btnAge, False)
             bold(self.ui.btnAge)
             self.ui.btnAge.iconColor = '#343a40'
         self.ui.btnAge.setText(str(age))
         self.character.age = age
 
+    def _age_infinite_toggled(self, toggled: bool):
+        if toggled:
+            self.ui.btnAge.setIcon(IconRegistry.from_name('mdi.infinity', 'gray'))
+            self.ui.btnAge.setText('')
+        else:
+            self.ui.btnAge.setIcon(IconRegistry.from_name('fa5s.birthday-cake', 'gray'))
+            if self.character.age is not None:
+                self.ui.btnAge.setText(str(self.character.age))
+
+        self.character.age_infinite = toggled
+
     def _occupation_changed(self, occupation: str):
         if self.ui.btnOccupation.font().italic():  # first setup
             italic(self.ui.btnOccupation, False)
             bold(self.ui.btnOccupation)
-            incr_font(self.ui.btnOccupation, 2)
             self.ui.btnOccupation.iconColor = '#343a40'
         self.ui.btnOccupation.setText(occupation)
         self.character.occupation = occupation

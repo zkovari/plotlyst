@@ -52,7 +52,7 @@ from src.main.python.plotlyst.view.widget._toggle import AnimatedToggle
 from src.main.python.plotlyst.view.widget.lang import GrammarPopupMenu
 
 
-class AutoAdjustableTextEdit(QTextEdit):
+class AutoAdjustableTextEdit(EnhancedTextEdit):
     def __init__(self, parent=None, height: int = 25):
         super(AutoAdjustableTextEdit, self).__init__(parent)
         self.textChanged.connect(self._resizeToContent)
@@ -61,6 +61,9 @@ class AutoAdjustableTextEdit(QTextEdit):
         self.setAcceptRichText(False)
         self.setFixedHeight(self._minHeight)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+        self.setDocumentMargin(0)
+        self.setSidebarEnabled(False)
 
     @overrides
     def setText(self, text: str) -> None:
@@ -461,7 +464,7 @@ class DocumentTextEditor(RichTextEditor):
         title_font = self._textTitle.font()
         title_font.setBold(True)
         title_font.setPointSize(40)
-        title_font.setFamily('Arial')
+        title_font.setFamily('Helvetica')
         self._textTitle.setFont(title_font)
         self._textTitle.returnPressed.connect(self.textEdit.setFocus)
         self._textTitle.textChanged.connect(self.titleChanged.emit)

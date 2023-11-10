@@ -32,7 +32,7 @@ from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QSizePol
     QFileDialog, QMessageBox, QGridLayout
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup, incr_font, \
-    spacer, clear_layout, vbox, hbox, flow, translucent, margins, bold, pointy
+    spacer, clear_layout, vbox, hbox, flow, translucent, margins, bold, pointy, retain_when_hidden
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
@@ -42,7 +42,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, BackstoryEven
 from src.main.python.plotlyst.core.template import secondary_role, guide_role, love_interest_role, sidekick_role, \
     contagonist_role, confidant_role, foil_role, supporter_role, adversary_role, antagonist_role, henchmen_role, \
     tertiary_role, SelectionItem, Role, TemplateFieldType, TemplateField, protagonist_role, RoleImportance, \
-    promote_role, demote_role
+    promote_role, demote_role, major_role
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatchers
@@ -71,7 +71,7 @@ from src.main.python.plotlyst.view.widget.topic import TopicsEditor
 
 
 class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributionWidget):
-    avg_text: str = 'Average characters per scenes: '
+    avg_text: str = 'Characters per scene: '
     common_text: str = 'Common scenes: '
 
     def __init__(self, novel: Novel, parent=None):
@@ -81,7 +81,6 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
         self.average = 0
 
         self.btnCharacters.setIcon(IconRegistry.character_icon())
-        self.btnGoals.setIcon(IconRegistry.goal_icon())
         self.btnConflicts.setIcon(IconRegistry.conflict_icon())
         self.btnTags.setIcon(IconRegistry.tags_icon())
 
@@ -105,11 +104,11 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
         self.tblSceneDistribution.selectionModel().selectionChanged.connect(self._on_scene_selected)
 
         self.btnCharacters.toggled.connect(self._toggle_characters)
-        self.btnGoals.toggled.connect(self._toggle_goals)
         self.btnConflicts.toggled.connect(self._toggle_conflicts)
         self.btnTags.toggled.connect(self._toggle_tags)
 
         transparent(self.spinAverage)
+        retain_when_hidden(self.spinAverage)
 
         self.btnCharacters.setChecked(True)
 
@@ -141,15 +140,15 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
 
             self.spinAverage.setVisible(True)
 
-    def _toggle_goals(self, toggled: bool):
-        if toggled:
-            self._model = GoalScenesDistributionTableModel(self.novel)
-            self._scenes_proxy.setSourceModel(self._model)
-            self.tblCharacters.hideColumn(0)
-            self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexTags, 170)
-            self.tblCharacters.setMaximumWidth(170)
-
-            self.spinAverage.setVisible(False)
+    # def _toggle_goals(self, toggled: bool):
+    #     if toggled:
+    #         self._model = GoalScenesDistributionTableModel(self.novel)
+    #         self._scenes_proxy.setSourceModel(self._model)
+    #         self.tblCharacters.hideColumn(0)
+    #         self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexTags, 170)
+    #         self.tblCharacters.setMaximumWidth(170)
+    #
+    #         self.spinAverage.setVisible(False)
 
     def _toggle_conflicts(self, toggled: bool):
         if toggled:
@@ -310,14 +309,34 @@ class CharacterSelectorMenu(MenuWidget):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
-        self.aboutToShow.connect(self._fillUpMenu)
+        self._characters: Optional[List[Character]] = None
+        self.aboutToShow.connect(self._beforeShow)
+
+    def setCharacters(self, character: List[Character]):
+        self._characters = character
+        self._fillUpMenu()
+
+    def characters(self) -> List[Character]:
+        if self._characters is not None:
+            return self._characters
+        else:
+            return self._novel.characters
+
+    def refresh(self):
+        self._fillUpMenu()
+
+    def _beforeShow(self):
+        if self._characters is None:
+            self._fillUpMenu()
 
     def _fillUpMenu(self):
         self.clear()
 
-        for char in self._novel.characters:
+        for char in self.characters():
             self.addAction(
                 action(char.name, avatars.avatar(char), slot=partial(self.selected.emit, char), parent=self))
+
+        self._frame.updateGeometry()
 
 
 class CharacterSelectorButton(QToolButton):
@@ -338,6 +357,9 @@ class CharacterSelectorButton(QToolButton):
         self._menu = CharacterSelectorMenu(self._novel, self)
         self._menu.selected.connect(self._selected)
         self.clear()
+
+    def characterSelectorMenu(self) -> CharacterSelectorMenu:
+        return self._menu
 
     def setCharacter(self, character: Character):
         self.setIcon(avatars.avatar(character))
@@ -846,7 +868,9 @@ class CharacterAvatar(QWidget):
         wdg = AvatarSelectors(self._character)
         wdg.updated.connect(self._uploadedAvatar)
         wdg.selectorChanged.connect(self.updateAvatar)
-        btn_popup(self.btnAvatar, wdg)
+
+        menu = MenuWidget(self.btnAvatar)
+        menu.addWidget(wdg)
 
     def setCharacter(self, character: Character):
         self._character = character
@@ -891,6 +915,7 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
         self.btnItemAntagonist.setSelectionItem(copy.deepcopy(antagonist_role))
         self.btnItemContagonist.setSelectionItem(copy.deepcopy(contagonist_role))
         self.btnItemSecondary.setSelectionItem(copy.deepcopy(secondary_role))
+        self.btnItemMajor.setSelectionItem(copy.deepcopy(major_role))
         self.btnItemGuide.setSelectionItem(copy.deepcopy(guide_role))
         self.btnItemLoveInterest.setSelectionItem(copy.deepcopy(love_interest_role))
         self.btnItemSidekick.setSelectionItem(copy.deepcopy(sidekick_role))
@@ -914,6 +939,7 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
                                                    (self.btnItemAntagonist, self.pageAntagonist),
                                                    (self.btnItemContagonist, self.pageContagonist),
                                                    (self.btnItemSecondary, self.pageSecondary),
+                                                   (self.btnItemMajor, self.pageMajor),
                                                    (self.btnItemGuide, self.pageGuide),
                                                    (self.btnItemLoveInterest, self.pageLoveInterest),
                                                    (self.btnItemSidekick, self.pageSidekick),

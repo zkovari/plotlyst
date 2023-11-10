@@ -36,6 +36,7 @@ def test_scene_characters(qtbot, filled_window: MainWindow):
 
     view: ScenesOutlineView = start_new_scene_editor(filled_window)
     qtbot.keyClicks(view.editor.ui.lineTitle, 'Scene 3')
+    view.editor._povMenu.refresh()
     actions = view.editor.ui.wdgPov.btnAvatar.menu().actions()
     actions[5].trigger()
     view.editor.ui.btnClose.click()
@@ -57,7 +58,7 @@ def test_scene_deletion(qtbot, filled_window: MainWindow, monkeypatch):
     assert view.ui.btnEdit.isEnabled()
     assert view.ui.btnDelete.isEnabled()
 
-    patch_confirmed(monkeypatch, QMessageBox.StandardButton.No)
+    patch_confirmed(monkeypatch, False)
     view.ui.btnDelete.click()
     assert len(view.novel.scenes) == 2
     assert_data(view.tblModel, 'Scene 1', 0, ScenesTableModel.ColTitle)
@@ -82,7 +83,6 @@ def test_scene_edition(qtbot, filled_window: MainWindow):
     view.editor.ui.lineTitle.clear()
     qtbot.keyClicks(view.editor.ui.lineTitle, title)
     view.editor.ui.btnClose.click()
-    assert not view.editor
 
     assert_data(view.tblModel, title, 0, ScenesTableModel.ColTitle)
 
@@ -223,8 +223,6 @@ def test_character_distribution_display(qtbot, filled_window: MainWindow):
     click_on_item(qtbot, view.characters_distribution.tblSceneDistribution, 3, 2)
     assert model.flags(model.index(3, 1)) & Qt.ItemFlag.ItemIsEnabled
     assert model.flags(model.index(4, 1)) & Qt.ItemFlag.ItemIsEnabled
-
-    view.characters_distribution.btnGoals.click()
 
     view.characters_distribution.btnConflicts.click()
     assert not view.characters_distribution.spinAverage.isVisible()

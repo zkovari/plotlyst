@@ -160,7 +160,21 @@ class IconRegistry:
 
     @staticmethod
     def chapter_icon() -> QIcon:
-        return qtawesome.icon('ei.book')
+        return IconRegistry.from_name('ei.book')
+
+    @staticmethod
+    def prologue_icon() -> QIcon:
+        # color='#669bbc'
+        return IconRegistry.from_name('mdi.alpha-p-box-outline')
+
+    @staticmethod
+    def epilogue_icon() -> QIcon:
+        # color='#e76f51'
+        return IconRegistry.from_name('mdi.alpha-e-box-outline')
+
+    @staticmethod
+    def interlude_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.information-variant')
 
     @staticmethod
     def book_icon(color='black', color_on=PLOTLYST_SECONDARY_COLOR) -> QIcon:
@@ -175,13 +189,15 @@ class IconRegistry:
         return IconRegistry.from_name('fa5s.info-circle', color=PLOTLYST_SECONDARY_COLOR)
 
     @staticmethod
-    def action_scene_icon(resolved: bool = False, trade_off: bool = False) -> QIcon:
+    def action_scene_icon(resolved: bool = False, trade_off: bool = False, motion: bool = False) -> QIcon:
         if resolved:
             color = '#0b6e4f'
         elif trade_off:
             color = '#832161'
+        elif motion:
+            color = '#d4a373'
         else:
-            color = '#fe4a49'
+            color = '#CB4D4D'
         return qtawesome.icon('fa5s.circle', 'fa5s.yin-yang',
                               options=[{'color': 'white', 'scale_factor': 1},
                                        {'color': color, 'color_disabled': 'black'}])
@@ -189,7 +205,8 @@ class IconRegistry:
     @staticmethod
     def scene_type_icon(scene: Scene) -> Optional[QIcon]:
         if scene.purpose == ScenePurposeType.Story:
-            return IconRegistry.action_scene_icon(scene.outcome_resolution(), scene.outcome_trade_off())
+            return IconRegistry.action_scene_icon(scene.outcome_resolution(), scene.outcome_trade_off(),
+                                                  motion=scene.outcome_motion())
         elif scene.purpose == ScenePurposeType.Reaction:
             return IconRegistry.reaction_scene_icon()
         elif scene.purpose == ScenePurposeType.Character:
@@ -316,6 +333,10 @@ class IconRegistry:
     @staticmethod
     def tradeoff_icon(color: str = '#832161', color_on: str = '#832161') -> QIcon:
         return IconRegistry.from_name('fa5s.balance-scale-left', color=color, color_on=color_on)
+
+    @staticmethod
+    def motion_icon(color: str = '#d4a373', color_on: str = '#d4a373') -> QIcon:
+        return IconRegistry.from_name('mdi.motion-outline', color=color, color_on=color_on)
 
     @staticmethod
     def home_icon(color_on: str = 'darkBlue') -> QIcon:
@@ -647,6 +668,12 @@ class IconRegistry:
     @staticmethod
     def docx_icon() -> QIcon:
         return IconRegistry.from_name('mdi.file-word-outline')
+
+    @staticmethod
+    def scene_beat_badge_icon(name: str, color: str, act_color: str) -> QIcon:
+        return qtawesome.icon('mdi6.checkbox-blank-badge-outline', name,
+                              options=[{'color': act_color, 'scale_factor': 1.5},
+                                       {'color': color, 'color_disabled': 'lightgrey', 'scale_factor': 0.7}])
 
     @staticmethod
     def refresh_icon(color: str = PLOTLYST_MAIN_COLOR) -> QIcon:

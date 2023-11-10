@@ -22,10 +22,10 @@ from typing import Any, Optional, Tuple, Dict, List
 from PyQt6.QtCore import QModelIndex, Qt, QAbstractListModel, pyqtSignal, QSize
 from PyQt6.QtGui import QColor, QBrush, QResizeEvent
 from PyQt6.QtWidgets import QWidget, QListView, QSizePolicy, QToolButton, QButtonGroup, QDialog, QLabel, QPushButton, \
-    QGridLayout
+    QGridLayout, QColorDialog
 from overrides import overrides
 from qthandy import flow, transparent, pointy, hbox, grid, vspacer, italic, underline, decr_font, incr_font, bold, \
-    spacer, line, decr_icon, ask_confirmation
+    spacer, line, decr_icon, ask_confirmation, vline
 from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COMPLEMENTARY_COLOR
@@ -35,7 +35,7 @@ from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.resources import ResourceType, resource_manager, ResourceDescriptor, \
     ResourceStatusChangedEvent
 from src.main.python.plotlyst.service.resource import remove_resource, download_resource
-from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, spin
+from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, spin, tool_btn
 from src.main.python.plotlyst.view.generated.icon_selector_widget_ui import Ui_IconsSelectorWidget
 from src.main.python.plotlyst.view.generated.resource_manager_dialog_ui import Ui_ResourceManagerDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -90,6 +90,12 @@ class ColorPicker(QWidget):
                 self.layout().addWidget(btn, row, col)
             else:
                 self.layout().addWidget(btn)
+
+        self._btnCustomColor = tool_btn(IconRegistry.from_name('msc.symbol-color'), transparent_=True,
+                                        tooltip='Select a custom color')
+        self._btnCustomColor.clicked.connect(self._customColorClicked)
+        self.layout().addWidget(vline())
+        self.layout().addWidget(self._btnCustomColor)
         self.btnGroup.buttonClicked.connect(self._clicked)
 
     def color(self) -> QColor:
@@ -101,6 +107,11 @@ class ColorPicker(QWidget):
 
     def _clicked(self, btn: ColorButton):
         self.colorPicked.emit(QColor(btn.color))
+
+    def _customColorClicked(self):
+        color = QColorDialog.getColor()
+        if color.isValid():
+            self.colorPicked.emit(color)
 
 
 class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):

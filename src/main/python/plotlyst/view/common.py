@@ -383,7 +383,8 @@ def tool_btn(icon: QIcon, tooltip: str = '', checkable: bool = False, base: bool
     return btn
 
 
-def push_btn(icon: QIcon, text: str = '', tooltip: str = '', checkable: bool = False, base: bool = False,
+def push_btn(icon: Optional[QIcon] = None, text: str = '', tooltip: str = '', checkable: bool = False,
+             base: bool = False,
              icon_resize: bool = True, transparent_: bool = False, properties: List[str] = None,
              parent=None) -> QPushButton:
     btn = QPushButton()
@@ -393,10 +394,12 @@ def push_btn(icon: QIcon, text: str = '', tooltip: str = '', checkable: bool = F
     return btn
 
 
-def _init_btn(btn: QAbstractButton, icon: QIcon, tooltip: str = '', checkable: bool = False, base: bool = False,
+def _init_btn(btn: QAbstractButton, icon: Optional[QIcon] = None, tooltip: str = '', checkable: bool = False,
+              base: bool = False,
               icon_resize: bool = True, transparent_: bool = False, properties: List[str] = None,
               parent=None):
-    btn.setIcon(icon)
+    if icon:
+        btn.setIcon(icon)
     btn.setToolTip(tooltip)
     btn.setCheckable(checkable)
     pointy(btn)
@@ -421,7 +424,7 @@ def frame(parent=None):
 
 def label(text: str = '', bold: Optional[bool] = None, italic: Optional[bool] = None, underline: Optional[bool] = None,
           description: Optional[bool] = None, wordWrap: Optional[bool] = None, h1: Optional[bool] = None,
-          h2: Optional[bool] = None, h3: Optional[bool] = None, h4: Optional[bool] = None) -> QLabel:
+          h2: Optional[bool] = None, h3: Optional[bool] = None, h4: Optional[bool] = None, color=None) -> QLabel:
     lbl = QLabel(text)
     font = lbl.font()
     if bold:
@@ -442,6 +445,9 @@ def label(text: str = '', bold: Optional[bool] = None, italic: Optional[bool] = 
         lbl.setProperty('h3', h3)
     elif h4:
         lbl.setProperty('h4', h4)
+
+    if color:
+        lbl.setStyleSheet(f'color: {color};')
 
     if wordWrap:
         lbl.setWordWrap(wordWrap)

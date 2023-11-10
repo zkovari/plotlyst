@@ -118,6 +118,9 @@
      <item>
       <widget class="QWidget" name="wdgNav" native="true">
        <property name="navbar" stdset="0">
+        <bool>false</bool>
+       </property>
+       <property name="banner-bg" stdset="0">
         <bool>true</bool>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_3">

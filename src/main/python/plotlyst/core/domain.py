@@ -23,7 +23,7 @@ import uuid
 from abc import ABC
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
+from enum import Enum, auto
 from typing import List, Optional, Any, Dict
 
 from PyQt6.QtCore import Qt
@@ -33,6 +33,7 @@ from overrides import overrides
 from src.main.python.plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_field, \
     mbti_field, ProfileTemplate, default_character_profiles, default_location_profiles, enneagram_choices, \
     mbti_choices, Role, summary_field, exclude_if_false
+from src.main.python.plotlyst.env import app_env
 
 
 @dataclass
@@ -300,6 +301,7 @@ class Character:
     gender: str = ''
     role: Optional[Role] = None
     age: Optional[int] = None
+    age_infinite: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     occupation: Optional[str] = None
     avatar: Optional[Any] = None
     template_values: List[TemplateValue] = field(default_factory=list)
@@ -369,16 +371,26 @@ class PlaceholderCharacter(Character):
     pass
 
 
+class ChapterType(Enum):
+    Prologue = 0
+    Epilogue = 1
+    Interlude = 2
+
+
 @dataclass
 class Chapter:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
+    type: Optional[ChapterType] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
     def sid(self) -> str:
         return str(self.id)
 
-    def title_index(self, novel: 'Novel') -> str:
-        return f'Chapter {novel.chapters.index(self) + 1}'
+    def display_name(self) -> str:
+        if self.type is None:
+            return self.title
+        else:
+            return self.type.name
 
     @overrides
     def __eq__(self, other: 'Chapter'):
@@ -448,6 +460,7 @@ class StoryBeat:
     percentage: int = 0
     percentage_end: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     enabled: bool = True
+    notes: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
     @overrides
     def __eq__(self, other: 'StoryBeat'):
@@ -613,6 +626,85 @@ class PlotProgressionItem:
     text: str = ''
 
 
+class StorylineLinkType(Enum):
+    Connection = auto()
+    Catalyst = auto()
+    Impact = auto()
+    Contrast = auto()
+    Reflect_char = auto()
+    Reflect_plot = auto()
+    Reveal = auto()
+    Resolve = auto()
+    Compete = auto()
+
+    def icon(self) -> str:
+        if self == StorylineLinkType.Catalyst:
+            return 'fa5s.vial'
+        elif self == StorylineLinkType.Impact:
+            return 'mdi.motion-outline'
+        elif self == StorylineLinkType.Contrast:
+            return 'ei.adjust'
+        elif self == StorylineLinkType.Reflect_char:
+            return 'msc.mirror'
+        elif self == StorylineLinkType.Reflect_plot:
+            return 'msc.mirror'
+        elif self == StorylineLinkType.Resolve:
+            return 'mdi.bullseye-arrow'
+        # elif self == StorylineLinkType.Parallel:
+        #     return 'fa5s.grip-lines'
+        elif self == StorylineLinkType.Compete:
+            return 'ph.arrows-in-line-horizontal'
+        # elif self == StorylineLinkType.Complicate:
+        #     return 'mdi.sword-cross'
+        # elif self == StorylineLinkType.Converge:
+        #     return 'ri.git-pull-request-fill'
+        return 'fa5s.link'
+
+    def desc(self) -> str:
+        if self == StorylineLinkType.Catalyst:
+            return 'A storyline triggers the events in an other storyline'
+        elif self == StorylineLinkType.Impact:
+            return 'A storyline impacts or influences the events in an other storyline'
+        elif self == StorylineLinkType.Contrast:
+            return 'The storylines contrast each other in any way, e.g.,theme, tone, or pacing'
+        elif self == StorylineLinkType.Reflect_char:
+            return "The relationship plot reflects the character's changes"
+        elif self == StorylineLinkType.Reflect_plot:
+            return "The relationship plot reflects larger plot themes of conflicts through character interactions"
+        elif self == StorylineLinkType.Reveal:
+            return "The character's changes reveal the true nature of a relationship plot"
+        elif self == StorylineLinkType.Resolve:
+            return "Only through the character's changes the plot can be resolved"
+        elif self == StorylineLinkType.Compete:
+            return 'Two storylines compete against each other, often for a common goal'
+        return 'How does the storyline connect to the other one?'
+
+    def placeholder(self) -> str:
+        if self == StorylineLinkType.Catalyst:
+            return ''
+        elif self == StorylineLinkType.Impact:
+            return ''
+        elif self == StorylineLinkType.Contrast:
+            return ''
+        elif self == StorylineLinkType.Reflect_char:
+            return ''
+        elif self == StorylineLinkType.Reflect_plot:
+            return ''
+        elif self == StorylineLinkType.Resolve:
+            return ''
+        elif self == StorylineLinkType.Compete:
+            return ''
+        return 'How does the storyline connect to the other one?'
+
+
+@dataclass
+class StorylineLink:
+    source_id: uuid.UUID
+    target_id: uuid.UUID
+    type: StorylineLinkType
+    text: str = ''
+
+
 @dataclass
 class Plot(SelectionItem, CharacterBased):
     id: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -626,6 +718,7 @@ class Plot(SelectionItem, CharacterBased):
     default_value: PlotValue = field(default_factory=default_plot_value)
     default_value_enabled: bool = True
     progression: List[PlotProgressionItem] = field(default_factory=list)
+    links: List[StorylineLink] = field(default_factory=list)
 
     def __post_init__(self):
         self._character: Optional[Character] = None
@@ -779,12 +872,15 @@ class SceneOutcome(Enum):
     DISASTER = 0
     RESOLUTION = 1
     TRADE_OFF = 2
+    MOTION = 3
 
     @staticmethod
     def to_str(outcome: 'SceneOutcome') -> str:
         if outcome == SceneOutcome.TRADE_OFF:
-            return 'Trade-off'
-        return outcome.name.lower().capitalize()
+            return 'Trade-off outcome'
+        elif outcome == SceneOutcome.MOTION:
+            return 'Set into motion'
+        return outcome.name.lower().capitalize() + ' outcome'
 
 
 @dataclass
@@ -887,12 +983,11 @@ class TagReference:
 @dataclass
 class SceneStructureAgenda(CharacterBased):
     character_id: Optional[uuid.UUID] = None
-    items: List[SceneStructureItem] = field(default_factory=list)
     conflict_references: List[ConflictReference] = field(default_factory=list)
     goal_references: List[GoalReference] = field(default_factory=list)
+    intensity: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     emotion: Optional[int] = None
     motivations: Dict[int, int] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
-
     story_elements: List['StoryElement'] = field(default_factory=list)
 
     def __post_init__(self):
@@ -1012,8 +1107,20 @@ class StoryElementType(Enum):
     Goal = 'goal'
     Motivation = 'motivation'
     Conflict = 'conflict'
+    Internal_conflict = 'internal_conflict'
+    Dilemma = 'dilemma'
+    Impact = 'impact'
+    Responsibility = 'responsibility'
     Decision = 'decision'
     Emotion = 'emotion'
+    Agency = 'agency'
+    Initiative = 'initiative'
+    Catalyst = 'catalyst'
+    Plan_change = 'plan_change'
+    Collaboration = 'collaboration'
+    Subtext = 'subtext'
+    Event = 'event'
+    Effect = 'effect'
 
 
 @dataclass
@@ -1022,6 +1129,9 @@ class StoryElement:
     ref: Optional[uuid.UUID] = None
     text: str = ''
     intensity: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    row: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    col: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    arrows: Dict[int, int] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass
@@ -1047,6 +1157,7 @@ class Scene:
     purpose: Optional[ScenePurposeType] = None
     outcome: Optional[SceneOutcome] = None
     story_elements: List[StoryElement] = field(default_factory=list)
+    structure: List[SceneStructureItem] = field(default_factory=list)
 
     def beat(self, novel: 'Novel') -> Optional[StoryBeat]:
         structure = novel.active_story_structure
@@ -1098,6 +1209,9 @@ class Scene:
 
     def outcome_trade_off(self) -> bool:
         return self.__is_outcome(SceneOutcome.TRADE_OFF)
+
+    def outcome_motion(self) -> bool:
+        return self.__is_outcome(SceneOutcome.MOTION)
 
     def title_or_index(self, novel: 'Novel') -> str:
         return self.title if self.title else f'Scene {novel.scenes.index(self) + 1}'
@@ -1268,6 +1382,7 @@ class StoryStructure(CharacterBased):
     custom: bool = False
     active: bool = False
     character_id: Optional[uuid.UUID] = None
+    acts_text: Dict[int, str] = field(default_factory=dict)
 
     def __post_init__(self):
         self._character: Optional[Character] = None
@@ -1367,6 +1482,9 @@ crisis = StoryBeat(text='Crisis',
                    description="The protagonist must decide between two equally bad or two irreconcilable good choices.",
                    id=uuid.UUID('466688f7-ebee-4d36-a655-83ff40e1c46d'),
                    act=3, percentage=95)
+
+first_plot_points = (first_plot_point, first_plot_point_ponr)
+midpoints = (midpoint, midpoint_ponr, midpoint_mirror, midpoint_proactive)
 
 three_act_structure = StoryStructure(title='Three Act Structure',
                                      id=uuid.UUID('58013be5-1efb-4de4-9dd2-1433ce6edf90'),
@@ -1773,8 +1891,15 @@ class TextStatistics:
 
 
 @dataclass
+class DocumentProgress:
+    added: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    removed: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+
+
+@dataclass
 class DocumentStatistics:
     wc: int = 0
+    progress: Dict[str, DocumentProgress] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass
@@ -1937,9 +2062,9 @@ class Node(CharacterBased):
 def to_node(x: float, y: float, type: DiagramNodeType, subtype: str = '', default_size: int = 12) -> Node:
     node = Node(x, y, type=type, subtype=subtype)
     if type == DiagramNodeType.EVENT:
-        node.size = max(16, default_size)
+        node.size = max(20 if app_env.is_mac() else 16, default_size)
         if subtype in [NODE_SUBTYPE_BACKSTORY, NODE_SUBTYPE_INTERNAL_CONFLICT]:
-            node.size = max(14, default_size - 1)
+            node.size = max(16 if app_env.is_mac() else 14, default_size - 1)
 
     if subtype == NODE_SUBTYPE_GOAL:
         node.icon = 'mdi.target'
@@ -1974,7 +2099,7 @@ class Connector:
     pen: Qt.PenStyle = Qt.PenStyle.SolidLine
     width: int = 1
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
-    color: str = field(default='black', metadata=config(exclude=exclude_if_black))
+    color: str = field(default='', metadata=config(exclude=exclude_if_empty))
     text: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
 
@@ -2086,6 +2211,7 @@ class Novel(NovelDescriptor):
     scenes: List[Scene] = field(default_factory=list)
     plots: List[Plot] = field(default_factory=list)
     chapters: List[Chapter] = field(default_factory=list)
+    custom_chapters: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     stages: List[SceneStage] = field(default_factory=default_stages)
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
     character_topics: List[Topic] = field(default_factory=list)
@@ -2101,6 +2227,8 @@ class Novel(NovelDescriptor):
     manuscript_goals: ManuscriptGoals = field(default_factory=ManuscriptGoals)
     events_map: Diagram = field(default_factory=default_events_map)
     character_networks: List[Diagram] = field(default_factory=default_character_networks)
+    manuscript_progress: Dict[str, DocumentProgress] = field(default_factory=dict,
+                                                             metadata=config(exclude=exclude_if_empty))
 
     def pov_characters(self) -> List[Character]:
         pov_ids = set()
@@ -2116,11 +2244,12 @@ class Novel(NovelDescriptor):
         char_ids = set()
         chars: List[Character] = []
         for scene in self.scenes:
-            if scene.agendas and scene.agendas[0].character_id and str(scene.agendas[0].character_id) not in char_ids:
-                character = scene.agendas[0].character(self)
-                if character:
-                    chars.append(character)
-                    char_ids.add(str(scene.agendas[0].character_id))
+            for agenda in scene.agendas:
+                if agenda.character_id and str(agenda.character_id) not in char_ids:
+                    character: Character = agenda.character(self)
+                    if character:
+                        chars.append(character)
+                        char_ids.add(str(character.id))
 
         return chars
 
@@ -2173,6 +2302,13 @@ class Novel(NovelDescriptor):
         self.scenes.insert(i + 1, new_scene)
 
         return new_scene
+
+    def update_chapter_titles(self):
+        i = 1
+        for chapter in self.chapters:
+            if chapter.type is None:
+                chapter.title = f'Chapter {i}'
+                i += 1
 
     @overrides
     def __eq__(self, other: 'Novel'):
