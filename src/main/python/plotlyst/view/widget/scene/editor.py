@@ -21,7 +21,7 @@ from functools import partial
 from typing import List, Optional, Dict
 
 import qtanim
-from PyQt6.QtCore import Qt, QSize, QEvent, pyqtSignal, QObject
+from PyQt6.QtCore import Qt, QSize, QEvent, pyqtSignal, QObject, QTimer
 from PyQt6.QtGui import QEnterEvent, QIcon, QMouseEvent, QColor, QCursor, QPalette, QPaintEvent, QPainter, QPen
 from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QStackedWidget, QGridLayout, \
     QToolButton, QAbstractButton, QScrollArea, QButtonGroup
@@ -654,6 +654,7 @@ class SceneElementWidget(QWidget):
             corner.setVisible(False)
             retain_when_hidden(corner)
             corner.hovered.connect(self._typeChanged)
+            corner.clicked.connect(self.activate)
 
         self.reset()
 
@@ -676,14 +677,18 @@ class SceneElementWidget(QWidget):
 
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
+        def delayed_corners_visible():
+            for corner in self._corners:
+                if corner.isEnabled():
+                    corner.setVisible(True)
+
         if self._stackWidget.currentWidget() == self._pageIdle:
             self._lblClick.setVisible(True)
             self._titleIdle.setVisible(True)
             self._iconIdle.setIcon(self._icon)
 
-            for corner in self._corners:
-                if corner.isEnabled():
-                    corner.setVisible(True)
+            QTimer.singleShot(200, delayed_corners_visible)
+
 
         else:
             if self._storylineLinkEnabled and self._storylineVisible:
@@ -965,11 +970,9 @@ class SceneOutcomeEditor(QWidget):
 
 
 class EventElementEditor(TextBasedSceneElementWidget):
-    def __init__(self, novel: Novel, row: int, col: int, parent=None):
+    def __init__(self, novel: Novel, row: int, col: int, defaultType: StoryElementType, parent=None):
         super().__init__(novel, StoryElementType.Event, row, col, parent)
-        self.setTitle('Event')
-        self.setIcon('mdi.lightning-bolt-outline')
-        self.setPlaceholderText("A pivotal event")
+        self._typeChanged(defaultType)
 
         self._cornerTopLeft.setIcon(IconRegistry.from_name('mdi.lightning-bolt-outline', 'lightgrey'))
         self._cornerTopLeft.setType(StoryElementType.Event)
@@ -991,14 +994,6 @@ class EventElementEditor(TextBasedSceneElementWidget):
             self.setPlaceholderText("An effect caused by the event")
 
         super()._typeChanged(type_)
-
-
-class EffectElementEditor(TextBasedSceneElementWidget):
-    def __init__(self, novel: Novel, row: int, col: int, parent=None):
-        super().__init__(novel, StoryElementType.Effect, row, col, parent)
-        self.setTitle('Delayed effect')
-        self.setIcon('fa5s.tachometer-alt')
-        self.setPlaceholderText("An effect caused by the event")
 
 
 class AgencyTextBasedElementEditor(TextBasedSceneElementWidget):
@@ -1218,11 +1213,11 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
                 continue
             for col in range(self._col):
                 if col == 0:
-                    placeholder = EventElementEditor(self._novel, row, col)
+                    placeholder = EventElementEditor(self._novel, row, col, StoryElementType.Event)
                 elif col % 2 == 1:
                     continue
                 else:
-                    placeholder = EffectElementEditor(self._novel, row, col)
+                    placeholder = EventElementEditor(self._novel, row, col, StoryElementType.Effect)
                 placeholder.storylineSelected.connect(partial(self.storylineLinked.emit, placeholder))
                 placeholder.storylineEditRequested.connect(partial(self.storylineEditRequested.emit, placeholder))
                 self._wdgElements.layout().addWidget(placeholder, row, col, 1, 1)
@@ -1284,7 +1279,7 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
                         item.widget().setScene(scene)
 
         for element in scene.story_elements:
-            print(element)
+            pass
             # if element.type in [StoryElementType.Effect, StoryElementType.Event]:
             #     if element.row == 1:
             #         element.row = 2
