@@ -314,10 +314,12 @@ desire_field = TemplateField('Desire', type=TemplateFieldType.SMALL_TEXT, emoji=
 gmc_field = TemplateField('GMC', type=TemplateFieldType.COMPLEX, id=uuid.UUID('a8ac1eb0-dc18-4bd6-8ff4-47864d0dc431'))
 
 goal_field = TemplateField('External goal', type=TemplateFieldType.SMALL_TEXT, emoji=':bullseye:',
+                           description="Tangible objectives pursued by the character",
                            placeholder="What external goal does the character want to accomplish?",
                            id=uuid.UUID('99526331-6f3b-429d-ad22-0a4a90ee9d77'), has_notes=True)
 internal_goal_field = TemplateField('Internal goal', type=TemplateFieldType.SMALL_TEXT,
                                     emoji=':smiling_face_with_hearts:',
+                                    description="Emotional or psychological desires and growth pursued by the character",
                                     placeholder="What emotional state does the character want to achieve?",
                                     id=uuid.UUID('090d2431-3ae7-4aa3-81b3-2737a8043db7'), has_notes=True)
 motivation_field = TemplateField('Motivation', type=TemplateFieldType.SMALL_TEXT, emoji=':right-facing_fist:',
@@ -351,13 +353,13 @@ strength_field = TemplateField('Strength', type=TemplateFieldType.SMALL_TEXT, em
                                placeholder="What are the character's strengths in the story?",
                                id=uuid.UUID('4bc4269d-9ce7-47cf-aa65-23e7f8b1a250'))
 ghost_field = TemplateField('Ghost', type=TemplateFieldType.SMALL_TEXT, emoji=':ghost:',
-                            placeholder="What's the character's ghost from their past that haunts them?",
+                            placeholder="What internal conflicts or unresolved issues haunt them from the past?",
                             id=uuid.UUID("12a61aa5-ffc0-4309-9b65-c6f26ab5bcf5"))
 values_field = TemplateField('Values', type=TemplateFieldType.LABELS, emoji=':smiling_face_with_open_hands:',
                              id=uuid.UUID('47e2e30e-1708-414b-be79-3413063a798d'))
 
-wounds_field = TemplateField('Wounds', type=TemplateFieldType.COMPLEX,
-                             id=uuid.UUID('b3e591ba-ce55-43c2-a4b0-f35864693977'))
+baggage_field = TemplateField('Baggage', type=TemplateFieldType.COMPLEX,
+                              id=uuid.UUID('b3e591ba-ce55-43c2-a4b0-f35864693977'))
 wound_field = TemplateField('Wound', type=TemplateFieldType.SMALL_TEXT, emoji=':broken_heart:',
                             placeholder='What past event harmed the character and left an emotional wound?',
                             id=uuid.UUID('587cace8-0326-4895-b51e-de1d92b9db1b'))
@@ -370,6 +372,10 @@ trigger_field = TemplateField('Trigger', type=TemplateFieldType.SMALL_TEXT, emoj
 healing_field = TemplateField('Healing', type=TemplateFieldType.SMALL_TEXT, emoji=':syringe:',
                               placeholder='How could the character heal their emotional wounds?',
                               id=uuid.UUID('13ccb707-07bc-4567-9ae0-93da65b7f6e7'))
+
+demon_field = TemplateField('Demon', type=TemplateFieldType.SMALL_TEXT, emoji=':angry_face_with_horns:',
+                            placeholder="",
+                            id=uuid.UUID('66f5424d-f631-481f-872e-cb3ac85f8ec0'))
 
 arcs_field = TemplateField('Arc', type=TemplateFieldType.COMPLEX,
                            id=uuid.UUID('f9cd5704-debb-4d98-98d4-7eca36983d56'))
@@ -577,8 +583,8 @@ def default_character_profiles() -> List[ProfileTemplate]:
     summary_title = TemplateField('Summary', type=TemplateFieldType.DISPLAY_HEADER, required=True)
     personality_title = TemplateField('Personality', type=TemplateFieldType.DISPLAY_HEADER, required=True)
     gmc_title = TemplateField('Goals', type=TemplateFieldType.DISPLAY_HEADER)
-    wounds_title = TemplateField('Wounds', type=TemplateFieldType.DISPLAY_HEADER)
-    arcs_title = TemplateField('Arc', type=TemplateFieldType.DISPLAY_HEADER)
+    baggage_title = TemplateField('Baggage', type=TemplateFieldType.DISPLAY_HEADER)
+    # arcs_title = TemplateField('Arc', type=TemplateFieldType.DISPLAY_HEADER)
     philosophy_title = TemplateField('Philosophy', type=TemplateFieldType.DISPLAY_HEADER)
     faculties = TemplateField('Faculties', type=TemplateFieldType.DISPLAY_HEADER)
 
@@ -590,10 +596,10 @@ def default_character_profiles() -> List[ProfileTemplate]:
               ProfileElement(traits_field, 5, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(gmc_title, 6, 0, col_span=2),
               ProfileElement(gmc_field, 7, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(wounds_title, 8, 0, col_span=2),
-              ProfileElement(wounds_field, 9, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(arcs_title, 10, 0, col_span=2),
-              ProfileElement(arcs_field, 11, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(baggage_title, 8, 0, col_span=2),
+              ProfileElement(baggage_field, 9, 0, col_span=2, margins=Margins(left=15)),
+              # ProfileElement(arcs_title, 10, 0, col_span=2),
+              # ProfileElement(arcs_field, 11, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(philosophy_title, 12, 0, col_span=2),
               ProfileElement(values_field, 13, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(faculties, 14, 0, col_span=2),
