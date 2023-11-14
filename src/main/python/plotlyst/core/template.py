@@ -314,10 +314,12 @@ desire_field = TemplateField('Desire', type=TemplateFieldType.SMALL_TEXT, emoji=
 gmc_field = TemplateField('GMC', type=TemplateFieldType.COMPLEX, id=uuid.UUID('a8ac1eb0-dc18-4bd6-8ff4-47864d0dc431'))
 
 goal_field = TemplateField('External goal', type=TemplateFieldType.SMALL_TEXT, emoji=':bullseye:',
+                           description="Tangible objectives pursued by the character",
                            placeholder="What external goal does the character want to accomplish?",
                            id=uuid.UUID('99526331-6f3b-429d-ad22-0a4a90ee9d77'), has_notes=True)
 internal_goal_field = TemplateField('Internal goal', type=TemplateFieldType.SMALL_TEXT,
                                     emoji=':smiling_face_with_hearts:',
+                                    description="Emotional or psychological desires and growth pursued by the character",
                                     placeholder="What emotional state does the character want to achieve?",
                                     id=uuid.UUID('090d2431-3ae7-4aa3-81b3-2737a8043db7'), has_notes=True)
 motivation_field = TemplateField('Motivation', type=TemplateFieldType.SMALL_TEXT, emoji=':right-facing_fist:',

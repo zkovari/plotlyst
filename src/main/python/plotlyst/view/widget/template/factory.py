@@ -21,12 +21,12 @@ from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QComboBox
 
 from src.main.python.plotlyst.core.template import TemplateField, TemplateFieldType, enneagram_field, mbti_field, \
-    traits_field, SelectionItemType, SelectionItem, gmc_field, baggage_field, arcs_field
+    traits_field, SelectionItemType, SelectionItem, gmc_field, baggage_field
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.template.impl import SubtitleTemplateDisplayWidget, \
     LabelTemplateDisplayWidget, HeaderTemplateDisplayWidget, LineTemplateDisplayWidget, IconTemplateDisplayWidget, \
     EnneagramFieldWidget, MbtiFieldWidget, TraitsFieldWidget, NumericTemplateFieldWidget, SmallTextTemplateFieldWidget, \
-    LineTextTemplateFieldWidget, LabelsTemplateFieldWidget, GmcFieldWidget, WoundsFieldWidget, ArcsFieldWidget, \
+    LineTextTemplateFieldWidget, LabelsTemplateFieldWidget, GmcFieldWidget, WoundsFieldWidget, \
     BarTemplateFieldWidget
 
 
@@ -62,8 +62,8 @@ class TemplateFieldWidgetFactory:
             return GmcFieldWidget(field)
         elif field.id == baggage_field.id:
             return WoundsFieldWidget(field)
-        elif field.id == arcs_field.id:
-            return ArcsFieldWidget(field)
+        # elif field.id == arcs_field.id:
+        #     return ArcsFieldWidget(field)
         elif field.type == TemplateFieldType.NUMERIC:
             return NumericTemplateFieldWidget(field, parent)
         elif field.type == TemplateFieldType.TEXT_SELECTION:
