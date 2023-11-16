@@ -27,14 +27,14 @@ from PyQt6.QtCore import pyqtSignal, Qt, QSize
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QWidget, QSpinBox, QSlider, QTextBrowser, QButtonGroup, QToolButton
 from overrides import overrides
-from qthandy import vbox, pointy, hbox, sp, vspacer, underline, decr_font, flow, clear_layout, margins
+from qthandy import vbox, pointy, hbox, sp, vspacer, underline, decr_font, flow, clear_layout, translucent
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.core.help import enneagram_help
 from src.main.python.plotlyst.core.template import SelectionItem, enneagram_field, TemplateField, mbti_field
-from src.main.python.plotlyst.view.common import push_btn, action, tool_btn, label
+from src.main.python.plotlyst.view.common import push_btn, action, tool_btn, label, wrap
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
@@ -266,6 +266,7 @@ class PersonalitySelectorWidget(QWidget):
 
         self.btnIgnore = push_btn(IconRegistry.from_name('ri.share-forward-fill'), 'Ignore', transparent_=True)
         underline(self.btnIgnore)
+        decr_font(self.btnIgnore)
         self.btnIgnore.installEventFilter(OpacityEventFilter(self.btnIgnore))
 
         vbox(self)
@@ -288,7 +289,6 @@ class EnneagramSelectorWidget(PersonalitySelectorWidget):
 
         self.wdgSelector = QWidget()
         hbox(self.wdgSelector, 10, spacing=6)
-        margins(self.wdgSelector, top=20, bottom=20)
         self.layout().addWidget(self.wdgSelector)
         self._buttons: Dict[str, QToolButton] = {}
         self.btnGroup = QButtonGroup()
@@ -296,17 +296,18 @@ class EnneagramSelectorWidget(PersonalitySelectorWidget):
         for item in enneagram_field.selections:
             self._addItem(item)
 
-        self.title = label('', bold=True)
+        self.title = label('', h4=True)
         self.layout().addWidget(self.title, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self.text = QTextBrowser()
-        self.layout().addWidget(self.text)
+        self.text.setProperty('transparent', True)
+        self.layout().addWidget(wrap(self.text, margin_left=10, margin_right=10))
 
         self.wdgLabels = QWidget()
         flow(self.wdgLabels)
-        self.layout().addWidget(self.wdgLabels)
+        self.layout().addWidget(wrap(self.wdgLabels, margin_left=10, margin_right=10, margin_bottom=10))
 
-        self.btnSelect = push_btn(IconRegistry.ok_icon('white'), 'Select enneagram', properties=['highlighted', 'base'])
+        self.btnSelect = push_btn(IconRegistry.ok_icon('white'), 'Select enneagram', properties=['positive', 'base'])
         self.layout().addWidget(self.btnSelect, alignment=Qt.AlignmentFlag.AlignRight)
 
         self.btnGroup.buttons()[0].setChecked(True)
@@ -341,11 +342,13 @@ class EnneagramSelectorWidget(PersonalitySelectorWidget):
         if 'positive' in item.meta.keys():
             for trait in item.meta['positive']:
                 label = TraitLabel(trait)
+                translucent(label, 0.8)
                 decr_font(label)
                 self.wdgLabels.layout().addWidget(label)
         if 'negative' in item.meta.keys():
             for trait in item.meta['negative']:
                 label = TraitLabel(trait, positive=False)
+                translucent(label, 0.8)
                 decr_font(label)
                 self.wdgLabels.layout().addWidget(label)
 
