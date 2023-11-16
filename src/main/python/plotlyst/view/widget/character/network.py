@@ -22,6 +22,7 @@ from typing import Optional
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QAction
 from overrides import overrides
+from qthandy import vline
 from qtmenu import GridMenuWidget
 
 from src.main.python.plotlyst.core.client import json_client
@@ -32,7 +33,7 @@ from src.main.python.plotlyst.view.common import action
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
 from src.main.python.plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene
-from src.main.python.plotlyst.view.widget.graphics.editor import ConnectorToolbar
+from src.main.python.plotlyst.view.widget.graphics.editor import ConnectorToolbar, RelationsButton
 
 
 class RelationsEditorScene(NetworkScene):
@@ -137,7 +138,13 @@ class RelationSelector(GridMenuWidget):
 class RelationConnectorToolbar(ConnectorToolbar):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._btnRelationType = RelationsButton()
+
         self._relationSelector: Optional[RelationSelector] = None
+        self._btnText.setHidden(True)
+
+        self._toolbar.layout().insertWidget(0, self._btnRelationType)
+        self._toolbar.layout().insertWidget(1, vline())
 
     def setNetwork(self, diagram: Diagram):
         self._relationSelector = RelationSelector(diagram, self._btnRelationType)

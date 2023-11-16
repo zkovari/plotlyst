@@ -26,7 +26,7 @@ from PyQt6.QtCore import Qt, pyqtSignal, QRect
 from PyQt6.QtGui import QPainter, QPen, QColor, QIcon, QPaintEvent, QKeySequence, QShowEvent, QFont
 from PyQt6.QtWidgets import QFrame, \
     QToolButton, QWidget, \
-    QAbstractButton, QSlider, QButtonGroup, QPushButton, QLabel
+    QAbstractButton, QSlider, QButtonGroup, QPushButton, QLabel, QLineEdit
 from overrides import overrides
 from qthandy import hbox, margins, sp, vbox, grid, pointy, vline, decr_icon, transparent, retain_when_hidden
 from qtmenu import MenuWidget
@@ -286,7 +286,15 @@ class PaintedItemBasedToolbar(BaseItemToolbar):
 class ConnectorToolbar(PaintedItemBasedToolbar):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._btnRelationType = RelationsButton()
+
+        self._btnText = tool_btn(IconRegistry.from_name('mdi.format-text'), 'Change displayed text', transparent_=True)
+        self._menuText = MenuWidget(self._btnText)
+        self._textLineEdit = QLineEdit()
+        self._textLineEdit.setPlaceholderText('Connector text...')
+        self._textLineEdit.setClearButtonEnabled(True)
+        self._textLineEdit.textEdited.connect(self._textEdited)
+        self._menuText.addWidget(self._textLineEdit)
+        self._menuText.aboutToShow.connect(self._textLineEdit.setFocus)
 
         self._solidLine = SolidPenStyleSelector()
         self._dashLine = DashPenStyleSelector()
@@ -300,10 +308,9 @@ class ConnectorToolbar(PaintedItemBasedToolbar):
         self._sbWidth = PenWidthEditor()
         self._sbWidth.valueChanged.connect(self._widthChanged)
 
-        self._toolbar.layout().addWidget(self._btnRelationType)
-        self._toolbar.layout().addWidget(vline())
         self._toolbar.layout().addWidget(self._btnColor)
         self._toolbar.layout().addWidget(self._btnIcon)
+        self._toolbar.layout().addWidget(self._btnText)
         self._toolbar.layout().addWidget(vline())
         self._toolbar.layout().addWidget(self._solidLine)
         self._toolbar.layout().addWidget(self._dashLine)
@@ -317,6 +324,7 @@ class ConnectorToolbar(PaintedItemBasedToolbar):
         self._item = None
 
         self._sbWidth.setValue(connector.penWidth())
+        self._textLineEdit.setText(connector.text())
 
         penStyle = connector.penStyle()
         for line in [self._solidLine, self._dashLine, self._dotLine]:
@@ -324,6 +332,10 @@ class ConnectorToolbar(PaintedItemBasedToolbar):
                 line.setChecked(True)
                 break
         self._item = connector
+
+    def _textEdited(self):
+        if self._item:
+            self._item.setText(self._textLineEdit.text())
 
     def _penStyleChanged(self):
         btn = self._lineBtnGroup.checkedButton()

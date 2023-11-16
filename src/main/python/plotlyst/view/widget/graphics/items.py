@@ -27,7 +27,7 @@ from PyQt6.QtCore import Qt, QTimer, QRectF, QPointF, QPoint, QRect
 from PyQt6.QtGui import QPainter, QPen, QPainterPath, QColor, QIcon, QPolygonF, QBrush, QFontMetrics
 from PyQt6.QtWidgets import QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QGraphicsSceneMouseEvent, \
     QStyleOptionGraphicsItem, QWidget, \
-    QGraphicsSceneHoverEvent, QGraphicsPolygonItem, QApplication
+    QGraphicsSceneHoverEvent, QGraphicsPolygonItem, QApplication, QGraphicsTextItem
 from overrides import overrides
 from qthandy import pointy
 
@@ -258,6 +258,9 @@ class ConnectorItem(QGraphicsPathItem):
         self._iconBadge = IconBadge(self)
         self._iconBadge.setVisible(False)
 
+        self._text = QGraphicsTextItem('', self)
+        self._text.setVisible(False)
+
         self.rearrange()
 
     def networkScene(self) -> 'NetworkScene':
@@ -283,6 +286,8 @@ class ConnectorItem(QGraphicsPathItem):
             color = node.color
         else:
             color = 'black'
+        self._text.setPlainText(connector.text)
+
         self.setColor(QColor(color))
         if connector.icon:
             self.setIcon(connector.icon)
@@ -299,6 +304,18 @@ class ConnectorItem(QGraphicsPathItem):
         if self._connector:
             self._connector.pen = penStyle
             self.networkScene().connectorChangedEvent(self)
+
+    def text(self) -> str:
+        if self._connector:
+            return self._connector.text if self._connector.text else self._connector.type
+
+        return ''
+
+    def setText(self, text: str):
+        self._connector.text = text
+        self._text.setPlainText(text)
+        self.rearrange()
+        self.networkScene().connectorChangedEvent(self)
 
     def penWidth(self) -> int:
         return self.pen().width()
@@ -355,6 +372,7 @@ class ConnectorItem(QGraphicsPathItem):
 
     def setColor(self, color: QColor):
         self._setColor(color)
+        self._text.setDefaultTextColor(color)
 
         self.update()
 
@@ -449,12 +467,13 @@ class ConnectorItem(QGraphicsPathItem):
                                    point.y() - self._iconBadge.boundingRect().height() / 2)
 
     def _rearrangeText(self, path: QPainterPath):
-        pass
-        # if line:
-        #     point = path.pointAtPercent(0.4)
-        # else:
-        #     point = path.pointAtPercent(0.6)
-        # path.addText(point, QApplication.font(), 'Romance')
+        if self._icon:
+            point = path.pointAtPercent(0.7)
+        else:
+            point = path.pointAtPercent(0.5)
+        self._text.setPos(point.x() - self._text.boundingRect().width() / 2,
+                          point.y() - self._text.boundingRect().height())
+        self._text.setVisible(True)
 
     def _setColor(self, color: QColor):
         self._color = color
