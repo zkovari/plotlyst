@@ -555,9 +555,7 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
 class MbtiFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super(MbtiFieldWidget, self).__init__(field, parent)
-        # self.wdgEditor = TextSelectionWidget(field, mbti_help)
         self.wdgEditor = MbtiSelector()
-        # self.wdgEditor.setIgnoredTooltip('Ignore MBTI personality type for this character')
         self._defaultTooltip: str = 'Select MBTI personality type'
         self.wdgEditor.setToolTip(self._defaultTooltip)
 
@@ -567,8 +565,8 @@ class MbtiFieldWidget(TemplateFieldWidgetBase):
         if self.field.compact:
             _layout.addWidget(spacer())
 
-        # self.wdgEditor.selectionChanged.connect(self._selectionChanged)
-        # self.wdgEditor.ignored.connect(self._ignored)
+        self.wdgEditor.selected.connect(self._selectionChanged)
+        self.wdgEditor.ignored.connect(self._ignored)
 
     @overrides
     def value(self) -> Any:
@@ -585,14 +583,8 @@ class MbtiFieldWidget(TemplateFieldWidgetBase):
         else:
             self.wdgEditor.setToolTip(self._defaultTooltip)
 
-    def _selectionChanged(self, _: Optional[SelectionItem] = None, new: Optional[SelectionItem] = None,
-                          animated: bool = True):
-        if not new:
-            self.valueReset.emit()
-            self.wdgEditor.setToolTip(self._defaultTooltip)
-            return
-
-        self.wdgEditor.setToolTip(mbti_help[new.text])
+    def _selectionChanged(self, item: SelectionItem):
+        self.wdgEditor.setToolTip(mbti_help[item.text])
         self.valueFilled.emit(1)
 
     def _ignored(self):

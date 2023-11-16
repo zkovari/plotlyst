@@ -27,12 +27,12 @@ from PyQt6.QtCore import pyqtSignal, Qt, QSize
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QWidget, QSpinBox, QSlider, QTextBrowser, QButtonGroup, QToolButton
 from overrides import overrides
-from qthandy import vbox, pointy, hbox, sp, vspacer, underline, decr_font, flow, clear_layout, translucent, line
+from qthandy import vbox, pointy, hbox, sp, vspacer, underline, decr_font, flow, clear_layout, translucent, line, grid
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
-from src.main.python.plotlyst.core.help import enneagram_help
+from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.core.template import SelectionItem, enneagram_field, TemplateField, mbti_field
 from src.main.python.plotlyst.view.common import push_btn, action, tool_btn, label, wrap
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -312,7 +312,7 @@ class EnneagramSelectorWidget(PersonalitySelectorWidget):
         self.btnSelect = push_btn(IconRegistry.ok_icon('white'), 'Select enneagram', properties=['positive', 'base'])
         self.layout().addWidget(self.btnSelect, alignment=Qt.AlignmentFlag.AlignRight)
 
-        self.btnGroup.buttons()[0].setChecked(True)
+        self.reset()
 
     @overrides
     def setValue(self, value: SelectionItem):
@@ -328,12 +328,12 @@ class EnneagramSelectorWidget(PersonalitySelectorWidget):
                        transparent_=True)
         btn.setIconSize(QSize(32, 32))
         btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.5, ignoreCheckedButton=True))
-        btn.toggled.connect(partial(self._clicked, item))
+        btn.toggled.connect(partial(self._toggled, item))
         self.btnGroup.addButton(btn)
         self._buttons[item.text] = btn
         self.wdgSelector.layout().addWidget(btn)
 
-    def _clicked(self, item: SelectionItem, checked: bool):
+    def _toggled(self, item: SelectionItem, checked: bool):
         if not checked:
             return
 
@@ -358,7 +358,51 @@ class EnneagramSelectorWidget(PersonalitySelectorWidget):
 class MbtiSelectorWidget(PersonalitySelectorWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.layout().addWidget(label('mbti'))
+
+        self.wdgSelector = QWidget()
+        grid(self.wdgSelector)
+        self.layout().addWidget(self.wdgSelector)
+
+        self._buttons: Dict[str, QToolButton] = {}
+        self.btnGroup = QButtonGroup()
+
+        for i, item in enumerate(mbti_field.selections):
+            self._addItem(item, i)
+
+        self.text = QTextBrowser()
+        self.text.setProperty('transparent', True)
+        self.layout().addWidget(wrap(self.text, margin_left=10, margin_right=10))
+
+        self.btnSelect = push_btn(IconRegistry.ok_icon('white'), 'Select MBTI', properties=['positive', 'base'])
+        self.layout().addWidget(self.btnSelect, alignment=Qt.AlignmentFlag.AlignRight)
+
+        self.reset()
+
+    @overrides
+    def reset(self):
+        self.btnGroup.buttons()[0].setChecked(True)
+
+    def _addItem(self, item: SelectionItem, index: int):
+        btn = tool_btn(IconRegistry.from_name(item.icon, 'grey', item.icon_color), transparent_=True, checkable=True)
+        btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        btn.setText(item.text)
+        btn.setIconSize(QSize(32, 32))
+        btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.5, ignoreCheckedButton=True))
+        btn.toggled.connect(partial(self._toggled, item))
+        self.btnGroup.addButton(btn)
+        self._buttons[item.text] = btn
+
+        cluster = index // 4
+        row = index % 2
+        col = index % 4 // 2
+        self.wdgSelector.layout().addWidget(btn, row, col + cluster * 2)
+
+    def _toggled(self, item: SelectionItem, checked: bool):
+        if not checked:
+            return
+
+        self._selected = item
+        self.text.setText(mbti_help.get(item.text, ''))
 
 
 class PersonalitySelector(SecondaryActionPushButton):
@@ -456,6 +500,8 @@ class MbtiSelector(PersonalitySelector):
         self._selector = MbtiSelectorWidget(self)
         self._menu.addWidget(self._selector)
         self._selector.btnIgnore.clicked.connect(self._ignoreClicked)
+        self._selector.btnIgnore.setToolTip('Ignore MBTI personality type for this character')
+        self._selector.btnSelect.clicked.connect(self._selectionClicked)
 
     @overrides
     def field(self) -> TemplateField:
