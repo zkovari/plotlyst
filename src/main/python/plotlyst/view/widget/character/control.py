@@ -31,8 +31,9 @@ from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
-from src.main.python.plotlyst.view.common import push_btn, action, tool_btn
+from src.main.python.plotlyst.view.common import push_btn, action, tool_btn, label
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 
 
 class LifeStage(Enum):
@@ -251,13 +252,24 @@ class CharacterAgeEditor(QWidget):
         self._btnStage.setIcon(IconRegistry.from_name(stage.icon()))
         self._text.setText(stage.description())
 
-        
-class EnneagramSelector(SecondaryActionPushButton):
+
+class EnneagramSelectorWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
         vbox(self)
         self.layout().addWidget(label('Test'))
+
+
+class EnneagramSelector(SecondaryActionPushButton):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        vbox(self)
+        self._selector = EnneagramSelectorWidget(self)
+        self._menu = MenuWidget(self)
+        self._menu.addWidget(self._selector)
+
+        self.setText('Enneagram...')
 
     def value(self):
         pass
