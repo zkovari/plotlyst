@@ -165,6 +165,10 @@ class AbstractSocketItem(QAbstractGraphicsShapeItem):
         for con in self._connectors:
             con.rearrange()
 
+    def parentColorChangedEvent(self, node: 'NodeItem'):
+        for connector in self._connectors:
+            connector.colorChangedEvent(node)
+
     def removeConnectors(self):
         self._connectors.clear()
 
@@ -232,7 +236,7 @@ class ConnectorItem(QGraphicsPathItem):
         self._source = source
         self._target = target
         self._connector: Optional[Connector] = None
-        self._color: QColor = QColor('darkblue')
+        self._color: QColor = QColor('black')
         self._relation: Optional[Relation] = None
         self._icon: Optional[str] = None
         self._defaultLineType: ConnectorType = ConnectorType.Curved
@@ -272,7 +276,14 @@ class ConnectorItem(QGraphicsPathItem):
         self._connector = None
         self.setPenStyle(connector.pen)
         self.setPenWidth(connector.width)
-        self.setColor(QColor(connector.color))
+        if connector.color:
+            color = connector.color
+        elif isinstance(self._target.parentItem(), NodeItem):
+            node: Node = self._target.parentItem().node()
+            color = node.color
+        else:
+            color = 'black'
+        self.setColor(QColor(color))
         if connector.icon:
             self.setIcon(connector.icon)
         self._connector = connector
@@ -344,8 +355,6 @@ class ConnectorItem(QGraphicsPathItem):
 
     def setColor(self, color: QColor):
         self._setColor(color)
-        if self._icon:
-            self._iconBadge.setIcon(IconRegistry.from_name(self._icon, self._color.name()), self._color)
 
         self.update()
 
@@ -397,6 +406,11 @@ class ConnectorItem(QGraphicsPathItem):
         self._rearrangeText(path)
 
         self.setPath(path)
+
+    def colorChangedEvent(self, nodeItem: 'NodeItem'):
+        if nodeItem is self._target.parentItem():
+            if not self._connector.color:
+                self._setColor(QColor(nodeItem.node().color))
 
     def _rearrangeLinearConnector(self, path: QPainterPath, width: float, height: float, endArrowAngle: float):
         path.lineTo(width, height)
@@ -452,6 +466,9 @@ class ConnectorItem(QGraphicsPathItem):
         arrowPen.setColor(self._color)
         self._arrowheadItem.setPen(arrowPen)
         self._arrowheadItem.setBrush(self._color)
+
+        if self._icon:
+            self._iconBadge.setIcon(IconRegistry.from_name(self._icon, self._color.name()), self._color)
 
     def _inProximity(self, width: float, height: float) -> bool:
         return abs(height) < 5 or abs(width) < 100
@@ -756,6 +773,8 @@ class EventItem(NodeItem):
             self._icon = IconRegistry.from_name(self._node.icon, self._node.color)
         self._refresh()
         self.networkScene().nodeChangedEvent(self._node)
+        for socket in self._sockets:
+            socket.parentColorChangedEvent(self)
 
     def setFontSettings(self, size: Optional[int] = None, bold: Optional[bool] = None, italic: Optional[bool] = None,
                         underline: Optional[bool] = None):

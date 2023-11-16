@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import sys
 from functools import partial
 from typing import Dict
 
@@ -25,7 +24,7 @@ import emoji
 import qtanim
 from PyQt6.QtCore import Qt, QPointF, pyqtSignal, QSize, QRectF, QEvent
 from PyQt6.QtGui import QPaintEvent, QPainter, QPen, QColor, QPainterPath, QShowEvent, QEnterEvent, QMouseEvent
-from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel, QSizePolicy, QPushButton, QToolButton
+from PyQt6.QtWidgets import QWidget, QLabel, QSizePolicy, QPushButton, QToolButton
 from overrides import overrides
 from qthandy import vbox, vspacer, hbox, spacer, transparent, margins, line, retain_when_hidden, decr_font, curved_flow, \
     gc, sp, decr_icon, translucent, pointy
@@ -554,36 +553,3 @@ class CharacterPlansSelectorWidget(QWidget):
     def _subtaskSelected(self, wdg: CharacterSubtaskWidget, selected: bool):
         if selected:
             self.goalSelected.emit(wdg.subtask())
-
-
-if __name__ == '__main__':
-    class MainWindow(QMainWindow):
-        def __init__(self, parent=None):
-            super(MainWindow, self).__init__(parent)
-
-            self.resize(500, 500)
-
-            novel = Novel('test')
-            character = Character('Name')
-            plan = CharacterPlan()
-            goal = Goal('Goal 1')
-            novel.goals.append(goal)
-            plan.goals.append(CharacterGoal(goal_id=goal.id))
-            plan.goals.append(CharacterGoal(goal_id=goal.id,
-                                            children=[CharacterGoal(goal_id=goal.id),
-                                                      CharacterGoal(goal_id=goal.id),
-                                                      CharacterGoal(goal_id=goal.id)]))
-            plan.goals.append(CharacterGoal(goal_id=goal.id))
-            plan.goals.append(CharacterGoal(goal_id=goal.id))
-
-            character.plans.append(plan)
-            character.plans.append(CharacterPlan(external=False))
-            self.widget = CharacterPlansSelectorWidget(novel, character)
-            self.setCentralWidget(self.widget)
-
-
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-
-    app.exec()

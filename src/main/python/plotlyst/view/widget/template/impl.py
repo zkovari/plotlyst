@@ -27,22 +27,22 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QModelIndex, QSize, QItemSelectionModel
 from PyQt6.QtGui import QMouseEvent, QIcon, QWheelEvent
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QWidget, QLineEdit, QToolButton, QLabel, \
-    QSpinBox, QButtonGroup, QSizePolicy, QListView, QPushButton, QMenu, QVBoxLayout, QSlider
+    QSpinBox, QButtonGroup, QSizePolicy, QListView, QPushButton, QVBoxLayout, QSlider
 from overrides import overrides
 from qthandy import spacer, hbox, vbox, bold, line, underline, transparent, margins, \
-    decr_font, retain_when_hidden, btn_popup_menu, vspacer, gc, italic, sp, pointy
+    decr_font, retain_when_hidden, vspacer, gc, italic, sp, pointy
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
-from qtmenu import MenuWidget
+from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.core.template import TemplateField, SelectionItem, \
     enneagram_choices, goal_field, internal_goal_field, stakes_field, conflict_field, motivation_field, \
     internal_motivation_field, internal_conflict_field, internal_stakes_field, wound_field, trigger_field, fear_field, \
-    healing_field, methods_field, misbelief_field, positive_arc, negative_arc, need_field, ghost_field, desire_field
+    healing_field, methods_field, misbelief_field, ghost_field, demon_field
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
-from src.main.python.plotlyst.view.common import wrap, emoji_font, hmax, action, ButtonPressResizeEventFilter, \
-    insert_before_the_end
+from src.main.python.plotlyst.view.common import wrap, emoji_font, hmax, ButtonPressResizeEventFilter, \
+    insert_before_the_end, action
 from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui import Ui_FieldTextSelectionWidget
 from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -983,10 +983,12 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
         self._btnPrimary.setText(self._primaryButtonText())
         self._btnPrimary.setIcon(IconRegistry.plus_icon('grey'))
         decr_font(self._btnPrimary)
-        if self._hasMenu():
-            btn_popup_menu(self._btnPrimary, self._primaryMenu())
-        else:
-            self._btnPrimary.clicked.connect(partial(self._addPrimaryField, self._primaryFields()[0]))
+        fields = self._primaryFields()
+        menu = MenuWidget(self._btnPrimary)
+        menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+        for field in fields:
+            menu.addAction(
+                action(field.name, tooltip=field.description, slot=partial(self._addPrimaryField, field), parent=menu))
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self._layout: QVBoxLayout = vbox(self, 0, 5)
 
@@ -1036,17 +1038,6 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
 
     def _primaryButtonText(self) -> str:
         return 'Add new item'
-
-    def _hasMenu(self) -> bool:
-        return True
-
-    def _primaryMenu(self) -> QMenu:
-        fields = self._primaryFields()
-        menu = QMenu()
-        for field in fields:
-            menu.addAction(action(field.name, slot=partial(self._addPrimaryField, field), parent=menu))
-
-        return menu
 
     @abstractmethod
     def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
@@ -1113,34 +1104,31 @@ class WoundsFieldWidget(MultiLayerComplexTemplateWidgetBase):
 
     @overrides
     def _primaryButtonText(self) -> str:
-        return 'Add new wound'
-
-    @overrides
-    def _hasMenu(self) -> bool:
-        return False
+        return 'Add new baggage'
 
     @overrides
     def _primaryFields(self) -> List[TemplateField]:
-        return [wound_field]
+        return [wound_field, ghost_field, demon_field]
 
     @overrides
     def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
-        return [fear_field, misbelief_field, trigger_field, healing_field]
+        if primary.id == wound_field.id:
+            return [fear_field, misbelief_field, trigger_field, healing_field]
+        return []
 
-
-class ArcsFieldWidget(MultiLayerComplexTemplateWidgetBase):
-    @property
-    def wdgEditor(self):
-        return self
-
-    @overrides
-    def _primaryButtonText(self) -> str:
-        return 'Add new arc'
-
-    @overrides
-    def _primaryFields(self) -> List[TemplateField]:
-        return [positive_arc, negative_arc]
-
-    @overrides
-    def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
-        return [ghost_field, fear_field, misbelief_field, desire_field, need_field]
+# class ArcsFieldWidget(MultiLayerComplexTemplateWidgetBase):
+#     @property
+#     def wdgEditor(self):
+#         return self
+#
+#     @overrides
+#     def _primaryButtonText(self) -> str:
+#         return 'Add new arc'
+#
+#     @overrides
+#     def _primaryFields(self) -> List[TemplateField]:
+#         return [positive_arc, negative_arc]
+#
+#     @overrides
+#     def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
+#         return [ghost_field, fear_field, misbelief_field, desire_field, need_field]

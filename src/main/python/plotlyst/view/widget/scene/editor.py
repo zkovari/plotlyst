@@ -21,17 +21,19 @@ from functools import partial
 from typing import List, Optional, Dict
 
 import qtanim
-from PyQt6.QtCore import Qt, QSize, QEvent, pyqtSignal, QObject
-from PyQt6.QtGui import QEnterEvent, QIcon, QMouseEvent, QColor, QCursor, QPalette, QPaintEvent, QPainter, QPen
+from PyQt6.QtCore import Qt, QSize, QEvent, pyqtSignal, QObject, QTimer
+from PyQt6.QtGui import QEnterEvent, QIcon, QMouseEvent, QColor, QCursor, QPalette, QPaintEvent, QPainter, QPen, \
+    QShowEvent
 from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QStackedWidget, QGridLayout, \
     QToolButton, QAbstractButton, QScrollArea, QButtonGroup
 from overrides import overrides
 from qthandy import vbox, vspacer, transparent, sp, line, incr_font, hbox, pointy, vline, retain_when_hidden, margins, \
-    spacer, underline, bold, grid, gc, clear_layout, ask_confirmation, decr_icon, italic
+    spacer, underline, bold, grid, gc, clear_layout, ask_confirmation, decr_icon, italic, translucent
 from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import raise_unrecognized_arg, CONFLICT_SELF_COLOR, RELAXED_WHITE_COLOR
+from src.main.python.plotlyst.common import raise_unrecognized_arg, CONFLICT_SELF_COLOR, RELAXED_WHITE_COLOR, \
+    PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Scene, Novel, ScenePurpose, advance_story_scene_purpose, \
     ScenePurposeType, reaction_story_scene_purpose, character_story_scene_purpose, setup_story_scene_purpose, \
     emotion_story_scene_purpose, exposition_story_scene_purpose, scene_purposes, Character, StoryElement, \
@@ -456,6 +458,93 @@ class ArrowButton(QToolButton):
             self._increaseState()
 
 
+class LineElementWidget(QWidget):
+    def __init__(self, novel: Novel, type: StoryElementType, row: int, col: int, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+        self._type = type
+        self._row = row
+        self._col = col
+        self._scene: Optional[Scene] = None
+        self._element: Optional[StoryElement] = None
+
+        pointy(self)
+        self.setToolTip('Toggle a visual separator')
+
+        hbox(self, 3)
+        if self._type == StoryElementType.H_line:
+            self._line = line()
+        else:
+            self._line = vline()
+
+        retain_when_hidden(self._line)
+        self.layout().addWidget(self._line)
+
+    def setElement(self, element: StoryElement):
+        self._element = element
+        self._line.setVisible(True)
+
+    def setScene(self, scene: Scene):
+        self._scene = scene
+        self.reset()
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        if self._element is None:
+            self._line.setVisible(True)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        if self._element is None:
+            self._line.setVisible(False)
+
+    @overrides
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        if self._element is None:
+            self.activate()
+        else:
+            self._scene.story_elements.remove(self._element)
+            self.reset()
+
+    def activate(self):
+        self._element = StoryElement(self._type, row=self._row, col=self._col)
+        self._line.setVisible(True)
+        self._line.setGraphicsEffect(None)
+        self._scene.story_elements.append(self._element)
+
+    def reset(self):
+        self._line.setVisible(False)
+        translucent(self._line)
+        self._element = None
+
+
+class _CornerIcon(QToolButton):
+    hovered = pyqtSignal(StoryElementType)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        transparent(self)
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
+        self.setCheckable(True)
+        self._type = None
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        if self._type:
+            self.setChecked(True)
+            self.hovered.emit(self._type)
+
+    def showEvent(self, a0: QShowEvent) -> None:
+        self.setChecked(False)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self.setChecked(False)
+
+    def setType(self, type_: StoryElementType):
+        self._type = type_
+
+
 class SceneElementWidget(QWidget):
     storylineSelected = pyqtSignal(Plot)
     storylineEditRequested = pyqtSignal(Plot)
@@ -487,7 +576,6 @@ class SceneElementWidget(QWidget):
         if self._storylineLinkEnabled:
             self._storylineMenu = StorylineSelectorMenu(self._novel, self._btnStorylineLink)
             self._storylineMenu.storylineSelected.connect(self._storylineSelected)
-
 
         self._arrows: Dict[int, ArrowButton] = {
             90: ArrowButton(Qt.Edge.RightEdge),
@@ -528,19 +616,51 @@ class SceneElementWidget(QWidget):
         self._wdgTitle = QWidget()
         hbox(self._wdgTitle)
         self._wdgTitle.layout().addWidget(self._btnStorylineLink, alignment=Qt.AlignmentFlag.AlignLeft)
-        self._wdgTitle.layout().addWidget(group(self._iconActive, self._titleActive),
+        self._wdgTitle.layout().addWidget(group(self._iconActive, self._titleActive, margin=0, spacing=1),
                                           alignment=Qt.AlignmentFlag.AlignCenter)
         self._wdgTitle.layout().addWidget(self._btnClose, alignment=Qt.AlignmentFlag.AlignRight)
         self._pageEditor.layout().addWidget(self._wdgTitle)
 
-        self._pageIdle.layout().addWidget(self._iconIdle, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._corners: List[_CornerIcon] = []
+        self._cornerTopLeft = _CornerIcon()
+        self._corners.append(self._cornerTopLeft)
+        self._cornerTopRight = _CornerIcon()
+        self._corners.append(self._cornerTopRight)
+        self._cornerBottomLeft = _CornerIcon()
+        self._corners.append(self._cornerBottomLeft)
+        self._cornerBottomRight = _CornerIcon()
+        self._corners.append(self._cornerBottomRight)
+
+        self._wdgIdleTop = QWidget()
+        hbox(self._wdgIdleTop, 0, 0)
+        self._wdgIdleTop.layout().addWidget(self._cornerTopLeft,
+                                            alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        self._wdgIdleTop.layout().addWidget(self._iconIdle, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._wdgIdleTop.layout().addWidget(self._cornerTopRight,
+                                            alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+
+        self._pageIdle.layout().addWidget(self._wdgIdleTop)
         self._pageIdle.layout().addWidget(self._titleIdle, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self._lblClick = label('Click to add', underline=True, description=True)
         retain_when_hidden(self._lblClick)
         self._lblClick.setHidden(True)
-        self._pageIdle.layout().addWidget(self._lblClick, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._wdgIdleBottom = QWidget()
+        hbox(self._wdgIdleBottom, 0, 0)
+        self._wdgIdleBottom.layout().addWidget(self._cornerBottomLeft,
+                                               alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignBottom)
+        self._wdgIdleBottom.layout().addWidget(self._lblClick, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._wdgIdleBottom.layout().addWidget(self._cornerBottomRight,
+                                               alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignBottom)
+        self._pageIdle.layout().addWidget(self._wdgIdleBottom)
         self._pageIdle.layout().addWidget(vspacer())
+
+        for corner in self._corners:
+            corner.setDisabled(True)
+            corner.setVisible(False)
+            retain_when_hidden(corner)
+            corner.hovered.connect(self._typeChanged)
+            corner.clicked.connect(self.activate)
 
         self.reset()
 
@@ -553,7 +673,6 @@ class SceneElementWidget(QWidget):
 
     def setStorylineVisible(self, visible: bool):
         self._storylineVisible = visible
-        self._btnStorylineLink.setVisible(visible)
 
     @overrides
     def eventFilter(self, watched: 'QObject', event: 'QEvent') -> bool:
@@ -564,10 +683,19 @@ class SceneElementWidget(QWidget):
 
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
+        def delayed_corners_visible():
+            for corner in self._corners:
+                if corner.isEnabled():
+                    corner.setVisible(True)
+
         if self._stackWidget.currentWidget() == self._pageIdle:
             self._lblClick.setVisible(True)
             self._titleIdle.setVisible(True)
             self._iconIdle.setIcon(self._icon)
+
+            QTimer.singleShot(200, delayed_corners_visible)
+
+
         else:
             if self._storylineLinkEnabled and self._storylineVisible:
                 self._btnStorylineLink.setVisible(True)
@@ -581,6 +709,9 @@ class SceneElementWidget(QWidget):
             self._lblClick.setVisible(False)
             self._titleIdle.setVisible(False)
             self._iconIdle.setIcon(IconRegistry.from_name('msc.debug-stackframe-dot', 'lightgrey'))
+
+            for corner in self._corners:
+                corner.setVisible(False)
         else:
             for arrow in self._arrows.values():
                 if not arrow.isChecked():
@@ -631,6 +762,9 @@ class SceneElementWidget(QWidget):
         self._titleIdle.setVisible(False)
         self._iconIdle.setIcon(IconRegistry.from_name('msc.debug-stackframe-dot', 'lightgrey'))
         self._btnStorylineLink.setIcon(IconRegistry.storylines_icon(color='lightgrey'))
+        self._btnStorylineLink.setHidden(True)
+        for corner in self._corners:
+            corner.setHidden(True)
         pointy(self._pageIdle)
         self._element = None
 
@@ -658,6 +792,7 @@ class SceneElementWidget(QWidget):
     def _elementCreated(self, element: StoryElement):
         element.row = self._row
         element.col = self._col
+        print(f'created {element}')
         self._storyElements().append(element)
 
     def _elementRemoved(self, element: StoryElement):
@@ -693,6 +828,10 @@ class SceneElementWidget(QWidget):
     def _arrowReset(self, degree: int):
         self._element.arrows[degree] = 0
 
+    def _typeChanged(self, type_: StoryElementType):
+        self._type = type_
+        self._iconIdle.setIcon(self._icon)
+
 
 class TextBasedSceneElementWidget(SceneElementWidget):
     def __init__(self, novel: Novel, type: StoryElementType, row: int, col: int, parent=None):
@@ -700,9 +839,9 @@ class TextBasedSceneElementWidget(SceneElementWidget):
         self.setMaximumWidth(210)
 
         self._textEditor = QTextEdit()
-        self._textEditor.setMinimumWidth(170)
+        self._textEditor.setMinimumWidth(180)
         self._textEditor.setMaximumWidth(200)
-        self._textEditor.setMinimumHeight(80)
+        self._textEditor.setMinimumHeight(90)
         self._textEditor.setMaximumHeight(100)
         self._textEditor.setTabChangesFocus(True)
         self._textEditor.setAcceptRichText(False)
@@ -837,19 +976,58 @@ class SceneOutcomeEditor(QWidget):
 
 
 class EventElementEditor(TextBasedSceneElementWidget):
-    def __init__(self, novel: Novel, row: int, col: int, parent=None):
+    def __init__(self, novel: Novel, row: int, col: int, defaultType: StoryElementType, parent=None):
         super().__init__(novel, StoryElementType.Event, row, col, parent)
-        self.setTitle('Event')
-        self.setIcon('mdi.lightning-bolt-outline')
-        self.setPlaceholderText("A pivotal event")
+        self._typeChanged(defaultType)
 
+        self._cornerTopLeft.setIcon(
+            IconRegistry.from_name('mdi.lightning-bolt-outline', 'lightgrey', PLOTLYST_SECONDARY_COLOR))
+        self._cornerTopLeft.setType(StoryElementType.Event)
+        self._cornerTopLeft.setEnabled(True)
 
-class EffectElementEditor(TextBasedSceneElementWidget):
-    def __init__(self, novel: Novel, row: int, col: int, parent=None):
-        super().__init__(novel, StoryElementType.Event, row, col, parent)
-        self.setTitle('Effect')
-        self.setIcon('fa5s.tachometer-alt')
-        self.setPlaceholderText("An effect caused by the event")
+        self._cornerTopRight.setIcon(
+            IconRegistry.from_name('fa5s.tachometer-alt', 'lightgrey', PLOTLYST_SECONDARY_COLOR))
+        self._cornerTopRight.setType(StoryElementType.Effect)
+        self._cornerTopRight.setEnabled(True)
+
+        self._cornerBottomRight.setIcon(
+            IconRegistry.from_name('ri.timer-flash-line', 'lightgrey', PLOTLYST_SECONDARY_COLOR))
+        self._cornerBottomRight.setType(StoryElementType.Delayed_effect)
+        self._cornerBottomRight.setEnabled(True)
+
+        self._cornerBottomLeft.setIcon(IconRegistry.theme_icon('lightgrey', PLOTLYST_SECONDARY_COLOR))
+        self._cornerBottomLeft.setType(StoryElementType.Thematic_effect)
+        self._cornerBottomLeft.setEnabled(True)
+
+    @overrides
+    def setElement(self, element: StoryElement):
+        super().setElement(element)
+        self._typeChanged(element.type)
+
+    @overrides
+    def _typeChanged(self, type_: StoryElementType):
+        if type_ == StoryElementType.Event:
+            self.setTitle('Event')
+            self.setIcon('mdi.lightning-bolt-outline')
+            self.setPlaceholderText("A pivotal event")
+            self.setStorylineVisible(True)
+        elif type_ == StoryElementType.Effect:
+            self.setTitle('Effect')
+            self.setIcon('fa5s.tachometer-alt')
+            self.setPlaceholderText("An immediate effect caused by an event")
+            self.setStorylineVisible(True)
+        elif type_ == StoryElementType.Delayed_effect:
+            self.setTitle('Delayed effect')
+            self.setIcon('ri.timer-flash-line')
+            self.setPlaceholderText("A delayed effect happening in a later scene")
+            self.setStorylineVisible(False)
+        elif type_ == StoryElementType.Thematic_effect:
+            self.setTitle('Thematic effect')
+            self.setIcon('mdi.butterfly-outline')
+            self.setPlaceholderText("Events that contribute to, symbolize, or align with the theme")
+            self.setStorylineVisible(False)
+
+        super()._typeChanged(type_)
 
 
 class AgencyTextBasedElementEditor(TextBasedSceneElementWidget):
@@ -1062,20 +1240,27 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         self._headerLine = line()
         self._wdgElementsParent.layout().insertWidget(1, self._headerLine)
 
-        self._row = 3
-        self._col = 5
+        self._row = 5
+        self._col = 7
         for row in range(self._row):
+            if row % 2 == 1:
+                continue
             for col in range(self._col):
                 if col == 0:
-                    placeholder = EventElementEditor(self._novel, row, col)
-                elif col == 4:
+                    placeholder = EventElementEditor(self._novel, row, col, StoryElementType.Event)
+                elif col % 2 == 1:
                     continue
                 else:
-                    placeholder = EffectElementEditor(self._novel, row, col)
+                    placeholder = EventElementEditor(self._novel, row, col, StoryElementType.Effect)
                 placeholder.storylineSelected.connect(partial(self.storylineLinked.emit, placeholder))
                 placeholder.storylineEditRequested.connect(partial(self.storylineEditRequested.emit, placeholder))
                 self._wdgElements.layout().addWidget(placeholder, row, col, 1, 1)
-        self._wdgElements.layout().addWidget(vline(), 0, 3, 3, 1)
+
+        self._addLine(0, 1, True)
+        self._addLine(0, 3, True)
+        self._addLine(0, 5, True)
+        self._addLine(1, 0, False)
+        self._addLine(3, 0, False)
         self._wdgElements.layout().addWidget(spacer(), 0, self._col, 1, 1)
         self._wdgElements.layout().addWidget(vspacer(), self._row, 0, 1, 1)
         # self.__newPlotElementEditor()
@@ -1110,8 +1295,6 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         # self._wdgElements.layout().addWidget(self._newLine())
         # self._wdgElements.layout().addWidget(self._storylineElements[0])
         #
-        # self._wdgElements.layout().addWidget(self._newLine())
-        # self._wdgElements.layout().addWidget(self._consequencesElement)
 
     @overrides
     def setScene(self, scene: Scene):
@@ -1122,11 +1305,27 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         for row in range(self._row):
             for col in range(self._col):
                 item = self._wdgElements.layout().itemAtPosition(row, col)
-                if item and item.widget() and isinstance(item.widget(), SceneElementWidget):
-                    item.widget().setScene(scene)
-                    item.widget().setStorylineVisible(self._novel.prefs.toggled(NovelSetting.Storylines))
+                if item and item.widget():
+                    if isinstance(item.widget(), SceneElementWidget):
+                        item.widget().setScene(scene)
+                        item.widget().setStorylineVisible(self._novel.prefs.toggled(NovelSetting.Storylines))
+                    elif isinstance(item.widget(), LineElementWidget):
+                        item.widget().setScene(scene)
 
         for element in scene.story_elements:
+            pass
+            # if element.type in [StoryElementType.Effect, StoryElementType.Event]:
+            #     if element.row == 1:
+            #         element.row = 2
+            #     elif element.row == 2:
+            #         element.row = 4
+            #     if element.col == 1:
+            #         element.col = 2
+            #     elif element.col == 2:
+            #         element.col = 4
+            #     elif element.col == 3:
+            #         element.col = 6
+
             item = self._wdgElements.layout().itemAtPosition(element.row, element.col)
             if item and item.widget():
                 item.widget().setElement(element)
@@ -1149,6 +1348,11 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
                 if item and item.widget() and isinstance(item.widget(), SceneElementWidget):
                     item.widget().setStorylineVisible(toggled)
 
+    def _addLine(self, row, col, vertical: bool):
+        lineElement = LineElementWidget(self._novel, StoryElementType.V_line if vertical else StoryElementType.H_line,
+                                        row, col)
+        self._wdgElements.layout().addWidget(lineElement, row, col, self._row if vertical else 1,
+                                             1 if vertical else self._col)
     # def _plotSelected(self, plotElement: PlotSceneElementEditor):
     #     insert_after(self._wdgElements, self._wdgAddNewPlotParent, reference=plotElement)
     #     self._wdgAddNewPlotParent.setVisible(True)

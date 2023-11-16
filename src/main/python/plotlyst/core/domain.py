@@ -301,6 +301,7 @@ class Character:
     gender: str = ''
     role: Optional[Role] = None
     age: Optional[int] = None
+    age_infinite: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     occupation: Optional[str] = None
     avatar: Optional[Any] = None
     template_values: List[TemplateValue] = field(default_factory=list)
@@ -1118,8 +1119,12 @@ class StoryElementType(Enum):
     Plan_change = 'plan_change'
     Collaboration = 'collaboration'
     Subtext = 'subtext'
+    H_line = 'h_line'
+    V_line = 'v_line'
     Event = 'event'
     Effect = 'effect'
+    Delayed_effect = 'delayed_effect'
+    Thematic_effect = 'thematic_effect'
 
 
 @dataclass
@@ -1890,8 +1895,15 @@ class TextStatistics:
 
 
 @dataclass
+class DocumentProgress:
+    added: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    removed: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+
+
+@dataclass
 class DocumentStatistics:
     wc: int = 0
+    progress: Dict[str, DocumentProgress] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass
@@ -2091,7 +2103,7 @@ class Connector:
     pen: Qt.PenStyle = Qt.PenStyle.SolidLine
     width: int = 1
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
-    color: str = field(default='black', metadata=config(exclude=exclude_if_black))
+    color: str = field(default='', metadata=config(exclude=exclude_if_empty))
     text: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
 
@@ -2219,6 +2231,8 @@ class Novel(NovelDescriptor):
     manuscript_goals: ManuscriptGoals = field(default_factory=ManuscriptGoals)
     events_map: Diagram = field(default_factory=default_events_map)
     character_networks: List[Diagram] = field(default_factory=default_character_networks)
+    manuscript_progress: Dict[str, DocumentProgress] = field(default_factory=dict,
+                                                             metadata=config(exclude=exclude_if_empty))
 
     def pov_characters(self) -> List[Character]:
         pov_ids = set()

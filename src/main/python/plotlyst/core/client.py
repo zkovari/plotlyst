@@ -44,8 +44,9 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     default_tag_types, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterPreferences, TagReference, \
     ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding, Board, \
     default_big_five_values, CharacterPlan, ManuscriptGoals, Diagram, DiagramData, default_events_map, \
-    default_character_networks, ScenePurposeType, StoryElement, SceneOutcome, ChapterType, SceneStructureItem
-from src.main.python.plotlyst.core.template import Role, exclude_if_empty, exclude_if_black
+    default_character_networks, ScenePurposeType, StoryElement, SceneOutcome, ChapterType, SceneStructureItem, \
+    DocumentProgress
+from src.main.python.plotlyst.core.template import Role, exclude_if_empty, exclude_if_black, exclude_if_false
 from src.main.python.plotlyst.env import app_env
 
 
@@ -124,6 +125,7 @@ class CharacterInfo:
     gender: str = ''
     role: Optional[Role] = None
     age: Optional[int] = None
+    age_infinite: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     occupation: Optional[str] = None
     avatar_id: Optional[uuid.UUID] = None
     template_values: List[TemplateValue] = field(default_factory=list)
@@ -208,6 +210,8 @@ class NovelInfo:
     manuscript_goals: ManuscriptGoals = field(default_factory=ManuscriptGoals)
     events_map: Diagram = field(default_factory=default_events_map)
     character_networks: List[Diagram] = field(default_factory=default_character_networks)
+    manuscript_progress: Dict[str, DocumentProgress] = field(default_factory=dict,
+                                                             metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass
@@ -454,6 +458,7 @@ class JsonClient:
                 data = json_file.read()
                 info: CharacterInfo = CharacterInfo.from_json(data)
                 character = Character(name=info.name, id=info.id, gender=info.gender, role=info.role, age=info.age,
+                                      age_infinite=info.age_infinite,
                                       occupation=info.occupation,
                                       template_values=info.template_values,
                                       disabled_template_headers=info.disabled_template_headers,
@@ -527,7 +532,8 @@ class JsonClient:
                               chapter=chapter, stage=stage, beats=info.beats,
                               comments=info.comments, tag_references=info.tag_references,
                               document=info.document, manuscript=info.manuscript, drive=info.drive,
-                              purpose=info.purpose, outcome=info.outcome, story_elements=info.story_elements, structure=info.structure)
+                              purpose=info.purpose, outcome=info.outcome, story_elements=info.story_elements,
+                              structure=info.structure)
                 scenes.append(scene)
 
         tag_types = novel_info.tag_types
@@ -559,7 +565,8 @@ class JsonClient:
                       documents=novel_info.documents, premise=novel_info.premise, synopsis=novel_info.synopsis,
                       prefs=novel_info.prefs, manuscript_goals=novel_info.manuscript_goals,
                       events_map=novel_info.events_map,
-                      character_networks=novel_info.character_networks)
+                      character_networks=novel_info.character_networks,
+                      manuscript_progress=novel_info.manuscript_progress)
 
         world_path = self.novels_dir.joinpath(str(novel_info.id)).joinpath('world.json')
         if os.path.exists(world_path):
@@ -599,7 +606,8 @@ class JsonClient:
                                documents=novel.documents,
                                premise=novel.premise, synopsis=novel.synopsis,
                                version=LATEST_VERSION, prefs=novel.prefs, manuscript_goals=novel.manuscript_goals,
-                               events_map=novel.events_map, character_networks=novel.character_networks)
+                               events_map=novel.events_map, character_networks=novel.character_networks,
+                               manuscript_progress=novel.manuscript_progress)
 
         self.__persist_info(self.novels_dir, novel_info)
         self._persist_world(novel.id, novel.world)
@@ -621,6 +629,7 @@ class JsonClient:
 
     def _persist_character(self, char: Character, avatar_id: Optional[uuid.UUID] = None, novel: Optional[Novel] = None):
         char_info = CharacterInfo(id=char.id, name=char.name, gender=char.gender, role=char.role, age=char.age,
+                                  age_infinite=char.age_infinite,
                                   occupation=char.occupation,
                                   template_values=char.template_values,
                                   disabled_template_headers=char.disabled_template_headers,
