@@ -430,6 +430,7 @@ class EnneagramSelector(PersonalitySelector):
         self._selector = EnneagramSelectorWidget(self)
         self._menu.addWidget(self._selector)
         self._selector.btnIgnore.clicked.connect(self._ignoreClicked)
+        self._selector.btnIgnore.setToolTip('Ignore Enneagram personality type for this character')
         self._selector.btnSelect.clicked.connect(self._selectionClicked)
 
         self.setText('Enneagram...')

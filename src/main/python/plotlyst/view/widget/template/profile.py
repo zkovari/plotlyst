@@ -36,7 +36,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.template.base import TemplateWidgetBase, TemplateDisplayWidget, \
     EditableTemplateWidget
 from src.main.python.plotlyst.view.widget.template.factory import TemplateFieldWidgetFactory
-from src.main.python.plotlyst.view.widget.template.impl import HeaderTemplateDisplayWidget, TextSelectionWidget
+from src.main.python.plotlyst.view.widget.template.impl import HeaderTemplateDisplayWidget
 
 
 class _PlaceHolder(QFrame):
@@ -314,8 +314,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
 
     def _installEventFilter(self, widget: TemplateWidgetBase):
         widget.installEventFilter(self)
-        if isinstance(widget, TemplateWidgetBase) and not isinstance(widget, TemplateDisplayWidget) and isinstance(
-                widget.wdgEditor, TextSelectionWidget):
+        if isinstance(widget, TemplateWidgetBase) and not isinstance(widget, TemplateDisplayWidget):
             widget.wdgEditor.installEventFilter(self)
 
     def _addPlaceholder(self, row: int, col: int):
