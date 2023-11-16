@@ -27,7 +27,7 @@ from PyQt6.QtCore import pyqtSignal, Qt, QSize
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QWidget, QSpinBox, QSlider, QTextBrowser, QButtonGroup, QToolButton
 from overrides import overrides
-from qthandy import vbox, pointy, hbox, sp, vspacer, underline, decr_font, flow, clear_layout, translucent
+from qthandy import vbox, pointy, hbox, sp, vspacer, underline, decr_font, flow, clear_layout, translucent, line
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -295,6 +295,8 @@ class EnneagramSelectorWidget(PersonalitySelectorWidget):
 
         for item in enneagram_field.selections:
             self._addItem(item)
+
+        self.layout().addWidget(line(color='lightgrey'))
 
         self.title = label('', h4=True)
         self.layout().addWidget(self.title, alignment=Qt.AlignmentFlag.AlignCenter)
