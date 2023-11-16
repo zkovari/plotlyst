@@ -27,14 +27,15 @@ from typing import Optional, Tuple
 
 from PyQt6 import QtGui
 from PyQt6.QtCore import QUrl, Qt, QSize, QObject, QEvent, QPoint, QRect, pyqtSignal
-from PyQt6.QtGui import QColor, QPixmap, QIcon, QDesktopServices, QPainter
+from PyQt6.QtGui import QColor, QPixmap, QIcon, QPainter
 from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
 from PyQt6.QtWidgets import QDialog, QToolButton, QPushButton, QApplication
 from overrides import overrides
 from qthandy import hbox, FlowLayout, bold, underline
 from qthandy.filter import InstantTooltipEventFilter
+
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.view.common import rounded_pixmap
+from src.main.python.plotlyst.view.common import rounded_pixmap, open_url
 from src.main.python.plotlyst.view.generated.artbreeder_picker_dialog_ui import Ui_ArtbreederPickerDialog
 from src.main.python.plotlyst.view.generated.image_crop_dialog_ui import Ui_ImageCropDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -104,7 +105,7 @@ class ArtbreederDialog(QDialog, Ui_ArtbreederPickerDialog):
         self.setMinimumSize(250, 250)
         self.scrollArea.verticalScrollBar().valueChanged.connect(self._scrolled)
         self.btnVisit.setIcon(IconRegistry.from_name('fa5s.external-link-alt', 'white'))
-        self.btnVisit.clicked.connect(lambda: QDesktopServices.openUrl(QUrl('https://www.artbreeder.com/')))
+        self.btnVisit.clicked.connect(lambda: open_url('https://www.artbreeder.com/'))
 
     def display(self) -> Optional[QPixmap]:
         self._step = 0
@@ -287,11 +288,11 @@ class ImageCropDialog(QDialog, Ui_ImageCropDialog):
 
         def _xMovementAllowed(self, diff: int) -> bool:
             return 0 < self.geometry().x() + diff \
-                   and self.geometry().x() + diff + self.width() < self.parent().width()
+                and self.geometry().x() + diff + self.width() < self.parent().width()
 
         def _yMovementAllowed(self, diff: int) -> bool:
             return 0 < self.geometry().y() + diff \
-                   and self.geometry().y() + diff + self.height() < self.parent().height()
+                and self.geometry().y() + diff + self.height() < self.parent().height()
 
         @overrides
         def leaveEvent(self, event: QEvent) -> None:

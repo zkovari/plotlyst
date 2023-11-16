@@ -27,14 +27,15 @@ from PyQt6.QtCore import pyqtSignal, Qt, QSize
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QWidget, QSpinBox, QSlider, QTextBrowser, QButtonGroup, QToolButton
 from overrides import overrides
-from qthandy import vbox, pointy, hbox, sp, vspacer, underline, decr_font, flow, clear_layout, translucent, line, grid
+from qthandy import vbox, pointy, hbox, sp, vspacer, underline, decr_font, flow, clear_layout, translucent, line, grid, \
+    italic
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.core.template import SelectionItem, enneagram_field, TemplateField, mbti_field
-from src.main.python.plotlyst.view.common import push_btn, action, tool_btn, label, wrap
+from src.main.python.plotlyst.view.common import push_btn, action, tool_btn, label, wrap, open_url
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
@@ -374,7 +375,21 @@ class MbtiSelectorWidget(PersonalitySelectorWidget):
         self.layout().addWidget(wrap(self.text, margin_left=10, margin_right=10))
 
         self.btnSelect = push_btn(IconRegistry.ok_icon('white'), 'Select MBTI', properties=['positive', 'base'])
-        self.layout().addWidget(self.btnSelect, alignment=Qt.AlignmentFlag.AlignRight)
+
+        self.wdgBottom = QWidget()
+        hbox(self.wdgBottom)
+        ref = push_btn(text='Source: truity.com', properties=['transparent', 'no-menu'])
+        italic(ref)
+        decr_font(ref)
+        ref_menu = MenuWidget(ref)
+        ref_menu.addSection('Browse personality types and tests on truity')
+        ref_menu.addSeparator()
+        ref_menu.addAction(action('Visit truity.com', IconRegistry.from_name('fa5s.external-link-alt'),
+                                  slot=lambda: open_url('https://www.truity.com/')))
+        ref.installEventFilter(OpacityEventFilter(ref, 0.8, 0.5))
+        self.wdgBottom.layout().addWidget(ref, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgBottom.layout().addWidget(self.btnSelect, alignment=Qt.AlignmentFlag.AlignRight)
+        self.layout().addWidget(self.wdgBottom)
 
         self.reset()
 

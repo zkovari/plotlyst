@@ -23,8 +23,9 @@ from functools import partial
 from typing import Optional, Tuple, List, Union
 
 import qtawesome
-from PyQt6.QtCore import QRectF, QModelIndex, QRect, QPoint, QBuffer, QIODevice, QSize, QObject, QEvent, Qt, QTimer
-from PyQt6.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon, QAction
+from PyQt6.QtCore import QRectF, QModelIndex, QRect, QPoint, QBuffer, QIODevice, QSize, QObject, QEvent, Qt, QTimer, \
+    QUrl
+from PyQt6.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon, QAction, QDesktopServices
 from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemView, \
     QMenu, QAbstractButton, \
     QStackedWidget, QAbstractScrollArea, QLineEdit, QHeaderView, QScrollArea, QFrame, QTabWidget, \
@@ -539,3 +540,7 @@ def any_menu_visible(*buttons: Union[QPushButton, QToolButton]) -> bool:
             return True
 
     return False
+
+
+def open_url(url: str):
+    QDesktopServices.openUrl(QUrl(url))
