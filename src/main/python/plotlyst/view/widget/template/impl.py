@@ -24,9 +24,9 @@ from typing import Optional, List, Any, Dict, Set, Tuple
 import emoji
 import qtanim
 from PyQt6 import QtGui
-from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QModelIndex, QSize, QItemSelectionModel
+from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QModelIndex, QSize
 from PyQt6.QtGui import QMouseEvent, QIcon, QWheelEvent
-from PyQt6.QtWidgets import QFrame, QHBoxLayout, QWidget, QLineEdit, QToolButton, QLabel, \
+from PyQt6.QtWidgets import QHBoxLayout, QWidget, QLineEdit, QToolButton, QLabel, \
     QSpinBox, QButtonGroup, QSizePolicy, QListView, QPushButton, QVBoxLayout, QSlider
 from overrides import overrides
 from qthandy import spacer, hbox, vbox, bold, line, underline, transparent, margins, \
@@ -41,14 +41,13 @@ from src.main.python.plotlyst.core.template import TemplateField, SelectionItem,
     healing_field, methods_field, misbelief_field, ghost_field, demon_field
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
-from src.main.python.plotlyst.view.common import wrap, emoji_font, hmax, ButtonPressResizeEventFilter, \
-    insert_before_the_end, action
-from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui import Ui_FieldTextSelectionWidget
+from src.main.python.plotlyst.view.common import wrap, emoji_font, hmax, insert_before_the_end, action
 from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.slider import apply_slider_color
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton, CollapseButton
+from src.main.python.plotlyst.view.widget.character.control import EnneagramSelector, MbtiSelector
 from src.main.python.plotlyst.view.widget.display import Subtitle, Emoji, Icon
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
@@ -62,152 +61,6 @@ def _icon(item: SelectionItem) -> QIcon:
         return IconRegistry.from_name(item.icon, item.icon_color)
     else:
         return QIcon('')
-
-
-class TextSelectionWidget(SecondaryActionPushButton):
-    selectionChanged = pyqtSignal(object, object)
-    ignored = pyqtSignal()
-
-    def __init__(self, field: TemplateField, help: Dict[Any, str], parent=None):
-        super(TextSelectionWidget, self).__init__(parent)
-        self.field = field
-        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
-
-        self._ignored_field = False
-
-        self.setText(f'{self.field.name}...')
-        self._popup = self.Popup(self.field, help)
-        self._menu = MenuWidget(self)
-        self._menu.addWidget(self._popup)
-
-        self._selected: Optional[SelectionItem] = None
-        self._items: Dict[str, SelectionItem] = {}
-        for item in self.field.selections:
-            self._items[item.text] = item
-
-        self._popup.selected.connect(self._selection_changed)
-        self._popup.ignored.connect(self._ignored)
-
-    def value(self) -> Optional[str]:
-        if self._ignored_field:
-            return None
-        return self._selected.text if self._selected else ''
-
-    def setIgnoredTooltip(self, tooltip: str):
-        self._popup.setIgnoredTooltip(tooltip)
-
-    def setValue(self, value: Optional[str]):
-        self._selected = self._items.get(value)
-        self._popup.setValue(value)
-        if self._selected:
-            self.setText(self._selected.text)
-            if self._selected.icon:
-                self.setIcon(IconRegistry.from_name(self._selected.icon, self._selected.icon_color))
-                self.initStyleSheet(self._selected.icon_color, 'solid', 'black')
-            else:
-                self.setIcon(IconRegistry.empty_icon())
-                self.initStyleSheet('black', 'solid', 'black')
-        else:
-            self.setText(f'{self.field.name}...')
-            self.setIcon(IconRegistry.empty_icon())
-
-        self._ignored_field = False
-        if value is None:
-            self._ignored_field = True
-            self.setIcon(IconRegistry.from_name('ei.remove-circle', 'grey'))
-            self.initStyleSheet()
-
-    def _selection_changed(self, item: SelectionItem):
-        self._menu.close()
-        previous = self._selected
-        self.setValue(item.text)
-        self.selectionChanged.emit(previous, self._selected)
-
-    def _ignored(self):
-        self.setValue(None)
-        self._menu.close()
-        self.ignored.emit()
-
-    class Popup(QFrame, Ui_FieldTextSelectionWidget):
-        selected = pyqtSignal(SelectionItem)
-        ignored = pyqtSignal()
-
-        def __init__(self, field: TemplateField, help_: Dict[Any, str], parent=None):
-            super().__init__(parent)
-            self.setupUi(self)
-            self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
-            self.textBrowser.setContentsMargins(5, 5, 5, 5)
-            margins(self.wdgLabels, left=5, right=5)
-
-            self.field = field
-            self.help = help_
-
-            self.model = TemplateFieldSelectionModel(self.field)
-            self.model.setEditable(False)
-            self.tblItems.setModel(self.model)
-            self.tblItems.setColumnWidth(TemplateFieldSelectionModel.ColIcon, 26)
-            self.tblItems.hideColumn(TemplateFieldSelectionModel.ColBgColor)
-
-            underline(self.btnIgnore)
-            transparent(self.btnIgnore)
-            self.btnIgnore.setIcon(IconRegistry.from_name('ri.share-forward-fill'))
-            self.btnIgnore.installEventFilter(OpacityEventFilter(self.btnIgnore))
-            self.btnIgnore.installEventFilter(ButtonPressResizeEventFilter(self.btnIgnore))
-            self.btnIgnore.clicked.connect(self.ignored.emit)
-
-            self.btnSelect.setIcon(IconRegistry.ok_icon('white'))
-            self.tblItems.selectionModel().selectionChanged.connect(self._selection_changed)
-            self.tblItems.doubleClicked.connect(self._select)
-
-            self.btnSelect.clicked.connect(self._select)
-            self.btnSelect.installEventFilter(ButtonPressResizeEventFilter(self.btnSelect))
-
-        @overrides
-        def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
-            pass  # catch event not to close the popup
-
-        def setIgnoredTooltip(self, tooltip: str):
-            self.btnIgnore.setToolTip(tooltip)
-
-        def setValue(self, value: str):
-            if not value:
-                return
-            indexes = self.model.match(self.model.index(0, TemplateFieldSelectionModel.ColName),
-                                       Qt.ItemDataRole.DisplayRole, value)
-            if indexes:
-                self.tblItems.selectionModel().select(indexes[0], QItemSelectionModel.SelectionFlag.Select)
-
-        def _selection_changed(self):
-            item = self._current_item()
-            self.wdgLabels.clear()
-            if item:
-                self.btnSelect.setEnabled(True)
-                self.textBrowser.setText(self.help.get(item.text, ''))
-                if 'positive' in item.meta.keys():
-                    for trait in item.meta['positive']:
-                        label = TraitLabel(trait)
-                        decr_font(label)
-                        self.wdgLabels.addLabel(label)
-                if 'negative' in item.meta.keys():
-                    for trait in item.meta['negative']:
-                        label = TraitLabel(trait, positive=False)
-                        decr_font(label)
-                        self.wdgLabels.addLabel(label)
-            else:
-                self.btnSelect.setDisabled(True)
-                self.textBrowser.clear()
-
-        def _select(self):
-            item = self._current_item()
-            if item:
-                self.selected.emit(item)
-
-        def _current_item(self) -> Optional[SelectionItem]:
-            indexes = self.tblItems.selectedIndexes()
-            if not indexes:
-                self.btnSelect.setDisabled(True)
-                return
-            return indexes[0].data(TemplateFieldSelectionModel.ItemRole)
 
 
 class LabelsSelectionWidget(LabelsEditorWidget):
@@ -629,8 +482,7 @@ class BarTemplateFieldWidget(TemplateFieldWidgetBase):
 class EnneagramFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super(EnneagramFieldWidget, self).__init__(field, parent)
-        self.wdgEditor = TextSelectionWidget(field, enneagram_help)
-        self.wdgEditor.setIgnoredTooltip('Ignore Enneagram personality type for this character')
+        self.wdgEditor = EnneagramSelector()
         self._defaultTooltip: str = 'Select Enneagram personality'
         _layout = hbox(self)
         _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignTop)
@@ -662,7 +514,7 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
         if self.field.compact:
             _layout.addWidget(spacer())
 
-        self.wdgEditor.selectionChanged.connect(self._selectionChanged)
+        self.wdgEditor.selected.connect(self._selectionChanged)
         self.wdgEditor.ignored.connect(self._ignored)
 
     @overrides
@@ -675,27 +527,20 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
         enneagram = enneagram_choices.get(value)
         if enneagram:
             self.wdgEditor.setToolTip(enneagram_help[value])
-            self._selectionChanged(new=enneagram, animated=False)
+            self._selectionChanged(enneagram)
         elif value is None:
             self._ignored()
         else:
             self.wdgEditor.setToolTip(self._defaultTooltip)
 
-    def _selectionChanged(self, _: Optional[SelectionItem] = None, new: Optional[SelectionItem] = None,
-                          animated: bool = True):
-        if not new:
-            self.wdgAttr.setHidden(True)
-            self.wdgEditor.setToolTip(self._defaultTooltip)
-            self.valueReset.emit()
-            return
-
-        if animated:
+    def _selectionChanged(self, item: SelectionItem):
+        self.lblDesire.setText(item.meta['desire'])
+        self.lblFear.setText(item.meta['fear'])
+        self.wdgEditor.setToolTip(enneagram_help[item.text])
+        if self.isVisible():
             qtanim.fade_in(self.wdgAttr)
         else:
             self.wdgAttr.setVisible(True)
-        self.lblDesire.setText(new.meta['desire'])
-        self.lblFear.setText(new.meta['fear'])
-        self.wdgEditor.setToolTip(enneagram_help[new.text])
 
         self.valueFilled.emit(1)
 
@@ -710,8 +555,7 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
 class MbtiFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super(MbtiFieldWidget, self).__init__(field, parent)
-        self.wdgEditor = TextSelectionWidget(field, mbti_help)
-        self.wdgEditor.setIgnoredTooltip('Ignore MBTI personality type for this character')
+        self.wdgEditor = MbtiSelector()
         self._defaultTooltip: str = 'Select MBTI personality type'
         self.wdgEditor.setToolTip(self._defaultTooltip)
 
@@ -721,7 +565,7 @@ class MbtiFieldWidget(TemplateFieldWidgetBase):
         if self.field.compact:
             _layout.addWidget(spacer())
 
-        self.wdgEditor.selectionChanged.connect(self._selectionChanged)
+        self.wdgEditor.selected.connect(self._selectionChanged)
         self.wdgEditor.ignored.connect(self._ignored)
 
     @overrides
@@ -739,14 +583,8 @@ class MbtiFieldWidget(TemplateFieldWidgetBase):
         else:
             self.wdgEditor.setToolTip(self._defaultTooltip)
 
-    def _selectionChanged(self, _: Optional[SelectionItem] = None, new: Optional[SelectionItem] = None,
-                          animated: bool = True):
-        if not new:
-            self.valueReset.emit()
-            self.wdgEditor.setToolTip(self._defaultTooltip)
-            return
-
-        self.wdgEditor.setToolTip(mbti_help[new.text])
+    def _selectionChanged(self, item: SelectionItem):
+        self.wdgEditor.setToolTip(mbti_help[item.text])
         self.valueFilled.emit(1)
 
     def _ignored(self):

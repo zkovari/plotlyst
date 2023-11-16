@@ -24,8 +24,9 @@ from overrides import overrides
 from src.main.python.plotlyst.core.domain import Character
 from src.main.python.plotlyst.core.template import TemplateField, SelectionItem, \
     enneagram_field, traits_field, ProfileTemplate
+from src.main.python.plotlyst.view.widget.character.control import EnneagramSelector
 from src.main.python.plotlyst.view.widget.template.base import TemplateWidgetBase
-from src.main.python.plotlyst.view.widget.template.impl import TextSelectionWidget, TraitSelectionWidget
+from src.main.python.plotlyst.view.widget.template.impl import TraitSelectionWidget
 from src.main.python.plotlyst.view.widget.template.profile import ProfileTemplateView
 
 
@@ -34,7 +35,7 @@ class CharacterProfileTemplateView(ProfileTemplateView):
         super().__init__(character.template_values, profile, character.disabled_template_headers)
         self.character = character
         self._required_headers_toggled: bool = False
-        self._enneagram_widget: Optional[TextSelectionWidget] = None
+        self._enneagram_widget: Optional[EnneagramSelector] = None
         self._traits_widget: Optional[TraitSelectionWidget] = None
         self._goals_widget: Optional[TemplateWidgetBase] = None
         for widget in self.widgets:
@@ -44,7 +45,9 @@ class CharacterProfileTemplateView(ProfileTemplateView):
                 self._traits_widget = widget.wdgEditor
 
         if self._enneagram_widget:
-            self._enneagram_widget.selectionChanged.connect(self._enneagram_changed)
+            self._enneagram_widget.selected.connect(self._enneagram_changed)
+
+        self._current_enneagram: Optional[SelectionItem] = self.character.enneagram()
 
     def toggleRequiredHeaders(self, toggled: bool):
         if self._required_headers_toggled == toggled:
@@ -60,7 +63,10 @@ class CharacterProfileTemplateView(ProfileTemplateView):
     def _headerEnabledChanged(self, header: TemplateField, enabled: bool):
         self.character.disabled_template_headers[str(header.id)] = enabled
 
-    def _enneagram_changed(self, previous: Optional[SelectionItem], current: SelectionItem):
+    def _enneagram_changed(self, item: SelectionItem):
+        previous = self._current_enneagram
+        self._current_enneagram = item
+
         if self._traits_widget:
             traits: List[str] = self._traits_widget.value()
             if previous:
@@ -70,10 +76,10 @@ class CharacterProfileTemplateView(ProfileTemplateView):
                 for neg_trait in previous.meta['negative']:
                     if neg_trait in traits:
                         traits.remove(neg_trait)
-            for pos_trait in current.meta['positive']:
+            for pos_trait in self._current_enneagram.meta['positive']:
                 if pos_trait not in traits:
                     traits.append(pos_trait)
-            for neg_trait in current.meta['negative']:
+            for neg_trait in self._current_enneagram.meta['negative']:
                 if neg_trait not in traits:
                     traits.append(neg_trait)
             self._traits_widget.setValue(traits)
