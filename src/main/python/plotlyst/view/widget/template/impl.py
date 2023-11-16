@@ -49,7 +49,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.slider import apply_slider_color
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton, CollapseButton
-from src.main.python.plotlyst.view.widget.character.control import EnneagramSelector
+from src.main.python.plotlyst.view.widget.character.control import EnneagramSelector, MbtiSelector
 from src.main.python.plotlyst.view.widget.display import Subtitle, Emoji, Icon
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
@@ -664,8 +664,8 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
         if self.field.compact:
             _layout.addWidget(spacer())
 
-        # self.wdgEditor.selectionChanged.connect(self._selectionChanged)
-        # self.wdgEditor.ignored.connect(self._ignored)
+        self.wdgEditor.selected.connect(self._selectionChanged)
+        self.wdgEditor.ignored.connect(self._ignored)
 
     @overrides
     def value(self) -> Any:
@@ -677,27 +677,20 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
         enneagram = enneagram_choices.get(value)
         if enneagram:
             self.wdgEditor.setToolTip(enneagram_help[value])
-            self._selectionChanged(new=enneagram, animated=False)
+            self._selectionChanged(enneagram)
         elif value is None:
             self._ignored()
         else:
             self.wdgEditor.setToolTip(self._defaultTooltip)
 
-    def _selectionChanged(self, _: Optional[SelectionItem] = None, new: Optional[SelectionItem] = None,
-                          animated: bool = True):
-        if not new:
-            self.wdgAttr.setHidden(True)
-            self.wdgEditor.setToolTip(self._defaultTooltip)
-            self.valueReset.emit()
-            return
-
-        if animated:
+    def _selectionChanged(self, item: SelectionItem):
+        self.lblDesire.setText(item.meta['desire'])
+        self.lblFear.setText(item.meta['fear'])
+        self.wdgEditor.setToolTip(enneagram_help[item.text])
+        if self.isVisible():
             qtanim.fade_in(self.wdgAttr)
         else:
             self.wdgAttr.setVisible(True)
-        self.lblDesire.setText(new.meta['desire'])
-        self.lblFear.setText(new.meta['fear'])
-        self.wdgEditor.setToolTip(enneagram_help[new.text])
 
         self.valueFilled.emit(1)
 
@@ -712,8 +705,9 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
 class MbtiFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super(MbtiFieldWidget, self).__init__(field, parent)
-        self.wdgEditor = TextSelectionWidget(field, mbti_help)
-        self.wdgEditor.setIgnoredTooltip('Ignore MBTI personality type for this character')
+        # self.wdgEditor = TextSelectionWidget(field, mbti_help)
+        self.wdgEditor = MbtiSelector()
+        # self.wdgEditor.setIgnoredTooltip('Ignore MBTI personality type for this character')
         self._defaultTooltip: str = 'Select MBTI personality type'
         self.wdgEditor.setToolTip(self._defaultTooltip)
 
@@ -723,8 +717,8 @@ class MbtiFieldWidget(TemplateFieldWidgetBase):
         if self.field.compact:
             _layout.addWidget(spacer())
 
-        self.wdgEditor.selectionChanged.connect(self._selectionChanged)
-        self.wdgEditor.ignored.connect(self._ignored)
+        # self.wdgEditor.selectionChanged.connect(self._selectionChanged)
+        # self.wdgEditor.ignored.connect(self._ignored)
 
     @overrides
     def value(self) -> Any:
