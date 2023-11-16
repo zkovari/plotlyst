@@ -518,6 +518,8 @@ class MbtiSelector(PersonalitySelector):
         self._selector.btnIgnore.setToolTip('Ignore MBTI personality type for this character')
         self._selector.btnSelect.clicked.connect(self._selectionClicked)
 
+        self.setText('MBTI...')
+
     @overrides
     def field(self) -> TemplateField:
         return mbti_field
