@@ -44,7 +44,8 @@ from src.main.python.plotlyst.view.style.base import apply_bg_image, apply_white
 from src.main.python.plotlyst.view.widget.big_five import BigFivePersonalityWidget
 from src.main.python.plotlyst.view.widget.character.control import CharacterAgeEditor
 from src.main.python.plotlyst.view.widget.character.plan import CharacterPlansWidget
-from src.main.python.plotlyst.view.widget.characters import CharacterRoleSelector, CharacterTopicsEditor
+from src.main.python.plotlyst.view.widget.character.topic import CharacterTopicsEditor
+from src.main.python.plotlyst.view.widget.characters import CharacterRoleSelector
 from src.main.python.plotlyst.view.widget.template import CharacterProfileTemplateView
 
 
@@ -192,7 +193,7 @@ class CharacterEditor(QObject, EventListener):
         if self.character.role:
             self._display_role()
 
-        self.ui.tabAttributes.setCurrentWidget(self.ui.tabBackstory)
+        self.ui.tabAttributes.setCurrentWidget(self.ui.tabTopics)
 
         self.repo = RepositoryPersistenceManager.instance()
         dispatcher = event_dispatchers.instance(self.novel)
