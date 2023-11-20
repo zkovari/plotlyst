@@ -72,7 +72,7 @@ class TopicGroupWidget(QWidget):
 
         self.btnHeader = CollapseButton(Qt.Edge.BottomEdge, Qt.Edge.RightEdge)
         self.btnHeader.setIconSize(QSize(16, 16))
-        self.btnHeader.setText(self._type.name)
+        self.btnHeader.setText(self._type.display_name())
         self.btnHeader.setToolTip(self._type.description())
         bold(self.btnHeader)
         self.btnEdit = tool_btn(IconRegistry.edit_icon(), transparent_=True)
@@ -87,7 +87,7 @@ class TopicGroupWidget(QWidget):
             self.menuTopics.addAction(action_)
 
         self.btnRemoval = RemovalButton()
-        self.btnRemoval.clicked.connect(self._removed)
+        self.btnRemoval.clicked.connect(self.removed)
         self.btnRemoval.setHidden(True)
 
         self.wdgHeader = QWidget()
@@ -136,10 +136,6 @@ class TopicGroupWidget(QWidget):
         self.addTopic(topic, value)
 
         self.topicAdded.emit(topic, value)
-
-    def _removed(self):
-        self.removed.emit()
-        pass
 
     def _removeTopic(self, topic: Topic):
         wdg = self._topicWidgets.pop(topic)
