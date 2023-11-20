@@ -21,9 +21,10 @@ import uuid
 from functools import partial
 from typing import Dict, List
 
-from PyQt6.QtCore import Qt, QSize, pyqtSignal
-from PyQt6.QtGui import QAction
+from PyQt6.QtCore import Qt, QSize, pyqtSignal, QEvent
+from PyQt6.QtGui import QAction, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QTextEdit, QGridLayout
+from overrides import overrides
 from qthandy import vbox, bold, line, margins, spacer, grid, hbox, italic
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
@@ -53,9 +54,16 @@ topics: Dict[TopicType, List[Topic]] = {
     TopicType.Beliefs: [],
 }
 
+topic_ids = {}
+for topics_per_group in topics.values():
+    for topic in topics_per_group:
+        topic_ids[str(topic.id)] = topic
+
 
 class TopicGroupWidget(QWidget):
     removed = pyqtSignal()
+    topicAdded = pyqtSignal(Topic, TemplateValue)
+    topicRemoved = pyqtSignal(Topic, TemplateValue)
 
     def __init__(self, topicType: TopicType, parent=None):
         super().__init__(parent)
@@ -74,12 +82,13 @@ class TopicGroupWidget(QWidget):
         self._topicWidgets: Dict[Topic, TopicWidget] = {}
         for topic in topics[self._type]:
             action_ = action(topic.text, icon=IconRegistry.from_name(topic.icon), tooltip=topic.description,
-                             slot=partial(self.addTopic, topic))
+                             slot=partial(self._addNewTopic, topic))
             self._topicActions[topic] = action_
             self.menuTopics.addAction(action_)
 
         self.btnRemoval = RemovalButton()
         self.btnRemoval.clicked.connect(self._removed)
+        self.btnRemoval.setHidden(True)
 
         self.wdgHeader = QWidget()
         hbox(self.wdgHeader)
@@ -98,20 +107,35 @@ class TopicGroupWidget(QWidget):
         self.btnHeader.toggled.connect(self.wdgTopics.setHidden)
 
         self.installEventFilter(VisibilityToggleEventFilter(self.btnEdit, self.wdgHeader))
-        self.installEventFilter(VisibilityToggleEventFilter(self.btnRemoval, self.wdgHeader))
 
         self.layout().addWidget(self.wdgHeader)
         self.layout().addWidget(line())
         self.layout().addWidget(self.wdgTopics)
 
-    def addTopic(self, topic: Topic):
-        wdg = TopicWidget(topic, TemplateValue(topic.id, ''))
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        self.btnRemoval.setVisible(len(self._topicWidgets) == 0)
+
+    @overrides
+    def leaveEvent(self, _: QEvent) -> None:
+        self.btnRemoval.setHidden(True)
+
+    def addTopic(self, topic: Topic, value: TemplateValue):
+        wdg = TopicWidget(topic, value)
         wdg.removalRequested.connect(partial(self._removeTopic, topic))
         self._topicWidgets[topic] = wdg
-        self.btnAddTopic.setHidden(True)
         self.wdgTopics.layout().addWidget(wdg)
 
         self._topicActions[topic].setDisabled(True)
+
+        self.btnAddTopic.setHidden(True)
+        self.btnRemoval.setHidden(True)
+
+    def _addNewTopic(self, topic: Topic):
+        value = TemplateValue(topic.id, '')
+        self.addTopic(topic, value)
+
+        self.topicAdded.emit(topic, value)
 
     def _removed(self):
         self.removed.emit()
@@ -119,8 +143,9 @@ class TopicGroupWidget(QWidget):
 
     def _removeTopic(self, topic: Topic):
         wdg = self._topicWidgets.pop(topic)
-        fade_out_and_gc(self.wdgTopics, wdg)
         self._topicActions[topic].setEnabled(True)
+        self.topicRemoved.emit(topic, wdg.value())
+        fade_out_and_gc(self.wdgTopics, wdg)
 
 
 class TopicWidget(QWidget):
@@ -172,6 +197,8 @@ class TopicWidget(QWidget):
 
 class TopicsEditor(QWidget):
     topicGroupRemoved = pyqtSignal(TopicType)
+    topicAdded = pyqtSignal(Topic, TemplateValue)
+    topicRemoved = pyqtSignal(Topic, TemplateValue)
 
     def __init__(self, parent=None):
         super(TopicsEditor, self).__init__(parent)
@@ -182,9 +209,18 @@ class TopicsEditor(QWidget):
     def addTopicGroup(self, topicType: TopicType):
         wdg = TopicGroupWidget(topicType)
         wdg.removed.connect(partial(self.removeTopicGroup, topicType))
+        wdg.topicAdded.connect(self.topicAdded)
+        wdg.topicRemoved.connect(self.topicRemoved)
         self._topicGroups[topicType] = wdg
 
         self._gridLayout.addWidget(wdg, topicType.value, 0)
+
+    def addTopic(self, topic: Topic, topicType: TopicType, value: TemplateValue):
+        # topicType = TopicType(topic.type)
+        if topicType not in self._topicGroups:
+            self.addTopicGroup(topicType)
+
+        self._topicGroups[topicType].addTopic(topic, value)
 
     def removeTopicGroup(self, topicType: TopicType):
         wdg = self._topicGroups.pop(topicType)

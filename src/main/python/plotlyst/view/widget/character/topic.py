@@ -29,7 +29,7 @@ from qtmenu import MenuWidget, ActionTooltipDisplayMode
 from src.main.python.plotlyst.core.domain import Character, Topic, TemplateValue, TopicType
 from src.main.python.plotlyst.view.common import push_btn, scrolled, action
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.topic import TopicsEditor
+from src.main.python.plotlyst.view.widget.topic import TopicsEditor, topic_ids
 
 
 # default_topics: List[Topic] = [
@@ -56,11 +56,6 @@ from src.main.python.plotlyst.view.widget.topic import TopicsEditor
 #     Topic('Hobby', uuid.UUID('97c66076-e97d-4f11-a20d-1ae6ff6ba246'), 'fa5s.book-reader', ''),
 #     Topic('Art', uuid.UUID('ed6749da-d1b0-49cd-becf-c7ddc67725d2'), 'ei.picture', ''),
 # ]
-# default_topics.sort(key=lambda x: x.text)
-#
-# topic_ids = {}
-# for topic in default_topics:
-#     topic_ids[str(topic.id)] = topic
 
 
 class CharacterTopicGroupSelector(MenuWidget):
@@ -102,17 +97,20 @@ class CharacterTopicsEditor(QWidget):
         self._wdgCenter.layout().addWidget(self._wdgTopics)
         self._wdgCenter.layout().addWidget(vspacer())
         self._wdgTopics.topicGroupRemoved.connect(self._topicGroupRemoved)
+        self._wdgTopics.topicAdded.connect(self._topicAdded)
+        self._wdgTopics.topicRemoved.connect(self._topicRemoved)
 
     def setCharacter(self, character: Character):
         self._character = character
         self._menu = CharacterTopicGroupSelector(self._character, self.btnAdd)
         self._menu.topicGroupTriggered.connect(self._addTopicGroup)
 
-        for tc in character.topics:
-            pass
-            # topic = topic_ids.get(str(tc.id))
-            # if topic:
-            #     self._wdgTopics.addTopic(topic, tc)
+        for value in character.topics:
+            topic = topic_ids.get(str(value.id))
+            if topic:
+                topicType = TopicType(topic.type)
+                self._wdgTopics.addTopic(topic, topicType, value)
+                self._menu.updateTopic(topicType, False)
 
     def _addTopicGroup(self, topicType: TopicType):
         if self._character is None:
@@ -127,3 +125,9 @@ class CharacterTopicsEditor(QWidget):
     def _topicGroupRemoved(self, topicType: TopicType):
         # self._character.topics.remove(value)
         self._menu.updateTopic(topicType, True)
+
+    def _topicAdded(self, topic: Topic, value: TemplateValue):
+        self._character.topics.append(value)
+
+    def _topicRemoved(self, topic: Topic, value: TemplateValue):
+        self._character.topics.remove(value)
