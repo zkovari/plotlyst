@@ -17,15 +17,17 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import uuid
 from typing import Dict
 
 from PyQt6.QtCore import Qt, QSize, pyqtSignal
-from PyQt6.QtWidgets import QWidget, QPushButton, QTextEdit, QGridLayout
-from qthandy import vbox, bold, line, transparent, margins, spacer, pointy, grid, hbox, italic
+from PyQt6.QtWidgets import QWidget, QTextEdit, QGridLayout
+from qthandy import vbox, bold, line, margins, spacer, grid, hbox, italic
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.core.domain import TemplateValue, Topic, TopicType
-from src.main.python.plotlyst.view.common import tool_btn, push_btn
+from src.main.python.plotlyst.view.common import tool_btn, push_btn, action
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import CollapseButton
@@ -45,6 +47,8 @@ class TopicGroupWidget(QWidget):
         bold(self.btnHeader)
         self.btnEdit = tool_btn(IconRegistry.edit_icon(), transparent_=True)
         self.btnEdit.installEventFilter(OpacityEventFilter(self.btnEdit))
+        self.menuTopics = MenuWidget(self.btnEdit)
+        self.menuTopics.addAction(action('Scars, injuries', slot=self.addTopic))
 
         self.wdgHeader = QWidget()
         hbox(self.wdgHeader)
@@ -55,6 +59,8 @@ class TopicGroupWidget(QWidget):
         self.btnAddTopic = push_btn(IconRegistry.plus_icon('grey'), 'Add topic', transparent_=True)
         italic(self.btnAddTopic)
         self.btnAddTopic.installEventFilter(OpacityEventFilter(self.btnAddTopic))
+        self.btnAddTopic.clicked.connect(lambda: self.menuTopics.exec())
+
         vbox(self.wdgTopics)
         self.wdgTopics.layout().addWidget(self.btnAddTopic)
         self.btnHeader.toggled.connect(self.wdgTopics.setHidden)
@@ -64,6 +70,15 @@ class TopicGroupWidget(QWidget):
         self.layout().addWidget(self.wdgHeader)
         self.layout().addWidget(line())
         self.layout().addWidget(self.wdgTopics)
+
+    def addTopic(self, topic: Topic):
+        topic = Topic('Scars, injuries', TopicType.Physical, uuid.UUID('088ae5e0-99f8-4308-9d77-3daa624ca7a3'),
+                      'mdi.bandage',
+                      '')
+
+        wdg = TopicWidget(topic, TemplateValue(topic.id, ''))
+        self.btnAddTopic.setHidden(True)
+        self.wdgTopics.layout().addWidget(wdg)
 
 
 class TopicWidget(QWidget):
@@ -75,18 +90,8 @@ class TopicWidget(QWidget):
         self._topic = topic
         self._value = value
 
-        self.btnHeader = QPushButton()
-        self.btnHeader.setText(topic.text)
-        self.btnHeader.setToolTip(topic.description)
-        if topic.icon:
-            self.btnHeader.setIcon(IconRegistry.from_name(topic.icon, topic.icon_color))
-
-        self.btnCollapse = CollapseButton(Qt.Edge.BottomEdge, Qt.Edge.RightEdge)
-        self.btnCollapse.setIconSize(QSize(16, 16))
-
-        pointy(self.btnHeader)
-        transparent(self.btnHeader)
-        bold(self.btnHeader)
+        self.btnHeader = push_btn(IconRegistry.from_name(topic.icon, topic.icon_color), topic.text,
+                                  tooltip=topic.description, transparent_=True)
 
         self.textEdit = AutoAdjustableTextEdit(height=40)
         self.textEdit.setProperty('rounded', True)
@@ -99,22 +104,15 @@ class TopicWidget(QWidget):
         self._btnRemoval = RemovalButton()
         self._btnRemoval.clicked.connect(self.removalRequested.emit)
 
-        self._top = group(self.btnCollapse, self.btnHeader, spacer(), self._btnRemoval, margin=0, spacing=1)
+        self._top = group(self.btnHeader, spacer(), self._btnRemoval, margin=0, spacing=1)
+        margins(self._top, left=20)
         layout_ = vbox(self)
         layout_.addWidget(self._top)
         self._top.installEventFilter(VisibilityToggleEventFilter(self._btnRemoval, self._top))
 
-        line_ = line(color=topic.icon_color)
-        middle = group(line_, margin=0, spacing=0)
-        margins(middle, left=20)
-        layout_.addWidget(middle)
-
         bottom = group(self.textEdit, vertical=False, margin=0, spacing=0)
         margins(bottom, left=20)
         layout_.addWidget(bottom, alignment=Qt.AlignmentFlag.AlignTop)
-
-        self.btnHeader.clicked.connect(self.btnCollapse.toggle)
-        self.btnCollapse.toggled.connect(self.textEdit.setHidden)
 
     def activate(self):
         self.textEdit.setFocus()
