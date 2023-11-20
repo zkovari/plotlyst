@@ -101,7 +101,7 @@ class CharacterTopicsEditor(QWidget):
         vbox(self._wdgCenter)
         self._wdgCenter.layout().addWidget(self._wdgTopics)
         self._wdgCenter.layout().addWidget(vspacer())
-        self._wdgTopics.topicRemoved.connect(self._topicRemoved)
+        self._wdgTopics.topicGroupRemoved.connect(self._topicGroupRemoved)
 
     def setCharacter(self, character: Character):
         self._character = character
@@ -124,6 +124,6 @@ class CharacterTopicsEditor(QWidget):
 
         self._menu.updateTopic(topicType, False)
 
-    def _topicRemoved(self, topic: Topic, value: TemplateValue):
-        self._character.topics.remove(value)
-        self._menu.updateTopic(topic, True)
+    def _topicGroupRemoved(self, topicType: TopicType):
+        # self._character.topics.remove(value)
+        self._menu.updateTopic(topicType, True)
