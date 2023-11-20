@@ -236,9 +236,10 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnFilter.setIcon(IconRegistry.filter_icon())
         self.ui.btnPreferences.setIcon(IconRegistry.preferences_icon())
         self.prefs_widget = ScenesPreferencesWidget()
-        btn_popup(self.ui.btnPreferences, self.prefs_widget)
         self.prefs_widget.sliderCards.valueChanged.connect(self.ui.cards.setCardsWidth)
         self.ui.cards.setCardsWidth(self.prefs_widget.sliderCards.value())
+        menu = MenuWidget(self.ui.btnPreferences)
+        menu.addWidget(self.prefs_widget)
 
         self._scene_filter = SceneFilterWidget(self.novel)
         filterMenu = MenuWidget(self.ui.btnFilter)

@@ -35,6 +35,9 @@
       <number>0</number>
      </property>
      <widget class="QWidget" name="tabCards">
+      <property name="relaxe-white-bg" stdset="0">
+       <bool>true</bool>
+      </property>
       <attribute name="title">
        <string/>
       </attribute>

@@ -32,7 +32,7 @@ from PyQt6.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter
     QPushButton, QTreeView, QTextEdit, QLabel, QTableView, \
     QAbstractItemView, QButtonGroup, QAbstractButton
 from overrides import overrides
-from qthandy import busy, margins, vspacer, bold, incr_font, gc, pointy, vline
+from qthandy import busy, margins, vspacer, bold, incr_font, gc, pointy, vline, grid
 from qthandy import decr_font, transparent, translucent, underline, flow, \
     clear_layout, hbox, spacer, btn_popup, vbox, italic
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter, DragEventFilter
@@ -303,12 +303,11 @@ class SceneFilterWidget(QWidget):
         self.wdgActs.layout().addWidget(self.btnAct2)
         self.wdgActs.layout().addWidget(self.btnAct3)
 
-        vbox(self, 3)
-        self.layout().addWidget(label('Point of view', underline=True), alignment=Qt.AlignmentFlag.AlignLeft)
-        self.layout().addWidget(self.povFilter)
-        self.layout().addWidget(self.povFilter)
-        self.layout().addWidget(label('Acts', underline=True), alignment=Qt.AlignmentFlag.AlignLeft)
-        self.layout().addWidget(self.wdgActs, alignment=Qt.AlignmentFlag.AlignLeft)
+        grid(self)
+        self.layout().addWidget(label('Point of view:'), 0, 0, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self.povFilter, 0, 1)
+        self.layout().addWidget(label('Acts:', ), 1, 0, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self.wdgActs, 1, 1, alignment=Qt.AlignmentFlag.AlignLeft)
 
 
 class _BeatButton(QToolButton):
