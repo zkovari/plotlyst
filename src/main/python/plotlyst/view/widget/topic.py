@@ -216,7 +216,6 @@ class TopicsEditor(QWidget):
         self._gridLayout.addWidget(wdg, topicType.value, 0)
 
     def addTopic(self, topic: Topic, topicType: TopicType, value: TemplateValue):
-        # topicType = TopicType(topic.type)
         if topicType not in self._topicGroups:
             self.addTopicGroup(topicType)
 
@@ -226,23 +225,3 @@ class TopicsEditor(QWidget):
         wdg = self._topicGroups.pop(topicType)
         fade_out_and_gc(self, wdg)
         self.topicGroupRemoved.emit(topicType)
-    # def addTopic(self, topic: Topic, value: TemplateValue):
-    #     wdg = TopicWidget(topic, value, self)
-    #     self._topics[topic] = wdg
-    #     insert_before_the_end(self, wdg)
-    #     if self.isVisible():
-    #         anim = qtanim.fade_in(wdg, duration=200)
-    #         anim.finished.connect(wdg.activate)
-    #     else:
-    #         wdg.activate()
-    #
-    #     wdg.removalRequested.connect(partial(self._removeTopic, topic))
-    #
-    # def _removeTopic(self, topic: Topic):
-    #     wdg = self._topics[topic]
-    #
-    #     if not wdg.plainText() or ask_confirmation(f'Remove topic "{topic.text}"?'):
-    #         self._topics.pop(topic)
-    #         value = wdg.value()
-    #         fade_out_and_gc(self, wdg)
-    #         self.topicRemoved.emit(topic, value)

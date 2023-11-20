@@ -66,14 +66,11 @@ class CharacterTopicGroupSelector(MenuWidget):
         self._character = character
         self._actions: Dict[TopicType, QAction] = {}
         self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
-        char_topic_ids = set([str(x.id) for x in character.topics])
 
         for topic_group in TopicType:
             action_ = action(topic_group.name, tooltip=topic_group.description())
             self._actions[topic_group] = action_
             action_.triggered.connect(partial(self.topicGroupTriggered.emit, topic_group))
-            # if str(topic.id) in char_topic_ids:
-            #     action_.setDisabled(True)
             self.addAction(action_)
 
     def updateTopic(self, topicType: TopicType, enabled: bool):
@@ -115,15 +112,11 @@ class CharacterTopicsEditor(QWidget):
     def _addTopicGroup(self, topicType: TopicType):
         if self._character is None:
             return
-        # value = TemplateValue(topic.id, '')
-        # self._character.topics.append(value)
-        # self._wdgTopics.addTopic(topic, value)
         self._wdgTopics.addTopicGroup(topicType)
 
         self._menu.updateTopic(topicType, False)
 
     def _topicGroupRemoved(self, topicType: TopicType):
-        # self._character.topics.remove(value)
         self._menu.updateTopic(topicType, True)
 
     def _topicAdded(self, topic: Topic, value: TemplateValue):
