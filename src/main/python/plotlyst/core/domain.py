@@ -71,9 +71,57 @@ class Comment:
     character: Optional['Character'] = None
 
 
+class TopicType(Enum):
+    Physical = auto()
+    Habits = auto()
+    Skills = auto()
+    Fears = auto()
+    Background = auto()
+    Hobbies = auto()
+    Communication = auto()
+    Beliefs = auto()
+
+    def description(self) -> str:
+        if self == TopicType.Physical:
+            return ''
+        elif self == TopicType.Habits:
+            return ''
+        elif self == TopicType.Skills:
+            return ''
+        elif self == TopicType.Fears:
+            return ''
+        elif self == TopicType.Background:
+            return ''
+        elif self == TopicType.Hobbies:
+            return ''
+        elif self == TopicType.Communication:
+            return ''
+        elif self == TopicType.Beliefs:
+            return ''
+
+    def display_name(self) -> str:
+        if self == TopicType.Physical:
+            return 'Physical Appearance'
+        elif self == TopicType.Habits:
+            return 'Habits and Routines'
+        elif self == TopicType.Skills:
+            return 'Skills and Talents'
+        elif self == TopicType.Fears:
+            return 'Fears and Phobias'
+        elif self == TopicType.Background:
+            return 'Background and Identity'
+        elif self == TopicType.Hobbies:
+            return 'Interests and Hobbies'
+        elif self == TopicType.Communication:
+            return 'Communication and Social Interaction'
+        elif self == TopicType.Beliefs:
+            return 'Beliefs and Values'
+
+
 @dataclass
 class Topic:
     text: str
+    type: TopicType
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))

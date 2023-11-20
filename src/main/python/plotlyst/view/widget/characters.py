@@ -18,7 +18,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import copy
-import uuid
 from dataclasses import dataclass
 from functools import partial
 from typing import Iterable, List, Optional, Dict, Union
@@ -27,18 +26,18 @@ import qtanim
 from PyQt6 import QtCore
 from PyQt6.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent, QByteArray, QBuffer, QIODevice
 from PyQt6.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor, QImageReader, QImage, QPixmap, \
-    QMouseEvent, QAction, QShowEvent
+    QMouseEvent, QShowEvent
 from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QSizePolicy, QLabel, QPushButton, \
     QFileDialog, QMessageBox, QGridLayout
 from overrides import overrides
-from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup, incr_font, \
+from qthandy import vspacer, ask_confirmation, transparent, gc, line, incr_font, \
     spacer, clear_layout, vbox, hbox, flow, translucent, margins, bold, pointy, retain_when_hidden
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character, BackstoryEvent, \
-    VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, Topic, TemplateValue
+    VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY
 from src.main.python.plotlyst.core.template import secondary_role, guide_role, love_interest_role, sidekick_role, \
     contagonist_role, confidant_role, foil_role, supporter_role, adversary_role, antagonist_role, henchmen_role, \
     tertiary_role, SelectionItem, Role, TemplateFieldType, TemplateField, protagonist_role, RoleImportance, \
@@ -49,7 +48,7 @@ from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import CharacterSummaryChangedEvent
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
 from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
-    ConflictScenesDistributionTableModel, TagScenesDistributionTableModel, GoalScenesDistributionTableModel
+    ConflictScenesDistributionTableModel, TagScenesDistributionTableModel
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view.common import link_buttons_to_pages, action, ButtonPressResizeEventFilter, tool_btn
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
@@ -57,7 +56,6 @@ from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog, Art
 from src.main.python.plotlyst.view.generated.avatar_selectors_ui import Ui_AvatarSelectors
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
 from src.main.python.plotlyst.view.generated.character_role_selector_ui import Ui_CharacterRoleSelector
-from src.main.python.plotlyst.view.generated.character_topic_editor_ui import Ui_CharacterTopicEditor
 from src.main.python.plotlyst.view.generated.characters_progress_widget_ui import Ui_CharactersProgressWidget
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
@@ -67,7 +65,6 @@ from src.main.python.plotlyst.view.widget.display import IconText, Icon
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
 from src.main.python.plotlyst.view.widget.progress import CircularProgressBar, ProgressTooltipMode, \
     CharacterRoleProgressChart
-from src.main.python.plotlyst.view.widget.topic import TopicsEditor
 
 
 class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributionWidget):
@@ -1266,107 +1263,3 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
         icon.iconColor = item.icon_color
         icon.setToolTip(item.text)
         self._addWidget(icon, row, col)
-
-
-default_topics: List[Topic] = [
-    Topic('Family', uuid.UUID('2ce9c3b4-1dd9-4f88-a16e-b8dc507633b7'), 'mdi6.human-male-female-child', '#457b9d'),
-    Topic('Job', uuid.UUID('19d9bfe9-5432-42d8-a444-0bd849720b2d'), 'fa5s.briefcase', '#9c6644'),
-    Topic('Education', uuid.UUID('01e9ef93-7a71-4b2d-af88-53b30d3947cb'), 'fa5s.graduation-cap'),
-    Topic('Hometown', uuid.UUID('1ac1eec9-7953-419c-a265-88a0723a64ea'), 'ei.home-alt', '#4c334d'),
-    Topic('Physical appearance', uuid.UUID('3c1a00d2-5085-47f0-8fe5-6d253e708999'), 'ri.body-scan-fill', ''),
-    Topic('Scars, injuries', uuid.UUID('088ae5e0-99f8-4308-9d77-3daa624ca7a3'), 'mdi.bandage', ''),
-    Topic('Clothing', uuid.UUID('4572a00f-9039-43a1-8eb9-8abd39fbec32'), 'fa5s.tshirt', ''),
-    Topic('Accessories', uuid.UUID('eaab9129-576a-4042-9dfc-eedce3f6f3ab'), 'fa5s.glasses', ''),
-    Topic('Health', uuid.UUID('ec218ea4-d8f9-4eb7-9850-1ce0e7eff5e6'), 'mdi.hospital-box', ''),
-    Topic('Handwriting', uuid.UUID('65a43dc8-ee8d-4a4a-adb9-ee8a0e246e33'), 'mdi.signature-freehand', ''),
-    Topic('Gait', uuid.UUID('26bdeb49-116a-470a-8427-2e5c061243a8'), 'mdi.motion-sensor', ''),
-
-    Topic('Friends', uuid.UUID('d6d78fc4-d9d4-497b-8b61-cca465d5e8e7'), 'fa5s.user-friends', '#457b9d'),
-    Topic('Relationships', uuid.UUID('62f5e2b6-ac35-4b6e-ae3b-bfd5b083b026'), 'ei.heart', '#e63946'),
-
-    Topic('Faith', uuid.UUID('c4df6cdb-c92d-421b-8a2e-77598fc475a3'), 'fa5s.hands', ''),
-    Topic('Spirituality', uuid.UUID('01f750eb-c6e1-4efb-b32c-76cb1d7a33f6'), 'mdi6.meditation', ''),
-
-    Topic('Sport', uuid.UUID('d1e898d3-f9cc-4f65-8cfa-cc1a0c8cd8a2'), 'fa5.futbol', '#0096c7'),
-    Topic('Fitness', uuid.UUID('0e3e6e19-b284-4f7d-85ef-ce2ba047743c'), 'mdi.dumbbell', ''),
-    Topic('Hobby', uuid.UUID('97c66076-e97d-4f11-a20d-1ae6ff6ba246'), 'fa5s.book-reader', ''),
-    Topic('Art', uuid.UUID('ed6749da-d1b0-49cd-becf-c7ddc67725d2'), 'ei.picture', ''),
-]
-default_topics.sort(key=lambda x: x.text)
-
-topic_ids = {}
-for topic in default_topics:
-    topic_ids[str(topic.id)] = topic
-
-
-class CharacterTopicSelector(MenuWidget):
-    topicTriggered = pyqtSignal(Topic)
-
-    def __init__(self, character: Character, parent=None):
-        super(CharacterTopicSelector, self).__init__(parent)
-        self._character = character
-        self._actions: Dict[Topic, QAction] = {}
-        char_topic_ids = set([str(x.id) for x in character.topics])
-
-        for topic in default_topics:
-            action_ = self._Action(topic, self)
-            self._actions[topic] = action_
-            action_.triggered.connect(partial(self.topicTriggered.emit, topic))
-            if str(topic.id) in char_topic_ids:
-                action_.setDisabled(True)
-            self.addAction(action_)
-
-        # self.addSeparator()
-        # new_topic_action = action('New topic', IconRegistry.topics_icon(),
-        #                           slot=self._newTopic, parent=menu)
-        # self.addAction(new_topic_action)
-
-    def updateTopic(self, topic: Topic, enabled: bool):
-        self._actions[topic].setEnabled(enabled)
-
-    class _Action(QAction):
-        def __init__(self, topic: Topic, parent=None):
-            super().__init__(parent)
-            self.topic = topic
-            if topic.icon:
-                self.setIcon(IconRegistry.from_name(topic.icon, topic.icon_color))
-            self.setText(topic.text)
-            self.setToolTip(topic.description)
-
-
-class CharacterTopicsEditor(QWidget, Ui_CharacterTopicEditor):
-    def __init__(self, parent=None):
-        super(CharacterTopicsEditor, self).__init__(parent)
-        self._character: Optional[Character] = None
-        self._menu: Optional[CharacterTopicSelector] = None
-        self.setupUi(self)
-
-        self.btnAdd.setIcon(IconRegistry.plus_icon('white'))
-        self.btnAdd.setText('Add topic')
-
-        self._wdgTopics = TopicsEditor(self)
-        self.scrollAreaWidgetTopics.layout().addWidget(self._wdgTopics)
-        self._wdgTopics.topicRemoved.connect(self._topicRemoved)
-
-    def setCharacter(self, character: Character):
-        self._character = character
-        self._menu = CharacterTopicSelector(self._character, self.btnAdd)
-        self._menu.topicTriggered.connect(self._addTopic)
-
-        for tc in character.topics:
-            topic = topic_ids.get(str(tc.id))
-            if topic:
-                self._wdgTopics.addTopic(topic, tc)
-
-    def _addTopic(self, topic: Topic):
-        if self._character is None:
-            return
-        value = TemplateValue(topic.id, '')
-        self._character.topics.append(value)
-        self._wdgTopics.addTopic(topic, value)
-
-        self._menu.updateTopic(topic, False)
-
-    def _topicRemoved(self, topic: Topic, value: TemplateValue):
-        self._character.topics.remove(value)
-        self._menu.updateTopic(topic, True)
