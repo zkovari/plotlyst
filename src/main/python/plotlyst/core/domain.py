@@ -71,9 +71,24 @@ class Comment:
     character: Optional['Character'] = None
 
 
+class TopicType(Enum):
+    Physical = auto()
+    Habits = auto()
+    Skills = auto()
+    Fears = auto()
+    Background = auto()
+    Hobbies = auto()
+    Communication = auto()
+    Beliefs = auto()
+
+    def description(self) -> str:
+        return ''
+
+
 @dataclass
 class Topic:
     text: str
+    type: TopicType
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))

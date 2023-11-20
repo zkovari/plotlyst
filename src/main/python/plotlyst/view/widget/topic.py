@@ -17,21 +17,53 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from functools import partial
 from typing import Dict
 
-import qtanim
 from PyQt6.QtCore import Qt, QSize, pyqtSignal
-from PyQt6.QtWidgets import QWidget, QPushButton, QTextEdit
-from qthandy import vbox, bold, line, transparent, margins, vspacer, spacer, ask_confirmation, pointy
-from qthandy.filter import VisibilityToggleEventFilter
+from PyQt6.QtWidgets import QWidget, QPushButton, QTextEdit, QGridLayout
+from qthandy import vbox, bold, line, transparent, margins, spacer, pointy, grid, hbox, italic
+from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 
-from src.main.python.plotlyst.core.domain import TemplateValue, Topic
-from src.main.python.plotlyst.view.common import insert_before_the_end, fade_out_and_gc
+from src.main.python.plotlyst.core.domain import TemplateValue, Topic, TopicType
+from src.main.python.plotlyst.view.common import tool_btn, push_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import CollapseButton
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, RemovalButton
+
+
+class TopicGroupWidget(QWidget):
+    def __init__(self, topicType: TopicType, parent=None):
+        super().__init__(parent)
+        self._type = topicType
+        vbox(self)
+
+        self.btnHeader = CollapseButton(Qt.Edge.BottomEdge, Qt.Edge.RightEdge)
+        self.btnHeader.setIconSize(QSize(16, 16))
+        self.btnHeader.setText(self._type.name)
+        self.btnHeader.setToolTip(self._type.description())
+        bold(self.btnHeader)
+        self.btnEdit = tool_btn(IconRegistry.edit_icon(), transparent_=True)
+        self.btnEdit.installEventFilter(OpacityEventFilter(self.btnEdit))
+
+        self.wdgHeader = QWidget()
+        hbox(self.wdgHeader)
+        self.wdgHeader.layout().addWidget(self.btnHeader)
+        self.wdgHeader.layout().addWidget(self.btnEdit)
+        self.wdgHeader.layout().addWidget(spacer())
+        self.wdgTopics = QWidget()
+        self.btnAddTopic = push_btn(IconRegistry.plus_icon('grey'), 'Add topic', transparent_=True)
+        italic(self.btnAddTopic)
+        self.btnAddTopic.installEventFilter(OpacityEventFilter(self.btnAddTopic))
+        vbox(self.wdgTopics)
+        self.wdgTopics.layout().addWidget(self.btnAddTopic)
+        self.btnHeader.toggled.connect(self.wdgTopics.setHidden)
+
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnEdit, self.wdgHeader))
+
+        self.layout().addWidget(self.wdgHeader)
+        self.layout().addWidget(line())
+        self.layout().addWidget(self.wdgTopics)
 
 
 class TopicWidget(QWidget):
@@ -56,7 +88,7 @@ class TopicWidget(QWidget):
         transparent(self.btnHeader)
         bold(self.btnHeader)
 
-        self.textEdit = AutoAdjustableTextEdit(height=80)
+        self.textEdit = AutoAdjustableTextEdit(height=40)
         self.textEdit.setProperty('rounded', True)
         self.textEdit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
         self.textEdit.setTabChangesFocus(True)
@@ -103,28 +135,33 @@ class TopicsEditor(QWidget):
 
     def __init__(self, parent=None):
         super(TopicsEditor, self).__init__(parent)
-        vbox(self)
+        self._gridLayout: QGridLayout = grid(self)
 
-        self._topics: Dict[Topic, TopicWidget] = {}
-        self.layout().addWidget(vspacer())
+        self._topicGroups: Dict[TopicType, TopicGroupWidget] = {}
 
-    def addTopic(self, topic: Topic, value: TemplateValue):
-        wdg = TopicWidget(topic, value, self)
-        self._topics[topic] = wdg
-        insert_before_the_end(self, wdg)
-        if self.isVisible():
-            anim = qtanim.fade_in(wdg, duration=200)
-            anim.finished.connect(wdg.activate)
-        else:
-            wdg.activate()
+    def addTopicGroup(self, topicType: TopicType):
+        wdg = TopicGroupWidget(topicType)
+        self._topicGroups[topicType] = wdg
 
-        wdg.removalRequested.connect(partial(self._removeTopic, topic))
+        self._gridLayout.addWidget(wdg, topicType.value, 0)
 
-    def _removeTopic(self, topic: Topic):
-        wdg = self._topics[topic]
-
-        if not wdg.plainText() or ask_confirmation(f'Remove topic "{topic.text}"?'):
-            self._topics.pop(topic)
-            value = wdg.value()
-            fade_out_and_gc(self, wdg)
-            self.topicRemoved.emit(topic, value)
+    # def addTopic(self, topic: Topic, value: TemplateValue):
+    #     wdg = TopicWidget(topic, value, self)
+    #     self._topics[topic] = wdg
+    #     insert_before_the_end(self, wdg)
+    #     if self.isVisible():
+    #         anim = qtanim.fade_in(wdg, duration=200)
+    #         anim.finished.connect(wdg.activate)
+    #     else:
+    #         wdg.activate()
+    #
+    #     wdg.removalRequested.connect(partial(self._removeTopic, topic))
+    #
+    # def _removeTopic(self, topic: Topic):
+    #     wdg = self._topics[topic]
+    #
+    #     if not wdg.plainText() or ask_confirmation(f'Remove topic "{topic.text}"?'):
+    #         self._topics.pop(topic)
+    #         value = wdg.value()
+    #         fade_out_and_gc(self, wdg)
+    #         self.topicRemoved.emit(topic, value)
