@@ -30,7 +30,7 @@ from overrides import overrides
 from qthandy import vbox, vspacer, transparent, sp, line, incr_font, hbox, pointy, vline, retain_when_hidden, margins, \
     spacer, underline, bold, grid, gc, clear_layout, ask_confirmation, decr_icon, italic, translucent
 from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter
-from qtmenu import MenuWidget
+from qtmenu import MenuWidget, GridMenuWidget
 
 from src.main.python.plotlyst.common import raise_unrecognized_arg, CONFLICT_SELF_COLOR, RELAXED_WHITE_COLOR, \
     PLOTLYST_SECONDARY_COLOR
@@ -1037,63 +1037,52 @@ class AgencyTextBasedElementEditor(TextBasedSceneElementWidget):
         self.setTitle('Agency')
         self.setIcon('msc.debug-stackframe-dot')
 
-        self._menu = MenuWidget()
-        self._menu.addSection('Common')
-        self._menu.addSeparator()
+        self._menu = GridMenuWidget()
         goal_action = action('Goal', IconRegistry.goal_icon(), slot=partial(self._typeActivated, StoryElementType.Goal))
-        self._menu.addAction(goal_action)
         conflict_action = action('Conflict', IconRegistry.conflict_icon(),
                                  slot=partial(self._typeActivated, StoryElementType.Conflict))
-        self._menu.addAction(conflict_action)
         decision_action = action('Decision', IconRegistry.crisis_icon(),
                                  slot=partial(self._typeActivated, StoryElementType.Decision))
-        self._menu.addAction(decision_action)
-        self._menu.addAction(action('Character change', IconRegistry.from_name('mdi.account-cog', '#cdb4db'),
-                                    slot=partial(self._typeActivated, StoryElementType.Arc)))
         consequences_action = action('Consequences', IconRegistry.cause_and_effect_icon(),
                                      slot=partial(self._typeActivated, StoryElementType.Consequences))
-        self._menu.addAction(consequences_action)
 
-        initiativeMenu = MenuWidget()
-        initiativeMenu.setTitle('Initiative and decision-making')
-        initiativeMenu.addAction(action('Motivation', IconRegistry.from_name('fa5s.fist-raised', '#94d2bd'),
-                                        slot=partial(self._typeActivated, StoryElementType.Motivation)))
-        initiativeMenu.addAction(action('Initiative', IconRegistry.decision_icon(),
-                                        slot=partial(self._typeActivated, StoryElementType.Initiative)))
-        initiativeMenu.addAction(goal_action)
-        initiativeMenu.addSeparator()
-        initiativeMenu.addAction(action('Catalyst', IconRegistry.from_name('fa5s.vial', '#822faf'),
-                                        slot=partial(self._typeActivated, StoryElementType.Catalyst)))
-        initiativeMenu.addAction(decision_action)
-        initiativeMenu.addAction(action('Plan change', IconRegistry.from_name('mdi.calendar-refresh-outline'),
-                                        slot=partial(self._typeActivated, StoryElementType.Plan_change)))
+        self._menu.addSection('Initiative and decision-making', 0, 0, colSpan=2)
+        self._menu.addSeparator(1, 0, colSpan=2)
+        self._menu.addAction(goal_action, 2, 0)
+        self._menu.addAction(action('Motivation', IconRegistry.from_name('fa5s.fist-raised', '#94d2bd'),
+                                    slot=partial(self._typeActivated, StoryElementType.Motivation)), 2,
+                             1)
+        self._menu.addAction(action('Initiative', IconRegistry.decision_icon(),
+                                    slot=partial(self._typeActivated, StoryElementType.Initiative)), 3,
+                             0)
+        self._menu.addAction(action('Catalyst', IconRegistry.from_name('fa5s.vial', '#822faf'),
+                                    slot=partial(self._typeActivated, StoryElementType.Catalyst)), 3, 1)
+        self._menu.addAction(decision_action, 4, 0)
+        self._menu.addAction(action('Plan change', IconRegistry.from_name('mdi.calendar-refresh-outline'),
+                                    slot=partial(self._typeActivated, StoryElementType.Plan_change)), 4, 1)
 
-        conflict_menu = MenuWidget()
-        conflict_menu.setTitle('Conflict and consequence')
-        conflict_menu.addAction(conflict_action)
-        conflict_menu.addAction(action('Internal conflict', IconRegistry.conflict_self_icon(),
-                                       slot=partial(self._typeActivated, StoryElementType.Internal_conflict)))
-        conflict_menu.addAction(action('Dilemma', IconRegistry.dilemma_icon(),
-                                       slot=partial(self._typeActivated, StoryElementType.Dilemma)))
-        conflict_menu.addSeparator()
-        conflict_menu.addAction(consequences_action)
-        conflict_menu.addAction(action('Impact on plot', IconRegistry.from_name('mdi.motion-outline', '#d4a373'),
-                                       slot=partial(self._typeActivated, StoryElementType.Impact)))
-        conflict_menu.addAction(action('Responsibility', IconRegistry.from_name('fa5s.hand-holding-water', '#457b9d'),
-                                       slot=partial(self._typeActivated, StoryElementType.Responsibility)))
+        self._menu.addSection('Conflict and consequence', 5, 0, colSpan=2)
+        self._menu.addSeparator(6, 0, colSpan=2)
+        self._menu.addAction(conflict_action, 7, 0)
+        self._menu.addAction(action('Internal conflict', IconRegistry.conflict_self_icon(),
+                                    slot=partial(self._typeActivated, StoryElementType.Internal_conflict)),
+                             7, 1)
+        self._menu.addAction(action('Dilemma', IconRegistry.dilemma_icon(),
+                                    slot=partial(self._typeActivated, StoryElementType.Dilemma)), 8, 0)
+        self._menu.addAction(consequences_action, 9, 0)
+        self._menu.addAction(action('Impact on plot', IconRegistry.from_name('mdi.motion-outline', '#d4a373'),
+                                    slot=partial(self._typeActivated, StoryElementType.Impact)), 9, 1)
+        self._menu.addAction(action('Character change', IconRegistry.from_name('mdi.account-cog', '#cdb4db'),
+                                    slot=partial(self._typeActivated, StoryElementType.Arc)), 10, 0)
+        self._menu.addAction(action('Responsibility', IconRegistry.from_name('fa5s.hand-holding-water', '#457b9d'),
+                                    slot=partial(self._typeActivated, StoryElementType.Responsibility)), 10, 1)
 
-        interpersonal_menu = MenuWidget()
-        interpersonal_menu.setTitle('Interpersonal dynamics')
-        interpersonal_menu.addAction(action('Collaboration', IconRegistry.from_name('fa5.handshake', '#03045e'),
-                                            slot=partial(self._typeActivated, StoryElementType.Collaboration)))
-        interpersonal_menu.addAction(
-            action('Subtext', IconRegistry.from_name('mdi6.speaker-off', '#f4a261'),
-                   slot=partial(self._typeActivated, StoryElementType.Subtext)))
-
-        self._menu.addSeparator()
-        self._menu.addMenu(initiativeMenu)
-        self._menu.addMenu(conflict_menu)
-        self._menu.addMenu(interpersonal_menu)
+        self._menu.addSection('Interpersonal dynamics', 11, 0, colSpan=2)
+        self._menu.addSeparator(12, 0, colSpan=2)
+        self._menu.addAction(action('Collaboration', IconRegistry.from_name('fa5.handshake', '#03045e'),
+                                    slot=partial(self._typeActivated, StoryElementType.Collaboration)), 13, 0)
+        self._menu.addAction(action('Subtext', IconRegistry.from_name('mdi6.speaker-off', '#f4a261'),
+                                    slot=partial(self._typeActivated, StoryElementType.Subtext)), 14, 0)
 
     @overrides
     def setElement(self, element: StoryElement):
