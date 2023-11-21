@@ -27,7 +27,7 @@ from PyQt6.QtCore import Qt, QModelIndex, \
 from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget, QHeaderView
 from overrides import overrides
-from qthandy import incr_font, translucent, btn_popup, clear_layout, busy, bold, sp, transparent
+from qthandy import incr_font, translucent, clear_layout, busy, bold, sp, transparent, incr_icon, retain_when_hidden
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -62,9 +62,9 @@ from src.main.python.plotlyst.view.widget.display import ChartView
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.novel import StoryStructureSelectorMenu
 from src.main.python.plotlyst.view.widget.progress import SceneStageProgressCharts
+from src.main.python.plotlyst.view.widget.scene.story_map import StoryMap, StoryMapDisplayMode
 from src.main.python.plotlyst.view.widget.scenes import SceneFilterWidget, SceneStoryStructureWidget, \
-    ScenesPreferencesWidget, StoryMap, StoryMapDisplayMode
-from src.main.python.plotlyst.view.widget.scenes import StoryLinesMapWidget
+    ScenesPreferencesWidget
 from src.main.python.plotlyst.view.widget.tree import TreeSettings
 
 
@@ -126,7 +126,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.editor.close.connect(self._on_close_editor)
         self.ui.pageEditor.layout().addWidget(self.editor.widget)
 
-        self.storymap_view: Optional[StoryLinesMapWidget] = None
+        self.storymap_view: Optional[StoryMap] = None
         self.stagesModel: Optional[ScenesStageTableModel] = None
         self.stagesProgress: Optional[SceneStageProgressCharts] = None
         self.characters_distribution: Optional[CharactersScenesDistributionWidget] = None
@@ -200,12 +200,16 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnStoryStructure.setVisible(structure_visible)
         self.ui.wdgStoryStructure.setVisible(structure_visible)
 
-        self.ui.rbDots.setIcon(IconRegistry.from_name('fa5s.circle'))
-        self.ui.rbTitles.setIcon(IconRegistry.from_name('ei.text-width'))
-        self.ui.rbDetailed.setIcon(IconRegistry.from_name('mdi.card-text-outline'))
         self.ui.wdgOrientation.setHidden(True)
         self.ui.rbHorizontal.setIcon(IconRegistry.from_name('fa5s.grip-lines'))
         self.ui.rbVertical.setIcon(IconRegistry.from_name('fa5s.grip-lines-vertical'))
+        self.ui.btnStoryMapDisplay.setIcon(IconRegistry.from_name('mdi.source-branch', rotated=90))
+        self.ui.btnStoryGridDisplay.setIcon(IconRegistry.from_name('mdi6.timeline-text-outline'))
+        incr_font(self.ui.btnStoryMapDisplay, 2)
+        incr_icon(self.ui.btnStoryMapDisplay, 2)
+        incr_font(self.ui.btnStoryGridDisplay, 2)
+        incr_icon(self.ui.btnStoryGridDisplay, 2)
+        retain_when_hidden(self.ui.wdgStorymapToolbar)
 
         self.ui.btnStageCustomize.setIcon(IconRegistry.cog_icon())
         transparent(self.ui.btnStageCustomize)
@@ -347,9 +351,8 @@ class ScenesOutlineView(AbstractNovelView):
             if not self.storymap_view:
                 self.storymap_view = StoryMap()
                 self.ui.scrollAreaStoryMap.layout().addWidget(self.storymap_view)
-                self.ui.rbDots.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.DOTS))
-                self.ui.rbTitles.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.TITLE))
-                self.ui.rbDetailed.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.DETAILED))
+                self.ui.btnGroupStoryMapView.buttonClicked.connect(self._story_map_mode_clicked)
+                self.ui.cbStoryMapDetailed.clicked.connect(self._story_map_mode_clicked)
                 self.ui.rbHorizontal.clicked.connect(
                     lambda: self.storymap_view.setOrientation(Qt.Orientation.Horizontal))
                 self.ui.rbVertical.clicked.connect(lambda: self.storymap_view.setOrientation(Qt.Orientation.Vertical))
@@ -668,3 +671,14 @@ class ScenesOutlineView(AbstractNovelView):
     def _on_scene_moved(self):
         self.repo.update_novel(self.novel)
         self.refresh()
+
+    def _story_map_mode_clicked(self):
+        if self.ui.btnStoryMapDisplay.isChecked():
+            if self.ui.cbStoryMapDetailed.isChecked():
+                self.storymap_view.setMode(StoryMapDisplayMode.TITLE)
+            else:
+                self.storymap_view.setMode(StoryMapDisplayMode.DOTS)
+            self.ui.wdgStorymapToolbar.setVisible(True)
+        elif self.ui.btnStoryGridDisplay.isChecked():
+            self.ui.wdgStorymapToolbar.setVisible(False)
+            self.storymap_view.setMode(StoryMapDisplayMode.DETAILED)

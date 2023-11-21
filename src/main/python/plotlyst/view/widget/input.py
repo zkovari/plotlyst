@@ -710,23 +710,25 @@ class PowerBar(QFrame):
 
 
 class RemovalButton(QToolButton):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, colorOff: str = 'grey', colorOn='red', colorHover='black'):
         super(RemovalButton, self).__init__(parent)
-        self.setIcon(IconRegistry.close_icon('grey'))
+        self._colorOff = colorOff
+        self._colorHover = colorHover
+        self.setIcon(IconRegistry.close_icon(self._colorOff))
         pointy(self)
         self.installEventFilter(self)
         self.setIconSize(QSize(12, 12))
         transparent(self)
 
-        self.pressed.connect(lambda: self.setIcon(IconRegistry.close_icon('red')))
-        self.released.connect(lambda: self.setIcon(IconRegistry.close_icon()))
+        self.pressed.connect(lambda: self.setIcon(IconRegistry.close_icon(colorOn)))
+        self.released.connect(lambda: self.setIcon(IconRegistry.close_icon(colorOff)))
 
     @overrides
     def eventFilter(self, watched: 'QObject', event: 'QEvent') -> bool:
         if event.type() == QEvent.Type.Enter:
-            self.setIcon(IconRegistry.close_icon())
+            self.setIcon(IconRegistry.close_icon(self._colorHover))
         elif event.type() == QEvent.Type.Leave:
-            self.setIcon(IconRegistry.close_icon('grey'))
+            self.setIcon(IconRegistry.close_icon(self._colorOff))
         return super(RemovalButton, self).eventFilter(watched, event)
 
 
