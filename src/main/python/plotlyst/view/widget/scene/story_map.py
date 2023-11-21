@@ -30,7 +30,7 @@ from PyQt6.QtGui import QColor, QMouseEvent, QPaintEvent, QPainter, \
     QPen, QPainterPath, QShowEvent
 from PyQt6.QtWidgets import QSizePolicy, QWidget, QToolButton, QPushButton, QTextEdit, QLabel
 from overrides import overrides
-from qthandy import busy, margins, vspacer, bold, incr_font, pointy
+from qthandy import busy, margins, vspacer, bold, incr_font, pointy, line
 from qthandy import decr_font, transparent, clear_layout, hbox, spacer, vbox
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
@@ -286,7 +286,7 @@ class _SceneGridItem(QWidget):
         self.novel = novel
         self.scene = scene
 
-        vbox(self)
+        vbox(self, spacing=1)
 
         icon = Icon()
         beat = self.scene.beat(self.novel)
@@ -299,14 +299,8 @@ class _SceneGridItem(QWidget):
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label.setText(scene.title_or_index(self.novel))
 
-        # btn = WordWrappedPushButton(parent=self)
-        # btn.setFixedWidth(120)
-        # btn.setText(scene.title_or_index(self.novel))
-
-        # transparent(btn)
-
         self.wdgTop = QWidget()
-        hbox(self.wdgTop, 0)
+        hbox(self.wdgTop, 0, 1)
         self.wdgTop.layout().addWidget(spacer())
         self.wdgTop.layout().addWidget(icon)
         self.wdgTop.layout().addWidget(self.label, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -323,6 +317,7 @@ class _SceneGridItem(QWidget):
         self.textSynopsis.textChanged.connect(self._synopsisChanged)
 
         self.layout().addWidget(self.wdgTop)
+        self.layout().addWidget(line())
         self.layout().addWidget(self.textSynopsis)
 
         self.repo = RepositoryPersistenceManager.instance()
