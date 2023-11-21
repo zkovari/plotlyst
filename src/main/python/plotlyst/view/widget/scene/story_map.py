@@ -28,9 +28,9 @@ from PyQt6.QtCore import QPoint, QTimeLine
 from PyQt6.QtCore import Qt, QEvent, QSize, pyqtSignal
 from PyQt6.QtGui import QColor, QMouseEvent, QPaintEvent, QPainter, \
     QPen, QPainterPath, QShowEvent
-from PyQt6.QtWidgets import QSizePolicy, QWidget, QToolButton, QPushButton, QTextEdit, QLabel
+from PyQt6.QtWidgets import QSizePolicy, QWidget, QTextEdit, QLabel, QPushButton
 from overrides import overrides
-from qthandy import busy, margins, vspacer, bold, incr_font, pointy, line
+from qthandy import busy, margins, vspacer, line, incr_font
 from qthandy import decr_font, transparent, clear_layout, hbox, spacer, vbox
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
@@ -44,11 +44,11 @@ from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneOrderChangedEvent
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import hmax, ButtonPressResizeEventFilter, action
+from src.main.python.plotlyst.view.common import hmax, action, tool_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton
 from src.main.python.plotlyst.view.widget.display import Icon
-from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation, RotatedButton
+from src.main.python.plotlyst.view.widget.input import RotatedButton, RotatedButtonOrientation
 
 
 class StoryMapDisplayMode(Enum):
@@ -277,7 +277,8 @@ class StoryLinesMapWidget(QWidget):
         self.update()
 
 
-GRID_ITEM_SIZE: int = 150
+GRID_ITEM_WIDTH: int = 190
+GRID_ITEM_HEIGHT: int = 120
 
 
 class _SceneGridItem(QWidget):
@@ -338,7 +339,7 @@ class _ScenesLineWidget(QWidget):
             hbox(self, margin=0)
 
         wdgEmpty = QWidget()
-        wdgEmpty.setFixedSize(GRID_ITEM_SIZE, GRID_ITEM_SIZE)
+        wdgEmpty.setFixedSize(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT)
         self.layout().addWidget(wdgEmpty)
 
         if vertical:
@@ -346,7 +347,7 @@ class _ScenesLineWidget(QWidget):
 
         for scene in self.novel.scenes:
             wdg = _SceneGridItem(self.novel, scene)
-            wdg.setFixedSize(GRID_ITEM_SIZE, GRID_ITEM_SIZE)
+            wdg.setFixedSize(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT)
             self.layout().addWidget(wdg)
 
         if vertical:
@@ -367,45 +368,32 @@ class _ScenePlotAssociationsWidget(QWidget):
         self.setProperty('relaxed-white-bg', True)
 
         self.wdgReferences = QWidget()
-        line = QPushButton()
-        line.setStyleSheet(f'''
-                    background-color: {plot.icon_color};
-                    border-radius: 6px;
-                ''')
+        self.wdgReferences.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
         if vertical:
             hbox(self, 0, 0)
             vbox(self.wdgReferences, margin=0, spacing=5)
+            margins(self.wdgReferences, top=GRID_ITEM_HEIGHT)
             btnPlot = RotatedButton()
             btnPlot.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
             hmax(btnPlot)
             self.layout().addWidget(btnPlot, alignment=Qt.AlignmentFlag.AlignTop)
 
-            line.setFixedWidth(self.LineSize)
-            line.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
             hmax(self)
         else:
             vbox(self, 0, 0)
-            hbox(self.wdgReferences, margin=0, spacing=5)
+            hbox(self.wdgReferences, margin=0, spacing=12)
+            margins(self.wdgReferences, left=GRID_ITEM_WIDTH)
             btnPlot = QPushButton()
             self.layout().addWidget(btnPlot, alignment=Qt.AlignmentFlag.AlignLeft)
 
-            line.setFixedHeight(self.LineSize)
-            line.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-
         btnPlot.setText(self.plot.text)
         incr_font(btnPlot)
-        bold(btnPlot)
         if self.plot.icon:
             btnPlot.setIcon(IconRegistry.from_name(self.plot.icon, self.plot.icon_color))
         transparent(btnPlot)
 
-        self.layout().addWidget(line)
         self.layout().addWidget(self.wdgReferences)
-
-        wdgEmpty = QWidget()
-        wdgEmpty.setFixedSize(GRID_ITEM_SIZE, GRID_ITEM_SIZE)
-        self.wdgReferences.layout().addWidget(wdgEmpty)
 
         for scene in self.novel.scenes:
             pv = next((x for x in scene.plot_values if x.plot.id == self.plot.id), None)
@@ -413,18 +401,15 @@ class _ScenePlotAssociationsWidget(QWidget):
                 wdg = self.__initCommentWidget(scene, pv)
             else:
                 wdg = QWidget()
-                btnPlus = QToolButton()
-                transparent(btnPlus)
-                pointy(btnPlus)
-                btnPlus.setIcon(IconRegistry.plus_circle_icon('grey'))
-                btnPlus.setToolTip('Associate to plot')
+                transparent(wdg)
+                wdg.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+                btnPlus = tool_btn(IconRegistry.plus_circle_icon('grey'), 'Associate to storyline', transparent_=True)
                 btnPlus.setIconSize(QSize(32, 32))
                 btnPlus.installEventFilter(OpacityEventFilter(btnPlus, enterOpacity=0.7, leaveOpacity=0.2))
-                btnPlus.installEventFilter(ButtonPressResizeEventFilter(btnPlus))
                 btnPlus.clicked.connect(partial(self._linkToPlot, wdg, scene))
                 vbox(wdg).addWidget(btnPlus, alignment=Qt.AlignmentFlag.AlignCenter)
 
-            wdg.setFixedSize(GRID_ITEM_SIZE, GRID_ITEM_SIZE)
+            wdg.setFixedSize(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT)
             self.wdgReferences.layout().addWidget(wdg)
 
         if vertical:
@@ -433,6 +418,18 @@ class _ScenePlotAssociationsWidget(QWidget):
             self.wdgReferences.layout().addWidget(spacer())
 
         self.repo = RepositoryPersistenceManager.instance()
+
+    @overrides
+    def paintEvent(self, event: QPaintEvent) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(QColor(self.plot.icon_color))
+        painter.setBrush(QColor(self.plot.icon_color))
+
+        if self._vertical:
+            painter.drawRect(self.rect().width() // 2 - 4, 5, 8, self.rect().height())
+        else:
+            painter.drawRect(5, 50, self.rect().width(), 8)
 
     def _commentChanged(self, editor: QTextEdit, scene: Scene, scenePlotRef: ScenePlotReference):
         scenePlotRef.data.comment = editor.toPlainText()
@@ -443,33 +440,24 @@ class _ScenePlotAssociationsWidget(QWidget):
         scene.plot_values.append(ref)
 
         wdg = self.__initCommentWidget(scene, ref)
-        wdg.setFixedSize(GRID_ITEM_SIZE, GRID_ITEM_SIZE)
+        wdg.setFixedSize(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT)
         self.wdgReferences.layout().replaceWidget(placeholder, wdg)
         qtanim.fade_in(wdg)
+        wdg.setFocus()
 
         self.repo.update_scene(scene)
 
     def __initCommentWidget(self, scene: Scene, ref: ScenePlotReference) -> QWidget:
         wdg = QTextEdit()
-        wdg.setContentsMargins(5, 5, 5, 5)
         wdg.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         wdg.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        wdg.setPlaceholderText('How is the plot related to this scene?')
+        wdg.setPlaceholderText('How is the scene related to this storyline?')
         wdg.setTabChangesFocus(True)
-        if self._vertical:
-            wdg.setStyleSheet(f'''
-                                border:1px solid {self.plot.icon_color};
-                                border-left: 0px;
-                                border-bottom-right-radius: 12px;
-                                border-top-right-radius: 12px;
-                            ''')
-        else:
-            wdg.setStyleSheet(f'''
-                                border:1px solid {self.plot.icon_color};
-                                border-top: 0px;
-                                border-bottom-left-radius: 12px;
-                                border-bottom-right-radius: 12px;
-                            ''')
+        wdg.setStyleSheet(f'''
+                            border:2px solid {self.plot.icon_color};
+                            padding: 4px;
+                            border-radius: 6px;
+                        ''')
         wdg.setText(ref.data.comment)
         wdg.textChanged.connect(partial(self._commentChanged, wdg, scene, ref))
 

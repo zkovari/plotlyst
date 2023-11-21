@@ -677,7 +677,5 @@ class ScenesOutlineView(AbstractNovelView):
                 self.storymap_view.setMode(StoryMapDisplayMode.TITLE)
             else:
                 self.storymap_view.setMode(StoryMapDisplayMode.DOTS)
-            self.ui.wdgOrientation.setVisible(False)
         elif self.ui.btnStoryGridDisplay.isChecked():
-            self.ui.wdgOrientation.setVisible(True)
             self.storymap_view.setMode(StoryMapDisplayMode.DETAILED)
