@@ -725,7 +725,7 @@
            <item>
             <widget class="QStackedWidget" name="stackScenes">
              <property name="currentIndex">
-              <number>2</number>
+              <number>4</number>
              </property>
              <widget class="QWidget" name="pageCards">
               <property name="relaxed-white-bg" stdset="0">
@@ -757,8 +757,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>479</width>
-                    <height>580</height>
+                    <width>98</width>
+                    <height>28</height>
                    </rect>
                   </property>
                   <layout class="QHBoxLayout" name="horizontalLayout_8">
@@ -1024,7 +1024,7 @@
              <widget class="QWidget" name="pageStorymap">
               <layout class="QVBoxLayout" name="verticalLayout_9">
                <property name="spacing">
-                <number>0</number>
+                <number>3</number>
                </property>
                <property name="leftMargin">
                 <number>0</number>
@@ -1043,61 +1043,138 @@
                  <property name="spacing">
                   <number>3</number>
                  </property>
+                 <property name="topMargin">
+                  <number>2</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>5</number>
+                 </property>
                  <item>
-                  <widget class="QLabel" name="label_3">
-                   <property name="text">
-                    <string>Display mode</string>
+                  <spacer name="horizontalSpacer_6">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
                    </property>
-                  </widget>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
                  </item>
                  <item>
-                  <widget class="QRadioButton" name="rbDots">
+                  <widget class="QPushButton" name="btnStoryMapDisplay">
                    <property name="cursor">
                     <cursorShape>PointingHandCursor</cursorShape>
                    </property>
+                   <property name="toolTip">
+                    <string>Compare summary</string>
+                   </property>
                    <property name="text">
-                    <string>Dots</string>
+                    <string>Story Map</string>
+                   </property>
+                   <property name="checkable">
+                    <bool>true</bool>
                    </property>
                    <property name="checked">
                     <bool>true</bool>
                    </property>
-                   <attribute name="buttonGroup">
-                    <string notr="true">btnGroupStoryMapView</string>
-                   </attribute>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QRadioButton" name="rbTitles">
-                   <property name="cursor">
-                    <cursorShape>PointingHandCursor</cursorShape>
-                   </property>
-                   <property name="text">
-                    <string>Titles</string>
-                   </property>
-                   <attribute name="buttonGroup">
-                    <string notr="true">btnGroupStoryMapView</string>
-                   </attribute>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QRadioButton" name="rbDetailed">
-                   <property name="enabled">
+                   <property name="transparent-rounded-bg-on-hover" stdset="0">
                     <bool>true</bool>
                    </property>
+                   <property name="secondary-selector" stdset="0">
+                    <bool>true</bool>
+                   </property>
+                   <attribute name="buttonGroup">
+                    <string notr="true">btnGroupStoryMapView</string>
+                   </attribute>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="btnStoryGridDisplay">
                    <property name="cursor">
                     <cursorShape>PointingHandCursor</cursorShape>
                    </property>
+                   <property name="toolTip">
+                    <string>Compare summary</string>
+                   </property>
+                   <property name="text">
+                    <string>Story Grid</string>
+                   </property>
+                   <property name="checkable">
+                    <bool>true</bool>
+                   </property>
+                   <property name="checked">
+                    <bool>false</bool>
+                   </property>
+                   <property name="transparent-rounded-bg-on-hover" stdset="0">
+                    <bool>true</bool>
+                   </property>
+                   <property name="secondary-selector" stdset="0">
+                    <bool>true</bool>
+                   </property>
+                   <attribute name="buttonGroup">
+                    <string notr="true">btnGroupStoryMapView</string>
+                   </attribute>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_2">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_2">
+                 <property name="spacing">
+                  <number>2</number>
+                 </property>
+                 <item>
+                  <spacer name="horizontalSpacer_7">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item alignment="Qt::AlignVCenter">
+                  <widget class="QLabel" name="label">
                    <property name="text">
                     <string>Detailed</string>
                    </property>
-                   <attribute name="buttonGroup">
-                    <string notr="true">btnGroupStoryMapView</string>
-                   </attribute>
+                  </widget>
+                 </item>
+                 <item alignment="Qt::AlignVCenter">
+                  <widget class="Toggle" name="cbStoryMapDetailed">
+                   <property name="text">
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="Line" name="line_7">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
                   </widget>
                  </item>
                  <item>
                   <widget class="QWidget" name="wdgOrientation" native="true">
-                   <layout class="QHBoxLayout" name="horizontalLayout_2">
+                   <layout class="QHBoxLayout" name="horizontalLayout_11">
                     <property name="spacing">
                      <number>2</number>
                     </property>
@@ -1113,20 +1190,6 @@
                     <property name="bottomMargin">
                      <number>0</number>
                     </property>
-                    <item>
-                     <widget class="Line" name="line_7">
-                      <property name="orientation">
-                       <enum>Qt::Vertical</enum>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QLabel" name="label_4">
-                      <property name="text">
-                       <string>Orientation:</string>
-                      </property>
-                     </widget>
-                    </item>
                     <item>
                      <widget class="QRadioButton" name="rbHorizontal">
                       <property name="cursor">
@@ -1156,19 +1219,6 @@
                    </layout>
                   </widget>
                  </item>
-                 <item>
-                  <spacer name="horizontalSpacer_2">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
                 </layout>
                </item>
                <item>
@@ -1181,8 +1231,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>98</width>
-                    <height>28</height>
+                    <width>479</width>
+                    <height>523</height>
                    </rect>
                   </property>
                   <property name="sizePolicy">
@@ -1267,25 +1317,14 @@
    <extends>QTreeView</extends>
    <header>src.main.python.plotlyst.view.widget.scene</header>
   </customwidget>
+  <customwidget>
+   <class>Toggle</class>
+   <extends>QCheckBox</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
+  </customwidget>
  </customwidgets>
  <resources/>
  <connections>
-  <connection>
-   <sender>rbDetailed</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>wdgOrientation</receiver>
-   <slot>setVisible(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>376</x>
-     <y>89</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>395</x>
-     <y>89</y>
-    </hint>
-   </hints>
-  </connection>
   <connection>
    <sender>btnChaptersToggle</sender>
    <signal>toggled(bool)</signal>
