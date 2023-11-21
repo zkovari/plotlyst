@@ -125,7 +125,7 @@
          <string>Highlight current sentence only</string>
         </property>
         <property name="text">
-         <string/>
+         <string>Highlight</string>
         </property>
         <property name="iconSize">
          <size>
@@ -137,9 +137,12 @@
          <bool>true</bool>
         </property>
         <property name="toolButtonStyle">
-         <enum>Qt::ToolButtonIconOnly</enum>
+         <enum>Qt::ToolButtonTextUnderIcon</enum>
         </property>
         <property name="base" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="dark-mode-toggle" stdset="0">
          <bool>true</bool>
         </property>
        </widget>
@@ -153,7 +156,7 @@
          <string>Night mode</string>
         </property>
         <property name="text">
-         <string/>
+         <string>Dark mode</string>
         </property>
         <property name="iconSize">
          <size>
@@ -164,7 +167,16 @@
         <property name="checkable">
          <bool>true</bool>
         </property>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextUnderIcon</enum>
+        </property>
         <property name="base" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="transparent" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="dark-mode-toggle" stdset="0">
          <bool>true</bool>
         </property>
        </widget>
@@ -185,7 +197,7 @@
          <string>Center text to the middle</string>
         </property>
         <property name="text">
-         <string/>
+         <string>Centered</string>
         </property>
         <property name="iconSize">
          <size>
@@ -196,7 +208,13 @@
         <property name="checkable">
          <bool>true</bool>
         </property>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextUnderIcon</enum>
+        </property>
         <property name="base" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="dark-mode-toggle" stdset="0">
          <bool>true</bool>
         </property>
        </widget>
@@ -217,7 +235,7 @@
          <string>Display word count</string>
         </property>
         <property name="text">
-         <string/>
+         <string>Word count</string>
         </property>
         <property name="iconSize">
          <size>
@@ -228,7 +246,13 @@
         <property name="checkable">
          <bool>true</bool>
         </property>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextUnderIcon</enum>
+        </property>
         <property name="base" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="dark-mode-toggle" stdset="0">
          <bool>true</bool>
         </property>
        </widget>

@@ -466,6 +466,16 @@ btn_style_tool_button_main_navbar = """
     }
 """
 
+btn_style_tool_button_dark_toggle = """
+    QToolButton[dark-mode-toggle=true] {
+        border: 0px;
+        color: lightgrey;
+    }
+    QToolButton:checked[dark-mode-toggle=true] {
+        color: #D4B8E0;
+    }
+"""
+
 style = "\n".join([
     btn_style_no_menu,
     btn_style_base,
@@ -487,5 +497,6 @@ style = "\n".join([
     btn_style_tool_button_emotion,
     btn_style_tool_button_conflict_selector,
     btn_style_tool_button_gender,
-    btn_style_tool_button_main_navbar
+    btn_style_tool_button_main_navbar,
+    btn_style_tool_button_dark_toggle
 ])
