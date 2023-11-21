@@ -128,3 +128,12 @@ scene_motion_outcome_help = """<html><head/><body><p>Scene sets the story in mot
 mid_revision_scene_structure_help = """<html>This panel is recommended for <b>mid-revision</b> stage after the writer has already completed the first draft and implemented early, high-level developmental changes.
 <br/>During mid-revision, the writer might refine scene structure to ensure tension, escalation, and reader engagement.
 """
+
+home_page_welcome_text = """Plotlyst is an advanced writing software tailored for both aspiring and professional novelists.
+
+It offers a range of tools to support various stages of novel writing, including outlining and planning, drafting, and early, mid, or late-stage revisions.
+
+Not every tool aligns with every individual's writing process, and not all tools are universally suitable for all genres. Plotlyst is highly customizable, allowing you to choose and tailor the features that fit your specific preferences and needs.
+
+Not every tool needs to be used right away. Several features prove most beneficial after the initial drafting phase.
+"""

@@ -22,7 +22,7 @@ from typing import List, Optional
 from PyQt6.QtCore import pyqtSignal, QSize, Qt, QTimer
 from PyQt6.QtGui import QPixmap, QColor, QTextDocument
 from overrides import overrides
-from qthandy import transparent, incr_font, italic, busy, retain_when_hidden, incr_icon, bold
+from qthandy import transparent, incr_font, italic, busy, retain_when_hidden, incr_icon, bold, underline
 from qthandy.filter import VisibilityToggleEventFilter, InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -30,6 +30,7 @@ from src.main.python.plotlyst.common import NAV_BAR_BUTTON_DEFAULT_COLOR, \
     NAV_BAR_BUTTON_CHECKED_COLOR
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import NovelDescriptor
+from src.main.python.plotlyst.core.help import home_page_welcome_text
 from src.main.python.plotlyst.event.core import emit_global_event, Event
 from src.main.python.plotlyst.event.handler import global_event_dispatcher
 from src.main.python.plotlyst.events import NovelDeletedEvent, NovelUpdatedEvent
@@ -90,6 +91,17 @@ class HomeView(AbstractView):
 
         self.ui.btnProgress.setHidden(True)
         self.ui.btnRoadmap.setHidden(True)
+
+        self.ui.lblWelcomeMain.setText(home_page_welcome_text)
+        self.ui.btnVisitTutorials.setIcon(IconRegistry.from_name('mdi6.school-outline', NAV_BAR_BUTTON_DEFAULT_COLOR))
+        transparent(self.ui.btnVisitTutorials)
+        underline(self.ui.btnVisitTutorials)
+        self.ui.btnVisitTutorials.installEventFilter(OpacityEventFilter(self.ui.btnVisitTutorials, leaveOpacity=0.5))
+        self.ui.btnVisitTutorials.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnVisitTutorials))
+
+        self.ui.btnFirstStory.setIcon(IconRegistry.book_icon())
+        self.ui.btnFirstStory.installEventFilter(OpacityEventFilter(self.ui.btnFirstStory, leaveOpacity=0.7))
+        self.ui.btnFirstStory.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnFirstStory))
 
         self.ui.btnActivate.setIcon(IconRegistry.book_icon(color='white', color_on='white'))
         self.ui.btnActivate.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnActivate))
