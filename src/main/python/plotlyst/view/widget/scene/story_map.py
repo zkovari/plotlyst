@@ -24,7 +24,7 @@ from typing import Dict, Optional
 from typing import List
 
 import qtanim
-from PyQt6.QtCore import QPoint, QTimeLine
+from PyQt6.QtCore import QPoint, QTimeLine, QTimer
 from PyQt6.QtCore import Qt, QEvent, QSize, pyqtSignal
 from PyQt6.QtGui import QColor, QMouseEvent, QPaintEvent, QPainter, \
     QPen, QPainterPath, QShowEvent
@@ -32,7 +32,7 @@ from PyQt6.QtWidgets import QSizePolicy, QWidget, QTextEdit, QLabel, QPushButton
 from overrides import overrides
 from qthandy import busy, margins, vspacer, line, incr_font
 from qthandy import decr_font, transparent, clear_layout, hbox, spacer, vbox
-from qthandy.filter import OpacityEventFilter
+from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
@@ -44,11 +44,11 @@ from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneOrderChangedEvent
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import hmax, action, tool_btn
+from src.main.python.plotlyst.view.common import hmax, action, tool_btn, ButtonPressResizeEventFilter, fade_out_and_gc
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton
 from src.main.python.plotlyst.view.widget.display import Icon
-from src.main.python.plotlyst.view.widget.input import RotatedButton, RotatedButtonOrientation
+from src.main.python.plotlyst.view.widget.input import RotatedButton, RotatedButtonOrientation, RemovalButton
 
 
 class StoryMapDisplayMode(Enum):
@@ -400,16 +400,7 @@ class _ScenePlotAssociationsWidget(QWidget):
             if pv:
                 wdg = self.__initCommentWidget(scene, pv)
             else:
-                wdg = QWidget()
-                transparent(wdg)
-                wdg.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-                btnPlus = tool_btn(IconRegistry.plus_circle_icon('grey'), 'Associate to storyline', transparent_=True)
-                btnPlus.setIconSize(QSize(32, 32))
-                btnPlus.installEventFilter(OpacityEventFilter(btnPlus, enterOpacity=0.7, leaveOpacity=0.2))
-                btnPlus.clicked.connect(partial(self._linkToPlot, wdg, scene))
-                vbox(wdg).addWidget(btnPlus, alignment=Qt.AlignmentFlag.AlignCenter)
-
-            wdg.setFixedSize(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT)
+                wdg = self.__initPlusWidget(scene)
             self.wdgReferences.layout().addWidget(wdg)
 
         if vertical:
@@ -440,11 +431,19 @@ class _ScenePlotAssociationsWidget(QWidget):
         scene.plot_values.append(ref)
 
         wdg = self.__initCommentWidget(scene, ref)
-        wdg.setFixedSize(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT)
         self.wdgReferences.layout().replaceWidget(placeholder, wdg)
         qtanim.fade_in(wdg)
         wdg.setFocus()
 
+        self.repo.update_scene(scene)
+
+    def _removePlotLink(self, editor: QTextEdit, scene: Scene, ref: ScenePlotReference):
+        i = self.wdgReferences.layout().indexOf(editor)
+        fade_out_and_gc(self.wdgReferences, editor)
+        wdg = self.__initPlusWidget(scene)
+        QTimer.singleShot(200, lambda: self.wdgReferences.layout().insertWidget(i, wdg))
+
+        scene.plot_values.remove(ref)
         self.repo.update_scene(scene)
 
     def __initCommentWidget(self, scene: Scene, ref: ScenePlotReference) -> QWidget:
@@ -460,6 +459,28 @@ class _ScenePlotAssociationsWidget(QWidget):
                         ''')
         wdg.setText(ref.data.comment)
         wdg.textChanged.connect(partial(self._commentChanged, wdg, scene, ref))
+
+        btn = RemovalButton(wdg, ref.plot.icon_color, ref.plot.icon_color, colorHover='lightgrey')
+        btn.installEventFilter(ButtonPressResizeEventFilter(btn))
+        btn.setGeometry(GRID_ITEM_WIDTH - 20, 1, 20, 20)
+        btn.setVisible(True)
+        btn.clicked.connect(lambda: self._removePlotLink(wdg, scene, ref))
+
+        wdg.installEventFilter(VisibilityToggleEventFilter(btn, wdg))
+        wdg.setFixedSize(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT)
+
+        return wdg
+
+    def __initPlusWidget(self, scene: Scene) -> QWidget:
+        wdg = QWidget()
+        transparent(wdg)
+        wdg.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        btnPlus = tool_btn(IconRegistry.plus_circle_icon('grey'), 'Associate to storyline', transparent_=True)
+        btnPlus.setIconSize(QSize(32, 32))
+        btnPlus.installEventFilter(OpacityEventFilter(btnPlus, enterOpacity=0.7, leaveOpacity=0.2))
+        btnPlus.clicked.connect(partial(self._linkToPlot, wdg, scene))
+        vbox(wdg).addWidget(btnPlus, alignment=Qt.AlignmentFlag.AlignCenter)
+        wdg.setFixedSize(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT)
 
         return wdg
 

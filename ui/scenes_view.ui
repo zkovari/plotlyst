@@ -1067,9 +1067,6 @@
                    <property name="cursor">
                     <cursorShape>PointingHandCursor</cursorShape>
                    </property>
-                   <property name="toolTip">
-                    <string>Compare summary</string>
-                   </property>
                    <property name="text">
                     <string>Story Map</string>
                    </property>
@@ -1094,9 +1091,6 @@
                   <widget class="QPushButton" name="btnStoryGridDisplay">
                    <property name="cursor">
                     <cursorShape>PointingHandCursor</cursorShape>
-                   </property>
-                   <property name="toolTip">
-                    <string>Compare summary</string>
                    </property>
                    <property name="text">
                     <string>Story Grid</string>
@@ -1231,7 +1225,7 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>479</width>
+                    <width>387</width>
                     <height>523</height>
                    </rect>
                   </property>
