@@ -31,7 +31,7 @@ from PyQt6.QtGui import QColor, QMouseEvent, QPaintEvent, QPainter, \
 from PyQt6.QtWidgets import QSizePolicy, QWidget, QToolButton, QPushButton, QTextEdit, QLabel
 from overrides import overrides
 from qthandy import busy, margins, vspacer, bold, incr_font, pointy
-from qthandy import decr_font, transparent, underline, clear_layout, hbox, spacer, vbox, italic
+from qthandy import decr_font, transparent, clear_layout, hbox, spacer, vbox
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -348,16 +348,6 @@ class _ScenesLineWidget(QWidget):
 
         if vertical:
             hmax(self)
-            btnScenes = QPushButton()
-        else:
-            btnScenes = RotatedButton()
-            btnScenes.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
-        btnScenes.setText('Scenes')
-        transparent(btnScenes)
-        italic(btnScenes)
-        underline(btnScenes)
-        btnScenes.setIcon(IconRegistry.scene_icon())
-        self.layout().addWidget(btnScenes)
 
         for scene in self.novel.scenes:
             wdg = _SceneGridItem(self.novel, scene)
