@@ -33,6 +33,7 @@ from overrides import overrides
 from qthandy import busy, margins, vspacer, bold, incr_font, pointy
 from qthandy import decr_font, transparent, underline, clear_layout, hbox, spacer, vbox, italic
 from qthandy.filter import OpacityEventFilter
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.common import truncate_string
@@ -43,7 +44,7 @@ from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneOrderChangedEvent
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import PopupMenuBuilder, hmax, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import hmax, ButtonPressResizeEventFilter, action
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton
 from src.main.python.plotlyst.view.widget.display import Icon
@@ -78,6 +79,7 @@ class StoryLinesMapWidget(QWidget):
         self._line_height = 50
         self._first_paint_triggered: bool = False
 
+        self._menuPlots = MenuWidget()
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self._context_menu_requested)
 
@@ -128,6 +130,10 @@ class StoryLinesMapWidget(QWidget):
             self.update()
 
     @overrides
+    def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
+        self._context_menu_requested(event.pos())
+
+    @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -149,7 +155,7 @@ class StoryLinesMapWidget(QWidget):
             path = QPainterPath()
             painter.setPen(QPen(QColor(plot.icon_color), 4, Qt.PenStyle.SolidLine))
             path.moveTo(0, y)
-            painter.drawPixmap(0, y - 35, IconRegistry.from_name(plot.icon, plot.icon_color).pixmap(24, 24))
+            IconRegistry.from_name(plot.icon, plot.icon_color).paint(painter, 0, y - 35, 24, 24)
             path.lineTo(5, y)
             painter.drawPath(path)
 
@@ -203,21 +209,26 @@ class StoryLinesMapWidget(QWidget):
         painter.end()
 
     def _draw_scene_ellipse(self, painter: QPainter, scene: Scene, x: int, y: int):
+        selected = scene is self._clicked_scene
         if scene.plot_values:
-            pen = Qt.GlobalColor.red if scene is self._clicked_scene else Qt.GlobalColor.black
+            pen_color = '#CB4D4D' if selected else Qt.GlobalColor.black
             if len(scene.plot_values) == 1:
-                painter.setPen(QPen(pen, 3, Qt.PenStyle.SolidLine))
+                painter.setPen(QPen(QColor(pen_color), 3, Qt.PenStyle.SolidLine))
                 painter.setBrush(Qt.GlobalColor.black)
-                painter.drawEllipse(x, y - 7, 14, 14)
+                size = 22 if selected else 14
+                x_diff = 4 if selected else 0
+                painter.drawEllipse(x - x_diff, y - size // 2, size, size)
             else:
-                painter.setPen(QPen(pen, 3, Qt.PenStyle.SolidLine))
+                painter.setPen(QPen(QColor(pen_color), 3, Qt.PenStyle.SolidLine))
                 painter.setBrush(Qt.GlobalColor.white)
                 painter.drawEllipse(x, y - 10, 20, 20)
         else:
-            pen = Qt.GlobalColor.red if scene is self._clicked_scene else Qt.GlobalColor.gray
-            painter.setPen(QPen(pen, 3, Qt.PenStyle.SolidLine))
+            pen_color = '#CB4D4D' if scene is self._clicked_scene else Qt.GlobalColor.gray
+            painter.setPen(QPen(QColor(pen_color), 3, Qt.PenStyle.SolidLine))
             painter.setBrush(Qt.GlobalColor.gray)
-            painter.drawEllipse(x, y, 14, 14)
+            size = 18 if selected else 14
+            x_diff = 2 if selected else 0
+            painter.drawEllipse(x - x_diff, y, size, size)
 
     def _story_line_y(self, index: int) -> int:
         return self._top_height + self._line_height * (index)
@@ -235,17 +246,19 @@ class StoryLinesMapWidget(QWidget):
             self._clicked_scene: Scene = scenes[index]
             self.update()
 
-            builder = PopupMenuBuilder.from_widget_position(self, pos)
+            self._menuPlots.clear()
             if self.novel.plots:
                 for plot in self.novel.plots:
-                    plot_action = builder.add_action(truncate_string(plot.text, 70),
-                                                     IconRegistry.from_name(plot.icon, plot.icon_color),
-                                                     slot=partial(self._plot_changed, plot))
+                    plot_action = action(truncate_string(plot.text, 70),
+                                         IconRegistry.from_name(plot.icon, plot.icon_color),
+                                         slot=partial(self._plot_changed, plot))
+                    self._menuPlots.addAction(plot_action)
                     plot_action.setCheckable(True)
                     if plot in self._clicked_scene.plots():
                         plot_action.setChecked(True)
-
-                builder.popup()
+            else:
+                self._menuPlots.addSection('No storylines were found')
+            self._menuPlots.exec(self.mapToGlobal(pos))
 
     @busy
     def _plot_changed(self, plot: Plot, checked: bool):
