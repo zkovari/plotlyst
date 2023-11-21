@@ -24,7 +24,8 @@ import zipfile
 from typing import List, Optional
 
 import requests
-from PyQt6.QtCore import QRunnable, QThreadPool
+from PyQt6.QtCore import QRunnable, QThreadPool, QObject, pyqtSignal
+from PyQt6.QtGui import QImage
 from overrides import overrides
 from pypandoc import download_pandoc
 
@@ -106,7 +107,7 @@ class NltkResourceDownloadWorker(QRunnable):
 class JreResourceDownloadWorker(QRunnable):
 
     def __init__(self):
-        super(JreResourceDownloadWorker, self).__init__()
+        super().__init__()
         self._type = ResourceType.JRE_8
 
     @overrides
@@ -145,3 +146,80 @@ class PandocResourceDownloadWorker(QRunnable):
 
         download_pandoc(version=PANDOC_VERSION, targetfolder=target_path, download_folder=resource_path)
         emit_global_event(ResourceDownloadedEvent(self, self._type))
+
+
+class JsonDownloadResult(QObject):
+    finished = pyqtSignal(object)
+    failed = pyqtSignal(int, str)
+
+    def __init__(self):
+        super().__init__()
+
+    def emit_success(self, json_result):
+        self.finished.emit(json_result)
+
+    def emit_failure(self, code: int, msg: str):
+        self.failed.emit(code, msg)
+
+
+class JsonDownloadWorker(QRunnable):
+
+    def __init__(self, url: str, result: JsonDownloadResult):
+        super().__init__()
+        self._url = url
+        self._result = result
+
+    @overrides
+    def run(self) -> None:
+        try:
+            response = requests.get(self._url)
+            response.raise_for_status()
+
+            self._result.emit_success(response.json())
+        except requests.RequestException as e:
+            status_code = getattr(e.response, 'status_code', None)
+            reason = str(e) if status_code is None else e.response.reason
+            self._result.emit_failure(status_code, reason)
+
+
+class ImageDownloadResult(QObject):
+    downloaded = pyqtSignal(QImage)
+    failed = pyqtSignal(int, str)
+
+    def emit_success(self, data):
+        image = QImage.fromData(data)
+        if image.isNull():
+            self.failed.emit(500, 'Could not convert data to QImage')
+        else:
+            self.downloaded.emit(image)
+
+    def emit_failure(self, code: int, msg: str):
+        self.failed.emit(code, msg)
+
+
+class ImagesDownloadWorker(QRunnable):
+    def __init__(self, urls: List[str], result: ImageDownloadResult):
+        super().__init__()
+        self._urls = urls
+        self._result = result
+        self._stopped = False
+
+    @overrides
+    def run(self) -> None:
+        for url in self._urls:
+            if self._stopped:
+                return
+
+            try:
+                with requests.Session() as session:
+                    with session.get(url) as response:
+                        response.raise_for_status()
+
+                        self._result.emit_success(response.content)
+            except requests.RequestException as e:
+                status_code = getattr(e.response, 'status_code', None)
+                reason = str(e) if status_code is None else e.response.reason
+                self._result.emit_failure(status_code, reason)
+
+    def stop(self):
+        self._stopped = True

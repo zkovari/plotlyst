@@ -17,24 +17,23 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
-import json
-import logging
 import random
 from enum import Enum
 from functools import partial
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 from PyQt6 import QtGui
-from PyQt6.QtCore import QUrl, Qt, QSize, QObject, QEvent, QPoint, QRect, pyqtSignal
-from PyQt6.QtGui import QColor, QPixmap, QIcon, QPainter
-from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
+from PyQt6.QtCore import Qt, QSize, QObject, QEvent, QPoint, QRect, pyqtSignal, QThreadPool
+from PyQt6.QtGui import QColor, QPixmap, QIcon, QPainter, QImage
+from PyQt6.QtNetwork import QNetworkAccessManager
 from PyQt6.QtWidgets import QDialog, QToolButton, QPushButton, QApplication
 from overrides import overrides
 from qthandy import hbox, FlowLayout, bold, underline
 from qthandy.filter import InstantTooltipEventFilter
 
 from src.main.python.plotlyst.env import app_env
+from src.main.python.plotlyst.service.resource import JsonDownloadWorker, JsonDownloadResult, ImageDownloadResult, \
+    ImagesDownloadWorker
 from src.main.python.plotlyst.view.common import rounded_pixmap, open_url
 from src.main.python.plotlyst.view.generated.artbreeder_picker_dialog_ui import Ui_ArtbreederPickerDialog
 from src.main.python.plotlyst.view.generated.image_crop_dialog_ui import Ui_ImageCropDialog
@@ -107,19 +106,33 @@ class ArtbreederDialog(QDialog, Ui_ArtbreederPickerDialog):
         self.btnVisit.setIcon(IconRegistry.from_name('fa5s.external-link-alt', 'white'))
         self.btnVisit.clicked.connect(lambda: open_url('https://www.artbreeder.com/'))
 
+        self._threadpool = QThreadPool(self)
+        self._runnables: List[ImagesDownloadWorker] = []
+
     def display(self) -> Optional[QPixmap]:
         self._step = 0
         self.fetch()
         result = self.exec()
+        if self._threadpool.activeThreadCount() > 1:
+            for runnable in self._runnables:
+                runnable.stop()
+        self._threadpool.clear()
         if result == QDialog.DialogCode.Accepted:
             return self._pixmap
 
     def fetch(self):
-        urls_request = QNetworkRequest(QUrl(
-            'https://raw.githubusercontent.com/plotlyst/artbreeder-scraper/main/resources/artbreeder/portraits.json'))
+        def _listFetched(jsonResult):
+            self.urls = jsonResult
+            random.shuffle(self.urls)
+            self._loadImages()
 
-        self.manager.finished.connect(self._finished)
-        self.manager.get(urls_request)
+        result = JsonDownloadResult()
+        result.finished.connect(_listFetched)
+        runner = JsonDownloadWorker(
+            'https://raw.githubusercontent.com/plotlyst/artbreeder-scraper/main/resources/artbreeder/portraits.json',
+            result)
+        runner.setAutoDelete(True)
+        self._threadpool.start(runner)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
@@ -132,30 +145,32 @@ class ArtbreederDialog(QDialog, Ui_ArtbreederPickerDialog):
         return super(ArtbreederDialog, self).eventFilter(watched, event)
 
     def _loadImages(self):
+        def downloadImages(urls_list: List[str]):
+            result = ImageDownloadResult()
+            result.downloaded.connect(self._imageDownloaded)
+            runner = ImagesDownloadWorker(urls_list, result)
+            runner.setAutoDelete(True)
+            self._runnables.append(runner)
+            self._threadpool.start(runner)
+
         if self._step + self._step_size >= len(self.urls):
             return
-        for url in self.urls[self._step:self._step + self._step_size]:
-            request = QNetworkRequest(QUrl(url))
-            self.manager.get(request)
+
+        self._runnables.clear()
+
+        urls = self.urls[self._step:self._step + self._step_size]
+        half = len(urls) // 2
+        downloadImages(urls[:half])
+        downloadImages(urls[half:])
+
         self._step += self._step_size
 
-    def _finished(self, reply: QNetworkReply):
-        if reply.error():
-            logging.error(reply.errorString())
-        if reply.url().path().startswith('/plotlyst'):  # main json resource
-            urls_json = reply.readAll()
-            self.urls = json.loads(urls_json.data())
-            random.shuffle(self.urls)
-            self._loadImages()
-        else:  # image
-            jpegData = reply.readAll()
-            pixmap = QPixmap()
-            pixmap.loadFromData(jpegData)
-
-            btn = _AvatarButton(pixmap)
-            btn.clicked.connect(partial(self._selected, btn))
-            btn.installEventFilter(self)
-            self.wdgPictures.layout().addWidget(btn)
+    def _imageDownloaded(self, image: QImage):
+        pixmap = QPixmap.fromImage(image)
+        btn = _AvatarButton(pixmap)
+        btn.clicked.connect(partial(self._selected, btn))
+        btn.installEventFilter(self)
+        self.wdgPictures.layout().addWidget(btn)
 
     def _selected(self, btn: _AvatarButton):
         self._pixmap = btn.pixmap
@@ -163,7 +178,8 @@ class ArtbreederDialog(QDialog, Ui_ArtbreederPickerDialog):
 
     def _scrolled(self, value: int):
         if value == self.scrollArea.verticalScrollBar().maximum():
-            self._loadImages()
+            if self._threadpool.activeThreadCount() == 0:
+                self._loadImages()
 
 
 class Corner(Enum):
