@@ -27,7 +27,7 @@ from PyQt6.QtCore import Qt, QModelIndex, \
 from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget, QHeaderView
 from overrides import overrides
-from qthandy import incr_font, translucent, btn_popup, clear_layout, busy, bold, sp, transparent
+from qthandy import incr_font, translucent, clear_layout, busy, bold, sp, transparent
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -62,9 +62,9 @@ from src.main.python.plotlyst.view.widget.display import ChartView
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.novel import StoryStructureSelectorMenu
 from src.main.python.plotlyst.view.widget.progress import SceneStageProgressCharts
+from src.main.python.plotlyst.view.widget.scene.story_map import StoryLinesMapWidget, StoryMap, StoryMapDisplayMode
 from src.main.python.plotlyst.view.widget.scenes import SceneFilterWidget, SceneStoryStructureWidget, \
-    ScenesPreferencesWidget, StoryMap, StoryMapDisplayMode
-from src.main.python.plotlyst.view.widget.scenes import StoryLinesMapWidget
+    ScenesPreferencesWidget
 from src.main.python.plotlyst.view.widget.tree import TreeSettings
 
 
