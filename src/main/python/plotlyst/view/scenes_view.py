@@ -27,7 +27,7 @@ from PyQt6.QtCore import Qt, QModelIndex, \
 from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget, QHeaderView
 from overrides import overrides
-from qthandy import incr_font, translucent, clear_layout, busy, bold, sp, transparent, incr_icon
+from qthandy import incr_font, translucent, clear_layout, busy, bold, sp, transparent, incr_icon, retain_when_hidden
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -209,6 +209,7 @@ class ScenesOutlineView(AbstractNovelView):
         incr_icon(self.ui.btnStoryMapDisplay, 2)
         incr_font(self.ui.btnStoryGridDisplay, 2)
         incr_icon(self.ui.btnStoryGridDisplay, 2)
+        retain_when_hidden(self.ui.wdgStorymapToolbar)
 
         self.ui.btnStageCustomize.setIcon(IconRegistry.cog_icon())
         transparent(self.ui.btnStageCustomize)
@@ -677,5 +678,7 @@ class ScenesOutlineView(AbstractNovelView):
                 self.storymap_view.setMode(StoryMapDisplayMode.TITLE)
             else:
                 self.storymap_view.setMode(StoryMapDisplayMode.DOTS)
+            self.ui.wdgStorymapToolbar.setVisible(True)
         elif self.ui.btnStoryGridDisplay.isChecked():
+            self.ui.wdgStorymapToolbar.setVisible(False)
             self.storymap_view.setMode(StoryMapDisplayMode.DETAILED)
