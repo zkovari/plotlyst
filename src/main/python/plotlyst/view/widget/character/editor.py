@@ -33,12 +33,11 @@ from qthandy import vbox, pointy, hbox, sp, vspacer, underline, decr_font, flow,
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR, RELAXED_WHITE_COLOR
+from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR, RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR
 from src.main.python.plotlyst.core.domain import BackstoryEvent, Character, VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.core.template import SelectionItem, enneagram_field, TemplateField, mbti_field
 from src.main.python.plotlyst.view.common import push_btn, action, tool_btn, label, wrap, open_url, frame
-from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry, set_avatar
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.base import apply_white_menu
@@ -534,6 +533,34 @@ class MbtiSelector(PersonalitySelector):
         return self._selector
 
 
+# self._icons: Dict[BackstoryEventType, Tuple[str, str]] = {
+#            BackstoryEventType.Event: ('ri.calendar-event-fill', 'darkBlue'),
+#            BackstoryEventType.Birthday: ('fa5s.birthday-cake', '#03543f'),
+#            BackstoryEventType.Education: ('fa5s.graduation-cap', 'black'),
+#            BackstoryEventType.Job: ('fa5s.briefcase', '#9c6644'),
+#            BackstoryEventType.Love: ('ei.heart', '#e63946'),
+#            BackstoryEventType.Friendship: ('fa5s.user-friends', '#457b9d'),
+#            BackstoryEventType.Death: ('fa5s.skull-crossbones', 'black'),
+#            BackstoryEventType.Violence: ('mdi.knife-military', '#6c757d'),
+#            BackstoryEventType.Accident: ('fa5s.car-crash', '#a0001c'),
+#            BackstoryEventType.Promotion: ('mdi.ladder', '#6f4518'),
+#            BackstoryEventType.Travel: ('fa5s.train', '#a0001c'),
+#            BackstoryEventType.Breakup: ('fa5s.heart-broken', '#a4133c'),
+#            BackstoryEventType.Farewell: ('mdi6.hand-wave', '#656d4a'),
+#            BackstoryEventType.Award: ('fa5s.award', '#40916c'),
+#            BackstoryEventType.Family: ('mdi6.human-male-female-child', '#34a0a4'),
+#            BackstoryEventType.Home: ('fa5s.home', '#4c334d'),
+#            BackstoryEventType.Game: ('mdi.gamepad-variant', '#277da1'),
+#            BackstoryEventType.Sport: ('fa5.futbol', '#0096c7'),
+#            BackstoryEventType.Crime: ('fa5s.gavel', '#a68a64'),
+#            BackstoryEventType.Gift: ('fa5s.gift', '#b298dc'),
+#            BackstoryEventType.Medical: ('fa5s.medkit', '#849669'),
+#            BackstoryEventType.Catastrophe: ('fa5s.meteor', '#f48c06'),
+#            BackstoryEventType.Fortune: ('ph.coin-fill', '#ffb703'),
+#            BackstoryEventType.Injury: ('fa5s.user-injured', '#c05299'),
+#            BackstoryEventType.Loss: ('mdi.trophy-broken', '#f9c74f'),
+#        }
+
 class CharacterBackstoryCard(QWidget):
     edited = pyqtSignal()
     deleteRequested = pyqtSignal(object)
@@ -585,7 +612,7 @@ class CharacterBackstoryCard(QWidget):
         self.btnType.setGeometry(self.width() // 2 - 18, 2, 36, 36)
 
     def refresh(self):
-        bg_color: str = '#ababab'
+        bg_color: str = NEUTRAL_EMOTION_COLOR
         if self.backstory.emotion == VERY_HAPPY:
             bg_color = 'rgb(0, 202, 148)'
         elif self.backstory.emotion == HAPPY:
@@ -771,18 +798,15 @@ class CharacterTimelineWidget(QWidget):
         painter.end()
 
     def add(self, pos: int = -1):
-        backstory: Optional[BackstoryEvent] = BackstoryEditorDialog(
-            showRelationOption=len(self.character.backstory) > 0).display()
-        if backstory:
-            card = CharacterBackstoryCard(backstory)
-            card.deleteRequested.connect(self._remove)
-
-            if pos >= 0:
-                self.character.backstory.insert(pos, backstory)
-            else:
-                self.character.backstory.append(backstory)
-            self.refresh()
-            self.changed.emit()
+        backstory = BackstoryEvent('', '', type_color=NEUTRAL_EMOTION_COLOR)
+        card = CharacterBackstoryCard(backstory)
+        card.deleteRequested.connect(self._remove)
+        if pos >= 0:
+            self.character.backstory.insert(pos, backstory)
+        else:
+            self.character.backstory.append(backstory)
+        self.refresh()
+        self.changed.emit()
 
     def _remove(self, card: CharacterBackstoryCard):
         if card.backstory in self.character.backstory:
