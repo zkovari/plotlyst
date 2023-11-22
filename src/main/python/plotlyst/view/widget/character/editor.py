@@ -539,10 +539,9 @@ class CharacterBackstoryCard(QWidget):
     deleteRequested = pyqtSignal(object)
     relationChanged = pyqtSignal()
 
-    def __init__(self, backstory: BackstoryEvent, first: bool = False, parent=None):
+    def __init__(self, backstory: BackstoryEvent, parent=None):
         super(CharacterBackstoryCard, self).__init__(parent)
         self.backstory = backstory
-        self.first = first
 
         vbox(self)
         margins(self, top=18)
@@ -586,7 +585,7 @@ class CharacterBackstoryCard(QWidget):
         self.btnType.setGeometry(self.width() // 2 - 18, 2, 36, 36)
 
     def refresh(self):
-        bg_color: str = 'rgb(171, 171, 171)'
+        bg_color: str = '#ababab'
         if self.backstory.emotion == VERY_HAPPY:
             bg_color = 'rgb(0, 202, 148)'
         elif self.backstory.emotion == HAPPY:
@@ -609,7 +608,7 @@ class CharacterBackstoryCard(QWidget):
                         border-radius: 18px; padding: 4px;
                     }}''')
 
-        self.btnType.setIcon(IconRegistry.from_name(self.backstory.type_icon, self.backstory.type_color))
+        self.btnType.setIcon(IconRegistry.from_name(self.backstory.type_icon, bg_color))
         self.lineKeyPhrase.setText(self.backstory.keyphrase)
         self.textSummary.setPlainText(self.backstory.synopsis)
 
@@ -628,11 +627,10 @@ class CharacterBackstoryCard(QWidget):
 
 
 class CharacterBackstoryEvent(QWidget):
-    def __init__(self, backstory: BackstoryEvent, alignment: int = Qt.AlignmentFlag.AlignRight, first: bool = False,
-                 parent=None):
+    def __init__(self, backstory: BackstoryEvent, alignment: int = Qt.AlignmentFlag.AlignRight, parent=None):
         super(CharacterBackstoryEvent, self).__init__(parent)
         self.alignment = alignment
-        self.card = CharacterBackstoryCard(backstory, first)
+        self.card = CharacterBackstoryCard(backstory)
 
         self._layout = hbox(self, 0, 3)
         self.spacer = spacer()
@@ -745,7 +743,7 @@ class CharacterTimelineWidget(QWidget):
             else:
                 alignment = Qt.AlignmentFlag.AlignLeft
             prev_alignment = alignment
-            event = CharacterBackstoryEvent(backstory, alignment, first=i == 0, parent=self)
+            event = CharacterBackstoryEvent(backstory, alignment, parent=self)
             event.card.deleteRequested.connect(self._remove)
 
             self._spacers.append(event.spacer)
