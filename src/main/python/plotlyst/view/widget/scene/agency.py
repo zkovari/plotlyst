@@ -283,26 +283,7 @@ class SceneAgendaEmotionEditor(AbstractAgencyEditor):
             qtanim.fade_in(self._slider, 150)
 
     def _valueChanged(self, value: int):
-        if value == 5:
-            self._icon.setIcon(IconRegistry.from_name('mdi.emoticon-neutral', 'grey'))
-
-        elif value <= 1:
-            self._icon.setIcon(IconRegistry.from_name('mdi6.emoticon-angry', '#f25c54'))
-        elif value == 2:
-            self._icon.setIcon(IconRegistry.from_name('mdi6.emoticon-frown', '#f27059'))
-        elif value == 3:
-            self._icon.setIcon(IconRegistry.from_name('mdi6.emoticon-confused', '#f4845f'))
-        elif value == 4:
-            self._icon.setIcon(IconRegistry.from_name('mdi6.emoticon-sad', '#f79d65'))
-        elif value == 6:
-            self._icon.setIcon(IconRegistry.from_name('mdi6.emoticon-happy', '#74c69d'))
-        elif value == 7:
-            self._icon.setIcon(IconRegistry.from_name('mdi6.emoticon', '#52b788'))
-        elif value == 8:
-            self._icon.setIcon(IconRegistry.from_name('mdi6.emoticon-excited', '#40916c'))
-        elif value >= 9:
-            self._icon.setIcon(IconRegistry.from_name('mdi6.emoticon-cool', '#2d6a4f'))
-
+        self._icon.setIcon(IconRegistry.emotion_icon_from_feeling(value))
         self.emotionChanged.emit(value)
 
 

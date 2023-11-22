@@ -59,7 +59,7 @@ class Event:
     keyphrase: str
     synopsis: str
     conflicts: List['Conflict'] = field(default_factory=list)
-    emotion: int = 0
+    emotion: int = 5
 
 
 @dataclass

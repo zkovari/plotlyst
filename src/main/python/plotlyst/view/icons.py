@@ -27,8 +27,8 @@ from PyQt6.QtWidgets import QLabel
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, CONFLICT_CHARACTER_COLOR, \
     CONFLICT_SOCIETY_COLOR, CONFLICT_NATURE_COLOR, CONFLICT_TECHNOLOGY_COLOR, CONFLICT_SUPERNATURAL_COLOR, \
     CONFLICT_SELF_COLOR, CHARACTER_MAJOR_COLOR, CHARACTER_MINOR_COLOR, CHARACTER_SECONDARY_COLOR, \
-    PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR
-from src.main.python.plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY, ConflictType, \
+    PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR, NEUTRAL_EMOTION_COLOR, EMOTION_COLORS
+from src.main.python.plotlyst.core.domain import Character, ConflictType, \
     Scene, PlotType, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS, ScenePurposeType
 from src.main.python.plotlyst.core.template import SelectionItem
 from src.main.python.plotlyst.settings import CHARACTER_INITIAL_AVATAR_COLOR_CODES
@@ -367,17 +367,25 @@ class IconRegistry:
         return qtawesome.icon('fa5.eye-slash')
 
     @staticmethod
-    def emotion_icon_from_feeling(feeling: int) -> QIcon:
-        if feeling == VERY_UNHAPPY:
-            return qtawesome.icon('fa5s.sad-cry', color='red')
-        if feeling == UNHAPPY:
-            return qtawesome.icon('mdi.emoticon-sad', color='orange')
-        if feeling == HAPPY:
-            return qtawesome.icon('fa5s.smile', color='lightgreen')
-        if feeling == VERY_HAPPY:
-            return qtawesome.icon('fa5s.smile-beam', color='darkgreen')
-
-        return qtawesome.icon('mdi.emoticon-neutral', color='grey')
+    def emotion_icon_from_feeling(value: int) -> QIcon:
+        if value == 5:
+            return IconRegistry.from_name('mdi.emoticon-neutral', NEUTRAL_EMOTION_COLOR)
+        elif value <= 1:
+            return IconRegistry.from_name('mdi6.emoticon-angry', EMOTION_COLORS[value])
+        elif value == 2:
+            return IconRegistry.from_name('mdi6.emoticon-frown', EMOTION_COLORS[value])
+        elif value == 3:
+            return IconRegistry.from_name('mdi6.emoticon-confused', EMOTION_COLORS[value])
+        elif value == 4:
+            return IconRegistry.from_name('mdi6.emoticon-sad', EMOTION_COLORS[value])
+        elif value == 6:
+            return IconRegistry.from_name('mdi6.emoticon-happy', EMOTION_COLORS[value])
+        elif value == 7:
+            return IconRegistry.from_name('mdi6.emoticon', EMOTION_COLORS[value])
+        elif value == 8:
+            return IconRegistry.from_name('mdi6.emoticon-excited', EMOTION_COLORS[value])
+        elif value >= 9:
+            return IconRegistry.from_name('mdi6.emoticon-cool', EMOTION_COLORS[value])
 
     @staticmethod
     def upload_icon(**kwargs) -> QIcon:
