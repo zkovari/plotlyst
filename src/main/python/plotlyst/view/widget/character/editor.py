@@ -37,7 +37,7 @@ from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR, RELAXED_WHITE_C
 from src.main.python.plotlyst.core.domain import BackstoryEvent, Character, VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.core.template import SelectionItem, enneagram_field, TemplateField, mbti_field
-from src.main.python.plotlyst.view.common import push_btn, action, tool_btn, label, wrap, open_url, frame
+from src.main.python.plotlyst.view.common import push_btn, action, tool_btn, label, wrap, open_url, frame, restyle
 from src.main.python.plotlyst.view.icons import IconRegistry, set_avatar
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.base import apply_white_menu
@@ -561,6 +561,28 @@ class MbtiSelector(PersonalitySelector):
 #            BackstoryEventType.Loss: ('mdi.trophy-broken', '#f9c74f'),
 #        }
 
+
+class EmotionEditorSlider(QSlider):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        pointy(self)
+        self.setMinimum(0)
+        self.setMaximum(10)
+        self.setPageStep(1)
+        self.setMaximumWidth(100)
+        self.setValue(5)
+        self.setOrientation(Qt.Orientation.Horizontal)
+        self.valueChanged.connect(self._valueChanged)
+
+    def _valueChanged(self, value: int):
+        for v in range(0, 11):
+            self.setProperty(f'emotion_{v}', False)
+
+        self.setProperty(f'emotion_{value}', True)
+        restyle(self)
+
+
 class CharacterBackstoryCard(QWidget):
     edited = pyqtSignal()
     deleteRequested = pyqtSignal(object)
@@ -576,8 +598,12 @@ class CharacterBackstoryCard(QWidget):
         self.cardFrame = frame()
         vbox(self.cardFrame)
 
-        self.btnType = QToolButton(self)
+        self.btnType = tool_btn(QIcon(), parent=self)
         self.btnType.setIconSize(QSize(24, 24))
+
+        menu = MenuWidget(self.btnType)
+        self.emotionSlider = EmotionEditorSlider()
+        menu.addWidget(self.emotionSlider)
 
         self.btnRemove = RemovalButton()
         self.btnRemove.setVisible(False)
@@ -630,10 +656,16 @@ class CharacterBackstoryCard(QWidget):
                         }}
                     ''')
         self.btnType.setStyleSheet(
-            f'''QToolButton {{
-                        background-color: {RELAXED_WHITE_COLOR}; border: 3px solid {bg_color};
-                        border-radius: 18px; padding: 4px;
-                    }}''')
+            f'''
+            QToolButton {{
+                    background-color: {RELAXED_WHITE_COLOR}; border: 3px solid {bg_color};
+                    border-radius: 18px;
+                    padding: 4px;
+                }}
+            QToolButton:hover {{
+                padding: 2px;
+            }}
+            ''')
 
         self.btnType.setIcon(IconRegistry.from_name(self.backstory.type_icon, bg_color))
         self.lineKeyPhrase.setText(self.backstory.keyphrase)
