@@ -1,5 +1,5 @@
 from src.main.python.plotlyst.test.common import show_widget
-from src.main.python.plotlyst.view.widget.characters import CharacterRoleSelector
+from src.main.python.plotlyst.view.widget.character.editor import CharacterRoleSelector
 
 
 def test_role_selector(qtbot):
