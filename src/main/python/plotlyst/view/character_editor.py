@@ -43,9 +43,9 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_bg_image, apply_white_menu
 from src.main.python.plotlyst.view.widget.big_five import BigFivePersonalityWidget
 from src.main.python.plotlyst.view.widget.character.editor import CharacterAgeEditor
+from src.main.python.plotlyst.view.widget.character.editor import CharacterRoleSelector
 from src.main.python.plotlyst.view.widget.character.plan import CharacterPlansWidget
 from src.main.python.plotlyst.view.widget.character.topic import CharacterTopicsEditor
-from src.main.python.plotlyst.view.widget.character.editor import CharacterRoleSelector
 from src.main.python.plotlyst.view.widget.template import CharacterProfileTemplateView
 
 
@@ -97,7 +97,8 @@ class CharacterEditor(QObject, EventListener):
         self._roleSelector.rolePromoted.connect(self._role_promoted)
         if self.character.role:
             self._roleSelector.setActiveRole(self.character.role)
-        self._rolePopup = btn_popup(self.ui.btnRole, self._roleSelector)
+        self._roleMenu = MenuWidget(self.ui.btnRole)
+        self._roleMenu.addWidget(self._roleSelector)
 
         italic(self.ui.btnAge)
         italic(self.ui.btnOccupation)
@@ -229,7 +230,7 @@ class CharacterEditor(QObject, EventListener):
                 self.ui.wdgAvatar.updateAvatar()
 
     def _role_changed(self, role: SelectionItem):
-        self._rolePopup.close()
+        self._roleMenu.close()
         if role.text == protagonist_role.text and self.character.gender == FEMALE:
             role.icon = 'fa5s.chess-queen'
         self.character.role = role
