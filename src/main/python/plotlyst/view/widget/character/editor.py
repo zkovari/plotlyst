@@ -26,23 +26,24 @@ from typing import Tuple, Optional, Dict, List
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QObject, QEvent
 from PyQt6.QtGui import QIcon, QColor, QPainter, QPaintEvent, QBrush, QResizeEvent
 from PyQt6.QtWidgets import QWidget, QSpinBox, QSlider, QTextBrowser, QButtonGroup, QToolButton, QLabel, QSizePolicy, \
-    QFrame
+    QLineEdit
 from overrides import overrides
 from qthandy import vbox, pointy, hbox, sp, vspacer, underline, decr_font, flow, clear_layout, translucent, line, grid, \
-    italic, spacer, transparent, ask_confirmation, incr_font, bold
-from qthandy.filter import OpacityEventFilter
+    italic, spacer, transparent, ask_confirmation, incr_font, bold, margins
+from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import BackstoryEvent, Character, VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.core.template import SelectionItem, enneagram_field, TemplateField, mbti_field
-from src.main.python.plotlyst.view.common import push_btn, action, tool_btn, label, wrap, open_url
+from src.main.python.plotlyst.view.common import push_btn, action, tool_btn, label, wrap, open_url, frame
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
-from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
 from src.main.python.plotlyst.view.icons import IconRegistry, set_avatar
+from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
+from src.main.python.plotlyst.view.widget.input import RemovalButton, AutoAdjustableTextEdit
 from src.main.python.plotlyst.view.widget.labels import TraitLabel
 
 
@@ -533,47 +534,56 @@ class MbtiSelector(PersonalitySelector):
         return self._selector
 
 
-class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
+class CharacterBackstoryCard(QWidget):
     edited = pyqtSignal()
     deleteRequested = pyqtSignal(object)
     relationChanged = pyqtSignal()
 
     def __init__(self, backstory: BackstoryEvent, first: bool = False, parent=None):
         super(CharacterBackstoryCard, self).__init__(parent)
-        self.setupUi(self)
         self.backstory = backstory
         self.first = first
 
-        self.btnEdit.setVisible(False)
-        self.btnEdit.setIcon(IconRegistry.edit_icon())
-        self.btnEdit.clicked.connect(self._edit)
-        self.btnEdit.installEventFilter(OpacityEventFilter(parent=self.btnEdit))
-        self.btnRemove.setVisible(False)
-        self.btnRemove.setIcon(IconRegistry.wrong_icon(color='black'))
-        self.btnRemove.installEventFilter(OpacityEventFilter(parent=self.btnRemove))
-        self.textSummary.textChanged.connect(self._synopsis_changed)
-        self.btnRemove.clicked.connect(self._remove)
+        vbox(self)
+        margins(self, top=18)
+
+        self.cardFrame = frame()
+        vbox(self.cardFrame)
 
         self.btnType = QToolButton(self)
         self.btnType.setIconSize(QSize(24, 24))
 
-        incr_font(self.lblKeyphrase, 2)
-        bold(self.lblKeyphrase)
+        self.btnRemove = RemovalButton()
+        self.btnRemove.setVisible(False)
+        self.btnRemove.clicked.connect(self._remove)
 
-        self.setMinimumWidth(30)
+        self.lineKeyPhrase = QLineEdit()
+        self.lineKeyPhrase.setProperty('transparent', True)
+        self.lineKeyPhrase.textEdited.connect(self._keyphraseEdited)
+        incr_font(self.lineKeyPhrase)
+        bold(self.lineKeyPhrase)
+
+        self.textSummary = AutoAdjustableTextEdit(height=40)
+        self.textSummary.setPlaceholderText("Summarize this event")
+        self.textSummary.setProperty('transparent', True)
+        self.textSummary.setProperty('rounded', True)
+        self.textSummary.textChanged.connect(self._synopsisChanged)
+
+        self.cardFrame.layout().addWidget(group(self.lineKeyPhrase, self.btnRemove))
+        self.cardFrame.setObjectName('cardFrame')
+        self.cardFrame.layout().addWidget(self.textSummary)
+        self.layout().addWidget(self.cardFrame)
+
+        self.cardFrame.installEventFilter(VisibilityToggleEventFilter(self.btnRemove, self.cardFrame))
+
+        self.btnType.raise_()
+
+        self.setMinimumWidth(60)
         self.refresh()
 
     @overrides
-    def enterEvent(self, event: QEvent) -> None:
-        self._enableActionButtons(True)
-
-    @overrides
-    def leaveEvent(self, event: QEvent) -> None:
-        self._enableActionButtons(False)
-
-    @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
-        self.btnType.setGeometry(self.width() // 2 - 18, 2, 36, 38)
+        self.btnType.setGeometry(self.width() // 2 - 18, 2, 36, 36)
 
     def refresh(self):
         bg_color: str = 'rgb(171, 171, 171)'
@@ -600,33 +610,16 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
                     }}''')
 
         self.btnType.setIcon(IconRegistry.from_name(self.backstory.type_icon, self.backstory.type_color))
-        self.lblKeyphrase.setText(self.backstory.keyphrase)
+        self.lineKeyPhrase.setText(self.backstory.keyphrase)
         self.textSummary.setPlainText(self.backstory.synopsis)
 
-    def _enableActionButtons(self, enabled: bool):
-        self.btnEdit.setVisible(enabled)
-        self.btnRemove.setVisible(enabled)
-
-    def _synopsis_changed(self):
+    def _synopsisChanged(self):
         self.backstory.synopsis = self.textSummary.toPlainText()
         self.edited.emit()
 
-    def _edit(self):
-        backstory = BackstoryEditorDialog(self.backstory, showRelationOption=not self.first).display()
-        if backstory:
-            relation_changed = False
-            if self.backstory.follow_up != backstory.follow_up:
-                relation_changed = True
-            self.backstory.keyphrase = backstory.keyphrase
-            self.backstory.emotion = backstory.emotion
-            self.backstory.type = backstory.type
-            self.backstory.type_icon = backstory.type_icon
-            self.backstory.type_color = backstory.type_color
-            self.backstory.follow_up = backstory.follow_up
-            self.refresh()
-            self.edited.emit()
-            if relation_changed:
-                self.relationChanged.emit()
+    def _keyphraseEdited(self):
+        self.backstory.keyphrase = self.lineKeyPhrase.text()
+        self.edited.emit()
 
     def _remove(self):
         if self.backstory.synopsis and not ask_confirmation(f'Remove event "{self.backstory.keyphrase}"?'):
@@ -669,32 +662,24 @@ class CharacterBackstoryEvent(QWidget):
 class _ControlButtons(QWidget):
 
     def __init__(self, parent=None):
-        super(_ControlButtons, self).__init__(parent)
+        super().__init__(parent)
         vbox(self)
 
         self.btnPlaceholderCircle = QToolButton(self)
-
-        self.btnPlus = QToolButton(self)
-        self.btnPlus.setIcon(IconRegistry.plus_icon('white'))
-        self.btnSeparator = QToolButton(self)
-        self.btnSeparator.setIcon(IconRegistry.from_name('ri.separator', 'white'))
-        self.btnSeparator.setToolTip('Insert separator')
+        self.btnPlus = tool_btn(IconRegistry.plus_icon('white'), tooltip='Add new event')
 
         self.layout().addWidget(self.btnPlaceholderCircle)
         self.layout().addWidget(self.btnPlus)
-        self.layout().addWidget(self.btnSeparator)
 
         self.btnPlus.setHidden(True)
-        self.btnSeparator.setHidden(True)
 
         bg_color = '#1d3557'
-        for btn in [self.btnPlaceholderCircle, self.btnPlus, self.btnSeparator]:
+        for btn in [self.btnPlaceholderCircle, self.btnPlus]:
             btn.setStyleSheet(f'''
                 QToolButton {{ background-color: {bg_color}; border: 1px;
                         border-radius: 13px; padding: 2px;}}
                 QToolButton:pressed {{background-color: grey;}}
             ''')
-            btn.setCursor(Qt.CursorShape.PointingHandCursor)
 
         self.installEventFilter(self)
 
@@ -703,11 +688,9 @@ class _ControlButtons(QWidget):
         if event.type() == QEvent.Type.Enter:
             self.btnPlaceholderCircle.setHidden(True)
             self.btnPlus.setVisible(True)
-            # self.btnSeparator.setVisible(True)
         elif event.type() == QEvent.Type.Leave:
             self.btnPlaceholderCircle.setVisible(True)
             self.btnPlus.setHidden(True)
-            # self.btnSeparator.setHidden(True)
 
         return super().eventFilter(watched, event)
 
