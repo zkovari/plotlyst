@@ -29,7 +29,7 @@ from PyQt6.QtWidgets import QWidget, QSpinBox, QSlider, QTextBrowser, QButtonGro
     QLineEdit
 from overrides import overrides
 from qthandy import vbox, pointy, hbox, sp, vspacer, underline, decr_font, flow, clear_layout, translucent, line, grid, \
-    italic, spacer, transparent, ask_confirmation, incr_font, bold, margins
+    italic, spacer, transparent, ask_confirmation, incr_font, bold, margins, incr_icon
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
@@ -40,7 +40,6 @@ from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.core.template import SelectionItem, enneagram_field, TemplateField, mbti_field
 from src.main.python.plotlyst.view.common import push_btn, action, tool_btn, label, wrap, open_url, frame, restyle
 from src.main.python.plotlyst.view.icons import IconRegistry, set_avatar
-from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.display import Icon
@@ -535,35 +534,6 @@ class MbtiSelector(PersonalitySelector):
         return self._selector
 
 
-# self._icons: Dict[BackstoryEventType, Tuple[str, str]] = {
-#            BackstoryEventType.Event: ('ri.calendar-event-fill', 'darkBlue'),
-#            BackstoryEventType.Birthday: ('fa5s.birthday-cake', '#03543f'),
-#            BackstoryEventType.Education: ('fa5s.graduation-cap', 'black'),
-#            BackstoryEventType.Job: ('fa5s.briefcase', '#9c6644'),
-#            BackstoryEventType.Love: ('ei.heart', '#e63946'),
-#            BackstoryEventType.Friendship: ('fa5s.user-friends', '#457b9d'),
-#            BackstoryEventType.Death: ('fa5s.skull-crossbones', 'black'),
-#            BackstoryEventType.Violence: ('mdi.knife-military', '#6c757d'),
-#            BackstoryEventType.Accident: ('fa5s.car-crash', '#a0001c'),
-#            BackstoryEventType.Promotion: ('mdi.ladder', '#6f4518'),
-#            BackstoryEventType.Travel: ('fa5s.train', '#a0001c'),
-#            BackstoryEventType.Breakup: ('fa5s.heart-broken', '#a4133c'),
-#            BackstoryEventType.Farewell: ('mdi6.hand-wave', '#656d4a'),
-#            BackstoryEventType.Award: ('fa5s.award', '#40916c'),
-#            BackstoryEventType.Family: ('mdi6.human-male-female-child', '#34a0a4'),
-#            BackstoryEventType.Home: ('fa5s.home', '#4c334d'),
-#            BackstoryEventType.Game: ('mdi.gamepad-variant', '#277da1'),
-#            BackstoryEventType.Sport: ('fa5.futbol', '#0096c7'),
-#            BackstoryEventType.Crime: ('fa5s.gavel', '#a68a64'),
-#            BackstoryEventType.Gift: ('fa5s.gift', '#b298dc'),
-#            BackstoryEventType.Medical: ('fa5s.medkit', '#849669'),
-#            BackstoryEventType.Catastrophe: ('fa5s.meteor', '#f48c06'),
-#            BackstoryEventType.Fortune: ('ph.coin-fill', '#ffb703'),
-#            BackstoryEventType.Injury: ('fa5s.user-injured', '#c05299'),
-#            BackstoryEventType.Loss: ('mdi.trophy-broken', '#f9c74f'),
-#        }
-
-
 class EmotionEditorSlider(QSlider):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -585,6 +555,75 @@ class EmotionEditorSlider(QSlider):
         restyle(self)
 
 
+class BackstoryEditorMenu(MenuWidget):
+    emotionChanged = pyqtSignal(int)
+    iconSelected = pyqtSignal(str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        wdgEmotion = QWidget()
+        vbox(wdgEmotion, 1, 1)
+        self._iconEmotion = Icon()
+        self._iconEmotion.setIconSize(QSize(32, 32))
+        self._iconEmotion.setIcon(IconRegistry.emotion_icon_from_feeling(5))
+        self.emotionSlider = EmotionEditorSlider()
+        self.emotionSlider.setMaximumWidth(200)
+        self.emotionSlider.valueChanged.connect(self._emotionChanged)
+        sp(self.emotionSlider).h_exp()
+        wdgEmotion.layout().addWidget(self._iconEmotion, alignment=Qt.AlignmentFlag.AlignCenter)
+        wdgEmotion.layout().addWidget(self.emotionSlider)
+        self.wdgIcons = QWidget()
+        self.wdgIcons.setMaximumHeight(200)
+        flow(self.wdgIcons)
+        self._addIcon('ri.calendar-event-fill')
+        self._addIcon('fa5s.birthday-cake')
+        self._addIcon('fa5s.graduation-cap')
+        self._addIcon('fa5s.briefcase')
+        self._addIcon('ei.heart')
+        self._addIcon('fa5s.user-friends')
+        self._addIcon('fa5s.skull-crossbones')
+        self._addIcon('mdi.knife-military')
+        self._addIcon('fa5s.car-crash')
+        self._addIcon('mdi.ladder')
+        self._addIcon('fa5s.heart-broken')
+        self._addIcon('fa5s.award')
+        self._addIcon('mdi6.human-male-female-child')
+        self._addIcon('fa5s.home')
+        self._addIcon('fa5s.gavel')
+        self._addIcon('fa5s.gift')
+        self._addIcon('fa5s.medkit')
+        self._addIcon('ph.coin-fill')
+        self._addIcon('fa5s.user-injured')
+        self._addIcon('mdi.trophy-broken')
+
+        self.addWidget(wdgEmotion)
+        self.addWidget(self.wdgIcons)
+        self.addSeparator()
+        self.addAction(action('Custom icon...', IconRegistry.icons_icon()))
+
+        self._freeze = False
+
+    def setEmotion(self, value: int):
+        self._freeze = True
+        self.emotionSlider.setValue(value)
+        self._freeze = False
+
+    def _addIcon(self, icon: str):
+        def select():
+            self.iconSelected.emit(icon)
+            self.close()
+
+        btn = tool_btn(IconRegistry.from_name(icon), transparent_=True)
+        btn.clicked.connect(select)
+        incr_icon(btn, 4)
+        self.wdgIcons.layout().addWidget(btn)
+
+    def _emotionChanged(self, value: int):
+        self._iconEmotion.setIcon(IconRegistry.emotion_icon_from_feeling(value))
+        if not self._freeze:
+            self.emotionChanged.emit(value)
+
+
 class CharacterBackstoryCard(QWidget):
     edited = pyqtSignal()
     deleteRequested = pyqtSignal(object)
@@ -603,25 +642,16 @@ class CharacterBackstoryCard(QWidget):
         self.btnType = tool_btn(QIcon(), parent=self)
         self.btnType.setIconSize(QSize(24, 24))
 
-        menu = MenuWidget(self.btnType)
-        wdg = QWidget()
-        vbox(wdg, 1, 1)
-        self._iconEmotion = Icon()
-        self._iconEmotion.setIconSize(QSize(32, 32))
-        self._iconEmotion.setIcon(IconRegistry.emotion_icon_from_feeling(5))
-        self.emotionSlider = EmotionEditorSlider()
-        self.emotionSlider.setMaximumWidth(200)
-        self.emotionSlider.valueChanged.connect(self._emotionChanged)
-        sp(self.emotionSlider).h_exp()
-        wdg.layout().addWidget(self._iconEmotion, alignment=Qt.AlignmentFlag.AlignCenter)
-        wdg.layout().addWidget(self.emotionSlider)
-        menu.addWidget(wdg)
+        self.menu = BackstoryEditorMenu(self.btnType)
+        self.menu.emotionChanged.connect(self._emotionChanged)
+        self.menu.iconSelected.connect(self._iconChanged)
 
         self.btnRemove = RemovalButton()
         self.btnRemove.setVisible(False)
         self.btnRemove.clicked.connect(self._remove)
 
         self.lineKeyPhrase = QLineEdit()
+        self.lineKeyPhrase.setPlaceholderText('Keyphrase')
         self.lineKeyPhrase.setProperty('transparent', True)
         self.lineKeyPhrase.textEdited.connect(self._keyphraseEdited)
         incr_font(self.lineKeyPhrase)
@@ -633,7 +663,11 @@ class CharacterBackstoryCard(QWidget):
         self.textSummary.setProperty('rounded', True)
         self.textSummary.textChanged.connect(self._synopsisChanged)
 
-        self.cardFrame.layout().addWidget(group(self.lineKeyPhrase, self.btnRemove))
+        wdgTop = QWidget()
+        hbox(wdgTop, 0, 0)
+        wdgTop.layout().addWidget(self.lineKeyPhrase)
+        wdgTop.layout().addWidget(self.btnRemove, alignment=Qt.AlignmentFlag.AlignTop)
+        self.cardFrame.layout().addWidget(wdgTop)
         self.cardFrame.setObjectName('cardFrame')
         self.cardFrame.layout().addWidget(self.textSummary)
         self.layout().addWidget(self.cardFrame)
@@ -653,7 +687,7 @@ class CharacterBackstoryCard(QWidget):
         self._refreshStyle()
         self.lineKeyPhrase.setText(self.backstory.keyphrase)
         self.textSummary.setPlainText(self.backstory.synopsis)
-        self.emotionSlider.setValue(self.backstory.emotion)
+        self.menu.setEmotion(self.backstory.emotion)
 
     def _refreshStyle(self):
         bg_color = EMOTION_COLORS.get(self.backstory.emotion, NEUTRAL_EMOTION_COLOR)
@@ -688,9 +722,13 @@ class CharacterBackstoryCard(QWidget):
         self.edited.emit()
 
     def _emotionChanged(self, value: int):
-        self._iconEmotion.setIcon(IconRegistry.emotion_icon_from_feeling(value))
         self.backstory.emotion = value
         self._refreshStyle()
+        self.edited.emit()
+
+    def _iconChanged(self, icon: str):
+        self.backstory.type_icon = icon
+        self.btnType.setIcon(IconRegistry.from_name(self.backstory.type_icon, EMOTION_COLORS[self.backstory.emotion]))
         self.edited.emit()
 
     def _remove(self):
