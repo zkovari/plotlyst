@@ -39,6 +39,7 @@ from src.main.python.plotlyst.core.domain import BackstoryEvent, Character
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.core.template import SelectionItem, enneagram_field, TemplateField, mbti_field
 from src.main.python.plotlyst.view.common import push_btn, action, tool_btn, label, wrap, open_url, frame, restyle
+from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry, set_avatar
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
@@ -599,7 +600,7 @@ class BackstoryEditorMenu(MenuWidget):
         self.addWidget(wdgEmotion)
         self.addWidget(self.wdgIcons)
         self.addSeparator()
-        self.addAction(action('Custom icon...', IconRegistry.icons_icon()))
+        self.addAction(action('Custom icon...', IconRegistry.icons_icon(), slot=self._customIconTriggered))
 
         self._freeze = False
 
@@ -623,6 +624,12 @@ class BackstoryEditorMenu(MenuWidget):
         if not self._freeze:
             self.emotionChanged.emit(value)
 
+    def _customIconTriggered(self):
+        dialog = IconSelectorDialog()
+        dialog.selector.colorPicker.setHidden(True)
+        result = dialog.display()
+        if result:
+            self.iconSelected.emit(result[0])
 
 class CharacterBackstoryCard(QWidget):
     edited = pyqtSignal()
