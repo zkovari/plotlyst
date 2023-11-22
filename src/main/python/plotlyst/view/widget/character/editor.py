@@ -845,8 +845,6 @@ class CharacterTimelineWidget(QWidget):
 
     def add(self, pos: int = -1):
         backstory = BackstoryEvent('', '', type_color=NEUTRAL_EMOTION_COLOR)
-        card = CharacterBackstoryCard(backstory)
-        card.deleteRequested.connect(self._remove)
         if pos >= 0:
             self.character.backstory.insert(pos, backstory)
         else:
