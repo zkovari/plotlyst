@@ -31,11 +31,12 @@ from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.core.domain import Motivation, Novel, Scene, SceneStructureAgenda
-from src.main.python.plotlyst.view.common import push_btn, restyle, label, fade_out_and_gc, tool_btn
+from src.main.python.plotlyst.view.common import push_btn, label, fade_out_and_gc, tool_btn
 from src.main.python.plotlyst.view.generated.scene_goal_stakes_ui import Ui_GoalReferenceStakesEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import ChargeButton
+from src.main.python.plotlyst.view.widget.character.editor import EmotionEditorSlider
 from src.main.python.plotlyst.view.widget.input import RemovalButton
 from src.main.python.plotlyst.view.widget.scene.conflict import ConflictIntensityEditor, CharacterConflictSelector
 
@@ -241,13 +242,7 @@ class SceneAgendaEmotionEditor(AbstractAgencyEditor):
 
         self._icon.setIcon(IconRegistry.from_name('mdi.emoticon-neutral', 'lightgrey'))
 
-        self._slider = QSlider()
-        self._slider.setMinimum(0)
-        self._slider.setMaximum(10)
-        self._slider.setPageStep(1)
-        self._slider.setMaximumWidth(100)
-        self._slider.setValue(5)
-        self._slider.setOrientation(Qt.Orientation.Horizontal)
+        self._slider = EmotionEditorSlider()
         self._slider.valueChanged.connect(self._valueChanged)
 
         self.layout().addWidget(self._icon)
@@ -288,32 +283,7 @@ class SceneAgendaEmotionEditor(AbstractAgencyEditor):
             qtanim.fade_in(self._slider, 150)
 
     def _valueChanged(self, value: int):
-        for v in range(0, 11):
-            self._slider.setProperty(f'emotion_{v}', False)
-
-        if value == 5:
-            self._icon.setIcon(IconRegistry.from_name('mdi.emoticon-neutral', 'grey'))
-
-        elif value <= 1:
-            self._icon.setIcon(IconRegistry.from_name('mdi6.emoticon-angry', '#f25c54'))
-        elif value == 2:
-            self._icon.setIcon(IconRegistry.from_name('mdi6.emoticon-frown', '#f27059'))
-        elif value == 3:
-            self._icon.setIcon(IconRegistry.from_name('mdi6.emoticon-confused', '#f4845f'))
-        elif value == 4:
-            self._icon.setIcon(IconRegistry.from_name('mdi6.emoticon-sad', '#f79d65'))
-        elif value == 6:
-            self._icon.setIcon(IconRegistry.from_name('mdi6.emoticon-happy', '#74c69d'))
-        elif value == 7:
-            self._icon.setIcon(IconRegistry.from_name('mdi6.emoticon', '#52b788'))
-        elif value == 8:
-            self._icon.setIcon(IconRegistry.from_name('mdi6.emoticon-excited', '#40916c'))
-        elif value >= 9:
-            self._icon.setIcon(IconRegistry.from_name('mdi6.emoticon-cool', '#2d6a4f'))
-
-        self._slider.setProperty(f'emotion_{value}', True)
-        restyle(self._slider)
-
+        self._icon.setIcon(IconRegistry.emotion_icon_from_feeling(value))
         self.emotionChanged.emit(value)
 
 

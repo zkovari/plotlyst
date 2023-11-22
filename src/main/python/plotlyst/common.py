@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from timeit import default_timer as timer
-from typing import Any, NoReturn
+from typing import Any, NoReturn, Dict
 
 from src.main.python.plotlyst.core.domain import VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY
 
@@ -49,6 +49,20 @@ VERY_UNHAPPY_EMOTION_COLOR: str = '#ef0000'
 UNHAPPY_EMOTION_COLOR: str = '#ff8e2b'
 HAPPY_EMOTION_COLOR: str = '#93e5ab'
 VERY_HAPPY_EMOTION_COLOR: str = '#00ca94'
+
+EMOTION_COLORS: Dict[int, str] = {
+    0: '#f25c54',
+    1: '#f25c54',
+    2: '#f27059',
+    3: '#f4845f',
+    4: '#f79d65',
+    5: NEUTRAL_EMOTION_COLOR,
+    6: '#74c69d',
+    7: '#52b788',
+    8: '#40916c',
+    9: '#2d6a4f',
+    10: '#2d6a4f',
+}
 
 PLOTLYST_MAIN_COLOR: str = '#3C0764'  # Persian indigo, #4B0763: Indigo, #37065D: Russian violet
 PLOTLYST_MAIN_COMPLEMENTARY_COLOR: str = '#2C5D06'  # Dark moss green
