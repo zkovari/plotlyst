@@ -17,29 +17,24 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import copy
 from dataclasses import dataclass
 from functools import partial
 from typing import Iterable, List, Optional, Dict, Union
 
-import qtanim
 from PyQt6.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QByteArray, QBuffer, QIODevice
 from PyQt6.QtGui import QIcon, QColor, QImageReader, QImage, QPixmap, \
-    QMouseEvent, QShowEvent
+    QShowEvent
 from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QSizePolicy, QLabel, QPushButton, \
     QFileDialog, QMessageBox, QGridLayout
 from overrides import overrides
-from qthandy import vspacer, transparent, gc, line, incr_font, \
-    spacer, clear_layout, hbox, flow, translucent, margins, pointy, retain_when_hidden
+from qthandy import vspacer, transparent, gc, line, spacer, clear_layout, hbox, flow, translucent, margins, pointy, \
+    retain_when_hidden
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character
-from src.main.python.plotlyst.core.template import secondary_role, guide_role, love_interest_role, sidekick_role, \
-    contagonist_role, confidant_role, foil_role, supporter_role, adversary_role, antagonist_role, henchmen_role, \
-    tertiary_role, SelectionItem, Role, TemplateFieldType, TemplateField, protagonist_role, RoleImportance, \
-    promote_role, demote_role, major_role
+from src.main.python.plotlyst.core.template import SelectionItem, TemplateFieldType, TemplateField, RoleImportance
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatchers
@@ -48,15 +43,13 @@ from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
 from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
     ConflictScenesDistributionTableModel, TagScenesDistributionTableModel
 from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, action, ButtonPressResizeEventFilter, tool_btn
+from src.main.python.plotlyst.view.common import action, ButtonPressResizeEventFilter, tool_btn
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog, ArtbreederDialog, ImageCropDialog
 from src.main.python.plotlyst.view.generated.avatar_selectors_ui import Ui_AvatarSelectors
-from src.main.python.plotlyst.view.generated.character_role_selector_ui import Ui_CharacterRoleSelector
 from src.main.python.plotlyst.view.generated.characters_progress_widget_ui import Ui_CharactersProgressWidget
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_border_image
-from src.main.python.plotlyst.view.widget.button import SelectionItemPushButton
 from src.main.python.plotlyst.view.widget.display import IconText, Icon
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
 from src.main.python.plotlyst.view.widget.progress import CircularProgressBar, ProgressTooltipMode, \
@@ -611,9 +604,6 @@ class CharacterAvatar(QWidget):
         self._uploaded = True
         avatars.update_image(self._character)
         self.updateAvatar()
-
-
-
 
 
 class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListener):

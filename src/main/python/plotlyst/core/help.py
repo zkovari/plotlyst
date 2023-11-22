@@ -17,7 +17,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import Dict
+
 from src.main.python.plotlyst.core.domain import enneagram_field
+from src.main.python.plotlyst.core.template import Role, protagonist_role, antagonist_role, major_role, secondary_role, \
+    tertiary_role, \
+    love_interest_role, supporter_role, adversary_role, contagonist_role, guide_role, confidant_role, sidekick_role, \
+    foil_role, henchmen_role
 
 # flake8: noqa
 enneagram_help = {
@@ -137,3 +143,38 @@ Not every tool aligns with every individual's writing process, and not all tools
 
 Not every tool needs to be used right away. Several features prove most beneficial after the initial drafting phase.
 """
+
+character_roles_description: Dict[Role, str] = {
+    protagonist_role: """Your main character who drives the plot and often has the most to lose. This character might change the most by the end of the story.""",
+    antagonist_role: """The character who most opposes your protagonist in achieving their main story goal. They should produce the biggest conflicts.
+Sometimes they pursue the same goal as your protagonist but their methods are different.
+Often called villain, although the antagonis is not necessarily an evil character of the story.""",
+    major_role: """""",
+    secondary_role: """Less important than protagonist or antagonist, but they still play a significant role moving the plot forward, acting as foil, or contrasting the protagonist's thematic truth.
+Subcategories: sidekick, love interest, guide, etc.
+If promoted, it becomes deuteragonist - the second most important character
+""",
+    tertiary_role: """Minor characters who only appear once or twice to populate the world but they don't affect the plot's development.
+For special, antagonistic tertiary characters, see henchman.""",
+    love_interest_role: """Romance is in the air for the protagonist. In romance genre, this role could be promoted to a major one. In others, this role could be part of a subplot in which case it shall remain a secondary character. """,
+    supporter_role: """A type of secondary character who supports the protagonist in achieving their goals.
+    They might not be close friends with the protagonist like the sidekick or confidant roles, but they are considered allies.
+Subcategories: sidekick, confidant, guide
+""",
+    adversary_role: """A secondary role that opposes the protagonist. It serves less relevance than the antagonist.
+For a stronger alternative, see contagonist.
+For weaker oppositions, see hecklers.""",
+    guide_role: """Often called mentor, this secondary role usually teaches something valuable to the protagonist.
+    They might prepare them for an upcoming challenge, or they simply represent the story's thematic truth - the direction the protagonist should choose.
+    """,
+    confidant_role: """A supporter character. Often overlaps with sidekicks, mentors, or love interest.
+    Compared to sidekicks, this role often means a deeper personal connection to the protagonist.""",
+    sidekick_role: """A type of supporter character who is likely a close friend with the protagonist.
+For an alternative, stronger version, see confidant.""",
+    contagonist_role: """The second most important opposition after the antagonist. Often, the contagonist will sway the protagonist from their desire.
+    They might unite with the antagonist, although their gole can be different.""",
+    foil_role: """A mirror character who represents the opposite of the protagonist in terms of personality, appearance, worldview, or values. Not necessarily an antagonistic character but could be.
+A foil role can help to contrast the protagonist making them a multi-dimensional character. Also, a foil might represent a different facade of the theme, thus contrasting or empowering the protagonist's version of the truth.""",
+    henchmen_role: """Minor characters who oppose the protagonist and their supporting cast. They bring in smaller conflicts so they are less important than any other antagonistic roles.
+    Hecklers often come in greater numbers."""
+}
