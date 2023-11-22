@@ -42,7 +42,7 @@ from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_Chara
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_bg_image, apply_white_menu
 from src.main.python.plotlyst.view.widget.big_five import BigFivePersonalityWidget
-from src.main.python.plotlyst.view.widget.character.control import CharacterAgeEditor
+from src.main.python.plotlyst.view.widget.character.editor import CharacterAgeEditor
 from src.main.python.plotlyst.view.widget.character.plan import CharacterPlansWidget
 from src.main.python.plotlyst.view.widget.character.topic import CharacterTopicsEditor
 from src.main.python.plotlyst.view.widget.characters import CharacterRoleSelector

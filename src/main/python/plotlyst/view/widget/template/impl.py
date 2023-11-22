@@ -47,7 +47,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.slider import apply_slider_color
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton, CollapseButton
-from src.main.python.plotlyst.view.widget.character.control import EnneagramSelector, MbtiSelector
+from src.main.python.plotlyst.view.widget.character.editor import EnneagramSelector, MbtiSelector
 from src.main.python.plotlyst.view.widget.display import Subtitle, Emoji, Icon
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget

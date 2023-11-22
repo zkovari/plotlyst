@@ -39,7 +39,7 @@ from src.main.python.plotlyst.view.common import fade_out_and_gc
 from src.main.python.plotlyst.view.icons import set_avatar, avatars
 from src.main.python.plotlyst.view.widget.big_five import BigFiveChart, dimension_from
 from src.main.python.plotlyst.view.widget.button import EyeToggle
-from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget
+from src.main.python.plotlyst.view.widget.character.editor import CharacterTimelineWidget
 from src.main.python.plotlyst.view.widget.display import RoleIcon, ChartView
 from src.main.python.plotlyst.view.widget.template.impl import BarTemplateFieldWidget
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
