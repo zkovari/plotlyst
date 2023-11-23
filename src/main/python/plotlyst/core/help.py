@@ -229,11 +229,108 @@ class CharacterRoleExample:
     display_title: bool = True
 
 
+Harry_Potter = 'Harry Potter'
+Hunger_Games = 'Hunger Games'
+Lord_of_the_rings = 'Lord of the Rings'
+Matrix = 'Matrix'
+
+
 def character_role_examples(role: Role) -> List[CharacterRoleExample]:
     if role == protagonist_role:
         return [
-            CharacterRoleExample('Katniss', 'Hunger Games', 'mdi6.bow-arrow'),
-            CharacterRoleExample('Harry Potter', 'Harry Potter', 'ei.magic', False),
+            CharacterRoleExample('Katniss', Hunger_Games, 'mdi6.bow-arrow'),
+            CharacterRoleExample('Harry Potter', Harry_Potter, 'ei.magic', False),
+            CharacterRoleExample('Frodo', Lord_of_the_rings, 'fa5s.ring', False),
+            CharacterRoleExample('Neo', Matrix, 'mdi.sunglasses', False),
+            CharacterRoleExample('Anne', 'of Green Gables', 'mdi.flower'),
+            CharacterRoleExample('Hamlet', 'Hamlet', 'fa5s.skull'),
+            CharacterRoleExample('Sherlock Holmes', 'Sherlock Holmes', 'mdi.incognito', False)
+        ]
+    elif role == antagonist_role:
+        return [
+            CharacterRoleExample('Sauron', 'Lord_of_the_rings', 'fa5s.ring'),
+            CharacterRoleExample('The Joker', 'Batman', 'fa5s.theater-masks', False),
+            CharacterRoleExample('Voldemort', Harry_Potter, 'ei.magic'),
+            CharacterRoleExample('Agent Smith', 'Matrix', 'mdi.sunglasses'),
+        ]
+    elif role == major_role:
+        return [
+            CharacterRoleExample('Han Solo', 'Star Wars', 'mdi.death-star-variant'),
+            CharacterRoleExample('Aragorn', Lord_of_the_rings, 'mdi.sword'),
+            CharacterRoleExample('Griffith', 'Berserk', 'ph.sword-light'),
+            CharacterRoleExample('Sasuke', 'Naruto', 'mdi.eye-circle-outline'),
+        ]
+    elif role == secondary_role:
+        return [
+            CharacterRoleExample('Luna Lovegood', Harry_Potter, 'ei.magic'),
+            CharacterRoleExample('Gimli', Lord_of_the_rings, 'mdi6.axe-battle'),
+            CharacterRoleExample('Peeta', Hunger_Games, 'mdi.bread-slice'),
+        ]
+    elif role == tertiary_role:
+        return [
+            CharacterRoleExample('Tom Bombadil', Lord_of_the_rings, 'mdi.nature'),
+            CharacterRoleExample('Padma and Parvati Patil', Harry_Potter, 'ei.magic'),
+            CharacterRoleExample('Wormtail', Harry_Potter, 'ei.magic'),
+        ]
+    elif role == love_interest_role:
+        return [
+            CharacterRoleExample('Will', 'Me Before You', 'ei.wheelchair'),
+            CharacterRoleExample('Mr Darcy', 'Pride and Prejudice', ''),
+            CharacterRoleExample('Mr Rochester', 'Jane Eyre', ''),
+            CharacterRoleExample('Mary Jane', 'Spiderman', 'fa5s.spider'),
+            CharacterRoleExample('Augustus', 'The Fault in Our Stars', 'ei.star'),
+        ]
+    elif role == guide_role:
+        return [
+            CharacterRoleExample('Dumbledore', Harry_Potter, 'ei.magic'),
+            CharacterRoleExample('Gandalf', Lord_of_the_rings, 'fa5s.hat-wizard'),
+            CharacterRoleExample('Haymitch', Hunger_Games, 'fa5s.wine-glass-alt'),
+            CharacterRoleExample('Morpheus', 'Matrix', 'mdi.sunglasses'),
+        ]
+    elif role == sidekick_role:
+        return [
+            CharacterRoleExample('Ron', Harry_Potter, 'mdi.rodent'),
+            CharacterRoleExample('Robin', 'Batman', 'fa5s.mask'),
+            CharacterRoleExample('Dr. Watson', 'Sherlock Holmes', 'mdi.incognito'),
+            CharacterRoleExample('Donkey', 'Shrek', 'mdi.donkey'),
+        ]
+    elif role == confidant_role:
+        return [
+            CharacterRoleExample('Samwise Gamgee', Lord_of_the_rings, 'fa5s.ring'),
+            CharacterRoleExample('Wilson', 'House, M.D.', 'fa5s.briefcase-medical'),
+            CharacterRoleExample('Horatio', 'Hamlet', 'fa5s.skull'),
+        ]
+    elif role == supporter_role:
+        return [
+            CharacterRoleExample('Legolas', Lord_of_the_rings, 'mdi6.bow-arrow'),
+            CharacterRoleExample('Merry and Pippin', Lord_of_the_rings, 'mdi.smoking-pipe'),
+            CharacterRoleExample('Luna Lovegood', Harry_Potter, 'ei.magic'),
+        ]
+    elif role == adversary_role:
+        return [
+            CharacterRoleExample('Nazgûl', Lord_of_the_rings, 'mdi6.horse-human'),
+            CharacterRoleExample('Wormtongue', Lord_of_the_rings, 'fa5s.ring'),
+            CharacterRoleExample('Umbridge', Harry_Potter, 'ei.magic'),
+        ]
+    elif role == contagonist_role:
+        return [
+            CharacterRoleExample('Severus Snape', Harry_Potter, 'ei.magic'),
+            CharacterRoleExample('Gollum', Lord_of_the_rings, 'fa5s.ring'),
+            CharacterRoleExample('Jaime Lannister', 'Game of Thrones', 'ri.sword-line'),
+        ]
+    elif role == foil_role:
+        return [
+            CharacterRoleExample('Draco Malfoy', Harry_Potter, 'ei.magic'),
+            CharacterRoleExample('Tom Buchanan', 'The Great Gatsby', ''),
+            CharacterRoleExample('Edgar Linton', 'Wuthering Heights', 'mdi.weather-windy-variant'),
+            CharacterRoleExample('George Wickham', 'Pride and Prejudice', ''),
+        ]
+    elif role == henchmen_role:
+        return [
+            CharacterRoleExample('Crabbe and Goyle', Harry_Potter, 'ei.magic'),
+            CharacterRoleExample('Dudley', Harry_Potter, 'ei.magic'),
+            CharacterRoleExample('Orcs', Lord_of_the_rings, 'fa5s.ring'),
+            CharacterRoleExample('Stormtroopers', 'Star Wars', 'mdi.death-star-variant'),
         ]
 
     return []
