@@ -210,8 +210,10 @@ character_roles_description: Dict[Role, str] = {
     <br>The foil serves to emphasize differences, offering a profound understanding of the main character's qualities.
     <p>It contributes to character development, thematic exploration, and enhances the overall complexity of the narrative.
     """,
-    henchmen_role: """Minor characters who oppose the protagonist and their supporting cast. They bring in smaller conflicts so they are less important than any other antagonistic roles.
-    Hecklers often come in greater numbers."""
+    henchmen_role: """
+    Minor adversary characters who subtly obstruct or challenge the protagonist without being the primary focus.
+    <p>Their role is to introduce layers of opposition and complexity to the story, providing the protagonist with smaller challenges to overcome.
+    """
 }
 
 
