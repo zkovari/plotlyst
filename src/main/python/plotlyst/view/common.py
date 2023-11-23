@@ -318,6 +318,20 @@ def scrolled(parent: QWidget, frameless: bool = False) -> Tuple[QScrollArea, QWi
     return scrollArea, widget
 
 
+def scroll_area(h_on: bool = True, v_on: bool = True, frameless: bool = False) -> QScrollArea:
+    scroll = QScrollArea()
+    scroll.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+    scroll.setWidgetResizable(True)
+    if frameless:
+        scroll.setFrameStyle(QFrame.Shape.NoFrame)
+    if not h_on:
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    if not v_on:
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+    return scroll
+
+
 def set_tab_icon(tabs: QTabWidget, widget: QWidget, icon: QIcon):
     i = tabs.indexOf(widget)
     tabs.setTabIcon(i, icon)
