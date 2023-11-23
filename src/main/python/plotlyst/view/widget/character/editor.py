@@ -918,7 +918,6 @@ class CharacterTimelineWidget(QWidget):
         self._layout.addWidget(control, alignment=Qt.AlignmentFlag.AlignHCenter)
 
 
-# @spawn
 class CharacterRoleSelector(QWidget):
     roleSelected = pyqtSignal(SelectionItem)
     rolePromoted = pyqtSignal(SelectionItem)

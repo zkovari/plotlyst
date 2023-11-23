@@ -202,8 +202,12 @@ character_roles_description: Dict[Role, str] = {
     <p>May have a strong, dynamic relationship with the protagonist, often bringing unique skills or qualities that complement the protagonist's abilities.
     """,
 
-    contagonist_role: """The second most important opposition after the antagonist. Often, the contagonist will sway the protagonist from their desire.
-    They might unite with the antagonist, although their gole can be different.""",
+    contagonist_role: """
+    An adversary role who works against the protagonist. Unlike the antagonist, the contagonist may have a more ambiguous or conflicted role.
+    <p>Contagonists often possess a mix of qualities aligning with both the protagonist and antagonist.
+    <p>They may, at times, assist the protagonist and, at other times, hinder their progress. This ambivalence adds complexity to their character, challenging the protagonist in unexpected ways.
+    <p>They might unite with the antagonist, even if their goals differ.
+    """,
 
     foil_role: """
     A mirror character who contrasts with the protagonist, highlighting specific traits, values, or beliefs.
