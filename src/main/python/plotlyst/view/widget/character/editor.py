@@ -50,7 +50,8 @@ from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry, set_avatar
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton, SelectionItemPushButton
-from src.main.python.plotlyst.view.widget.display import Icon, MajorRoleIcon, SecondaryRoleIcon, MinorRoleIcon, IconText
+from src.main.python.plotlyst.view.widget.display import Icon, MajorRoleIcon, SecondaryRoleIcon, MinorRoleIcon, \
+    IconText, RoleIcon
 from src.main.python.plotlyst.view.widget.input import RemovalButton, AutoAdjustableTextEdit
 from src.main.python.plotlyst.view.widget.labels import TraitLabel
 
@@ -969,12 +970,11 @@ class CharacterRoleSelector(QWidget):
         self.iconSecondary.setToolTip("The selected role is a secondary character role")
         self.iconMinor = MinorRoleIcon()
         self.iconMinor.setToolTip("The selected role is a minor character role")
-        translucent(self.iconMajor, 0.7)
-        translucent(self.iconSecondary, 0.7)
-        translucent(self.iconMinor, 0.7)
+        translucent(self.iconMajor, 0.5)
+        translucent(self.iconSecondary, 0.5)
+        translucent(self.iconMinor, 0.5)
 
-        self.iconRole = QPushButton()
-        transparent(self.iconRole)
+        self.iconRole = RoleIcon()
         incr_font(self.iconRole, 2)
         self.btnPromote = SecondaryActionPushButton()
         self.btnPromote.setIcon(IconRegistry.from_name('mdi.chevron-double-up', CHARACTER_MAJOR_COLOR))
@@ -1050,8 +1050,7 @@ class CharacterRoleSelector(QWidget):
         if toggled:
             self._currentButton = btn
             self._currentRole = role
-            # self.iconRole.setRole(role, animate=True)
-            self.iconRole.setText(role.text)
+            self.iconRole.setRole(role, animate=True, showText=True)
             self.textBrowser.setHtml(character_roles_description[role])
             self.btnPromote.setVisible(role.can_be_promoted)
             self.btnPromote.setChecked(role.promoted)
@@ -1105,7 +1104,7 @@ class CharacterRoleSelector(QWidget):
 
         self._updatePromotionButton(self._currentRole.promoted)
 
-        # self.iconRole.setRole(self._currentRole, animate=True)
+        self.iconRole.setRole(self._currentRole, animate=True, showText=True)
         self._currentButton.setSelectionItem(self._currentRole)
         self.rolePromoted.emit(self._currentRole)
 
