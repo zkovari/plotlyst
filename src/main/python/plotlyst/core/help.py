@@ -174,9 +174,11 @@ character_roles_description: Dict[Role, str] = {
 
     love_interest_role: """Romance is in the air for the protagonist. In romance genre, this role could be promoted to a major one. In others, this role could be part of a subplot in which case it shall remain a secondary character. """,
 
-    adversary_role: """A secondary role that opposes the protagonist. It serves less relevance than the antagonist.
-For a stronger alternative, see contagonist.
-For weaker oppositions, see hecklers.""",
+    adversary_role: """
+    Characters who oppose the protagonist. While not as central as the antagonist, they still present challenges and tension to the protagonist.
+    <p>For a more formidable opposition, see contagonist.
+    <p>For lesser, minor, adversaries, consider hecklers.
+    """,
 
     supporter_role: """
     A secondary character type providing support to the protagonist in their journey. They may not fit into more specialized roles like guide, sidekick, or confidant, but they are considered allies.
