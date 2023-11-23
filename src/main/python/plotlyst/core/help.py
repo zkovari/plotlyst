@@ -204,8 +204,12 @@ character_roles_description: Dict[Role, str] = {
 
     contagonist_role: """The second most important opposition after the antagonist. Often, the contagonist will sway the protagonist from their desire.
     They might unite with the antagonist, although their gole can be different.""",
-    foil_role: """A mirror character who represents the opposite of the protagonist in terms of personality, appearance, worldview, or values. Not necessarily an antagonistic character but could be.
-A foil role can help to contrast the protagonist making them a multi-dimensional character. Also, a foil might represent a different facade of the theme, thus contrasting or empowering the protagonist's version of the truth.""",
+
+    foil_role: """
+    A mirror character who contrasts with the protagonist, highlighting specific traits, values, or beliefs.
+    <br>The foil serves to emphasize differences, offering a profound understanding of the main character's qualities.
+    <p>It contributes to character development, thematic exploration, and enhances the overall complexity of the narrative.
+    """,
     henchmen_role: """Minor characters who oppose the protagonist and their supporting cast. They bring in smaller conflicts so they are less important than any other antagonistic roles.
     Hecklers often come in greater numbers."""
 }
