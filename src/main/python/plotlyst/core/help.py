@@ -172,7 +172,11 @@ character_roles_description: Dict[Role, str] = {
     <p>For special, antagonistic tertiary characters, see hecklers.
     """,
 
-    love_interest_role: """Romance is in the air for the protagonist. In romance genre, this role could be promoted to a major one. In others, this role could be part of a subplot in which case it shall remain a secondary character. """,
+    love_interest_role: """
+    A character that introduces a romantic subplot or relationship into the story.
+    <br>This role not only explores romantic dynamics but often reveals a softer or more vulnerable side of the protagonist.
+    <p>In the romance genre, the love interest may assume a more prominent, major role.
+    """,
 
     adversary_role: """
     Characters who oppose the protagonist. While not as central as the antagonist, they still present challenges and tension to the protagonist.
