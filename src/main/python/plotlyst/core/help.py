@@ -17,7 +17,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from dataclasses import dataclass
+from typing import Dict, List
+
 from src.main.python.plotlyst.core.domain import enneagram_field
+from src.main.python.plotlyst.core.template import Role, protagonist_role, antagonist_role, major_role, secondary_role, \
+    tertiary_role, \
+    love_interest_role, supporter_role, adversary_role, contagonist_role, guide_role, confidant_role, sidekick_role, \
+    foil_role, henchmen_role
 
 # flake8: noqa
 enneagram_help = {
@@ -137,3 +144,193 @@ Not every tool aligns with every individual's writing process, and not all tools
 
 Not every tool needs to be used right away. Several features prove most beneficial after the initial drafting phase.
 """
+
+character_roles_description: Dict[Role, str] = {
+    protagonist_role: """
+    The central character around whom the story revolves.
+    <br>They typically undergo personal growth, development, or transformation by the story's conclusion.
+    <p>Protagonists often drive the narrative and face significant challenges, having the most at stake.
+    <p>Note that the protagonist may not always have a point of view.
+    """,
+    antagonist_role: """
+    The character who opposes the protagonist most, creating a central conflict in the story.
+    <p>While often referred to as the villain, the antagonist is not necessarily an evil character.
+    <p>Their opposition serves as a catalyst for the story's conflict, and they may have complex motives or goals that drive their actions.
+    """,
+    major_role: """
+    Central character who plays a significant role in impacting the story.<br>They might undergo character development and changes themselves.
+    <p>For major but more specific roles see protagonist and antagonist.
+    """,
+    secondary_role: """Important characters contributing to the story and major character development.
+    <br>They may have their own subplots and character development but aren't the primary focus.
+    <p>Subcategories include sidekick, love interest, guide, supporter/adversary, and contagonist.
+    <p>If promoted, they become the deuteragonist - the second most important character role.
+    """,
+    tertiary_role: """
+    Minor characters with limited appearance and impact in the story.
+    <br>They may still serve specific functions such as providing information, kickstarting a plot, acting as red herrings, or enhancing the setting and atmosphere.
+    <p>For special, antagonistic tertiary characters, see hecklers.
+    """,
+
+    love_interest_role: """
+    A character that introduces a romantic subplot or relationship into the story.
+    <br>This role not only explores romantic dynamics but often reveals a softer or more vulnerable side of the protagonist.
+    <p>In the romance genre, the love interest may assume a more prominent, major role.
+    """,
+
+    adversary_role: """
+    Characters who oppose the protagonist. While not as central as the antagonist, they still present challenges and tension to the protagonist.
+    <p>For a more formidable opposition, see contagonist.
+    <p>For lesser, minor, adversaries, consider hecklers.
+    """,
+
+    supporter_role: """
+    A secondary character type providing support to the protagonist in their journey. They may not fit into more specialized roles like guide, sidekick, or confidant, but they are considered allies.
+    <p>Subcategories: Sidekick, Confidant, Guide
+    """,
+    guide_role: """
+    Often referred to as a mentor, this secondary role typically imparts valuable lessons to the protagonist.
+    <br>They may share wisdom, knowledge, skills, or provide guidance and direction, be it physical, spiritual, or psychological.
+    """,
+    confidant_role: """
+    Serves as a trusted ally and emotional support, with whom the protagonist can share personal thoughts and feelings.
+    <p>Often overlaps with sidekicks, mentors, or love interests.
+    <p>This role often implies a deeper personal connection to the protagonist compared to sidekicks.
+    """,
+    sidekick_role: """
+    A loyal companion and supporter to the protagonist, actively participating in their adventures.
+    <p>May have a strong, dynamic relationship with the protagonist, often bringing unique skills or qualities that complement the protagonist's abilities.
+    """,
+
+    contagonist_role: """
+    An adversary role who works against the protagonist. Unlike the antagonist, the contagonist may have a more ambiguous or conflicted role.
+    <p>Contagonists often possess a mix of qualities aligning with both the protagonist and antagonist.
+    <p>They may, at times, assist the protagonist and, at other times, hinder their progress. This ambivalence adds complexity to their character, challenging the protagonist in unexpected ways.
+    <p>They might unite with the antagonist, even if their goals differ.
+    """,
+
+    foil_role: """
+    A mirror character who contrasts with the protagonist, highlighting specific traits, values, or beliefs.
+    <br>The foil serves to emphasize differences, offering a profound understanding of the main character's qualities.
+    <p>It contributes to character development, thematic exploration, and enhances the overall complexity of the narrative.
+    """,
+    henchmen_role: """
+    Minor adversary characters who subtly obstruct or challenge the protagonist without being the primary focus.
+    <p>Their role is to introduce layers of opposition and complexity to the story, providing the protagonist with smaller challenges to overcome.
+    """
+}
+
+
+@dataclass
+class CharacterRoleExample:
+    name: str
+    title: str
+    icon: str = ''
+    display_title: bool = True
+
+
+Harry_Potter = 'Harry Potter'
+Hunger_Games = 'Hunger Games'
+Lord_of_the_rings = 'Lord of the Rings'
+Matrix = 'Matrix'
+
+
+def character_role_examples(role: Role) -> List[CharacterRoleExample]:
+    if role == protagonist_role:
+        return [
+            CharacterRoleExample('Katniss', Hunger_Games, 'mdi6.bow-arrow'),
+            CharacterRoleExample('Harry Potter', Harry_Potter, 'ei.magic', False),
+            CharacterRoleExample('Frodo', Lord_of_the_rings, 'fa5s.ring', False),
+            CharacterRoleExample('Neo', Matrix, 'mdi.sunglasses', False),
+            CharacterRoleExample('Anne', 'of Green Gables', 'mdi.flower'),
+            CharacterRoleExample('Hamlet', 'Hamlet', 'fa5s.skull'),
+            CharacterRoleExample('Sherlock Holmes', 'Sherlock Holmes', 'mdi.incognito', False)
+        ]
+    elif role == antagonist_role:
+        return [
+            CharacterRoleExample('Sauron', 'Lord_of_the_rings', 'fa5s.ring'),
+            CharacterRoleExample('The Joker', 'Batman', 'fa5s.theater-masks', False),
+            CharacterRoleExample('Voldemort', Harry_Potter, 'ei.magic'),
+            CharacterRoleExample('Agent Smith', 'Matrix', 'mdi.sunglasses'),
+        ]
+    elif role == major_role:
+        return [
+            CharacterRoleExample('Han Solo', 'Star Wars', 'mdi.death-star-variant'),
+            CharacterRoleExample('Aragorn', Lord_of_the_rings, 'mdi.sword'),
+            CharacterRoleExample('Griffith', 'Berserk', 'ph.sword-light'),
+            CharacterRoleExample('Sasuke', 'Naruto', 'mdi.eye-circle-outline'),
+        ]
+    elif role == secondary_role:
+        return [
+            CharacterRoleExample('Luna Lovegood', Harry_Potter, 'ei.magic'),
+            CharacterRoleExample('Gimli', Lord_of_the_rings, 'mdi6.axe-battle'),
+            CharacterRoleExample('Peeta', Hunger_Games, 'mdi.bread-slice'),
+        ]
+    elif role == tertiary_role:
+        return [
+            CharacterRoleExample('Tom Bombadil', Lord_of_the_rings, 'mdi.nature'),
+            CharacterRoleExample('Padma and Parvati Patil', Harry_Potter, 'ei.magic'),
+            CharacterRoleExample('Wormtail', Harry_Potter, 'ei.magic'),
+        ]
+    elif role == love_interest_role:
+        return [
+            CharacterRoleExample('Will', 'Me Before You', 'ei.wheelchair'),
+            CharacterRoleExample('Mr Darcy', 'Pride and Prejudice', ''),
+            CharacterRoleExample('Mr Rochester', 'Jane Eyre', ''),
+            CharacterRoleExample('Mary Jane', 'Spiderman', 'fa5s.spider'),
+            CharacterRoleExample('Augustus', 'The Fault in Our Stars', 'ei.star'),
+        ]
+    elif role == guide_role:
+        return [
+            CharacterRoleExample('Dumbledore', Harry_Potter, 'ei.magic'),
+            CharacterRoleExample('Gandalf', Lord_of_the_rings, 'fa5s.hat-wizard'),
+            CharacterRoleExample('Haymitch', Hunger_Games, 'fa5s.wine-glass-alt'),
+            CharacterRoleExample('Morpheus', 'Matrix', 'mdi.sunglasses'),
+        ]
+    elif role == sidekick_role:
+        return [
+            CharacterRoleExample('Ron', Harry_Potter, 'mdi.rodent'),
+            CharacterRoleExample('Robin', 'Batman', 'fa5s.mask'),
+            CharacterRoleExample('Dr. Watson', 'Sherlock Holmes', 'mdi.incognito'),
+            CharacterRoleExample('Donkey', 'Shrek', 'mdi.donkey'),
+        ]
+    elif role == confidant_role:
+        return [
+            CharacterRoleExample('Samwise Gamgee', Lord_of_the_rings, 'fa5s.ring'),
+            CharacterRoleExample('Wilson', 'House, M.D.', 'fa5s.briefcase-medical'),
+            CharacterRoleExample('Horatio', 'Hamlet', 'fa5s.skull'),
+        ]
+    elif role == supporter_role:
+        return [
+            CharacterRoleExample('Legolas', Lord_of_the_rings, 'mdi6.bow-arrow'),
+            CharacterRoleExample('Merry and Pippin', Lord_of_the_rings, 'mdi.smoking-pipe'),
+            CharacterRoleExample('Luna Lovegood', Harry_Potter, 'ei.magic'),
+        ]
+    elif role == adversary_role:
+        return [
+            CharacterRoleExample('Nazgûl', Lord_of_the_rings, 'mdi6.horse-human'),
+            CharacterRoleExample('Wormtongue', Lord_of_the_rings, 'fa5s.ring'),
+            CharacterRoleExample('Umbridge', Harry_Potter, 'ei.magic'),
+        ]
+    elif role == contagonist_role:
+        return [
+            CharacterRoleExample('Severus Snape', Harry_Potter, 'ei.magic'),
+            CharacterRoleExample('Gollum', Lord_of_the_rings, 'fa5s.ring'),
+            CharacterRoleExample('Jaime Lannister', 'Game of Thrones', 'ri.sword-line'),
+        ]
+    elif role == foil_role:
+        return [
+            CharacterRoleExample('Draco Malfoy', Harry_Potter, 'ei.magic'),
+            CharacterRoleExample('Tom Buchanan', 'The Great Gatsby', ''),
+            CharacterRoleExample('Edgar Linton', 'Wuthering Heights', 'mdi.weather-windy-variant'),
+            CharacterRoleExample('George Wickham', 'Pride and Prejudice', ''),
+        ]
+    elif role == henchmen_role:
+        return [
+            CharacterRoleExample('Crabbe and Goyle', Harry_Potter, 'ei.magic'),
+            CharacterRoleExample('Dudley', Harry_Potter, 'ei.magic'),
+            CharacterRoleExample('Orcs', Lord_of_the_rings, 'fa5s.ring'),
+            CharacterRoleExample('Stormtroopers', 'Star Wars', 'mdi.death-star-variant'),
+        ]
+
+    return []

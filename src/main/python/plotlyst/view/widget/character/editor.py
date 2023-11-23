@@ -17,16 +17,18 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import copy
 import random
 from abc import abstractmethod
 from enum import Enum, auto
 from functools import partial
 from typing import Tuple, Optional, Dict, List
 
+import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QObject, QEvent
-from PyQt6.QtGui import QIcon, QColor, QPainter, QPaintEvent, QBrush, QResizeEvent
+from PyQt6.QtGui import QIcon, QColor, QPainter, QPaintEvent, QBrush, QResizeEvent, QMouseEvent
 from PyQt6.QtWidgets import QWidget, QSpinBox, QSlider, QTextBrowser, QButtonGroup, QToolButton, QLabel, QSizePolicy, \
-    QLineEdit
+    QLineEdit, QPushButton
 from overrides import overrides
 from qthandy import vbox, pointy, hbox, sp, vspacer, underline, decr_font, flow, clear_layout, translucent, line, grid, \
     italic, spacer, transparent, ask_confirmation, incr_font, bold, margins, incr_icon
@@ -34,16 +36,22 @@ from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR, RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, \
-    EMOTION_COLORS
+    EMOTION_COLORS, CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import BackstoryEvent, Character
-from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
-from src.main.python.plotlyst.core.template import SelectionItem, enneagram_field, TemplateField, mbti_field
-from src.main.python.plotlyst.view.common import push_btn, action, tool_btn, label, wrap, open_url, frame, restyle
+from src.main.python.plotlyst.core.help import enneagram_help, mbti_help, character_roles_description, \
+    character_role_examples
+from src.main.python.plotlyst.core.template import SelectionItem, enneagram_field, TemplateField, mbti_field, \
+    promote_role, demote_role, Role, protagonist_role, antagonist_role, major_role, secondary_role, tertiary_role, \
+    love_interest_role, supporter_role, adversary_role, contagonist_role, guide_role, confidant_role, sidekick_role, \
+    foil_role, henchmen_role
+from src.main.python.plotlyst.view.common import push_btn, action, tool_btn, label, wrap, open_url, frame, restyle, \
+    scroll_area
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry, set_avatar
 from src.main.python.plotlyst.view.style.base import apply_white_menu
-from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
-from src.main.python.plotlyst.view.widget.display import Icon
+from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton, SelectionItemPushButton
+from src.main.python.plotlyst.view.widget.display import Icon, MajorRoleIcon, SecondaryRoleIcon, MinorRoleIcon, \
+    IconText, RoleIcon
 from src.main.python.plotlyst.view.widget.input import RemovalButton, AutoAdjustableTextEdit
 from src.main.python.plotlyst.view.widget.labels import TraitLabel
 
@@ -631,6 +639,7 @@ class BackstoryEditorMenu(MenuWidget):
         if result:
             self.iconSelected.emit(result[0])
 
+
 class CharacterBackstoryCard(QWidget):
     edited = pyqtSignal()
     deleteRequested = pyqtSignal(object)
@@ -908,3 +917,196 @@ class CharacterTimelineWidget(QWidget):
         control = _ControlButtons(self)
         control.btnPlus.clicked.connect(partial(self.add, pos))
         self._layout.addWidget(control, alignment=Qt.AlignmentFlag.AlignHCenter)
+
+
+class CharacterRoleSelector(QWidget):
+    roleSelected = pyqtSignal(SelectionItem)
+    rolePromoted = pyqtSignal(SelectionItem)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        hbox(self)
+        self.setProperty('relaxed-white-bg', True)
+
+        self.wdgSidebar = QWidget()
+        self.wdgSidebar.setProperty('bg', True)
+        vbox(self.wdgSidebar)
+        self.wdgDisplay = QWidget()
+        vbox(self.wdgDisplay)
+        margins(self.wdgDisplay, left=20, right=20)
+        self.layout().addWidget(self.wdgSidebar)
+        self.layout().addWidget(self.wdgDisplay)
+
+        self.textBrowser = QTextBrowser()
+        incr_font(self.textBrowser)
+        self.textBrowser.setProperty('rounded', True)
+        self.textBrowser.setMinimumSize(400, 300)
+
+        self.buttonGroup = QButtonGroup()
+
+        self._addRoleItem(protagonist_role)
+        self._addRoleItem(antagonist_role)
+        self.wdgSidebar.layout().addWidget(line(color='lightgrey'))
+        self._addRoleItem(major_role)
+        self._addRoleItem(secondary_role)
+        self._addRoleItem(tertiary_role)
+        self.wdgSidebar.layout().addWidget(line(color='lightgrey'))
+        self._addRoleItem(love_interest_role)
+        self._addRoleItem(supporter_role)
+        self._addRoleItem(adversary_role)
+        self._addRoleItem(guide_role)
+        self._addRoleItem(confidant_role)
+        self._addRoleItem(sidekick_role)
+        self.wdgSidebar.layout().addWidget(line(color='lightgrey'))
+        self._addRoleItem(contagonist_role)
+        self._addRoleItem(foil_role)
+        self.wdgSidebar.layout().addWidget(line(color='lightgrey'))
+        self._addRoleItem(henchmen_role)
+        self.wdgSidebar.layout().addWidget(vspacer())
+
+        self.iconMajor = MajorRoleIcon()
+        self.iconMajor.setToolTip("The selected role is a major character role")
+        self.iconSecondary = SecondaryRoleIcon()
+        self.iconSecondary.setToolTip("The selected role is a secondary character role")
+        self.iconMinor = MinorRoleIcon()
+        self.iconMinor.setToolTip("The selected role is a minor character role")
+        translucent(self.iconMajor, 0.5)
+        translucent(self.iconSecondary, 0.5)
+        translucent(self.iconMinor, 0.5)
+
+        self.iconRole = RoleIcon()
+        incr_font(self.iconRole, 2)
+        self.btnPromote = SecondaryActionPushButton()
+        self.btnPromote.setIcon(IconRegistry.from_name('mdi.chevron-double-up', CHARACTER_MAJOR_COLOR))
+        self.btnPromote.setText('Promote')
+        self.btnPromote.clicked.connect(self._promoted)
+
+        self._currentRole = protagonist_role
+        self._currentButton: Optional[SelectionItemPushButton] = None
+
+        self.btnSelect = push_btn(IconRegistry.ok_icon('white'), 'Select', properties=['base', 'positive'])
+        self.btnSelect.clicked.connect(self._select)
+
+        self.wdgDisplayHeader = QWidget()
+        hbox(self.wdgDisplayHeader)
+        self.wdgDisplayHeader.layout().addWidget(spacer())
+        self.wdgDisplayHeader.layout().addWidget(self.btnPromote)
+        self.wdgDisplayHeader.layout().addWidget(self.iconMajor)
+        self.wdgDisplayHeader.layout().addWidget(self.iconSecondary)
+        self.wdgDisplayHeader.layout().addWidget(self.iconMinor)
+
+        self.wdgExamples = QWidget()
+        self.examplesScrollArea = scroll_area(False, False, True)
+        self.examplesScrollArea.setWidget(self.wdgExamples)
+        self.wdgExamples.setMinimumSize(400, 150)
+        self.examplesScrollArea.setMinimumSize(400, 150)
+        flow(self.wdgExamples, 8, 8)
+
+        self.wdgDisplay.layout().addWidget(self.wdgDisplayHeader)
+        self.wdgDisplay.layout().addWidget(line(color='lightgrey'))
+        self.wdgDisplay.layout().addWidget(self.iconRole, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.wdgDisplay.layout().addWidget(self.textBrowser)
+        self.wdgDisplay.layout().addWidget(label('Examples:'), alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgDisplay.layout().addWidget(self.examplesScrollArea)
+        self.wdgDisplay.layout().addWidget(vspacer())
+        self.wdgDisplay.layout().addWidget(self.btnSelect)
+
+        self.buttonGroup.buttons()[0].setChecked(True)
+
+    def _addRoleItem(self, role: Role):
+        copied_role = copy.deepcopy(role)
+        btn = SelectionItemPushButton()
+        btn.setCheckable(True)
+        btn.setSelectionItem(copied_role)
+        self.buttonGroup.addButton(btn)
+        btn.setStyleSheet('''
+                        QPushButton {
+                            border: 1px hidden black;
+                            padding: 2px;
+                        }
+                        QPushButton:hover {
+                            background-color: #e9ecef;
+                        }
+                        QPushButton:checked {
+                            background-color: #ced4da;
+                        }
+                    ''')
+        btn.toggled.connect(partial(self._roleToggled, btn, copied_role))
+        btn.itemDoubleClicked.connect(self._select)
+        self.wdgSidebar.layout().addWidget(btn)
+
+    @overrides
+    def mouseReleaseEvent(self, a0: QMouseEvent) -> None:
+        pass
+
+    def setActiveRole(self, role: Role):
+        for btn in self.buttonGroup.buttons():
+            if btn.selectionItem().text == role.text:
+                btn.setSelectionItem(role)
+                btn.setChecked(True)
+                break
+
+    def _roleToggled(self, btn: SelectionItemPushButton, role: Role, toggled: bool):
+        if toggled:
+            self._currentButton = btn
+            self._currentRole = role
+            self.iconRole.setRole(role, animate=True, showText=True)
+            self.textBrowser.setHtml(character_roles_description[role])
+            self.btnPromote.setVisible(role.can_be_promoted)
+            self.btnPromote.setChecked(role.promoted)
+            self._updatePromotionButton(role.promoted)
+
+            self._updateRolePriorityIcon()
+
+            clear_layout(self.wdgExamples)
+            for example in character_role_examples(role):
+                iconText = IconText()
+                if example.icon:
+                    iconText.setIcon(IconRegistry.from_name(example.icon))
+                text = example.name
+                if example.display_title:
+                    text += f' ({example.title})'
+                iconText.setText(text)
+
+                self.wdgExamples.layout().addWidget(iconText)
+
+    def _updatePromotionButton(self, promoted: bool):
+        if promoted:
+            self.btnPromote.setText('Demote')
+            self.btnPromote.setIcon(IconRegistry.from_name('mdi.chevron-double-down', CHARACTER_SECONDARY_COLOR))
+        else:
+            self.btnPromote.setText('Promote')
+            self.btnPromote.setIcon(IconRegistry.from_name('mdi.chevron-double-up', CHARACTER_MAJOR_COLOR))
+
+    def _updateRolePriorityIcon(self, anim: bool = False):
+        self.iconMajor.setHidden(True)
+        self.iconSecondary.setHidden(True)
+        self.iconMinor.setHidden(True)
+
+        if self._currentRole.is_major():
+            self.iconMajor.setVisible(True)
+            if anim:
+                qtanim.glow(self.iconMajor, color=QColor(CHARACTER_MAJOR_COLOR))
+        elif self._currentRole.is_secondary():
+            self.iconSecondary.setVisible(True)
+            if anim:
+                qtanim.glow(self.iconSecondary, color=QColor(CHARACTER_SECONDARY_COLOR))
+        else:
+            self.iconMinor.setVisible(True)
+
+    def _promoted(self):
+        if self._currentRole.promoted:
+            demote_role(self._currentRole)
+        else:
+            promote_role(self._currentRole)
+        self._currentRole.promoted = not self._currentRole.promoted
+        self._updateRolePriorityIcon(anim=True)
+
+        self._updatePromotionButton(self._currentRole.promoted)
+
+        self.iconRole.setRole(self._currentRole, animate=True, showText=True)
+        self._currentButton.setSelectionItem(self._currentRole)
+        self.rolePromoted.emit(self._currentRole)
+
+    def _select(self):
+        self.roleSelected.emit(self._currentRole)
