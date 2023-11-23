@@ -154,16 +154,16 @@ Often called villain, although the antagonis is not necessarily an evil characte
     Central character who plays a significant role in impacting the story.<br>They might undergo character development and changes themselves.
     <p>For major but more specific roles see protagonist and antagonist.
     """,
-    secondary_role: """Important characters who contribute to the story and the development of major characters.
-    <br>They might have their own subplots and character development but they are not the primary focus.
-    
-    <p>Subcategories: sidekick, love interest, guide, supporter/adversary, contagonist.
-    <p>If promoted, it becomes deuteragonist - the second most important character role.
-""",
-    tertiary_role: """Minor characters who have limited appearance and impact in the story.
-    <br>They might still serve specific functions such as providing information, kickstarting a plot, serving as red herrings, or enhancing the setting and athmosphere.
-    
-    <p>For special, antagonistic tertiary characters, see hecklers.""",
+    secondary_role: """Important characters contributing to the story and major character development.
+    <br>They may have their own subplots and character development but aren't the primary focus.
+    <p>Subcategories include sidekick, love interest, guide, supporter/adversary, and contagonist.
+    <p>If promoted, they become the deuteragonist - the second most important character role.
+    """,
+    tertiary_role: """
+    Minor characters with limited appearance and impact in the story.
+    <br>They may still serve specific functions such as providing information, kickstarting a plot, acting as red herrings, or enhancing the setting and atmosphere.
+    <p>For special, antagonistic tertiary characters, see hecklers.
+    """,
     love_interest_role: """Romance is in the air for the protagonist. In romance genre, this role could be promoted to a major one. In others, this role could be part of a subplot in which case it shall remain a secondary character. """,
     supporter_role: """A type of secondary character who supports the protagonist in achieving their goals.
     They might not be close friends with the protagonist like the sidekick or confidant roles, but they are considered allies.
