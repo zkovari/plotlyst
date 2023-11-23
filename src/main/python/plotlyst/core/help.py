@@ -171,21 +171,31 @@ character_roles_description: Dict[Role, str] = {
     <br>They may still serve specific functions such as providing information, kickstarting a plot, acting as red herrings, or enhancing the setting and atmosphere.
     <p>For special, antagonistic tertiary characters, see hecklers.
     """,
+
     love_interest_role: """Romance is in the air for the protagonist. In romance genre, this role could be promoted to a major one. In others, this role could be part of a subplot in which case it shall remain a secondary character. """,
-    supporter_role: """A type of secondary character who supports the protagonist in achieving their goals.
-    They might not be close friends with the protagonist like the sidekick or confidant roles, but they are considered allies.
-Subcategories: sidekick, confidant, guide
-""",
+
     adversary_role: """A secondary role that opposes the protagonist. It serves less relevance than the antagonist.
 For a stronger alternative, see contagonist.
 For weaker oppositions, see hecklers.""",
-    guide_role: """Often called mentor, this secondary role usually teaches something valuable to the protagonist.
-    They might prepare them for an upcoming challenge, or they simply represent the story's thematic truth - the direction the protagonist should choose.
+
+    supporter_role: """
+    A secondary character type providing support to the protagonist in their journey. They may not fit into more specialized roles like guide, sidekick, or confidant, but they are considered allies.
+    <p>Subcategories: Sidekick, Confidant, Guide
     """,
-    confidant_role: """A supporter character. Often overlaps with sidekicks, mentors, or love interest.
-    Compared to sidekicks, this role often means a deeper personal connection to the protagonist.""",
-    sidekick_role: """A type of supporter character who is likely a close friend with the protagonist.
-For an alternative, stronger version, see confidant.""",
+    guide_role: """
+    Often referred to as a mentor, this secondary role typically imparts valuable lessons to the protagonist.
+    <br>They may share wisdom, knowledge, skills, or provide guidance and direction, be it physical, spiritual, or psychological.
+    """,
+    confidant_role: """
+    Serves as a trusted ally and emotional support, with whom the protagonist can share personal thoughts and feelings.
+    <p>Often overlaps with sidekicks, mentors, or love interests.
+    <p>This role often implies a deeper personal connection to the protagonist compared to sidekicks.
+    """,
+    sidekick_role: """
+    A loyal companion and supporter to the protagonist, actively participating in their adventures.
+    <p>May have a strong, dynamic relationship with the protagonist, often bringing unique skills or qualities that complement the protagonist's abilities.
+    """,
+
     contagonist_role: """The second most important opposition after the antagonist. Often, the contagonist will sway the protagonist from their desire.
     They might unite with the antagonist, although their gole can be different.""",
     foil_role: """A mirror character who represents the opposite of the protagonist in terms of personality, appearance, worldview, or values. Not necessarily an antagonistic character but could be.
