@@ -17,7 +17,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Dict
+from dataclasses import dataclass
+from typing import Dict, List
 
 from src.main.python.plotlyst.core.domain import enneagram_field
 from src.main.python.plotlyst.core.template import Role, protagonist_role, antagonist_role, major_role, secondary_role, \
@@ -149,13 +150,20 @@ character_roles_description: Dict[Role, str] = {
     antagonist_role: """The character who most opposes your protagonist in achieving their main story goal. They should produce the biggest conflicts.
 Sometimes they pursue the same goal as your protagonist but their methods are different.
 Often called villain, although the antagonis is not necessarily an evil character of the story.""",
-    major_role: """""",
-    secondary_role: """Less important than protagonist or antagonist, but they still play a significant role moving the plot forward, acting as foil, or contrasting the protagonist's thematic truth.
-Subcategories: sidekick, love interest, guide, etc.
-If promoted, it becomes deuteragonist - the second most important character
+    major_role: """
+    Central character who plays a significant role in impacting the story.<br>They might undergo character development and changes themselves.
+    <p>For major but more specific roles see protagonist and antagonist.
+    """,
+    secondary_role: """Important characters who contribute to the story and the development of major characters.
+    <br>They might have their own subplots and character development but they are not the primary focus.
+    
+    <p>Subcategories: sidekick, love interest, guide, supporter/adversary, contagonist.
+    <p>If promoted, it becomes deuteragonist - the second most important character role.
 """,
-    tertiary_role: """Minor characters who only appear once or twice to populate the world but they don't affect the plot's development.
-For special, antagonistic tertiary characters, see henchman.""",
+    tertiary_role: """Minor characters who have limited appearance and impact in the story.
+    <br>They might still serve specific functions such as providing information, kickstarting a plot, serving as red herrings, or enhancing the setting and athmosphere.
+    
+    <p>For special, antagonistic tertiary characters, see hecklers.""",
     love_interest_role: """Romance is in the air for the protagonist. In romance genre, this role could be promoted to a major one. In others, this role could be part of a subplot in which case it shall remain a secondary character. """,
     supporter_role: """A type of secondary character who supports the protagonist in achieving their goals.
     They might not be close friends with the protagonist like the sidekick or confidant roles, but they are considered allies.
@@ -178,3 +186,21 @@ A foil role can help to contrast the protagonist making them a multi-dimensional
     henchmen_role: """Minor characters who oppose the protagonist and their supporting cast. They bring in smaller conflicts so they are less important than any other antagonistic roles.
     Hecklers often come in greater numbers."""
 }
+
+
+@dataclass
+class CharacterRoleExample:
+    name: str
+    title: str
+    icon: str = ''
+    display_title: bool = True
+
+
+def character_role_examples(role: Role) -> List[CharacterRoleExample]:
+    if role == protagonist_role:
+        return [
+            CharacterRoleExample('Katniss', 'Hunger Games', 'mdi6.bow-arrow'),
+            CharacterRoleExample('Harry Potter', 'Harry Potter', 'ei.magic', False),
+        ]
+
+    return []
