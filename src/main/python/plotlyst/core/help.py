@@ -146,10 +146,17 @@ Not every tool needs to be used right away. Several features prove most benefici
 """
 
 character_roles_description: Dict[Role, str] = {
-    protagonist_role: """Your main character who drives the plot and often has the most to lose. This character might change the most by the end of the story.""",
-    antagonist_role: """The character who most opposes your protagonist in achieving their main story goal. They should produce the biggest conflicts.
-Sometimes they pursue the same goal as your protagonist but their methods are different.
-Often called villain, although the antagonis is not necessarily an evil character of the story.""",
+    protagonist_role: """
+    The central character around whom the story revolves.
+    <br>They typically undergo personal growth, development, or transformation by the story's conclusion.
+    <p>Protagonists often drive the narrative and face significant challenges, having the most at stake.
+    <p>Note that the protagonist may not always have a point of view.
+    """,
+    antagonist_role: """
+    The character who opposes the protagonist most, creating a central conflict in the story.
+    <p>While often referred to as the villain, the antagonist is not necessarily an evil character.
+    <p>Their opposition serves as a catalyst for the story's conflict, and they may have complex motives or goals that drive their actions.
+    """,
     major_role: """
     Central character who plays a significant role in impacting the story.<br>They might undergo character development and changes themselves.
     <p>For major but more specific roles see protagonist and antagonist.
