@@ -173,7 +173,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self._language_tool_setup_worker = LanguageToolServerSetupWorker()
         if not app_env.test_env():
             download_nltk_resources()
-            download_resource(ResourceType.JRE_8)
+            if not app_env.is_windows():
+                download_resource(ResourceType.JRE_8)
             download_resource(ResourceType.PANDOC)
 
         if self.novel:

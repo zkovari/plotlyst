@@ -215,7 +215,8 @@ class ResourceManager(EventListener):
             elif app_env.is_mac():
                 distr = 'OpenJDK8U-jre_x64_mac_hotspot_8u362b09.tar.gz'
             else:
-                raise IOError('Not supported platform for JRE')
+                distr = 'OpenJDK8U-jre_x64_mac_hotspot_8u362b09.tar.gz'
+                # raise IOError('Not supported platform for JRE')
             url = f'https://github.com/adoptium/temurin8-binaries/releases/download/{version}/{distr}'
             return ResourceDescriptor('jre', 'jre', url, extension='tar.gz',
                                       version=version, human_name='Java',

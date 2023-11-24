@@ -50,13 +50,17 @@ def default_directory() -> Optional[str]:
     if not home:
         return None
 
-    if app_env.is_mac() or app_env.is_windows():
+    if app_env.is_mac():
         plotlyst = home.joinpath('Plotlyst')
+    elif app_env.is_windows():
+        plotlyst = home.joinpath('Documents/Plotlyst')
     else:
         plotlyst = home.joinpath('plotlyst')
 
     if plotlyst.exists() and plotlyst.is_file():
         return None
+    if not plotlyst.exists():
+        plotlyst.mkdir(exist_ok=True)
     if not os.access(str(plotlyst), os.W_OK):
         return None
 
