@@ -80,7 +80,7 @@ jobs:
           pip install git+https://github.com/plotlyst/language_tool_python.git@plotlyst
       - name: Generate code
         run: |
-          python uic_gen.py
+          qt-uic --source ui --target src/main/python/plotlyst/view/generated
 
       - name: fbs
         run: |
