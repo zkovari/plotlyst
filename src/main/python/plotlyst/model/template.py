@@ -21,6 +21,7 @@ from typing import Any
 
 from PyQt6.QtCore import QModelIndex, Qt, QSortFilterProxyModel
 from PyQt6.QtGui import QBrush, QColor
+from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 
 from src.main.python.plotlyst.core.template import TemplateField, SelectionItem
@@ -70,8 +71,10 @@ class TraitsFieldItemsSelectionModel(TemplateFieldSelectionModel):
             else:
                 brush.setColor(QColor('#db5461'))
             return brush
-        if role == self.PositivityRole:
+        elif role == self.PositivityRole:
             return item.meta.get('positive', True)
+        elif role == Qt.ItemDataRole.FontRole:
+            return QApplication.font()
         return super(TraitsFieldItemsSelectionModel, self).data(index, role)
 
     @overrides
