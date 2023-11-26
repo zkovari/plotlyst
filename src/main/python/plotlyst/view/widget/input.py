@@ -464,7 +464,6 @@ class DocumentTextEditor(RichTextEditor):
         title_font = self._textTitle.font()
         title_font.setBold(True)
         title_font.setPointSize(40)
-        title_font.setFamily('Helvetica')
         self._textTitle.setFont(title_font)
         self._textTitle.returnPressed.connect(self.textEdit.setFocus)
         self._textTitle.textChanged.connect(self.titleChanged.emit)
@@ -482,9 +481,11 @@ class DocumentTextEditor(RichTextEditor):
 
         if app_env.is_mac():
             family = 'Helvetica Neue'
+        elif app_env.is_windows():
+            family = 'Calibri'
         else:
             family = 'Helvetica'
-        self.textEdit.setFont(QFont(family))
+        self.textEdit.setFont(QFont(family, 16))
         self.textEdit.setProperty('transparent', True)
         self.textEdit.zoomIn(int(self.textEdit.font().pointSize() * 0.34))
         self.textEdit.setBlockFormat(lineSpacing=120)
