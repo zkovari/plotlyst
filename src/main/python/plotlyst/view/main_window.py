@@ -440,6 +440,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
     def _init_menubar(self):
         self.menubar.setContextMenuPolicy(Qt.ContextMenuPolicy.PreventContextMenu)
+        if app_env.is_windows():
+            self.menubar.setFont(QApplication.font())
         if app_env.is_prod():
             self.menuFile.removeAction(self.actionRestart)
         else:

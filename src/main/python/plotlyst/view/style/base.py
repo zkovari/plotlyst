@@ -37,6 +37,10 @@ QToolTip {
     padding: 5px;
 }
 
+QMenuBar {
+    background-color: #EFEFF4;
+}
+
 QToolBar {
     spacing: 1px;
 }
