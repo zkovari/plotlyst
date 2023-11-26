@@ -42,14 +42,22 @@ class ResourceRegistry:
         self._cover1 = None
         self._banner = None
         self._circular_frame1 = None
+        self._manuscript_docx_template = None
 
     def set_up(self, app_context: ApplicationContext):
-        self._cork = app_context.get_resource('cork.wav')
-        self._frame1 = app_context.get_resource('frame_1.png')
-        self._cover1 = app_context.get_resource('cover_1.jpg')
-        self._banner = app_context.get_resource('plotlyst_banner.png')
-        self._circular_frame1 = app_context.get_resource('circular_frame1.png')
-        self._manuscript_docx_template = app_context.get_resource('manuscript-template.docx')
+        self._cork = self.__get_resource(app_context, 'cork.wav')
+        self._frame1 = self.__get_resource(app_context, 'frame_1.png')
+        self._cover1 = self.__get_resource(app_context, 'cover_1.jpg')
+        self._banner = self.__get_resource(app_context, 'plotlyst_banner.png')
+        self._circular_frame1 = self.__get_resource(app_context, 'circular_frame1.png')
+        self._manuscript_docx_template = self.__get_resource(app_context, 'manuscript-template.docx')
+
+    def __get_resource(self, app_context: ApplicationContext, name: str):
+        resource_url = app_context.get_resource(name)
+        if app_env.is_windows():
+            resource_url = resource_url.replace('\\', '/')
+
+        return resource_url
 
     @property
     def cork(self) -> str:
