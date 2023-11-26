@@ -35,6 +35,7 @@ QToolTip {
     border: 0px;
     font-size: 14pt;
     padding: 5px;
+    background-color: #EFEFF4;
 }
 
 QMenuBar {
