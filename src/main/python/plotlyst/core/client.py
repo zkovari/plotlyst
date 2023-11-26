@@ -699,7 +699,7 @@ class JsonClient:
         path = novel_doc_dir.joinpath(self.__json_file(data_uuid))
         if not os.path.exists(path):
             return ''
-        with open(path, encoding='utf8') as json_file:
+        with open(path, encoding='utf-8') as json_file:
             return json_file.read()
 
     def __load_diagram(self, novel: Novel, diagram_uuid: uuid.UUID) -> str:
@@ -707,7 +707,7 @@ class JsonClient:
         path = diagrams_dir.joinpath(self.__json_file(diagram_uuid))
         if not os.path.exists(path):
             return ''
-        with open(path, encoding='utf8') as json_file:
+        with open(path, encoding='utf-8') as json_file:
             return json_file.read()
 
     def __persist_doc(self, novel: Novel, doc: Document):
@@ -717,7 +717,7 @@ class JsonClient:
 
         if doc.type in [DocumentType.DOCUMENT, DocumentType.STORY_STRUCTURE]:
             doc_file_path = novel_doc_dir.joinpath(self.__doc_file(doc.id))
-            with atomic_write(doc_file_path, overwrite=True) as f:
+            with atomic_write(doc_file_path, encoding='utf-8', overwrite=True) as f:
                 f.write(doc.content)
         elif doc.type in [DocumentType.REVERSED_CAUSE_AND_EFFECT, DocumentType.CAUSE_AND_EFFECT, DocumentType.MICE]:
             self.__persist_json_by_id(novel_doc_dir, doc.data.to_json(), doc.data_id)
@@ -729,11 +729,11 @@ class JsonClient:
         self.__persist_json_by_name(dir, info.to_json(), name)
 
     def __persist_json_by_name(self, dir, json_data: str, name: str):
-        with atomic_write(dir.joinpath(f'{name}.json'), overwrite=True) as f:
+        with atomic_write(dir.joinpath(f'{name}.json'), encoding='utf-8', overwrite=True) as f:
             f.write(json_data)
 
     def __persist_json_by_id(self, dir, json_data: str, id: uuid.UUID):
-        with atomic_write(dir.joinpath(self.__json_file(id)), overwrite=True) as f:
+        with atomic_write(dir.joinpath(self.__json_file(id)), encoding='utf-8', overwrite=True) as f:
             f.write(json_data)
 
     def __delete_info(self, dir, id: uuid.UUID):
