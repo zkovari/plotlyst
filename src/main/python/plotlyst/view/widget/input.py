@@ -46,7 +46,6 @@ from src.main.python.plotlyst.service.grammar import language_tool_proxy, dictio
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import action
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.text import apply_texteditor_toolbar_style
 from src.main.python.plotlyst.view.widget._toggle import AnimatedToggle
 from src.main.python.plotlyst.view.widget.lang import GrammarPopupMenu
@@ -457,7 +456,7 @@ class DocumentTextEditor(RichTextEditor):
 
         self._btnIcon = QToolButton()
         transparent(self._btnIcon)
-        self._btnIcon.setIconSize(QSize(40, 40))
+        self._btnIcon.setIconSize(QSize(48, 48))
         self._textTitle = QLineEdit()
         self._textTitle.setProperty('transparent', True)
         self._textTitle.setFrame(False)
@@ -470,7 +469,10 @@ class DocumentTextEditor(RichTextEditor):
 
         apply_texteditor_toolbar_style(self.toolbar())
 
-        self._wdgTitle = group(self._btnIcon, self._textTitle, margin=0, spacing=0)
+        self._wdgTitle = QWidget()
+        hbox(self._wdgTitle, 0, 0)
+        self._wdgTitle.layout().addWidget(self._btnIcon, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._wdgTitle.layout().addWidget(self._textTitle)
         self._wdgTitle.setProperty('relaxed-white-bg', True)
         margins(self._wdgTitle, top=20, bottom=5)
         self.setProperty('relaxed-white-bg', True)
