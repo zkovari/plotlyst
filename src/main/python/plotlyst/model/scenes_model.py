@@ -23,7 +23,8 @@ from typing import List, Any, Dict, Optional
 import emoji
 from PyQt6.QtCore import QModelIndex, Qt, QVariant, QSortFilterProxyModel, QMimeData, QByteArray, pyqtSignal, \
     QAbstractTableModel
-from PyQt6.QtGui import QFont, QBrush, QColor
+from PyQt6.QtGui import QBrush, QColor
+from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, Scene, CharacterArc, Character, \
@@ -98,10 +99,7 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
         if role == self.SceneRole:
             return scene
         elif role == Qt.ItemDataRole.FontRole:
-            if scene.wip or not scene.title:
-                font = QFont()
-                font.setItalic(True)
-                return font
+            return QApplication.font()
         elif role == Qt.ItemDataRole.DisplayRole:
             if index.column() == self.ColTitle:
                 return scene.title_or_index(self.novel)

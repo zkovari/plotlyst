@@ -21,6 +21,7 @@ from typing import List, Any, Optional
 
 from PyQt6.QtCore import QModelIndex, Qt, QVariant, pyqtSignal
 from PyQt6.QtGui import QFont
+from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Character, Novel, Scene, SelectionItem, enneagram_field
@@ -57,6 +58,9 @@ class CharactersTableModel(AbstractHorizontalHeaderBasedTableModel):
         character: Character = self._data[index.row()]
         if role == self.CharacterRole:
             return character
+
+        if role == Qt.ItemDataRole.FontRole:
+            return QApplication.font()
 
         if index.column() == self.ColName:
             if role == Qt.ItemDataRole.DisplayRole or role == self.SortRole:
