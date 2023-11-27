@@ -693,6 +693,7 @@ class CharacterBackstoryCard(QWidget):
         self.btnType.raise_()
 
         self.setMinimumWidth(60)
+        sp(self).v_max()
         self.refresh()
 
     @overrides
@@ -884,7 +885,7 @@ class CharacterTimelineWidget(QWidget):
             event.card.relationChanged.connect(self.refresh)
 
         self._addControlButtons(-1)
-        spacer_ = spacer(vertical=True)
+        spacer_ = vspacer()
         spacer_.setMinimumHeight(200)
         self.layout().addWidget(spacer_)
 
