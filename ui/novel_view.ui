@@ -32,7 +32,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <property name="centered" stdset="0">
       <bool>true</bool>
@@ -368,7 +368,7 @@
      </widget>
      <widget class="QWidget" name="tabEvents">
       <attribute name="title">
-       <string>Events</string>
+       <string>Mindmap</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_11">
        <property name="spacing">
@@ -540,8 +540,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>626</width>
-            <height>512</height>
+            <width>100</width>
+            <height>30</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -625,8 +625,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>546</width>
-            <height>512</height>
+            <width>98</width>
+            <height>31</height>
            </rect>
           </property>
           <property name="sizePolicy">
