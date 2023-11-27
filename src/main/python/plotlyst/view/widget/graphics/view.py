@@ -111,7 +111,8 @@ class NetworkGraphicsView(BaseGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
         # self.setBackgroundBrush(QColor('#e9ecef'))
-        self.setBackgroundBrush(QColor(RELAXED_WHITE_COLOR))
+        self.setBackgroundBrush(QColor('#F2F2F2'))
+        # self.setBackgroundBrush(QColor(RELAXED_WHITE_COLOR))
         self._diagram: Optional[Diagram] = None
         self._scene = self._initScene()
         self.setScene(self._scene)
