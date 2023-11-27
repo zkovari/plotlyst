@@ -342,7 +342,7 @@ class NightModeHighlighter(QSyntaxHighlighter):
         super(NightModeHighlighter, self).__init__(textedit.document())
 
         self._nightFormat = QTextCharFormat()
-        self._nightFormat.setForeground(QColor('#edf6f9'))
+        self._nightFormat.setForeground(QColor(RELAXED_WHITE_COLOR))
 
     @overrides
     def highlightBlock(self, text: str) -> None:
