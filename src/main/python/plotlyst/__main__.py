@@ -110,7 +110,7 @@ if __name__ == '__main__':
         resource_manager.init()
 
         workspace: Optional[str] = settings.workspace()
-        if not workspace:
+        if not workspace or not os.path.exists(workspace):
             workspace = default_directory()
 
         changed_dir = False
