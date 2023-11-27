@@ -1039,6 +1039,8 @@ class StorylineHeaderWidget(QWidget):
         self.layout().addWidget(self._icon, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self._lbl, alignment=Qt.AlignmentFlag.AlignCenter)
 
+        self.setMaximumWidth(220)
+
     @overrides
     def showEvent(self, event: QShowEvent) -> None:
         self._lbl.setText(self._storyline.text)
@@ -1116,6 +1118,8 @@ class StorylinesConnectionWidget(QWidget):
 
         vbox(self, 0, 0)
         self.layout().addWidget(self.stack)
+
+        sp(self).h_max().v_max()
 
     def activate(self):
         QTimer.singleShot(10, self._menu.exec)
@@ -1213,13 +1217,13 @@ class StorylinesImpactMatrix(QWidget):
 
         self._grid.addWidget(line(), 0, 1, 1, len(self._novel.plots), alignment=Qt.AlignmentFlag.AlignBottom)
         self._grid.addWidget(vline(), 1, 0, len(self._novel.plots), 1, alignment=Qt.AlignmentFlag.AlignRight)
+        self._grid.addWidget(spacer(), 0, len(self._novel.plots) + 1)
 
         self._grid.addWidget(vspacer(), len(self._novel.plots) + 1, 0)
 
     def _emptyCellWidget(self) -> QWidget:
         wdg = IdleWidget()
         wdg.setMinimumSize(50, 50)
-        sp(wdg).h_exp().v_exp()
 
         return wdg
 
