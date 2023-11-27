@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt6.QtCore import QObject, QEvent, Qt
+from PyQt6.QtCore import QObject, QEvent
 from overrides import overrides
 from qthandy import retain_when_hidden, decr_icon, gc
 from qthandy.filter import OpacityEventFilter
@@ -160,6 +160,8 @@ class NovelView(AbstractNovelView):
         self.repo.update_novel(self.novel)
 
     def _expandSynopsisEditor(self):
+        if self.novel.synopsis is None:
+            self.__init_synopsis_doc()
         self._dialogSynopsisEditor = SynopsisEditorDialog(self.novel)
         self.ui.textSynopsis.setDisabled(True)
         self._btnSynopsisExtendEdit.setDisabled(True)
@@ -176,9 +178,12 @@ class NovelView(AbstractNovelView):
 
     def _synopsis_changed(self):
         if self.novel.synopsis is None:
-            self.novel.synopsis = Document('Synopsis')
-            self.novel.synopsis.loaded = True
-            self.repo.update_novel(self.novel)
+            self.__init_synopsis_doc()
         self.novel.synopsis.content = self.ui.textSynopsis.textEdit.toHtml()
         self.ui.lblSynopsisWords.setWordCount(self.ui.textSynopsis.textEdit.statistics().word_count)
         self.repo.update_doc(self.novel, self.novel.synopsis)
+
+    def __init_synopsis_doc(self):
+        self.novel.synopsis = Document('Synopsis')
+        self.novel.synopsis.loaded = True
+        self.repo.update_novel(self.novel)
