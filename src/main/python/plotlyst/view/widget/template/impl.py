@@ -795,7 +795,9 @@ class _PrimaryFieldWidget(QWidget):
             item = self._secondaryWdgContainer.layout().itemAt(i)
             icon = Icon()
             icon.setIcon(IconRegistry.from_name('msc.dash', 'grey'))
-            self._secondaryWdgContainer.layout().replaceWidget(item.widget(), group(icon, wdg))
+            spac = spacer()
+            sp(spac).h_preferred()
+            self._secondaryWdgContainer.layout().replaceWidget(item.widget(), group(icon, wdg, spac))
         else:
             self._secondaryWdgContainer.layout().replaceWidget(self._secondaryFieldWidgets[secondary], spacer())
             gc(self._secondaryFieldWidgets[secondary])
