@@ -332,6 +332,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             for btn in self.buttonGroup.buttons():
                 btn.setHidden(True)
             self._actionSettings.setVisible(False)
+            self._actionScrivener.setVisible(False)
             return
 
         sender: EventSender = event_senders.instance(self.novel)
