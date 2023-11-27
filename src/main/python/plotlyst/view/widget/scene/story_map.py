@@ -30,7 +30,7 @@ from PyQt6.QtGui import QColor, QMouseEvent, QPaintEvent, QPainter, \
     QPen, QPainterPath, QShowEvent
 from PyQt6.QtWidgets import QSizePolicy, QWidget, QTextEdit, QLabel, QPushButton
 from overrides import overrides
-from qthandy import busy, margins, vspacer, line, incr_font
+from qthandy import busy, margins, vspacer, line, incr_font, sp
 from qthandy import decr_font, transparent, clear_layout, hbox, spacer, vbox
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
@@ -355,6 +355,8 @@ class _ScenesLineWidget(QWidget):
         else:
             self.layout().addWidget(spacer())
 
+        sp(self).v_max()
+
 
 class _ScenePlotAssociationsWidget(QWidget):
     LineSize: int = 15
@@ -409,6 +411,7 @@ class _ScenePlotAssociationsWidget(QWidget):
             self.wdgReferences.layout().addWidget(spacer())
 
         self.repo = RepositoryPersistenceManager.instance()
+        sp(self).v_max()
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
