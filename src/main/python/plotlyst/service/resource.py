@@ -32,7 +32,7 @@ from pypandoc import download_pandoc
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_global_event
 from src.main.python.plotlyst.resources import ResourceType, resource_manager, ResourceDownloadedEvent, \
-    ResourceRemovedEvent, is_nltk, PANDOC_VERSION
+    ResourceRemovedEvent, is_nltk, PANDOC_VERSION, ResourceExtension
 
 
 def download_file(url, target):
@@ -118,11 +118,15 @@ class JreResourceDownloadWorker(QRunnable):
         resource_path = os.path.join(app_env.cache_dir, resource.folder)
         os.makedirs(resource_path, exist_ok=True)
 
-        resource_tar_path = os.path.join(resource_path, resource.filename())
-        download_file(resource.web_url, resource_tar_path)
+        compressed_resource_path = os.path.join(resource_path, resource.filename())
+        download_file(resource.web_url, compressed_resource_path)
 
-        with tarfile.open(resource_tar_path) as tar_ref:
-            tar_ref.extractall(resource_path)
+        if resource.extension == ResourceExtension.tar_gz.value:
+            with tarfile.open(compressed_resource_path) as tar_ref:
+                tar_ref.extractall(resource_path)
+        elif resource.extension == ResourceExtension.zip.value:
+            with zipfile.ZipFile(compressed_resource_path, 'r') as zip_ref:
+                zip_ref.extractall(resource_path)
 
         emit_global_event(ResourceDownloadedEvent(self, self._type))
 

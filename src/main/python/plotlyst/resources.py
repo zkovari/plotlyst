@@ -98,6 +98,11 @@ def is_nltk(resourceType: ResourceType) -> bool:
     return resourceType.name.startswith('NLTK')
 
 
+class ResourceExtension(Enum):
+    tar_gz = 'tar.gz'
+    zip = 'zip'
+
+
 @dataclass
 class ResourceDescriptor:
     name: str
@@ -187,6 +192,8 @@ class ResourceManager(EventListener):
                                                        f'jre/{jre.version}-jre/Contents/Home/bin/java')
         elif app_env.is_linux():
             os.environ['LTP_JAVA_PATH'] = os.path.join(app_env.cache_dir, f'jre/{jre.version}-jre/bin/java')
+        elif app_env.is_windows():
+            os.environ['LTP_JAVA_PATH'] = os.path.join(app_env.cache_dir, f'jre/{jre.version}-jre/bin/java')
 
         os.environ.setdefault('PYPANDOC_PANDOC',
                               os.path.join(app_env.cache_dir, _pandoc_resource.folder, _pandoc_resource.name, 'pandoc'))
@@ -219,14 +226,16 @@ class ResourceManager(EventListener):
         elif resource_type == ResourceType.JRE_8:
             version = 'jdk8u362-b09'
             if app_env.is_linux():
+                extension = 'tar.gz'
                 distr = 'OpenJDK8U-jre_x64_linux_hotspot_8u362b09.tar.gz'
             elif app_env.is_mac():
+                extension = 'tar.gz'
                 distr = 'OpenJDK8U-jre_x64_mac_hotspot_8u362b09.tar.gz'
             else:
-                distr = 'OpenJDK8U-jre_x64_mac_hotspot_8u362b09.tar.gz'
-                # raise IOError('Not supported platform for JRE')
+                extension = 'zip'
+                distr = 'OpenJDK8U-jre_x64_windows_hotspot_8u362b09.zip'
             url = f'https://github.com/adoptium/temurin8-binaries/releases/download/{version}/{distr}'
-            return ResourceDescriptor('jre', 'jre', url, extension='tar.gz',
+            return ResourceDescriptor('jre', 'jre', url, extension=extension,
                                       version=version, human_name='Java',
                                       description='Necessary for local grammar checking')
 
