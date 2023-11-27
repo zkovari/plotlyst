@@ -53,7 +53,16 @@ def default_directory() -> Optional[str]:
     if app_env.is_mac():
         plotlyst = home.joinpath('Plotlyst')
     elif app_env.is_windows():
-        plotlyst = home.joinpath('Documents/Plotlyst')
+        from src.main.python.plotlyst.service._win_known_folders import get_windows_path, FOLDERID, UserHandle, \
+            PathNotFoundException
+        try:
+            plotlyst = get_windows_path(FOLDERID.Documents, UserHandle.current)
+            if plotlyst:
+                plotlyst = Path(plotlyst).joinpath('Plotlyst')
+            else:
+                plotlyst = home.joinpath('Documents/Plotlyst')
+        except PathNotFoundException:
+            plotlyst = home.joinpath('Documents/Plotlyst')
     else:
         plotlyst = home.joinpath('plotlyst')
 
