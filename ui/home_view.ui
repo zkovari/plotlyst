@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>644</width>
+    <width>771</width>
     <height>492</height>
    </rect>
   </property>
@@ -507,6 +507,9 @@ It offers a range of tools to support various stages of novel writing, including
  Not every tool is suitable for everybody's process, neither all tools fit all genres. Plotlyst is highly customizable, so you can select the features you're interested in.</string>
                         </property>
                         <property name="wordWrap">
+                         <bool>true</bool>
+                        </property>
+                        <property name="small-body" stdset="0">
                          <bool>true</bool>
                         </property>
                        </widget>

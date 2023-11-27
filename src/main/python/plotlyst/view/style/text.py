@@ -57,6 +57,9 @@ label_style_headings = """
     QLabel[h4=true] {
         font-size: 16pt;
     }
+    QLabel[small-body=true] {
+        font-size: 14pt;
+    }
 """
 
 # QTextBrowser styles
