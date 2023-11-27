@@ -109,7 +109,6 @@ class CharacterEditor(QObject, EventListener):
         menu = MenuWidget(self.ui.btnAge)
         menu.addWidget(self._ageEditor)
         apply_white_menu(menu)
-        # menu = btn_popup(self.ui.btnAge, wrap(self._ageEditor, margin_bottom=4))
         menu.aboutToShow.connect(self._ageEditor.setFocus)
 
         self._lineOccupation = QLineEdit()

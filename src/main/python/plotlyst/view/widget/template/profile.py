@@ -76,7 +76,7 @@ class _ProfileTemplateBase(QWidget):
         self.scrollArea.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.scrollArea.setFrameShape(QFrame.Shape.NoFrame)
         self.scrollAreaWidgetContents = QWidget()
-        self.scrollAreaWidgetContents.setProperty('relaxed-white-bg', True)
+        self.scrollAreaWidgetContents.setProperty('bg', True)
         self.gridLayout = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout.setSpacing(1)
         self.gridLayout.setContentsMargins(2, 0, 2, 0)
