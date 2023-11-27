@@ -701,19 +701,20 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.repo.update_novel(self.novel)
 
     def _handle_customization_event(self, event: NovelPanelCustomizationEvent):
+        def teardown():
+            if not self.buttonGroup.checkedButton().isVisible():
+                self.btnNovel.setChecked(True)
+
         func = qtanim.fade_in if event.toggled else qtanim.fade_out
         if isinstance(event, NovelWorldBuildingToggleEvent):
-            func(self.btnWorld)
+            func(self.btnWorld, teardown=teardown)
         elif isinstance(event, NovelCharactersToggleEvent):
-            func(self.btnCharacters)
+            func(self.btnCharacters, teardown=teardown)
         elif isinstance(event, NovelScenesToggleEvent):
-            func(self.btnScenes)
+            func(self.btnScenes, teardown=teardown)
         elif isinstance(event, NovelDocumentsToggleEvent):
-            func(self.btnNotes)
+            func(self.btnNotes, teardown=teardown)
         elif isinstance(event, NovelManuscriptToggleEvent):
-            func(self.btnManuscript)
+            func(self.btnManuscript, teardown=teardown)
         elif isinstance(event, NovelManagementToggleEvent):
-            func(self.btnBoard)
-
-        if not self.buttonGroup.checkedButton().isVisible():
-            self.btnNovel.setChecked(True)
+            func(self.btnBoard, teardown=teardown)
