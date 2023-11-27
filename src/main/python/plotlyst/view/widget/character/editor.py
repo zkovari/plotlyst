@@ -28,7 +28,7 @@ import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QObject, QEvent
 from PyQt6.QtGui import QIcon, QColor, QPainter, QPaintEvent, QBrush, QResizeEvent, QMouseEvent
 from PyQt6.QtWidgets import QWidget, QSpinBox, QSlider, QTextBrowser, QButtonGroup, QToolButton, QLabel, QSizePolicy, \
-    QLineEdit, QPushButton
+    QLineEdit
 from overrides import overrides
 from qthandy import vbox, pointy, hbox, sp, vspacer, underline, decr_font, flow, clear_layout, translucent, line, grid, \
     italic, spacer, transparent, ask_confirmation, incr_font, bold, margins, incr_icon
@@ -925,13 +925,14 @@ class CharacterRoleSelector(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        hbox(self)
-        self.setProperty('relaxed-white-bg', True)
+        hbox(self, 0)
 
         self.wdgSidebar = QWidget()
         self.wdgSidebar.setProperty('bg', True)
         vbox(self.wdgSidebar)
+        margins(self.wdgSidebar, left=10, top=15, right=10)
         self.wdgDisplay = QWidget()
+        self.wdgDisplay.setProperty('relaxed-white-bg', True)
         vbox(self.wdgDisplay)
         margins(self.wdgDisplay, left=20, right=20)
         self.layout().addWidget(self.wdgSidebar)
@@ -996,6 +997,7 @@ class CharacterRoleSelector(QWidget):
         self.wdgDisplayHeader.layout().addWidget(self.iconMinor)
 
         self.wdgExamples = QWidget()
+        self.wdgExamples.setProperty('relaxed-white-bg', True)
         self.examplesScrollArea = scroll_area(False, False, True)
         self.examplesScrollArea.setWidget(self.wdgExamples)
         self.wdgExamples.setMinimumSize(400, 150)
