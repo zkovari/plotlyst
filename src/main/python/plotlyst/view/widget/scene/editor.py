@@ -62,6 +62,7 @@ class SceneMiniEditor(QWidget, EventListener):
         self._novel = novel
         self._scenes: List[Scene] = []
         self._currentScene: Optional[Scene] = None
+        self._freeze = False
 
         self._lblScene = QLabel()
         incr_font(self._lblScene, 2)
@@ -144,7 +145,9 @@ class SceneMiniEditor(QWidget, EventListener):
     def event_received(self, event: Event):
         if isinstance(event, SceneChangedEvent):
             if event.scene is self._currentScene:
+                self._freeze = True
                 self.selectScene(self._currentScene)
+                self._freeze = False
 
     def _povChanged(self, character: Character):
         self._currentScene.pov = character
@@ -152,6 +155,8 @@ class SceneMiniEditor(QWidget, EventListener):
         emit_event(self._novel, SceneChangedEvent(self, self._currentScene))
 
     def _save(self):
+        if self._freeze:
+            return
         if self._currentScene and self._currentScene.synopsis != self._textSynopsis.toPlainText():
             self._currentScene.synopsis = self._textSynopsis.toPlainText()
             self._repo.update_scene(self._currentScene)
