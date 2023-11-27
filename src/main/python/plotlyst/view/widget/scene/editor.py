@@ -668,6 +668,7 @@ class SceneElementWidget(QWidget):
             corner.clicked.connect(self.activate)
 
         self.reset()
+        sp(self).v_max()
 
     def element(self) -> Optional[StoryElement]:
         return self._element
@@ -797,7 +798,6 @@ class SceneElementWidget(QWidget):
     def _elementCreated(self, element: StoryElement):
         element.row = self._row
         element.col = self._col
-        print(f'created {element}')
         self._storyElements().append(element)
 
     def _elementRemoved(self, element: StoryElement):
