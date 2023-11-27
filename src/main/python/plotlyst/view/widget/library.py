@@ -122,6 +122,12 @@ class ShelvesTreeView(TreeView):
     def updateNovel(self, novel: NovelDescriptor):
         self._novels[novel].refresh()
 
+    def selectNovel(self, novel: NovelDescriptor):
+        self._wdgNovels.deselect()
+        self._novels[novel].select()
+        self._selectedNovels.add(novel)
+        self.novelSelected.emit(novel)
+
     def clearSelection(self):
         for novel in self._selectedNovels:
             self._novels[novel].deselect()
@@ -138,8 +144,3 @@ class ShelvesTreeView(TreeView):
         if selected:
             self.clearSelection()
             self.novelsShelveSelected.emit()
-
-    def selectNovel(self, novel: NovelDescriptor):
-        self._novels[novel].select()
-        self._selectedNovels.add(novel)
-        self.novelSelected.emit(novel)
