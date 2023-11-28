@@ -489,7 +489,7 @@ class DocumentTextEditor(RichTextEditor):
             family = 'Helvetica'
         self.textEdit.setFont(QFont(family, 16))
         self.textEdit.setProperty('transparent', True)
-        self.textEdit.zoomIn(int(self.textEdit.font().pointSize() * 0.34))
+        self.textEdit.zoomIn(int(self.textEdit.font().pointSize() * 0.25))
         self.textEdit.setBlockFormat(lineSpacing=120)
         self.textEdit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
         self.textEdit.setPlaceholderText('Write your notes...')

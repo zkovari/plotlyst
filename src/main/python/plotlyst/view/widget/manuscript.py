@@ -607,7 +607,7 @@ class ManuscriptTextEditor(RichTextEditor):
     @overrides
     def _initTextEdit(self) -> ManuscriptTextEdit:
         _textedit = ManuscriptTextEdit()
-        _textedit.zoomIn(int(_textedit.font().pointSize() * 0.34))
+        _textedit.zoomIn(int(_textedit.font().pointSize() * 0.25))
         _textedit.setBlockFormat(DEFAULT_MANUSCRIPT_LINE_SPACE, textIndent=DEFAULT_MANUSCRIPT_INDENT)
         _textedit.selectionChanged.connect(self.selectionChanged.emit)
         _textedit.textChanged.connect(self._textChanged)
