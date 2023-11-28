@@ -68,7 +68,7 @@ class CharacterTopicGroupSelector(MenuWidget):
         self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
 
         for topic_group in TopicType:
-            action_ = action(topic_group.name, tooltip=topic_group.description())
+            action_ = action(topic_group.name, icon=IconRegistry.from_name(topic_group.icon()), tooltip=topic_group.description())
             self._actions[topic_group] = action_
             action_.triggered.connect(partial(self.topicGroupTriggered.emit, topic_group))
             self.addAction(action_)

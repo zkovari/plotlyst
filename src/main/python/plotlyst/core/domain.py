@@ -83,21 +83,39 @@ class TopicType(Enum):
 
     def description(self) -> str:
         if self == TopicType.Physical:
-            return ''
+            return 'Body type, clothing, hairstyle, etc.'
         elif self == TopicType.Habits:
-            return ''
+            return 'Exercises, routines, bad habits, superstitions, daily rituals'
         elif self == TopicType.Skills:
-            return ''
+            return 'Art and creativity, technical, leadership, communication, emotional intelligence'
         elif self == TopicType.Fears:
-            return ''
+            return 'Fears, phobias, social anxiety, public speaking, etc.'
         elif self == TopicType.Background:
-            return ''
+            return 'Cultural heritage, traditions, family, education, identity struggles, dreams'
         elif self == TopicType.Hobbies:
-            return ''
+            return 'Sports, art, collecting, travel, leisure time'
         elif self == TopicType.Communication:
-            return ''
+            return 'Conversation style, listening skills, networking, charisma'
         elif self == TopicType.Beliefs:
-            return ''
+            return 'Religion, spirituality, ethics and morals, political beliefs'
+
+    def icon(self) -> str:
+        if self == TopicType.Physical:
+            return 'mdi6.human-male-height-variant'
+        elif self == TopicType.Habits:
+            return 'mdi.smoking'
+        elif self == TopicType.Skills:
+            return 'fa5s.palette'
+        elif self == TopicType.Fears:
+            return 'ri.ghost-2-fill'
+        elif self == TopicType.Background:
+            return 'fa5s.passport'
+        elif self == TopicType.Hobbies:
+            return 'fa5s.book-reader'
+        elif self == TopicType.Communication:
+            return 'ph.chats-circle'
+        elif self == TopicType.Beliefs:
+            return 'fa5s.balance-scale'
 
     def display_name(self) -> str:
         if self == TopicType.Physical:
