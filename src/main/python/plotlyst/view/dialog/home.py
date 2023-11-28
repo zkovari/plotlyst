@@ -131,6 +131,7 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         self._scrivenerNovel = parser.parse_project(project)
 
         self.stackedWidget.setCurrentWidget(self.pageScrivenerPreview)
+        self.wdgBanner.setHidden(True)
         self.setMaximumWidth(MAXIMUM_SIZE)
         self.wdgScrivenerImportDetails.setVisible(True)
         self.wdgScrivenerImportDetails.setNovel(self._scrivenerNovel)

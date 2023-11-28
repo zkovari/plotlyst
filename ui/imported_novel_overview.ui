@@ -63,7 +63,7 @@
         <string>Synchronization</string>
        </property>
        <property name="description" stdset="0">
-        <string>Allow synchronization from Scrivener, so every change will be reflected in Plotlyst.</string>
+        <string>Allow synchronization from Scrivener, so every new change will be reflected in Plotlyst.</string>
        </property>
        <property name="icon" stdset="0">
         <string>fa5s.sync</string>
@@ -133,13 +133,19 @@
      </item>
      <item>
       <widget class="QPushButton" name="btnCharacters">
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
        <property name="text">
         <string>Characters</string>
        </property>
        <property name="checkable">
         <bool>true</bool>
        </property>
-       <property name="base" stdset="0">
+       <property name="transparent-rounded-bg-on-hover" stdset="0">
+        <bool>true</bool>
+       </property>
+       <property name="secondary-selector" stdset="0">
         <bool>true</bool>
        </property>
        <attribute name="buttonGroup">
@@ -165,13 +171,19 @@
      </item>
      <item>
       <widget class="QPushButton" name="btnLocations">
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
        <property name="text">
         <string>Locations</string>
        </property>
        <property name="checkable">
         <bool>true</bool>
        </property>
-       <property name="base" stdset="0">
+       <property name="transparent-rounded-bg-on-hover" stdset="0">
+        <bool>true</bool>
+       </property>
+       <property name="secondary-selector" stdset="0">
         <bool>true</bool>
        </property>
        <attribute name="buttonGroup">
@@ -197,13 +209,19 @@
      </item>
      <item>
       <widget class="QPushButton" name="btnScenes">
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
        <property name="text">
         <string>Scenes</string>
        </property>
        <property name="checkable">
         <bool>true</bool>
        </property>
-       <property name="base" stdset="0">
+       <property name="transparent-rounded-bg-on-hover" stdset="0">
+        <bool>true</bool>
+       </property>
+       <property name="secondary-selector" stdset="0">
         <bool>true</bool>
        </property>
        <attribute name="buttonGroup">
@@ -229,7 +247,7 @@
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="pageCharacters">
       <layout class="QVBoxLayout" name="verticalLayout">
