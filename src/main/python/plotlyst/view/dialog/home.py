@@ -33,7 +33,7 @@ from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import global_event_dispatcher
 from src.main.python.plotlyst.resources import resource_registry, ResourceType
 from src.main.python.plotlyst.service.tour import TourService
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, link_editor_to_btn, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.story_creation_dialog_ui import Ui_StoryCreationDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.tour.core import NewStoryTitleInDialogTourEvent, \
@@ -52,6 +52,7 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         link_buttons_to_pages(self.stackedWidget,
                               [(self.btnNewStory, self.pageNewStory), (self.btnScrivener, self.pageScrivener)])
         self.lineTitle.setFocus()
+        incr_font(self.lineTitle, 2)
         self.wdgScrivenerImportDetails.setHidden(True)
         self.lblBanner.setPixmap(QPixmap(resource_registry.banner))
         self.btnNewStory.setIcon(IconRegistry.book_icon(color_on='white'))
@@ -63,10 +64,6 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         incr_font(self.btnScrivener)
 
         self.btnSaveNewStory = self.btnBoxStoryCreation.button(QDialogButtonBox.StandardButton.Ok)
-        self.btnSaveNewStory.setDisabled(True)
-        self.btnSaveNewStory.installEventFilter(
-            DisabledClickEventFilter(self.btnSaveNewStory, lambda: qtanim.shake(self.lineTitle)))
-        link_editor_to_btn(self.lineTitle, self.btnSaveNewStory)
 
         self.btnSaveScrivener = self.btnBoxScrivener.button(QDialogButtonBox.StandardButton.Ok)
         self.btnSaveScrivener.setDisabled(True)
@@ -82,6 +79,8 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
                             NewStoryDialogOkayButtonTourEvent]
         global_event_dispatcher.register(self, *self._eventTypes)
 
+        self.resize(600, 400)
+
     def display(self) -> Optional[Novel]:
         self._scrivenerNovel = None
         result = self.exec()
@@ -89,7 +88,7 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
             return None
 
         if self.stackedWidget.currentWidget() == self.pageNewStory:
-            return Novel.new_novel(self.lineTitle.text())
+            return Novel.new_novel(self.lineTitle.text() if self.lineTitle.text() else 'My new novel')
         elif self._scrivenerNovel is not None:
             return self._scrivenerNovel
 
