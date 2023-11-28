@@ -334,3 +334,6 @@ def character_role_examples(role: Role) -> List[CharacterRoleExample]:
         ]
 
     return []
+
+
+synopsis_editor_placeholder = "Summarize your story's main events, concluding the resolution or outcome of the story"

@@ -27,6 +27,7 @@ from qthandy.filter import OpacityEventFilter
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document, NovelSetting
+from src.main.python.plotlyst.core.help import synopsis_editor_placeholder
 from src.main.python.plotlyst.event.core import emit_global_event, Event
 from src.main.python.plotlyst.events import NovelUpdatedEvent, \
     SceneChangedEvent, NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelMindmapToggleEvent, \
@@ -90,10 +91,13 @@ class NovelView(AbstractNovelView):
         self.ui.lblTitle.setText(self.novel.title)
         self.ui.textPremise.setText(self.novel.premise)
         self.ui.textPremise.textChanged.connect(self._premise_changed)
-        self.ui.textSynopsis.setPlaceholderText("Write down your story's main events")
+        self.ui.textSynopsis.setPlaceholderText(synopsis_editor_placeholder)
         self.ui.textSynopsis.setMargins(0, 10, 0, 10)
         self.ui.textSynopsis.textEdit.setSidebarEnabled(False)
         self.ui.textSynopsis.textEdit.setTabChangesFocus(True)
+        self.ui.textSynopsis.textEdit.setProperty('transparent', False)
+        self.ui.textSynopsis.textEdit.setProperty('rounded', True)
+        self.ui.textSynopsis.textEdit.setProperty('relaxed-white-bg', False)
         self.ui.textSynopsis.setGrammarCheckEnabled(self.novel.prefs.docs.grammar_check)
 
         self.ui.textSynopsis.setToolbarVisible(False)

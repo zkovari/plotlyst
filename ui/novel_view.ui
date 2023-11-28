@@ -32,7 +32,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <property name="centered" stdset="0">
       <bool>true</bool>
@@ -42,6 +42,9 @@
      </property>
      <widget class="QWidget" name="tabSynopsis">
       <property name="relaxed-white-bg" stdset="0">
+       <bool>false</bool>
+      </property>
+      <property name="bg" stdset="0">
        <bool>true</bool>
       </property>
       <attribute name="title">
@@ -316,9 +319,6 @@
            <property name="title" stdset="0">
             <string>Synopsis</string>
            </property>
-           <property name="description" stdset="0">
-            <string>Summarize your story's core events</string>
-           </property>
            <property name="icon" stdset="0">
             <string>fa5s.scroll</string>
            </property>
@@ -336,6 +336,9 @@
        <item>
         <widget class="QWidget" name="widget_4" native="true">
          <property name="relaxed-white-bg" stdset="0">
+          <bool>false</bool>
+         </property>
+         <property name="bg" stdset="0">
           <bool>true</bool>
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_5">
@@ -355,11 +358,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="DocumentTextEditor" name="textSynopsis" native="true">
-            <property name="placeholderText" stdset="0">
-             <string>Synopsis: summarize your story's core events</string>
-            </property>
-           </widget>
+           <widget class="DocumentTextEditor" name="textSynopsis" native="true"/>
           </item>
          </layout>
         </widget>
@@ -540,8 +539,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>100</width>
-            <height>30</height>
+            <width>626</width>
+            <height>512</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -625,8 +624,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>98</width>
-            <height>31</height>
+            <width>546</width>
+            <height>512</height>
            </rect>
           </property>
           <property name="sizePolicy">

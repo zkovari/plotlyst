@@ -491,7 +491,7 @@ border: 0px;
        <enum>Qt::ClickFocus</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="tabTopics">
        <property name="relaxed-white-bg" stdset="0">
@@ -605,8 +605,8 @@ border: 0px;
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>285</width>
-             <height>535</height>
+             <width>98</width>
+             <height>156</height>
             </rect>
            </property>
            <property name="bg-image" stdset="0">
@@ -689,7 +689,7 @@ border: 0px;
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>326</width>
+             <width>325</width>
              <height>594</height>
             </rect>
            </property>
@@ -741,6 +741,9 @@ border: 0px;
        </layout>
       </widget>
       <widget class="QWidget" name="tabNotes">
+       <property name="relaxed-white-bg" stdset="0">
+        <bool>true</bool>
+       </property>
        <attribute name="title">
         <string>Notes</string>
        </attribute>

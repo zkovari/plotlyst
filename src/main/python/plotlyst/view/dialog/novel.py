@@ -30,7 +30,7 @@ from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import NovelDescriptor, PlotValue, Novel
-from src.main.python.plotlyst.core.help import plot_value_help
+from src.main.python.plotlyst.core.help import plot_value_help, synopsis_editor_placeholder
 from src.main.python.plotlyst.view.common import link_editor_to_btn, ButtonPressResizeEventFilter, set_tab_icon
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.novel_creation_dialog_ui import Ui_NovelCreationDialog
@@ -317,7 +317,7 @@ class SynopsisEditorDialog(QDialog, Ui_SynopsisEditorDialog):
         self.setupUi(self)
         self._novel = novel
 
-        self.textSynopsis.setPlaceholderText("Write down your story's main events")
+        self.textSynopsis.setPlaceholderText(synopsis_editor_placeholder)
         self.textSynopsis.setMargins(0, 10, 0, 10)
         self.textSynopsis.setGrammarCheckEnabled(False)
 
