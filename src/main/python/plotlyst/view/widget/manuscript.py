@@ -440,7 +440,7 @@ class ManuscriptTextEdit(TextEditBase):
     def checkGrammar(self):
         self.highlighter.rehighlight()
 
-    def asyncCheckGrammer(self):
+    def asyncCheckGrammar(self):
         self.highlighter.asyncRehighlight()
 
     def clearHighlights(self):
@@ -636,8 +636,8 @@ class ManuscriptTextEditor(RichTextEditor):
     def checkGrammar(self):
         self.textEdit.checkGrammar()
 
-    def asyncCheckGrammer(self):
-        self.textEdit.asyncCheckGrammer()
+    def asyncCheckGrammar(self):
+        self.textEdit.asyncCheckGrammar()
 
     def scenes(self) -> List[Scene]:
         return self._scenes

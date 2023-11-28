@@ -508,7 +508,7 @@ class DocumentTextEditor(RichTextEditor):
 
             self.setGrammarCheckEnabled(toggled)
             if toggled:
-                self.asyncCheckGrammer()
+                self.asyncCheckGrammar()
             else:
                 self.checkGrammar()
 
@@ -556,7 +556,7 @@ class DocumentTextEditor(RichTextEditor):
     def checkGrammar(self):
         self.highlighter.rehighlight()
 
-    def asyncCheckGrammer(self):
+    def asyncCheckGrammar(self):
         self.highlighter.asyncRehighlight()
 
     def clear(self):

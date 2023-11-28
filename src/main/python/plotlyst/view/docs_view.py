@@ -103,7 +103,7 @@ class DocumentsView(AbstractNovelView):
                 self.textEditor.setText(self._current_doc.content, self._current_doc.title, icon)
             if self.novel.prefs.docs.grammar_check:
                 self.textEditor.setGrammarCheckEnabled(True)
-                self.textEditor.asyncCheckGrammer()
+                self.textEditor.asyncCheckGrammar()
         else:
             self.ui.stackedEditor.setCurrentWidget(self.ui.customEditorPage)
             clear_layout(self.ui.customEditorPage)
