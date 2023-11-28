@@ -18,7 +18,7 @@
   </property>
   <property name="maximumSize">
    <size>
-    <width>587</width>
+    <width>700</width>
     <height>16777215</height>
    </size>
   </property>
@@ -44,6 +44,37 @@
    <property name="bottomMargin">
     <number>2</number>
    </property>
+   <item>
+    <widget class="QWidget" name="widget_2" native="true">
+     <property name="banner-bg" stdset="0">
+      <bool>true</bool>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_6">
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+       <widget class="QLabel" name="lblBanner">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
@@ -141,18 +172,11 @@
           <number>0</number>
          </property>
          <property name="rightMargin">
-          <number>0</number>
+          <number>5</number>
          </property>
          <property name="bottomMargin">
           <number>2</number>
          </property>
-         <item>
-          <widget class="QLabel" name="lblBanner">
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
          <item>
           <widget class="Subtitle" name="widget" native="true">
            <property name="title" stdset="0">
@@ -184,7 +208,10 @@
            <item>
             <widget class="QLineEdit" name="lineTitle">
              <property name="placeholderText">
-              <string>Title</string>
+              <string>Title (Default: 'My new novel')</string>
+             </property>
+             <property name="rounded" stdset="0">
+              <bool>true</bool>
              </property>
             </widget>
            </item>
