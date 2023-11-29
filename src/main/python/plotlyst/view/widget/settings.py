@@ -183,6 +183,7 @@ class NovelPanelCustomizationToggle(QToolButton):
         sp(self).h_exp().v_exp()
 
         self.setMinimumWidth(150)
+        self.setMaximumHeight(100)
 
         self.installEventFilter(ButtonPressResizeEventFilter(self))
         self.installEventFilter(OpacityEventFilter(self, ignoreCheckedButton=True))
@@ -212,7 +213,7 @@ class NovelPanelCustomizationToggle(QToolButton):
             qtanim.glow(self, 150, color=QColor('grey'), radius=5)
 
 
-class NovelQuickPanelCustomizationWidget(QWidget, EventListener):
+class NovelPanelSettingsWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._novel: Optional[Novel] = None
@@ -246,17 +247,10 @@ class NovelQuickPanelCustomizationWidget(QWidget, EventListener):
         self._addSetting(NovelSetting.World_building, 2, 1)
         self._addSetting(NovelSetting.Management, 2, 2)
 
-    @overrides
-    def event_received(self, event: Event):
-        if isinstance(event, NovelPanelCustomizationEvent):
-            self._settings[event.setting].setChecked(event.toggled)
-
     def setNovel(self, novel: Novel):
         self._novel = novel
         for toggle in self._settings.values():
             toggle.setChecked(self._novel.prefs.toggled(toggle.setting()))
-
-        event_dispatchers.instance(self._novel).register(self, *panel_events)
 
     # def reset(self):
     #     event_dispatchers.instance(self._novel).deregister(self, *panel_events)
@@ -275,6 +269,25 @@ class NovelQuickPanelCustomizationWidget(QWidget, EventListener):
         toggle.installEventFilter(self)
         self._grid.addWidget(toggle, row, col, 1, 1)
 
+    def _settingChanged(self, setting: NovelSetting, toggled: bool):
+        self._novel.prefs.settings[setting.value] = toggled
+
+
+class NovelQuickPanelCustomizationWidget(NovelPanelSettingsWidget, EventListener):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    @overrides
+    def setNovel(self, novel: Novel):
+        super().setNovel(novel)
+        event_dispatchers.instance(self._novel).register(self, *panel_events)
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, NovelPanelCustomizationEvent):
+            self._settings[event.setting].setChecked(event.toggled)
+
+    @overrides
     def _settingChanged(self, setting: NovelSetting, toggled: bool):
         toggle_setting(self, self._novel, setting, toggled)
 
