@@ -193,7 +193,7 @@
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
             <property name="toolTip">
-             <string>Relations view (Not implemented yet)</string>
+             <string>Relations view</string>
             </property>
             <property name="text">
              <string/>
@@ -1118,7 +1118,7 @@
  <connections/>
  <buttongroups>
   <buttongroup name="btnGroupComparisonView"/>
-  <buttongroup name="btnGroupViews"/>
   <buttongroup name="btnGroupComparison"/>
+  <buttongroup name="btnGroupViews"/>
  </buttongroups>
 </ui>
