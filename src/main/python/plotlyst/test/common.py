@@ -167,7 +167,8 @@ def create_story_dialog(new_title: str):
         assert isinstance(dialog, StoryCreationDialog)
         creation_dialog: StoryCreationDialog = dialog
         creation_dialog.lineTitle.setText(new_title)
-        creation_dialog.btnSaveNewStory.click()
+        creation_dialog.toggleWizard.setChecked(False)
+        creation_dialog.btnCreate.click()
     finally:
         dialog.close()
 
