@@ -48,7 +48,7 @@ from src.main.python.plotlyst.model.novel import NovelStagesModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
 from src.main.python.plotlyst.service.persistence import delete_scene
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import PopupMenuBuilder, ButtonPressResizeEventFilter, action, restyle
+from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, action, restyle
 from src.main.python.plotlyst.view.delegates import ScenesViewDelegate
 from src.main.python.plotlyst.view.dialog.items import ItemsEditorDialog
 from src.main.python.plotlyst.view.generated.scenes_title_ui import Ui_ScenesTitle
@@ -617,18 +617,17 @@ class ScenesOutlineView(AbstractNovelView):
             self.refresh()
 
         index: QModelIndex = self.ui.tblScenes.indexAt(pos)
-        scene: Scene = index.data(ScenesTableModel.SceneRole)
-
-        builder = PopupMenuBuilder.from_widget_position(self.ui.tblScenes, pos)
-        builder.add_action('Toggle WIP status', IconRegistry.wip_icon(), lambda: toggle_wip(scene))
-        action_ = builder.add_action('Insert new scene', IconRegistry.plus_icon(),
-                                     lambda: self._insert_scene_after(index.data(ScenesTableModel.SceneRole)))
+        menu = MenuWidget()
+        action_ = action('Insert new scene', IconRegistry.plus_icon(),
+                         lambda: self._insert_scene_after(index.data(ScenesTableModel.SceneRole)))
+        menu.addAction(action_)
         action_.setDisabled(self.novel.is_readonly())
-        builder.add_separator()
-        action_ = builder.add_action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
+        menu.addSeparator()
+        action_ = action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
         action_.setDisabled(self.novel.is_readonly())
+        menu.addAction(action_)
 
-        builder.popup()
+        menu.exec(self.ui.tblScenes.viewport().mapToGlobal(pos))
 
     def _insert_scene_after(self, scene: Scene, chapter: Optional[Chapter] = None):
         new_scene = self.novel.insert_scene_after(scene, chapter)
