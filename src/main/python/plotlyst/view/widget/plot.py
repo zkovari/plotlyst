@@ -735,8 +735,6 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             action('Change icon', icon=IconRegistry.icons_icon(), slot=self._changeIcon, parent=iconMenu))
 
         contextMenu = MenuWidget(self.btnSettings)
-        contextMenu.addMenu(colorMenu)
-        contextMenu.addSeparator()
         progress_action = action('Track general progress',
                                  slot=self._trackGeneralProgressChanged,
                                  checkable=True,
