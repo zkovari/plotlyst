@@ -877,18 +877,14 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         self.btnReturn.setIcon(IconRegistry.from_name('mdi.arrow-collapse', 'white'))
         self.btnReturn.clicked.connect(self.exitRequested.emit)
         self.btnFocus.setIcon(IconRegistry.from_name('mdi.credit-card', 'lightgrey', color_on=PLOTLYST_TERTIARY_COLOR))
-        self.btnFocus.installEventFilter(InstantTooltipEventFilter(self.btnFocus))
         self.btnFocus.toggled.connect(self._toggle_manuscript_focus)
         self.btnTypewriterMode.setIcon(
             IconRegistry.from_name('mdi.typewriter', 'lightgrey', color_on=PLOTLYST_TERTIARY_COLOR))
-        self.btnTypewriterMode.installEventFilter(InstantTooltipEventFilter(self.btnTypewriterMode))
         self.btnTypewriterMode.toggled.connect(self._toggle_typewriter_mode)
         self.btnNightMode.setIcon(
             IconRegistry.from_name('mdi.weather-night', 'lightgrey', color_on=PLOTLYST_TERTIARY_COLOR))
-        self.btnNightMode.installEventFilter(InstantTooltipEventFilter(self.btnNightMode))
         self.btnNightMode.toggled.connect(self._toggle_manuscript_night_mode)
         self.btnWordCount.setIcon(IconRegistry.from_name('mdi6.counter', 'lightgrey', color_on=PLOTLYST_TERTIARY_COLOR))
-        self.btnWordCount.installEventFilter(InstantTooltipEventFilter(self.btnWordCount))
         self.btnWordCount.clicked.connect(self._wordCountClicked)
 
         decr_font(self.btnFocus, 2)

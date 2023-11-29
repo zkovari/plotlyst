@@ -152,9 +152,6 @@
         <property name="cursor">
          <cursorShape>PointingHandCursor</cursorShape>
         </property>
-        <property name="toolTip">
-         <string>Night mode</string>
-        </property>
         <property name="text">
          <string>Dark mode</string>
         </property>
@@ -192,9 +189,6 @@
        <widget class="QToolButton" name="btnTypewriterMode">
         <property name="cursor">
          <cursorShape>PointingHandCursor</cursorShape>
-        </property>
-        <property name="toolTip">
-         <string>Center text to the middle</string>
         </property>
         <property name="text">
          <string>Centered</string>
