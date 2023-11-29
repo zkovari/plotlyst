@@ -442,6 +442,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.title.setHidden(True)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
         self.editor.set_scene(scene)
+        self.editor.ui.lineTitle.setFocus()
 
     @busy
     def _on_close_editor(self):
