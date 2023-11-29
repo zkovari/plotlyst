@@ -19,11 +19,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-import qtanim
 from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
+from PyQt6.QtWidgets import QDialog, QFileDialog
 from qthandy import incr_font
-from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
+from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.common import MAXIMUM_SIZE
 from src.main.python.plotlyst.core.domain import Novel
@@ -36,6 +35,8 @@ from src.main.python.plotlyst.service.tour import TourService
 from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.story_creation_dialog_ui import Ui_StoryCreationDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.input import Toggle
+from src.main.python.plotlyst.view.widget.novel import NovelCustomizationWizard
 from src.main.python.plotlyst.view.widget.tour.core import NewStoryTitleInDialogTourEvent, \
     NewStoryTitleFillInDialogTourEvent, NewStoryDialogOkayButtonTourEvent
 from src.main.python.plotlyst.view.widget.utility import ask_for_resource
@@ -63,12 +64,19 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         incr_font(self.btnNewStory)
         incr_font(self.btnScrivener)
 
-        self.btnSaveNewStory = self.btnBoxStoryCreation.button(QDialogButtonBox.StandardButton.Ok)
+        self.btnCancel.setIcon(IconRegistry.close_icon())
+        self.btnCancel.installEventFilter(ButtonPressResizeEventFilter(self.btnCancel))
+        self.btnCancel.clicked.connect(self.reject)
+        self.btnCreate.clicked.connect(self._createClicked)
+        self.btnCreate.installEventFilter(ButtonPressResizeEventFilter(self.btnCreate))
+        self.btnFinish.clicked.connect(self.accept)
+        self.btnFinish.setVisible(False)
 
-        self.btnSaveScrivener = self.btnBoxScrivener.button(QDialogButtonBox.StandardButton.Ok)
-        self.btnSaveScrivener.setDisabled(True)
-        self.btnSaveScrivener.installEventFilter(
-            DisabledClickEventFilter(self.btnSaveScrivener, lambda: qtanim.shake(self.btnLoadScrivener)))
+        self.toggleWizard = Toggle()
+        self.toggleWizard.toggled.connect(self._wizardToggled)
+        self.toggleWizard.setChecked(True)
+        self.wdgWizardSubtitle.addWidget(self.toggleWizard)
+
         for btn in [self.btnNewStory, self.btnScrivener]:
             btn.installEventFilter(OpacityEventFilter(parent=btn, ignoreCheckedButton=True))
         self.stackedWidget.currentChanged.connect(self._pageChanged)
@@ -79,7 +87,7 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
                             NewStoryDialogOkayButtonTourEvent]
         global_event_dispatcher.register(self, *self._eventTypes)
 
-        self.resize(600, 400)
+        self.resize(700, 550)
 
     def display(self) -> Optional[Novel]:
         self._scrivenerNovel = None
@@ -105,11 +113,41 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
             self.lineTitle.setText(event.title)
             self._tour_service.next()
         elif isinstance(event, NewStoryDialogOkayButtonTourEvent):
-            self._tour_service.addDialogWidget(self, self.btnSaveNewStory, event)
+            self._tour_service.addDialogWidget(self, self.btnCreate, event)
 
     def _pageChanged(self):
         if self.stackedWidget.currentWidget() == self.pageNewStory:
             self.lineTitle.setFocus()
+            self.btnCreate.setVisible(True)
+            self.btnFinish.setVisible(False)
+        elif self.stackedWidget.currentWidget() == self.pageScrivener:
+            self.btnCreate.setVisible(False)
+            self.btnFinish.setVisible(False)
+        elif self.stackedWidget.currentWidget() == self.pageScrivenerPreview:
+            self.btnCreate.setVisible(False)
+            self.btnFinish.setVisible(True)
+
+    def _wizardToggled(self, toggled: bool):
+        self.btnCreate.setText('Start wizard' if toggled else 'Create')
+        if toggled:
+            icon = IconRegistry.from_name('ph.magic-wand', 'white', 'white')
+        else:
+            icon = IconRegistry.book_icon('white', 'white')
+        self.btnCreate.setIcon(icon)
+
+    def _createClicked(self):
+        if self.toggleWizard.isChecked():
+            wizard = NovelCustomizationWizard(
+                Novel.new_novel(self.lineTitle.text() if self.lineTitle.text() else 'My new novel'))
+            self.pageWizard.layout().addWidget(wizard)
+            self.wdgBanner.setHidden(True)
+            self.wdgTypesContainer.setHidden(True)
+            self.wdgBottomButtons.setVisible(False)
+            self.stackedWidget.setCurrentWidget(self.pageWizard)
+            self.resize(600, 450)
+
+        else:
+            self.accept()
 
     def _loadFromScrivener(self):
         if not ask_for_resource(ResourceType.PANDOC):
@@ -132,8 +170,7 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
 
         self.stackedWidget.setCurrentWidget(self.pageScrivenerPreview)
         self.wdgBanner.setHidden(True)
+        self.wdgTypesContainer.setHidden(True)
         self.setMaximumWidth(MAXIMUM_SIZE)
         self.wdgScrivenerImportDetails.setVisible(True)
         self.wdgScrivenerImportDetails.setNovel(self._scrivenerNovel)
-        self.btnSaveScrivener.setEnabled(True)
-        self.wdgTypesContainer.setHidden(True)
