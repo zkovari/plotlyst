@@ -275,6 +275,7 @@ class PlotPrincipleEditor(QWidget):
         bold(self._label)
         self._label.setText(principle.type.name.lower().capitalize().replace('_', ' '))
         self._label.setIcon(principle_icon(principle.type))
+        self._label.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self._label.setCheckable(True)
         self._label.setChecked(True)
 
@@ -284,6 +285,7 @@ class PlotPrincipleEditor(QWidget):
         hint = principle_placeholder(principle.type, plotType)
         self._textedit.setPlaceholderText(hint)
         self._textedit.setToolTip(hint)
+        self._textedit.setTabChangesFocus(True)
         if app_env.is_mac():
             incr_font(self._textedit)
         self._textedit.setText(principle.value)
@@ -653,6 +655,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.btnValues.clicked.connect(self._newValue)
         hbox(self.wdgValues)
         self._btnAddValue = SecondaryActionPushButton(self)
+        self._btnAddValue.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         decr_font(self._btnAddValue)
         self._btnAddValue.setIconSize(QSize(14, 14))
         retain_when_hidden(self._btnAddValue)

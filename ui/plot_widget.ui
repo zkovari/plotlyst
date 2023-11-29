@@ -123,6 +123,9 @@
               <property name="cursor">
                <cursorShape>PointingHandCursor</cursorShape>
               </property>
+              <property name="focusPolicy">
+               <enum>Qt::ClickFocus</enum>
+              </property>
               <property name="text">
                <string/>
               </property>
@@ -313,6 +316,9 @@
               <property name="cursor">
                <cursorShape>PointingHandCursor</cursorShape>
               </property>
+              <property name="focusPolicy">
+               <enum>Qt::NoFocus</enum>
+              </property>
               <property name="text">
                <string>Principles</string>
               </property>
@@ -327,7 +333,7 @@
                <cursorShape>PointingHandCursor</cursorShape>
               </property>
               <property name="focusPolicy">
-               <enum>Qt::NoFocus</enum>
+               <enum>Qt::ClickFocus</enum>
               </property>
               <property name="toolTip">
                <string>Edit plot principles</string>
@@ -375,6 +381,9 @@
             </property>
             <item alignment="Qt::AlignLeft">
              <widget class="QPushButton" name="btnProgression">
+              <property name="focusPolicy">
+               <enum>Qt::NoFocus</enum>
+              </property>
               <property name="text">
                <string>Progression</string>
               </property>
