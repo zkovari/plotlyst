@@ -49,6 +49,7 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         self.setupUi(self)
 
         self._scrivenerNovel: Optional[Novel] = None
+        self._wizardNovel: Optional[Novel] = None
 
         link_buttons_to_pages(self.stackedWidget,
                               [(self.btnNewStory, self.pageNewStory), (self.btnScrivener, self.pageScrivener)])
@@ -96,7 +97,9 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
             return None
 
         if self.stackedWidget.currentWidget() == self.pageNewStory:
-            return Novel.new_novel(self.lineTitle.text() if self.lineTitle.text() else 'My new novel')
+            return self.__newNovel()
+        elif self.stackedWidget.currentWidget() == self.pageWizard:
+            return self._wizardNovel
         elif self._scrivenerNovel is not None:
             return self._scrivenerNovel
 
@@ -137,12 +140,13 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
 
     def _createClicked(self):
         if self.toggleWizard.isChecked():
-            wizard = NovelCustomizationWizard(
-                Novel.new_novel(self.lineTitle.text() if self.lineTitle.text() else 'My new novel'))
+            self._wizardNovel = self.__newNovel()
+            wizard = NovelCustomizationWizard(self._wizardNovel)
             self.pageWizard.layout().addWidget(wizard)
             self.wdgBanner.setHidden(True)
             self.wdgTypesContainer.setHidden(True)
-            self.wdgBottomButtons.setVisible(False)
+            self.btnCreate.setVisible(False)
+            self.btnFinish.setVisible(True)
             self.stackedWidget.setCurrentWidget(self.pageWizard)
             self.resize(600, 450)
 
@@ -174,3 +178,6 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         self.setMaximumWidth(MAXIMUM_SIZE)
         self.wdgScrivenerImportDetails.setVisible(True)
         self.wdgScrivenerImportDetails.setNovel(self._scrivenerNovel)
+
+    def __newNovel(self) -> Novel:
+        return Novel.new_novel(self.lineTitle.text() if self.lineTitle.text() else 'My new novel')

@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QEvent
@@ -214,6 +214,8 @@ class NovelPanelCustomizationToggle(QToolButton):
 
 
 class NovelPanelSettingsWidget(QWidget):
+    clicked = pyqtSignal(NovelSetting, bool)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._novel: Optional[Novel] = None
@@ -262,15 +264,32 @@ class NovelPanelSettingsWidget(QWidget):
             self._lblDesc.setText(setting_descriptions[watched.setting()])
         return super().eventFilter(watched, event)
 
+    def checkAllSettings(self, checked: bool):
+        for k in self._settings.keys():
+            self._settings[k].setChecked(checked)
+
+    def checkSettings(self, settings: List[NovelSetting], checked: bool = True):
+        self.checkAllSettings(not checked)
+
+        for setting in settings:
+            self._settings[setting].setChecked(checked)
+
+    def toggledSettings(self) -> List[NovelSetting]:
+        return [k for k, v in self._settings.items() if v.isChecked()]
+
     def _addSetting(self, setting: NovelSetting, row: int, col: int):
         toggle = NovelPanelCustomizationToggle(setting)
         self._settings[setting] = toggle
+        toggle.toggled.connect(partial(self._settingToggled, setting))
         toggle.clicked.connect(partial(self._settingChanged, setting))
         toggle.installEventFilter(self)
         self._grid.addWidget(toggle, row, col, 1, 1)
 
-    def _settingChanged(self, setting: NovelSetting, toggled: bool):
+    def _settingToggled(self, setting: NovelSetting, toggled: bool):
         self._novel.prefs.settings[setting.value] = toggled
+
+    def _settingChanged(self, setting: NovelSetting, toggled: bool):
+        self.clicked.emit(setting, toggled)
 
 
 class NovelQuickPanelCustomizationWidget(NovelPanelSettingsWidget, EventListener):
@@ -286,6 +305,10 @@ class NovelQuickPanelCustomizationWidget(NovelPanelSettingsWidget, EventListener
     def event_received(self, event: Event):
         if isinstance(event, NovelPanelCustomizationEvent):
             self._settings[event.setting].setChecked(event.toggled)
+
+    @overrides
+    def _settingToggled(self, setting: NovelSetting, toggled: bool):
+        pass
 
     @overrides
     def _settingChanged(self, setting: NovelSetting, toggled: bool):

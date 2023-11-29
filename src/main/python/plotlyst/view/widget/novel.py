@@ -17,26 +17,29 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from enum import Enum, auto
 from functools import partial
 from typing import Optional, List
 
-from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtWidgets import QWidget, QStackedWidget
 from overrides import overrides
-from qthandy import vspacer, spacer, transparent, bold, vbox
-from qtmenu import MenuWidget
+from qthandy import vspacer, spacer, transparent, bold, vbox, hbox, line
+from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
-from src.main.python.plotlyst.core.domain import StoryStructure, Novel, TagType, SelectionItem, Tag
+from src.main.python.plotlyst.core.domain import StoryStructure, Novel, TagType, SelectionItem, Tag, NovelSetting
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelTagsModel
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, action
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, action, label, push_btn
 from src.main.python.plotlyst.view.generated.imported_novel_overview_ui import Ui_ImportedNovelOverview
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.layout import group
+from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.display import Subtitle
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
+from src.main.python.plotlyst.view.widget.settings import NovelPanelSettingsWidget
 
 
 class TagLabelsEditor(LabelsEditorWidget):
@@ -166,3 +169,84 @@ class StoryStructureSelectorMenu(MenuWidget):
                              parent=self)
             action_.setChecked(structure.active)
             self.addAction(action_)
+
+
+class WriterType(Enum):
+    Architect = auto()
+    Planner = auto()
+    Explorer = auto()
+    Intuitive = auto()
+    Free_spirit = auto()
+
+
+class NovelCustomizationWizard(QWidget):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+        self.stack = QStackedWidget()
+        hbox(self).addWidget(self.stack)
+
+        self.pagePanels = QWidget()
+        self.wdgPanelSettings = NovelPanelSettingsWidget()
+        self.wdgPanelSettings.setNovel(self._novel)
+        self.lblCounter = label('')
+        self._updateCounter()
+        self.wdgPanelSettings.clicked.connect(self._updateCounter)
+        self.btnRecommend = push_btn(IconRegistry.from_name('mdi.trophy-award'), 'Recommend me', transparent_=True)
+        menuRecommendation = MenuWidget(self.btnRecommend)
+        apply_white_menu(menuRecommendation)
+        menuRecommendation.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+        menuRecommendation.addSection("Recommend me features if my writing style fits into...")
+        menuRecommendation.addAction(
+            action('Architect', IconRegistry.from_name('fa5s.drafting-compass'),
+                   tooltip='Someone who follows meticulous planning and detailed outlines before writing',
+                   slot=lambda: self._recommend(WriterType.Architect)))
+        menuRecommendation.addAction(
+            action('Planner', IconRegistry.from_name('fa5.calendar-alt'),
+                   tooltip='Someone who enjoys some planning but allows for flexibility',
+                   slot=lambda: self._recommend(WriterType.Planner)))
+        menuRecommendation.addAction(action(
+            'Explorer', IconRegistry.from_name('fa5s.binoculars'),
+            tooltip='Someone who enjoys discovering their story as they write with very little directions or planning beforehand',
+            slot=lambda: self._recommend(WriterType.Explorer)))
+        menuRecommendation.addAction(
+            action('Intuitive', IconRegistry.from_name('fa5.lightbulb'),
+                   tooltip='Someone who writes based on intuition and inspiration with minimal to no planning',
+                   slot=lambda: self._recommend(WriterType.Intuitive)))
+        menuRecommendation.addAction(
+            action('Free spirit', IconRegistry.from_name('mdi.bird'),
+                   tooltip='Someone who enjoys the spontaneity of writing without constraints',
+                   slot=lambda: self._recommend(WriterType.Free_spirit)))
+
+        vbox(self.pagePanels)
+        self.wdgTop = QWidget()
+        hbox(self.wdgTop)
+        self.wdgTop.layout().addWidget(self.lblCounter, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgTop.layout().addWidget(self.btnRecommend, alignment=Qt.AlignmentFlag.AlignRight)
+        self.pagePanels.layout().addWidget(self.wdgTop)
+        self.pagePanels.layout().addWidget(line())
+        self.pagePanels.layout().addWidget(self.wdgPanelSettings)
+        self.pagePanels.layout().addWidget(vspacer())
+        self.pagePanels.layout().addWidget(label('You can always change these settings later', description=True),
+                                           alignment=Qt.AlignmentFlag.AlignRight)
+        self.stack.addWidget(self.pagePanels)
+
+    def _updateCounter(self):
+        self.lblCounter.setText(f'<html><i>Selected features: <b>9/{len(self.wdgPanelSettings.toggledSettings())}')
+
+    def _recommend(self, writerType: WriterType):
+        if writerType == WriterType.Architect:
+            self.wdgPanelSettings.checkSettings([NovelSetting.Mindmap], False)
+        elif writerType == WriterType.Planner:
+            self.wdgPanelSettings.checkSettings([NovelSetting.Management], False)
+        elif writerType == WriterType.Explorer:
+            self.wdgPanelSettings.checkSettings(
+                [NovelSetting.Manuscript, NovelSetting.Characters, NovelSetting.Documents, NovelSetting.Mindmap,
+                 NovelSetting.Storylines])
+        elif writerType == WriterType.Intuitive:
+            self.wdgPanelSettings.checkSettings(
+                [NovelSetting.Manuscript, NovelSetting.Characters, NovelSetting.Documents])
+        elif writerType == WriterType.Free_spirit:
+            self.wdgPanelSettings.checkSettings([NovelSetting.Manuscript])
+
+        self._updateCounter()
