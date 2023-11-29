@@ -239,7 +239,7 @@
             <string>Personalization wizard</string>
            </property>
            <property name="description" stdset="0">
-            <string>Launch a wizard to customize your writing or outlining experience (recommended for new users)</string>
+            <string>Launch a wizard to customize your writing or outlining experience (recommended)</string>
            </property>
            <property name="icon" stdset="0">
             <string>ph.magic-wand</string>
