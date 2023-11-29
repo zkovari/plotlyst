@@ -26,7 +26,7 @@ import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QSize, QRectF, QEvent, QPoint, QMimeData, QTimer
 from PyQt6.QtGui import QIcon, QColor, QPainter, QPen, \
     QPainterPath, QPaintEvent, QAction, QResizeEvent, QEnterEvent, QDragEnterEvent
-from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QTextEdit, QDialog, QApplication
+from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QTextEdit, QDialog, QApplication, QMessageBox
 from overrides import overrides
 from qtanim import fade_in
 from qthandy import pointy, gc, translucent, bold, clear_layout, decr_font, \
@@ -1080,12 +1080,13 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             self.stackStructure.setCurrentWidget(self.pageTimetilne)
 
     def _showTemplates(self):
-        selector = SceneStructureTemplateSelector()
-        structure = selector.display()
-        if structure:
-            self.scene.structure.clear()
-            self.scene.structure.extend(structure)
-            self.timeline.setStructure(structure)
+        QMessageBox.warning(self, 'Not implemented yet', 'This feature is not available yet for early testing')
+        # selector = SceneStructureTemplateSelector()
+        # structure = selector.display()
+        # if structure:
+        #     self.scene.structure.clear()
+        #     self.scene.structure.extend(structure)
+        #     self.timeline.setStructure(structure)
 
     def _reset(self):
         pass
