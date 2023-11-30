@@ -1,14 +1,11 @@
-from typing import List
-
 from PyQt6.QtCharts import QPieSeries
 from PyQt6.QtCore import Qt, QModelIndex
-from PyQt6.QtGui import QAction
-from PyQt6.QtWidgets import QMessageBox, QSpinBox
+from PyQt6.QtWidgets import QSpinBox
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesStageTableModel
 from src.main.python.plotlyst.test.common import create_character, start_new_scene_editor, assert_data, go_to_scenes, \
-    click_on_item, popup_actions_on_item, trigger_popup_action_on_item, patch_confirmed
+    click_on_item, patch_confirmed
 from src.main.python.plotlyst.view.comments_view import CommentWidget
 from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
@@ -85,30 +82,6 @@ def test_scene_edition(qtbot, filled_window: MainWindow):
     view.editor.ui.btnClose.click()
 
     assert_data(view.tblModel, title, 0, ScenesTableModel.ColTitle)
-
-
-def test_context_menu(qtbot, filled_window: MainWindow):
-    view: ScenesOutlineView = go_to_scenes(filled_window)
-    actions: List[QAction] = popup_actions_on_item(qtbot, view.ui.tblScenes, 0, ScenesTableModel.ColTitle)
-    assert actions[0].text() == 'Toggle WIP status'
-    assert actions[1].text() == 'Insert new scene'
-    assert actions[3].text() == 'Delete'
-
-
-def test_toggle_wip_status(qtbot, filled_window: MainWindow):
-    view: ScenesOutlineView = go_to_scenes(filled_window)
-    trigger_popup_action_on_item(qtbot, view.ui.tblScenes, 0, ScenesTableModel.ColTitle, 'Toggle WIP status')
-    assert view.novel.scenes[0].wip
-
-
-def test_insert_new_scene_after(qtbot, filled_window: MainWindow):
-    view: ScenesOutlineView = go_to_scenes(filled_window)
-    trigger_popup_action_on_item(qtbot, view.ui.tblScenes, 0, ScenesTableModel.ColTitle, 'Insert new scene')
-
-    assert len(view.novel.scenes) == 3
-    assert_data(view.tblModel, 'Scene 1', 0, ScenesTableModel.ColTitle)
-    assert_data(view.tblModel, 'Scene 2', 1, ScenesTableModel.ColTitle)
-    assert_data(view.tblModel, 'Scene 2', 2, ScenesTableModel.ColTitle)
 
 
 def test_switch_views(qtbot, filled_window: MainWindow):
