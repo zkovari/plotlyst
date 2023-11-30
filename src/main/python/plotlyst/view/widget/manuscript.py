@@ -483,7 +483,7 @@ class ManuscriptTextEdit(TextEditBase):
             sceneSepCharFormat = QTextCharFormat()
             sceneSepCharFormat.setObjectType(SceneSeparatorTextFormat)
             sceneSepCharFormat.setToolTip(scene.synopsis)
-            sceneSepCharFormat.setAnchor(True)
+            # sceneSepCharFormat.setAnchor(True)
             sceneSepCharFormat.setAnchorHref(f'{SceneSeparatorTextFormatPrefix}{scene.id}')
 
             return sceneSepCharFormat
