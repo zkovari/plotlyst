@@ -690,9 +690,10 @@ class SceneElementWidget(QWidget):
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
         def delayed_corners_visible():
-            for corner in self._corners:
-                if corner.isEnabled():
-                    corner.setVisible(True)
+            if self.underMouse():
+                for corner in self._corners:
+                    if corner.isEnabled():
+                        corner.setVisible(True)
 
         if self._stackWidget.currentWidget() == self._pageIdle:
             self._lblClick.setVisible(True)
@@ -700,8 +701,6 @@ class SceneElementWidget(QWidget):
             self._iconIdle.setIcon(self._icon)
 
             QTimer.singleShot(200, delayed_corners_visible)
-
-
         else:
             if self._storylineLinkEnabled and self._storylineVisible:
                 self._btnStorylineLink.setVisible(True)
@@ -784,6 +783,8 @@ class SceneElementWidget(QWidget):
         self._btnClose.setVisible(True)
         if self._storylineLinkEnabled and self._storylineVisible:
             self._btnStorylineLink.setVisible(True)
+        for arrow in self._arrows.values():
+            arrow.setVisible(True)
 
         qtanim.glow(self._iconActive, duration=150, color=self._colorActive)
         self._elementCreated(element)
