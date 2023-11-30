@@ -2360,6 +2360,13 @@ class Novel(NovelDescriptor):
     def new_novel(title: str = '') -> 'Novel':
         novel = Novel(title)
         novel.story_structures = [copy.deepcopy(three_act_structure)]
+        chapter = Chapter('Chapter 1')
+        novel.chapters.append(chapter)
+
+        scene = Novel.new_scene('My first scene')
+        scene.chapter = chapter
+        novel.scenes.append(scene)
+
         return novel
 
     def insert_scene_after(self, scene: Scene, chapter: Optional[Chapter] = None) -> Scene:
