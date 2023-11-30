@@ -35,7 +35,7 @@ from qthandy import transparent, translucent, flow, \
 from qthandy.filter import InstantTooltipEventFilter, DragEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR
+from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR, PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Scene, Novel, SceneOutcome, StoryBeat, StoryBeatType, Tag, SceneStage, \
     ReaderPosition, InformationAcquisition, Document, \
@@ -798,7 +798,7 @@ class SceneStageButton(QToolButton, EventListener):
 
             if scene_stage_index >= active_stage_index:
                 self._stageOk = True
-                self.setIcon(IconRegistry.ok_icon())
+                self.setIcon(IconRegistry.ok_icon(PLOTLYST_SECONDARY_COLOR))
 
         if not self._stageOk:
             self.setIcon(IconRegistry.progress_check_icon('grey'))

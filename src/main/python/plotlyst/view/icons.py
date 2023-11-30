@@ -39,7 +39,7 @@ class IconRegistry:
 
     @staticmethod
     def ok_icon(color: str = 'green') -> QIcon:
-        return qtawesome.icon('ei.ok', color=color)
+        return IconRegistry.from_name('ei.ok', color=color)
 
     @staticmethod
     def wrong_icon(color: str = 'red') -> QIcon:
