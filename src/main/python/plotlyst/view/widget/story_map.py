@@ -79,6 +79,8 @@ class EventsMindMapView(NetworkGraphicsView):
         self._btnAddSticker = self._newControlButton(IconRegistry.from_name('mdi6.sticker-circle-outline'),
                                                      'Add new sticker',
                                                      DiagramNodeType.COMMENT)
+        self._btnAddSticker.setDisabled(True)
+        self._btnAddSticker.setToolTip('Feature is not yet available')
 
         self._wdgSecondaryEventSelector = EventSelectorWidget(self)
         self._wdgSecondaryEventSelector.setVisible(False)

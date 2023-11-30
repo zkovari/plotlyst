@@ -65,6 +65,8 @@ class CharacterNetworkView(NetworkGraphicsView):
                                                        DiagramNodeType.CHARACTER)
         self._btnAddSticker = self._newControlButton(IconRegistry.from_name('mdi6.sticker-circle-outline'),
                                                      'Add new sticker', DiagramNodeType.STICKER)
+        self._btnAddSticker.setDisabled(True)
+        self._btnAddSticker.setToolTip('Feature is not yet available')
 
         self._connectorEditor = RelationConnectorToolbar(self)
         self._connectorEditor.setVisible(False)
