@@ -509,7 +509,10 @@ class ManuscriptTextEdit(TextEditBase):
         if not scene.manuscript.loaded:
             json_client.load_document(app_env.novel, scene.manuscript)
 
+        first_scene_block = self.textCursor().block()
         self.textCursor().insertHtml(remove_font(scene.manuscript.content))
+        if first_scene_block.userState() == TextBlockState.UNEDITABLE.value:
+            first_scene_block.setUserState(-1)
 
     def _transparent(self):
         border = 0
