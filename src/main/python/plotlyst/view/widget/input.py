@@ -289,7 +289,8 @@ class TextEditBase(EnhancedTextEdit):
         super(TextEditBase, self).__init__(parent)
         self._blockStatistics = BlockStatistics(self.document())
         self.setDashInsertionMode(DashInsertionMode.INSERT_EM_DASH)
-        self.setAutoCapitalizationEnabled(True)
+        # self.setAutoCapitalizationEnabled(True)
+        self.setBlockAutoCapitalizationEnabled(True)
 
     def statistics(self) -> TextStatistics:
         wc = 0
