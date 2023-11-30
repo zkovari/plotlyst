@@ -235,7 +235,9 @@ class BeatSelectorMenu(TabularGridMenuWidget):
         self.addSection(self._tabReaction, 'Common reaction beats', 0, 0)
         self.addSeparator(self._tabReaction, 1, 0)
         self._addAction(self._tabReaction, 'Reaction', SceneStructureItemType.REACTION, 2, 0)
-        self._addAction(self._tabReaction, 'Emotion', SceneStructureItemType.EMOTION, 3, 0)
+        actionEmotion = self._addAction(self._tabReaction, 'Emotion', SceneStructureItemType.EMOTION, 3, 0)
+        actionEmotion.setDisabled(True)
+        actionEmotion.setToolTip('This feature is not available yet')
         self._addAction(self._tabReaction, 'Dilemma', SceneStructureItemType.DILEMMA, 4, 0)
         self._addAction(self._tabReaction, 'Decision', SceneStructureItemType.DECISION, 5, 0)
         self.addWidget(self._tabReaction, vspacer(), 6, 0)
@@ -254,11 +256,13 @@ class BeatSelectorMenu(TabularGridMenuWidget):
         self._addAction(self._tabMisc, 'False victory', SceneStructureItemType.FALSE_VICTORY, 2, 0)
         self.addWidget(self._tabMisc, vspacer(), 6, 0)
 
-    def _addAction(self, tabWidget: QWidget, text: str, beat_type: SceneStructureItemType, row: int, column: int):
+    def _addAction(self, tabWidget: QWidget, text: str, beat_type: SceneStructureItemType, row: int, column: int) -> QAction:
         description = beat_descriptions[beat_type]
         action_ = action(text, beat_icon(beat_type), slot=lambda: self.selected.emit(beat_type), tooltip=description)
         self._actions[beat_type] = action_
         self.addAction(tabWidget, action_, row, column)
+
+        return action_
 
     def setOutcomeEnabled(self, enabled: bool):
         self._outcomeEnabled = enabled
