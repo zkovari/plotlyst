@@ -23,6 +23,7 @@ from typing import List, Any, Set, Optional, Dict
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, Qt, QAbstractItemModel, QSortFilterProxyModel, pyqtSignal, \
     QVariant
 from PyQt6.QtGui import QFont, QColor, QBrush
+from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
@@ -177,11 +178,13 @@ class SelectionItemsModel(QAbstractTableModel):
             return item.text
         if role == Qt.ItemDataRole.CheckStateRole and self._checkable and index.column() == self._checkable_column:
             return Qt.CheckState.Checked if item in self._checked else Qt.CheckState.Unchecked
-        if role == Qt.ItemDataRole.FontRole and self._checkable and index.column() == self._checkable_column:
-            if item in self._checked:
-                font = QFont()
+        if role == Qt.ItemDataRole.FontRole:
+            if self._checkable and index.column() == self._checkable_column and item in self._checked:
+                font = QApplication.font()
                 font.setBold(True)
                 return font
+            else:
+                return QApplication.font()
         if index.column() == self.ColBgColor:
             if role == Qt.ItemDataRole.BackgroundRole and item.color_hexa:
                 return QBrush(QColor(item.color_hexa))
