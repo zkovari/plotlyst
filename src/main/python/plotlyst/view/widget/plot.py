@@ -671,6 +671,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             self._addValue(value)
 
         self.btnRelationArrow.setHidden(True)
+        self._characterRelationSelector: Optional[CharacterAvatar] = None
         if self.plot.plot_type == PlotType.Global:
             pass
         elif self.plot.plot_type == PlotType.Relation:
@@ -762,7 +763,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         if isinstance(event, CharacterDeletedEvent):
             if self._characterSelector.character() and self._characterSelector.character().id == event.character.id:
                 self._characterSelector.reset()
-            if self._characterRelationSelector.character() and self._characterRelationSelector.character().id == event.character.id:
+            if self._characterRelationSelector and self._characterRelationSelector.character() and self._characterRelationSelector.character().id == event.character.id:
                 self._characterRelationSelector.reset()
 
     def _updateIcon(self):
