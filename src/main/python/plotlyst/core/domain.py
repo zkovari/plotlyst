@@ -1192,6 +1192,8 @@ class StoryElementType(Enum):
     Delayed_effect = 'delayed_effect'
     Thematic_effect = 'thematic_effect'
 
+    def displayed_name(self) -> str:
+        return self.value.capitalize().replace('_', ' ')
 
 @dataclass
 class StoryElement:

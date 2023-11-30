@@ -524,7 +524,6 @@ class LineElementWidget(QWidget):
 
 
 class _CornerIcon(QToolButton):
-    hovered = pyqtSignal(StoryElementType)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -533,11 +532,17 @@ class _CornerIcon(QToolButton):
         self.setCheckable(True)
         self._type = None
 
+    def type(self) -> StoryElementType:
+        return self._type
+
+    def setType(self, type_: StoryElementType):
+        self._type = type_
+        self.setToolTip(f'Click to add {type_.displayed_name()}')
+
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
         if self._type:
             self.setChecked(True)
-            self.hovered.emit(self._type)
 
     def showEvent(self, a0: QShowEvent) -> None:
         self.setChecked(False)
@@ -545,9 +550,6 @@ class _CornerIcon(QToolButton):
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
         self.setChecked(False)
-
-    def setType(self, type_: StoryElementType):
-        self._type = type_
 
 
 class SceneElementWidget(QWidget):
@@ -664,8 +666,7 @@ class SceneElementWidget(QWidget):
             corner.setDisabled(True)
             corner.setVisible(False)
             retain_when_hidden(corner)
-            corner.hovered.connect(self._typeChanged)
-            corner.clicked.connect(self.activate)
+            corner.clicked.connect(partial(self._cornerClicked, corner))
 
         self.reset()
         sp(self).v_max()
@@ -833,6 +834,9 @@ class SceneElementWidget(QWidget):
 
     def _arrowReset(self, degree: int):
         self._element.arrows[degree] = 0
+
+    def _cornerClicked(self, btn: _CornerIcon):
+        self._typeChanged(btn.type())
 
     def _typeChanged(self, type_: StoryElementType):
         self._type = type_
