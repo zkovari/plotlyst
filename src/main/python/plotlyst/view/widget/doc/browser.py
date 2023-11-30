@@ -20,20 +20,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Set, Optional, Dict
 
-from PyQt6.QtCore import pyqtSignal, Qt, QMimeData, QPointF, QModelIndex
-from PyQt6.QtWidgets import QListView
+from PyQt6.QtCore import pyqtSignal, Qt, QMimeData, QPointF
 from overrides import overrides
-from qthandy import clear_layout, vspacer, translucent, gc, ask_confirmation, pointy, retain_when_hidden
+from qthandy import clear_layout, vspacer, translucent, gc, ask_confirmation, retain_when_hidden
 from qthandy.filter import DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import recursive
 from src.main.python.plotlyst.core.domain import Document, Novel, DocumentType, Character
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import fade_out_and_gc, action
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
 
@@ -46,20 +44,14 @@ class DocumentAdditionMenu(MenuWidget):
 
         self.addAction(action('Document', IconRegistry.document_edition_icon(), lambda: self._documentSelected()))
 
-        self._character_menu = MenuWidget()
+        self._character_menu = CharacterSelectorMenu(self._novel)
+        self._character_menu.selected.connect(self._characterSelected)
         self._character_menu.setTitle('Link characters')
         self._character_menu.setIcon(IconRegistry.character_icon())
-        _view = QListView()
-        pointy(_view)
-        _view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        _view.clicked.connect(self._characterSelected)
-        _view.setModel(CharactersTableModel(self._novel))
-        self._character_menu.addWidget(_view)
         self.addMenu(self._character_menu)
 
-    def _characterSelected(self, char_index: QModelIndex):
-        char = char_index.data(CharactersTableModel.CharacterRole)
-        self._documentSelected(character=char)
+    def _characterSelected(self, character: Character):
+        self._documentSelected(character=character)
         self._character_menu.close()
 
     def _documentSelected(self, docType=DocumentType.DOCUMENT, character: Optional[Character] = None):
@@ -97,9 +89,10 @@ class DocumentWidget(ContainerNode):
             self._icon.setIcon(IconRegistry.from_name(self._doc.icon, self._doc.icon_color))
             self._icon.setVisible(True)
         elif self._doc.character_id:
-            char = self._doc.character(app_env.novel)
-            self._lblTitle.setText(char.name)
-            self._icon.setIcon(avatars.avatar(char))
+            char = self._doc.character(self._novel)
+            if char is not None:
+                self._lblTitle.setText(char.name)
+                self._icon.setIcon(avatars.avatar(char))
             self._icon.setVisible(True)
         else:
             self._icon.setHidden(True)
