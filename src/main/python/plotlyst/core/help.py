@@ -117,9 +117,10 @@ mbti_help = {'ISTJ': '''<html><h3>The Inspector</h3>
              '''
              }
 
-plot_value_help = """<html>When associated with scenes, such plot value can be charged <b style=color:#52b788;>positively</b> or 
-<b style=color:#9d0208;>negatively</b>, thus depicting a 
-character's shift between the value's positive and negative spectrum, e.g., Love vs. Hate.</html>"""
+plot_value_help = """<html>When a storyline is linked to a scene, these values can be <b style=color:#52b788;>positively</b> or 
+<b style=color:#9d0208;>negatively</b> charged, showcasing the storyline's advancement or setback.
+<br>The changes can be also visualized in the analysis panel, depicting the story's arc.
+</html>"""
 
 scene_disaster_outcome_help = """<html><head/><body><p>Scene ends with a <span style=" font-weight:600; color:#f4442e;">disaster</span>,
  so the agenda character's scene goal remains unachieved</p></body></html>"""
