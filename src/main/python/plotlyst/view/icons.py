@@ -244,7 +244,7 @@ class IconRegistry:
 
     @staticmethod
     def emotion_scene_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.emoticon-outline', 'grey', 'black')
+        return IconRegistry.from_name('mdi.emoticon-neutral-outline', 'grey', 'black')
 
     @staticmethod
     def summary_scene_icon() -> QIcon:

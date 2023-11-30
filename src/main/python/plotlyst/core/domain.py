@@ -1134,7 +1134,7 @@ class ScenePurpose:
 
 advance_story_scene_purpose = ScenePurpose(ScenePurposeType.Story, 'Advance\nstory',
                                            keywords=['goal', 'conflict', 'action', 'outcome', 'tension', 'revelation',
-                                                     'mystery', 'catalyst'],
+                                                     'mystery', 'catalyst', 'crisis', 'cause & effect'],
                                            include=[ScenePurposeType.Character, ScenePurposeType.Emotion,
                                                     ScenePurposeType.Setup],
                                            pacing='fast-medium')
@@ -1143,13 +1143,15 @@ reaction_story_scene_purpose = ScenePurpose(ScenePurposeType.Reaction, 'Reaction
                                                       'new goal'],
                                             include=[ScenePurposeType.Character, ScenePurposeType.Emotion],
                                             pacing='medium-slow')
-character_story_scene_purpose = ScenePurpose(ScenePurposeType.Character, 'Character\ndevelopment',
-                                             keywords=['internal conflict', 'relations'],
+character_story_scene_purpose = ScenePurpose(ScenePurposeType.Character, 'Character\ninsight',
+                                             keywords=['characterization', 'introspection', 'backstory',
+                                                       'internal conflict', 'relations', 'character change'],
                                              include=[ScenePurposeType.Emotion])
 emotion_story_scene_purpose = ScenePurpose(ScenePurposeType.Emotion, 'Emotion',
-                                           keywords=['mood', 'atmosphere', 'emotion'])
+                                           keywords=['mood', 'atmosphere', 'emotion', 'evocative tone',
+                                                     'thematic resonance'])
 setup_story_scene_purpose = ScenePurpose(ScenePurposeType.Setup, 'Setup',
-                                         keywords=['plant', 'foreshadowing', 'setup', 'happening', 'transition'])
+                                         keywords=['plant', 'foreshadowing', 'setup', 'transition'])
 exposition_story_scene_purpose = ScenePurpose(ScenePurposeType.Exposition, 'Exposition',
                                               keywords=['introduction', 'description', 'information'])
 
