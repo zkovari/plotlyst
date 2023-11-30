@@ -322,6 +322,11 @@ class CharacterSelectorMenu(MenuWidget):
             self.addAction(
                 action(char.name, avatars.avatar(char), slot=partial(self.selected.emit, char), parent=self))
 
+        if not self.actions():
+            self.addSection('No characters were found')
+            self.addSeparator()
+            self.addSection('Go to the Characters panel to create your first character')
+
         self._frame.updateGeometry()
 
 
