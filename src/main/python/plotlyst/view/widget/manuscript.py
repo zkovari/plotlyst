@@ -491,10 +491,6 @@ class ManuscriptTextEdit(TextEditBase):
         self.setUneditableBlocksEnabled(True)
         self._sceneTextObject.setScenes(scenes)
 
-        block = self.document().begin()
-        cursor = QTextCursor(block)
-        cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
-        cursor.deleteChar()
         for i, scene in enumerate(scenes):
             self.textCursor().insertBlock(self._sceneSepBlockFormat)
             self.textCursor().insertText(f'{OBJECT_REPLACEMENT_CHARACTER}', sceneCharFormat(scene))
