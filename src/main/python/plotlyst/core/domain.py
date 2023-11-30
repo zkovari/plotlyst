@@ -1195,6 +1195,7 @@ class StoryElementType(Enum):
     def displayed_name(self) -> str:
         return self.value.capitalize().replace('_', ' ')
 
+
 @dataclass
 class StoryElement:
     type: StoryElementType
@@ -1307,8 +1308,8 @@ class Scene:
 
 def default_stages() -> List[SceneStage]:
     return [SceneStage('Outlined'), SceneStage('1st Draft'),
-            SceneStage('2nd Draft'), SceneStage('3rd Draft'), SceneStage('4th Draft'),
-            SceneStage('Edited'), SceneStage('Proofread'), SceneStage('Final')]
+            SceneStage('Early Revision'), SceneStage('Mid-revision'), SceneStage('Late Revision'),
+            SceneStage('Proofread'), SceneStage('Final')]
 
 
 class WorldBuildingEntityType(Enum):
@@ -2008,8 +2009,8 @@ class Document(CharacterBased, SceneBased):
 def default_documents() -> List[Document]:
     return [Document('Story', id=uuid.UUID('ec2a62d9-fc00-41dd-8a6c-b121156b6cf4'), icon='fa5s.book-open'),
             Document('Characters', id=uuid.UUID('8fa16650-bed0-489b-baa1-d239e5198d47'), icon='fa5s.user'),
-            Document('Scenes', id=uuid.UUID('75a552f4-037d-4179-860f-dd8400a7545b'), icon='mdi.movie-open'),
-            Document('Worldbuilding', id=uuid.UUID('5faf7c16-f970-465d-bbcb-1bad56f3313c'), icon='mdi.globe-model')]
+            Document('Locations', id=uuid.UUID('42739fb7-85a9-4716-b1e0-5ab4c751eebd'), icon='fa5s.map-marker'),
+            ]
 
 
 @dataclass
