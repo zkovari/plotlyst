@@ -111,6 +111,9 @@
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
+            <property name="toolTip">
+             <string>Cards view</string>
+            </property>
             <property name="text">
              <string/>
             </property>
@@ -135,6 +138,9 @@
            <widget class="QToolButton" name="btnTableView">
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="toolTip">
+             <string>Table view</string>
             </property>
             <property name="text">
              <string/>
@@ -161,6 +167,9 @@
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
+            <property name="toolTip">
+             <string>Storymap view</string>
+            </property>
             <property name="text">
              <string/>
             </property>
@@ -185,6 +194,9 @@
            <widget class="QToolButton" name="btnCharactersDistributionView">
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="toolTip">
+             <string>Character-scene distribution view</string>
             </property>
             <property name="text">
              <string/>
@@ -214,6 +226,9 @@
            <widget class="QToolButton" name="btnStatusView">
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="toolTip">
+             <string>Progress view</string>
             </property>
             <property name="text">
              <string/>
@@ -1307,6 +1322,16 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>Toggle</class>
+   <extends>QCheckBox</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
+  </customwidget>
+  <customwidget>
+   <class>ScenesTreeView</class>
+   <extends>QTreeView</extends>
+   <header>src.main.python.plotlyst.view.widget.scene</header>
+  </customwidget>
+  <customwidget>
    <class>SceneStoryStructureWidget</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.scenes</header>
@@ -1321,16 +1346,6 @@
   <customwidget>
    <class>RotatedButton</class>
    <extends>QPushButton</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
-  </customwidget>
-  <customwidget>
-   <class>ScenesTreeView</class>
-   <extends>QTreeView</extends>
-   <header>src.main.python.plotlyst.view.widget.scene</header>
-  </customwidget>
-  <customwidget>
-   <class>Toggle</class>
-   <extends>QCheckBox</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
  </customwidgets>
@@ -1370,7 +1385,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="btnGroupViews"/>
   <buttongroup name="btnGroupStoryMapView"/>
+  <buttongroup name="btnGroupViews"/>
  </buttongroups>
 </ui>
