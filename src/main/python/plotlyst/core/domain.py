@@ -808,9 +808,7 @@ class Plot(SelectionItem, CharacterBased):
             self.relation_character_id = character.id
             self._relation_character = character
 
-    @overrides
-    def reset_character(self):
-        super().reset_character()
+    def reset_relation_character(self):
         self.relation_character_id = None
         self._relation_character = None
 

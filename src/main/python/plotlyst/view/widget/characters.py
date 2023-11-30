@@ -575,6 +575,9 @@ class CharacterAvatar(QWidget):
         menu = MenuWidget(self.btnAvatar)
         menu.addWidget(wdg)
 
+    def character(self) -> Optional[Character]:
+        return self._character
+
     def setCharacter(self, character: Character):
         self._character = character
         self.updateAvatar()

@@ -30,6 +30,8 @@ from overrides import overrides
 from src.main.python.plotlyst.core.client import client, json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, NovelDescriptor, Document, Plot, Diagram
 from src.main.python.plotlyst.env import app_env
+from src.main.python.plotlyst.event.core import emit_event
+from src.main.python.plotlyst.events import StorylineCharacterAssociationChanged
 from src.main.python.plotlyst.view.widget.confirm import confirmed
 
 
@@ -317,6 +319,15 @@ def delete_character(novel: Novel, character: Character, forced: bool = False) -
 
             if update_scene:
                 repo.update_scene(scene)
+
+        for plot in novel.plots:
+            if plot.character_id == char_id:
+                plot.reset_character()
+                repo.update_novel(novel)
+                emit_event(novel, StorylineCharacterAssociationChanged(QObject(), plot))
+            if plot.relation_character_id == char_id:
+                plot.reset_relation_character()
+                repo.update_novel(novel)
 
         return True
 

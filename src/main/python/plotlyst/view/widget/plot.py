@@ -43,7 +43,7 @@ from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent, StorylineCreatedEvent, \
-    StorylineRemovedEvent
+    StorylineRemovedEvent, StorylineCharacterAssociationChanged
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter, wrap, \
@@ -494,7 +494,7 @@ class PlotEventsArcChart(BaseChart):
         axis.setVisible(False)
 
 
-class PlotTreeView(TreeView):
+class PlotTreeView(TreeView, EventListener):
     plotSelected = pyqtSignal(Plot)
     plotRemoved = pyqtSignal(Plot)
 
@@ -505,6 +505,12 @@ class PlotTreeView(TreeView):
         self._characterNodes: Dict[Character, ContainerNode] = {}
         self._selectedPlots: Set[Plot] = set()
 
+        self.refresh()
+
+        event_dispatchers.instance(self._novel).register(self, StorylineCharacterAssociationChanged)
+
+    @overrides
+    def event_received(self, event: Event):
         self.refresh()
 
     def refresh(self):
@@ -754,10 +760,10 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
     @overrides
     def event_received(self, event: Event):
         if isinstance(event, CharacterDeletedEvent):
-            if self.plot.character_id == event.character.id:
-                self.plot.reset_character()
-                self._save()
-                self._characterSelector.clear()
+            if self._characterSelector.character() and self._characterSelector.character().id == event.character.id:
+                self._characterSelector.reset()
+            if self._characterRelationSelector.character() and self._characterRelationSelector.character().id == event.character.id:
+                self._characterRelationSelector.reset()
 
     def _updateIcon(self):
         if self.plot.icon:

@@ -194,6 +194,11 @@ class StorylineRemovedEvent(Event):
 
 
 @dataclass
+class StorylineCharacterAssociationChanged(Event):
+    storyline: Plot
+
+
+@dataclass
 class OpenDistractionFreeMode(Event):
     pass
 
