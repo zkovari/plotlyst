@@ -44,6 +44,7 @@ class NetworkScene(QGraphicsScene):
     cancelItemAddition = pyqtSignal()
     itemAdded = pyqtSignal(DiagramNodeType, NodeItem)
     editItem = pyqtSignal(NodeItem)
+    itemMoved = pyqtSignal(NodeItem)
     hideItemEditor = pyqtSignal()
 
     def __init__(self, parent=None):
@@ -193,7 +194,7 @@ class NetworkScene(QGraphicsScene):
         super().mouseReleaseEvent(event)
 
     def itemChangedEvent(self, item: NodeItem):
-        pass
+        self.itemMoved.emit(item)
 
     def nodeChangedEvent(self, node: Node):
         self._save()

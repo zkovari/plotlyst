@@ -133,6 +133,7 @@ class NetworkGraphicsView(BaseGraphicsView):
         self._scene.cancelItemAddition.connect(self._endAddition)
         self._scene.selectionChanged.connect(self._selectionChanged)
         self._scene.editItem.connect(self._editItem)
+        self._scene.itemMoved.connect(self._itemMoved)
         self._scene.hideItemEditor.connect(self._hideItemToolbar)
 
     def setDiagram(self, diagram: Diagram):
@@ -228,6 +229,10 @@ class NetworkGraphicsView(BaseGraphicsView):
             self._showItemToolbar(self._scene.selectedItems()[0])
         else:
             self._hideItemToolbar()
+
+    def _itemMoved(self, item: NodeItem):
+        if len(self._scene.selectedItems()) == 1:
+            self._showItemToolbar(item)
 
     def _editItem(self, item: NodeItem):
         if isinstance(item, CharacterItem):
