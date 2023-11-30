@@ -75,8 +75,9 @@ class AutoAdjustableTextEdit(EnhancedTextEdit):
             self._resizedOnShow = True
 
     def _resizeToContent(self):
+        padding = self.contentsMargins().top() + self.contentsMargins().bottom() + 2 * self.document().documentMargin()
         size = self.document().size()
-        self.setFixedHeight(max(self._minHeight, math.ceil(size.height())))
+        self.setFixedHeight(max(self._minHeight, math.ceil(size.height() + padding)))
 
 
 class AutoAdjustableLineEdit(QLineEdit):
