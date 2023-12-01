@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import copy
 import uuid
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, auto
 from typing import List
 
 from PyQt6.QtCore import QObject
@@ -31,10 +31,11 @@ from src.main.python.plotlyst.event.core import Event
 
 # flake8: noqa
 class Tutorial(Enum):
-    ContainerIntroduction = 0
-    FirstNovel = 1
-    FirstProtagonist = 2
-    FirstScene = 3
+    ContainerIntroduction = auto()
+    FirstNovel = auto()
+    FirstCharacter = auto()
+    FirstScene = auto()
+    FirstProtagonist = auto()
 
     def is_container(self) -> bool:
         return self.name.startswith('Container')
@@ -81,6 +82,10 @@ class NewStoryTitleInDialogTourEvent(TourEvent):
 @dataclass
 class NewStoryTitleFillInDialogTourEvent(TourEvent):
     title: str = ''
+
+
+class NewStoryDialogWizardCustomizationTourEvent(TourEvent):
+    pass
 
 
 class NewStoryDialogOkayButtonTourEvent(TourEvent):
@@ -156,6 +161,76 @@ class BoardViewTourEvent(BaseNovelViewTourEvent):
     pass
 
 
+class CharacterNewButtonTourEvent(TourEvent):
+    pass
+
+
+class CharacterCardTourEvent(TourEvent):
+    pass
+
+
+class CharacterPerspectivesTourEvent(TourEvent):
+    pass
+
+
+@dataclass
+class BasePerspectiveTourEvent(TourEvent):
+    click_before: bool = False
+
+
+class CharacterPerspectiveCardsTourEvent(BasePerspectiveTourEvent):
+    pass
+
+
+class CharacterPerspectiveTableTourEvent(BasePerspectiveTourEvent):
+    pass
+
+
+class CharacterPerspectiveComparisonTourEvent(BasePerspectiveTourEvent):
+    pass
+
+
+class CharacterPerspectiveNetworkTourEvent(BasePerspectiveTourEvent):
+    pass
+
+
+class CharacterPerspectiveProgressTourEvent(BasePerspectiveTourEvent):
+    pass
+
+
+class CharacterDisplayTourEvent(TourEvent):
+    pass
+
+
+class CharacterEditorTourEvent(TourEvent):
+    pass
+
+
+class CharacterEditorNameLineEditTourEvent(TourEvent):
+    pass
+
+
+@dataclass
+class CharacterEditorNameFilledTourEvent(TourEvent):
+    name: str = ''
+
+
+class CharacterEditorAvatarDisplayTourEvent(TourEvent):
+    pass
+
+
+class CharacterEditorAvatarMenuTourEvent(TourEvent):
+    pass
+
+
+class CharacterEditorAvatarMenuCloseTourEvent(TourEvent):
+    pass
+
+
+class CharacterEditorBackButtonTourEvent(TourEvent):
+    pass
+
+
 def tour_events(tutorial: Tutorial, sender: QObject):
     return tour_factories[tutorial](sender)
 
@@ -163,13 +238,15 @@ def tour_events(tutorial: Tutorial, sender: QObject):
 def first_novel_tour_factory(sender: QObject) -> List[TourEvent]:
     return [LibraryTourEvent(sender,
                              message='Navigate first to your library panel. This is where you will find all your stories.'),
-            NewStoryButtonTourEvent(sender, message="Let's create a new story.", delegate_click=False),
+            NewStoryButtonTourEvent(sender, delegate_click=False),
             NewStoryDialogOpenTourEvent(sender),
             NewStoryTitleInDialogTourEvent(sender,
                                            message="Specify your story's name. You can change it later. Now click to autofill.",
                                            action='Fill in',
                                            delegate_click=False),
             NewStoryTitleFillInDialogTourEvent(sender, title='My new novel'),
+            NewStoryDialogWizardCustomizationTourEvent(sender,
+                                                       message="A personalization step is available to help you customzie your experience. Let's turn this off, for now."),
             NewStoryDialogOkayButtonTourEvent(sender),
             TutorialNovelSelectTourEvent(sender),
             NovelDisplayTourEvent(sender,
@@ -203,5 +280,45 @@ def first_novel_tour_factory(sender: QObject) -> List[TourEvent]:
                                   action='Finish tour')]
 
 
-tour_factories = {Tutorial.FirstNovel: first_novel_tour_factory}
+def first_character_tour_factory(sender: QObject) -> List[TourEvent]:
+    return [
+        TutorialNovelOpenTourEvent(sender),
+        CharacterViewTourEvent(sender, message="Visit the Characters panel"),
+        CharacterNewButtonTourEvent(sender, message='Click to add a new character'),
+        CharacterEditorTourEvent(sender,
+                                 message='This your character editor panel. You can edit character role, personality, backstory, etc.',
+                                 action='Next'),
+        CharacterEditorNameLineEditTourEvent(sender, message="Let's give the character a name",
+                                             action="Name her 'Jane'"),
+        CharacterEditorNameFilledTourEvent(sender, name='Jane'),
+        CharacterEditorNameLineEditTourEvent(sender, message="Good. That is your character's name.", action='Next'),
+        CharacterEditorAvatarDisplayTourEvent(sender,
+                                              message="Notice how the character's avatar changed. Click to customize it more."),
+        CharacterEditorAvatarMenuTourEvent(sender,
+                                           message="Multiple options are available for a character's avatar. To get the most out of Plotlyst, we recommend uploading custom images",
+                                           action='Next'),
+        CharacterEditorAvatarMenuCloseTourEvent(sender),
+        CharacterEditorBackButtonTourEvent(sender, message="Let's close the character editor for now and go back "),
+        CharacterCardTourEvent(sender, message='A character card was created for your new character', action='Next',
+                               delegate_click=False),
+        CharacterPerspectivesTourEvent(sender,
+                                       message='Multiple perspectives are available to offer different views for the characters',
+                                       action='Next', delegate_click=False),
+        CharacterPerspectiveCardsTourEvent(sender, message='Display all characters in a card view', click_before=True),
+        CharacterPerspectiveTableTourEvent(sender, message='Display all characters in a table', click_before=True),
+        CharacterPerspectiveComparisonTourEvent(sender, 'Compare characters to each other by certain attributes',
+                                                click_before=True),
+        CharacterPerspectiveNetworkTourEvent(sender, 'Visualize a relationship network among your characters',
+                                             click_before=True),
+        CharacterPerspectiveProgressTourEvent(sender, 'Track the progress of your character profiles',
+                                              click_before=True),
+        CharacterDisplayTourEvent(sender, 'The tour is over! Check out more tutorials to learn about characters.',
+                                  action='Finish tour')
+    ]
+
+
+tour_factories = {
+    Tutorial.FirstNovel: first_novel_tour_factory,
+    Tutorial.FirstCharacter: first_character_tour_factory,
+}
 tour_teardowns = {Tutorial.FirstNovel: TutorialNovelCloseTourEvent}

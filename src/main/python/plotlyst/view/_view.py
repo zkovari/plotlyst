@@ -31,6 +31,7 @@ from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import global_event_dispatcher, event_dispatchers
 from src.main.python.plotlyst.events import CharacterDeletedEvent, NovelSyncEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
+from src.main.python.plotlyst.service.tour import TourService
 
 
 class AbstractView(QObject, EventListener):
@@ -49,6 +50,7 @@ class AbstractView(QObject, EventListener):
         for event in self._global_event_types:
             global_event_dispatcher.register(self, event)
 
+        self._tour_service = TourService.instance()
         self.repo = RepositoryPersistenceManager.instance()
 
     def setNavigableButtonGroup(self, group: QButtonGroup):

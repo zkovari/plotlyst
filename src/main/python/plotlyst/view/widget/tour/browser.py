@@ -55,10 +55,12 @@ class TutorialsTreeView(TreeView):
         self._selected: Optional[TutorialNode] = None
 
         self._wdgBasic = self.__initNode('Introduction', Tutorial.ContainerIntroduction, IconRegistry.tutorial_icon())
-        self._wdgBasic.addChild(self.__initNode('Create novel', Tutorial.FirstNovel, IconRegistry.book_icon()))
+        self._wdgBasic.addChild(self.__initNode('Create a novel', Tutorial.FirstNovel, IconRegistry.book_icon()))
         self._wdgBasic.addChild(
-            self.__initNode('Create protagonist', Tutorial.FirstProtagonist, IconRegistry.character_icon()))
-        self._wdgBasic.addChild(self.__initNode('Create scenes', Tutorial.FirstScene, IconRegistry.scene_icon()))
+            self.__initNode('Create a character', Tutorial.FirstCharacter, IconRegistry.character_icon()))
+        # self._wdgBasic.addChild(
+        #     self.__initNode('Create protagonist', Tutorial.FirstProtagonist, IconRegistry.character_icon()))
+        # self._wdgBasic.addChild(self.__initNode('Create a scene', Tutorial.FirstScene, IconRegistry.scene_icon()))
 
         self._centralWidget.layout().addWidget(self._wdgBasic)
         self._centralWidget.layout().addWidget(vspacer())

@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 
 import qtanim
-from PyQt6.QtCore import pyqtSignal, QObject
+from PyQt6.QtCore import pyqtSignal, QObject, QTimer
 from PyQt6.QtWidgets import QWidget, QAbstractButton, QLineEdit, QCompleter
 from overrides import overrides
 from qthandy import translucent, btn_popup, bold, italic, margins
@@ -32,10 +32,11 @@ from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Document, MALE, FEMALE, SelectionItem
 from src.main.python.plotlyst.core.template import protagonist_role
 from src.main.python.plotlyst.event.core import EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatchers
+from src.main.python.plotlyst.event.handler import event_dispatchers, global_event_dispatcher
 from src.main.python.plotlyst.events import NovelAboutToSyncEvent
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
+from src.main.python.plotlyst.service.tour import TourService
 from src.main.python.plotlyst.view.common import emoji_font, set_tab_icon, wrap, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
@@ -47,6 +48,10 @@ from src.main.python.plotlyst.view.widget.character.editor import CharacterRoleS
 from src.main.python.plotlyst.view.widget.character.plan import CharacterPlansWidget
 from src.main.python.plotlyst.view.widget.character.topic import CharacterTopicsEditor
 from src.main.python.plotlyst.view.widget.template import CharacterProfileTemplateView
+from src.main.python.plotlyst.view.widget.tour.core import CharacterEditorTourEvent, \
+    CharacterEditorNameLineEditTourEvent, TourEvent, CharacterEditorNameFilledTourEvent, \
+    CharacterEditorAvatarDisplayTourEvent, CharacterEditorAvatarMenuTourEvent, CharacterEditorBackButtonTourEvent, \
+    CharacterEditorAvatarMenuCloseTourEvent
 
 
 class CharacterEditor(QObject, EventListener):
@@ -199,9 +204,17 @@ class CharacterEditor(QObject, EventListener):
         dispatcher = event_dispatchers.instance(self.novel)
         dispatcher.register(self, NovelAboutToSyncEvent)
 
+        self._tour_service = TourService.instance()
+        global_event_dispatcher.register(self, CharacterEditorTourEvent, CharacterEditorNameLineEditTourEvent,
+                                         CharacterEditorNameFilledTourEvent, CharacterEditorAvatarDisplayTourEvent,
+                                         CharacterEditorAvatarMenuTourEvent, CharacterEditorAvatarMenuCloseTourEvent,
+                                         CharacterEditorBackButtonTourEvent)
+
     @overrides
     def event_received(self, event: Event):
-        if isinstance(event, NovelAboutToSyncEvent):
+        if isinstance(event, TourEvent):
+            self.__handle_tour_event(event)
+        elif isinstance(event, NovelAboutToSyncEvent):
             self._save()
 
     def _customize_profile(self):
@@ -340,3 +353,24 @@ class CharacterEditor(QObject, EventListener):
             self.repo.update_doc(self.novel, self.character.document)
 
         self.close.emit()
+
+    def __handle_tour_event(self, event: TourEvent):
+        if isinstance(event, CharacterEditorTourEvent):
+            self._tour_service.addWidget(self.widget, event)
+        elif isinstance(event, CharacterEditorNameLineEditTourEvent):
+            self._tour_service.addWidget(self.ui.lineName, event)
+        elif isinstance(event, CharacterEditorNameFilledTourEvent):
+            self.ui.lineName.setText(event.name)
+            self._name_edited(event.name)
+            self.ui.wdgAvatar.updateAvatar()
+            self._tour_service.next()
+        elif isinstance(event, CharacterEditorAvatarDisplayTourEvent):
+            self._tour_service.addWidget(self.ui.wdgAvatar, event)
+        elif isinstance(event, CharacterEditorAvatarMenuTourEvent):
+            self.ui.wdgAvatar.popupMenu().exec()
+            QTimer.singleShot(150, lambda: self._tour_service.addWidget(self.ui.wdgAvatar.popupMenu(), event))
+        elif isinstance(event, CharacterEditorAvatarMenuCloseTourEvent):
+            self.ui.wdgAvatar.popupMenu().close()
+            self._tour_service.next()
+        elif isinstance(event, CharacterEditorBackButtonTourEvent):
+            self._tour_service.addWidget(self.ui.btnClose, event)

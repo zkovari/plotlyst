@@ -33,7 +33,7 @@ from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
-from src.main.python.plotlyst.event.handler import event_dispatchers
+from src.main.python.plotlyst.event.handler import event_dispatchers, global_event_dispatcher
 from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent, NovelSyncEvent
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import proxy
@@ -53,6 +53,10 @@ from src.main.python.plotlyst.view.widget.character.comp import CharacterCompari
 from src.main.python.plotlyst.view.widget.character.comp import CharactersTreeView
 from src.main.python.plotlyst.view.widget.character.network import CharacterNetworkView
 from src.main.python.plotlyst.view.widget.characters import CharactersProgressWidget
+from src.main.python.plotlyst.view.widget.tour.core import CharacterNewButtonTourEvent, TourEvent, \
+    CharacterCardTourEvent, CharacterPerspectivesTourEvent, CharacterPerspectiveCardsTourEvent, \
+    CharacterPerspectiveTableTourEvent, CharacterPerspectiveNetworkTourEvent, CharacterPerspectiveComparisonTourEvent, \
+    CharacterPerspectiveProgressTourEvent, CharacterDisplayTourEvent
 
 
 class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
@@ -197,6 +201,19 @@ class CharactersView(AbstractNovelView):
         self.ui.cards.orderChanged.connect(self._characters_swapped)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
 
+        global_event_dispatcher.register(self, CharacterNewButtonTourEvent, CharacterCardTourEvent,
+                                         CharacterPerspectivesTourEvent, CharacterPerspectiveCardsTourEvent,
+                                         CharacterPerspectiveTableTourEvent,
+                                         CharacterPerspectiveNetworkTourEvent, CharacterPerspectiveComparisonTourEvent,
+                                         CharacterPerspectiveProgressTourEvent, CharacterDisplayTourEvent)
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, TourEvent):
+            self.__handle_tour_event(event)
+        else:
+            super().event_received(event)
+
     @overrides
     def refresh(self):
         self.model.modelReset.emit()
@@ -329,3 +346,34 @@ class CharactersView(AbstractNovelView):
         else:
             self.ui.scrollAreaComparisonContent.setStyleSheet('')
             self.ui.wdgComparisonLayout.setVisible(True)
+
+    def __handle_tour_event(self, event: TourEvent):
+        if isinstance(event, CharacterNewButtonTourEvent):
+            self._tour_service.addWidget(self.ui.btnNew, event)
+        elif isinstance(event, CharacterCardTourEvent):
+            card = self.ui.cards.cardAt(0)
+            self._tour_service.addWidget(card, event)
+        elif isinstance(event, CharacterPerspectivesTourEvent):
+            self._tour_service.addWidget(self.ui.wdgPerspectives, event)
+        elif isinstance(event, CharacterPerspectiveCardsTourEvent):
+            if event.click_before:
+                self.ui.btnCardsView.click()
+            self._tour_service.addWidget(self.ui.btnCardsView, event)
+        elif isinstance(event, CharacterPerspectiveTableTourEvent):
+            if event.click_before:
+                self.ui.btnTableView.click()
+            self._tour_service.addWidget(self.ui.btnTableView, event)
+        elif isinstance(event, CharacterPerspectiveComparisonTourEvent):
+            if event.click_before:
+                self.ui.btnComparison.click()
+            self._tour_service.addWidget(self.ui.btnComparison, event)
+        elif isinstance(event, CharacterPerspectiveNetworkTourEvent):
+            if event.click_before:
+                self.ui.btnRelationsView.click()
+            self._tour_service.addWidget(self.ui.btnRelationsView, event)
+        elif isinstance(event, CharacterPerspectiveProgressTourEvent):
+            if event.click_before:
+                self.ui.btnProgressView.click()
+            self._tour_service.addWidget(self.ui.btnProgressView, event)
+        elif isinstance(event, CharacterDisplayTourEvent):
+            self._tour_service.addWidget(self.widget, event)
