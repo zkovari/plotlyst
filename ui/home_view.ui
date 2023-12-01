@@ -1146,7 +1146,11 @@ It offers a range of tools to support various stages of novel writing, including
                </spacer>
               </item>
               <item>
-               <widget class="QTextBrowser" name="textTutorial"/>
+               <widget class="QTextBrowser" name="textTutorial">
+                <property name="rounded" stdset="0">
+                 <bool>true</bool>
+                </property>
+               </widget>
               </item>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_11">
@@ -1156,20 +1160,7 @@ It offers a range of tools to support various stages of novel writing, including
                 <property name="rightMargin">
                  <number>10</number>
                 </property>
-                <item>
-                 <spacer name="horizontalSpacer_8">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-                <item>
+                <item alignment="Qt::AlignHCenter">
                  <widget class="QPushButton" name="btnStartTutorial">
                   <property name="cursor">
                    <cursorShape>PointingHandCursor</cursorShape>
@@ -1181,6 +1172,9 @@ It offers a range of tools to support various stages of novel writing, including
                    <bool>true</bool>
                   </property>
                   <property name="positive" stdset="0">
+                   <bool>true</bool>
+                  </property>
+                  <property name="large" stdset="0">
                    <bool>true</bool>
                   </property>
                  </widget>

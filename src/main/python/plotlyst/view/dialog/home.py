@@ -38,7 +38,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.novel import NovelCustomizationWizard
 from src.main.python.plotlyst.view.widget.tour.core import NewStoryTitleInDialogTourEvent, \
-    NewStoryTitleFillInDialogTourEvent, NewStoryDialogOkayButtonTourEvent
+    NewStoryTitleFillInDialogTourEvent, NewStoryDialogOkayButtonTourEvent, NewStoryDialogWizardCustomizationTourEvent
 from src.main.python.plotlyst.view.widget.utility import ask_for_resource
 
 
@@ -85,6 +85,7 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
 
         self._tour_service: TourService = TourService.instance()
         self._eventTypes = [NewStoryTitleInDialogTourEvent, NewStoryTitleFillInDialogTourEvent,
+                            NewStoryDialogWizardCustomizationTourEvent,
                             NewStoryDialogOkayButtonTourEvent]
         global_event_dispatcher.register(self, *self._eventTypes)
 
@@ -115,6 +116,8 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         elif isinstance(event, NewStoryTitleFillInDialogTourEvent):
             self.lineTitle.setText(event.title)
             self._tour_service.next()
+        elif isinstance(event, NewStoryDialogWizardCustomizationTourEvent):
+            self._tour_service.addDialogWidget(self, self.toggleWizard, event)
         elif isinstance(event, NewStoryDialogOkayButtonTourEvent):
             self._tour_service.addDialogWidget(self, self.btnCreate, event)
 
