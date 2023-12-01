@@ -26,7 +26,8 @@ from qttour import TourManager, TourSequence, TourStep
 
 from src.main.python.plotlyst.event.core import emit_global_event
 from src.main.python.plotlyst.view.widget.tour import Tutorial
-from src.main.python.plotlyst.view.widget.tour.core import COLOR_ON_NAVBAR, tour_events, TourEvent, tour_teardowns
+from src.main.python.plotlyst.view.widget.tour.core import COLOR_ON_NAVBAR, tour_events, TourEvent, tour_teardowns, \
+    TutorialNovelCloseTourEvent
 
 
 class TourService(QObject):
@@ -84,6 +85,6 @@ class TourService(QObject):
             self._manager.finish()
 
     def _tourFinished(self):
-        teardown = tour_teardowns.get(self._tutorial)
+        teardown = tour_teardowns.get(self._tutorial, TutorialNovelCloseTourEvent)
         if teardown:
             emit_global_event(teardown(self))
