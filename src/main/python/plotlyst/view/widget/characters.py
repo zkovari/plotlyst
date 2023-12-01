@@ -553,6 +553,8 @@ class CharacterAvatar(QWidget):
     def __init__(self, parent=None, defaultIconSize: int = 118, avatarSize: int = 168, customIconSize: int = 132,
                  margins: int = 17):
         super().__init__(parent)
+        self._menu: Optional[MenuWidget] = None
+
         self._defaultIconSize = defaultIconSize
         self._avatarSize = avatarSize
         self._customIconSize = customIconSize
@@ -570,6 +572,9 @@ class CharacterAvatar(QWidget):
 
         self.reset()
 
+    def popupMenu(self) -> Optional[MenuWidget]:
+        return self._menu
+
     def setUploadPopupMenu(self):
         if not self._character:
             raise ValueError('Set character first')
@@ -577,8 +582,8 @@ class CharacterAvatar(QWidget):
         wdg.updated.connect(self._uploadedAvatar)
         wdg.selectorChanged.connect(self.updateAvatar)
 
-        menu = MenuWidget(self.btnAvatar)
-        menu.addWidget(wdg)
+        self._menu = MenuWidget(self.btnAvatar)
+        self._menu.addWidget(wdg)
 
     def character(self) -> Optional[Character]:
         return self._character

@@ -24,13 +24,19 @@ from src.main.python.plotlyst.view.widget.tour import Tutorial
 # flake8: noqa
 tutorial_titles: Dict[Tutorial, str] = {
     Tutorial.FirstNovel: 'Create your first novel',
+    Tutorial.FirstCharacter: 'Create your first character',
     Tutorial.FirstScene: 'Create your first scene',
     Tutorial.FirstProtagonist: 'Create your first protagonist',
 }
 
-tutorial_descriptions: Dict[Tutorial, str] = {}
-
-tutorial_descriptions[Tutorial.FirstNovel] = '''In this tutorial, you will create your first novel. You will learn how to:
- * Use the Library panel to create and edit novels
- * Open the corresponding novel editor to navigate through the different story panels, e.g., characters, scenes, manuscript, etc.
-'''
+tutorial_descriptions: Dict[Tutorial, str] = {
+    Tutorial.FirstNovel: '''In this tutorial, you will create your first novel. You will:
+ * Use the Library panel to create a novel
+ * Open the created novel and navigate through its primary panels, e.g., characters, scenes, manuscript, etc.
+''',
+    Tutorial.FirstCharacter: '''Let's create your first character. You will:
+ * Add a new character and give them a name
+ * Select an avatar
+ * Browse the different perspectives that include your new character
+    '''
+}
