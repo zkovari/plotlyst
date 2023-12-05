@@ -20,10 +20,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Optional, Dict, Set
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import QFrame
 from overrides import overrides
-from qthandy import vspacer, clear_layout
+from qthandy import vspacer, clear_layout, transparent
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from src.main.python.plotlyst.common import recursive
@@ -127,7 +127,9 @@ class WorldBuildingTreeView(TreeView):
         self._root: Optional[RootNode] = None
         self._entities: Dict[WorldBuildingEntity, EntityNode] = {}
         self._selectedEntities: Set[WorldBuildingEntity] = set()
-        self._centralWidget.setProperty('bg', True)
+        # self._centralWidget.setProperty('bg', True)
+        transparent(self)
+        # self._centralWidget.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
     def selectRoot(self):
         self._root.select()
