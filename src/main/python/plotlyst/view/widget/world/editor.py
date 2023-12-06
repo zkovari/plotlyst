@@ -24,7 +24,7 @@ import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit
-from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox
+from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -33,7 +33,8 @@ from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity, Wor
     WorldBuildingEntityElement, WorldBuildingEntityElementType
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import action, push_btn, frame, insert_before_the_end, fade_out_and_gc
+from src.main.python.plotlyst.view.common import action, push_btn, frame, insert_before_the_end, fade_out_and_gc, \
+    tool_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit
@@ -226,6 +227,10 @@ class WorldBuildingEntityElementWidget(QWidget):
             return WorldBuildingEntityHeaderElementEditor(novel, element)
         elif element.type == WorldBuildingEntityElementType.Quote:
             return WorldBuildingEntityQuoteElementEditor(novel, element)
+        elif element.type == WorldBuildingEntityElementType.Variables:
+            return WorldBuildingEntityVariablesElementEditor(novel, element)
+        elif element.type == WorldBuildingEntityElementType.Highlight:
+            return WorldBuildingEntityHighlightedTextElementEditor(novel, element)
         else:
             raise ValueError(f'Unsupported WorldBuildingEntityElement type {element.type}')
 
@@ -333,7 +338,6 @@ class WorldBuildingEntityQuoteElementEditor(WorldBuildingEntityElementWidget):
                 background-color: rgba(0, 0, 0, 0);
                 color: grey;
         ''')
-        # self.textEdit.setProperty('transparent', True)
         self.textEdit.setPlaceholderText('Edit quote')
         font: QFont = self.textEdit.font()
         font.setPointSize(14)
@@ -388,6 +392,54 @@ class WorldBuildingEntityQuoteElementEditor(WorldBuildingEntityElementWidget):
         self.save()
 
 
+class WorldBuildingEntityVariablesElementEditor(WorldBuildingEntityElementWidget):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
+        super().__init__(novel, element, parent)
+        vbox(self, 5)
+        margins(self, right=15)
+
+        self.frame = frame()
+        self.frame.setStyleSheet('''
+        .QFrame {
+            border: 1px outset #510442;
+            border-radius: 6px;
+            background: #DABFA7;
+        }
+        ''')
+
+        self.btnAdd = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True)
+        self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd, enterOpacity=0.8))
+        vbox(self.frame, 10).addWidget(self.btnAdd)
+
+        self.layout().addWidget(self.frame)
+
+
+class WorldBuildingEntityHighlightedTextElementEditor(WorldBuildingEntityElementWidget):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
+        super().__init__(novel, element, parent)
+        vbox(self, 5)
+        margins(self, right=15)
+
+        self.frame = frame()
+        sp(self.frame).v_max()
+        self.frame.setStyleSheet('''
+                        .QFrame {
+                            border: 1px outset #510442;
+                            border-left: 3px outset #510442;
+                            border-radius: 4px;
+                            background: #E3D0BD;
+                        }''')
+        self.textEdit = AutoAdjustableTextEdit()
+        font: QFont = self.textEdit.font()
+        font.setPointSize(14)
+        self.textEdit.setFont(font)
+        self.textEdit.setPlaceholderText('Begin writing...')
+        self.textEdit.setProperty('transparent', True)
+        vbox(self.frame, 10).addWidget(self.textEdit)
+
+        self.layout().addWidget(self.frame)
+
+
 class WorldBuildingEntitySectionElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent)
@@ -413,6 +465,17 @@ class SectionAdditionMenu(MenuWidget):
         self.addAction(action('Crime'))
 
 
+class SideBlockAdditionMenu(MenuWidget):
+    newSideBlockSelected = pyqtSignal(WorldBuildingEntityElementType)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.addAction(action('Variables', IconRegistry.from_name('mdi.alpha-v-box-outline'),
+                              slot=lambda: self.newSideBlockSelected.emit(WorldBuildingEntityElementType.Variables)))
+        self.addAction(action('Highlighted text', IconRegistry.from_name('mdi6.card-text'),
+                              slot=lambda: self.newSideBlockSelected.emit(WorldBuildingEntityElementType.Highlight)))
+
+
 class WorldBuildingEntityEditor(QWidget):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -424,7 +487,7 @@ class WorldBuildingEntityEditor(QWidget):
         margins(self.wdgEditorMiddle, left=15, bottom=20)
         self.wdgEditorSide = QWidget()
         vbox(self.wdgEditorSide)
-        margins(self.wdgEditorSide, right=15)
+        margins(self.wdgEditorSide, left=10, right=15)
 
         splitter = QSplitter()
         splitter.setChildrenCollapsible(False)
@@ -457,6 +520,9 @@ class WorldBuildingEntityEditor(QWidget):
         if middle:
             menu = SectionAdditionMenu(wdg)
             menu.newSectionSelected.connect(self._addNewSection)
+        else:
+            menu = SideBlockAdditionMenu(wdg)
+            menu.newSideBlockSelected.connect(self._addNewSideBlock)
         wdg.installEventFilter(OpacityEventFilter(wdg, enterOpacity=0.8))
         if middle:
             self.wdgEditorMiddle.layout().addWidget(wdg, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -481,4 +547,14 @@ class WorldBuildingEntityEditor(QWidget):
         qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
 
         self._entity.elements.append(element)
+        self.repo.update_world(self._novel)
+
+    def _addNewSideBlock(self, type_: WorldBuildingEntityElementType):
+        element = WorldBuildingEntityElement(type_)
+        wdg = WorldBuildingEntityElementWidget.newWidget(self._novel, element)
+
+        insert_before_the_end(self.wdgEditorSide, wdg, 2)
+        qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
+
+        self._entity.side_elements.append(element)
         self.repo.update_world(self._novel)

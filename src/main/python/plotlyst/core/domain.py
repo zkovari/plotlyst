@@ -1330,6 +1330,7 @@ class WorldBuildingEntityElementType(Enum):
     Variables = 6
     Comments = 7
     Section = 8
+    Highlight = 9
 
 
 @dataclass
