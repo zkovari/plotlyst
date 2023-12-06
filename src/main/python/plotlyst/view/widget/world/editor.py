@@ -21,7 +21,7 @@ from functools import partial
 from typing import Optional, Dict, Set
 
 from PyQt6.QtCore import pyqtSignal, Qt
-from PyQt6.QtGui import QTextCharFormat, QTextCursor
+from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit
 from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox
 from qthandy.filter import OpacityEventFilter
@@ -33,7 +33,8 @@ from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity, Wor
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.view.common import action, push_btn, frame
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
+from src.main.python.plotlyst.view.widget.display import Icon
+from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
 
@@ -207,6 +208,8 @@ class WorldBuildingEntityElementWidget(QWidget):
             return WorldBuildingEntitySectionElementEditor(element)
         elif element.type == WorldBuildingEntityElementType.Header:
             return WorldBuildingEntityHeaderElementEditor(element)
+        elif element.type == WorldBuildingEntityElementType.Quote:
+            return WorldBuildingEntityQuoteElementEditor(element)
         else:
             raise ValueError(f'Unsupported WorldBuildingEntityElement type {element.type}')
 
@@ -218,7 +221,7 @@ class WorldBuildingEntityTextElementEditor(WorldBuildingEntityElementWidget):
 
         self.textEdit = AutoAdjustableTextEdit()
         self.textEdit.setProperty('transparent', True)
-        self.textEdit.setProperty('rounded', True)
+        # self.textEdit.setProperty('rounded', True)
         self.textEdit.setPlaceholderText('Describe this entity...')
         self.textEdit.textChanged.connect(self._textChanged)
         self.textEdit.setMarkdown(element.text)
@@ -235,6 +238,7 @@ class WorldBuildingEntityTextElementEditor(WorldBuildingEntityElementWidget):
         self.textEdit.setFont(font)
 
         hbox(self, 0, 0).addWidget(self.textEdit)
+        margins(self, left=15)
 
     def _textChanged(self):
         if not self.textEdit.toPlainText() or len(self.textEdit.toPlainText()) == 1:
@@ -291,6 +295,63 @@ class WorldBuildingEntityHeaderElementEditor(WorldBuildingEntityElementWidget):
             border-radius: 6px;
             background: #DABFA7;
         }''')
+
+
+class WorldBuildingEntityQuoteElementEditor(WorldBuildingEntityElementWidget):
+    def __init__(self, element: WorldBuildingEntityElement, parent=None):
+        super().__init__(element, parent)
+
+        vbox(self, 0)
+        margins(self, left=15, top=5, bottom=5)
+        self.textEdit = AutoAdjustableTextEdit()
+        self.textEdit.setStyleSheet(f'''
+                border: 0px;
+                background-color: rgba(0, 0, 0, 0);
+                color: grey;
+        ''')
+        # self.textEdit.setProperty('transparent', True)
+        self.textEdit.setPlaceholderText('Edit quote')
+        font: QFont = self.textEdit.font()
+        font.setPointSize(14)
+        if app_env.is_mac():
+            family = 'Helvetica Neue'
+        elif app_env.is_windows():
+            family = 'Calibri'
+        else:
+            family = 'Sans Serif'
+        font.setFamily(family)
+        font.setItalic(True)
+        self.textEdit.setFont(font)
+        self.textEdit.setText(self.element.text)
+
+        self.lineEditRef = AutoAdjustableLineEdit()
+        self.lineEditRef.setFont(font)
+        self.lineEditRef.setStyleSheet(f'''
+                QLineEdit {{
+                    border: 0px;
+                    background-color: rgba(0, 0, 0, 0);
+                    color: #510442;
+                }}''')
+        self.lineEditRef.setPlaceholderText('Source')
+        self.wdgQuoteRef = QWidget()
+        hbox(self.wdgQuoteRef, 2, 0)
+        iconDash = Icon()
+        iconDash.setIcon(IconRegistry.from_name('msc.dash', '#510442', scale=2.0))
+        self.wdgQuoteRef.layout().addWidget(iconDash)
+        self.wdgQuoteRef.layout().addWidget(self.lineEditRef)
+
+        self.frame = frame()
+        vbox(self.frame, 5)
+        margins(self.frame, left=20, right=15)
+        self.frame.layout().addWidget(self.textEdit)
+        self.frame.layout().addWidget(self.wdgQuoteRef, alignment=Qt.AlignmentFlag.AlignRight)
+        self.layout().addWidget(self.frame)
+        self.frame.setStyleSheet('''
+                .QFrame {
+                    border-left: 3px outset #510442;
+                    border-radius: 2px;
+                    background: #E3D0BD;
+                }''')
 
 
 class WorldBuildingEntitySectionElementEditor(WorldBuildingEntityElementWidget):
