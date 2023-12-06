@@ -26,7 +26,7 @@ from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit
 from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox
 from qthandy.filter import OpacityEventFilter
-from qtmenu import MenuWidget, ActionTooltipDisplayMode
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import recursive
 from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityType, \
@@ -45,25 +45,20 @@ class EntityAdditionMenu(MenuWidget):
 
     def __init__(self, parent=None):
         super(EntityAdditionMenu, self).__init__(parent)
-        self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
-
-        self.addAction(action('Location', IconRegistry.location_icon(),
-                              slot=lambda: self._triggered(WorldBuildingEntityType.SETTING),
-                              tooltip='Physical location in the world'))
         self.addAction(action('Entity', IconRegistry.world_building_icon(),
                               slot=lambda: self._triggered(WorldBuildingEntityType.ABSTRACT),
-                              tooltip='Abstract entity in the world, e.g., nation, kingdom, or magic'))
-        self.addAction(action('Social group', IconRegistry.group_icon(),
-                              slot=lambda: self._triggered(WorldBuildingEntityType.GROUP),
-                              tooltip='Social group in the world, e.g., a guild or an organization'))
+                              tooltip='Any physical, human, or abstract entity in the world, e.g., location, kingdom, magic, God, etc.'))
         self.addSeparator()
-        self.addAction(action('Item', IconRegistry.from_name('mdi.ring', '#b6a6ca'),
-                              slot=lambda: self._triggered(WorldBuildingEntityType.ITEM),
-                              tooltip='Relevant item in the world, e.g., an artifact'))
-        self.addSeparator()
-        self.addAction(action('Container',
-                              slot=lambda: self._triggered(WorldBuildingEntityType.CONTAINER),
-                              tooltip='General container to group worldbuilding entities together'))
+
+        submenu = MenuWidget()
+        submenu.setTitle('Link')
+        submenu.setIcon(IconRegistry.from_name('fa5s.link'))
+        submenu.setDisabled(True)
+        submenu.addAction(action('Location', IconRegistry.location_icon()))
+        submenu.addAction(action('Social group', IconRegistry.group_icon()))
+        submenu.addAction(action('Character', IconRegistry.character_icon()))
+
+        self.addMenu(submenu)
 
     def _triggered(self, wdType: WorldBuildingEntityType):
         if wdType == WorldBuildingEntityType.SETTING:
@@ -133,6 +128,8 @@ class WorldBuildingTreeView(TreeView):
         self._centralWidget.setStyleSheet('background: #ede0d4;')
         transparent(self)
 
+        self.repo = RepositoryPersistenceManager.instance()
+
     def selectRoot(self):
         self._root.select()
         self._entitySelectionChanged(self._root, self._root.isSelected())
@@ -149,6 +146,8 @@ class WorldBuildingTreeView(TreeView):
     def addEntity(self, entity: WorldBuildingEntity):
         wdg = self.__initEntityWidget(entity)
         self._root.addChild(wdg)
+        self._novel.world.root_entity.children.append(entity)
+        self.repo.update_world(self._novel)
 
     def refresh(self):
         def addChildWdg(parent: WorldBuildingEntity, child: WorldBuildingEntity):
@@ -187,6 +186,7 @@ class WorldBuildingTreeView(TreeView):
         wdg = self.__initEntityWidget(entity)
         parent.addChild(wdg)
         parent.entity().children.append(entity)
+        self.repo.update_world(self._novel)
 
     def __initEntityWidget(self, entity: WorldBuildingEntity) -> EntityNode:
         node = EntityNode(entity, settings=self._settings)
@@ -428,6 +428,9 @@ class WorldBuildingEntityEditor(QWidget):
 
     def setEntity(self, entity: WorldBuildingEntity):
         self._entity = entity
+
+        clear_layout(self.wdgEditorMiddle)
+        clear_layout(self.wdgEditorSide)
 
         for element in self._entity.elements:
             self._addElement(element)
