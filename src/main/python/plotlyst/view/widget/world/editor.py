@@ -198,32 +198,35 @@ class WorldBuildingTreeView(TreeView):
 
 
 class WorldBuildingEntityElementWidget(QWidget):
-    def __init__(self, element: WorldBuildingEntityElement, parent=None):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(parent)
+        self.novel = novel
         self.element = element
 
+    def save(self):
+        RepositoryPersistenceManager.instance().update_world(self.novel)
+
     @staticmethod
-    def newWidget(element: WorldBuildingEntityElement) -> 'WorldBuildingEntityElementWidget':
+    def newWidget(novel: Novel, element: WorldBuildingEntityElement) -> 'WorldBuildingEntityElementWidget':
         if element.type == WorldBuildingEntityElementType.Text:
-            return WorldBuildingEntityTextElementEditor(element)
+            return WorldBuildingEntityTextElementEditor(novel, element)
         elif element.type == WorldBuildingEntityElementType.Section:
-            return WorldBuildingEntitySectionElementEditor(element)
+            return WorldBuildingEntitySectionElementEditor(novel, element)
         elif element.type == WorldBuildingEntityElementType.Header:
-            return WorldBuildingEntityHeaderElementEditor(element)
+            return WorldBuildingEntityHeaderElementEditor(novel, element)
         elif element.type == WorldBuildingEntityElementType.Quote:
-            return WorldBuildingEntityQuoteElementEditor(element)
+            return WorldBuildingEntityQuoteElementEditor(novel, element)
         else:
             raise ValueError(f'Unsupported WorldBuildingEntityElement type {element.type}')
 
 
 class WorldBuildingEntityTextElementEditor(WorldBuildingEntityElementWidget):
-    def __init__(self, element: WorldBuildingEntityElement, parent=None):
-        super().__init__(element, parent)
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
+        super().__init__(novel, element, parent)
         self._capitalized = False
 
         self.textEdit = AutoAdjustableTextEdit()
         self.textEdit.setProperty('transparent', True)
-        # self.textEdit.setProperty('rounded', True)
         self.textEdit.setPlaceholderText('Describe this entity...')
         self.textEdit.textChanged.connect(self._textChanged)
         self.textEdit.setMarkdown(element.text)
@@ -243,6 +246,9 @@ class WorldBuildingEntityTextElementEditor(WorldBuildingEntityElementWidget):
         margins(self, left=15)
 
     def _textChanged(self):
+        self.element.text = self.textEdit.toMarkdown()
+        self.save()
+
         if not self.textEdit.toPlainText() or len(self.textEdit.toPlainText()) == 1:
             self._capitalized = False
             return
@@ -261,8 +267,8 @@ class WorldBuildingEntityTextElementEditor(WorldBuildingEntityElementWidget):
 
 
 class WorldBuildingEntityHeaderElementEditor(WorldBuildingEntityElementWidget):
-    def __init__(self, element: WorldBuildingEntityElement, parent=None):
-        super().__init__(element, parent)
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
+        super().__init__(novel, element, parent)
 
         vbox(self, 0)
         margins(self, top=10, bottom=10)
@@ -287,6 +293,7 @@ class WorldBuildingEntityHeaderElementEditor(WorldBuildingEntityElementWidget):
         }}''')
         self.lineTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lineTitle.setText(self.element.title)
+        self.lineTitle.textEdited.connect(self._titleEdited)
 
         self.frame = frame()
         vbox(self.frame).addWidget(self.lineTitle, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -299,10 +306,14 @@ class WorldBuildingEntityHeaderElementEditor(WorldBuildingEntityElementWidget):
             background: #DABFA7;
         }''')
 
+    def _titleEdited(self, title: str):
+        self.element.title = title
+        self.save()
+
 
 class WorldBuildingEntityQuoteElementEditor(WorldBuildingEntityElementWidget):
-    def __init__(self, element: WorldBuildingEntityElement, parent=None):
-        super().__init__(element, parent)
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
+        super().__init__(novel, element, parent)
 
         vbox(self, 0)
         margins(self, left=15, top=5, bottom=5)
@@ -325,7 +336,8 @@ class WorldBuildingEntityQuoteElementEditor(WorldBuildingEntityElementWidget):
         font.setFamily(family)
         font.setItalic(True)
         self.textEdit.setFont(font)
-        self.textEdit.setText(self.element.text)
+        self.textEdit.setMarkdown(self.element.text)
+        self.textEdit.textChanged.connect(self._quoteChanged)
 
         self.lineEditRef = AutoAdjustableLineEdit()
         self.lineEditRef.setFont(font)
@@ -336,6 +348,7 @@ class WorldBuildingEntityQuoteElementEditor(WorldBuildingEntityElementWidget):
                     color: #510442;
                 }}''')
         self.lineEditRef.setPlaceholderText('Source')
+        self.lineEditRef.textEdited.connect(self._quoteRefEdited)
         self.wdgQuoteRef = QWidget()
         hbox(self.wdgQuoteRef, 2, 0)
         iconDash = Icon()
@@ -356,14 +369,22 @@ class WorldBuildingEntityQuoteElementEditor(WorldBuildingEntityElementWidget):
                     background: #E3D0BD;
                 }''')
 
+    def _quoteChanged(self):
+        self.element.text = self.textEdit.toMarkdown()
+        self.save()
+
+    def _quoteRefEdited(self, text: str):
+        self.element.ref = text
+        self.save()
+
 
 class WorldBuildingEntitySectionElementEditor(WorldBuildingEntityElementWidget):
-    def __init__(self, element: WorldBuildingEntityElement, parent=None):
-        super().__init__(element, parent)
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
+        super().__init__(novel, element, parent)
 
         vbox(self, 0)
         for el in self.element.blocks:
-            wdg = WorldBuildingEntityElementWidget.newWidget(el)
+            wdg = WorldBuildingEntityElementWidget.newWidget(self.novel, el)
             self.layout().addWidget(wdg)
 
 
@@ -430,7 +451,7 @@ class WorldBuildingEntityEditor(QWidget):
             self.wdgEditorSide.layout().addWidget(wdg, alignment=Qt.AlignmentFlag.AlignCenter)
 
     def _addElement(self, element: WorldBuildingEntityElement, middle: bool = True):
-        wdg = WorldBuildingEntityElementWidget.newWidget(element)
+        wdg = WorldBuildingEntityElementWidget.newWidget(self._novel, element)
 
         if middle:
             self.wdgEditorMiddle.layout().addWidget(wdg)
@@ -442,7 +463,7 @@ class WorldBuildingEntityEditor(QWidget):
             WorldBuildingEntityElement(WorldBuildingEntityElementType.Header),
             WorldBuildingEntityElement(WorldBuildingEntityElementType.Text)
         ])
-        wdg = WorldBuildingEntityElementWidget.newWidget(element)
+        wdg = WorldBuildingEntityElementWidget.newWidget(self._novel, element)
         insert_before_the_end(self.wdgEditorMiddle, wdg)
         qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
 

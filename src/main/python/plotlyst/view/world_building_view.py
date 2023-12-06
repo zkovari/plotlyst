@@ -26,8 +26,7 @@ from overrides import overrides
 from qthandy import line
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
-from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityElement, \
-    WorldBuildingEntityElementType
+from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
@@ -97,7 +96,7 @@ class WorldBuildingView(AbstractNovelView):
             color: #510442; 
         }}''')
 
-        # self._lineName.textEdited.connect(self._name_edited)
+        self.ui.lineName.textEdited.connect(self._name_edited)
         # self._btnIcon = IconSelectorButton()
         # self._btnIcon.iconSelected.connect(self._icon_changed)
         # self.ui.wdgName.layout().addWidget(self._btnIcon)
@@ -126,17 +125,17 @@ class WorldBuildingView(AbstractNovelView):
     def _selection_changed(self, entity: WorldBuildingEntity):
         self._entity = entity
         self.ui.lineName.setText(self._entity.name)
-#         self._entity.elements = [
-#             WorldBuildingEntityElement(WorldBuildingEntityElementType.Text, text="""The Elensh people is a group that has had a cultural identity for many hundreds of years. They're primarily found in Olinthis as well as the southern parts of Elken. They are the main people of Olinthis but are considered a minority in Elken, though they're generally respected both places.
-# They're known as the people of the flowers, because many of their traditions feature colourful flowers and they're known for being the best flower traders through many parts of Dysvoll."""),
-#             WorldBuildingEntityElement(WorldBuildingEntityElementType.Section, title='Fauna', blocks=[
-#                 WorldBuildingEntityElement(WorldBuildingEntityElementType.Header, title='Fauna'),
-#                 WorldBuildingEntityElement(WorldBuildingEntityElementType.Quote,
-#                                            text='This is a quoted text said by a smart person', ref='Beril'),
-#                 WorldBuildingEntityElement(WorldBuildingEntityElementType.Text)
-#             ]),
-#
-#         ]
+        #         self._entity.elements = [
+        #             WorldBuildingEntityElement(WorldBuildingEntityElementType.Text, text="""The Elensh people is a group that has had a cultural identity for many hundreds of years. They're primarily found in Olinthis as well as the southern parts of Elken. They are the main people of Olinthis but are considered a minority in Elken, though they're generally respected both places.
+        # They're known as the people of the flowers, because many of their traditions feature colourful flowers and they're known for being the best flower traders through many parts of Dysvoll."""),
+        #             WorldBuildingEntityElement(WorldBuildingEntityElementType.Section, title='Fauna', blocks=[
+        #                 WorldBuildingEntityElement(WorldBuildingEntityElementType.Header, title='Fauna'),
+        #                 WorldBuildingEntityElement(WorldBuildingEntityElementType.Quote,
+        #                                            text='This is a quoted text said by a smart person', ref='Beril'),
+        #                 WorldBuildingEntityElement(WorldBuildingEntityElementType.Text)
+        #             ]),
+        #
+        #         ]
         self._editor.setEntity(self._entity)
         # self._btnIcon.setVisible(True)
         # self.ui.tabWidget.setVisible(True)
@@ -163,6 +162,7 @@ class WorldBuildingView(AbstractNovelView):
     def _name_edited(self, name: str):
         self._entity.name = name
         self.ui.treeWorld.updateEntity(self._entity)
+        self.repo.update_world(self.novel)
 
     def _icon_changed(self, icon_name: str, color: QColor):
         self._entity.icon = icon_name
