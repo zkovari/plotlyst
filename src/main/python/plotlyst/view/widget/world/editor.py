@@ -21,19 +21,19 @@ from functools import partial
 from typing import Optional, Dict, Set
 
 from PyQt6.QtCore import pyqtSignal, Qt
-from PyQt6.QtWidgets import QFrame
-from overrides import overrides
-from qthandy import vspacer, clear_layout, transparent
+from PyQt6.QtGui import QTextCharFormat, QTextCursor
+from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit
+from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox
+from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from src.main.python.plotlyst.common import recursive
-from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityType
-from src.main.python.plotlyst.core.template import ProfileTemplate
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import action
+from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityType, \
+    WorldBuildingEntityElement, WorldBuildingEntityElementType
+from src.main.python.plotlyst.env import app_env
+from src.main.python.plotlyst.view.common import action, push_btn, frame
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.template.base import EditableTemplateWidget
-from src.main.python.plotlyst.view.widget.template.profile import ProfileTemplateView
+from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
 
@@ -127,9 +127,8 @@ class WorldBuildingTreeView(TreeView):
         self._root: Optional[RootNode] = None
         self._entities: Dict[WorldBuildingEntity, EntityNode] = {}
         self._selectedEntities: Set[WorldBuildingEntity] = set()
-        # self._centralWidget.setProperty('bg', True)
+        self._centralWidget.setStyleSheet('background: #ede0d4;')
         transparent(self)
-        # self._centralWidget.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
     def selectRoot(self):
         self._root.select()
@@ -195,30 +194,143 @@ class WorldBuildingTreeView(TreeView):
         return node
 
 
-class WorldBuildingProfileTemplateView(ProfileTemplateView):
-    def __init__(self, novel: Novel, profile: ProfileTemplate):
-        super().__init__([], profile, {})
-        self.novel = novel
-        self._entity: Optional[WorldBuildingEntity] = None
-        self.scrollArea.setFrameShape(QFrame.Shape.NoFrame)
-        for wdg in self.widgets:
-            if isinstance(wdg, EditableTemplateWidget):
-                wdg.valueFilled.connect(self._save)
-                wdg.valueReset.connect(self._save)
+class WorldBuildingEntityTextElementEditor(QWidget):
+    def __init__(self, element: WorldBuildingEntityElement, parent=None):
+        super().__init__(parent)
+        self.element = element
+        self._capitalized = False
 
-        self.repo = RepositoryPersistenceManager.instance()
+        self.textEdit = AutoAdjustableTextEdit()
+        self.textEdit.setProperty('transparent', True)
+        self.textEdit.setProperty('rounded', True)
+        self.textEdit.setPlaceholderText('Describe this entity...')
+        self.textEdit.textChanged.connect(self._textChanged)
+        self.textEdit.setMarkdown(element.text)
+
+        font = self.textEdit.font()
+        font.setPointSize(16)
+        if app_env.is_mac():
+            family = 'Helvetica Neue'
+        elif app_env.is_windows():
+            family = 'Calibri'
+        else:
+            family = 'Sans Serif'
+        font.setFamily(family)
+        self.textEdit.setFont(font)
+
+        hbox(self, 0, 0).addWidget(self.textEdit)
+
+    def _textChanged(self):
+        if not self.textEdit.toPlainText() or len(self.textEdit.toPlainText()) == 1:
+            self._capitalized = False
+            return
+
+        if self._capitalized:
+            return
+
+        format_first_letter = QTextCharFormat()
+        format_first_letter.setFontPointSize(32)
+
+        cursor = QTextCursor(self.textEdit.document())
+        cursor.movePosition(QTextCursor.MoveOperation.Start)
+        cursor.movePosition(QTextCursor.MoveOperation.NextCharacter, QTextCursor.MoveMode.KeepAnchor)
+        self._capitalized = True
+        cursor.setCharFormat(format_first_letter)
+
+
+class WorldBuildingEntityHeaderElementEditor(QWidget):
+    def __init__(self, element: WorldBuildingEntityElement, parent=None):
+        super().__init__(parent)
+        self.element = element
+
+        vbox(self, 0)
+        margins(self, top=10, bottom=10)
+        self.lineTitle = QLineEdit()
+        self.lineTitle.setProperty('transparent', True)
+        font = self.lineTitle.font()
+        font.setPointSize(24)
+        if app_env.is_mac():
+            family = 'Helvetica Neue'
+        elif app_env.is_windows():
+            family = 'Calibri'
+        else:
+            family = 'Sans Serif'
+        font.setFamily(family)
+        self.lineTitle.setFont(font)
+        self.lineTitle.setStyleSheet(f'''
+        QLineEdit {{
+            border: 0px;
+            background-color: rgba(0, 0, 0, 0);
+            color: #510442;
+        }}''')
+        self.lineTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lineTitle.setText(self.element.title)
+
+        # self.layout().addWidget(line(color='#4D0A71'))
+        # self.layout().addWidget(line(color='#4D0A71'))
+        self.frame = frame()
+        vbox(self.frame).addWidget(self.lineTitle, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self.frame)
+        self.frame.setStyleSheet('''
+        .QFrame {
+            border-top: 1px outset #510442;
+            border-bottom: 1px outset #510442;
+            border-radius: 6px;
+            background: #DABFA7;
+        }''')
+
+
+class WorldBuildingEntityEditor(QWidget):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+        self._entity: Optional[WorldBuildingEntity] = None
+
+        self.wdgEditorMiddle = QWidget()
+        vbox(self.wdgEditorMiddle)
+        margins(self.wdgEditorMiddle, left=15)
+        self.wdgEditorSide = QWidget()
+        vbox(self.wdgEditorSide)
+        margins(self.wdgEditorSide, right=15)
+
+        splitter = QSplitter()
+        splitter.setChildrenCollapsible(False)
+        splitter.addWidget(self.wdgEditorMiddle)
+        splitter.addWidget(self.wdgEditorSide)
+        splitter.setSizes([500, 150])
+
+        vbox(self, 0, 0).addWidget(splitter)
 
     def setEntity(self, entity: WorldBuildingEntity):
-        self.clearValues()
-        self.setValues(entity.template_values)
         self._entity = entity
 
-    @overrides
-    def clearValues(self):
-        self._entity = None
-        super(WorldBuildingProfileTemplateView, self).clearValues()
+        for element in self._entity.elements:
+            self._addElement(element)
 
-    def _save(self):
-        if self._entity:
-            self._entity.template_values = self.values()
-            self.repo.update_novel(self.novel)
+        for element in self._entity.side_elements:
+            self._addElement(element, False)
+
+        self._addPlaceholder()
+        self._addPlaceholder(False)
+        self.wdgEditorSide.layout().addWidget(vspacer())
+
+    def _addPlaceholder(self, middle: bool = True):
+        wdg = push_btn(IconRegistry.plus_icon('grey'), 'Add section', transparent_=True)
+        wdg.installEventFilter(OpacityEventFilter(wdg, enterOpacity=0.8))
+        if middle:
+            self.wdgEditorMiddle.layout().addWidget(wdg, alignment=Qt.AlignmentFlag.AlignLeft)
+        else:
+            self.wdgEditorSide.layout().addWidget(wdg, alignment=Qt.AlignmentFlag.AlignCenter)
+
+    def _addElement(self, element: WorldBuildingEntityElement, middle: bool = True):
+        if element.type == WorldBuildingEntityElementType.Text:
+            wdg = WorldBuildingEntityTextElementEditor(element)
+        elif element.type == WorldBuildingEntityElementType.Header:
+            wdg = WorldBuildingEntityHeaderElementEditor(element)
+        else:
+            return
+
+        if middle:
+            self.wdgEditorMiddle.layout().addWidget(wdg)
+        else:
+            self.wdgEditorSide.layout().addWidget(wdg)

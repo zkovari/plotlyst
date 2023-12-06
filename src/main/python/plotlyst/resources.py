@@ -41,6 +41,7 @@ class ResourceRegistry:
         self._frame1 = None
         self._cover1 = None
         self._paper_bg1 = None
+        self._vintage_pocket_banner = None
         self._banner = None
         self._circular_frame1 = None
         self._manuscript_docx_template = None
@@ -50,6 +51,7 @@ class ResourceRegistry:
         self._frame1 = self.__get_resource(app_context, 'frame_1.png')
         self._cover1 = self.__get_resource(app_context, 'cover_1.jpg')
         self._paper_bg1 = self.__get_resource(app_context, 'paper_bg.jpg')
+        self._vintage_pocket_banner = self.__get_resource(app_context, 'antique.jpg')
         self._banner = self.__get_resource(app_context, 'plotlyst_banner.png')
         self._circular_frame1 = self.__get_resource(app_context, 'circular_frame1.png')
         self._manuscript_docx_template = self.__get_resource(app_context, 'manuscript-template.docx')
@@ -72,6 +74,10 @@ class ResourceRegistry:
     @property
     def cover1(self) -> str:
         return self._cover1
+
+    @property
+    def vintage_pocket_banner(self) -> str:
+        return self._vintage_pocket_banner
 
     @property
     def paper_bg(self) -> str:

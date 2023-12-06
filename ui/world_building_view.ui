@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>874</width>
-    <height>655</height>
+    <width>937</width>
+    <height>659</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,66 +17,21 @@
    <bool>true</bool>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_3">
-   <item>
-    <widget class="QWidget" name="wdgTitleParent" native="true">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_3">
-      <property name="spacing">
-       <number>1</number>
-      </property>
-      <property name="leftMargin">
-       <number>0</number>
-      </property>
-      <property name="topMargin">
-       <number>0</number>
-      </property>
-      <property name="rightMargin">
-       <number>0</number>
-      </property>
-      <property name="bottomMargin">
-       <number>0</number>
-      </property>
-      <item>
-       <spacer name="horizontalSpacer_4">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
-       <widget class="QToolButton" name="iconReaderMode">
-        <property name="cursor">
-         <cursorShape>PointingHandCursor</cursorShape>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="Toggle" name="checkBox">
-        <property name="cursor">
-         <cursorShape>PointingHandCursor</cursorShape>
-        </property>
-        <property name="text">
-         <string>CheckBox</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
+   <property name="spacing">
+    <number>3</number>
+   </property>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>2</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
    <item>
     <widget class="QWidget" name="wdgButtonsHeader" native="true">
      <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -193,13 +148,39 @@
         </property>
        </spacer>
       </item>
+      <item>
+       <widget class="QToolButton" name="iconReaderMode">
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="transparent" stdset="0">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="Toggle" name="checkBox">
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
+        <property name="text">
+         <string>CheckBox</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
-     <property name="leftMargin">
+     <property name="spacing">
       <number>5</number>
+     </property>
+     <property name="leftMargin">
+      <number>8</number>
      </property>
      <property name="bottomMargin">
       <number>5</number>
@@ -214,6 +195,19 @@
        </property>
        <property name="checkable">
         <bool>true</bool>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+       <property name="base" stdset="0">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="Line" name="line">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
        </property>
       </widget>
      </item>
@@ -300,24 +294,21 @@
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
-          <property name="transparent" stdset="0">
-           <bool>true</bool>
-          </property>
           <layout class="QVBoxLayout" name="verticalLayout_2">
            <property name="spacing">
             <number>3</number>
            </property>
            <property name="leftMargin">
-            <number>2</number>
+            <number>5</number>
            </property>
            <property name="topMargin">
-            <number>10</number>
+            <number>15</number>
            </property>
            <property name="rightMargin">
-            <number>2</number>
+            <number>0</number>
            </property>
            <property name="bottomMargin">
-            <number>10</number>
+            <number>15</number>
            </property>
            <item>
             <widget class="WorldBuildingTreeView" name="treeWorld">
@@ -346,8 +337,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>412</width>
-             <height>542</height>
+             <width>609</width>
+             <height>597</height>
             </rect>
            </property>
            <property name="sizePolicy">
@@ -367,13 +358,13 @@
              <number>2</number>
             </property>
             <property name="topMargin">
-             <number>2</number>
+             <number>15</number>
             </property>
             <property name="rightMargin">
              <number>2</number>
             </property>
             <property name="bottomMargin">
-             <number>2</number>
+             <number>15</number>
             </property>
             <item>
              <spacer name="horizontalSpacer_2">
@@ -392,7 +383,7 @@
              </spacer>
             </item>
             <item>
-             <widget class="QWidget" name="wdgCenterEditor" native="true">
+             <widget class="QFrame" name="wdgCenterEditor">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                 <horstretch>0</horstretch>
@@ -405,75 +396,95 @@
                 <height>16777215</height>
                </size>
               </property>
-              <property name="relaxed-white-bg" stdset="0">
-               <bool>true</bool>
-              </property>
-              <layout class="QVBoxLayout" name="verticalLayout">
+              <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0">
                <property name="spacing">
-                <number>3</number>
+                <number>5</number>
                </property>
                <property name="leftMargin">
-                <number>2</number>
+                <number>0</number>
                </property>
                <property name="topMargin">
-                <number>2</number>
+                <number>0</number>
                </property>
                <property name="rightMargin">
-                <number>2</number>
+                <number>0</number>
                </property>
                <property name="bottomMargin">
-                <number>2</number>
+                <number>15</number>
                </property>
                <item>
-                <widget class="QLineEdit" name="lineName"/>
+                <widget class="QWidget" name="wdgNameHeader" native="true">
+                 <layout class="QVBoxLayout" name="verticalLayout_7">
+                  <property name="spacing">
+                   <number>15</number>
+                  </property>
+                  <property name="leftMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>10</number>
+                  </property>
+                  <item>
+                   <widget class="QLabel" name="lblBanner">
+                    <property name="minimumSize">
+                     <size>
+                      <width>400</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>16777215</width>
+                      <height>250</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string/>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="lineName"/>
+                  </item>
+                 </layout>
+                </widget>
                </item>
                <item>
-                <widget class="QSplitter" name="splitterEditor">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="childrenCollapsible">
-                  <bool>false</bool>
-                 </property>
-                 <widget class="QWidget" name="wdgEntityMiddle" native="true">
-                  <layout class="QVBoxLayout" name="verticalLayout_4">
-                   <property name="spacing">
-                    <number>3</number>
-                   </property>
-                   <property name="leftMargin">
-                    <number>2</number>
-                   </property>
-                   <property name="topMargin">
-                    <number>2</number>
-                   </property>
-                   <property name="rightMargin">
-                    <number>2</number>
-                   </property>
-                   <property name="bottomMargin">
-                    <number>2</number>
-                   </property>
-                  </layout>
-                 </widget>
-                 <widget class="QWidget" name="wdgEntityRight" native="true">
-                  <layout class="QVBoxLayout" name="verticalLayout_5">
-                   <property name="spacing">
-                    <number>3</number>
-                   </property>
-                   <property name="leftMargin">
-                    <number>2</number>
-                   </property>
-                   <property name="topMargin">
-                    <number>2</number>
-                   </property>
-                   <property name="rightMargin">
-                    <number>2</number>
-                   </property>
-                   <property name="bottomMargin">
-                    <number>2</number>
-                   </property>
-                  </layout>
-                 </widget>
+                <widget class="QWidget" name="wdgSeparator" native="true">
+                 <layout class="QHBoxLayout" name="horizontalLayout_3">
+                  <property name="leftMargin">
+                   <number>15</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>10</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>15</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>10</number>
+                  </property>
+                 </layout>
                 </widget>
+               </item>
+               <item>
+                <spacer name="verticalSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
                </item>
               </layout>
              </widget>
@@ -502,6 +513,7 @@
       </layout>
      </widget>
      <widget class="QWidget" name="pageMap"/>
+     <widget class="QWidget" name="pageTimeline"/>
     </widget>
    </item>
   </layout>
@@ -519,7 +531,24 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>iconReaderMode</sender>
+   <signal>clicked()</signal>
+   <receiver>checkBox</receiver>
+   <slot>toggle()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>766</x>
+     <y>24</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>802</x>
+     <y>21</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
  <buttongroups>
   <buttongroup name="buttonGroup"/>
  </buttongroups>

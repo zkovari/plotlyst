@@ -19,19 +19,25 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt6.QtGui import QColor
+import qtanim
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor, QPixmap
 from overrides import overrides
+from qthandy import line
 
-from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity
-from src.main.python.plotlyst.core.template import default_location_profiles
+from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityElement, \
+    WorldBuildingEntityElementType
+from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, shadow, \
+    insert_before_the_end
 from src.main.python.plotlyst.view.generated.world_building_view_ui import Ui_WorldBuildingView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_bg_image
 from src.main.python.plotlyst.view.widget.tree import TreeSettings
-from src.main.python.plotlyst.view.widget.world.editor import EntityAdditionMenu, WorldBuildingProfileTemplateView
+from src.main.python.plotlyst.view.widget.world.editor import EntityAdditionMenu, WorldBuildingEntityEditor
 
 
 class WorldBuildingView(AbstractNovelView):
@@ -40,52 +46,78 @@ class WorldBuildingView(AbstractNovelView):
         super().__init__(novel)
         self.ui = Ui_WorldBuildingView()
         self.ui.setupUi(self.widget)
-        # self.ui.wdgCenterEditor.setProperty('bg-image', True)
         apply_bg_image(self.ui.pageEntity, resource_registry.paper_bg)
         apply_bg_image(self.ui.scrollAreaWidgetContents, resource_registry.paper_bg)
+        # background: #F2F2F2;
+        # 692345;
+        self.ui.wdgCenterEditor.setStyleSheet('''
+        #wdgCenterEditor {
+            background: #ede0d4;
+            border-radius: 12px;
+            opacity: 0.1;
+        }
+        ''')
+        # self.ui.wdgCenterEditor.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.ui.lblBanner.setPixmap(QPixmap(resource_registry.vintage_pocket_banner))
 
         self._entity: Optional[WorldBuildingEntity] = None
 
         self.ui.btnNew.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnNew.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnNew))
+        self.ui.btnTreeToggle.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
+        self.ui.btnTreeToggle.clicked.connect(lambda x: qtanim.toggle_expansion(self.ui.wdgWorldContainer, x))
+        shadow(self.ui.wdgWorldContainer)
         self._additionMenu = EntityAdditionMenu(self.ui.btnNew)
         self._additionMenu.entityTriggered.connect(self.ui.treeWorld.addEntity)
+        self.ui.iconReaderMode.setIcon(IconRegistry.from_name('fa5s.eye'))
 
-        self.ui.splitterNav.setSizes([150, 500])
-        self.ui.splitterEditor.setSizes([500, 150])
-        # self._lineName = AutoAdjustableLineEdit()
-        # self._lineName.setPlaceholderText('Name')
-        # transparent(self._lineName)
-        # incr_font(self._lineName, 15)
+        self.ui.wdgSeparator.layout().addWidget(line(color='#510442'))
+
+        self.ui.btnWorldView.setIcon(IconRegistry.world_building_icon())
+        self.ui.btnMapView.setIcon(IconRegistry.from_name('fa5s.map-marked-alt', color_on=PLOTLYST_SECONDARY_COLOR))
+        self.ui.btnHistoryView.setIcon(
+            IconRegistry.from_name('mdi.timeline-outline', color_on=PLOTLYST_SECONDARY_COLOR))
+
+        self.ui.splitterNav.setSizes([100, 500])
+        font = self.ui.lineName.font()
+        font.setPointSize(32)
+        if app_env.is_mac():
+            family = 'Helvetica Neue'
+        elif app_env.is_windows():
+            family = 'Calibri'
+        else:
+            family = 'Sans Serif'
+        font.setFamily(family)
+        self.ui.lineName.setFont(font)
+        self.ui.lineName.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.ui.lineName.setStyleSheet(f'''
+        QLineEdit {{
+            border: 0px;
+            background-color: rgba(0, 0, 0, 0);
+            color: #510442; 
+        }}''')
+
         # self._lineName.textEdited.connect(self._name_edited)
         # self._btnIcon = IconSelectorButton()
         # self._btnIcon.iconSelected.connect(self._icon_changed)
         # self.ui.wdgName.layout().addWidget(self._btnIcon)
         # self.ui.wdgName.layout().addWidget(self._lineName)
 
-        # self.ui.wdgWorldContainer.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        # self.ui.treeWorld.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self._editor = WorldBuildingEntityEditor(self.novel)
+        insert_before_the_end(self.ui.wdgCenterEditor, self._editor)
+
         self.ui.treeWorld.setSettings(TreeSettings(font_incr=2))
         self.ui.treeWorld.setNovel(self.novel)
         self.ui.treeWorld.entitySelected.connect(self._selection_changed)
         self.ui.treeWorld.selectRoot()
 
-        # retain_when_hidden(self.ui.tabWidget)
-        # set_tab_icon(self.ui.tabWidget, self.ui.tabPerception,
-        #              IconRegistry.from_name('mdi.radio-tower', color_on=PLOTLYST_MAIN_COLOR))
-        # set_tab_icon(self.ui.tabWidget, self.ui.tabGoals, IconRegistry.goal_icon('black', PLOTLYST_MAIN_COLOR))
-        # set_tab_icon(self.ui.tabWidget, self.ui.tabTopics, IconRegistry.topics_icon(color_on=PLOTLYST_MAIN_COLOR))
-        # set_tab_icon(self.ui.tabWidget, self.ui.tabHistory, IconRegistry.backstory_icon('black', PLOTLYST_MAIN_COLOR))
-        # set_tab_icon(self.ui.tabWidget, self.ui.tabNotes, IconRegistry.document_edition_icon())
-
-        self._setting_template = WorldBuildingProfileTemplateView(self.novel, default_location_profiles()[0])
-        # hbox(self.ui.tabPerception).addWidget(self._setting_template)
-        # self._group_template = WorldBuildingProfileTemplateView(self.novel, default_group_profile())
-        # hbox(self.ui.tabGoals).addWidget(self._group_template)
-
         link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnWorldView, self.ui.pageEntity),
-                                                      (self.ui.btnMapView, self.ui.pageMap)])
+                                                      (self.ui.btnMapView, self.ui.pageMap),
+                                                      (self.ui.btnHistoryView, self.ui.pageTimeline)])
         self.ui.btnWorldView.setChecked(True)
+
+        self.ui.btnTreeToggle.setChecked(False)
+        self.ui.wdgWorldContainer.setHidden(True)
 
     @overrides
     def refresh(self):
@@ -94,6 +126,13 @@ class WorldBuildingView(AbstractNovelView):
     def _selection_changed(self, entity: WorldBuildingEntity):
         self._entity = entity
         self.ui.lineName.setText(self._entity.name)
+        self._entity.elements = [
+            WorldBuildingEntityElement(WorldBuildingEntityElementType.Text, text="""The Elensh people is a group that has had a cultural identity for many hundreds of years. They're primarily found in Olinthis as well as the southern parts of Elken. They are the main people of Olinthis but are considered a minority in Elken, though they're generally respected both places.
+They're known as the people of the flowers, because many of their traditions feature colourful flowers and they're known for being the best flower traders through many parts of Dysvoll."""),
+            WorldBuildingEntityElement(WorldBuildingEntityElementType.Header, title='Fauna'),
+            WorldBuildingEntityElement(WorldBuildingEntityElementType.Text),
+        ]
+        self._editor.setEntity(self._entity)
         # self._btnIcon.setVisible(True)
         # self.ui.tabWidget.setVisible(True)
         # if entity.icon:
