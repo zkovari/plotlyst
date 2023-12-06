@@ -1329,6 +1329,7 @@ class WorldBuildingEntityElementType(Enum):
     Timeline = 5
     Variables = 6
     Comments = 7
+    Section = 8
 
 
 @dataclass
@@ -1338,6 +1339,8 @@ class WorldBuildingEntityElement:
     text: str = field(default='', metadata=config(exclude=exclude_if_empty))
     ref: Any = field(default=None, metadata=config(exclude=exclude_if_empty))
     events: List[BackstoryEvent] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    blocks: List['WorldBuildingEntityElement'] = field(default_factory=list,
+                                                         metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass

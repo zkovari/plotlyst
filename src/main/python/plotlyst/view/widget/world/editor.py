@@ -194,10 +194,26 @@ class WorldBuildingTreeView(TreeView):
         return node
 
 
-class WorldBuildingEntityTextElementEditor(QWidget):
+class WorldBuildingEntityElementWidget(QWidget):
     def __init__(self, element: WorldBuildingEntityElement, parent=None):
         super().__init__(parent)
         self.element = element
+
+    @staticmethod
+    def newWidget(element: WorldBuildingEntityElement) -> 'WorldBuildingEntityElementWidget':
+        if element.type == WorldBuildingEntityElementType.Text:
+            return WorldBuildingEntityTextElementEditor(element)
+        elif element.type == WorldBuildingEntityElementType.Section:
+            return WorldBuildingEntitySectionElementEditor(element)
+        elif element.type == WorldBuildingEntityElementType.Header:
+            return WorldBuildingEntityHeaderElementEditor(element)
+        else:
+            raise ValueError(f'Unsupported WorldBuildingEntityElement type {element.type}')
+
+
+class WorldBuildingEntityTextElementEditor(WorldBuildingEntityElementWidget):
+    def __init__(self, element: WorldBuildingEntityElement, parent=None):
+        super().__init__(element, parent)
         self._capitalized = False
 
         self.textEdit = AutoAdjustableTextEdit()
@@ -238,10 +254,9 @@ class WorldBuildingEntityTextElementEditor(QWidget):
         cursor.setCharFormat(format_first_letter)
 
 
-class WorldBuildingEntityHeaderElementEditor(QWidget):
+class WorldBuildingEntityHeaderElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, element: WorldBuildingEntityElement, parent=None):
-        super().__init__(parent)
-        self.element = element
+        super().__init__(element, parent)
 
         vbox(self, 0)
         margins(self, top=10, bottom=10)
@@ -266,8 +281,6 @@ class WorldBuildingEntityHeaderElementEditor(QWidget):
         self.lineTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lineTitle.setText(self.element.title)
 
-        # self.layout().addWidget(line(color='#4D0A71'))
-        # self.layout().addWidget(line(color='#4D0A71'))
         self.frame = frame()
         vbox(self.frame).addWidget(self.lineTitle, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self.frame)
@@ -278,6 +291,18 @@ class WorldBuildingEntityHeaderElementEditor(QWidget):
             border-radius: 6px;
             background: #DABFA7;
         }''')
+
+
+class WorldBuildingEntitySectionElementEditor(WorldBuildingEntityElementWidget):
+    def __init__(self, element: WorldBuildingEntityElement, parent=None):
+        super().__init__(element, parent)
+
+        vbox(self, 0)
+
+        for el in self.element.blocks:
+            wdg = WorldBuildingEntityElementWidget.newWidget(el)
+            # self.header = WorldBuildingEntityHeaderElementEditor(self.element)
+            self.layout().addWidget(wdg)
 
 
 class WorldBuildingEntityEditor(QWidget):
@@ -323,12 +348,7 @@ class WorldBuildingEntityEditor(QWidget):
             self.wdgEditorSide.layout().addWidget(wdg, alignment=Qt.AlignmentFlag.AlignCenter)
 
     def _addElement(self, element: WorldBuildingEntityElement, middle: bool = True):
-        if element.type == WorldBuildingEntityElementType.Text:
-            wdg = WorldBuildingEntityTextElementEditor(element)
-        elif element.type == WorldBuildingEntityElementType.Header:
-            wdg = WorldBuildingEntityHeaderElementEditor(element)
-        else:
-            return
+        wdg = WorldBuildingEntityElementWidget.newWidget(element)
 
         if middle:
             self.wdgEditorMiddle.layout().addWidget(wdg)
