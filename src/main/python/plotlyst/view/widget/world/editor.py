@@ -33,7 +33,7 @@ from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity, Wor
     WorldBuildingEntityElement, WorldBuildingEntityElementType
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import action, push_btn, frame, insert_before_the_end
+from src.main.python.plotlyst.view.common import action, push_btn, frame, insert_before_the_end, fade_out_and_gc
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit
@@ -188,10 +188,20 @@ class WorldBuildingTreeView(TreeView):
         parent.entity().children.append(entity)
         self.repo.update_world(self._novel)
 
+    def _removeEntity(self, node: EntityNode):
+        entity = node.entity()
+        self.clearSelection()
+        self.selectRoot()
+
+        node.parent().parent().entity().children.remove(entity)
+        fade_out_and_gc(node.parent(), node)
+        self.repo.update_world(self._novel)
+
     def __initEntityWidget(self, entity: WorldBuildingEntity) -> EntityNode:
         node = EntityNode(entity, settings=self._settings)
         node.selectionChanged.connect(partial(self._entitySelectionChanged, node))
         node.addEntity.connect(partial(self._addEntity, node))
+        node.deleted.connect(partial(self._removeEntity, node))
 
         self._entities[entity] = node
         return node
