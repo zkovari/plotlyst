@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Optional, Dict, Set
 
+import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit
@@ -31,7 +32,8 @@ from src.main.python.plotlyst.common import recursive
 from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityType, \
     WorldBuildingEntityElement, WorldBuildingEntityElementType
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.view.common import action, push_btn, frame
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
+from src.main.python.plotlyst.view.common import action, push_btn, frame, insert_before_the_end
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit
@@ -266,6 +268,7 @@ class WorldBuildingEntityHeaderElementEditor(WorldBuildingEntityElementWidget):
         margins(self, top=10, bottom=10)
         self.lineTitle = QLineEdit()
         self.lineTitle.setProperty('transparent', True)
+        self.lineTitle.setPlaceholderText('New section')
         font = self.lineTitle.font()
         font.setPointSize(24)
         if app_env.is_mac():
@@ -359,11 +362,24 @@ class WorldBuildingEntitySectionElementEditor(WorldBuildingEntityElementWidget):
         super().__init__(element, parent)
 
         vbox(self, 0)
-
         for el in self.element.blocks:
             wdg = WorldBuildingEntityElementWidget.newWidget(el)
-            # self.header = WorldBuildingEntityHeaderElementEditor(self.element)
             self.layout().addWidget(wdg)
+
+
+class SectionAdditionMenu(MenuWidget):
+    newSectionSelected = pyqtSignal()
+    templateSectionSelected = pyqtSignal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.addAction(action('New section', IconRegistry.plus_icon('grey'), slot=self.newSectionSelected))
+        self.addSeparator()
+        self.addSection('Section templates')
+        self.addSeparator()
+        self.addAction(action('Nature'))
+        self.addAction(action('Culture'))
+        self.addAction(action('Crime'))
 
 
 class WorldBuildingEntityEditor(QWidget):
@@ -373,8 +389,8 @@ class WorldBuildingEntityEditor(QWidget):
         self._entity: Optional[WorldBuildingEntity] = None
 
         self.wdgEditorMiddle = QWidget()
-        vbox(self.wdgEditorMiddle)
-        margins(self.wdgEditorMiddle, left=15)
+        vbox(self.wdgEditorMiddle, spacing=10)
+        margins(self.wdgEditorMiddle, left=15, bottom=20)
         self.wdgEditorSide = QWidget()
         vbox(self.wdgEditorSide)
         margins(self.wdgEditorSide, right=15)
@@ -386,6 +402,8 @@ class WorldBuildingEntityEditor(QWidget):
         splitter.setSizes([500, 150])
 
         vbox(self, 0, 0).addWidget(splitter)
+
+        self.repo = RepositoryPersistenceManager.instance()
 
     def setEntity(self, entity: WorldBuildingEntity):
         self._entity = entity
@@ -401,7 +419,10 @@ class WorldBuildingEntityEditor(QWidget):
         self.wdgEditorSide.layout().addWidget(vspacer())
 
     def _addPlaceholder(self, middle: bool = True):
-        wdg = push_btn(IconRegistry.plus_icon('grey'), 'Add section', transparent_=True)
+        wdg = push_btn(IconRegistry.plus_icon('grey'), 'Add section' if middle else 'Add block', transparent_=True)
+        if middle:
+            menu = SectionAdditionMenu(wdg)
+            menu.newSectionSelected.connect(self._addNewSection)
         wdg.installEventFilter(OpacityEventFilter(wdg, enterOpacity=0.8))
         if middle:
             self.wdgEditorMiddle.layout().addWidget(wdg, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -415,3 +436,15 @@ class WorldBuildingEntityEditor(QWidget):
             self.wdgEditorMiddle.layout().addWidget(wdg)
         else:
             self.wdgEditorSide.layout().addWidget(wdg)
+
+    def _addNewSection(self):
+        element = WorldBuildingEntityElement(WorldBuildingEntityElementType.Section, blocks=[
+            WorldBuildingEntityElement(WorldBuildingEntityElementType.Header),
+            WorldBuildingEntityElement(WorldBuildingEntityElementType.Text)
+        ])
+        wdg = WorldBuildingEntityElementWidget.newWidget(element)
+        insert_before_the_end(self.wdgEditorMiddle, wdg)
+        qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
+
+        self._entity.elements.append(element)
+        self.repo.update_world(self._novel)

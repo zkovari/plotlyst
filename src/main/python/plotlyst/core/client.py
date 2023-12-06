@@ -342,6 +342,9 @@ class JsonClient:
     def update_novel(self, novel: Novel):
         self._persist_novel(novel)
 
+    def update_world(self, novel: Novel):
+        self._persist_world(novel.id, novel.world)
+
     def insert_scene(self, novel: Novel, scene: Scene):
         self._persist_scene(scene, novel)
         self._persist_novel(novel)
@@ -610,7 +613,7 @@ class JsonClient:
                                manuscript_progress=novel.manuscript_progress)
 
         self.__persist_info(self.novels_dir, novel_info)
-        self._persist_world(novel.id, novel.world)
+        # self._persist_world(novel.id, novel.world)
         self._persist_board(novel.id, novel.board)
 
     def _persist_world(self, novel_id: uuid.UUID, world: WorldBuilding):

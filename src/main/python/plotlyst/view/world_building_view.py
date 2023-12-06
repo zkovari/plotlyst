@@ -126,17 +126,17 @@ class WorldBuildingView(AbstractNovelView):
     def _selection_changed(self, entity: WorldBuildingEntity):
         self._entity = entity
         self.ui.lineName.setText(self._entity.name)
-        self._entity.elements = [
-            WorldBuildingEntityElement(WorldBuildingEntityElementType.Text, text="""The Elensh people is a group that has had a cultural identity for many hundreds of years. They're primarily found in Olinthis as well as the southern parts of Elken. They are the main people of Olinthis but are considered a minority in Elken, though they're generally respected both places.
-They're known as the people of the flowers, because many of their traditions feature colourful flowers and they're known for being the best flower traders through many parts of Dysvoll."""),
-            WorldBuildingEntityElement(WorldBuildingEntityElementType.Section, title='Fauna', blocks=[
-                WorldBuildingEntityElement(WorldBuildingEntityElementType.Header, title='Fauna'),
-                WorldBuildingEntityElement(WorldBuildingEntityElementType.Quote,
-                                           text='This is a quoted text said by a smart person', ref='Beril'),
-                WorldBuildingEntityElement(WorldBuildingEntityElementType.Text)
-            ]),
-
-        ]
+#         self._entity.elements = [
+#             WorldBuildingEntityElement(WorldBuildingEntityElementType.Text, text="""The Elensh people is a group that has had a cultural identity for many hundreds of years. They're primarily found in Olinthis as well as the southern parts of Elken. They are the main people of Olinthis but are considered a minority in Elken, though they're generally respected both places.
+# They're known as the people of the flowers, because many of their traditions feature colourful flowers and they're known for being the best flower traders through many parts of Dysvoll."""),
+#             WorldBuildingEntityElement(WorldBuildingEntityElementType.Section, title='Fauna', blocks=[
+#                 WorldBuildingEntityElement(WorldBuildingEntityElementType.Header, title='Fauna'),
+#                 WorldBuildingEntityElement(WorldBuildingEntityElementType.Quote,
+#                                            text='This is a quoted text said by a smart person', ref='Beril'),
+#                 WorldBuildingEntityElement(WorldBuildingEntityElementType.Text)
+#             ]),
+#
+#         ]
         self._editor.setEntity(self._entity)
         # self._btnIcon.setVisible(True)
         # self.ui.tabWidget.setVisible(True)
