@@ -24,8 +24,8 @@ import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit
-from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp
-from qthandy.filter import OpacityEventFilter
+from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon
+from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import recursive
@@ -214,23 +214,31 @@ class WorldBuildingEntityElementWidget(QWidget):
         self.novel = novel
         self.element = element
 
+        self.btnAdd = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True, tooltip='Insert new block')
+        self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd))
+        decr_icon(self.btnAdd)
+        self.btnAdd.setHidden(True)
+        retain_when_hidden(self.btnAdd)
+
     def save(self):
         RepositoryPersistenceManager.instance().update_world(self.novel)
 
     @staticmethod
-    def newWidget(novel: Novel, element: WorldBuildingEntityElement) -> 'WorldBuildingEntityElementWidget':
+    def newWidget(novel: Novel, element: WorldBuildingEntityElement,
+                  parent: Optional[
+                      'WorldBuildingEntitySectionElementEditor'] = None) -> 'WorldBuildingEntityElementWidget':
         if element.type == WorldBuildingEntityElementType.Text:
-            return WorldBuildingEntityTextElementEditor(novel, element)
+            return WorldBuildingEntityTextElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Section:
-            return WorldBuildingEntitySectionElementEditor(novel, element)
+            return WorldBuildingEntitySectionElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Header:
-            return WorldBuildingEntityHeaderElementEditor(novel, element)
+            return WorldBuildingEntityHeaderElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Quote:
-            return WorldBuildingEntityQuoteElementEditor(novel, element)
+            return WorldBuildingEntityQuoteElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Variables:
-            return WorldBuildingEntityVariablesElementEditor(novel, element)
+            return WorldBuildingEntityVariablesElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Highlight:
-            return WorldBuildingEntityHighlightedTextElementEditor(novel, element)
+            return WorldBuildingEntityHighlightedTextElementEditor(novel, element, parent)
         else:
             raise ValueError(f'Unsupported WorldBuildingEntityElement type {element.type}')
 
@@ -257,8 +265,12 @@ class WorldBuildingEntityTextElementEditor(WorldBuildingEntityElementWidget):
         font.setFamily(family)
         self.textEdit.setFont(font)
 
-        hbox(self, 0, 0).addWidget(self.textEdit)
-        margins(self, left=15)
+        vbox(self, 0, 0).addWidget(self.textEdit)
+        if parent:
+            margins(self, left=15)
+            self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
+            # self.btnAdd.setVisible(True)
+            self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
 
     def _textChanged(self):
         self.element.text = self.textEdit.toMarkdown()
@@ -330,7 +342,7 @@ class WorldBuildingEntityQuoteElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent)
 
-        vbox(self, 0)
+        vbox(self, 0, 0)
         margins(self, left=15, top=5, bottom=5)
         self.textEdit = AutoAdjustableTextEdit()
         self.textEdit.setStyleSheet(f'''
@@ -382,6 +394,11 @@ class WorldBuildingEntityQuoteElementEditor(WorldBuildingEntityElementWidget):
                     border-radius: 2px;
                     background: #E3D0BD;
                 }''')
+
+        if parent:
+            self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
+            self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
+            # self.btnAdd.setVisible(True)
 
     def _quoteChanged(self):
         self.element.text = self.textEdit.toMarkdown()
@@ -445,9 +462,29 @@ class WorldBuildingEntitySectionElementEditor(WorldBuildingEntityElementWidget):
         super().__init__(novel, element, parent)
 
         vbox(self, 0)
-        for el in self.element.blocks:
-            wdg = WorldBuildingEntityElementWidget.newWidget(self.novel, el)
+        for element in self.element.blocks:
+            wdg = self.__initBlockWidget(element)
             self.layout().addWidget(wdg)
+
+    def _addBlock(self, wdg: WorldBuildingEntityElementWidget, type_: WorldBuildingEntityElementType):
+        element = WorldBuildingEntityElement(type_)
+        newBlockWdg = self.__initBlockWidget(element)
+
+        index = self.element.blocks.index(wdg.element)
+        if index == len(self.element.blocks) - 1:
+            self.element.blocks.append(element)
+            self.layout().addWidget(newBlockWdg)
+        else:
+            self.element.blocks.insert(index + 1, element)
+            self.layout().insertWidget(index + 1, newBlockWdg)
+        qtanim.fade_in(newBlockWdg, teardown=lambda: newBlockWdg.setGraphicsEffect(None))
+
+    def __initBlockWidget(self, element: WorldBuildingEntityElement) -> WorldBuildingEntityElementWidget:
+        wdg = WorldBuildingEntityElementWidget.newWidget(self.novel, element, self)
+        menu = MainBlockAdditionMenu(wdg.btnAdd)
+        menu.newBlockSelected.connect(partial(self._addBlock, wdg))
+
+        return wdg
 
 
 class SectionAdditionMenu(MenuWidget):
@@ -463,6 +500,17 @@ class SectionAdditionMenu(MenuWidget):
         self.addAction(action('Nature'))
         self.addAction(action('Culture'))
         self.addAction(action('Crime'))
+
+
+class MainBlockAdditionMenu(MenuWidget):
+    newBlockSelected = pyqtSignal(WorldBuildingEntityElementType)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.addAction(action('Text', IconRegistry.from_name('mdi.text'),
+                              slot=lambda: self.newBlockSelected.emit(WorldBuildingEntityElementType.Text)))
+        self.addAction(action('Quote', IconRegistry.from_name('ei.quote-right-alt'),
+                              slot=lambda: self.newBlockSelected.emit(WorldBuildingEntityElementType.Quote)))
 
 
 class SideBlockAdditionMenu(MenuWidget):

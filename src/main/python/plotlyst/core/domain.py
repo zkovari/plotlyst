@@ -1336,12 +1336,23 @@ class WorldBuildingEntityElementType(Enum):
 @dataclass
 class WorldBuildingEntityElement:
     type: WorldBuildingEntityElementType
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
     title: str = field(default='', metadata=config(exclude=exclude_if_empty))
     text: str = field(default='', metadata=config(exclude=exclude_if_empty))
     ref: Any = field(default=None, metadata=config(exclude=exclude_if_empty))
     events: List[BackstoryEvent] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     blocks: List['WorldBuildingEntityElement'] = field(default_factory=list,
-                                                         metadata=config(exclude=exclude_if_empty))
+                                                       metadata=config(exclude=exclude_if_empty))
+
+    @overrides
+    def __eq__(self, other: 'WorldBuildingEntityElement'):
+        if isinstance(other, WorldBuildingEntityElement):
+            return self.id == other.id
+        return False
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
 
 
 @dataclass
