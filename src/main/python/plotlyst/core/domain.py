@@ -31,7 +31,7 @@ from dataclasses_json import dataclass_json, Undefined, config
 from overrides import overrides
 
 from src.main.python.plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_field, \
-    mbti_field, ProfileTemplate, default_character_profiles, default_location_profiles, enneagram_choices, \
+    mbti_field, ProfileTemplate, default_character_profiles, enneagram_choices, \
     mbti_choices, Role, summary_field, exclude_if_false
 from src.main.python.plotlyst.env import app_env
 
@@ -1320,6 +1320,41 @@ class WorldBuildingEntityType(Enum):
     CONTAINER = 5
 
 
+class WorldBuildingEntityElementType(Enum):
+    Text = 0
+    Header = 1
+    Quote = 2
+    Image = 3
+    Separator = 4
+    Timeline = 5
+    Variables = 6
+    Comments = 7
+    Section = 8
+    Highlight = 9
+
+
+@dataclass
+class WorldBuildingEntityElement:
+    type: WorldBuildingEntityElementType
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    title: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    text: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    ref: Any = field(default=None, metadata=config(exclude=exclude_if_empty))
+    events: List[BackstoryEvent] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    blocks: List['WorldBuildingEntityElement'] = field(default_factory=list,
+                                                       metadata=config(exclude=exclude_if_empty))
+
+    @overrides
+    def __eq__(self, other: 'WorldBuildingEntityElement'):
+        if isinstance(other, WorldBuildingEntityElement):
+            return self.id == other.id
+        return False
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
+
 @dataclass
 class WorldBuildingEntity:
     name: str
@@ -1331,9 +1366,13 @@ class WorldBuildingEntity:
     bg_color: str = field(default='', metadata=config(exclude=exclude_if_empty))
     summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
     type: WorldBuildingEntityType = WorldBuildingEntityType.ABSTRACT
-    notes: str = field(default='', metadata=config(exclude=exclude_if_empty))
-    template_values: List[TemplateValue] = field(default_factory=list)
-    topics: List[TemplateValue] = field(default_factory=list)
+    elements: List[WorldBuildingEntityElement] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    side_elements: List[WorldBuildingEntityElement] = field(default_factory=list,
+                                                            metadata=config(exclude=exclude_if_empty))
+
+    # notes: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    # template_values: List[TemplateValue] = field(default_factory=list)
+    # topics: List[TemplateValue] = field(default_factory=list)
 
     @overrides
     def __eq__(self, other: 'WorldBuildingEntity'):
@@ -1346,11 +1385,15 @@ class WorldBuildingEntity:
         return hash(str(self.id))
 
 
+def worldbuilding_root() -> WorldBuildingEntity:
+    return WorldBuildingEntity('My world', icon='mdi.globe-model', bg_color='#40916c',
+                               elements=[WorldBuildingEntityElement(WorldBuildingEntityElementType.Text)])
+
+
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class WorldBuilding:
-    root_entity: WorldBuildingEntity = WorldBuildingEntity('My world', icon='mdi.globe-model', bg_color='#40916c')
-    location_profiles: List[ProfileTemplate] = field(default_factory=default_location_profiles)
+    root_entity: WorldBuildingEntity = field(default_factory=worldbuilding_root)
 
 
 @dataclass

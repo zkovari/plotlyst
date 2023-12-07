@@ -28,7 +28,8 @@ from PyQt6.QtCore import QTimer, QRunnable, QThreadPool, QObject
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client, json_client
-from src.main.python.plotlyst.core.domain import Novel, Character, Scene, NovelDescriptor, Document, Plot, Diagram
+from src.main.python.plotlyst.core.domain import Novel, Character, Scene, NovelDescriptor, Document, Plot, Diagram, \
+    WorldBuilding
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import StorylineCharacterAssociationChanged
@@ -51,6 +52,7 @@ class Operation:
     update_image: bool = False
     doc: Optional[Document] = None
     diagram: Optional[Diagram] = None
+    world: Optional[WorldBuilding] = None
 
 
 class RepositoryPersistenceManager(QObject):
@@ -155,6 +157,11 @@ class RepositoryPersistenceManager(QObject):
             self._operations.append(Operation(OperationType.UPDATE, novel=novel, diagram=diagram))
             self._persist_if_test_env()
 
+    def update_world(self, novel: Novel):
+        if self._persistence_enabled:
+            self._operations.append(Operation(OperationType.UPDATE, novel=novel, world=novel.world))
+            self._persist_if_test_env()
+
     def delete_doc(self, novel: Novel, document: Document):
         if self._persistence_enabled:
             self._operations.append(Operation(OperationType.DELETE, novel=novel, doc=document))
@@ -196,6 +203,7 @@ def _persist_operations(operations: List[Operation]):
     updated_scene_cache: Set[Scene] = set()
     updated_character_cache: Set[Character] = set()
     updated_diagram_cache: Set[Diagram] = set()
+    updated_world: bool = False
 
     for op in operations:
         # scenes
@@ -230,6 +238,11 @@ def _persist_operations(operations: List[Operation]):
             if op.diagram not in updated_diagram_cache:
                 json_client.update_diagram(op.novel, op.diagram)
                 updated_diagram_cache.add(op.diagram)
+
+        elif op.world and op.type == OperationType.UPDATE:
+            if not updated_world:
+                json_client.update_world(op.novel)
+                updated_world = True
 
         elif op.novel and op.type == OperationType.UPDATE:
             if op.novel not in updated_novel_cache:
