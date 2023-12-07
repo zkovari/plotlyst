@@ -20,11 +20,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import random
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QPixmap, QPainter
-from PyQt6.QtWidgets import QGraphicsScene, QGraphicsSceneMouseEvent, QGraphicsView, QGraphicsPixmapItem, QWidget
+from PyQt6.QtGui import QColor, QPixmap, QPainter, QPen, QPainterPath, QBrush
+from PyQt6.QtWidgets import QGraphicsScene, QGraphicsSceneMouseEvent, QGraphicsView, QGraphicsPixmapItem, QWidget, \
+    QGraphicsPathItem
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView
 
 SPRAY_PARTICLES = 1000
@@ -36,15 +38,17 @@ class MapCanvas(QGraphicsPixmapItem):
         super().__init__(parent)
         self._paintMode = False
 
-        self._pixmap = QPixmap(800, 600)
-        self._pixmap.fill(QColor('gray'))
+        # self._pixmap = QPixmap(800, 600)
+        self._pixmap = QPixmap(resource_registry.sea_texture)
+        # self._pixmap.fill(QColor('gray'))
         self.setPixmap(self._pixmap)
 
         self.setAcceptHoverEvents(True)
 
     @overrides
     def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        self._paintMode = True
+        # self._paintMode = True
+        pass
 
     @overrides
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
@@ -95,13 +99,30 @@ class WorldBuildingMapScene(QGraphicsScene):
         map = MapCanvas()
         self.addItem(map)
 
+        self._pathItem = QGraphicsPathItem()
+        self._pathItem.setPen(QPen(QColor('white'), 2, Qt.PenStyle.DashLine))
+        self._pathItem.setBrush(QColor('red'))
+
+        self._pathItem.setBrush(QBrush(QPixmap(resource_registry.land_texture)))
+
     @overrides
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        self._pathItem.setPath(QPainterPath(event.scenePos()))
+        self.addItem(self._pathItem)
+        self._paintMode = True
         super().mousePressEvent(event)
 
     @overrides
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        self.removeItem(self._pathItem)
+        self._paintMode = False
         super().mouseReleaseEvent(event)
+
+    def mouseMoveEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        if self._paintMode:
+            path = self._pathItem.path()
+            path.lineTo(event.scenePos())
+            self._pathItem.setPath(path)
 
 
 class WorldBuildingMapView(BaseGraphicsView):
