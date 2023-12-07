@@ -1385,11 +1385,15 @@ class WorldBuildingEntity:
         return hash(str(self.id))
 
 
+def worldbuilding_root() -> WorldBuildingEntity:
+    return WorldBuildingEntity('My world', icon='mdi.globe-model', bg_color='#40916c',
+                               elements=[WorldBuildingEntityElement(WorldBuildingEntityElementType.Text)])
+
+
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class WorldBuilding:
-    root_entity: WorldBuildingEntity = WorldBuildingEntity('My world', icon='mdi.globe-model', bg_color='#40916c')
-    # location_profiles: List[ProfileTemplate] = field(default_factory=default_location_profiles)
+    root_entity: WorldBuildingEntity = field(default_factory=worldbuilding_root)
 
 
 @dataclass
