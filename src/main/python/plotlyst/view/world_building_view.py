@@ -37,6 +37,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_bg_image
 from src.main.python.plotlyst.view.widget.tree import TreeSettings
 from src.main.python.plotlyst.view.widget.world.editor import EntityAdditionMenu, WorldBuildingEntityEditor
+from src.main.python.plotlyst.view.widget.world.map import WorldBuildingMapView
 
 
 class WorldBuildingView(AbstractNovelView):
@@ -109,6 +110,9 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.treeWorld.setNovel(self.novel)
         self.ui.treeWorld.entitySelected.connect(self._selection_changed)
         self.ui.treeWorld.selectRoot()
+
+        # self.map = WorldBuildingMapView(self.novel)
+        # self.ui.pageMap.layout().addWidget(self.map)
 
         link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnWorldView, self.ui.pageEntity),
                                                       (self.ui.btnMapView, self.ui.pageMap),
