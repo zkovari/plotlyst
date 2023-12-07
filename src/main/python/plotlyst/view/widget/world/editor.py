@@ -615,7 +615,7 @@ class WorldBuildingEntityEditor(QWidget):
             self.wdgEditorSide.layout().addWidget(wdg, alignment=Qt.AlignmentFlag.AlignCenter)
 
     def _addElement(self, element: WorldBuildingEntityElement, middle: bool = True):
-        wdg = WorldBuildingEntityElementWidget.newWidget(self._novel, element)
+        wdg = self.__initElementWidget(element, middle)
 
         if middle:
             self.wdgEditorMiddle.layout().addWidget(wdg)
@@ -627,19 +627,39 @@ class WorldBuildingEntityEditor(QWidget):
             WorldBuildingEntityElement(WorldBuildingEntityElementType.Header),
             WorldBuildingEntityElement(WorldBuildingEntityElementType.Text)
         ])
-        wdg = WorldBuildingEntityElementWidget.newWidget(self._novel, element)
+        wdg = self.__initElementWidget(element, True)
         insert_before_the_end(self.wdgEditorMiddle, wdg)
         qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
 
         self._entity.elements.append(element)
         self.repo.update_world(self._novel)
 
+    def _removeSection(self, wdg: WorldBuildingEntityElementWidget):
+        self._entity.elements.remove(wdg.element)
+        fade_out_and_gc(self.wdgEditorMiddle, wdg)
+        self.repo.update_world(self._novel)
+
     def _addNewSideBlock(self, type_: WorldBuildingEntityElementType):
         element = WorldBuildingEntityElement(type_)
-        wdg = WorldBuildingEntityElementWidget.newWidget(self._novel, element)
+        wdg = self.__initElementWidget(element, False)
 
         insert_before_the_end(self.wdgEditorSide, wdg, 2)
         qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
 
         self._entity.side_elements.append(element)
         self.repo.update_world(self._novel)
+
+    def _removeSideBlock(self, wdg: WorldBuildingEntityElementWidget):
+        self._entity.side_elements.remove(wdg.element)
+        fade_out_and_gc(self.wdgEditorSide, wdg)
+        self.repo.update_world(self._novel)
+
+    def __initElementWidget(self, element: WorldBuildingEntityElement,
+                            middle: bool) -> WorldBuildingEntityElementWidget:
+        wdg = WorldBuildingEntityElementWidget.newWidget(self._novel, element)
+        if middle and isinstance(wdg, WorldBuildingEntitySectionElementEditor):
+            wdg.removed.connect(partial(self._removeSection, wdg))
+        elif not middle:
+            wdg.btnRemove.clicked.connect(partial(self._removeSideBlock, wdg))
+
+        return wdg
