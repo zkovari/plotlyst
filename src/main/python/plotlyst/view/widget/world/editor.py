@@ -79,7 +79,8 @@ class EntityAdditionMenu(MenuWidget):
             name = 'New entity'
             icon_name = ''
 
-        entity = WorldBuildingEntity(name, icon=icon_name, type=wdType)
+        entity = WorldBuildingEntity(name, icon=icon_name, type=wdType,
+                                     elements=[WorldBuildingEntityElement(WorldBuildingEntityElementType.Text)])
 
         self.entityTriggered.emit(entity)
 
@@ -289,7 +290,7 @@ class WorldBuildingEntityTextElementEditor(WorldBuildingEntityElementWidget):
             self.btnRemove.raise_()
         # else:
         #     self._removalEnabled = False
-            # self.btnRemove.setHidden(True)
+        # self.btnRemove.setHidden(True)
 
     def _textChanged(self):
         self.element.text = self.textEdit.toMarkdown()
