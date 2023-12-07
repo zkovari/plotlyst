@@ -269,7 +269,6 @@ class WorldBuildingEntityTextElementEditor(WorldBuildingEntityElementWidget):
         if parent:
             margins(self, left=15)
             self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
-            # self.btnAdd.setVisible(True)
             self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
 
     def _textChanged(self):
@@ -332,6 +331,10 @@ class WorldBuildingEntityHeaderElementEditor(WorldBuildingEntityElementWidget):
             border-radius: 6px;
             background: #DABFA7;
         }''')
+
+        if parent:
+            self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
+            self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
 
     def _titleEdited(self, title: str):
         self.element.title = title
