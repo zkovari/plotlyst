@@ -286,11 +286,8 @@ class WorldBuildingEntityTextElementEditor(WorldBuildingEntityElementWidget):
         if parent:
             margins(self, left=15)
             self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
-            # self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
+            self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
             self.btnRemove.raise_()
-        # else:
-        #     self._removalEnabled = False
-        # self.btnRemove.setHidden(True)
 
     def _textChanged(self):
         self.element.text = self.textEdit.toMarkdown()
@@ -486,6 +483,8 @@ class WorldBuildingEntityHighlightedTextElementEditor(WorldBuildingEntityElement
 
 
 class WorldBuildingEntitySectionElementEditor(WorldBuildingEntityElementWidget):
+    removed = pyqtSignal()
+
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent, removalEnabled=False)
 
@@ -507,10 +506,20 @@ class WorldBuildingEntitySectionElementEditor(WorldBuildingEntityElementWidget):
             self.layout().insertWidget(index + 1, newBlockWdg)
         qtanim.fade_in(newBlockWdg, teardown=lambda: newBlockWdg.setGraphicsEffect(None))
 
+    def _removeBlock(self, widget: WorldBuildingEntityElementWidget):
+        if isinstance(widget, WorldBuildingEntityHeaderElementEditor):
+            self.removed.emit()
+            return
+
+        self.element.blocks.remove(widget.element)
+        self.save()
+        fade_out_and_gc(self, widget)
+
     def __initBlockWidget(self, element: WorldBuildingEntityElement) -> WorldBuildingEntityElementWidget:
         wdg = WorldBuildingEntityElementWidget.newWidget(self.novel, element, self)
         menu = MainBlockAdditionMenu(wdg.btnAdd)
         menu.newBlockSelected.connect(partial(self._addBlock, wdg))
+        wdg.btnRemove.clicked.connect(partial(self._removeBlock, wdg))
 
         return wdg
 
