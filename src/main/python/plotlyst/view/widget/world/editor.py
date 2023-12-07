@@ -22,8 +22,9 @@ from typing import Optional, Dict, Set
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt
-from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont
+from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit
+from overrides import overrides
 from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
@@ -37,7 +38,7 @@ from src.main.python.plotlyst.view.common import action, push_btn, frame, insert
     tool_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.display import Icon
-from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit
+from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, RemovalButton
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
 
@@ -209,10 +210,11 @@ class WorldBuildingTreeView(TreeView):
 
 
 class WorldBuildingEntityElementWidget(QWidget):
-    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None, removalEnabled: bool = True):
         super().__init__(parent)
         self.novel = novel
         self.element = element
+        self._removalEnabled = removalEnabled
 
         self.btnAdd = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True, tooltip='Insert new block')
         self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd))
@@ -220,8 +222,22 @@ class WorldBuildingEntityElementWidget(QWidget):
         self.btnAdd.setHidden(True)
         retain_when_hidden(self.btnAdd)
 
+        self.btnRemove = RemovalButton(self, colorOn='#510442')
+        if self._removalEnabled:
+            self.installEventFilter(VisibilityToggleEventFilter(self.btnRemove, self))
+        else:
+            self.btnRemove.setHidden(True)
+
+        self._btnRemovalOffsetY = 1
+
     def save(self):
         RepositoryPersistenceManager.instance().update_world(self.novel)
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        if self._removalEnabled:
+            self.btnRemove.setGeometry(event.size().width() - 20, self._btnRemovalOffsetY, 20, 20)
+        super().resizeEvent(event)
 
     @staticmethod
     def newWidget(novel: Novel, element: WorldBuildingEntityElement,
@@ -270,6 +286,10 @@ class WorldBuildingEntityTextElementEditor(WorldBuildingEntityElementWidget):
             margins(self, left=15)
             self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
             self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
+            self.btnRemove.raise_()
+        else:
+            self._removalEnabled = False
+            self.btnRemove.setHidden(True)
 
     def _textChanged(self):
         self.element.text = self.textEdit.toMarkdown()
@@ -336,6 +356,9 @@ class WorldBuildingEntityHeaderElementEditor(WorldBuildingEntityElementWidget):
             self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
             self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
 
+        self._btnRemovalOffsetY = 7
+        self.btnRemove.raise_()
+
     def _titleEdited(self, title: str):
         self.element.title = title
         self.save()
@@ -346,7 +369,7 @@ class WorldBuildingEntityQuoteElementEditor(WorldBuildingEntityElementWidget):
         super().__init__(novel, element, parent)
 
         vbox(self, 0, 0)
-        margins(self, left=15, top=5, bottom=5)
+        margins(self, left=15, right=15, top=5, bottom=5)
         self.textEdit = AutoAdjustableTextEdit()
         self.textEdit.setStyleSheet(f'''
                 border: 0px;
@@ -401,7 +424,8 @@ class WorldBuildingEntityQuoteElementEditor(WorldBuildingEntityElementWidget):
         if parent:
             self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
             self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
-            # self.btnAdd.setVisible(True)
+
+        self.btnRemove.raise_()
 
     def _quoteChanged(self):
         self.element.text = self.textEdit.toMarkdown()
@@ -462,7 +486,7 @@ class WorldBuildingEntityHighlightedTextElementEditor(WorldBuildingEntityElement
 
 class WorldBuildingEntitySectionElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
-        super().__init__(novel, element, parent)
+        super().__init__(novel, element, parent, removalEnabled=False)
 
         vbox(self, 0)
         for element in self.element.blocks:
