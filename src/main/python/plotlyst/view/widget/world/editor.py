@@ -222,7 +222,7 @@ class WorldBuildingEntityElementWidget(QWidget):
         self.btnAdd.setHidden(True)
         retain_when_hidden(self.btnAdd)
 
-        self.btnRemove = RemovalButton(self, colorOn='#510442')
+        self.btnRemove = RemovalButton(self, colorOff='grey', colorOn='#510442', colorHover='darkgrey')
         if self._removalEnabled:
             self.installEventFilter(VisibilityToggleEventFilter(self.btnRemove, self))
         else:
@@ -261,7 +261,7 @@ class WorldBuildingEntityElementWidget(QWidget):
 
 class WorldBuildingEntityTextElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
-        super().__init__(novel, element, parent)
+        super().__init__(novel, element, parent, removalEnabled=True if parent else False)
         self._capitalized = False
 
         self.textEdit = AutoAdjustableTextEdit()
@@ -285,11 +285,11 @@ class WorldBuildingEntityTextElementEditor(WorldBuildingEntityElementWidget):
         if parent:
             margins(self, left=15)
             self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
-            self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
+            # self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
             self.btnRemove.raise_()
-        else:
-            self._removalEnabled = False
-            self.btnRemove.setHidden(True)
+        # else:
+        #     self._removalEnabled = False
+            # self.btnRemove.setHidden(True)
 
     def _textChanged(self):
         self.element.text = self.textEdit.toMarkdown()
