@@ -466,7 +466,7 @@ class Chapter:
 
     @overrides
     def __hash__(self):
-        return hash(str(id))
+        return hash(str(self.id))
 
 
 @dataclass
@@ -536,7 +536,7 @@ class StoryBeat:
 
     @overrides
     def __hash__(self):
-        return hash(str(id))
+        return hash(str(self.id))
 
 
 @dataclass
@@ -551,7 +551,7 @@ class SceneStage(SelectionItem):
 
     @overrides
     def __hash__(self):
-        return hash(str(id))
+        return hash(str(self.id))
 
 
 @dataclass
@@ -566,7 +566,7 @@ class DramaticQuestion(SelectionItem):
 
     @overrides
     def __hash__(self):
-        return hash(str(id))
+        return hash(str(self.id))
 
 
 class PlotType(Enum):
@@ -590,7 +590,7 @@ class PlotValue(SelectionItem):
 
     @overrides
     def __hash__(self):
-        return hash(str(id))
+        return hash(str(self.id))
 
 
 class PlotPrincipleType(Enum):
@@ -820,7 +820,7 @@ class Plot(SelectionItem, CharacterBased):
 
     @overrides
     def __hash__(self):
-        return hash(str(id))
+        return hash(str(self.id))
 
 
 class ConflictType(Enum):
@@ -1390,10 +1390,26 @@ def worldbuilding_root() -> WorldBuildingEntity:
                                elements=[WorldBuildingEntityElement(WorldBuildingEntityElementType.Text)])
 
 
+@dataclass
+class GlossaryItem(SelectionItem):
+    key: str = ''
+
+    @overrides
+    def __eq__(self, other: 'SceneStage'):
+        if isinstance(other, SceneStage):
+            return self.key == other.key
+        return False
+
+    @overrides
+    def __hash__(self):
+        return hash(self.key)
+
+
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class WorldBuilding:
     root_entity: WorldBuildingEntity = field(default_factory=worldbuilding_root)
+    glossary: Dict[str, GlossaryItem] = field(default_factory=dict)
 
 
 @dataclass
@@ -1410,7 +1426,7 @@ class TaskStatus(SelectionItem):
 
     @overrides
     def __hash__(self):
-        return hash(str(id))
+        return hash(str(self.id))
 
 
 tag_characterization = SelectionItem('Characterization', icon='fa5s.user', icon_color='darkBlue')
@@ -1473,7 +1489,7 @@ class Task(CharacterBased):
 
     @overrides
     def __hash__(self):
-        return hash(str(id))
+        return hash(str(self.id))
 
 
 def default_task_statues() -> List[TaskStatus]:

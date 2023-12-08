@@ -24,8 +24,8 @@ import emoji
 import qtanim
 from PyQt6.QtCharts import QChartView
 from PyQt6.QtCore import pyqtProperty, QSize, Qt
-from PyQt6.QtGui import QPainter, QShowEvent, QColor, QPaintEvent, QBrush
-from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy, QTextBrowser, QFrame
+from PyQt6.QtGui import QPainter, QShowEvent, QColor, QPaintEvent, QBrush, QKeyEvent
+from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy, QTextBrowser, QFrame, QDialog
 from overrides import overrides
 from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon, pointy, hbox
 from qthandy.filter import OpacityEventFilter
@@ -36,7 +36,7 @@ from src.main.python.plotlyst.core.help import mid_revision_scene_structure_help
 from src.main.python.plotlyst.core.template import Role, protagonist_role
 from src.main.python.plotlyst.core.text import wc
 from src.main.python.plotlyst.view.common import emoji_font, insert_before_the_end, \
-    ButtonPressResizeEventFilter, restyle, label
+    ButtonPressResizeEventFilter, restyle, label, frame, shadow, tool_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 
@@ -334,3 +334,28 @@ class StageRecommendationBadge(QFrame):
 
         self.layout().addWidget(self.label)
         self.layout().addWidget(self.info)
+
+
+class PopupDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        vbox(self)
+        self.frame = frame()
+        self.frame.setProperty('relaxed-white-bg', True)
+        self.frame.setProperty('large-rounded', True)
+        vbox(self.frame, 10, 10)
+        self.layout().addWidget(self.frame)
+        self.setMinimumSize(200, 150)
+        shadow(self.frame)
+
+        self.btnReset = tool_btn(IconRegistry.close_icon('grey'), tooltip='Cancel', transparent_=True)
+        self.btnReset.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.btnReset.setIconSize(QSize(12, 12))
+        self.btnReset.clicked.connect(self.reject)
+
+    @overrides
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_Escape:
+            self.reject()

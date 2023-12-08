@@ -20,15 +20,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from builtins import staticmethod
 from dataclasses import dataclass
 
-from PyQt6.QtCore import Qt, QSize, QPoint
-from PyQt6.QtGui import QKeyEvent
+from PyQt6.QtCore import Qt, QPoint
 from PyQt6.QtWidgets import QDialog, QWidget, QApplication
-from overrides import overrides
-from qthandy import vbox, line, hbox, sp, vspacer
+from qthandy import line, hbox, sp, vspacer
 
-from src.main.python.plotlyst.view.common import label, push_btn, frame, shadow, tool_btn
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.display import OverlayWidget
+from src.main.python.plotlyst.view.common import label, push_btn
+from src.main.python.plotlyst.view.widget.display import OverlayWidget, PopupDialog
 
 
 @dataclass
@@ -36,25 +33,11 @@ class ConfirmationResult:
     confirmed: bool
 
 
-class ConfirmationDialog(QDialog):
+class ConfirmationDialog(PopupDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        vbox(self)
-        self.frame = frame()
-        self.frame.setProperty('relaxed-white-bg', True)
-        self.frame.setProperty('large-rounded', True)
-        vbox(self.frame, 10, 10)
-        self.layout().addWidget(self.frame)
-        self.setMinimumSize(200, 150)
-        shadow(self.frame)
 
         self.title = label('Confirm', h4=True)
-        self.btnReset = tool_btn(IconRegistry.close_icon('grey'), tooltip='Cancel', transparent_=True)
-        self.btnReset.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.btnReset.setIconSize(QSize(12, 12))
-        self.btnReset.clicked.connect(self.reject)
         sp(self.title).v_max()
         self.wdgTitle = QWidget()
         hbox(self.wdgTitle)
@@ -80,11 +63,6 @@ class ConfirmationDialog(QDialog):
 
         return ConfirmationResult(False)
 
-    @overrides
-    def keyPressEvent(self, event: QKeyEvent) -> None:
-        if event.key() == Qt.Key.Key_Escape:
-            self.reject()
-
     @staticmethod
     def confirm(message: str, title: str = 'Confirm?') -> bool:
         dialog = ConfirmationDialog()
@@ -98,9 +76,10 @@ class ConfirmationDialog(QDialog):
         dialog.move(
             window.frameGeometry().center() - QPoint(dialog.sizeHint().width() // 2, dialog.sizeHint().height() // 2))
 
-        result = dialog.display().confirmed
-
-        overlay.setHidden(True)
+        try:
+            result = dialog.display().confirmed
+        finally:
+            overlay.setHidden(True)
 
         return result
 

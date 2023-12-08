@@ -103,7 +103,7 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.pencil-plus', color=color)
 
     @staticmethod
-    def plus_icon(color: str = 'green') -> QIcon:
+    def plus_icon(color: str = PLOTLYST_MAIN_COLOR) -> QIcon:
         return qtawesome.icon('fa5s.plus', color=color)
 
     @staticmethod

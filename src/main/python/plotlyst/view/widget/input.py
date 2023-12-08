@@ -60,6 +60,7 @@ class AutoAdjustableTextEdit(EnhancedTextEdit):
         self.setAcceptRichText(False)
         self.setFixedHeight(self._minHeight)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setTabChangesFocus(True)
 
         self.setDocumentMargin(0)
         self.setSidebarEnabled(False)

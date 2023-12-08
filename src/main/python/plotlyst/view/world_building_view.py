@@ -36,8 +36,8 @@ from src.main.python.plotlyst.view.generated.world_building_view_ui import Ui_Wo
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_bg_image
 from src.main.python.plotlyst.view.widget.tree import TreeSettings
-from src.main.python.plotlyst.view.widget.world.editor import EntityAdditionMenu, WorldBuildingEntityEditor
-from src.main.python.plotlyst.view.widget.world.map import WorldBuildingMapView
+from src.main.python.plotlyst.view.widget.world.editor import EntityAdditionMenu, WorldBuildingEntityEditor, \
+    WorldBuildingGlossaryEditor
 
 
 class WorldBuildingView(AbstractNovelView):
@@ -77,6 +77,7 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.btnMapView.setIcon(IconRegistry.from_name('fa5s.map-marked-alt', color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnHistoryView.setIcon(
             IconRegistry.from_name('mdi.timeline-outline', color_on=PLOTLYST_SECONDARY_COLOR))
+        self.ui.btnGlossaryView.setIcon(IconRegistry.from_name('mdi.book-alphabet', color_on=PLOTLYST_SECONDARY_COLOR))
 
         self.ui.splitterNav.setSizes([100, 500])
         font = self.ui.lineName.font()
@@ -114,10 +115,14 @@ class WorldBuildingView(AbstractNovelView):
         # self.map = WorldBuildingMapView(self.novel)
         # self.ui.pageMap.layout().addWidget(self.map)
 
+        self.glossaryEditor = WorldBuildingGlossaryEditor(self.novel)
+        self.ui.wdgGlossaryParent.layout().addWidget(self.glossaryEditor)
+
         link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnWorldView, self.ui.pageEntity),
                                                       (self.ui.btnMapView, self.ui.pageMap),
-                                                      (self.ui.btnHistoryView, self.ui.pageTimeline)])
-        self.ui.btnWorldView.setChecked(True)
+                                                      (self.ui.btnHistoryView, self.ui.pageTimeline),
+                                                      (self.ui.btnGlossaryView, self.ui.pageGlossary)])
+        self.ui.btnGlossaryView.setChecked(True)
 
         self.ui.btnTreeToggle.setChecked(False)
         self.ui.wdgWorldContainer.setHidden(True)

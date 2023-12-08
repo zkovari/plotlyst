@@ -21,24 +21,23 @@ from typing import Optional
 
 from PyQt6.QtCore import QModelIndex, Qt, pyqtSignal, QPoint
 from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QWidget, QAbstractItemView
-from qthandy import ask_confirmation
+from PyQt6.QtWidgets import QWidget, QAbstractItemView, QTableView
+from qthandy import ask_confirmation, vbox, spacer, hbox, vline
+from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.core.domain import SelectionItem
 from src.main.python.plotlyst.model.common import SelectionItemsModel
-from src.main.python.plotlyst.view.common import show_color_picker, PopupMenuBuilder
+from src.main.python.plotlyst.view.common import show_color_picker, PopupMenuBuilder, tool_btn
 from src.main.python.plotlyst.view.delegates import TextItemDelegate
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
-from src.main.python.plotlyst.view.generated.items_editor_widget_ui import Ui_ItemsEditorWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 
 
-class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
+class ItemsEditorWidget(QWidget):
     editRequested = pyqtSignal(SelectionItem)
 
     def __init__(self, parent=None):
         super(ItemsEditorWidget, self).__init__(parent)
-        self.setupUi(self)
         self.model: Optional[SelectionItemsModel] = None
 
         self.bgColorFieldEnabled: bool = False
@@ -46,20 +45,46 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
         self.insertionEnabled: bool = False
         self.removeAllEnabled: bool = True
         self.inlineEditionEnabled: bool = True
+        self.inlineAdditionEnabled: bool = True
 
-        self.btnAdd.setIcon(IconRegistry.plus_icon())
+        vbox(self)
+        self.toolbar = QWidget()
+        hbox(self.toolbar, spacing=5)
+        self.btnAdd = tool_btn(IconRegistry.plus_icon(), tooltip='Add new item', transparent_=True)
         self.btnAdd.clicked.connect(self._add)
+        self.btnAdd.setShortcut('Ctrl+N')
+        self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd, 1.0, 0.7))
 
+        self.btnEdit = tool_btn(IconRegistry.edit_icon(), tooltip='Edit selected item', transparent_=True)
         self.btnEdit.clicked.connect(self._edit)
-        self.btnEdit.setIcon(IconRegistry.edit_icon())
         self.btnEdit.setDisabled(True)
+        self.btnEdit.setShortcut(Qt.Key.Key_E)
+        self.btnEdit.installEventFilter(OpacityEventFilter(self.btnEdit, 1.0, 0.7))
 
+        self.btnRemove = tool_btn(IconRegistry.minus_icon(), tooltip='Remove selected item', transparent_=True)
         self.btnRemove.clicked.connect(self._remove)
         self.btnRemove.setDisabled(True)
-        self.btnRemove.setIcon(IconRegistry.minus_icon())
+        self.btnRemove.setShortcut(Qt.Key.Key_Delete)
+        self.btnRemove.installEventFilter(OpacityEventFilter(self.btnRemove, 1.0, 0.7))
 
+        self.toolbar.layout().addWidget(self.btnAdd)
+        self.toolbar.layout().addWidget(self.btnEdit)
+        self.toolbar.layout().addWidget(vline())
+        self.toolbar.layout().addWidget(self.btnRemove)
+        self.toolbar.layout().addWidget(spacer())
+
+        self.tableView = QTableView()
+        self.tableView.setShowGrid(False)
+        self.tableView.horizontalHeader().setVisible(False)
+        self.tableView.horizontalHeader().setDefaultSectionSize(24)
+        self.tableView.horizontalHeader().setMinimumSectionSize(20)
+        self.tableView.horizontalHeader().setStretchLastSection(True)
+        self.tableView.verticalHeader().setVisible(False)
         self.tableView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.tableView.customContextMenuRequested.connect(self._contextMenu)
+
+        self.layout().addWidget(self.toolbar)
+        self.layout().addWidget(self.tableView)
 
     def setModel(self, model: SelectionItemsModel):
         self.model = model
@@ -89,6 +114,9 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
             self.tableView.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
             self.tableView.doubleClicked.connect(self._edit)
 
+    def setInlineAdditionEnabled(self, enabled: bool):
+        self.inlineAdditionEnabled = enabled
+
     def setAdditionEnabled(self, enabled: bool):
         self.btnAdd.setEnabled(enabled)
         self.btnAdd.setVisible(enabled)
@@ -106,6 +134,8 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
         self.btnRemove.setEnabled(False)
 
     def _add(self):
+        if not self.inlineAdditionEnabled:
+            return
         row = self.model.add()
         if row == 0:
             self.tableView.scrollToTop()
