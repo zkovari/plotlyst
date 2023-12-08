@@ -21,9 +21,9 @@ from functools import partial
 from typing import Optional, Dict, Set, Any
 
 import qtanim
-from PyQt6.QtCore import pyqtSignal, Qt, QModelIndex
+from PyQt6.QtCore import pyqtSignal, Qt, QModelIndex, QPoint
 from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent
-from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QTableView, QApplication
+from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QTableView, QApplication, QDialog
 from overrides import overrides
 from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
@@ -39,7 +39,7 @@ from src.main.python.plotlyst.service.persistence import RepositoryPersistenceMa
 from src.main.python.plotlyst.view.common import action, push_btn, frame, insert_before_the_end, fade_out_and_gc, \
     tool_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.display import Icon
+from src.main.python.plotlyst.view.widget.display import Icon, PopupDialog, OverlayWidget
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, RemovalButton
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
@@ -719,6 +719,67 @@ class GlossaryModel(SelectionItemsModel):
         self._items.pop(index.row())
 
 
+class GlossaryEditorDialog(PopupDialog):
+    def __init__(self, glossary: Optional[GlossaryItem] = None, parent=None):
+        super().__init__(parent)
+        self._glossary = glossary
+
+        self.lineKey = QLineEdit()
+        self.lineKey.setProperty('white-bg', True)
+        self.lineKey.setProperty('rounded', True)
+        self.lineKey.setPlaceholderText('Term')
+        self.lineKey.textChanged.connect(self._keyChanged)
+
+        self.textDefinition = AutoAdjustableTextEdit(height=150)
+        self.textDefinition.setProperty('white-bg', True)
+        self.textDefinition.setProperty('rounded', True)
+        self.textDefinition.setPlaceholderText('Define term')
+
+        self.wdgTitle = QWidget()
+        hbox(self.wdgTitle)
+        self.wdgTitle.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
+
+        self.btnConfirm = push_btn(text='Confirm', properties=['base', 'positive'])
+        sp(self.btnConfirm).h_exp()
+        self.btnConfirm.clicked.connect(self.accept)
+        self.btnConfirm.setDisabled(True)
+
+        self.frame.layout().addWidget(self.wdgTitle)
+        self.frame.layout().addWidget(self.lineKey)
+        self.frame.layout().addWidget(self.textDefinition)
+        self.frame.layout().addWidget(self.btnConfirm)
+
+    def display(self) -> GlossaryItem:
+        result = self.exec()
+
+        if result == QDialog.DialogCode.Accepted:
+            if self._glossary is None:
+                self._glossary = GlossaryItem('')
+            self._glossary.key = self.lineKey.text()
+            self._glossary.text = self.textDefinition.toMarkdown()
+
+            return self._glossary
+
+    def _keyChanged(self, key: str):
+        self.btnConfirm.setEnabled(len(key) > 0)
+
+    @staticmethod
+    def edit(glossary: Optional[GlossaryItem] = None) -> Optional[GlossaryItem]:
+        dialog = GlossaryEditorDialog(glossary)
+
+        window = QApplication.activeWindow()
+        overlay = OverlayWidget(window)
+        overlay.show()
+
+        dialog.move(
+            window.frameGeometry().center() - QPoint(dialog.sizeHint().width() // 2, dialog.sizeHint().height() // 2))
+
+        try:
+            return dialog.display()
+        finally:
+            overlay.setHidden(True)
+
+
 class WorldBuildingGlossaryEditor(QWidget):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -726,12 +787,15 @@ class WorldBuildingGlossaryEditor(QWidget):
         vbox(self)
         self.editor = ItemsEditorWidget()
         self.editor.setInlineEditionEnabled(False)
-        # self.editor.btnEdit.setHidden(True)
-        self._novel.world.glossary = {'First': GlossaryItem('Definition of first', key='First'),
-                                      'Second': GlossaryItem('Definition of Second', key='Second'),
-                                      'Third': GlossaryItem('Definition of Third', key='Third'),
-                                      }
-        self.editor.setModel(GlossaryModel(self._novel))
+        self.editor.setInlineAdditionEnabled(False)
+        self.editor.btnAdd.clicked.connect(self._addNew)
+        # self._novel.world.glossary = {'First': GlossaryItem('Definition of first', key='First'),
+        #                               'Second': GlossaryItem('Definition of Second', key='Second'),
+        #                               'Third': GlossaryItem('Definition of Third', key='Third'),
+        #                               }
+
+        self.glossaryModel = GlossaryModel(self._novel)
+        self.editor.setModel(self.glossaryModel)
         self.editor.tableView.setColumnHidden(GlossaryModel.ColIcon, True)
         self.editor.tableView.setColumnWidth(GlossaryModel.ColName, 200)
         self.editor.tableView.setContentsMargins(10, 15, 10, 5)
@@ -747,3 +811,11 @@ class WorldBuildingGlossaryEditor(QWidget):
         self.editor.tableView.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
 
         self.layout().addWidget(self.editor)
+        self.repo = RepositoryPersistenceManager.instance()
+
+    def _addNew(self):
+        glossary = GlossaryEditorDialog.edit()
+        if glossary:
+            self._novel.world.glossary[glossary.key] = glossary
+            self.glossaryModel.modelReset.emit()
+            self.repo.update_world(self._novel)

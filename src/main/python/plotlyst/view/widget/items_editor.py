@@ -44,20 +44,24 @@ class ItemsEditorWidget(QWidget):
         self.insertionEnabled: bool = False
         self.removeAllEnabled: bool = True
         self.inlineEditionEnabled: bool = True
+        self.inlineAdditionEnabled: bool = True
 
         vbox(self)
         self.toolbar = QWidget()
         hbox(self.toolbar, spacing=5)
         self.btnAdd = tool_btn(IconRegistry.plus_icon(), tooltip='Add new item', transparent_=True)
         self.btnAdd.clicked.connect(self._add)
+        self.btnAdd.setShortcut('Ctrl+N')
 
         self.btnEdit = tool_btn(IconRegistry.edit_icon(), tooltip='Edit selected item', transparent_=True)
         self.btnEdit.clicked.connect(self._edit)
         self.btnEdit.setDisabled(True)
+        self.btnEdit.setShortcut(Qt.Key.Key_E)
 
         self.btnRemove = tool_btn(IconRegistry.minus_icon(), tooltip='Remove selected item', transparent_=True)
         self.btnRemove.clicked.connect(self._remove)
         self.btnRemove.setDisabled(True)
+        self.btnRemove.setShortcut(Qt.Key.Key_Delete)
 
         self.toolbar.layout().addWidget(self.btnAdd)
         self.toolbar.layout().addWidget(self.btnEdit)
@@ -106,6 +110,9 @@ class ItemsEditorWidget(QWidget):
             self.tableView.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
             self.tableView.doubleClicked.connect(self._edit)
 
+    def setInlineAdditionEnabled(self, enabled: bool):
+        self.inlineAdditionEnabled = enabled
+
     def setAdditionEnabled(self, enabled: bool):
         self.btnAdd.setEnabled(enabled)
         self.btnAdd.setVisible(enabled)
@@ -123,6 +130,8 @@ class ItemsEditorWidget(QWidget):
         self.btnRemove.setEnabled(False)
 
     def _add(self):
+        if not self.inlineAdditionEnabled:
+            return
         row = self.model.add()
         if row == 0:
             self.tableView.scrollToTop()
