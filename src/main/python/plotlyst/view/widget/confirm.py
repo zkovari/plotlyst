@@ -36,22 +36,8 @@ class ConfirmationResult:
 class ConfirmationDialog(PopupDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        # self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
-        # self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        # vbox(self)
-        # self.frame = frame()
-        # self.frame.setProperty('relaxed-white-bg', True)
-        # self.frame.setProperty('large-rounded', True)
-        # vbox(self.frame, 10, 10)
-        # self.layout().addWidget(self.frame)
-        # self.setMinimumSize(200, 150)
-        # shadow(self.frame)
 
         self.title = label('Confirm', h4=True)
-        # self.btnReset = tool_btn(IconRegistry.close_icon('grey'), tooltip='Cancel', transparent_=True)
-        # self.btnReset.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        # self.btnReset.setIconSize(QSize(12, 12))
-        # self.btnReset.clicked.connect(self.reject)
         sp(self.title).v_max()
         self.wdgTitle = QWidget()
         hbox(self.wdgTitle)

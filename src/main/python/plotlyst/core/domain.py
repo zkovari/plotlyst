@@ -1397,7 +1397,7 @@ class GlossaryItem(SelectionItem):
     @overrides
     def __eq__(self, other: 'SceneStage'):
         if isinstance(other, SceneStage):
-            return self.key == other.id
+            return self.key == other.key
         return False
 
     @overrides
