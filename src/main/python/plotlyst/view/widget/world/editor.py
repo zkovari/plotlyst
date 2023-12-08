@@ -18,12 +18,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Optional, Dict, Set
+from typing import Optional, Dict, Set, Any
 
 import qtanim
-from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtCore import pyqtSignal, Qt, QModelIndex
 from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent
-from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit
+from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QTableView, QApplication
 from overrides import overrides
 from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
@@ -31,14 +31,17 @@ from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import recursive
 from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityType, \
-    WorldBuildingEntityElement, WorldBuildingEntityElementType
+    WorldBuildingEntityElement, WorldBuildingEntityElementType, GlossaryItem
+from src.main.python.plotlyst.core.template import SelectionItem
 from src.main.python.plotlyst.env import app_env
+from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import action, push_btn, frame, insert_before_the_end, fade_out_and_gc, \
     tool_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, RemovalButton
+from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
 
@@ -663,3 +666,84 @@ class WorldBuildingEntityEditor(QWidget):
             wdg.btnRemove.clicked.connect(partial(self._removeSideBlock, wdg))
 
         return wdg
+
+
+class GlossaryModel(SelectionItemsModel):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+
+    @overrides
+    def rowCount(self, parent: QModelIndex = None) -> int:
+        return len(self._novel.world.glossary.keys())
+
+    @overrides
+    def columnCount(self, parent: QModelIndex = None) -> int:
+        return 4
+
+    @overrides
+    def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
+        if role == Qt.ItemDataRole.FontRole:
+            font = QApplication.font()
+            font.setPointSize(13)
+            if index.column() == self.ColName:
+                font.setBold(True)
+            return font
+        if index.column() == self.ColName:
+            if role == Qt.ItemDataRole.DisplayRole:
+                return list(self._novel.world.glossary.values())[index.row()].key
+        if index.column() == 3:
+            if role == Qt.ItemDataRole.DisplayRole:
+                return list(self._novel.world.glossary.values())[index.row()].text
+        return super().data(index, role)
+
+    @overrides
+    def _newItem(self) -> QModelIndex:
+        print('new')
+        # self._items.append('new')
+        # return self.index(self.rowCount() - 1, 0)
+
+    @overrides
+    def _insertItem(self, row: int) -> QModelIndex:
+        print('insert new')
+        # self._items.insert(row, SelectionItem(''))
+        # return self.index(row, 0)
+
+    @overrides
+    def item(self, index: QModelIndex) -> SelectionItem:
+        return list(self._novel.world.glossary.values())[index.row()]
+
+    @overrides
+    def remove(self, index: QModelIndex):
+        super().remove(index)
+        self._items.pop(index.row())
+
+
+class WorldBuildingGlossaryEditor(QWidget):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+        vbox(self)
+        self.editor = ItemsEditorWidget()
+        self.editor.setInlineEditionEnabled(False)
+        # self.editor.btnEdit.setHidden(True)
+        self._novel.world.glossary = {'First': GlossaryItem('Definition of first', key='First'),
+                                      'Second': GlossaryItem('Definition of Second', key='Second'),
+                                      'Third': GlossaryItem('Definition of Third', key='Third'),
+                                      }
+        self.editor.setModel(GlossaryModel(self._novel))
+        self.editor.tableView.setColumnHidden(GlossaryModel.ColIcon, True)
+        self.editor.tableView.setColumnWidth(GlossaryModel.ColName, 200)
+        self.editor.tableView.setContentsMargins(10, 15, 10, 5)
+
+        self.editor.tableView.setStyleSheet('''
+        QTableView::item
+{
+  border: 0px;
+  padding: 5px;
+}
+#         ''')
+        self.editor.tableView.setAlternatingRowColors(True)
+        self.editor.tableView.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
+
+        self.layout().addWidget(self.editor)
