@@ -692,6 +692,8 @@ class GlossaryModel(SelectionItemsModel):
         if index.column() == self.ColName:
             if role == Qt.ItemDataRole.DisplayRole:
                 return list(self._novel.world.glossary.values())[index.row()].key
+            if role == Qt.ItemDataRole.TextAlignmentRole:
+                return Qt.AlignmentFlag.AlignTop
         if index.column() == 3:
             if role == Qt.ItemDataRole.DisplayRole:
                 return list(self._novel.world.glossary.values())[index.row()].text
@@ -744,6 +746,10 @@ class GlossaryEditorDialog(PopupDialog):
         self.btnConfirm.clicked.connect(self.accept)
         self.btnConfirm.setDisabled(True)
 
+        if self._glossary:
+            self.lineKey.setText(self._glossary.key)
+            self.textDefinition.setText(self._glossary.text)
+
         self.frame.layout().addWidget(self.wdgTitle)
         self.frame.layout().addWidget(self.lineKey)
         self.frame.layout().addWidget(self.textDefinition)
@@ -756,7 +762,7 @@ class GlossaryEditorDialog(PopupDialog):
             if self._glossary is None:
                 self._glossary = GlossaryItem('')
             self._glossary.key = self.lineKey.text()
-            self._glossary.text = self.textDefinition.toMarkdown()
+            self._glossary.text = self.textDefinition.toMarkdown().strip()
 
             return self._glossary
 
@@ -789,24 +795,17 @@ class WorldBuildingGlossaryEditor(QWidget):
         self.editor.setInlineEditionEnabled(False)
         self.editor.setInlineAdditionEnabled(False)
         self.editor.btnAdd.clicked.connect(self._addNew)
-        # self._novel.world.glossary = {'First': GlossaryItem('Definition of first', key='First'),
-        #                               'Second': GlossaryItem('Definition of Second', key='Second'),
-        #                               'Third': GlossaryItem('Definition of Third', key='Third'),
-        #                               }
-
+        self.editor.editRequested.connect(self._edit)
         self.glossaryModel = GlossaryModel(self._novel)
         self.editor.setModel(self.glossaryModel)
         self.editor.tableView.setColumnHidden(GlossaryModel.ColIcon, True)
         self.editor.tableView.setColumnWidth(GlossaryModel.ColName, 200)
         self.editor.tableView.setContentsMargins(10, 15, 10, 5)
 
-        self.editor.tableView.setStyleSheet('''
-        QTableView::item
-{
-  border: 0px;
-  padding: 5px;
-}
-#         ''')
+        self.glossaryModel.modelReset.connect(self.editor.tableView.resizeRowsToContents)
+
+        self.editor.tableView.setStyleSheet('QTableView::item { border: 0px; padding: 5px; }')
+        self.editor.tableView.resizeRowsToContents()
         self.editor.tableView.setAlternatingRowColors(True)
         self.editor.tableView.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
 
@@ -816,6 +815,16 @@ class WorldBuildingGlossaryEditor(QWidget):
     def _addNew(self):
         glossary = GlossaryEditorDialog.edit()
         if glossary:
-            self._novel.world.glossary[glossary.key] = glossary
-            self.glossaryModel.modelReset.emit()
-            self.repo.update_world(self._novel)
+            self._updateGlossary(glossary)
+
+    def _edit(self, item: GlossaryItem):
+        edited_glossary = GlossaryEditorDialog.edit(item)
+        if edited_glossary:
+            self._novel.world.glossary.pop(item.key)
+            self._updateGlossary(edited_glossary)
+
+    def _updateGlossary(self, glossary: GlossaryItem):
+        self._novel.world.glossary[glossary.key] = glossary
+        self.glossaryModel.modelReset.emit()
+        # self.editor.tableView.resizeRowsToContents()
+        self.repo.update_world(self._novel)
