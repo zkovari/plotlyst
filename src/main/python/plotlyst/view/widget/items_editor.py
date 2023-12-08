@@ -23,6 +23,7 @@ from PyQt6.QtCore import QModelIndex, Qt, pyqtSignal, QPoint
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QAbstractItemView, QTableView
 from qthandy import ask_confirmation, vbox, spacer, hbox, vline
+from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.core.domain import SelectionItem
 from src.main.python.plotlyst.model.common import SelectionItemsModel
@@ -52,16 +53,19 @@ class ItemsEditorWidget(QWidget):
         self.btnAdd = tool_btn(IconRegistry.plus_icon(), tooltip='Add new item', transparent_=True)
         self.btnAdd.clicked.connect(self._add)
         self.btnAdd.setShortcut('Ctrl+N')
+        self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd, 1.0, 0.7))
 
         self.btnEdit = tool_btn(IconRegistry.edit_icon(), tooltip='Edit selected item', transparent_=True)
         self.btnEdit.clicked.connect(self._edit)
         self.btnEdit.setDisabled(True)
         self.btnEdit.setShortcut(Qt.Key.Key_E)
+        self.btnEdit.installEventFilter(OpacityEventFilter(self.btnEdit, 1.0, 0.7))
 
         self.btnRemove = tool_btn(IconRegistry.minus_icon(), tooltip='Remove selected item', transparent_=True)
         self.btnRemove.clicked.connect(self._remove)
         self.btnRemove.setDisabled(True)
         self.btnRemove.setShortcut(Qt.Key.Key_Delete)
+        self.btnRemove.installEventFilter(OpacityEventFilter(self.btnRemove, 1.0, 0.7))
 
         self.toolbar.layout().addWidget(self.btnAdd)
         self.toolbar.layout().addWidget(self.btnEdit)

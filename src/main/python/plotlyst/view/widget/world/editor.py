@@ -26,7 +26,7 @@ from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QTableView, QApplication, QDialog
 from overrides import overrides
 from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon
-from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
+from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import recursive
@@ -669,13 +669,16 @@ class WorldBuildingEntityEditor(QWidget):
 
 
 class GlossaryModel(SelectionItemsModel):
+    glossaryRemoved = pyqtSignal()
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
+        self._items = list(self._novel.world.glossary.values())
 
     @overrides
     def rowCount(self, parent: QModelIndex = None) -> int:
-        return len(self._novel.world.glossary.keys())
+        return len(self._items)
 
     @overrides
     def columnCount(self, parent: QModelIndex = None) -> int:
@@ -691,34 +694,36 @@ class GlossaryModel(SelectionItemsModel):
             return font
         if index.column() == self.ColName:
             if role == Qt.ItemDataRole.DisplayRole:
-                return list(self._novel.world.glossary.values())[index.row()].key
+                return self._items[index.row()].key
             if role == Qt.ItemDataRole.TextAlignmentRole:
                 return Qt.AlignmentFlag.AlignTop
         if index.column() == 3:
             if role == Qt.ItemDataRole.DisplayRole:
-                return list(self._novel.world.glossary.values())[index.row()].text
+                return self._items[index.row()].text
         return super().data(index, role)
+
+    def refresh(self):
+        self._items = list(self._novel.world.glossary.values())
+        self.modelReset.emit()
 
     @overrides
     def _newItem(self) -> QModelIndex:
-        print('new')
-        # self._items.append('new')
-        # return self.index(self.rowCount() - 1, 0)
+        pass
 
     @overrides
     def _insertItem(self, row: int) -> QModelIndex:
-        print('insert new')
-        # self._items.insert(row, SelectionItem(''))
-        # return self.index(row, 0)
+        pass
 
     @overrides
     def item(self, index: QModelIndex) -> SelectionItem:
-        return list(self._novel.world.glossary.values())[index.row()]
+        return self._items[index.row()]
 
     @overrides
     def remove(self, index: QModelIndex):
-        super().remove(index)
-        self._items.pop(index.row())
+        glossary = self._items[index.row()]
+        self._novel.world.glossary.pop(glossary.key)
+        self.refresh()
+        self.glossaryRemoved.emit()
 
 
 class GlossaryEditorDialog(PopupDialog):
@@ -745,6 +750,8 @@ class GlossaryEditorDialog(PopupDialog):
         sp(self.btnConfirm).h_exp()
         self.btnConfirm.clicked.connect(self.accept)
         self.btnConfirm.setDisabled(True)
+        self.btnConfirm.installEventFilter(
+            DisabledClickEventFilter(self.btnConfirm, lambda: qtanim.shake(self.lineKey)))
 
         if self._glossary:
             self.lineKey.setText(self._glossary.key)
@@ -803,6 +810,7 @@ class WorldBuildingGlossaryEditor(QWidget):
         self.editor.tableView.setContentsMargins(10, 15, 10, 5)
 
         self.glossaryModel.modelReset.connect(self.editor.tableView.resizeRowsToContents)
+        self.glossaryModel.glossaryRemoved.connect(self._save)
 
         self.editor.tableView.setStyleSheet('QTableView::item { border: 0px; padding: 5px; }')
         self.editor.tableView.resizeRowsToContents()
@@ -825,6 +833,8 @@ class WorldBuildingGlossaryEditor(QWidget):
 
     def _updateGlossary(self, glossary: GlossaryItem):
         self._novel.world.glossary[glossary.key] = glossary
-        self.glossaryModel.modelReset.emit()
-        # self.editor.tableView.resizeRowsToContents()
+        self.glossaryModel.refresh()
+        self._save()
+
+    def _save(self):
         self.repo.update_world(self._novel)
