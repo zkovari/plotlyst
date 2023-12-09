@@ -164,6 +164,33 @@ class CharacterCard(Ui_CharacterCard, Card):
     def copy(self) -> 'Card':
         return CharacterCard(self.character)
 
+    def _borderColor(self, selected: bool = False) -> str:
+        if self.character.role:
+            color = QColor(self.character.role.icon_color)
+        else:
+            return super()._bgColor(selected)
+
+        color.setAlpha(225 if selected else 155)
+        red, green, blue, alpha = color.red(), color.green(), color.blue(), color.alpha()
+        return f"rgba({red}, {green}, {blue}, {alpha})"
+
+    @overrides
+    def _bgColor(self, selected: bool = False) -> str:
+        if self.character.role:
+            color = QColor(self.character.role.icon_color)
+        # if self.character.is_major():
+        #     color = QColor(CHARACTER_MAJOR_COLOR)
+        # elif self.character.is_secondary():
+        #     color = QColor(CHARACTER_SECONDARY_COLOR)
+        # elif self.character.is_minor():
+        #     color = QColor(CHARACTER_MINOR_COLOR)
+        else:
+            return super()._bgColor(selected)
+
+        color.setAlpha(175 if selected else 15)
+        red, green, blue, alpha = color.red(), color.green(), color.blue(), color.alpha()
+        return f"rgba({red}, {green}, {blue}, {alpha})"
+
 
 class SceneCard(Ui_SceneCard, Card):
     def __init__(self, scene: Scene, novel: Novel, parent=None):
