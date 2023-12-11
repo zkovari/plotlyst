@@ -452,7 +452,7 @@ class ArrowButton(QToolButton):
 
     def _handleNewState(self):
         self.setIconSize(QSize(22, 22))
-        self.setIcon(IconRegistry.from_name(self._icons[self._state], 'black'))
+        self.setIcon(IconRegistry.from_name(self._icons[self._state], '#6c757d'))
         self.setChecked(True)
 
     def _clicked(self):
