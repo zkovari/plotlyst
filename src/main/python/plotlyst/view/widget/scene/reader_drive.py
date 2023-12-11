@@ -50,6 +50,7 @@ class QuestionState(Enum):
 
 class ReaderQuestionWidget(QWidget):
     resolved = pyqtSignal()
+    changed = pyqtSignal()
 
     def __init__(self, question: ReaderQuestion, state: QuestionState, ref: Optional[SceneReaderQuestion] = None,
                  parent=None):
@@ -75,6 +76,7 @@ class ReaderQuestionWidget(QWidget):
         self.textedit.setMaximumSize(question.max_width, question.max_height)
         self.textedit.verticalScrollBar().setVisible(False)
         shadow(self.textedit)
+        self.textedit.setText(self.question.text)
         self.textedit.textChanged.connect(self._questionChanged)
 
         self.layout().addWidget(self._label, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -97,7 +99,8 @@ class ReaderQuestionWidget(QWidget):
         sp(self).v_max()
 
     def _questionChanged(self):
-        pass
+        self.question.text = self.textedit.toPlainText()
+        self.changed.emit()
 
 
 class ReaderCuriosityEditor(LazyWidget):
@@ -288,5 +291,6 @@ class ReaderCuriosityEditor(LazyWidget):
                              state: QuestionState, ref: Optional[SceneReaderQuestion] = None) -> ReaderQuestionWidget:
         wdg = ReaderQuestionWidget(question, state, ref)
         wdg.resolved.connect(partial(self._resolve, wdg))
+        wdg.changed.connect(lambda: self.repo.update_novel(self._novel))
 
         return wdg
