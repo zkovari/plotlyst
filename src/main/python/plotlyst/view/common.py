@@ -362,11 +362,13 @@ def set_tab_settings(tabs: QTabWidget, widget: QWidget, text: Optional[str] = No
         tabs.setTabEnabled(i, enabled)
 
 
-def fade_out_and_gc(parent: QWidget, widget: QWidget, duration: int = 200):
+def fade_out_and_gc(parent: QWidget, widget: QWidget, duration: int = 200, teardown=None):
     def destroy():
         widget.setHidden(True)
         parent.layout().removeWidget(widget)
         gc(widget)
+        if teardown:
+            teardown()
 
     widget.setDisabled((True))
     anim = fade_out(widget, duration)

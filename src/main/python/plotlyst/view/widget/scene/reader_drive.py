@@ -19,13 +19,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import random
 from enum import Enum, auto
-from typing import Optional, Set
+from functools import partial
+from typing import Optional, Dict
 
 import qtanim
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QButtonGroup, QStackedWidget, QTextEdit
 from overrides import overrides
-from qthandy import vbox, hbox, spacer, sp, flow, vline, clear_layout, bold, margins, incr_font
+from qthandy import vbox, hbox, spacer, sp, flow, vline, clear_layout, bold, margins, incr_font, italic
 from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
@@ -33,7 +35,7 @@ from src.main.python.plotlyst.core.domain import Novel, Scene, ReaderQuestion, S
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import push_btn, link_buttons_to_pages, shadow, scroll_area, \
-    insert_before_the_end, wrap
+    insert_before_the_end, wrap, fade_out_and_gc
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.display import LazyWidget
 
@@ -41,14 +43,19 @@ from src.main.python.plotlyst.view.widget.display import LazyWidget
 class QuestionState(Enum):
     Raised_before = auto()
     Raised_now = auto()
-    Resolved = auto()
+    Resolved_before = auto()
+    Resolved_now = auto()
     Detached = auto()
 
 
 class ReaderQuestionWidget(QWidget):
-    def __init__(self, question: ReaderQuestion, state: QuestionState, parent=None):
+    resolved = pyqtSignal()
+
+    def __init__(self, question: ReaderQuestion, state: QuestionState, ref: Optional[SceneReaderQuestion] = None,
+                 parent=None):
         super().__init__(parent)
         self.question = question
+        self.scene_ref = ref
         self.state = state
 
         vbox(self)
@@ -73,11 +80,19 @@ class ReaderQuestionWidget(QWidget):
         self.layout().addWidget(self._label, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self.textedit)
 
-        if self.state == QuestionState.Raised_now:
+        if self.state == QuestionState.Raised_now or self.state == QuestionState.Resolved_now:
             badge = push_btn(IconRegistry.from_name('ei.star-alt', color=PLOTLYST_SECONDARY_COLOR), 'New!',
                              icon_resize=False, pointy_=False)
             badge.setStyleSheet(f'border: 0px; color: {PLOTLYST_SECONDARY_COLOR}')
+            italic(badge)
             self.layout().addWidget(badge, alignment=Qt.AlignmentFlag.AlignLeft)
+        elif self.state == QuestionState.Raised_before:
+            resolve = push_btn(
+                IconRegistry.from_name('mdi.sticker-check-outline', color=PLOTLYST_SECONDARY_COLOR), 'Resolve')
+            resolve.setStyleSheet(f'border:opx; color: {PLOTLYST_SECONDARY_COLOR};')
+            resolve.installEventFilter(OpacityEventFilter(resolve, leaveOpacity=0.7))
+            resolve.clicked.connect(self.resolved)
+            self.layout().addWidget(resolve, alignment=Qt.AlignmentFlag.AlignCenter)
 
         sp(self).v_max()
 
@@ -187,24 +202,28 @@ class ReaderCuriosityEditor(LazyWidget):
         clear_layout(self.pageResolvedQuestionsEditor)
         clear_layout(self.pageDetachedQuestionsEditor)
 
-        found_questions: Set[ReaderQuestion] = set()
+        found_questions: Dict[ReaderQuestion, Optional[bool]] = {}
         for scene in self._novel.scenes:
-            state = QuestionState.Raised_before
-            if scene is self._scene:
-                state = QuestionState.Raised_now
-
             for question_ref in scene.questions:
                 question = self._novel.questions[question_ref.sid()]
-                if question_ref.resolved:
-                    state = QuestionState.Resolved
-                self._addQuestion(question, state)
-                found_questions.add(question)
+                found_questions[question] = question_ref.resolved
 
             if scene is self._scene:
                 break
 
+        for question_ref in self._scene.questions:
+            question = self._novel.questions[question_ref.sid()]
+            found_questions[question] = None
+            self._addQuestion(question,
+                              QuestionState.Resolved_now if question_ref.resolved else QuestionState.Raised_now)
+
+        for k, v in found_questions.items():
+            if v is None:
+                continue
+            self._addQuestion(k, QuestionState.Resolved_before if v else QuestionState.Raised_before)
+
         for question in self._novel.questions.values():
-            if question not in found_questions:
+            if question not in found_questions.keys():
                 self._addQuestion(question, QuestionState.Detached)
 
         self.pageQuestionsEditor.layout().addWidget(wrap(self.btnAddNew, margin_top=80))
@@ -223,12 +242,12 @@ class ReaderCuriosityEditor(LazyWidget):
         if not self.btnOther.isVisible() and self.btnOther.isChecked():
             self.btnUnresolved.setChecked(True)
 
-    def _addQuestion(self, question: ReaderQuestion, state: QuestionState):
-        wdg = ReaderQuestionWidget(question, state)
+    def _addQuestion(self, question: ReaderQuestion, state: QuestionState, ref: Optional[SceneReaderQuestion] = None):
+        wdg = self.__initQuestionWidget(question, state, ref)
 
         if state == QuestionState.Raised_before or state == QuestionState.Raised_now:
             self.pageQuestionsEditor.layout().addWidget(wdg)
-        elif state == QuestionState.Resolved:
+        elif state == QuestionState.Resolved_before or state == QuestionState.Resolved_now:
             self.pageResolvedQuestionsEditor.layout().addWidget(wdg)
         else:
             self.pageDetachedQuestionsEditor.layout().addWidget(wdg)
@@ -243,12 +262,31 @@ class ReaderCuriosityEditor(LazyWidget):
         question.max_height = random.randint(110, 120)
 
         self._novel.questions[question.sid()] = question
-        self._scene.questions.append(SceneReaderQuestion(question.id))
+        ref = SceneReaderQuestion(question.id)
+        self._scene.questions.append(ref)
         self.repo.update_novel(self._novel)
 
-        wdg = ReaderQuestionWidget(question, QuestionState.Raised_now)
+        wdg = self.__initQuestionWidget(question, QuestionState.Raised_now, ref)
         insert_before_the_end(self.pageQuestionsEditor, wdg)
         qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
         wdg.textedit.setFocus()
 
         self._updateLabels()
+
+    def _resolve(self, wdg: ReaderQuestionWidget):
+        def finish():
+            self._addQuestion(question, QuestionState.Resolved_now, ref)
+            qtanim.glow(self.btnResolved, color=QColor(PLOTLYST_SECONDARY_COLOR), loop=3)
+            self._updateLabels()
+
+        question = wdg.question
+        ref = SceneReaderQuestion(question.id, resolved=True)
+        fade_out_and_gc(self.pageQuestionsEditor, wdg, teardown=finish)
+        self._scene.questions.append(ref)
+
+    def __initQuestionWidget(self, question: ReaderQuestion,
+                             state: QuestionState, ref: Optional[SceneReaderQuestion] = None) -> ReaderQuestionWidget:
+        wdg = ReaderQuestionWidget(question, state, ref)
+        wdg.resolved.connect(partial(self._resolve, wdg))
+
+        return wdg
