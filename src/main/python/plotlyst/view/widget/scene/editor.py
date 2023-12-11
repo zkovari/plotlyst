@@ -29,7 +29,7 @@ from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QSt
 from overrides import overrides
 from qthandy import vbox, vspacer, transparent, sp, line, incr_font, hbox, pointy, vline, retain_when_hidden, margins, \
     spacer, underline, bold, grid, gc, clear_layout, ask_confirmation, decr_icon, italic, translucent
-from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter
+from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget, GridMenuWidget
 
 from src.main.python.plotlyst.common import raise_unrecognized_arg, CONFLICT_SELF_COLOR, RELAXED_WHITE_COLOR, \
@@ -665,6 +665,7 @@ class SceneElementWidget(QWidget):
         for corner in self._corners:
             corner.setDisabled(True)
             corner.setVisible(False)
+            corner.installEventFilter(InstantTooltipEventFilter(corner))
             retain_when_hidden(corner)
             corner.clicked.connect(partial(self._cornerClicked, corner))
 
