@@ -1208,6 +1208,15 @@ class StoryElement:
 
 
 @dataclass
+class SceneReaderQuestion:
+    id: uuid.UUID
+    resolved: bool = False
+
+    def sid(self) -> str:
+        return str(self.id)
+
+
+@dataclass
 class Scene:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -1231,6 +1240,7 @@ class Scene:
     outcome: Optional[SceneOutcome] = None
     story_elements: List[StoryElement] = field(default_factory=list)
     structure: List[SceneStructureItem] = field(default_factory=list)
+    questions: List[SceneReaderQuestion] = field(default_factory=list)
 
     def beat(self, novel: 'Novel') -> Optional[StoryBeat]:
         structure = novel.active_story_structure
@@ -2094,6 +2104,19 @@ class ReaderQuestion:
     bottom_margin: int = 0
     max_width = 0
     max_height = 0
+
+    def sid(self) -> str:
+        return str(self.id)
+
+    @overrides
+    def __eq__(self, other: 'ReaderQuestion'):
+        if isinstance(other, ReaderQuestion):
+            return self.id == other.id
+        return False
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
 
 
 @dataclass
