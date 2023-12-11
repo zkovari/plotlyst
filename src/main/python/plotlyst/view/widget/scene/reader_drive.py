@@ -73,6 +73,12 @@ class ReaderQuestionWidget(QWidget):
         self.layout().addWidget(self._label, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self.textedit)
 
+        if self.state == QuestionState.Raised_now:
+            badge = push_btn(IconRegistry.from_name('ei.star-alt', color=PLOTLYST_SECONDARY_COLOR), 'New!',
+                             icon_resize=False, pointy_=False)
+            badge.setStyleSheet(f'border: 0px; color: {PLOTLYST_SECONDARY_COLOR}')
+            self.layout().addWidget(badge, alignment=Qt.AlignmentFlag.AlignLeft)
+
         sp(self).v_max()
 
     def _questionChanged(self):
