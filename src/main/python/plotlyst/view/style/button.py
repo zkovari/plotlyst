@@ -301,9 +301,13 @@ btn_style_abstract_button_transparent = """
     QAbstractButton::menu-indicator[transparent-rounded-bg-on-hover=true] {
         width:0px;
     }
-
+    
     QAbstractButton:hover[transparent-rounded-bg-on-hover=true] {
         background: #EDEDED;
+    }
+    
+    QAbstractButton:hover[transparent-magnolia-rounded-bg-on-hover=true] {
+        background: #FCF5FE;
     }
 
     QAbstractButton:hover[top-selector=true] {

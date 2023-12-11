@@ -2072,6 +2072,30 @@ def default_documents() -> List[Document]:
             ]
 
 
+class ReaderQuestionType(Enum):
+    General = 0
+    Plot = 1
+    Character_growth = 2
+    Backstory = 3
+    Internal_conflict = 4
+    Relationship = 5
+    Character_motivation = 6
+    Conflict_resolution = 7
+
+
+@dataclass
+class ReaderQuestion:
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    text: str = ''
+    type: ReaderQuestionType = ReaderQuestionType.General
+    left_margin: int = 0
+    top_margin: int = 0
+    right_margin: int = 0
+    bottom_margin: int = 0
+    max_width = 0
+    max_height = 0
+
+
 @dataclass
 class TagType(SelectionItem):
     description: str = ''
@@ -2361,6 +2385,7 @@ class Novel(NovelDescriptor):
     character_networks: List[Diagram] = field(default_factory=default_character_networks)
     manuscript_progress: Dict[str, DocumentProgress] = field(default_factory=dict,
                                                              metadata=config(exclude=exclude_if_empty))
+    questions: Dict[str, ReaderQuestion] = field(default_factory=dict)
 
     def pov_characters(self) -> List[Character]:
         pov_ids = set()
