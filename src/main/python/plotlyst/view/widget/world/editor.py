@@ -42,7 +42,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.display import Icon, PopupDialog, OverlayWidget
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, RemovalButton
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
-from src.main.python.plotlyst.view.widget.timeline import TimelineWidget
+from src.main.python.plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
 
@@ -488,6 +488,12 @@ class WorldBuildingEntityHighlightedTextElementEditor(WorldBuildingEntityElement
         self.layout().addWidget(self.frame)
 
 
+class EntityTimelineCard(BackstoryCard):
+    def __init__(self, backstory: BackstoryEvent, parent=None):
+        super().__init__(backstory, parent)
+        self.refresh()
+
+
 class EntityTimelineWidget(TimelineWidget):
     def __init__(self, element: WorldBuildingEntityElement, parent=None):
         super().__init__(parent)
@@ -497,6 +503,10 @@ class EntityTimelineWidget(TimelineWidget):
     @overrides
     def events(self) -> List[BackstoryEvent]:
         return self.element.events
+
+    @overrides
+    def cardClass(self):
+        return EntityTimelineCard
 
 
 class WorldBuildingEntityTimelineElementEditor(WorldBuildingEntityElementWidget):
