@@ -23,23 +23,24 @@ from typing import Optional, Dict
 
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QResizeEvent
+from PyQt6.QtGui import QColor, QResizeEvent, QAction
 from PyQt6.QtWidgets import QWidget, QButtonGroup, QStackedWidget, QTextEdit
 from overrides import overrides
 from qthandy import vbox, hbox, spacer, sp, flow, vline, clear_layout, bold, incr_font, italic, translucent, line
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, InstantTooltipEventFilter
-from qtmenu import MenuWidget
+from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
-from src.main.python.plotlyst.core.domain import Novel, Scene, ReaderQuestion, SceneReaderQuestion
+from src.main.python.plotlyst.core.domain import Novel, Scene, ReaderQuestion, SceneReaderQuestion, ReaderQuestionType
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import push_btn, link_buttons_to_pages, shadow, scroll_area, \
     insert_before_the_end, wrap, fade_out_and_gc, action, label
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import DotsMenuButton
 from src.main.python.plotlyst.view.widget.confirm import confirmed
-from src.main.python.plotlyst.view.widget.display import LazyWidget
+from src.main.python.plotlyst.view.widget.display import LazyWidget, Icon
 from src.main.python.plotlyst.view.widget.input import RemovalButton
 
 
@@ -49,6 +50,42 @@ class QuestionState(Enum):
     Resolved_before = auto()
     Resolved_now = auto()
     Detached = auto()
+
+
+class ReaderQuestionTypeMenu(MenuWidget):
+    selected = pyqtSignal(ReaderQuestionType)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        apply_white_menu(self)
+
+        self._actions: Dict[ReaderQuestionType, QAction] = {}
+        self.addSection('Associate an optional tag to this question')
+        self.addSeparator()
+        self._addAction(ReaderQuestionType.General)
+        self._addAction(ReaderQuestionType.Plot)
+        self._addAction(ReaderQuestionType.Character_growth)
+        self._addAction(ReaderQuestionType.Backstory)
+        self._addAction(ReaderQuestionType.Internal_conflict)
+        self._addAction(ReaderQuestionType.Relationship)
+        self._addAction(ReaderQuestionType.Character_motivation)
+        self._addAction(ReaderQuestionType.Conflict_resolution)
+
+        self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+
+    def setTypeDisabled(self, type_: ReaderQuestionType):
+        for v in self._actions.values():
+            v.setEnabled(True)
+
+        self._actions[type_].setDisabled(True)
+
+    def _addAction(self, type_: ReaderQuestionType):
+        action_ = action(type_.display_name(), icon=IconRegistry.from_name(type_.icon()), tooltip=type_.description(),
+                         slot=partial(self.selected.emit, type_))
+        self.addAction(action_)
+        self._actions[type_] = action_
+        return action_
 
 
 class ReaderQuestionWidget(QWidget):
@@ -75,6 +112,8 @@ class ReaderQuestionWidget(QWidget):
             translucent(self._label)
         bold(self._label, self.new)
         self._label.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self._menuTypes = ReaderQuestionTypeMenu(self._label)
+        self._menuTypes.selected.connect(self._typeChanged)
 
         self.textedit = QTextEdit(self)
         self.textedit.setProperty('white-bg', True)
@@ -96,6 +135,10 @@ class ReaderQuestionWidget(QWidget):
 
         self.layout().addWidget(self._label, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self.textedit)
+
+        self.badgeType = Icon(self)
+        self.badgeType.setGeometry(10, 10, 17, 17)
+        self._updateTypeIcon()
 
         if self.state == QuestionState.Raised_now or self.state == QuestionState.Resolved_now:
             badge = push_btn(IconRegistry.from_name('ei.star-alt', color=PLOTLYST_SECONDARY_COLOR), 'New!',
@@ -152,6 +195,20 @@ class ReaderQuestionWidget(QWidget):
     def _questionChanged(self):
         self.question.text = self.textedit.toPlainText()
         self.changed.emit()
+
+    def _typeChanged(self, type_: ReaderQuestionType):
+        self.question.type = type_
+        self._updateTypeIcon()
+        self.changed.emit()
+
+    def _updateTypeIcon(self):
+        if self.question.type == ReaderQuestionType.General:
+            self.badgeType.setHidden(True)
+        else:
+            self.badgeType.setIcon(IconRegistry.from_name(self.question.type.icon(), PLOTLYST_SECONDARY_COLOR))
+            self.badgeType.setVisible(True)
+
+        self._menuTypes.setTypeDisabled(self.question.type)
 
 
 class ReaderCuriosityEditor(LazyWidget):
