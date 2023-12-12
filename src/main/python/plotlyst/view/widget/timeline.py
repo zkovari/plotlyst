@@ -217,6 +217,8 @@ class TimelineWidget(QWidget):
         super().__init__(parent)
         self._layout = vbox(self, spacing=0)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self._lineTopMargin: int = 0
+        self._endSpacerMinHeight: int = 45
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
@@ -260,7 +262,7 @@ class TimelineWidget(QWidget):
 
         self._addControlButtons(-1)
         spacer_ = vspacer()
-        spacer_.setMinimumHeight(200)
+        spacer_.setMinimumHeight(self._endSpacerMinHeight)
         self.layout().addWidget(spacer_)
 
     @overrides
@@ -268,7 +270,7 @@ class TimelineWidget(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setBrush(QBrush(QColor('#1d3557')))
-        painter.drawRect(int(self.width() / 2) - 3, 64, 6, self.height() - 64)
+        painter.drawRect(int(self.width() / 2) - 3, self._lineTopMargin, 6, self.height() - self._lineTopMargin)
 
         painter.end()
 

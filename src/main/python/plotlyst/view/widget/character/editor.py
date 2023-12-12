@@ -665,6 +665,8 @@ class CharacterTimelineWidget(TimelineWidget):
     def __init__(self, parent=None):
         super(CharacterTimelineWidget, self).__init__(parent)
         self.character: Optional[Character] = None
+        self._lineTopMargin = 64
+        self._endSpacerMinHeight = 200
 
     def setCharacter(self, character: Character):
         self.character = character
