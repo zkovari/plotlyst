@@ -45,7 +45,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding, Board, \
     default_big_five_values, CharacterPlan, ManuscriptGoals, Diagram, DiagramData, default_events_map, \
     default_character_networks, ScenePurposeType, StoryElement, SceneOutcome, ChapterType, SceneStructureItem, \
-    DocumentProgress
+    DocumentProgress, ReaderQuestion, SceneReaderQuestion
 from src.main.python.plotlyst.core.template import Role, exclude_if_empty, exclude_if_black, exclude_if_false
 from src.main.python.plotlyst.env import app_env
 
@@ -175,6 +175,7 @@ class SceneInfo:
     outcome: Optional[SceneOutcome] = None
     story_elements: List[StoryElement] = field(default_factory=list)
     structure: List[SceneStructureItem] = field(default_factory=list)
+    questions: List[SceneReaderQuestion] = field(default_factory=list)
 
 
 @dataclass
@@ -212,6 +213,7 @@ class NovelInfo:
     character_networks: List[Diagram] = field(default_factory=default_character_networks)
     manuscript_progress: Dict[str, DocumentProgress] = field(default_factory=dict,
                                                              metadata=config(exclude=exclude_if_empty))
+    questions: Dict[str, ReaderQuestion] = field(default_factory=dict)
 
 
 @dataclass
@@ -536,7 +538,7 @@ class JsonClient:
                               comments=info.comments, tag_references=info.tag_references,
                               document=info.document, manuscript=info.manuscript, drive=info.drive,
                               purpose=info.purpose, outcome=info.outcome, story_elements=info.story_elements,
-                              structure=info.structure)
+                              structure=info.structure, questions=info.questions)
                 scenes.append(scene)
 
         tag_types = novel_info.tag_types
@@ -569,7 +571,7 @@ class JsonClient:
                       prefs=novel_info.prefs, manuscript_goals=novel_info.manuscript_goals,
                       events_map=novel_info.events_map,
                       character_networks=novel_info.character_networks,
-                      manuscript_progress=novel_info.manuscript_progress)
+                      manuscript_progress=novel_info.manuscript_progress, questions=novel_info.questions)
 
         world_path = self.novels_dir.joinpath(str(novel_info.id)).joinpath('world.json')
         if os.path.exists(world_path):
@@ -610,7 +612,7 @@ class JsonClient:
                                premise=novel.premise, synopsis=novel.synopsis,
                                version=LATEST_VERSION, prefs=novel.prefs, manuscript_goals=novel.manuscript_goals,
                                events_map=novel.events_map, character_networks=novel.character_networks,
-                               manuscript_progress=novel.manuscript_progress)
+                               manuscript_progress=novel.manuscript_progress, questions=novel.questions)
 
         self.__persist_info(self.novels_dir, novel_info)
         # self._persist_world(novel.id, novel.world)
@@ -654,7 +656,7 @@ class JsonClient:
                          tag_references=scene.tag_references, document=scene.document, manuscript=scene.manuscript,
                          drive=scene.drive, purpose=scene.purpose, outcome=scene.outcome,
                          story_elements=scene.story_elements,
-                         structure=scene.structure)
+                         structure=scene.structure, questions=scene.questions)
         self.__persist_info(self.scenes_dir(novel), info)
 
     def _persist_diagram(self, novel: Novel, diagram: Diagram):
