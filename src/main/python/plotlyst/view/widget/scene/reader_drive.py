@@ -332,6 +332,25 @@ class ReaderCuriosityEditor(LazyWidget):
             self._novel.questions.pop(question.sid())
             self.repo.update_novel(self._novel)
 
+    def _remove(self, wdg: ReaderQuestionWidget):
+        def finish():
+            self.refresh()
+
+        if not confirmed("Remove this reader's question and all its associations?"):
+            return
+
+        question = wdg.question
+
+        for scene in self._novel.scenes:
+            for ref in scene.questions[:]:
+                if ref.id == question.id:
+                    scene.questions.remove(ref)
+                    self.repo.update_scene(scene)
+
+        self._novel.questions.pop(question.sid())
+        fade_out_and_gc(wdg.parent(), wdg, teardown=finish)
+        self.repo.update_novel(self._novel)
+
     def _find_ref(self, question: ReaderQuestion) -> Optional[SceneReaderQuestion]:
         for scene in self._novel.scenes:
             for ref in scene.questions:
@@ -344,5 +363,6 @@ class ReaderCuriosityEditor(LazyWidget):
         wdg.resolved.connect(partial(self._resolve, wdg))
         wdg.changed.connect(lambda: self.repo.update_novel(self._novel))
         wdg.detached.connect(partial(self._detach, wdg))
+        wdg.removed.connect(partial(self._remove, wdg))
 
         return wdg
