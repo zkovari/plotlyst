@@ -17,27 +17,29 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import random
 from enum import Enum, auto
 from functools import partial
 from typing import Optional, Dict
 
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QColor
+from PyQt6.QtGui import QColor, QResizeEvent
 from PyQt6.QtWidgets import QWidget, QButtonGroup, QStackedWidget, QTextEdit
 from overrides import overrides
-from qthandy import vbox, hbox, spacer, sp, flow, vline, clear_layout, bold, margins, incr_font, italic
-from qthandy.filter import OpacityEventFilter
+from qthandy import vbox, hbox, spacer, sp, flow, vline, clear_layout, bold, incr_font, italic, translucent
+from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Scene, ReaderQuestion, SceneReaderQuestion
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import push_btn, link_buttons_to_pages, shadow, scroll_area, \
-    insert_before_the_end, wrap, fade_out_and_gc
+    insert_before_the_end, wrap, fade_out_and_gc, action
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.button import DotsMenuButton
 from src.main.python.plotlyst.view.widget.display import LazyWidget
+from src.main.python.plotlyst.view.widget.input import RemovalButton
 
 
 class QuestionState(Enum):
@@ -51,6 +53,8 @@ class QuestionState(Enum):
 class ReaderQuestionWidget(QWidget):
     resolved = pyqtSignal()
     changed = pyqtSignal()
+    detached = pyqtSignal()
+    removed = pyqtSignal()
 
     def __init__(self, question: ReaderQuestion, state: QuestionState, ref: Optional[SceneReaderQuestion] = None,
                  parent=None):
@@ -58,12 +62,15 @@ class ReaderQuestionWidget(QWidget):
         self.question = question
         self.scene_ref = ref
         self.state = state
+        self.new = self.state in [QuestionState.Raised_now, QuestionState.Resolved_now]
 
-        vbox(self)
-        margins(self, top=self.question.top_margin, left=self.question.left_margin, right=self.question.right_margin,
-                bottom=self.question.bottom_margin)
-        self._label = push_btn(IconRegistry.from_name('ei.question-sign'), 'Question', transparent_=True)
-        bold(self._label)
+        vbox(self, 10)
+        self._label = push_btn(
+            IconRegistry.from_name('ei.question-sign', PLOTLYST_SECONDARY_COLOR if self.new else 'black'), 'Question',
+            transparent_=True)
+        if self.state == QuestionState.Resolved_before:
+            translucent(self._label)
+        bold(self._label, self.new)
         self._label.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.textedit = QTextEdit(self)
@@ -73,9 +80,14 @@ class ReaderQuestionWidget(QWidget):
         if app_env.is_mac():
             incr_font(self.textedit)
         self.textedit.setMinimumSize(170, 100)
-        self.textedit.setMaximumSize(question.max_width, question.max_height)
+        self.textedit.setMaximumSize(190, 120)
         self.textedit.verticalScrollBar().setVisible(False)
-        shadow(self.textedit)
+        if self.new:
+            shadow(self.textedit, color=QColor(PLOTLYST_SECONDARY_COLOR))
+        elif self.state == QuestionState.Resolved_before:
+            shadow(self.textedit, color=QColor('lightgrey'))
+        else:
+            shadow(self.textedit)
         self.textedit.setText(self.question.text)
         self.textedit.textChanged.connect(self._questionChanged)
 
@@ -92,11 +104,30 @@ class ReaderQuestionWidget(QWidget):
             resolve = push_btn(
                 IconRegistry.from_name('mdi.sticker-check-outline', color=PLOTLYST_SECONDARY_COLOR), 'Resolve')
             resolve.setStyleSheet(f'border:opx; color: {PLOTLYST_SECONDARY_COLOR};')
-            resolve.installEventFilter(OpacityEventFilter(resolve, leaveOpacity=0.7))
+            resolve.installEventFilter(OpacityEventFilter(resolve, leaveOpacity=0.5))
             resolve.clicked.connect(self.resolved)
             self.layout().addWidget(resolve, alignment=Qt.AlignmentFlag.AlignCenter)
 
+        if self.scene_ref:
+            self.btnRemove = RemovalButton(self)
+            self.btnRemove.setHidden(True)
+            self.btnRemove.clicked.connect(self.detached)
+            self.installEventFilter(VisibilityToggleEventFilter(self.btnRemove, self))
+        else:
+            self.btnOptions = DotsMenuButton(self)
+            self.btnOptions.setHidden(True)
+            menu = MenuWidget(self.btnOptions)
+            menu.addAction(action('Delete', IconRegistry.trash_can_icon(), slot=self.removed))
+            self.installEventFilter(VisibilityToggleEventFilter(self.btnOptions, self))
+
         sp(self).v_max()
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        if self.scene_ref:
+            self.btnRemove.setGeometry(event.size().width() - 20, 1, 10, 10)
+        else:
+            self.btnOptions.setGeometry(event.size().width() - 25, 4, 20, 20)
 
     def _questionChanged(self):
         self.question.text = self.textedit.toPlainText()
@@ -218,7 +249,8 @@ class ReaderCuriosityEditor(LazyWidget):
             question = self._novel.questions[question_ref.sid()]
             found_questions[question] = None
             self._addQuestion(question,
-                              QuestionState.Resolved_now if question_ref.resolved else QuestionState.Raised_now)
+                              QuestionState.Resolved_now if question_ref.resolved else QuestionState.Raised_now,
+                              question_ref)
 
         for k, v in found_questions.items():
             if v is None:
@@ -257,12 +289,6 @@ class ReaderCuriosityEditor(LazyWidget):
 
     def _addNew(self):
         question = ReaderQuestion()
-        question.top_margin = random.randint(5, 15)
-        question.left_margin = random.randint(5, 15)
-        question.right_margin = random.randint(5, 15)
-        question.bottom_margin = random.randint(5, 15)
-        question.max_width = random.randint(180, 190)
-        question.max_height = random.randint(110, 120)
 
         self._novel.questions[question.sid()] = question
         ref = SceneReaderQuestion(question.id)

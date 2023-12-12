@@ -2098,12 +2098,6 @@ class ReaderQuestion:
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     text: str = ''
     type: ReaderQuestionType = ReaderQuestionType.General
-    left_margin: int = 0
-    top_margin: int = 0
-    right_margin: int = 0
-    bottom_margin: int = 0
-    max_width = 0
-    max_height = 0
 
     def sid(self) -> str:
         return str(self.id)
