@@ -56,10 +56,6 @@ class BackstoryCard(QWidget):
         self.btnType = tool_btn(QIcon(), parent=self)
         self.btnType.setIconSize(QSize(24, 24))
 
-        # self.menu = BackstoryEditorMenu(self.btnType)
-        # self.menu.emotionChanged.connect(self._emotionChanged)
-        # self.menu.iconSelected.connect(self._iconChanged)
-
         self.btnRemove = RemovalButton()
         self.btnRemove.setVisible(False)
         self.btnRemove.clicked.connect(self._remove)
@@ -92,7 +88,6 @@ class BackstoryCard(QWidget):
 
         self.setMinimumWidth(60)
         sp(self).v_max()
-        self.refresh()
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
@@ -134,11 +129,6 @@ class BackstoryCard(QWidget):
 
     def _keyphraseEdited(self):
         self.backstory.keyphrase = self.lineKeyPhrase.text()
-        self.edited.emit()
-
-    def _emotionChanged(self, value: int):
-        self.backstory.emotion = value
-        self._refreshStyle()
         self.edited.emit()
 
     def _iconChanged(self, icon: str):
@@ -237,6 +227,9 @@ class TimelineWidget(QWidget):
     def events(self) -> List[BackstoryEvent]:
         pass
 
+    def cardClass(self):
+        return BackstoryCard
+
     def refresh(self):
         self._spacers.clear()
         clear_layout(self.layout())
@@ -252,7 +245,7 @@ class TimelineWidget(QWidget):
             else:
                 alignment = Qt.AlignmentFlag.AlignLeft
             prev_alignment = alignment
-            event = BackstoryCardPlaceholder(BackstoryCard(backstory), alignment, parent=self)
+            event = BackstoryCardPlaceholder(self.cardClass()(backstory), alignment, parent=self)
             event.card.deleteRequested.connect(self._remove)
 
             self._spacers.append(event.spacer)
