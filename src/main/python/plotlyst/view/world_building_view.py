@@ -98,10 +98,6 @@ class WorldBuildingView(AbstractNovelView):
         }}''')
 
         self.ui.lineName.textEdited.connect(self._name_edited)
-        # self._btnIcon = IconSelectorButton()
-        # self._btnIcon.iconSelected.connect(self._icon_changed)
-        # self.ui.wdgName.layout().addWidget(self._btnIcon)
-        # self.ui.wdgName.layout().addWidget(self._lineName)
 
         self._editor = WorldBuildingEntityEditor(self.novel)
         insert_before_the_end(self.ui.wdgCenterEditor, self._editor)
@@ -121,7 +117,7 @@ class WorldBuildingView(AbstractNovelView):
                                                       (self.ui.btnMapView, self.ui.pageMap),
                                                       (self.ui.btnHistoryView, self.ui.pageTimeline),
                                                       (self.ui.btnGlossaryView, self.ui.pageGlossary)])
-        self.ui.btnGlossaryView.setChecked(True)
+        self.ui.btnWorldView.setChecked(True)
 
         self.ui.btnTreeToggle.setChecked(False)
         self.ui.wdgWorldContainer.setHidden(True)
