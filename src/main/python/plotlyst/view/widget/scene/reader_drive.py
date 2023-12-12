@@ -27,7 +27,7 @@ from PyQt6.QtGui import QColor, QResizeEvent
 from PyQt6.QtWidgets import QWidget, QButtonGroup, QStackedWidget, QTextEdit
 from overrides import overrides
 from qthandy import vbox, hbox, spacer, sp, flow, vline, clear_layout, bold, incr_font, italic, translucent
-from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
+from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
@@ -99,15 +99,19 @@ class ReaderQuestionWidget(QWidget):
         if self.state == QuestionState.Raised_now or self.state == QuestionState.Resolved_now:
             badge = push_btn(IconRegistry.from_name('ei.star-alt', color=PLOTLYST_SECONDARY_COLOR), 'New!',
                              icon_resize=False, pointy_=False)
+            badge.installEventFilter(InstantTooltipEventFilter(badge))
             badge.setStyleSheet(f'border: 0px; color: {PLOTLYST_SECONDARY_COLOR}')
             italic(badge)
             self.layout().addWidget(badge, alignment=Qt.AlignmentFlag.AlignLeft)
             if self.state == QuestionState.Resolved_now:
+                badge.setToolTip("This question is being resolved in this scene")
                 unresolve = push_btn(
                     IconRegistry.from_name('mdi.sticker-remove-outline', color='grey'), 'Unresolve', transparent_=True)
                 unresolve.installEventFilter(OpacityEventFilter(unresolve))
                 unresolve.clicked.connect(self.unresolved)
                 self.layout().addWidget(unresolve, alignment=Qt.AlignmentFlag.AlignCenter)
+            else:
+                badge.setToolTip("This question is being raised in this scene")
         elif self.state == QuestionState.Raised_before:
             resolve = push_btn(
                 IconRegistry.from_name('mdi.sticker-check-outline', color=PLOTLYST_SECONDARY_COLOR), 'Resolve')
