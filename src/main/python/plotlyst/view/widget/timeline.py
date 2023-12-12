@@ -32,7 +32,7 @@ from qthandy import vbox, hbox, sp, vspacer, clear_layout, spacer, ask_confirmat
 from qthandy.filter import VisibilityToggleEventFilter
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, \
-    EMOTION_COLORS
+    EMOTION_COLORS, PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import BackstoryEvent
 from src.main.python.plotlyst.view.common import tool_btn, frame
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -41,7 +41,7 @@ from src.main.python.plotlyst.view.widget.input import RemovalButton, AutoAdjust
 
 @dataclass
 class TimelineTheme:
-    timeline_color: str = '#1d3557'
+    timeline_color: str = PLOTLYST_SECONDARY_COLOR
     card_bg_color: str = '#ffe8d6'
 
 
