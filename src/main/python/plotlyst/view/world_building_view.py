@@ -47,6 +47,7 @@ class WorldBuildingView(AbstractNovelView):
         self.ui = Ui_WorldBuildingView()
         self.ui.setupUi(self.widget)
         apply_bg_image(self.ui.pageEntity, resource_registry.paper_bg)
+        apply_bg_image(self.ui.pageGlossary, resource_registry.paper_bg)
         apply_bg_image(self.ui.scrollAreaWidgetContents, resource_registry.paper_bg)
         # background: #F2F2F2;
         # 692345;
@@ -54,10 +55,8 @@ class WorldBuildingView(AbstractNovelView):
         #wdgCenterEditor {
             background: #ede0d4;
             border-radius: 12px;
-            opacity: 0.1;
         }
         ''')
-        # self.ui.wdgCenterEditor.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.ui.lblBanner.setPixmap(QPixmap(resource_registry.vintage_pocket_banner))
 
         self._entity: Optional[WorldBuildingEntity] = None
