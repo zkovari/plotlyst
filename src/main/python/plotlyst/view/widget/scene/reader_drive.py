@@ -38,6 +38,7 @@ from src.main.python.plotlyst.view.common import push_btn, link_buttons_to_pages
     insert_before_the_end, wrap, fade_out_and_gc, action
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import DotsMenuButton
+from src.main.python.plotlyst.view.widget.confirm import confirmed
 from src.main.python.plotlyst.view.widget.display import LazyWidget
 from src.main.python.plotlyst.view.widget.input import RemovalButton
 
@@ -313,10 +314,35 @@ class ReaderCuriosityEditor(LazyWidget):
         fade_out_and_gc(self.pageQuestionsEditor, wdg, teardown=finish)
         self._scene.questions.append(ref)
 
+    def _detach(self, wdg: ReaderQuestionWidget):
+        def finish():
+            if ref:
+                self.refresh()
+            else:
+                self._updateLabels()
+
+        if wdg.question.text and not confirmed("Remove this reader's question?"):
+            return
+
+        self._scene.questions.remove(wdg.scene_ref)
+        question = wdg.question
+        ref = self._find_ref(question)
+        fade_out_and_gc(wdg.parent(), wdg, teardown=finish)
+        if not ref:
+            self._novel.questions.pop(question.sid())
+            self.repo.update_novel(self._novel)
+
+    def _find_ref(self, question: ReaderQuestion) -> Optional[SceneReaderQuestion]:
+        for scene in self._novel.scenes:
+            for ref in scene.questions:
+                if ref.id == question.id:
+                    return ref
+
     def __initQuestionWidget(self, question: ReaderQuestion,
                              state: QuestionState, ref: Optional[SceneReaderQuestion] = None) -> ReaderQuestionWidget:
         wdg = ReaderQuestionWidget(question, state, ref)
         wdg.resolved.connect(partial(self._resolve, wdg))
         wdg.changed.connect(lambda: self.repo.update_novel(self._novel))
+        wdg.detached.connect(partial(self._detach, wdg))
 
         return wdg
