@@ -289,8 +289,7 @@ class TimelineWidget(QWidget):
         self.changed.emit()
 
     def _remove(self, card: BackstoryCard):
-        if card.backstory in self.character.backstory:
-            self.character.backstory.remove(card.backstory)
+        self.events().remove(card.backstory)
 
         self.refresh()
         self.changed.emit()
