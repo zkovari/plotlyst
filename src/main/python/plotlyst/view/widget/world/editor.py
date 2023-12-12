@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Optional, Dict, Set, Any
+from typing import Optional, Dict, Set, Any, List
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QModelIndex, QPoint
@@ -31,7 +31,7 @@ from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import recursive
 from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityType, \
-    WorldBuildingEntityElement, WorldBuildingEntityElementType, GlossaryItem
+    WorldBuildingEntityElement, WorldBuildingEntityElementType, GlossaryItem, BackstoryEvent
 from src.main.python.plotlyst.core.template import SelectionItem
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.model.common import SelectionItemsModel
@@ -42,6 +42,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.display import Icon, PopupDialog, OverlayWidget
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, RemovalButton
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
+from src.main.python.plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
 
@@ -259,6 +260,8 @@ class WorldBuildingEntityElementWidget(QWidget):
             return WorldBuildingEntityVariablesElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Highlight:
             return WorldBuildingEntityHighlightedTextElementEditor(novel, element, parent)
+        elif element.type == WorldBuildingEntityElementType.Timeline:
+            return WorldBuildingEntityTimelineElementEditor(novel, element, parent)
         else:
             raise ValueError(f'Unsupported WorldBuildingEntityElement type {element.type}')
 
@@ -485,6 +488,38 @@ class WorldBuildingEntityHighlightedTextElementEditor(WorldBuildingEntityElement
         self.layout().addWidget(self.frame)
 
 
+class EntityTimelineCard(BackstoryCard):
+    def __init__(self, backstory: BackstoryEvent, parent=None):
+        super().__init__(backstory, parent)
+        self.refresh()
+
+
+class EntityTimelineWidget(TimelineWidget):
+    def __init__(self, element: WorldBuildingEntityElement, parent=None):
+        super().__init__(TimelineTheme(timeline_color='#510442', card_bg_color='#E3D0BD'), parent)
+        self.element = element
+        self.refresh()
+
+    @overrides
+    def events(self) -> List[BackstoryEvent]:
+        return self.element.events
+
+    @overrides
+    def cardClass(self):
+        return EntityTimelineCard
+
+
+class WorldBuildingEntityTimelineElementEditor(WorldBuildingEntityElementWidget):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
+        super().__init__(novel, element, parent)
+
+        self.timeline = EntityTimelineWidget(element)
+        vbox(self, 0, 0).addWidget(self.timeline)
+        self.timeline.changed.connect(self.save)
+
+        self.btnRemove.raise_()
+
+
 class WorldBuildingEntitySectionElementEditor(WorldBuildingEntityElementWidget):
     removed = pyqtSignal()
 
@@ -551,6 +586,8 @@ class MainBlockAdditionMenu(MenuWidget):
                               slot=lambda: self.newBlockSelected.emit(WorldBuildingEntityElementType.Text)))
         self.addAction(action('Quote', IconRegistry.from_name('ei.quote-right-alt'),
                               slot=lambda: self.newBlockSelected.emit(WorldBuildingEntityElementType.Quote)))
+        self.addAction(action('Timeline', IconRegistry.from_name('mdi.timeline'),
+                              slot=lambda: self.newBlockSelected.emit(WorldBuildingEntityElementType.Timeline)))
 
 
 class SideBlockAdditionMenu(MenuWidget):
