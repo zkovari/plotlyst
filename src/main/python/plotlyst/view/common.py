@@ -362,11 +362,13 @@ def set_tab_settings(tabs: QTabWidget, widget: QWidget, text: Optional[str] = No
         tabs.setTabEnabled(i, enabled)
 
 
-def fade_out_and_gc(parent: QWidget, widget: QWidget, duration: int = 200):
+def fade_out_and_gc(parent: QWidget, widget: QWidget, duration: int = 200, teardown=None):
     def destroy():
         widget.setHidden(True)
         parent.layout().removeWidget(widget)
         gc(widget)
+        if teardown:
+            teardown()
 
     widget.setDisabled((True))
     anim = fade_out(widget, duration)
@@ -391,33 +393,36 @@ def insert_after(parent: QWidget, widget: QWidget, reference: QWidget, alignment
 
 
 def tool_btn(icon: QIcon, tooltip: str = '', checkable: bool = False, base: bool = False,
-             icon_resize: bool = True, transparent_: bool = False, properties: List[str] = None,
+             icon_resize: bool = True, pointy_: bool = True, transparent_: bool = False, properties: List[str] = None,
              parent=None) -> QToolButton:
     btn = QToolButton()
-    _init_btn(btn, icon, tooltip, checkable, base, icon_resize, transparent_, properties, parent)
+    _init_btn(btn, icon=icon, tooltip=tooltip, checkable=checkable, base=base, icon_resize=icon_resize, pointy_=pointy_,
+              transparent_=transparent_, properties=properties, parent=parent)
     return btn
 
 
 def push_btn(icon: Optional[QIcon] = None, text: str = '', tooltip: str = '', checkable: bool = False,
              base: bool = False,
-             icon_resize: bool = True, transparent_: bool = False, properties: List[str] = None,
+             icon_resize: bool = True, pointy_: bool = True, transparent_: bool = False, properties: List[str] = None,
              parent=None) -> QPushButton:
     btn = QPushButton()
     btn.setText(text)
-    _init_btn(btn, icon, tooltip, checkable, base, icon_resize, transparent_, properties, parent)
+    _init_btn(btn, icon=icon, tooltip=tooltip, checkable=checkable, base=base, icon_resize=icon_resize, pointy_=pointy_,
+              transparent_=transparent_, properties=properties, parent=parent)
 
     return btn
 
 
 def _init_btn(btn: QAbstractButton, icon: Optional[QIcon] = None, tooltip: str = '', checkable: bool = False,
               base: bool = False,
-              icon_resize: bool = True, transparent_: bool = False, properties: List[str] = None,
+              icon_resize: bool = True, pointy_: bool = True, transparent_: bool = False, properties: List[str] = None,
               parent=None):
     if icon:
         btn.setIcon(icon)
     btn.setToolTip(tooltip)
     btn.setCheckable(checkable)
-    pointy(btn)
+    if pointy_:
+        pointy(btn)
     if base:
         btn.setProperty('base', True)
     if icon_resize:

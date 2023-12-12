@@ -343,7 +343,7 @@ class IconRegistry:
         return IconRegistry.from_name('fa5s.home', color_on=color_on)
 
     @staticmethod
-    def trash_can_icon(color: str = 'red') -> QIcon:
+    def trash_can_icon(color: str = '#ED6868') -> QIcon:
         return qtawesome.icon('fa5s.trash-alt', color=color)
 
     @staticmethod

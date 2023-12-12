@@ -553,7 +553,7 @@
             <enum>QTabWidget::West</enum>
            </property>
            <property name="currentIndex">
-            <number>0</number>
+            <number>1</number>
            </property>
            <widget class="QWidget" name="tabStorylines">
             <property name="relaxed-white-bg" stdset="0">
@@ -580,12 +580,12 @@
              </property>
             </layout>
            </widget>
-           <widget class="QWidget" name="tabCharacter">
+           <widget class="QWidget" name="tabDrive">
             <property name="relaxed-white-bg" stdset="0">
              <bool>true</bool>
             </property>
             <attribute name="title">
-             <string>Agency</string>
+             <string>Drive</string>
             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_8">
              <property name="spacing">
@@ -603,6 +603,91 @@
              <property name="bottomMargin">
               <number>0</number>
              </property>
+             <item>
+              <widget class="QTabWidget" name="tabWidgetDrive">
+               <property name="currentIndex">
+                <number>0</number>
+               </property>
+               <property name="centered" stdset="0">
+                <bool>true</bool>
+               </property>
+               <widget class="QWidget" name="tabAgency">
+                <property name="relaxed-white-bg" stdset="0">
+                 <bool>true</bool>
+                </property>
+                <attribute name="title">
+                 <string>Character agency</string>
+                </attribute>
+                <layout class="QVBoxLayout" name="verticalLayout_13">
+                 <property name="spacing">
+                  <number>0</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                </layout>
+               </widget>
+               <widget class="QWidget" name="tabCuriosity">
+                <property name="relaxed-white-bg" stdset="0">
+                 <bool>true</bool>
+                </property>
+                <attribute name="title">
+                 <string>Reader's curiosity</string>
+                </attribute>
+                <layout class="QVBoxLayout" name="verticalLayout_14">
+                 <property name="spacing">
+                  <number>0</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                </layout>
+               </widget>
+               <widget class="QWidget" name="tabInformation">
+                <property name="relaxed-white-bg" stdset="0">
+                 <bool>true</bool>
+                </property>
+                <attribute name="title">
+                 <string>Reader's information</string>
+                </attribute>
+                <layout class="QVBoxLayout" name="verticalLayout_15">
+                 <property name="spacing">
+                  <number>0</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                </layout>
+               </widget>
+              </widget>
+             </item>
             </layout>
            </widget>
            <widget class="QWidget" name="tabStructure">

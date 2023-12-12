@@ -27,7 +27,7 @@ from PyQt6.QtCore import pyqtProperty, QSize, Qt
 from PyQt6.QtGui import QPainter, QShowEvent, QColor, QPaintEvent, QBrush, QKeyEvent
 from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy, QTextBrowser, QFrame, QDialog
 from overrides import overrides
-from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon, pointy, hbox
+from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon, pointy, hbox, busy
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -359,3 +359,21 @@ class PopupDialog(QDialog):
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key.Key_Escape:
             self.reject()
+
+
+class LazyWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._initialized = False
+
+    def refresh(self):
+        self._initialized = True
+
+    @overrides
+    def showEvent(self, _: QShowEvent) -> None:
+        if not self._initialized:
+            self.__refreshOnShow()
+
+    @busy
+    def __refreshOnShow(self):
+        self.refresh()

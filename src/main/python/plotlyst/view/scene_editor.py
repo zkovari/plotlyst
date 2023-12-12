@@ -31,6 +31,7 @@ from qthandy import underline, incr_font, margins, pointy, hbox, clear_layout, b
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
+from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, Document, StoryBeat, \
     Character, ScenePurposeType, ScenePurpose, Plot, ScenePlotReference, NovelSetting
@@ -52,6 +53,7 @@ from src.main.python.plotlyst.view.widget.scene.editor import ScenePurposeSelect
     SceneStorylineEditor, SceneAgendaEditor, SceneElementWidget
 from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotLabels, \
     ScenePlotSelectorMenu
+from src.main.python.plotlyst.view.widget.scene.reader_drive import ReaderCuriosityEditor
 
 
 class SceneEditor(QObject, EventListener):
@@ -68,11 +70,18 @@ class SceneEditor(QObject, EventListener):
 
         self._emoji_font = emoji_font()
 
-        set_tab_icon(self.ui.tabWidget, self.ui.tabStorylines, IconRegistry.storylines_icon())
-        set_tab_icon(self.ui.tabWidget, self.ui.tabCharacter, IconRegistry.character_icon())
+        set_tab_icon(self.ui.tabWidget, self.ui.tabStorylines,
+                     IconRegistry.storylines_icon(color_on=PLOTLYST_SECONDARY_COLOR))
+        set_tab_icon(self.ui.tabWidget, self.ui.tabDrive,
+                     IconRegistry.from_name('mdi.chemical-weapon', color_on=PLOTLYST_SECONDARY_COLOR))
         set_tab_icon(self.ui.tabWidget, self.ui.tabStructure,
-                     IconRegistry.from_name('mdi6.timeline-outline', rotated=90))
+                     IconRegistry.from_name('mdi6.timeline-outline', rotated=90, color_on=PLOTLYST_SECONDARY_COLOR))
         set_tab_icon(self.ui.tabWidget, self.ui.tabNotes, IconRegistry.document_edition_icon())
+        set_tab_icon(self.ui.tabWidgetDrive, self.ui.tabAgency, IconRegistry.character_icon())
+        set_tab_icon(self.ui.tabWidgetDrive, self.ui.tabCuriosity,
+                     IconRegistry.from_name('ei.question-sign', color_on=PLOTLYST_SECONDARY_COLOR))
+        set_tab_icon(self.ui.tabWidgetDrive, self.ui.tabInformation,
+                     IconRegistry.from_name('fa5s.book-reader', color_on=PLOTLYST_SECONDARY_COLOR))
 
         self.ui.btnStageCharacterLabel.setIcon(IconRegistry.character_icon(color_on='black'))
         underline(self.ui.btnStageCharacterLabel)
@@ -161,14 +170,18 @@ class SceneEditor(QObject, EventListener):
 
         self._agencyEditor = SceneAgendaEditor(self.novel)
         self._agencyEditor.setUnsetCharacterSlot(self._character_not_selected_notification)
-        self.ui.tabCharacter.layout().addWidget(self._agencyEditor)
+        self.ui.tabAgency.layout().addWidget(self._agencyEditor)
+
+        self._curiosityEditor = ReaderCuriosityEditor(self.novel)
+        self.ui.tabCuriosity.layout().addWidget(self._curiosityEditor)
 
         self.ui.btnClose.clicked.connect(self._on_close)
 
         self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._btnPurposeType.refresh)
         self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._storylineEditor.refresh)
 
-        self.ui.tabWidget.setCurrentWidget(self.ui.tabStorylines)
+        self.ui.tabWidget.setCurrentWidget(self.ui.tabDrive)
+        self.ui.tabWidgetDrive.setCurrentWidget(self.ui.tabCuriosity)
         self.ui.tabWidget.currentChanged.connect(self._page_toggled)
 
         self.repo = RepositoryPersistenceManager.instance()
@@ -199,6 +212,7 @@ class SceneEditor(QObject, EventListener):
         # self.tag_selector.setScene(self.scene)
         self._storylineEditor.setScene(self.scene)
         self._agencyEditor.setScene(self.scene)
+        self._curiosityEditor.setScene(self.scene)
 
         self.ui.lineTitle.setText(self.scene.title)
         self.ui.textSynopsis.setText(self.scene.synopsis)

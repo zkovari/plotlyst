@@ -1208,6 +1208,15 @@ class StoryElement:
 
 
 @dataclass
+class SceneReaderQuestion:
+    id: uuid.UUID
+    resolved: bool = False
+
+    def sid(self) -> str:
+        return str(self.id)
+
+
+@dataclass
 class Scene:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -1231,6 +1240,7 @@ class Scene:
     outcome: Optional[SceneOutcome] = None
     story_elements: List[StoryElement] = field(default_factory=list)
     structure: List[SceneStructureItem] = field(default_factory=list)
+    questions: List[SceneReaderQuestion] = field(default_factory=list)
 
     def beat(self, novel: 'Novel') -> Optional[StoryBeat]:
         structure = novel.active_story_structure
@@ -2072,6 +2082,76 @@ def default_documents() -> List[Document]:
             ]
 
 
+class ReaderQuestionType(Enum):
+    General = 0
+    Character_growth = 1
+    Backstory = 2
+    Internal_conflict = 3
+    Relationship = 4
+    Character_motivation = 5
+    Conflict_resolution = 6
+    Plot = 7
+
+    def display_name(self) -> str:
+        return self.name.replace('_', ' ')
+
+    def description(self) -> str:
+        if self == ReaderQuestionType.General:
+            return "Any mystery, secret, or dramatic question about the story"
+        if self == ReaderQuestionType.Character_growth:
+            return "Questions related to a character's growth and development"
+        if self == ReaderQuestionType.Backstory:
+            return "A mystery about a character's past"
+        if self == ReaderQuestionType.Internal_conflict:
+            return "Questions related to a character's internal turmoil and their resolution"
+        if self == ReaderQuestionType.Relationship:
+            return "Dynamics between characters"
+        if self == ReaderQuestionType.Character_motivation:
+            return "Questions related to a character's hidden motivation"
+        if self == ReaderQuestionType.Conflict_resolution:
+            return "Questions related to unresolved conflict, especially between characters"
+        if self == ReaderQuestionType.Plot:
+            return "Dramatic questions related to plot"
+
+    def icon(self) -> str:
+        if self == ReaderQuestionType.General:
+            return "ei.question-sign"
+        if self == ReaderQuestionType.Character_growth:
+            return "ph.person-bold"
+        if self == ReaderQuestionType.Backstory:
+            return "mdi.archive-alert"
+        if self == ReaderQuestionType.Internal_conflict:
+            return "mdi6.mirror-variant"
+        if self == ReaderQuestionType.Relationship:
+            return "fa5s.people-arrows"
+        if self == ReaderQuestionType.Character_motivation:
+            return "fa5s.fist-raised"
+        if self == ReaderQuestionType.Conflict_resolution:
+            return "mdi.sword-cross"
+        if self == ReaderQuestionType.Plot:
+            return "mdi.drama-masks"
+
+
+@dataclass
+class ReaderQuestion:
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    text: str = ''
+    type: ReaderQuestionType = ReaderQuestionType.General
+
+    def sid(self) -> str:
+        return str(self.id)
+
+    @overrides
+    def __eq__(self, other: 'ReaderQuestion'):
+        if isinstance(other, ReaderQuestion):
+            return self.id == other.id
+        return False
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
+
 @dataclass
 class TagType(SelectionItem):
     description: str = ''
@@ -2361,6 +2441,7 @@ class Novel(NovelDescriptor):
     character_networks: List[Diagram] = field(default_factory=default_character_networks)
     manuscript_progress: Dict[str, DocumentProgress] = field(default_factory=dict,
                                                              metadata=config(exclude=exclude_if_empty))
+    questions: Dict[str, ReaderQuestion] = field(default_factory=dict)
 
     def pov_characters(self) -> List[Character]:
         pov_ids = set()
