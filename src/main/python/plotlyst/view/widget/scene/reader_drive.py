@@ -53,6 +53,7 @@ class QuestionState(Enum):
 
 class ReaderQuestionWidget(QWidget):
     resolved = pyqtSignal()
+    unresolved = pyqtSignal()
     changed = pyqtSignal()
     detached = pyqtSignal()
     removed = pyqtSignal()
@@ -101,6 +102,12 @@ class ReaderQuestionWidget(QWidget):
             badge.setStyleSheet(f'border: 0px; color: {PLOTLYST_SECONDARY_COLOR}')
             italic(badge)
             self.layout().addWidget(badge, alignment=Qt.AlignmentFlag.AlignLeft)
+            if self.state == QuestionState.Resolved_now:
+                unresolve = push_btn(
+                    IconRegistry.from_name('mdi.sticker-remove-outline', color='grey'), 'Unresolve', transparent_=True)
+                unresolve.installEventFilter(OpacityEventFilter(unresolve))
+                unresolve.clicked.connect(self.unresolved)
+                self.layout().addWidget(unresolve, alignment=Qt.AlignmentFlag.AlignCenter)
         elif self.state == QuestionState.Raised_before:
             resolve = push_btn(
                 IconRegistry.from_name('mdi.sticker-check-outline', color=PLOTLYST_SECONDARY_COLOR), 'Resolve')
@@ -314,6 +321,16 @@ class ReaderCuriosityEditor(LazyWidget):
         fade_out_and_gc(self.pageQuestionsEditor, wdg, teardown=finish)
         self._scene.questions.append(ref)
 
+    def _unresolve(self, wdg: ReaderQuestionWidget):
+        def finish():
+            self._addQuestion(question, QuestionState.Raised_before)
+            qtanim.glow(self.btnUnresolved, color=QColor(PLOTLYST_SECONDARY_COLOR), loop=2)
+            self._updateLabels()
+
+        question = wdg.question
+        self._scene.questions.remove(wdg.scene_ref)
+        fade_out_and_gc(self.pageResolvedQuestionsEditor, wdg, teardown=finish)
+
     def _detach(self, wdg: ReaderQuestionWidget):
         def finish():
             if ref:
@@ -361,6 +378,7 @@ class ReaderCuriosityEditor(LazyWidget):
                              state: QuestionState, ref: Optional[SceneReaderQuestion] = None) -> ReaderQuestionWidget:
         wdg = ReaderQuestionWidget(question, state, ref)
         wdg.resolved.connect(partial(self._resolve, wdg))
+        wdg.unresolved.connect(partial(self._unresolve, wdg))
         wdg.changed.connect(lambda: self.repo.update_novel(self._novel))
         wdg.detached.connect(partial(self._detach, wdg))
         wdg.removed.connect(partial(self._remove, wdg))
