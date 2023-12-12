@@ -57,6 +57,7 @@ class ReaderQuestionWidget(QWidget):
     changed = pyqtSignal()
     detached = pyqtSignal()
     removed = pyqtSignal()
+    resurrect = pyqtSignal()
 
     def __init__(self, question: ReaderQuestion, state: QuestionState, ref: Optional[SceneReaderQuestion] = None,
                  parent=None):
@@ -119,6 +120,13 @@ class ReaderQuestionWidget(QWidget):
             resolve.installEventFilter(OpacityEventFilter(resolve, leaveOpacity=0.5))
             resolve.clicked.connect(self.resolved)
             self.layout().addWidget(resolve, alignment=Qt.AlignmentFlag.AlignCenter)
+        elif self.state == QuestionState.Resolved_before:
+            resurrect = push_btn(
+                IconRegistry.from_name('mdi.progress-question', color=PLOTLYST_SECONDARY_COLOR), 'Resurrect')
+            resurrect.setStyleSheet(f'border:opx; color: {PLOTLYST_SECONDARY_COLOR};')
+            resurrect.installEventFilter(OpacityEventFilter(resurrect, leaveOpacity=0.5))
+            resurrect.clicked.connect(self.resurrect)
+            self.layout().addWidget(resurrect, alignment=Qt.AlignmentFlag.AlignCenter)
 
         if self.scene_ref:
             self.btnRemove = RemovalButton(self)
@@ -387,6 +395,16 @@ class ReaderCuriosityEditor(LazyWidget):
         fade_out_and_gc(wdg.parent(), wdg, teardown=finish)
         self.repo.update_novel(self._novel)
 
+    def _resurrect(self, wdg: ReaderQuestionWidget):
+        def finish():
+            self.refresh()
+            qtanim.glow(self.btnUnresolved, color=QColor(PLOTLYST_SECONDARY_COLOR), loop=2)
+
+        question = wdg.question
+        ref = SceneReaderQuestion(question.id)
+        self._scene.questions.append(ref)
+        fade_out_and_gc(wdg.parent(), wdg, teardown=finish)
+
     def _find_ref(self, question: ReaderQuestion) -> Optional[SceneReaderQuestion]:
         for scene in self._novel.scenes:
             for ref in scene.questions:
@@ -401,5 +419,6 @@ class ReaderCuriosityEditor(LazyWidget):
         wdg.changed.connect(lambda: self.repo.update_novel(self._novel))
         wdg.detached.connect(partial(self._detach, wdg))
         wdg.removed.connect(partial(self._remove, wdg))
+        wdg.resurrect.connect(partial(self._resurrect, wdg))
 
         return wdg
