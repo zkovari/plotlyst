@@ -26,7 +26,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QResizeEvent
 from PyQt6.QtWidgets import QWidget, QButtonGroup, QStackedWidget, QTextEdit
 from overrides import overrides
-from qthandy import vbox, hbox, spacer, sp, flow, vline, clear_layout, bold, incr_font, italic, translucent
+from qthandy import vbox, hbox, spacer, sp, flow, vline, clear_layout, bold, incr_font, italic, translucent, line
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget
 
@@ -35,7 +35,7 @@ from src.main.python.plotlyst.core.domain import Novel, Scene, ReaderQuestion, S
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import push_btn, link_buttons_to_pages, shadow, scroll_area, \
-    insert_before_the_end, wrap, fade_out_and_gc, action
+    insert_before_the_end, wrap, fade_out_and_gc, action, label
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import DotsMenuButton
 from src.main.python.plotlyst.view.widget.confirm import confirmed
@@ -151,6 +151,10 @@ class ReaderCuriosityEditor(LazyWidget):
     LABEL_RESOLVED_QUESTIONS = 'Resolved questions'
     LABEL_FUTURE_QUESTIONS = 'Future questions'
 
+    DESC_RAISED_QUESTIONS = "Questions and mysteries that create narrative drive by raising curiosity in the reader. These questions were raised in this or prior scenes and yet remain unresolved."
+    DESC_RESOLVED_QUESTIONS = "Questions that have been resolved in the narrative. They don't pique interest in the reader anymore. "
+    DESC_FUTURE_QUESTIONS = "Questions that are introduced in later scenes. At this point, the reader is not aware of them."
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
@@ -224,8 +228,11 @@ class ReaderCuriosityEditor(LazyWidget):
         self.wdgEditor.setCurrentWidget(self.pageQuestions)
 
         self.layout().addWidget(self.wdgHeader)
+        self.lblDesc = label(self.DESC_RAISED_QUESTIONS, description=True, wordWrap=True)
+        self.layout().addWidget(self.lblDesc)
+        self.layout().addWidget(line())
         self.layout().addWidget(self.wdgEditor)
-
+        self.wdgEditor.currentChanged.connect(self._pageChanged)
         link_buttons_to_pages(self.wdgEditor, [
             (self.btnUnresolved, self.pageQuestions), (self.btnResolved, self.pageResolvedQuestions),
             (self.btnOther, self.pageDetachedQuestions)
@@ -278,6 +285,14 @@ class ReaderCuriosityEditor(LazyWidget):
         self._updateLabels()
 
         super().refresh()
+
+    def _pageChanged(self):
+        if self.wdgEditor.currentWidget() is self.pageQuestions:
+            self.lblDesc.setText(self.DESC_RAISED_QUESTIONS)
+        elif self.wdgEditor.currentWidget() is self.pageResolvedQuestions:
+            self.lblDesc.setText(self.DESC_RESOLVED_QUESTIONS)
+        elif self.wdgEditor.currentWidget() is self.pageDetachedQuestions:
+            self.lblDesc.setText(self.DESC_FUTURE_QUESTIONS)
 
     def _updateLabels(self):
         self.btnUnresolved.setText(f'{self.LABEL_RAISED_QUESTIONS} ({self.pageQuestionsEditor.layout().count() - 1})')
