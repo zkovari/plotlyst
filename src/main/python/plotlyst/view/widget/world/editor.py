@@ -42,7 +42,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.display import Icon, PopupDialog, OverlayWidget
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, RemovalButton
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
-from src.main.python.plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard
+from src.main.python.plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
 
@@ -496,7 +496,7 @@ class EntityTimelineCard(BackstoryCard):
 
 class EntityTimelineWidget(TimelineWidget):
     def __init__(self, element: WorldBuildingEntityElement, parent=None):
-        super().__init__(parent)
+        super().__init__(TimelineTheme(timeline_color='#510442', card_bg_color='#E3D0BD'), parent)
         self.element = element
         self.refresh()
 
@@ -515,6 +515,7 @@ class WorldBuildingEntityTimelineElementEditor(WorldBuildingEntityElementWidget)
 
         self.timeline = EntityTimelineWidget(element)
         vbox(self, 0, 0).addWidget(self.timeline)
+        self.timeline.changed.connect(self.save)
 
         self.btnRemove.raise_()
 

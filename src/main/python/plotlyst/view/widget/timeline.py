@@ -18,8 +18,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
+from dataclasses import dataclass
 from functools import partial
-from typing import List
+from typing import List, Optional
 
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QObject, QEvent
 from PyQt6.QtGui import QIcon, QColor, QPainter, QPaintEvent, QBrush, QResizeEvent
@@ -38,14 +39,21 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.input import RemovalButton, AutoAdjustableTextEdit
 
 
+@dataclass
+class TimelineTheme:
+    timeline_color: str = '#1d3557'
+    card_bg_color: str = '#ffe8d6'
+
+
 class BackstoryCard(QWidget):
     edited = pyqtSignal()
     deleteRequested = pyqtSignal(object)
     relationChanged = pyqtSignal()
 
-    def __init__(self, backstory: BackstoryEvent, parent=None):
+    def __init__(self, backstory: BackstoryEvent, theme: TimelineTheme, parent=None):
         super().__init__(parent)
         self.backstory = backstory
+        self._theme = theme
 
         vbox(self)
         margins(self, top=18)
@@ -97,22 +105,21 @@ class BackstoryCard(QWidget):
         self._refreshStyle()
         self.lineKeyPhrase.setText(self.backstory.keyphrase)
         self.textSummary.setPlainText(self.backstory.synopsis)
-        # self.menu.setEmotion(self.backstory.emotion)
 
     def _refreshStyle(self):
-        bg_color = EMOTION_COLORS.get(self.backstory.emotion, NEUTRAL_EMOTION_COLOR)
+        frame_color = EMOTION_COLORS.get(self.backstory.emotion, NEUTRAL_EMOTION_COLOR)
         self.cardFrame.setStyleSheet(f'''
                             #cardFrame {{
-                                border-top: 8px solid {bg_color};
+                                border-top: 8px solid {frame_color};
                                 border-bottom-left-radius: 12px;
                                 border-bottom-right-radius: 12px;
-                                background-color: #ffe8d6;
+                                background-color: {self._theme.card_bg_color};
                                 }}
                             ''')
         self.btnType.setStyleSheet(
             f'''
                     QToolButton {{
-                            background-color: {RELAXED_WHITE_COLOR}; border: 3px solid {bg_color};
+                            background-color: {RELAXED_WHITE_COLOR}; border: 3px solid {frame_color};
                             border-radius: 18px;
                             padding: 4px;
                         }}
@@ -121,7 +128,7 @@ class BackstoryCard(QWidget):
                     }}
                     ''')
 
-        self.btnType.setIcon(IconRegistry.from_name(self.backstory.type_icon, bg_color))
+        self.btnType.setIcon(IconRegistry.from_name(self.backstory.type_icon, frame_color))
 
     def _synopsisChanged(self):
         self.backstory.synopsis = self.textSummary.toPlainText()
@@ -175,22 +182,21 @@ class BackstoryCardPlaceholder(QWidget):
 
 class _ControlButtons(QWidget):
 
-    def __init__(self, parent=None):
+    def __init__(self, theme: TimelineTheme, parent=None):
         super().__init__(parent)
         vbox(self)
 
         self.btnPlaceholderCircle = QToolButton(self)
-        self.btnPlus = tool_btn(IconRegistry.plus_icon('white'), tooltip='Add new event')
+        self.btnPlus = tool_btn(IconRegistry.plus_icon(RELAXED_WHITE_COLOR), tooltip='Add new event')
 
         self.layout().addWidget(self.btnPlaceholderCircle)
         self.layout().addWidget(self.btnPlus)
 
         self.btnPlus.setHidden(True)
 
-        bg_color = '#1d3557'
         for btn in [self.btnPlaceholderCircle, self.btnPlus]:
             btn.setStyleSheet(f'''
-                QToolButton {{ background-color: {bg_color}; border: 1px;
+                QToolButton {{ background-color: {theme.timeline_color}; border: 1px;
                         border-radius: 13px; padding: 2px;}}
                 QToolButton:pressed {{background-color: grey;}}
             ''')
@@ -212,9 +218,12 @@ class _ControlButtons(QWidget):
 class TimelineWidget(QWidget):
     changed = pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, theme: Optional[TimelineTheme] = None, parent=None):
         self._spacers: List[QWidget] = []
         super().__init__(parent)
+        if theme is None:
+            theme = TimelineTheme()
+        self._theme = theme
         self._layout = vbox(self, spacing=0)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self._lineTopMargin: int = 0
@@ -247,7 +256,7 @@ class TimelineWidget(QWidget):
             else:
                 alignment = Qt.AlignmentFlag.AlignLeft
             prev_alignment = alignment
-            event = BackstoryCardPlaceholder(self.cardClass()(backstory), alignment, parent=self)
+            event = BackstoryCardPlaceholder(self.cardClass()(backstory, self._theme), alignment, parent=self)
             event.card.deleteRequested.connect(self._remove)
 
             self._spacers.append(event.spacer)
@@ -269,7 +278,7 @@ class TimelineWidget(QWidget):
     def paintEvent(self, event: QPaintEvent) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setBrush(QBrush(QColor('#1d3557')))
+        painter.setBrush(QBrush(QColor(self._theme.timeline_color)))
         painter.drawRect(int(self.width() / 2) - 3, self._lineTopMargin, 6, self.height() - self._lineTopMargin)
 
         painter.end()
@@ -290,6 +299,6 @@ class TimelineWidget(QWidget):
         self.changed.emit()
 
     def _addControlButtons(self, pos: int):
-        control = _ControlButtons(self)
+        control = _ControlButtons(self._theme, self)
         control.btnPlus.clicked.connect(partial(self.add, pos))
         self._layout.addWidget(control, alignment=Qt.AlignmentFlag.AlignHCenter)
