@@ -21,13 +21,13 @@ from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QComboBox
 
 from src.main.python.plotlyst.core.template import TemplateField, TemplateFieldType, enneagram_field, mbti_field, \
-    traits_field, SelectionItemType, SelectionItem, gmc_field, baggage_field
+    traits_field, SelectionItemType, SelectionItem, gmc_field, baggage_field, love_style_field, disc_field
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.template.impl import SubtitleTemplateDisplayWidget, \
     LabelTemplateDisplayWidget, HeaderTemplateDisplayWidget, LineTemplateDisplayWidget, IconTemplateDisplayWidget, \
     EnneagramFieldWidget, MbtiFieldWidget, TraitsFieldWidget, NumericTemplateFieldWidget, SmallTextTemplateFieldWidget, \
-    LineTextTemplateFieldWidget, LabelsTemplateFieldWidget, GmcFieldWidget, WoundsFieldWidget, \
-    BarTemplateFieldWidget
+    LineTextTemplateFieldWidget, LabelsTemplateFieldWidget, GmcFieldWidget, BaggageFieldWidget, \
+    BarTemplateFieldWidget, LoveStyleFieldWidget, WorkStyleFieldWidget
 
 
 def _icon(item: SelectionItem) -> QIcon:
@@ -56,14 +56,16 @@ class TemplateFieldWidgetFactory:
             return EnneagramFieldWidget(field, parent)
         elif field.id == mbti_field.id:
             return MbtiFieldWidget(field, parent)
+        elif field.id == love_style_field.id:
+            return LoveStyleFieldWidget(field, parent)
+        elif field.id == disc_field.id:
+            return WorkStyleFieldWidget(field, parent)
         elif field.id == traits_field.id:
             return TraitsFieldWidget(field)
         elif field.id == gmc_field.id:
             return GmcFieldWidget(field)
         elif field.id == baggage_field.id:
-            return WoundsFieldWidget(field)
-        # elif field.id == arcs_field.id:
-        #     return ArcsFieldWidget(field)
+            return BaggageFieldWidget(field)
         elif field.type == TemplateFieldType.NUMERIC:
             return NumericTemplateFieldWidget(field, parent)
         elif field.type == TemplateFieldType.TEXT_SELECTION:
@@ -75,6 +77,7 @@ class TemplateFieldWidgetFactory:
                     widget.addItem(_icon(item), item.text)
                 if item.type == SelectionItemType.SEPARATOR:
                     widget.insertSeparator(widget.count())
+            return widget
         # elif field.type == TemplateFieldType.BUTTON_SELECTION:
         #     widget = ButtonSelectionWidget(field)
         elif field.type == TemplateFieldType.SMALL_TEXT:

@@ -377,3 +377,10 @@ class LazyWidget(QWidget):
     @busy
     def __refreshOnShow(self):
         self.refresh()
+
+
+def dash_icon() -> QToolButton:
+    btn = QToolButton()
+    transparent(btn)
+    btn.setIcon(IconRegistry.from_name('msc.dash'))
+    return btn

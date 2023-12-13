@@ -90,12 +90,17 @@ class _SecondaryActionButton(QAbstractButton):
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum)
         self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.7))
 
-    def initStyleSheet(self, border_color: str = 'grey', border_style: str = 'dashed', color: str = 'grey'):
+    def initStyleSheet(self, border_color: str = 'grey', border_style: str = 'dashed', color: str = 'grey',
+                       bg_color: Optional[str] = None):
+        bg_style = ''
+        if bg_color:
+            bg_style = f'background: {bg_color};'
         self.setStyleSheet(f'''
                 {self.__class__.__name__} {{
                     border: 2px {border_style} {border_color};
                     border-radius: 6px;
                     color: {color};
+                    {bg_style}
                     padding: {self._padding}px;
                 }}
                 {self.__class__.__name__}:pressed {{

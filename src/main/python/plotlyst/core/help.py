@@ -117,6 +117,24 @@ mbti_help = {'ISTJ': '''<html><h3>The Inspector</h3>
              '''
              }
 
+mbti_keywords = {'ISTJ': "Dependable, systematic, traditional, task-oriented, decisive",
+                 'ISFJ': "Patient, responsible, loyal, traditional, service-oriented",
+                 'ESTP': "Energetic, analytical, inventive, resourceful, motivating",
+                 'ESFP': "Adaptable, friendly, talkative, social, enjoyable",
+                 'INFJ': "Individualistic, private, mysterious, visionary, thoughtful",
+                 'INTJ': "Visionary, innovative, strategic, problem-solver, long-range planner",
+                 'ENFP': "Quick-thinking, possibility-driven, energetic, creative, adaptable",
+                 'ENTP': "Creative, innovative, strategic thinker, pattern recognizer, opportunity-seeker",
+                 'ISFP': "Practical, service-oriented, cooperative, facilitator, encouraging",
+                 'INFP': "Creative, moral, helping, growth-oriented, inner development",
+                 'ESFJ': "Sociable, outgoing, understanding, appreciative, procedural",
+                 'ENFJ': "Team-oriented, consensus builder, inspirational leader, values-driven, effective decision-maker",
+                 'ISTP': "Patient, skilled, crisis manager, problem-solver, calm",
+                 'INTP': "Strategic thinker, conceptual builder, analytical, detached, innovative",
+                 'ESTJ': "Goal-oriented, organized, decisive, networked, competent",
+                 'ENTJ': "Strategic thinker, goal-oriented, efficient, organized, strong leadership"
+                 }
+
 plot_value_help = """<html>When a storyline is linked to a scene, these values can be <b style=color:#52b788;>positively</b> or 
 <b style=color:#9d0208;>negatively</b> charged, showcasing the storyline's advancement or setback.
 <br>The changes can be also visualized in the analysis panel, depicting the story's arc.

@@ -34,21 +34,21 @@ from qthandy import spacer, hbox, vbox, bold, line, underline, transparent, marg
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
-from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
+from src.main.python.plotlyst.core.help import enneagram_help, mbti_help, mbti_keywords
 from src.main.python.plotlyst.core.template import TemplateField, SelectionItem, \
     enneagram_choices, goal_field, internal_goal_field, stakes_field, conflict_field, motivation_field, \
     internal_motivation_field, internal_conflict_field, internal_stakes_field, wound_field, trigger_field, fear_field, \
-    healing_field, methods_field, misbelief_field, ghost_field, demon_field
+    healing_field, methods_field, misbelief_field, ghost_field, demon_field, mbti_choices
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
-from src.main.python.plotlyst.view.common import wrap, emoji_font, hmax, insert_before_the_end, action
+from src.main.python.plotlyst.view.common import wrap, emoji_font, hmax, insert_before_the_end, action, label
 from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.slider import apply_slider_color
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton, CollapseButton
 from src.main.python.plotlyst.view.widget.character.editor import EnneagramSelector, MbtiSelector
-from src.main.python.plotlyst.view.widget.display import Subtitle, Emoji, Icon
+from src.main.python.plotlyst.view.widget.display import Subtitle, Emoji, Icon, dash_icon
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
 from src.main.python.plotlyst.view.widget.progress import CircularProgressBar
@@ -484,7 +484,7 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
         super(EnneagramFieldWidget, self).__init__(field, parent)
         self.wdgEditor = EnneagramSelector()
         self._defaultTooltip: str = 'Select Enneagram personality'
-        _layout = hbox(self)
+        _layout = vbox(self)
         _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignTop)
 
         emojiDesire = Emoji()
@@ -498,14 +498,14 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
         self.lblFear = QLabel('')
         self.lblFear.setToolTip('Core fear')
 
-        decr_font(emojiDesire, 3)
+        decr_font(emojiDesire, 2)
         decr_font(self.lblDesire)
-        decr_font(emojiFear, 3)
+        decr_font(emojiFear, 2)
         decr_font(self.lblFear)
 
         self.wdgAttr = group(
-            group(emojiDesire, self.lblDesire, spacer()),
-            group(emojiFear, self.lblFear, spacer()),
+            group(dash_icon(), emojiDesire, self.lblDesire, spacer()),
+            group(dash_icon(), emojiFear, self.lblFear, spacer()),
             vertical=False)
         margins(self.wdgAttr, left=10)
         _layout.addWidget(self.wdgAttr)
@@ -526,7 +526,7 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
         self.wdgEditor.setValue(value)
         enneagram = enneagram_choices.get(value)
         if enneagram:
-            self.wdgEditor.setToolTip(enneagram_help[value])
+            # self.wdgEditor.setToolTip(enneagram_help[value])
             self._selectionChanged(enneagram)
         elif value is None:
             self._ignored()
@@ -562,6 +562,14 @@ class MbtiFieldWidget(TemplateFieldWidgetBase):
         _layout = vbox(self)
         _layout.addWidget(self.wdgEditor)
 
+        self.lblKeywords = label(wordWrap=True)
+        decr_font(self.lblKeywords)
+
+        self.wdgAttr = group(dash_icon(), self.lblKeywords, spacer())
+        margins(self.wdgAttr, left=10)
+        _layout.addWidget(self.wdgAttr)
+        self.wdgAttr.setHidden(True)
+
         if self.field.compact:
             _layout.addWidget(spacer())
 
@@ -576,20 +584,38 @@ class MbtiFieldWidget(TemplateFieldWidgetBase):
     def setValue(self, value: Any):
         self.wdgEditor.setValue(value)
         if value:
-            self.wdgEditor.setToolTip(mbti_help[value])
-            self.valueFilled.emit(1)
+            mbti = mbti_choices[value]
+            self._selectionChanged(mbti)
         elif value is None:
             self._ignored()
         else:
             self.wdgEditor.setToolTip(self._defaultTooltip)
 
     def _selectionChanged(self, item: SelectionItem):
+        self.lblKeywords.setText(mbti_keywords.get(item.text, ''))
+        if self.isVisible():
+            qtanim.fade_in(self.wdgAttr)
+        else:
+            self.wdgAttr.setVisible(True)
+
         self.wdgEditor.setToolTip(mbti_help[item.text])
         self.valueFilled.emit(1)
 
     def _ignored(self):
         self.wdgEditor.setToolTip('MBTI field is ignored for this character')
         self.valueFilled.emit(1)
+
+
+class LoveStyleFieldWidget(TemplateFieldWidgetBase):
+    def __init__(self, field: TemplateField, parent=None):
+        super().__init__(field, parent)
+        self.wdgEditor = QWidget()
+
+
+class WorkStyleFieldWidget(TemplateFieldWidgetBase):
+    def __init__(self, field: TemplateField, parent=None):
+        super().__init__(field, parent)
+        self.wdgEditor = QWidget()
 
 
 class TraitsFieldWidget(TemplateFieldWidgetBase):
@@ -935,7 +961,7 @@ class GmcFieldWidget(MultiLayerComplexTemplateWidgetBase):
             return [methods_field, internal_motivation_field, internal_conflict_field, internal_stakes_field]
 
 
-class WoundsFieldWidget(MultiLayerComplexTemplateWidgetBase):
+class BaggageFieldWidget(MultiLayerComplexTemplateWidgetBase):
     @property
     def wdgEditor(self):
         return self
@@ -953,20 +979,3 @@ class WoundsFieldWidget(MultiLayerComplexTemplateWidgetBase):
         if primary.id == wound_field.id:
             return [fear_field, misbelief_field, trigger_field, healing_field]
         return []
-
-# class ArcsFieldWidget(MultiLayerComplexTemplateWidgetBase):
-#     @property
-#     def wdgEditor(self):
-#         return self
-#
-#     @overrides
-#     def _primaryButtonText(self) -> str:
-#         return 'Add new arc'
-#
-#     @overrides
-#     def _primaryFields(self) -> List[TemplateField]:
-#         return [positive_arc, negative_arc]
-#
-#     @overrides
-#     def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
-#         return [ghost_field, fear_field, misbelief_field, desire_field, need_field]

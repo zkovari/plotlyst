@@ -233,6 +233,25 @@ mbti_field = TemplateField(name='MBTI', type=TemplateFieldType.TEXT_SELECTION,
                                        SelectionItem('ENFJ', icon='mdi6.flower', icon_color='#d00000'),
                                        ],
                            compact=True, show_label=False)
+love_style_field = TemplateField('Love styles', TemplateFieldType.LABELS,
+                                 id=uuid.UUID('dc707786-c35d-46bd-9517-6b6704cd4a88'),
+                                 selections=[
+                                     SelectionItem('Activity'),
+                                     SelectionItem('Appreciation'),
+                                     SelectionItem('Emotional'),
+                                     SelectionItem('Financial'),
+                                     SelectionItem('Intellectual'),
+                                     SelectionItem('Physical'),
+                                     SelectionItem('Practical')
+                                 ])
+disc_field = TemplateField('Work styles', TemplateFieldType.TEXT_SELECTION,
+                           id=uuid.UUID('84adc497-aa43-47eb-aeac-148248cc1eca'),
+                           selections=[
+                               SelectionItem('Drive'),
+                               SelectionItem('Influence'),
+                               SelectionItem('Clarity'),
+                               SelectionItem('Support')
+                           ])
 positive_traits = sorted([
     'Accessible', 'Active', 'Adaptive', 'Admirable', 'Adventurous', 'Agreeable', 'Alert', 'Ambitious', 'Appreciative',
     'Articulate', 'Aspiring', 'Assertive', 'Attentive', 'Balanced', 'Benevolent', 'Calm', 'Capable', 'Captivating',
@@ -296,8 +315,8 @@ def get_selection_values(field: TemplateField) -> Dict[str, SelectionItem]:
     return _choices
 
 
-enneagram_choices = get_selection_values(enneagram_field)
-mbti_choices = get_selection_values(mbti_field)
+enneagram_choices: Dict[str, SelectionItem] = get_selection_values(enneagram_field)
+mbti_choices: Dict[str, SelectionItem] = get_selection_values(mbti_field)
 
 summary_field = TemplateField('Summary', type=TemplateFieldType.SMALL_TEXT,
                               id=uuid.UUID('90112538-2eca-45e8-81b4-e3c331204e31'),
@@ -376,6 +395,11 @@ healing_field = TemplateField('Healing', type=TemplateFieldType.SMALL_TEXT, emoj
 demon_field = TemplateField('Demon', type=TemplateFieldType.SMALL_TEXT, emoji=':angry_face_with_horns:',
                             placeholder="",
                             id=uuid.UUID('66f5424d-f631-481f-872e-cb3ac85f8ec0'))
+
+strengths_weaknesses_field = TemplateField('Strengths and weaknesses', type=TemplateFieldType.COMPLEX,
+                                           id=uuid.UUID('9cf11007-c032-46f9-a550-e238cb807714'))
+flaws_field = TemplateField('Flaws', type=TemplateFieldType.COMPLEX,
+                            id=uuid.UUID('561900fb-3061-4735-ac9f-d87571131392'))
 
 arcs_field = TemplateField('Arc', type=TemplateFieldType.COMPLEX,
                            id=uuid.UUID('f9cd5704-debb-4d98-98d4-7eca36983d56'))
@@ -582,79 +606,50 @@ class ProfileTemplate:
 def default_character_profiles() -> List[ProfileTemplate]:
     summary_title = TemplateField('Summary', type=TemplateFieldType.DISPLAY_HEADER, required=True)
     personality_title = TemplateField('Personality', type=TemplateFieldType.DISPLAY_HEADER, required=True)
-    gmc_title = TemplateField('Goals', type=TemplateFieldType.DISPLAY_HEADER)
-    baggage_title = TemplateField('Baggage', type=TemplateFieldType.DISPLAY_HEADER)
-    # arcs_title = TemplateField('Arc', type=TemplateFieldType.DISPLAY_HEADER)
     philosophy_title = TemplateField('Philosophy', type=TemplateFieldType.DISPLAY_HEADER)
+    strengths_weaknesses = TemplateField('Strengths and weaknesses', type=TemplateFieldType.DISPLAY_HEADER)
     faculties = TemplateField('Faculties', type=TemplateFieldType.DISPLAY_HEADER)
+    flaws_title = TemplateField('Flaws', type=TemplateFieldType.DISPLAY_HEADER)
+    baggage_title = TemplateField('Baggage', type=TemplateFieldType.DISPLAY_HEADER)
+    gmc_title = TemplateField('Goals', type=TemplateFieldType.DISPLAY_HEADER)
 
     fields = [ProfileElement(summary_title, 0, 0, col_span=2),
               ProfileElement(summary_field, 1, 0, col_span=2, margins=Margins(left=15)),
+
               ProfileElement(personality_title, 2, 0, col_span=2),
               ProfileElement(enneagram_field, 3, 0, margins=Margins(left=15)),
               ProfileElement(mbti_field, 3, 1),
+
+              ProfileElement(TemplateField('', TemplateFieldType.DISPLAY_LINE), 4, 0, col_span=2,
+                             margins=Margins(left=15)),
+
+              ProfileElement(love_style_field, 4, 0, margins=Margins(left=15)),
+              ProfileElement(disc_field, 4, 1),
               ProfileElement(traits_field, 5, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(gmc_title, 6, 0, col_span=2),
-              ProfileElement(gmc_field, 7, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(baggage_title, 8, 0, col_span=2),
-              ProfileElement(baggage_field, 9, 0, col_span=2, margins=Margins(left=15)),
-              # ProfileElement(arcs_title, 10, 0, col_span=2),
-              # ProfileElement(arcs_field, 11, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(philosophy_title, 12, 0, col_span=2),
-              ProfileElement(values_field, 13, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(faculties, 14, 0, col_span=2),
-              ProfileElement(weaknesses_field, 15, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(strength_field, 16, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(iq_field, 17, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(eq_field, 18, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(rationalism_field, 19, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(willpower_field, 20, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(creativity_field, 21, 0, col_span=2, margins=Margins(left=15)),
+
+              ProfileElement(philosophy_title, 6, 0, col_span=2),
+              ProfileElement(values_field, 7, 0, col_span=2, margins=Margins(left=15)),
+
+              ProfileElement(strengths_weaknesses, 8, 0, col_span=2),
+              ProfileElement(strengths_weaknesses_field, 9, 0, col_span=2, margins=Margins(left=15)),
+
+              ProfileElement(faculties, 10, 0, col_span=2),
+              ProfileElement(iq_field, 11, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(eq_field, 12, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(rationalism_field, 13, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(willpower_field, 14, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(creativity_field, 15, 0, col_span=2, margins=Margins(left=15)),
+
+              ProfileElement(flaws_title, 16, 0, col_span=2),
+              ProfileElement(flaws_field, 17, 0, col_span=2, margins=Margins(left=15)),
+
+              ProfileElement(baggage_title, 18, 0, col_span=2),
+              ProfileElement(baggage_field, 19, 0, col_span=2, margins=Margins(left=15)),
+
+              ProfileElement(gmc_title, 20, 0, col_span=2),
+              ProfileElement(gmc_field, 21, 0, col_span=2, margins=Margins(left=15)),
 
               ]
     return [ProfileTemplate(title='Default character template',
                             id=uuid.UUID('6e89c683-c132-469b-a75c-6712af7c339d'),
                             elements=fields)]
-
-
-entity_summary_field = TemplateField('Summary', type=TemplateFieldType.SMALL_TEXT,
-                                     id=uuid.UUID('207053e6-dd51-4956-8830-478fe8efca0a'),
-                                     placeholder="Summarize your entity",
-                                     show_label=False)
-
-sight_field = TemplateField('Sight', type=TemplateFieldType.SMALL_TEXT,
-                            id=uuid.UUID('935e6595-27ae-426e-8b41-b315e9160ad9'),
-                            emoji=':eyes:',
-                            placeholder='Describe common sights for this location')
-
-smell_field = TemplateField('Smell', type=TemplateFieldType.SMALL_TEXT,
-                            id=uuid.UUID('50245a33-599b-49c6-9746-094f12b4d667'),
-                            emoji=':pig_nose:',
-                            placeholder='Describe common smells for this location')
-noise_field = TemplateField('Sound', type=TemplateFieldType.SMALL_TEXT,
-                            id=uuid.UUID('76659d94-8753-4945-8d5c-e811189e3b49'),
-                            emoji=':bell:',
-                            placeholder='Describe common sounds for this location')
-
-
-def default_location_profiles() -> List[ProfileTemplate]:
-    fields = [
-        ProfileElement(sight_field, 0, 0, margins=Margins(left=10, top=5)),
-        ProfileElement(smell_field, 0, 1, margins=Margins(left=10, top=5, right=10)),
-        ProfileElement(noise_field, 1, 0, margins=Margins(left=10, top=5)),
-    ]
-    return [ProfileTemplate(title='Default location template',
-                            id=uuid.UUID('8a95aa51-a975-416e-83d4-e349b84565b1'),
-                            elements=fields)]
-
-
-def default_group_profile() -> ProfileTemplate:
-    fields = [
-        ProfileElement(values_field, 0, 0, col_span=2, margins=Margins(left=10, top=5, right=10)),
-        ProfileElement(gmc_field, 1, 0, col_span=2, margins=Margins(left=10, top=5, right=10)),
-    ]
-
-    return ProfileTemplate(title='Default group template',
-                           id=uuid.UUID('3d5c2743-2212-4058-b922-bb3026add9d6'),
-                           elements=fields
-                           )

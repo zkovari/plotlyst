@@ -35,7 +35,7 @@ from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR, CHARACTER_MAJOR_COLOR, \
-    CHARACTER_SECONDARY_COLOR
+    CHARACTER_SECONDARY_COLOR, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import BackstoryEvent, Character
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help, character_roles_description, \
     character_role_examples
@@ -440,6 +440,7 @@ class PersonalitySelector(SecondaryActionPushButton):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._ignored = False
+        self._padding = 5
 
         self._selected: Optional[SelectionItem] = None
         self._items: Dict[str, SelectionItem] = {}
@@ -478,11 +479,13 @@ class PersonalitySelector(SecondaryActionPushButton):
 
     def _updateValue(self):
         self.setText(self._selected.text)
+        self.setIconSize(QSize(32, 32))
         self.setIcon(IconRegistry.from_name(self._selected.icon, self._selected.icon_color))
-        self.initStyleSheet(self._selected.icon_color, 'solid', 'black')
+        self.initStyleSheet(self._selected.icon_color, 'solid', self._selected.icon_color, RELAXED_WHITE_COLOR)
 
     def _updateIgnoredValue(self):
         self._ignored = True
+        self.setIconSize(QSize(20, 20))
         self.setIcon(IconRegistry.from_name('ei.remove-circle', 'grey'))
         self.initStyleSheet()
 
@@ -540,6 +543,11 @@ class MbtiSelector(PersonalitySelector):
     @overrides
     def selector(self) -> PersonalitySelectorWidget:
         return self._selector
+
+
+class DiscSelector(PersonalitySelector):
+    def __init__(self, parent=None):
+        super().__init__(parent)
 
 
 class EmotionEditorSlider(QSlider):
