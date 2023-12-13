@@ -52,7 +52,7 @@ from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButto
 from src.main.python.plotlyst.view.widget.display import Icon, MajorRoleIcon, SecondaryRoleIcon, MinorRoleIcon, \
     IconText, RoleIcon
 from src.main.python.plotlyst.view.widget.labels import TraitLabel
-from src.main.python.plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard
+from src.main.python.plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
 
 
 class LifeStage(Enum):
@@ -640,8 +640,8 @@ class BackstoryEditorMenu(MenuWidget):
 
 
 class CharacterBackstoryCard(BackstoryCard):
-    def __init__(self, backstory: BackstoryEvent, parent=None):
-        super(CharacterBackstoryCard, self).__init__(backstory, parent)
+    def __init__(self, backstory: BackstoryEvent, theme: TimelineTheme, parent=None):
+        super(CharacterBackstoryCard, self).__init__(backstory, theme, parent)
         self.menu = BackstoryEditorMenu(self.btnType)
         self.menu.emotionChanged.connect(self._emotionChanged)
         self.menu.iconSelected.connect(self._iconChanged)
@@ -663,7 +663,7 @@ class CharacterTimelineWidget(TimelineWidget):
     changed = pyqtSignal()
 
     def __init__(self, parent=None):
-        super(CharacterTimelineWidget, self).__init__(parent)
+        super(CharacterTimelineWidget, self).__init__(parent=parent)
         self.character: Optional[Character] = None
         self._lineTopMargin = 64
         self._endSpacerMinHeight = 200
