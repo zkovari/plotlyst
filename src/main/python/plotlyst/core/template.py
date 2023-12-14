@@ -236,21 +236,21 @@ mbti_field = TemplateField(name='MBTI', type=TemplateFieldType.TEXT_SELECTION,
 love_style_field = TemplateField('Love styles', TemplateFieldType.LABELS,
                                  id=uuid.UUID('dc707786-c35d-46bd-9517-6b6704cd4a88'),
                                  selections=[
-                                     SelectionItem('Activity', icon_color='#5e548e'),
-                                     SelectionItem('Appreciation', icon_color='#ad2831'),
-                                     SelectionItem('Emotional', icon_color='#ff0054'),
-                                     SelectionItem('Financial', icon_color='#fb8500'),
-                                     SelectionItem('Intellectual', icon_color='#0077b6'),
-                                     SelectionItem('Physical', icon_color='#f4a261'),
-                                     SelectionItem('Practical', icon_color='#2a9d8f')
+                                     SelectionItem('Activity', icon='fa5s.heart', icon_color='#5e548e'),
+                                     SelectionItem('Appreciation', icon='fa5s.heart', icon_color='#ad2831'),
+                                     SelectionItem('Emotional', icon='fa5s.heart', icon_color='#ff0054'),
+                                     SelectionItem('Financial', icon='fa5s.heart', icon_color='#fb8500'),
+                                     SelectionItem('Intellectual', icon='fa5s.heart', icon_color='#0077b6'),
+                                     SelectionItem('Physical', icon='fa5s.heart', icon_color='#f4a261'),
+                                     SelectionItem('Practical', icon='fa5s.heart', icon_color='#2a9d8f')
                                  ], compact=True, show_label=False)
 disc_field = TemplateField('Work styles', TemplateFieldType.TEXT_SELECTION,
                            id=uuid.UUID('84adc497-aa43-47eb-aeac-148248cc1eca'),
                            selections=[
-                               SelectionItem('Influence', icon_color='#588157'),
-                               SelectionItem('Support', icon_color='#219ebc'),
-                               SelectionItem('Clarity', icon_color='#e9c46a'),
-                               SelectionItem('Drive', icon_color='#e63946')
+                               SelectionItem('Influence', icon='fa5s.briefcase', icon_color='#588157'),
+                               SelectionItem('Support', icon='fa5s.briefcase', icon_color='#219ebc'),
+                               SelectionItem('Clarity', icon='fa5s.briefcase', icon_color='#e9c46a'),
+                               SelectionItem('Drive', icon='fa5s.briefcase', icon_color='#e63946')
                            ], compact=True, show_label=False)
 positive_traits = sorted([
     'Accessible', 'Active', 'Adaptive', 'Admirable', 'Adventurous', 'Agreeable', 'Alert', 'Ambitious', 'Appreciative',

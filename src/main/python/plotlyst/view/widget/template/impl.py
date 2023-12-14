@@ -604,6 +604,7 @@ class MbtiFieldWidget(TemplateFieldWidgetBase):
 
     def _ignored(self):
         self.wdgEditor.setToolTip('MBTI field is ignored for this character')
+        self.wdgAttr.setHidden(True)
         self.valueFilled.emit(1)
 
 
@@ -615,6 +616,16 @@ class LoveStyleFieldWidget(TemplateFieldWidgetBase):
         _layout = vbox(self)
         _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignLeft)
 
+        self.wdgEditor.selected.connect(self._selectionChanged)
+        self.wdgEditor.ignored.connect(self._ignored)
+
+    def _selectionChanged(self, item: SelectionItem):
+        pass
+
+    def _ignored(self):
+        self.wdgEditor.setToolTip('Love style field is ignored for this character')
+        self.valueFilled.emit(1)
+
 
 class WorkStyleFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
@@ -623,6 +634,16 @@ class WorkStyleFieldWidget(TemplateFieldWidgetBase):
         self._defaultTooltip: str = 'Select work style'
         _layout = vbox(self)
         _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        self.wdgEditor.selected.connect(self._selectionChanged)
+        self.wdgEditor.ignored.connect(self._ignored)
+
+    def _selectionChanged(self, item: SelectionItem):
+        pass
+
+    def _ignored(self):
+        self.wdgEditor.setToolTip('Work style field is ignored for this character')
+        self.valueFilled.emit(1)
 
 
 class TraitsFieldWidget(TemplateFieldWidgetBase):

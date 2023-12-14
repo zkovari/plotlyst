@@ -27,7 +27,7 @@ from PyQt6.QtCore import pyqtProperty, QSize, Qt
 from PyQt6.QtGui import QPainter, QShowEvent, QColor, QPaintEvent, QBrush, QKeyEvent
 from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy, QTextBrowser, QFrame, QDialog
 from overrides import overrides
-from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon, pointy, hbox, busy
+from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon, pointy, hbox, busy, italic, decr_font
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -36,7 +36,7 @@ from src.main.python.plotlyst.core.help import mid_revision_scene_structure_help
 from src.main.python.plotlyst.core.template import Role, protagonist_role
 from src.main.python.plotlyst.core.text import wc
 from src.main.python.plotlyst.view.common import emoji_font, insert_before_the_end, \
-    ButtonPressResizeEventFilter, restyle, label, frame, shadow, tool_btn
+    ButtonPressResizeEventFilter, restyle, label, frame, shadow, tool_btn, push_btn, action, open_url
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 
@@ -384,3 +384,19 @@ def dash_icon() -> QToolButton:
     transparent(btn)
     btn.setIcon(IconRegistry.from_name('msc.dash'))
     return btn
+
+
+class TruitySourceWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        ref = push_btn(text='Source: truity.com', properties=['transparent', 'no-menu'])
+        italic(ref)
+        decr_font(ref)
+        ref_menu = MenuWidget(ref)
+        ref_menu.addSection('Browse personality types and tests on truity')
+        ref_menu.addSeparator()
+        ref_menu.addAction(action('Visit truity.com', IconRegistry.from_name('fa5s.external-link-alt'),
+                                  slot=lambda: open_url('https://www.truity.com/')))
+        ref.installEventFilter(OpacityEventFilter(ref, 0.8, 0.5))
+
+        hbox(self).addWidget(ref)
