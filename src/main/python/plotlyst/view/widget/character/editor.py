@@ -25,7 +25,7 @@ from functools import partial
 from typing import Tuple, Optional, Dict, List
 
 import qtanim
-from PyQt6.QtCharts import QPieSeries, QChartView
+from PyQt6.QtCharts import QPieSeries, QChartView, QPieSlice
 from PyQt6.QtCore import pyqtSignal, Qt, QSize
 from PyQt6.QtGui import QIcon, QColor, QMouseEvent, QPainter
 from PyQt6.QtWidgets import QWidget, QSpinBox, QSlider, QTextBrowser, QButtonGroup, QToolButton, QLabel, QSizePolicy
@@ -445,6 +445,13 @@ love_style_opaque_colors = {
     'Practical': '#84DED4',
 }
 
+work_style_opaque_colors = {
+    'Drive': '#F39BA2',
+    'Influence': '#9BBB9A',
+    'Clarity': '#F1D99E',
+    'Support': '#60C9E3',
+}
+
 
 class LoveStylePie(BaseChart):
     sliceClicked = pyqtSignal(int)
@@ -456,6 +463,43 @@ class LoveStylePie(BaseChart):
 
         for i, item in enumerate(love_style_field.selections):
             slice = SelectionItemPieSlice(item, love_style_opaque_colors[item.text])
+            slice.setValue(1)
+            self.series.append(slice)
+
+        self.series.hovered.connect(partial(self._hovered))
+        self.series.clicked.connect(partial(self._clicked))
+        self.addSeries(self.series)
+
+    def _hovered(self, slice: SelectionItemPieSlice, state: bool):
+        if slice is self._selectedSlice:
+            return
+        if state:
+            slice.highlight()
+        else:
+            slice.reset()
+
+    def _clicked(self, slice: SelectionItemPieSlice):
+        if self._selectedSlice:
+            self._selectedSlice.reset()
+            if self._selectedSlice is slice:
+                self._selectedSlice = None
+                return
+
+        self._selectedSlice = slice
+        self._selectedSlice.select()
+
+
+class WorkStylePie(BaseChart):
+    sliceClicked = pyqtSignal(int)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._selectedSlice: Optional[SelectionItemPieSlice] = None
+        self.series = QPieSeries()
+
+        for i, item in enumerate(disc_field.selections):
+            slice = SelectionItemPieSlice(item, work_style_opaque_colors[item.text],
+                                          labelPosition=QPieSlice.LabelPosition.LabelInsideHorizontal)
             slice.setValue(1)
             self.series.append(slice)
 
@@ -496,6 +540,11 @@ class LoveStyleSelectorWidget(PersonalitySelectorWidget):
 class WorkStyleSelectorWidget(PersonalitySelectorWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.pieView = QChartView()
+        self.pieView.setRenderHint(QPainter.RenderHint.Antialiasing)
+        self.pie = WorkStylePie()
+        self.pieView.setChart(self.pie)
+        self.layout().addWidget(self.pieView)
 
 
 class PersonalitySelector(SecondaryActionPushButton):

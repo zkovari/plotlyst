@@ -374,7 +374,8 @@ class ActDistributionChart(BaseChart):
 
 
 class SelectionItemPieSlice(QPieSlice):
-    def __init__(self, item: SelectionItem, bgColor: str, parent=None):
+    def __init__(self, item: SelectionItem, bgColor: str, parent=None,
+                 labelPosition=QPieSlice.LabelPosition.LabelInsideNormal):
         super().__init__(parent)
         self.item = item
         self._bgColor = bgColor
@@ -386,7 +387,7 @@ class SelectionItemPieSlice(QPieSlice):
         self.setLabelFont(font)
         self.setLabel(item.text)
         self.setLabelColor(QColor('grey'))
-        self.setLabelPosition(QPieSlice.LabelPosition.LabelInsideNormal)
+        self.setLabelPosition(labelPosition)
         self.setColor(QColor(self._bgColor))
 
     def highlight(self):
