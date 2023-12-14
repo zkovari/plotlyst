@@ -236,22 +236,22 @@ mbti_field = TemplateField(name='MBTI', type=TemplateFieldType.TEXT_SELECTION,
 love_style_field = TemplateField('Love styles', TemplateFieldType.LABELS,
                                  id=uuid.UUID('dc707786-c35d-46bd-9517-6b6704cd4a88'),
                                  selections=[
-                                     SelectionItem('Activity'),
-                                     SelectionItem('Appreciation'),
-                                     SelectionItem('Emotional'),
-                                     SelectionItem('Financial'),
-                                     SelectionItem('Intellectual'),
-                                     SelectionItem('Physical'),
-                                     SelectionItem('Practical')
-                                 ])
+                                     SelectionItem('Activity', icon='fa5s.heart', icon_color='#5e548e'),
+                                     SelectionItem('Appreciation', icon='fa5s.heart', icon_color='#ad2831'),
+                                     SelectionItem('Emotional', icon='fa5s.heart', icon_color='#ff0054'),
+                                     SelectionItem('Financial', icon='fa5s.heart', icon_color='#fb8500'),
+                                     SelectionItem('Intellectual', icon='fa5s.heart', icon_color='#0077b6'),
+                                     SelectionItem('Physical', icon='fa5s.heart', icon_color='#f4a261'),
+                                     SelectionItem('Practical', icon='fa5s.heart', icon_color='#2a9d8f')
+                                 ], compact=True, show_label=False)
 disc_field = TemplateField('Work styles', TemplateFieldType.TEXT_SELECTION,
                            id=uuid.UUID('84adc497-aa43-47eb-aeac-148248cc1eca'),
                            selections=[
-                               SelectionItem('Drive'),
-                               SelectionItem('Influence'),
-                               SelectionItem('Clarity'),
-                               SelectionItem('Support')
-                           ])
+                               SelectionItem('Influence', icon='fa5s.briefcase', icon_color='#588157'),
+                               SelectionItem('Support', icon='fa5s.briefcase', icon_color='#219ebc'),
+                               SelectionItem('Clarity', icon='fa5s.briefcase', icon_color='#e9c46a'),
+                               SelectionItem('Drive', icon='fa5s.briefcase', icon_color='#e63946')
+                           ], compact=True, show_label=False)
 positive_traits = sorted([
     'Accessible', 'Active', 'Adaptive', 'Admirable', 'Adventurous', 'Agreeable', 'Alert', 'Ambitious', 'Appreciative',
     'Articulate', 'Aspiring', 'Assertive', 'Attentive', 'Balanced', 'Benevolent', 'Calm', 'Capable', 'Captivating',
@@ -317,6 +317,8 @@ def get_selection_values(field: TemplateField) -> Dict[str, SelectionItem]:
 
 enneagram_choices: Dict[str, SelectionItem] = get_selection_values(enneagram_field)
 mbti_choices: Dict[str, SelectionItem] = get_selection_values(mbti_field)
+love_style_choices: Dict[str, SelectionItem] = get_selection_values(love_style_field)
+work_style_choices: Dict[str, SelectionItem] = get_selection_values(disc_field)
 
 summary_field = TemplateField('Summary', type=TemplateFieldType.SMALL_TEXT,
                               id=uuid.UUID('90112538-2eca-45e8-81b4-e3c331204e31'),
@@ -623,31 +625,35 @@ def default_character_profiles() -> List[ProfileTemplate]:
               ProfileElement(TemplateField('', TemplateFieldType.DISPLAY_LINE), 4, 0, col_span=2,
                              margins=Margins(left=15)),
 
-              ProfileElement(love_style_field, 4, 0, margins=Margins(left=15)),
-              ProfileElement(disc_field, 4, 1),
-              ProfileElement(traits_field, 5, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(love_style_field, 5, 0, margins=Margins(left=15)),
+              ProfileElement(disc_field, 5, 1),
 
-              ProfileElement(philosophy_title, 6, 0, col_span=2),
-              ProfileElement(values_field, 7, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(TemplateField('', TemplateFieldType.DISPLAY_LINE), 6, 0, col_span=2,
+                             margins=Margins(left=15)),
 
-              ProfileElement(strengths_weaknesses, 8, 0, col_span=2),
-              ProfileElement(strengths_weaknesses_field, 9, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(traits_field, 7, 0, col_span=2, margins=Margins(left=15)),
 
-              ProfileElement(faculties, 10, 0, col_span=2),
-              ProfileElement(iq_field, 11, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(eq_field, 12, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(rationalism_field, 13, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(willpower_field, 14, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(creativity_field, 15, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(philosophy_title, 8, 0, col_span=2),
+              ProfileElement(values_field, 9, 0, col_span=2, margins=Margins(left=15)),
 
-              ProfileElement(flaws_title, 16, 0, col_span=2),
-              ProfileElement(flaws_field, 17, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(strengths_weaknesses, 10, 0, col_span=2),
+              ProfileElement(strengths_weaknesses_field, 11, 0, col_span=2, margins=Margins(left=15)),
 
-              ProfileElement(baggage_title, 18, 0, col_span=2),
-              ProfileElement(baggage_field, 19, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(faculties, 12, 0, col_span=2),
+              ProfileElement(iq_field, 13, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(eq_field, 14, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(rationalism_field, 15, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(willpower_field, 16, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(creativity_field, 17, 0, col_span=2, margins=Margins(left=15)),
 
-              ProfileElement(gmc_title, 20, 0, col_span=2),
-              ProfileElement(gmc_field, 21, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(flaws_title, 18, 0, col_span=2),
+              ProfileElement(flaws_field, 19, 0, col_span=2, margins=Margins(left=15)),
+
+              ProfileElement(baggage_title, 20, 0, col_span=2),
+              ProfileElement(baggage_field, 21, 0, col_span=2, margins=Margins(left=15)),
+
+              ProfileElement(gmc_title, 22, 0, col_span=2),
+              ProfileElement(gmc_field, 23, 0, col_span=2, margins=Margins(left=15)),
 
               ]
     return [ProfileTemplate(title='Default character template',

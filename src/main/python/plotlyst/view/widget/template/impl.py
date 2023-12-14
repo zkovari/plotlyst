@@ -38,7 +38,8 @@ from src.main.python.plotlyst.core.help import enneagram_help, mbti_help, mbti_k
 from src.main.python.plotlyst.core.template import TemplateField, SelectionItem, \
     enneagram_choices, goal_field, internal_goal_field, stakes_field, conflict_field, motivation_field, \
     internal_motivation_field, internal_conflict_field, internal_stakes_field, wound_field, trigger_field, fear_field, \
-    healing_field, methods_field, misbelief_field, ghost_field, demon_field, mbti_choices
+    healing_field, methods_field, misbelief_field, ghost_field, demon_field, mbti_choices, love_style_choices, \
+    work_style_choices
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
 from src.main.python.plotlyst.view.common import wrap, emoji_font, hmax, insert_before_the_end, action, label
@@ -47,7 +48,8 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.slider import apply_slider_color
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton, CollapseButton
-from src.main.python.plotlyst.view.widget.character.editor import EnneagramSelector, MbtiSelector
+from src.main.python.plotlyst.view.widget.character.editor import EnneagramSelector, MbtiSelector, LoveStyleSelector, \
+    DiscSelector
 from src.main.python.plotlyst.view.widget.display import Subtitle, Emoji, Icon, dash_icon
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
@@ -603,19 +605,76 @@ class MbtiFieldWidget(TemplateFieldWidgetBase):
 
     def _ignored(self):
         self.wdgEditor.setToolTip('MBTI field is ignored for this character')
+        self.wdgAttr.setHidden(True)
         self.valueFilled.emit(1)
 
 
 class LoveStyleFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super().__init__(field, parent)
-        self.wdgEditor = QWidget()
+        self.wdgEditor = LoveStyleSelector()
+        self._defaultTooltip: str = 'Select love style'
+        _layout = vbox(self)
+        _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        self.wdgEditor.selected.connect(self._selectionChanged)
+        self.wdgEditor.ignored.connect(self._ignored)
+
+    @overrides
+    def value(self) -> Any:
+        return self.wdgEditor.value()
+
+    @overrides
+    def setValue(self, value: Any):
+        self.wdgEditor.setValue(value)
+        if value:
+            mbti = love_style_choices[value]
+            self._selectionChanged(mbti)
+        elif value is None:
+            self._ignored()
+        else:
+            self.wdgEditor.setToolTip(self._defaultTooltip)
+
+    def _selectionChanged(self, item: SelectionItem):
+        pass
+
+    def _ignored(self):
+        self.wdgEditor.setToolTip('Love style field is ignored for this character')
+        self.valueFilled.emit(1)
 
 
 class WorkStyleFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super().__init__(field, parent)
-        self.wdgEditor = QWidget()
+        self.wdgEditor = DiscSelector()
+        self._defaultTooltip: str = 'Select work style'
+        _layout = vbox(self)
+        _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        self.wdgEditor.selected.connect(self._selectionChanged)
+        self.wdgEditor.ignored.connect(self._ignored)
+
+    @overrides
+    def value(self) -> Any:
+        return self.wdgEditor.value()
+
+    @overrides
+    def setValue(self, value: Any):
+        self.wdgEditor.setValue(value)
+        if value:
+            mbti = work_style_choices[value]
+            self._selectionChanged(mbti)
+        elif value is None:
+            self._ignored()
+        else:
+            self.wdgEditor.setToolTip(self._defaultTooltip)
+
+    def _selectionChanged(self, item: SelectionItem):
+        pass
+
+    def _ignored(self):
+        self.wdgEditor.setToolTip('Work style field is ignored for this character')
+        self.valueFilled.emit(1)
 
 
 class TraitsFieldWidget(TemplateFieldWidgetBase):

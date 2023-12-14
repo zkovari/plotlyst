@@ -25,13 +25,14 @@ from functools import partial
 from typing import Tuple, Optional, Dict, List
 
 import qtanim
+from PyQt6.QtCharts import QPieSeries, QChartView, QPieSlice
 from PyQt6.QtCore import pyqtSignal, Qt, QSize
-from PyQt6.QtGui import QIcon, QColor, QMouseEvent
+from PyQt6.QtGui import QIcon, QColor, QMouseEvent, QPainter
 from PyQt6.QtWidgets import QWidget, QSpinBox, QSlider, QTextBrowser, QButtonGroup, QToolButton, QLabel, QSizePolicy
 from overrides import overrides
 from qthandy import vbox, pointy, hbox, sp, vspacer, underline, decr_font, flow, clear_layout, translucent, line, grid, \
-    italic, spacer, transparent, incr_font, margins, incr_icon
-from qthandy.filter import OpacityEventFilter
+    spacer, transparent, incr_font, margins, incr_icon
+from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR, CHARACTER_MAJOR_COLOR, \
@@ -42,15 +43,16 @@ from src.main.python.plotlyst.core.help import enneagram_help, mbti_help, charac
 from src.main.python.plotlyst.core.template import SelectionItem, enneagram_field, TemplateField, mbti_field, \
     promote_role, demote_role, Role, protagonist_role, antagonist_role, major_role, secondary_role, tertiary_role, \
     love_interest_role, supporter_role, adversary_role, contagonist_role, guide_role, confidant_role, sidekick_role, \
-    foil_role, henchmen_role
-from src.main.python.plotlyst.view.common import push_btn, action, tool_btn, label, wrap, open_url, restyle, \
+    foil_role, henchmen_role, love_style_field, disc_field
+from src.main.python.plotlyst.view.common import push_btn, action, tool_btn, label, wrap, restyle, \
     scroll_area
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry, set_avatar
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton, SelectionItemPushButton
+from src.main.python.plotlyst.view.widget.chart import BaseChart, SelectionItemPieSlice
 from src.main.python.plotlyst.view.widget.display import Icon, MajorRoleIcon, SecondaryRoleIcon, MinorRoleIcon, \
-    IconText, RoleIcon
+    IconText, RoleIcon, TruitySourceWidget
 from src.main.python.plotlyst.view.widget.labels import TraitLabel
 from src.main.python.plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
 
@@ -391,15 +393,7 @@ class MbtiSelectorWidget(PersonalitySelectorWidget):
 
         self.wdgBottom = QWidget()
         hbox(self.wdgBottom)
-        ref = push_btn(text='Source: truity.com', properties=['transparent', 'no-menu'])
-        italic(ref)
-        decr_font(ref)
-        ref_menu = MenuWidget(ref)
-        ref_menu.addSection('Browse personality types and tests on truity')
-        ref_menu.addSeparator()
-        ref_menu.addAction(action('Visit truity.com', IconRegistry.from_name('fa5s.external-link-alt'),
-                                  slot=lambda: open_url('https://www.truity.com/')))
-        ref.installEventFilter(OpacityEventFilter(ref, 0.8, 0.5))
+        ref = TruitySourceWidget()
         self.wdgBottom.layout().addWidget(ref, alignment=Qt.AlignmentFlag.AlignLeft)
         self.wdgBottom.layout().addWidget(self.btnSelect, alignment=Qt.AlignmentFlag.AlignRight)
         self.layout().addWidget(self.wdgBottom)
@@ -432,6 +426,159 @@ class MbtiSelectorWidget(PersonalitySelectorWidget):
         self._selected = item
         self.text.setText(mbti_help.get(item.text, ''))
 
+
+love_style_opaque_colors = {
+    'Activity': '#B7B2D2',
+    'Appreciation': '#EBA9AE',
+    'Emotional': '#FFA4C2',
+    'Financial': '#FFBA6A',
+    'Intellectual': '#8AD6FF',
+    'Physical': '#FAD1B0',
+    'Practical': '#84DED4',
+}
+
+work_style_opaque_colors = {
+    'Drive': '#F39BA2',
+    'Influence': '#9BBB9A',
+    'Clarity': '#F1D99E',
+    'Support': '#60C9E3',
+}
+
+
+class LoveStylePie(BaseChart):
+    sliceClicked = pyqtSignal(SelectionItem, bool)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._selectedSlice: Optional[SelectionItemPieSlice] = None
+        self.series = QPieSeries()
+
+        for i, item in enumerate(love_style_field.selections):
+            slice = SelectionItemPieSlice(item, love_style_opaque_colors[item.text])
+            slice.setValue(1)
+            self.series.append(slice)
+
+        self.series.hovered.connect(partial(self._hovered))
+        self.series.clicked.connect(partial(self._clicked))
+        self.addSeries(self.series)
+
+    def _hovered(self, slice: SelectionItemPieSlice, state: bool):
+        if slice is self._selectedSlice:
+            return
+        if state:
+            slice.highlight()
+        else:
+            slice.reset()
+
+    def _clicked(self, slice: SelectionItemPieSlice):
+        if self._selectedSlice:
+            self._selectedSlice.reset()
+            if self._selectedSlice is slice:
+                self._selectedSlice = None
+                self.sliceClicked.emit(slice.item, False)
+                return
+
+        self._selectedSlice = slice
+        self._selectedSlice.select()
+        self.sliceClicked.emit(slice.item, True)
+
+
+class WorkStylePie(BaseChart):
+    sliceClicked = pyqtSignal(SelectionItem, bool)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._selectedSlice: Optional[SelectionItemPieSlice] = None
+        self.series = QPieSeries()
+
+        for i, item in enumerate(disc_field.selections):
+            slice = SelectionItemPieSlice(item, work_style_opaque_colors[item.text],
+                                          labelPosition=QPieSlice.LabelPosition.LabelInsideHorizontal)
+            slice.setValue(1)
+            self.series.append(slice)
+
+        self.series.hovered.connect(partial(self._hovered))
+        self.series.clicked.connect(partial(self._clicked))
+        self.addSeries(self.series)
+
+    def _hovered(self, slice: SelectionItemPieSlice, state: bool):
+        if slice is self._selectedSlice:
+            return
+        if state:
+            slice.highlight()
+        else:
+            slice.reset()
+
+    def _clicked(self, slice: SelectionItemPieSlice):
+        if self._selectedSlice:
+            self._selectedSlice.reset()
+            if self._selectedSlice is slice:
+                self._selectedSlice = None
+                self.sliceClicked.emit(slice.item, False)
+                return
+
+        self._selectedSlice = slice
+        self._selectedSlice.select()
+        self.sliceClicked.emit(slice.item, True)
+
+
+class LoveStyleSelectorWidget(PersonalitySelectorWidget):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.pieView = QChartView()
+        self.pieView.setRenderHint(QPainter.RenderHint.Antialiasing)
+        self.pie = LoveStylePie()
+        self.pie.sliceClicked.connect(self._itemClicked)
+        self.pieView.setChart(self.pie)
+        self.layout().addWidget(self.pieView)
+
+        self.btnSelect = push_btn(IconRegistry.ok_icon('white'), 'Select Love Style', properties=['positive', 'base'])
+        self.btnSelect.setDisabled(True)
+        self.btnSelect.installEventFilter(DisabledClickEventFilter(self.btnSelect, lambda: qtanim.shake(self.pieView)))
+
+        self.wdgBottom = QWidget()
+        hbox(self.wdgBottom)
+        ref = TruitySourceWidget()
+        self.wdgBottom.layout().addWidget(ref, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgBottom.layout().addWidget(self.btnSelect, alignment=Qt.AlignmentFlag.AlignRight)
+        self.layout().addWidget(self.wdgBottom)
+
+    def _itemClicked(self, item: SelectionItem, checked: bool):
+        self.btnSelect.setEnabled(checked)
+        if checked:
+            self._selected = item
+        else:
+            self._selected = None
+
+
+class WorkStyleSelectorWidget(PersonalitySelectorWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.pieView = QChartView()
+        self.pieView.setRenderHint(QPainter.RenderHint.Antialiasing)
+        self.pie = WorkStylePie()
+        self.pie.sliceClicked.connect(self._itemClicked)
+        self.pieView.setChart(self.pie)
+        self.layout().addWidget(self.pieView)
+
+        self.btnSelect = push_btn(IconRegistry.ok_icon('white'), 'Select Work Style', properties=['positive', 'base'])
+        self.btnSelect.setDisabled(True)
+        self.btnSelect.installEventFilter(DisabledClickEventFilter(self.btnSelect, lambda: qtanim.shake(self.pieView)))
+
+        self.wdgBottom = QWidget()
+        hbox(self.wdgBottom)
+        ref = TruitySourceWidget()
+        self.wdgBottom.layout().addWidget(ref, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgBottom.layout().addWidget(self.btnSelect, alignment=Qt.AlignmentFlag.AlignRight)
+        self.layout().addWidget(self.wdgBottom)
+
+    def _itemClicked(self, item: SelectionItem, checked: bool):
+        self.btnSelect.setEnabled(checked)
+        if checked:
+            self._selected = item
+        else:
+            self._selected = None
 
 class PersonalitySelector(SecondaryActionPushButton):
     selected = pyqtSignal(SelectionItem)
@@ -545,9 +692,46 @@ class MbtiSelector(PersonalitySelector):
         return self._selector
 
 
+class LoveStyleSelector(PersonalitySelector):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._selector = LoveStyleSelectorWidget(self)
+        self._menu.addWidget(self._selector)
+
+        self._selector.btnIgnore.clicked.connect(self._ignoreClicked)
+        self._selector.btnIgnore.setToolTip('Ignore love style for this character')
+        self._selector.btnSelect.clicked.connect(self._selectionClicked)
+
+        self.setText('Love style...')
+
+    @overrides
+    def field(self) -> TemplateField:
+        return love_style_field
+
+    @overrides
+    def selector(self) -> PersonalitySelectorWidget:
+        return self._selector
+
+
 class DiscSelector(PersonalitySelector):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._selector = WorkStyleSelectorWidget(self)
+        self._menu.addWidget(self._selector)
+
+        self._selector.btnIgnore.clicked.connect(self._ignoreClicked)
+        self._selector.btnIgnore.setToolTip('Ignore work style for this character')
+        self._selector.btnSelect.clicked.connect(self._selectionClicked)
+
+        self.setText('Work style...')
+
+    @overrides
+    def field(self) -> TemplateField:
+        return disc_field
+
+    @overrides
+    def selector(self) -> PersonalitySelectorWidget:
+        return self._selector
 
 
 class EmotionEditorSlider(QSlider):

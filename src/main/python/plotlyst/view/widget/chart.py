@@ -20,10 +20,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import List, Dict
 
-from PyQt6.QtCharts import QChart, QPieSeries, QBarSet, QBarCategoryAxis, QValueAxis, QBarSeries, QPolarChart
+from PyQt6.QtCharts import QChart, QPieSeries, QBarSet, QBarCategoryAxis, QValueAxis, QBarSeries, QPolarChart, QPieSlice
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QCursor, QIcon
-from PyQt6.QtWidgets import QToolTip
+from PyQt6.QtGui import QColor, QCursor, QIcon, QFont
+from PyQt6.QtWidgets import QToolTip, QApplication
 from overrides import overrides
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, CHARACTER_MAJOR_COLOR, \
@@ -371,3 +371,43 @@ class ActDistributionChart(BaseChart):
             slice_.setColor(QColor(color))
 
         self.addSeries(series)
+
+
+class SelectionItemPieSlice(QPieSlice):
+    def __init__(self, item: SelectionItem, bgColor: str, parent=None,
+                 labelPosition=QPieSlice.LabelPosition.LabelInsideNormal):
+        super().__init__(parent)
+        self.item = item
+        self._bgColor = bgColor
+
+        self.setLabelVisible()
+        self.setLabel(self.item.text)
+        font = QApplication.font()
+        font.setPointSize(14)
+        self.setLabelFont(font)
+        self.setLabel(item.text)
+        self.setLabelColor(QColor('grey'))
+        self.setLabelPosition(labelPosition)
+        self.setColor(QColor(self._bgColor))
+
+    def highlight(self):
+        self.setExplodeDistanceFactor(0.05)
+        self.setColor(QColor(self.item.icon_color))
+        color = QColor(RELAXED_WHITE_COLOR)
+        color.setAlpha(205)
+        self.setLabelColor(color)
+        self.setExploded(True)
+
+    def select(self):
+        self.setExplodeDistanceFactor(0.2)
+        font: QFont = self.labelFont()
+        font.setBold(True)
+        self.setLabelFont(font)
+
+    def reset(self):
+        self.setColor(QColor(self._bgColor))
+        self.setExploded(False)
+        self.setLabelColor(QColor('grey'))
+        font = self.labelFont()
+        font.setBold(False)
+        self.setLabelFont(font)
