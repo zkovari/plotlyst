@@ -25,11 +25,10 @@ from functools import partial
 from typing import Tuple, Optional, Dict, List
 
 import qtanim
-from PyQt6.QtCharts import QPieSeries, QChartView, QPieSlice
+from PyQt6.QtCharts import QPieSeries, QChartView
 from PyQt6.QtCore import pyqtSignal, Qt, QSize
-from PyQt6.QtGui import QIcon, QColor, QMouseEvent, QPainter, QFont
-from PyQt6.QtWidgets import QWidget, QSpinBox, QSlider, QTextBrowser, QButtonGroup, QToolButton, QLabel, QSizePolicy, \
-    QApplication
+from PyQt6.QtGui import QIcon, QColor, QMouseEvent, QPainter
+from PyQt6.QtWidgets import QWidget, QSpinBox, QSlider, QTextBrowser, QButtonGroup, QToolButton, QLabel, QSizePolicy
 from overrides import overrides
 from qthandy import vbox, pointy, hbox, sp, vspacer, underline, decr_font, flow, clear_layout, translucent, line, grid, \
     italic, spacer, transparent, incr_font, margins, incr_icon
@@ -46,12 +45,12 @@ from src.main.python.plotlyst.core.template import SelectionItem, enneagram_fiel
     love_interest_role, supporter_role, adversary_role, contagonist_role, guide_role, confidant_role, sidekick_role, \
     foil_role, henchmen_role, love_style_field, disc_field
 from src.main.python.plotlyst.view.common import push_btn, action, tool_btn, label, wrap, open_url, restyle, \
-    scroll_area, spawn
+    scroll_area
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry, set_avatar
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton, SelectionItemPushButton
-from src.main.python.plotlyst.view.widget.chart import BaseChart
+from src.main.python.plotlyst.view.widget.chart import BaseChart, SelectionItemPieSlice
 from src.main.python.plotlyst.view.widget.display import Icon, MajorRoleIcon, SecondaryRoleIcon, MinorRoleIcon, \
     IconText, RoleIcon
 from src.main.python.plotlyst.view.widget.labels import TraitLabel
@@ -447,67 +446,40 @@ love_style_opaque_colors = {
 }
 
 
-@spawn
 class LoveStylePie(BaseChart):
     sliceClicked = pyqtSignal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.selected: Optional[SelectionItem] = None
-        self._selectedSlice: Optional[QPieSlice] = None
+        self._selectedSlice: Optional[SelectionItemPieSlice] = None
         self.series = QPieSeries()
 
         for i, item in enumerate(love_style_field.selections):
-            slice_ = self.series.append(f'{i}', 1)
-            slice_.setLabelVisible()
-            font = QApplication.font()
-            font.setPointSize(14)
-            slice_.setLabelFont(font)
-            slice_.setLabelColor(QColor('grey'))
-            slice_.setLabel(item.text)
-            slice_.setLabelPosition(QPieSlice.LabelPosition.LabelInsideNormal)
-            slice_.setColor(QColor(love_style_opaque_colors[item.text]))
-            slice_.hovered.connect(partial(self._hovered, item, slice_))
-            slice_.clicked.connect(partial(self._clicked, item, slice_))
+            slice = SelectionItemPieSlice(item, love_style_opaque_colors[item.text])
+            slice.setValue(1)
+            self.series.append(slice)
 
+        self.series.hovered.connect(partial(self._hovered))
+        self.series.clicked.connect(partial(self._clicked))
         self.addSeries(self.series)
 
-    def _hovered(self, item: SelectionItem, slice: QPieSlice, state: bool):
+    def _hovered(self, slice: SelectionItemPieSlice, state: bool):
         if slice is self._selectedSlice:
             return
-
         if state:
-            slice.setExplodeDistanceFactor(0.05)
-            slice.setColor(QColor(item.icon_color))
-            color = QColor(RELAXED_WHITE_COLOR)
-            color.setAlpha(205)
-            slice.setLabelColor(color)
-            slice.setExploded(True)
+            slice.highlight()
         else:
-            self._resetSlice(slice, item)
+            slice.reset()
 
-    def _clicked(self, item: SelectionItem, slice: QPieSlice):
+    def _clicked(self, slice: SelectionItemPieSlice):
         if self._selectedSlice:
-            self._resetSlice(self._selectedSlice, self.selected)
+            self._selectedSlice.reset()
             if self._selectedSlice is slice:
-                self.selected = None
                 self._selectedSlice = None
                 return
 
-        self.selected = item
         self._selectedSlice = slice
-        slice.setExplodeDistanceFactor(0.2)
-        font: QFont = slice.labelFont()
-        font.setBold(True)
-        slice.setLabelFont(font)
-
-    def _resetSlice(self, slice: QPieSlice, item: SelectionItem):
-        slice.setColor(QColor(love_style_opaque_colors[item.text]))
-        slice.setExploded(False)
-        slice.setLabelColor(QColor('grey'))
-        font = slice.labelFont()
-        font.setBold(False)
-        slice.setLabelFont(font)
+        self._selectedSlice.select()
 
 
 class LoveStyleSelectorWidget(PersonalitySelectorWidget):
