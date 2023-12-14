@@ -317,6 +317,8 @@ def get_selection_values(field: TemplateField) -> Dict[str, SelectionItem]:
 
 enneagram_choices: Dict[str, SelectionItem] = get_selection_values(enneagram_field)
 mbti_choices: Dict[str, SelectionItem] = get_selection_values(mbti_field)
+love_style_choices: Dict[str, SelectionItem] = get_selection_values(love_style_field)
+work_style_choices: Dict[str, SelectionItem] = get_selection_values(disc_field)
 
 summary_field = TemplateField('Summary', type=TemplateFieldType.SMALL_TEXT,
                               id=uuid.UUID('90112538-2eca-45e8-81b4-e3c331204e31'),

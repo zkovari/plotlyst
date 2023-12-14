@@ -38,7 +38,8 @@ from src.main.python.plotlyst.core.help import enneagram_help, mbti_help, mbti_k
 from src.main.python.plotlyst.core.template import TemplateField, SelectionItem, \
     enneagram_choices, goal_field, internal_goal_field, stakes_field, conflict_field, motivation_field, \
     internal_motivation_field, internal_conflict_field, internal_stakes_field, wound_field, trigger_field, fear_field, \
-    healing_field, methods_field, misbelief_field, ghost_field, demon_field, mbti_choices
+    healing_field, methods_field, misbelief_field, ghost_field, demon_field, mbti_choices, love_style_choices, \
+    work_style_choices
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
 from src.main.python.plotlyst.view.common import wrap, emoji_font, hmax, insert_before_the_end, action, label
@@ -619,6 +620,21 @@ class LoveStyleFieldWidget(TemplateFieldWidgetBase):
         self.wdgEditor.selected.connect(self._selectionChanged)
         self.wdgEditor.ignored.connect(self._ignored)
 
+    @overrides
+    def value(self) -> Any:
+        return self.wdgEditor.value()
+
+    @overrides
+    def setValue(self, value: Any):
+        self.wdgEditor.setValue(value)
+        if value:
+            mbti = love_style_choices[value]
+            self._selectionChanged(mbti)
+        elif value is None:
+            self._ignored()
+        else:
+            self.wdgEditor.setToolTip(self._defaultTooltip)
+
     def _selectionChanged(self, item: SelectionItem):
         pass
 
@@ -637,6 +653,21 @@ class WorkStyleFieldWidget(TemplateFieldWidgetBase):
 
         self.wdgEditor.selected.connect(self._selectionChanged)
         self.wdgEditor.ignored.connect(self._ignored)
+
+    @overrides
+    def value(self) -> Any:
+        return self.wdgEditor.value()
+
+    @overrides
+    def setValue(self, value: Any):
+        self.wdgEditor.setValue(value)
+        if value:
+            mbti = work_style_choices[value]
+            self._selectionChanged(mbti)
+        elif value is None:
+            self._ignored()
+        else:
+            self.wdgEditor.setToolTip(self._defaultTooltip)
 
     def _selectionChanged(self, item: SelectionItem):
         pass
