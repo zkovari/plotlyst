@@ -274,7 +274,10 @@
             </widget>
            </item>
            <item>
-            <widget class="QToolButton" name="btnNotes">
+            <widget class="QToolButton" name="btnManuscript">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
              <property name="minimumSize">
               <size>
                <width>50</width>
@@ -291,7 +294,7 @@
               <cursorShape>PointingHandCursor</cursorShape>
              </property>
              <property name="toolTip">
-              <string>Documents</string>
+              <string>Manuscript</string>
              </property>
              <property name="text">
               <string/>
@@ -349,10 +352,7 @@
             </spacer>
            </item>
            <item>
-            <widget class="QToolButton" name="btnManuscript">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
+            <widget class="QToolButton" name="btnNotes">
              <property name="minimumSize">
               <size>
                <width>50</width>
@@ -369,7 +369,7 @@
               <cursorShape>PointingHandCursor</cursorShape>
              </property>
              <property name="toolTip">
-              <string>Manuscript</string>
+              <string>Documents</string>
              </property>
              <property name="text">
               <string/>
