@@ -23,6 +23,7 @@ from functools import partial
 from typing import Optional, Tuple, List, Union
 
 import qtawesome
+from PyQt6.QtCharts import QChart, QChartView
 from PyQt6.QtCore import QRectF, QModelIndex, QRect, QPoint, QBuffer, QIODevice, QSize, QObject, QEvent, Qt, QTimer, \
     QUrl
 from PyQt6.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon, QAction, QDesktopServices
@@ -537,7 +538,13 @@ def spawn(cls):
     wdgDisplay = QWidget()
     hbox(wdgDisplay)
     wdgDisplay.layout().addWidget(spacer())
-    wdgDisplay.layout().addWidget(widget)
+    if isinstance(widget, QChart):
+        view = QChartView()
+        view.setRenderHint(QPainter.RenderHint.Antialiasing)
+        view.setChart(widget)
+        wdgDisplay.layout().addWidget(view)
+    else:
+        wdgDisplay.layout().addWidget(widget)
     wdgDisplay.layout().addWidget(spacer())
 
     btnClose = QPushButton("Close")

@@ -25,9 +25,11 @@ from functools import partial
 from typing import Tuple, Optional, Dict, List
 
 import qtanim
+from PyQt6.QtCharts import QPieSeries, QChartView, QPieSlice
 from PyQt6.QtCore import pyqtSignal, Qt, QSize
-from PyQt6.QtGui import QIcon, QColor, QMouseEvent
-from PyQt6.QtWidgets import QWidget, QSpinBox, QSlider, QTextBrowser, QButtonGroup, QToolButton, QLabel, QSizePolicy
+from PyQt6.QtGui import QIcon, QColor, QMouseEvent, QPainter, QFont
+from PyQt6.QtWidgets import QWidget, QSpinBox, QSlider, QTextBrowser, QButtonGroup, QToolButton, QLabel, QSizePolicy, \
+    QApplication
 from overrides import overrides
 from qthandy import vbox, pointy, hbox, sp, vspacer, underline, decr_font, flow, clear_layout, translucent, line, grid, \
     italic, spacer, transparent, incr_font, margins, incr_icon
@@ -42,13 +44,14 @@ from src.main.python.plotlyst.core.help import enneagram_help, mbti_help, charac
 from src.main.python.plotlyst.core.template import SelectionItem, enneagram_field, TemplateField, mbti_field, \
     promote_role, demote_role, Role, protagonist_role, antagonist_role, major_role, secondary_role, tertiary_role, \
     love_interest_role, supporter_role, adversary_role, contagonist_role, guide_role, confidant_role, sidekick_role, \
-    foil_role, henchmen_role
+    foil_role, henchmen_role, love_style_field, disc_field
 from src.main.python.plotlyst.view.common import push_btn, action, tool_btn, label, wrap, open_url, restyle, \
-    scroll_area
+    scroll_area, spawn
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry, set_avatar
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton, SelectionItemPushButton
+from src.main.python.plotlyst.view.widget.chart import BaseChart
 from src.main.python.plotlyst.view.widget.display import Icon, MajorRoleIcon, SecondaryRoleIcon, MinorRoleIcon, \
     IconText, RoleIcon
 from src.main.python.plotlyst.view.widget.labels import TraitLabel
@@ -433,6 +436,96 @@ class MbtiSelectorWidget(PersonalitySelectorWidget):
         self.text.setText(mbti_help.get(item.text, ''))
 
 
+love_style_opaque_colors = {
+    'Activity': '#B7B2D2',
+    'Appreciation': '#EBA9AE',
+    'Emotional': '#FFA4C2',
+    'Financial': '#FFBA6A',
+    'Intellectual': '#8AD6FF',
+    'Physical': '#FAD1B0',
+    'Practical': '#84DED4',
+}
+
+
+@spawn
+class LoveStylePie(BaseChart):
+    sliceClicked = pyqtSignal(int)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.selected: Optional[SelectionItem] = None
+        self._selectedSlice: Optional[QPieSlice] = None
+        self.series = QPieSeries()
+
+        for i, item in enumerate(love_style_field.selections):
+            slice_ = self.series.append(f'{i}', 1)
+            slice_.setLabelVisible()
+            font = QApplication.font()
+            font.setPointSize(14)
+            slice_.setLabelFont(font)
+            slice_.setLabelColor(QColor('grey'))
+            slice_.setLabel(item.text)
+            slice_.setLabelPosition(QPieSlice.LabelPosition.LabelInsideNormal)
+            slice_.setColor(QColor(love_style_opaque_colors[item.text]))
+            slice_.hovered.connect(partial(self._hovered, item, slice_))
+            slice_.clicked.connect(partial(self._clicked, item, slice_))
+
+        self.addSeries(self.series)
+
+    def _hovered(self, item: SelectionItem, slice: QPieSlice, state: bool):
+        if slice is self._selectedSlice:
+            return
+
+        if state:
+            slice.setExplodeDistanceFactor(0.05)
+            slice.setColor(QColor(item.icon_color))
+            color = QColor(RELAXED_WHITE_COLOR)
+            color.setAlpha(205)
+            slice.setLabelColor(color)
+            slice.setExploded(True)
+        else:
+            self._resetSlice(slice, item)
+
+    def _clicked(self, item: SelectionItem, slice: QPieSlice):
+        if self._selectedSlice:
+            self._resetSlice(self._selectedSlice, self.selected)
+            if self._selectedSlice is slice:
+                self.selected = None
+                self._selectedSlice = None
+                return
+
+        self.selected = item
+        self._selectedSlice = slice
+        slice.setExplodeDistanceFactor(0.2)
+        font: QFont = slice.labelFont()
+        font.setBold(True)
+        slice.setLabelFont(font)
+
+    def _resetSlice(self, slice: QPieSlice, item: SelectionItem):
+        slice.setColor(QColor(love_style_opaque_colors[item.text]))
+        slice.setExploded(False)
+        slice.setLabelColor(QColor('grey'))
+        font = slice.labelFont()
+        font.setBold(False)
+        slice.setLabelFont(font)
+
+
+class LoveStyleSelectorWidget(PersonalitySelectorWidget):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.pieView = QChartView()
+        self.pieView.setRenderHint(QPainter.RenderHint.Antialiasing)
+        self.pie = LoveStylePie()
+        self.pieView.setChart(self.pie)
+        self.layout().addWidget(self.pieView)
+
+
+class WorkStyleSelectorWidget(PersonalitySelectorWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+
 class PersonalitySelector(SecondaryActionPushButton):
     selected = pyqtSignal(SelectionItem)
     ignored = pyqtSignal()
@@ -545,9 +638,37 @@ class MbtiSelector(PersonalitySelector):
         return self._selector
 
 
+class LoveStyleSelector(PersonalitySelector):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._selector = LoveStyleSelectorWidget(self)
+        self._menu.addWidget(self._selector)
+
+        self.setText('Love style...')
+
+    @overrides
+    def field(self) -> TemplateField:
+        return love_style_field
+
+    @overrides
+    def selector(self) -> PersonalitySelectorWidget:
+        return self._selector
+
+
 class DiscSelector(PersonalitySelector):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._selector = WorkStyleSelectorWidget(self)
+        self._menu.addWidget(self._selector)
+        self.setText('Work style...')
+
+    @overrides
+    def field(self) -> TemplateField:
+        return disc_field
+
+    @overrides
+    def selector(self) -> PersonalitySelectorWidget:
+        return self._selector
 
 
 class EmotionEditorSlider(QSlider):

@@ -47,7 +47,8 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.slider import apply_slider_color
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton, CollapseButton
-from src.main.python.plotlyst.view.widget.character.editor import EnneagramSelector, MbtiSelector
+from src.main.python.plotlyst.view.widget.character.editor import EnneagramSelector, MbtiSelector, LoveStyleSelector, \
+    DiscSelector
 from src.main.python.plotlyst.view.widget.display import Subtitle, Emoji, Icon, dash_icon
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
@@ -609,13 +610,19 @@ class MbtiFieldWidget(TemplateFieldWidgetBase):
 class LoveStyleFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super().__init__(field, parent)
-        self.wdgEditor = QWidget()
+        self.wdgEditor = LoveStyleSelector()
+        self._defaultTooltip: str = 'Select love style'
+        _layout = vbox(self)
+        _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignLeft)
 
 
 class WorkStyleFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super().__init__(field, parent)
-        self.wdgEditor = QWidget()
+        self.wdgEditor = DiscSelector()
+        self._defaultTooltip: str = 'Select work style'
+        _layout = vbox(self)
+        _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignLeft)
 
 
 class TraitsFieldWidget(TemplateFieldWidgetBase):
