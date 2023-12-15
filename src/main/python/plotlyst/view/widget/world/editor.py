@@ -21,25 +21,26 @@ from functools import partial
 from typing import Optional, Dict, Set, Any, List
 
 import qtanim
-from PyQt6.QtCore import pyqtSignal, Qt, QModelIndex, QPoint
-from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent
+from PyQt6.QtCore import pyqtSignal, Qt, QModelIndex
+from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMouseEvent
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QTableView, QApplication, QDialog
 from overrides import overrides
-from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon
+from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import recursive
 from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityType, \
-    WorldBuildingEntityElement, WorldBuildingEntityElementType, GlossaryItem, BackstoryEvent
+    WorldBuildingEntityElement, WorldBuildingEntityElementType, GlossaryItem, BackstoryEvent, Variable, VariableType
 from src.main.python.plotlyst.core.template import SelectionItem
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import action, push_btn, frame, insert_before_the_end, fade_out_and_gc, \
-    tool_btn
+    tool_btn, label
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.display import Icon, PopupDialog, OverlayWidget
+from src.main.python.plotlyst.view.widget.button import DotsMenuButton
+from src.main.python.plotlyst.view.widget.display import Icon, PopupDialog
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, RemovalButton
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 from src.main.python.plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
@@ -215,11 +216,15 @@ class WorldBuildingTreeView(TreeView):
 
 
 class WorldBuildingEntityElementWidget(QWidget):
-    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None, removalEnabled: bool = True):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None, removalEnabled: bool = True,
+                 menuEnabled: bool = False):
         super().__init__(parent)
         self.novel = novel
         self.element = element
         self._removalEnabled = removalEnabled
+        self._menuEnabled = menuEnabled
+        if removalEnabled and removalEnabled == menuEnabled:
+            raise ValueError('Cannot allow both removal and menu for WorldBuildingEntityElementWidget')
 
         self.btnAdd = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True, tooltip='Insert new block')
         self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd))
@@ -233,7 +238,13 @@ class WorldBuildingEntityElementWidget(QWidget):
         else:
             self.btnRemove.setHidden(True)
 
-        self._btnRemovalOffsetY = 1
+        if self._menuEnabled:
+            self.btnMenu = DotsMenuButton(self)
+            self.menu = MenuWidget(self.btnMenu)
+            self.installEventFilter(VisibilityToggleEventFilter(self.btnMenu, self))
+
+        self._btnCornerButtonOffsetY = 1
+        self._btnCornerButtonOffsetX = 20
 
     def save(self):
         RepositoryPersistenceManager.instance().update_world(self.novel)
@@ -241,7 +252,11 @@ class WorldBuildingEntityElementWidget(QWidget):
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
         if self._removalEnabled:
-            self.btnRemove.setGeometry(event.size().width() - 20, self._btnRemovalOffsetY, 20, 20)
+            self.btnRemove.setGeometry(event.size().width() - self._btnCornerButtonOffsetX,
+                                       self._btnCornerButtonOffsetY, 20, 20)
+        elif self._menuEnabled:
+            self.btnMenu.setGeometry(event.size().width() - self._btnCornerButtonOffsetX, self._btnCornerButtonOffsetY,
+                                     20, 20)
         super().resizeEvent(event)
 
     @staticmethod
@@ -440,13 +455,87 @@ class WorldBuildingEntityQuoteElementEditor(WorldBuildingEntityElementWidget):
         self.save()
 
 
+class VariableEditorDialog(PopupDialog):
+    def __init__(self, variable: Optional[Variable] = None, parent=None):
+        super().__init__(parent)
+        self._variable: Optional[Variable] = variable
+
+        self.lineKey = QLineEdit()
+        self.lineKey.setProperty('white-bg', True)
+        self.lineKey.setProperty('rounded', True)
+        self.lineKey.setPlaceholderText('Key')
+        self.lineKey.textChanged.connect(self._keyChanged)
+
+        self.wdgTitle = QWidget()
+        hbox(self.wdgTitle)
+        self.wdgTitle.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
+
+        self.btnConfirm = push_btn(text='Confirm', properties=['base', 'positive'])
+        sp(self.btnConfirm).h_exp()
+        self.btnConfirm.clicked.connect(self.accept)
+        self.btnConfirm.setDisabled(True)
+        self.btnConfirm.installEventFilter(
+            DisabledClickEventFilter(self.btnConfirm, lambda: qtanim.shake(self.lineKey)))
+
+        if self._variable:
+            self.lineKey.setText(self._variable.key)
+
+        self.frame.layout().addWidget(self.wdgTitle)
+        self.frame.layout().addWidget(self.lineKey)
+        self.frame.layout().addWidget(self.btnConfirm)
+
+    def display(self) -> Optional[Variable]:
+        result = self.exec()
+
+        if result == QDialog.DialogCode.Accepted:
+            if self._variable is None:
+                self._variable = Variable(self.lineKey.text(), VariableType.Text, '')
+            self._variable.key = self.lineKey.text()
+
+            return self._variable
+
+    @classmethod
+    def edit(cls, variable: Optional[Variable] = None) -> Optional[Variable]:
+        return cls.popup(variable)
+
+    def _keyChanged(self, key: str):
+        self.btnConfirm.setEnabled(len(key) > 0)
+
+
+class VariableWidget(QWidget):
+    def __init__(self, variable: Variable, parent=None):
+        super().__init__(parent)
+        self.variable = variable
+        vbox(self)
+        self.lblKey = label(variable.key, bold=True)
+        self.valueField = label(variable.value)
+        self.layout().addWidget(self.lblKey, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self.valueField, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        self.installEventFilter(OpacityEventFilter(self, 0.7, 1.0))
+        pointy(self)
+
+    @overrides
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        self.edit()
+
+    def edit(self):
+        edited = VariableEditorDialog.edit(self.variable)
+        if edited:
+            self.lblKey.setText(self.variable.key)
+
+
 class WorldBuildingEntityVariablesElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
-        super().__init__(novel, element, parent)
+        super().__init__(novel, element, parent, removalEnabled=False, menuEnabled=True)
         vbox(self, 5)
         margins(self, right=15)
 
+        self._btnCornerButtonOffsetX = 37
+        self._btnCornerButtonOffsetY = 7
+
         self.frame = frame()
+        vbox(self.frame, 10)
         self.frame.setStyleSheet('''
         .QFrame {
             border: 1px outset #510442;
@@ -457,13 +546,30 @@ class WorldBuildingEntityVariablesElementEditor(WorldBuildingEntityElementWidget
 
         self.btnAdd = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True)
         self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd, enterOpacity=0.8))
-        vbox(self.frame, 10).addWidget(self.btnAdd)
         self.btnAdd.clicked.connect(self._addNew)
+        for variable in self.element.variables:
+            wdg = VariableWidget(variable)
+            self.frame.layout().addWidget(wdg)
+
+        self.frame.layout().addWidget(self.btnAdd)
 
         self.layout().addWidget(self.frame)
 
+        self.btnMenu.raise_()
+        self.menu.aboutToShow.connect(self._fillMenu)
+
     def _addNew(self):
-        pass
+        variable = VariableEditorDialog.edit()
+        if variable:
+            self.element.variables.append(variable)
+            wdg = VariableWidget(variable)
+            insert_before_the_end(self.frame, wdg)
+            qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
+            self.save()
+
+    def _fillMenu(self):
+        self.menu.clear()
+        self.menu.addAction(action('Remove', IconRegistry.trash_can_icon(), slot=self.btnRemove.click))
 
 
 class WorldBuildingEntityHighlightedTextElementEditor(WorldBuildingEntityElementWidget):
