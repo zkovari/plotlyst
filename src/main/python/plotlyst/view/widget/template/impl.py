@@ -254,12 +254,13 @@ class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
 
     def attachWidget(self, widget: TemplateWidgetBase):
         self.children.append(widget)
-        self.progressStatuses[widget] = False
+        if not widget.field.type.is_display():
+            self.progressStatuses[widget] = False
         widget.valueFilled.connect(partial(self._valueFilled, widget))
         widget.valueReset.connect(partial(self._valueReset, widget))
 
     def updateProgress(self):
-        self.progress.setMaxValue(len(self.children))
+        self.progress.setMaxValue(len(self.progressStatuses.keys()))
         self.progress.update()
 
     def collapse(self, collapsed: bool):
@@ -907,11 +908,12 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
         self._btnPrimary.setIcon(IconRegistry.plus_icon('grey'))
         decr_font(self._btnPrimary)
         fields = self._primaryFields()
-        menu = MenuWidget(self._btnPrimary)
-        menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+        self._menu = MenuWidget(self._btnPrimary)
+        self._menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         for field in fields:
-            menu.addAction(
-                action(field.name, tooltip=field.description, slot=partial(self._addPrimaryField, field), parent=menu))
+            self._menu.addAction(
+                action(field.name, tooltip=field.description, slot=partial(self._addPrimaryField, field),
+                       parent=self._menu))
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self._layout: QVBoxLayout = vbox(self, 0, 5)
 
@@ -937,6 +939,8 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
     @overrides
     def setValue(self, value: Any):
         if value is None:
+            return
+        if isinstance(value, str):
             return
 
         primary_fields = self._primaryFields()
@@ -994,6 +998,28 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
                 if v:
                     value += 1
         self.valueFilled.emit(value / count if count else 0)
+
+
+class FlawsFieldWidget(MultiLayerComplexTemplateWidgetBase):
+
+    def __init__(self, field: TemplateField, parent=None):
+        super().__init__(field, parent)
+        self._menu.addAction(action('Add new character flaw...', slot=self._addNew))
+
+    @property
+    def wdgEditor(self):
+        return self
+
+    @overrides
+    def _primaryButtonText(self) -> str:
+        return 'Add new flaw'
+
+    @overrides
+    def _primaryFields(self) -> List[TemplateField]:
+        return []
+
+    def _addNew(self):
+        pass
 
 
 class GmcFieldWidget(MultiLayerComplexTemplateWidgetBase):
