@@ -630,9 +630,15 @@ class WorldBuildingEntityHighlightedTextElementEditor(WorldBuildingEntityElement
         self.textEdit.setFont(font)
         self.textEdit.setPlaceholderText('Begin writing...')
         self.textEdit.setProperty('transparent', True)
+        self.textEdit.setMarkdown(self.element.text)
+        self.textEdit.textChanged.connect(self._textChanged)
         vbox(self.frame, 10).addWidget(self.textEdit)
 
         self.layout().addWidget(self.frame)
+
+    def _textChanged(self):
+        self.element.text = self.textEdit.toMarkdown()
+        self.save()
 
 
 class EntityTimelineCard(BackstoryCard):
@@ -765,7 +771,7 @@ class WorldBuildingEntityEditor(QWidget):
         splitter.setChildrenCollapsible(False)
         splitter.addWidget(self.wdgEditorMiddle)
         splitter.addWidget(self.wdgEditorSide)
-        splitter.setSizes([500, 150])
+        splitter.setSizes([500, 170])
 
         vbox(self, 0, 0).addWidget(splitter)
 
