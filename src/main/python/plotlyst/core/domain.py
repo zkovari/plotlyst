@@ -1322,6 +1322,28 @@ def default_stages() -> List[SceneStage]:
             SceneStage('Proofread'), SceneStage('Final')]
 
 
+class VariableType(Enum):
+    Text = 0
+
+
+@dataclass
+class Variable:
+    key: str
+    type: VariableType
+    value: Any
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+
+    @overrides
+    def __eq__(self, other: 'Variable'):
+        if isinstance(other, Variable):
+            return self.id == other.id
+        return False
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
+
 class WorldBuildingEntityType(Enum):
     ABSTRACT = 1
     SETTING = 2
@@ -1353,6 +1375,7 @@ class WorldBuildingEntityElement:
     events: List[BackstoryEvent] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     blocks: List['WorldBuildingEntityElement'] = field(default_factory=list,
                                                        metadata=config(exclude=exclude_if_empty))
+    variables: List[Variable] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
 
     @overrides
     def __eq__(self, other: 'WorldBuildingEntityElement'):
@@ -1379,10 +1402,6 @@ class WorldBuildingEntity:
     elements: List[WorldBuildingEntityElement] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     side_elements: List[WorldBuildingEntityElement] = field(default_factory=list,
                                                             metadata=config(exclude=exclude_if_empty))
-
-    # notes: str = field(default='', metadata=config(exclude=exclude_if_empty))
-    # template_values: List[TemplateValue] = field(default_factory=list)
-    # topics: List[TemplateValue] = field(default_factory=list)
 
     @overrides
     def __eq__(self, other: 'WorldBuildingEntity'):
