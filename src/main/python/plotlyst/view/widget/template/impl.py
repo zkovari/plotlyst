@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from abc import abstractmethod
+import copy
 from functools import partial
 from typing import Optional, List, Any, Dict, Set, Tuple
 
@@ -39,7 +39,7 @@ from src.main.python.plotlyst.core.template import TemplateField, SelectionItem,
     enneagram_choices, goal_field, internal_goal_field, stakes_field, conflict_field, motivation_field, \
     internal_motivation_field, internal_conflict_field, internal_stakes_field, wound_field, trigger_field, fear_field, \
     healing_field, methods_field, misbelief_field, ghost_field, demon_field, mbti_choices, love_style_choices, \
-    work_style_choices
+    work_style_choices, flaw_placeholder_field
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
 from src.main.python.plotlyst.view.common import wrap, emoji_font, hmax, insert_before_the_end, action, label
@@ -51,7 +51,7 @@ from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButto
 from src.main.python.plotlyst.view.widget.character.editor import EnneagramSelector, MbtiSelector, LoveStyleSelector, \
     DiscSelector
 from src.main.python.plotlyst.view.widget.display import Subtitle, Emoji, Icon, dash_icon
-from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle
+from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle, TextInputDialog
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
 from src.main.python.plotlyst.view.widget.progress import CircularProgressBar
 from src.main.python.plotlyst.view.widget.template.base import TemplateDisplayWidget, TemplateFieldWidgetBase, \
@@ -897,10 +897,11 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
     ID_KEY: str = 'id'
     VALUE_KEY: str = 'value'
     SECONDARY_KEY: str = 'secondary'
+    ALIAS_KEY = 'alias'
 
     def __init__(self, field: TemplateField, parent=None):
         super().__init__(field, parent)
-
+        self._hasAlias = False
         self._primaryWidgets: List[_PrimaryFieldWidget] = []
 
         self._btnPrimary = SecondaryActionPushButton()
@@ -931,8 +932,13 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
 
         value = {}
         for primary_wdg in self._primaryWidgets:
-            value[str(primary_wdg.field().id)] = {self.VALUE_KEY: primary_wdg.value(),
-                                                  self.SECONDARY_KEY: secondaryValues(primary_wdg)}
+            sid = str(primary_wdg.field().id)
+            if self._hasAlias:
+                sid += f'&{primary_wdg.field().name}'
+            value[sid] = {self.VALUE_KEY: primary_wdg.value(),
+                          self.SECONDARY_KEY: secondaryValues(primary_wdg)}
+            if self._hasAlias:
+                value[sid][self.ALIAS_KEY] = primary_wdg.field().name
 
         return value
 
@@ -945,9 +951,14 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
 
         primary_fields = self._primaryFields()
         for k, v in value.items():
+            if self._hasAlias and self.ALIAS_KEY in v.keys():
+                k = k.split('&')[0]
             primary = next((x for x in primary_fields if str(x.id) == k), None)
             if primary is None:
                 continue
+            if self._hasAlias and self.ALIAS_KEY in v.keys():
+                primary = copy.deepcopy(primary)
+                primary.name = v[self.ALIAS_KEY]
             wdg = self._addPrimaryField(primary)
             wdg.setValue(v[self.VALUE_KEY])
 
@@ -959,16 +970,14 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
 
         self._valueChanged()
 
-    @abstractmethod
     def _primaryFields(self) -> List[TemplateField]:
-        pass
+        return []
 
     def _primaryButtonText(self) -> str:
         return 'Add new item'
 
-    @abstractmethod
     def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
-        pass
+        return []
 
     def _addPrimaryField(self, field: TemplateField) -> _PrimaryFieldWidget:
         wdg = _PrimaryFieldWidget(field, self._secondaryFields(field))
@@ -1004,6 +1013,8 @@ class FlawsFieldWidget(MultiLayerComplexTemplateWidgetBase):
 
     def __init__(self, field: TemplateField, parent=None):
         super().__init__(field, parent)
+        self._hasAlias = True
+        self._menu.clear()
         self._menu.addAction(action('Add new character flaw...', slot=self._addNew))
 
     @property
@@ -1016,10 +1027,20 @@ class FlawsFieldWidget(MultiLayerComplexTemplateWidgetBase):
 
     @overrides
     def _primaryFields(self) -> List[TemplateField]:
-        return []
+        return [flaw_placeholder_field]
+
+    # @overrides
+    # def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
+    #     if primary.id == wound_field.id:
+    #         return [fear_field, misbelief_field, trigger_field, healing_field]
+    #     return []
 
     def _addNew(self):
-        pass
+        flaw = TextInputDialog.edit('Define a character flaw', 'Name of the flaw')
+        if flaw:
+            field = copy.deepcopy(flaw_placeholder_field)
+            field.name = flaw
+            self._addPrimaryField(field)
 
 
 class GmcFieldWidget(MultiLayerComplexTemplateWidgetBase):

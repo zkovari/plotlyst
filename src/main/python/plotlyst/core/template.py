@@ -92,6 +92,7 @@ class TemplateFieldType(Enum):
     def is_display(self) -> bool:
         return self.name.startswith('DISPLAY')
 
+
 class SelectionType(Enum):
     SINGLE_LIST = 0
     CHECKBOX = 1
@@ -402,6 +403,8 @@ demon_field = TemplateField('Demon', type=TemplateFieldType.SMALL_TEXT, emoji=':
 
 strengths_weaknesses_field = TemplateField('Strengths and weaknesses', type=TemplateFieldType.COMPLEX,
                                            id=uuid.UUID('9cf11007-c032-46f9-a550-e238cb807714'))
+flaw_placeholder_field = TemplateField('Flaw', TemplateFieldType.TEXT,
+                                       id=uuid.UUID('9d65ec96-fb07-4997-b9d4-3b2b4155ee5d'))
 flaws_field = TemplateField('Flaws', type=TemplateFieldType.COMPLEX,
                             id=uuid.UUID('561900fb-3061-4735-ac9f-d87571131392'))
 
