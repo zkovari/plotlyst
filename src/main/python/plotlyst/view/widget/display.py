@@ -24,7 +24,7 @@ import emoji
 import qtanim
 from PyQt6.QtCharts import QChartView
 from PyQt6.QtCore import pyqtProperty, QSize, Qt, QPoint
-from PyQt6.QtGui import QPainter, QShowEvent, QColor, QPaintEvent, QBrush, QKeyEvent, QCursor
+from PyQt6.QtGui import QPainter, QShowEvent, QColor, QPaintEvent, QBrush, QKeyEvent
 from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy, QTextBrowser, QFrame, QDialog, \
     QApplication
 from overrides import overrides
@@ -363,7 +363,10 @@ class PopupDialog(QDialog):
 
     @classmethod
     def popup(cls, *args, **kwargs) -> Any:
-        QApplication.setOverrideCursor(QCursor(Qt.CursorShape.ArrowCursor))
+        override_cursor = None
+        if QApplication.overrideCursor():
+            override_cursor = QApplication.overrideCursor()
+            QApplication.restoreOverrideCursor()
         dialog = cls(*args, **kwargs)
         window = QApplication.activeWindow()
         overlay = OverlayWidget(window)
@@ -376,7 +379,8 @@ class PopupDialog(QDialog):
             return dialog.display()
         finally:
             overlay.setHidden(True)
-            QApplication.restoreOverrideCursor()
+            if override_cursor:
+                QApplication.setOverrideCursor(override_cursor)
 
 
 class LazyWidget(QWidget):
