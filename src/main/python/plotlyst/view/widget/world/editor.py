@@ -458,8 +458,12 @@ class WorldBuildingEntityVariablesElementEditor(WorldBuildingEntityElementWidget
         self.btnAdd = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True)
         self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd, enterOpacity=0.8))
         vbox(self.frame, 10).addWidget(self.btnAdd)
+        self.btnAdd.clicked.connect(self._addNew)
 
         self.layout().addWidget(self.frame)
+
+    def _addNew(self):
+        pass
 
 
 class WorldBuildingEntityHighlightedTextElementEditor(WorldBuildingEntityElementWidget):
