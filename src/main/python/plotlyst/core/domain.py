@@ -1331,6 +1331,17 @@ class Variable:
     key: str
     type: VariableType
     value: Any
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+
+    @overrides
+    def __eq__(self, other: 'Variable'):
+        if isinstance(other, Variable):
+            return self.id == other.id
+        return False
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
 
 
 class WorldBuildingEntityType(Enum):

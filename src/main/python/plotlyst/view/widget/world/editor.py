@@ -23,9 +23,10 @@ from typing import Optional, Dict, Set, Any, List
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QModelIndex
 from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMouseEvent
-from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QTableView, QApplication, QDialog
+from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QTableView, QApplication, QDialog, QGridLayout
 from overrides import overrides
-from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy
+from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy, \
+    grid
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
@@ -547,8 +548,10 @@ class WorldBuildingEntityVariablesElementEditor(WorldBuildingEntityElementWidget
         self.btnAdd = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True)
         self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd, enterOpacity=0.8))
         self.btnAdd.clicked.connect(self._addNew)
+        self._variables: Dict[Variable, VariableWidget] = {}
         for variable in self.element.variables:
             wdg = VariableWidget(variable)
+            self._variables[variable] = wdg
             self.frame.layout().addWidget(wdg)
 
         self.frame.layout().addWidget(self.btnAdd)
@@ -563,13 +566,39 @@ class WorldBuildingEntityVariablesElementEditor(WorldBuildingEntityElementWidget
         if variable:
             self.element.variables.append(variable)
             wdg = VariableWidget(variable)
+            self._variables[variable] = wdg
             insert_before_the_end(self.frame, wdg)
             qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
             self.save()
 
+    def _edit(self, variable: Variable):
+        self._variables[variable].edit()
+
+    def _remove(self, variable: Variable):
+        if self.menu.isVisible():
+            self.menu.close()
+        wdg = self._variables.pop(variable)
+        fade_out_and_gc(self.frame, wdg)
+        self.element.variables.remove(variable)
+        self.save()
+
     def _fillMenu(self):
         self.menu.clear()
-        self.menu.addAction(action('Remove', IconRegistry.trash_can_icon(), slot=self.btnRemove.click))
+        wdg = QWidget()
+        grid_layout: QGridLayout = grid(wdg)
+        for i, variable in enumerate(self.element.variables):
+            grid_layout.addWidget(label(variable.key), i, 0, 1, 2, alignment=Qt.AlignmentFlag.AlignLeft)
+
+            edit_btn = tool_btn(IconRegistry.edit_icon(), tooltip=f'Edit {variable.key}', transparent_=True)
+            edit_btn.clicked.connect(partial(self._edit, variable))
+            grid_layout.addWidget(edit_btn, i, 2)
+
+            remove_btn = tool_btn(IconRegistry.trash_can_icon(), transparent_=True, tooltip=f'Remove {variable.key}')
+            remove_btn.clicked.connect(partial(self._remove, variable))
+            grid_layout.addWidget(remove_btn, i, 3)
+        self.menu.addWidget(wdg)
+        self.menu.addSeparator()
+        self.menu.addAction(action('Remove all variables', IconRegistry.trash_can_icon(), slot=self.btnRemove.click))
 
 
 class WorldBuildingEntityHighlightedTextElementEditor(WorldBuildingEntityElementWidget):
