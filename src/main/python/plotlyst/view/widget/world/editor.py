@@ -467,6 +467,11 @@ class VariableEditorDialog(PopupDialog):
         self.lineKey.setPlaceholderText('Key')
         self.lineKey.textChanged.connect(self._keyChanged)
 
+        self.lineValue = QLineEdit()
+        self.lineValue.setProperty('white-bg', True)
+        self.lineValue.setProperty('rounded', True)
+        self.lineValue.setPlaceholderText('Value')
+
         self.wdgTitle = QWidget()
         hbox(self.wdgTitle)
         self.wdgTitle.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
@@ -483,6 +488,7 @@ class VariableEditorDialog(PopupDialog):
 
         self.frame.layout().addWidget(self.wdgTitle)
         self.frame.layout().addWidget(self.lineKey)
+        self.frame.layout().addWidget(self.lineValue)
         self.frame.layout().addWidget(self.btnConfirm)
 
     def display(self) -> Optional[Variable]:
@@ -492,6 +498,7 @@ class VariableEditorDialog(PopupDialog):
             if self._variable is None:
                 self._variable = Variable(self.lineKey.text(), VariableType.Text, '')
             self._variable.key = self.lineKey.text()
+            self._variable.value = self.lineValue.text()
 
             return self._variable
 
@@ -524,6 +531,7 @@ class VariableWidget(QWidget):
         edited = VariableEditorDialog.edit(self.variable)
         if edited:
             self.lblKey.setText(self.variable.key)
+            self.valueField.setText(self.variable.value)
 
 
 class WorldBuildingEntityVariablesElementEditor(WorldBuildingEntityElementWidget):
