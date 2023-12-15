@@ -89,6 +89,8 @@ class TemplateFieldType(Enum):
     COMPLEX = 12
     BAR = 13
 
+    def is_display(self) -> bool:
+        return self.name.startswith('DISPLAY')
 
 class SelectionType(Enum):
     SINGLE_LIST = 0
