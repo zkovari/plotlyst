@@ -817,21 +817,9 @@ class GlossaryEditorDialog(PopupDialog):
     def _keyChanged(self, key: str):
         self.btnConfirm.setEnabled(len(key) > 0)
 
-    @staticmethod
-    def edit(glossary: Optional[GlossaryItem] = None) -> Optional[GlossaryItem]:
-        dialog = GlossaryEditorDialog(glossary)
-
-        window = QApplication.activeWindow()
-        overlay = OverlayWidget(window)
-        overlay.show()
-
-        dialog.move(
-            window.frameGeometry().center() - QPoint(dialog.sizeHint().width() // 2, dialog.sizeHint().height() // 2))
-
-        try:
-            return dialog.display()
-        finally:
-            overlay.setHidden(True)
+    @classmethod
+    def edit(cls, glossary: Optional[GlossaryItem] = None) -> Optional[GlossaryItem]:
+        return cls.popup(glossary)
 
 
 class WorldBuildingGlossaryEditor(QWidget):

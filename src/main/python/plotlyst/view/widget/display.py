@@ -18,14 +18,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
-from typing import Optional
+from typing import Optional, Any
 
 import emoji
 import qtanim
 from PyQt6.QtCharts import QChartView
-from PyQt6.QtCore import pyqtProperty, QSize, Qt
-from PyQt6.QtGui import QPainter, QShowEvent, QColor, QPaintEvent, QBrush, QKeyEvent
-from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy, QTextBrowser, QFrame, QDialog
+from PyQt6.QtCore import pyqtProperty, QSize, Qt, QPoint
+from PyQt6.QtGui import QPainter, QShowEvent, QColor, QPaintEvent, QBrush, QKeyEvent, QCursor
+from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy, QTextBrowser, QFrame, QDialog, \
+    QApplication
 from overrides import overrides
 from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon, pointy, hbox, busy, italic, decr_font
 from qthandy.filter import OpacityEventFilter
@@ -359,6 +360,23 @@ class PopupDialog(QDialog):
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key.Key_Escape:
             self.reject()
+
+    @classmethod
+    def popup(cls, *args, **kwargs) -> Any:
+        QApplication.setOverrideCursor(QCursor(Qt.CursorShape.ArrowCursor))
+        dialog = cls(*args, **kwargs)
+        window = QApplication.activeWindow()
+        overlay = OverlayWidget(window)
+        overlay.show()
+
+        dialog.move(
+            window.frameGeometry().center() - QPoint(dialog.sizeHint().width() // 2, dialog.sizeHint().height() // 2))
+
+        try:
+            return dialog.display()
+        finally:
+            overlay.setHidden(True)
+            QApplication.restoreOverrideCursor()
 
 
 class LazyWidget(QWidget):

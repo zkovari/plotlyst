@@ -17,15 +17,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from builtins import staticmethod
 from dataclasses import dataclass
 
-from PyQt6.QtCore import Qt, QPoint
-from PyQt6.QtWidgets import QDialog, QWidget, QApplication
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QDialog, QWidget
 from qthandy import line, hbox, sp, vspacer
 
 from src.main.python.plotlyst.view.common import label, push_btn
-from src.main.python.plotlyst.view.widget.display import OverlayWidget, PopupDialog
+from src.main.python.plotlyst.view.widget.display import PopupDialog
 
 
 @dataclass
@@ -34,16 +33,16 @@ class ConfirmationResult:
 
 
 class ConfirmationDialog(PopupDialog):
-    def __init__(self, parent=None):
+    def __init__(self, message: str, title: str = 'Confirm?', parent=None):
         super().__init__(parent)
 
-        self.title = label('Confirm', h4=True)
+        self.title = label(title, h4=True)
         sp(self.title).v_max()
         self.wdgTitle = QWidget()
-        hbox(self.wdgTitle)
+        hbox(self.wdgTitle, spacing=5)
         self.wdgTitle.layout().addWidget(self.title, alignment=Qt.AlignmentFlag.AlignLeft)
         self.wdgTitle.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
-        self.text = label('Do you confirm?', wordWrap=True)
+        self.text = label(message, wordWrap=True)
         self.btnConfirm = push_btn(text='Confirm', properties=['base', 'deconstructive'])
         sp(self.btnConfirm).h_exp()
         self.btnConfirm.clicked.connect(self.accept)
@@ -63,25 +62,9 @@ class ConfirmationDialog(PopupDialog):
 
         return ConfirmationResult(False)
 
-    @staticmethod
-    def confirm(message: str, title: str = 'Confirm?') -> bool:
-        dialog = ConfirmationDialog()
-        dialog.title.setText(title)
-        dialog.text.setText(message)
-
-        window = QApplication.activeWindow()
-        overlay = OverlayWidget(window)
-        overlay.show()
-
-        dialog.move(
-            window.frameGeometry().center() - QPoint(dialog.sizeHint().width() // 2, dialog.sizeHint().height() // 2))
-
-        try:
-            result = dialog.display().confirmed
-        finally:
-            overlay.setHidden(True)
-
-        return result
+    @classmethod
+    def confirm(cls, message: str, title: str = 'Confirm?') -> bool:
+        return cls.popup(message, title).confirmed
 
 
 def confirmed(message: str, title: str = 'Confirm?') -> bool:
