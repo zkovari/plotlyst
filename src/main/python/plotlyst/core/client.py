@@ -440,15 +440,14 @@ class JsonClient:
         path = self.images_dir(novel).joinpath(filename)
         if not path.exists():
             return None
-        image = QImage(str(path))
-        image.load()
+        image = QImage()
+        image.load(str(path))
 
         return image
 
     def save_image(self, novel: Novel, ref: ImageRef, image: QImage):
         file_path = self.images_dir(novel).joinpath(f'{ref.id}.{ref.extension}')
-        # file_path = f'{ref.id}.{ref.extension}'
-        writer = QImageWriter(file_path)
+        writer = QImageWriter(str(file_path))
         writer.write(image)
 
     def update_document(self, novel: Novel, document: Document):

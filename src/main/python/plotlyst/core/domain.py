@@ -1453,11 +1453,19 @@ class GlossaryItem(SelectionItem):
         return hash(self.key)
 
 
+@dataclass
+class WorldBuildingMap:
+    ref: ImageRef
+    title: str = ''
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+
+
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class WorldBuilding:
     root_entity: WorldBuildingEntity = field(default_factory=worldbuilding_root)
     glossary: Dict[str, GlossaryItem] = field(default_factory=dict)
+    maps: List[WorldBuildingMap] = field(default_factory=list)
 
 
 @dataclass
