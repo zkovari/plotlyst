@@ -58,7 +58,6 @@ class TemplateValue:
 class Event:
     keyphrase: str
     synopsis: str
-    conflicts: List['Conflict'] = field(default_factory=list)
     emotion: int = 5
 
 
@@ -69,6 +68,26 @@ class Comment:
     major: bool = False
     resolved: bool = False
     character: Optional['Character'] = None
+
+
+@dataclass
+class ImageRef:
+    extension: str
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+
+    def __post_init__(self):
+        self.loaded: bool = False
+        self.data: Any = None
+
+    @overrides
+    def __eq__(self, other: 'ImageRef'):
+        if isinstance(other, ImageRef):
+            return self.id == other.id
+        return False
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
 
 
 class TopicType(Enum):

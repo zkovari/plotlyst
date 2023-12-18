@@ -118,7 +118,7 @@ class WorldBuildingView(AbstractNovelView):
                                                       (self.ui.btnMapView, self.ui.pageMap),
                                                       (self.ui.btnHistoryView, self.ui.pageTimeline),
                                                       (self.ui.btnGlossaryView, self.ui.pageGlossary)])
-        self.ui.btnWorldView.setChecked(True)
+        self.ui.btnMapView.setChecked(True)
 
         self.ui.btnTreeToggle.setChecked(False)
         self.ui.wdgWorldContainer.setHidden(True)
