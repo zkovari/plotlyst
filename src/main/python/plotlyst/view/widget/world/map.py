@@ -19,10 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional, Any
 
+import qtanim
 from PyQt6.QtCore import Qt, QPoint, QSize, QPointF, QRectF
 from PyQt6.QtGui import QColor, QPixmap, QShowEvent, QResizeEvent, QImage, QPainter
 from PyQt6.QtWidgets import QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem, QAbstractGraphicsShapeItem, QWidget, \
-    QGraphicsSceneMouseEvent, QGraphicsOpacityEffect
+    QGraphicsSceneMouseEvent, QGraphicsOpacityEffect, QGraphicsDropShadowEffect
 from overrides import overrides
 from qthandy import busy
 from qthandy.filter import OpacityEventFilter
@@ -54,6 +55,7 @@ class MarkerItem(QAbstractGraphicsShapeItem):
         self.setAcceptHoverEvents(True)
 
         self._iconMarker = IconRegistry.from_name('fa5s.map-marker', '#ef233c')
+        self._iconMarkerSelected = IconRegistry.from_name('fa5s.map-marker', '#A50C1E')
         self._iconType = IconRegistry.from_name('mdi.castle', RELAXED_WHITE_COLOR)
 
     @overrides
@@ -65,8 +67,11 @@ class MarkerItem(QAbstractGraphicsShapeItem):
         painter.setPen(Qt.PenStyle.NoPen)
         if self.isSelected():
             painter.setBrush(QColor(RELAXED_WHITE_COLOR))
-            painter.drawRect(3, 3, self._width - 6, self._height - 10)
-        self._iconMarker.paint(painter, 0, 0, self._width, self._height)
+            # painter.drawRect(3, 3, self._width - 6, self._height - 10)
+            marker = self._iconMarkerSelected
+        else:
+            marker = self._iconMarker
+        marker.paint(painter, 0, 0, self._width, self._height)
         self._iconType.paint(painter, (self._width - self._typeSize) // 2, 15, self._typeSize, self._typeSize)
 
     @overrides
@@ -80,20 +85,34 @@ class MarkerItem(QAbstractGraphicsShapeItem):
 
     @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        effect = QGraphicsOpacityEffect()
-        effect.setOpacity(0.9)
-        self.setGraphicsEffect(effect)
-        self._typeSize = self.__default_type_size + 2
-        self.update()
+        if not self.isSelected():
+            effect = QGraphicsOpacityEffect()
+            effect.setOpacity(0.9)
+            self.setGraphicsEffect(effect)
+            self._typeSize = self.__default_type_size + 1
+            self.update()
 
     @overrides
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        self.setGraphicsEffect(None)
-        self._typeSize = self.__default_type_size
-        self.update()
+        if not self.isSelected():
+            self.setGraphicsEffect(None)
+            self._typeSize = self.__default_type_size
+            self.update()
 
     def _onSelection(self, selected: bool):
-        pass
+        if selected:
+            effect = QGraphicsDropShadowEffect()
+            effect.setBlurRadius(12)
+            effect.setOffset(0)
+            effect.setColor(QColor('white'))
+            self.setGraphicsEffect(effect)
+
+            self._typeSize = self.__default_type_size + 2
+            # self.update()
+        else:
+            self._typeSize = self.__default_type_size
+            # self.update()
+            self.setGraphicsEffect(None)
 
 
 class WorldBuildingMapScene(QGraphicsScene):
@@ -128,8 +147,10 @@ class WorldBuildingMapScene(QGraphicsScene):
     def _addMarker(self, pos: QPointF):
         marker = MarkerItem()
         rect = marker.boundingRect()
-        marker.setPos(pos - QPointF(20, rect.height()))
+        marker.setPos(pos - QPointF(rect.width() / 2, rect.height()))
         self.addItem(marker)
+
+        self._anim = qtanim.fade_in(marker)
 
 
 class WorldBuildingMapView(BaseGraphicsView):
