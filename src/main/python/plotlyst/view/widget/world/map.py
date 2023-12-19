@@ -17,11 +17,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional
+from typing import Optional, Any
 
-from PyQt6.QtCore import Qt, QPoint, QSize
-from PyQt6.QtGui import QColor, QPixmap, QShowEvent, QResizeEvent, QImage
-from PyQt6.QtWidgets import QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem
+from PyQt6.QtCore import Qt, QPoint, QSize, QPointF, QRectF
+from PyQt6.QtGui import QColor, QPixmap, QShowEvent, QResizeEvent, QImage, QPainter
+from PyQt6.QtWidgets import QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem, QAbstractGraphicsShapeItem, QWidget, \
+    QGraphicsSceneMouseEvent, QGraphicsOpacityEffect
 from overrides import overrides
 from qthandy import busy
 from qthandy.filter import OpacityEventFilter
@@ -35,6 +36,64 @@ from src.main.python.plotlyst.view.common import tool_btn, action
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView
 from src.main.python.plotlyst.view.widget.graphics.editor import ZoomBar
+
+
+class MarkerItem(QAbstractGraphicsShapeItem):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.__default_marker_width = 50
+        self.__default_marker_height = 70
+        self.__default_type_size = 25
+        self._width = self.__default_marker_width
+        self._height = self.__default_marker_height
+        self._typeSize = self.__default_type_size
+
+        self.setFlag(
+            QGraphicsItem.GraphicsItemFlag.ItemIsMovable | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable |
+            QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
+        self.setAcceptHoverEvents(True)
+
+        self._iconMarker = IconRegistry.from_name('fa5s.map-marker', '#ef233c')
+        self._iconType = IconRegistry.from_name('mdi.castle', RELAXED_WHITE_COLOR)
+
+    @overrides
+    def boundingRect(self) -> QRectF:
+        return QRectF(0, 0, self._width, self._height)
+
+    @overrides
+    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+        painter.setPen(Qt.PenStyle.NoPen)
+        if self.isSelected():
+            painter.setBrush(QColor(RELAXED_WHITE_COLOR))
+            painter.drawRect(3, 3, self._width - 6, self._height - 10)
+        self._iconMarker.paint(painter, 0, 0, self._width, self._height)
+        self._iconType.paint(painter, (self._width - self._typeSize) // 2, 15, self._typeSize, self._typeSize)
+
+    @overrides
+    def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
+        # if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
+        #     self._posChangedTimer.start()
+        #     self._onPosChanged()
+        if change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
+            self._onSelection(value)
+        return super().itemChange(change, value)
+
+    @overrides
+    def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        effect = QGraphicsOpacityEffect()
+        effect.setOpacity(0.9)
+        self.setGraphicsEffect(effect)
+        self._typeSize = self.__default_type_size + 2
+        self.update()
+
+    @overrides
+    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        self.setGraphicsEffect(None)
+        self._typeSize = self.__default_type_size
+        self.update()
+
+    def _onSelection(self, selected: bool):
+        pass
 
 
 class WorldBuildingMapScene(QGraphicsScene):
@@ -60,6 +119,17 @@ class WorldBuildingMapScene(QGraphicsScene):
             return item
         else:
             self._map = None
+
+    @overrides
+    def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        if self._map:
+            self._addMarker(event.scenePos())
+
+    def _addMarker(self, pos: QPointF):
+        marker = MarkerItem()
+        rect = marker.boundingRect()
+        marker.setPos(pos - QPointF(20, rect.height()))
+        self.addItem(marker)
 
 
 class WorldBuildingMapView(BaseGraphicsView):
@@ -144,6 +214,7 @@ class WorldBuildingMapView(BaseGraphicsView):
     def _addNewMap(self):
         loadedImage: Optional[LoadedImage] = upload_image(self._novel)
         if loadedImage:
+            self._novel.world.maps.clear()
             map = WorldBuildingMap(loadedImage.ref)
             self._novel.world.maps.append(map)
             self._scene.loadMap(map)
