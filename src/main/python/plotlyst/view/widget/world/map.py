@@ -23,9 +23,9 @@ import qtanim
 from PyQt6.QtCore import Qt, QPoint, QSize, QPointF, QRectF
 from PyQt6.QtGui import QColor, QPixmap, QShowEvent, QResizeEvent, QImage, QPainter
 from PyQt6.QtWidgets import QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem, QAbstractGraphicsShapeItem, QWidget, \
-    QGraphicsSceneMouseEvent, QGraphicsOpacityEffect, QGraphicsDropShadowEffect
+    QGraphicsSceneMouseEvent, QGraphicsOpacityEffect, QGraphicsDropShadowEffect, QFrame, QTextEdit
 from overrides import overrides
-from qthandy import busy
+from qthandy import busy, vbox, vspacer, sp
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
@@ -33,10 +33,33 @@ from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WH
 from src.main.python.plotlyst.core.domain import Novel, WorldBuildingMap
 from src.main.python.plotlyst.service.image import load_image, upload_image, LoadedImage
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import tool_btn, action
+from src.main.python.plotlyst.view.common import tool_btn, action, shadow
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView
 from src.main.python.plotlyst.view.widget.graphics.editor import ZoomBar
+
+
+class EntityEditorWidget(QFrame):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFrameShape(QFrame.Shape.StyledPanel)
+        self.setProperty('relaxed-white-bg', True)
+        self.setProperty('rounded', True)
+
+        shadow(self)
+        vbox(self, 10, spacing=6)
+
+        self.textEdit = QTextEdit()
+        self.textEdit.setProperty('white-bg', True)
+        self.textEdit.setProperty('rounded', True)
+        self.textEdit.setPlaceholderText('Edit synopsis')
+
+        self.layout().addWidget(self.textEdit)
+        self.layout().addWidget(vspacer())
+
+        self.setFixedWidth(200)
+
+        sp(self).v_max()
 
 
 class MarkerItem(QAbstractGraphicsShapeItem):
@@ -163,6 +186,9 @@ class WorldBuildingMapView(BaseGraphicsView):
         self._wdgZoomBar = ZoomBar(self)
         self._wdgZoomBar.zoomed.connect(self._scale)
 
+        self._wdgEditor = EntityEditorWidget(self)
+        self._wdgEditor.setHidden(True)
+
         self._btnEdit = tool_btn(IconRegistry.plus_edit_icon(PLOTLYST_SECONDARY_COLOR), parent=self)
         self._btnEdit.installEventFilter(OpacityEventFilter(self._btnEdit, 0.8, 0.5))
         self._btnEdit.setIconSize(QSize(48, 48))
@@ -182,6 +208,7 @@ class WorldBuildingMapView(BaseGraphicsView):
         self.setBackgroundBrush(QColor('#F2F2F2'))
         self._scene = WorldBuildingMapScene(self._novel)
         self.setScene(self._scene)
+        self._scene.selectionChanged.connect(self._selectionChanged)
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -225,6 +252,11 @@ class WorldBuildingMapView(BaseGraphicsView):
                                   self._btnEdit.sizeHint().width(),
                                   self._btnEdit.sizeHint().height())
 
+        self._wdgEditor.setGeometry(self.width() - self._wdgEditor.sizeHint().width() - 20,
+                                    20,
+                                    self._wdgEditor.sizeHint().width(),
+                                    self._wdgEditor.sizeHint().height())
+
     def _loadMap(self, map: WorldBuildingMap):
         self._bgItem = self._scene.loadMap(map)
         if self._bgItem:
@@ -241,6 +273,14 @@ class WorldBuildingMapView(BaseGraphicsView):
             self._scene.loadMap(map)
             self._loadMap(map)
             self.repo.update_world(self._novel)
+
+    def _selectionChanged(self):
+        if self._scene.selectedItems():
+            # self._wdgEditor.setVisible(True)
+            qtanim.fade_in(self._wdgEditor)
+        else:
+            qtanim.fade_out(self._wdgEditor)
+            # self._wdgEditor.setVisible(False)
 
     def _fillUpEditMenu(self):
         self._menuEdit.clear()
