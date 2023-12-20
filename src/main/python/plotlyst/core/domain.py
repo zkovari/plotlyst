@@ -1454,6 +1454,13 @@ class GlossaryItem(SelectionItem):
 
 
 @dataclass
+class WorldBuildingMarker:
+    x: float
+    y: float
+    description: str = ''
+
+
+@dataclass
 class WorldBuildingMap:
     ref: ImageRef
     title: str = ''

@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional, Any
 
 import qtanim
-from PyQt6.QtCore import Qt, QPoint, QSize, QPointF, QRectF
+from PyQt6.QtCore import Qt, QPoint, QSize, QPointF, QRectF, pyqtSignal, QTimer
 from PyQt6.QtGui import QColor, QPixmap, QShowEvent, QResizeEvent, QImage, QPainter
 from PyQt6.QtWidgets import QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem, QAbstractGraphicsShapeItem, QWidget, \
     QGraphicsSceneMouseEvent, QGraphicsOpacityEffect, QGraphicsDropShadowEffect, QFrame, QTextEdit
@@ -30,29 +30,60 @@ from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Novel, WorldBuildingMap
+from src.main.python.plotlyst.core.domain import Novel, WorldBuildingMap, WorldBuildingMarker
 from src.main.python.plotlyst.service.image import load_image, upload_image, LoadedImage
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import tool_btn, action, shadow
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView
 from src.main.python.plotlyst.view.widget.graphics.editor import ZoomBar
+from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
+
+
+class PopupText(QFrame):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFrameShape(QFrame.Shape.StyledPanel)
+        self.setStyleSheet('''QFrame {
+                    background: #ede0d4;
+                    border-radius: 12px;
+                }''')
+        shadow(self)
+        vbox(self, 10, spacing=6)
+
+        self.textEdit = AutoAdjustableTextEdit()
+        self.textEdit.setProperty('transparent', True)
+        self.textEdit.setProperty('rounded', True)
+        self.textEdit.setReadOnly(True)
+
+        self.layout().addWidget(self.textEdit)
+
+        self.setFixedWidth(200)
+
+        sp(self).v_max()
+
+    def setText(self, text: str):
+        self.textEdit.setText(text)
 
 
 class EntityEditorWidget(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._marker: Optional[WorldBuildingMarker] = None
         self.setFrameShape(QFrame.Shape.StyledPanel)
-        self.setProperty('relaxed-white-bg', True)
-        self.setProperty('rounded', True)
+        self.setStyleSheet('''QFrame {
+            background: #ede0d4;
+            border-radius: 12px;
+        }''')
 
         shadow(self)
         vbox(self, 10, spacing=6)
 
         self.textEdit = QTextEdit()
-        self.textEdit.setProperty('white-bg', True)
+        self.textEdit.setProperty('transparent', True)
         self.textEdit.setProperty('rounded', True)
         self.textEdit.setPlaceholderText('Edit synopsis')
+        self.textEdit.textChanged.connect(self._synopsisChanged)
 
         self.layout().addWidget(self.textEdit)
         self.layout().addWidget(vspacer())
@@ -61,15 +92,26 @@ class EntityEditorWidget(QFrame):
 
         sp(self).v_max()
 
+    def setMarker(self, marker: WorldBuildingMarker):
+        self._marker = None
+        self.textEdit.setText(marker.description)
+        self._marker = marker
+
+    def _synopsisChanged(self):
+        if self._marker:
+            self._marker.description = self.textEdit.toPlainText()
+
 
 class MarkerItem(QAbstractGraphicsShapeItem):
-    def __init__(self, parent=None):
+    DEFAULT_MARKER_WIDTH: int = 50
+    DEFAULT_MARKER_HEIGHT: int = 70
+
+    def __init__(self, marker: WorldBuildingMarker, parent=None):
         super().__init__(parent)
-        self.__default_marker_width = 50
-        self.__default_marker_height = 70
+        self._marker = marker
         self.__default_type_size = 25
-        self._width = self.__default_marker_width
-        self._height = self.__default_marker_height
+        self._width = self.DEFAULT_MARKER_WIDTH
+        self._height = self.DEFAULT_MARKER_HEIGHT
         self._typeSize = self.__default_type_size
 
         self.setFlag(
@@ -80,6 +122,11 @@ class MarkerItem(QAbstractGraphicsShapeItem):
         self._iconMarker = IconRegistry.from_name('fa5s.map-marker', '#ef233c')
         self._iconMarkerSelected = IconRegistry.from_name('fa5s.map-marker', '#A50C1E')
         self._iconType = IconRegistry.from_name('mdi.castle', RELAXED_WHITE_COLOR)
+
+        self.setPos(self._marker.x, self._marker.y)
+
+    def marker(self) -> WorldBuildingMarker:
+        return self._marker
 
     @overrides
     def boundingRect(self) -> QRectF:
@@ -115,12 +162,22 @@ class MarkerItem(QAbstractGraphicsShapeItem):
             self._typeSize = self.__default_type_size + 1
             self.update()
 
+            if self._marker.description:
+                QTimer.singleShot(250, self._triggerPopup)
+
     @overrides
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         if not self.isSelected():
             self.setGraphicsEffect(None)
             self._typeSize = self.__default_type_size
             self.update()
+
+            if self._marker.description:
+                self.scene().hidePopupEvent()
+
+    def _triggerPopup(self):
+        if not self.isSelected() and self.isUnderMouse():
+            self.scene().showPopupEvent(self)
 
     def _onSelection(self, selected: bool):
         if selected:
@@ -131,14 +188,18 @@ class MarkerItem(QAbstractGraphicsShapeItem):
             self.setGraphicsEffect(effect)
 
             self._typeSize = self.__default_type_size + 2
-            # self.update()
         else:
             self._typeSize = self.__default_type_size
-            # self.update()
             self.setGraphicsEffect(None)
+
+        if self._marker.description:
+            self.scene().hidePopupEvent()
 
 
 class WorldBuildingMapScene(QGraphicsScene):
+    showPopup = pyqtSignal(MarkerItem)
+    hidePopup = pyqtSignal()
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
@@ -146,6 +207,12 @@ class WorldBuildingMapScene(QGraphicsScene):
 
     def map(self) -> Optional[WorldBuildingMap]:
         return self._map
+
+    def showPopupEvent(self, item: MarkerItem):
+        self.showPopup.emit(item)
+
+    def hidePopupEvent(self):
+        self.hidePopup.emit()
 
     @busy
     def loadMap(self, map: WorldBuildingMap) -> Optional[QGraphicsPixmapItem]:
@@ -168,12 +235,12 @@ class WorldBuildingMapScene(QGraphicsScene):
             self._addMarker(event.scenePos())
 
     def _addMarker(self, pos: QPointF):
-        marker = MarkerItem()
-        rect = marker.boundingRect()
-        marker.setPos(pos - QPointF(rect.width() / 2, rect.height()))
-        self.addItem(marker)
+        pos = pos - QPointF(MarkerItem.DEFAULT_MARKER_WIDTH / 2, MarkerItem.DEFAULT_MARKER_HEIGHT)
+        marker = WorldBuildingMarker(pos.x(), pos.y())
+        markerItem = MarkerItem(marker)
+        self.addItem(markerItem)
 
-        self._anim = qtanim.fade_in(marker)
+        self._anim = qtanim.fade_in(markerItem)
 
 
 class WorldBuildingMapView(BaseGraphicsView):
@@ -188,6 +255,9 @@ class WorldBuildingMapView(BaseGraphicsView):
 
         self._wdgEditor = EntityEditorWidget(self)
         self._wdgEditor.setHidden(True)
+
+        self._popup = PopupText(self)
+        self._popup.setHidden(True)
 
         self._btnEdit = tool_btn(IconRegistry.plus_edit_icon(PLOTLYST_SECONDARY_COLOR), parent=self)
         self._btnEdit.installEventFilter(OpacityEventFilter(self._btnEdit, 0.8, 0.5))
@@ -209,6 +279,8 @@ class WorldBuildingMapView(BaseGraphicsView):
         self._scene = WorldBuildingMapScene(self._novel)
         self.setScene(self._scene)
         self._scene.selectionChanged.connect(self._selectionChanged)
+        self._scene.showPopup.connect(self._showPopup)
+        self._scene.hidePopup.connect(self._hidePopup)
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -252,9 +324,9 @@ class WorldBuildingMapView(BaseGraphicsView):
                                   self._btnEdit.sizeHint().width(),
                                   self._btnEdit.sizeHint().height())
 
-        self._wdgEditor.setGeometry(self.width() - self._wdgEditor.sizeHint().width() - 20,
+        self._wdgEditor.setGeometry(self.width() - self._wdgEditor.width() - 20,
                                     20,
-                                    self._wdgEditor.sizeHint().width(),
+                                    self._wdgEditor.width(),
                                     self._wdgEditor.sizeHint().height())
 
     def _loadMap(self, map: WorldBuildingMap):
@@ -275,12 +347,18 @@ class WorldBuildingMapView(BaseGraphicsView):
             self.repo.update_world(self._novel)
 
     def _selectionChanged(self):
-        if self._scene.selectedItems():
-            # self._wdgEditor.setVisible(True)
+        if len(self._scene.selectedItems()) == 1:
+            self._wdgEditor.setMarker(self._scene.selectedItems()[0].marker())
             qtanim.fade_in(self._wdgEditor)
         else:
             qtanim.fade_out(self._wdgEditor)
-            # self._wdgEditor.setVisible(False)
+
+    def _showPopup(self, item: MarkerItem):
+        self._popup.setText(item.marker().description)
+        self._popupAbove(self._popup, item)
+
+    def _hidePopup(self):
+        self._popup.setHidden(True)
 
     def _fillUpEditMenu(self):
         self._menuEdit.clear()

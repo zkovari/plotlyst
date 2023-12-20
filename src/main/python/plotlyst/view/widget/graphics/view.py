@@ -107,6 +107,17 @@ class BaseGraphicsView(QGraphicsView):
         self._scaledFactor += scale
         self.scale(1.0 + scale, 1.0 + scale)
 
+    def _popupAbove(self, widget: QWidget, refItem: QGraphicsItem):
+        item_w = refItem.sceneBoundingRect().width()
+        editor_w = widget.sizeHint().width()
+        diff_w = int(editor_w - item_w) // 2
+
+        view_pos = self.mapFromScene(refItem.sceneBoundingRect().topLeft())
+        view_pos.setX(view_pos.x() - diff_w)
+        view_pos.setY(view_pos.y() - widget.sizeHint().height() - 20)
+        widget.move(view_pos)
+        widget.setVisible(True)
+
 
 class NetworkGraphicsView(BaseGraphicsView):
     def __init__(self, parent=None):
@@ -209,17 +220,6 @@ class NetworkGraphicsView(BaseGraphicsView):
                                      self._wdgZoomBar.sizeHint().height())
         self._controlsNavBar.setGeometry(10, 100, self._controlsNavBar.sizeHint().width(),
                                          self._controlsNavBar.sizeHint().height())
-
-    def _popupAbove(self, widget: QWidget, refItem: QGraphicsItem):
-        item_w = refItem.sceneBoundingRect().width()
-        editor_w = widget.sizeHint().width()
-        diff_w = int(editor_w - item_w) // 2
-
-        view_pos = self.mapFromScene(refItem.sceneBoundingRect().topLeft())
-        view_pos.setX(view_pos.x() - diff_w)
-        view_pos.setY(view_pos.y() - 50)
-        widget.move(view_pos)
-        widget.setVisible(True)
 
     def _initScene(self):
         return NetworkScene()
