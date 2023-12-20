@@ -33,7 +33,7 @@ from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WH
 from src.main.python.plotlyst.core.domain import Novel, WorldBuildingMap, WorldBuildingMarker
 from src.main.python.plotlyst.service.image import load_image, upload_image, LoadedImage
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import tool_btn, action, shadow
+from src.main.python.plotlyst.view.common import tool_btn, action, shadow, scrolled
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView
 from src.main.python.plotlyst.view.widget.graphics.editor import ZoomBar
@@ -76,8 +76,13 @@ class EntityEditorWidget(QFrame):
             border-radius: 12px;
         }''')
 
+        vbox(self, 5, 0)
+        self._scrollarea, self.wdgCenter = scrolled(self)
+        self._scrollarea.setProperty('transparent', True)
+        self.wdgCenter.setProperty('transparent', True)
+
         shadow(self)
-        vbox(self, 10, spacing=6)
+        vbox(self.wdgCenter, 10, spacing=6)
 
         self.textEdit = QTextEdit()
         self.textEdit.setProperty('transparent', True)
@@ -85,8 +90,8 @@ class EntityEditorWidget(QFrame):
         self.textEdit.setPlaceholderText('Edit synopsis')
         self.textEdit.textChanged.connect(self._synopsisChanged)
 
-        self.layout().addWidget(self.textEdit)
-        self.layout().addWidget(vspacer())
+        self.wdgCenter.layout().addWidget(self.textEdit)
+        self.wdgCenter.layout().addWidget(vspacer())
 
         self.setFixedWidth(200)
 
