@@ -20,8 +20,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional, Any
 
 import qtanim
-from PyQt6.QtCore import Qt, QPoint, QSize, QPointF, QRectF, pyqtSignal, QTimer
-from PyQt6.QtGui import QColor, QPixmap, QShowEvent, QResizeEvent, QImage, QPainter
+from PyQt6.QtCore import Qt, QPoint, QSize, QPointF, QRectF, pyqtSignal, QTimer, QObject
+from PyQt6.QtGui import QColor, QPixmap, QShowEvent, QResizeEvent, QImage, QPainter, QKeyEvent
 from PyQt6.QtWidgets import QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem, QAbstractGraphicsShapeItem, QWidget, \
     QGraphicsSceneMouseEvent, QGraphicsOpacityEffect, QGraphicsDropShadowEffect, QFrame, QTextEdit
 from overrides import overrides
@@ -204,6 +204,7 @@ class WorldBuildingMapScene(QGraphicsScene):
         super().__init__(parent)
         self._novel = novel
         self._map: Optional[WorldBuildingMap] = None
+        self._animParent = QObject()
 
     def map(self) -> Optional[WorldBuildingMap]:
         return self._map
@@ -213,6 +214,13 @@ class WorldBuildingMapScene(QGraphicsScene):
 
     def hidePopupEvent(self):
         self.hidePopup.emit()
+
+    @overrides
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_Delete or event.key() == Qt.Key.Key_Backspace:
+            for item in self.selectedItems():
+                self._removeItem(item)
+            # self.clearSelection()
 
     @busy
     def loadMap(self, map: WorldBuildingMap) -> Optional[QGraphicsPixmapItem]:
@@ -240,7 +248,15 @@ class WorldBuildingMapScene(QGraphicsScene):
         markerItem = MarkerItem(marker)
         self.addItem(markerItem)
 
-        self._anim = qtanim.fade_in(markerItem)
+        anim = qtanim.fade_in(markerItem)
+        anim.setParent(self._animParent)
+
+    def _removeItem(self, item: QGraphicsItem):
+        def remove():
+            self.removeItem(item)
+
+        anim = qtanim.fade_out(item, teardown=remove, hide_if_finished=False)
+        anim.setParent(self._animParent)
 
 
 class WorldBuildingMapView(BaseGraphicsView):
