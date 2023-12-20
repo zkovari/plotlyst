@@ -23,9 +23,9 @@ import qtanim
 from PyQt6.QtCore import Qt, QPoint, QSize, QPointF, QRectF, pyqtSignal, QTimer, QObject
 from PyQt6.QtGui import QColor, QPixmap, QShowEvent, QResizeEvent, QImage, QPainter, QKeyEvent
 from PyQt6.QtWidgets import QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem, QAbstractGraphicsShapeItem, QWidget, \
-    QGraphicsSceneMouseEvent, QGraphicsOpacityEffect, QGraphicsDropShadowEffect, QFrame, QTextEdit
+    QGraphicsSceneMouseEvent, QGraphicsOpacityEffect, QGraphicsDropShadowEffect, QFrame, QTextEdit, QLineEdit
 from overrides import overrides
-from qthandy import busy, vbox, vspacer, sp
+from qthandy import busy, vbox, vspacer, sp, line, decr_icon, incr_font
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
@@ -33,8 +33,9 @@ from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WH
 from src.main.python.plotlyst.core.domain import Novel, WorldBuildingMap, WorldBuildingMarker
 from src.main.python.plotlyst.service.image import load_image, upload_image, LoadedImage
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import tool_btn, action, shadow, scrolled
+from src.main.python.plotlyst.view.common import tool_btn, action, shadow, scrolled, wrap
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.button import CollapseButton
 from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView
 from src.main.python.plotlyst.view.widget.graphics.editor import ZoomBar
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
@@ -84,13 +85,20 @@ class EntityEditorWidget(QFrame):
         shadow(self)
         vbox(self.wdgCenter, 10, spacing=6)
 
+        self.lineTitle = QLineEdit()
+        self.lineTitle.setProperty('transparent', True)
+        self.lineTitle.setPlaceholderText('Name')
+        incr_font(self.lineTitle)
+
         self.textEdit = QTextEdit()
         self.textEdit.setProperty('transparent', True)
         self.textEdit.setProperty('rounded', True)
         self.textEdit.setPlaceholderText('Edit synopsis')
         self.textEdit.textChanged.connect(self._synopsisChanged)
 
-        self.wdgCenter.layout().addWidget(self.textEdit)
+        self.wdgCenter.layout().addWidget(self.lineTitle, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.wdgCenter.layout().addWidget(line(color='lightgrey'))
+        self._addHeader('Synopsis', self.textEdit)
         self.wdgCenter.layout().addWidget(vspacer())
 
         self.setFixedWidth(200)
@@ -105,6 +113,17 @@ class EntityEditorWidget(QFrame):
     def _synopsisChanged(self):
         if self._marker:
             self._marker.description = self.textEdit.toPlainText()
+
+    def _addHeader(self, text: str, wdg: QWidget) -> CollapseButton:
+        btn = CollapseButton(Qt.Edge.RightEdge, Qt.Edge.BottomEdge)
+        decr_icon(btn, 2)
+        btn.setChecked(True)
+        btn.setText(text)
+        wrapped = wrap(wdg, margin_left=5)
+        btn.toggled.connect(wrapped.setVisible)
+
+        self.wdgCenter.layout().addWidget(btn, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgCenter.layout().addWidget(wrapped)
 
 
 class MarkerItem(QAbstractGraphicsShapeItem):
