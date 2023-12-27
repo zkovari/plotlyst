@@ -83,7 +83,7 @@ class EntityEditorWidget(QFrame):
         self.wdgCenter.setProperty('transparent', True)
 
         shadow(self)
-        vbox(self.wdgCenter, 10, spacing=6)
+        vbox(self.wdgCenter, 2, spacing=6)
 
         self.lineTitle = QLineEdit()
         self.lineTitle.setProperty('transparent', True)
@@ -96,7 +96,7 @@ class EntityEditorWidget(QFrame):
         self.textEdit.setPlaceholderText('Edit synopsis')
         self.textEdit.textChanged.connect(self._synopsisChanged)
 
-        self.wdgCenter.layout().addWidget(self.lineTitle, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.wdgCenter.layout().addWidget(self.lineTitle)
         self.wdgCenter.layout().addWidget(line(color='lightgrey'))
         self._addHeader('Synopsis', self.textEdit)
         self.wdgCenter.layout().addWidget(vspacer())
