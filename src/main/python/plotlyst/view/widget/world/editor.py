@@ -724,7 +724,7 @@ class TopicSelectionDialog(QDialog):
 
         vbox(self, 0, 0)
         self._scrollarea, self._wdgCenter = scrolled(self, frameless=True)
-        vbox(self._wdgCenter)
+        vbox(self._wdgCenter, 10)
         # self._wdgCenter.setStyleSheet('QWidget {background: #ede0d4;}')
 
         self._addSection('Ecological', ecological_topics)
@@ -761,10 +761,10 @@ class TopicSelectionDialog(QDialog):
                 border-radius: 10px;
             }
             QToolButton:hover:!checked {
-                background: lightgrey;
+                background: #FCF5FE;
             }
             QToolButton:checked {
-                background: grey;
+                background: #D4B8E0;
             }
             ''')
             wdg.layout().addWidget(btn)
