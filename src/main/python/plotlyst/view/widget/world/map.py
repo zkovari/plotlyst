@@ -254,6 +254,7 @@ class MarkerItem(QAbstractGraphicsShapeItem):
             self._iconType = IconRegistry.from_name(self._marker.icon, RELAXED_WHITE_COLOR)
 
         self.update()
+        self.mapScene().markerChangedEvent(self)
 
     @overrides
     def boundingRect(self) -> QRectF:
