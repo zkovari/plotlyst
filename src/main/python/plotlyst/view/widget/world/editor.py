@@ -722,10 +722,10 @@ class TopicSelectionDialog(QDialog):
         super().__init__(parent)
         self._selectedTopics = []
 
-        vbox(self)
-
+        vbox(self, 0, 0)
         self._scrollarea, self._wdgCenter = scrolled(self, frameless=True)
         vbox(self._wdgCenter)
+        # self._wdgCenter.setStyleSheet('QWidget {background: #ede0d4;}')
 
         self._addSection('Ecological', ecological_topics)
 
@@ -737,21 +737,36 @@ class TopicSelectionDialog(QDialog):
         self._wdgCenter.layout().addWidget(vspacer())
         self._wdgCenter.layout().addWidget(self.btnSelect, alignment=Qt.AlignmentFlag.AlignRight)
 
-    def display(self):
+    def display(self) -> List[Topic]:
         result = self.exec()
         if result == QDialog.DialogCode.Accepted:
             return self._selectedTopics
+
+        return []
 
     def _addSection(self, header: str, topics: List[Topic]):
         self._wdgCenter.layout().addWidget(label(header, bold=True), alignment=Qt.AlignmentFlag.AlignLeft)
         wdg = QWidget()
         flow(wdg)
+        margins(wdg, left=10)
 
         for topic in topics:
             btn = tool_btn(IconRegistry.from_name(topic.icon), topic.description, checkable=True)
             btn.setText(topic.text)
             btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
             btn.toggled.connect(partial(self._toggled, topic))
+            btn.setStyleSheet('''
+            QToolButton {
+                border: 1px hidden lightgrey;
+                border-radius: 10px;
+            }
+            QToolButton:hover:!checked {
+                background: lightgrey;
+            }
+            QToolButton:checked {
+                background: grey;
+            }
+            ''')
             wdg.layout().addWidget(btn)
 
         self._wdgCenter.layout().addWidget(wdg)
@@ -863,11 +878,15 @@ class WorldBuildingEntityEditor(QWidget):
         else:
             self.wdgEditorSide.layout().addWidget(wdg)
 
-    def _addNewSection(self):
+    def _addNewSection(self, topic: Optional[Topic] = None):
+        header = WorldBuildingEntityElement(WorldBuildingEntityElementType.Header)
         element = WorldBuildingEntityElement(WorldBuildingEntityElementType.Section, blocks=[
-            WorldBuildingEntityElement(WorldBuildingEntityElementType.Header),
+            header,
             WorldBuildingEntityElement(WorldBuildingEntityElementType.Text)
         ])
+        if topic:
+            element.title = topic.text
+            header.title = topic.text
         wdg = self.__initElementWidget(element, True)
         insert_before_the_end(self.wdgEditorMiddle, wdg)
         qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
@@ -877,7 +896,10 @@ class WorldBuildingEntityEditor(QWidget):
 
     def _selectNewTopic(self):
         dialog = TopicSelectionDialog()
-        dialog.display()
+        topics = dialog.display()
+        if topics:
+            for topic in topics:
+                self._addNewSection(topic)
 
     def _removeSection(self, wdg: WorldBuildingEntityElementWidget):
         self._entity.elements.remove(wdg.element)
