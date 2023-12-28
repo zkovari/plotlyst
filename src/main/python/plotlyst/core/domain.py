@@ -1469,6 +1469,7 @@ class WorldBuildingMap:
     ref: ImageRef
     title: str = ''
     id: uuid.UUID = field(default_factory=uuid.uuid4)
+    markers: List[WorldBuildingMarker] = field(default_factory=list)
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)

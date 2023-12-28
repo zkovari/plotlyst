@@ -223,6 +223,10 @@ class MarkerItem(QAbstractGraphicsShapeItem):
         self._height = self.DEFAULT_MARKER_HEIGHT
         self._typeSize = self.__default_type_size
 
+        self._posChangedTimer = QTimer()
+        self._posChangedTimer.setInterval(1000)
+        self._posChangedTimer.timeout.connect(self._posChangedOnTimeout)
+
         self.setFlag(
             QGraphicsItem.GraphicsItemFlag.ItemIsMovable | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable |
             QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
@@ -239,6 +243,9 @@ class MarkerItem(QAbstractGraphicsShapeItem):
 
     def marker(self) -> WorldBuildingMarker:
         return self._marker
+
+    def mapScene(self) -> 'WorldBuildingMapScene':
+        return self.scene()
 
     def refresh(self):
         self._iconMarker = IconRegistry.from_name('fa5s.map-marker', self._marker.color)
@@ -266,9 +273,8 @@ class MarkerItem(QAbstractGraphicsShapeItem):
 
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
-        # if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
-        #     self._posChangedTimer.start()
-        #     self._onPosChanged()
+        if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
+            self._posChangedTimer.start()
         if change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
             self._onSelection(value)
         return super().itemChange(change, value)
@@ -294,6 +300,14 @@ class MarkerItem(QAbstractGraphicsShapeItem):
 
             if self._marker.description:
                 self.scene().hidePopupEvent()
+
+    def _posChangedOnTimeout(self):
+        self._posChangedTimer.stop()
+        self._marker.x = self.scenePos().x()
+        self._marker.y = self.scenePos().y()
+        scene = self.mapScene()
+        if scene:
+            scene.markerChangedEvent(self)
 
     def _triggerPopup(self):
         if not self.isSelected() and self.isUnderMouse():
@@ -326,6 +340,8 @@ class WorldBuildingMapScene(QGraphicsScene):
         self._map: Optional[WorldBuildingMap] = None
         self._animParent = QObject()
 
+        self.repo = RepositoryPersistenceManager.instance()
+
     def map(self) -> Optional[WorldBuildingMap]:
         return self._map
 
@@ -340,7 +356,6 @@ class WorldBuildingMapScene(QGraphicsScene):
         if event.key() == Qt.Key.Key_Delete or event.key() == Qt.Key.Key_Backspace:
             for item in self.selectedItems():
                 self._removeItem(item)
-            # self.clearSelection()
 
     @busy
     def loadMap(self, map: WorldBuildingMap) -> Optional[QGraphicsPixmapItem]:
@@ -353,6 +368,10 @@ class WorldBuildingMapScene(QGraphicsScene):
             item.setPixmap(QPixmap.fromImage(image))
             self.addItem(item)
 
+            for marker in self._map.markers:
+                markerItem = MarkerItem(marker)
+                self.addItem(markerItem)
+
             return item
         else:
             self._map = None
@@ -362,17 +381,24 @@ class WorldBuildingMapScene(QGraphicsScene):
         if self._map:
             self._addMarker(event.scenePos())
 
+    def markerChangedEvent(self, _: MarkerItem):
+        self.repo.update_world(self._novel)
+
     def _addMarker(self, pos: QPointF):
         pos = pos - QPointF(MarkerItem.DEFAULT_MARKER_WIDTH / 2, MarkerItem.DEFAULT_MARKER_HEIGHT)
         marker = WorldBuildingMarker(pos.x(), pos.y())
+        self._map.markers.append(marker)
         markerItem = MarkerItem(marker)
         self.addItem(markerItem)
+        self.repo.update_world(self._novel)
 
         anim = qtanim.fade_in(markerItem)
         anim.setParent(self._animParent)
 
     def _removeItem(self, item: QGraphicsItem):
         def remove():
+            self._map.markers.remove(item.marker())
+            self.repo.update_world(self._novel)
             self.removeItem(item)
 
         anim = qtanim.fade_out(item, teardown=remove, hide_if_finished=False)
