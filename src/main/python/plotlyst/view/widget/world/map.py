@@ -22,7 +22,7 @@ from typing import Optional, Any
 
 import qtanim
 from PyQt6.QtCore import Qt, QPoint, QSize, QPointF, QRectF, pyqtSignal, QTimer, QObject
-from PyQt6.QtGui import QColor, QPixmap, QShowEvent, QResizeEvent, QImage, QPainter, QKeyEvent
+from PyQt6.QtGui import QColor, QPixmap, QShowEvent, QResizeEvent, QImage, QPainter, QKeyEvent, QIcon
 from PyQt6.QtWidgets import QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem, QAbstractGraphicsShapeItem, QWidget, \
     QGraphicsSceneMouseEvent, QGraphicsOpacityEffect, QGraphicsDropShadowEffect, QFrame, QTextEdit, QLineEdit
 from overrides import overrides
@@ -68,9 +68,13 @@ class PopupText(QFrame):
         self.textEdit.setText(text)
 
 
-marker_colors = ['#ef233c', '#0077b6', '#fb8500', '#cdb4db', '#d4a373']
+marker_colors = ['#ef233c', '#0077b6', '#fb8500', '#B28DC8', '#CE9861']
 marker_selected_colors = {
-    '#ef233c': '#A50C1E'
+    '#ef233c': '#A50C1E',
+    '#0077b6': '#00669D',
+    '#fb8500': '#C46900',
+    '#B28DC8': '#9967B6',
+    '#CE9861': '#C3803D',
 }
 
 
@@ -117,6 +121,7 @@ class EntityEditorWidget(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._marker: Optional[WorldBuildingMarker] = None
+        self._item: Optional[MarkerItem] = None
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setStyleSheet('''QFrame {
             background: #ede0d4;
@@ -160,10 +165,12 @@ class EntityEditorWidget(QFrame):
 
         sp(self).v_max()
 
-    def setMarker(self, marker: WorldBuildingMarker):
+    def setMarker(self, item: 'MarkerItem'):
         self._marker = None
-        self.textEdit.setText(marker.description)
-        self._marker = marker
+        self._item = None
+        self.textEdit.setText(item.marker().description)
+        self._marker = item.marker()
+        self._item = item
 
     def _synopsisChanged(self):
         if self._marker:
@@ -173,14 +180,17 @@ class EntityEditorWidget(QFrame):
         if self._marker:
             self._marker.color = color
             self._marker.color_selected = marker_selected_colors[color]
+            self._item.refresh()
 
     def _iconChanged(self, icon: str):
         if self._marker:
             self._marker.icon = icon
+            self._item.refresh()
 
     def _iconReset(self):
         if self._marker:
             self._marker.icon = ''
+            self._item.refresh()
 
     def _addHeader(self, text: str, wdg: QWidget) -> CollapseButton:
         btn = CollapseButton(Qt.Edge.RightEdge, Qt.Edge.BottomEdge)
@@ -211,14 +221,25 @@ class MarkerItem(QAbstractGraphicsShapeItem):
             QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
         self.setAcceptHoverEvents(True)
 
-        self._iconMarker = IconRegistry.from_name('fa5s.map-marker', '#ef233c')
-        self._iconMarkerSelected = IconRegistry.from_name('fa5s.map-marker', '#A50C1E')
-        self._iconType = IconRegistry.from_name('mdi.castle', RELAXED_WHITE_COLOR)
+        self._iconMarker = IconRegistry.from_name('fa5s.map-marker', self._marker.color)
+        self._iconMarkerSelected = IconRegistry.from_name('fa5s.map-marker', self._marker.color_selected)
+        if self._marker.icon:
+            self._iconType = IconRegistry.from_name(self._marker.icon, RELAXED_WHITE_COLOR)
+        else:
+            self._iconType = QIcon()
 
         self.setPos(self._marker.x, self._marker.y)
 
     def marker(self) -> WorldBuildingMarker:
         return self._marker
+
+    def refresh(self):
+        self._iconMarker = IconRegistry.from_name('fa5s.map-marker', self._marker.color)
+        self._iconMarkerSelected = IconRegistry.from_name('fa5s.map-marker', self._marker.color_selected)
+        if self._marker.icon:
+            self._iconType = IconRegistry.from_name(self._marker.icon, RELAXED_WHITE_COLOR)
+
+        self.update()
 
     @overrides
     def boundingRect(self) -> QRectF:
@@ -229,12 +250,12 @@ class MarkerItem(QAbstractGraphicsShapeItem):
         painter.setPen(Qt.PenStyle.NoPen)
         if self.isSelected():
             painter.setBrush(QColor(RELAXED_WHITE_COLOR))
-            # painter.drawRect(3, 3, self._width - 6, self._height - 10)
             marker = self._iconMarkerSelected
         else:
             marker = self._iconMarker
         marker.paint(painter, 0, 0, self._width, self._height)
-        self._iconType.paint(painter, (self._width - self._typeSize) // 2, 15, self._typeSize, self._typeSize)
+        if self._marker.icon:
+            self._iconType.paint(painter, (self._width - self._typeSize) // 2, 15, self._typeSize, self._typeSize)
 
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
@@ -456,7 +477,7 @@ class WorldBuildingMapView(BaseGraphicsView):
 
     def _selectionChanged(self):
         if len(self._scene.selectedItems()) == 1:
-            self._wdgEditor.setMarker(self._scene.selectedItems()[0].marker())
+            self._wdgEditor.setMarker(self._scene.selectedItems()[0])
             qtanim.fade_in(self._wdgEditor)
         else:
             qtanim.fade_out(self._wdgEditor)
