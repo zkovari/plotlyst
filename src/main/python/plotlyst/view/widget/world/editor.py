@@ -26,19 +26,20 @@ from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMous
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QTableView, QApplication, QDialog, QGridLayout
 from overrides import overrides
 from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy, \
-    grid
+    grid, flow
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import recursive
 from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityType, \
-    WorldBuildingEntityElement, WorldBuildingEntityElementType, GlossaryItem, BackstoryEvent, Variable, VariableType
+    WorldBuildingEntityElement, WorldBuildingEntityElementType, GlossaryItem, BackstoryEvent, Variable, VariableType, \
+    Topic
 from src.main.python.plotlyst.core.template import SelectionItem
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import action, push_btn, frame, insert_before_the_end, fade_out_and_gc, \
-    tool_btn, label
+    tool_btn, label, scrolled
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import DotsMenuButton
 from src.main.python.plotlyst.view.widget.display import Icon, PopupDialog
@@ -46,6 +47,7 @@ from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, A
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 from src.main.python.plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
+from src.main.python.plotlyst.view.widget.world._topics import ecological_topics
 
 
 class EntityAdditionMenu(MenuWidget):
@@ -715,19 +717,48 @@ class WorldBuildingEntitySectionElementEditor(WorldBuildingEntityElementWidget):
         return wdg
 
 
+class TopicSelectionDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._selectedTopics = []
+
+        vbox(self)
+
+        self._scrollarea, self._wdgCenter = scrolled(self, frameless=True)
+        vbox(self._wdgCenter)
+
+        self._addSection('Ecological', ecological_topics)
+        self._wdgCenter.layout().addWidget(vspacer())
+
+    def display(self):
+        result = self.exec()
+        if result == QDialog.DialogCode.Accepted:
+            return self._selectedTopics
+
+    def _addSection(self, header: str, topics: List[Topic]):
+        self._wdgCenter.layout().addWidget(label(header, bold=True), alignment=Qt.AlignmentFlag.AlignLeft)
+        wdg = QWidget()
+        flow(wdg)
+
+        for topic in topics:
+            btn = tool_btn(IconRegistry.from_name(topic.icon), topic.description, checkable=True)
+            btn.setText(topic.text)
+            btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+            wdg.layout().addWidget(btn)
+
+        self._wdgCenter.layout().addWidget(wdg)
+
+
 class SectionAdditionMenu(MenuWidget):
     newSectionSelected = pyqtSignal()
-    templateSectionSelected = pyqtSignal()
+    topicSectionSelected = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.addAction(action('New section', IconRegistry.plus_icon('grey'), slot=self.newSectionSelected))
         self.addSeparator()
-        self.addSection('Section templates')
-        self.addSeparator()
-        self.addAction(action('Nature'))
-        self.addAction(action('Culture'))
-        self.addAction(action('Crime'))
+        self.addAction(
+            action('Select topic...', IconRegistry.world_building_icon('grey'), slot=self.topicSectionSelected))
 
 
 class MainBlockAdditionMenu(MenuWidget):
@@ -798,6 +829,7 @@ class WorldBuildingEntityEditor(QWidget):
         if middle:
             menu = SectionAdditionMenu(wdg)
             menu.newSectionSelected.connect(self._addNewSection)
+            menu.topicSectionSelected.connect(self._selectNewTopic)
         else:
             menu = SideBlockAdditionMenu(wdg)
             menu.newSideBlockSelected.connect(self._addNewSideBlock)
@@ -826,6 +858,10 @@ class WorldBuildingEntityEditor(QWidget):
 
         self._entity.elements.append(element)
         self.repo.update_world(self._novel)
+
+    def _selectNewTopic(self):
+        dialog = TopicSelectionDialog()
+        dialog.display()
 
     def _removeSection(self, wdg: WorldBuildingEntityElementWidget):
         self._entity.elements.remove(wdg.element)

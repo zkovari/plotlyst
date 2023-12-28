@@ -99,6 +99,7 @@ class TopicType(Enum):
     Hobbies = auto()
     Communication = auto()
     Beliefs = auto()
+    Worldbuilding = auto()
 
     def description(self) -> str:
         if self == TopicType.Physical:
