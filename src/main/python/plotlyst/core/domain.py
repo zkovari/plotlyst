@@ -1391,6 +1391,7 @@ class WorldBuildingEntityElement:
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     title: str = field(default='', metadata=config(exclude=exclude_if_empty))
     text: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
     ref: Any = field(default=None, metadata=config(exclude=exclude_if_empty))
     events: List[BackstoryEvent] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     blocks: List['WorldBuildingEntityElement'] = field(default_factory=list,

@@ -361,6 +361,7 @@ class WorldBuildingEntityHeaderElementEditor(WorldBuildingEntityElementWidget):
         }}''')
         self.lineTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lineTitle.setText(self.element.title)
+
         self.lineTitle.textEdited.connect(self._titleEdited)
 
         self.frame = frame()
@@ -718,6 +719,8 @@ class WorldBuildingEntitySectionElementEditor(WorldBuildingEntityElementWidget):
 
 
 class TopicSelectionDialog(QDialog):
+    DEFAULT_SELECT_BTN_TEXT: str = 'Select worldbuilding topics'
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._selectedTopics = []
@@ -726,10 +729,11 @@ class TopicSelectionDialog(QDialog):
         self._scrollarea, self._wdgCenter = scrolled(self, frameless=True)
         vbox(self._wdgCenter, 10)
         # self._wdgCenter.setStyleSheet('QWidget {background: #ede0d4;}')
+        self.setMinimumWidth(300)
 
         self._addSection('Ecological', ecological_topics)
 
-        self.btnSelect = push_btn(IconRegistry.ok_icon('white'), 'Select worldbuilding topics',
+        self.btnSelect = push_btn(IconRegistry.ok_icon('white'), self.DEFAULT_SELECT_BTN_TEXT,
                                   properties=['positive', 'base'])
         self.btnSelect.setDisabled(True)
         self.btnSelect.clicked.connect(self.accept)
@@ -778,6 +782,10 @@ class TopicSelectionDialog(QDialog):
             self._selectedTopics.remove(topic)
 
         self.btnSelect.setEnabled(len(self._selectedTopics) > 0)
+        if self._selectedTopics:
+            self.btnSelect.setText(f'{self.DEFAULT_SELECT_BTN_TEXT} ({len(self._selectedTopics)})')
+        else:
+            self.btnSelect.setText(self.DEFAULT_SELECT_BTN_TEXT)
 
 
 class SectionAdditionMenu(MenuWidget):
@@ -885,8 +893,10 @@ class WorldBuildingEntityEditor(QWidget):
             WorldBuildingEntityElement(WorldBuildingEntityElementType.Text)
         ])
         if topic:
+            element.ref = topic.id
             element.title = topic.text
             header.title = topic.text
+            header.icon = topic.icon
         wdg = self.__initElementWidget(element, True)
         insert_before_the_end(self.wdgEditorMiddle, wdg)
         qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
