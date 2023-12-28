@@ -1458,6 +1458,9 @@ class WorldBuildingMarker:
     x: float
     y: float
     description: str = ''
+    color: str = '#ef233c'
+    color_selected: str = '#A50C1E'
+    icon: str = ''
 
 
 @dataclass

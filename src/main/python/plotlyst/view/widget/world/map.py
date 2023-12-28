@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from functools import partial
 from typing import Optional, Any
 
 import qtanim
@@ -25,7 +26,7 @@ from PyQt6.QtGui import QColor, QPixmap, QShowEvent, QResizeEvent, QImage, QPain
 from PyQt6.QtWidgets import QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem, QAbstractGraphicsShapeItem, QWidget, \
     QGraphicsSceneMouseEvent, QGraphicsOpacityEffect, QGraphicsDropShadowEffect, QFrame, QTextEdit, QLineEdit
 from overrides import overrides
-from qthandy import busy, vbox, vspacer, sp, line, decr_icon, incr_font
+from qthandy import busy, vbox, vspacer, sp, line, decr_icon, incr_font, flow
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
@@ -67,6 +68,51 @@ class PopupText(QFrame):
         self.textEdit.setText(text)
 
 
+marker_colors = ['#ef233c', '#0077b6', '#fb8500', '#cdb4db', '#d4a373']
+marker_selected_colors = {
+    '#ef233c': '#A50C1E'
+}
+
+
+class MarkerColorSelectorWidget(QWidget):
+    colorSelected = pyqtSignal(str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        flow(self)
+        for color in marker_colors:
+            btn = tool_btn(IconRegistry.from_name('fa5s.map-marker', color), transparent_=True)
+            btn.setIconSize(QSize(32, 32))
+            btn.clicked.connect(partial(self.colorSelected.emit, color))
+            self.layout().addWidget(btn)
+
+
+class MarkerIconSelectorWidget(QWidget):
+    iconReset = pyqtSignal()
+    iconSelected = pyqtSignal(str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.icons = ['mdi.castle', 'mdi.tower-fire', 'mdi.lighthouse-on', 'mdi.warehouse', 'mdi6.hoop-house',
+                      'ph.house-line-bold', 'mdi.city-variant', 'mdi6.town-hall', 'fa5s.place-of-worship',
+                      'mdi.water-well',
+                      'mdi.treasure-chest', 'fa5s.flag',
+                      'mdi6.axe-battle', 'mdi.sword-cross',
+                      'mdi.horse-human',
+                      'fa5s.dragon',
+                      'fa5s.skull', 'fa5s.skull-crossbones', 'ri.ghost-2-fill', 'mdi.grave-stone',
+                      'fa5s.train', 'mdi.ship-wheel', 'mdi.sail-boat',
+                      'fa5s.mountain', 'fa5s.tree', 'mdi.tree', 'mdi.island'
+                      ]
+        flow(self)
+        for icon in self.icons:
+            btn = tool_btn(IconRegistry.from_name(icon), transparent_=True)
+            btn.clicked.connect(partial(self.iconSelected.emit, icon))
+            self.layout().addWidget(btn)
+
+
 class EntityEditorWidget(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -79,6 +125,7 @@ class EntityEditorWidget(QFrame):
 
         vbox(self, 5, 0)
         self._scrollarea, self.wdgCenter = scrolled(self)
+        self._scrollarea.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._scrollarea.setProperty('transparent', True)
         self.wdgCenter.setProperty('transparent', True)
 
@@ -96,9 +143,17 @@ class EntityEditorWidget(QFrame):
         self.textEdit.setPlaceholderText('Edit synopsis')
         self.textEdit.textChanged.connect(self._synopsisChanged)
 
+        self.wdgColorSelector = MarkerColorSelectorWidget()
+        self.wdgColorSelector.colorSelected.connect(self._colorChanged)
+        self.wdgIconSelector = MarkerIconSelectorWidget()
+        self.wdgIconSelector.iconReset.connect(self._iconReset)
+        self.wdgIconSelector.iconSelected.connect(self._iconChanged)
+
         self.wdgCenter.layout().addWidget(self.lineTitle)
         self.wdgCenter.layout().addWidget(line(color='lightgrey'))
         self._addHeader('Synopsis', self.textEdit)
+        self._addHeader('Color', self.wdgColorSelector)
+        self._addHeader('Icon', self.wdgIconSelector)
         self.wdgCenter.layout().addWidget(vspacer())
 
         self.setFixedWidth(200)
@@ -113,6 +168,19 @@ class EntityEditorWidget(QFrame):
     def _synopsisChanged(self):
         if self._marker:
             self._marker.description = self.textEdit.toPlainText()
+
+    def _colorChanged(self, color: str):
+        if self._marker:
+            self._marker.color = color
+            self._marker.color_selected = marker_selected_colors[color]
+
+    def _iconChanged(self, icon: str):
+        if self._marker:
+            self._marker.icon = icon
+
+    def _iconReset(self):
+        if self._marker:
+            self._marker.icon = ''
 
     def _addHeader(self, text: str, wdg: QWidget) -> CollapseButton:
         btn = CollapseButton(Qt.Edge.RightEdge, Qt.Edge.BottomEdge)
