@@ -108,11 +108,12 @@ class MarkerIconSelectorWidget(QWidget):
                       'fa5s.dragon',
                       'fa5s.skull', 'fa5s.skull-crossbones', 'ri.ghost-2-fill', 'mdi.grave-stone',
                       'fa5s.train', 'mdi.ship-wheel', 'mdi.sail-boat',
-                      'fa5s.mountain', 'fa5s.tree', 'mdi.tree', 'mdi.island'
+                      'fa5s.mountain', 'fa5s.tree', 'mdi.tree', 'mdi.island', 'mdi.circle'
                       ]
-        flow(self)
+        flow(self, 0, 1)
         for icon in self.icons:
             btn = tool_btn(IconRegistry.from_name(icon), transparent_=True)
+            btn.setIconSize(QSize(24, 24))
             btn.clicked.connect(partial(self.iconSelected.emit, icon))
             self.layout().addWidget(btn)
 
@@ -147,6 +148,7 @@ class EntityEditorWidget(QFrame):
         self.textEdit.setProperty('transparent', True)
         self.textEdit.setProperty('rounded', True)
         self.textEdit.setPlaceholderText('Edit synopsis')
+        self.textEdit.setMaximumHeight(150)
         self.textEdit.textChanged.connect(self._synopsisChanged)
 
         self.wdgColorSelector = MarkerColorSelectorWidget()

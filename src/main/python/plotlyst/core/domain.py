@@ -1461,7 +1461,7 @@ class WorldBuildingMarker:
     description: str = ''
     color: str = '#ef233c'
     color_selected: str = '#A50C1E'
-    icon: str = ''
+    icon: str = 'mdi.circle'
 
 
 @dataclass
