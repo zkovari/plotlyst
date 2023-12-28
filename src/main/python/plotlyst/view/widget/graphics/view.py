@@ -28,7 +28,6 @@ from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QFrame, \
 from overrides import overrides
 from qthandy import sp, incr_icon, vbox
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Diagram, DiagramNodeType, Character
 from src.main.python.plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButtonGroup, \
     TooltipPositionEventFilter
@@ -43,6 +42,7 @@ class BaseGraphicsView(QGraphicsView):
     def __init__(self, parent=None):
         super(BaseGraphicsView, self).__init__(parent)
         self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
+        self.setResizeAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         self._moveOriginX = 0
         self._moveOriginY = 0
         self._scaledFactor: float = 1.0
@@ -93,11 +93,12 @@ class BaseGraphicsView(QGraphicsView):
 
     @overrides
     def wheelEvent(self, event: QWheelEvent) -> None:
-        super(BaseGraphicsView, self).wheelEvent(event)
         if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
             diff = event.angleDelta().y()
             scale = diff / 1200
             self._scale(round(scale, 1))
+        else:
+            super(BaseGraphicsView, self).wheelEvent(event)
 
     def scaledFactor(self) -> float:
         return self._scaledFactor
@@ -105,6 +106,17 @@ class BaseGraphicsView(QGraphicsView):
     def _scale(self, scale: float):
         self._scaledFactor += scale
         self.scale(1.0 + scale, 1.0 + scale)
+
+    def _popupAbove(self, widget: QWidget, refItem: QGraphicsItem):
+        item_w = refItem.sceneBoundingRect().width()
+        editor_w = widget.sizeHint().width()
+        diff_w = int(editor_w - item_w) // 2
+
+        view_pos = self.mapFromScene(refItem.sceneBoundingRect().topLeft())
+        view_pos.setX(view_pos.x() - diff_w)
+        view_pos.setY(view_pos.y() - widget.sizeHint().height() - 20)
+        widget.move(view_pos)
+        widget.setVisible(True)
 
 
 class NetworkGraphicsView(BaseGraphicsView):
@@ -208,17 +220,6 @@ class NetworkGraphicsView(BaseGraphicsView):
                                      self._wdgZoomBar.sizeHint().height())
         self._controlsNavBar.setGeometry(10, 100, self._controlsNavBar.sizeHint().width(),
                                          self._controlsNavBar.sizeHint().height())
-
-    def _popupAbove(self, widget: QWidget, refItem: QGraphicsItem):
-        item_w = refItem.sceneBoundingRect().width()
-        editor_w = widget.sizeHint().width()
-        diff_w = int(editor_w - item_w) // 2
-
-        view_pos = self.mapFromScene(refItem.sceneBoundingRect().topLeft())
-        view_pos.setX(view_pos.x() - diff_w)
-        view_pos.setY(view_pos.y() - 50)
-        widget.move(view_pos)
-        widget.setVisible(True)
 
     def _initScene(self):
         return NetworkScene()

@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import List, Optional, Any, Dict, Set, Union
 
 from PyQt6.QtCore import QByteArray, QBuffer, QIODevice
-from PyQt6.QtGui import QImage, QImageReader
+from PyQt6.QtGui import QImage, QImageReader, QImageWriter
 from atomicwrites import atomic_write
 from dataclasses_json import dataclass_json, Undefined, config
 from qthandy import busy
@@ -45,7 +45,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding, Board, \
     default_big_five_values, CharacterPlan, ManuscriptGoals, Diagram, DiagramData, default_events_map, \
     default_character_networks, ScenePurposeType, StoryElement, SceneOutcome, ChapterType, SceneStructureItem, \
-    DocumentProgress, ReaderQuestion, SceneReaderQuestion
+    DocumentProgress, ReaderQuestion, SceneReaderQuestion, ImageRef
 from src.main.python.plotlyst.core.template import Role, exclude_if_empty, exclude_if_black, exclude_if_false
 from src.main.python.plotlyst.env import app_env
 
@@ -248,7 +248,7 @@ class JsonClient:
         self.novels_dir: Optional[pathlib.Path] = None
         self._old_scenes_dir: Optional[pathlib.Path] = None
         self._old_characters_dir: Optional[pathlib.Path] = None
-        self.images_dir: Optional[pathlib.Path] = None
+        self.project_images_dir: Optional[pathlib.Path] = None
         self._old_docs_dir: Optional[pathlib.Path] = None
 
     def init(self, workspace: str):
@@ -266,12 +266,12 @@ class JsonClient:
         self._workspace = workspace
         self.root_path = pathlib.Path(self._workspace)
         self.novels_dir = self.root_path.joinpath('novels')
-        self.images_dir = self.root_path.joinpath('images')
+        self.project_images_dir = self.root_path.joinpath('images')
 
         if not os.path.exists(str(self.novels_dir)):
             os.mkdir(self.novels_dir)
-        if not os.path.exists(str(self.images_dir)):
-            os.mkdir(self.images_dir)
+        if not os.path.exists(str(self.project_images_dir)):
+            os.mkdir(self.project_images_dir)
 
     def novels(self) -> List[NovelDescriptor]:
         return [NovelDescriptor(title=x.title, id=x.id, import_origin=x.import_origin, lang_settings=x.lang_settings,
@@ -301,11 +301,17 @@ class JsonClient:
             scenes_dir_.mkdir()
         return scenes_dir_
 
-    def diagrams_dir(self, novel: Novel):
+    def diagrams_dir(self, novel: Novel) -> Path:
         diagrams_dir_ = self.novels_dir.joinpath(str(novel.id)).joinpath('diagrams')
         if not diagrams_dir_.exists():
             diagrams_dir_.mkdir()
         return diagrams_dir_
+
+    def images_dir(self, novel: Novel) -> Path:
+        images_dir_ = self.novels_dir.joinpath(str(novel.id)).joinpath('images')
+        if not images_dir_.exists():
+            images_dir_.mkdir()
+        return images_dir_
 
     def docs_dir(self, novel: Novel) -> Path:
         docs_dir_ = self.novels_dir.joinpath(str(novel.id)).joinpath('docs')
@@ -381,7 +387,7 @@ class JsonClient:
             if character.avatar:
                 avatar_id = uuid.uuid4()
                 image = QImage.fromData(character.avatar)
-                image.save(str(self.images_dir.joinpath(self.__image_file(avatar_id))))
+                image.save(str(self.project_images_dir.joinpath(self.__image_file(avatar_id))))
 
         self._persist_character(character, avatar_id, novel)
 
@@ -428,6 +434,21 @@ class JsonClient:
         else:
             diagram.data = DiagramData()
         diagram.loaded = True
+
+    def load_image(self, novel: Novel, ref: ImageRef) -> Optional[QImage]:
+        filename = f'{ref.id}.{ref.extension}'
+        path = self.images_dir(novel).joinpath(filename)
+        if not path.exists():
+            return None
+        image = QImage()
+        image.load(str(path))
+
+        return image
+
+    def save_image(self, novel: Novel, ref: ImageRef, image: QImage):
+        file_path = self.images_dir(novel).joinpath(f'{ref.id}.{ref.extension}')
+        writer = QImageWriter(str(file_path))
+        writer.write(image)
 
     def update_document(self, novel: Novel, document: Document):
         self.__persist_doc(novel, document)
@@ -685,8 +706,8 @@ class JsonClient:
     def __doc_file(self, uuid: uuid.UUID) -> str:
         return f'{uuid}.html'
 
-    def _load_image(self, filename) -> Optional[Any]:
-        path = self.images_dir.joinpath(filename)
+    def _load_image(self, filename: str) -> Optional[Any]:
+        path = self.project_images_dir.joinpath(filename)
         return load_image(path)
 
     def __load_doc(self, novel: Novel, doc_uuid: uuid.UUID) -> str:
@@ -747,7 +768,7 @@ class JsonClient:
             os.remove(path)
 
     def __delete_image(self, id: uuid.UUID):
-        path = self.images_dir.joinpath(self.__image_file(id))
+        path = self.project_images_dir.joinpath(self.__image_file(id))
         if os.path.exists(path):
             os.remove(path)
 
