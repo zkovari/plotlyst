@@ -1457,6 +1457,7 @@ class GlossaryItem(SelectionItem):
 class WorldBuildingMarker:
     x: float
     y: float
+    name: str = ''
     description: str = ''
     color: str = '#ef233c'
     color_selected: str = '#A50C1E'

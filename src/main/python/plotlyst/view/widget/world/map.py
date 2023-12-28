@@ -141,6 +141,7 @@ class EntityEditorWidget(QFrame):
         self.lineTitle.setProperty('transparent', True)
         self.lineTitle.setPlaceholderText('Name')
         incr_font(self.lineTitle)
+        self.lineTitle.textEdited.connect(self._nameChanged)
 
         self.textEdit = QTextEdit()
         self.textEdit.setProperty('transparent', True)
@@ -171,6 +172,10 @@ class EntityEditorWidget(QFrame):
         self.textEdit.setText(item.marker().description)
         self._marker = item.marker()
         self._item = item
+
+    def _nameChanged(self, text: str):
+        if self._marker:
+            self._marker.name = text
 
     def _synopsisChanged(self):
         if self._marker:
