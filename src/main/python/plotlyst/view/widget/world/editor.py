@@ -728,7 +728,14 @@ class TopicSelectionDialog(QDialog):
         vbox(self._wdgCenter)
 
         self._addSection('Ecological', ecological_topics)
+
+        self.btnSelect = push_btn(IconRegistry.ok_icon('white'), 'Select worldbuilding topics',
+                                  properties=['positive', 'base'])
+        self.btnSelect.setDisabled(True)
+        self.btnSelect.clicked.connect(self.accept)
+
         self._wdgCenter.layout().addWidget(vspacer())
+        self._wdgCenter.layout().addWidget(self.btnSelect, alignment=Qt.AlignmentFlag.AlignRight)
 
     def display(self):
         result = self.exec()
@@ -744,9 +751,18 @@ class TopicSelectionDialog(QDialog):
             btn = tool_btn(IconRegistry.from_name(topic.icon), topic.description, checkable=True)
             btn.setText(topic.text)
             btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+            btn.toggled.connect(partial(self._toggled, topic))
             wdg.layout().addWidget(btn)
 
         self._wdgCenter.layout().addWidget(wdg)
+
+    def _toggled(self, topic: Topic, checked: bool):
+        if checked:
+            self._selectedTopics.append(topic)
+        else:
+            self._selectedTopics.remove(topic)
+
+        self.btnSelect.setEnabled(len(self._selectedTopics) > 0)
 
 
 class SectionAdditionMenu(MenuWidget):
