@@ -161,6 +161,12 @@ def apply_white_menu(menu: MenuWidget):
                         MenuItemWidget[pressed=true] {{
                             background-color: #DCDCDC;
                         }}
+                        SubmenuWidget:hover {{
+                            background-color: #EDEDED;
+                        }}
+                        SubmenuWidget[pressed=true] {{
+                            background-color: #DCDCDC;
+                        }}
                         QLabel[description=true] {{
                             color: grey;
                         }}
