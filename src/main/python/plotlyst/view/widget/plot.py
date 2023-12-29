@@ -31,7 +31,7 @@ from qthandy import bold, flow, incr_font, \
     margins, ask_confirmation, italic, retain_when_hidden, vbox, transparent, \
     clear_layout, vspacer, decr_font, decr_icon, hbox, spacer, sp, pointy, incr_icon, translucent, grid, line, vline
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
-from qtmenu import MenuWidget, ActionTooltipDisplayMode
+from qtmenu import MenuWidget, ActionTooltipDisplayMode, group
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, CONFLICT_SELF_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
@@ -46,13 +46,14 @@ from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDele
     StorylineRemovedEvent, StorylineCharacterAssociationChanged
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
-from src.main.python.plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter, wrap, \
+from src.main.python.plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter, \
     insert_before_the_end, shadow, label, tool_btn, push_btn
 from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
 from src.main.python.plotlyst.view.generated.plot_widget_ui import Ui_PlotWidget
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.characters import CharacterAvatar, CharacterSelectorMenu
@@ -197,26 +198,21 @@ plot_event_type_hint = {
 
 
 class _PlotPrincipleToggle(QWidget):
-    def __init__(self, pincipleType: PlotPrincipleType, plotType: PlotType, parent=None):
+    def __init__(self, principleType: PlotPrincipleType, plotType: PlotType, parent=None):
         super().__init__(parent)
-        hbox(self)
-        margins(self, bottom=0)
-        self._principleType = pincipleType
+        vbox(self, 0, spacing=0)
+        self._principleType = principleType
 
-        self._label = QPushButton()
-        transparent(self._label)
-        self._label.setCheckable(True)
+        self._label = push_btn(principle_icon(self._principleType),
+                               text=self._principleType.name.lower().capitalize().replace('_', ' '), transparent_=True,
+                               tooltip=principle_hint(self._principleType, plotType), checkable=True, icon_resize=False,
+                               pointy_=False)
         bold(self._label)
-        self._label.setText(self._principleType.name.lower().capitalize().replace('_', ' '))
-        self._label.setToolTip(principle_hint(self._principleType, plotType))
-        self._label.setIcon(principle_icon(self._principleType))
-        self._label.setCheckable(True)
 
         self.toggle = Toggle(self)
-
-        self.layout().addWidget(self._label)
-        self.layout().addWidget(spacer())
-        self.layout().addWidget(self.toggle)
+        self.layout().addWidget(group(self._label, spacer(), self.toggle))
+        desc = label(principle_hint(self._principleType, plotType), description=True)
+        self.layout().addWidget(desc)
 
         self.toggle.toggled.connect(self._label.setChecked)
 
@@ -252,8 +248,6 @@ class PlotPrinciplesWidget(QWidget):
                 wdg.toggle.setChecked(True)
             wdg.toggle.toggled.connect(partial(self.principleToggled.emit, principle))
             self.layout().addWidget(wdg)
-            desc = label(principle_hint(principle, self.plotType), description=True)
-            self.layout().addWidget(wrap(desc, margin_left=10, margin_bottom=5))
 
 
 class PlotPrincipleSelectorMenu(MenuWidget):
@@ -282,14 +276,13 @@ class PlotPrincipleSelectorMenu(MenuWidget):
             menu.addWidget(char_arc_selectors)
             self.addSeparator()
             self.addMenu(menu)
-        # self.addSeparator()
-        # self.addSection('Thematic relevance')
+
         self.addSeparator()
         wdg = _PlotPrincipleToggle(PlotPrincipleType.THEME, self._plot.plot_type)
+        margins(wdg, left=15)
         self.addWidget(wdg)
         self.addSeparator()
         self.addSection('Linear progression')
-        # self.addSeparator()
 
 
 class PlotPrincipleEditor(QWidget):
