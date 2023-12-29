@@ -25,13 +25,13 @@ import qtanim
 from PyQt6.QtCharts import QSplineSeries, QValueAxis
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QTimer
 from PyQt6.QtGui import QColor, QIcon, QPen, QCursor, QEnterEvent, QShowEvent
-from PyQt6.QtWidgets import QWidget, QFrame, QPushButton, QTextEdit, QLabel, QGridLayout, QStackedWidget
+from PyQt6.QtWidgets import QWidget, QFrame, QPushButton, QTextEdit, QGridLayout, QStackedWidget
 from overrides import overrides
 from qthandy import bold, flow, incr_font, \
     margins, ask_confirmation, italic, retain_when_hidden, vbox, transparent, \
     clear_layout, vspacer, decr_font, decr_icon, hbox, spacer, sp, pointy, incr_icon, translucent, grid, line, vline
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
-from qtmenu import MenuWidget, ActionTooltipDisplayMode, TabularGridMenuWidget
+from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
@@ -250,8 +250,7 @@ class PlotPrinciplesWidget(QWidget):
                 wdg.toggle.setChecked(True)
             wdg.toggle.toggled.connect(partial(self.principleToggled.emit, principle))
             self.layout().addWidget(wdg)
-            desc = QLabel(principle_hint(principle, self.plotType))
-            desc.setProperty('description', True)
+            desc = label(principle_hint(principle, self.plotType), description=True)
             self.layout().addWidget(wrap(desc, margin_left=10, margin_bottom=5))
 
 
@@ -264,35 +263,31 @@ class PlotPrincipleSelectorMenu(MenuWidget):
         apply_white_menu(self)
 
         self._selectors = PlotPrinciplesWidget(self._plot.plot_type, self._plot.principles)
+        margins(self._selectors, left=15)
         self._selectors.principleToggled.connect(self.principleToggled)
-        # vbox(self._selectors, spacing=0)
-
-        # active_types = set([x.type for x in self._plot.principles])
-        # if self._plot.plot_type == PlotType.Internal:
-        #     principles = [PlotPrincipleType.POSITIVE_CHANGE, PlotPrincipleType.NEGATIVE_CHANGE,
-        #                   PlotPrincipleType.DESIRE, PlotPrincipleType.NEED, PlotPrincipleType.EXTERNAL_CONFLICT,
-        #                   PlotPrincipleType.INTERNAL_CONFLICT, PlotPrincipleType.FLAW]
-        # elif self._plot.plot_type == PlotType.Relation:
-        #     principles = [PlotPrincipleType.QUESTION, PlotPrincipleType.GOAL, PlotPrincipleType.CONFLICT,
-        #                   PlotPrincipleType.STAKES]
-        # else:
-        #     principles = [PlotPrincipleType.QUESTION, PlotPrincipleType.GOAL, PlotPrincipleType.ANTAGONIST,
-        #                   PlotPrincipleType.CONFLICT,
-        #                   PlotPrincipleType.STAKES, PlotPrincipleType.THEME]
-        #
-        # for principle in principles:
-        #     wdg = _PlotPrincipleToggle(principle, self._plot.plot_type)
-        #     if principle in active_types:
-        #         wdg.toggle.setChecked(True)
-        #     wdg.toggle.toggled.connect(partial(self.principleToggled.emit, principle))
-        #     self._selectors.layout().addWidget(wdg)
-        #     desc = QLabel(principle_hint(principle, self._plot.plot_type))
-        #     desc.setProperty('description', True)
-        #     self._selectors.layout().addWidget(wrap(desc, margin_left=10, margin_bottom=5))
 
         self.addSection('Select principles that are relevant to this storyline')
         self.addSeparator()
         self.addWidget(self._selectors)
+        if self._plot.plot_type in [PlotType.Main, PlotType.Subplot]:
+            menu = MenuWidget(self)
+            menu.setTitle('Combine with character arc')
+            menu.setIcon(IconRegistry.conflict_self_icon())
+            char_arc_selectors = PlotPrinciplesWidget(PlotType.Internal, self._plot.principles)
+            char_arc_selectors.principleToggled.connect(self.principleToggled)
+            menu.addSection('Extend with principles that are relevant to character development')
+            menu.addSeparator()
+            menu.addWidget(char_arc_selectors)
+            self.addSeparator()
+            self.addMenu(menu)
+        # self.addSeparator()
+        # self.addSection('Thematic relevance')
+        self.addSeparator()
+        wdg = _PlotPrincipleToggle(PlotPrincipleType.THEME, self._plot.plot_type)
+        self.addWidget(wdg)
+        self.addSeparator()
+        self.addSection('Linear progression')
+        # self.addSeparator()
 
 
 class PlotPrincipleEditor(QWidget):
