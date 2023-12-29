@@ -33,7 +33,7 @@ from qthandy import bold, flow, incr_font, \
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, CONFLICT_SELF_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
     PlotPrincipleType, PlotEventType, PlotProgressionItem, \
     PlotProgressionItemType, StorylineLink, StorylineLinkType
@@ -221,6 +221,11 @@ class _PlotPrincipleToggle(QWidget):
         self.toggle.toggled.connect(self._label.setChecked)
 
 
+internal_principles = {PlotPrincipleType.POSITIVE_CHANGE, PlotPrincipleType.NEGATIVE_CHANGE,
+                       PlotPrincipleType.DESIRE, PlotPrincipleType.NEED, PlotPrincipleType.EXTERNAL_CONFLICT,
+                       PlotPrincipleType.INTERNAL_CONFLICT, PlotPrincipleType.FLAW}
+
+
 class PlotPrinciplesWidget(QWidget):
     principleToggled = pyqtSignal(PlotPrincipleType, bool)
 
@@ -232,9 +237,7 @@ class PlotPrinciplesWidget(QWidget):
 
         active_types = set([x.type for x in principles])
         if self.plotType == PlotType.Internal:
-            principles = [PlotPrincipleType.POSITIVE_CHANGE, PlotPrincipleType.NEGATIVE_CHANGE,
-                          PlotPrincipleType.DESIRE, PlotPrincipleType.NEED, PlotPrincipleType.EXTERNAL_CONFLICT,
-                          PlotPrincipleType.INTERNAL_CONFLICT, PlotPrincipleType.FLAW]
+            principles = internal_principles
         elif self.plotType == PlotType.Relation:
             principles = [PlotPrincipleType.QUESTION, PlotPrincipleType.GOAL, PlotPrincipleType.CONFLICT,
                           PlotPrincipleType.STAKES]
@@ -270,7 +273,7 @@ class PlotPrincipleSelectorMenu(MenuWidget):
         self.addWidget(self._selectors)
         if self._plot.plot_type in [PlotType.Main, PlotType.Subplot]:
             menu = MenuWidget(self)
-            menu.setTitle('Combine with character arc')
+            menu.setTitle('Combine with character development')
             menu.setIcon(IconRegistry.conflict_self_icon())
             char_arc_selectors = PlotPrinciplesWidget(PlotType.Internal, self._plot.principles)
             char_arc_selectors.principleToggled.connect(self.principleToggled)
@@ -319,7 +322,10 @@ class PlotPrincipleEditor(QWidget):
         self._textedit.setMinimumSize(175, 100)
         self._textedit.setMaximumSize(190, 120)
         self._textedit.verticalScrollBar().setVisible(False)
-        shadow(self._textedit)
+        if plotType != PlotType.Internal and principle.type in internal_principles:
+            shadow(self._textedit, color=QColor(CONFLICT_SELF_COLOR))
+        else:
+            shadow(self._textedit)
         self._textedit.textChanged.connect(self._valueChanged)
 
         self.layout().addWidget(self._label, alignment=Qt.AlignmentFlag.AlignCenter)
