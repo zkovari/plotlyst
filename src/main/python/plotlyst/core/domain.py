@@ -626,6 +626,7 @@ class PlotPrincipleType(Enum):
     INTERNAL_CONFLICT = 15
     EXTERNAL_CONFLICT = 16
     FLAW = 17
+    LINEAR_PROGRESSION = 18
 
 
 @dataclass
@@ -799,6 +800,8 @@ class Plot(SelectionItem, CharacterBased):
     relation_character_id: Optional[uuid.UUID] = None
     question: str = ''
     principles: List[PlotPrinciple] = field(default_factory=list)
+    has_progression: bool = True
+    has_thematic_relevance: bool = False
     events: List[PlotEvent] = field(default_factory=list)
     default_value: PlotValue = field(default_factory=default_plot_value)
     default_value_enabled: bool = True

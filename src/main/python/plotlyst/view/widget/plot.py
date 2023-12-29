@@ -95,6 +95,9 @@ def principle_icon(type: PlotPrincipleType) -> QIcon:
     elif type == PlotPrincipleType.FLAW:
         return IconRegistry.from_name('mdi.virus', 'grey', '#b5179e')
 
+    elif type == PlotPrincipleType.LINEAR_PROGRESSION:
+        return IconRegistry.from_name('mdi.middleware', 'grey', 'black')
+
     else:
         return QIcon()
 
@@ -105,7 +108,6 @@ _principle_hints = {
     PlotPrincipleType.CONFLICT: "Is there conflict that hinders the character's goal?",
     PlotPrincipleType.STAKES: "Is there anything at stake if the storyline is not resolved?",
     PlotPrincipleType.QUESTION: "Is there a major dramatic question associated to this storyline?",
-    PlotPrincipleType.THEME: "Is there thematic relevance associated to this storyline?",
 
     PlotPrincipleType.POSITIVE_CHANGE: "Does the character change positively?",
     PlotPrincipleType.NEGATIVE_CHANGE: "Does the character change negatively?",
@@ -114,6 +116,9 @@ _principle_hints = {
     PlotPrincipleType.EXTERNAL_CONFLICT: "Are there external obstacles that force the character to change?",
     PlotPrincipleType.INTERNAL_CONFLICT: "Does the character face an internal dilemma?",
     PlotPrincipleType.FLAW: "Is there a major flaw, misbelief, or imperfection the character has to overcome?",
+
+    PlotPrincipleType.THEME: "Is there thematic relevance associated to this storyline?",
+    PlotPrincipleType.LINEAR_PROGRESSION: "Track linear progression in this storyline"
 }
 
 
@@ -252,6 +257,7 @@ class PlotPrinciplesWidget(QWidget):
 
 class PlotPrincipleSelectorMenu(MenuWidget):
     principleToggled = pyqtSignal(PlotPrincipleType, bool)
+    progressionToggled = pyqtSignal(bool)
 
     def __init__(self, plot: Plot, parent=None):
         super(PlotPrincipleSelectorMenu, self).__init__(parent)
@@ -272,17 +278,21 @@ class PlotPrincipleSelectorMenu(MenuWidget):
             char_arc_selectors = PlotPrinciplesWidget(PlotType.Internal, self._plot.principles)
             char_arc_selectors.principleToggled.connect(self.principleToggled)
             menu.addSection('Extend with principles that are relevant to character development')
-            menu.addSeparator()
             menu.addWidget(char_arc_selectors)
             self.addSeparator()
             self.addMenu(menu)
 
+        self.addSection('Narrative dynamics')
         self.addSeparator()
         wdg = _PlotPrincipleToggle(PlotPrincipleType.THEME, self._plot.plot_type)
         margins(wdg, left=15)
+        wdg.setDisabled(True)
         self.addWidget(wdg)
-        self.addSeparator()
-        self.addSection('Linear progression')
+        wdg = _PlotPrincipleToggle(PlotPrincipleType.LINEAR_PROGRESSION, self._plot.plot_type)
+        wdg.toggle.setChecked(self._plot.has_progression)
+        wdg.toggle.toggled.connect(self.progressionToggled)
+        margins(wdg, left=15)
+        self.addWidget(wdg)
 
 
 class PlotPrincipleEditor(QWidget):
@@ -655,6 +665,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
 
         self._principleSelectorMenu = PlotPrincipleSelectorMenu(self.plot, self.btnPincipleEditor)
         self._principleSelectorMenu.principleToggled.connect(self._principleToggled)
+        self._principleSelectorMenu.progressionToggled.connect(self._progressionToggled)
         self.btnPincipleEditor.installEventFilter(ButtonPressResizeEventFilter(self.btnPincipleEditor))
         self.btnPincipleEditor.installEventFilter(OpacityEventFilter(self.btnPincipleEditor, leaveOpacity=0.7))
         self._principles: Dict[PlotPrincipleType, PlotPrincipleEditor] = {}
@@ -753,6 +764,8 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self._timeline.setStructure(self.plot.progression)
         self._timeline.timelineChanged.connect(self._timelineChanged)
 
+        self.wdgProgression.setVisible(self.plot.has_progression)
+
         iconMenu = MenuWidget(self.btnPlotIcon)
 
         colorPicker = ColorPicker(self)
@@ -846,6 +859,11 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.btnSettings.setVisible(True)
         self.btnPincipleEditor.setVisible(True)
 
+        self._save()
+
+    def _progressionToggled(self, toggled: bool):
+        self.plot.has_progression = toggled
+        self.wdgProgression.setVisible(self.plot.has_progression)
         self._save()
 
     def _initPrincipleEditor(self, principle: PlotPrinciple):
