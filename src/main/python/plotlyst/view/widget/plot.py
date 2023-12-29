@@ -690,8 +690,8 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             self.btnProgression.setText('Evolution')
 
         translucent(self.btnProgression, 0.7)
-        incr_icon(self.btnProgression, 2)
-        incr_font(self.btnProgression, 2)
+        incr_icon(self.btnProgression)
+        incr_font(self.btnProgression)
 
         self.btnValues.setText('' if self.plot.values else 'Values')
         self.btnValues.setIcon(IconRegistry.from_name('fa5s.chevron-circle-down', 'grey'))
