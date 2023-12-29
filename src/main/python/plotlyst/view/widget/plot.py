@@ -31,7 +31,7 @@ from qthandy import bold, flow, incr_font, \
     margins, ask_confirmation, italic, retain_when_hidden, vbox, transparent, \
     clear_layout, vspacer, decr_font, decr_icon, hbox, spacer, sp, pointy, incr_icon, translucent, grid, line, vline
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
-from qtmenu import MenuWidget, ActionTooltipDisplayMode
+from qtmenu import MenuWidget, ActionTooltipDisplayMode, TabularGridMenuWidget
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
@@ -222,24 +222,21 @@ class _PlotPrincipleToggle(QWidget):
         self.toggle.toggled.connect(self._label.setChecked)
 
 
-class PlotPrincipleSelectorMenu(MenuWidget):
+class PlotPrinciplesWidget(QWidget):
     principleToggled = pyqtSignal(PlotPrincipleType, bool)
 
-    def __init__(self, plot: Plot, parent=None):
-        super(PlotPrincipleSelectorMenu, self).__init__(parent)
-        self._plot = plot
+    def __init__(self, plotType: PlotType, principles: List[PlotPrinciple], parent=None):
+        super().__init__(parent)
+        self.plotType = plotType
 
-        self._selectors = QWidget()
-        apply_white_menu(self)
-        vbox(self._selectors, spacing=0)
+        vbox(self, spacing=0)
 
-        active_types = set([x.type for x in self._plot.principles])
-
-        if self._plot.plot_type == PlotType.Internal:
+        active_types = set([x.type for x in principles])
+        if self.plotType == PlotType.Internal:
             principles = [PlotPrincipleType.POSITIVE_CHANGE, PlotPrincipleType.NEGATIVE_CHANGE,
                           PlotPrincipleType.DESIRE, PlotPrincipleType.NEED, PlotPrincipleType.EXTERNAL_CONFLICT,
                           PlotPrincipleType.INTERNAL_CONFLICT, PlotPrincipleType.FLAW]
-        elif self._plot.plot_type == PlotType.Relation:
+        elif self.plotType == PlotType.Relation:
             principles = [PlotPrincipleType.QUESTION, PlotPrincipleType.GOAL, PlotPrincipleType.CONFLICT,
                           PlotPrincipleType.STAKES]
         else:
@@ -248,14 +245,50 @@ class PlotPrincipleSelectorMenu(MenuWidget):
                           PlotPrincipleType.STAKES, PlotPrincipleType.THEME]
 
         for principle in principles:
-            wdg = _PlotPrincipleToggle(principle, self._plot.plot_type)
+            wdg = _PlotPrincipleToggle(principle, self.plotType)
             if principle in active_types:
                 wdg.toggle.setChecked(True)
             wdg.toggle.toggled.connect(partial(self.principleToggled.emit, principle))
-            self._selectors.layout().addWidget(wdg)
-            desc = QLabel(principle_hint(principle, self._plot.plot_type))
+            self.layout().addWidget(wdg)
+            desc = QLabel(principle_hint(principle, self.plotType))
             desc.setProperty('description', True)
-            self._selectors.layout().addWidget(wrap(desc, margin_left=10, margin_bottom=5))
+            self.layout().addWidget(wrap(desc, margin_left=10, margin_bottom=5))
+
+
+class PlotPrincipleSelectorMenu(MenuWidget):
+    principleToggled = pyqtSignal(PlotPrincipleType, bool)
+
+    def __init__(self, plot: Plot, parent=None):
+        super(PlotPrincipleSelectorMenu, self).__init__(parent)
+        self._plot = plot
+        apply_white_menu(self)
+
+        self._selectors = PlotPrinciplesWidget(self._plot.plot_type, self._plot.principles)
+        self._selectors.principleToggled.connect(self.principleToggled)
+        # vbox(self._selectors, spacing=0)
+
+        # active_types = set([x.type for x in self._plot.principles])
+        # if self._plot.plot_type == PlotType.Internal:
+        #     principles = [PlotPrincipleType.POSITIVE_CHANGE, PlotPrincipleType.NEGATIVE_CHANGE,
+        #                   PlotPrincipleType.DESIRE, PlotPrincipleType.NEED, PlotPrincipleType.EXTERNAL_CONFLICT,
+        #                   PlotPrincipleType.INTERNAL_CONFLICT, PlotPrincipleType.FLAW]
+        # elif self._plot.plot_type == PlotType.Relation:
+        #     principles = [PlotPrincipleType.QUESTION, PlotPrincipleType.GOAL, PlotPrincipleType.CONFLICT,
+        #                   PlotPrincipleType.STAKES]
+        # else:
+        #     principles = [PlotPrincipleType.QUESTION, PlotPrincipleType.GOAL, PlotPrincipleType.ANTAGONIST,
+        #                   PlotPrincipleType.CONFLICT,
+        #                   PlotPrincipleType.STAKES, PlotPrincipleType.THEME]
+        #
+        # for principle in principles:
+        #     wdg = _PlotPrincipleToggle(principle, self._plot.plot_type)
+        #     if principle in active_types:
+        #         wdg.toggle.setChecked(True)
+        #     wdg.toggle.toggled.connect(partial(self.principleToggled.emit, principle))
+        #     self._selectors.layout().addWidget(wdg)
+        #     desc = QLabel(principle_hint(principle, self._plot.plot_type))
+        #     desc.setProperty('description', True)
+        #     self._selectors.layout().addWidget(wrap(desc, margin_left=10, margin_bottom=5))
 
         self.addSection('Select principles that are relevant to this storyline')
         self.addSeparator()
