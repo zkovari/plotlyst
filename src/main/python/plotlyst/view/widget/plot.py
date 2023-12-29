@@ -163,15 +163,14 @@ principle_type_index: Dict[PlotPrincipleType, int] = {
     PlotPrincipleType.ANTAGONIST: 2,
     PlotPrincipleType.CONFLICT: 3,
     PlotPrincipleType.STAKES: 4,
-    PlotPrincipleType.THEME: 5,
 
-    PlotPrincipleType.POSITIVE_CHANGE: 0,
-    PlotPrincipleType.NEGATIVE_CHANGE: 1,
-    PlotPrincipleType.DESIRE: 2,
-    PlotPrincipleType.NEED: 3,
-    PlotPrincipleType.EXTERNAL_CONFLICT: 4,
-    PlotPrincipleType.INTERNAL_CONFLICT: 5,
-    PlotPrincipleType.FLAW: 6,
+    PlotPrincipleType.POSITIVE_CHANGE: 6,
+    PlotPrincipleType.NEGATIVE_CHANGE: 7,
+    PlotPrincipleType.DESIRE: 8,
+    PlotPrincipleType.NEED: 9,
+    PlotPrincipleType.EXTERNAL_CONFLICT: 10,
+    PlotPrincipleType.INTERNAL_CONFLICT: 11,
+    PlotPrincipleType.FLAW: 12,
 }
 
 
@@ -242,7 +241,7 @@ class PlotPrinciplesWidget(QWidget):
         else:
             principles = [PlotPrincipleType.QUESTION, PlotPrincipleType.GOAL, PlotPrincipleType.ANTAGONIST,
                           PlotPrincipleType.CONFLICT,
-                          PlotPrincipleType.STAKES, PlotPrincipleType.THEME]
+                          PlotPrincipleType.STAKES]
 
         for principle in principles:
             wdg = _PlotPrincipleToggle(principle, self.plotType)
