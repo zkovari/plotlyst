@@ -29,7 +29,8 @@ from PyQt6.QtWidgets import QWidget, QFrame, QPushButton, QTextEdit, QGridLayout
 from overrides import overrides
 from qthandy import bold, flow, incr_font, \
     margins, ask_confirmation, italic, retain_when_hidden, vbox, transparent, \
-    clear_layout, vspacer, decr_font, decr_icon, hbox, spacer, sp, pointy, incr_icon, translucent, grid, line, vline
+    clear_layout, vspacer, decr_font, decr_icon, hbox, spacer, sp, pointy, incr_icon, translucent, grid, line, vline, \
+    underline
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode, group
 
@@ -258,6 +259,7 @@ class PlotPrinciplesWidget(QWidget):
 class PlotPrincipleSelectorMenu(MenuWidget):
     principleToggled = pyqtSignal(PlotPrincipleType, bool)
     progressionToggled = pyqtSignal(bool)
+    genresSelected = pyqtSignal()
 
     def __init__(self, plot: Plot, parent=None):
         super(PlotPrincipleSelectorMenu, self).__init__(parent)
@@ -267,6 +269,14 @@ class PlotPrincipleSelectorMenu(MenuWidget):
         self._selectors = PlotPrinciplesWidget(self._plot.plot_type, self._plot.principles)
         margins(self._selectors, left=15)
         self._selectors.principleToggled.connect(self.principleToggled)
+
+        self.btnGenres = push_btn(IconRegistry.genre_icon(color=RELAXED_WHITE_COLOR), 'Browse genres',
+                                  properties=['base', 'positive'])
+        self.btnGenres.installEventFilter(OpacityEventFilter(self.btnGenres, 0.8, 0.6))
+        underline(self.btnGenres)
+        italic(self.btnGenres)
+        self.btnGenres.clicked.connect(self._genresClicked)
+        self.addWidget(group(spacer(), self.btnGenres))
 
         self.addSection('Select principles that are relevant to this storyline')
         self.addSeparator()
@@ -293,6 +303,13 @@ class PlotPrincipleSelectorMenu(MenuWidget):
         wdg.toggle.toggled.connect(self.progressionToggled)
         margins(wdg, left=15)
         self.addWidget(wdg)
+
+    def _genresClicked(self):
+        def trigger():
+            self.hide()
+            self.genresSelected.emit()
+
+        QTimer.singleShot(50, trigger)
 
 
 class PlotPrincipleEditor(QWidget):
@@ -666,6 +683,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self._principleSelectorMenu = PlotPrincipleSelectorMenu(self.plot, self.btnPincipleEditor)
         self._principleSelectorMenu.principleToggled.connect(self._principleToggled)
         self._principleSelectorMenu.progressionToggled.connect(self._progressionToggled)
+        self._principleSelectorMenu.genresSelected.connect(self._genresSelected)
         self.btnPincipleEditor.installEventFilter(ButtonPressResizeEventFilter(self.btnPincipleEditor))
         self.btnPincipleEditor.installEventFilter(OpacityEventFilter(self.btnPincipleEditor, leaveOpacity=0.7))
         self._principles: Dict[PlotPrincipleType, PlotPrincipleEditor] = {}
@@ -865,6 +883,9 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.plot.has_progression = toggled
         self.wdgProgression.setVisible(self.plot.has_progression)
         self._save()
+
+    def _genresSelected(self):
+        pass
 
     def _initPrincipleEditor(self, principle: PlotPrinciple):
         editor = PlotPrincipleEditor(principle, self.plot.plot_type)

@@ -595,6 +595,10 @@ class IconRegistry:
         return IconRegistry.from_name('fa5s.theater-masks', **kwargs)
 
     @staticmethod
+    def genre_icon(**kwargs) -> QIcon:
+        return IconRegistry.from_name('mdi.drama-masks', **kwargs)
+
+    @staticmethod
     def plot_type_icon(plot_type: PlotType) -> QIcon:
         if plot_type == PlotType.Main:
             return IconRegistry.cause_and_effect_icon()
