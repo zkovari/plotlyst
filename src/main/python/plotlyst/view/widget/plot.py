@@ -23,7 +23,7 @@ from typing import Set, Dict, List, Optional
 
 import qtanim
 from PyQt6.QtCharts import QSplineSeries, QValueAxis
-from PyQt6.QtCore import pyqtSignal, Qt, QSize, QTimer
+from PyQt6.QtCore import pyqtSignal, Qt, QSize, QTimer, QObject
 from PyQt6.QtGui import QColor, QIcon, QPen, QCursor, QEnterEvent, QShowEvent
 from PyQt6.QtWidgets import QWidget, QFrame, QPushButton, QTextEdit, QGridLayout, QStackedWidget
 from overrides import overrides
@@ -59,7 +59,7 @@ from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.characters import CharacterAvatar, CharacterSelectorMenu
 from src.main.python.plotlyst.view.widget.chart import BaseChart
-from src.main.python.plotlyst.view.widget.display import Icon, IdleWidget
+from src.main.python.plotlyst.view.widget.display import Icon, IdleWidget, PopupDialog
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
 from src.main.python.plotlyst.view.widget.scene.structure import SceneStructureTimeline, SceneStructureBeatWidget
@@ -99,6 +99,11 @@ def principle_icon(type: PlotPrincipleType) -> QIcon:
     elif type == PlotPrincipleType.LINEAR_PROGRESSION:
         return IconRegistry.from_name('mdi.middleware', 'grey', 'black')
 
+    elif type == PlotPrincipleType.SKILL_SET:
+        return IconRegistry.from_name('fa5s.tools', 'grey', 'black')
+    elif type == PlotPrincipleType.TICKING_CLOCK:
+        return IconRegistry.ticking_clock_icon('grey')
+
     else:
         return QIcon()
 
@@ -119,12 +124,15 @@ _principle_hints = {
     PlotPrincipleType.FLAW: "Is there a major flaw, misbelief, or imperfection the character has to overcome?",
 
     PlotPrincipleType.THEME: "Is there thematic relevance associated to this storyline?",
-    PlotPrincipleType.LINEAR_PROGRESSION: "Track linear progression in this storyline"
+    PlotPrincipleType.LINEAR_PROGRESSION: "Track linear progression in this storyline",
+
+    PlotPrincipleType.SKILL_SET: "Does the character possess unique skills and abilities to resolve the storyline?",
+    PlotPrincipleType.TICKING_CLOCK: "Is there deadline in which the character must take actions?",
 }
 
 
-def principle_hint(principle_type: PlotPrincipleType, plot_type: PlotType) -> str:
-    if plot_type == PlotType.Relation:
+def principle_hint(principle_type: PlotPrincipleType, plot_type: Optional[PlotType] = None) -> str:
+    if plot_type and plot_type == PlotType.Relation:
         if principle_type == PlotPrincipleType.GOAL:
             return "Is there a shared goal the characters aim for in this relationship plot?"
         if principle_type == PlotPrincipleType.CONFLICT:
@@ -150,6 +158,9 @@ _principle_placeholders = {
     PlotPrincipleType.EXTERNAL_CONFLICT: "What external obstacles force the character to change?",
     PlotPrincipleType.INTERNAL_CONFLICT: "What internal dilemma of conflict the character has to face?",
     PlotPrincipleType.FLAW: "What kind of flaw the character has to overcome?",
+
+    PlotPrincipleType.SKILL_SET: "What unique skills or abilities the character possess?",
+    PlotPrincipleType.TICKING_CLOCK: "What is the deadline in which the character must act?",
 }
 
 
@@ -178,6 +189,9 @@ principle_type_index: Dict[PlotPrincipleType, int] = {
     PlotPrincipleType.EXTERNAL_CONFLICT: 10,
     PlotPrincipleType.INTERNAL_CONFLICT: 11,
     PlotPrincipleType.FLAW: 12,
+
+    PlotPrincipleType.SKILL_SET: 13,
+    PlotPrincipleType.TICKING_CLOCK: 14,
 }
 
 
@@ -204,20 +218,21 @@ plot_event_type_hint = {
 
 
 class _PlotPrincipleToggle(QWidget):
-    def __init__(self, principleType: PlotPrincipleType, plotType: PlotType, parent=None):
+    def __init__(self, principleType: PlotPrincipleType, plotType: Optional[PlotType] = None, parent=None):
         super().__init__(parent)
         vbox(self, 0, spacing=0)
         self._principleType = principleType
 
+        hint = principle_hint(self._principleType, plotType)
         self._label = push_btn(principle_icon(self._principleType),
                                text=self._principleType.name.lower().capitalize().replace('_', ' '), transparent_=True,
-                               tooltip=principle_hint(self._principleType, plotType), checkable=True, icon_resize=False,
+                               tooltip=hint, checkable=True, icon_resize=False,
                                pointy_=False)
         bold(self._label)
 
         self.toggle = Toggle(self)
         self.layout().addWidget(group(self._label, spacer(), self.toggle))
-        desc = label(principle_hint(self._principleType, plotType), description=True)
+        desc = label(hint, description=True)
         self.layout().addWidget(desc)
 
         self.toggle.toggled.connect(self._label.setChecked)
@@ -226,6 +241,55 @@ class _PlotPrincipleToggle(QWidget):
 internal_principles = {PlotPrincipleType.POSITIVE_CHANGE, PlotPrincipleType.NEGATIVE_CHANGE,
                        PlotPrincipleType.DESIRE, PlotPrincipleType.NEED, PlotPrincipleType.EXTERNAL_CONFLICT,
                        PlotPrincipleType.INTERNAL_CONFLICT, PlotPrincipleType.FLAW}
+
+
+class PrincipleSelectorObject(QObject):
+    principleToggled = pyqtSignal(PlotPrincipleType, bool)
+
+
+class GenrePrincipleSelectorDialog(PopupDialog):
+
+    def __init__(self, plot: Plot, selector: PrincipleSelectorObject, parent=None):
+        super().__init__(parent)
+        self.selector = selector
+        self.wdgTitle = QWidget()
+        self._active_types = set([x.type for x in plot.principles])
+        hbox(self.wdgTitle)
+        self.wdgTitle.layout().addWidget(spacer())
+        self.wdgTitle.layout().addWidget(
+            tool_btn(IconRegistry.genre_icon(), icon_resize=False, pointy_=False, transparent_=True))
+        self.wdgTitle.layout().addWidget(label('Genre specific principles', bold=True, h4=True))
+        self.wdgTitle.layout().addWidget(spacer())
+        self.wdgTitle.layout().addWidget(self.btnReset)
+        self.frame.layout().addWidget(self.wdgTitle)
+
+        self._addHeader('Action', 'fa5s.running')
+        self._addPrinciple(PlotPrincipleType.SKILL_SET)
+        self._addPrinciple(PlotPrincipleType.TICKING_CLOCK)
+
+        self.btnConfirm = push_btn(text='Close', properties=['base', 'positive'])
+        sp(self.btnConfirm).h_exp()
+        self.btnConfirm.clicked.connect(self.accept)
+
+        self.frame.layout().addWidget(self.btnConfirm)
+
+    def display(self):
+        self.exec()
+
+    def _addHeader(self, name: str, icon_name: str):
+        icon = Icon()
+        icon.setIcon(IconRegistry.from_name(icon_name))
+        header = label(name, bold=True)
+        self.frame.layout().addWidget(group(icon, header), alignment=Qt.AlignmentFlag.AlignLeft)
+        self.frame.layout().addWidget(line())
+
+    def _addPrinciple(self, principle: PlotPrincipleType):
+        wdg = _PlotPrincipleToggle(principle)
+        margins(wdg, left=15)
+        if principle in self._active_types:
+            wdg.toggle.setChecked(True)
+        wdg.toggle.toggled.connect(partial(self.selector.principleToggled.emit, principle))
+        self.frame.layout().addWidget(wdg)
 
 
 class PlotPrinciplesWidget(QWidget):
@@ -885,7 +949,9 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self._save()
 
     def _genresSelected(self):
-        pass
+        object = PrincipleSelectorObject()
+        object.principleToggled.connect(self._principleToggled)
+        GenrePrincipleSelectorDialog.popup(self.plot, object)
 
     def _initPrincipleEditor(self, principle: PlotPrinciple):
         editor = PlotPrincipleEditor(principle, self.plot.plot_type)

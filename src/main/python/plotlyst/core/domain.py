@@ -628,6 +628,9 @@ class PlotPrincipleType(Enum):
     FLAW = 17
     LINEAR_PROGRESSION = 18
 
+    SKILL_SET = 19
+    TICKING_CLOCK = 20
+
 
 @dataclass
 class PlotPrinciple:

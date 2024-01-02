@@ -551,8 +551,8 @@ class IconRegistry:
         return IconRegistry.from_name('ph.coin-bold', color, color_on)
 
     @staticmethod
-    def ticking_clock_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.clock-alert-outline', '#f7cb15')
+    def ticking_clock_icon(color: str = '#f7cb15', color_on: str = '#f7cb15') -> QIcon:
+        return IconRegistry.from_name('mdi.clock-alert-outline', color, color_on)
 
     @staticmethod
     def exposition_icon() -> QIcon:
