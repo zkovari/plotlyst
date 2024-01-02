@@ -103,6 +103,11 @@ def principle_icon(type: PlotPrincipleType) -> QIcon:
         return IconRegistry.from_name('fa5s.tools', 'grey', 'black')
     elif type == PlotPrincipleType.TICKING_CLOCK:
         return IconRegistry.ticking_clock_icon('grey')
+    elif type == PlotPrincipleType.WAR:
+        return IconRegistry.from_name('mdi.skull', 'grey', 'black')
+    elif type == PlotPrincipleType.WAR_MENTAL_EFFECT:
+        return IconRegistry.from_name('mdi6.head-flash-outline', 'grey', 'black')
+
 
     else:
         return QIcon()
@@ -128,6 +133,8 @@ _principle_hints = {
 
     PlotPrincipleType.SKILL_SET: "Does the character possess unique skills and abilities to resolve the storyline?",
     PlotPrincipleType.TICKING_CLOCK: "Is there deadline in which the character must take actions?",
+    PlotPrincipleType.WAR: "Is there a central war in the storyline?",
+    PlotPrincipleType.WAR_MENTAL_EFFECT: "Is the war's psychological impact on the characters explored?",
 }
 
 
@@ -161,6 +168,8 @@ _principle_placeholders = {
 
     PlotPrincipleType.SKILL_SET: "What unique skills or abilities the character possess?",
     PlotPrincipleType.TICKING_CLOCK: "What is the deadline in which the character must act?",
+    PlotPrincipleType.WAR: "What's the central war in this storyline?",
+    PlotPrincipleType.WAR_MENTAL_EFFECT: "How is the war's psychological impact on the characters explored?",
 }
 
 
@@ -175,24 +184,25 @@ def principle_placeholder(principle_type: PlotPrincipleType, plot_type: PlotType
     return _principle_placeholders[principle_type]
 
 
-principle_type_index: Dict[PlotPrincipleType, int] = {
-    PlotPrincipleType.QUESTION: 0,
-    PlotPrincipleType.GOAL: 1,
-    PlotPrincipleType.ANTAGONIST: 2,
-    PlotPrincipleType.CONFLICT: 3,
-    PlotPrincipleType.STAKES: 4,
-
-    PlotPrincipleType.POSITIVE_CHANGE: 6,
-    PlotPrincipleType.NEGATIVE_CHANGE: 7,
-    PlotPrincipleType.DESIRE: 8,
-    PlotPrincipleType.NEED: 9,
-    PlotPrincipleType.EXTERNAL_CONFLICT: 10,
-    PlotPrincipleType.INTERNAL_CONFLICT: 11,
-    PlotPrincipleType.FLAW: 12,
-
-    PlotPrincipleType.SKILL_SET: 13,
-    PlotPrincipleType.TICKING_CLOCK: 14,
-}
+# principle_type_index: Dict[PlotPrincipleType, int] = {
+#     PlotPrincipleType.QUESTION: 0,
+#     PlotPrincipleType.GOAL: 1,
+#     PlotPrincipleType.ANTAGONIST: 2,
+#     PlotPrincipleType.CONFLICT: 3,
+#     PlotPrincipleType.STAKES: 4,
+#
+#     PlotPrincipleType.POSITIVE_CHANGE: 6,
+#     PlotPrincipleType.NEGATIVE_CHANGE: 7,
+#     PlotPrincipleType.DESIRE: 8,
+#     PlotPrincipleType.NEED: 9,
+#     PlotPrincipleType.EXTERNAL_CONFLICT: 10,
+#     PlotPrincipleType.INTERNAL_CONFLICT: 11,
+#     PlotPrincipleType.FLAW: 12,
+#
+#     PlotPrincipleType.SKILL_SET: 13,
+#     PlotPrincipleType.TICKING_CLOCK: 14,
+#     PlotPrincipleType.WAR: 15,
+# }
 
 
 def plot_event_icon(type: PlotEventType) -> QIcon:
@@ -225,13 +235,13 @@ class _PlotPrincipleToggle(QWidget):
 
         hint = principle_hint(self._principleType, plotType)
         self._label = push_btn(principle_icon(self._principleType),
-                               text=self._principleType.name.lower().capitalize().replace('_', ' '), transparent_=True,
+                               text=self._principleType.display_name(), transparent_=True,
                                tooltip=hint, checkable=True, icon_resize=False,
                                pointy_=False)
         bold(self._label)
 
         self.toggle = Toggle(self)
-        self.layout().addWidget(group(self._label, spacer(), self.toggle))
+        self.layout().addWidget(group(self._label, spacer(), self.toggle, margin=0))
         desc = label(hint, description=True)
         self.layout().addWidget(desc)
 
@@ -266,6 +276,9 @@ class GenrePrincipleSelectorDialog(PopupDialog):
         self._addHeader('Action', 'fa5s.running')
         self._addPrinciple(PlotPrincipleType.SKILL_SET)
         self._addPrinciple(PlotPrincipleType.TICKING_CLOCK)
+        self._addHeader('War', 'ri.sword-fill')
+        self._addPrinciple(PlotPrincipleType.WAR)
+        self._addPrinciple(PlotPrincipleType.WAR_MENTAL_EFFECT)
 
         self.btnConfirm = push_btn(text='Close', properties=['base', 'positive'])
         sp(self.btnConfirm).h_exp()
@@ -387,7 +400,7 @@ class PlotPrincipleEditor(QWidget):
         self._label = QPushButton()
         transparent(self._label)
         bold(self._label)
-        self._label.setText(principle.type.name.lower().capitalize().replace('_', ' '))
+        self._label.setText(principle.type.display_name())
         self._label.setIcon(principle_icon(principle.type))
         self._label.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self._label.setCheckable(True)
@@ -956,7 +969,8 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
     def _initPrincipleEditor(self, principle: PlotPrinciple):
         editor = PlotPrincipleEditor(principle, self.plot.plot_type)
         editor.principleEdited.connect(self._save)
-        self.wdgPrinciples.layout().insertWidget(principle_type_index[principle.type], editor)
+        # self.wdgPrinciples.layout().insertWidget(principle_type_index[principle.type], editor)
+        self.wdgPrinciples.layout().insertWidget(principle.type.value, editor)
         self._principles[principle.type] = editor
 
         return editor

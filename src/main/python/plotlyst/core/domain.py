@@ -630,6 +630,13 @@ class PlotPrincipleType(Enum):
 
     SKILL_SET = 19
     TICKING_CLOCK = 20
+    WAR = 21
+    WAR_MENTAL_EFFECT = 22
+
+    def display_name(self) -> str:
+        if self == PlotPrincipleType.WAR_MENTAL_EFFECT:
+            return 'Mental effect'
+        return self.name.lower().capitalize().replace('_', ' ')
 
 
 @dataclass
