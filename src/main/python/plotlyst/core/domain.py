@@ -632,6 +632,8 @@ class PlotPrincipleType(Enum):
     TICKING_CLOCK = 20
     WAR = 21
     WAR_MENTAL_EFFECT = 22
+    MONSTER = 23
+    CONFINED_SPACE = 24
 
     def display_name(self) -> str:
         if self == PlotPrincipleType.WAR_MENTAL_EFFECT:

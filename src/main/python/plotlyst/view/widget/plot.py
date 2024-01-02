@@ -48,7 +48,7 @@ from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDele
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter, \
-    insert_before_the_end, shadow, label, tool_btn, push_btn
+    insert_before_the_end, shadow, label, tool_btn, push_btn, scrolled
 from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
@@ -107,7 +107,10 @@ def principle_icon(type: PlotPrincipleType) -> QIcon:
         return IconRegistry.from_name('mdi.skull', 'grey', 'black')
     elif type == PlotPrincipleType.WAR_MENTAL_EFFECT:
         return IconRegistry.from_name('mdi6.head-flash-outline', 'grey', 'black')
-
+    elif type == PlotPrincipleType.MONSTER:
+        return IconRegistry.from_name('ri.ghost-2-fill', 'grey', antagonist_role.icon_color)
+    elif type == PlotPrincipleType.CONFINED_SPACE:
+        return IconRegistry.from_name('fa5s.house-user', 'grey', '#ffb703')
 
     else:
         return QIcon()
@@ -135,6 +138,8 @@ _principle_hints = {
     PlotPrincipleType.TICKING_CLOCK: "Is there deadline in which the character must take actions?",
     PlotPrincipleType.WAR: "Is there a central war in the storyline?",
     PlotPrincipleType.WAR_MENTAL_EFFECT: "Is the war's psychological impact on the characters explored?",
+    PlotPrincipleType.MONSTER: "Is there a monster that pursues a victim?",
+    PlotPrincipleType.CONFINED_SPACE: "Does the story unfold in a confined or isolated space to increase tension?",
 }
 
 
@@ -170,6 +175,9 @@ _principle_placeholders = {
     PlotPrincipleType.TICKING_CLOCK: "What is the deadline in which the character must act?",
     PlotPrincipleType.WAR: "What's the central war in this storyline?",
     PlotPrincipleType.WAR_MENTAL_EFFECT: "How is the war's psychological impact on the characters explored?",
+
+    PlotPrincipleType.MONSTER: "What is the monster that pursues the victim?",
+    PlotPrincipleType.CONFINED_SPACE: "What enclosed or confined space is present to increase tension?",
 }
 
 
@@ -261,7 +269,7 @@ class GenrePrincipleSelectorDialog(PopupDialog):
 
     def __init__(self, plot: Plot, selector: PrincipleSelectorObject, parent=None):
         super().__init__(parent)
-        self.selector = selector
+        self.selectorObject = selector
         self.wdgTitle = QWidget()
         self._active_types = set([x.type for x in plot.principles])
         hbox(self.wdgTitle)
@@ -271,7 +279,10 @@ class GenrePrincipleSelectorDialog(PopupDialog):
         self.wdgTitle.layout().addWidget(label('Genre specific principles', bold=True, h4=True))
         self.wdgTitle.layout().addWidget(spacer())
         self.wdgTitle.layout().addWidget(self.btnReset)
-        self.frame.layout().addWidget(self.wdgTitle)
+        self._scrollarea, self._wdgCenter = scrolled(self.frame, frameless=True)
+        self._wdgCenter.setProperty('relaxed-white-bg', True)
+        vbox(self._wdgCenter)
+        self._wdgCenter.layout().addWidget(self.wdgTitle)
 
         self._addHeader('Action', 'fa5s.running')
         self._addPrinciple(PlotPrincipleType.SKILL_SET)
@@ -279,6 +290,9 @@ class GenrePrincipleSelectorDialog(PopupDialog):
         self._addHeader('War', 'ri.sword-fill')
         self._addPrinciple(PlotPrincipleType.WAR)
         self._addPrinciple(PlotPrincipleType.WAR_MENTAL_EFFECT)
+        self._addHeader('Horror', 'ri.knife-blood-fill')
+        self._addPrinciple(PlotPrincipleType.MONSTER)
+        self._addPrinciple(PlotPrincipleType.CONFINED_SPACE)
 
         self.btnConfirm = push_btn(text='Close', properties=['base', 'positive'])
         sp(self.btnConfirm).h_exp()
@@ -293,16 +307,16 @@ class GenrePrincipleSelectorDialog(PopupDialog):
         icon = Icon()
         icon.setIcon(IconRegistry.from_name(icon_name))
         header = label(name, bold=True)
-        self.frame.layout().addWidget(group(icon, header), alignment=Qt.AlignmentFlag.AlignLeft)
-        self.frame.layout().addWidget(line())
+        self._wdgCenter.layout().addWidget(group(icon, header), alignment=Qt.AlignmentFlag.AlignLeft)
+        self._wdgCenter.layout().addWidget(line())
 
     def _addPrinciple(self, principle: PlotPrincipleType):
         wdg = _PlotPrincipleToggle(principle)
         margins(wdg, left=15)
         if principle in self._active_types:
             wdg.toggle.setChecked(True)
-        wdg.toggle.toggled.connect(partial(self.selector.principleToggled.emit, principle))
-        self.frame.layout().addWidget(wdg)
+        wdg.toggle.toggled.connect(partial(self.selectorObject.principleToggled.emit, principle))
+        self._wdgCenter.layout().addWidget(wdg)
 
 
 class PlotPrinciplesWidget(QWidget):
