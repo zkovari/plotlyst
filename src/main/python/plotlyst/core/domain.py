@@ -627,6 +627,37 @@ class PlotPrincipleType(Enum):
     INTERNAL_CONFLICT = 15
     EXTERNAL_CONFLICT = 16
     FLAW = 17
+    LINEAR_PROGRESSION = 18
+
+    SKILL_SET = 19
+    TICKING_CLOCK = 20
+    WAR = 21
+    WAR_MENTAL_EFFECT = 22
+    MONSTER = 23
+    CONFINED_SPACE = 24
+    CRIME = 25
+    SLEUTH = 26
+    AUTHORITY = 27
+    MACGUFFIN = 28
+    SCHEME = 29
+    CRIME_CLOCK = 30
+
+    SELF_DISCOVERY = 31
+    LOSS_OF_INNOCENCE = 32
+    MATURITY = 33
+    FIRST_LOVE = 34
+    MENTOR = 35
+
+    def display_name(self) -> str:
+        if self == PlotPrincipleType.WAR_MENTAL_EFFECT:
+            return 'Mental effect'
+        elif self == PlotPrincipleType.CRIME_CLOCK:
+            return 'Time pressure'
+        elif self == PlotPrincipleType.MACGUFFIN:
+            return 'MacGuffin'
+        elif self == PlotPrincipleType.SELF_DISCOVERY:
+            return 'Self-discovery'
+        return self.name.lower().capitalize().replace('_', ' ')
 
 
 @dataclass
@@ -800,6 +831,8 @@ class Plot(SelectionItem, CharacterBased):
     relation_character_id: Optional[uuid.UUID] = None
     question: str = ''
     principles: List[PlotPrinciple] = field(default_factory=list)
+    has_progression: bool = True
+    has_thematic_relevance: bool = False
     events: List[PlotEvent] = field(default_factory=list)
     default_value: PlotValue = field(default_factory=default_plot_value)
     default_value_enabled: bool = True

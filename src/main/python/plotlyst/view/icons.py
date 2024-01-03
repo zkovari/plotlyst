@@ -551,8 +551,8 @@ class IconRegistry:
         return IconRegistry.from_name('ph.coin-bold', color, color_on)
 
     @staticmethod
-    def ticking_clock_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.clock-alert-outline', '#f7cb15')
+    def ticking_clock_icon(color: str = '#f7cb15', color_on: str = '#f7cb15') -> QIcon:
+        return IconRegistry.from_name('mdi.clock-alert-outline', color, color_on)
 
     @staticmethod
     def exposition_icon() -> QIcon:
@@ -593,6 +593,10 @@ class IconRegistry:
     @staticmethod
     def storylines_icon(**kwargs) -> QIcon:
         return IconRegistry.from_name('fa5s.theater-masks', **kwargs)
+
+    @staticmethod
+    def genre_icon(**kwargs) -> QIcon:
+        return IconRegistry.from_name('mdi.drama-masks', **kwargs)
 
     @staticmethod
     def plot_type_icon(plot_type: PlotType) -> QIcon:
