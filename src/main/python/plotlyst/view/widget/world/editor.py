@@ -47,7 +47,9 @@ from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, A
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 from src.main.python.plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
-from src.main.python.plotlyst.view.widget.world._topics import ecological_topics
+from src.main.python.plotlyst.view.widget.world._topics import ecological_topics, cultural_topics, historical_topics, \
+    linguistic_topics, technological_topics, economic_topics, infrastructural_topics, religious_topics, \
+    fantastic_topics, nefarious_topics, environmental_topics
 
 
 class EntityAdditionMenu(MenuWidget):
@@ -732,6 +734,16 @@ class TopicSelectionDialog(PopupDialog):
         self.setMinimumWidth(350)
 
         self._addSection('Ecological', ecological_topics)
+        self._addSection('Cultural', cultural_topics)
+        self._addSection('Historical', historical_topics)
+        self._addSection('Linguistic', linguistic_topics)
+        self._addSection('Technological', technological_topics)
+        self._addSection('Economic', economic_topics)
+        self._addSection('Infrastructural', infrastructural_topics)
+        self._addSection('Religious', religious_topics)
+        self._addSection('Fantastic', fantastic_topics)
+        self._addSection('Nefarious', nefarious_topics)
+        self._addSection('Environmental', environmental_topics)
 
         self.btnSelect = push_btn(IconRegistry.ok_icon('white'), self.DEFAULT_SELECT_BTN_TEXT,
                                   properties=['positive', 'base'])

@@ -8,3 +8,14 @@ ecological_topics = [
     Topic('Fiona', TopicType.Worldbuilding, uuid.UUID('c97351b8-3b3c-4a16-8560-be9b1fcfecdc'), icon='fa5s.leaf'),
     Topic('Pets', TopicType.Worldbuilding, uuid.UUID('a725a343-9e84-4a63-a7d1-908895082086'), icon='fa5s.paw'),
 ]
+
+cultural_topics = []
+historical_topics = []
+linguistic_topics = []
+technological_topics = []
+economic_topics = []
+infrastructural_topics = []
+religious_topics = []
+fantastic_topics = []
+nefarious_topics = []
+environmental_topics = []
