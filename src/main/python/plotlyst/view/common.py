@@ -301,11 +301,16 @@ def stretch_col(view: QTableView, col: int):
     view.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeMode.Stretch)
 
 
-def scrolled(parent: QWidget, frameless: bool = False) -> Tuple[QScrollArea, QWidget]:
+def scrolled(parent: QWidget, frameless: bool = False, h_on: bool = True, v_on: bool = True) -> Tuple[
+    QScrollArea, QWidget]:
     """Usage: self._scrollarea, self._wdgCenter = scrolled(self)"""
     scrollArea = QScrollArea(parent)
     scrollArea.setFocusPolicy(Qt.FocusPolicy.NoFocus)
     scrollArea.setWidgetResizable(True)
+    if not h_on:
+        scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    if not v_on:
+        scrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
     widget = QWidget(scrollArea)
     scrollArea.setWidget(widget)

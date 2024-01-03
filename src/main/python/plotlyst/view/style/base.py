@@ -121,6 +121,10 @@ QScrollArea[transparent=true] {
     background-color: rgba(0, 0, 0, 0);
 }
 
+QScrollArea[relaxed-white-bg=true] {
+    background-color: #f8f9fa;
+}
+
 TaskWidget {
     background-color: #f8f9fa;
     border: 1px solid lightGrey;
@@ -159,6 +163,12 @@ def apply_white_menu(menu: MenuWidget):
                             background-color: #EDEDED;
                         }}
                         MenuItemWidget[pressed=true] {{
+                            background-color: #DCDCDC;
+                        }}
+                        SubmenuWidget:hover {{
+                            background-color: #EDEDED;
+                        }}
+                        SubmenuWidget[pressed=true] {{
                             background-color: #DCDCDC;
                         }}
                         QLabel[description=true] {{

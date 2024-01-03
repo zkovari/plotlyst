@@ -23,17 +23,18 @@ from typing import Set, Dict, List, Optional
 
 import qtanim
 from PyQt6.QtCharts import QSplineSeries, QValueAxis
-from PyQt6.QtCore import pyqtSignal, Qt, QSize, QTimer
+from PyQt6.QtCore import pyqtSignal, Qt, QSize, QTimer, QObject
 from PyQt6.QtGui import QColor, QIcon, QPen, QCursor, QEnterEvent, QShowEvent
-from PyQt6.QtWidgets import QWidget, QFrame, QPushButton, QTextEdit, QLabel, QGridLayout, QStackedWidget
+from PyQt6.QtWidgets import QWidget, QFrame, QPushButton, QTextEdit, QGridLayout, QStackedWidget
 from overrides import overrides
 from qthandy import bold, flow, incr_font, \
     margins, ask_confirmation, italic, retain_when_hidden, vbox, transparent, \
-    clear_layout, vspacer, decr_font, decr_icon, hbox, spacer, sp, pointy, incr_icon, translucent, grid, line, vline
+    clear_layout, vspacer, decr_font, decr_icon, hbox, spacer, sp, pointy, incr_icon, translucent, grid, line, vline, \
+    underline
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
-from qtmenu import MenuWidget, ActionTooltipDisplayMode
+from qtmenu import MenuWidget, ActionTooltipDisplayMode, group
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, CONFLICT_SELF_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
     PlotPrincipleType, PlotEventType, PlotProgressionItem, \
     PlotProgressionItemType, StorylineLink, StorylineLinkType
@@ -46,18 +47,19 @@ from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDele
     StorylineRemovedEvent, StorylineCharacterAssociationChanged
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
-from src.main.python.plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter, wrap, \
-    insert_before_the_end, shadow, label, tool_btn, push_btn
+from src.main.python.plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter, \
+    insert_before_the_end, shadow, label, tool_btn, push_btn, scrolled
 from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
 from src.main.python.plotlyst.view.generated.plot_widget_ui import Ui_PlotWidget
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.characters import CharacterAvatar, CharacterSelectorMenu
 from src.main.python.plotlyst.view.widget.chart import BaseChart
-from src.main.python.plotlyst.view.widget.display import Icon, IdleWidget
+from src.main.python.plotlyst.view.widget.display import Icon, IdleWidget, PopupDialog
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
 from src.main.python.plotlyst.view.widget.scene.structure import SceneStructureTimeline, SceneStructureBeatWidget
@@ -94,6 +96,44 @@ def principle_icon(type: PlotPrincipleType) -> QIcon:
     elif type == PlotPrincipleType.FLAW:
         return IconRegistry.from_name('mdi.virus', 'grey', '#b5179e')
 
+    elif type == PlotPrincipleType.LINEAR_PROGRESSION:
+        return IconRegistry.from_name('mdi.middleware', 'grey', 'black')
+
+    elif type == PlotPrincipleType.SKILL_SET:
+        return IconRegistry.from_name('fa5s.tools', 'grey', 'black')
+    elif type == PlotPrincipleType.TICKING_CLOCK:
+        return IconRegistry.ticking_clock_icon('grey')
+    elif type == PlotPrincipleType.WAR:
+        return IconRegistry.from_name('mdi.skull', 'grey', 'black')
+    elif type == PlotPrincipleType.WAR_MENTAL_EFFECT:
+        return IconRegistry.from_name('mdi6.head-flash-outline', 'grey', 'black')
+    elif type == PlotPrincipleType.MONSTER:
+        return IconRegistry.from_name('ri.ghost-2-fill', 'grey', antagonist_role.icon_color)
+    elif type == PlotPrincipleType.CONFINED_SPACE:
+        return IconRegistry.from_name('fa5s.house-user', 'grey', '#ffb703')
+    elif type == PlotPrincipleType.CRIME:
+        return IconRegistry.from_name('ri.knife-blood-fill', 'grey', 'black')
+    elif type == PlotPrincipleType.SLEUTH:
+        return IconRegistry.from_name('mdi.incognito', 'grey', 'black')
+    elif type == PlotPrincipleType.AUTHORITY:
+        return IconRegistry.from_name('mdi.incognito', 'grey', antagonist_role.icon_color)
+    elif type == PlotPrincipleType.MACGUFFIN:
+        return IconRegistry.from_name('fa5s.parachute-box', 'grey', '#0077b6')
+    elif type == PlotPrincipleType.CRIME_CLOCK:
+        return IconRegistry.ticking_clock_icon('grey')
+    elif type == PlotPrincipleType.SCHEME:
+        return IconRegistry.from_name('mdi.floor-plan', 'grey', 'black')
+    elif type == PlotPrincipleType.SELF_DISCOVERY:
+        return IconRegistry.from_name('mdi.fingerprint', 'grey', '#cdb4db')
+    elif type == PlotPrincipleType.LOSS_OF_INNOCENCE:
+        return IconRegistry.from_name('fa5s.dove', 'grey', '#a2d2ff')
+    elif type == PlotPrincipleType.MATURITY:
+        return IconRegistry.from_name('ri.seedling-fill', 'grey', '#2a9d8f')
+    elif type == PlotPrincipleType.FIRST_LOVE:
+        return IconRegistry.from_name('fa5s.heart', 'grey', '#e76f51')
+    elif type == PlotPrincipleType.MENTOR:
+        return IconRegistry.from_name('mdi.compass-rose', 'grey', '#80ced7')
+
     else:
         return QIcon()
 
@@ -104,7 +144,6 @@ _principle_hints = {
     PlotPrincipleType.CONFLICT: "Is there conflict that hinders the character's goal?",
     PlotPrincipleType.STAKES: "Is there anything at stake if the storyline is not resolved?",
     PlotPrincipleType.QUESTION: "Is there a major dramatic question associated to this storyline?",
-    PlotPrincipleType.THEME: "Is there thematic relevance associated to this storyline?",
 
     PlotPrincipleType.POSITIVE_CHANGE: "Does the character change positively?",
     PlotPrincipleType.NEGATIVE_CHANGE: "Does the character change negatively?",
@@ -113,11 +152,34 @@ _principle_hints = {
     PlotPrincipleType.EXTERNAL_CONFLICT: "Are there external obstacles that force the character to change?",
     PlotPrincipleType.INTERNAL_CONFLICT: "Does the character face an internal dilemma?",
     PlotPrincipleType.FLAW: "Is there a major flaw, misbelief, or imperfection the character has to overcome?",
+
+    PlotPrincipleType.THEME: "Is there thematic relevance associated to this storyline?",
+    PlotPrincipleType.LINEAR_PROGRESSION: "Track linear progression in this storyline",
+
+    PlotPrincipleType.SKILL_SET: "Does the character possess unique skills and abilities to resolve the storyline?",
+    PlotPrincipleType.TICKING_CLOCK: "Is there deadline in which the character must take actions?",
+    PlotPrincipleType.WAR: "Is there a central war in the storyline?",
+    PlotPrincipleType.WAR_MENTAL_EFFECT: "Is the war's psychological impact on the characters explored?",
+    PlotPrincipleType.MONSTER: "Is there a monster that pursues a victim?",
+    PlotPrincipleType.CONFINED_SPACE: "Does the story unfold in a confined or isolated space to increase tension?",
+
+    PlotPrincipleType.CRIME: "Does the story revolve around a crime?",
+    PlotPrincipleType.SLEUTH: "Is there a detective figure who wants to solve the crime?",
+    PlotPrincipleType.AUTHORITY: "Is there an authority figure who chases the criminal protagonist?",
+    PlotPrincipleType.CRIME_CLOCK: "Is there a deadline to solve the crime?",
+    PlotPrincipleType.MACGUFFIN: "Is there an object or desire the characters pursue?",
+    PlotPrincipleType.SCHEME: "Is there a well-organized scheme to carry out a crime?",
+
+    PlotPrincipleType.SELF_DISCOVERY: "Will the character understand themselves, their identity or their place better in the world?",
+    PlotPrincipleType.LOSS_OF_INNOCENCE: "Does the character forgo a loss of innocence and experience the realities of life?",
+    PlotPrincipleType.MATURITY: "Does the character go through personal growth and maturity?",
+    PlotPrincipleType.FIRST_LOVE: "Is there a first love the character experiences?",
+    PlotPrincipleType.MENTOR: "Is there a mentor figure who guides the character?",
 }
 
 
-def principle_hint(principle_type: PlotPrincipleType, plot_type: PlotType) -> str:
-    if plot_type == PlotType.Relation:
+def principle_hint(principle_type: PlotPrincipleType, plot_type: Optional[PlotType] = None) -> str:
+    if plot_type and plot_type == PlotType.Relation:
         if principle_type == PlotPrincipleType.GOAL:
             return "Is there a shared goal the characters aim for in this relationship plot?"
         if principle_type == PlotPrincipleType.CONFLICT:
@@ -143,6 +205,27 @@ _principle_placeholders = {
     PlotPrincipleType.EXTERNAL_CONFLICT: "What external obstacles force the character to change?",
     PlotPrincipleType.INTERNAL_CONFLICT: "What internal dilemma of conflict the character has to face?",
     PlotPrincipleType.FLAW: "What kind of flaw the character has to overcome?",
+
+    PlotPrincipleType.SKILL_SET: "What unique skills or abilities the character possess?",
+    PlotPrincipleType.TICKING_CLOCK: "What is the deadline in which the character must act?",
+    PlotPrincipleType.WAR: "What's the central war in this storyline?",
+    PlotPrincipleType.WAR_MENTAL_EFFECT: "How is the war's psychological impact on the characters explored?",
+
+    PlotPrincipleType.MONSTER: "What is the monster that pursues the victim?",
+    PlotPrincipleType.CONFINED_SPACE: "What enclosed or confined space is present to increase tension?",
+
+    PlotPrincipleType.CRIME: "What's the central crime the story revolves around?",
+    PlotPrincipleType.SLEUTH: "Who is the detective character who wants to solve the crime",
+    PlotPrincipleType.AUTHORITY: "Who is authority figure who chases the criminal protagonist?",
+    PlotPrincipleType.CRIME_CLOCK: "What is the deadline of solving the crime?",
+    PlotPrincipleType.MACGUFFIN: "What object or desire do the characters pursue?",
+    PlotPrincipleType.SCHEME: "Is there a well-organized scheme to carry out a crime?",
+
+    PlotPrincipleType.SELF_DISCOVERY: "How will the character grow and understand themselves  or their identity better",
+    PlotPrincipleType.LOSS_OF_INNOCENCE: "How does the character experience a loss of innocence and the realities of life?",
+    PlotPrincipleType.MATURITY: "How does the character go through personal growth and maturity?",
+    PlotPrincipleType.FIRST_LOVE: "How does the first love contributes to the character's growth?",
+    PlotPrincipleType.MENTOR: "Who and how guides the character?",
 }
 
 
@@ -157,22 +240,25 @@ def principle_placeholder(principle_type: PlotPrincipleType, plot_type: PlotType
     return _principle_placeholders[principle_type]
 
 
-principle_type_index: Dict[PlotPrincipleType, int] = {
-    PlotPrincipleType.QUESTION: 0,
-    PlotPrincipleType.GOAL: 1,
-    PlotPrincipleType.ANTAGONIST: 2,
-    PlotPrincipleType.CONFLICT: 3,
-    PlotPrincipleType.STAKES: 4,
-    PlotPrincipleType.THEME: 5,
-
-    PlotPrincipleType.POSITIVE_CHANGE: 0,
-    PlotPrincipleType.NEGATIVE_CHANGE: 1,
-    PlotPrincipleType.DESIRE: 2,
-    PlotPrincipleType.NEED: 3,
-    PlotPrincipleType.EXTERNAL_CONFLICT: 4,
-    PlotPrincipleType.INTERNAL_CONFLICT: 5,
-    PlotPrincipleType.FLAW: 6,
-}
+# principle_type_index: Dict[PlotPrincipleType, int] = {
+#     PlotPrincipleType.QUESTION: 0,
+#     PlotPrincipleType.GOAL: 1,
+#     PlotPrincipleType.ANTAGONIST: 2,
+#     PlotPrincipleType.CONFLICT: 3,
+#     PlotPrincipleType.STAKES: 4,
+#
+#     PlotPrincipleType.POSITIVE_CHANGE: 6,
+#     PlotPrincipleType.NEGATIVE_CHANGE: 7,
+#     PlotPrincipleType.DESIRE: 8,
+#     PlotPrincipleType.NEED: 9,
+#     PlotPrincipleType.EXTERNAL_CONFLICT: 10,
+#     PlotPrincipleType.INTERNAL_CONFLICT: 11,
+#     PlotPrincipleType.FLAW: 12,
+#
+#     PlotPrincipleType.SKILL_SET: 13,
+#     PlotPrincipleType.TICKING_CLOCK: 14,
+#     PlotPrincipleType.WAR: 15,
+# }
 
 
 def plot_event_icon(type: PlotEventType) -> QIcon:
@@ -198,68 +284,207 @@ plot_event_type_hint = {
 
 
 class _PlotPrincipleToggle(QWidget):
-    def __init__(self, pincipleType: PlotPrincipleType, plotType: PlotType, parent=None):
+    def __init__(self, principleType: PlotPrincipleType, plotType: Optional[PlotType] = None, parent=None):
         super().__init__(parent)
-        hbox(self)
-        margins(self, bottom=0)
-        self._principleType = pincipleType
+        vbox(self, 0, spacing=0)
+        self._principleType = principleType
 
-        self._label = QPushButton()
-        transparent(self._label)
-        self._label.setCheckable(True)
+        hint = principle_hint(self._principleType, plotType)
+        self._label = push_btn(principle_icon(self._principleType),
+                               text=self._principleType.display_name(), transparent_=True,
+                               tooltip=hint, checkable=True, icon_resize=False,
+                               pointy_=False)
         bold(self._label)
-        self._label.setText(self._principleType.name.lower().capitalize().replace('_', ' '))
-        self._label.setToolTip(principle_hint(self._principleType, plotType))
-        self._label.setIcon(principle_icon(self._principleType))
-        self._label.setCheckable(True)
 
         self.toggle = Toggle(self)
-
-        self.layout().addWidget(self._label)
-        self.layout().addWidget(spacer())
-        self.layout().addWidget(self.toggle)
+        self.layout().addWidget(group(self._label, spacer(), self.toggle, margin=0))
+        desc = label(hint, description=True)
+        self.layout().addWidget(desc)
 
         self.toggle.toggled.connect(self._label.setChecked)
 
 
-class PlotPrincipleSelectorMenu(MenuWidget):
+internal_principles = {PlotPrincipleType.POSITIVE_CHANGE, PlotPrincipleType.NEGATIVE_CHANGE,
+                       PlotPrincipleType.DESIRE, PlotPrincipleType.NEED, PlotPrincipleType.EXTERNAL_CONFLICT,
+                       PlotPrincipleType.INTERNAL_CONFLICT, PlotPrincipleType.FLAW}
+
+
+class PrincipleSelectorObject(QObject):
     principleToggled = pyqtSignal(PlotPrincipleType, bool)
 
-    def __init__(self, plot: Plot, parent=None):
-        super(PlotPrincipleSelectorMenu, self).__init__(parent)
-        self._plot = plot
 
-        self._selectors = QWidget()
-        apply_white_menu(self)
-        vbox(self._selectors, spacing=0)
+class GenrePrincipleSelectorDialog(PopupDialog):
 
-        active_types = set([x.type for x in self._plot.principles])
+    def __init__(self, plot: Plot, selector: PrincipleSelectorObject, parent=None):
+        super().__init__(parent)
+        self.selectorObject = selector
+        self.wdgTitle = QWidget()
+        self._active_types = set([x.type for x in plot.principles])
+        hbox(self.wdgTitle)
+        self.wdgTitle.layout().addWidget(spacer())
+        self.wdgTitle.layout().addWidget(
+            tool_btn(IconRegistry.genre_icon(), icon_resize=False, pointy_=False, transparent_=True))
+        self.wdgTitle.layout().addWidget(label('Genre specific principles', bold=True, h4=True))
+        self.wdgTitle.layout().addWidget(spacer())
+        self.wdgTitle.layout().addWidget(self.btnReset)
+        self._scrollarea, self._wdgCenter = scrolled(self.frame, frameless=True, h_on=False)
+        vbox(self._wdgCenter)
+        self._wdgCenter.layout().addWidget(self.wdgTitle)
+        margins(self._wdgCenter, right=20)
 
-        if self._plot.plot_type == PlotType.Internal:
-            principles = [PlotPrincipleType.POSITIVE_CHANGE, PlotPrincipleType.NEGATIVE_CHANGE,
-                          PlotPrincipleType.DESIRE, PlotPrincipleType.NEED, PlotPrincipleType.EXTERNAL_CONFLICT,
-                          PlotPrincipleType.INTERNAL_CONFLICT, PlotPrincipleType.FLAW]
-        elif self._plot.plot_type == PlotType.Relation:
+        self._addHeader('Action', 'fa5s.running')
+        self._addPrinciple(PlotPrincipleType.SKILL_SET)
+        self._addPrinciple(PlotPrincipleType.TICKING_CLOCK)
+        self._addHeader('War', 'ri.sword-fill')
+        self._addPrinciple(PlotPrincipleType.WAR)
+        self._addPrinciple(PlotPrincipleType.WAR_MENTAL_EFFECT)
+        self._addHeader('Horror', 'ri.knife-blood-fill')
+        self._addPrinciple(PlotPrincipleType.MONSTER)
+        self._addPrinciple(PlotPrincipleType.CONFINED_SPACE)
+
+        self._crimeHeaderIcon = Icon()
+        self._btnCrimeToggle = Toggle()
+        pointy(self._btnCrimeToggle)
+        self._wdgCenter.layout().addWidget(group(self._crimeHeaderIcon, label('Crime', bold=True),
+                                                 label('(criminal protagonist'), self._btnCrimeToggle, label(')')),
+                                           alignment=Qt.AlignmentFlag.AlignLeft)
+        self._wdgCenter.layout().addWidget(line('lightgrey'))
+        self._addPrinciple(PlotPrincipleType.CRIME)
+        self._crimeClockPrinciple = self._addPrinciple(PlotPrincipleType.CRIME_CLOCK)
+        self._crimeSleuthPrinciple = self._addPrinciple(PlotPrincipleType.SLEUTH)
+        self._crimeMacGuffinPrinciple = self._addPrinciple(PlotPrincipleType.MACGUFFIN)
+        self._crimeAuthorityPrinciple = self._addPrinciple(PlotPrincipleType.AUTHORITY)
+        self._criminalToggled(self._btnCrimeToggle.isChecked())
+        self._btnCrimeToggle.toggled.connect(self._criminalToggled)
+
+        self._addHeader('Caper', 'mdi.robber')
+        self._addPrinciple(PlotPrincipleType.SCHEME)
+
+        self._addHeader('Coming of age', 'ri.seedling-line')
+        self._addPrinciple(PlotPrincipleType.SELF_DISCOVERY)
+        self._addPrinciple(PlotPrincipleType.LOSS_OF_INNOCENCE)
+        self._addPrinciple(PlotPrincipleType.MATURITY)
+        self._addPrinciple(PlotPrincipleType.FIRST_LOVE)
+        self._addPrinciple(PlotPrincipleType.MENTOR)
+
+        self.btnConfirm = push_btn(text='Close', properties=['base', 'positive'])
+        sp(self.btnConfirm).h_exp()
+        self.btnConfirm.clicked.connect(self.accept)
+
+        self.frame.layout().addWidget(self.btnConfirm)
+
+    def display(self):
+        self.exec()
+
+    def _addHeader(self, name: str, icon_name: str):
+        icon = Icon()
+        icon.setIcon(IconRegistry.from_name(icon_name))
+        header = label(name, bold=True)
+        self._wdgCenter.layout().addWidget(group(icon, header), alignment=Qt.AlignmentFlag.AlignLeft)
+        self._wdgCenter.layout().addWidget(line('lightgrey'))
+
+    def _criminalToggled(self, toggled: bool):
+        self._crimeClockPrinciple.setVisible(not toggled)
+        self._crimeSleuthPrinciple.setVisible(not toggled)
+        self._crimeAuthorityPrinciple.setVisible(toggled)
+        if toggled:
+            self._crimeHeaderIcon.setIcon(IconRegistry.from_name('fa5s.mask'))
+        else:
+            self._crimeHeaderIcon.setIcon(IconRegistry.from_name('mdi.handcuffs'))
+
+    def _addPrinciple(self, principle: PlotPrincipleType) -> _PlotPrincipleToggle:
+        wdg = _PlotPrincipleToggle(principle)
+        margins(wdg, left=15)
+        if principle in self._active_types:
+            wdg.toggle.setChecked(True)
+        wdg.toggle.toggled.connect(partial(self.selectorObject.principleToggled.emit, principle))
+        self._wdgCenter.layout().addWidget(wdg)
+
+        return wdg
+
+
+class PlotPrinciplesWidget(QWidget):
+    principleToggled = pyqtSignal(PlotPrincipleType, bool)
+
+    def __init__(self, plotType: PlotType, principles: List[PlotPrinciple], parent=None):
+        super().__init__(parent)
+        self.plotType = plotType
+
+        vbox(self, spacing=0)
+
+        active_types = set([x.type for x in principles])
+        if self.plotType == PlotType.Internal:
+            principles = internal_principles
+        elif self.plotType == PlotType.Relation:
             principles = [PlotPrincipleType.QUESTION, PlotPrincipleType.GOAL, PlotPrincipleType.CONFLICT,
                           PlotPrincipleType.STAKES]
         else:
             principles = [PlotPrincipleType.QUESTION, PlotPrincipleType.GOAL, PlotPrincipleType.ANTAGONIST,
                           PlotPrincipleType.CONFLICT,
-                          PlotPrincipleType.STAKES, PlotPrincipleType.THEME]
+                          PlotPrincipleType.STAKES]
 
         for principle in principles:
-            wdg = _PlotPrincipleToggle(principle, self._plot.plot_type)
+            wdg = _PlotPrincipleToggle(principle, self.plotType)
             if principle in active_types:
                 wdg.toggle.setChecked(True)
             wdg.toggle.toggled.connect(partial(self.principleToggled.emit, principle))
-            self._selectors.layout().addWidget(wdg)
-            desc = QLabel(principle_hint(principle, self._plot.plot_type))
-            desc.setProperty('description', True)
-            self._selectors.layout().addWidget(wrap(desc, margin_left=10, margin_bottom=5))
+            self.layout().addWidget(wdg)
+
+
+class PlotPrincipleSelectorMenu(MenuWidget):
+    principleToggled = pyqtSignal(PlotPrincipleType, bool)
+    progressionToggled = pyqtSignal(bool)
+    genresSelected = pyqtSignal()
+
+    def __init__(self, plot: Plot, parent=None):
+        super(PlotPrincipleSelectorMenu, self).__init__(parent)
+        self._plot = plot
+        apply_white_menu(self)
+
+        self._selectors = PlotPrinciplesWidget(self._plot.plot_type, self._plot.principles)
+        margins(self._selectors, left=15)
+        self._selectors.principleToggled.connect(self.principleToggled)
+
+        self.btnGenres = push_btn(IconRegistry.genre_icon(color=RELAXED_WHITE_COLOR), 'Browse genres',
+                                  properties=['base', 'positive'])
+        self.btnGenres.installEventFilter(OpacityEventFilter(self.btnGenres, 0.8, 0.6))
+        underline(self.btnGenres)
+        italic(self.btnGenres)
+        self.btnGenres.clicked.connect(self._genresClicked)
+        self.addWidget(group(spacer(), self.btnGenres))
 
         self.addSection('Select principles that are relevant to this storyline')
         self.addSeparator()
         self.addWidget(self._selectors)
+        if self._plot.plot_type in [PlotType.Main, PlotType.Subplot]:
+            menu = MenuWidget(self)
+            menu.setTitle('Combine with character development')
+            menu.setIcon(IconRegistry.conflict_self_icon())
+            char_arc_selectors = PlotPrinciplesWidget(PlotType.Internal, self._plot.principles)
+            char_arc_selectors.principleToggled.connect(self.principleToggled)
+            menu.addSection('Extend with principles that are relevant to character development')
+            menu.addWidget(char_arc_selectors)
+            self.addSeparator()
+            self.addMenu(menu)
+
+        self.addSection('Narrative dynamics')
+        self.addSeparator()
+        wdg = _PlotPrincipleToggle(PlotPrincipleType.THEME, self._plot.plot_type)
+        margins(wdg, left=15)
+        wdg.setDisabled(True)
+        self.addWidget(wdg)
+        wdg = _PlotPrincipleToggle(PlotPrincipleType.LINEAR_PROGRESSION, self._plot.plot_type)
+        wdg.toggle.setChecked(self._plot.has_progression)
+        wdg.toggle.toggled.connect(self.progressionToggled)
+        margins(wdg, left=15)
+        self.addWidget(wdg)
+
+    def _genresClicked(self):
+        def trigger():
+            self.hide()
+            self.genresSelected.emit()
+
+        QTimer.singleShot(50, trigger)
 
 
 class PlotPrincipleEditor(QWidget):
@@ -273,7 +498,7 @@ class PlotPrincipleEditor(QWidget):
         self._label = QPushButton()
         transparent(self._label)
         bold(self._label)
-        self._label.setText(principle.type.name.lower().capitalize().replace('_', ' '))
+        self._label.setText(principle.type.display_name())
         self._label.setIcon(principle_icon(principle.type))
         self._label.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self._label.setCheckable(True)
@@ -292,7 +517,10 @@ class PlotPrincipleEditor(QWidget):
         self._textedit.setMinimumSize(175, 100)
         self._textedit.setMaximumSize(190, 120)
         self._textedit.verticalScrollBar().setVisible(False)
-        shadow(self._textedit)
+        if plotType != PlotType.Internal and principle.type in internal_principles:
+            shadow(self._textedit, color=QColor(CONFLICT_SELF_COLOR))
+        else:
+            shadow(self._textedit)
         self._textedit.textChanged.connect(self._valueChanged)
 
         self.layout().addWidget(self._label, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -629,6 +857,8 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
 
         self._principleSelectorMenu = PlotPrincipleSelectorMenu(self.plot, self.btnPincipleEditor)
         self._principleSelectorMenu.principleToggled.connect(self._principleToggled)
+        self._principleSelectorMenu.progressionToggled.connect(self._progressionToggled)
+        self._principleSelectorMenu.genresSelected.connect(self._genresSelected)
         self.btnPincipleEditor.installEventFilter(ButtonPressResizeEventFilter(self.btnPincipleEditor))
         self.btnPincipleEditor.installEventFilter(OpacityEventFilter(self.btnPincipleEditor, leaveOpacity=0.7))
         self._principles: Dict[PlotPrincipleType, PlotPrincipleEditor] = {}
@@ -653,8 +883,8 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             self.btnProgression.setText('Evolution')
 
         translucent(self.btnProgression, 0.7)
-        incr_icon(self.btnProgression, 2)
-        incr_font(self.btnProgression, 2)
+        incr_icon(self.btnProgression)
+        incr_font(self.btnProgression)
 
         self.btnValues.setText('' if self.plot.values else 'Values')
         self.btnValues.setIcon(IconRegistry.from_name('fa5s.chevron-circle-down', 'grey'))
@@ -726,6 +956,8 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.wdgEventsParent.layout().addWidget(self._timeline)
         self._timeline.setStructure(self.plot.progression)
         self._timeline.timelineChanged.connect(self._timelineChanged)
+
+        self.wdgProgression.setVisible(self.plot.has_progression)
 
         iconMenu = MenuWidget(self.btnPlotIcon)
 
@@ -822,10 +1054,21 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
 
         self._save()
 
+    def _progressionToggled(self, toggled: bool):
+        self.plot.has_progression = toggled
+        self.wdgProgression.setVisible(self.plot.has_progression)
+        self._save()
+
+    def _genresSelected(self):
+        object = PrincipleSelectorObject()
+        object.principleToggled.connect(self._principleToggled)
+        GenrePrincipleSelectorDialog.popup(self.plot, object)
+
     def _initPrincipleEditor(self, principle: PlotPrinciple):
         editor = PlotPrincipleEditor(principle, self.plot.plot_type)
         editor.principleEdited.connect(self._save)
-        self.wdgPrinciples.layout().insertWidget(principle_type_index[principle.type], editor)
+        # self.wdgPrinciples.layout().insertWidget(principle_type_index[principle.type], editor)
+        self.wdgPrinciples.layout().insertWidget(principle.type.value, editor)
         self._principles[principle.type] = editor
 
         return editor
