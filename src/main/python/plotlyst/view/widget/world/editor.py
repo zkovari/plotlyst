@@ -718,18 +718,18 @@ class WorldBuildingEntitySectionElementEditor(WorldBuildingEntityElementWidget):
         return wdg
 
 
-class TopicSelectionDialog(QDialog):
+class TopicSelectionDialog(PopupDialog):
     DEFAULT_SELECT_BTN_TEXT: str = 'Select worldbuilding topics'
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self._selectedTopics = []
 
-        vbox(self, 0, 0)
-        self._scrollarea, self._wdgCenter = scrolled(self, frameless=True)
+        self.frame.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
+        self._scrollarea, self._wdgCenter = scrolled(self.frame, frameless=True, h_on=False)
         vbox(self._wdgCenter, 10)
         # self._wdgCenter.setStyleSheet('QWidget {background: #ede0d4;}')
-        self.setMinimumWidth(300)
+        self.setMinimumWidth(350)
 
         self._addSection('Ecological', ecological_topics)
 
@@ -739,7 +739,7 @@ class TopicSelectionDialog(QDialog):
         self.btnSelect.clicked.connect(self.accept)
 
         self._wdgCenter.layout().addWidget(vspacer())
-        self._wdgCenter.layout().addWidget(self.btnSelect, alignment=Qt.AlignmentFlag.AlignRight)
+        self.frame.layout().addWidget(self.btnSelect)
 
     def display(self) -> List[Topic]:
         result = self.exec()
@@ -905,8 +905,8 @@ class WorldBuildingEntityEditor(QWidget):
         self.repo.update_world(self._novel)
 
     def _selectNewTopic(self):
-        dialog = TopicSelectionDialog()
-        topics = dialog.display()
+        topics = TopicSelectionDialog.popup()
+        # topics = dialog.display()
         if topics:
             for topic in topics:
                 self._addNewSection(topic)
