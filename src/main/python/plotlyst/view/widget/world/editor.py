@@ -267,24 +267,24 @@ class WorldBuildingEntityElementWidget(QWidget):
                   parent: Optional[
                       'WorldBuildingEntitySectionElementEditor'] = None) -> 'WorldBuildingEntityElementWidget':
         if element.type == WorldBuildingEntityElementType.Text:
-            return WorldBuildingEntityTextElementEditor(novel, element, parent)
+            return TextElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Section:
             return WorldBuildingEntitySectionElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Header:
-            return WorldBuildingEntityHeaderElementEditor(novel, element, parent)
+            return HeaderElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Quote:
-            return WorldBuildingEntityQuoteElementEditor(novel, element, parent)
+            return QuoteElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Variables:
-            return WorldBuildingEntityVariablesElementEditor(novel, element, parent)
+            return VariablesElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Highlight:
-            return WorldBuildingEntityHighlightedTextElementEditor(novel, element, parent)
+            return HighlightedTextElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Timeline:
-            return WorldBuildingEntityTimelineElementEditor(novel, element, parent)
+            return TimelineElementEditor(novel, element, parent)
         else:
             raise ValueError(f'Unsupported WorldBuildingEntityElement type {element.type}')
 
 
-class WorldBuildingEntityTextElementEditor(WorldBuildingEntityElementWidget):
+class TextElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent, removalEnabled=True if parent else False)
         self._capitalized = False
@@ -334,7 +334,7 @@ class WorldBuildingEntityTextElementEditor(WorldBuildingEntityElementWidget):
         cursor.setCharFormat(format_first_letter)
 
 
-class WorldBuildingEntityHeaderElementEditor(WorldBuildingEntityElementWidget):
+class HeaderElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent)
 
@@ -387,7 +387,7 @@ class WorldBuildingEntityHeaderElementEditor(WorldBuildingEntityElementWidget):
         self.save()
 
 
-class WorldBuildingEntityQuoteElementEditor(WorldBuildingEntityElementWidget):
+class QuoteElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent)
 
@@ -537,7 +537,7 @@ class VariableWidget(QWidget):
             self.valueField.setText(self.variable.value)
 
 
-class WorldBuildingEntityVariablesElementEditor(WorldBuildingEntityElementWidget):
+class VariablesElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent, removalEnabled=False, menuEnabled=True)
         vbox(self, 5)
@@ -612,7 +612,7 @@ class WorldBuildingEntityVariablesElementEditor(WorldBuildingEntityElementWidget
         self.menu.addAction(action('Remove all variables', IconRegistry.trash_can_icon(), slot=self.btnRemove.click))
 
 
-class WorldBuildingEntityHighlightedTextElementEditor(WorldBuildingEntityElementWidget):
+class HighlightedTextElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent)
         vbox(self, 5)
@@ -665,7 +665,7 @@ class EntityTimelineWidget(TimelineWidget):
         return EntityTimelineCard
 
 
-class WorldBuildingEntityTimelineElementEditor(WorldBuildingEntityElementWidget):
+class TimelineElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent)
 
@@ -701,7 +701,7 @@ class WorldBuildingEntitySectionElementEditor(WorldBuildingEntityElementWidget):
         qtanim.fade_in(newBlockWdg, teardown=lambda: newBlockWdg.setGraphicsEffect(None))
 
     def _removeBlock(self, widget: WorldBuildingEntityElementWidget):
-        if isinstance(widget, WorldBuildingEntityHeaderElementEditor):
+        if isinstance(widget, HeaderElementEditor):
             self.removed.emit()
             return
 
