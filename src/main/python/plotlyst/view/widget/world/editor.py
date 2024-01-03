@@ -21,12 +21,12 @@ from functools import partial
 from typing import Optional, Dict, Set, Any, List
 
 import qtanim
-from PyQt6.QtCore import pyqtSignal, Qt, QModelIndex
-from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMouseEvent
+from PyQt6.QtCore import pyqtSignal, Qt, QModelIndex, QSize
+from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMouseEvent, QColor
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QTableView, QApplication, QDialog, QGridLayout
 from overrides import overrides
 from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy, \
-    grid, flow
+    grid, flow, spacer
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
@@ -41,6 +41,8 @@ from src.main.python.plotlyst.service.persistence import RepositoryPersistenceMa
 from src.main.python.plotlyst.view.common import action, push_btn, frame, insert_before_the_end, fade_out_and_gc, \
     tool_btn, label, scrolled
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import group
+from src.main.python.plotlyst.view.style.text import apply_text_color
 from src.main.python.plotlyst.view.widget.button import DotsMenuButton
 from src.main.python.plotlyst.view.widget.display import Icon, PopupDialog
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, RemovalButton
@@ -342,7 +344,12 @@ class HeaderElementEditor(WorldBuildingEntityElementWidget):
 
         vbox(self, 0)
         margins(self, top=10, bottom=10)
-        self.lineTitle = QLineEdit()
+
+        self.icon = Icon()
+        self.icon.setIconSize(QSize(32, 32))
+        if self.element.icon:
+            self.icon.setIcon(IconRegistry.from_name(self.element.icon, '#510442'))
+        self.lineTitle = AutoAdjustableLineEdit(defaultWidth=50)
         self.lineTitle.setProperty('transparent', True)
         self.lineTitle.setPlaceholderText('New section')
         font = self.lineTitle.font()
@@ -355,19 +362,21 @@ class HeaderElementEditor(WorldBuildingEntityElementWidget):
             family = 'Sans Serif'
         font.setFamily(family)
         self.lineTitle.setFont(font)
-        self.lineTitle.setStyleSheet(f'''
-        QLineEdit {{
-            border: 0px;
-            background-color: rgba(0, 0, 0, 0);
-            color: #510442;
-        }}''')
-        self.lineTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        apply_text_color(self.lineTitle, QColor('#510442'))
+        # palette = self.lineTitle.palette()
+        # color = QColor('#510442')
+        # palette.setColor(QPalette.ColorRole.Text, color)
+        # color.setAlpha(125)
+        # palette.setColor(QPalette.ColorRole.PlaceholderText, color)
+        # self.lineTitle.setPalette(palette)
+
         self.lineTitle.setText(self.element.title)
 
         self.lineTitle.textEdited.connect(self._titleEdited)
 
         self.frame = frame()
-        vbox(self.frame).addWidget(self.lineTitle, alignment=Qt.AlignmentFlag.AlignCenter)
+        vbox(self.frame).addWidget(group(spacer(), self.icon, self.lineTitle, spacer(), margin=0, spacing=0))
         self.layout().addWidget(self.frame)
         self.frame.setStyleSheet('''
         .QFrame {
