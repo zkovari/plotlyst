@@ -25,7 +25,7 @@ import qtanim
 from PyQt6.QtCharts import QSplineSeries, QValueAxis
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QTimer, QObject
 from PyQt6.QtGui import QColor, QIcon, QPen, QCursor, QEnterEvent, QShowEvent
-from PyQt6.QtWidgets import QWidget, QFrame, QPushButton, QTextEdit, QGridLayout, QStackedWidget
+from PyQt6.QtWidgets import QWidget, QFrame, QPushButton, QTextEdit, QGridLayout, QStackedWidget, QCheckBox
 from overrides import overrides
 from qthandy import bold, flow, incr_font, \
     margins, ask_confirmation, italic, retain_when_hidden, vbox, transparent, \
@@ -111,6 +111,18 @@ def principle_icon(type: PlotPrincipleType) -> QIcon:
         return IconRegistry.from_name('ri.ghost-2-fill', 'grey', antagonist_role.icon_color)
     elif type == PlotPrincipleType.CONFINED_SPACE:
         return IconRegistry.from_name('fa5s.house-user', 'grey', '#ffb703')
+    elif type == PlotPrincipleType.CRIME:
+        return IconRegistry.from_name('ri.knife-blood-fill', 'grey', 'black')
+    elif type == PlotPrincipleType.SLEUTH:
+        return IconRegistry.from_name('mdi.incognito', 'grey', 'black')
+    elif type == PlotPrincipleType.AUTHORITY:
+        return IconRegistry.from_name('mdi.incognito', 'grey', antagonist_role.icon_color)
+    elif type == PlotPrincipleType.MACGUFFIN:
+        return IconRegistry.from_name('fa5s.parachute-box', 'grey', '#0077b6')
+    elif type == PlotPrincipleType.CRIME_CLOCK:
+        return IconRegistry.ticking_clock_icon('grey')
+    elif type == PlotPrincipleType.SCHEME:
+        return IconRegistry.from_name('mdi.floor-plan', 'grey', 'black')
 
     else:
         return QIcon()
@@ -140,6 +152,13 @@ _principle_hints = {
     PlotPrincipleType.WAR_MENTAL_EFFECT: "Is the war's psychological impact on the characters explored?",
     PlotPrincipleType.MONSTER: "Is there a monster that pursues a victim?",
     PlotPrincipleType.CONFINED_SPACE: "Does the story unfold in a confined or isolated space to increase tension?",
+
+    PlotPrincipleType.CRIME: "Does the story revolve around a crime?",
+    PlotPrincipleType.SLEUTH: "Is there a detective figure who wants to solve the crime?",
+    PlotPrincipleType.AUTHORITY: "Is there an authority figure who chases the criminal protagonist?",
+    PlotPrincipleType.CRIME_CLOCK: "Is there a deadline to solve the crime?",
+    PlotPrincipleType.MACGUFFIN: "Is there an object or desire the characters pursue?",
+    PlotPrincipleType.SCHEME: "Is there a well-organized scheme to carry out a crime?",
 }
 
 
@@ -178,6 +197,13 @@ _principle_placeholders = {
 
     PlotPrincipleType.MONSTER: "What is the monster that pursues the victim?",
     PlotPrincipleType.CONFINED_SPACE: "What enclosed or confined space is present to increase tension?",
+
+    PlotPrincipleType.CRIME: "What's the central crime the story revolves around?",
+    PlotPrincipleType.SLEUTH: "Who is the detective character who wants to solve the crime",
+    PlotPrincipleType.AUTHORITY: "Who is authority figure who chases the criminal protagonist?",
+    PlotPrincipleType.CRIME_CLOCK: "What is the deadline of solving the crime?",
+    PlotPrincipleType.MACGUFFIN: "What object or desire do the characters pursue?",
+    PlotPrincipleType.SCHEME: "Is there a well-organized scheme to carry out a crime?",
 }
 
 
@@ -279,10 +305,12 @@ class GenrePrincipleSelectorDialog(PopupDialog):
         self.wdgTitle.layout().addWidget(label('Genre specific principles', bold=True, h4=True))
         self.wdgTitle.layout().addWidget(spacer())
         self.wdgTitle.layout().addWidget(self.btnReset)
-        self._scrollarea, self._wdgCenter = scrolled(self.frame, frameless=True)
-        self._wdgCenter.setProperty('relaxed-white-bg', True)
+        self._scrollarea, self._wdgCenter = scrolled(self.frame, frameless=True, h_on=False)
+        transparent(self._scrollarea)
+        transparent(self._wdgCenter)
         vbox(self._wdgCenter)
         self._wdgCenter.layout().addWidget(self.wdgTitle)
+        margins(self._wdgCenter, right=20)
 
         self._addHeader('Action', 'fa5s.running')
         self._addPrinciple(PlotPrincipleType.SKILL_SET)
@@ -293,6 +321,24 @@ class GenrePrincipleSelectorDialog(PopupDialog):
         self._addHeader('Horror', 'ri.knife-blood-fill')
         self._addPrinciple(PlotPrincipleType.MONSTER)
         self._addPrinciple(PlotPrincipleType.CONFINED_SPACE)
+
+        self._crimeHeaderIcon = Icon()
+        self._btnCrimeToggle = Toggle()
+        pointy(self._btnCrimeToggle)
+        self._wdgCenter.layout().addWidget(group(self._crimeHeaderIcon, label('Crime', bold=True),
+                                                 label('(criminal protagonist'), self._btnCrimeToggle, label(')')),
+                                           alignment=Qt.AlignmentFlag.AlignLeft)
+        self._wdgCenter.layout().addWidget(line())
+        self._addPrinciple(PlotPrincipleType.CRIME)
+        self._crimeClockPrinciple = self._addPrinciple(PlotPrincipleType.CRIME_CLOCK)
+        self._crimeSleuthPrinciple = self._addPrinciple(PlotPrincipleType.SLEUTH)
+        self._crimeMacGuffinPrinciple = self._addPrinciple(PlotPrincipleType.MACGUFFIN)
+        self._crimeAuthorityPrinciple = self._addPrinciple(PlotPrincipleType.AUTHORITY)
+        self._criminalToggled(self._btnCrimeToggle.isChecked())
+        self._btnCrimeToggle.toggled.connect(self._criminalToggled)
+
+        self._addHeader('Caper', 'mdi.robber')
+        self._addPrinciple(PlotPrincipleType.SCHEME)
 
         self.btnConfirm = push_btn(text='Close', properties=['base', 'positive'])
         sp(self.btnConfirm).h_exp()
@@ -310,13 +356,24 @@ class GenrePrincipleSelectorDialog(PopupDialog):
         self._wdgCenter.layout().addWidget(group(icon, header), alignment=Qt.AlignmentFlag.AlignLeft)
         self._wdgCenter.layout().addWidget(line())
 
-    def _addPrinciple(self, principle: PlotPrincipleType):
+    def _criminalToggled(self, toggled: bool):
+        self._crimeClockPrinciple.setVisible(not toggled)
+        self._crimeSleuthPrinciple.setVisible(not toggled)
+        self._crimeAuthorityPrinciple.setVisible(toggled)
+        if toggled:
+            self._crimeHeaderIcon.setIcon(IconRegistry.from_name('fa5s.mask'))
+        else:
+            self._crimeHeaderIcon.setIcon(IconRegistry.from_name('mdi.handcuffs'))
+
+    def _addPrinciple(self, principle: PlotPrincipleType) -> _PlotPrincipleToggle:
         wdg = _PlotPrincipleToggle(principle)
         margins(wdg, left=15)
         if principle in self._active_types:
             wdg.toggle.setChecked(True)
         wdg.toggle.toggled.connect(partial(self.selectorObject.principleToggled.emit, principle))
         self._wdgCenter.layout().addWidget(wdg)
+
+        return wdg
 
 
 class PlotPrinciplesWidget(QWidget):
