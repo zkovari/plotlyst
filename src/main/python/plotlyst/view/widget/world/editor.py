@@ -26,7 +26,7 @@ from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMous
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QTableView, QApplication, QDialog, QGridLayout
 from overrides import overrides
 from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy, \
-    grid, flow, spacer
+    grid, flow, spacer, line, incr_icon
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
@@ -364,15 +364,7 @@ class HeaderElementEditor(WorldBuildingEntityElementWidget):
         self.lineTitle.setFont(font)
 
         apply_text_color(self.lineTitle, QColor('#510442'))
-        # palette = self.lineTitle.palette()
-        # color = QColor('#510442')
-        # palette.setColor(QPalette.ColorRole.Text, color)
-        # color.setAlpha(125)
-        # palette.setColor(QPalette.ColorRole.PlaceholderText, color)
-        # self.lineTitle.setPalette(palette)
-
         self.lineTitle.setText(self.element.title)
-
         self.lineTitle.textEdited.connect(self._titleEdited)
 
         self.frame = frame()
@@ -740,7 +732,7 @@ class TopicSelectionDialog(PopupDialog):
         self._scrollarea, self._wdgCenter = scrolled(self.frame, frameless=True, h_on=False)
         vbox(self._wdgCenter, 10)
         # self._wdgCenter.setStyleSheet('QWidget {background: #ede0d4;}')
-        self.setMinimumWidth(350)
+        self.setMinimumWidth(550)
 
         self._addSection('Ecological', ecological_topics)
         self._addSection('Cultural', cultural_topics)
@@ -771,12 +763,15 @@ class TopicSelectionDialog(PopupDialog):
 
     def _addSection(self, header: str, topics: List[Topic]):
         self._wdgCenter.layout().addWidget(label(header, bold=True), alignment=Qt.AlignmentFlag.AlignLeft)
+        self._wdgCenter.layout().addWidget(line())
         wdg = QWidget()
         flow(wdg)
         margins(wdg, left=10)
 
         for topic in topics:
             btn = tool_btn(IconRegistry.from_name(topic.icon), topic.description, checkable=True)
+            btn.setMinimumWidth(100)
+            incr_icon(btn, 4)
             btn.setText(topic.text)
             btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
             btn.toggled.connect(partial(self._toggled, topic))
