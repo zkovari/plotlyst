@@ -379,7 +379,7 @@ class HeaderElementEditor(WorldBuildingEntityElementWidget):
             self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
             self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
 
-        self._btnRemovalOffsetY = 7
+        self._btnCornerButtonOffsetY = 7
         self.btnRemove.raise_()
 
     def _titleEdited(self, title: str):
