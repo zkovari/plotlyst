@@ -25,7 +25,7 @@ import qtanim
 from PyQt6.QtCharts import QSplineSeries, QValueAxis
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QTimer, QObject
 from PyQt6.QtGui import QColor, QIcon, QPen, QCursor, QEnterEvent, QShowEvent
-from PyQt6.QtWidgets import QWidget, QFrame, QPushButton, QTextEdit, QGridLayout, QStackedWidget, QCheckBox
+from PyQt6.QtWidgets import QWidget, QFrame, QPushButton, QTextEdit, QGridLayout, QStackedWidget
 from overrides import overrides
 from qthandy import bold, flow, incr_font, \
     margins, ask_confirmation, italic, retain_when_hidden, vbox, transparent, \
@@ -123,6 +123,16 @@ def principle_icon(type: PlotPrincipleType) -> QIcon:
         return IconRegistry.ticking_clock_icon('grey')
     elif type == PlotPrincipleType.SCHEME:
         return IconRegistry.from_name('mdi.floor-plan', 'grey', 'black')
+    elif type == PlotPrincipleType.SELF_DISCOVERY:
+        return IconRegistry.from_name('mdi.fingerprint', 'grey', '#cdb4db')
+    elif type == PlotPrincipleType.LOSS_OF_INNOCENCE:
+        return IconRegistry.from_name('fa5s.dove', 'grey', '#a2d2ff')
+    elif type == PlotPrincipleType.MATURITY:
+        return IconRegistry.from_name('ri.seedling-fill', 'grey', '#2a9d8f')
+    elif type == PlotPrincipleType.FIRST_LOVE:
+        return IconRegistry.from_name('fa5s.heart', 'grey', '#e76f51')
+    elif type == PlotPrincipleType.MENTOR:
+        return IconRegistry.from_name('mdi.compass-rose', 'grey', '#80ced7')
 
     else:
         return QIcon()
@@ -159,6 +169,12 @@ _principle_hints = {
     PlotPrincipleType.CRIME_CLOCK: "Is there a deadline to solve the crime?",
     PlotPrincipleType.MACGUFFIN: "Is there an object or desire the characters pursue?",
     PlotPrincipleType.SCHEME: "Is there a well-organized scheme to carry out a crime?",
+
+    PlotPrincipleType.SELF_DISCOVERY: "Will the character understand themselves, their identity or their place better in the world?",
+    PlotPrincipleType.LOSS_OF_INNOCENCE: "Does the character forgo a loss of innocence and experience the realities of life?",
+    PlotPrincipleType.MATURITY: "Does the character go through personal growth and maturity?",
+    PlotPrincipleType.FIRST_LOVE: "Is there a first love the character experiences?",
+    PlotPrincipleType.MENTOR: "Is there a mentor figure who guides the character?",
 }
 
 
@@ -204,6 +220,12 @@ _principle_placeholders = {
     PlotPrincipleType.CRIME_CLOCK: "What is the deadline of solving the crime?",
     PlotPrincipleType.MACGUFFIN: "What object or desire do the characters pursue?",
     PlotPrincipleType.SCHEME: "Is there a well-organized scheme to carry out a crime?",
+
+    PlotPrincipleType.SELF_DISCOVERY: "How will the character grow and understand themselves  or their identity better",
+    PlotPrincipleType.LOSS_OF_INNOCENCE: "How does the character experience a loss of innocence and the realities of life?",
+    PlotPrincipleType.MATURITY: "How does the character go through personal growth and maturity?",
+    PlotPrincipleType.FIRST_LOVE: "How does the first love contributes to the character's growth?",
+    PlotPrincipleType.MENTOR: "Who and how guides the character?",
 }
 
 
@@ -306,8 +328,6 @@ class GenrePrincipleSelectorDialog(PopupDialog):
         self.wdgTitle.layout().addWidget(spacer())
         self.wdgTitle.layout().addWidget(self.btnReset)
         self._scrollarea, self._wdgCenter = scrolled(self.frame, frameless=True, h_on=False)
-        transparent(self._scrollarea)
-        transparent(self._wdgCenter)
         vbox(self._wdgCenter)
         self._wdgCenter.layout().addWidget(self.wdgTitle)
         margins(self._wdgCenter, right=20)
@@ -328,7 +348,7 @@ class GenrePrincipleSelectorDialog(PopupDialog):
         self._wdgCenter.layout().addWidget(group(self._crimeHeaderIcon, label('Crime', bold=True),
                                                  label('(criminal protagonist'), self._btnCrimeToggle, label(')')),
                                            alignment=Qt.AlignmentFlag.AlignLeft)
-        self._wdgCenter.layout().addWidget(line())
+        self._wdgCenter.layout().addWidget(line('lightgrey'))
         self._addPrinciple(PlotPrincipleType.CRIME)
         self._crimeClockPrinciple = self._addPrinciple(PlotPrincipleType.CRIME_CLOCK)
         self._crimeSleuthPrinciple = self._addPrinciple(PlotPrincipleType.SLEUTH)
@@ -339,6 +359,13 @@ class GenrePrincipleSelectorDialog(PopupDialog):
 
         self._addHeader('Caper', 'mdi.robber')
         self._addPrinciple(PlotPrincipleType.SCHEME)
+
+        self._addHeader('Coming of age', 'ri.seedling-line')
+        self._addPrinciple(PlotPrincipleType.SELF_DISCOVERY)
+        self._addPrinciple(PlotPrincipleType.LOSS_OF_INNOCENCE)
+        self._addPrinciple(PlotPrincipleType.MATURITY)
+        self._addPrinciple(PlotPrincipleType.FIRST_LOVE)
+        self._addPrinciple(PlotPrincipleType.MENTOR)
 
         self.btnConfirm = push_btn(text='Close', properties=['base', 'positive'])
         sp(self.btnConfirm).h_exp()
@@ -354,7 +381,7 @@ class GenrePrincipleSelectorDialog(PopupDialog):
         icon.setIcon(IconRegistry.from_name(icon_name))
         header = label(name, bold=True)
         self._wdgCenter.layout().addWidget(group(icon, header), alignment=Qt.AlignmentFlag.AlignLeft)
-        self._wdgCenter.layout().addWidget(line())
+        self._wdgCenter.layout().addWidget(line('lightgrey'))
 
     def _criminalToggled(self, toggled: bool):
         self._crimeClockPrinciple.setVisible(not toggled)

@@ -641,6 +641,12 @@ class PlotPrincipleType(Enum):
     SCHEME = 29
     CRIME_CLOCK = 30
 
+    SELF_DISCOVERY = 31
+    LOSS_OF_INNOCENCE = 32
+    MATURITY = 33
+    FIRST_LOVE = 34
+    MENTOR = 35
+
     def display_name(self) -> str:
         if self == PlotPrincipleType.WAR_MENTAL_EFFECT:
             return 'Mental effect'
@@ -648,6 +654,8 @@ class PlotPrincipleType(Enum):
             return 'Time pressure'
         elif self == PlotPrincipleType.MACGUFFIN:
             return 'MacGuffin'
+        elif self == PlotPrincipleType.SELF_DISCOVERY:
+            return 'Self-discovery'
         return self.name.lower().capitalize().replace('_', ' ')
 
 

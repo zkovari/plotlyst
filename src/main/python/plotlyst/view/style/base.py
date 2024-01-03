@@ -121,6 +121,10 @@ QScrollArea[transparent=true] {
     background-color: rgba(0, 0, 0, 0);
 }
 
+QScrollArea[relaxed-white-bg=true] {
+    background-color: #f8f9fa;
+}
+
 TaskWidget {
     background-color: #f8f9fa;
     border: 1px solid lightGrey;
