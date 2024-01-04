@@ -38,6 +38,7 @@ from src.main.python.plotlyst.view.style.base import apply_bg_image
 from src.main.python.plotlyst.view.widget.tree import TreeSettings
 from src.main.python.plotlyst.view.widget.world.editor import EntityAdditionMenu, WorldBuildingEntityEditor, \
     WorldBuildingGlossaryEditor
+from src.main.python.plotlyst.view.widget.world.map import WorldBuildingMapView
 
 
 class WorldBuildingView(AbstractNovelView):
@@ -107,8 +108,8 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.treeWorld.entitySelected.connect(self._selection_changed)
         self.ui.treeWorld.selectRoot()
 
-        # self.map = WorldBuildingMapView(self.novel)
-        # self.ui.pageMap.layout().addWidget(self.map)
+        self.map = WorldBuildingMapView(self.novel)
+        self.ui.pageMap.layout().addWidget(self.map)
 
         self.glossaryEditor = WorldBuildingGlossaryEditor(self.novel)
         self.ui.wdgGlossaryParent.layout().addWidget(self.glossaryEditor)

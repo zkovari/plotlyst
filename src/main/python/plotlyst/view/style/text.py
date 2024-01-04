@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from PyQt6.QtGui import QColor, QPalette
 from PyQt6.QtWidgets import QWidget
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
@@ -159,3 +160,11 @@ def apply_texteditor_toolbar_style(widget: QWidget):
                                 background-color: #e5e5e5;
                             }}
                         ''')
+
+
+def apply_text_color(editor: QWidget, color: QColor):
+    palette = editor.palette()
+    palette.setColor(QPalette.ColorRole.Text, color)
+    color.setAlpha(125)
+    palette.setColor(QPalette.ColorRole.PlaceholderText, color)
+    editor.setPalette(palette)
