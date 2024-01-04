@@ -423,6 +423,13 @@ flaw_triggers_field = TemplateField('Triggers', type=TemplateFieldType.SMALL_TEX
 flaw_goals_field = TemplateField('Impact on goals', type=TemplateFieldType.SMALL_TEXT, emoji=':bullseye:',
                                  placeholder="How does the flaw impact the character's goals?",
                                  id=uuid.UUID('eb0c550b-b531-4295-b5a0-e88a2d330c06'))
+flaw_growth_field = TemplateField('Potential growth', type=TemplateFieldType.SMALL_TEXT, emoji=':smiling_face_with_halo:',
+                                  placeholder="How could the character grow and overcome their flaw?",
+                                  id=uuid.UUID('6862fa7b-f33c-4de8-834e-ae172f0c5a74'))
+flaw_deterioration_field = TemplateField('Deterioration', type=TemplateFieldType.SMALL_TEXT,
+                                         placeholder="How could the flaw progressively become worse?",
+                                         emoji=':smiling_face_with_horns:',
+                                         id=uuid.UUID('6988b841-1d0e-4df5-9a80-13113a77228c'))
 
 flaws_field = TemplateField('Flaws', type=TemplateFieldType.COMPLEX,
                             id=uuid.UUID('561900fb-3061-4735-ac9f-d87571131392'))

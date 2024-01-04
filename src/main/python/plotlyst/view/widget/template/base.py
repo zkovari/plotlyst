@@ -109,6 +109,9 @@ class TemplateFieldWidgetBase(EditableTemplateWidget):
             if item and item.widget():
                 item.widget().setEnabled(enabled)
 
+    def refresh(self):
+        self.lblName.setText(self.field.name)
+
     def updateEmoji(self, emoji: str):
         self.lblEmoji.setFont(emoji_font())
         self.lblEmoji.setText(emoji)

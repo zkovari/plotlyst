@@ -32,7 +32,7 @@ from PyQt6.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyl
     QApplication, QToolButton, QLineEdit, QWidgetAction, QListView, QSpinBox, QWidget, QLabel, QDialog
 from language_tool_python import LanguageTool
 from overrides import overrides
-from qthandy import transparent, hbox, margins, pointy, sp, vbox
+from qthandy import transparent, hbox, margins, pointy, sp
 from qthandy.filter import DisabledClickEventFilter
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
 
@@ -789,7 +789,7 @@ class FontSizeSpinBox(QWidget):
 
 
 class TextInputDialog(PopupDialog):
-    def __init__(self, title: str, placeholder: str, parent=None):
+    def __init__(self, title: str, placeholder: str, value: str = '', parent=None):
         super().__init__(parent)
 
         self.title = label(title, h4=True)
@@ -803,9 +803,11 @@ class TextInputDialog(PopupDialog):
         self.lineKey.setProperty('white-bg', True)
         self.lineKey.setProperty('rounded', True)
         self.lineKey.setPlaceholderText(placeholder)
+        self.lineKey.setText(value)
         self.lineKey.textChanged.connect(self._textChanged)
 
         self.btnConfirm = push_btn(text='Confirm', properties=['base', 'positive'])
+        self.btnConfirm.setShortcut(Qt.Key.Key_Enter)
         sp(self.btnConfirm).h_exp()
         self.btnConfirm.clicked.connect(self.accept)
         self.btnConfirm.setDisabled(True)
@@ -825,8 +827,8 @@ class TextInputDialog(PopupDialog):
         return None
 
     @classmethod
-    def edit(cls, title: str = 'Edit text', placeholder: str = 'Edit text'):
-        return cls.popup(title, placeholder)
+    def edit(cls, title: str = 'Edit text', placeholder: str = 'Edit text', value: str = ''):
+        return cls.popup(title, placeholder, value)
 
     def _textChanged(self, key: str):
         self.btnConfirm.setEnabled(len(key) > 0)
