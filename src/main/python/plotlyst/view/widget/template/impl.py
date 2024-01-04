@@ -39,7 +39,8 @@ from src.main.python.plotlyst.core.template import TemplateField, SelectionItem,
     enneagram_choices, goal_field, internal_goal_field, stakes_field, conflict_field, motivation_field, \
     internal_motivation_field, internal_conflict_field, internal_stakes_field, wound_field, trigger_field, fear_field, \
     healing_field, methods_field, misbelief_field, ghost_field, demon_field, mbti_choices, love_style_choices, \
-    work_style_choices, flaw_placeholder_field
+    work_style_choices, flaw_placeholder_field, flaw_relation_field, flaw_manifestation_field, flaw_coping_field, \
+    flaw_triggers_field, flaw_goals_field
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
 from src.main.python.plotlyst.view.common import wrap, emoji_font, hmax, insert_before_the_end, action, label
@@ -1015,7 +1016,10 @@ class FlawsFieldWidget(MultiLayerComplexTemplateWidgetBase):
         super().__init__(field, parent)
         self._hasAlias = True
         self._menu.clear()
-        self._menu.addAction(action('Add new character flaw...', slot=self._addNew))
+        self._menu.addAction(
+            action('Add a new character flaw...', icon=IconRegistry.from_name('mdi.virus'),
+                   tooltip='A flaw can deepen the character, provide complexity, and may even impact the plot',
+                   slot=self._addNew))
 
     @property
     def wdgEditor(self):
@@ -1029,11 +1033,9 @@ class FlawsFieldWidget(MultiLayerComplexTemplateWidgetBase):
     def _primaryFields(self) -> List[TemplateField]:
         return [flaw_placeholder_field]
 
-    # @overrides
-    # def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
-    #     if primary.id == wound_field.id:
-    #         return [fear_field, misbelief_field, trigger_field, healing_field]
-    #     return []
+    @overrides
+    def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
+        return [flaw_triggers_field, flaw_coping_field, flaw_manifestation_field, flaw_relation_field, flaw_goals_field]
 
     def _addNew(self):
         flaw = TextInputDialog.edit('Define a character flaw', 'Name of the flaw')

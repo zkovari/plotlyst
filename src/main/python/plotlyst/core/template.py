@@ -404,12 +404,29 @@ demon_field = TemplateField('Demon', type=TemplateFieldType.SMALL_TEXT, emoji=':
 strengths_weaknesses_field = TemplateField('Strengths and weaknesses', type=TemplateFieldType.COMPLEX,
                                            id=uuid.UUID('9cf11007-c032-46f9-a550-e238cb807714'))
 flaw_placeholder_field = TemplateField('Flaw', TemplateFieldType.TEXT, emoji=':angry_face_with_horns:',
+                                       placeholder="Describe the flaw that the character has",
                                        id=uuid.UUID('9d65ec96-fb07-4997-b9d4-3b2b4155ee5d'))
+flaw_relation_field = TemplateField('Impact on relationships', type=TemplateFieldType.SMALL_TEXT,
+                                    emoji=':broken_heart:',
+                                    placeholder="How does the flaw impact the character's relationships?",
+                                    id=uuid.UUID('bad8336e-631a-4af4-a6dd-d0d4349def3f'))
+flaw_manifestation_field = TemplateField('Manifestation', type=TemplateFieldType.SMALL_TEXT,
+                                         emoji=':eyes:',
+                                         placeholder="How is the flaw expressed outwardly through behaviour, habits, or else?",
+                                         id=uuid.UUID('b23f9492-7c1d-4aee-adfa-417cc7584486'))
+flaw_coping_field = TemplateField('Coping', type=TemplateFieldType.SMALL_TEXT, emoji=':downcast_face_with_sweat:',
+                                  placeholder="How does the character try to cope with the flaw?",
+                                  id=uuid.UUID('99de6162-186e-4fb4-bbb8-28a80c2220bf'))
+flaw_triggers_field = TemplateField('Triggers', type=TemplateFieldType.SMALL_TEXT, emoji=':police_car_light:',
+                                    placeholder="What situations can trigger the flaw to resurface or intensify?",
+                                    id=uuid.UUID('afabeeb6-0cb0-465b-845c-76e3755e761a'))
+flaw_goals_field = TemplateField('Impact on goals', type=TemplateFieldType.SMALL_TEXT, emoji=':bullseye:',
+                                 placeholder="How does the flaw impact the character's goals?",
+                                 id=uuid.UUID('eb0c550b-b531-4295-b5a0-e88a2d330c06'))
+
 flaws_field = TemplateField('Flaws', type=TemplateFieldType.COMPLEX,
                             id=uuid.UUID('561900fb-3061-4735-ac9f-d87571131392'))
 
-arcs_field = TemplateField('Arc', type=TemplateFieldType.COMPLEX,
-                           id=uuid.UUID('f9cd5704-debb-4d98-98d4-7eca36983d56'))
 positive_arc = TemplateField('Positive arc', type=TemplateFieldType.SMALL_TEXT, emoji=':smiling_face_with_halo:',
                              placeholder='How does the character change positively?',
                              id=uuid.UUID('d0feee5d-c40b-4615-9aa0-78a6071f8ce7'))
