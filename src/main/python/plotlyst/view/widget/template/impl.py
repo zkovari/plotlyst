@@ -934,8 +934,9 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
             return values
 
         value = {}
-        for primary_wdg in self._primaryWidgets:
+        for i, primary_wdg in enumerate(self._primaryWidgets):
             sid = str(primary_wdg.field().id)
+            sid += f'&{i}'
             if self._hasAlias:
                 sid += f'&{primary_wdg.field().name}'
             value[sid] = {self.VALUE_KEY: primary_wdg.value(),
@@ -954,8 +955,7 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
 
         primary_fields = self._primaryFields()
         for k, v in value.items():
-            if self._hasAlias and self.ALIAS_KEY in v.keys():
-                k = k.split('&')[0]
+            k = k.split('&')[0]
             primary = next((x for x in primary_fields if str(x.id) == k), None)
             if primary is None:
                 continue
