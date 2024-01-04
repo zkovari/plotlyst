@@ -22,16 +22,18 @@ from enum import Enum
 from functools import partial
 from typing import Optional
 
+import qtanim
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize, pyqtSignal, QModelIndex, QItemSelectionModel
 from PyQt6.QtGui import QFont, QTextCursor, QTextCharFormat, QKeyEvent, QPaintEvent, QPainter, QBrush, QLinearGradient, \
     QColor, QSyntaxHighlighter, \
     QTextDocument, QTextBlockUserData, QIcon
 from PyQt6.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QMenu, \
-    QApplication, QToolButton, QLineEdit, QWidgetAction, QListView, QSpinBox, QWidget, QLabel
+    QApplication, QToolButton, QLineEdit, QWidgetAction, QListView, QSpinBox, QWidget, QLabel, QDialog
 from language_tool_python import LanguageTool
 from overrides import overrides
-from qthandy import transparent, hbox, margins, pointy
+from qthandy import transparent, hbox, margins, pointy, sp
+from qthandy.filter import DisabledClickEventFilter
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
 
 from src.main.python.plotlyst.core.domain import TextStatistics, Character
@@ -44,10 +46,11 @@ from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.service.grammar import language_tool_proxy, dictionary
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import action
+from src.main.python.plotlyst.view.common import action, label, push_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.text import apply_texteditor_toolbar_style
 from src.main.python.plotlyst.view.widget._toggle import AnimatedToggle
+from src.main.python.plotlyst.view.widget.display import PopupDialog
 from src.main.python.plotlyst.view.widget.lang import GrammarPopupMenu
 
 
@@ -783,3 +786,48 @@ class FontSizeSpinBox(QWidget):
         self._label.setText(f"{font_size} pt")
 
         self.fontChanged.emit(font_size)
+
+
+class TextInputDialog(PopupDialog):
+    def __init__(self, title: str, placeholder: str, value: str = '', parent=None):
+        super().__init__(parent)
+
+        self.title = label(title, h4=True)
+        sp(self.title).v_max()
+        self.wdgTitle = QWidget()
+        hbox(self.wdgTitle, spacing=5)
+        self.wdgTitle.layout().addWidget(self.title, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgTitle.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
+
+        self.lineKey = QLineEdit()
+        self.lineKey.setProperty('white-bg', True)
+        self.lineKey.setProperty('rounded', True)
+        self.lineKey.setPlaceholderText(placeholder)
+        self.lineKey.setText(value)
+        self.lineKey.textChanged.connect(self._textChanged)
+
+        self.btnConfirm = push_btn(text='Confirm', properties=['base', 'positive'])
+        sp(self.btnConfirm).h_exp()
+        self.btnConfirm.clicked.connect(self.accept)
+        self.btnConfirm.setDisabled(True)
+        self.btnConfirm.installEventFilter(
+            DisabledClickEventFilter(self.btnConfirm, lambda: qtanim.shake(self.lineKey)))
+
+        self.frame.layout().addWidget(self.wdgTitle)
+        self.frame.layout().addWidget(self.lineKey)
+        self.frame.layout().addWidget(self.btnConfirm)
+
+    def display(self) -> Optional[str]:
+        result = self.exec()
+
+        if result == QDialog.DialogCode.Accepted:
+            return self.lineKey.text()
+
+        return None
+
+    @classmethod
+    def edit(cls, title: str = 'Edit text', placeholder: str = 'Edit text', value: str = ''):
+        return cls.popup(title, placeholder, value)
+
+    def _textChanged(self, key: str):
+        self.btnConfirm.setEnabled(len(key) > 0)
