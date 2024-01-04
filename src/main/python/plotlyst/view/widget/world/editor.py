@@ -30,7 +30,7 @@ from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp,
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import recursive
+from src.main.python.plotlyst.common import recursive, IGNORE_CAPITALIZATION_PROPERTY
 from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityType, \
     WorldBuildingEntityElement, WorldBuildingEntityElementType, GlossaryItem, BackstoryEvent, Variable, VariableType, \
     Topic
@@ -1024,6 +1024,7 @@ class GlossaryEditorDialog(PopupDialog):
         self.lineKey = QLineEdit()
         self.lineKey.setProperty('white-bg', True)
         self.lineKey.setProperty('rounded', True)
+        self.lineKey.setProperty(IGNORE_CAPITALIZATION_PROPERTY, True)
         self.lineKey.setPlaceholderText('Term')
         self.lineKey.textChanged.connect(self._keyChanged)
 

@@ -36,6 +36,7 @@ from qthandy import transparent, hbox, margins, pointy, sp
 from qthandy.filter import DisabledClickEventFilter
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
 
+from src.main.python.plotlyst.common import IGNORE_CAPITALIZATION_PROPERTY
 from src.main.python.plotlyst.core.domain import TextStatistics, Character
 from src.main.python.plotlyst.core.text import wc
 from src.main.python.plotlyst.env import app_env
@@ -416,8 +417,10 @@ class CapitalizationEventFilter(QObject):
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if isinstance(event, QKeyEvent) and event.type() == QEvent.Type.KeyPress:
-            if event.text().isalpha() and (self._empty(watched) or self._selectedAll(
-                    watched)) and 'filter' not in watched.objectName().lower() and not self._readOnly(watched):
+            if (event.text().isalpha() and (self._empty(watched) or self._selectedAll(
+                    watched)) and not watched.property(IGNORE_CAPITALIZATION_PROPERTY)
+                    and 'filter' not in watched.objectName().lower() and not self._readOnly(
+                        watched)):
                 inserted = self._insert(watched, event.text().upper())
                 if inserted:
                     return True

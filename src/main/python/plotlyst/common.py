@@ -50,6 +50,8 @@ UNHAPPY_EMOTION_COLOR: str = '#ff8e2b'
 HAPPY_EMOTION_COLOR: str = '#93e5ab'
 VERY_HAPPY_EMOTION_COLOR: str = '#00ca94'
 
+IGNORE_CAPITALIZATION_PROPERTY = 'ignore_capitalization'
+
 EMOTION_COLORS: Dict[int, str] = {
     0: '#f25c54',
     1: '#f25c54',
