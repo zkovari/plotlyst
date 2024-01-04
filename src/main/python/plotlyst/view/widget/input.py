@@ -98,6 +98,8 @@ class AutoAdjustableLineEdit(QLineEdit):
 
     def _resizeToContent(self):
         text = self.text().strip()
+        if not text:
+            text = self.placeholderText().strip()
         if text:
             text_width = self.fontMetrics().boundingRect(text).width()
             width = max(text_width + self._padding, self._defaultWidth)

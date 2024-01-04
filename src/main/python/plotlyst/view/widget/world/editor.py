@@ -21,31 +21,37 @@ from functools import partial
 from typing import Optional, Dict, Set, Any, List
 
 import qtanim
-from PyQt6.QtCore import pyqtSignal, Qt, QModelIndex
-from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMouseEvent
+from PyQt6.QtCore import pyqtSignal, Qt, QModelIndex, QSize
+from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMouseEvent, QColor
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QTableView, QApplication, QDialog, QGridLayout
 from overrides import overrides
 from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy, \
-    grid
+    grid, flow, spacer, line, incr_icon
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import recursive
 from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityType, \
-    WorldBuildingEntityElement, WorldBuildingEntityElementType, GlossaryItem, BackstoryEvent, Variable, VariableType
+    WorldBuildingEntityElement, WorldBuildingEntityElementType, GlossaryItem, BackstoryEvent, Variable, VariableType, \
+    Topic
 from src.main.python.plotlyst.core.template import SelectionItem
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import action, push_btn, frame, insert_before_the_end, fade_out_and_gc, \
-    tool_btn, label
+    tool_btn, label, scrolled
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import group
+from src.main.python.plotlyst.view.style.text import apply_text_color
 from src.main.python.plotlyst.view.widget.button import DotsMenuButton
 from src.main.python.plotlyst.view.widget.display import Icon, PopupDialog
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, RemovalButton
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 from src.main.python.plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
+from src.main.python.plotlyst.view.widget.world._topics import ecological_topics, cultural_topics, historical_topics, \
+    linguistic_topics, technological_topics, economic_topics, infrastructural_topics, religious_topics, \
+    fantastic_topics, nefarious_topics, environmental_topics
 
 
 class EntityAdditionMenu(MenuWidget):
@@ -265,24 +271,24 @@ class WorldBuildingEntityElementWidget(QWidget):
                   parent: Optional[
                       'WorldBuildingEntitySectionElementEditor'] = None) -> 'WorldBuildingEntityElementWidget':
         if element.type == WorldBuildingEntityElementType.Text:
-            return WorldBuildingEntityTextElementEditor(novel, element, parent)
+            return TextElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Section:
             return WorldBuildingEntitySectionElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Header:
-            return WorldBuildingEntityHeaderElementEditor(novel, element, parent)
+            return HeaderElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Quote:
-            return WorldBuildingEntityQuoteElementEditor(novel, element, parent)
+            return QuoteElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Variables:
-            return WorldBuildingEntityVariablesElementEditor(novel, element, parent)
+            return VariablesElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Highlight:
-            return WorldBuildingEntityHighlightedTextElementEditor(novel, element, parent)
+            return HighlightedTextElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Timeline:
-            return WorldBuildingEntityTimelineElementEditor(novel, element, parent)
+            return TimelineElementEditor(novel, element, parent)
         else:
             raise ValueError(f'Unsupported WorldBuildingEntityElement type {element.type}')
 
 
-class WorldBuildingEntityTextElementEditor(WorldBuildingEntityElementWidget):
+class TextElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent, removalEnabled=True if parent else False)
         self._capitalized = False
@@ -332,13 +338,18 @@ class WorldBuildingEntityTextElementEditor(WorldBuildingEntityElementWidget):
         cursor.setCharFormat(format_first_letter)
 
 
-class WorldBuildingEntityHeaderElementEditor(WorldBuildingEntityElementWidget):
+class HeaderElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent)
 
         vbox(self, 0)
         margins(self, top=10, bottom=10)
-        self.lineTitle = QLineEdit()
+
+        self.icon = Icon()
+        self.icon.setIconSize(QSize(32, 32))
+        if self.element.icon:
+            self.icon.setIcon(IconRegistry.from_name(self.element.icon, '#510442'))
+        self.lineTitle = AutoAdjustableLineEdit(defaultWidth=50)
         self.lineTitle.setProperty('transparent', True)
         self.lineTitle.setPlaceholderText('New section')
         font = self.lineTitle.font()
@@ -351,18 +362,13 @@ class WorldBuildingEntityHeaderElementEditor(WorldBuildingEntityElementWidget):
             family = 'Sans Serif'
         font.setFamily(family)
         self.lineTitle.setFont(font)
-        self.lineTitle.setStyleSheet(f'''
-        QLineEdit {{
-            border: 0px;
-            background-color: rgba(0, 0, 0, 0);
-            color: #510442;
-        }}''')
-        self.lineTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        apply_text_color(self.lineTitle, QColor('#510442'))
         self.lineTitle.setText(self.element.title)
         self.lineTitle.textEdited.connect(self._titleEdited)
 
         self.frame = frame()
-        vbox(self.frame).addWidget(self.lineTitle, alignment=Qt.AlignmentFlag.AlignCenter)
+        vbox(self.frame).addWidget(group(spacer(), self.icon, self.lineTitle, spacer(), margin=0, spacing=0))
         self.layout().addWidget(self.frame)
         self.frame.setStyleSheet('''
         .QFrame {
@@ -376,7 +382,7 @@ class WorldBuildingEntityHeaderElementEditor(WorldBuildingEntityElementWidget):
             self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
             self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
 
-        self._btnRemovalOffsetY = 7
+        self._btnCornerButtonOffsetY = 7
         self.btnRemove.raise_()
 
     def _titleEdited(self, title: str):
@@ -384,7 +390,7 @@ class WorldBuildingEntityHeaderElementEditor(WorldBuildingEntityElementWidget):
         self.save()
 
 
-class WorldBuildingEntityQuoteElementEditor(WorldBuildingEntityElementWidget):
+class QuoteElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent)
 
@@ -534,7 +540,7 @@ class VariableWidget(QWidget):
             self.valueField.setText(self.variable.value)
 
 
-class WorldBuildingEntityVariablesElementEditor(WorldBuildingEntityElementWidget):
+class VariablesElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent, removalEnabled=False, menuEnabled=True)
         vbox(self, 5)
@@ -609,7 +615,7 @@ class WorldBuildingEntityVariablesElementEditor(WorldBuildingEntityElementWidget
         self.menu.addAction(action('Remove all variables', IconRegistry.trash_can_icon(), slot=self.btnRemove.click))
 
 
-class WorldBuildingEntityHighlightedTextElementEditor(WorldBuildingEntityElementWidget):
+class HighlightedTextElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent)
         vbox(self, 5)
@@ -662,7 +668,7 @@ class EntityTimelineWidget(TimelineWidget):
         return EntityTimelineCard
 
 
-class WorldBuildingEntityTimelineElementEditor(WorldBuildingEntityElementWidget):
+class TimelineElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent)
 
@@ -698,7 +704,7 @@ class WorldBuildingEntitySectionElementEditor(WorldBuildingEntityElementWidget):
         qtanim.fade_in(newBlockWdg, teardown=lambda: newBlockWdg.setGraphicsEffect(None))
 
     def _removeBlock(self, widget: WorldBuildingEntityElementWidget):
-        if isinstance(widget, WorldBuildingEntityHeaderElementEditor):
+        if isinstance(widget, HeaderElementEditor):
             self.removed.emit()
             return
 
@@ -715,19 +721,99 @@ class WorldBuildingEntitySectionElementEditor(WorldBuildingEntityElementWidget):
         return wdg
 
 
+class TopicSelectionDialog(PopupDialog):
+    DEFAULT_SELECT_BTN_TEXT: str = 'Select worldbuilding topics'
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._selectedTopics = []
+
+        self.frame.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
+        self._scrollarea, self._wdgCenter = scrolled(self.frame, frameless=True, h_on=False)
+        vbox(self._wdgCenter, 10)
+        # self._wdgCenter.setStyleSheet('QWidget {background: #ede0d4;}')
+        self.setMinimumWidth(550)
+
+        self._addSection('Ecological', ecological_topics)
+        self._addSection('Cultural', cultural_topics)
+        self._addSection('Historical', historical_topics)
+        self._addSection('Linguistic', linguistic_topics)
+        self._addSection('Technological', technological_topics)
+        self._addSection('Economic', economic_topics)
+        self._addSection('Infrastructural', infrastructural_topics)
+        self._addSection('Religious', religious_topics)
+        self._addSection('Fantastic', fantastic_topics)
+        self._addSection('Nefarious', nefarious_topics)
+        self._addSection('Environmental', environmental_topics)
+
+        self.btnSelect = push_btn(IconRegistry.ok_icon('white'), self.DEFAULT_SELECT_BTN_TEXT,
+                                  properties=['positive', 'base'])
+        self.btnSelect.setDisabled(True)
+        self.btnSelect.clicked.connect(self.accept)
+
+        self._wdgCenter.layout().addWidget(vspacer())
+        self.frame.layout().addWidget(self.btnSelect)
+
+    def display(self) -> List[Topic]:
+        result = self.exec()
+        if result == QDialog.DialogCode.Accepted:
+            return self._selectedTopics
+
+        return []
+
+    def _addSection(self, header: str, topics: List[Topic]):
+        self._wdgCenter.layout().addWidget(label(header, bold=True), alignment=Qt.AlignmentFlag.AlignLeft)
+        self._wdgCenter.layout().addWidget(line())
+        wdg = QWidget()
+        flow(wdg)
+        margins(wdg, left=10)
+
+        for topic in topics:
+            btn = tool_btn(IconRegistry.from_name(topic.icon), topic.description, checkable=True)
+            btn.setMinimumWidth(100)
+            incr_icon(btn, 4)
+            btn.setText(topic.text)
+            btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+            btn.toggled.connect(partial(self._toggled, topic))
+            btn.setStyleSheet('''
+            QToolButton {
+                border: 1px hidden lightgrey;
+                border-radius: 10px;
+            }
+            QToolButton:hover:!checked {
+                background: #FCF5FE;
+            }
+            QToolButton:checked {
+                background: #D4B8E0;
+            }
+            ''')
+            wdg.layout().addWidget(btn)
+
+        self._wdgCenter.layout().addWidget(wdg)
+
+    def _toggled(self, topic: Topic, checked: bool):
+        if checked:
+            self._selectedTopics.append(topic)
+        else:
+            self._selectedTopics.remove(topic)
+
+        self.btnSelect.setEnabled(len(self._selectedTopics) > 0)
+        if self._selectedTopics:
+            self.btnSelect.setText(f'{self.DEFAULT_SELECT_BTN_TEXT} ({len(self._selectedTopics)})')
+        else:
+            self.btnSelect.setText(self.DEFAULT_SELECT_BTN_TEXT)
+
+
 class SectionAdditionMenu(MenuWidget):
     newSectionSelected = pyqtSignal()
-    templateSectionSelected = pyqtSignal()
+    topicSectionSelected = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.addAction(action('New section', IconRegistry.plus_icon('grey'), slot=self.newSectionSelected))
         self.addSeparator()
-        self.addSection('Section templates')
-        self.addSeparator()
-        self.addAction(action('Nature'))
-        self.addAction(action('Culture'))
-        self.addAction(action('Crime'))
+        self.addAction(
+            action('Select topic...', IconRegistry.world_building_icon('grey'), slot=self.topicSectionSelected))
 
 
 class MainBlockAdditionMenu(MenuWidget):
@@ -798,6 +884,7 @@ class WorldBuildingEntityEditor(QWidget):
         if middle:
             menu = SectionAdditionMenu(wdg)
             menu.newSectionSelected.connect(self._addNewSection)
+            menu.topicSectionSelected.connect(self._selectNewTopic)
         else:
             menu = SideBlockAdditionMenu(wdg)
             menu.newSideBlockSelected.connect(self._addNewSideBlock)
@@ -815,17 +902,30 @@ class WorldBuildingEntityEditor(QWidget):
         else:
             self.wdgEditorSide.layout().addWidget(wdg)
 
-    def _addNewSection(self):
+    def _addNewSection(self, topic: Optional[Topic] = None):
+        header = WorldBuildingEntityElement(WorldBuildingEntityElementType.Header)
         element = WorldBuildingEntityElement(WorldBuildingEntityElementType.Section, blocks=[
-            WorldBuildingEntityElement(WorldBuildingEntityElementType.Header),
+            header,
             WorldBuildingEntityElement(WorldBuildingEntityElementType.Text)
         ])
+        if topic:
+            element.ref = topic.id
+            element.title = topic.text
+            header.title = topic.text
+            header.icon = topic.icon
         wdg = self.__initElementWidget(element, True)
         insert_before_the_end(self.wdgEditorMiddle, wdg)
         qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
 
         self._entity.elements.append(element)
         self.repo.update_world(self._novel)
+
+    def _selectNewTopic(self):
+        topics = TopicSelectionDialog.popup()
+        # topics = dialog.display()
+        if topics:
+            for topic in topics:
+                self._addNewSection(topic)
 
     def _removeSection(self, wdg: WorldBuildingEntityElementWidget):
         self._entity.elements.remove(wdg.element)
