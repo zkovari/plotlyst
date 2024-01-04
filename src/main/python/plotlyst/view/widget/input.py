@@ -807,7 +807,6 @@ class TextInputDialog(PopupDialog):
         self.lineKey.textChanged.connect(self._textChanged)
 
         self.btnConfirm = push_btn(text='Confirm', properties=['base', 'positive'])
-        self.btnConfirm.setShortcut(Qt.Key.Key_Enter)
         sp(self.btnConfirm).h_exp()
         self.btnConfirm.clicked.connect(self.accept)
         self.btnConfirm.setDisabled(True)
