@@ -27,10 +27,10 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QModelIndex, QSize
 from PyQt6.QtGui import QMouseEvent, QIcon, QWheelEvent
 from PyQt6.QtWidgets import QHBoxLayout, QWidget, QLineEdit, QToolButton, QLabel, \
-    QSpinBox, QButtonGroup, QSizePolicy, QListView, QVBoxLayout, QSlider
+    QSpinBox, QButtonGroup, QSizePolicy, QListView, QVBoxLayout, QSlider, QGridLayout
 from overrides import overrides
 from qthandy import spacer, hbox, vbox, bold, line, underline, transparent, margins, \
-    decr_font, retain_when_hidden, vspacer, gc, sp, pointy
+    decr_font, retain_when_hidden, vspacer, gc, sp, pointy, grid
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
@@ -56,7 +56,7 @@ from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, T
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
 from src.main.python.plotlyst.view.widget.progress import CircularProgressBar
 from src.main.python.plotlyst.view.widget.template.base import TemplateDisplayWidget, TemplateFieldWidgetBase, \
-    TemplateWidgetBase, ComplexTemplateWidgetBase
+    TemplateWidgetBase, ComplexTemplateWidgetBase, EditableTemplateWidget
 
 
 def _icon(item: SelectionItem) -> QIcon:
@@ -1102,3 +1102,61 @@ class BaggageFieldWidget(MultiLayerComplexTemplateWidgetBase):
         if primary.id == wound_field.id:
             return [fear_field, misbelief_field, trigger_field, healing_field]
         return []
+
+
+class StrengthsWeaknessesTableRow(QWidget):
+    def __init__(self, attribute: str, parent=None):
+        super().__init__(parent)
+        hbox(self)
+        self.lblAttribute = label(attribute)
+        self.layout().addWidget(self.lblAttribute)
+
+
+class StrengthsWeaknessesFieldWidget(EditableTemplateWidget):
+    def __init__(self, field: TemplateField, parent=None):
+        super().__init__(field, parent)
+        self._rows: List[StrengthsWeaknessesTableRow] = []
+
+        self._layout: QGridLayout = grid(self, 0, 5, 2)
+
+        self.lblStrength = label('Strength')
+        self.lblWeakness = label('Weakness')
+        self._layout.addWidget(self.lblStrength, 0, 1, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._layout.addWidget(self.lblWeakness, 0, 2, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self._btnPrimary = SecondaryActionPushButton()
+        self._btnPrimary.setText('Add new attribute')
+        self._btnPrimary.setIcon(IconRegistry.plus_icon('grey'))
+        self._btnPrimary.clicked.connect(self._addNewAttribute)
+        decr_font(self._btnPrimary)
+
+
+        self._layout.addWidget(wrap(self._btnPrimary, margin_left=5), 1, 0)
+
+    @overrides
+    def value(self) -> Any:
+        pass
+
+    @overrides
+    def setValue(self, value: Any):
+        if value is None:
+            return
+        if isinstance(value, str):
+            return
+
+        for item in value:
+            pass
+
+    def _addNewAttribute(self):
+        attribute = TextInputDialog.edit('Define attribute',
+                                         'Name an attribute that is a potential weakness, strength, or both')
+        if attribute:
+            wdg = StrengthsWeaknessesTableRow(attribute)
+            self._rows.append(wdg)
+            # wdg.removed.connect(partial(self._removePrimaryField, wdg))
+            # wdg.renamed.connect(partial(self._renamePrimaryField, wdg))
+            # wdg.valueChanged.connect(self._valueChanged)
+            insert_before_the_end(self._layout, wdg)
+            self._layout.addWidget(wdg, self._layout.rowCount() - 1, )
+
+            # return wdg
