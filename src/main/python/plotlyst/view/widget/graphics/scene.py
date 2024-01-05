@@ -22,7 +22,8 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Optional, Dict
 
-from PyQt6.QtCore import Qt, pyqtSignal, QPointF, QPoint
+import qtanim
+from PyQt6.QtCore import Qt, pyqtSignal, QPointF, QPoint, QObject
 from PyQt6.QtGui import QTransform, \
     QKeyEvent, QKeySequence, QCursor
 from PyQt6.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QApplication
@@ -53,6 +54,7 @@ class NetworkScene(QGraphicsScene):
         self._linkMode: bool = False
         self._additionDescriptor: Optional[ItemDescriptor] = None
         self._copyDescriptor: Optional[ItemDescriptor] = None
+        self._animParent = QObject()
 
         self._placeholder: Optional[PlaceholderSocketItem] = None
         self._connectorPlaceholder: Optional[ConnectorItem] = None
@@ -287,6 +289,8 @@ class NetworkScene(QGraphicsScene):
             item = EventItem(self.toEventNode(scenePos, itemType, subType))
 
         self.addItem(item)
+        anim = qtanim.fade_in(item)
+        anim.setParent(self._animParent)
         self.itemAdded.emit(itemType, item)
         self.endAdditionMode()
 
