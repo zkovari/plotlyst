@@ -65,6 +65,9 @@
         <property name="cursor">
          <cursorShape>PointingHandCursor</cursorShape>
         </property>
+        <property name="toolTip">
+         <string>Worldbuilding entities</string>
+        </property>
         <property name="text">
          <string/>
         </property>
@@ -89,6 +92,9 @@
        <widget class="QToolButton" name="btnMapView">
         <property name="cursor">
          <cursorShape>PointingHandCursor</cursorShape>
+        </property>
+        <property name="toolTip">
+         <string>Map</string>
         </property>
         <property name="text">
          <string/>
@@ -115,6 +121,9 @@
         <property name="cursor">
          <cursorShape>PointingHandCursor</cursorShape>
         </property>
+        <property name="toolTip">
+         <string>Timeline</string>
+        </property>
         <property name="text">
          <string/>
         </property>
@@ -139,6 +148,9 @@
        <widget class="QToolButton" name="btnGlossaryView">
         <property name="cursor">
          <cursorShape>PointingHandCursor</cursorShape>
+        </property>
+        <property name="toolTip">
+         <string>Glossary</string>
         </property>
         <property name="text">
          <string/>
@@ -187,7 +199,7 @@
        </widget>
       </item>
       <item>
-       <widget class="Toggle" name="checkBox">
+       <widget class="Toggle" name="readerModeToggle">
         <property name="cursor">
          <cursorShape>PointingHandCursor</cursorShape>
         </property>
@@ -373,8 +385,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>609</width>
-             <height>592</height>
+             <width>490</width>
+             <height>136</height>
             </rect>
            </property>
            <property name="sizePolicy">
@@ -673,7 +685,7 @@
   <connection>
    <sender>iconReaderMode</sender>
    <signal>clicked()</signal>
-   <receiver>checkBox</receiver>
+   <receiver>readerModeToggle</receiver>
    <slot>toggle()</slot>
    <hints>
     <hint type="sourcelabel">

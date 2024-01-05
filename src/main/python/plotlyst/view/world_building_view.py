@@ -120,6 +120,10 @@ class WorldBuildingView(AbstractNovelView):
                                                       (self.ui.btnGlossaryView, self.ui.pageGlossary)])
         self.ui.btnWorldView.setChecked(True)
 
+        self.ui.iconReaderMode.setHidden(True)
+        self.ui.readerModeToggle.setHidden(True)
+        self.ui.btnHistoryView.setHidden(True)
+
         self.ui.btnTreeToggle.setChecked(False)
         self.ui.wdgWorldContainer.setHidden(True)
 
