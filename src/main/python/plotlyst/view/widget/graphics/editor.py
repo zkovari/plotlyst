@@ -205,7 +205,7 @@ class EventSelectorWidget(SecondarySelectorWidget):
 
         self._grid.addWidget(QLabel('Internal'), 3, 0, 1, 3)
         self._btnInternalConflict = self.addItemTypeButton(DiagramNodeType.EVENT,
-                                                           IconRegistry.conflict_self_icon('black'),
+                                                           IconRegistry.conflict_self_icon('black', 'black'),
                                                            'Internal conflict', 4, 0,
                                                            subType=NODE_SUBTYPE_INTERNAL_CONFLICT)
         self._btnBackstory = self.addItemTypeButton(DiagramNodeType.EVENT,
