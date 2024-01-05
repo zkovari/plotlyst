@@ -528,5 +528,6 @@ class WorldBuildingMapView(BaseGraphicsView):
         addAction = action('Add map', IconRegistry.plus_icon(), tooltip="Upload a picture for your map",
                            slot=self._addNewMap)
         if self._scene.map():
-            addAction.setText('Add another map')
+            addAction.setText('Replace map')
+            addAction.setToolTip('Upload a new picture for your map')
         self._menuEdit.addAction(addAction)
