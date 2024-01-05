@@ -193,6 +193,14 @@ class NetworkScene(QGraphicsScene):
 
         super().mouseReleaseEvent(event)
 
+    @overrides
+    def mouseDoubleClickEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        if (not self.isAdditionMode() and not self.linkMode() and
+                event.button() & Qt.MouseButton.LeftButton and not self.itemAt(event.scenePos(), QTransform())):
+            pos = self._cursorScenePos()
+            if pos:
+                self._addNewItem(pos, DiagramNodeType.EVENT)
+
     def itemChangedEvent(self, item: NodeItem):
         self.itemMoved.emit(item)
 
