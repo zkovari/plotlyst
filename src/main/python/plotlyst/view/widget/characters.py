@@ -34,7 +34,8 @@ from qtmenu import MenuWidget, ScrollableMenuWidget
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character
-from src.main.python.plotlyst.core.template import SelectionItem, TemplateFieldType, TemplateField, RoleImportance
+from src.main.python.plotlyst.core.template import SelectionItem, TemplateFieldType, TemplateField, RoleImportance, \
+    strengths_weaknesses_field
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatchers
@@ -777,7 +778,19 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
                             count += 1
                             if secondary.get('value'):
                                 values += 1
-
+                    headers[header] = headers[header] + values / count
+                elif value.id == strengths_weaknesses_field.id:
+                    count = 0
+                    values = 0
+                    for attrs in value.value:
+                        if attrs.get('has_strength', True):
+                            count += 1
+                        if attrs.get('strength', ''):
+                            values += 1
+                        if attrs.get('has_weakness', True):
+                            count += 1
+                        if attrs.get('weakness', ''):
+                            values += 1
                     headers[header] = headers[header] + values / count
                 else:
                     headers[header] = headers[header] + 1
