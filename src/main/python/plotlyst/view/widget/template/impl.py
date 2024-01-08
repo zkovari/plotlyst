@@ -43,7 +43,8 @@ from src.main.python.plotlyst.core.template import TemplateField, SelectionItem,
     flaw_triggers_field, flaw_goals_field, flaw_growth_field, flaw_deterioration_field
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
-from src.main.python.plotlyst.view.common import wrap, emoji_font, insert_before_the_end, action, label, push_btn
+from src.main.python.plotlyst.view.common import wrap, emoji_font, insert_before_the_end, action, label, push_btn, \
+    fade_out_and_gc
 from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
@@ -1143,18 +1144,19 @@ class StrengthsWeaknessesTableRow(QWidget):
         hbox(self, 0, spacing=10)
         self.textStrength = self._textEditor()
         self.textStrength.setPlaceholderText('Define the strength of this attribute')
-        self.textStrength.setVisible(self.attribute.has_strength)
         self.textStrength.setText(self.attribute.strength)
         self.textStrength.textChanged.connect(self._strengthChanged)
 
         self.textWeakness = self._textEditor()
         self.textWeakness.setPlaceholderText('Define the weakness of this attribute')
-        self.textWeakness.setVisible(self.attribute.has_weakness)
         self.textWeakness.setText(self.attribute.weakness)
         self.textWeakness.textChanged.connect(self._weaknessChanged)
 
         self.layout().addWidget(self.textStrength)
         self.layout().addWidget(self.textWeakness)
+
+        self.textStrength.setVisible(self.attribute.has_strength)
+        self.textWeakness.setVisible(self.attribute.has_weakness)
 
     def refreshAttribute(self, attribute: StrengthWeaknessAttribute):
         self.attribute = attribute
@@ -1215,32 +1217,50 @@ class StrengthsWeaknessesFieldWidget(EditableTemplateWidget):
 
     @overrides
     def value(self) -> Any:
-        pass
+        values = []
+        for row in self._rows:
+            values.append({
+                'key': row.attribute.name,
+                'has_strength': row.attribute.has_strength,
+                'has_weakness': row.attribute.has_weakness,
+                'strength': row.attribute.strength,
+                'weakness': row.attribute.weakness
+            })
+
+        return values
 
     @overrides
     def setValue(self, value: Any):
+        self._rows.clear()
         if value is None:
             return
         if isinstance(value, str):
             return
 
         for item in value:
-            pass
+            attribute = StrengthWeaknessAttribute(item.get('key', ''),
+                                                  has_strength=item.get('has_strength', True),
+                                                  has_weakness=item.get('has_weakness', True),
+                                                  strength=item.get('strength', ''),
+                                                  weakness=item.get('weakness', '')
+                                                  )
+            self._addAttribute(attribute)
 
     def _addNewAttribute(self):
         attribute = StrengthWeaknessEditor.popup()
         if attribute:
-            wdg = StrengthsWeaknessesTableRow(attribute)
-            self._rows.append(wdg)
-            header = StrengthsWeaknessesHeader(attribute)
-            header.edit.connect(partial(self._edit, header, wdg))
-            header.remove.connect(partial(self._remove, header, wdg))
+            self._addAttribute(attribute)
 
-            row = self._centerlayout.rowCount()
-            self._centerlayout.addWidget(header, row, 0, alignment=Qt.AlignmentFlag.AlignTop)
-            self._centerlayout.addWidget(wdg, row, 1, 1, 2)
+    def _addAttribute(self, attribute: StrengthWeaknessAttribute):
+        wdg = StrengthsWeaknessesTableRow(attribute)
+        self._rows.append(wdg)
+        header = StrengthsWeaknessesHeader(attribute)
+        header.edit.connect(partial(self._edit, header, wdg))
+        header.remove.connect(partial(self._remove, header, wdg))
 
-            # return wdg
+        row = self._centerlayout.rowCount()
+        self._centerlayout.addWidget(header, row, 0, alignment=Qt.AlignmentFlag.AlignTop)
+        self._centerlayout.addWidget(wdg, row, 1, 1, 2)
 
     def _edit(self, header: StrengthsWeaknessesHeader, row: StrengthsWeaknessesTableRow):
         attribute = StrengthWeaknessEditor.popup(header.attribute)
@@ -1249,4 +1269,6 @@ class StrengthsWeaknessesFieldWidget(EditableTemplateWidget):
             row.refreshAttribute(attribute)
 
     def _remove(self, header: StrengthsWeaknessesHeader, row: StrengthsWeaknessesTableRow):
-        pass
+        self._rows.remove(row)
+        fade_out_and_gc(self._center, header)
+        fade_out_and_gc(self._center, row)
