@@ -20,15 +20,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import copy
 import random
 from abc import abstractmethod
+from dataclasses import dataclass
 from enum import Enum, auto
 from functools import partial
 from typing import Tuple, Optional, Dict, List
 
+import emoji
 import qtanim
 from PyQt6.QtCharts import QPieSeries, QChartView, QPieSlice
 from PyQt6.QtCore import pyqtSignal, Qt, QSize
 from PyQt6.QtGui import QIcon, QColor, QMouseEvent, QPainter
-from PyQt6.QtWidgets import QWidget, QSpinBox, QSlider, QTextBrowser, QButtonGroup, QToolButton, QLabel, QSizePolicy
+from PyQt6.QtWidgets import QWidget, QSpinBox, QSlider, QTextBrowser, QButtonGroup, QToolButton, QLabel, QSizePolicy, \
+    QLineEdit, QDialog
 from overrides import overrides
 from qthandy import vbox, pointy, hbox, sp, vspacer, underline, decr_font, flow, clear_layout, translucent, line, grid, \
     spacer, transparent, incr_font, margins, incr_icon
@@ -45,14 +48,16 @@ from src.main.python.plotlyst.core.template import SelectionItem, enneagram_fiel
     love_interest_role, supporter_role, adversary_role, contagonist_role, guide_role, confidant_role, sidekick_role, \
     foil_role, henchmen_role, love_style_field, disc_field
 from src.main.python.plotlyst.view.common import push_btn, action, tool_btn, label, wrap, restyle, \
-    scroll_area
+    scroll_area, emoji_font
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry, set_avatar
+from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton, SelectionItemPushButton
 from src.main.python.plotlyst.view.widget.chart import BaseChart, SelectionItemPieSlice
 from src.main.python.plotlyst.view.widget.display import Icon, MajorRoleIcon, SecondaryRoleIcon, MinorRoleIcon, \
-    IconText, RoleIcon, TruitySourceWidget
+    IconText, RoleIcon, TruitySourceWidget, PopupDialog
+from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.labels import TraitLabel
 from src.main.python.plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
 
@@ -580,6 +585,7 @@ class WorkStyleSelectorWidget(PersonalitySelectorWidget):
         else:
             self._selected = None
 
+
 class PersonalitySelector(SecondaryActionPushButton):
     selected = pyqtSignal(SelectionItem)
     ignored = pyqtSignal()
@@ -1086,3 +1092,85 @@ class CharacterRoleSelector(QWidget):
 
     def _select(self):
         self.roleSelected.emit(self._currentRole)
+
+
+@dataclass
+class StrengthWeaknessAttribute:
+    name: str
+    has_strength: bool = False
+    has_weakness: bool = False
+    strength: str = ''
+    weakness: str = ''
+
+
+class StrengthWeaknessEditor(PopupDialog):
+    def __init__(self, attribute: Optional[StrengthWeaknessAttribute] = None, parent=None):
+        super().__init__(parent)
+        self.wdgTitle = QWidget()
+        hbox(self.wdgTitle)
+        self.wdgTitle.layout().addWidget(label('Define a new strength or weakness', h4=True),
+                                         alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgTitle.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
+
+        self.lineKey = QLineEdit()
+        self.lineKey.setProperty('white-bg', True)
+        self.lineKey.setProperty('rounded', True)
+        self.lineKey.setPlaceholderText('Attribute')
+        self.lineKey.textChanged.connect(self._changed)
+
+        self.toggleStrength = Toggle()
+        self.toggleWeakness = Toggle()
+        self.btnGroup = QButtonGroup()
+        self.btnGroup.setExclusive(False)
+        self.btnGroup.addButton(self.toggleStrength)
+        self.btnGroup.addButton(self.toggleWeakness)
+        self.toggleStrength.setChecked(True)
+        self.toggleWeakness.setChecked(True)
+        self.btnGroup.buttonToggled.connect(self._changed)
+
+        self.btnConfirm = push_btn(text='Confirm', properties=['base', 'positive'])
+        sp(self.btnConfirm).h_exp()
+        self.btnConfirm.clicked.connect(self.accept)
+        self.btnConfirm.setDisabled(True)
+        self.btnConfirm.installEventFilter(
+            DisabledClickEventFilter(self.btnConfirm, self._disabledClick))
+
+        if attribute:
+            self.lineKey.setText(attribute.name)
+            self.toggleStrength.setChecked(attribute.has_strength)
+            self.toggleWeakness.setChecked(attribute.has_weakness)
+
+        self.emojiStrength = label('')
+        self.emojiStrength.setFont(emoji_font())
+        self.emojiStrength.setText(emoji.emojize(':flexed_biceps:'))
+        self.emojiWeakness = label('')
+        self.emojiWeakness.setFont(emoji_font())
+        self.emojiWeakness.setText(emoji.emojize(':nauseated_face:'))
+
+        self.frame.layout().addWidget(self.wdgTitle)
+        self.frame.layout().addWidget(
+            label('Define an attribute that is either a character strength, a weakness, or both',
+                  description=True, wordWrap=True), alignment=Qt.AlignmentFlag.AlignLeft)
+        self.frame.layout().addWidget(self.lineKey)
+        self.frame.layout().addWidget(line())
+        self.frame.layout().addWidget(
+            group(self.emojiStrength, label('Is it a character strength?'), spacer(), self.toggleStrength))
+        self.frame.layout().addWidget(
+            group(self.emojiWeakness, label('Is it a character weakness?'), spacer(), self.toggleWeakness))
+        self.frame.layout().addWidget(self.btnConfirm)
+
+    def display(self) -> Optional[StrengthWeaknessAttribute]:
+        result = self.exec()
+        if result == QDialog.DialogCode.Accepted:
+            return StrengthWeaknessAttribute(self.lineKey.text(), has_strength=self.toggleStrength.isChecked(),
+                                             has_weakness=self.toggleWeakness.isChecked())
+
+    def _changed(self):
+        self.btnConfirm.setEnabled(len(self.lineKey.text()) > 0 and self.btnGroup.checkedButton() is not None)
+
+    def _disabledClick(self):
+        if not self.lineKey.text():
+            qtanim.shake(self.lineKey)
+        elif not self.btnGroup.checkedButton():
+            qtanim.shake(self.toggleStrength)
+            qtanim.shake(self.toggleWeakness)
