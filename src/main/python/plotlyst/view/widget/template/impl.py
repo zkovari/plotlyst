@@ -1138,6 +1138,8 @@ class StrengthsWeaknessesHeader(QWidget):
 
 
 class StrengthsWeaknessesTableRow(QWidget):
+    changed = pyqtSignal()
+
     def __init__(self, attribute: StrengthWeaknessAttribute, parent=None):
         super().__init__(parent)
         self.attribute = attribute
@@ -1160,14 +1162,18 @@ class StrengthsWeaknessesTableRow(QWidget):
 
     def refreshAttribute(self, attribute: StrengthWeaknessAttribute):
         self.attribute = attribute
+        self.attribute.strength = self.textStrength.toPlainText()
+        self.attribute.weakness = self.textWeakness.toPlainText()
         self.textStrength.setVisible(self.attribute.has_strength)
         self.textWeakness.setVisible(self.attribute.has_weakness)
 
     def _strengthChanged(self):
         self.attribute.strength = self.textStrength.toPlainText()
+        self.changed.emit()
 
     def _weaknessChanged(self):
         self.attribute.weakness = self.textWeakness.toPlainText()
+        self.changed.emit()
 
     def _textEditor(self) -> AutoAdjustableTextEdit:
         editor = AutoAdjustableTextEdit(height=75)
@@ -1246,15 +1252,19 @@ class StrengthsWeaknessesFieldWidget(EditableTemplateWidget):
                                                   )
             self._addAttribute(attribute)
 
+        self._valueChanged()
+
     def _addNewAttribute(self):
         attribute = StrengthWeaknessEditor.popup()
         if attribute:
             header, rowWdg = self._addAttribute(attribute)
             qtanim.fade_in(header, teardown=lambda: header.setGraphicsEffect(None))
             qtanim.fade_in(rowWdg, teardown=lambda: rowWdg.setGraphicsEffect(None))
+            self._valueChanged()
 
     def _addAttribute(self, attribute: StrengthWeaknessAttribute):
         rowWdg = StrengthsWeaknessesTableRow(attribute)
+        rowWdg.changed.connect(self._valueChanged)
         self._rows.append(rowWdg)
         header = StrengthsWeaknessesHeader(attribute)
         header.edit.connect(partial(self._edit, header, rowWdg))
@@ -1271,8 +1281,23 @@ class StrengthsWeaknessesFieldWidget(EditableTemplateWidget):
         if attribute:
             header.refreshAttribute(attribute)
             row.refreshAttribute(attribute)
+            self._valueChanged()
 
     def _remove(self, header: StrengthsWeaknessesHeader, row: StrengthsWeaknessesTableRow):
         self._rows.remove(row)
         fade_out_and_gc(self._center, header)
         fade_out_and_gc(self._center, row)
+
+    def _valueChanged(self):
+        count = 0
+        value = 0
+        for wdg in self._rows:
+            if wdg.attribute.has_strength:
+                count += 1
+                if wdg.attribute.strength:
+                    value += 1
+            if wdg.attribute.has_weakness:
+                count += 1
+                if wdg.attribute.weakness:
+                    value += 1
+        self.valueFilled.emit(value / count if count else 0)
