@@ -1249,18 +1249,22 @@ class StrengthsWeaknessesFieldWidget(EditableTemplateWidget):
     def _addNewAttribute(self):
         attribute = StrengthWeaknessEditor.popup()
         if attribute:
-            self._addAttribute(attribute)
+            header, rowWdg = self._addAttribute(attribute)
+            qtanim.fade_in(header, teardown=lambda: header.setGraphicsEffect(None))
+            qtanim.fade_in(rowWdg, teardown=lambda: rowWdg.setGraphicsEffect(None))
 
     def _addAttribute(self, attribute: StrengthWeaknessAttribute):
-        wdg = StrengthsWeaknessesTableRow(attribute)
-        self._rows.append(wdg)
+        rowWdg = StrengthsWeaknessesTableRow(attribute)
+        self._rows.append(rowWdg)
         header = StrengthsWeaknessesHeader(attribute)
-        header.edit.connect(partial(self._edit, header, wdg))
-        header.remove.connect(partial(self._remove, header, wdg))
+        header.edit.connect(partial(self._edit, header, rowWdg))
+        header.remove.connect(partial(self._remove, header, rowWdg))
 
         row = self._centerlayout.rowCount()
         self._centerlayout.addWidget(header, row, 0, alignment=Qt.AlignmentFlag.AlignTop)
-        self._centerlayout.addWidget(wdg, row, 1, 1, 2)
+        self._centerlayout.addWidget(rowWdg, row, 1, 1, 2)
+
+        return header, rowWdg
 
     def _edit(self, header: StrengthsWeaknessesHeader, row: StrengthsWeaknessesTableRow):
         attribute = StrengthWeaknessEditor.popup(header.attribute)
