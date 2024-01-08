@@ -43,12 +43,12 @@ from src.main.python.plotlyst.core.template import TemplateField, SelectionItem,
     flaw_triggers_field, flaw_goals_field, flaw_growth_field, flaw_deterioration_field
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
-from src.main.python.plotlyst.view.common import wrap, emoji_font, insert_before_the_end, action, label, tool_btn
+from src.main.python.plotlyst.view.common import wrap, emoji_font, insert_before_the_end, action, label, push_btn
 from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.slider import apply_slider_color
-from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton, CollapseButton
+from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton, CollapseButton, DotsMenuButton
 from src.main.python.plotlyst.view.widget.character.editor import EnneagramSelector, MbtiSelector, LoveStyleSelector, \
     DiscSelector, StrengthWeaknessAttribute, StrengthWeaknessEditor
 from src.main.python.plotlyst.view.widget.display import Subtitle, Emoji, Icon, dash_icon
@@ -1105,19 +1105,35 @@ class BaggageFieldWidget(MultiLayerComplexTemplateWidgetBase):
 
 
 class StrengthsWeaknessesHeader(QWidget):
+    edit = pyqtSignal()
+    remove = pyqtSignal()
+
     def __init__(self, attribute: StrengthWeaknessAttribute, parent=None):
         super().__init__(parent)
         self.attribute = attribute
         hbox(self, 0)
 
-        self.btnEdit = tool_btn(IconRegistry.edit_icon(), 'Edit attribute', transparent_=True)
-        self.btnEdit.installEventFilter(OpacityEventFilter(self.btnEdit))
-        retain_when_hidden(self.btnEdit)
+        self.btnKey = push_btn(text=self.attribute.name, transparent_=True)
+        bold(self.btnKey)
+        self.btnKey.clicked.connect(self.edit)
 
-        self.layout().addWidget(label(self.attribute.name, bold=True), alignment=Qt.AlignmentFlag.AlignLeft)
-        self.layout().addWidget(self.btnEdit, alignment=Qt.AlignmentFlag.AlignRight)
+        self.btnMenu = DotsMenuButton()
+        self.btnMenu.installEventFilter(OpacityEventFilter(self.btnMenu))
+        retain_when_hidden(self.btnMenu)
 
-        self.installEventFilter(VisibilityToggleEventFilter(self.btnEdit, self))
+        menu = MenuWidget(self.btnMenu)
+        menu.addAction(action('Edit', IconRegistry.edit_icon(), slot=self.edit))
+        menu.addSeparator()
+        menu.addAction(action('Remove', IconRegistry.trash_can_icon(), slot=self.remove))
+
+        self.layout().addWidget(self.btnKey, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self.btnMenu, alignment=Qt.AlignmentFlag.AlignRight)
+
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnMenu, self))
+
+    def refreshAttribute(self, attribute: StrengthWeaknessAttribute):
+        self.attribute = attribute
+        self.btnKey.setText(self.attribute.name)
 
 
 class StrengthsWeaknessesTableRow(QWidget):
@@ -1125,22 +1141,29 @@ class StrengthsWeaknessesTableRow(QWidget):
         super().__init__(parent)
         self.attribute = attribute
         hbox(self, 0, spacing=10)
-        self.textStrength = AutoAdjustableTextEdit(height=75)
-        self.textStrength.setProperty('white-bg', True)
-        self.textStrength.setProperty('rounded', True)
+        self.textStrength = self._textEditor()
         self.textStrength.setPlaceholderText('Define the strength of this attribute')
-        retain_when_hidden(self.textStrength)
         self.textStrength.setVisible(self.attribute.has_strength)
 
-        self.textWeakness = AutoAdjustableTextEdit(height=75)
-        self.textWeakness.setProperty('white-bg', True)
-        self.textWeakness.setProperty('rounded', True)
+        self.textWeakness = self._textEditor()
         self.textWeakness.setPlaceholderText('Define the weakness of this attribute')
-        retain_when_hidden(self.textWeakness)
         self.textWeakness.setVisible(self.attribute.has_weakness)
 
         self.layout().addWidget(self.textStrength)
         self.layout().addWidget(self.textWeakness)
+
+    def refreshAttribute(self, attribute: StrengthWeaknessAttribute):
+        self.attribute = attribute
+        self.textStrength.setVisible(self.attribute.has_strength)
+        self.textWeakness.setVisible(self.attribute.has_weakness)
+
+    def _textEditor(self) -> AutoAdjustableTextEdit:
+        editor = AutoAdjustableTextEdit(height=75)
+        editor.setMaximumWidth(500)
+        editor.setProperty('white-bg', True)
+        editor.setProperty('rounded', True)
+        retain_when_hidden(editor)
+        return editor
 
 
 class StrengthsWeaknessesFieldWidget(EditableTemplateWidget):
@@ -1199,13 +1222,21 @@ class StrengthsWeaknessesFieldWidget(EditableTemplateWidget):
         if attribute:
             wdg = StrengthsWeaknessesTableRow(attribute)
             self._rows.append(wdg)
-            # wdg.removed.connect(partial(self._removePrimaryField, wdg))
-            # wdg.renamed.connect(partial(self._renamePrimaryField, wdg))
-            # wdg.valueChanged.connect(self._valueChanged)
-            # insert_before_the_end(self._layout, wdg)
-            row = self._centerlayout.rowCount()
             header = StrengthsWeaknessesHeader(attribute)
+            header.edit.connect(partial(self._edit, header, wdg))
+            header.remove.connect(partial(self._remove, header, wdg))
+
+            row = self._centerlayout.rowCount()
             self._centerlayout.addWidget(header, row, 0, alignment=Qt.AlignmentFlag.AlignTop)
             self._centerlayout.addWidget(wdg, row, 1, 1, 2)
 
             # return wdg
+
+    def _edit(self, header: StrengthsWeaknessesHeader, row: StrengthsWeaknessesTableRow):
+        attribute = StrengthWeaknessEditor.popup(header.attribute)
+        if attribute:
+            header.refreshAttribute(attribute)
+            row.refreshAttribute(attribute)
+
+    def _remove(self, header: StrengthsWeaknessesHeader, row: StrengthsWeaknessesTableRow):
+        pass

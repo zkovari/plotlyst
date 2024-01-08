@@ -1103,7 +1103,7 @@ class StrengthWeaknessAttribute:
 
 
 class StrengthWeaknessEditor(PopupDialog):
-    def __init__(self, parent=None):
+    def __init__(self, attribute: Optional[StrengthWeaknessAttribute] = None, parent=None):
         super().__init__(parent)
         self.wdgTitle = QWidget()
         hbox(self.wdgTitle)
@@ -1133,6 +1133,11 @@ class StrengthWeaknessEditor(PopupDialog):
         self.btnConfirm.setDisabled(True)
         self.btnConfirm.installEventFilter(
             DisabledClickEventFilter(self.btnConfirm, self._disabledClick))
+
+        if attribute:
+            self.lineKey.setText(attribute.name)
+            self.toggleStrength.setChecked(attribute.has_strength)
+            self.toggleWeakness.setChecked(attribute.has_weakness)
 
         self.frame.layout().addWidget(self.wdgTitle)
         self.frame.layout().addWidget(
