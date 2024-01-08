@@ -25,6 +25,7 @@ from enum import Enum, auto
 from functools import partial
 from typing import Tuple, Optional, Dict, List
 
+import emoji
 import qtanim
 from PyQt6.QtCharts import QPieSeries, QChartView, QPieSlice
 from PyQt6.QtCore import pyqtSignal, Qt, QSize
@@ -47,7 +48,7 @@ from src.main.python.plotlyst.core.template import SelectionItem, enneagram_fiel
     love_interest_role, supporter_role, adversary_role, contagonist_role, guide_role, confidant_role, sidekick_role, \
     foil_role, henchmen_role, love_style_field, disc_field
 from src.main.python.plotlyst.view.common import push_btn, action, tool_btn, label, wrap, restyle, \
-    scroll_area
+    scroll_area, emoji_font
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry, set_avatar
 from src.main.python.plotlyst.view.layout import group
@@ -1139,14 +1140,23 @@ class StrengthWeaknessEditor(PopupDialog):
             self.toggleStrength.setChecked(attribute.has_strength)
             self.toggleWeakness.setChecked(attribute.has_weakness)
 
+        self.emojiStrength = label('')
+        self.emojiStrength.setFont(emoji_font())
+        self.emojiStrength.setText(emoji.emojize(':flexed_biceps:'))
+        self.emojiWeakness = label('')
+        self.emojiWeakness.setFont(emoji_font())
+        self.emojiWeakness.setText(emoji.emojize(':nauseated_face:'))
+
         self.frame.layout().addWidget(self.wdgTitle)
         self.frame.layout().addWidget(
             label('Define an attribute that is either a character strength, a weakness, or both',
                   description=True, wordWrap=True), alignment=Qt.AlignmentFlag.AlignLeft)
         self.frame.layout().addWidget(self.lineKey)
         self.frame.layout().addWidget(line())
-        self.frame.layout().addWidget(group(label('Is it a character strength?'), spacer(), self.toggleStrength))
-        self.frame.layout().addWidget(group(label('Is it a character weakness?'), spacer(), self.toggleWeakness))
+        self.frame.layout().addWidget(
+            group(self.emojiStrength, label('Is it a character strength?'), spacer(), self.toggleStrength))
+        self.frame.layout().addWidget(
+            group(self.emojiWeakness, label('Is it a character weakness?'), spacer(), self.toggleWeakness))
         self.frame.layout().addWidget(self.btnConfirm)
 
     def display(self) -> Optional[StrengthWeaknessAttribute]:
