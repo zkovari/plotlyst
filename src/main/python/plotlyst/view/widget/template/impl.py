@@ -50,7 +50,7 @@ from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.slider import apply_slider_color
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton, CollapseButton
 from src.main.python.plotlyst.view.widget.character.editor import EnneagramSelector, MbtiSelector, LoveStyleSelector, \
-    DiscSelector
+    DiscSelector, StrengthWeaknessAttribute, StrengthWeaknessEditor
 from src.main.python.plotlyst.view.widget.display import Subtitle, Emoji, Icon, dash_icon
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle, TextInputDialog
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
@@ -1105,10 +1105,11 @@ class BaggageFieldWidget(MultiLayerComplexTemplateWidgetBase):
 
 
 class StrengthsWeaknessesTableRow(QWidget):
-    def __init__(self, attribute: str, parent=None):
+    def __init__(self, attribute: StrengthWeaknessAttribute, parent=None):
         super().__init__(parent)
+        self.attribute = attribute
         hbox(self)
-        self.lblAttribute = label(attribute)
+        self.lblAttribute = label(attribute.name)
         self.layout().addWidget(self.lblAttribute)
 
 
@@ -1130,7 +1131,6 @@ class StrengthsWeaknessesFieldWidget(EditableTemplateWidget):
         self._btnPrimary.clicked.connect(self._addNewAttribute)
         decr_font(self._btnPrimary)
 
-
         self._layout.addWidget(wrap(self._btnPrimary, margin_left=5), 1, 0)
 
     @overrides
@@ -1148,15 +1148,17 @@ class StrengthsWeaknessesFieldWidget(EditableTemplateWidget):
             pass
 
     def _addNewAttribute(self):
-        attribute = TextInputDialog.edit('Define attribute',
-                                         'Name an attribute that is a potential weakness, strength, or both')
+        # attribute = TextInputDialog.edit('Define attribute',
+        #                                  'Name an attribute that is a potential weakness, strength, or both')
+        attribute = StrengthWeaknessEditor.popup()
         if attribute:
             wdg = StrengthsWeaknessesTableRow(attribute)
             self._rows.append(wdg)
             # wdg.removed.connect(partial(self._removePrimaryField, wdg))
             # wdg.renamed.connect(partial(self._renamePrimaryField, wdg))
             # wdg.valueChanged.connect(self._valueChanged)
-            insert_before_the_end(self._layout, wdg)
-            self._layout.addWidget(wdg, self._layout.rowCount() - 1, )
+            # insert_before_the_end(self._layout, wdg)
+            self._layout.addWidget(label(attribute.name), self._layout.rowCount() - 1, 0)
+            self._layout.addWidget(wdg, self._layout.rowCount() - 1, 1)
 
             # return wdg
