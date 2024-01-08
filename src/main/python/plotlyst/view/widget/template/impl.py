@@ -30,7 +30,7 @@ from PyQt6.QtWidgets import QHBoxLayout, QWidget, QLineEdit, QToolButton, QLabel
     QSpinBox, QButtonGroup, QSizePolicy, QListView, QVBoxLayout, QSlider, QGridLayout
 from overrides import overrides
 from qthandy import spacer, hbox, vbox, bold, line, underline, transparent, margins, \
-    decr_font, retain_when_hidden, vspacer, gc, sp, pointy, grid
+    decr_font, retain_when_hidden, vspacer, gc, sp, pointy, grid, incr_font
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
@@ -43,7 +43,7 @@ from src.main.python.plotlyst.core.template import TemplateField, SelectionItem,
     flaw_triggers_field, flaw_goals_field, flaw_growth_field, flaw_deterioration_field
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
-from src.main.python.plotlyst.view.common import wrap, emoji_font, insert_before_the_end, action, label
+from src.main.python.plotlyst.view.common import wrap, emoji_font, insert_before_the_end, action, label, tool_btn
 from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
@@ -1104,13 +1104,43 @@ class BaggageFieldWidget(MultiLayerComplexTemplateWidgetBase):
         return []
 
 
+class StrengthsWeaknessesHeader(QWidget):
+    def __init__(self, attribute: StrengthWeaknessAttribute, parent=None):
+        super().__init__(parent)
+        self.attribute = attribute
+        hbox(self, 0)
+
+        self.btnEdit = tool_btn(IconRegistry.edit_icon(), 'Edit attribute', transparent_=True)
+        self.btnEdit.installEventFilter(OpacityEventFilter(self.btnEdit))
+        retain_when_hidden(self.btnEdit)
+
+        self.layout().addWidget(label(self.attribute.name, bold=True), alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self.btnEdit, alignment=Qt.AlignmentFlag.AlignRight)
+
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnEdit, self))
+
+
 class StrengthsWeaknessesTableRow(QWidget):
     def __init__(self, attribute: StrengthWeaknessAttribute, parent=None):
         super().__init__(parent)
         self.attribute = attribute
-        hbox(self)
-        self.lblAttribute = label(attribute.name)
-        self.layout().addWidget(self.lblAttribute)
+        hbox(self, 0, spacing=10)
+        self.textStrength = AutoAdjustableTextEdit(height=75)
+        self.textStrength.setProperty('white-bg', True)
+        self.textStrength.setProperty('rounded', True)
+        self.textStrength.setPlaceholderText('Define the strength of this attribute')
+        retain_when_hidden(self.textStrength)
+        self.textStrength.setVisible(self.attribute.has_strength)
+
+        self.textWeakness = AutoAdjustableTextEdit(height=75)
+        self.textWeakness.setProperty('white-bg', True)
+        self.textWeakness.setProperty('rounded', True)
+        self.textWeakness.setPlaceholderText('Define the weakness of this attribute')
+        retain_when_hidden(self.textWeakness)
+        self.textWeakness.setVisible(self.attribute.has_weakness)
+
+        self.layout().addWidget(self.textStrength)
+        self.layout().addWidget(self.textWeakness)
 
 
 class StrengthsWeaknessesFieldWidget(EditableTemplateWidget):
@@ -1118,12 +1148,28 @@ class StrengthsWeaknessesFieldWidget(EditableTemplateWidget):
         super().__init__(field, parent)
         self._rows: List[StrengthsWeaknessesTableRow] = []
 
-        self._layout: QGridLayout = grid(self, 0, 5, 2)
+        vbox(self, 0)
+        self._center = QWidget()
+        self._centerlayout: QGridLayout = grid(self._center, 0, 0, 5)
+        margins(self._centerlayout, left=5)
+        self._centerlayout.setColumnMinimumWidth(0, 70)
+        self._centerlayout.setColumnStretch(1, 1)
+        self._centerlayout.setColumnStretch(2, 1)
 
-        self.lblStrength = label('Strength')
-        self.lblWeakness = label('Weakness')
-        self._layout.addWidget(self.lblStrength, 0, 1, alignment=Qt.AlignmentFlag.AlignCenter)
-        self._layout.addWidget(self.lblWeakness, 0, 2, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.emojiStrength = label('')
+        self.emojiStrength.setFont(emoji_font())
+        self.emojiStrength.setText(emoji.emojize(':flexed_biceps:'))
+        self.emojiWeakness = label('')
+        self.emojiWeakness.setFont(emoji_font())
+        self.emojiWeakness.setText(emoji.emojize(':nauseated_face:'))
+        self.lblStrength = label('Strength', underline=True)
+        self.lblWeakness = label('Weakness', underline=True)
+        incr_font(self.lblStrength)
+        incr_font(self.lblWeakness)
+        self._centerlayout.addWidget(group(self.emojiStrength, self.lblStrength), 0, 1,
+                                     alignment=Qt.AlignmentFlag.AlignCenter)
+        self._centerlayout.addWidget(group(self.emojiWeakness, self.lblWeakness), 0, 2,
+                                     alignment=Qt.AlignmentFlag.AlignCenter)
 
         self._btnPrimary = SecondaryActionPushButton()
         self._btnPrimary.setText('Add new attribute')
@@ -1131,7 +1177,8 @@ class StrengthsWeaknessesFieldWidget(EditableTemplateWidget):
         self._btnPrimary.clicked.connect(self._addNewAttribute)
         decr_font(self._btnPrimary)
 
-        self._layout.addWidget(wrap(self._btnPrimary, margin_left=5), 1, 0)
+        self.layout().addWidget(self._center)
+        self.layout().addWidget(wrap(self._btnPrimary, margin_left=5), alignment=Qt.AlignmentFlag.AlignLeft)
 
     @overrides
     def value(self) -> Any:
@@ -1148,8 +1195,6 @@ class StrengthsWeaknessesFieldWidget(EditableTemplateWidget):
             pass
 
     def _addNewAttribute(self):
-        # attribute = TextInputDialog.edit('Define attribute',
-        #                                  'Name an attribute that is a potential weakness, strength, or both')
         attribute = StrengthWeaknessEditor.popup()
         if attribute:
             wdg = StrengthsWeaknessesTableRow(attribute)
@@ -1158,7 +1203,9 @@ class StrengthsWeaknessesFieldWidget(EditableTemplateWidget):
             # wdg.renamed.connect(partial(self._renamePrimaryField, wdg))
             # wdg.valueChanged.connect(self._valueChanged)
             # insert_before_the_end(self._layout, wdg)
-            self._layout.addWidget(label(attribute.name), self._layout.rowCount() - 1, 0)
-            self._layout.addWidget(wdg, self._layout.rowCount() - 1, 1)
+            row = self._centerlayout.rowCount()
+            header = StrengthsWeaknessesHeader(attribute)
+            self._centerlayout.addWidget(header, row, 0, alignment=Qt.AlignmentFlag.AlignTop)
+            self._centerlayout.addWidget(wdg, row, 1, 1, 2)
 
             # return wdg
