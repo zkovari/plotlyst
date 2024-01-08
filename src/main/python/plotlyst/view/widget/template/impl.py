@@ -1144,10 +1144,14 @@ class StrengthsWeaknessesTableRow(QWidget):
         self.textStrength = self._textEditor()
         self.textStrength.setPlaceholderText('Define the strength of this attribute')
         self.textStrength.setVisible(self.attribute.has_strength)
+        self.textStrength.setText(self.attribute.strength)
+        self.textStrength.textChanged.connect(self._strengthChanged)
 
         self.textWeakness = self._textEditor()
         self.textWeakness.setPlaceholderText('Define the weakness of this attribute')
         self.textWeakness.setVisible(self.attribute.has_weakness)
+        self.textWeakness.setText(self.attribute.weakness)
+        self.textWeakness.textChanged.connect(self._weaknessChanged)
 
         self.layout().addWidget(self.textStrength)
         self.layout().addWidget(self.textWeakness)
@@ -1156,6 +1160,12 @@ class StrengthsWeaknessesTableRow(QWidget):
         self.attribute = attribute
         self.textStrength.setVisible(self.attribute.has_strength)
         self.textWeakness.setVisible(self.attribute.has_weakness)
+
+    def _strengthChanged(self):
+        self.attribute.strength = self.textStrength.toPlainText()
+
+    def _weaknessChanged(self):
+        self.attribute.weakness = self.textWeakness.toPlainText()
 
     def _textEditor(self) -> AutoAdjustableTextEdit:
         editor = AutoAdjustableTextEdit(height=75)
