@@ -26,7 +26,8 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QResizeEvent, QAction
 from PyQt6.QtWidgets import QWidget, QButtonGroup, QStackedWidget, QTextEdit
 from overrides import overrides
-from qthandy import vbox, hbox, spacer, sp, flow, vline, clear_layout, bold, incr_font, italic, translucent, line
+from qthandy import vbox, hbox, spacer, sp, flow, vline, clear_layout, bold, incr_font, italic, translucent, line, \
+    vspacer, incr_icon
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
@@ -498,8 +499,25 @@ class ReaderInformationColumn(QWidget):
         vbox(self)
 
         self.title = IconText()
+        if infoType == ReaderInformationType.Story:
+            self.title.setText('Story')
+            self.title.setIcon(IconRegistry.storylines_icon())
+        elif infoType == ReaderInformationType.Character:
+            self.title.setText('Characters')
+            self.title.setIcon(IconRegistry.character_icon())
+        elif infoType == ReaderInformationType.World:
+            self.title.setText('World')
+            self.title.setIcon(IconRegistry.world_building_icon())
+        incr_font(self.title, 2)
+        incr_icon(self.title, 4)
+
         self.layout().addWidget(self.title)
         self.layout().addWidget(line())
+        self.layout().addWidget(vspacer())
+
+        self.setMinimumWidth(150)
+        self.setMaximumWidth(400)
+        sp(self).h_exp()
 
     def addInfo(self):
         pass
@@ -511,15 +529,22 @@ class ReaderInformationEditor(LazyWidget):
         self._novel = novel
         self._scene: Optional[Scene] = None
 
-        hbox(self)
-        self._scrollarea, self._wdgCenter = scrolled(self)
-        vbox(self._wdgCenter)
+        hbox(self, 0, 0)
+        self._scrollarea, self._wdgCenter = scrolled(self, frameless=True)
+        self._scrollarea.setProperty('relaxed-white-bg', True)
+        self._wdgCenter.setProperty('relaxed-white-bg', True)
+        hbox(self._wdgCenter)
         self.wdgStory = ReaderInformationColumn(ReaderInformationType.Story)
         self.wdgCharacters = ReaderInformationColumn(ReaderInformationType.Character)
         self.wdgWorld = ReaderInformationColumn(ReaderInformationType.World)
         self._wdgCenter.layout().addWidget(self.wdgStory)
+        self._wdgCenter.layout().addWidget(vline())
         self._wdgCenter.layout().addWidget(self.wdgCharacters)
+        self._wdgCenter.layout().addWidget(vline())
         self._wdgCenter.layout().addWidget(self.wdgWorld)
+        spacer_ = spacer()
+        sp(spacer_).h_preferred()
+        self._wdgCenter.layout().addWidget(spacer_)
 
     def setScene(self, scene: Scene):
         self._scene = scene

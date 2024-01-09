@@ -53,7 +53,7 @@ from src.main.python.plotlyst.view.widget.scene.editor import ScenePurposeSelect
     SceneStorylineEditor, SceneAgendaEditor, SceneElementWidget
 from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotLabels, \
     ScenePlotSelectorMenu
-from src.main.python.plotlyst.view.widget.scene.reader_drive import ReaderCuriosityEditor
+from src.main.python.plotlyst.view.widget.scene.reader_drive import ReaderCuriosityEditor, ReaderInformationEditor
 
 
 class SceneEditor(QObject, EventListener):
@@ -174,6 +174,9 @@ class SceneEditor(QObject, EventListener):
 
         self._curiosityEditor = ReaderCuriosityEditor(self.novel)
         self.ui.tabCuriosity.layout().addWidget(self._curiosityEditor)
+
+        self._informationEditor = ReaderInformationEditor(self.novel)
+        self.ui.tabInformation.layout().addWidget(self._informationEditor)
 
         self.ui.btnClose.clicked.connect(self._on_close)
 
