@@ -37,7 +37,7 @@ from src.main.python.plotlyst.core.domain import Novel, Scene, ReaderQuestion, S
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import push_btn, link_buttons_to_pages, shadow, scroll_area, \
-    insert_before_the_end, wrap, fade_out_and_gc, action, label, scrolled
+    insert_before_the_end, wrap, fade_out_and_gc, action, label, scrolled, tool_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import DotsMenuButton
@@ -490,10 +490,10 @@ class ReaderInformationWidget(QWidget):
         vbox(self, 10)
 
         self._label = push_btn(
-            IconRegistry.general_info_icon(self.info.type.color()), 'Information',
+            IconRegistry.general_info_icon('black'), 'Information',
             transparent_=True, icon_resize=False, pointy_=False)
         self._label.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self._label.setStyleSheet(f'border:0px; color: {self.info.type.color()};')
+        translucent(self._label, 0.6)
 
         self.textedit = QTextEdit(self)
         self.textedit.setProperty('white-bg', True)
@@ -533,15 +533,20 @@ class ReaderInformationColumn(QWidget):
             self.title.setIcon(IconRegistry.character_icon(color=self.infoType.color(), color_on=self.infoType.color()))
         elif self.infoType == ReaderInformationType.World:
             self.title.setText('World')
-            self.title.setIcon(IconRegistry.world_building_icon(color=self.infoType.color(), color_on=self.infoType.color()))
+            self.title.setIcon(
+                IconRegistry.world_building_icon(color=self.infoType.color(), color_on=self.infoType.color()))
         self.title.setStyleSheet(f'border:0px; color: {self.infoType.color()};')
         incr_font(self.title, 2)
         incr_icon(self.title, 4)
+
+        self.btnAdd = tool_btn(IconRegistry.plus_icon(self.infoType.color()), transparent_=True)
+        self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd))
 
         self.wdgEditor = QWidget()
         vbox(self.wdgEditor)
 
         self.layout().addWidget(self.title)
+        self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(line(color=self.infoType.color()))
         self.layout().addWidget(self.wdgEditor)
         self.layout().addWidget(vspacer())
