@@ -1270,6 +1270,25 @@ class SceneReaderQuestion:
 
 
 @dataclass
+class SceneReaderInformation:
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    text: str = ''
+
+    def sid(self) -> str:
+        return str(self.id)
+
+    @overrides
+    def __eq__(self, other: 'SceneReaderInformation'):
+        if isinstance(other, SceneReaderInformation):
+            return self.id == other.id
+        return False
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
+
+@dataclass
 class Scene:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -1294,6 +1313,7 @@ class Scene:
     story_elements: List[StoryElement] = field(default_factory=list)
     structure: List[SceneStructureItem] = field(default_factory=list)
     questions: List[SceneReaderQuestion] = field(default_factory=list)
+    info: List[SceneReaderInformation] = field(default_factory=list)
 
     def beat(self, novel: 'Novel') -> Optional[StoryBeat]:
         structure = novel.active_story_structure

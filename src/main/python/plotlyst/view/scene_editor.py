@@ -216,6 +216,7 @@ class SceneEditor(QObject, EventListener):
         self._storylineEditor.setScene(self.scene)
         self._agencyEditor.setScene(self.scene)
         self._curiosityEditor.setScene(self.scene)
+        self._informationEditor.setScene(self.scene)
 
         self.ui.lineTitle.setText(self.scene.title)
         self.ui.textSynopsis.setText(self.scene.synopsis)

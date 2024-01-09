@@ -45,7 +45,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding, Board, \
     default_big_five_values, CharacterPlan, ManuscriptGoals, Diagram, DiagramData, default_events_map, \
     default_character_networks, ScenePurposeType, StoryElement, SceneOutcome, ChapterType, SceneStructureItem, \
-    DocumentProgress, ReaderQuestion, SceneReaderQuestion, ImageRef
+    DocumentProgress, ReaderQuestion, SceneReaderQuestion, ImageRef, SceneReaderInformation
 from src.main.python.plotlyst.core.template import Role, exclude_if_empty, exclude_if_black, exclude_if_false
 from src.main.python.plotlyst.env import app_env
 
@@ -176,6 +176,7 @@ class SceneInfo:
     story_elements: List[StoryElement] = field(default_factory=list)
     structure: List[SceneStructureItem] = field(default_factory=list)
     questions: List[SceneReaderQuestion] = field(default_factory=list)
+    info: List[SceneReaderInformation] = field(default_factory=list)
 
 
 @dataclass
@@ -559,7 +560,7 @@ class JsonClient:
                               comments=info.comments, tag_references=info.tag_references,
                               document=info.document, manuscript=info.manuscript, drive=info.drive,
                               purpose=info.purpose, outcome=info.outcome, story_elements=info.story_elements,
-                              structure=info.structure, questions=info.questions)
+                              structure=info.structure, questions=info.questions, info=info.info)
                 scenes.append(scene)
 
         tag_types = novel_info.tag_types
@@ -677,7 +678,7 @@ class JsonClient:
                          tag_references=scene.tag_references, document=scene.document, manuscript=scene.manuscript,
                          drive=scene.drive, purpose=scene.purpose, outcome=scene.outcome,
                          story_elements=scene.story_elements,
-                         structure=scene.structure, questions=scene.questions)
+                         structure=scene.structure, questions=scene.questions, info=scene.info)
         self.__persist_info(self.scenes_dir(novel), info)
 
     def _persist_diagram(self, novel: Novel, diagram: Diagram):
