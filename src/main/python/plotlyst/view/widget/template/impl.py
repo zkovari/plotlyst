@@ -37,10 +37,12 @@ from qtmenu import MenuWidget, ActionTooltipDisplayMode
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help, mbti_keywords
 from src.main.python.plotlyst.core.template import TemplateField, SelectionItem, \
     enneagram_choices, goal_field, internal_goal_field, stakes_field, conflict_field, motivation_field, \
-    internal_motivation_field, internal_conflict_field, internal_stakes_field, wound_field, trigger_field, fear_field, \
-    healing_field, methods_field, misbelief_field, ghost_field, demon_field, mbti_choices, love_style_choices, \
+    internal_motivation_field, internal_conflict_field, internal_stakes_field, wound_field, fear_field, \
+    baggage_healing_field, methods_field, misbelief_field, ghost_field, demon_field, mbti_choices, love_style_choices, \
     work_style_choices, flaw_placeholder_field, flaw_relation_field, flaw_manifestation_field, flaw_coping_field, \
-    flaw_triggers_field, flaw_goals_field, flaw_growth_field, flaw_deterioration_field
+    flaw_triggers_field, flaw_goals_field, flaw_growth_field, flaw_deterioration_field, baggage_coping_field, \
+    baggage_manifestation_field, baggage_deterioration_field, baggage_relation_field, baggage_trigger_field, \
+    baggage_source_field, baggage_defense_mechanism_field
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
 from src.main.python.plotlyst.view.common import wrap, emoji_font, insert_before_the_end, action, label, push_btn, \
@@ -917,7 +919,8 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
         self._menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         for field in fields:
             self._menu.addAction(
-                action(field.name, tooltip=field.description, slot=partial(self._addPrimaryField, field),
+                action(field.name, icon=IconRegistry.from_name(field.icon), tooltip=field.description,
+                       slot=partial(self._addPrimaryField, field),
                        parent=self._menu))
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self._layout: QVBoxLayout = vbox(self, 0, 5)
@@ -1096,13 +1099,20 @@ class BaggageFieldWidget(MultiLayerComplexTemplateWidgetBase):
 
     @overrides
     def _primaryFields(self) -> List[TemplateField]:
-        return [wound_field, ghost_field, demon_field]
+        return [ghost_field, wound_field, demon_field, fear_field, misbelief_field]
 
     @overrides
     def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
-        if primary.id == wound_field.id:
-            return [fear_field, misbelief_field, trigger_field, healing_field]
-        return []
+        elements = [baggage_source_field, baggage_manifestation_field,
+                    baggage_relation_field, baggage_coping_field, baggage_healing_field, baggage_deterioration_field]
+
+        if primary.id != ghost_field.id:
+            elements.insert(3, baggage_defense_mechanism_field)
+
+        if primary.id in [wound_field.id, ghost_field.id, demon_field.id]:
+            elements.insert(1, baggage_trigger_field)
+
+        return elements
 
 
 class StrengthsWeaknessesHeader(QWidget):
@@ -1220,6 +1230,10 @@ class StrengthsWeaknessesFieldWidget(EditableTemplateWidget):
 
         self.layout().addWidget(self._center)
         self.layout().addWidget(wrap(self._btnPrimary, margin_left=5), alignment=Qt.AlignmentFlag.AlignLeft)
+
+    @property
+    def wdgEditor(self):
+        return self
 
     @overrides
     def value(self) -> Any:

@@ -119,6 +119,7 @@ class TemplateField:
     show_label: bool = field(default=True, metadata=config(exclude=exclude_if_true))
     color: str = field(default='', metadata=config(exclude=exclude_if_empty))
     has_notes: bool = field(default=False, metadata=config(exclude=exclude_if_false))
+    icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
     @overrides
     def __eq__(self, other: 'TemplateField'):
@@ -328,10 +329,6 @@ summary_field = TemplateField('Summary', type=TemplateFieldType.SMALL_TEXT,
                               placeholder="Summarize your character's role in the story",
                               show_label=False)
 
-misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.SMALL_TEXT, emoji=':goblin:',
-                                id=uuid.UUID('32feaa23-acbf-4990-b99f-429747824a0b'),
-                                placeholder='What false view did the character develop about themselves or the world?')
-
 desire_field = TemplateField('Desire', type=TemplateFieldType.SMALL_TEXT, emoji=':star-struck:',
                              placeholder='What does the character want?',
                              id=uuid.UUID('eb6626ea-4d07-4b8a-80f0-d92d2fe7f1c3'))
@@ -340,12 +337,14 @@ gmc_field = TemplateField('GMC', type=TemplateFieldType.COMPLEX, id=uuid.UUID('a
 goal_field = TemplateField('External goal', type=TemplateFieldType.SMALL_TEXT, emoji=':bullseye:',
                            description="Tangible objectives pursued by the character",
                            placeholder="What external goal does the character want to accomplish?",
-                           id=uuid.UUID('99526331-6f3b-429d-ad22-0a4a90ee9d77'), has_notes=True)
+                           id=uuid.UUID('99526331-6f3b-429d-ad22-0a4a90ee9d77'), has_notes=True,
+                           icon='mdi.target')
 internal_goal_field = TemplateField('Internal goal', type=TemplateFieldType.SMALL_TEXT,
                                     emoji=':smiling_face_with_hearts:',
                                     description="Emotional or psychological desires and growth pursued by the character",
                                     placeholder="What emotional state does the character want to achieve?",
-                                    id=uuid.UUID('090d2431-3ae7-4aa3-81b3-2737a8043db7'), has_notes=True)
+                                    id=uuid.UUID('090d2431-3ae7-4aa3-81b3-2737a8043db7'), has_notes=True,
+                                    icon='ri.user-heart-line')
 motivation_field = TemplateField('Motivation', type=TemplateFieldType.SMALL_TEXT, emoji=':right-facing_fist:',
                                  placeholder='Why does the character want to accomplish their goal?',
                                  id=uuid.UUID('5aa2c2e6-90a6-42b2-af7b-b4c82a56390e'), has_notes=True)
@@ -376,36 +375,74 @@ weaknesses_field = TemplateField('Weakness', type=TemplateFieldType.SMALL_TEXT, 
 strength_field = TemplateField('Strength', type=TemplateFieldType.SMALL_TEXT, emoji=':smiling_face_with_sunglasses:',
                                placeholder="What are the character's strengths in the story?",
                                id=uuid.UUID('4bc4269d-9ce7-47cf-aa65-23e7f8b1a250'))
-ghost_field = TemplateField('Ghost', type=TemplateFieldType.SMALL_TEXT, emoji=':ghost:',
-                            placeholder="What internal conflicts or unresolved issues haunt them from the past?",
-                            id=uuid.UUID("12a61aa5-ffc0-4309-9b65-c6f26ab5bcf5"))
+
 values_field = TemplateField('Values', type=TemplateFieldType.LABELS, emoji=':smiling_face_with_open_hands:',
                              id=uuid.UUID('47e2e30e-1708-414b-be79-3413063a798d'))
 
 baggage_field = TemplateField('Baggage', type=TemplateFieldType.COMPLEX,
                               id=uuid.UUID('b3e591ba-ce55-43c2-a4b0-f35864693977'))
+ghost_field = TemplateField('Ghost', type=TemplateFieldType.SMALL_TEXT, emoji=':ghost:',
+                            description="Unresolved issues from the character's past",
+                            placeholder="What internal conflicts or unresolved issues haunt them from the past?",
+                            id=uuid.UUID("12a61aa5-ffc0-4309-9b65-c6f26ab5bcf5"),
+                            icon='mdi6.ghost')
 wound_field = TemplateField('Wound', type=TemplateFieldType.SMALL_TEXT, emoji=':broken_heart:',
+                            description="Emotional trauma and wound",
                             placeholder='What past event harmed the character and left an emotional wound?',
-                            id=uuid.UUID('587cace8-0326-4895-b51e-de1d92b9db1b'))
+                            id=uuid.UUID('587cace8-0326-4895-b51e-de1d92b9db1b'),
+                            icon='fa5s.heart-broken')
 fear_field = TemplateField('Fear', type=TemplateFieldType.SMALL_TEXT, emoji=':fearful_face:',
-                           placeholder='What does the character fear as a result of their wound?',
-                           id=uuid.UUID('9601abef-c568-4ef6-9ff9-8da2e62e0572'))
-trigger_field = TemplateField('Trigger', type=TemplateFieldType.SMALL_TEXT, emoji=':high_voltage:',
-                              placeholder="What could aggravate the character's wound?",
-                              id=uuid.UUID('1a7b45ee-29d4-4e69-a177-0f8804a93b78'))
-healing_field = TemplateField('Healing', type=TemplateFieldType.SMALL_TEXT, emoji=':syringe:',
-                              placeholder='How could the character heal their emotional wounds?',
-                              id=uuid.UUID('13ccb707-07bc-4567-9ae0-93da65b7f6e7'))
-
+                           description="Deeply rooted anxieties or apprehensions",
+                           placeholder='What does the character fear as a result of their past?',
+                           id=uuid.UUID('9601abef-c568-4ef6-9ff9-8da2e62e0572'),
+                           icon='ri.ghost-2-fill')
 demon_field = TemplateField('Demon', type=TemplateFieldType.SMALL_TEXT, emoji=':angry_face_with_horns:',
-                            placeholder="",
-                            id=uuid.UUID('66f5424d-f631-481f-872e-cb3ac85f8ec0'))
+                            description="Deeply seated negative traits, vices, internal conflict",
+                            placeholder="What deep-seated traits, fears, vices, internal conflict plague the character?",
+                            id=uuid.UUID('66f5424d-f631-481f-872e-cb3ac85f8ec0'),
+                            icon='mdi.emoticon-devil')
+misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.SMALL_TEXT, emoji=':exploding_head:',
+                                description="A false view the character developed about themselves or about the world",
+                                id=uuid.UUID('32feaa23-acbf-4990-b99f-429747824a0b'),
+                                placeholder='What false view did the character develop about themselves or the world?',
+                                icon='mdi.head-question-outline')
+baggage_source_field = TemplateField('Source', type=TemplateFieldType.SMALL_TEXT, emoji=':seedling:',
+                                     placeholder="What's the origin, the root cause of the character's baggage?",
+                                     id=uuid.UUID('936b7ab4-d72c-42af-a485-32e03c89da85'))
+baggage_defense_mechanism_field = TemplateField('Defense mechanism', type=TemplateFieldType.SMALL_TEXT,
+                                                emoji=':shield:',
+                                                placeholder="Unconsciously, what defense did the character deploy to protect themselves?",
+                                                id=uuid.UUID('72794fb2-fc52-4266-b8e9-957778ccebdc'))
+
+baggage_trigger_field = TemplateField('Trigger', type=TemplateFieldType.SMALL_TEXT, emoji=':high_voltage:',
+                                      placeholder="What could trigger and aggravate the character's baggage?",
+                                      id=uuid.UUID('1a7b45ee-29d4-4e69-a177-0f8804a93b78'))
+baggage_healing_field = TemplateField('Healing', type=TemplateFieldType.SMALL_TEXT, emoji=':syringe:',
+                                      placeholder='How could the character heal their baggage?',
+                                      id=uuid.UUID('13ccb707-07bc-4567-9ae0-93da65b7f6e7'))
+
+baggage_relation_field = TemplateField('Impact on relationships', type=TemplateFieldType.SMALL_TEXT,
+                                       emoji=':broken_heart:',
+                                       placeholder="How does the baggage impact the character's relationships?",
+                                       id=uuid.UUID('5072c423-b5ae-4ac2-a108-142edcb3ec2f'))
+baggage_manifestation_field = TemplateField('Manifestation', type=TemplateFieldType.SMALL_TEXT,
+                                            emoji=':eyes:',
+                                            placeholder="How is the character's baggage expressed outwardly through behaviour, habits, or else?",
+                                            id=uuid.UUID('21d5234c-ed5d-42ee-aac7-aa9030e7abf9'))
+baggage_coping_field = TemplateField('Coping', type=TemplateFieldType.SMALL_TEXT, emoji=':downcast_face_with_sweat:',
+                                     placeholder="How does the character try to cope with their baggage?",
+                                     id=uuid.UUID('f4e5afaf-4a62-43ec-9714-301ad7c4feb2'))
+baggage_deterioration_field = TemplateField('Deterioration', type=TemplateFieldType.SMALL_TEXT,
+                                            placeholder="How could the baggage progressively become worse?",
+                                            emoji=':smiling_face_with_horns:',
+                                            id=uuid.UUID('d66d65bd-ddaf-40ba-be8e-fa7dcbaa313c'))
 
 strengths_weaknesses_field = TemplateField('Strengths and weaknesses', type=TemplateFieldType.COMPLEX,
                                            id=uuid.UUID('9cf11007-c032-46f9-a550-e238cb807714'))
 flaw_placeholder_field = TemplateField('Flaw', TemplateFieldType.TEXT, emoji=':angry_face_with_horns:',
                                        placeholder="Describe the flaw that the character has",
-                                       id=uuid.UUID('9d65ec96-fb07-4997-b9d4-3b2b4155ee5d'))
+                                       id=uuid.UUID('9d65ec96-fb07-4997-b9d4-3b2b4155ee5d'),
+                                       icon='mdi.virus')
 flaw_relation_field = TemplateField('Impact on relationships', type=TemplateFieldType.SMALL_TEXT,
                                     emoji=':broken_heart:',
                                     placeholder="How does the flaw impact the character's relationships?",
@@ -423,7 +460,8 @@ flaw_triggers_field = TemplateField('Triggers', type=TemplateFieldType.SMALL_TEX
 flaw_goals_field = TemplateField('Impact on goals', type=TemplateFieldType.SMALL_TEXT, emoji=':bullseye:',
                                  placeholder="How does the flaw impact the character's goals?",
                                  id=uuid.UUID('eb0c550b-b531-4295-b5a0-e88a2d330c06'))
-flaw_growth_field = TemplateField('Potential growth', type=TemplateFieldType.SMALL_TEXT, emoji=':smiling_face_with_halo:',
+flaw_growth_field = TemplateField('Potential growth', type=TemplateFieldType.SMALL_TEXT,
+                                  emoji=':smiling_face_with_halo:',
                                   placeholder="How could the character grow and overcome their flaw?",
                                   id=uuid.UUID('6862fa7b-f33c-4de8-834e-ae172f0c5a74'))
 flaw_deterioration_field = TemplateField('Deterioration', type=TemplateFieldType.SMALL_TEXT,
