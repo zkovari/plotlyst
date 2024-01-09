@@ -919,7 +919,8 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
         self._menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         for field in fields:
             self._menu.addAction(
-                action(field.name, tooltip=field.description, slot=partial(self._addPrimaryField, field),
+                action(field.name, icon=IconRegistry.from_name(field.icon), tooltip=field.description,
+                       slot=partial(self._addPrimaryField, field),
                        parent=self._menu))
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self._layout: QVBoxLayout = vbox(self, 0, 5)
