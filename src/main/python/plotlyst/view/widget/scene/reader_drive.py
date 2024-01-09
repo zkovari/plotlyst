@@ -35,12 +35,12 @@ from src.main.python.plotlyst.core.domain import Novel, Scene, ReaderQuestion, S
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import push_btn, link_buttons_to_pages, shadow, scroll_area, \
-    insert_before_the_end, wrap, fade_out_and_gc, action, label
+    insert_before_the_end, wrap, fade_out_and_gc, action, label, scrolled
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import DotsMenuButton
 from src.main.python.plotlyst.view.widget.confirm import confirmed
-from src.main.python.plotlyst.view.widget.display import LazyWidget, Icon
+from src.main.python.plotlyst.view.widget.display import LazyWidget, Icon, IconText
 from src.main.python.plotlyst.view.widget.input import RemovalButton
 
 
@@ -481,11 +481,45 @@ class ReaderCuriosityEditor(LazyWidget):
         return wdg
 
 
+class ReaderInformationType(Enum):
+    Story = 0
+    Character = 1
+    World = 2
+
+
+class ReaderInformationWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+
+class ReaderInformationColumn(QWidget):
+    def __init__(self, infoType: ReaderInformationType, parent=None):
+        super().__init__(parent)
+        vbox(self)
+
+        self.title = IconText()
+        self.layout().addWidget(self.title)
+        self.layout().addWidget(line())
+
+    def addInfo(self):
+        pass
+
+
 class ReaderInformationEditor(LazyWidget):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
         self._scene: Optional[Scene] = None
+
+        hbox(self)
+        self._scrollarea, self._wdgCenter = scrolled(self)
+        vbox(self._wdgCenter)
+        self.wdgStory = ReaderInformationColumn(ReaderInformationType.Story)
+        self.wdgCharacters = ReaderInformationColumn(ReaderInformationType.Character)
+        self.wdgWorld = ReaderInformationColumn(ReaderInformationType.World)
+        self._wdgCenter.layout().addWidget(self.wdgStory)
+        self._wdgCenter.layout().addWidget(self.wdgCharacters)
+        self._wdgCenter.layout().addWidget(self.wdgWorld)
 
     def setScene(self, scene: Scene):
         self._scene = scene
