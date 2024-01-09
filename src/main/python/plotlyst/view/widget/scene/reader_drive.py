@@ -519,6 +519,8 @@ class ReaderInformationWidget(QWidget):
 
 
 class ReaderInformationColumn(QWidget):
+    added = pyqtSignal(SceneReaderInformation)
+
     def __init__(self, infoType: ReaderInformationType, parent=None):
         super().__init__(parent)
         vbox(self, spacing=5)
@@ -542,6 +544,7 @@ class ReaderInformationColumn(QWidget):
 
         self.btnAdd = tool_btn(IconRegistry.plus_icon(self.infoType.color()), transparent_=True)
         self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd))
+        self.btnAdd.clicked.connect(self._addNew)
 
         self.wdgEditor = QWidget()
         vbox(self.wdgEditor)
@@ -559,9 +562,16 @@ class ReaderInformationColumn(QWidget):
     def clear(self):
         clear_layout(self.wdgEditor)
 
-    def addInfo(self, info: SceneReaderInformation):
+    def addInfo(self, info: SceneReaderInformation) -> ReaderInformationWidget:
         wdg = ReaderInformationWidget(info)
         self.wdgEditor.layout().addWidget(wdg, alignment=Qt.AlignmentFlag.AlignCenter)
+        return wdg
+
+    def _addNew(self):
+        info = SceneReaderInformation(self.infoType)
+        wdg = self.addInfo(info)
+        qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
+        self.added.emit(info)
 
 
 class ReaderInformationEditor(LazyWidget):
@@ -576,8 +586,11 @@ class ReaderInformationEditor(LazyWidget):
         self._wdgCenter.setProperty('relaxed-white-bg', True)
         hbox(self._wdgCenter)
         self.wdgStory = ReaderInformationColumn(ReaderInformationType.Story)
+        self.wdgStory.added.connect(self._infoAdded)
         self.wdgCharacters = ReaderInformationColumn(ReaderInformationType.Character)
+        self.wdgCharacters.added.connect(self._infoAdded)
         self.wdgWorld = ReaderInformationColumn(ReaderInformationType.World)
+        self.wdgWorld.added.connect(self._infoAdded)
         self._wdgCenter.layout().addWidget(self.wdgStory)
         self._wdgCenter.layout().addWidget(vline())
         self._wdgCenter.layout().addWidget(self.wdgCharacters)
@@ -603,13 +616,17 @@ class ReaderInformationEditor(LazyWidget):
         self.wdgWorld.clear()
 
         for info in self._scene.info:
-            if info == ReaderInformationType.Story:
+            if info.type == ReaderInformationType.Story:
                 self.wdgStory.addInfo(info)
-            elif info == ReaderInformationType.Character:
+            elif info.type == ReaderInformationType.Character:
                 self.wdgCharacters.addInfo(info)
-            elif info == ReaderInformationType.World:
+            elif info.type == ReaderInformationType.World:
                 self.wdgWorld.addInfo(info)
 
-        self.wdgStory.addInfo(SceneReaderInformation(ReaderInformationType.Story, text='Test'))
-        self.wdgCharacters.addInfo(SceneReaderInformation(ReaderInformationType.Character, text='Test'))
-        self.wdgWorld.addInfo(SceneReaderInformation(ReaderInformationType.World, text='Test'))
+        super().refresh()
+
+    def _infoAdded(self, info: SceneReaderInformation):
+        if not self._scene:
+            return
+
+        self._scene.info.append(info)
