@@ -1274,6 +1274,15 @@ class ReaderInformationType(Enum):
     Character = 1
     World = 2
 
+    def color(self) -> str:
+        if self == ReaderInformationType.Story:
+            return '#4B0763'
+        elif self == ReaderInformationType.Character:
+            return '#219ebc'
+            # return '#0077b6'
+        elif self == ReaderInformationType.World:
+            return '#40916c'
+
 
 @dataclass
 class SceneReaderInformation:

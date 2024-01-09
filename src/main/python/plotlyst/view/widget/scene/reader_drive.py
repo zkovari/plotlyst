@@ -27,7 +27,7 @@ from PyQt6.QtGui import QColor, QResizeEvent, QAction
 from PyQt6.QtWidgets import QWidget, QButtonGroup, QStackedWidget, QTextEdit
 from overrides import overrides
 from qthandy import vbox, hbox, spacer, sp, flow, vline, clear_layout, bold, incr_font, italic, translucent, line, \
-    vspacer, incr_icon
+    vspacer, incr_icon, margins
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
@@ -487,28 +487,63 @@ class ReaderInformationWidget(QWidget):
     def __init__(self, info: SceneReaderInformation, parent=None):
         super().__init__(parent)
         self.info = info
+        vbox(self, 10)
+
+        self._label = push_btn(
+            IconRegistry.general_info_icon(self.info.type.color()), 'Information',
+            transparent_=True, icon_resize=False, pointy_=False)
+        self._label.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self._label.setStyleSheet(f'border:0px; color: {self.info.type.color()};')
+
+        self.textedit = QTextEdit(self)
+        self.textedit.setProperty('white-bg', True)
+        self.textedit.setProperty('rounded', True)
+        self.textedit.setTabChangesFocus(True)
+        if app_env.is_mac():
+            incr_font(self.textedit)
+        self.textedit.setMinimumSize(170, 100)
+        self.textedit.setMaximumSize(190, 120)
+        self.textedit.verticalScrollBar().setVisible(False)
+        shadow(self.textedit, color=QColor(self.info.type.color()))
+        self.textedit.setText(self.info.text)
+        self.textedit.textChanged.connect(self._infoChanged)
+
+        self.layout().addWidget(self._label, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self.textedit)
+
+        sp(self).v_max()
+
+    def _infoChanged(self):
+        self.info.text = self.textedit.toPlainText()
 
 
 class ReaderInformationColumn(QWidget):
     def __init__(self, infoType: ReaderInformationType, parent=None):
         super().__init__(parent)
-        vbox(self)
+        vbox(self, spacing=5)
+        self.infoType = infoType
 
         self.title = IconText()
-        if infoType == ReaderInformationType.Story:
+        if self.infoType == ReaderInformationType.Story:
             self.title.setText('Story')
-            self.title.setIcon(IconRegistry.storylines_icon())
-        elif infoType == ReaderInformationType.Character:
+            self.title.setIcon(
+                IconRegistry.storylines_icon(color=self.infoType.color(), color_on=self.infoType.color()))
+        elif self.infoType == ReaderInformationType.Character:
             self.title.setText('Characters')
-            self.title.setIcon(IconRegistry.character_icon())
-        elif infoType == ReaderInformationType.World:
+            self.title.setIcon(IconRegistry.character_icon(color=self.infoType.color(), color_on=self.infoType.color()))
+        elif self.infoType == ReaderInformationType.World:
             self.title.setText('World')
-            self.title.setIcon(IconRegistry.world_building_icon())
+            self.title.setIcon(IconRegistry.world_building_icon(color=self.infoType.color(), color_on=self.infoType.color()))
+        self.title.setStyleSheet(f'border:0px; color: {self.infoType.color()};')
         incr_font(self.title, 2)
         incr_icon(self.title, 4)
 
+        self.wdgEditor = QWidget()
+        vbox(self.wdgEditor)
+
         self.layout().addWidget(self.title)
-        self.layout().addWidget(line())
+        self.layout().addWidget(line(color=self.infoType.color()))
+        self.layout().addWidget(self.wdgEditor)
         self.layout().addWidget(vspacer())
 
         self.setMinimumWidth(150)
@@ -516,10 +551,11 @@ class ReaderInformationColumn(QWidget):
         sp(self).h_exp()
 
     def clear(self):
-        pass
+        clear_layout(self.wdgEditor)
 
     def addInfo(self, info: SceneReaderInformation):
         wdg = ReaderInformationWidget(info)
+        self.wdgEditor.layout().addWidget(wdg, alignment=Qt.AlignmentFlag.AlignCenter)
 
 
 class ReaderInformationEditor(LazyWidget):
@@ -528,7 +564,8 @@ class ReaderInformationEditor(LazyWidget):
         self._novel = novel
         self._scene: Optional[Scene] = None
 
-        hbox(self, 0, 0)
+        hbox(self, 10, 0)
+        margins(self, top=25)
         self._scrollarea, self._wdgCenter = scrolled(self, frameless=True)
         self._wdgCenter.setProperty('relaxed-white-bg', True)
         hbox(self._wdgCenter)
@@ -566,3 +603,7 @@ class ReaderInformationEditor(LazyWidget):
                 self.wdgCharacters.addInfo(info)
             elif info == ReaderInformationType.World:
                 self.wdgWorld.addInfo(info)
+
+        self.wdgStory.addInfo(SceneReaderInformation(ReaderInformationType.Story, text='Test'))
+        self.wdgCharacters.addInfo(SceneReaderInformation(ReaderInformationType.Character, text='Test'))
+        self.wdgWorld.addInfo(SceneReaderInformation(ReaderInformationType.World, text='Test'))
