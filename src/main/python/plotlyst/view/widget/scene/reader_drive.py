@@ -484,6 +484,8 @@ class ReaderCuriosityEditor(LazyWidget):
 
 
 class ReaderInformationWidget(QWidget):
+    removed = pyqtSignal()
+
     def __init__(self, info: SceneReaderInformation, parent=None):
         super().__init__(parent)
         self.info = info
@@ -494,6 +496,11 @@ class ReaderInformationWidget(QWidget):
             transparent_=True, icon_resize=False, pointy_=False)
         self._label.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         translucent(self._label, 0.6)
+
+        self.btnRemove = RemovalButton(self)
+        self.btnRemove.setHidden(True)
+        self.btnRemove.clicked.connect(self.removed)
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnRemove, self))
 
         self.textedit = QTextEdit(self)
         self.textedit.setProperty('white-bg', True)
@@ -514,12 +521,17 @@ class ReaderInformationWidget(QWidget):
 
         sp(self).v_max()
 
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        self.btnRemove.setGeometry(event.size().width() - 20, 10, 10, 10)
+
     def _infoChanged(self):
         self.info.text = self.textedit.toPlainText()
 
 
 class ReaderInformationColumn(QWidget):
     added = pyqtSignal(SceneReaderInformation)
+    removed = pyqtSignal(SceneReaderInformation)
 
     def __init__(self, infoType: ReaderInformationType, parent=None):
         super().__init__(parent)
@@ -564,6 +576,7 @@ class ReaderInformationColumn(QWidget):
 
     def addInfo(self, info: SceneReaderInformation) -> ReaderInformationWidget:
         wdg = ReaderInformationWidget(info)
+        wdg.removed.connect(partial(self._remove, wdg))
         self.wdgEditor.layout().addWidget(wdg, alignment=Qt.AlignmentFlag.AlignCenter)
         return wdg
 
@@ -572,6 +585,10 @@ class ReaderInformationColumn(QWidget):
         wdg = self.addInfo(info)
         qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
         self.added.emit(info)
+
+    def _remove(self, wdg: ReaderInformationWidget):
+        fade_out_and_gc(self.wdgEditor, wdg)
+        self.removed.emit(wdg.info)
 
 
 class ReaderInformationEditor(LazyWidget):
@@ -587,10 +604,13 @@ class ReaderInformationEditor(LazyWidget):
         hbox(self._wdgCenter)
         self.wdgStory = ReaderInformationColumn(ReaderInformationType.Story)
         self.wdgStory.added.connect(self._infoAdded)
+        self.wdgStory.removed.connect(self._infoRemoved)
         self.wdgCharacters = ReaderInformationColumn(ReaderInformationType.Character)
         self.wdgCharacters.added.connect(self._infoAdded)
+        self.wdgCharacters.removed.connect(self._infoRemoved)
         self.wdgWorld = ReaderInformationColumn(ReaderInformationType.World)
         self.wdgWorld.added.connect(self._infoAdded)
+        self.wdgWorld.removed.connect(self._infoRemoved)
         self._wdgCenter.layout().addWidget(self.wdgStory)
         self._wdgCenter.layout().addWidget(vline())
         self._wdgCenter.layout().addWidget(self.wdgCharacters)
@@ -626,7 +646,9 @@ class ReaderInformationEditor(LazyWidget):
         super().refresh()
 
     def _infoAdded(self, info: SceneReaderInformation):
-        if not self._scene:
-            return
+        if self._scene:
+            self._scene.info.append(info)
 
-        self._scene.info.append(info)
+    def _infoRemoved(self, info: SceneReaderInformation):
+        if self._scene:
+            self._scene.info.remove(info)
