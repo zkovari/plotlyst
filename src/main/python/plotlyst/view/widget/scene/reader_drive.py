@@ -479,3 +479,21 @@ class ReaderCuriosityEditor(LazyWidget):
         wdg.resurrect.connect(partial(self._resurrect, wdg))
 
         return wdg
+
+
+class ReaderInformationEditor(LazyWidget):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+        self._scene: Optional[Scene] = None
+
+    def setScene(self, scene: Scene):
+        self._scene = scene
+        self._initialized = False
+        if self.isVisible():
+            self.refresh()
+
+    @overrides
+    def refresh(self):
+        if not self._scene:
+            return
