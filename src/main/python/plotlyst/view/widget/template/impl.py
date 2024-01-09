@@ -1098,17 +1098,18 @@ class BaggageFieldWidget(MultiLayerComplexTemplateWidgetBase):
 
     @overrides
     def _primaryFields(self) -> List[TemplateField]:
-        return [wound_field, ghost_field, misbelief_field, demon_field, fear_field]
+        return [ghost_field, wound_field, demon_field, fear_field, misbelief_field]
 
     @overrides
     def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
-        elements = [baggage_source_field, baggage_healing_field, baggage_coping_field, baggage_manifestation_field,
-                    baggage_deterioration_field, baggage_relation_field]
+        elements = [baggage_source_field, baggage_manifestation_field,
+                    baggage_relation_field, baggage_coping_field, baggage_healing_field, baggage_deterioration_field]
+
+        if primary.id != ghost_field.id:
+            elements.insert(3, baggage_defense_mechanism_field)
 
         if primary.id in [wound_field.id, ghost_field.id, demon_field.id]:
-            elements.insert(0, baggage_trigger_field)
-        if primary.id != ghost_field.id:
-            elements.insert(2, baggage_defense_mechanism_field)
+            elements.insert(1, baggage_trigger_field)
 
         return elements
 
@@ -1228,6 +1229,10 @@ class StrengthsWeaknessesFieldWidget(EditableTemplateWidget):
 
         self.layout().addWidget(self._center)
         self.layout().addWidget(wrap(self._btnPrimary, margin_left=5), alignment=Qt.AlignmentFlag.AlignLeft)
+
+    @property
+    def wdgEditor(self):
+        return self
 
     @overrides
     def value(self) -> Any:
