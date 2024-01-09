@@ -505,6 +505,7 @@ class ReaderInformationWidget(QWidget):
         self.textedit.setMaximumSize(190, 120)
         self.textedit.verticalScrollBar().setVisible(False)
         shadow(self.textedit, color=QColor(self.info.type.color()))
+        self.textedit.setPlaceholderText('What new information is conveyed to the reader?')
         self.textedit.setText(self.info.text)
         self.textedit.textChanged.connect(self._infoChanged)
 
