@@ -185,8 +185,8 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.file-document', **kwargs)
 
     @staticmethod
-    def general_info_icon() -> QIcon:
-        return IconRegistry.from_name('fa5s.info-circle', color=PLOTLYST_SECONDARY_COLOR)
+    def general_info_icon(color: str = PLOTLYST_SECONDARY_COLOR) -> QIcon:
+        return IconRegistry.from_name('fa5s.info-circle', color=color)
 
     @staticmethod
     def action_scene_icon(resolved: bool = False, trade_off: bool = False, motion: bool = False) -> QIcon:

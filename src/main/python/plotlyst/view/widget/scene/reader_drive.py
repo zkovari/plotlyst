@@ -26,21 +26,23 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QResizeEvent, QAction
 from PyQt6.QtWidgets import QWidget, QButtonGroup, QStackedWidget, QTextEdit
 from overrides import overrides
-from qthandy import vbox, hbox, spacer, sp, flow, vline, clear_layout, bold, incr_font, italic, translucent, line
+from qthandy import vbox, hbox, spacer, sp, flow, vline, clear_layout, bold, incr_font, italic, translucent, line, \
+    vspacer, incr_icon, margins
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
-from src.main.python.plotlyst.core.domain import Novel, Scene, ReaderQuestion, SceneReaderQuestion, ReaderQuestionType
+from src.main.python.plotlyst.core.domain import Novel, Scene, ReaderQuestion, SceneReaderQuestion, ReaderQuestionType, \
+    ReaderInformationType, SceneReaderInformation
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import push_btn, link_buttons_to_pages, shadow, scroll_area, \
-    insert_before_the_end, wrap, fade_out_and_gc, action, label
+    insert_before_the_end, wrap, fade_out_and_gc, action, label, scrolled, tool_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import DotsMenuButton
 from src.main.python.plotlyst.view.widget.confirm import confirmed
-from src.main.python.plotlyst.view.widget.display import LazyWidget, Icon
+from src.main.python.plotlyst.view.widget.display import LazyWidget, Icon, IconText
 from src.main.python.plotlyst.view.widget.input import RemovalButton
 
 
@@ -479,3 +481,174 @@ class ReaderCuriosityEditor(LazyWidget):
         wdg.resurrect.connect(partial(self._resurrect, wdg))
 
         return wdg
+
+
+class ReaderInformationWidget(QWidget):
+    removed = pyqtSignal()
+
+    def __init__(self, info: SceneReaderInformation, parent=None):
+        super().__init__(parent)
+        self.info = info
+        vbox(self, 10)
+
+        self._label = push_btn(
+            IconRegistry.general_info_icon('black'), 'Information',
+            transparent_=True, icon_resize=False, pointy_=False)
+        self._label.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        translucent(self._label, 0.6)
+
+        self.btnRemove = RemovalButton(self)
+        self.btnRemove.setHidden(True)
+        self.btnRemove.clicked.connect(self.removed)
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnRemove, self))
+
+        self.textedit = QTextEdit(self)
+        self.textedit.setProperty('white-bg', True)
+        self.textedit.setProperty('rounded', True)
+        self.textedit.setTabChangesFocus(True)
+        if app_env.is_mac():
+            incr_font(self.textedit)
+        self.textedit.setMinimumSize(170, 100)
+        self.textedit.setMaximumSize(190, 120)
+        self.textedit.verticalScrollBar().setVisible(False)
+        shadow(self.textedit, color=QColor(self.info.type.color()))
+        self.textedit.setPlaceholderText('What new information is conveyed to the reader?')
+        self.textedit.setText(self.info.text)
+        self.textedit.textChanged.connect(self._infoChanged)
+
+        self.layout().addWidget(self._label, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self.textedit)
+
+        sp(self).v_max()
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        self.btnRemove.setGeometry(event.size().width() - 20, 10, 10, 10)
+
+    def _infoChanged(self):
+        self.info.text = self.textedit.toPlainText()
+
+
+class ReaderInformationColumn(QWidget):
+    added = pyqtSignal(SceneReaderInformation)
+    removed = pyqtSignal(SceneReaderInformation)
+
+    def __init__(self, infoType: ReaderInformationType, parent=None):
+        super().__init__(parent)
+        vbox(self, spacing=5)
+        self.infoType = infoType
+
+        self.title = IconText()
+        if self.infoType == ReaderInformationType.Story:
+            self.title.setText('Story')
+            self.title.setIcon(
+                IconRegistry.storylines_icon(color=self.infoType.color(), color_on=self.infoType.color()))
+        elif self.infoType == ReaderInformationType.Character:
+            self.title.setText('Characters')
+            self.title.setIcon(IconRegistry.character_icon(color=self.infoType.color(), color_on=self.infoType.color()))
+        elif self.infoType == ReaderInformationType.World:
+            self.title.setText('World')
+            self.title.setIcon(
+                IconRegistry.world_building_icon(color=self.infoType.color(), color_on=self.infoType.color()))
+        self.title.setStyleSheet(f'border:0px; color: {self.infoType.color()};')
+        incr_font(self.title, 2)
+        incr_icon(self.title, 4)
+
+        self.btnAdd = tool_btn(IconRegistry.plus_icon(self.infoType.color()), transparent_=True)
+        self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd))
+        self.btnAdd.clicked.connect(self._addNew)
+
+        self.wdgEditor = QWidget()
+        vbox(self.wdgEditor)
+
+        self.layout().addWidget(self.title)
+        self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(line(color=self.infoType.color()))
+        self.layout().addWidget(self.wdgEditor)
+        self.layout().addWidget(vspacer())
+
+        self.setMinimumWidth(150)
+        self.setMaximumWidth(400)
+        sp(self).h_exp()
+
+    def clear(self):
+        clear_layout(self.wdgEditor)
+
+    def addInfo(self, info: SceneReaderInformation) -> ReaderInformationWidget:
+        wdg = ReaderInformationWidget(info)
+        wdg.removed.connect(partial(self._remove, wdg))
+        self.wdgEditor.layout().addWidget(wdg, alignment=Qt.AlignmentFlag.AlignCenter)
+        return wdg
+
+    def _addNew(self):
+        info = SceneReaderInformation(self.infoType)
+        wdg = self.addInfo(info)
+        qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
+        self.added.emit(info)
+
+    def _remove(self, wdg: ReaderInformationWidget):
+        fade_out_and_gc(self.wdgEditor, wdg)
+        self.removed.emit(wdg.info)
+
+
+class ReaderInformationEditor(LazyWidget):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+        self._scene: Optional[Scene] = None
+
+        hbox(self, 10, 0)
+        margins(self, top=25)
+        self._scrollarea, self._wdgCenter = scrolled(self, frameless=True)
+        self._wdgCenter.setProperty('relaxed-white-bg', True)
+        hbox(self._wdgCenter)
+        self.wdgStory = ReaderInformationColumn(ReaderInformationType.Story)
+        self.wdgStory.added.connect(self._infoAdded)
+        self.wdgStory.removed.connect(self._infoRemoved)
+        self.wdgCharacters = ReaderInformationColumn(ReaderInformationType.Character)
+        self.wdgCharacters.added.connect(self._infoAdded)
+        self.wdgCharacters.removed.connect(self._infoRemoved)
+        self.wdgWorld = ReaderInformationColumn(ReaderInformationType.World)
+        self.wdgWorld.added.connect(self._infoAdded)
+        self.wdgWorld.removed.connect(self._infoRemoved)
+        self._wdgCenter.layout().addWidget(self.wdgStory)
+        self._wdgCenter.layout().addWidget(vline())
+        self._wdgCenter.layout().addWidget(self.wdgCharacters)
+        self._wdgCenter.layout().addWidget(vline())
+        self._wdgCenter.layout().addWidget(self.wdgWorld)
+        spacer_ = spacer()
+        sp(spacer_).h_preferred()
+        self._wdgCenter.layout().addWidget(spacer_)
+
+    def setScene(self, scene: Scene):
+        self._scene = scene
+        self._initialized = False
+        if self.isVisible():
+            self.refresh()
+
+    @overrides
+    def refresh(self):
+        if not self._scene:
+            return
+
+        self.wdgStory.clear()
+        self.wdgCharacters.clear()
+        self.wdgWorld.clear()
+
+        for info in self._scene.info:
+            if info.type == ReaderInformationType.Story:
+                self.wdgStory.addInfo(info)
+            elif info.type == ReaderInformationType.Character:
+                self.wdgCharacters.addInfo(info)
+            elif info.type == ReaderInformationType.World:
+                self.wdgWorld.addInfo(info)
+
+        super().refresh()
+
+    def _infoAdded(self, info: SceneReaderInformation):
+        if self._scene:
+            self._scene.info.append(info)
+
+    def _infoRemoved(self, info: SceneReaderInformation):
+        if self._scene:
+            self._scene.info.remove(info)
