@@ -1096,12 +1096,12 @@ class BaggageFieldWidget(MultiLayerComplexTemplateWidgetBase):
 
     @overrides
     def _primaryFields(self) -> List[TemplateField]:
-        return [wound_field, ghost_field, demon_field]
+        return [wound_field, ghost_field, misbelief_field, demon_field]
 
     @overrides
     def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
         if primary.id == wound_field.id:
-            return [fear_field, misbelief_field, trigger_field, healing_field]
+            return [fear_field, trigger_field, healing_field]
         return []
 
 
