@@ -1269,8 +1269,15 @@ class SceneReaderQuestion:
         return str(self.id)
 
 
+class ReaderInformationType(Enum):
+    Story = 0
+    Character = 1
+    World = 2
+
+
 @dataclass
 class SceneReaderInformation:
+    type: ReaderInformationType
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     text: str = ''
 

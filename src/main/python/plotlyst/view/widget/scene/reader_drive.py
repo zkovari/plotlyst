@@ -32,7 +32,8 @@ from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, Inst
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
-from src.main.python.plotlyst.core.domain import Novel, Scene, ReaderQuestion, SceneReaderQuestion, ReaderQuestionType
+from src.main.python.plotlyst.core.domain import Novel, Scene, ReaderQuestion, SceneReaderQuestion, ReaderQuestionType, \
+    ReaderInformationType, SceneReaderInformation
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import push_btn, link_buttons_to_pages, shadow, scroll_area, \
@@ -482,15 +483,10 @@ class ReaderCuriosityEditor(LazyWidget):
         return wdg
 
 
-class ReaderInformationType(Enum):
-    Story = 0
-    Character = 1
-    World = 2
-
-
 class ReaderInformationWidget(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, info: SceneReaderInformation, parent=None):
         super().__init__(parent)
+        self.info = info
 
 
 class ReaderInformationColumn(QWidget):
@@ -519,8 +515,11 @@ class ReaderInformationColumn(QWidget):
         self.setMaximumWidth(400)
         sp(self).h_exp()
 
-    def addInfo(self):
+    def clear(self):
         pass
+
+    def addInfo(self, info: SceneReaderInformation):
+        wdg = ReaderInformationWidget(info)
 
 
 class ReaderInformationEditor(LazyWidget):
@@ -531,7 +530,6 @@ class ReaderInformationEditor(LazyWidget):
 
         hbox(self, 0, 0)
         self._scrollarea, self._wdgCenter = scrolled(self, frameless=True)
-        self._scrollarea.setProperty('relaxed-white-bg', True)
         self._wdgCenter.setProperty('relaxed-white-bg', True)
         hbox(self._wdgCenter)
         self.wdgStory = ReaderInformationColumn(ReaderInformationType.Story)
@@ -556,3 +554,15 @@ class ReaderInformationEditor(LazyWidget):
     def refresh(self):
         if not self._scene:
             return
+
+        self.wdgStory.clear()
+        self.wdgCharacters.clear()
+        self.wdgWorld.clear()
+
+        for info in self._scene.info:
+            if info == ReaderInformationType.Story:
+                self.wdgStory.addInfo(info)
+            elif info == ReaderInformationType.Character:
+                self.wdgCharacters.addInfo(info)
+            elif info == ReaderInformationType.World:
+                self.wdgWorld.addInfo(info)
