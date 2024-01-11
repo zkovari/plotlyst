@@ -24,10 +24,11 @@ from typing import Optional
 
 import qtanim
 from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal
+from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QButtonGroup
 from overrides import overrides
 from qthandy import translucent, gc, flow, ask_confirmation, hbox, clear_layout, vbox, sp, margins, vspacer, \
-    retain_when_hidden, incr_font, bold
+    incr_font, bold
 from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR
@@ -42,7 +43,6 @@ from src.main.python.plotlyst.service.persistence import RepositoryPersistenceMa
 from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon, label, frame, shadow
 from src.main.python.plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.widget.button import CollapseButton
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
 from src.main.python.plotlyst.view.widget.display import IconText
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
@@ -102,7 +102,7 @@ class _StoryStructureButton(QPushButton):
         self.setFont(font)
 
 
-class BestNotesWidget(QWidget):
+class BeatNotesWidget(QWidget):
     notesChanged = pyqtSignal()
 
     def __init__(self, beat: StoryBeat, parent=None):
@@ -147,12 +147,9 @@ class ActNotesWidget(QWidget):
         self._wdgContainer = QWidget()
         hbox(self._wdgContainer, spacing=15)
 
-        self._wdgBeatContainer = QWidget()
-        vbox(self._wdgBeatContainer)
-
         self._text = AutoAdjustableTextEdit(height=300)
         incr_font(self._text, 3)
-        self._text.setMaximumWidth(800)
+        self._text.setMaximumWidth(1200)
         self._text.setPlaceholderText(f'Describe the events in act {act}')
         self._text.setProperty('transparent', True)
         self._text.setMarkdown(structure.acts_text.get(act, ''))
@@ -166,28 +163,17 @@ class ActNotesWidget(QWidget):
 
         self._wdgActEditor = frame()
         self._wdgActEditor.setProperty('white-bg', True)
-        self._wdgActEditor.setMaximumWidth(800)
+        self._wdgActEditor.setMaximumWidth(1200)
+        qcolor = QColor(color)
+        qcolor.setAlpha(75)
+        shadow(self._wdgActEditor, color=qcolor)
         vbox(self._wdgActEditor)
         margins(self._wdgActEditor, left=15)
         self._wdgActEditor.layout().addWidget(label(f'Act {act}', h3=True), alignment=Qt.AlignmentFlag.AlignLeft)
         self._wdgActEditor.layout().addWidget(self._text)
         self._wdgActEditor.layout().addWidget(vspacer())
 
-        self._btnCollapseBeats = CollapseButton(Qt.Edge.RightEdge, Qt.Edge.LeftEdge)
-        retain_when_hidden(self._wdgBeatContainer)
-        self._btnCollapseBeats.toggled.connect(self._wdgBeatContainer.setHidden)
-
-        for beat in structure.beats:
-            if beat.act == act:
-                wdg = BestNotesWidget(beat)
-                wdg.notesChanged.connect(self.notesChanged)
-                self._wdgBeatContainer.layout().addWidget(wdg)
-        self._wdgBeatContainer.layout().addWidget(vspacer())
-
         self._wdgContainer.layout().addWidget(self._wdgActEditor)
-        self._wdgContainer.layout().addWidget(self._btnCollapseBeats)
-        self._wdgContainer.layout().addWidget(self._wdgBeatContainer)
-        # self._wdgContainer.layout().addWidget(spacer())
 
         self.layout().addWidget(self._wdgBar)
         self.layout().addWidget(self._wdgContainer)
