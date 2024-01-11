@@ -257,6 +257,10 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.btnLinkCharacter.installEventFilter(ButtonPressResizeEventFilter(self.btnLinkCharacter))
         self.btnLinkCharacter.installEventFilter(OpacityEventFilter(self.btnLinkCharacter, leaveOpacity=0.8))
 
+        set_tab_icon(self.tabWidget, self.tabOutline,
+                     IconRegistry.from_name('mdi6.timeline-outline', rotated=90, color_on=PLOTLYST_SECONDARY_COLOR))
+        set_tab_icon(self.tabWidget, self.tabOverview,
+                     IconRegistry.from_name('mdi6.grid', color_on=PLOTLYST_SECONDARY_COLOR))
         set_tab_icon(self.tabWidget, self.tabNotes, IconRegistry.document_edition_icon())
 
         self._characterMenu: Optional[CharacterSelectorMenu] = None
@@ -393,9 +397,6 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         structure.active = True
         acts_registry.refresh()
         self._structureNotes.setStructure(structure)
-
-        set_tab_icon(self.tabWidget, self.tabOverview,
-                     IconRegistry.from_name(structure.icon, 'black', color_on=PLOTLYST_SECONDARY_COLOR))
 
         if self.wdgPreview.novel is not None:
             clear_layout(self.layoutPreview)
