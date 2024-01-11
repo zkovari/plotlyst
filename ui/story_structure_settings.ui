@@ -250,6 +250,9 @@
             <height>256</height>
            </rect>
           </property>
+          <property name="relaxed-white-bg" stdset="0">
+           <bool>true</bool>
+          </property>
          </widget>
         </widget>
        </item>
@@ -291,8 +294,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>100</width>
-            <height>30</height>
+            <width>565</width>
+            <height>256</height>
            </rect>
           </property>
           <property name="sizePolicy">

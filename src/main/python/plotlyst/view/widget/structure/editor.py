@@ -256,6 +256,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
 
         self._structureNotes = StoryStructureNotes()
         hbox(self.notes).addWidget(self._structureNotes)
+        hbox(self.beats, 5, 0)
 
         self._beatsPreview: Optional[BeatsPreview] = None
 
@@ -301,7 +302,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self._characterMenu.selected.connect(self._characterLinked)
 
         self._beatsPreview = BeatsPreview(self.novel, toggleBeats=False)
-        hbox(self.beats, 0, 0).addWidget(self._beatsPreview)
+        self.beats.layout().addWidget(self._beatsPreview)
         self._beatsPreview.attachStructurePreview(self.wdgPreview)
 
         self._structureNotes.setNovel(self.novel)
