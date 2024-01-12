@@ -62,7 +62,8 @@ from src.main.python.plotlyst.view.widget.chart import BaseChart
 from src.main.python.plotlyst.view.widget.display import Icon, IdleWidget, PopupDialog
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
-from src.main.python.plotlyst.view.widget.scene.structure import SceneStructureTimeline, SceneStructureBeatWidget
+from src.main.python.plotlyst.view.widget.outline import OutlineItemWidget
+from src.main.python.plotlyst.view.widget.scene.structure import SceneStructureTimeline
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
 from src.main.python.plotlyst.view.widget.utility import ColorPicker
 
@@ -571,13 +572,21 @@ storyline_progression_steps_descriptions = {
 }
 
 
-class PlotProgressionEventWidget(SceneStructureBeatWidget):
+class PlotProgressionEventWidget(OutlineItemWidget):
     def __init__(self, novel: Novel, type: PlotType, item: PlotProgressionItem, parent=None):
         self._type = type
-        super().__init__(novel, item, parent)
+        self.beat = item
+        self.novel = novel
+        super().__init__(item, parent)
         self._btnIcon.removeEventFilter(self._dragEventFilter)
         self._btnIcon.setCursor(Qt.CursorShape.ArrowCursor)
         self.setAcceptDrops(False)
+
+        self._initStyle()
+
+    @overrides
+    def mimeType(self) -> str:
+        return ''
 
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:

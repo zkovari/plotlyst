@@ -33,7 +33,6 @@ from qthandy import pointy, gc, translucent, decr_font, \
 from qthandy.filter import OpacityEventFilter, ObjectReferenceMimeData, DropEventFilter
 from qtmenu import ScrollableMenuWidget, ActionTooltipDisplayMode, MenuWidget, TabularGridMenuWidget
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Scene, SceneStructureItemType, SceneStructureItem, SceneOutcome, \
     ScenePurposeType
 from src.main.python.plotlyst.env import app_env
@@ -325,33 +324,11 @@ class SceneStructureItemWidget(OutlineItemWidget):
     def sceneStructureItem(self) -> SceneStructureItem:
         return self.beat
 
-    def activate(self):
-        if self.graphicsEffect():
-            self.setGraphicsEffect(None)
-
     @abstractmethod
     def copy(self) -> 'SceneStructureItemWidget':
         pass
 
-    def _initStyle(self):
-        color = self._color()
-        self._btnIcon.setStyleSheet(f'''
-                    QToolButton {{
-                                    background-color: {RELAXED_WHITE_COLOR};
-                                    border: 2px solid {color};
-                                    border-radius: 18px; padding: 4px;
-                                }}
-                    QToolButton:menu-indicator {{
-                        width: 0;
-                    }}
-                    ''')
-        self._btnName.setStyleSheet(f'''QPushButton {{
-            border: 0px; background-color: rgba(0, 0, 0, 0); color: {color};
-            padding-left: 15px;
-            padding-right: 15px;
-        }}''')
-
-
+    @overrides
     def _color(self) -> str:
         if self.beat.type == SceneStructureItemType.ACTION:
             return 'darkBlue'
@@ -406,12 +383,6 @@ class SceneStructureItemWidget(OutlineItemWidget):
             return '#b5838d'
         else:
             return '#343a40'
-
-    def _glow(self) -> QColor:
-        color = QColor(self._color())
-        qtanim.glow(self._btnName, color=color)
-
-        return color
 
 
 class SceneStructureBeatWidget(SceneStructureItemWidget):
@@ -528,7 +499,6 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
         else:
             name = self.beat.type.name
         self._btnName.setText(name.lower().capitalize().replace('_', ' '))
-        self._btnIcon.setIcon(self._icon())
 
     def _icon(self) -> QIcon:
         return beat_icon(self.beat.type, resolved=self.beat.outcome == SceneOutcome.RESOLUTION,

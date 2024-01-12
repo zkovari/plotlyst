@@ -22,12 +22,13 @@ from typing import Optional, List
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal, QRectF, QPoint, Qt, QSize, QEvent
-from PyQt6.QtGui import QPainterPath, QColor, QPen, QPainter, QPaintEvent, QResizeEvent, QEnterEvent
+from PyQt6.QtGui import QPainterPath, QColor, QPen, QPainter, QPaintEvent, QResizeEvent, QEnterEvent, QIcon
 from PyQt6.QtWidgets import QWidget, QPushButton, QToolButton
 from overrides import overrides
 from qthandy import sp, curved_flow, clear_layout, vbox, bold
 from qthandy.filter import DragEventFilter
 
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, OutlineItem
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.view.widget.input import RemovalButton
@@ -86,12 +87,51 @@ class OutlineItemWidget(QWidget):
     def leaveEvent(self, event: QEvent) -> None:
         self._btnRemove.setHidden(True)
 
+    def activate(self):
+        if self.graphicsEffect():
+            self.setGraphicsEffect(None)
+
     def _remove(self):
         anim = qtanim.fade_out(self, duration=150)
         anim.finished.connect(lambda: self.removed.emit(self))
 
     def _beatDataFunc(self, btn):
         return id(self)
+
+    def _initStyle(self):
+        color = self._color()
+        self._btnIcon.setStyleSheet(f'''
+                    QToolButton {{
+                                    background-color: {RELAXED_WHITE_COLOR};
+                                    border: 2px solid {color};
+                                    border-radius: 18px; padding: 4px;
+                                }}
+                    QToolButton:menu-indicator {{
+                        width: 0;
+                    }}
+                    ''')
+        self._btnName.setStyleSheet(f'''QPushButton {{
+            border: 0px; background-color: rgba(0, 0, 0, 0); color: {color};
+            padding-left: 15px;
+            padding-right: 15px;
+        }}''')
+
+        self._btnIcon.setIcon(self._icon())
+
+    def _color(self) -> str:
+        return 'black'
+
+    def _icon(self) -> QIcon:
+        return QIcon()
+
+    def _descriptions(self) -> dict:
+        pass
+
+    def _glow(self) -> QColor:
+        color = QColor(self._color())
+        qtanim.glow(self._btnName, color=color)
+
+        return color
 
 
 class OutlineTimelineWidget(QWidget):
