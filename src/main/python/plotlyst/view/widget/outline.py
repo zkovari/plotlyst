@@ -23,9 +23,9 @@ from typing import Optional, List
 import qtanim
 from PyQt6.QtCore import pyqtSignal, QRectF, QPoint, Qt, QSize, QEvent
 from PyQt6.QtGui import QPainterPath, QColor, QPen, QPainter, QPaintEvent, QResizeEvent, QEnterEvent, QIcon
-from PyQt6.QtWidgets import QWidget, QPushButton, QToolButton
+from PyQt6.QtWidgets import QWidget, QPushButton, QToolButton, QTextEdit
 from overrides import overrides
-from qthandy import sp, curved_flow, clear_layout, vbox, bold
+from qthandy import sp, curved_flow, clear_layout, vbox, bold, decr_font
 from qthandy.filter import DragEventFilter
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
@@ -55,12 +55,26 @@ class OutlineItemWidget(QWidget):
         self._btnIcon.setIconSize(QSize(24, 24))
         self._btnIcon.setFixedSize(self.iconFixedSize, self.iconFixedSize)
 
+        self._text = QTextEdit(self)
+        if not app_env.is_mac():
+            decr_font(self._text)
+        self._text.setProperty('rounded', True)
+        self._text.setProperty('white-bg', True)
+        self._text.setReadOnly(self._readOnly)
+        self._text.setMaximumHeight(100)
+        self._text.setTabChangesFocus(True)
+        self._text.setText(self.item.text)
+        self._text.textChanged.connect(self._textChanged)
+
         self._btnRemove = RemovalButton(self)
         self._btnRemove.setHidden(True)
         self._btnRemove.clicked.connect(self._remove)
 
         self.layout().addWidget(self._btnIcon, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self._btnName, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self._text)
+
+        self.setFixedWidth(210)
 
         if not self._readOnly:
             self._btnIcon.setCursor(Qt.CursorShape.OpenHandCursor)
@@ -90,6 +104,8 @@ class OutlineItemWidget(QWidget):
     def activate(self):
         if self.graphicsEffect():
             self.setGraphicsEffect(None)
+        if self.isVisible():
+            self._text.setFocus()
 
     def _remove(self):
         anim = qtanim.fade_out(self, duration=150)
@@ -98,7 +114,7 @@ class OutlineItemWidget(QWidget):
     def _beatDataFunc(self, btn):
         return id(self)
 
-    def _initStyle(self):
+    def _initStyle(self, name: Optional[str] = None, desc: Optional[str] = None):
         color = self._color()
         self._btnIcon.setStyleSheet(f'''
                     QToolButton {{
@@ -116,6 +132,17 @@ class OutlineItemWidget(QWidget):
             padding-right: 15px;
         }}''')
 
+        if desc is None:
+            desc = self._descriptions()[self.item.type]
+        self._text.setPlaceholderText(desc)
+        self._btnName.setToolTip(desc)
+        self._text.setToolTip(desc)
+        self._btnIcon.setToolTip(desc)
+
+        if name is None:
+            name = self.item.type.name
+        self._btnName.setText(name.lower().capitalize().replace('_', ' '))
+
         self._btnIcon.setIcon(self._icon())
 
     def _color(self) -> str:
@@ -130,8 +157,12 @@ class OutlineItemWidget(QWidget):
     def _glow(self) -> QColor:
         color = QColor(self._color())
         qtanim.glow(self._btnName, color=color)
+        qtanim.glow(self._text, color=color)
 
         return color
+
+    def _textChanged(self):
+        self.item.text = self._text.toPlainText()
 
 
 class OutlineTimelineWidget(QWidget):

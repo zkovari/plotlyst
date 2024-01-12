@@ -615,11 +615,12 @@ class PlotProgressionEventWidget(OutlineItemWidget):
 
     @overrides
     def _initStyle(self):
-        super()._initStyle()
+        name = None
         if self.beat.type == PlotProgressionItemType.ENDING:
-            self._btnName.setText('End')
+            name = 'End'
         elif self.beat.type == PlotProgressionItemType.EVENT:
-            self._btnName.setText('')
+            name = ''
+        super()._initStyle(name=name)
 
 
 class PlotEventsTimeline(SceneStructureTimeline):

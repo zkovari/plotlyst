@@ -22,20 +22,17 @@ from dataclasses import dataclass
 from functools import partial
 from typing import Optional, List, Dict
 
-import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QSize, QEvent, QPoint, QMimeData, QTimer
-from PyQt6.QtGui import QIcon, QColor, QAction, QResizeEvent, QEnterEvent, QDragEnterEvent
-from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QTextEdit, QDialog, QApplication, QMessageBox
+from PyQt6.QtGui import QIcon, QAction, QResizeEvent, QEnterEvent, QDragEnterEvent
+from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QDialog, QApplication, QMessageBox
 from overrides import overrides
 from qtanim import fade_in
-from qthandy import pointy, gc, translucent, decr_font, \
-    margins, spacer, sp, incr_icon, vbox, vspacer, transparent, underline
+from qthandy import pointy, gc, translucent, margins, spacer, sp, incr_icon, vbox, vspacer, transparent, underline
 from qthandy.filter import OpacityEventFilter, ObjectReferenceMimeData, DropEventFilter
 from qtmenu import ScrollableMenuWidget, ActionTooltipDisplayMode, MenuWidget, TabularGridMenuWidget
 
 from src.main.python.plotlyst.core.domain import Novel, Scene, SceneStructureItemType, SceneStructureItem, SceneOutcome, \
     ScenePurposeType
-from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.generated.scene_structure_template_selector_dialog_ui import \
@@ -391,21 +388,9 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
 
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None, readOnly: bool = False):
         super(SceneStructureBeatWidget, self).__init__(novel, scene_structure_item, parent, readOnly)
-        self.setFixedWidth(210)
 
         self._outcome = SceneOutcomeSelector()
         self._outcome.selected.connect(self._outcomeChanged)
-
-        self._text = QTextEdit(self)
-        if not app_env.is_mac():
-            decr_font(self._text)
-        self._text.setProperty('rounded', True)
-        self._text.setProperty('white-bg', True)
-        self._text.setReadOnly(self._readOnly)
-        self._text.setMaximumHeight(100)
-        self._text.setTabChangesFocus(True)
-        self._text.setText(self.beat.text)
-        self._text.textChanged.connect(self._textChanged)
 
         self._btnProgressSwitch = QToolButton(self)
         self._btnProgressSwitch.setIcon(IconRegistry.from_name('mdi.chevron-double-up', 'grey'))
@@ -418,7 +403,6 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
         pointy(self._btnProgressSwitch)
         self._btnProgressSwitch.setHidden(True)
 
-        self.layout().addWidget(self._text)
         self.layout().addWidget(self._outcome, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self._initStyle()
@@ -433,11 +417,6 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
         # else:
         #     self._outcome.reset()
         self._initStyle()
-
-    def activate(self):
-        super(SceneStructureBeatWidget, self).activate()
-        if self.isVisible():
-            self._text.setFocus()
 
     @overrides
     def copy(self) -> 'SceneStructureItemWidget':
@@ -476,17 +455,8 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
 
     @overrides
     def _initStyle(self):
-        super(SceneStructureBeatWidget, self)._initStyle()
-
+        name = None
         self._outcome.setVisible(self.beat.type == SceneStructureItemType.CLIMAX)
-        if self.isEmotion():
-            desc = "How is the character's emotion shown?"
-        else:
-            desc = self._descriptions()[self.beat.type]
-        self._text.setPlaceholderText(desc)
-        self._btnName.setToolTip(desc)
-        self._text.setToolTip(desc)
-        self._btnIcon.setToolTip(desc)
 
         self._text.setHidden(self.isEmotion())
         if self.beat.type == SceneStructureItemType.CLIMAX:
@@ -494,18 +464,13 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
                 self.beat.outcome = SceneOutcome.DISASTER
             name = SceneOutcome.to_str(self.beat.outcome)
             self._outcome.refresh(self.beat.outcome)
-        elif self.isEmotion():
-            name = self.beat.emotion
-        else:
-            name = self.beat.type.name
-        self._btnName.setText(name.lower().capitalize().replace('_', ' '))
 
+        super(SceneStructureBeatWidget, self)._initStyle(name=name)
+
+    @overrides
     def _icon(self) -> QIcon:
         return beat_icon(self.beat.type, resolved=self.beat.outcome == SceneOutcome.RESOLUTION,
                          trade_off=self.beat.outcome == SceneOutcome.TRADE_OFF)
-
-    def _textChanged(self):
-        self.beat.text = self._text.toPlainText()
 
     def _outcomeChanged(self, outcome: SceneOutcome):
         self.beat.outcome = outcome
@@ -518,13 +483,6 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
             self.swap(SceneStructureItemType.PROGRESS)
         else:
             self.swap(SceneStructureItemType.SETBACK)
-
-    @overrides
-    def _glow(self) -> QColor:
-        color = super(SceneStructureBeatWidget, self)._glow()
-        qtanim.glow(self._text, color=color)
-
-        return color
 
 
 class SceneStructureEmotionWidget(SceneStructureItemWidget):
