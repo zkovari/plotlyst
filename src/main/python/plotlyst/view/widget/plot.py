@@ -62,8 +62,7 @@ from src.main.python.plotlyst.view.widget.chart import BaseChart
 from src.main.python.plotlyst.view.widget.display import Icon, IdleWidget, PopupDialog
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
-from src.main.python.plotlyst.view.widget.outline import OutlineItemWidget
-from src.main.python.plotlyst.view.widget.scene.structure import SceneStructureTimeline
+from src.main.python.plotlyst.view.widget.outline import OutlineItemWidget, OutlineTimelineWidget
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
 from src.main.python.plotlyst.view.widget.utility import ColorPicker
 
@@ -623,7 +622,7 @@ class PlotProgressionEventWidget(OutlineItemWidget):
         super()._initStyle(name=name)
 
 
-class PlotEventsTimeline(SceneStructureTimeline):
+class PlotEventsTimeline(OutlineTimelineWidget):
     def __init__(self, novel: Novel, type: PlotType, parent=None):
         super().__init__(parent)
         self._type = type
@@ -651,7 +650,6 @@ class PlotEventsTimeline(SceneStructureTimeline):
         self._currentPlaceholder = placeholder
         self._insertBeat(PlotProgressionItemType.EVENT)
 
-    @overrides
     def _insertBeat(self, beatType: PlotProgressionItemType):
         item = PlotProgressionItem(type=beatType)
         widget = self._newBeatWidget(item)

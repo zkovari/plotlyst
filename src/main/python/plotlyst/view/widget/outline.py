@@ -18,19 +18,23 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
+from functools import partial
 from typing import Optional, List
 
 import qtanim
-from PyQt6.QtCore import pyqtSignal, QRectF, QPoint, Qt, QSize, QEvent
+from PyQt6.QtCore import pyqtSignal, QRectF, QPoint, Qt, QSize, QEvent, QMimeData
 from PyQt6.QtGui import QPainterPath, QColor, QPen, QPainter, QPaintEvent, QResizeEvent, QEnterEvent, QIcon
 from PyQt6.QtWidgets import QWidget, QPushButton, QToolButton, QTextEdit
 from overrides import overrides
-from qthandy import sp, curved_flow, clear_layout, vbox, bold, decr_font
-from qthandy.filter import DragEventFilter
+from qtanim import fade_in
+from qthandy import sp, curved_flow, clear_layout, vbox, bold, decr_font, gc, pointy, margins
+from qthandy.filter import DragEventFilter, OpacityEventFilter
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, OutlineItem
 from src.main.python.plotlyst.env import app_env
+from src.main.python.plotlyst.view.common import fade_out_and_gc
+from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.input import RemovalButton
 
 
@@ -165,6 +169,27 @@ class OutlineItemWidget(QWidget):
         self.item.text = self._text.toPlainText()
 
 
+class _SceneBeatPlaceholderButton(QPushButton):
+
+    def __init__(self, parent=None):
+        super(_SceneBeatPlaceholderButton, self).__init__(parent)
+        self.setProperty('transparent', True)
+        self.setIcon(IconRegistry.plus_circle_icon('grey'))
+        self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.3))
+        self.setIconSize(QSize(20, 20))
+        pointy(self)
+        self.setToolTip('Insert new beat')
+
+
+class _PlaceholderWidget(QWidget):
+    def __init__(self, parent=None):
+        super(_PlaceholderWidget, self).__init__(parent)
+        self.btn = _SceneBeatPlaceholderButton(self)
+        vbox(self, 0, 0)
+        margins(self, top=80)
+        self.layout().addWidget(self.btn)
+
+
 class OutlineTimelineWidget(QWidget):
     timelineChanged = pyqtSignal()
 
@@ -172,12 +197,20 @@ class OutlineTimelineWidget(QWidget):
         super().__init__(parent)
         self._novel: Optional[Novel] = None
         self._readOnly: bool = False
+        self._currentPlaceholder: Optional[QWidget] = None
 
         sp(self).h_exp().v_exp()
         curved_flow(self, margin=10, spacing=10)
 
         self._structure: List[OutlineItem] = []
         self._beatWidgets: List[OutlineItemWidget] = []
+
+        self._dragPlaceholder: Optional[OutlineItemWidget] = None
+        self._dragPlaceholderIndex: int = -1
+        self._dragged: Optional[OutlineItemWidget] = None
+        self._wasDropped: bool = False
+
+        self.setAcceptDrops(True)
 
     def setNovel(self, novel: Novel):
         self._novel = novel
@@ -260,14 +293,120 @@ class OutlineTimelineWidget(QWidget):
         widget.activate()
         self.timelineChanged.emit()
 
+    def _insertWidget(self, item: OutlineItem, widget: OutlineItemWidget):
+        i = self.layout().indexOf(self._currentPlaceholder)
+        self.layout().removeWidget(self._currentPlaceholder)
+        gc(self._currentPlaceholder)
+        self._currentPlaceholder = None
+
+        beat_index = i // 2
+        self._beatWidgets.insert(beat_index, widget)
+        self._structure.insert(beat_index, item)
+        self.layout().insertWidget(i, widget)
+        self.layout().insertWidget(i + 1, self._newPlaceholderWidget())
+        self.layout().insertWidget(i, self._newPlaceholderWidget())
+        fade_in(widget, teardown=widget.activate)
+        self.update()
+        self.timelineChanged.emit()
+
+    def _beatRemoved(self, wdg: OutlineItemWidget):
+        i = self.layout().indexOf(wdg)
+        self._structure.remove(wdg.item)
+        self._beatWidgets.remove(wdg)
+        placeholder_prev = self.layout().takeAt(i - 1).widget()
+        gc(placeholder_prev)
+        fade_out_and_gc(self, wdg)
+        self.update()
+
+        self.timelineChanged.emit()
+
     @abstractmethod
     def _newBeatWidget(self, item: OutlineItem) -> OutlineItemWidget:
         pass
 
     @abstractmethod
-    def _newPlaceholderWidget(self):
+    def _showBeatMenu(self, placeholder: QWidget):
         pass
 
+    def _newPlaceholderWidget(self, displayText: bool = False) -> QWidget:
+        parent = _PlaceholderWidget()
+        if displayText:
+            parent.btn.setText('Insert beat')
+        parent.btn.clicked.connect(partial(self._showBeatMenu, parent))
+
+        if self._readOnly:
+            parent.setHidden(True)
+
+        return parent
+
+    def _dragMoved(self, widget: QWidget, edge: Qt.Edge, _: QPoint):
+        i = self.layout().indexOf(widget)
+        if edge == Qt.Edge.LeftEdge:
+            new_index = i - 1
+        else:
+            new_index = i + 2
+
+        if self._dragPlaceholderIndex != new_index:
+            self._dragPlaceholderIndex = new_index
+            self.layout().insertWidget(self._dragPlaceholderIndex, self._dragPlaceholder)
+            self._dragPlaceholder.setVisible(True)
+            self.update()
+
+    def _dropped(self, _: QMimeData):
+        wdg = self._newBeatWidget(self._dragged.item)
+        i = self.layout().indexOf(self._dragPlaceholder)
+        self.layout().insertWidget(i, wdg)
+
+        self.layout().removeWidget(self._dragPlaceholder)
+        gc(self._dragPlaceholder)
+        self._dragPlaceholder = None
+        self._dragPlaceholderIndex = -1
+
+        beats: List[OutlineItemWidget] = []
+        is_placeholder = False
+        is_beat = True
+        i = 0
+        while i < self.layout().count():
+            item = self.layout().itemAt(i)
+            if item.widget() and isinstance(item.widget(), _PlaceholderWidget):
+                if is_placeholder:
+                    gc(item.widget())
+                    continue
+                is_placeholder = True
+                is_beat = False
+            elif item.widget() is not self._dragged:
+                beats.append(item.widget())
+                is_placeholder = False
+                if is_beat:
+                    self.layout().insertWidget(i, self._newPlaceholderWidget())
+                    is_beat = False
+                    i += 1
+                else:
+                    is_beat = True
+
+            i += 1
+
+        self._beatWidgets[:] = beats
+        self._structure[:] = [x.item for x in self._beatWidgets]
+        self._wasDropped = True
+
+    def _dragFinished(self):
+        if self._dragPlaceholder is not None:
+            self._dragPlaceholder.setHidden(True)
+            gc(self._dragPlaceholder)
+
+        if self._wasDropped:
+            self._dragged.setHidden(True)
+            self.layout().removeWidget(self._dragged)
+            gc(self._dragged)
+        else:
+            self._dragged.setVisible(True)
+
+        self._dragPlaceholder = None
+        self._dragPlaceholderIndex = -1
+        self._dragged = None
+        self._wasDropped = False
+        self.update()
     # def _newBeatWidget(self, item: SceneStructureItem) -> SceneStructureBeatWidget:
     #     if item.type == OutlineItemType.EMOTION:
     #         clazz = SceneStructureEmotionWidget
