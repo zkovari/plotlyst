@@ -534,17 +534,33 @@ def exclude_if_beat(value):
 
 
 @dataclass
-class StoryBeat:
-    text: str
-    act: int
+class OutlineItem:
+    text: str = ''
+    percentage: float = 0.0
+
+
+class PlotProgressionItemType(Enum):
+    BEGINNING = 0
+    MIDDLE = 1
+    ENDING = 2
+    EVENT = 3
+
+
+@dataclass
+class PlotProgressionItem(OutlineItem):
+    type: PlotProgressionItemType = PlotProgressionItemType.EVENT
+
+
+@dataclass
+class StoryBeat(OutlineItem):
+    act: int = 1
     description: str = ''
     type: StoryBeatType = field(default=StoryBeatType.BEAT, metadata=config(exclude=exclude_if_beat))
     ends_act: bool = field(default=False, metadata=config(exclude=exclude_if_empty))
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     icon: str = ''
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
-    percentage: int = 0
-    percentage_end: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    percentage_end: float = field(default=0, metadata=config(exclude=exclude_if_empty))
     enabled: bool = True
     notes: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
@@ -728,19 +744,6 @@ class SceneBased(ABC):
 
 def default_plot_value() -> PlotValue:
     return PlotValue('Progress', icon='fa5s.chart-line')
-
-
-class PlotProgressionItemType(Enum):
-    BEGINNING = 0
-    MIDDLE = 1
-    ENDING = 2
-    EVENT = 3
-
-
-@dataclass
-class PlotProgressionItem:
-    type: PlotProgressionItemType
-    text: str = ''
 
 
 class StorylineLinkType(Enum):
@@ -1001,10 +1004,8 @@ class SceneOutcome(Enum):
 
 
 @dataclass
-class SceneStructureItem:
-    type: SceneStructureItemType
-    text: str = ''
-    percentage: float = 0.0
+class SceneStructureItem(OutlineItem):
+    type: SceneStructureItemType = SceneStructureItemType.BEAT
     emotion: str = field(default='', metadata=config(exclude=exclude_if_empty))
     meta: Dict[str, Any] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
 
