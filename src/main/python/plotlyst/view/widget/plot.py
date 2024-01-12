@@ -631,10 +631,6 @@ class PlotEventsTimeline(SceneStructureTimeline):
 
         return widget
 
-    # @overrides
-    # def _addBeatWidget(self, item: PlotProgressionItem):
-    #     super()._addBeatWidget(item)
-
     @overrides
     def _insertWidget(self, item: PlotProgressionItem, widget: PlotProgressionEventWidget):
         super()._insertWidget(item, widget)
@@ -647,7 +643,7 @@ class PlotEventsTimeline(SceneStructureTimeline):
 
     @overrides
     def _insertBeat(self, beatType: PlotProgressionItemType):
-        item = PlotProgressionItem(beatType)
+        item = PlotProgressionItem(type=beatType)
         widget = self._newBeatWidget(item)
         self._insertWidget(item, widget)
 
