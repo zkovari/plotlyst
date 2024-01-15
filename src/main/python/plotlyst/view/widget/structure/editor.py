@@ -420,11 +420,15 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.wdgPreview.setActsClickable(False)
         self.wdgPreview.setActsResizeable(True)
         self.wdgPreview.actsResized.connect(lambda: emit_event(self.novel, NovelStoryStructureUpdated(self)))
-        self.wdgPreview.beatMoved.connect(lambda: emit_event(self.novel, NovelStoryStructureUpdated(self)))
+        self.wdgPreview.beatMoved.connect(self._beatMoved)
 
     def _beatToggled(self, beat: StoryBeat):
         self.wdgPreview.toggleBeatVisibility(beat)
         self.repo.update_novel(self.novel)
+
+    def _beatMoved(self):
+        QTimer.singleShot(20, lambda: self._refreshStructure(self.novel.active_story_structure))
+        emit_event(self.novel, NovelStoryStructureUpdated(self))
 
     def _toggleDeleteButton(self):
         self.btnDelete.setEnabled(len(self.novel.story_structures) > 1)

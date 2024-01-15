@@ -68,7 +68,7 @@ class StoryStructureOutline(OutlineTimelineWidget):
         self.clear()
         self._structure = items
 
-        for item in items:
+        for item in sorted(items, key=lambda x: x.percentage):
             if item.type == StoryBeatType.BEAT and item.enabled:
                 self._addBeatWidget(item)
         if not items:
