@@ -83,6 +83,8 @@ class StoryStructureOutline(OutlineTimelineWidget):
 
     def attachStructurePreview(self, structurePreview: SceneStoryStructureWidget):
         self._structurePreview = structurePreview
+        for wdg in self._beatWidgets:
+            wdg.attachStructurePreview(self._structurePreview)
 
     @overrides
     def setStructure(self, items: List[StoryBeat]):
