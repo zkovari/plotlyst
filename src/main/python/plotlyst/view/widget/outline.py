@@ -56,7 +56,7 @@ class OutlineItemWidget(QWidget):
         if app_env.is_mac():
             self._btnName.setFixedHeight(max(self._btnName.sizeHint().height() - 8, 24))
         transparent(self._btnName)
-        translucent(self._btnName, 0.4)
+        translucent(self._btnName, 0.7)
 
         self._btnIcon = QToolButton(self)
         self._btnIcon.setIconSize(QSize(24, 24))
