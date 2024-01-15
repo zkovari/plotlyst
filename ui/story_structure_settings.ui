@@ -253,6 +253,23 @@
           <property name="relaxed-white-bg" stdset="0">
            <bool>true</bool>
           </property>
+          <layout class="QVBoxLayout" name="verticalLayout_5">
+           <property name="spacing">
+            <number>3</number>
+           </property>
+           <property name="leftMargin">
+            <number>5</number>
+           </property>
+           <property name="topMargin">
+            <number>5</number>
+           </property>
+           <property name="rightMargin">
+            <number>5</number>
+           </property>
+           <property name="bottomMargin">
+            <number>5</number>
+           </property>
+          </layout>
          </widget>
         </widget>
        </item>
@@ -348,8 +365,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>100</width>
-            <height>30</height>
+            <width>565</width>
+            <height>236</height>
            </rect>
           </property>
           <property name="relaxed-white-bg" stdset="0">

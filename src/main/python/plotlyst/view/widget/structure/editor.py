@@ -48,6 +48,7 @@ from src.main.python.plotlyst.view.widget.display import IconText
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
 from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget
 from src.main.python.plotlyst.view.widget.structure.beat import BeatsPreview
+from src.main.python.plotlyst.view.widget.structure.outline import StoryStructureOutline
 from src.main.python.plotlyst.view.widget.structure.selector import StoryStructureSelectorDialog
 
 
@@ -254,6 +255,9 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.btnGroupStructure = QButtonGroup()
         self.btnGroupStructure.setExclusive(True)
 
+        self.wdgStructureOutline = StoryStructureOutline()
+        self.wdgOutline.layout().addWidget(self.wdgStructureOutline)
+
         self._structureNotes = StoryStructureNotes()
         hbox(self.notes).addWidget(self._structureNotes)
         hbox(self.beats, 5, 0)
@@ -300,6 +304,8 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
 
         self._characterMenu = CharacterSelectorMenu(self.novel, self.btnLinkCharacter)
         self._characterMenu.selected.connect(self._characterLinked)
+
+        self.wdgStructureOutline.setNovel(self.novel)
 
         self._beatsPreview = BeatsPreview(self.novel, toggleBeats=False)
         self.beats.layout().addWidget(self._beatsPreview)
@@ -383,6 +389,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
             struct.active = False
         structure.active = True
         acts_registry.refresh()
+        self.wdgStructureOutline.setStructure(structure.beats)
         self._structureNotes.setStructure(structure)
 
         if self.wdgPreview.novel is not None:
