@@ -23,12 +23,12 @@ from functools import partial
 from typing import Optional
 
 import qtanim
-from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal
+from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal, QTimer
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QButtonGroup
 from overrides import overrides
 from qthandy import translucent, gc, flow, ask_confirmation, hbox, clear_layout, vbox, sp, margins, vspacer, \
-    incr_font, bold
+    incr_font, bold, busy
 from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR
@@ -382,6 +382,20 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
             self._addNewStructure(structure)
 
     def _activeStructureToggled(self, structure: StoryStructure, toggled: bool):
+        @busy
+        def refresh():
+            self.wdgStructureOutline.setStructure(structure.beats)
+            self._structureNotes.setStructure(structure)
+
+            if self.wdgPreview.novel is not None:
+                clear_layout(self.layoutPreview)
+                self.wdgPreview = SceneStoryStructureWidget(self)
+                self.__initWdgPreview()
+                self.layoutPreview.addWidget(self.wdgPreview)
+            self.wdgPreview.setStructure(self.novel)
+            self._beatsPreview.attachStructurePreview(self.wdgPreview)
+            self._beatsPreview.setStructure(structure)
+
         if not toggled:
             return
 
@@ -389,17 +403,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
             struct.active = False
         structure.active = True
         acts_registry.refresh()
-        self.wdgStructureOutline.setStructure(structure.beats)
-        self._structureNotes.setStructure(structure)
-
-        if self.wdgPreview.novel is not None:
-            clear_layout(self.layoutPreview)
-            self.wdgPreview = SceneStoryStructureWidget(self)
-            self.__initWdgPreview()
-            self.layoutPreview.addWidget(self.wdgPreview)
-        self.wdgPreview.setStructure(self.novel)
-        self._beatsPreview.attachStructurePreview(self.wdgPreview)
-        self._beatsPreview.setStructure(structure)
+        QTimer.singleShot(20, refresh)
 
     def _activeStructureClicked(self, _: StoryStructure, toggled: bool):
         if not toggled:
