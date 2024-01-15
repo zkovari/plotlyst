@@ -1211,9 +1211,9 @@ class PlotEditor(QWidget, Ui_PlotEditor):
             name = 'Main plot'
             icon = 'fa5s.theater-masks'
         plot = Plot(name, plot_type=plot_type, icon=icon,
-                    progression=[PlotProgressionItem(PlotProgressionItemType.BEGINNING),
-                                 PlotProgressionItem(PlotProgressionItemType.MIDDLE),
-                                 PlotProgressionItem(PlotProgressionItemType.ENDING)])
+                    progression=[PlotProgressionItem(type=PlotProgressionItemType.BEGINNING),
+                                 PlotProgressionItem(type=PlotProgressionItemType.MIDDLE),
+                                 PlotProgressionItem(type=PlotProgressionItemType.ENDING)])
         self.novel.plots.append(plot)
 
         plot_colors = list(STORY_LINE_COLOR_CODES[plot_type.value])
