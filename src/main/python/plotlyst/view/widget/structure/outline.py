@@ -31,8 +31,7 @@ class StoryStructureBeatWidget(OutlineItemWidget):
         self.beat = beat
         super().__init__(beat, parent)
         self._text.setText(self.beat.notes)
-        self._text.setMaximumSize(210, 110)
-        self.setMaximumWidth(220)
+        self._text.setMaximumSize(220, 110)
         self._initStyle(name=self.beat.text, desc=self.beat.description)
 
     @overrides

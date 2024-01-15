@@ -70,7 +70,7 @@ class OutlineItemWidget(QWidget):
         self._text.setReadOnly(self._readOnly)
         shadow(self._text)
         self._text.setMinimumSize(170, 100)
-        self._text.setMaximumSize(190, 100)
+        self._text.setMaximumSize(210, 100)
         self._text.setTabChangesFocus(True)
         self._text.setText(self.item.text)
         self._text.textChanged.connect(self._textChanged)
@@ -82,8 +82,6 @@ class OutlineItemWidget(QWidget):
         self.layout().addWidget(self._btnIcon, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self._btnName, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self._text)
-
-        self.setMaximumWidth(210)
 
         if not self._readOnly:
             self._btnIcon.setCursor(Qt.CursorShape.OpenHandCursor)
