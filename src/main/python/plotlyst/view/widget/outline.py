@@ -27,13 +27,13 @@ from PyQt6.QtGui import QPainterPath, QColor, QPen, QPainter, QPaintEvent, QResi
 from PyQt6.QtWidgets import QWidget, QPushButton, QToolButton, QTextEdit
 from overrides import overrides
 from qtanim import fade_in
-from qthandy import sp, curved_flow, clear_layout, vbox, bold, decr_font, gc, pointy, margins
+from qthandy import sp, curved_flow, clear_layout, vbox, bold, decr_font, gc, pointy, margins, translucent, transparent
 from qthandy.filter import DragEventFilter, OpacityEventFilter
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, OutlineItem
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.view.common import fade_out_and_gc
+from src.main.python.plotlyst.view.common import fade_out_and_gc, to_rgba_str, shadow
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.input import RemovalButton
 
@@ -48,12 +48,15 @@ class OutlineItemWidget(QWidget):
         super().__init__(parent)
         self.item = item
         self._readOnly = readOnly
-        vbox(self, 0, 2)
+        vbox(self, 5, 2)
+        self._colorAlpha: int = 175
 
         self._btnName = QPushButton(self)
         bold(self._btnName)
         if app_env.is_mac():
             self._btnName.setFixedHeight(max(self._btnName.sizeHint().height() - 8, 24))
+        transparent(self._btnName)
+        translucent(self._btnName, 0.4)
 
         self._btnIcon = QToolButton(self)
         self._btnIcon.setIconSize(QSize(24, 24))
@@ -65,7 +68,9 @@ class OutlineItemWidget(QWidget):
         self._text.setProperty('rounded', True)
         self._text.setProperty('white-bg', True)
         self._text.setReadOnly(self._readOnly)
-        self._text.setMaximumHeight(100)
+        shadow(self._text)
+        self._text.setMinimumSize(170, 100)
+        self._text.setMaximumSize(190, 100)
         self._text.setTabChangesFocus(True)
         self._text.setText(self.item.text)
         self._text.textChanged.connect(self._textChanged)
@@ -78,7 +83,7 @@ class OutlineItemWidget(QWidget):
         self.layout().addWidget(self._btnName, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self._text)
 
-        self.setFixedWidth(210)
+        self.setMaximumWidth(210)
 
         if not self._readOnly:
             self._btnIcon.setCursor(Qt.CursorShape.OpenHandCursor)
@@ -120,21 +125,17 @@ class OutlineItemWidget(QWidget):
 
     def _initStyle(self, name: Optional[str] = None, desc: Optional[str] = None):
         color = self._color()
+        color_translucent = to_rgba_str(QColor(color), self._colorAlpha)
         self._btnIcon.setStyleSheet(f'''
                     QToolButton {{
                                     background-color: {RELAXED_WHITE_COLOR};
-                                    border: 2px solid {color};
+                                    border: 2px solid {color_translucent};
                                     border-radius: 18px; padding: 4px;
                                 }}
                     QToolButton:menu-indicator {{
                         width: 0;
                     }}
                     ''')
-        self._btnName.setStyleSheet(f'''QPushButton {{
-            border: 0px; background-color: rgba(0, 0, 0, 0); color: {color};
-            padding-left: 15px;
-            padding-right: 15px;
-        }}''')
 
         if desc is None:
             desc = self._descriptions()[self.item.type]

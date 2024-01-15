@@ -306,9 +306,9 @@ class SceneStructureItemWidget(OutlineItemWidget):
     SceneBeatMimeType: str = 'application/scene-beat'
 
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None, readOnly: bool = False):
+        self.beat = scene_structure_item
         super(SceneStructureItemWidget, self).__init__(scene_structure_item, parent, readOnly=readOnly)
         self.novel = novel
-        self.beat = scene_structure_item
 
     @overrides
     def mimeType(self):

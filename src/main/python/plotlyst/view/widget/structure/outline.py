@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QIcon, QColor
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 
@@ -28,9 +28,11 @@ from src.main.python.plotlyst.view.widget.outline import OutlineTimelineWidget, 
 
 class StoryStructureBeatWidget(OutlineItemWidget):
     def __init__(self, beat: StoryBeat, parent=None):
-        super().__init__(beat, parent)
         self.beat = beat
+        super().__init__(beat, parent)
         self._text.setText(self.beat.notes)
+        self._text.setMaximumSize(210, 110)
+        self.setMaximumWidth(220)
         self._initStyle(name=self.beat.text, desc=self.beat.description)
 
     @overrides
@@ -43,7 +45,9 @@ class StoryStructureBeatWidget(OutlineItemWidget):
 
     @overrides
     def _icon(self) -> QIcon:
-        return IconRegistry.from_name(self.beat.icon, self.beat.icon_color)
+        qcolor = QColor(self.beat.icon_color)
+        qcolor.setAlpha(self._colorAlpha)
+        return IconRegistry.from_name(self.beat.icon, qcolor)
 
     @overrides
     def _textChanged(self):
