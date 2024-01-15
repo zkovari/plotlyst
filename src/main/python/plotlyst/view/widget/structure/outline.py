@@ -17,11 +17,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import List
+
 from PyQt6.QtGui import QIcon, QColor
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import StoryBeat
+from src.main.python.plotlyst.core.domain import StoryBeat, StoryBeatType
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.outline import OutlineTimelineWidget, OutlineItemWidget
 
@@ -56,6 +58,19 @@ class StoryStructureBeatWidget(OutlineItemWidget):
 class StoryStructureOutline(OutlineTimelineWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+
+    @overrides
+    def setStructure(self, items: List[StoryBeat]):
+        self.clear()
+        self._structure = items
+
+        for item in items:
+            if item.type == StoryBeatType.BEAT and item.enabled:
+                self._addBeatWidget(item)
+        if not items:
+            self.layout().addWidget(self._newPlaceholderWidget(displayText=True))
+
+        self.update()
 
     @overrides
     def _newBeatWidget(self, item: StoryBeat) -> StoryStructureBeatWidget:
