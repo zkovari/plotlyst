@@ -317,12 +317,13 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
 
     def _addStructureWidget(self, structure: StoryStructure):
         btn = _StoryStructureButton(structure, self.novel)
-        btn.toggled.connect(partial(self._activeStructureToggled, structure))
-        btn.clicked.connect(partial(self._activeStructureClicked, structure))
         self.btnGroupStructure.addButton(btn)
         self.wdgTemplates.layout().addWidget(btn)
         if structure.active:
             btn.setChecked(True)
+            self._refreshStructure(structure)
+        btn.toggled.connect(partial(self._activeStructureToggled, structure))
+        btn.clicked.connect(partial(self._activeStructureClicked, structure))
 
         self._toggleDeleteButton()
 
@@ -381,21 +382,21 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         if structure:
             self._addNewStructure(structure)
 
+    @busy
+    def _refreshStructure(self, structure: StoryStructure):
+        self.wdgStructureOutline.setStructure(structure.beats)
+        self._structureNotes.setStructure(structure)
+
+        if self.wdgPreview.novel is not None:
+            clear_layout(self.layoutPreview)
+            self.wdgPreview = SceneStoryStructureWidget(self)
+            self.__initWdgPreview()
+            self.layoutPreview.addWidget(self.wdgPreview)
+        self.wdgPreview.setStructure(self.novel)
+        self._beatsPreview.attachStructurePreview(self.wdgPreview)
+        self._beatsPreview.setStructure(structure)
+
     def _activeStructureToggled(self, structure: StoryStructure, toggled: bool):
-        @busy
-        def refresh():
-            self.wdgStructureOutline.setStructure(structure.beats)
-            self._structureNotes.setStructure(structure)
-
-            if self.wdgPreview.novel is not None:
-                clear_layout(self.layoutPreview)
-                self.wdgPreview = SceneStoryStructureWidget(self)
-                self.__initWdgPreview()
-                self.layoutPreview.addWidget(self.wdgPreview)
-            self.wdgPreview.setStructure(self.novel)
-            self._beatsPreview.attachStructurePreview(self.wdgPreview)
-            self._beatsPreview.setStructure(structure)
-
         if not toggled:
             return
 
@@ -403,7 +404,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
             struct.active = False
         structure.active = True
         acts_registry.refresh()
-        QTimer.singleShot(20, refresh)
+        QTimer.singleShot(20, lambda: self._refreshStructure(structure))
 
     def _activeStructureClicked(self, _: StoryStructure, toggled: bool):
         if not toggled:
