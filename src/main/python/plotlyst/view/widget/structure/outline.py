@@ -17,28 +17,45 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import List
+from typing import List, Optional
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QIcon, QColor
+from PyQt6.QtCore import Qt, QEvent
+from PyQt6.QtGui import QIcon, QColor, QEnterEvent
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import StoryBeat, StoryBeatType
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.outline import OutlineTimelineWidget, OutlineItemWidget
+from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget
 
 
 class StoryStructureBeatWidget(OutlineItemWidget):
     def __init__(self, beat: StoryBeat, parent=None):
         self.beat = beat
         super().__init__(beat, parent)
+        self._structurePreview: Optional[SceneStoryStructureWidget] = None
         self._text.setText(self.beat.notes)
         self._text.setMaximumSize(220, 110)
         self._btnIcon.removeEventFilter(self._dragEventFilter)
         self._btnIcon.setCursor(Qt.CursorShape.ArrowCursor)
         self.setAcceptDrops(False)
         self._initStyle(name=self.beat.text, desc=self.beat.description)
+
+    def attachStructurePreview(self, structurePreview: SceneStoryStructureWidget):
+        self._structurePreview = structurePreview
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        super().enterEvent(event)
+        if self._structurePreview:
+            self._structurePreview.highlightBeat(self.beat)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        super().leaveEvent(event)
+        if self._structurePreview:
+            self._structurePreview.unhighlightBeats()
 
     @overrides
     def mimeType(self) -> str:
@@ -62,6 +79,10 @@ class StoryStructureBeatWidget(OutlineItemWidget):
 class StoryStructureOutline(OutlineTimelineWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._structurePreview: Optional[SceneStoryStructureWidget] = None
+
+    def attachStructurePreview(self, structurePreview: SceneStoryStructureWidget):
+        self._structurePreview = structurePreview
 
     @overrides
     def setStructure(self, items: List[StoryBeat]):
@@ -79,6 +100,7 @@ class StoryStructureOutline(OutlineTimelineWidget):
     @overrides
     def _newBeatWidget(self, item: StoryBeat) -> StoryStructureBeatWidget:
         widget = StoryStructureBeatWidget(item, parent=self)
+        widget.attachStructurePreview(self._structurePreview)
         widget.removed.connect(self._beatRemoved)
 
         return widget

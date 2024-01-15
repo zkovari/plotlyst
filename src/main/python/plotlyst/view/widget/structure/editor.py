@@ -256,6 +256,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.btnGroupStructure.setExclusive(True)
 
         self.wdgStructureOutline = StoryStructureOutline()
+        self.wdgStructureOutline.attachStructurePreview(self.wdgPreview)
         self.wdgOutline.layout().addWidget(self.wdgStructureOutline)
 
         self._structureNotes = StoryStructureNotes()
@@ -394,6 +395,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
             self.layoutPreview.addWidget(self.wdgPreview)
         self.wdgPreview.setStructure(self.novel)
         self._beatsPreview.attachStructurePreview(self.wdgPreview)
+        self.wdgStructureOutline.attachStructurePreview(self.wdgPreview)
         self._beatsPreview.setStructure(structure)
 
     def _activeStructureToggled(self, structure: StoryStructure, toggled: bool):
