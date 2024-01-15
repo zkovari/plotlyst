@@ -218,6 +218,8 @@ class BeatsPreview(QFrame):
         for beat in self._structure.beats:
             if beat.type != StoryBeatType.BEAT:
                 continue
+            if not self._toggleBeats and not beat.enabled:
+                continue
             wdg = self.__initBeatWidget(beat)
             self._beats[beat] = wdg
             if beat.act - 1 > col:  # new act
