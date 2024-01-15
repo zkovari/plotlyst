@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List
 
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon, QColor
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
@@ -34,6 +35,9 @@ class StoryStructureBeatWidget(OutlineItemWidget):
         super().__init__(beat, parent)
         self._text.setText(self.beat.notes)
         self._text.setMaximumSize(220, 110)
+        self._btnIcon.removeEventFilter(self._dragEventFilter)
+        self._btnIcon.setCursor(Qt.CursorShape.ArrowCursor)
+        self.setAcceptDrops(False)
         self._initStyle(name=self.beat.text, desc=self.beat.description)
 
     @overrides
