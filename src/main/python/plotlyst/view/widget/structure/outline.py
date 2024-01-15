@@ -73,7 +73,7 @@ class StoryStructureBeatWidget(OutlineItemWidget):
 
     @overrides
     def _textChanged(self):
-        self.beat.note = self._text.toPlainText()
+        self.beat.notes = self._text.toPlainText()
 
 
 class StoryStructureOutline(OutlineTimelineWidget):
