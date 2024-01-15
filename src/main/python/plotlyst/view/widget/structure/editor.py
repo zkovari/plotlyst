@@ -311,6 +311,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self._beatsPreview = BeatsPreview(self.novel, toggleBeats=False)
         self.beats.layout().addWidget(self._beatsPreview)
         self._beatsPreview.attachStructurePreview(self.wdgPreview)
+        self.wdgStructureOutline.attachBeatsPreview(self._beatsPreview)
 
         self._structureNotes.setNovel(self.novel)
         for structure in self.novel.story_structures:

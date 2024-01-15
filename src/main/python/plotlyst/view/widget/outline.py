@@ -115,8 +115,7 @@ class OutlineItemWidget(QWidget):
             self._text.setFocus()
 
     def _remove(self):
-        anim = qtanim.fade_out(self, duration=150)
-        anim.finished.connect(lambda: self.removed.emit(self))
+        self.removed.emit(self)
 
     def _beatDataFunc(self, btn):
         return id(self)
@@ -309,8 +308,11 @@ class OutlineTimelineWidget(QWidget):
         self.timelineChanged.emit()
 
     def _beatRemoved(self, wdg: OutlineItemWidget):
-        i = self.layout().indexOf(wdg)
         self._structure.remove(wdg.item)
+        self._beatWidgetRemoved(wdg)
+
+    def _beatWidgetRemoved(self, wdg: OutlineItemWidget):
+        i = self.layout().indexOf(wdg)
         self._beatWidgets.remove(wdg)
         placeholder_prev = self.layout().takeAt(i - 1).widget()
         gc(placeholder_prev)

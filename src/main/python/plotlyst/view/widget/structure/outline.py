@@ -28,6 +28,7 @@ from src.main.python.plotlyst.core.domain import StoryBeat, StoryBeatType
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.outline import OutlineTimelineWidget, OutlineItemWidget
 from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget
+from src.main.python.plotlyst.view.widget.structure.beat import BeatsPreview
 
 
 class StoryStructureBeatWidget(OutlineItemWidget):
@@ -80,11 +81,15 @@ class StoryStructureOutline(OutlineTimelineWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._structurePreview: Optional[SceneStoryStructureWidget] = None
+        self._beatsPreview: Optional[BeatsPreview] = None
 
     def attachStructurePreview(self, structurePreview: SceneStoryStructureWidget):
         self._structurePreview = structurePreview
         for wdg in self._beatWidgets:
             wdg.attachStructurePreview(self._structurePreview)
+
+    def attachBeatsPreview(self, beats: BeatsPreview):
+        self._beatsPreview = beats
 
     @overrides
     def setStructure(self, items: List[StoryBeat]):
@@ -103,9 +108,16 @@ class StoryStructureOutline(OutlineTimelineWidget):
     def _newBeatWidget(self, item: StoryBeat) -> StoryStructureBeatWidget:
         widget = StoryStructureBeatWidget(item, parent=self)
         widget.attachStructurePreview(self._structurePreview)
-        widget.removed.connect(self._beatRemoved)
+        widget.removed.connect(self._beatRemovedClicked)
 
         return widget
+
+    def _beatRemovedClicked(self, wdg: StoryStructureBeatWidget):
+        wdg.beat.enabled = False
+        self._structurePreview.toggleBeatVisibility(wdg.beat)
+        self._beatWidgetRemoved(wdg)
+        if self._beatsPreview:
+            self._beatsPreview.refresh()
 
     @overrides
     def _showBeatMenu(self, placeholder: QWidget):
