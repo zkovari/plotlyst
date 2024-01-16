@@ -257,6 +257,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
 
         self.wdgStructureOutline = StoryStructureOutline()
         self.wdgStructureOutline.attachStructurePreview(self.wdgPreview)
+        self.wdgStructureOutline.timelineChanged.connect(self._timelineChanged)
         self.wdgOutline.layout().addWidget(self.wdgStructureOutline)
 
         self._structureNotes = StoryStructureNotes()
@@ -425,8 +426,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.wdgPreview.actsResized.connect(lambda: emit_event(self.novel, NovelStoryStructureUpdated(self)))
         self.wdgPreview.beatMoved.connect(self._beatMoved)
 
-    def _beatToggled(self, beat: StoryBeat):
-        self.wdgPreview.toggleBeatVisibility(beat)
+    def _timelineChanged(self):
         self.repo.update_novel(self.novel)
 
     def _beatMoved(self):
