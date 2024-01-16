@@ -563,6 +563,7 @@ class StoryBeat(OutlineItem):
     percentage_end: float = field(default=0, metadata=config(exclude=exclude_if_empty))
     enabled: bool = True
     notes: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    custom: bool = False
 
     @overrides
     def __eq__(self, other: 'StoryBeat'):
