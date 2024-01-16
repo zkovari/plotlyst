@@ -24,7 +24,7 @@ from PyQt6.QtGui import QIcon, QColor, QEnterEvent
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import StoryBeat, StoryBeatType
+from src.main.python.plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.outline import OutlineTimelineWidget, OutlineItemWidget
 from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget
@@ -48,7 +48,8 @@ class StoryStructureBeatWidget(OutlineItemWidget):
 
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
-        super().enterEvent(event)
+        if self.beat not in midpoints and not self.beat.ends_act:
+            super().enterEvent(event)
         if self._structurePreview:
             self._structurePreview.highlightBeat(self.beat)
 
