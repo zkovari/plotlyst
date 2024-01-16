@@ -17,17 +17,21 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import copy
+import uuid
+from functools import partial
 from typing import List, Optional
 
 from PyQt6.QtCore import Qt, QEvent
 from PyQt6.QtGui import QIcon, QColor, QEnterEvent
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QWidget, QDialog
 from overrides import overrides
-from qthandy import line, vbox, margins, hbox, spacer, sp, incr_icon, transparent
+from qthandy import line, vbox, margins, hbox, spacer, sp, incr_icon, transparent, italic
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat, motion_beat, \
-    disturbance_beat, characteristic_moment_beat, normal_world_beat
+    disturbance_beat, characteristic_moment_beat, normal_world_beat, general_beat, midpoint_ponr, midpoint_mirror, \
+    midpoint_proactive
 from src.main.python.plotlyst.view.common import label, scrolled, push_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
@@ -93,9 +97,9 @@ class _StoryBeatSection(QWidget):
                                text=beat.text, transparent_=True,
                                tooltip=beat.description, checkable=True, icon_resize=False,
                                pointy_=False)
-        # bold(self._label)
-
-        self.btnAdd = push_btn(IconRegistry.plus_icon(PLOTLYST_SECONDARY_COLOR), transparent_=True)
+        self.btnAdd = push_btn(IconRegistry.plus_icon(PLOTLYST_SECONDARY_COLOR), 'Add')
+        italic(self.btnAdd)
+        self.btnAdd.setStyleSheet(f'border: 0px; color: {PLOTLYST_SECONDARY_COLOR};')
         self.layout().addWidget(group(self._label, spacer(), self.btnAdd, margin=0))
         desc = label(beat.description, description=True)
         self.layout().addWidget(desc)
@@ -105,6 +109,7 @@ class StoryBeatSelectorPopup(PopupDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.wdgTitle = QWidget()
+        self._beat: Optional[StoryBeat] = None
 
         self._scrollarea, self._wdgCenter = scrolled(self.frame, frameless=True, h_on=False)
         self._scrollarea.setProperty('transparent', True)
@@ -123,6 +128,7 @@ class StoryBeatSelectorPopup(PopupDialog):
         self._wdgCenter.layout().addWidget(self.wdgTitle)
         margins(self._wdgCenter, right=20)
 
+        self._addBeat(general_beat)
         self._addHeader('Beginning', IconRegistry.cause_icon())
         self._addBeat(hook_beat)
         self._addBeat(motion_beat)
@@ -130,6 +136,9 @@ class StoryBeatSelectorPopup(PopupDialog):
         self._addBeat(characteristic_moment_beat)
         self._addBeat(normal_world_beat)
         self._addHeader('Midpoint', IconRegistry.from_name('mdi.middleware-outline'))
+        self._addBeat(midpoint_ponr)
+        self._addBeat(midpoint_mirror)
+        self._addBeat(midpoint_proactive)
 
         self.btnConfirm = push_btn(text='Close', properties=['base', 'positive'])
         sp(self.btnConfirm).h_exp()
@@ -137,8 +146,13 @@ class StoryBeatSelectorPopup(PopupDialog):
 
         self.frame.layout().addWidget(self.btnConfirm)
 
-    def display(self):
-        self.exec()
+    def display(self) -> Optional[StoryBeat]:
+        result = self.exec()
+        if result == QDialog.DialogCode.Accepted:
+            cloned_beat = copy.deepcopy(self._beat)
+            cloned_beat.id = uuid.uuid4()
+            cloned_beat.custom = True
+            return cloned_beat
 
     def _addHeader(self, name: str, icon: QIcon):
         icon_ = Icon()
@@ -151,6 +165,11 @@ class StoryBeatSelectorPopup(PopupDialog):
         wdg = _StoryBeatSection(beat)
         margins(wdg, left=15)
         self._wdgCenter.layout().addWidget(wdg)
+        wdg.btnAdd.clicked.connect(partial(self._addClicked, beat))
+
+    def _addClicked(self, beat: StoryBeat):
+        self._beat = beat
+        self.accept()
 
 
 class StoryStructureOutline(OutlineTimelineWidget):
@@ -189,16 +208,27 @@ class StoryStructureOutline(OutlineTimelineWidget):
         return widget
 
     def _beatRemovedClicked(self, wdg: StoryStructureBeatWidget):
-        wdg.beat.enabled = False
-        self._structurePreview.toggleBeatVisibility(wdg.beat)
-        self._beatWidgetRemoved(wdg)
+        if wdg.beat.custom:
+            self._structurePreview.removeBeat(wdg.beat)
+            self._beatRemoved(wdg)
+        else:
+            wdg.beat.enabled = False
+            self._structurePreview.toggleBeatVisibility(wdg.beat)
+            self._beatWidgetRemoved(wdg)
+
         if self._beatsPreview:
             self._beatsPreview.refresh()
 
     @overrides
     def _placeholderClicked(self, placeholder: QWidget):
         self._currentPlaceholder = placeholder
-        StoryBeatSelectorPopup.popup()
+        beat = StoryBeatSelectorPopup.popup()
+        if beat:
+            self._insertBeat(beat)
 
     def _insertBeat(self, beat: StoryBeat):
-        pass
+        print(beat.text)
+        print(beat.act)
+        print(beat.percentage)
+        wdg = self._newBeatWidget(beat)
+        self._insertWidget(beat, wdg)
