@@ -22,7 +22,7 @@ import uuid
 from functools import partial
 from typing import List, Optional
 
-from PyQt6.QtCore import Qt, QEvent
+from PyQt6.QtCore import Qt, QEvent, QTimer
 from PyQt6.QtGui import QIcon, QColor, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QDialog
 from overrides import overrides
@@ -227,8 +227,17 @@ class StoryStructureOutline(OutlineTimelineWidget):
             self._insertBeat(beat)
 
     def _insertBeat(self, beat: StoryBeat):
-        print(beat.text)
-        print(beat.act)
-        print(beat.percentage)
         wdg = self._newBeatWidget(beat)
+        i = self.layout().indexOf(self._currentPlaceholder)
+        if i > 0:
+            percentBefore = self.layout().itemAt(i - 1).widget().beat.percentage
+            if i < self.layout().count() - 1:
+                percentAfter = self.layout().itemAt(i + 1).widget().beat.percentage
+            else:
+                percentAfter = 99
+            beat.percentage = percentBefore + (percentAfter - percentBefore) / 2
         self._insertWidget(beat, wdg)
+
+        if self._beatsPreview:
+            QTimer.singleShot(150, self._beatsPreview.refresh)
+            QTimer.singleShot(150, lambda: self._structurePreview.insertBeat(beat))
