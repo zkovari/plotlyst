@@ -1664,6 +1664,12 @@ class StoryStructure(CharacterBased):
         return [x for x in self.beats if x.ends_act]
 
 
+general_beat = StoryBeat(text='Beat',
+                         id=uuid.UUID('3dc905df-1a9b-4e04-90f5-199ea908f2d5'),
+                         icon='mdi.lightning-bolt-outline',
+                         description="A pivotal moment in the story",
+                         act=1, percentage=1)
+
 hook_beat = StoryBeat(text='Hook',
                       id=uuid.UUID('40365047-e7df-4543-8816-f9f8dcce12da'),
                       icon='mdi.hook',
