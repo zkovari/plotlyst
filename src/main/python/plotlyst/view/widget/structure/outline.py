@@ -121,5 +121,5 @@ class StoryStructureOutline(OutlineTimelineWidget):
             self._beatsPreview.refresh()
 
     @overrides
-    def _showBeatMenu(self, placeholder: QWidget):
+    def _placeholderClicked(self, placeholder: QWidget):
         pass

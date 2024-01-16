@@ -588,7 +588,7 @@ class SceneStructureTimeline(OutlineTimelineWidget):
 
         return widget
 
-    def _showBeatMenu(self, placeholder: QWidget):
+    def _placeholderClicked(self, placeholder: QWidget):
         self._currentPlaceholder = placeholder
         self._selectorMenu.exec(self.mapToGlobal(self._currentPlaceholder.pos()))
 

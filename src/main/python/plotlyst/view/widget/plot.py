@@ -646,7 +646,7 @@ class PlotEventsTimeline(OutlineTimelineWidget):
         self._hideFirstAndLastItems()
 
     @overrides
-    def _showBeatMenu(self, placeholder: QWidget):
+    def _placeholderClicked(self, placeholder: QWidget):
         self._currentPlaceholder = placeholder
         self._insertBeat(PlotProgressionItemType.EVENT)
 

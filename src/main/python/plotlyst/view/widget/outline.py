@@ -326,14 +326,14 @@ class OutlineTimelineWidget(QWidget):
         pass
 
     @abstractmethod
-    def _showBeatMenu(self, placeholder: QWidget):
+    def _placeholderClicked(self, placeholder: QWidget):
         pass
 
     def _newPlaceholderWidget(self, displayText: bool = False) -> QWidget:
         parent = _PlaceholderWidget()
         if displayText:
             parent.btn.setText('Insert beat')
-        parent.btn.clicked.connect(partial(self._showBeatMenu, parent))
+        parent.btn.clicked.connect(partial(self._placeholderClicked, parent))
 
         if self._readOnly:
             parent.setHidden(True)
