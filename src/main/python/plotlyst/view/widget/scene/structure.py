@@ -588,6 +588,7 @@ class SceneStructureTimeline(OutlineTimelineWidget):
 
         return widget
 
+    @overrides
     def _placeholderClicked(self, placeholder: QWidget):
         self._currentPlaceholder = placeholder
         self._selectorMenu.exec(self.mapToGlobal(self._currentPlaceholder.pos()))

@@ -23,9 +23,15 @@ from PyQt6.QtCore import Qt, QEvent
 from PyQt6.QtGui import QIcon, QColor, QEnterEvent
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
+from qthandy import line, vbox, margins, hbox, spacer, sp, incr_icon, transparent
 
-from src.main.python.plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints
+from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from src.main.python.plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat, motion_beat, \
+    disturbance_beat, characteristic_moment_beat, normal_world_beat
+from src.main.python.plotlyst.view.common import label, scrolled, push_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import group
+from src.main.python.plotlyst.view.widget.display import PopupDialog, Icon
 from src.main.python.plotlyst.view.widget.outline import OutlineTimelineWidget, OutlineItemWidget
 from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget
 from src.main.python.plotlyst.view.widget.structure.beat import BeatsPreview
@@ -78,6 +84,75 @@ class StoryStructureBeatWidget(OutlineItemWidget):
         self.beat.notes = self._text.toPlainText()
 
 
+class _StoryBeatSection(QWidget):
+    def __init__(self, beat: StoryBeat, parent=None):
+        super().__init__(parent)
+        vbox(self, 0, spacing=0)
+
+        self._label = push_btn(IconRegistry.from_name(beat.icon, beat.icon_color),
+                               text=beat.text, transparent_=True,
+                               tooltip=beat.description, checkable=True, icon_resize=False,
+                               pointy_=False)
+        # bold(self._label)
+
+        self.btnAdd = push_btn(IconRegistry.plus_icon(PLOTLYST_SECONDARY_COLOR), transparent_=True)
+        self.layout().addWidget(group(self._label, spacer(), self.btnAdd, margin=0))
+        desc = label(beat.description, description=True)
+        self.layout().addWidget(desc)
+
+
+class StoryBeatSelectorPopup(PopupDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.wdgTitle = QWidget()
+
+        self._scrollarea, self._wdgCenter = scrolled(self.frame, frameless=True, h_on=False)
+        self._scrollarea.setProperty('transparent', True)
+        transparent(self._wdgCenter)
+        vbox(self._wdgCenter, spacing=8)
+        hbox(self.wdgTitle)
+        self.wdgTitle.layout().addWidget(spacer())
+        icon = Icon()
+        icon.setIcon(IconRegistry.story_structure_icon())
+        incr_icon(icon, 4)
+        self.wdgTitle.layout().addWidget(icon)
+        self.wdgTitle.layout().addWidget(label('Common story structure beats', bold=True, h4=True))
+        self.wdgTitle.layout().addWidget(spacer())
+        self.wdgTitle.layout().addWidget(self.btnReset)
+
+        self._wdgCenter.layout().addWidget(self.wdgTitle)
+        margins(self._wdgCenter, right=20)
+
+        self._addHeader('Beginning', IconRegistry.cause_icon())
+        self._addBeat(hook_beat)
+        self._addBeat(motion_beat)
+        self._addBeat(disturbance_beat)
+        self._addBeat(characteristic_moment_beat)
+        self._addBeat(normal_world_beat)
+        self._addHeader('Midpoint', IconRegistry.from_name('mdi.middleware-outline'))
+
+        self.btnConfirm = push_btn(text='Close', properties=['base', 'positive'])
+        sp(self.btnConfirm).h_exp()
+        self.btnConfirm.clicked.connect(self.reject)
+
+        self.frame.layout().addWidget(self.btnConfirm)
+
+    def display(self):
+        self.exec()
+
+    def _addHeader(self, name: str, icon: QIcon):
+        icon_ = Icon()
+        icon_.setIcon(icon)
+        header = label(name, bold=True)
+        self._wdgCenter.layout().addWidget(group(icon_, header), alignment=Qt.AlignmentFlag.AlignLeft)
+        self._wdgCenter.layout().addWidget(line(color='lightgrey'))
+
+    def _addBeat(self, beat: StoryBeat):
+        wdg = _StoryBeatSection(beat)
+        margins(wdg, left=15)
+        self._wdgCenter.layout().addWidget(wdg)
+
+
 class StoryStructureOutline(OutlineTimelineWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -122,4 +197,8 @@ class StoryStructureOutline(OutlineTimelineWidget):
 
     @overrides
     def _placeholderClicked(self, placeholder: QWidget):
+        self._currentPlaceholder = placeholder
+        StoryBeatSelectorPopup.popup()
+
+    def _insertBeat(self, beat: StoryBeat):
         pass
