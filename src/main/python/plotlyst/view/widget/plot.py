@@ -328,6 +328,8 @@ class GenrePrincipleSelectorDialog(PopupDialog):
         self.wdgTitle.layout().addWidget(spacer())
         self.wdgTitle.layout().addWidget(self.btnReset)
         self._scrollarea, self._wdgCenter = scrolled(self.frame, frameless=True, h_on=False)
+        self._scrollarea.setProperty('transparent', True)
+        transparent(self._wdgCenter)
         vbox(self._wdgCenter)
         self._wdgCenter.layout().addWidget(self.wdgTitle)
         margins(self._wdgCenter, right=20)
@@ -381,7 +383,7 @@ class GenrePrincipleSelectorDialog(PopupDialog):
         icon.setIcon(IconRegistry.from_name(icon_name))
         header = label(name, bold=True)
         self._wdgCenter.layout().addWidget(group(icon, header), alignment=Qt.AlignmentFlag.AlignLeft)
-        self._wdgCenter.layout().addWidget(line('lightgrey'))
+        self._wdgCenter.layout().addWidget(line(color='lightgrey'))
 
     def _criminalToggled(self, toggled: bool):
         self._crimeClockPrinciple.setVisible(not toggled)

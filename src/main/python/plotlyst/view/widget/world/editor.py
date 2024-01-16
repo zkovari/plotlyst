@@ -730,6 +730,8 @@ class TopicSelectionDialog(PopupDialog):
 
         self.frame.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
         self._scrollarea, self._wdgCenter = scrolled(self.frame, frameless=True, h_on=False)
+        self._scrollarea.setProperty('transparent', True)
+        transparent(self._wdgCenter)
         vbox(self._wdgCenter, 10)
         # self._wdgCenter.setStyleSheet('QWidget {background: #ede0d4;}')
         self.setMinimumWidth(550)
@@ -763,7 +765,7 @@ class TopicSelectionDialog(PopupDialog):
 
     def _addSection(self, header: str, topics: List[Topic]):
         self._wdgCenter.layout().addWidget(label(header, bold=True), alignment=Qt.AlignmentFlag.AlignLeft)
-        self._wdgCenter.layout().addWidget(line())
+        self._wdgCenter.layout().addWidget(line(color='lightgrey'))
         wdg = QWidget()
         flow(wdg)
         margins(wdg, left=10)
