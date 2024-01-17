@@ -2542,6 +2542,7 @@ class NovelSetting(Enum):
     Characters = 'characters'
     Scenes = 'scenes'
     Track_emotion = 'track_emotion'
+    Track_motivation = 'track_motivation'
     Track_conflict = 'track_conflict'
     Documents = 'documents'
     Manuscript = 'manuscript'
