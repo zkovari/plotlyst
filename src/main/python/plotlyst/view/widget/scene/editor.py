@@ -40,7 +40,8 @@ from src.main.python.plotlyst.core.domain import Scene, Novel, ScenePurpose, adv
     StoryElementType, SceneOutcome, SceneStructureAgenda, Motivation, Plot, NovelSetting
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
-from src.main.python.plotlyst.events import SceneChangedEvent
+from src.main.python.plotlyst.events import SceneChangedEvent, NovelEmotionTrackingToggleEvent, \
+    NovelMotivationTrackingToggleEvent, NovelConflictTrackingToggleEvent, NovelPanelCustomizationEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import DelayedSignalSlotConnector, action, wrap, label, scrolled, \
     ButtonPressResizeEventFilter, push_btn, tool_btn, insert_before_the_end, fade_out_and_gc
@@ -1631,7 +1632,7 @@ class SceneAgendasTabBar(CharacterTabBar):
         self.resetAgenda.emit(agenda)
 
 
-class SceneAgendaEditor(AbstractSceneElementsEditor):
+class SceneAgendaEditor(AbstractSceneElementsEditor, EventListener):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
@@ -1653,9 +1654,11 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         self._btnCharacterDelegate.clicked.connect(self._characterDelegateClicked)
 
         self._emotionEditor = SceneAgendaEmotionEditor()
+        self._emotionEditor.layout().addWidget(vline())
         self._emotionEditor.emotionChanged.connect(self._emotionChanged)
         self._emotionEditor.deactivated.connect(self._emotionReset)
         self._motivationEditor = SceneAgendaMotivationEditor()
+        self._motivationEditor.layout().addWidget(vline())
         self._motivationEditor.setNovel(novel)
         self._motivationEditor.motivationChanged.connect(self._motivationChanged)
         self._motivationEditor.deactivated.connect(self._motivationReset)
@@ -1667,9 +1670,7 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         self._wdgHeader.layout().setSpacing(5)
         self._wdgHeader.layout().addWidget(self._btnCharacterDelegate)
         self._wdgHeader.layout().addWidget(self._emotionEditor)
-        self._wdgHeader.layout().addWidget(vline())
         self._wdgHeader.layout().addWidget(self._motivationEditor)
-        self._wdgHeader.layout().addWidget(vline())
         self._wdgHeader.layout().addWidget(self._conflictEditor)
         self._wdgHeader.layout().addWidget(spacer())
         self._wdgElementsParent.layout().insertWidget(1, line())
@@ -1684,6 +1685,18 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         self._wdgElements.layout().addWidget(vspacer(), self._row, 0, 1, 1)
 
         retain_when_hidden(self._wdgElements)
+        self._emotionEditor.setVisible(self._novel.prefs.toggled(NovelSetting.Track_emotion))
+        self._motivationEditor.setVisible(self._novel.prefs.toggled(NovelSetting.Track_motivation))
+        self._conflictEditor.setVisible(self._novel.prefs.toggled(NovelSetting.Track_conflict))
+
+        event_dispatchers.instance(self._novel).register(self, NovelEmotionTrackingToggleEvent,
+                                                         NovelMotivationTrackingToggleEvent,
+                                                         NovelConflictTrackingToggleEvent)
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, NovelPanelCustomizationEvent):
+            self._updateElementsVisibility()
 
     @overrides
     def setScene(self, scene: Scene):
@@ -1767,6 +1780,7 @@ class SceneAgendaEditor(AbstractSceneElementsEditor):
         elements_visible = self._agenda.character_id is not None
         self._btnCharacterDelegate.setVisible(not elements_visible)
         self._wdgElements.setVisible(elements_visible)
-        self._emotionEditor.setVisible(elements_visible)
-        self._motivationEditor.setVisible(elements_visible)
-        self._conflictEditor.setVisible(elements_visible)
+
+        self._emotionEditor.setVisible(elements_visible and self._novel.prefs.toggled(NovelSetting.Track_emotion))
+        self._motivationEditor.setVisible(elements_visible and self._novel.prefs.toggled(NovelSetting.Track_motivation))
+        self._conflictEditor.setVisible(elements_visible and self._novel.prefs.toggled(NovelSetting.Track_conflict))
