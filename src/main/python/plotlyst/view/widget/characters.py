@@ -33,13 +33,13 @@ from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Novel, Character
+from src.main.python.plotlyst.core.domain import Novel, Character, NovelSetting
 from src.main.python.plotlyst.core.template import SelectionItem, TemplateFieldType, TemplateField, RoleImportance, \
     strengths_weaknesses_field
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatchers
-from src.main.python.plotlyst.events import CharacterSummaryChangedEvent
+from src.main.python.plotlyst.events import CharacterSummaryChangedEvent, NovelConflictTrackingToggleEvent
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
 from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
     ConflictScenesDistributionTableModel, TagScenesDistributionTableModel
@@ -57,7 +57,7 @@ from src.main.python.plotlyst.view.widget.progress import CircularProgressBar, P
     CharacterRoleProgressChart
 
 
-class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributionWidget):
+class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributionWidget, EventListener):
     avg_text: str = 'Characters per scene: '
     common_text: str = 'Common scenes: '
 
@@ -98,8 +98,17 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
         retain_when_hidden(self.spinAverage)
 
         self.btnCharacters.setChecked(True)
+        self.btnConflicts.setVisible(self.novel.prefs.toggled(NovelSetting.Track_conflict))
+        event_dispatchers.instance(self.novel).register(self, NovelConflictTrackingToggleEvent)
 
         self.refresh()
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, NovelConflictTrackingToggleEvent):
+            self.btnConflicts.setVisible(event.toggled)
+            if self.btnConflicts.isChecked():
+                self.btnCharacters.setChecked(True)
 
     def refresh(self):
         if self.novel.scenes:
