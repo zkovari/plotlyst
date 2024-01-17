@@ -534,19 +534,36 @@ def exclude_if_beat(value):
 
 
 @dataclass
-class StoryBeat:
-    text: str
-    act: int
+class OutlineItem:
+    text: str = ''
+    percentage: float = 0.0
+
+
+class PlotProgressionItemType(Enum):
+    BEGINNING = 0
+    MIDDLE = 1
+    ENDING = 2
+    EVENT = 3
+
+
+@dataclass
+class PlotProgressionItem(OutlineItem):
+    type: PlotProgressionItemType = PlotProgressionItemType.EVENT
+
+
+@dataclass
+class StoryBeat(OutlineItem):
+    act: int = 1
     description: str = ''
     type: StoryBeatType = field(default=StoryBeatType.BEAT, metadata=config(exclude=exclude_if_beat))
     ends_act: bool = field(default=False, metadata=config(exclude=exclude_if_empty))
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     icon: str = ''
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
-    percentage: int = 0
-    percentage_end: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    percentage_end: float = field(default=0, metadata=config(exclude=exclude_if_empty))
     enabled: bool = True
     notes: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    custom: bool = False
 
     @overrides
     def __eq__(self, other: 'StoryBeat'):
@@ -728,19 +745,6 @@ class SceneBased(ABC):
 
 def default_plot_value() -> PlotValue:
     return PlotValue('Progress', icon='fa5s.chart-line')
-
-
-class PlotProgressionItemType(Enum):
-    BEGINNING = 0
-    MIDDLE = 1
-    ENDING = 2
-    EVENT = 3
-
-
-@dataclass
-class PlotProgressionItem:
-    type: PlotProgressionItemType
-    text: str = ''
 
 
 class StorylineLinkType(Enum):
@@ -1001,10 +1005,8 @@ class SceneOutcome(Enum):
 
 
 @dataclass
-class SceneStructureItem:
-    type: SceneStructureItemType
-    text: str = ''
-    percentage: float = 0.0
+class SceneStructureItem(OutlineItem):
+    type: SceneStructureItemType = SceneStructureItemType.BEAT
     emotion: str = field(default='', metadata=config(exclude=exclude_if_empty))
     meta: Dict[str, Any] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
 
@@ -1662,6 +1664,12 @@ class StoryStructure(CharacterBased):
         return [x for x in self.beats if x.ends_act]
 
 
+general_beat = StoryBeat(text='Beat',
+                         id=uuid.UUID('3dc905df-1a9b-4e04-90f5-199ea908f2d5'),
+                         icon='mdi.lightning-bolt-outline',
+                         description="A pivotal moment in the story",
+                         act=1, percentage=1)
+
 hook_beat = StoryBeat(text='Hook',
                       id=uuid.UUID('40365047-e7df-4543-8816-f9f8dcce12da'),
                       icon='mdi.hook',
@@ -1692,6 +1700,18 @@ normal_world_beat = StoryBeat(text='Normal World',
                               icon_color='#1ea896',
                               description="Establishes the setting alongside the protagonist before the first major change in the story would happen.",
                               act=1, percentage=1)
+
+turn_beat = StoryBeat(text='Turn',
+                      id=uuid.UUID('31000162-4bed-49f2-9def-a70ba15ff378'),
+                      icon='mdi.boom-gate-up-outline',
+                      icon_color='#8338ec',
+                      description="Delivers a shift in the story's direction by often playing with or subverting readers expectations")
+
+twist_beat = StoryBeat(text='Twist',
+                       id=uuid.UUID('cd297072-07ea-487a-b884-c645673a73cb'),
+                       icon='ph.shuffle-bold',
+                       icon_color='#f20089',
+                       description="Brings an unexpected development of the story by defying readers expectations")
 
 first_plot_point = StoryBeat(text='First Plot Point',
                              icon='mdi6.chevron-double-right',

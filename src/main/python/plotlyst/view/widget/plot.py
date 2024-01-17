@@ -62,7 +62,7 @@ from src.main.python.plotlyst.view.widget.chart import BaseChart
 from src.main.python.plotlyst.view.widget.display import Icon, IdleWidget, PopupDialog
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
-from src.main.python.plotlyst.view.widget.scene.structure import SceneStructureTimeline, SceneStructureBeatWidget
+from src.main.python.plotlyst.view.widget.outline import OutlineItemWidget, OutlineTimelineWidget
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
 from src.main.python.plotlyst.view.widget.utility import ColorPicker
 
@@ -328,6 +328,8 @@ class GenrePrincipleSelectorDialog(PopupDialog):
         self.wdgTitle.layout().addWidget(spacer())
         self.wdgTitle.layout().addWidget(self.btnReset)
         self._scrollarea, self._wdgCenter = scrolled(self.frame, frameless=True, h_on=False)
+        self._scrollarea.setProperty('transparent', True)
+        transparent(self._wdgCenter)
         vbox(self._wdgCenter)
         self._wdgCenter.layout().addWidget(self.wdgTitle)
         margins(self._wdgCenter, right=20)
@@ -381,7 +383,7 @@ class GenrePrincipleSelectorDialog(PopupDialog):
         icon.setIcon(IconRegistry.from_name(icon_name))
         header = label(name, bold=True)
         self._wdgCenter.layout().addWidget(group(icon, header), alignment=Qt.AlignmentFlag.AlignLeft)
-        self._wdgCenter.layout().addWidget(line('lightgrey'))
+        self._wdgCenter.layout().addWidget(line(color='lightgrey'))
 
     def _criminalToggled(self, toggled: bool):
         self._crimeClockPrinciple.setVisible(not toggled)
@@ -571,13 +573,21 @@ storyline_progression_steps_descriptions = {
 }
 
 
-class PlotProgressionEventWidget(SceneStructureBeatWidget):
+class PlotProgressionEventWidget(OutlineItemWidget):
     def __init__(self, novel: Novel, type: PlotType, item: PlotProgressionItem, parent=None):
         self._type = type
-        super().__init__(novel, item, parent)
+        self.beat = item
+        self.novel = novel
+        super().__init__(item, parent)
         self._btnIcon.removeEventFilter(self._dragEventFilter)
         self._btnIcon.setCursor(Qt.CursorShape.ArrowCursor)
         self.setAcceptDrops(False)
+
+        self._initStyle()
+
+    @overrides
+    def mimeType(self) -> str:
+        return ''
 
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
@@ -606,14 +616,15 @@ class PlotProgressionEventWidget(SceneStructureBeatWidget):
 
     @overrides
     def _initStyle(self):
-        super()._initStyle()
+        name = None
         if self.beat.type == PlotProgressionItemType.ENDING:
-            self._btnName.setText('End')
+            name = 'End'
         elif self.beat.type == PlotProgressionItemType.EVENT:
-            self._btnName.setText('')
+            name = ''
+        super()._initStyle(name=name)
 
 
-class PlotEventsTimeline(SceneStructureTimeline):
+class PlotEventsTimeline(OutlineTimelineWidget):
     def __init__(self, novel: Novel, type: PlotType, parent=None):
         super().__init__(parent)
         self._type = type
@@ -631,23 +642,18 @@ class PlotEventsTimeline(SceneStructureTimeline):
 
         return widget
 
-    # @overrides
-    # def _addBeatWidget(self, item: PlotProgressionItem):
-    #     super()._addBeatWidget(item)
-
     @overrides
     def _insertWidget(self, item: PlotProgressionItem, widget: PlotProgressionEventWidget):
         super()._insertWidget(item, widget)
         self._hideFirstAndLastItems()
 
     @overrides
-    def _showBeatMenu(self, placeholder: QWidget):
+    def _placeholderClicked(self, placeholder: QWidget):
         self._currentPlaceholder = placeholder
         self._insertBeat(PlotProgressionItemType.EVENT)
 
-    @overrides
     def _insertBeat(self, beatType: PlotProgressionItemType):
-        item = PlotProgressionItem(beatType)
+        item = PlotProgressionItem(type=beatType)
         widget = self._newBeatWidget(item)
         self._insertWidget(item, widget)
 
@@ -1207,9 +1213,9 @@ class PlotEditor(QWidget, Ui_PlotEditor):
             name = 'Main plot'
             icon = 'fa5s.theater-masks'
         plot = Plot(name, plot_type=plot_type, icon=icon,
-                    progression=[PlotProgressionItem(PlotProgressionItemType.BEGINNING),
-                                 PlotProgressionItem(PlotProgressionItemType.MIDDLE),
-                                 PlotProgressionItem(PlotProgressionItemType.ENDING)])
+                    progression=[PlotProgressionItem(type=PlotProgressionItemType.BEGINNING),
+                                 PlotProgressionItem(type=PlotProgressionItemType.MIDDLE),
+                                 PlotProgressionItem(type=PlotProgressionItemType.ENDING)])
         self.novel.plots.append(plot)
 
         plot_colors = list(STORY_LINE_COLOR_CODES[plot_type.value])

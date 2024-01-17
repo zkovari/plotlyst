@@ -32,7 +32,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <property name="centered" stdset="0">
       <bool>true</bool>
@@ -365,73 +365,6 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tabEvents">
-      <attribute name="title">
-       <string>Mindmap</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_11">
-       <property name="spacing">
-        <number>0</number>
-       </property>
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
-        <number>0</number>
-       </property>
-       <item>
-        <widget class="QSplitter" name="splitterEvents">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <widget class="QWidget" name="wdgEventsMapParent" native="true">
-          <layout class="QVBoxLayout" name="verticalLayout_7">
-           <property name="spacing">
-            <number>0</number>
-           </property>
-           <property name="leftMargin">
-            <number>0</number>
-           </property>
-           <property name="topMargin">
-            <number>0</number>
-           </property>
-           <property name="rightMargin">
-            <number>0</number>
-           </property>
-           <property name="bottomMargin">
-            <number>0</number>
-           </property>
-          </layout>
-         </widget>
-         <widget class="QWidget" name="wdgEventsSidebar" native="true">
-          <layout class="QVBoxLayout" name="verticalLayout_10">
-           <property name="spacing">
-            <number>0</number>
-           </property>
-           <property name="leftMargin">
-            <number>0</number>
-           </property>
-           <property name="topMargin">
-            <number>0</number>
-           </property>
-           <property name="rightMargin">
-            <number>0</number>
-           </property>
-           <property name="bottomMargin">
-            <number>0</number>
-           </property>
-          </layout>
-         </widget>
-        </widget>
-       </item>
-      </layout>
-     </widget>
      <widget class="QWidget" name="tabPlot">
       <attribute name="title">
        <string>Storylines</string>
@@ -500,6 +433,73 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="tabEvents">
+      <attribute name="title">
+       <string>Mindmap</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_11">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QSplitter" name="splitterEvents">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <widget class="QWidget" name="wdgEventsMapParent" native="true">
+          <layout class="QVBoxLayout" name="verticalLayout_7">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="wdgEventsSidebar" native="true">
+          <layout class="QVBoxLayout" name="verticalLayout_10">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
      <widget class="QWidget" name="tabTags">
       <property name="relaxed-white-bg" stdset="0">
        <bool>true</bool>
@@ -539,8 +539,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>626</width>
-            <height>512</height>
+            <width>100</width>
+            <height>30</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -624,8 +624,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>546</width>
-            <height>512</height>
+            <width>98</width>
+            <height>31</height>
            </rect>
           </property>
           <property name="sizePolicy">

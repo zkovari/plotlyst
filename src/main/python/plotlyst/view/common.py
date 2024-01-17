@@ -575,3 +575,7 @@ def any_menu_visible(*buttons: Union[QPushButton, QToolButton]) -> bool:
 
 def open_url(url: str):
     QDesktopServices.openUrl(QUrl(url))
+
+
+def to_rgba_str(color: QColor, alpha: int = 255) -> str:
+    return f'rgba({color.red()}, {color.green()}, {color.blue()}, {alpha})'

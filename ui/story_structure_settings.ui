@@ -213,6 +213,68 @@
      <property name="currentIndex">
       <number>0</number>
      </property>
+     <widget class="QWidget" name="tabOutline">
+      <attribute name="title">
+       <string>Outline</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QScrollArea" name="scrollArea_3">
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="widgetResizable">
+          <bool>true</bool>
+         </property>
+         <widget class="QWidget" name="wdgOutline">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>565</width>
+            <height>256</height>
+           </rect>
+          </property>
+          <property name="relaxed-white-bg" stdset="0">
+           <bool>true</bool>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_5">
+           <property name="spacing">
+            <number>3</number>
+           </property>
+           <property name="leftMargin">
+            <number>5</number>
+           </property>
+           <property name="topMargin">
+            <number>5</number>
+           </property>
+           <property name="rightMargin">
+            <number>5</number>
+           </property>
+           <property name="bottomMargin">
+            <number>5</number>
+           </property>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
      <widget class="QWidget" name="tabOverview">
       <attribute name="title">
        <string>Overview</string>
@@ -304,7 +366,7 @@
             <x>0</x>
             <y>0</y>
             <width>565</width>
-            <height>260</height>
+            <height>236</height>
            </rect>
           </property>
           <property name="relaxed-white-bg" stdset="0">
