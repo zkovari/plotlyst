@@ -25,7 +25,7 @@ from PyQt6.QtCore import pyqtSignal, Qt, QSize, QEvent
 from PyQt6.QtGui import QIcon, QPalette, QColor
 from PyQt6.QtWidgets import QWidget, QPushButton, QToolButton, QGridLayout
 from overrides import overrides
-from qthandy import transparent, sp, vbox, hbox, vspacer, incr_font, pointy, grid
+from qthandy import transparent, sp, vbox, hbox, vspacer, incr_font, pointy, grid, margins
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -35,7 +35,8 @@ from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import NovelMindmapToggleEvent, NovelPanelCustomizationEvent, \
     NovelStructureToggleEvent, NovelStorylinesToggleEvent, NovelCharactersToggleEvent, NovelScenesToggleEvent, \
-    NovelWorldBuildingToggleEvent, NovelManuscriptToggleEvent, NovelDocumentsToggleEvent, NovelManagementToggleEvent
+    NovelWorldBuildingToggleEvent, NovelManuscriptToggleEvent, NovelDocumentsToggleEvent, NovelManagementToggleEvent, \
+    NovelEmotionTrackingToggleEvent, NovelMotivationTrackingToggleEvent, NovelConflictTrackingToggleEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import label, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -48,6 +49,9 @@ setting_titles: Dict[NovelSetting, str] = {
     NovelSetting.Storylines: 'Storylines',
     NovelSetting.Characters: 'Characters',
     NovelSetting.Scenes: 'Scenes',
+    NovelSetting.Track_emotion: 'Track character emotions',
+    NovelSetting.Track_motivation: 'Track character motivation',
+    NovelSetting.Track_conflict: 'Track character conflicts',
     NovelSetting.World_building: 'World-building',
     NovelSetting.Manuscript: 'Manuscript',
     NovelSetting.Documents: 'Documents',
@@ -59,6 +63,9 @@ setting_descriptions: Dict[NovelSetting, str] = {
     NovelSetting.Storylines: "Create separate storylines for plot, character's change, subplots, or relationship plots",
     NovelSetting.Characters: "Create a cast of characters with different roles, personalities, backstories, goals, and relationships among them",
     NovelSetting.Scenes: "Create scene cards for early outlining or later revision purposes to have characters, conflicts, or storylines associated to the scenes",
+    NovelSetting.Track_emotion: 'Track character emotions',
+    NovelSetting.Track_motivation: 'Track character motivation',
+    NovelSetting.Track_conflict: 'Track character conflicts',
     NovelSetting.World_building: "[BETA] Develop your story's world by creating fictional settings and lore",
     NovelSetting.Manuscript: "Write your story in Plotlyst using the manuscript panel",
     NovelSetting.Documents: "Add documents for your planning or research",
@@ -77,6 +84,9 @@ setting_events: Dict[NovelSetting, NovelPanelCustomizationEvent] = {
     NovelSetting.Storylines: NovelStorylinesToggleEvent,
     NovelSetting.Characters: NovelCharactersToggleEvent,
     NovelSetting.Scenes: NovelScenesToggleEvent,
+    NovelSetting.Track_emotion: NovelEmotionTrackingToggleEvent,
+    NovelSetting.Track_motivation: NovelMotivationTrackingToggleEvent,
+    NovelSetting.Track_conflict: NovelConflictTrackingToggleEvent,
     NovelSetting.World_building: NovelWorldBuildingToggleEvent,
     NovelSetting.Manuscript: NovelManuscriptToggleEvent,
     NovelSetting.Documents: NovelDocumentsToggleEvent,
@@ -140,11 +150,15 @@ class NovelSettingToggle(QWidget):
         self._wdgTitle.layout().addWidget(self._title, alignment=Qt.AlignmentFlag.AlignLeft)
         self._wdgTitle.layout().addWidget(self._description)
 
+        self._wdgChildren = QWidget()
+        vbox(self._wdgChildren)
+        margins(self._wdgChildren, left=20, right=20)
+        self._wdgChildren.setHidden(True)
+
         self._toggle = Toggle()
         self._toggle.setChecked(True)
         self._toggle.toggled.connect(self._toggled)
         self._toggle.clicked.connect(self._clicked)
-        self._toggle.setChecked(self._novel.prefs.toggled(self._setting))
 
         self._wdgHeader = QWidget()
         self._wdgHeader.setObjectName('wdgHeader')
@@ -152,14 +166,22 @@ class NovelSettingToggle(QWidget):
         self._wdgHeader.layout().addWidget(self._wdgTitle)
         self._wdgHeader.layout().addWidget(self._toggle, alignment=Qt.AlignmentFlag.AlignTop)
 
-        hbox(self, 0, 0)
+        vbox(self, 0, 0)
         self.layout().addWidget(self._wdgHeader)
+        self.layout().addWidget(self._wdgChildren)
+
+        self._toggle.setChecked(self._novel.prefs.toggled(self._setting))
 
     def setChecked(self, checked: bool):
         self._toggle.setChecked(checked)
 
+    def addChild(self, child: 'NovelSettingToggle'):
+        self._wdgChildren.setVisible(self._toggle.isChecked())
+        self._wdgChildren.layout().addWidget(child)
+
     def _toggled(self, toggled: bool):
         self._wdgTitle.setEnabled(toggled)
+        self._wdgChildren.setVisible(toggled)
 
     def _clicked(self, toggled: bool):
         self.settingToggled.emit(self._setting, toggled)
@@ -346,7 +368,10 @@ class NovelSettingsWidget(QWidget, EventListener):
         self._addSettingToggle(NovelSetting.Structure)
         self._addSettingToggle(NovelSetting.Storylines)
         self._addSettingToggle(NovelSetting.Characters)
-        self._addSettingToggle(NovelSetting.Scenes)
+        wdgScenes = self._addSettingToggle(NovelSetting.Scenes)
+        self._addSettingToggle(NovelSetting.Track_emotion, wdgScenes)
+        self._addSettingToggle(NovelSetting.Track_motivation, wdgScenes)
+        self._addSettingToggle(NovelSetting.Track_conflict, wdgScenes)
         self._addSettingToggle(NovelSetting.World_building)
         self._addSettingToggle(NovelSetting.Documents)
         self._addSettingToggle(NovelSetting.Manuscript)
@@ -360,11 +385,17 @@ class NovelSettingsWidget(QWidget, EventListener):
         if isinstance(event, NovelPanelCustomizationEvent):
             self._settings[event.setting].setChecked(event.toggled)
 
-    def _addSettingToggle(self, setting: NovelSetting):
+    def _addSettingToggle(self, setting: NovelSetting,
+                          parent: Optional[NovelSettingToggle] = None) -> NovelSettingToggle:
         toggle = NovelSettingToggle(self._novel, setting)
         toggle.settingToggled.connect(self._toggled)
         self._settings[setting] = toggle
-        self.layout().addWidget(toggle)
+        if parent:
+            parent.addChild(toggle)
+        else:
+            self.layout().addWidget(toggle)
+
+        return toggle
 
     def _toggled(self, setting: NovelSetting, toggled: bool):
         toggle_setting(self, self._novel, setting, toggled)

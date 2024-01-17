@@ -159,6 +159,21 @@ class NovelScenesToggleEvent(NovelPanelCustomizationEvent):
 
 
 @dataclass
+class NovelEmotionTrackingToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
+class NovelMotivationTrackingToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
+class NovelConflictTrackingToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
 class NovelStructureToggleEvent(NovelPanelCustomizationEvent):
     pass
 
