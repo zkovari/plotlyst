@@ -1644,8 +1644,6 @@ class SceneAgendaEditor(AbstractSceneElementsEditor, EventListener):
         self._characterTabbar.resetAgenda.connect(self._agendaReset)
         self._btnAddAgency = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True)
         self._btnAddAgency.clicked.connect(self._characterTabbar.addNewTab)
-        # self.layout().insertWidget(0, group(self._characterTabbar, self._btnAddAgency, vertical=False),
-        #                            alignment=Qt.AlignmentFlag.AlignTop)
         self.layout().insertWidget(0, self._characterTabbar)
 
         self._unsetCharacterSlot = None
@@ -1777,6 +1775,8 @@ class SceneAgendaEditor(AbstractSceneElementsEditor, EventListener):
             self._characterTabbar.popup()
 
     def _updateElementsVisibility(self):
+        if not self._agenda:
+            return
         elements_visible = self._agenda.character_id is not None
         self._btnCharacterDelegate.setVisible(not elements_visible)
         self._wdgElements.setVisible(elements_visible)

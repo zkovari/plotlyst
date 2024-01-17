@@ -311,8 +311,8 @@ class IconRegistry:
         return qtawesome.icon('fa5s.shield-alt')
 
     @staticmethod
-    def emotion_icon() -> QIcon:
-        return IconRegistry.from_name('ri.emotion-sad-line')
+    def emotion_icon(**kwargs) -> QIcon:
+        return IconRegistry.from_name('ri.emotion-sad-line', **kwargs)
 
     @staticmethod
     def disaster_icon(color: str = '#f4442e', color_on: str = '#f4442e') -> QIcon:

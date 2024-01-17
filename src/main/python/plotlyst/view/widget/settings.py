@@ -63,9 +63,9 @@ setting_descriptions: Dict[NovelSetting, str] = {
     NovelSetting.Storylines: "Create separate storylines for plot, character's change, subplots, or relationship plots",
     NovelSetting.Characters: "Create a cast of characters with different roles, personalities, backstories, goals, and relationships among them",
     NovelSetting.Scenes: "Create scene cards for early outlining or later revision purposes to have characters, conflicts, or storylines associated to the scenes",
-    NovelSetting.Track_emotion: 'Track character emotions',
-    NovelSetting.Track_motivation: 'Track character motivation',
-    NovelSetting.Track_conflict: 'Track character conflicts',
+    NovelSetting.Track_emotion: "Track and visualize how characters' emotions shift between positive and negative throughout the scenes",
+    NovelSetting.Track_motivation: "Track and visualize how characters' motivation change throughout the scenes",
+    NovelSetting.Track_conflict: 'Track the frequency and the type of conflicts the characters face',
     NovelSetting.World_building: "[BETA] Develop your story's world by creating fictional settings and lore",
     NovelSetting.Manuscript: "Write your story in Plotlyst using the manuscript panel",
     NovelSetting.Documents: "Add documents for your planning or research",
@@ -105,6 +105,12 @@ def setting_icon(setting: NovelSetting, color=PLOTLYST_SECONDARY_COLOR, color_on
         return IconRegistry.character_icon(color=color, color_on=color_on)
     elif setting == NovelSetting.Scenes:
         return IconRegistry.scene_icon(color=color, color_on=color_on)
+    elif setting == NovelSetting.Track_emotion:
+        return IconRegistry.emotion_icon(color=color, color_on=color_on)
+    elif setting == NovelSetting.Track_motivation:
+        return IconRegistry.from_name('fa5s.fist-raised', color=color, color_on=color_on)
+    elif setting == NovelSetting.Track_conflict:
+        return IconRegistry.conflict_icon(color=color, color_on=color_on)
     elif setting == NovelSetting.World_building:
         return IconRegistry.world_building_icon(color=color, color_on=color_on)
     elif setting == NovelSetting.Manuscript:
