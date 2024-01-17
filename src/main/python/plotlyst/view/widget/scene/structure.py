@@ -61,7 +61,7 @@ beat_descriptions = {SceneStructureItemType.BEAT: 'New action, reaction, thought
                      SceneStructureItemType.CHOICE: 'Impossible choice between two equally good or bad outcomes',
                      SceneStructureItemType.EXPOSITION: 'Description, explanation, or introduction of normal world',
                      SceneStructureItemType.SUMMARY: 'A summary of events to quicken the pace',
-                     SceneStructureItemType.TURN: 'Shift in plot arc: small victory or setback',
+                     SceneStructureItemType.TURN: "A shift in the story's development",
                      SceneStructureItemType.MYSTERY: "An unanswered question raises reader's curiosity",
                      SceneStructureItemType.REVELATION: 'Key information is revealed or discovered',
                      SceneStructureItemType.SETUP: 'Event that sets up a later payoff. May put the scene in motion',

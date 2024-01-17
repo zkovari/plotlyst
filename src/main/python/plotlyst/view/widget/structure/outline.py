@@ -30,8 +30,7 @@ from qthandy import line, vbox, margins, hbox, spacer, sp, incr_icon, transparen
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat, motion_beat, \
-    disturbance_beat, characteristic_moment_beat, normal_world_beat, general_beat, midpoint_ponr, midpoint_mirror, \
-    midpoint_proactive
+    disturbance_beat, characteristic_moment_beat, normal_world_beat, general_beat, turn_beat, twist_beat
 from src.main.python.plotlyst.view.common import label, scrolled, push_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
@@ -135,10 +134,14 @@ class StoryBeatSelectorPopup(PopupDialog):
         self._addBeat(disturbance_beat)
         self._addBeat(characteristic_moment_beat)
         self._addBeat(normal_world_beat)
-        self._addHeader('Midpoint', IconRegistry.from_name('mdi.middleware-outline'))
-        self._addBeat(midpoint_ponr)
-        self._addBeat(midpoint_mirror)
-        self._addBeat(midpoint_proactive)
+        self._addHeader('Escalation', IconRegistry.rising_action_icon('black'))
+        self._addBeat(turn_beat)
+        self._addBeat(twist_beat)
+
+        # self._addHeader('Midpoint', IconRegistry.from_name('mdi.middleware-outline'))
+        # self._addBeat(midpoint_ponr)
+        # self._addBeat(midpoint_mirror)
+        # self._addBeat(midpoint_proactive)
 
         self.btnConfirm = push_btn(text='Close', properties=['base', 'positive'])
         sp(self.btnConfirm).h_exp()

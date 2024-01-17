@@ -1701,6 +1701,18 @@ normal_world_beat = StoryBeat(text='Normal World',
                               description="Establishes the setting alongside the protagonist before the first major change in the story would happen.",
                               act=1, percentage=1)
 
+turn_beat = StoryBeat(text='Turn',
+                      id=uuid.UUID('31000162-4bed-49f2-9def-a70ba15ff378'),
+                      icon='mdi.boom-gate-up-outline',
+                      icon_color='#8338ec',
+                      description="Delivers a shift in the story's direction by often playing with or subverting readers expectations")
+
+twist_beat = StoryBeat(text='Twist',
+                       id=uuid.UUID('cd297072-07ea-487a-b884-c645673a73cb'),
+                       icon='ph.shuffle-bold',
+                       icon_color='#f20089',
+                       description="Brings an unexpected development of the story by defying readers expectations")
+
 first_plot_point = StoryBeat(text='First Plot Point',
                              icon='mdi6.chevron-double-right',
                              icon_color='#2a4494',
