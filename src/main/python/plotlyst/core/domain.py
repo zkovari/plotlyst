@@ -2508,13 +2508,13 @@ class Relation(SelectionItem):
 
 @dataclass
 class FontSettings:
-    pass
+    family: str = ''
 
 
 @dataclass
 class DocsPreferences:
     grammar_check: bool = True
-    font: FontSettings = field(default_factory=FontSettings)
+    font: Dict[str, FontSettings] = field(default_factory=dict)
 
 
 class NovelPanel(Enum):
