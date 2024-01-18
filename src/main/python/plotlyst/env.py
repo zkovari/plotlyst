@@ -74,6 +74,9 @@ class AppEnvironment:
             return True
         return False
 
+    def platform(self) -> str:
+        return platform.name()
+
     def is_mac(self) -> bool:
         return platform.is_mac()
 
