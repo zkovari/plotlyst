@@ -39,7 +39,7 @@ from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import NovelAboutToSyncEvent, SceneStoryBeatChangedEvent, \
-    NovelStorylinesToggleEvent, NovelStructureToggleEvent
+    NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelPovTrackingToggleEvent
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
@@ -189,8 +189,10 @@ class SceneEditor(QObject, EventListener):
 
         self.repo = RepositoryPersistenceManager.instance()
 
+        self.ui.wdgPov.setVisible(self.novel.prefs.toggled(NovelSetting.Track_pov))
+
         dispatcher = event_dispatchers.instance(self.novel)
-        dispatcher.register(self, NovelAboutToSyncEvent, NovelStorylinesToggleEvent, NovelStructureToggleEvent)
+        dispatcher.register(self, NovelAboutToSyncEvent, NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelPovTrackingToggleEvent)
 
     @overrides
     def event_received(self, event: Event):
@@ -202,6 +204,8 @@ class SceneEditor(QObject, EventListener):
             self._storylineEditor.storylinesSettingToggledEvent(event.toggled)
         elif isinstance(event, NovelStructureToggleEvent):
             self.ui.wdgStructure.setVisible(event.toggled)
+        elif isinstance(event, NovelPovTrackingToggleEvent):
+            self.ui.wdgPov.setVisible(event.toggled)
 
     def set_scene(self, scene: Scene):
         self.scene = scene

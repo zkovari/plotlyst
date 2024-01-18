@@ -41,7 +41,7 @@ from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
     SceneSelectedEvent, SceneSelectionClearedEvent, ActiveSceneStageChanged, \
     ChapterChangedEvent, AvailableSceneStagesChanged, CharacterChangedEvent, CharacterDeletedEvent, \
     NovelAboutToSyncEvent, NovelSyncEvent, NovelStoryStructureActivationRequest, NovelPanelCustomizationEvent, \
-    NovelStorylinesToggleEvent, NovelStructureToggleEvent
+    NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelPovTrackingToggleEvent
 from src.main.python.plotlyst.events import SceneOrderChangedEvent
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
@@ -114,7 +114,7 @@ class ScenesOutlineView(AbstractNovelView):
                          [NovelStoryStructureUpdated, CharacterChangedEvent, SceneChangedEvent, ChapterChangedEvent,
                           SceneDeletedEvent,
                           SceneOrderChangedEvent, NovelAboutToSyncEvent, NovelStorylinesToggleEvent,
-                          NovelStructureToggleEvent])
+                          NovelStructureToggleEvent, NovelPovTrackingToggleEvent])
         self.ui = Ui_ScenesView()
         self.ui.setupUi(self.widget)
 
@@ -303,6 +303,8 @@ class ScenesOutlineView(AbstractNovelView):
             elif isinstance(event, NovelStructureToggleEvent):
                 self.ui.btnStoryStructure.setVisible(event.toggled)
                 self.ui.wdgStoryStructure.setVisible(event.toggled)
+            elif isinstance(event, NovelPovTrackingToggleEvent):
+                self.ui.tblScenes.setColumnHidden(self.tblModel.ColPov, not event.toggled)
             return
 
         super(ScenesOutlineView, self).event_received(event)
@@ -384,9 +386,14 @@ class ScenesOutlineView(AbstractNovelView):
         self.tblModel.setRelaxColors(relax_colors)
         for col in range(self.tblModel.columnCount()):
             if col in columns:
-                self.ui.tblScenes.showColumn(col)
+                if col == self.tblModel.ColPov:
+                    self.ui.tblScenes.setColumnHidden(self.tblModel.ColPov,
+                                                      not self.novel.prefs.toggled(NovelSetting.Track_pov))
+                else:
+                    self.ui.tblScenes.showColumn(col)
                 continue
             self.ui.tblScenes.hideColumn(col)
+
         self.ui.tblScenes.verticalHeader().setDefaultSectionSize(height)
 
         emit_event(self.novel, SceneSelectionClearedEvent(self))

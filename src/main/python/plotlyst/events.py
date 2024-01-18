@@ -174,6 +174,11 @@ class NovelConflictTrackingToggleEvent(NovelPanelCustomizationEvent):
 
 
 @dataclass
+class NovelPovTrackingToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
 class NovelStructureToggleEvent(NovelPanelCustomizationEvent):
     pass
 
