@@ -19,11 +19,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
+from PyQt6.QtGui import QFont
 from overrides import overrides
 from qthandy import clear_layout, margins, bold
+from qttextedit.ops import TextEditorSettingsSection, FontSectionSettingWidget
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Document, DocumentType
+from src.main.python.plotlyst.core.domain import Novel, Document, DocumentType, FontSettings
+from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter
@@ -69,13 +72,23 @@ class DocumentsView(AbstractNovelView):
         self.ui.treeDocuments.addDocument(doc)
 
     def _init_text_editor(self):
+        def settings_ready():
+            section: FontSectionSettingWidget = self.textEditor.settingsWidget().section(TextEditorSettingsSection.FONT)
+            section.fontSelected.connect(self._fontChanged)
+
         self._clear_text_editor()
 
         self.textEditor = DocumentTextEditor(self.ui.docEditorPage)
         margins(self.textEditor, top=50, right=10)
         self.ui.docEditorPage.layout().addWidget(self.textEditor)
+
+        if self.novel.prefs.docs.font.get(app_env.platform(), ''):
+            font_: QFont = self.textEditor.textEdit.font()
+            font_.setFamily(self.novel.prefs.docs.font[app_env.platform()].family)
+            self.textEditor.textEdit.setFont(font_)
         self.textEditor.textEdit.textChanged.connect(self._save)
         self.textEditor.titleChanged.connect(self._title_changed)
+        self.textEditor.settingsAttached.connect(settings_ready)
 
     def _clear_text_editor(self):
         clear_layout(self.ui.docEditorPage.layout())
@@ -132,3 +145,10 @@ class DocumentsView(AbstractNovelView):
                 # emit_column_changed_in_tree(self.model, 0, QModelIndex())
                 self.ui.treeDocuments.updateDocument(self._current_doc)
                 self.repo.update_novel(self.novel)
+
+    def _fontChanged(self, family: str):
+        if app_env.platform() not in self.novel.prefs.docs.font.keys():
+            self.novel.prefs.docs.font[app_env.platform()] = FontSettings()
+        fontSettings = self.novel.prefs.docs.font[app_env.platform()]
+        fontSettings.family = family
+        self.repo.update_novel(self.novel)
