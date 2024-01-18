@@ -2507,8 +2507,14 @@ class Relation(SelectionItem):
 
 
 @dataclass
+class FontSettings:
+    pass
+
+
+@dataclass
 class DocsPreferences:
     grammar_check: bool = True
+    font: FontSettings = field(default_factory=FontSettings)
 
 
 class NovelPanel(Enum):
