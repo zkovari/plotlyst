@@ -41,7 +41,8 @@ from src.main.python.plotlyst.core.domain import Scene, Novel, ScenePurpose, adv
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent, NovelEmotionTrackingToggleEvent, \
-    NovelMotivationTrackingToggleEvent, NovelConflictTrackingToggleEvent, NovelPanelCustomizationEvent
+    NovelMotivationTrackingToggleEvent, NovelConflictTrackingToggleEvent, NovelPanelCustomizationEvent, \
+    NovelPovTrackingToggleEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import DelayedSignalSlotConnector, action, wrap, label, scrolled, \
     ButtonPressResizeEventFilter, push_btn, tool_btn, insert_before_the_end, fade_out_and_gc
@@ -96,9 +97,11 @@ class SceneMiniEditor(QWidget, EventListener):
 
         DelayedSignalSlotConnector(self._textSynopsis.textChanged, self._save, parent=self)
 
+        self._charSelector.setVisible(self._novel.prefs.toggled(NovelSetting.Track_pov))
+
         self._repo = RepositoryPersistenceManager.instance()
         dispatcher = event_dispatchers.instance(self._novel)
-        dispatcher.register(self, SceneChangedEvent)
+        dispatcher.register(self, SceneChangedEvent, NovelPovTrackingToggleEvent)
 
     def setScene(self, scene: Scene):
         self.setScenes([scene])
@@ -149,6 +152,8 @@ class SceneMiniEditor(QWidget, EventListener):
                 self._freeze = True
                 self.selectScene(self._currentScene)
                 self._freeze = False
+        elif isinstance(event, NovelPovTrackingToggleEvent):
+            self._charSelector.setVisible(event.toggled)
 
     def _povChanged(self, character: Character):
         self._currentScene.pov = character
