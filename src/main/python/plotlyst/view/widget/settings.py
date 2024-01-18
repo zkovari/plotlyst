@@ -36,7 +36,8 @@ from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import NovelMindmapToggleEvent, NovelPanelCustomizationEvent, \
     NovelStructureToggleEvent, NovelStorylinesToggleEvent, NovelCharactersToggleEvent, NovelScenesToggleEvent, \
     NovelWorldBuildingToggleEvent, NovelManuscriptToggleEvent, NovelDocumentsToggleEvent, NovelManagementToggleEvent, \
-    NovelEmotionTrackingToggleEvent, NovelMotivationTrackingToggleEvent, NovelConflictTrackingToggleEvent
+    NovelEmotionTrackingToggleEvent, NovelMotivationTrackingToggleEvent, NovelConflictTrackingToggleEvent, \
+    NovelPovTrackingToggleEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import label, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -57,7 +58,7 @@ setting_titles: Dict[NovelSetting, str] = {
     NovelSetting.Manuscript: 'Manuscript',
     NovelSetting.Documents: 'Documents',
     NovelSetting.Management: 'Task management',
-    NovelSetting.Pov: 'Point of view'
+    NovelSetting.Track_pov: 'Point of view'
 }
 setting_descriptions: Dict[NovelSetting, str] = {
     NovelSetting.Structure: "Follow a story structure to help you with your story's pacing and escalation",
@@ -72,7 +73,7 @@ setting_descriptions: Dict[NovelSetting, str] = {
     NovelSetting.Manuscript: "Write your story in Plotlyst using the manuscript panel",
     NovelSetting.Documents: "Add documents for your planning or research",
     NovelSetting.Management: "Stay organized by tracking your tasks in a simple Kanban board",
-    NovelSetting.Pov: "Configure the point of view of your story"
+    NovelSetting.Track_pov: "Track the point of view characters of your story"
 }
 
 panel_events = [NovelMindmapToggleEvent, NovelCharactersToggleEvent,
@@ -90,6 +91,7 @@ setting_events: Dict[NovelSetting, NovelPanelCustomizationEvent] = {
     NovelSetting.Track_emotion: NovelEmotionTrackingToggleEvent,
     NovelSetting.Track_motivation: NovelMotivationTrackingToggleEvent,
     NovelSetting.Track_conflict: NovelConflictTrackingToggleEvent,
+    NovelSetting.Track_pov: NovelPovTrackingToggleEvent,
     NovelSetting.World_building: NovelWorldBuildingToggleEvent,
     NovelSetting.Manuscript: NovelManuscriptToggleEvent,
     NovelSetting.Documents: NovelDocumentsToggleEvent,
@@ -114,6 +116,8 @@ def setting_icon(setting: NovelSetting, color=PLOTLYST_SECONDARY_COLOR, color_on
         return IconRegistry.from_name('fa5s.fist-raised', color=color, color_on=color_on)
     elif setting == NovelSetting.Track_conflict:
         return IconRegistry.conflict_icon(color=color, color_on=color_on)
+    elif setting == NovelSetting.Track_pov:
+        return IconRegistry.eye_open_icon(color=color, color_on=color_on)
     elif setting == NovelSetting.World_building:
         return IconRegistry.world_building_icon(color=color, color_on=color_on)
     elif setting == NovelSetting.Manuscript:
@@ -199,7 +203,7 @@ class NovelSettingToggle(QWidget):
         self.settingToggled.emit(self._setting, toggled)
 
 
-class ScenePovSettingWidget(QWidget):
+class NovelPovSettingWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -386,11 +390,12 @@ class NovelSettingsWidget(QWidget, EventListener):
         self._addSettingToggle(NovelSetting.Storylines)
         self._addSettingToggle(NovelSetting.Characters)
         wdgScenes = self._addSettingToggle(NovelSetting.Scenes)
+        self._addSettingToggle(NovelSetting.Track_pov, wdgScenes)
+        # wdgPov = NovelPovSettingWidget()
+        # wdgScenes.addChild(wdgPov)
         self._addSettingToggle(NovelSetting.Track_emotion, wdgScenes)
         self._addSettingToggle(NovelSetting.Track_motivation, wdgScenes)
         self._addSettingToggle(NovelSetting.Track_conflict, wdgScenes)
-        wdgPov = ScenePovSettingWidget()
-        wdgScenes.addChild(wdgPov)
         self._addSettingToggle(NovelSetting.World_building)
         self._addSettingToggle(NovelSetting.Documents)
         self._addSettingToggle(NovelSetting.Manuscript)

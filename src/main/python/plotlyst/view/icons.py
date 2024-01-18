@@ -359,8 +359,8 @@ class IconRegistry:
         return IconRegistry.from_name('fa5s.chevron-circle-left', color=color)
 
     @staticmethod
-    def eye_open_icon() -> QIcon:
-        return qtawesome.icon('fa5.eye')
+    def eye_open_icon(**kwargs) -> QIcon:
+        return IconRegistry.from_name('ei.eye-open', **kwargs)
 
     @staticmethod
     def eye_closed_icon() -> QIcon:

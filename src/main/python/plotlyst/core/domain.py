@@ -2544,7 +2544,7 @@ class NovelSetting(Enum):
     Track_emotion = 'track_emotion'
     Track_motivation = 'track_motivation'
     Track_conflict = 'track_conflict'
-    Pov = 'pov'
+    Track_pov = 'pov'
     Documents = 'documents'
     Manuscript = 'manuscript'
     World_building = 'world_building'
