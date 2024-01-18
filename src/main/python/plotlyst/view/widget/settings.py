@@ -22,7 +22,7 @@ from typing import Dict, Optional, List
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QEvent
-from PyQt6.QtGui import QIcon, QPalette, QColor
+from PyQt6.QtGui import QIcon, QColor
 from PyQt6.QtWidgets import QWidget, QPushButton, QToolButton, QGridLayout
 from overrides import overrides
 from qthandy import transparent, sp, vbox, hbox, vspacer, incr_font, pointy, grid, margins
@@ -41,6 +41,7 @@ from src.main.python.plotlyst.service.persistence import RepositoryPersistenceMa
 from src.main.python.plotlyst.view.common import label, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_white_menu
+from src.main.python.plotlyst.view.style.button import apply_button_palette_color
 from src.main.python.plotlyst.view.widget.input import Toggle
 
 setting_titles: Dict[NovelSetting, str] = {
@@ -56,6 +57,7 @@ setting_titles: Dict[NovelSetting, str] = {
     NovelSetting.Manuscript: 'Manuscript',
     NovelSetting.Documents: 'Documents',
     NovelSetting.Management: 'Task management',
+    NovelSetting.Pov: 'Point of view'
 }
 setting_descriptions: Dict[NovelSetting, str] = {
     NovelSetting.Structure: "Follow a story structure to help you with your story's pacing and escalation",
@@ -70,6 +72,7 @@ setting_descriptions: Dict[NovelSetting, str] = {
     NovelSetting.Manuscript: "Write your story in Plotlyst using the manuscript panel",
     NovelSetting.Documents: "Add documents for your planning or research",
     NovelSetting.Management: "Stay organized by tracking your tasks in a simple Kanban board",
+    NovelSetting.Pov: "Configure the point of view of your story"
 }
 
 panel_events = [NovelMindmapToggleEvent, NovelCharactersToggleEvent,
@@ -130,6 +133,11 @@ def toggle_setting(source, novel: Novel, setting: NovelSetting, toggled: bool):
     emit_event(novel, event_clazz(source, setting, toggled))
 
 
+class NovelSettingBase(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+
 class NovelSettingToggle(QWidget):
     settingToggled = pyqtSignal(NovelSetting, bool)
 
@@ -141,9 +149,7 @@ class NovelSettingToggle(QWidget):
         self._title = QPushButton()
         self._title.setText(setting_titles[setting])
         self._title.setIcon(setting_icon(setting))
-        palette = self._title.palette()
-        palette.setColor(QPalette.ColorGroup.Active, QPalette.ColorRole.ButtonText, QColor(PLOTLYST_SECONDARY_COLOR))
-        self._title.setPalette(palette)
+        apply_button_palette_color(self._title, PLOTLYST_SECONDARY_COLOR)
         transparent(self._title)
         incr_font(self._title, 2)
 
@@ -181,7 +187,7 @@ class NovelSettingToggle(QWidget):
     def setChecked(self, checked: bool):
         self._toggle.setChecked(checked)
 
-    def addChild(self, child: 'NovelSettingToggle'):
+    def addChild(self, child: QWidget):
         self._wdgChildren.setVisible(self._toggle.isChecked())
         self._wdgChildren.layout().addWidget(child)
 
@@ -191,6 +197,11 @@ class NovelSettingToggle(QWidget):
 
     def _clicked(self, toggled: bool):
         self.settingToggled.emit(self._setting, toggled)
+
+
+class ScenePovSettingWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
 
 
 class NovelPanelCustomizationToggle(QToolButton):
@@ -378,6 +389,8 @@ class NovelSettingsWidget(QWidget, EventListener):
         self._addSettingToggle(NovelSetting.Track_emotion, wdgScenes)
         self._addSettingToggle(NovelSetting.Track_motivation, wdgScenes)
         self._addSettingToggle(NovelSetting.Track_conflict, wdgScenes)
+        wdgPov = ScenePovSettingWidget()
+        wdgScenes.addChild(wdgPov)
         self._addSettingToggle(NovelSetting.World_building)
         self._addSettingToggle(NovelSetting.Documents)
         self._addSettingToggle(NovelSetting.Manuscript)

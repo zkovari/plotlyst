@@ -17,6 +17,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import Union
+
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor, QPalette
+from PyQt6.QtWidgets import QAbstractButton
 
 btn_style_no_menu = """
     QPushButton::menu-indicator[no-menu] {
@@ -504,3 +509,11 @@ style = "\n".join([
     btn_style_tool_button_main_navbar,
     btn_style_tool_button_dark_toggle
 ])
+
+
+def apply_button_palette_color(btn: QAbstractButton, color: Union[str, QColor, Qt.GlobalColor]):
+    if isinstance(color, str):
+        color = QColor(color)
+    palette = btn.palette()
+    palette.setColor(QPalette.ColorGroup.Active, QPalette.ColorRole.ButtonText, color)
+    btn.setPalette(palette)
