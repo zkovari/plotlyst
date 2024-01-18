@@ -2507,8 +2507,19 @@ class Relation(SelectionItem):
 
 
 @dataclass
+class FontSettings:
+    family: str = ''
+
+
+@dataclass
 class DocsPreferences:
     grammar_check: bool = True
+    font: Dict[str, FontSettings] = field(default_factory=dict)
+
+
+@dataclass
+class ManuscriptPreferences:
+    font: Dict[str, FontSettings] = field(default_factory=dict)
 
 
 class NovelPanel(Enum):
@@ -2555,6 +2566,7 @@ class NovelSetting(Enum):
 class NovelPreferences:
     active_stage_id: Optional[uuid.UUID] = None
     docs: DocsPreferences = field(default_factory=DocsPreferences)
+    manuscript: ManuscriptPreferences = field(default_factory=ManuscriptPreferences)
     panels: PanelPreferences = field(default_factory=PanelPreferences)
     settings: Dict[str, Any] = field(default_factory=dict)
 

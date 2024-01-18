@@ -19,17 +19,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import qtanim
 from PyQt6.QtCore import QTimer, Qt
-from PyQt6.QtGui import QColor
+from PyQt6.QtGui import QColor, QFont
 from PyQt6.QtWidgets import QInputDialog
 from overrides import overrides
 from qthandy import translucent, bold, margins, spacer, vline, transparent, vspacer, decr_icon
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
-from qttextedit.ops import TextEditorSettingsWidget, TextEditorSettingsSection
+from qttextedit.ops import TextEditorSettingsWidget, TextEditorSettingsSection, FontSectionSettingWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR, RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Novel, Document, Chapter, DocumentProgress
+from src.main.python.plotlyst.core.domain import Novel, Document, Chapter, DocumentProgress, FontSettings
 from src.main.python.plotlyst.core.domain import Scene
+from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_global_event, emit_critical, emit_info, Event, emit_event
 from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode, \
     ChapterChangedEvent, SceneDeletedEvent, ExitDistractionFreeMode, NovelSyncEvent, CloseNovelEvent
@@ -38,7 +39,7 @@ from src.main.python.plotlyst.service.grammar import language_tool_proxy
 from src.main.python.plotlyst.service.persistence import flush_or_fail
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import tool_btn, ButtonPressResizeEventFilter, action, \
-    ExclusiveOptionalButtonGroup, link_buttons_to_pages, icon_to_html_img, label
+    ExclusiveOptionalButtonGroup, link_buttons_to_pages, icon_to_html_img
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
@@ -170,6 +171,10 @@ class ManuscriptView(AbstractNovelView):
         apply_white_menu(menu)
         menu.addWidget(self._contextMenuWidget)
         self._contextMenuWidget.setSectionVisible(TextEditorSettingsSection.WIDTH, False)
+        if self.novel.prefs.manuscript.font.get(app_env.platform(), ''):
+            font_: QFont = self.ui.textEdit.textEdit.font()
+            font_.setFamily(self.novel.prefs.manuscript.font[app_env.platform()].family)
+            self.ui.textEdit.textEdit.setFont(font_)
         self.ui.textEdit.attachSettingsWidget(self._contextMenuWidget)
 
         self._langSelectionWidget.languageChanged.connect(self._language_changed)
@@ -209,6 +214,8 @@ class ManuscriptView(AbstractNovelView):
         self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
         self.ui.textEdit.sceneTitleChanged.connect(self._scene_title_changed)
         self.ui.textEdit.progressChanged.connect(self._progress_changed)
+        section: FontSectionSettingWidget = self.ui.textEdit.settingsWidget().section(TextEditorSettingsSection.FONT)
+        section.fontSelected.connect(self._fontChanged)
         self._btnDistractionFree.clicked.connect(self._enter_distraction_free)
 
         if self.novel.chapters:
@@ -277,25 +284,6 @@ class ManuscriptView(AbstractNovelView):
 
         self.ui.textEdit.setScene(scene)
         self._miniSceneEditor.setScene(scene)
-
-        # if scene.title:
-        #     self.ui.lineSceneTitle.setText(scene.title)
-        #     self.ui.lineSceneTitle.setPlaceholderText('Scene title')
-        # else:
-        #     self.ui.lineSceneTitle.clear()
-        #     self.ui.lineSceneTitle.setPlaceholderText(scene.title_or_index(self.novel))
-
-        # if scene.pov:
-        #     self.ui.btnPov.setIcon(avatars.avatar(scene.pov))
-        #     self.ui.btnPov.setVisible(True)
-        # else:
-        #     self.ui.btnPov.setHidden(True)
-        # scene_type_icon = IconRegistry.scene_type_icon(scene)
-        # if scene_type_icon:
-        #     self.ui.btnSceneType.setIcon(scene_type_icon)
-        #     self.ui.btnSceneType.setVisible(True)
-        # else:
-        #     self.ui.btnSceneType.setHidden(True)
 
         self.notesEditor.setScene(scene)
         self.ui.btnNotes.setEnabled(True)
@@ -395,7 +383,6 @@ class ManuscriptView(AbstractNovelView):
         elif btn is self.ui.btnGoals:
             self._refresh_target_wc()
 
-
     def _spellcheck_toggled(self, toggled: bool):
         translucent(self._spellCheckIcon, 1 if toggled else 0.4)
 
@@ -447,3 +434,10 @@ class ManuscriptView(AbstractNovelView):
 
     def _empty_page(self):
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
+
+    def _fontChanged(self, family: str):
+        if app_env.platform() not in self.novel.prefs.manuscript.font.keys():
+            self.novel.prefs.manuscript.font[app_env.platform()] = FontSettings()
+        fontSettings = self.novel.prefs.manuscript.font[app_env.platform()]
+        fontSettings.family = family
+        self.repo.update_novel(self.novel)
