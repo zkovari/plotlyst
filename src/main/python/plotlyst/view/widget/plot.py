@@ -22,9 +22,8 @@ from functools import partial
 from typing import Set, Dict, List, Optional
 
 import qtanim
-from PyQt6.QtCharts import QSplineSeries, QValueAxis
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QTimer, QObject
-from PyQt6.QtGui import QColor, QIcon, QPen, QCursor, QEnterEvent, QShowEvent
+from PyQt6.QtGui import QColor, QIcon, QCursor, QEnterEvent, QShowEvent
 from PyQt6.QtWidgets import QWidget, QFrame, QPushButton, QTextEdit, QGridLayout, QStackedWidget
 from overrides import overrides
 from qthandy import bold, flow, incr_font, \
@@ -39,7 +38,6 @@ from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotTyp
     PlotPrincipleType, PlotEventType, PlotProgressionItem, \
     PlotProgressionItemType, StorylineLink, StorylineLinkType
 from src.main.python.plotlyst.core.template import antagonist_role
-from src.main.python.plotlyst.core.text import html
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
@@ -58,7 +56,6 @@ from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.characters import CharacterAvatar, CharacterSelectorMenu
-from src.main.python.plotlyst.view.widget.chart import BaseChart
 from src.main.python.plotlyst.view.widget.display import Icon, IdleWidget, PopupDialog
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
@@ -687,45 +684,6 @@ class PlotNode(ContainerNode):
             self._icon.setHidden(True)
 
         self._lblTitle.setText(self._plot.text)
-
-
-class PlotEventsArcChart(BaseChart):
-    MAX: int = 4
-    MIN: int = -4
-
-    def __init__(self, plot: Plot, parent=None):
-        super(PlotEventsArcChart, self).__init__(parent)
-        self._plot = plot
-        self.setTitle(html('Arc preview').bold())
-
-    def refresh(self):
-        self.reset()
-
-        if not self._plot.events:
-            return
-
-        series = QSplineSeries()
-        pen = QPen()
-        pen.setWidth(2)
-        pen.setColor(QColor(self._plot.icon_color))
-        series.setPen(pen)
-        arc_value: int = 0
-        series.append(0, 0)
-        for event in self._plot.events:
-            if event.type in [PlotEventType.PROGRESS, PlotEventType.TOOL] and arc_value < self.MAX:
-                arc_value += 1
-            elif event.type in [PlotEventType.SETBACK, PlotEventType.COST] and arc_value > self.MIN:
-                arc_value -= 1
-            elif event.type == PlotEventType.CRISIS and arc_value > self.MIN + 1:
-                arc_value -= 2
-            series.append(len(series), arc_value)
-
-        axis = QValueAxis()
-        axis.setRange(self.MIN, self.MAX)
-        self.addSeries(series)
-        self.addAxis(axis, Qt.AlignmentFlag.AlignLeft)
-        series.attachAxis(axis)
-        axis.setVisible(False)
 
 
 class PlotTreeView(TreeView, EventListener):
