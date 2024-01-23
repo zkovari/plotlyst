@@ -666,6 +666,8 @@ class PlotPrincipleType(Enum):
     FIRST_LOVE = 34
     MENTOR = 35
 
+    DYNAMIC_PRINCIPLES = 36
+
     def display_name(self) -> str:
         if self == PlotPrincipleType.WAR_MENTAL_EFFECT:
             return 'Mental effect'

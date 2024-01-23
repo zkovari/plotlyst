@@ -22,9 +22,8 @@ from functools import partial
 from typing import List, Optional
 
 from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QObject
-from PyQt6.QtGui import QColor, QIcon, QEnterEvent
+from PyQt6.QtGui import QColor, QIcon
 from PyQt6.QtWidgets import QWidget, QPushButton, QTextEdit
-from overrides import overrides
 from qthandy import bold, incr_font, \
     margins, italic, vbox, transparent, \
     hbox, spacer, sp, pointy, line, underline
@@ -32,9 +31,8 @@ from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, group
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, CONFLICT_SELF_COLOR
-from src.main.python.plotlyst.core.domain import Novel, Plot, PlotType, PlotPrinciple, \
-    PlotPrincipleType, PlotEventType, PlotProgressionItem, \
-    PlotProgressionItemType
+from src.main.python.plotlyst.core.domain import Plot, PlotType, PlotPrinciple, \
+    PlotPrincipleType, PlotEventType
 from src.main.python.plotlyst.core.template import antagonist_role
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.view.common import shadow, label, tool_btn, push_btn, scrolled
@@ -43,7 +41,6 @@ from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.display import Icon, PopupDialog
 from src.main.python.plotlyst.view.widget.input import Toggle
-from src.main.python.plotlyst.view.widget.outline import OutlineItemWidget, OutlineTimelineWidget
 
 
 def principle_icon(type: PlotPrincipleType) -> QIcon:
@@ -77,6 +74,8 @@ def principle_icon(type: PlotPrincipleType) -> QIcon:
 
     elif type == PlotPrincipleType.LINEAR_PROGRESSION:
         return IconRegistry.from_name('mdi.middleware', 'grey', 'black')
+    elif type == PlotPrincipleType.DYNAMIC_PRINCIPLES:
+        return IconRegistry.from_name('mdi6.chart-timeline-variant-shimmer', 'grey', 'black')
 
     elif type == PlotPrincipleType.SKILL_SET:
         return IconRegistry.from_name('fa5s.tools', 'grey', 'black')
@@ -134,6 +133,7 @@ _principle_hints = {
 
     PlotPrincipleType.THEME: "Is there thematic relevance associated to this storyline?",
     PlotPrincipleType.LINEAR_PROGRESSION: "Track linear progression in this storyline",
+    PlotPrincipleType.DYNAMIC_PRINCIPLES: "Track evolving and unpredictable elements that add complexity and engagement to the storyline",
 
     PlotPrincipleType.SKILL_SET: "Does the character possess unique skills and abilities to resolve the storyline?",
     PlotPrincipleType.TICKING_CLOCK: "Is there deadline in which the character must take actions?",
@@ -415,6 +415,7 @@ class PlotPrinciplesWidget(QWidget):
 class PlotPrincipleSelectorMenu(MenuWidget):
     principleToggled = pyqtSignal(PlotPrincipleType, bool)
     progressionToggled = pyqtSignal(bool)
+    dynamicPrinciplesToggled = pyqtSignal(bool)
     genresSelected = pyqtSignal()
 
     def __init__(self, plot: Plot, parent=None):
@@ -450,10 +451,16 @@ class PlotPrincipleSelectorMenu(MenuWidget):
 
         self.addSection('Narrative dynamics')
         self.addSeparator()
+        wdg = _PlotPrincipleToggle(PlotPrincipleType.DYNAMIC_PRINCIPLES, self._plot.plot_type)
+        wdg.toggle.toggled.connect(self.dynamicPrinciplesToggled)
+        margins(wdg, left=15)
+        self.addWidget(wdg)
+
         wdg = _PlotPrincipleToggle(PlotPrincipleType.THEME, self._plot.plot_type)
         margins(wdg, left=15)
         wdg.setDisabled(True)
         self.addWidget(wdg)
+
         wdg = _PlotPrincipleToggle(PlotPrincipleType.LINEAR_PROGRESSION, self._plot.plot_type)
         wdg.toggle.setChecked(self._plot.has_progression)
         wdg.toggle.toggled.connect(self.progressionToggled)
@@ -516,6 +523,3 @@ class PlotPrincipleEditor(QWidget):
     def _valueChanged(self):
         self._principle.value = self._textedit.toPlainText()
         self.principleEdited.emit()
-
-
-
