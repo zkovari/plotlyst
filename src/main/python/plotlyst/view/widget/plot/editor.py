@@ -220,6 +220,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self._principleSelectorMenu = PlotPrincipleSelectorMenu(self.plot, self.btnPincipleEditor)
         self._principleSelectorMenu.principleToggled.connect(self._principleToggled)
         self._principleSelectorMenu.progressionToggled.connect(self._progressionToggled)
+        self._principleSelectorMenu.dynamicPrinciplesToggled.connect(self._dynamicPrinciplesToggled)
         self._principleSelectorMenu.genresSelected.connect(self._genresSelected)
         self.btnPincipleEditor.installEventFilter(ButtonPressResizeEventFilter(self.btnPincipleEditor))
         self.btnPincipleEditor.installEventFilter(OpacityEventFilter(self.btnPincipleEditor, leaveOpacity=0.7))
@@ -238,15 +239,17 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         for principle in self.plot.principles:
             self._initPrincipleEditor(principle)
 
+        self.btnDynamicPrinciples.setIcon(IconRegistry.from_name('mdi6.chart-timeline-variant-shimmer', 'grey'))
         self.btnProgression.setIcon(IconRegistry.rising_action_icon('grey'))
         if self.plot.plot_type == PlotType.Internal:
             self.btnProgression.setText('Transformation')
         elif self.plot.plot_type == PlotType.Relation:
             self.btnProgression.setText('Evolution')
 
-        translucent(self.btnProgression, 0.7)
-        incr_icon(self.btnProgression)
-        incr_font(self.btnProgression)
+        for btn in [self.btnProgression, self.btnDynamicPrinciples]:
+            translucent(btn, 0.7)
+            incr_icon(btn)
+            incr_font(btn)
 
         self.btnValues.setText('' if self.plot.values else 'Values')
         self.btnValues.setIcon(IconRegistry.from_name('fa5s.chevron-circle-down', 'grey'))
@@ -320,6 +323,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self._timeline.timelineChanged.connect(self._timelineChanged)
 
         self.wdgProgression.setVisible(self.plot.has_progression)
+        self.wdgDynamicPrinciples.setVisible(self.plot.has_dynamic_principles)
 
         iconMenu = MenuWidget(self.btnPlotIcon)
 
@@ -419,6 +423,11 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
     def _progressionToggled(self, toggled: bool):
         self.plot.has_progression = toggled
         self.wdgProgression.setVisible(self.plot.has_progression)
+        self._save()
+
+    def _dynamicPrinciplesToggled(self, toggled: bool):
+        self.plot.has_dynamic_principles = toggled
+        self.wdgDynamicPrinciples.setVisible(self.plot.has_dynamic_principles)
         self._save()
 
     def _genresSelected(self):
