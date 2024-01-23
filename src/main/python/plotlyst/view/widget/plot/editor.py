@@ -55,7 +55,7 @@ from src.main.python.plotlyst.view.widget.characters import CharacterAvatar, Cha
 from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
 from src.main.python.plotlyst.view.widget.plot.matrix import StorylinesImpactMatrix
 from src.main.python.plotlyst.view.widget.plot.principle import PlotPrincipleSelectorMenu, PlotPrincipleEditor, \
-    PrincipleSelectorObject, GenrePrincipleSelectorDialog
+    PrincipleSelectorObject, GenrePrincipleSelectorDialog, PlotDynamicPrincipleSelectorMenu
 from src.main.python.plotlyst.view.widget.plot.progression import PlotEventsTimeline
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
 from src.main.python.plotlyst.view.widget.utility import ColorPicker
@@ -212,19 +212,28 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.lineName.setText(self.plot.text)
         self.lineName.textChanged.connect(self._nameEdited)
 
-        self.btnPincipleEditor.setIcon(IconRegistry.plus_edit_icon('grey'))
-        transparent(self.btnPincipleEditor)
-        retain_when_hidden(self.btnPincipleEditor)
-        decr_icon(self.btnPincipleEditor)
+        self.btnPrincipleEditor.setIcon(IconRegistry.plus_edit_icon('grey'))
+        transparent(self.btnPrincipleEditor)
+        retain_when_hidden(self.btnPrincipleEditor)
+        decr_icon(self.btnPrincipleEditor)
 
-        self._principleSelectorMenu = PlotPrincipleSelectorMenu(self.plot, self.btnPincipleEditor)
+        self._principleSelectorMenu = PlotPrincipleSelectorMenu(self.plot, self.btnPrincipleEditor)
         self._principleSelectorMenu.principleToggled.connect(self._principleToggled)
         self._principleSelectorMenu.progressionToggled.connect(self._progressionToggled)
         self._principleSelectorMenu.dynamicPrinciplesToggled.connect(self._dynamicPrinciplesToggled)
         self._principleSelectorMenu.genresSelected.connect(self._genresSelected)
-        self.btnPincipleEditor.installEventFilter(ButtonPressResizeEventFilter(self.btnPincipleEditor))
-        self.btnPincipleEditor.installEventFilter(OpacityEventFilter(self.btnPincipleEditor, leaveOpacity=0.7))
+        self.btnPrincipleEditor.installEventFilter(ButtonPressResizeEventFilter(self.btnPrincipleEditor))
+        self.btnPrincipleEditor.installEventFilter(OpacityEventFilter(self.btnPrincipleEditor, leaveOpacity=0.7))
         self._principles: Dict[PlotPrincipleType, PlotPrincipleEditor] = {}
+
+        self._dynamicPrincipleSelectorMenu = PlotDynamicPrincipleSelectorMenu(self.btnDynamicPrincipleEditor)
+        self.btnDynamicPrincipleEditor.setIcon(IconRegistry.plus_icon('grey'))
+        transparent(self.btnDynamicPrincipleEditor)
+        retain_when_hidden(self.btnDynamicPrincipleEditor)
+        decr_icon(self.btnDynamicPrincipleEditor)
+        self.btnDynamicPrincipleEditor.installEventFilter(ButtonPressResizeEventFilter(self.btnDynamicPrincipleEditor))
+        self.btnDynamicPrincipleEditor.installEventFilter(
+            OpacityEventFilter(self.btnDynamicPrincipleEditor, leaveOpacity=0.7))
 
         self._initFrameColor()
         self.btnPrinciples.setIcon(IconRegistry.from_name('mdi6.note-text-outline', 'grey'))
@@ -250,6 +259,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             translucent(btn, 0.7)
             incr_icon(btn)
             incr_font(btn)
+        self.btnDynamicPrinciples.clicked.connect(lambda: self._dynamicPrincipleSelectorMenu.exec())
 
         self.btnValues.setText('' if self.plot.values else 'Values')
         self.btnValues.setIcon(IconRegistry.from_name('fa5s.chevron-circle-down', 'grey'))
@@ -312,7 +322,8 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
 
         self.installEventFilter(VisibilityToggleEventFilter(target=self.btnSettings, parent=self))
         self.installEventFilter(VisibilityToggleEventFilter(target=self._btnAddValue, parent=self))
-        self.installEventFilter(VisibilityToggleEventFilter(target=self.btnPincipleEditor, parent=self))
+        self.installEventFilter(VisibilityToggleEventFilter(target=self.btnPrincipleEditor, parent=self))
+        self.installEventFilter(VisibilityToggleEventFilter(target=self.btnDynamicPrincipleEditor, parent=self))
 
         self.btnPlotIcon.installEventFilter(OpacityEventFilter(self.btnPlotIcon, enterOpacity=0.7, leaveOpacity=1.0))
         self._updateIcon()
@@ -416,7 +427,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
 
         self._btnAddValue.setVisible(True)
         self.btnSettings.setVisible(True)
-        self.btnPincipleEditor.setVisible(True)
+        self.btnPrincipleEditor.setVisible(True)
 
         self._save()
 

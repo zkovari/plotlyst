@@ -32,7 +32,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_field, \
     mbti_field, ProfileTemplate, default_character_profiles, enneagram_choices, \
-    mbti_choices, Role, summary_field, exclude_if_false
+    mbti_choices, Role, summary_field, exclude_if_false, antagonist_role
 from src.main.python.plotlyst.env import app_env
 
 
@@ -538,7 +538,6 @@ class OutlineItem:
     text: str = ''
 
 
-
 class PlotProgressionItemType(Enum):
     BEGINNING = 0
     MIDDLE = 1
@@ -685,6 +684,77 @@ class PlotPrinciple:
     type: PlotPrincipleType
     value: Any = None
     is_set: bool = False
+
+
+class DynamicPlotPrincipleType(Enum):
+    TWIST = 'twist'
+    TURN = 'turn'
+
+
+@dataclass
+class DynamicPlotPrinciple:
+    type: DynamicPlotPrincipleType
+    value: Any = None
+
+
+class DynamicPlotPrincipleGroupType(Enum):
+    TURNS_AND_TWISTS = 0
+    ALLIES_AND_ENEMIES = 1
+    SUSPECTS = 2
+    ELEMENTS_OF_WONDER = 3
+    EVOLUTION_OF_THE_MONSTER = 4
+    CAST = 5
+
+    def display_name(self) -> str:
+        return self.name.lower().capitalize().replace('_', ' ')
+
+    def icon(self) -> str:
+        if self == DynamicPlotPrincipleGroupType.TURNS_AND_TWISTS:
+            return 'ph.shuffle-bold'
+        elif self == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
+            return 'fa5s.thumbs-down'
+        elif self == DynamicPlotPrincipleGroupType.SUSPECTS:
+            return 'ri.criminal-fill'
+        elif self == DynamicPlotPrincipleGroupType.ELEMENTS_OF_WONDER:
+            return 'ph.globe-stand-bold'
+        elif self == DynamicPlotPrincipleGroupType.EVOLUTION_OF_THE_MONSTER:
+            return 'ri.ghost-2-fill'
+        elif self == DynamicPlotPrincipleGroupType.CAST:
+            return 'mdi.robber'
+
+    def color(self) -> str:
+        if self == DynamicPlotPrincipleGroupType.TURNS_AND_TWISTS:
+            return '#f20089'
+        elif self == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
+            return '#9e1946'
+        elif self == DynamicPlotPrincipleGroupType.SUSPECTS:
+            return '#9e2a2b'
+        elif self == DynamicPlotPrincipleGroupType.ELEMENTS_OF_WONDER:
+            return '#40916c'
+        elif self == DynamicPlotPrincipleGroupType.EVOLUTION_OF_THE_MONSTER:
+            return antagonist_role.icon_color
+        elif self == DynamicPlotPrincipleGroupType.CAST:
+            return '#0077b6'
+
+    def description(self) -> str:
+        if self == DynamicPlotPrincipleGroupType.TURNS_AND_TWISTS:
+            return 'Turns, twists, revelations that add intrigue and excitement'
+        elif self == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
+            return "Allies and enemies that surround the storyline's focal character"
+        elif self == DynamicPlotPrincipleGroupType.SUSPECTS:
+            return "Suspects, clues, red herrings that add depth to a mystery"
+        elif self == DynamicPlotPrincipleGroupType.ELEMENTS_OF_WONDER:
+            return "Elements of wonder and awe that make a fantastical world captivating"
+        elif self == DynamicPlotPrincipleGroupType.EVOLUTION_OF_THE_MONSTER:
+            return "The monster's power that get continuously evolved or revealed"
+        elif self == DynamicPlotPrincipleGroupType.CAST:
+            return "The ensemble of characters involved in a caper, each with their own skills and contributions"
+
+
+@dataclass
+class DynamicPlotPrincipleGroup:
+    type: DynamicPlotPrincipleGroupType
+    principles: List[DynamicPlotPrinciple] = field(default_factory=list)
 
 
 class PlotEventType(Enum):
@@ -838,6 +908,7 @@ class Plot(SelectionItem, CharacterBased):
     relation_character_id: Optional[uuid.UUID] = None
     question: str = ''
     principles: List[PlotPrinciple] = field(default_factory=list)
+    dynamic_principles: List[DynamicPlotPrincipleGroup] = field(default_factory=list)
     has_progression: bool = True
     has_dynamic_principles: bool = True
     has_thematic_relevance: bool = False

@@ -24,6 +24,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon, QEnterEvent
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
+from qthandy import flow
 
 from src.main.python.plotlyst.core.domain import Novel, PlotType, PlotProgressionItem, \
     PlotProgressionItemType
@@ -155,3 +156,9 @@ class PlotEventsTimeline(OutlineTimelineWidget):
                 item.widget().setVisible(False)
             else:
                 item.widget().setVisible(True)
+
+
+class DynamicPlotPrinciplesEditor(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        flow(self)

@@ -28,14 +28,14 @@ from qthandy import bold, incr_font, \
     margins, italic, vbox, transparent, \
     hbox, spacer, sp, pointy, line, underline
 from qthandy.filter import OpacityEventFilter
-from qtmenu import MenuWidget, group
+from qtmenu import MenuWidget, group, ActionTooltipDisplayMode
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, CONFLICT_SELF_COLOR
 from src.main.python.plotlyst.core.domain import Plot, PlotType, PlotPrinciple, \
-    PlotPrincipleType, PlotEventType
+    PlotPrincipleType, PlotEventType, DynamicPlotPrincipleGroupType
 from src.main.python.plotlyst.core.template import antagonist_role
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.view.common import shadow, label, tool_btn, push_btn, scrolled
+from src.main.python.plotlyst.view.common import shadow, label, tool_btn, push_btn, scrolled, action
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.base import apply_white_menu
@@ -329,7 +329,7 @@ class GenrePrincipleSelectorDialog(PopupDialog):
         self._wdgCenter.layout().addWidget(group(self._crimeHeaderIcon, label('Crime', bold=True),
                                                  label('(criminal protagonist'), self._btnCrimeToggle, label(')')),
                                            alignment=Qt.AlignmentFlag.AlignLeft)
-        self._wdgCenter.layout().addWidget(line('lightgrey'))
+        self._wdgCenter.layout().addWidget(line(color='lightgrey'))
         self._addPrinciple(PlotPrincipleType.CRIME)
         self._crimeClockPrinciple = self._addPrinciple(PlotPrincipleType.CRIME_CLOCK)
         self._crimeSleuthPrinciple = self._addPrinciple(PlotPrincipleType.SLEUTH)
@@ -474,6 +474,34 @@ class PlotPrincipleSelectorMenu(MenuWidget):
             self.genresSelected.emit()
 
         QTimer.singleShot(50, trigger)
+
+
+class PlotDynamicPrincipleSelectorMenu(MenuWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+        apply_white_menu(self)
+        self._addGroup(DynamicPlotPrincipleGroupType.TURNS_AND_TWISTS)
+        self._addGroup(DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES)
+        self.addSection('Fantasy', IconRegistry.from_name('msc.wand'))
+        self.addSeparator()
+        self._addGroup(DynamicPlotPrincipleGroupType.ELEMENTS_OF_WONDER)
+
+        self.addSection('Mystery', IconRegistry.from_name('fa5s.puzzle-piece'))
+        self.addSeparator()
+        self._addGroup(DynamicPlotPrincipleGroupType.SUSPECTS)
+
+        self.addSection('Horror', IconRegistry.from_name('ri.knife-blood-fill'))
+        self.addSeparator()
+        self._addGroup(DynamicPlotPrincipleGroupType.EVOLUTION_OF_THE_MONSTER)
+
+        self.addSection('Caper', IconRegistry.from_name('mdi.robber'))
+        self.addSeparator()
+        self._addGroup(DynamicPlotPrincipleGroupType.CAST)
+
+    def _addGroup(self, group: DynamicPlotPrincipleGroupType):
+        self.addAction(action(group.display_name(), tooltip=group.description(),
+                              icon=IconRegistry.from_name(group.icon(), group.color())))
 
 
 class PlotPrincipleEditor(QWidget):
