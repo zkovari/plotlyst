@@ -477,6 +477,8 @@ class PlotPrincipleSelectorMenu(MenuWidget):
 
 
 class PlotDynamicPrincipleSelectorMenu(MenuWidget):
+    triggered = pyqtSignal(DynamicPlotPrincipleGroupType)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
@@ -501,7 +503,8 @@ class PlotDynamicPrincipleSelectorMenu(MenuWidget):
 
     def _addGroup(self, group: DynamicPlotPrincipleGroupType):
         self.addAction(action(group.display_name(), tooltip=group.description(),
-                              icon=IconRegistry.from_name(group.icon(), group.color())))
+                              icon=IconRegistry.from_name(group.icon(), group.color()),
+                              slot=partial(self.triggered.emit, group)))
 
 
 class PlotPrincipleEditor(QWidget):

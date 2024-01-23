@@ -56,7 +56,7 @@ from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
 from src.main.python.plotlyst.view.widget.plot.matrix import StorylinesImpactMatrix
 from src.main.python.plotlyst.view.widget.plot.principle import PlotPrincipleSelectorMenu, PlotPrincipleEditor, \
     PrincipleSelectorObject, GenrePrincipleSelectorDialog, PlotDynamicPrincipleSelectorMenu
-from src.main.python.plotlyst.view.widget.plot.progression import PlotEventsTimeline
+from src.main.python.plotlyst.view.widget.plot.progression import PlotEventsTimeline, DynamicPlotPrinciplesEditor
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
 from src.main.python.plotlyst.view.widget.utility import ColorPicker
 
@@ -234,6 +234,11 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.btnDynamicPrincipleEditor.installEventFilter(ButtonPressResizeEventFilter(self.btnDynamicPrincipleEditor))
         self.btnDynamicPrincipleEditor.installEventFilter(
             OpacityEventFilter(self.btnDynamicPrincipleEditor, leaveOpacity=0.7))
+
+        self._dynamicPrinciplesEditor = DynamicPlotPrinciplesEditor()
+        margins(self._dynamicPrinciplesEditor, left=40)
+        self.wdgDynamicPrinciples.layout().addWidget(self._dynamicPrinciplesEditor)
+        self._dynamicPrincipleSelectorMenu.triggered.connect(self._dynamicPrinciplesEditor.addGroup)
 
         self._initFrameColor()
         self.btnPrinciples.setIcon(IconRegistry.from_name('mdi6.note-text-outline', 'grey'))

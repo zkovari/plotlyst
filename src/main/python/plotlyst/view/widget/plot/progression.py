@@ -24,11 +24,14 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon, QEnterEvent
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import flow
+from qthandy import flow, vbox
 
 from src.main.python.plotlyst.core.domain import Novel, PlotType, PlotProgressionItem, \
-    PlotProgressionItemType
+    PlotProgressionItemType, DynamicPlotPrincipleGroupType, OutlineItem
+from src.main.python.plotlyst.view.common import frame
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.style.button import apply_button_palette_color
+from src.main.python.plotlyst.view.widget.display import IconText
 from src.main.python.plotlyst.view.widget.outline import OutlineItemWidget, OutlineTimelineWidget
 
 storyline_progression_steps_descriptions = {
@@ -158,7 +161,52 @@ class PlotEventsTimeline(OutlineTimelineWidget):
                 item.widget().setVisible(True)
 
 
+class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    @overrides
+    def _newBeatWidget(self, item: OutlineItem) -> OutlineItemWidget:
+        pass
+
+    @overrides
+    def _placeholderClicked(self, placeholder: QWidget):
+        pass
+
+
+class DynamicPlotPrinciplesGroupWidget(QWidget):
+
+    def __init__(self, group: DynamicPlotPrincipleGroupType, parent=None):
+        super().__init__(parent)
+        self.group = group
+        self.frame = frame()
+        self.frame.setObjectName('frame')
+        vbox(self.frame, 5, 0)
+        self.setStyleSheet(f'''
+            #frame {{
+                border: 1px solid {self.group.color()};
+                border-radius: 15px;
+            }}''')
+
+        vbox(self)
+        self._wdgPrinciples = DynamicPlotPrinciplesWidget()
+        self._wdgPrinciples.setStructure([])
+
+        self._title = IconText()
+        self._title.setText(group.display_name())
+        self._title.setIcon(IconRegistry.from_name(group.icon(), group.color()))
+        apply_button_palette_color(self._title, group.color())
+
+        self.frame.layout().addWidget(self._wdgPrinciples)
+        self.layout().addWidget(self._title, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self.frame)
+
+
 class DynamicPlotPrinciplesEditor(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        flow(self)
+        flow(self, 5, 10)
+
+    def addGroup(self, group: DynamicPlotPrincipleGroupType):
+        wdg = DynamicPlotPrinciplesGroupWidget(group)
+        self.layout().addWidget(wdg)
