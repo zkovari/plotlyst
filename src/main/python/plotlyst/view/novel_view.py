@@ -123,7 +123,7 @@ class NovelView(AbstractNovelView):
         self._settings = NovelSettingsWidget(self.novel)
         self.ui.wdgSettings.layout().addWidget(self._settings)
 
-        self.ui.tabWidget.setCurrentWidget(self.ui.tabStructure)
+        self.ui.tabWidget.setCurrentWidget(self.ui.tabPlot)
 
     @overrides
     def event_received(self, event: Event):

@@ -839,6 +839,7 @@ class Plot(SelectionItem, CharacterBased):
     question: str = ''
     principles: List[PlotPrinciple] = field(default_factory=list)
     has_progression: bool = True
+    has_dynamic_principles: bool = True
     has_thematic_relevance: bool = False
     events: List[PlotEvent] = field(default_factory=list)
     default_value: PlotValue = field(default_factory=default_plot_value)

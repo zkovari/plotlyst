@@ -452,6 +452,7 @@ class PlotPrincipleSelectorMenu(MenuWidget):
         self.addSection('Narrative dynamics')
         self.addSeparator()
         wdg = _PlotPrincipleToggle(PlotPrincipleType.DYNAMIC_PRINCIPLES, self._plot.plot_type)
+        wdg.toggle.setChecked(self._plot.has_dynamic_principles)
         wdg.toggle.toggled.connect(self.dynamicPrinciplesToggled)
         margins(wdg, left=15)
         self.addWidget(wdg)
