@@ -690,15 +690,21 @@ class DynamicPlotPrincipleType(Enum):
     TWIST = 'twist'
     TURN = 'turn'
 
+    def display_name(self) -> str:
+        return self.name.lower().capitalize().replace('_', ' ')
+
+    def description(self) -> str:
+        if self == DynamicPlotPrincipleType.TWIST:
+            return ""
+
 
 @dataclass
-class DynamicPlotPrinciple:
-    type: DynamicPlotPrincipleType
-    value: Any = None
+class DynamicPlotPrinciple(OutlineItem):
+    type: DynamicPlotPrincipleType = DynamicPlotPrincipleType.TWIST
 
 
 class DynamicPlotPrincipleGroupType(Enum):
-    TURNS_AND_TWISTS = 0
+    TWISTS_AND_TURNS = 0
     ALLIES_AND_ENEMIES = 1
     SUSPECTS = 2
     ELEMENTS_OF_WONDER = 3
@@ -709,7 +715,7 @@ class DynamicPlotPrincipleGroupType(Enum):
         return self.name.lower().capitalize().replace('_', ' ')
 
     def icon(self) -> str:
-        if self == DynamicPlotPrincipleGroupType.TURNS_AND_TWISTS:
+        if self == DynamicPlotPrincipleGroupType.TWISTS_AND_TURNS:
             return 'ph.shuffle-bold'
         elif self == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
             return 'fa5s.thumbs-down'
@@ -723,7 +729,7 @@ class DynamicPlotPrincipleGroupType(Enum):
             return 'mdi.robber'
 
     def color(self) -> str:
-        if self == DynamicPlotPrincipleGroupType.TURNS_AND_TWISTS:
+        if self == DynamicPlotPrincipleGroupType.TWISTS_AND_TURNS:
             return '#f20089'
         elif self == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
             return '#9e1946'
@@ -737,7 +743,7 @@ class DynamicPlotPrincipleGroupType(Enum):
             return '#0077b6'
 
     def description(self) -> str:
-        if self == DynamicPlotPrincipleGroupType.TURNS_AND_TWISTS:
+        if self == DynamicPlotPrincipleGroupType.TWISTS_AND_TURNS:
             return 'Narrative turns, unexpected twists, and revelations that enhance intrigue and excitement in the storyline'
         elif self == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
             return "Characters forming alliances and adversaries around the focal character"

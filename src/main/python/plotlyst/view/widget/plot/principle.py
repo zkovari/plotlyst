@@ -483,7 +483,7 @@ class PlotDynamicPrincipleSelectorMenu(MenuWidget):
         super().__init__(parent)
         self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         apply_white_menu(self)
-        self._addGroup(DynamicPlotPrincipleGroupType.TURNS_AND_TWISTS)
+        self._addGroup(DynamicPlotPrincipleGroupType.TWISTS_AND_TURNS)
         self._addGroup(DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES)
         self.addSection('Fantasy', IconRegistry.from_name('msc.wand'))
         self.addSeparator()
