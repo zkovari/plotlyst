@@ -738,17 +738,17 @@ class DynamicPlotPrincipleGroupType(Enum):
 
     def description(self) -> str:
         if self == DynamicPlotPrincipleGroupType.TURNS_AND_TWISTS:
-            return 'Turns, twists, revelations that add intrigue and excitement'
+            return 'Narrative turns, unexpected twists, and revelations that enhance intrigue and excitement in the storyline'
         elif self == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
-            return "Allies and enemies that surround the storyline's focal character"
+            return "Characters forming alliances and adversaries around the focal character"
         elif self == DynamicPlotPrincipleGroupType.SUSPECTS:
             return "Suspects, clues, red herrings that add depth to a mystery"
         elif self == DynamicPlotPrincipleGroupType.ELEMENTS_OF_WONDER:
             return "Elements of wonder and awe that make a fantastical world captivating"
         elif self == DynamicPlotPrincipleGroupType.EVOLUTION_OF_THE_MONSTER:
-            return "The monster's power that get continuously evolved or revealed"
+            return "The continuous evolution or revelation of the monster's power, unfolding dynamically throughout the narrative"
         elif self == DynamicPlotPrincipleGroupType.CAST:
-            return "The ensemble of characters involved in a caper, each with their own skills and contributions"
+            return "The ensemble of characters involved in a caper, each with unique skills and contributions"
 
 
 @dataclass
