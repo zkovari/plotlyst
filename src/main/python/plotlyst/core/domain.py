@@ -536,7 +536,7 @@ def exclude_if_beat(value):
 @dataclass
 class OutlineItem:
     text: str = ''
-    percentage: float = 0.0
+
 
 
 class PlotProgressionItemType(Enum):
@@ -554,6 +554,7 @@ class PlotProgressionItem(OutlineItem):
 @dataclass
 class StoryBeat(OutlineItem):
     act: int = 1
+    percentage: float = 0.0
     description: str = ''
     type: StoryBeatType = field(default=StoryBeatType.BEAT, metadata=config(exclude=exclude_if_beat))
     ends_act: bool = field(default=False, metadata=config(exclude=exclude_if_empty))
