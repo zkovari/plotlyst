@@ -171,6 +171,7 @@ class DynamicPlotPrincipleWidget(OutlineItemWidget):
         self.principle = principle
         super().__init__(principle, parent)
         self._initStyle(name=self.principle.type.display_name(), desc=self.principle.type.description())
+        self._btnIcon.setHidden(True)
 
     @overrides
     def mimeType(self) -> str:
@@ -179,7 +180,7 @@ class DynamicPlotPrincipleWidget(OutlineItemWidget):
 
 class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
     def __init__(self, group: DynamicPlotPrincipleGroup, parent=None):
-        super().__init__(parent)
+        super().__init__(parent, paintTimeline=False)
         self.group = group
 
     @overrides

@@ -96,7 +96,8 @@ class OutlineItemWidget(QWidget):
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
-        self._btnRemove.setGeometry(self.width() - 15, self.iconFixedSize, 15, 15)
+        y = self.iconFixedSize if not self._btnIcon.isHidden() else 5
+        self._btnRemove.setGeometry(self.width() - 15, y, 15, 15)
         self._btnRemove.raise_()
 
     @overrides
@@ -191,11 +192,12 @@ class _PlaceholderWidget(QWidget):
 class OutlineTimelineWidget(QWidget):
     timelineChanged = pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, paintTimeline: bool = True):
         super().__init__(parent)
         self._novel: Optional[Novel] = None
         self._readOnly: bool = False
         self._currentPlaceholder: Optional[QWidget] = None
+        self._paintTimeline = paintTimeline
 
         sp(self).h_exp().v_exp()
         curved_flow(self, margin=10, spacing=10)
@@ -234,6 +236,8 @@ class OutlineTimelineWidget(QWidget):
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
+        if not self._paintTimeline:
+            return
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setOpacity(0.5)
