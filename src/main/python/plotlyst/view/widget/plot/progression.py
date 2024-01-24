@@ -201,6 +201,8 @@ class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
         self._currentPlaceholder = placeholder
         if self.group.type == DynamicPlotPrincipleGroupType.ELEMENTS_OF_WONDER:
             self._insertPrinciple(DynamicPlotPrincipleType.WONDER)
+        elif self.group.type == DynamicPlotPrincipleGroupType.EVOLUTION_OF_THE_MONSTER:
+            self._insertPrinciple(DynamicPlotPrincipleType.MONSTER)
 
     def _insertPrinciple(self, principleType: DynamicPlotPrincipleType):
         item = DynamicPlotPrinciple(type=principleType)
@@ -261,6 +263,9 @@ class DynamicPlotPrinciplesEditor(QWidget):
         group = DynamicPlotPrincipleGroup(groupType)
         if groupType == DynamicPlotPrincipleGroupType.ELEMENTS_OF_WONDER:
             group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.WONDER))
+        elif groupType == DynamicPlotPrincipleGroupType.EVOLUTION_OF_THE_MONSTER:
+            group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.MONSTER))
+            group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.MONSTER))
         self.plot.dynamic_principles.append(group)
         self._addGroup(group)
         self._save()

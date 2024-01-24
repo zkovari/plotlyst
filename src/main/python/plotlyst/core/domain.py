@@ -690,6 +690,7 @@ class DynamicPlotPrincipleType(Enum):
     TWIST = 'twist'
     TURN = 'turn'
     WONDER = 'wonder'
+    MONSTER = 'monster'
 
     def display_name(self) -> str:
         return self.name.lower().capitalize().replace('_', ' ')
@@ -701,6 +702,8 @@ class DynamicPlotPrincipleType(Enum):
             return ''
         elif self == DynamicPlotPrincipleType.WONDER:
             return 'mdi.star-four-points-outline'
+        elif self == DynamicPlotPrincipleType.MONSTER:
+            return 'ri.ghost-2-fill'
 
     def color(self) -> str:
         if self == DynamicPlotPrincipleType.TWIST:
@@ -709,6 +712,8 @@ class DynamicPlotPrincipleType(Enum):
             return ""
         elif self == DynamicPlotPrincipleType.WONDER:
             return "#40916c"
+        elif self == DynamicPlotPrincipleType.MONSTER:
+            return antagonist_role.icon_color
 
     def description(self) -> str:
         if self == DynamicPlotPrincipleType.TWIST:
@@ -716,6 +721,8 @@ class DynamicPlotPrincipleType(Enum):
         elif self == DynamicPlotPrincipleType.TURN:
             return ""
         elif self == DynamicPlotPrincipleType.WONDER:
+            return ""
+        elif self == DynamicPlotPrincipleType.MONSTER:
             return ""
 
     def placeholder(self) -> str:
@@ -725,6 +732,10 @@ class DynamicPlotPrincipleType(Enum):
             return ""
         elif self == DynamicPlotPrincipleType.WONDER:
             return "Describe an element of wonder that make your fantastical world captivating"
+        elif self == DynamicPlotPrincipleType.MONSTER:
+            return "How the monster's power evolved or revealed continuously"
+
+        return ''
 
 
 @dataclass
