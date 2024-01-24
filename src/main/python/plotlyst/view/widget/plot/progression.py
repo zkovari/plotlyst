@@ -197,6 +197,14 @@ class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
         return wdg
 
     @overrides
+    def _newPlaceholderWidget(self, displayText: bool = False) -> QWidget:
+        wdg = super()._newPlaceholderWidget(displayText)
+        if displayText:
+            wdg.btn.setText('Insert principle')
+        wdg.btn.setToolTip('Insert new principle')
+        return wdg
+
+    @overrides
     def _placeholderClicked(self, placeholder: QWidget):
         self._currentPlaceholder = placeholder
         if self.group.type == DynamicPlotPrincipleGroupType.ELEMENTS_OF_WONDER:
