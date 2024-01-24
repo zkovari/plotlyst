@@ -785,11 +785,9 @@ class DynamicPlotPrincipleGroupType(Enum):
 
     def color(self) -> str:
         if self == DynamicPlotPrincipleGroupType.TWISTS_AND_TURNS:
-            return '#f20089'
+            return '#8338ec'
         elif self == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
-            # return '#F2AEC5'
-            # return '#9e1946'
-            return '#4B0763'
+            return '#9e1946'
         elif self == DynamicPlotPrincipleGroupType.SUSPECTS:
             return '#9e2a2b'
         elif self == DynamicPlotPrincipleGroupType.ELEMENTS_OF_WONDER:
