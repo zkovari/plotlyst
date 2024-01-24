@@ -17,23 +17,26 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
+from functools import partial
 from typing import List
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QIcon, QEnterEvent
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import vbox, incr_icon, bold
+from qthandy import vbox, incr_icon, bold, spacer, retain_when_hidden
+from qthandy.filter import VisibilityToggleEventFilter
 
 from src.main.python.plotlyst.core.domain import Novel, PlotType, PlotProgressionItem, \
     PlotProgressionItemType, DynamicPlotPrincipleGroupType, DynamicPlotPrinciple, DynamicPlotPrincipleType, Plot, \
     DynamicPlotPrincipleGroup
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import frame
+from src.main.python.plotlyst.view.common import frame, fade_out_and_gc
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.button import apply_button_palette_color
 from src.main.python.plotlyst.view.widget.display import IconText
+from src.main.python.plotlyst.view.widget.input import RemovalButton
 from src.main.python.plotlyst.view.widget.outline import OutlineItemWidget, OutlineTimelineWidget
 
 storyline_progression_steps_descriptions = {
@@ -199,10 +202,11 @@ class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
 
 
 class DynamicPlotPrinciplesGroupWidget(QWidget):
+    remove = pyqtSignal()
 
-    def __init__(self, group: DynamicPlotPrincipleGroup, parent=None):
+    def __init__(self, principleGroup: DynamicPlotPrincipleGroup, parent=None):
         super().__init__(parent)
-        self.group = group
+        self.group = principleGroup
         self.frame = frame()
         self.frame.setObjectName('frame')
         vbox(self.frame, 0, 0)
@@ -217,14 +221,19 @@ class DynamicPlotPrinciplesGroupWidget(QWidget):
         self._wdgPrinciples.setStructure(self.group.principles)
 
         self._title = IconText()
-        self._title.setText(group.type.display_name())
-        self._title.setIcon(IconRegistry.from_name(group.type.icon(), group.type.color()))
+        self._title.setText(self.group.type.display_name())
+        self._title.setIcon(IconRegistry.from_name(self.group.type.icon(), self.group.type.color()))
         incr_icon(self._title, 4)
         bold(self._title)
-        apply_button_palette_color(self._title, group.type.color())
+        apply_button_palette_color(self._title, self.group.type.color())
+
+        self.btnRemove = RemovalButton()
+        retain_when_hidden(self.btnRemove)
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnRemove, self))
+        self.btnRemove.clicked.connect(self.remove)
 
         self.frame.layout().addWidget(self._wdgPrinciples)
-        self.layout().addWidget(self._title, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(group(spacer(), self._title, spacer(), self.btnRemove))
         self.layout().addWidget(self.frame)
 
 
@@ -248,9 +257,15 @@ class DynamicPlotPrinciplesEditor(QWidget):
 
     def _addGroup(self, group: DynamicPlotPrincipleGroup) -> DynamicPlotPrinciplesGroupWidget:
         wdg = DynamicPlotPrinciplesGroupWidget(group)
+        wdg.remove.connect(partial(self._removeGroup, wdg))
         self.layout().addWidget(wdg)
 
         return wdg
+
+    def _removeGroup(self, wdg: DynamicPlotPrinciplesGroupWidget):
+        self.plot.dynamic_principles.remove(wdg.group)
+        fade_out_and_gc(self, wdg)
+        self._save()
 
     def _save(self):
         self.repo.update_novel(self.novel)
