@@ -26,12 +26,13 @@ from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 from qthandy import vbox, incr_icon, bold, spacer, retain_when_hidden, translucent
 from qthandy.filter import VisibilityToggleEventFilter
+from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from src.main.python.plotlyst.core.domain import Novel, PlotType, PlotProgressionItem, \
     PlotProgressionItemType, DynamicPlotPrincipleGroupType, DynamicPlotPrinciple, DynamicPlotPrincipleType, Plot, \
     DynamicPlotPrincipleGroup
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import frame, fade_out_and_gc
+from src.main.python.plotlyst.view.common import frame, fade_out_and_gc, action
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.button import apply_button_palette_color
@@ -173,7 +174,9 @@ class DynamicPlotPrincipleWidget(OutlineItemWidget):
         super().__init__(principle, parent, colorfulShadow=True)
         self._initStyle(name=self.principle.type.display_name(), desc=self.principle.type.placeholder())
         self._btnIcon.setHidden(True)
-        self._btnName.setIcon(IconRegistry.from_name(self.principle.type.icon()))
+
+        self._btnName.setIcon(IconRegistry.from_name(self.principle.type.icon(), self._color()))
+
         translucent(self._btnName, 0.7)
 
     @overrides
@@ -185,10 +188,34 @@ class DynamicPlotPrincipleWidget(OutlineItemWidget):
         return self.principle.type.color()
 
 
+class DynamicPlotPrincipleSelectorMenu(MenuWidget):
+    selected = pyqtSignal(DynamicPlotPrincipleType)
+
+    def __init__(self, groupType: DynamicPlotPrincipleGroupType, parent=None):
+        super().__init__(parent)
+        self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+        if groupType == DynamicPlotPrincipleGroupType.TWISTS_AND_TURNS:
+            self._addPrinciple(DynamicPlotPrincipleType.TURN)
+            self._addPrinciple(DynamicPlotPrincipleType.TWIST)
+        elif groupType == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
+            self._addPrinciple(DynamicPlotPrincipleType.ALLY)
+            self._addPrinciple(DynamicPlotPrincipleType.ENEMY)
+
+    def _addPrinciple(self, principleType: DynamicPlotPrincipleType):
+        self.addAction(action(principleType.display_name(),
+                              icon=IconRegistry.from_name(principleType.icon(), principleType.color()),
+                              tooltip=principleType.description(), slot=partial(self.selected.emit, principleType)))
+
+
 class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
     def __init__(self, group: DynamicPlotPrincipleGroup, parent=None):
         super().__init__(parent, paintTimeline=False)
         self.group = group
+        self._hasMenu = self.group.type in [DynamicPlotPrincipleGroupType.TWISTS_AND_TURNS,
+                                            DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES]
+        if self._hasMenu:
+            self._menu = DynamicPlotPrincipleSelectorMenu(self.group.type)
+            self._menu.selected.connect(self._insertPrinciple)
 
     @overrides
     def _newBeatWidget(self, item: DynamicPlotPrinciple) -> OutlineItemWidget:
@@ -207,7 +234,9 @@ class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
     @overrides
     def _placeholderClicked(self, placeholder: QWidget):
         self._currentPlaceholder = placeholder
-        if self.group.type == DynamicPlotPrincipleGroupType.ELEMENTS_OF_WONDER:
+        if self._hasMenu:
+            self._menu.exec(self.mapToGlobal(self._currentPlaceholder.pos()))
+        elif self.group.type == DynamicPlotPrincipleGroupType.ELEMENTS_OF_WONDER:
             self._insertPrinciple(DynamicPlotPrincipleType.WONDER)
         elif self.group.type == DynamicPlotPrincipleGroupType.EVOLUTION_OF_THE_MONSTER:
             self._insertPrinciple(DynamicPlotPrincipleType.MONSTER)
@@ -274,6 +303,12 @@ class DynamicPlotPrinciplesEditor(QWidget):
         elif groupType == DynamicPlotPrincipleGroupType.EVOLUTION_OF_THE_MONSTER:
             group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.MONSTER))
             group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.MONSTER))
+        elif groupType == DynamicPlotPrincipleGroupType.TWISTS_AND_TURNS:
+            group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.TURN))
+        elif groupType == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
+            group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.ALLY))
+            group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.ENEMY))
+
         self.plot.dynamic_principles.append(group)
         self._addGroup(group)
         self._save()

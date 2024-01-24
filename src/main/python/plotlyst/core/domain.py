@@ -691,49 +691,64 @@ class DynamicPlotPrincipleType(Enum):
     TURN = 'turn'
     WONDER = 'wonder'
     MONSTER = 'monster'
+    ALLY = 'ally'
+    ENEMY = 'enemy'
 
     def display_name(self) -> str:
         return self.name.lower().capitalize().replace('_', ' ')
 
     def icon(self) -> str:
         if self == DynamicPlotPrincipleType.TWIST:
-            return ''
+            return 'ph.shuffle-bold'
         elif self == DynamicPlotPrincipleType.TURN:
-            return ''
+            return 'mdi.boom-gate-up-outline'
         elif self == DynamicPlotPrincipleType.WONDER:
             return 'mdi.star-four-points-outline'
         elif self == DynamicPlotPrincipleType.MONSTER:
             return 'ri.ghost-2-fill'
+        elif self == DynamicPlotPrincipleType.ALLY:
+            return 'fa5s.thumbs-up'
+        elif self == DynamicPlotPrincipleType.ENEMY:
+            return 'fa5s.thumbs-down'
 
     def color(self) -> str:
         if self == DynamicPlotPrincipleType.TWIST:
-            return ""
+            return "#f20089"
         elif self == DynamicPlotPrincipleType.TURN:
-            return ""
+            return "#8338ec"
         elif self == DynamicPlotPrincipleType.WONDER:
             return "#40916c"
         elif self == DynamicPlotPrincipleType.MONSTER:
             return antagonist_role.icon_color
+        elif self == DynamicPlotPrincipleType.ALLY:
+            return '#266dd3'
+        elif self == DynamicPlotPrincipleType.ENEMY:
+            return '#9e1946'
 
     def description(self) -> str:
         if self == DynamicPlotPrincipleType.TWIST:
-            return ""
+            return "Brings an unexpected development of the story by defying readers expectations"
         elif self == DynamicPlotPrincipleType.TURN:
-            return ""
-        elif self == DynamicPlotPrincipleType.WONDER:
-            return ""
-        elif self == DynamicPlotPrincipleType.MONSTER:
-            return ""
+            return "Delivers a shift in the story's direction by often playing with or subverting readers expectations"
+        elif self == DynamicPlotPrincipleType.ALLY:
+            return "A character forming alliance with the storyline's focal character"
+        elif self == DynamicPlotPrincipleType.ENEMY:
+            return "An adversary character who opposes the storyline's focal character"
+        return ""
 
     def placeholder(self) -> str:
         if self == DynamicPlotPrincipleType.TWIST:
-            return ""
+            return "How the story develops unexpectedly by defying readers expectations"
         elif self == DynamicPlotPrincipleType.TURN:
-            return ""
+            return "How the story shifts by playing with or subverting readers expectations"
         elif self == DynamicPlotPrincipleType.WONDER:
             return "Describe an element of wonder that make your fantastical world captivating"
         elif self == DynamicPlotPrincipleType.MONSTER:
             return "How the monster's power evolved or revealed continuously"
+        elif self == DynamicPlotPrincipleType.ALLY:
+            return "Describe who and how forms an alliance with the character"
+        elif self == DynamicPlotPrincipleType.ENEMY:
+            return "Describe who and how opposes the focal character"
 
         return ''
 
@@ -772,7 +787,9 @@ class DynamicPlotPrincipleGroupType(Enum):
         if self == DynamicPlotPrincipleGroupType.TWISTS_AND_TURNS:
             return '#f20089'
         elif self == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
-            return '#9e1946'
+            # return '#F2AEC5'
+            # return '#9e1946'
+            return '#4B0763'
         elif self == DynamicPlotPrincipleGroupType.SUSPECTS:
             return '#9e2a2b'
         elif self == DynamicPlotPrincipleGroupType.ELEMENTS_OF_WONDER:
@@ -781,6 +798,8 @@ class DynamicPlotPrincipleGroupType(Enum):
             return antagonist_role.icon_color
         elif self == DynamicPlotPrincipleGroupType.CAST:
             return '#0077b6'
+
+        return 'black'
 
     def description(self) -> str:
         if self == DynamicPlotPrincipleGroupType.TWISTS_AND_TURNS:
