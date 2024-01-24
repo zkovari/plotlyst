@@ -695,7 +695,12 @@ class DynamicPlotPrincipleType(Enum):
         return self.name.lower().capitalize().replace('_', ' ')
 
     def icon(self) -> str:
-        pass
+        if self == DynamicPlotPrincipleType.TWIST:
+            return ''
+        elif self == DynamicPlotPrincipleType.TURN:
+            return ''
+        elif self == DynamicPlotPrincipleType.WONDER:
+            return 'mdi.star-four-points-outline'
 
     def color(self) -> str:
         if self == DynamicPlotPrincipleType.TWIST:
@@ -712,6 +717,14 @@ class DynamicPlotPrincipleType(Enum):
             return ""
         elif self == DynamicPlotPrincipleType.WONDER:
             return ""
+
+    def placeholder(self) -> str:
+        if self == DynamicPlotPrincipleType.TWIST:
+            return ""
+        elif self == DynamicPlotPrincipleType.TURN:
+            return ""
+        elif self == DynamicPlotPrincipleType.WONDER:
+            return "Describe an element of wonder that make your fantastical world captivating"
 
 
 @dataclass

@@ -24,7 +24,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QIcon, QEnterEvent
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import vbox, incr_icon, bold, spacer, retain_when_hidden
+from qthandy import vbox, incr_icon, bold, spacer, retain_when_hidden, translucent
 from qthandy.filter import VisibilityToggleEventFilter
 
 from src.main.python.plotlyst.core.domain import Novel, PlotType, PlotProgressionItem, \
@@ -170,8 +170,10 @@ class DynamicPlotPrincipleWidget(OutlineItemWidget):
     def __init__(self, principle: DynamicPlotPrinciple, parent=None):
         self.principle = principle
         super().__init__(principle, parent, colorfulShadow=True)
-        self._initStyle(name=self.principle.type.display_name(), desc=self.principle.type.description())
+        self._initStyle(name=self.principle.type.display_name(), desc=self.principle.type.placeholder())
         self._btnIcon.setHidden(True)
+        self._btnName.setIcon(IconRegistry.from_name(self.principle.type.icon()))
+        translucent(self._btnName, 0.7)
 
     @overrides
     def mimeType(self) -> str:
@@ -256,6 +258,8 @@ class DynamicPlotPrinciplesEditor(QWidget):
 
     def addGroup(self, groupType: DynamicPlotPrincipleGroupType):
         group = DynamicPlotPrincipleGroup(groupType)
+        if groupType == DynamicPlotPrincipleGroupType.ELEMENTS_OF_WONDER:
+            group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.WONDER))
         self.plot.dynamic_principles.append(group)
         self._addGroup(group)
         self._save()
