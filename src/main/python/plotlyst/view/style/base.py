@@ -51,7 +51,7 @@ QWidget[bg=true] {
 }
 
 QWidget[white-bg=true] {
-    background-color: white;
+    background-color: #FcFcFc;
 }
 
 QWidget[relaxed-white-bg=true] {
@@ -77,6 +77,10 @@ QFrame[bottom-bar=true] {
 
 QFrame[relaxed-white-bg=true] {
     background-color: #f8f9fa;
+}
+
+QFrame[white-bg=true] {
+    background-color: #FcFcFc;
 }
 
 QFrame[rounded=true] {
