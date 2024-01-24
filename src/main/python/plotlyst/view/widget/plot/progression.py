@@ -192,7 +192,7 @@ class DynamicPlotMultiPrincipleWidget(DynamicPlotPrincipleWidget):
     def __init__(self, principle: DynamicPlotPrinciple, parent=None):
         super().__init__(principle, parent)
         self.elements = DynamicPlotMultiPrincipleElements(principle.type)
-        self.elements.setStructure([])
+        self.elements.setStructure(principle.elements)
         self._text.setHidden(True)
         self.layout().addWidget(self.elements)
 
