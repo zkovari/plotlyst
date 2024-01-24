@@ -35,6 +35,7 @@ from src.main.python.plotlyst.view.common import frame, fade_out_and_gc
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.button import apply_button_palette_color
+from src.main.python.plotlyst.view.widget.confirm import confirmed
 from src.main.python.plotlyst.view.widget.display import IconText
 from src.main.python.plotlyst.view.widget.input import RemovalButton
 from src.main.python.plotlyst.view.widget.outline import OutlineItemWidget, OutlineTimelineWidget
@@ -272,6 +273,9 @@ class DynamicPlotPrinciplesEditor(QWidget):
         return wdg
 
     def _removeGroup(self, wdg: DynamicPlotPrinciplesGroupWidget):
+        if wdg.group.principles and not confirmed("All principles within will be lost.", "Remove principle group?"):
+            return
+
         self.plot.dynamic_principles.remove(wdg.group)
         fade_out_and_gc(self, wdg)
         self._save()
