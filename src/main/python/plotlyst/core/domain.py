@@ -698,7 +698,12 @@ class DynamicPlotPrincipleType(Enum):
         pass
 
     def color(self) -> str:
-        pass
+        if self == DynamicPlotPrincipleType.TWIST:
+            return ""
+        elif self == DynamicPlotPrincipleType.TURN:
+            return ""
+        elif self == DynamicPlotPrincipleType.WONDER:
+            return "#40916c"
 
     def description(self) -> str:
         if self == DynamicPlotPrincipleType.TWIST:

@@ -44,7 +44,7 @@ class OutlineItemWidget(QWidget):
     removed = pyqtSignal(object)
     iconFixedSize: int = 36
 
-    def __init__(self, item: OutlineItem, parent=None, readOnly: bool = False):
+    def __init__(self, item: OutlineItem, parent=None, readOnly: bool = False, colorfulShadow: bool = False):
         super().__init__(parent)
         self.item = item
         self._readOnly = readOnly
@@ -68,7 +68,12 @@ class OutlineItemWidget(QWidget):
         self._text.setProperty('rounded', True)
         self._text.setProperty('white-bg', True)
         self._text.setReadOnly(self._readOnly)
-        shadow(self._text)
+        if colorfulShadow:
+            qcolor = QColor(self._color())
+            qcolor.setAlpha(125)
+            shadow(self._text, color=qcolor)
+        else:
+            shadow(self._text)
         self._text.setMinimumSize(170, 100)
         self._text.setMaximumSize(210, 100)
         self._text.setTabChangesFocus(True)

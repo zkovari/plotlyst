@@ -169,13 +169,17 @@ class PlotEventsTimeline(OutlineTimelineWidget):
 class DynamicPlotPrincipleWidget(OutlineItemWidget):
     def __init__(self, principle: DynamicPlotPrinciple, parent=None):
         self.principle = principle
-        super().__init__(principle, parent)
+        super().__init__(principle, parent, colorfulShadow=True)
         self._initStyle(name=self.principle.type.display_name(), desc=self.principle.type.description())
         self._btnIcon.setHidden(True)
 
     @overrides
     def mimeType(self) -> str:
         return f'application/{self.principle.type.name.lower()}'
+
+    @overrides
+    def _color(self) -> str:
+        return self.principle.type.color()
 
 
 class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
