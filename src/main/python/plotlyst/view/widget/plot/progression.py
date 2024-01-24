@@ -257,11 +257,13 @@ class DynamicPlotPrinciplesGroupWidget(QWidget):
         self.frame = frame()
         self.frame.setObjectName('frame')
         vbox(self.frame, 0, 0)
+
         self.setStyleSheet(f'''
-            #frame {{
-                border: 2px solid {self.group.type.color()};
-                border-radius: 15px;
-            }}''')
+                        #frame {{
+                            border: 0px;
+                            border-top: 2px solid {self.group.type.color()};
+                            border-radius: 15px;
+                        }}''')
 
         vbox(self)
         self._wdgPrinciples = DynamicPlotPrinciplesWidget(self.group)
