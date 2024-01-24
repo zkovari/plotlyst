@@ -689,12 +689,23 @@ class PlotPrinciple:
 class DynamicPlotPrincipleType(Enum):
     TWIST = 'twist'
     TURN = 'turn'
+    WONDER = 'wonder'
 
     def display_name(self) -> str:
         return self.name.lower().capitalize().replace('_', ' ')
 
+    def icon(self) -> str:
+        pass
+
+    def color(self) -> str:
+        pass
+
     def description(self) -> str:
         if self == DynamicPlotPrincipleType.TWIST:
+            return ""
+        elif self == DynamicPlotPrincipleType.TURN:
+            return ""
+        elif self == DynamicPlotPrincipleType.WONDER:
             return ""
 
 

@@ -27,7 +27,9 @@ from overrides import overrides
 from qthandy import vbox, incr_icon, bold
 
 from src.main.python.plotlyst.core.domain import Novel, PlotType, PlotProgressionItem, \
-    PlotProgressionItemType, DynamicPlotPrincipleGroupType, DynamicPlotPrinciple
+    PlotProgressionItemType, DynamicPlotPrincipleGroupType, DynamicPlotPrinciple, DynamicPlotPrincipleType, Plot, \
+    DynamicPlotPrincipleGroup
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import frame
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.button import apply_button_palette_color
@@ -173,22 +175,32 @@ class DynamicPlotPrincipleWidget(OutlineItemWidget):
 
 
 class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
-    def __init__(self, parent=None):
+    def __init__(self, group: DynamicPlotPrincipleGroup, parent=None):
         super().__init__(parent)
+        self.group = group
 
     @overrides
     def _newBeatWidget(self, item: DynamicPlotPrinciple) -> OutlineItemWidget:
         wdg = DynamicPlotPrincipleWidget(item)
+        wdg.removed.connect(self._beatRemoved)
         return wdg
 
     @overrides
     def _placeholderClicked(self, placeholder: QWidget):
-        pass
+        self._currentPlaceholder = placeholder
+        if self.group.type == DynamicPlotPrincipleGroupType.ELEMENTS_OF_WONDER:
+            self._insertPrinciple(DynamicPlotPrincipleType.WONDER)
+
+    def _insertPrinciple(self, principleType: DynamicPlotPrincipleType):
+        item = DynamicPlotPrinciple(type=principleType)
+
+        widget = self._newBeatWidget(item)
+        self._insertWidget(item, widget)
 
 
 class DynamicPlotPrinciplesGroupWidget(QWidget):
 
-    def __init__(self, group: DynamicPlotPrincipleGroupType, parent=None):
+    def __init__(self, group: DynamicPlotPrincipleGroup, parent=None):
         super().__init__(parent)
         self.group = group
         self.frame = frame()
@@ -196,20 +208,20 @@ class DynamicPlotPrinciplesGroupWidget(QWidget):
         vbox(self.frame, 0, 0)
         self.setStyleSheet(f'''
             #frame {{
-                border: 2px solid {self.group.color()};
+                border: 2px solid {self.group.type.color()};
                 border-radius: 15px;
             }}''')
 
         vbox(self)
-        self._wdgPrinciples = DynamicPlotPrinciplesWidget()
-        self._wdgPrinciples.setStructure([DynamicPlotPrinciple(), DynamicPlotPrinciple(), DynamicPlotPrinciple()])
+        self._wdgPrinciples = DynamicPlotPrinciplesWidget(self.group)
+        self._wdgPrinciples.setStructure(self.group.principles)
 
         self._title = IconText()
-        self._title.setText(group.display_name())
-        self._title.setIcon(IconRegistry.from_name(group.icon(), group.color()))
+        self._title.setText(group.type.display_name())
+        self._title.setIcon(IconRegistry.from_name(group.type.icon(), group.type.color()))
         incr_icon(self._title, 4)
         bold(self._title)
-        apply_button_palette_color(self._title, group.color())
+        apply_button_palette_color(self._title, group.type.color())
 
         self.frame.layout().addWidget(self._wdgPrinciples)
         self.layout().addWidget(self._title, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -217,10 +229,28 @@ class DynamicPlotPrinciplesGroupWidget(QWidget):
 
 
 class DynamicPlotPrinciplesEditor(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, novel: Novel, plot: Plot, parent=None):
         super().__init__(parent)
+        self.novel = novel
+        self.plot = plot
         vbox(self, 5, 10)
 
-    def addGroup(self, group: DynamicPlotPrincipleGroupType):
+        for group in self.plot.dynamic_principles:
+            self._addGroup(group)
+
+        self.repo = RepositoryPersistenceManager.instance()
+
+    def addGroup(self, groupType: DynamicPlotPrincipleGroupType):
+        group = DynamicPlotPrincipleGroup(groupType)
+        self.plot.dynamic_principles.append(group)
+        self._addGroup(group)
+        self._save()
+
+    def _addGroup(self, group: DynamicPlotPrincipleGroup) -> DynamicPlotPrinciplesGroupWidget:
         wdg = DynamicPlotPrinciplesGroupWidget(group)
         self.layout().addWidget(wdg)
+
+        return wdg
+
+    def _save(self):
+        self.repo.update_novel(self.novel)

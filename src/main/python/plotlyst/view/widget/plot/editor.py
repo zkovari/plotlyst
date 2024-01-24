@@ -235,7 +235,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.btnDynamicPrincipleEditor.installEventFilter(
             OpacityEventFilter(self.btnDynamicPrincipleEditor, leaveOpacity=0.7))
 
-        self._dynamicPrinciplesEditor = DynamicPlotPrinciplesEditor()
+        self._dynamicPrinciplesEditor = DynamicPlotPrinciplesEditor(self.novel, self.plot)
         margins(self._dynamicPrinciplesEditor, left=40, right=40)
         self.wdgDynamicPrinciples.layout().addWidget(self._dynamicPrinciplesEditor)
         self._dynamicPrincipleSelectorMenu.triggered.connect(self._dynamicPrinciplesEditor.addGroup)
