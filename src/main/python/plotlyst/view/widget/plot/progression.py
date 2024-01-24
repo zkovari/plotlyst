@@ -24,13 +24,13 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QIcon, QEnterEvent
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import vbox, incr_icon, bold, spacer, retain_when_hidden, translucent
+from qthandy import vbox, incr_icon, bold, spacer, retain_when_hidden, translucent, margins, transparent
 from qthandy.filter import VisibilityToggleEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from src.main.python.plotlyst.core.domain import Novel, PlotType, PlotProgressionItem, \
     PlotProgressionItemType, DynamicPlotPrincipleGroupType, DynamicPlotPrinciple, DynamicPlotPrincipleType, Plot, \
-    DynamicPlotPrincipleGroup
+    DynamicPlotPrincipleGroup, LayoutType
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import frame, fade_out_and_gc, action
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -188,6 +188,62 @@ class DynamicPlotPrincipleWidget(OutlineItemWidget):
         return self.principle.type.color()
 
 
+class DynamicPlotMultiPrincipleWidget(DynamicPlotPrincipleWidget):
+    def __init__(self, principle: DynamicPlotPrinciple, parent=None):
+        super().__init__(principle, parent)
+        self.elements = DynamicPlotMultiPrincipleElements(principle.type)
+        self.elements.setStructure([])
+        self._text.setHidden(True)
+        self.layout().addWidget(self.elements)
+
+
+class DynamicPlotPrincipleElementWidget(DynamicPlotPrincipleWidget):
+    def __init__(self, principle: DynamicPlotPrinciple, parent=None):
+        super().__init__(principle, parent)
+        self._text.setGraphicsEffect(None)
+        transparent(self._text)
+
+
+class DynamicPlotMultiPrincipleElements(OutlineTimelineWidget):
+    def __init__(self, principleType: DynamicPlotPrincipleType, parent=None):
+        self._principleType = principleType
+        super().__init__(parent, paintTimeline=False, layout=LayoutType.VERTICAL, framed=True,
+                         frameColor=self._principleType.color())
+        self.setProperty('white-bg', True)
+        self.setProperty('large-rounded', True)
+        margins(self, 0, 0, 0, 0)
+        self.layout().setSpacing(0)
+
+    @overrides
+    def _newBeatWidget(self, item: DynamicPlotPrinciple) -> OutlineItemWidget:
+        wdg = DynamicPlotPrincipleElementWidget(item)
+        wdg.removed.connect(self._beatRemoved)
+        return wdg
+
+    @overrides
+    def _newPlaceholderWidget(self, displayText: bool = False) -> QWidget:
+        wdg = super()._newPlaceholderWidget(displayText)
+        margins(wdg, top=2)
+        if displayText:
+            wdg.btn.setText('Insert element')
+        wdg.btn.setToolTip('Insert new element')
+        return wdg
+
+    @overrides
+    def _placeholderClicked(self, placeholder: QWidget):
+        self._currentPlaceholder = placeholder
+        if self._principleType == DynamicPlotPrincipleType.SUSPECT:
+            self._insertPrinciple(DynamicPlotPrincipleType.SUSPECT)
+        elif self._principleType == DynamicPlotPrincipleType.CREW_MEMBER:
+            self._insertPrinciple(DynamicPlotPrincipleType.CREW_MEMBER)
+
+    def _insertPrinciple(self, principleType: DynamicPlotPrincipleType):
+        item = DynamicPlotPrinciple(type=principleType)
+
+        widget = self._newBeatWidget(item)
+        self._insertWidget(item, widget)
+
+
 class DynamicPlotPrincipleSelectorMenu(MenuWidget):
     selected = pyqtSignal(DynamicPlotPrincipleType)
 
@@ -219,7 +275,10 @@ class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
 
     @overrides
     def _newBeatWidget(self, item: DynamicPlotPrinciple) -> OutlineItemWidget:
-        wdg = DynamicPlotPrincipleWidget(item)
+        if self.group.type in [DynamicPlotPrincipleGroupType.SUSPECTS, DynamicPlotPrincipleGroupType.CAST]:
+            wdg = DynamicPlotMultiPrincipleWidget(item)
+        else:
+            wdg = DynamicPlotPrincipleWidget(item)
         wdg.removed.connect(self._beatRemoved)
         return wdg
 
@@ -240,6 +299,10 @@ class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
             self._insertPrinciple(DynamicPlotPrincipleType.WONDER)
         elif self.group.type == DynamicPlotPrincipleGroupType.EVOLUTION_OF_THE_MONSTER:
             self._insertPrinciple(DynamicPlotPrincipleType.MONSTER)
+        elif self.group.type == DynamicPlotPrincipleGroupType.SUSPECTS:
+            self._insertPrinciple(DynamicPlotPrincipleType.SUSPECT)
+        elif self.group.type == DynamicPlotPrincipleGroupType.CAST:
+            self._insertPrinciple(DynamicPlotPrincipleType.CREW_MEMBER)
 
     def _insertPrinciple(self, principleType: DynamicPlotPrincipleType):
         item = DynamicPlotPrinciple(type=principleType)
@@ -310,6 +373,10 @@ class DynamicPlotPrinciplesEditor(QWidget):
         elif groupType == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
             group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.ALLY))
             group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.ENEMY))
+        elif groupType == DynamicPlotPrincipleGroupType.SUSPECTS:
+            group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.SUSPECT))
+        elif groupType == DynamicPlotPrincipleGroupType.CAST:
+            group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.CREW_MEMBER))
 
         self.plot.dynamic_principles.append(group)
         self._addGroup(group)

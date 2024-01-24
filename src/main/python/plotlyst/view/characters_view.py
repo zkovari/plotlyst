@@ -30,7 +30,7 @@ from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
-from src.main.python.plotlyst.core.domain import Novel, Character
+from src.main.python.plotlyst.core.domain import Novel, Character, LayoutType
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers, global_event_dispatcher
@@ -48,7 +48,7 @@ from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_Charac
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_bg_image
 from src.main.python.plotlyst.view.widget.cards import CharacterCard, CardSizeRatio
-from src.main.python.plotlyst.view.widget.character.comp import CharacterComparisonWidget, LayoutType, \
+from src.main.python.plotlyst.view.widget.character.comp import CharacterComparisonWidget, \
     CharacterComparisonAttribute
 from src.main.python.plotlyst.view.widget.character.comp import CharactersTreeView
 from src.main.python.plotlyst.view.widget.character.network import CharacterNetworkView

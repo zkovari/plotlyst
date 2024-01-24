@@ -24,14 +24,15 @@ from typing import Optional, List
 import qtanim
 from PyQt6.QtCore import pyqtSignal, QRectF, QPoint, Qt, QSize, QEvent, QMimeData
 from PyQt6.QtGui import QPainterPath, QColor, QPen, QPainter, QPaintEvent, QResizeEvent, QEnterEvent, QIcon
-from PyQt6.QtWidgets import QWidget, QPushButton, QToolButton, QTextEdit
+from PyQt6.QtWidgets import QWidget, QPushButton, QToolButton, QTextEdit, QFrame
 from overrides import overrides
 from qtanim import fade_in
-from qthandy import sp, curved_flow, clear_layout, vbox, bold, decr_font, gc, pointy, margins, translucent, transparent
+from qthandy import sp, curved_flow, clear_layout, vbox, bold, decr_font, gc, pointy, margins, translucent, transparent, \
+    hbox
 from qthandy.filter import DragEventFilter, OpacityEventFilter
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Novel, OutlineItem
+from src.main.python.plotlyst.core.domain import Novel, OutlineItem, LayoutType
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.view.common import fade_out_and_gc, to_rgba_str, shadow
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -194,18 +195,31 @@ class _PlaceholderWidget(QWidget):
         self.layout().addWidget(self.btn)
 
 
-class OutlineTimelineWidget(QWidget):
+class OutlineTimelineWidget(QFrame):
     timelineChanged = pyqtSignal()
 
-    def __init__(self, parent=None, paintTimeline: bool = True):
+    def __init__(self, parent=None, paintTimeline: bool = True, layout: LayoutType = LayoutType.CURVED_FLOW,
+                 framed: bool = False, frameColor=Qt.GlobalColor.black):
         super().__init__(parent)
         self._novel: Optional[Novel] = None
         self._readOnly: bool = False
         self._currentPlaceholder: Optional[QWidget] = None
         self._paintTimeline = paintTimeline
 
+        if framed:
+            self.setFrameShape(QFrame.Shape.StyledPanel)
+            self.setLineWidth(1)
+            # self.setProperty('relaxed-white-bg', True)
+            # self.setProperty('large-rounded', True)
+            shadow(self, color=QColor(frameColor))
+
         sp(self).h_exp().v_exp()
-        curved_flow(self, margin=10, spacing=10)
+        if layout == LayoutType.CURVED_FLOW:
+            curved_flow(self, margin=10, spacing=10)
+        elif layout == LayoutType.HORIZONTAL:
+            hbox(self, 10, 10)
+        elif layout == LayoutType.VERTICAL:
+            vbox(self, 10, 10)
 
         self._structure: List[OutlineItem] = []
         self._beatWidgets: List[OutlineItemWidget] = []

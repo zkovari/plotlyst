@@ -54,6 +54,14 @@ class TemplateValue:
         return hash(str(self.id))
 
 
+class LayoutType(Enum):
+    HORIZONTAL = 0
+    VERTICAL = 1
+    FLOW = 2
+    CURVED_FLOW = 3
+    GRID = 4
+
+
 @dataclass
 class Event:
     keyphrase: str
@@ -693,6 +701,8 @@ class DynamicPlotPrincipleType(Enum):
     MONSTER = 'monster'
     ALLY = 'ally'
     ENEMY = 'enemy'
+    SUSPECT = 'suspect'
+    CREW_MEMBER = 'crew'
 
     def display_name(self) -> str:
         return self.name.lower().capitalize().replace('_', ' ')
@@ -710,6 +720,10 @@ class DynamicPlotPrincipleType(Enum):
             return 'fa5s.thumbs-up'
         elif self == DynamicPlotPrincipleType.ENEMY:
             return 'fa5s.thumbs-down'
+        elif self == DynamicPlotPrincipleType.SUSPECT:
+            return 'ri.criminal-fill'
+        elif self == DynamicPlotPrincipleType.CREW_MEMBER:
+            return 'mdi.robber'
 
     def color(self) -> str:
         if self == DynamicPlotPrincipleType.TWIST:
@@ -724,6 +738,10 @@ class DynamicPlotPrincipleType(Enum):
             return '#266dd3'
         elif self == DynamicPlotPrincipleType.ENEMY:
             return '#9e1946'
+        elif self == DynamicPlotPrincipleType.SUSPECT:
+            return '#9e2a2b'
+        elif self == DynamicPlotPrincipleType.CREW_MEMBER:
+            return '#0077b6'
 
     def description(self) -> str:
         if self == DynamicPlotPrincipleType.TWIST:
@@ -734,6 +752,10 @@ class DynamicPlotPrincipleType(Enum):
             return "A character forming alliance with the storyline's focal character"
         elif self == DynamicPlotPrincipleType.ENEMY:
             return "An adversary character who opposes the storyline's focal character"
+        elif self == DynamicPlotPrincipleType.SUSPECT:
+            return ''
+        elif self == DynamicPlotPrincipleType.CREW_MEMBER:
+            return ''
         return ""
 
     def placeholder(self) -> str:
@@ -749,6 +771,10 @@ class DynamicPlotPrincipleType(Enum):
             return "Describe who and how forms an alliance with the character"
         elif self == DynamicPlotPrincipleType.ENEMY:
             return "Describe who and how opposes the focal character"
+        elif self == DynamicPlotPrincipleType.SUSPECT:
+            return ''
+        elif self == DynamicPlotPrincipleType.CREW_MEMBER:
+            return ''
 
         return ''
 
