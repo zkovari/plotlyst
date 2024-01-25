@@ -29,7 +29,7 @@ from overrides import overrides
 from qtanim import fade_in
 from qthandy import sp, curved_flow, clear_layout, vbox, bold, decr_font, gc, pointy, margins, translucent, transparent, \
     hbox
-from qthandy.filter import DragEventFilter, OpacityEventFilter
+from qthandy.filter import DragEventFilter
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, OutlineItem, LayoutType
@@ -178,12 +178,23 @@ class _SceneBeatPlaceholderButton(QPushButton):
 
     def __init__(self, parent=None):
         super(_SceneBeatPlaceholderButton, self).__init__(parent)
+        self._colorOff = 'lightgrey'
+        self._colorHover = 'grey'
         self.setProperty('transparent', True)
-        self.setIcon(IconRegistry.plus_circle_icon('grey'))
-        self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.3))
+        self.setIcon(IconRegistry.plus_circle_icon(self._colorOff))
         self.setIconSize(QSize(20, 20))
         pointy(self)
         self.setToolTip('Insert new beat')
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        self.setIcon(IconRegistry.plus_circle_icon(self._colorHover))
+        super().enterEvent(event)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self.setIcon(IconRegistry.plus_circle_icon(self._colorOff))
+        super().leaveEvent(event)
 
 
 class _PlaceholderWidget(QWidget):
