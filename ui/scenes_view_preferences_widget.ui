@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>139</width>
-    <height>75</height>
+    <width>421</width>
+    <height>389</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -41,47 +41,252 @@
       <attribute name="title">
        <string/>
       </attribute>
-      <layout class="QHBoxLayout" name="horizontalLayout">
+      <layout class="QVBoxLayout" name="verticalLayout_3">
        <property name="spacing">
         <number>3</number>
        </property>
        <property name="leftMargin">
-        <number>2</number>
+        <number>5</number>
        </property>
        <property name="topMargin">
-        <number>2</number>
+        <number>5</number>
        </property>
        <property name="rightMargin">
-        <number>2</number>
+        <number>5</number>
        </property>
        <property name="bottomMargin">
-        <number>2</number>
+        <number>5</number>
        </property>
-       <item>
-        <widget class="QToolButton" name="btnCardsWidth">
+       <item alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="lblTitle">
          <property name="text">
-          <string/>
-         </property>
-         <property name="transparent" stdset="0">
-          <bool>true</bool>
+          <string>Scene card settings</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QSlider" name="sliderCards">
-         <property name="minimum">
-          <number>100</number>
-         </property>
-         <property name="maximum">
-          <number>300</number>
-         </property>
-         <property name="value">
-          <number>175</number>
-         </property>
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Display</string>
          </property>
         </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <property name="leftMargin">
+          <number>15</number>
+         </property>
+         <item>
+          <widget class="QToolButton" name="btnPov">
+           <property name="text">
+            <string/>
+           </property>
+           <property name="transparent" stdset="0">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>POV</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="Toggle" name="checkBox">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <property name="leftMargin">
+          <number>15</number>
+         </property>
+         <item>
+          <widget class="QToolButton" name="btnPurpose">
+           <property name="text">
+            <string/>
+           </property>
+           <property name="transparent" stdset="0">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>Scene purpose</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="Toggle" name="checkBox_2">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <property name="leftMargin">
+          <number>15</number>
+         </property>
+         <item>
+          <widget class="QToolButton" name="btnCharacters">
+           <property name="text">
+            <string/>
+           </property>
+           <property name="transparent" stdset="0">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>Characters</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="Toggle" name="checkBox_3">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_6">
+         <property name="leftMargin">
+          <number>15</number>
+         </property>
+         <item>
+          <widget class="QToolButton" name="btnCharacters_2">
+           <property name="text">
+            <string/>
+           </property>
+           <property name="transparent" stdset="0">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>Storylines</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="Toggle" name="checkBox_4">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_7">
+         <property name="leftMargin">
+          <number>15</number>
+         </property>
+         <item>
+          <widget class="QToolButton" name="btnPurpose_2">
+           <property name="text">
+            <string/>
+           </property>
+           <property name="transparent" stdset="0">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>Stage</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="Toggle" name="checkBox_5">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Size</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <property name="leftMargin">
+          <number>15</number>
+         </property>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <widget class="QToolButton" name="btnCardsWidth">
+             <property name="text">
+              <string/>
+             </property>
+             <property name="transparent" stdset="0">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSlider" name="sliderCards">
+             <property name="minimum">
+              <number>100</number>
+             </property>
+             <property name="maximum">
+              <number>300</number>
+             </property>
+             <property name="value">
+              <number>175</number>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QRadioButton" name="radioButton">
+             <property name="text">
+              <string>2:3</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="radioButton_2">
+             <property name="text">
+              <string>3:4</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
        </item>
       </layout>
      </widget>
@@ -89,6 +294,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Toggle</class>
+   <extends>QCheckBox</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
