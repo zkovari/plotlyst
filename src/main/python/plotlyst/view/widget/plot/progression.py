@@ -30,12 +30,14 @@ from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from src.main.python.plotlyst.core.domain import Novel, PlotType, PlotProgressionItem, \
     PlotProgressionItemType, DynamicPlotPrincipleGroupType, DynamicPlotPrinciple, DynamicPlotPrincipleType, Plot, \
-    DynamicPlotPrincipleGroup, LayoutType
+    DynamicPlotPrincipleGroup, LayoutType, Character
+from src.main.python.plotlyst.service.cache import characters_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import frame, fade_out_and_gc, action
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.button import apply_button_palette_color
+from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
 from src.main.python.plotlyst.view.widget.confirm import confirmed
 from src.main.python.plotlyst.view.widget.display import IconText
 from src.main.python.plotlyst.view.widget.input import RemovalButton
@@ -169,13 +171,27 @@ class PlotEventsTimeline(OutlineTimelineWidget):
 
 
 class DynamicPlotPrincipleWidget(OutlineItemWidget):
-    def __init__(self, principle: DynamicPlotPrinciple, parent=None, nameAlignment=Qt.AlignmentFlag.AlignCenter):
+    def __init__(self, novel: Novel, principle: DynamicPlotPrinciple, parent=None,
+                 nameAlignment=Qt.AlignmentFlag.AlignCenter):
+        self.novel = novel
         self.principle = principle
         super().__init__(principle, parent, colorfulShadow=True, nameAlignment=nameAlignment)
         self._initStyle(name=self.principle.type.display_name(), desc=self.principle.type.placeholder())
         self._btnIcon.setHidden(True)
 
         self._btnName.setIcon(IconRegistry.from_name(self.principle.type.icon(), self._color()))
+
+        if principle.type in [DynamicPlotPrincipleType.ALLY, DynamicPlotPrincipleType.ENEMY,
+                              DynamicPlotPrincipleType.SUSPECT,
+                              DynamicPlotPrincipleType.CREW_MEMBER]:
+            self._charSelector = CharacterSelectorButton(self.novel, iconSize=64)
+            self._charSelector.characterSelected.connect(self._characterSelected)
+            self.layout().insertWidget(0, self._charSelector, alignment=Qt.AlignmentFlag.AlignCenter)
+
+            if self.principle.character_id:
+                character = characters_registry.character(self.principle.character_id)
+                if character:
+                    self._charSelector.setCharacter(character)
 
         translucent(self._btnName, 0.7)
 
@@ -187,25 +203,32 @@ class DynamicPlotPrincipleWidget(OutlineItemWidget):
     def _color(self) -> str:
         return self.principle.type.color()
 
+    def _characterSelected(self, character: Character):
+        self.principle.character_id = str(character.id)
+        RepositoryPersistenceManager.instance().update_novel(self.novel)
+
 
 class DynamicPlotMultiPrincipleWidget(DynamicPlotPrincipleWidget):
-    def __init__(self, principle: DynamicPlotPrinciple, groupType: DynamicPlotPrincipleGroupType, parent=None):
-        super().__init__(principle, parent)
-        self.elements = DynamicPlotMultiPrincipleElements(principle.type, groupType)
+    def __init__(self, novel: Novel, principle: DynamicPlotPrinciple, groupType: DynamicPlotPrincipleGroupType,
+                 parent=None):
+        super().__init__(novel, principle, parent)
+        self.elements = DynamicPlotMultiPrincipleElements(novel, principle.type, groupType)
         self.elements.setStructure(principle.elements)
         self._text.setHidden(True)
         self.layout().addWidget(self.elements)
 
 
 class DynamicPlotPrincipleElementWidget(DynamicPlotPrincipleWidget):
-    def __init__(self, principle: DynamicPlotPrinciple, parent=None):
-        super().__init__(principle, parent, nameAlignment=Qt.AlignmentFlag.AlignLeft)
+    def __init__(self, novel: Novel, principle: DynamicPlotPrinciple, parent=None):
+        super().__init__(novel, principle, parent, nameAlignment=Qt.AlignmentFlag.AlignLeft)
         self._text.setGraphicsEffect(None)
         transparent(self._text)
 
 
 class DynamicPlotMultiPrincipleElements(OutlineTimelineWidget):
-    def __init__(self, principleType: DynamicPlotPrincipleType, groupType: DynamicPlotPrincipleGroupType, parent=None):
+    def __init__(self, novel: Novel, principleType: DynamicPlotPrincipleType, groupType: DynamicPlotPrincipleGroupType,
+                 parent=None):
+        self.novel = novel
         self._principleType = principleType
         super().__init__(parent, paintTimeline=False, layout=LayoutType.VERTICAL, framed=True,
                          frameColor=self._principleType.color())
@@ -219,7 +242,7 @@ class DynamicPlotMultiPrincipleElements(OutlineTimelineWidget):
 
     @overrides
     def _newBeatWidget(self, item: DynamicPlotPrinciple) -> OutlineItemWidget:
-        wdg = DynamicPlotPrincipleElementWidget(item)
+        wdg = DynamicPlotPrincipleElementWidget(self.novel, item)
         wdg.removed.connect(self._beatRemoved)
         return wdg
 
@@ -268,6 +291,8 @@ class DynamicPlotPrincipleSelectorMenu(MenuWidget):
             self._addPrinciple(DynamicPlotPrincipleType.EVIDENCE_AGAINST)
             self._addPrinciple(DynamicPlotPrincipleType.EVIDENCE_IN_FAVOR)
             self._addPrinciple(DynamicPlotPrincipleType.BEHAVIOR_DURING_INVESTIGATION)
+        elif groupType == DynamicPlotPrincipleGroupType.CAST:
+            pass
 
     def _addPrinciple(self, principleType: DynamicPlotPrincipleType):
         self.addAction(action(principleType.display_name(),
@@ -276,8 +301,9 @@ class DynamicPlotPrincipleSelectorMenu(MenuWidget):
 
 
 class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
-    def __init__(self, group: DynamicPlotPrincipleGroup, parent=None):
+    def __init__(self, novel: Novel, group: DynamicPlotPrincipleGroup, parent=None):
         super().__init__(parent, paintTimeline=False)
+        self.novel = novel
         self.group = group
         self._hasMenu = self.group.type in [DynamicPlotPrincipleGroupType.TWISTS_AND_TURNS,
                                             DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES]
@@ -288,9 +314,9 @@ class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
     @overrides
     def _newBeatWidget(self, item: DynamicPlotPrinciple) -> OutlineItemWidget:
         if self.group.type in [DynamicPlotPrincipleGroupType.SUSPECTS, DynamicPlotPrincipleGroupType.CAST]:
-            wdg = DynamicPlotMultiPrincipleWidget(item, self.group.type)
+            wdg = DynamicPlotMultiPrincipleWidget(self.novel, item, self.group.type)
         else:
-            wdg = DynamicPlotPrincipleWidget(item)
+            wdg = DynamicPlotPrincipleWidget(self.novel, item)
         wdg.removed.connect(self._beatRemoved)
         return wdg
 
@@ -326,7 +352,7 @@ class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
 class DynamicPlotPrinciplesGroupWidget(QWidget):
     remove = pyqtSignal()
 
-    def __init__(self, principleGroup: DynamicPlotPrincipleGroup, parent=None):
+    def __init__(self, novel: Novel, principleGroup: DynamicPlotPrincipleGroup, parent=None):
         super().__init__(parent)
         self.group = principleGroup
         self.frame = frame()
@@ -341,7 +367,7 @@ class DynamicPlotPrinciplesGroupWidget(QWidget):
                         }}''')
 
         vbox(self)
-        self._wdgPrinciples = DynamicPlotPrinciplesWidget(self.group)
+        self._wdgPrinciples = DynamicPlotPrinciplesWidget(novel, self.group)
         self._wdgPrinciples.setStructure(self.group.principles)
 
         self._title = IconText()
@@ -395,7 +421,7 @@ class DynamicPlotPrinciplesEditor(QWidget):
         self._save()
 
     def _addGroup(self, group: DynamicPlotPrincipleGroup) -> DynamicPlotPrinciplesGroupWidget:
-        wdg = DynamicPlotPrinciplesGroupWidget(group)
+        wdg = DynamicPlotPrinciplesGroupWidget(self.novel, group)
         wdg.remove.connect(partial(self._removeGroup, wdg))
         self.layout().addWidget(wdg)
 

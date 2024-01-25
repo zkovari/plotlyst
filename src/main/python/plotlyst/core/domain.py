@@ -870,6 +870,7 @@ class DynamicPlotPrincipleType(Enum):
 class DynamicPlotPrinciple(OutlineItem):
     type: DynamicPlotPrincipleType = DynamicPlotPrincipleType.TWIST
     elements: List['DynamicPlotPrinciple'] = field(default_factory=list)
+    character_id: str = ''
 
 
 class DynamicPlotPrincipleGroupType(Enum):
