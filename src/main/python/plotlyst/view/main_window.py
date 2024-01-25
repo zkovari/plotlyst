@@ -47,7 +47,7 @@ from src.main.python.plotlyst.events import NovelDeletedEvent, \
     NovelWorldBuildingToggleEvent, NovelCharactersToggleEvent, NovelScenesToggleEvent, NovelDocumentsToggleEvent, \
     NovelManagementToggleEvent, NovelManuscriptToggleEvent
 from src.main.python.plotlyst.resources import resource_manager, ResourceType, ResourceDownloadedEvent
-from src.main.python.plotlyst.service.cache import acts_registry
+from src.main.python.plotlyst.service.cache import acts_registry, characters_registry
 from src.main.python.plotlyst.service.dir import select_new_project_directory
 from src.main.python.plotlyst.service.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
 from src.main.python.plotlyst.service.importer import ScrivenerSyncImporter
@@ -122,6 +122,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         if self.novel:
             acts_registry.set_novel(self.novel)
+            characters_registry.set_novel(self.novel)
             dictionary.set_novel(self.novel)
             app_env.novel = self.novel
 
@@ -570,6 +571,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.novel = client.fetch_novel(novel.id)
         self.repo.set_persistence_enabled(not novel.tutorial)
         acts_registry.set_novel(self.novel)
+        characters_registry.set_novel(self.novel)
         dictionary.set_novel(self.novel)
         app_env.novel = self.novel
 

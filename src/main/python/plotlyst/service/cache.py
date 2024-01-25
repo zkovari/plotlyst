@@ -21,10 +21,11 @@ from typing import Optional, Dict, Set
 
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel, Scene, StoryBeat
+from src.main.python.plotlyst.core.domain import Novel, Scene, StoryBeat, Character
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatchers
-from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, SceneStoryBeatChangedEvent
+from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, SceneStoryBeatChangedEvent, \
+    CharacterChangedEvent, CharacterDeletedEvent
 
 
 class NovelActsRegistry(EventListener):
@@ -91,3 +92,32 @@ class NovelActsRegistry(EventListener):
 
 
 acts_registry = NovelActsRegistry()
+
+
+class CharactersRegistry(EventListener):
+    def __init__(self, parent=None):
+        self.novel: Optional[Novel] = None
+        self._characters: Dict[str, Character] = {}
+
+    def set_novel(self, novel: Novel):
+        self.novel = novel
+        dispatcher = event_dispatchers.instance(self.novel)
+        dispatcher.register(self, CharacterChangedEvent, CharacterDeletedEvent)
+        self.refresh()
+
+    def character(self, s_id: str) -> Optional[Character]:
+        return self._characters.get(s_id, None)
+
+    @overrides
+    def event_received(self, event: Event):
+        if self.novel:
+            self.refresh()
+
+    def refresh(self):
+        if self.novel:
+            self._characters.clear()
+            for character in self.novel.characters:
+                self._characters[str(character.id)] = character
+
+
+characters_registry = CharactersRegistry()
