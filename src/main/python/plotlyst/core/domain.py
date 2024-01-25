@@ -716,6 +716,13 @@ class DynamicPlotPrincipleType(Enum):
     EVIDENCE_IN_FAVOR = 'evidence_in_favor'
     BEHAVIOR_DURING_INVESTIGATION = 'behavior_during_investigation'
 
+    SKILL_SET = 'skill_set'
+    MOTIVATION = 'motivation'
+    CONTRIBUTION = 'contribution'
+    WEAK_LINK = 'weak_link'
+    HIDDEN_AGENDA = 'hidden_agenda'
+    NICKNAME = 'nickname'
+
     def display_name(self) -> str:
         return self.name.lower().capitalize().replace('_', ' ')
 
@@ -759,6 +766,19 @@ class DynamicPlotPrincipleType(Enum):
         elif self == DynamicPlotPrincipleType.BEHAVIOR_DURING_INVESTIGATION:
             return 'mdi.head-dots-horizontal-outline'
 
+        elif self == DynamicPlotPrincipleType.SKILL_SET:
+            return "fa5s.tools"
+        elif self == DynamicPlotPrincipleType.MOTIVATION:
+            return "fa5s.hand-holding-usd"
+        elif self == DynamicPlotPrincipleType.CONTRIBUTION:
+            return "ph.puzzle-piece"
+        elif self == DynamicPlotPrincipleType.WEAK_LINK:
+            return "mdi6.target-account"
+        elif self == DynamicPlotPrincipleType.HIDDEN_AGENDA:
+            return "fa5s.user-secret"
+        elif self == DynamicPlotPrincipleType.NICKNAME:
+            return "mdi.badge-account-outline"
+
     def color(self) -> str:
         if self == DynamicPlotPrincipleType.TWIST:
             return "#f20089"
@@ -793,10 +813,6 @@ class DynamicPlotPrincipleType(Enum):
             return "A character forming alliance with the storyline's focal character"
         elif self == DynamicPlotPrincipleType.ENEMY:
             return "An adversary character who opposes the storyline's focal character"
-        elif self == DynamicPlotPrincipleType.SUSPECT:
-            return ""
-        elif self == DynamicPlotPrincipleType.CREW_MEMBER:
-            return ""
 
         elif self == DynamicPlotPrincipleType.DESCRIPTION:
             return "The suspect's physical appearance and distinguishing features"
@@ -820,6 +836,20 @@ class DynamicPlotPrincipleType(Enum):
             return "Any information that supports the suspect's innocence"
         elif self == DynamicPlotPrincipleType.BEHAVIOR_DURING_INVESTIGATION:
             return "How does the suspect behave during the investigation?"
+
+        elif self == DynamicPlotPrincipleType.SKILL_SET:
+            return "What's the member's unique skill set that can help the caper?"
+        elif self == DynamicPlotPrincipleType.MOTIVATION:
+            return "The member's unique motivation for participating"
+        elif self == DynamicPlotPrincipleType.CONTRIBUTION:
+            return "How does the member help the team?"
+        elif self == DynamicPlotPrincipleType.WEAK_LINK:
+            return "Is the member a weak link or a liability?"
+        elif self == DynamicPlotPrincipleType.HIDDEN_AGENDA:
+            return "Is there a hidden agenda of the member behind being part of the team?"
+        elif self == DynamicPlotPrincipleType.NICKNAME:
+            return "Any nicknames the member is referred to"
+
         return ""
 
     def placeholder(self) -> str:
@@ -835,10 +865,6 @@ class DynamicPlotPrincipleType(Enum):
             return "Describe who and how forms an alliance with the character"
         elif self == DynamicPlotPrincipleType.ENEMY:
             return "Describe who and how opposes the focal character"
-        elif self == DynamicPlotPrincipleType.SUSPECT:
-            return ""
-        elif self == DynamicPlotPrincipleType.CREW_MEMBER:
-            return ""
 
         elif self == DynamicPlotPrincipleType.DESCRIPTION:
             return "Describe the suspect's physical appearance or any distinguishing features"
@@ -862,6 +888,19 @@ class DynamicPlotPrincipleType(Enum):
             return "Describe any significant information that supports the suspect's innocence"
         elif self == DynamicPlotPrincipleType.BEHAVIOR_DURING_INVESTIGATION:
             return "Describe how the suspect behaves during the investigation"
+
+        elif self == DynamicPlotPrincipleType.SKILL_SET:
+            return "Describe the member's unique skill set that helps the scheme"
+        elif self == DynamicPlotPrincipleType.MOTIVATION:
+            return "Describe the member's motivation for being part of the heist"
+        elif self == DynamicPlotPrincipleType.CONTRIBUTION:
+            return "Describe how the member helps the scheme"
+        elif self == DynamicPlotPrincipleType.WEAK_LINK:
+            return "Describe how the member is considered a weak link"
+        elif self == DynamicPlotPrincipleType.HIDDEN_AGENDA:
+            return "Describe the member's hidden agenda behind participating in the scheme"
+        elif self == DynamicPlotPrincipleType.NICKNAME:
+            return "Describe member's nicknames, if there's any"
 
         return ""
 

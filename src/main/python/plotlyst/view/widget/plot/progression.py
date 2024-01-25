@@ -303,7 +303,12 @@ class DynamicPlotPrincipleSelectorMenu(MenuWidget):
             self._addPrinciple(DynamicPlotPrincipleType.EVIDENCE_IN_FAVOR)
             self._addPrinciple(DynamicPlotPrincipleType.BEHAVIOR_DURING_INVESTIGATION)
         elif groupType == DynamicPlotPrincipleGroupType.CAST:
-            pass
+            self._addPrinciple(DynamicPlotPrincipleType.SKILL_SET)
+            self._addPrinciple(DynamicPlotPrincipleType.MOTIVATION)
+            self._addPrinciple(DynamicPlotPrincipleType.CONTRIBUTION)
+            self._addPrinciple(DynamicPlotPrincipleType.WEAK_LINK)
+            self._addPrinciple(DynamicPlotPrincipleType.HIDDEN_AGENDA)
+            self._addPrinciple(DynamicPlotPrincipleType.NICKNAME)
 
     def _addPrinciple(self, principleType: DynamicPlotPrincipleType):
         self.addAction(action(principleType.display_name(),
