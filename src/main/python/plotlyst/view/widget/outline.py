@@ -45,7 +45,8 @@ class OutlineItemWidget(QWidget):
     removed = pyqtSignal(object)
     iconFixedSize: int = 36
 
-    def __init__(self, item: OutlineItem, parent=None, readOnly: bool = False, colorfulShadow: bool = False):
+    def __init__(self, item: OutlineItem, parent=None, readOnly: bool = False, colorfulShadow: bool = False,
+                 nameAlignment=Qt.AlignmentFlag.AlignCenter):
         super().__init__(parent)
         self.item = item
         self._readOnly = readOnly
@@ -86,7 +87,7 @@ class OutlineItemWidget(QWidget):
         self._btnRemove.clicked.connect(self._remove)
 
         self.layout().addWidget(self._btnIcon, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.layout().addWidget(self._btnName, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self._btnName, alignment=nameAlignment)
         self.layout().addWidget(self._text)
 
         if not self._readOnly:

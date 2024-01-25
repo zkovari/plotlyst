@@ -169,9 +169,9 @@ class PlotEventsTimeline(OutlineTimelineWidget):
 
 
 class DynamicPlotPrincipleWidget(OutlineItemWidget):
-    def __init__(self, principle: DynamicPlotPrinciple, parent=None):
+    def __init__(self, principle: DynamicPlotPrinciple, parent=None, nameAlignment=Qt.AlignmentFlag.AlignCenter):
         self.principle = principle
-        super().__init__(principle, parent, colorfulShadow=True)
+        super().__init__(principle, parent, colorfulShadow=True, nameAlignment=nameAlignment)
         self._initStyle(name=self.principle.type.display_name(), desc=self.principle.type.placeholder())
         self._btnIcon.setHidden(True)
 
@@ -199,7 +199,7 @@ class DynamicPlotMultiPrincipleWidget(DynamicPlotPrincipleWidget):
 
 class DynamicPlotPrincipleElementWidget(DynamicPlotPrincipleWidget):
     def __init__(self, principle: DynamicPlotPrinciple, parent=None):
-        super().__init__(principle, parent)
+        super().__init__(principle, parent, nameAlignment=Qt.AlignmentFlag.AlignLeft)
         self._text.setGraphicsEffect(None)
         transparent(self._text)
 
