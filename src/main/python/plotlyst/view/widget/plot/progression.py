@@ -189,9 +189,9 @@ class DynamicPlotPrincipleWidget(OutlineItemWidget):
 
 
 class DynamicPlotMultiPrincipleWidget(DynamicPlotPrincipleWidget):
-    def __init__(self, principle: DynamicPlotPrinciple, parent=None):
+    def __init__(self, principle: DynamicPlotPrinciple, groupType: DynamicPlotPrincipleGroupType, parent=None):
         super().__init__(principle, parent)
-        self.elements = DynamicPlotMultiPrincipleElements(principle.type)
+        self.elements = DynamicPlotMultiPrincipleElements(principle.type, groupType)
         self.elements.setStructure(principle.elements)
         self._text.setHidden(True)
         self.layout().addWidget(self.elements)
@@ -205,7 +205,7 @@ class DynamicPlotPrincipleElementWidget(DynamicPlotPrincipleWidget):
 
 
 class DynamicPlotMultiPrincipleElements(OutlineTimelineWidget):
-    def __init__(self, principleType: DynamicPlotPrincipleType, parent=None):
+    def __init__(self, principleType: DynamicPlotPrincipleType, groupType: DynamicPlotPrincipleGroupType, parent=None):
         self._principleType = principleType
         super().__init__(parent, paintTimeline=False, layout=LayoutType.VERTICAL, framed=True,
                          frameColor=self._principleType.color())
@@ -213,6 +213,9 @@ class DynamicPlotMultiPrincipleElements(OutlineTimelineWidget):
         self.setProperty('large-rounded', True)
         margins(self, 0, 0, 0, 0)
         self.layout().setSpacing(0)
+
+        self._menu = DynamicPlotPrincipleSelectorMenu(groupType)
+        self._menu.selected.connect(self._insertPrinciple)
 
     @overrides
     def _newBeatWidget(self, item: DynamicPlotPrinciple) -> OutlineItemWidget:
@@ -232,10 +235,7 @@ class DynamicPlotMultiPrincipleElements(OutlineTimelineWidget):
     @overrides
     def _placeholderClicked(self, placeholder: QWidget):
         self._currentPlaceholder = placeholder
-        if self._principleType == DynamicPlotPrincipleType.SUSPECT:
-            self._insertPrinciple(DynamicPlotPrincipleType.SUSPECT)
-        elif self._principleType == DynamicPlotPrincipleType.CREW_MEMBER:
-            self._insertPrinciple(DynamicPlotPrincipleType.CREW_MEMBER)
+        self._menu.exec(self.mapToGlobal(self._currentPlaceholder.pos()))
 
     def _insertPrinciple(self, principleType: DynamicPlotPrincipleType):
         item = DynamicPlotPrinciple(type=principleType)
@@ -256,6 +256,18 @@ class DynamicPlotPrincipleSelectorMenu(MenuWidget):
         elif groupType == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
             self._addPrinciple(DynamicPlotPrincipleType.ALLY)
             self._addPrinciple(DynamicPlotPrincipleType.ENEMY)
+        elif groupType == DynamicPlotPrincipleGroupType.SUSPECTS:
+            self._addPrinciple(DynamicPlotPrincipleType.DESCRIPTION)
+            self._addPrinciple(DynamicPlotPrincipleType.CLUES)
+            self._addPrinciple(DynamicPlotPrincipleType.MOTIVE)
+            self._addPrinciple(DynamicPlotPrincipleType.RED_HERRING)
+            self._addPrinciple(DynamicPlotPrincipleType.ALIBI)
+            self._addPrinciple(DynamicPlotPrincipleType.SECRETS)
+            self._addPrinciple(DynamicPlotPrincipleType.RED_FLAGS)
+            self._addPrinciple(DynamicPlotPrincipleType.CRIMINAL_RECORD)
+            self._addPrinciple(DynamicPlotPrincipleType.EVIDENCE_AGAINST)
+            self._addPrinciple(DynamicPlotPrincipleType.EVIDENCE_IN_FAVOR)
+            self._addPrinciple(DynamicPlotPrincipleType.BEHAVIOR_DURING_INVESTIGATION)
 
     def _addPrinciple(self, principleType: DynamicPlotPrincipleType):
         self.addAction(action(principleType.display_name(),
@@ -276,7 +288,7 @@ class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
     @overrides
     def _newBeatWidget(self, item: DynamicPlotPrinciple) -> OutlineItemWidget:
         if self.group.type in [DynamicPlotPrincipleGroupType.SUSPECTS, DynamicPlotPrincipleGroupType.CAST]:
-            wdg = DynamicPlotMultiPrincipleWidget(item)
+            wdg = DynamicPlotMultiPrincipleWidget(item, self.group.type)
         else:
             wdg = DynamicPlotPrincipleWidget(item)
         wdg.removed.connect(self._beatRemoved)
