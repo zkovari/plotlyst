@@ -181,9 +181,10 @@ class DynamicPlotPrincipleWidget(OutlineItemWidget):
 
         self._btnName.setIcon(IconRegistry.from_name(self.principle.type.icon(), self._color()))
 
-        if principle.type in [DynamicPlotPrincipleType.ALLY, DynamicPlotPrincipleType.ENEMY,
-                              DynamicPlotPrincipleType.SUSPECT,
-                              DynamicPlotPrincipleType.CREW_MEMBER]:
+        self._hasCharacter = principle.type in [DynamicPlotPrincipleType.ALLY, DynamicPlotPrincipleType.ENEMY,
+                                                DynamicPlotPrincipleType.SUSPECT,
+                                                DynamicPlotPrincipleType.CREW_MEMBER]
+        if self._hasCharacter:
             self._charSelector = CharacterSelectorButton(self.novel, iconSize=64)
             self._charSelector.characterSelected.connect(self._characterSelected)
             self.layout().insertWidget(0, self._charSelector, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -198,6 +199,16 @@ class DynamicPlotPrincipleWidget(OutlineItemWidget):
     @overrides
     def mimeType(self) -> str:
         return f'application/{self.principle.type.name.lower()}'
+
+    def refreshCharacters(self):
+        if self._hasCharacter and self.principle.character_id:
+            character = characters_registry.character(self.principle.character_id)
+            if character:
+                self._charSelector.setCharacter(character)
+            else:
+                self._charSelector.clear()
+                self.principle.character_id = ''
+                RepositoryPersistenceManager.instance().update_novel(self.novel)
 
     @overrides
     def _color(self) -> str:
@@ -311,6 +322,11 @@ class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
             self._menu = DynamicPlotPrincipleSelectorMenu(self.group.type)
             self._menu.selected.connect(self._insertPrinciple)
 
+    def refreshCharacters(self):
+        for wdg in self._beatWidgets:
+            if isinstance(wdg, DynamicPlotPrincipleWidget):
+                wdg.refreshCharacters()
+
     @overrides
     def _newBeatWidget(self, item: DynamicPlotPrinciple) -> OutlineItemWidget:
         if self.group.type in [DynamicPlotPrincipleGroupType.SUSPECTS, DynamicPlotPrincipleGroupType.CAST]:
@@ -386,6 +402,9 @@ class DynamicPlotPrinciplesGroupWidget(QWidget):
         self.layout().addWidget(group(spacer(), self._title, spacer(), self.btnRemove))
         self.layout().addWidget(self.frame)
 
+    def refreshCharacters(self):
+        self._wdgPrinciples.refreshCharacters()
+
 
 class DynamicPlotPrinciplesEditor(QWidget):
     def __init__(self, novel: Novel, plot: Plot, parent=None):
@@ -398,6 +417,12 @@ class DynamicPlotPrinciplesEditor(QWidget):
             self._addGroup(group)
 
         self.repo = RepositoryPersistenceManager.instance()
+
+    def refreshCharacters(self):
+        for i in range(self.layout().count()):
+            item = self.layout().itemAt(i)
+            if item.widget() and isinstance(item.widget(), DynamicPlotPrinciplesGroupWidget):
+                item.widget().refreshCharacters()
 
     def addGroup(self, groupType: DynamicPlotPrincipleGroupType):
         group = DynamicPlotPrincipleGroup(groupType)

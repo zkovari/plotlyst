@@ -221,8 +221,6 @@ class OutlineTimelineWidget(QFrame):
         if framed:
             self.setFrameShape(QFrame.Shape.StyledPanel)
             self.setLineWidth(1)
-            # self.setProperty('relaxed-white-bg', True)
-            # self.setProperty('large-rounded', True)
             shadow(self, color=QColor(frameColor))
 
         sp(self).h_exp().v_exp()

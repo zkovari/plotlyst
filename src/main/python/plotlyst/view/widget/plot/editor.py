@@ -379,6 +379,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
                 self._characterSelector.reset()
             if self._characterRelationSelector and self._characterRelationSelector.character() and self._characterRelationSelector.character().id == event.character.id:
                 self._characterRelationSelector.reset()
+            self._dynamicPrinciplesEditor.refreshCharacters()
 
     def _updateIcon(self):
         if self.plot.icon:
