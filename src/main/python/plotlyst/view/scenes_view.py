@@ -55,6 +55,7 @@ from src.main.python.plotlyst.view.generated.scenes_title_ui import Ui_ScenesTit
 from src.main.python.plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.scene_editor import SceneEditor
+from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.cards import SceneCard, SceneCardFilter
 from src.main.python.plotlyst.view.widget.characters import CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.widget.chart import ActDistributionChart
@@ -243,6 +244,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.prefs_widget.sliderCards.valueChanged.connect(self.ui.cards.setCardsWidth)
         self.ui.cards.setCardsWidth(self.prefs_widget.sliderCards.value())
         menu = MenuWidget(self.ui.btnPreferences)
+        apply_white_menu(menu)
         menu.addWidget(self.prefs_widget)
 
         self._scene_filter = SceneFilterWidget(self.novel)

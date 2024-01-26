@@ -718,7 +718,7 @@ class SceneStoryStructureWidget(QWidget):
 
 class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
     def __init__(self, parent=None):
-        super(ScenesPreferencesWidget, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
 
         self.btnCardsWidth.setIcon(IconRegistry.from_name('ei.resize-horizontal'))
