@@ -396,7 +396,7 @@ class IconRegistry:
         return qtawesome.icon('fa5s.portrait')
 
     @staticmethod
-    def progress_check_icon(color: str = 'darkBlue', color_on=PLOTLYST_SECONDARY_COLOR) -> QIcon:
+    def progress_check_icon(color: str = 'black', color_on=PLOTLYST_SECONDARY_COLOR) -> QIcon:
         return IconRegistry.from_name('mdi.progress-check', color=color, color_on=color_on)
 
     @staticmethod

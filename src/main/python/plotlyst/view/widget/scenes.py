@@ -29,7 +29,7 @@ from PyQt6.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter
     QPushButton, QTreeView, QLabel, QTableView, \
     QAbstractItemView, QButtonGroup, QAbstractButton
 from overrides import overrides
-from qthandy import busy, margins, gc, pointy, vline, grid
+from qthandy import busy, margins, gc, pointy, vline, grid, line
 from qthandy import transparent, translucent, flow, \
     clear_layout, hbox, btn_popup, italic
 from qthandy.filter import InstantTooltipEventFilter, DragEventFilter
@@ -52,7 +52,7 @@ from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import PopupMenuBuilder, action, stretch_col, \
-    tool_btn, label
+    tool_btn, label, ExclusiveOptionalButtonGroup
 from src.main.python.plotlyst.view.generated.scene_drive_editor_ui import Ui_SceneDriveTrackingEditor
 from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui import Ui_ScenesViewPreferences
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -722,6 +722,18 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.setupUi(self)
 
         self.btnCardsWidth.setIcon(IconRegistry.from_name('ei.resize-horizontal'))
+        self.btnPov.setIcon(IconRegistry.eye_open_icon())
+        self.btnPurpose.setIcon(IconRegistry.from_name('fa5s.yin-yang'))
+        self.btnCharacters.setIcon(IconRegistry.character_icon())
+        self.btnStorylines.setIcon(IconRegistry.storylines_icon())
+        self.btnStage.setIcon(IconRegistry.progress_check_icon())
+
+        self.tabCards.layout().insertWidget(1, line(color='lightgrey'))
+        self.tabCards.layout().insertWidget(6, line(color='lightgrey'))
+
+        self.btnGroup = ExclusiveOptionalButtonGroup()
+        self.btnGroup.addButton(self.cbCharacters)
+        self.btnGroup.addButton(self.cbStorylines)
 
         self.tabWidget.setTabIcon(self.tabWidget.indexOf(self.tabCards), IconRegistry.cards_icon())
 
