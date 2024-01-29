@@ -11,6 +11,10 @@ description = "Plotlyst"
 long_description = '''<Your long description here>'''
 long_description_content_type = "text/markdown"
 url = ""
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent"
+]
 
 [project.dependencies]
 python = ">=3.6, <4"
@@ -38,9 +42,3 @@ core = ["PyQt6", "PyQt6-Qt6", "overrides", "qtawesome", "PyQt6-Charts", "PyQt6-C
 test = ["pytest", "pytest-qt", "pytest-cov", "pytest-randomly", "pypandoc-binary"]
 dev = []
 doc = []
-
-[project.classifiers]
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "Operating System :: OS Independent"
-]
