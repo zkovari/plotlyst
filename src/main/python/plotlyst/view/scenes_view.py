@@ -242,8 +242,9 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnPreferences.setIcon(IconRegistry.preferences_icon())
         self.prefs_widget = ScenesPreferencesWidget(self.novel)
         self.prefs_widget.settingToggled.connect(self._scene_prefs_toggled)
-        self.prefs_widget.sliderCards.valueChanged.connect(self.ui.cards.setCardsWidth)
-        self.ui.cards.setCardsWidth(self.prefs_widget.sliderCards.value())
+        self.prefs_widget.cardWidthChanged.connect(self._scene_card_width_changed)
+        self.ui.cards.setCardsWidth(
+            self.novel.prefs.setting(NovelSetting.SCENE_CARD_WIDTH, ScenesPreferencesWidget.DEFAULT_CARD_WIDTH))
         menu = MenuWidget(self.ui.btnPreferences)
         apply_white_menu(menu)
         menu.addWidget(self.prefs_widget)
@@ -698,3 +699,9 @@ class ScenesOutlineView(AbstractNovelView):
         self.repo.update_novel(self.novel)
 
         self.ui.cards.setSetting(setting, toggled)
+
+    def _scene_card_width_changed(self, width: int):
+        self.novel.prefs.settings[NovelSetting.SCENE_CARD_WIDTH.value] = width
+        self.repo.update_novel(self.novel)
+
+        self.ui.cards.setCardsWidth(width)

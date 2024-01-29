@@ -2564,6 +2564,7 @@ class NovelSetting(Enum):
     SCENE_CARD_PURPOSE = 'scene_card_purpose'
     SCENE_CARD_STAGE = 'scene_card_stage'
     SCENE_CARD_MIDDLE = 'scene_card_middle_display'
+    SCENE_CARD_WIDTH = 'scene_card_width'
 
 
 @dataclass
@@ -2575,6 +2576,9 @@ class NovelPreferences:
     settings: Dict[str, Any] = field(default_factory=dict)
 
     def toggled(self, setting: NovelSetting, default: bool = True) -> bool:
+        return self.settings.get(setting.value, default)
+
+    def setting(self, setting: NovelSetting, default: Any) -> Any:
         return self.settings.get(setting.value, default)
 
 

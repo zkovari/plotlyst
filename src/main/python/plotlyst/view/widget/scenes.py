@@ -717,7 +717,9 @@ class SceneStoryStructureWidget(QWidget):
 
 
 class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
+    DEFAULT_CARD_WIDTH: int = 175
     settingToggled = pyqtSignal(NovelSetting, bool)
+    cardWidthChanged = pyqtSignal(int)
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -745,6 +747,9 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.cbPov.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_CARD_POV))
         self.cbPurpose.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_CARD_PURPOSE))
         self.cbStage.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_CARD_STAGE))
+
+        self.sliderCards.setValue(self.novel.prefs.setting(NovelSetting.SCENE_CARD_WIDTH, self.DEFAULT_CARD_WIDTH))
+        self.sliderCards.valueChanged.connect(self.cardWidthChanged)
 
         self.tabWidget.setTabIcon(self.tabWidget.indexOf(self.tabCards), IconRegistry.cards_icon())
 
