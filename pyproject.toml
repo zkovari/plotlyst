@@ -33,11 +33,15 @@ dependencies = [
     "requests==2.27.1",
     "qt-handy",
     "pypandoc==1.11",
+    "pypandoc-binary==1.11",
+]
+
+[project.optional-dependencies]
+test = [
     "pytest==6.2.4",
     "pytest-qt==4.0.2",
     "pytest-cov==2.12.1",
     "pytest-randomly==3.11.0",
-    "pypandoc-binary==1.11",
 ]
 
 [tool.briefcase]
