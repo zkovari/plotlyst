@@ -5,12 +5,10 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "plotlyst"
 version = "0.1.0"
-author = "Zsolt Kovari"
-author_email = ""
+authors = [
+    { name = "Zsolt Kovari" }
+]
 description = "Plotlyst"
-long_description = '''<Your long description here>'''
-long_description_content_type = "text/markdown"
-url = ""
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent"
@@ -42,8 +40,6 @@ dependencies = [
     "pypandoc-binary==1.11",
 ]
 
-[project.extras_require]
-core = ["PyQt6", "PyQt6-Qt6", "overrides", "qtawesome", "PyQt6-Charts", "PyQt6-Charts-Qt6", "anytree", "emoji", "fbs[sentry]", "atomicwrites", "dataclasses-json", "python-slugify", "striprtf", "textstat", "nltk", "requests", "qt-handy", "pypandoc"]
-test = ["pytest", "pytest-qt", "pytest-cov", "pytest-randomly", "pypandoc-binary"]
-dev = []
-doc = []
+[tool.briefcase]
+project_name = "Plotlyst"
+bundle = "com.plotlyst"
