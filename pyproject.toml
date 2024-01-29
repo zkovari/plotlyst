@@ -2,7 +2,7 @@
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
+[project]
 name = "plotlyst"
 version = "0.1.0"
 author = "Zsolt Kovari"
@@ -12,7 +12,7 @@ long_description = '''<Your long description here>'''
 long_description_content_type = "text/markdown"
 url = ""
 
-[tool.setuptools.dependencies]
+[project.dependencies]
 python = ">=3.6, <4"
 PyQt6 = "==6.4.0"
 PyQt6-Qt6 = "==6.4.0"
@@ -33,13 +33,13 @@ requests = "==2.27.1"
 qt-handy = "*"
 pypandoc = "==1.11"
 
-[tool.setuptools.extras_require]
+[project.extras_require]
 core = ["PyQt6", "PyQt6-Qt6", "overrides", "qtawesome", "PyQt6-Charts", "PyQt6-Charts-Qt6", "anytree", "emoji", "fbs[sentry]", "atomicwrites", "dataclasses-json", "python-slugify", "striprtf", "textstat", "nltk", "requests", "qt-handy", "pypandoc"]
 test = ["pytest", "pytest-qt", "pytest-cov", "pytest-randomly", "pypandoc-binary"]
 dev = []
 doc = []
 
-[tool.setuptools.classifiers]
+[project.classifiers]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent"
