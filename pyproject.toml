@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+name = "plotlyst"
+version = "0.1.0"
+author = "Zsolt Kovari"
+author_email = ""
+description = "Plotlyst"
+long_description = '''<Your long description here>'''
+long_description_content_type = "text/markdown"
+url = ""
+
+[tool.setuptools.dependencies]
+python = ">=3.6, <4"
+PyQt6 = "==6.4.0"
+PyQt6-Qt6 = "==6.4.0"
+overrides = "==3.1.0"
+qtawesome = "==1.1.1"
+PyQt6-Charts = "==6.4.0"
+PyQt6-Charts-Qt6 = "==6.4.0"
+anytree = "==2.8.0"
+emoji = "==2.2.0"
+fbs = { version = "*", extras = ["sentry"] }
+atomicwrites = "==1.4.0"
+dataclasses-json = "==0.5.2"
+python-slugify = "==5.0.2"
+striprtf = "==0.0.19"
+textstat = "==0.7.2"
+nltk = "==3.7"
+requests = "==2.27.1"
+qt-handy = "*"
+pypandoc = "==1.11"
+
+[tool.setuptools.extras_require]
+core = ["PyQt6", "PyQt6-Qt6", "overrides", "qtawesome", "PyQt6-Charts", "PyQt6-Charts-Qt6", "anytree", "emoji", "fbs[sentry]", "atomicwrites", "dataclasses-json", "python-slugify", "striprtf", "textstat", "nltk", "requests", "qt-handy", "pypandoc"]
+test = ["pytest", "pytest-qt", "pytest-cov", "pytest-randomly", "pypandoc-binary"]
+dev = []
+doc = []
+
+[tool.setuptools.classifiers]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent"
+]
