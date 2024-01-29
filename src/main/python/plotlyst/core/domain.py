@@ -2546,6 +2546,11 @@ class PanelPreferences:
     scene_chapters_sidebar_toggled: bool = False
 
 
+class CardSizeRatio(Enum):
+    RATIO_2_3 = 0
+    RATIO_3_4 = 1
+
+
 class NovelSetting(Enum):
     Structure = 'structure'
     Storylines = 'storylines'

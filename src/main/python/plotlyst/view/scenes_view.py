@@ -33,7 +33,7 @@ from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, ScenePurposeType, \
-    StoryStructure, NovelSetting
+    StoryStructure, NovelSetting, CardSizeRatio
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
@@ -243,6 +243,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.prefs_widget = ScenesPreferencesWidget(self.novel)
         self.prefs_widget.settingToggled.connect(self._scene_prefs_toggled)
         self.prefs_widget.cardWidthChanged.connect(self._scene_card_width_changed)
+        self.prefs_widget.cardRatioChanged.connect(self._scene_card_ratio_changed)
         self.ui.cards.setCardsWidth(
             self.novel.prefs.setting(NovelSetting.SCENE_CARD_WIDTH, ScenesPreferencesWidget.DEFAULT_CARD_WIDTH))
         menu = MenuWidget(self.ui.btnPreferences)
@@ -705,3 +706,6 @@ class ScenesOutlineView(AbstractNovelView):
         self.repo.update_novel(self.novel)
 
         self.ui.cards.setCardsWidth(width)
+
+    def _scene_card_ratio_changed(self, ratio: CardSizeRatio):
+        self.ui.cards.setCardsSizeRatio(ratio)

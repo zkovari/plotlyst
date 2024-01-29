@@ -39,7 +39,7 @@ from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Scene, Novel, SceneOutcome, StoryBeat, StoryBeatType, Tag, SceneStage, \
     ReaderPosition, InformationAcquisition, Document, \
-    StoryStructure, NovelSetting
+    StoryStructure, NovelSetting, CardSizeRatio
 from src.main.python.plotlyst.core.help import scene_disaster_outcome_help, scene_trade_off_outcome_help, \
     scene_resolution_outcome_help, scene_motion_outcome_help
 from src.main.python.plotlyst.env import app_env
@@ -52,7 +52,7 @@ from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import PopupMenuBuilder, action, stretch_col, \
-    tool_btn, label, ExclusiveOptionalButtonGroup, wrap
+    tool_btn, label, ExclusiveOptionalButtonGroup
 from src.main.python.plotlyst.view.generated.scene_drive_editor_ui import Ui_SceneDriveTrackingEditor
 from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui import Ui_ScenesViewPreferences
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -720,6 +720,7 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
     DEFAULT_CARD_WIDTH: int = 175
     settingToggled = pyqtSignal(NovelSetting, bool)
     cardWidthChanged = pyqtSignal(int)
+    cardRatioChanged = pyqtSignal(CardSizeRatio)
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -750,6 +751,11 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
 
         self.sliderCards.setValue(self.novel.prefs.setting(NovelSetting.SCENE_CARD_WIDTH, self.DEFAULT_CARD_WIDTH))
         self.sliderCards.valueChanged.connect(self.cardWidthChanged)
+
+        # self.rb23.clicked.connect(partial(self.cardRatioChanged.emit, CardSizeRatio.RATIO_2_3))
+        # self.rb34.clicked.connect(partial(self.cardRatioChanged.emit, CardSizeRatio.RATIO_3_4))
+        self.rb23.setHidden(True)
+        self.rb34.setHidden(True)
 
         self.wdgCharacters.setHidden(True)
         self.wdgStorylines.setHidden(True)

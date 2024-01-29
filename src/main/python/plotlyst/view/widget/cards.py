@@ -18,7 +18,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
-from enum import Enum
 from functools import partial
 from typing import Optional, List, Dict, Iterable, Set, Any
 
@@ -32,7 +31,7 @@ from qthandy import clear_layout, retain_when_hidden, transparent, flow, translu
 from qthandy.filter import DragEventFilter, DropEventFilter
 
 from src.main.python.plotlyst.common import act_color
-from src.main.python.plotlyst.core.domain import Character, Scene, Novel, NovelSetting
+from src.main.python.plotlyst.core.domain import Character, Scene, Novel, NovelSetting, CardSizeRatio
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
@@ -281,11 +280,6 @@ class SceneCard(Ui_SceneCard, Card):
 
         self.btnBeat.setGeometry(w - self.btnBeat.sizeHint().width(), 0, self.btnBeat.sizeHint().width(),
                                  self.btnBeat.sizeHint().height() + 5)
-
-
-class CardSizeRatio(Enum):
-    RATIO_2_3 = 0
-    RATIO_3_4 = 1
 
 
 class CardFilter:
