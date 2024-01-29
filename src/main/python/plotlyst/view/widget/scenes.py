@@ -734,7 +734,7 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.btnStage.setIcon(IconRegistry.progress_check_icon())
 
         self.tabCards.layout().insertWidget(1, line(color='lightgrey'))
-        self.tabCards.layout().insertWidget(6, wrap(line(color='lightgrey'), margin_left=10))
+        # self.tabCards.layout().insertWidget(6, wrap(line(color='lightgrey'), margin_left=10))
 
         self.btnGroup = ExclusiveOptionalButtonGroup()
         self.btnGroup.addButton(self.cbCharacters)
@@ -750,6 +750,9 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
 
         self.sliderCards.setValue(self.novel.prefs.setting(NovelSetting.SCENE_CARD_WIDTH, self.DEFAULT_CARD_WIDTH))
         self.sliderCards.valueChanged.connect(self.cardWidthChanged)
+
+        self.wdgCharacters.setHidden(True)
+        self.wdgStorylines.setHidden(True)
 
         self.tabWidget.setTabIcon(self.tabWidget.indexOf(self.tabCards), IconRegistry.cards_icon())
 
