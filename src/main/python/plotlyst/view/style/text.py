@@ -58,6 +58,11 @@ label_style_headings = """
     QLabel[h4=true] {
         font-size: 16pt;
     }
+    
+    QLabel[h5=true] {
+        font-size: 14pt;
+    }
+    
     QLabel[small-body=true] {
         font-size: 14pt;
     }

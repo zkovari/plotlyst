@@ -29,7 +29,7 @@ from PyQt6.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter
     QPushButton, QTreeView, QLabel, QTableView, \
     QAbstractItemView, QButtonGroup, QAbstractButton
 from overrides import overrides
-from qthandy import busy, margins, gc, pointy, vline, grid
+from qthandy import busy, margins, gc, pointy, vline, grid, line
 from qthandy import transparent, translucent, flow, \
     clear_layout, hbox, btn_popup, italic
 from qthandy.filter import InstantTooltipEventFilter, DragEventFilter
@@ -39,7 +39,7 @@ from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Scene, Novel, SceneOutcome, StoryBeat, StoryBeatType, Tag, SceneStage, \
     ReaderPosition, InformationAcquisition, Document, \
-    StoryStructure
+    StoryStructure, NovelSetting, CardSizeRatio
 from src.main.python.plotlyst.core.help import scene_disaster_outcome_help, scene_trade_off_outcome_help, \
     scene_resolution_outcome_help, scene_motion_outcome_help
 from src.main.python.plotlyst.env import app_env
@@ -52,7 +52,7 @@ from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import PopupMenuBuilder, action, stretch_col, \
-    tool_btn, label
+    tool_btn, label, ExclusiveOptionalButtonGroup
 from src.main.python.plotlyst.view.generated.scene_drive_editor_ui import Ui_SceneDriveTrackingEditor
 from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui import Ui_ScenesViewPreferences
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -717,11 +717,48 @@ class SceneStoryStructureWidget(QWidget):
 
 
 class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
-    def __init__(self, parent=None):
-        super(ScenesPreferencesWidget, self).__init__(parent)
+    DEFAULT_CARD_WIDTH: int = 175
+    settingToggled = pyqtSignal(NovelSetting, bool)
+    cardWidthChanged = pyqtSignal(int)
+    cardRatioChanged = pyqtSignal(CardSizeRatio)
+
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
         self.setupUi(self)
+        self.novel = novel
 
         self.btnCardsWidth.setIcon(IconRegistry.from_name('ei.resize-horizontal'))
+        self.btnPov.setIcon(IconRegistry.eye_open_icon())
+        self.btnPurpose.setIcon(IconRegistry.from_name('fa5s.yin-yang'))
+        self.btnCharacters.setIcon(IconRegistry.character_icon())
+        self.btnStorylines.setIcon(IconRegistry.storylines_icon())
+        self.btnStage.setIcon(IconRegistry.progress_check_icon())
+
+        self.tabCards.layout().insertWidget(1, line(color='lightgrey'))
+        # self.tabCards.layout().insertWidget(6, wrap(line(color='lightgrey'), margin_left=10))
+
+        self.btnGroup = ExclusiveOptionalButtonGroup()
+        self.btnGroup.addButton(self.cbCharacters)
+        self.btnGroup.addButton(self.cbStorylines)
+
+        self.cbPov.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_POV))
+        self.cbPurpose.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_PURPOSE))
+        self.cbStage.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_STAGE))
+
+        self.cbPov.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_CARD_POV))
+        self.cbPurpose.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_CARD_PURPOSE))
+        self.cbStage.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_CARD_STAGE))
+
+        self.sliderCards.setValue(self.novel.prefs.setting(NovelSetting.SCENE_CARD_WIDTH, self.DEFAULT_CARD_WIDTH))
+        self.sliderCards.valueChanged.connect(self.cardWidthChanged)
+
+        # self.rb23.clicked.connect(partial(self.cardRatioChanged.emit, CardSizeRatio.RATIO_2_3))
+        # self.rb34.clicked.connect(partial(self.cardRatioChanged.emit, CardSizeRatio.RATIO_3_4))
+        self.rb23.setHidden(True)
+        self.rb34.setHidden(True)
+
+        self.wdgCharacters.setHidden(True)
+        self.wdgStorylines.setHidden(True)
 
         self.tabWidget.setTabIcon(self.tabWidget.indexOf(self.tabCards), IconRegistry.cards_icon())
 

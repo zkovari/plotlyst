@@ -33,7 +33,7 @@ from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, ScenePurposeType, \
-    StoryStructure, NovelSetting
+    StoryStructure, NovelSetting, CardSizeRatio
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatchers
@@ -55,6 +55,7 @@ from src.main.python.plotlyst.view.generated.scenes_title_ui import Ui_ScenesTit
 from src.main.python.plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.scene_editor import SceneEditor
+from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.cards import SceneCard, SceneCardFilter
 from src.main.python.plotlyst.view.widget.characters import CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.widget.chart import ActDistributionChart
@@ -239,10 +240,14 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.ui.btnFilter.setIcon(IconRegistry.filter_icon())
         self.ui.btnPreferences.setIcon(IconRegistry.preferences_icon())
-        self.prefs_widget = ScenesPreferencesWidget()
-        self.prefs_widget.sliderCards.valueChanged.connect(self.ui.cards.setCardsWidth)
-        self.ui.cards.setCardsWidth(self.prefs_widget.sliderCards.value())
+        self.prefs_widget = ScenesPreferencesWidget(self.novel)
+        self.prefs_widget.settingToggled.connect(self._scene_prefs_toggled)
+        self.prefs_widget.cardWidthChanged.connect(self._scene_card_width_changed)
+        self.prefs_widget.cardRatioChanged.connect(self._scene_card_ratio_changed)
+        self.ui.cards.setCardsWidth(
+            self.novel.prefs.setting(NovelSetting.SCENE_CARD_WIDTH, ScenesPreferencesWidget.DEFAULT_CARD_WIDTH))
         menu = MenuWidget(self.ui.btnPreferences)
+        apply_white_menu(menu)
         menu.addWidget(self.prefs_widget)
 
         self._scene_filter = SceneFilterWidget(self.novel)
@@ -689,3 +694,18 @@ class ScenesOutlineView(AbstractNovelView):
         elif self.ui.btnStoryGridDisplay.isChecked():
             self.ui.wdgStorymapToolbar.setVisible(False)
             self.storymap_view.setMode(StoryMapDisplayMode.DETAILED)
+
+    def _scene_prefs_toggled(self, setting: NovelSetting, toggled: bool):
+        self.novel.prefs.settings[setting.value] = toggled
+        self.repo.update_novel(self.novel)
+
+        self.ui.cards.setSetting(setting, toggled)
+
+    def _scene_card_width_changed(self, width: int):
+        self.novel.prefs.settings[NovelSetting.SCENE_CARD_WIDTH.value] = width
+        self.repo.update_novel(self.novel)
+
+        self.ui.cards.setCardsWidth(width)
+
+    def _scene_card_ratio_changed(self, ratio: CardSizeRatio):
+        self.ui.cards.setCardsSizeRatio(ratio)

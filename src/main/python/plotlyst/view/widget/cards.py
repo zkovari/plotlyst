@@ -18,7 +18,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
-from enum import Enum
 from functools import partial
 from typing import Optional, List, Dict, Iterable, Set, Any
 
@@ -32,7 +31,7 @@ from qthandy import clear_layout, retain_when_hidden, transparent, flow, translu
 from qthandy.filter import DragEventFilter, DropEventFilter
 
 from src.main.python.plotlyst.common import act_color
-from src.main.python.plotlyst.core.domain import Character, Scene, Novel
+from src.main.python.plotlyst.core.domain import Character, Scene, Novel, NovelSetting, CardSizeRatio
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
@@ -205,10 +204,15 @@ class SceneCard(Ui_SceneCard, Card):
             self.lblType.setPixmap(icon.pixmap(QSize(24, 24)))
         else:
             self.lblType.clear()
+        retain_when_hidden(self.lblType)
 
         self.btnStage.setScene(self.scene, self.novel)
 
         self._setStyleSheet()
+
+        self._stageVisible = self.novel.prefs.toggled(NovelSetting.SCENE_CARD_STAGE)
+        self.btnPov.setVisible(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_POV))
+        self.lblType.setVisible(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_PURPOSE))
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -224,22 +228,40 @@ class SceneCard(Ui_SceneCard, Card):
     def copy(self) -> 'Card':
         return SceneCard(self.scene, self.novel)
 
+    def setSetting(self, setting: NovelSetting, value: Any):
+        if setting == NovelSetting.SCENE_CARD_POV:
+            self.btnPov.setVisible(value)
+        elif setting == NovelSetting.SCENE_CARD_PURPOSE:
+            self.lblType.setVisible(value)
+        elif setting == NovelSetting.SCENE_CARD_STAGE:
+            self._stageVisible = value
+            if self._stageVisible:
+                if self.btnStage.stageOk():
+                    self.btnStage.setVisible(True)
+            else:
+                self.btnStage.setHidden(True)
+
     @overrides
     def enterEvent(self, event: QEvent) -> None:
         super(SceneCard, self).enterEvent(event)
         self.wdgCharacters.setEnabled(True)
-        if not self.btnStage.stageOk():
+        if self._stageVisible:
             self.btnStage.setVisible(True)
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
         self.wdgCharacters.setEnabled(False)
-        if not self.btnStage.stageOk() and not self.btnStage.menu().isVisible():
+        if not self._stageVisible:
+            self.btnStage.setHidden(True)
+        elif not self.btnStage.stageOk() and not self.btnStage.menu().isVisible():
             self.btnStage.setHidden(True)
 
     @overrides
     def showEvent(self, event: QtGui.QShowEvent) -> None:
-        self.btnStage.setVisible(self.btnStage.stageOk())
+        if self._stageVisible:
+            self.btnStage.setVisible(self.btnStage.stageOk())
+        else:
+            self.btnStage.setHidden(True)
 
     @overrides
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
@@ -258,11 +280,6 @@ class SceneCard(Ui_SceneCard, Card):
 
         self.btnBeat.setGeometry(w - self.btnBeat.sizeHint().width(), 0, self.btnBeat.sizeHint().width(),
                                  self.btnBeat.sizeHint().height() + 5)
-
-
-class CardSizeRatio(Enum):
-    RATIO_2_3 = 0
-    RATIO_3_4 = 1
 
 
 class CardFilter:
@@ -359,6 +376,10 @@ class CardsView(QFrame):
     def setCardsSizeRatio(self, ratio: CardSizeRatio):
         self._cardsRatio = ratio
         self._resizeAllCards()
+
+    def setSetting(self, setting: NovelSetting, value: Any):
+        for card in self._cards.values():
+            card.setSetting(setting, value)
 
     def applyFilter(self, cardFilter: CardFilter):
         for card in self._cards.values():
