@@ -32,7 +32,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_field, \
     mbti_field, ProfileTemplate, default_character_profiles, enneagram_choices, \
-    mbti_choices, Role, summary_field, exclude_if_false
+    mbti_choices, Role, summary_field, exclude_if_false, antagonist_role
 from src.main.python.plotlyst.env import app_env
 
 
@@ -52,6 +52,14 @@ class TemplateValue:
     @overrides
     def __hash__(self):
         return hash(str(self.id))
+
+
+class LayoutType(Enum):
+    HORIZONTAL = 0
+    VERTICAL = 1
+    FLOW = 2
+    CURVED_FLOW = 3
+    GRID = 4
 
 
 @dataclass
@@ -415,7 +423,7 @@ class Character:
             if value.id == summary_field.id:
                 return value.value
 
-        return ''
+        return ""
 
     def set_summary(self, summary: str):
         for tmpl_value in self.template_values:
@@ -536,7 +544,6 @@ def exclude_if_beat(value):
 @dataclass
 class OutlineItem:
     text: str = ''
-    percentage: float = 0.0
 
 
 class PlotProgressionItemType(Enum):
@@ -554,6 +561,7 @@ class PlotProgressionItem(OutlineItem):
 @dataclass
 class StoryBeat(OutlineItem):
     act: int = 1
+    percentage: float = 0.0
     description: str = ''
     type: StoryBeatType = field(default=StoryBeatType.BEAT, metadata=config(exclude=exclude_if_beat))
     ends_act: bool = field(default=False, metadata=config(exclude=exclude_if_empty))
@@ -665,6 +673,8 @@ class PlotPrincipleType(Enum):
     FIRST_LOVE = 34
     MENTOR = 35
 
+    DYNAMIC_PRINCIPLES = 36
+
     def display_name(self) -> str:
         if self == PlotPrincipleType.WAR_MENTAL_EFFECT:
             return 'Mental effect'
@@ -682,6 +692,286 @@ class PlotPrinciple:
     type: PlotPrincipleType
     value: Any = None
     is_set: bool = False
+
+
+class DynamicPlotPrincipleType(Enum):
+    TWIST = 'twist'
+    TURN = 'turn'
+    WONDER = 'wonder'
+    MONSTER = 'monster'
+    ALLY = 'ally'
+    ENEMY = 'enemy'
+    SUSPECT = 'suspect'
+    CREW_MEMBER = 'crew'
+
+    DESCRIPTION = 'DESCRIPTION'
+    MOTIVE = 'motive'
+    CLUES = 'clues'
+    RED_HERRING = 'red_herring'
+    ALIBI = 'alibi'
+    SECRETS = 'secrets'
+    RED_FLAGS = 'red_flags'
+    CRIMINAL_RECORD = 'criminal_record'
+    EVIDENCE_AGAINST = 'evidence_against'
+    EVIDENCE_IN_FAVOR = 'evidence_in_favor'
+    BEHAVIOR_DURING_INVESTIGATION = 'behavior_during_investigation'
+
+    SKILL_SET = 'skill_set'
+    MOTIVATION = 'motivation'
+    CONTRIBUTION = 'contribution'
+    WEAK_LINK = 'weak_link'
+    HIDDEN_AGENDA = 'hidden_agenda'
+    NICKNAME = 'nickname'
+
+    def display_name(self) -> str:
+        return self.name.lower().capitalize().replace('_', ' ')
+
+    def icon(self) -> str:
+        if self == DynamicPlotPrincipleType.TWIST:
+            return 'ph.shuffle-bold'
+        elif self == DynamicPlotPrincipleType.TURN:
+            return 'mdi.boom-gate-up-outline'
+        elif self == DynamicPlotPrincipleType.WONDER:
+            return 'mdi.star-four-points-outline'
+        elif self == DynamicPlotPrincipleType.MONSTER:
+            return 'ri.ghost-2-fill'
+        elif self == DynamicPlotPrincipleType.ALLY:
+            return 'fa5s.thumbs-up'
+        elif self == DynamicPlotPrincipleType.ENEMY:
+            return 'fa5s.thumbs-down'
+        elif self == DynamicPlotPrincipleType.SUSPECT:
+            return 'ri.criminal-fill'
+        elif self == DynamicPlotPrincipleType.CREW_MEMBER:
+            return 'mdi.robber'
+        elif self == DynamicPlotPrincipleType.DESCRIPTION:
+            return 'mdi6.human-male-height-variant'
+        elif self == DynamicPlotPrincipleType.MOTIVE:
+            return 'fa5s.fist-raised'
+        elif self == DynamicPlotPrincipleType.CLUES:
+            return 'mdi.fingerprint'
+        elif self == DynamicPlotPrincipleType.RED_HERRING:
+            return 'fa5s.fish'
+        elif self == DynamicPlotPrincipleType.ALIBI:
+            return 'fa5.calendar-check'
+        elif self == DynamicPlotPrincipleType.SECRETS:
+            return 'ei.lock-alt'
+        elif self == DynamicPlotPrincipleType.RED_FLAGS:
+            return 'fa5s.flag'
+        elif self == DynamicPlotPrincipleType.CRIMINAL_RECORD:
+            return 'fa5s.gavel'
+        elif self == DynamicPlotPrincipleType.EVIDENCE_AGAINST:
+            return 'ri.criminal-fill'
+        elif self == DynamicPlotPrincipleType.EVIDENCE_IN_FAVOR:
+            return 'fa5s.dove'
+        elif self == DynamicPlotPrincipleType.BEHAVIOR_DURING_INVESTIGATION:
+            return 'mdi.head-dots-horizontal-outline'
+
+        elif self == DynamicPlotPrincipleType.SKILL_SET:
+            return "fa5s.tools"
+        elif self == DynamicPlotPrincipleType.MOTIVATION:
+            return "fa5s.hand-holding-usd"
+        elif self == DynamicPlotPrincipleType.CONTRIBUTION:
+            return "ph.puzzle-piece"
+        elif self == DynamicPlotPrincipleType.WEAK_LINK:
+            return "mdi6.target-account"
+        elif self == DynamicPlotPrincipleType.HIDDEN_AGENDA:
+            return "fa5s.user-secret"
+        elif self == DynamicPlotPrincipleType.NICKNAME:
+            return "mdi.badge-account-outline"
+
+    def color(self) -> str:
+        if self == DynamicPlotPrincipleType.TWIST:
+            return "#f20089"
+        elif self == DynamicPlotPrincipleType.TURN:
+            return "#8338ec"
+        elif self == DynamicPlotPrincipleType.WONDER:
+            return "#40916c"
+        elif self == DynamicPlotPrincipleType.MONSTER:
+            return antagonist_role.icon_color
+        elif self == DynamicPlotPrincipleType.ALLY:
+            return '#266dd3'
+        elif self == DynamicPlotPrincipleType.ENEMY:
+            return '#9e1946'
+        elif self == DynamicPlotPrincipleType.SUSPECT:
+            return '#9e2a2b'
+        elif self == DynamicPlotPrincipleType.CREW_MEMBER:
+            return '#0077b6'
+
+        elif self == DynamicPlotPrincipleType.RED_HERRING:
+            return '#d33f49'
+        elif self == DynamicPlotPrincipleType.RED_FLAGS:
+            return '#9e1946'
+
+        return 'black'
+
+    def description(self) -> str:
+        if self == DynamicPlotPrincipleType.TWIST:
+            return "Brings an unexpected development of the story by defying readers expectations"
+        elif self == DynamicPlotPrincipleType.TURN:
+            return "Delivers a shift in the story's direction by often playing with or subverting readers expectations"
+        elif self == DynamicPlotPrincipleType.ALLY:
+            return "A character forming alliance with the storyline's focal character"
+        elif self == DynamicPlotPrincipleType.ENEMY:
+            return "An adversary character who opposes the storyline's focal character"
+
+        elif self == DynamicPlotPrincipleType.DESCRIPTION:
+            return "The suspect's physical appearance and distinguishing features"
+        elif self == DynamicPlotPrincipleType.MOTIVE:
+            return "The suspects underlying or speculated motivation to commit the crime"
+        elif self == DynamicPlotPrincipleType.CLUES:
+            return "Information or evidence that brings the suspect into the investigation"
+        elif self == DynamicPlotPrincipleType.RED_HERRING:
+            return "A misleading clue that diverts the investigation"
+        elif self == DynamicPlotPrincipleType.ALIBI:
+            return "Does the suspect have any alibi when the crime occurred?"
+        elif self == DynamicPlotPrincipleType.SECRETS:
+            return "Secrets from the suspect's life that may be relevant to the investigation"
+        elif self == DynamicPlotPrincipleType.RED_FLAGS:
+            return "Any behavior or sign that raises suspicion about the suspect"
+        elif self == DynamicPlotPrincipleType.CRIMINAL_RECORD:
+            return "Does the suspect have a criminal record?"
+        elif self == DynamicPlotPrincipleType.EVIDENCE_AGAINST:
+            return "Evidence that strongly suggests the suspect's involvement in the crime"
+        elif self == DynamicPlotPrincipleType.EVIDENCE_IN_FAVOR:
+            return "Any information that supports the suspect's innocence"
+        elif self == DynamicPlotPrincipleType.BEHAVIOR_DURING_INVESTIGATION:
+            return "How does the suspect behave during the investigation?"
+
+        elif self == DynamicPlotPrincipleType.SKILL_SET:
+            return "What's the member's unique skill set that can help the caper?"
+        elif self == DynamicPlotPrincipleType.MOTIVATION:
+            return "The member's unique motivation for participating"
+        elif self == DynamicPlotPrincipleType.CONTRIBUTION:
+            return "How does the member help the team?"
+        elif self == DynamicPlotPrincipleType.WEAK_LINK:
+            return "Is the member a weak link or a liability?"
+        elif self == DynamicPlotPrincipleType.HIDDEN_AGENDA:
+            return "Is there a hidden agenda of the member behind being part of the team?"
+        elif self == DynamicPlotPrincipleType.NICKNAME:
+            return "Any nicknames the member is referred to"
+
+        return ""
+
+    def placeholder(self) -> str:
+        if self == DynamicPlotPrincipleType.TWIST:
+            return "How the story develops unexpectedly by defying readers expectations"
+        elif self == DynamicPlotPrincipleType.TURN:
+            return "How the story shifts by playing with or subverting readers expectations"
+        elif self == DynamicPlotPrincipleType.WONDER:
+            return "Describe an element of wonder that make your fantastical world captivating"
+        elif self == DynamicPlotPrincipleType.MONSTER:
+            return "How the monster's power evolved or revealed continuously"
+        elif self == DynamicPlotPrincipleType.ALLY:
+            return "Describe who and how forms an alliance with the character"
+        elif self == DynamicPlotPrincipleType.ENEMY:
+            return "Describe who and how opposes the focal character"
+
+        elif self == DynamicPlotPrincipleType.DESCRIPTION:
+            return "Describe the suspect's physical appearance or any distinguishing features"
+        elif self == DynamicPlotPrincipleType.MOTIVE:
+            return "Describe the suspect's potential motivation to commit the crime"
+        elif self == DynamicPlotPrincipleType.CLUES:
+            return "Describe what clues raise suspicion about the suspect"
+        elif self == DynamicPlotPrincipleType.RED_HERRING:
+            return "What misleading clues distract the investigation and divert it into a wrong direction"
+        elif self == DynamicPlotPrincipleType.ALIBI:
+            return "Describe any potential alibi"
+        elif self == DynamicPlotPrincipleType.SECRETS:
+            return "Describe the secrets the suspect may have"
+        elif self == DynamicPlotPrincipleType.RED_FLAGS:
+            return "Describe any behavior or sign that raises suspicion about the suspect"
+        elif self == DynamicPlotPrincipleType.CRIMINAL_RECORD:
+            return "Describe the suspect's criminal record, if there's any"
+        elif self == DynamicPlotPrincipleType.EVIDENCE_AGAINST:
+            return "Describe any evidence that strongly suggests the suspect is guilty"
+        elif self == DynamicPlotPrincipleType.EVIDENCE_IN_FAVOR:
+            return "Describe any significant information that supports the suspect's innocence"
+        elif self == DynamicPlotPrincipleType.BEHAVIOR_DURING_INVESTIGATION:
+            return "Describe how the suspect behaves during the investigation"
+
+        elif self == DynamicPlotPrincipleType.SKILL_SET:
+            return "Describe the member's unique skill set that helps the scheme"
+        elif self == DynamicPlotPrincipleType.MOTIVATION:
+            return "Describe the member's motivation for being part of the heist"
+        elif self == DynamicPlotPrincipleType.CONTRIBUTION:
+            return "Describe how the member helps the scheme"
+        elif self == DynamicPlotPrincipleType.WEAK_LINK:
+            return "Describe how the member is considered a weak link"
+        elif self == DynamicPlotPrincipleType.HIDDEN_AGENDA:
+            return "Describe the member's hidden agenda behind participating in the scheme"
+        elif self == DynamicPlotPrincipleType.NICKNAME:
+            return "Describe member's nicknames, if there's any"
+
+        return ""
+
+
+@dataclass
+class DynamicPlotPrinciple(OutlineItem):
+    type: DynamicPlotPrincipleType = DynamicPlotPrincipleType.TWIST
+    elements: List['DynamicPlotPrinciple'] = field(default_factory=list)
+    character_id: str = ''
+
+
+class DynamicPlotPrincipleGroupType(Enum):
+    TWISTS_AND_TURNS = 0
+    ALLIES_AND_ENEMIES = 1
+    SUSPECTS = 2
+    ELEMENTS_OF_WONDER = 3
+    EVOLUTION_OF_THE_MONSTER = 4
+    CAST = 5
+
+    def display_name(self) -> str:
+        return self.name.lower().capitalize().replace('_', ' ')
+
+    def icon(self) -> str:
+        if self == DynamicPlotPrincipleGroupType.TWISTS_AND_TURNS:
+            return 'ph.shuffle-bold'
+        elif self == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
+            return 'fa5s.thumbs-down'
+        elif self == DynamicPlotPrincipleGroupType.SUSPECTS:
+            return 'ri.criminal-fill'
+        elif self == DynamicPlotPrincipleGroupType.ELEMENTS_OF_WONDER:
+            return 'ph.globe-stand-bold'
+        elif self == DynamicPlotPrincipleGroupType.EVOLUTION_OF_THE_MONSTER:
+            return 'ri.ghost-2-fill'
+        elif self == DynamicPlotPrincipleGroupType.CAST:
+            return 'mdi.robber'
+
+    def color(self) -> str:
+        if self == DynamicPlotPrincipleGroupType.TWISTS_AND_TURNS:
+            return '#8338ec'
+        elif self == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
+            return '#9e1946'
+        elif self == DynamicPlotPrincipleGroupType.SUSPECTS:
+            return '#9e2a2b'
+        elif self == DynamicPlotPrincipleGroupType.ELEMENTS_OF_WONDER:
+            return '#40916c'
+        elif self == DynamicPlotPrincipleGroupType.EVOLUTION_OF_THE_MONSTER:
+            return antagonist_role.icon_color
+        elif self == DynamicPlotPrincipleGroupType.CAST:
+            return '#0077b6'
+
+        return 'black'
+
+    def description(self) -> str:
+        if self == DynamicPlotPrincipleGroupType.TWISTS_AND_TURNS:
+            return 'Narrative turns, unexpected twists, and revelations that enhance intrigue and excitement in the storyline'
+        elif self == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
+            return "Characters forming alliances and adversaries around the focal character"
+        elif self == DynamicPlotPrincipleGroupType.SUSPECTS:
+            return "Suspects, clues, red herrings that add depth to a mystery"
+        elif self == DynamicPlotPrincipleGroupType.ELEMENTS_OF_WONDER:
+            return "Elements of wonder and awe that make a fantastical world captivating"
+        elif self == DynamicPlotPrincipleGroupType.EVOLUTION_OF_THE_MONSTER:
+            return "The continuous evolution or revelation of the monster's power, unfolding dynamically throughout the narrative"
+        elif self == DynamicPlotPrincipleGroupType.CAST:
+            return "The ensemble of characters involved in a caper, each with unique skills and contributions"
+
+
+@dataclass
+class DynamicPlotPrincipleGroup:
+    type: DynamicPlotPrincipleGroupType
+    principles: List[DynamicPlotPrinciple] = field(default_factory=list)
 
 
 class PlotEventType(Enum):
@@ -802,19 +1092,19 @@ class StorylineLinkType(Enum):
 
     def placeholder(self) -> str:
         if self == StorylineLinkType.Catalyst:
-            return ''
+            return ""
         elif self == StorylineLinkType.Impact:
-            return ''
+            return ""
         elif self == StorylineLinkType.Contrast:
-            return ''
+            return ""
         elif self == StorylineLinkType.Reflect_char:
-            return ''
+            return ""
         elif self == StorylineLinkType.Reflect_plot:
-            return ''
+            return ""
         elif self == StorylineLinkType.Resolve:
-            return ''
+            return ""
         elif self == StorylineLinkType.Compete:
-            return ''
+            return ""
         return 'How does the storyline connect to the other one?'
 
 
@@ -835,7 +1125,9 @@ class Plot(SelectionItem, CharacterBased):
     relation_character_id: Optional[uuid.UUID] = None
     question: str = ''
     principles: List[PlotPrinciple] = field(default_factory=list)
+    dynamic_principles: List[DynamicPlotPrincipleGroup] = field(default_factory=list)
     has_progression: bool = True
+    has_dynamic_principles: bool = True
     has_thematic_relevance: bool = False
     events: List[PlotEvent] = field(default_factory=list)
     default_value: PlotValue = field(default_factory=default_plot_value)

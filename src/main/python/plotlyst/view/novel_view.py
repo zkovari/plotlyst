@@ -39,7 +39,7 @@ from src.main.python.plotlyst.view.dialog.novel import NovelEditionDialog, Synop
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_border_image
-from src.main.python.plotlyst.view.widget.plot import PlotEditor
+from src.main.python.plotlyst.view.widget.plot.editor import PlotEditor
 from src.main.python.plotlyst.view.widget.settings import NovelSettingsWidget
 from src.main.python.plotlyst.view.widget.story_map import EventsMindMapView
 
@@ -123,7 +123,7 @@ class NovelView(AbstractNovelView):
         self._settings = NovelSettingsWidget(self.novel)
         self.ui.wdgSettings.layout().addWidget(self._settings)
 
-        self.ui.tabWidget.setCurrentWidget(self.ui.tabStructure)
+        self.ui.tabWidget.setCurrentWidget(self.ui.tabPlot)
 
     @overrides
     def event_received(self, event: Event):

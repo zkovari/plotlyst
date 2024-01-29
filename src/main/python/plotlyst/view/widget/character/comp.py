@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QLabel, QTextEdit
 from overrides import overrides
 from qthandy import vbox, hbox, line, flow, gc, vspacer, clear_layout, bold, margins
 
-from src.main.python.plotlyst.core.domain import Character, Novel, TemplateValue
+from src.main.python.plotlyst.core.domain import Character, Novel, TemplateValue, LayoutType
 from src.main.python.plotlyst.core.template import iq_field, eq_field, rationalism_field, creativity_field, \
     willpower_field, TemplateField
 from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
@@ -254,12 +254,6 @@ class CharacterOverviewWidget(QWidget, EventListener):
             self._wdgHeader.setHidden(True)
             self._display = BackstoryDisplay(self._character)
             self._displayContainer.layout().addWidget(self._display)
-
-
-class LayoutType(Enum):
-    HORIZONTAL = 0
-    VERTICAL = 1
-    FLOW = 2
 
 
 class CharacterComparisonWidget(QWidget):

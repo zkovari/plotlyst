@@ -51,7 +51,7 @@ from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import RemovalButton
-from src.main.python.plotlyst.view.widget.plot import StorylineSelectorMenu
+from src.main.python.plotlyst.view.widget.plot.selector import StorylineSelectorMenu
 from src.main.python.plotlyst.view.widget.scene.agency import SceneAgendaEmotionEditor, SceneAgendaMotivationEditor, \
     SceneAgendaConflictEditor
 from src.main.python.plotlyst.view.widget.scenes import SceneOutcomeSelector
