@@ -240,7 +240,8 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.ui.btnFilter.setIcon(IconRegistry.filter_icon())
         self.ui.btnPreferences.setIcon(IconRegistry.preferences_icon())
-        self.prefs_widget = ScenesPreferencesWidget()
+        self.prefs_widget = ScenesPreferencesWidget(self.novel)
+        self.prefs_widget.settingToggled.connect(self._scene_prefs_toggled)
         self.prefs_widget.sliderCards.valueChanged.connect(self.ui.cards.setCardsWidth)
         self.ui.cards.setCardsWidth(self.prefs_widget.sliderCards.value())
         menu = MenuWidget(self.ui.btnPreferences)
@@ -691,3 +692,9 @@ class ScenesOutlineView(AbstractNovelView):
         elif self.ui.btnStoryGridDisplay.isChecked():
             self.ui.wdgStorymapToolbar.setVisible(False)
             self.storymap_view.setMode(StoryMapDisplayMode.DETAILED)
+
+    def _scene_prefs_toggled(self, setting: NovelSetting, toggled: bool):
+        self.novel.prefs.settings[setting.value] = toggled
+        self.repo.update_novel(self.novel)
+
+        self.ui.cards.setSetting(setting, toggled)

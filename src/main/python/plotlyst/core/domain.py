@@ -2560,6 +2560,10 @@ class NovelSetting(Enum):
     Manuscript = 'manuscript'
     World_building = 'world_building'
     Management = 'management'
+    SCENE_CARD_POV = 'scene_card_pov'
+    SCENE_CARD_PURPOSE = 'scene_card_purpose'
+    SCENE_CARD_STAGE = 'scene_card_stage'
+    SCENE_CARD_MIDDLE = 'scene_card_middle_display'
 
 
 @dataclass
@@ -2570,8 +2574,8 @@ class NovelPreferences:
     panels: PanelPreferences = field(default_factory=PanelPreferences)
     settings: Dict[str, Any] = field(default_factory=dict)
 
-    def toggled(self, setting: NovelSetting) -> bool:
-        return self.settings.get(setting.value, True)
+    def toggled(self, setting: NovelSetting, default: bool = True) -> bool:
+        return self.settings.get(setting.value, default)
 
 
 @dataclass
