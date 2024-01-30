@@ -1,10 +1,6 @@
 {
   "app_name": "Plotlyst",
   "author": "Zsolt Kovari",
-  "main_module": "src/main/python/plotlyst/__main__.py",
-  "version": "0.1.0",
-  "sentry_dsn": "https://3c254a8ebf29468094c40ad4a1269fc3@o917305.ingest.sentry.io/5859533",
-  "public_settings": [
-    "sentry_dsn"
-  ]
+  "main_module": "plotlyst/__main__.py",
+  "version": "0.1.0"
 }
