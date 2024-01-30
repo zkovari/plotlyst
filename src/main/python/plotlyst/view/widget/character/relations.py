@@ -29,8 +29,8 @@ from qthandy import flow, transparent, pointy
 from qthandy.filter import OpacityEventFilter, DragEventFilter
 from qttoolbox import ToolBox
 
-from src.main.python.plotlyst.core.domain import Character, Novel, Diagram
-from src.main.python.plotlyst.view.icons import avatars, IconRegistry
+from plotlyst.core.domain import Character, Novel, Diagram
+from plotlyst.view.icons import avatars, IconRegistry
 
 
 class PlusItem(QAbstractGraphicsShapeItem, QGraphicsObject):

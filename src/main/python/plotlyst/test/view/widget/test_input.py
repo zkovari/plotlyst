@@ -1,7 +1,7 @@
 from PyQt6.QtCore import Qt
 
-from src.main.python.plotlyst.test.common import show_widget
-from src.main.python.plotlyst.view.widget.input import PowerBar, Toggle
+from plotlyst.test.common import show_widget
+from plotlyst.view.widget.input import PowerBar, Toggle
 
 
 def test_powerbar(qtbot):

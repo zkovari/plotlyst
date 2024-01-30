@@ -30,11 +30,11 @@ from qthandy import vbox, clear_layout, vspacer, spacer, sp, grid, line, vline
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
-from src.main.python.plotlyst.core.domain import Novel, Plot, PlotType, StorylineLink, StorylineLinkType
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import action, label, tool_btn, push_btn
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.display import Icon, IdleWidget
+from plotlyst.core.domain import Novel, Plot, PlotType, StorylineLink, StorylineLinkType
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import action, label, tool_btn, push_btn
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.display import Icon, IdleWidget
 
 
 class StorylineHeaderWidget(QWidget):

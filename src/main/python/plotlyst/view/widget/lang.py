@@ -24,9 +24,9 @@ from PyQt6.QtWidgets import QWidget, QMenu, QWidgetAction, QPushButton
 from qthandy import decr_font, FlowLayout, bold
 from qthandy.filter import OpacityEventFilter
 
-from src.main.python.plotlyst.view.generated.grammar_popup_ui import Ui_GrammarPopup
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.style.base import apply_color
+from plotlyst.view.generated.grammar_popup_ui import Ui_GrammarPopup
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.style.base import apply_color
 
 
 class GrammarPopup(QWidget, Ui_GrammarPopup):

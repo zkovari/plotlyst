@@ -24,13 +24,13 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPen, QColor
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel, Character, Motivation
-from src.main.python.plotlyst.core.text import html
-from src.main.python.plotlyst.view.common import icon_to_html_img
-from src.main.python.plotlyst.view.generated.report.stakes_report_ui import Ui_StakesReport
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.report import AbstractReport
-from src.main.python.plotlyst.view.widget.chart import BaseChart
+from plotlyst.core.domain import Novel, Character, Motivation
+from plotlyst.core.text import html
+from plotlyst.view.common import icon_to_html_img
+from plotlyst.view.generated.report.stakes_report_ui import Ui_StakesReport
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.report import AbstractReport
+from plotlyst.view.widget.chart import BaseChart
 
 
 class StakesReport(AbstractReport, Ui_StakesReport):

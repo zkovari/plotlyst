@@ -36,23 +36,23 @@ from qthandy import transparent, hbox, margins, pointy, sp
 from qthandy.filter import DisabledClickEventFilter
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
 
-from src.main.python.plotlyst.common import IGNORE_CAPITALIZATION_PROPERTY
-from src.main.python.plotlyst.core.domain import TextStatistics, Character
-from src.main.python.plotlyst.core.text import wc
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import EventListener, Event
-from src.main.python.plotlyst.event.handler import global_event_dispatcher
-from src.main.python.plotlyst.events import LanguageToolSet
-from src.main.python.plotlyst.model.characters_model import CharactersTableModel
-from src.main.python.plotlyst.model.common import proxy
-from src.main.python.plotlyst.service.grammar import language_tool_proxy, dictionary
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import action, label, push_btn
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.style.text import apply_texteditor_toolbar_style
-from src.main.python.plotlyst.view.widget._toggle import AnimatedToggle
-from src.main.python.plotlyst.view.widget.display import PopupDialog
-from src.main.python.plotlyst.view.widget.lang import GrammarPopupMenu
+from plotlyst.common import IGNORE_CAPITALIZATION_PROPERTY
+from plotlyst.core.domain import TextStatistics, Character
+from plotlyst.core.text import wc
+from plotlyst.env import app_env
+from plotlyst.event.core import EventListener, Event
+from plotlyst.event.handler import global_event_dispatcher
+from plotlyst.events import LanguageToolSet
+from plotlyst.model.characters_model import CharactersTableModel
+from plotlyst.model.common import proxy
+from plotlyst.service.grammar import language_tool_proxy, dictionary
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import action, label, push_btn
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.style.text import apply_texteditor_toolbar_style
+from plotlyst.view.widget._toggle import AnimatedToggle
+from plotlyst.view.widget.display import PopupDialog
+from plotlyst.view.widget.lang import GrammarPopupMenu
 
 
 class AutoAdjustableTextEdit(EnhancedTextEdit):

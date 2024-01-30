@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from timeit import default_timer as timer
 from typing import Any, NoReturn, Dict
 
-from src.main.python.plotlyst.core.domain import VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY
+from plotlyst.core.domain import VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY
 
 EXIT_CODE_RESTART = 10
 

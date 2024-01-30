@@ -31,12 +31,12 @@ from qthandy import vbox, hbox, sp, vspacer, clear_layout, spacer, ask_confirmat
     margins
 from qthandy.filter import VisibilityToggleEventFilter
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, \
+from plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, \
     EMOTION_COLORS, PLOTLYST_SECONDARY_COLOR
-from src.main.python.plotlyst.core.domain import BackstoryEvent
-from src.main.python.plotlyst.view.common import tool_btn, frame
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.input import RemovalButton, AutoAdjustableTextEdit
+from plotlyst.core.domain import BackstoryEvent
+from plotlyst.view.common import tool_btn, frame
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.input import RemovalButton, AutoAdjustableTextEdit
 
 
 @dataclass

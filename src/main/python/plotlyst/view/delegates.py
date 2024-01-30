@@ -26,11 +26,11 @@ from PyQt6.QtWidgets import QWidget, QStyledItemDelegate, \
     QStyleOptionViewItem, QTextEdit, QComboBox, QLineEdit, QSpinBox
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Scene, VERY_UNHAPPY, UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY, \
+from plotlyst.core.domain import Scene, VERY_UNHAPPY, UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY, \
     Character
-from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+from plotlyst.model.scenes_model import ScenesTableModel
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.icons import IconRegistry, avatars
 
 
 class ScenesViewDelegate(QStyledItemDelegate):

@@ -29,9 +29,9 @@ from dataclasses_json import Undefined, dataclass_json
 from fbs_runtime.application_context.PyQt6 import ApplicationContext
 from overrides import overrides
 
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import EventListener, Event, emit_global_event
-from src.main.python.plotlyst.event.handler import global_event_dispatcher
+from plotlyst.env import app_env
+from plotlyst.event.core import EventListener, Event, emit_global_event
+from plotlyst.event.handler import global_event_dispatcher
 
 
 class ResourceRegistry:

@@ -27,19 +27,19 @@ from overrides import overrides
 from qthandy import vspacer, spacer, transparent, bold, vbox, hbox, line
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
-from src.main.python.plotlyst.core.domain import StoryStructure, Novel, TagType, SelectionItem, Tag, NovelSetting
-from src.main.python.plotlyst.model.characters_model import CharactersTableModel
-from src.main.python.plotlyst.model.common import SelectionItemsModel
-from src.main.python.plotlyst.model.novel import NovelTagsModel
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, action, label, push_btn
-from src.main.python.plotlyst.view.generated.imported_novel_overview_ui import Ui_ImportedNovelOverview
-from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.layout import group
-from src.main.python.plotlyst.view.style.base import apply_white_menu
-from src.main.python.plotlyst.view.widget.display import Subtitle
-from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
-from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
-from src.main.python.plotlyst.view.widget.settings import NovelPanelSettingsWidget
+from plotlyst.core.domain import StoryStructure, Novel, TagType, SelectionItem, Tag, NovelSetting
+from plotlyst.model.characters_model import CharactersTableModel
+from plotlyst.model.common import SelectionItemsModel
+from plotlyst.model.novel import NovelTagsModel
+from plotlyst.view.common import link_buttons_to_pages, action, label, push_btn
+from plotlyst.view.generated.imported_novel_overview_ui import Ui_ImportedNovelOverview
+from plotlyst.view.icons import IconRegistry, avatars
+from plotlyst.view.layout import group
+from plotlyst.view.style.base import apply_white_menu
+from plotlyst.view.widget.display import Subtitle
+from plotlyst.view.widget.items_editor import ItemsEditorWidget
+from plotlyst.view.widget.labels import LabelsEditorWidget
+from plotlyst.view.widget.settings import NovelPanelSettingsWidget
 
 
 class TagLabelsEditor(LabelsEditorWidget):

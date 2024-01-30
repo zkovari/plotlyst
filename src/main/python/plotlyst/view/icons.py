@@ -24,15 +24,15 @@ from PyQt6.QtCore import QSize
 from PyQt6.QtGui import QIcon, QPixmap
 from PyQt6.QtWidgets import QLabel
 
-from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, CONFLICT_CHARACTER_COLOR, \
+from plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, CONFLICT_CHARACTER_COLOR, \
     CONFLICT_SOCIETY_COLOR, CONFLICT_NATURE_COLOR, CONFLICT_TECHNOLOGY_COLOR, CONFLICT_SUPERNATURAL_COLOR, \
     CONFLICT_SELF_COLOR, CHARACTER_MAJOR_COLOR, CHARACTER_MINOR_COLOR, CHARACTER_SECONDARY_COLOR, \
     PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR, NEUTRAL_EMOTION_COLOR, EMOTION_COLORS
-from src.main.python.plotlyst.core.domain import Character, ConflictType, \
+from plotlyst.core.domain import Character, ConflictType, \
     Scene, PlotType, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS, ScenePurposeType
-from src.main.python.plotlyst.core.template import SelectionItem
-from src.main.python.plotlyst.settings import CHARACTER_INITIAL_AVATAR_COLOR_CODES
-from src.main.python.plotlyst.view.common import rounded_pixmap
+from plotlyst.core.template import SelectionItem
+from plotlyst.settings import CHARACTER_INITIAL_AVATAR_COLOR_CODES
+from plotlyst.view.common import rounded_pixmap
 
 
 class IconRegistry:

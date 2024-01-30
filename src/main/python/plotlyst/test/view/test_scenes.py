@@ -2,13 +2,13 @@ from PyQt6.QtCharts import QPieSeries
 from PyQt6.QtCore import Qt, QModelIndex
 from PyQt6.QtWidgets import QSpinBox
 
-from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesStageTableModel
-from src.main.python.plotlyst.test.common import create_character, start_new_scene_editor, assert_data, go_to_scenes, \
+from plotlyst.core.client import client
+from plotlyst.model.scenes_model import ScenesTableModel, ScenesStageTableModel
+from plotlyst.test.common import create_character, start_new_scene_editor, assert_data, go_to_scenes, \
     click_on_item, patch_confirmed
-from src.main.python.plotlyst.view.comments_view import CommentWidget
-from src.main.python.plotlyst.view.main_window import MainWindow
-from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
+from plotlyst.view.comments_view import CommentWidget
+from plotlyst.view.main_window import MainWindow
+from plotlyst.view.scenes_view import ScenesOutlineView
 
 
 def test_create_new_scene(qtbot, filled_window: MainWindow):

@@ -31,15 +31,15 @@ from qthandy import vbox, vspacer, hbox, spacer, transparent, margins, line, ret
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
-from src.main.python.plotlyst.core.domain import Character, CharacterGoal, Novel, CharacterPlan, Goal
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, action, wrap, \
+from plotlyst.core.domain import Character, CharacterGoal, Novel, CharacterPlan, Goal
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, action, wrap, \
     fade_out_and_gc, MouseEventDelegate
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import group
-from src.main.python.plotlyst.view.widget.button import DotsMenuButton
-from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit
-from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.layout import group
+from plotlyst.view.widget.button import DotsMenuButton
+from plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit
+from plotlyst.view.widget.utility import IconSelectorButton
 
 
 class _AddObjectiveButton(QPushButton):

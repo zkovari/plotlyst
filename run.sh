@@ -29,6 +29,7 @@ then
     fi
     py_cmd="$py_cmd -m cProfile -o profile.stats"
 fi
+export PYTHONPATH=src/main/python
 py_cmd="$py_cmd src/main/python/plotlyst/__main__.py --mode DEV $@ &"
 
 eval "$py_cmd"

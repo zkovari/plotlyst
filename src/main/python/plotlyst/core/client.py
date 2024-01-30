@@ -34,8 +34,8 @@ from atomicwrites import atomic_write
 from dataclasses_json import dataclass_json, Undefined, config
 from qthandy import busy
 
-from src.main.python.plotlyst.common import recursive
-from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapter, SceneStage, \
+from plotlyst.common import recursive
+from plotlyst.core.domain import Novel, Character, Scene, Chapter, SceneStage, \
     default_stages, StoryStructure, \
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
     Conflict, BackstoryEvent, Comment, Document, default_documents, DocumentType, Causality, \
@@ -46,8 +46,8 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     default_big_five_values, CharacterPlan, ManuscriptGoals, Diagram, DiagramData, default_events_map, \
     default_character_networks, ScenePurposeType, StoryElement, SceneOutcome, ChapterType, SceneStructureItem, \
     DocumentProgress, ReaderQuestion, SceneReaderQuestion, ImageRef, SceneReaderInformation
-from src.main.python.plotlyst.core.template import Role, exclude_if_empty, exclude_if_black, exclude_if_false
-from src.main.python.plotlyst.env import app_env
+from plotlyst.core.template import Role, exclude_if_empty, exclude_if_black, exclude_if_false
+from plotlyst.env import app_env
 
 
 class ApplicationNovelVersion(IntEnum):

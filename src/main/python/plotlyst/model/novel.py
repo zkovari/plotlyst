@@ -25,12 +25,12 @@ from PyQt6.QtGui import QFont
 from anytree import Node
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel, SelectionItem, SceneStage, TagType, \
+from plotlyst.core.domain import Novel, SelectionItem, SceneStage, TagType, \
     Tag
-from src.main.python.plotlyst.model.common import SelectionItemsModel, DefaultSelectionItemsModel
-from src.main.python.plotlyst.model.tree_model import TreeItemModel
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.icons import IconRegistry
+from plotlyst.model.common import SelectionItemsModel, DefaultSelectionItemsModel
+from plotlyst.model.tree_model import TreeItemModel
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.icons import IconRegistry
 
 
 class _NovelSelectionItemsModel(SelectionItemsModel):

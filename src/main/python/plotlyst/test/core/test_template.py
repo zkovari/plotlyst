@@ -1,4 +1,4 @@
-from src.main.python.plotlyst.core.template import positive_traits, negative_traits, default_character_profiles
+from plotlyst.core.template import positive_traits, negative_traits, default_character_profiles
 
 
 def test_unique_traits():

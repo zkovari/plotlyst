@@ -21,10 +21,10 @@ from PyQt6.QtCore import QModelIndex, Qt
 from PyQt6.QtGui import QBrush, QColor
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Conflict, ConflictType, Tag, Goal, Novel
-from src.main.python.plotlyst.model.common import DistributionModel
-from src.main.python.plotlyst.view.common import text_color_with_bg_color
-from src.main.python.plotlyst.view.icons import avatars, IconRegistry
+from plotlyst.core.domain import Conflict, ConflictType, Tag, Goal, Novel
+from plotlyst.model.common import DistributionModel
+from plotlyst.view.common import text_color_with_bg_color
+from plotlyst.view.icons import avatars, IconRegistry
 
 
 class CharactersScenesDistributionTableModel(DistributionModel):

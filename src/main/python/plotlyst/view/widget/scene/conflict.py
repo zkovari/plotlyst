@@ -28,15 +28,15 @@ from qthandy import hbox, gc
 from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.core.domain import Conflict, ConflictReference, Novel, Scene, ConflictType, \
+from plotlyst.core.domain import Conflict, ConflictReference, Novel, Scene, ConflictType, \
     SceneStructureAgenda
-from src.main.python.plotlyst.event.core import emit_critical
-from src.main.python.plotlyst.model.scenes_model import SceneConflictsModel
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import tool_btn
-from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
-from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.widget.labels import ConflictLabel
+from plotlyst.event.core import emit_critical
+from plotlyst.model.scenes_model import SceneConflictsModel
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import tool_btn
+from plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
+from plotlyst.view.icons import IconRegistry, avatars
+from plotlyst.view.widget.labels import ConflictLabel
 
 
 class ConflictIntensityEditor(QWidget):

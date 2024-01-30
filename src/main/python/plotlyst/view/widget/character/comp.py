@@ -28,21 +28,21 @@ from PyQt6.QtWidgets import QWidget, QLabel, QTextEdit
 from overrides import overrides
 from qthandy import vbox, hbox, line, flow, gc, vspacer, clear_layout, bold, margins
 
-from src.main.python.plotlyst.core.domain import Character, Novel, TemplateValue, LayoutType
-from src.main.python.plotlyst.core.template import iq_field, eq_field, rationalism_field, creativity_field, \
+from plotlyst.core.domain import Character, Novel, TemplateValue, LayoutType
+from plotlyst.core.template import iq_field, eq_field, rationalism_field, creativity_field, \
     willpower_field, TemplateField
-from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
-from src.main.python.plotlyst.event.handler import event_dispatchers
-from src.main.python.plotlyst.events import CharacterSummaryChangedEvent, CharacterChangedEvent, CharacterDeletedEvent
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import fade_out_and_gc
-from src.main.python.plotlyst.view.icons import set_avatar, avatars
-from src.main.python.plotlyst.view.widget.big_five import BigFiveChart, dimension_from
-from src.main.python.plotlyst.view.widget.button import EyeToggle
-from src.main.python.plotlyst.view.widget.character.editor import CharacterTimelineWidget
-from src.main.python.plotlyst.view.widget.display import RoleIcon, ChartView
-from src.main.python.plotlyst.view.widget.template.impl import BarTemplateFieldWidget
-from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
+from plotlyst.event.core import EventListener, Event, emit_event
+from plotlyst.event.handler import event_dispatchers
+from plotlyst.events import CharacterSummaryChangedEvent, CharacterChangedEvent, CharacterDeletedEvent
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import fade_out_and_gc
+from plotlyst.view.icons import set_avatar, avatars
+from plotlyst.view.widget.big_five import BigFiveChart, dimension_from
+from plotlyst.view.widget.button import EyeToggle
+from plotlyst.view.widget.character.editor import CharacterTimelineWidget
+from plotlyst.view.widget.display import RoleIcon, ChartView
+from plotlyst.view.widget.template.impl import BarTemplateFieldWidget
+from plotlyst.view.widget.tree import TreeView, ContainerNode
 
 
 class CharacterComparisonAttribute(Enum):

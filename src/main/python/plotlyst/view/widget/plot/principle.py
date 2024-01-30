@@ -30,17 +30,17 @@ from qthandy import bold, incr_font, \
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, group, ActionTooltipDisplayMode
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, CONFLICT_SELF_COLOR
-from src.main.python.plotlyst.core.domain import Plot, PlotType, PlotPrinciple, \
+from plotlyst.common import RELAXED_WHITE_COLOR, CONFLICT_SELF_COLOR
+from plotlyst.core.domain import Plot, PlotType, PlotPrinciple, \
     PlotPrincipleType, PlotEventType, DynamicPlotPrincipleGroupType
-from src.main.python.plotlyst.core.template import antagonist_role
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.view.common import shadow, label, tool_btn, push_btn, scrolled, action
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import group
-from src.main.python.plotlyst.view.style.base import apply_white_menu
-from src.main.python.plotlyst.view.widget.display import Icon, PopupDialog
-from src.main.python.plotlyst.view.widget.input import Toggle
+from plotlyst.core.template import antagonist_role
+from plotlyst.env import app_env
+from plotlyst.view.common import shadow, label, tool_btn, push_btn, scrolled, action
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.layout import group
+from plotlyst.view.style.base import apply_white_menu
+from plotlyst.view.widget.display import Icon, PopupDialog
+from plotlyst.view.widget.input import Toggle
 
 
 def principle_icon(type: PlotPrincipleType) -> QIcon:

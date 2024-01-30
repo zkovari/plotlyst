@@ -31,42 +31,42 @@ from qthandy import incr_font, translucent, clear_layout, busy, bold, sp, transp
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
-from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, ScenePurposeType, \
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, ScenePurposeType, \
     StoryStructure, NovelSetting, CardSizeRatio
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import EventListener, emit_event
-from src.main.python.plotlyst.event.handler import event_dispatchers
-from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
+from plotlyst.env import app_env
+from plotlyst.event.core import EventListener, emit_event
+from plotlyst.event.handler import event_dispatchers
+from plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
     SceneSelectedEvent, SceneSelectionClearedEvent, ActiveSceneStageChanged, \
     ChapterChangedEvent, AvailableSceneStagesChanged, CharacterChangedEvent, CharacterDeletedEvent, \
     NovelAboutToSyncEvent, NovelSyncEvent, NovelStoryStructureActivationRequest, NovelPanelCustomizationEvent, \
     NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelPovTrackingToggleEvent
-from src.main.python.plotlyst.events import SceneOrderChangedEvent
-from src.main.python.plotlyst.model.common import SelectionItemsModel
-from src.main.python.plotlyst.model.novel import NovelStagesModel
-from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
-from src.main.python.plotlyst.service.persistence import delete_scene
-from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, action, restyle
-from src.main.python.plotlyst.view.delegates import ScenesViewDelegate
-from src.main.python.plotlyst.view.dialog.items import ItemsEditorDialog
-from src.main.python.plotlyst.view.generated.scenes_title_ui import Ui_ScenesTitle
-from src.main.python.plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.scene_editor import SceneEditor
-from src.main.python.plotlyst.view.style.base import apply_white_menu
-from src.main.python.plotlyst.view.widget.cards import SceneCard, SceneCardFilter
-from src.main.python.plotlyst.view.widget.characters import CharactersScenesDistributionWidget
-from src.main.python.plotlyst.view.widget.chart import ActDistributionChart
-from src.main.python.plotlyst.view.widget.display import ChartView
-from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
-from src.main.python.plotlyst.view.widget.novel import StoryStructureSelectorMenu
-from src.main.python.plotlyst.view.widget.progress import SceneStageProgressCharts
-from src.main.python.plotlyst.view.widget.scene.story_map import StoryMap, StoryMapDisplayMode
-from src.main.python.plotlyst.view.widget.scenes import SceneFilterWidget, SceneStoryStructureWidget, \
+from plotlyst.events import SceneOrderChangedEvent
+from plotlyst.model.common import SelectionItemsModel
+from plotlyst.model.novel import NovelStagesModel
+from plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
+from plotlyst.service.persistence import delete_scene
+from plotlyst.view._view import AbstractNovelView
+from plotlyst.view.common import ButtonPressResizeEventFilter, action, restyle
+from plotlyst.view.delegates import ScenesViewDelegate
+from plotlyst.view.dialog.items import ItemsEditorDialog
+from plotlyst.view.generated.scenes_title_ui import Ui_ScenesTitle
+from plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.scene_editor import SceneEditor
+from plotlyst.view.style.base import apply_white_menu
+from plotlyst.view.widget.cards import SceneCard, SceneCardFilter
+from plotlyst.view.widget.characters import CharactersScenesDistributionWidget
+from plotlyst.view.widget.chart import ActDistributionChart
+from plotlyst.view.widget.display import ChartView
+from plotlyst.view.widget.input import RotatedButtonOrientation
+from plotlyst.view.widget.novel import StoryStructureSelectorMenu
+from plotlyst.view.widget.progress import SceneStageProgressCharts
+from plotlyst.view.widget.scene.story_map import StoryMap, StoryMapDisplayMode
+from plotlyst.view.widget.scenes import SceneFilterWidget, SceneStoryStructureWidget, \
     ScenesPreferencesWidget
-from src.main.python.plotlyst.view.widget.tree import TreeSettings
+from plotlyst.view.widget.tree import TreeSettings
 
 
 class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):

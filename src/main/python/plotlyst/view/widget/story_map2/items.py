@@ -25,10 +25,10 @@ from PyQt6.QtWidgets import QWidget, QStyleOptionGraphicsItem, \
     QGraphicsSceneHoverEvent, QGraphicsSceneMouseEvent, QGraphicsItem
 from overrides import overrides
 
-from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Node, DiagramNodeType
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.graphics import NodeItem
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
+from plotlyst.core.domain import Node, DiagramNodeType
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.graphics import NodeItem
 
 
 class StickerItem(NodeItem):

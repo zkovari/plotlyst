@@ -29,12 +29,12 @@ from xml.etree.ElementTree import Element
 import pypandoc
 from PyQt6.QtGui import QTextDocument, QTextBlockFormat, QTextCursor
 
-from src.main.python.plotlyst.common import camel_to_whitespace, DEFAULT_MANUSCRIPT_INDENT, \
+from plotlyst.common import camel_to_whitespace, DEFAULT_MANUSCRIPT_INDENT, \
     DEFAULT_MANUSCRIPT_LINE_SPACE
-from src.main.python.plotlyst.core.client import load_image
-from src.main.python.plotlyst.core.domain import Novel, Scene, Chapter, Character, Document, DocumentStatistics, \
+from plotlyst.core.client import load_image
+from plotlyst.core.domain import Novel, Scene, Chapter, Character, Document, DocumentStatistics, \
     ImportOrigin, ImportOriginType
-from src.main.python.plotlyst.core.text import wc
+from plotlyst.core.text import wc
 
 
 class ScrivenerParsingError(Exception):

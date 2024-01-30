@@ -26,9 +26,9 @@ from PyQt6.QtWidgets import QFrame, \
     QLabel, QSizePolicy
 from overrides import overrides
 
-from src.main.python.plotlyst.core.template import TemplateField
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.view.common import emoji_font
+from plotlyst.core.template import TemplateField
+from plotlyst.env import app_env
+from plotlyst.view.common import emoji_font
 
 
 class TemplateWidgetBase(QFrame):

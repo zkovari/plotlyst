@@ -24,9 +24,9 @@ from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QIcon
 from qthandy import vspacer, retain_when_hidden
 
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.tour.core import Tutorial
-from src.main.python.plotlyst.view.widget.tree import TreeView, TreeSettings, ContainerNode
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.tour.core import Tutorial
+from plotlyst.view.widget.tree import TreeView, TreeSettings, ContainerNode
 
 
 class TutorialNode(ContainerNode):

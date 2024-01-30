@@ -24,8 +24,8 @@ from typing import Optional
 from PyQt6.QtGui import QImage, QImageReader
 from PyQt6.QtWidgets import QApplication, QFileDialog
 
-from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import ImageRef, Novel
+from plotlyst.core.client import json_client
+from plotlyst.core.domain import ImageRef, Novel
 
 
 def has_clipboard_image() -> bool:

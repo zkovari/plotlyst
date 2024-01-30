@@ -30,19 +30,19 @@ from qthandy import pointy, translucent, margins, spacer, sp, incr_icon, vspacer
 from qthandy.filter import OpacityEventFilter, ObjectReferenceMimeData, DropEventFilter
 from qtmenu import ScrollableMenuWidget, ActionTooltipDisplayMode, MenuWidget, TabularGridMenuWidget
 
-from src.main.python.plotlyst.core.domain import Novel, Scene, SceneStructureItemType, SceneStructureItem, SceneOutcome, \
+from plotlyst.core.domain import Novel, Scene, SceneStructureItemType, SceneStructureItem, SceneOutcome, \
     ScenePurposeType
-from src.main.python.plotlyst.view.common import action, ButtonPressResizeEventFilter
-from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
-from src.main.python.plotlyst.view.generated.scene_structure_template_selector_dialog_ui import \
+from plotlyst.view.common import action, ButtonPressResizeEventFilter
+from plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
+from plotlyst.view.generated.scene_structure_template_selector_dialog_ui import \
     Ui_SceneStructuteTemplateSelector
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.style.base import apply_white_menu
-from src.main.python.plotlyst.view.widget.button import DotsMenuButton
-from src.main.python.plotlyst.view.widget.display import StageRecommendationBadge
-from src.main.python.plotlyst.view.widget.list import ListView, ListItemWidget
-from src.main.python.plotlyst.view.widget.outline import OutlineTimelineWidget, OutlineItemWidget
-from src.main.python.plotlyst.view.widget.scenes import SceneOutcomeSelector
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.style.base import apply_white_menu
+from plotlyst.view.widget.button import DotsMenuButton
+from plotlyst.view.widget.display import StageRecommendationBadge
+from plotlyst.view.widget.list import ListView, ListItemWidget
+from plotlyst.view.widget.outline import OutlineTimelineWidget, OutlineItemWidget
+from plotlyst.view.widget.scenes import SceneOutcomeSelector
 
 beat_descriptions = {SceneStructureItemType.BEAT: 'New action, reaction, thought, or emotion',
                      SceneStructureItemType.ACTION: 'Character takes an action to achieve their goal',

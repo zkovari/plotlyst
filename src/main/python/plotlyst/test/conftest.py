@@ -21,13 +21,13 @@ import os
 
 import pytest
 
-from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Character, Scene, Chapter, \
+from plotlyst.core.client import json_client
+from plotlyst.core.domain import Character, Scene, Chapter, \
     Novel, Conflict, ConflictType, Plot, PlotType, ScenePlotReference, SceneStructureAgenda, ScenePurposeType
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.handler import global_event_dispatcher
-from src.main.python.plotlyst.view.main_window import MainWindow
-from src.main.python.plotlyst.view.stylesheet import APP_STYLESHEET
+from plotlyst.env import app_env
+from plotlyst.event.handler import global_event_dispatcher
+from plotlyst.view.main_window import MainWindow
+from plotlyst.view.stylesheet import APP_STYLESHEET
 
 
 def pytest_generate_tests(metafunc):

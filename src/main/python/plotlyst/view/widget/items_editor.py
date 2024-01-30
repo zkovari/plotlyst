@@ -25,12 +25,12 @@ from PyQt6.QtWidgets import QWidget, QAbstractItemView, QTableView
 from qthandy import ask_confirmation, vbox, spacer, hbox, vline
 from qthandy.filter import OpacityEventFilter
 
-from src.main.python.plotlyst.core.domain import SelectionItem
-from src.main.python.plotlyst.model.common import SelectionItemsModel
-from src.main.python.plotlyst.view.common import show_color_picker, PopupMenuBuilder, tool_btn
-from src.main.python.plotlyst.view.delegates import TextItemDelegate
-from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
-from src.main.python.plotlyst.view.icons import IconRegistry
+from plotlyst.core.domain import SelectionItem
+from plotlyst.model.common import SelectionItemsModel
+from plotlyst.view.common import show_color_picker, PopupMenuBuilder, tool_btn
+from plotlyst.view.delegates import TextItemDelegate
+from plotlyst.view.dialog.utility import IconSelectorDialog
+from plotlyst.view.icons import IconRegistry
 
 
 class ItemsEditorWidget(QWidget):

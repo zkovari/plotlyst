@@ -24,9 +24,9 @@ from typing import Dict
 from PyQt6.QtCore import pyqtSignal
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.core.domain import Novel, Plot, PlotType
-from src.main.python.plotlyst.view.common import action
-from src.main.python.plotlyst.view.icons import IconRegistry
+from plotlyst.core.domain import Novel, Plot, PlotType
+from plotlyst.view.common import action
+from plotlyst.view.icons import IconRegistry
 
 
 class StorylineSelectorMenu(MenuWidget):

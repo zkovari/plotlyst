@@ -27,10 +27,10 @@ from qthandy import hbox, pointy, gc
 from qthandy.filter import OpacityEventFilter
 from qtmenu import ScrollableMenuWidget
 
-from src.main.python.plotlyst.core.domain import Novel, Scene, GoalReference, CharacterGoal
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.character.plan import CharacterPlansSelectorWidget
-from src.main.python.plotlyst.view.widget.labels import CharacterGoalLabel
+from plotlyst.core.domain import Novel, Scene, GoalReference, CharacterGoal
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.character.plan import CharacterPlansSelectorWidget
+from plotlyst.view.widget.labels import CharacterGoalLabel
 
 
 class SceneGoalSelector(QWidget):

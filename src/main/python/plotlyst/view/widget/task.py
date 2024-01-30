@@ -30,22 +30,22 @@ from qthandy import vbox, hbox, transparent, vspacer, margins, spacer, bold, ret
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import TaskStatus, Task, Novel, Character, task_tags
-from src.main.python.plotlyst.core.template import SelectionItem
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import Event, emit_event
-from src.main.python.plotlyst.event.handler import event_dispatchers
-from src.main.python.plotlyst.events import CharacterDeletedEvent, TaskChanged, TaskDeleted, TaskChangedToWip, \
+from plotlyst.common import RELAXED_WHITE_COLOR
+from plotlyst.core.domain import TaskStatus, Task, Novel, Character, task_tags
+from plotlyst.core.template import SelectionItem
+from plotlyst.env import app_env
+from plotlyst.event.core import Event, emit_event
+from plotlyst.event.handler import event_dispatchers
+from plotlyst.events import CharacterDeletedEvent, TaskChanged, TaskDeleted, TaskChangedToWip, \
     TaskChangedFromWip
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, shadow, action, tool_btn, \
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import ButtonPressResizeEventFilter, shadow, action, tool_btn, \
     any_menu_visible
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import group
-from src.main.python.plotlyst.view.widget.button import CollapseButton, TaskTagSelector
-from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
-from src.main.python.plotlyst.view.widget.input import AutoAdjustableLineEdit
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.layout import group
+from plotlyst.view.widget.button import CollapseButton, TaskTagSelector
+from plotlyst.view.widget.characters import CharacterSelectorButton
+from plotlyst.view.widget.input import AutoAdjustableLineEdit
 
 TASK_WIDGET_MAX_WIDTH = 350
 

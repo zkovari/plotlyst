@@ -4,9 +4,9 @@ from uuid import UUID
 
 import pytest
 
-from src.main.python.plotlyst.core.domain import Novel, Chapter, Scene, SceneStructureAgenda, Character, ImportOrigin, \
+from plotlyst.core.domain import Novel, Chapter, Scene, SceneStructureAgenda, Character, ImportOrigin, \
     ImportOriginType
-from src.main.python.plotlyst.core.scrivener import ScrivenerParser
+from plotlyst.core.scrivener import ScrivenerParser
 
 
 def test_empty_folder(tmp_path):

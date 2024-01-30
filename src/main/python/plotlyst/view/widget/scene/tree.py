@@ -31,17 +31,17 @@ from qthandy import vspacer
 from qthandy.filter import DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, ChapterType
-from src.main.python.plotlyst.event.core import Event, EventListener, emit_event
-from src.main.python.plotlyst.event.handler import event_dispatchers
-from src.main.python.plotlyst.events import SceneDeletedEvent, \
+from plotlyst.core.domain import Scene, Novel, Chapter, ChapterType
+from plotlyst.event.core import Event, EventListener, emit_event
+from plotlyst.event.handler import event_dispatchers
+from plotlyst.events import SceneDeletedEvent, \
     SceneChangedEvent
-from src.main.python.plotlyst.events import SceneOrderChangedEvent, ChapterChangedEvent
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_scene
-from src.main.python.plotlyst.view.common import action, insert_before_the_end
-from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.widget.display import Icon
-from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
+from plotlyst.events import SceneOrderChangedEvent, ChapterChangedEvent
+from plotlyst.service.persistence import RepositoryPersistenceManager, delete_scene
+from plotlyst.view.common import action, insert_before_the_end
+from plotlyst.view.icons import IconRegistry, avatars
+from plotlyst.view.widget.display import Icon
+from plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
 
 class SceneWidget(ContainerNode):

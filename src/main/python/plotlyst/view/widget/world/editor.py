@@ -30,26 +30,26 @@ from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp,
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import recursive, IGNORE_CAPITALIZATION_PROPERTY
-from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityType, \
+from plotlyst.common import recursive, IGNORE_CAPITALIZATION_PROPERTY
+from plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityType, \
     WorldBuildingEntityElement, WorldBuildingEntityElementType, GlossaryItem, BackstoryEvent, Variable, VariableType, \
     Topic
-from src.main.python.plotlyst.core.template import SelectionItem
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.model.common import SelectionItemsModel
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import action, push_btn, frame, insert_before_the_end, fade_out_and_gc, \
+from plotlyst.core.template import SelectionItem
+from plotlyst.env import app_env
+from plotlyst.model.common import SelectionItemsModel
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import action, push_btn, frame, insert_before_the_end, fade_out_and_gc, \
     tool_btn, label, scrolled
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import group
-from src.main.python.plotlyst.view.style.text import apply_text_color
-from src.main.python.plotlyst.view.widget.button import DotsMenuButton
-from src.main.python.plotlyst.view.widget.display import Icon, PopupDialog
-from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, RemovalButton
-from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
-from src.main.python.plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
-from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
-from src.main.python.plotlyst.view.widget.world._topics import ecological_topics, cultural_topics, historical_topics, \
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.layout import group
+from plotlyst.view.style.text import apply_text_color
+from plotlyst.view.widget.button import DotsMenuButton
+from plotlyst.view.widget.display import Icon, PopupDialog
+from plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, RemovalButton
+from plotlyst.view.widget.items_editor import ItemsEditorWidget
+from plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
+from plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
+from plotlyst.view.widget.world._topics import ecological_topics, cultural_topics, historical_topics, \
     linguistic_topics, technological_topics, economic_topics, infrastructural_topics, religious_topics, \
     fantastic_topics, nefarious_topics, environmental_topics
 

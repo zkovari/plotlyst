@@ -34,8 +34,8 @@ from qthandy import spacer, hbox, vbox, bold, line, underline, transparent, marg
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
-from src.main.python.plotlyst.core.help import enneagram_help, mbti_help, mbti_keywords
-from src.main.python.plotlyst.core.template import TemplateField, SelectionItem, \
+from plotlyst.core.help import enneagram_help, mbti_help, mbti_keywords
+from plotlyst.core.template import TemplateField, SelectionItem, \
     enneagram_choices, goal_field, internal_goal_field, stakes_field, conflict_field, motivation_field, \
     internal_motivation_field, internal_conflict_field, internal_stakes_field, wound_field, fear_field, \
     baggage_healing_field, methods_field, misbelief_field, ghost_field, demon_field, mbti_choices, love_style_choices, \
@@ -43,22 +43,22 @@ from src.main.python.plotlyst.core.template import TemplateField, SelectionItem,
     flaw_triggers_field, flaw_goals_field, flaw_growth_field, flaw_deterioration_field, baggage_coping_field, \
     baggage_manifestation_field, baggage_deterioration_field, baggage_relation_field, baggage_trigger_field, \
     baggage_source_field, baggage_defense_mechanism_field
-from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
+from plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
-from src.main.python.plotlyst.view.common import wrap, emoji_font, insert_before_the_end, action, label, push_btn, \
+from plotlyst.view.common import wrap, emoji_font, insert_before_the_end, action, label, push_btn, \
     fade_out_and_gc
-from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import group
-from src.main.python.plotlyst.view.style.slider import apply_slider_color
-from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton, CollapseButton, DotsMenuButton
-from src.main.python.plotlyst.view.widget.character.editor import EnneagramSelector, MbtiSelector, LoveStyleSelector, \
+from plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.layout import group
+from plotlyst.view.style.slider import apply_slider_color
+from plotlyst.view.widget.button import SecondaryActionPushButton, CollapseButton, DotsMenuButton
+from plotlyst.view.widget.character.editor import EnneagramSelector, MbtiSelector, LoveStyleSelector, \
     DiscSelector, StrengthWeaknessAttribute, StrengthWeaknessEditor
-from src.main.python.plotlyst.view.widget.display import Subtitle, Emoji, Icon, dash_icon
-from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle, TextInputDialog
-from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
-from src.main.python.plotlyst.view.widget.progress import CircularProgressBar
-from src.main.python.plotlyst.view.widget.template.base import TemplateDisplayWidget, TemplateFieldWidgetBase, \
+from plotlyst.view.widget.display import Subtitle, Emoji, Icon, dash_icon
+from plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle, TextInputDialog
+from plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
+from plotlyst.view.widget.progress import CircularProgressBar
+from plotlyst.view.widget.template.base import TemplateDisplayWidget, TemplateFieldWidgetBase, \
     TemplateWidgetBase, ComplexTemplateWidgetBase, EditableTemplateWidget
 
 

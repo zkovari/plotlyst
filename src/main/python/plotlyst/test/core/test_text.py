@@ -1,6 +1,6 @@
 import nltk
 
-from src.main.python.plotlyst.core.text import wc, sentence_count
+from plotlyst.core.text import wc, sentence_count
 
 nltk.download('punkt')
 

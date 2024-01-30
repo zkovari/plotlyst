@@ -26,16 +26,16 @@ from PyQt6.QtGui import QShowEvent
 from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 
-from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Character, DiagramNodeType, NODE_SUBTYPE_TOOL, NODE_SUBTYPE_COST
-from src.main.python.plotlyst.core.domain import Node
-from src.main.python.plotlyst.core.domain import Novel
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
-from src.main.python.plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, EventItem, \
+from plotlyst.core.client import json_client
+from plotlyst.core.domain import Character, DiagramNodeType, NODE_SUBTYPE_TOOL, NODE_SUBTYPE_COST
+from plotlyst.core.domain import Node
+from plotlyst.core.domain import Novel
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.characters import CharacterSelectorMenu
+from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, EventItem, \
     NodeItem
-from src.main.python.plotlyst.view.widget.graphics.editor import EventSelectorWidget, TextLineEditorPopup, \
+from plotlyst.view.widget.graphics.editor import EventSelectorWidget, TextLineEditorPopup, \
     EventItemToolbar, ConnectorToolbar, SecondarySelectorWidget
 
 

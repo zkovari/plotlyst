@@ -24,18 +24,18 @@ from overrides import overrides
 from qthandy import clear_layout, margins, bold
 from qttextedit.ops import TextEditorSettingsSection, FontSectionSettingWidget
 
-from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Document, DocumentType, FontSettings
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
-from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter
-from src.main.python.plotlyst.view.doc.mice import MiceQuotientDoc
-from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
-from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.widget.doc.browser import DocumentAdditionMenu
-from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
-from src.main.python.plotlyst.view.widget.tree import TreeSettings
+from plotlyst.core.client import json_client
+from plotlyst.core.domain import Novel, Document, DocumentType, FontSettings
+from plotlyst.env import app_env
+from plotlyst.events import SceneChangedEvent, SceneDeletedEvent
+from plotlyst.view._view import AbstractNovelView
+from plotlyst.view.common import ButtonPressResizeEventFilter
+from plotlyst.view.doc.mice import MiceQuotientDoc
+from plotlyst.view.generated.notes_view_ui import Ui_NotesView
+from plotlyst.view.icons import IconRegistry, avatars
+from plotlyst.view.widget.doc.browser import DocumentAdditionMenu
+from plotlyst.view.widget.input import DocumentTextEditor
+from plotlyst.view.widget.tree import TreeSettings
 
 
 class DocumentsView(AbstractNovelView):

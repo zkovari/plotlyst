@@ -24,10 +24,10 @@ import language_tool_python
 from PyQt6.QtCore import QRunnable
 from language_tool_python import LanguageTool
 from overrides import overrides
-from src.main.python.plotlyst.core.domain import Novel, Event
-from src.main.python.plotlyst.event.core import emit_global_event, emit_info, EventListener
-from src.main.python.plotlyst.event.handler import event_dispatchers
-from src.main.python.plotlyst.events import LanguageToolSet, CharacterChangedEvent
+from plotlyst.core.domain import Novel, Event
+from plotlyst.event.core import emit_global_event, emit_info, EventListener
+from plotlyst.event.handler import event_dispatchers
+from plotlyst.events import LanguageToolSet, CharacterChangedEvent
 
 
 class LanguageToolServerSetupWorker(QRunnable):

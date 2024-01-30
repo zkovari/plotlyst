@@ -22,11 +22,11 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel
-from src.main.python.plotlyst.core.text import html
-from src.main.python.plotlyst.view.generated.report.world_building_report_ui import Ui_WorldBuildingReport
-from src.main.python.plotlyst.view.report import AbstractReport
-from src.main.python.plotlyst.view.widget.chart import BaseChart
+from plotlyst.core.domain import Novel
+from plotlyst.core.text import html
+from plotlyst.view.generated.report.world_building_report_ui import Ui_WorldBuildingReport
+from plotlyst.view.report import AbstractReport
+from plotlyst.view.widget.chart import BaseChart
 
 
 class WorldBuildingReport(AbstractReport, Ui_WorldBuildingReport):

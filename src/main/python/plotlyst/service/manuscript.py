@@ -27,12 +27,12 @@ from PyQt6.QtWidgets import QFileDialog
 from qthandy import ask_confirmation
 from slugify import slugify
 
-from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Document, DocumentProgress, Scene, DocumentStatistics
-from src.main.python.plotlyst.env import open_location, app_env
-from src.main.python.plotlyst.resources import resource_registry, ResourceType
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.widget.utility import ask_for_resource
+from plotlyst.core.client import json_client
+from plotlyst.core.domain import Novel, Document, DocumentProgress, Scene, DocumentStatistics
+from plotlyst.env import open_location, app_env
+from plotlyst.resources import resource_registry, ResourceType
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.widget.utility import ask_for_resource
 
 
 def prepare_content_for_convert(html: str) -> str:

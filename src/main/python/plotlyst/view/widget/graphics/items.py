@@ -31,10 +31,10 @@ from PyQt6.QtWidgets import QAbstractGraphicsShapeItem, QGraphicsItem, QGraphics
 from overrides import overrides
 from qthandy import pointy
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR, \
+from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR, \
     WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Node, Relation, Connector, Character, DiagramNodeType, to_node
-from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+from plotlyst.core.domain import Node, Relation, Connector, Character, DiagramNodeType, to_node
+from plotlyst.view.icons import IconRegistry, avatars
 
 
 def v_center(ref_height: int, item_height: int) -> int:

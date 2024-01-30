@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from src.main.python.plotlyst.view import style
+from plotlyst.view import style
 
 APP_STYLESHEET = f'''
 {style.base_style}

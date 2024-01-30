@@ -26,14 +26,14 @@ from PyQt6.QtGui import QPen
 from overrides import overrides
 from qthandy import hbox, vbox, margins, flow
 
-from src.main.python.plotlyst.core.domain import Novel, Character
-from src.main.python.plotlyst.view.common import icon_to_html_img
-from src.main.python.plotlyst.view.generated.report.character_report_ui import Ui_CharacterReport
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.report import AbstractReport
-from src.main.python.plotlyst.view.widget.chart import SupporterRoleChart, GenderCharacterChart, \
+from plotlyst.core.domain import Novel, Character
+from plotlyst.view.common import icon_to_html_img
+from plotlyst.view.generated.report.character_report_ui import Ui_CharacterReport
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.report import AbstractReport
+from plotlyst.view.widget.chart import SupporterRoleChart, GenderCharacterChart, \
     PolarBaseChart, RoleChart, EnneagramChart
-from src.main.python.plotlyst.view.widget.display import ChartView
+from plotlyst.view.widget.display import ChartView
 
 
 class CharacterReport(AbstractReport, Ui_CharacterReport):

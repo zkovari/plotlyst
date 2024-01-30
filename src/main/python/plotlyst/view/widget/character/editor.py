@@ -38,28 +38,28 @@ from qthandy import vbox, pointy, hbox, sp, vspacer, underline, decr_font, flow,
 from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR, CHARACTER_MAJOR_COLOR, \
+from plotlyst.common import PLOTLYST_MAIN_COLOR, CHARACTER_MAJOR_COLOR, \
     CHARACTER_SECONDARY_COLOR, RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import BackstoryEvent, Character
-from src.main.python.plotlyst.core.help import enneagram_help, mbti_help, character_roles_description, \
+from plotlyst.core.domain import BackstoryEvent, Character
+from plotlyst.core.help import enneagram_help, mbti_help, character_roles_description, \
     character_role_examples
-from src.main.python.plotlyst.core.template import SelectionItem, enneagram_field, TemplateField, mbti_field, \
+from plotlyst.core.template import SelectionItem, enneagram_field, TemplateField, mbti_field, \
     promote_role, demote_role, Role, protagonist_role, antagonist_role, major_role, secondary_role, tertiary_role, \
     love_interest_role, supporter_role, adversary_role, contagonist_role, guide_role, confidant_role, sidekick_role, \
     foil_role, henchmen_role, love_style_field, disc_field
-from src.main.python.plotlyst.view.common import push_btn, action, tool_btn, label, wrap, restyle, \
+from plotlyst.view.common import push_btn, action, tool_btn, label, wrap, restyle, \
     scroll_area, emoji_font
-from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
-from src.main.python.plotlyst.view.icons import IconRegistry, set_avatar
-from src.main.python.plotlyst.view.layout import group
-from src.main.python.plotlyst.view.style.base import apply_white_menu
-from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton, SelectionItemPushButton
-from src.main.python.plotlyst.view.widget.chart import BaseChart, SelectionItemPieSlice
-from src.main.python.plotlyst.view.widget.display import Icon, MajorRoleIcon, SecondaryRoleIcon, MinorRoleIcon, \
+from plotlyst.view.dialog.utility import IconSelectorDialog
+from plotlyst.view.icons import IconRegistry, set_avatar
+from plotlyst.view.layout import group
+from plotlyst.view.style.base import apply_white_menu
+from plotlyst.view.widget.button import SecondaryActionPushButton, SelectionItemPushButton
+from plotlyst.view.widget.chart import BaseChart, SelectionItemPieSlice
+from plotlyst.view.widget.display import Icon, MajorRoleIcon, SecondaryRoleIcon, MinorRoleIcon, \
     IconText, RoleIcon, TruitySourceWidget, PopupDialog
-from src.main.python.plotlyst.view.widget.input import Toggle
-from src.main.python.plotlyst.view.widget.labels import TraitLabel
-from src.main.python.plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
+from plotlyst.view.widget.input import Toggle
+from plotlyst.view.widget.labels import TraitLabel
+from plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
 
 
 class LifeStage(Enum):

@@ -35,20 +35,20 @@ from qthandy import decr_font, transparent, clear_layout, hbox, spacer, vbox
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.common import truncate_string
-from src.main.python.plotlyst.core.domain import Scene, Novel, Plot, \
+from plotlyst.common import RELAXED_WHITE_COLOR
+from plotlyst.common import truncate_string
+from plotlyst.core.domain import Scene, Novel, Plot, \
     ScenePlotReference
-from src.main.python.plotlyst.event.core import Event, EventListener
-from src.main.python.plotlyst.event.handler import event_dispatchers
-from src.main.python.plotlyst.events import SceneOrderChangedEvent
-from src.main.python.plotlyst.service.cache import acts_registry
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import hmax, action, tool_btn, ButtonPressResizeEventFilter, fade_out_and_gc
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton
-from src.main.python.plotlyst.view.widget.display import Icon
-from src.main.python.plotlyst.view.widget.input import RotatedButton, RotatedButtonOrientation, RemovalButton
+from plotlyst.event.core import Event, EventListener
+from plotlyst.event.handler import event_dispatchers
+from plotlyst.events import SceneOrderChangedEvent
+from plotlyst.service.cache import acts_registry
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import hmax, action, tool_btn, ButtonPressResizeEventFilter, fade_out_and_gc
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.button import WordWrappedPushButton
+from plotlyst.view.widget.display import Icon
+from plotlyst.view.widget.input import RotatedButton, RotatedButtonOrientation, RemovalButton
 
 
 class StoryMapDisplayMode(Enum):

@@ -28,11 +28,11 @@ try:
 
     from overrides import overrides
 
-    from src.main.python.plotlyst.env import AppMode, app_env
-    from src.main.python.plotlyst.resources import resource_registry, resource_manager
-    from src.main.python.plotlyst.settings import settings
-    from src.main.python.plotlyst.service.persistence import flush_or_fail
-    from src.main.python.plotlyst.service.dir import select_new_project_directory, default_directory
+    from plotlyst.env import AppMode, app_env
+    from plotlyst.resources import resource_registry, resource_manager
+    from plotlyst.settings import settings
+    from plotlyst.service.persistence import flush_or_fail
+    from plotlyst.service.dir import select_new_project_directory, default_directory
 
     from PyQt6.QtGui import QFont
     from PyQt6.QtWidgets import QApplication, QMessageBox
@@ -41,12 +41,12 @@ try:
     from fbs_runtime.application_context import cached_property, is_frozen
     from fbs_runtime.excepthook.sentry import SentryExceptionHandler
 
-    from src.main.python.plotlyst.common import EXIT_CODE_RESTART
-    from src.main.python.plotlyst.core.client import json_client
-    from src.main.python.plotlyst.event.handler import DialogExceptionHandler
-    from src.main.python.plotlyst.view.dialog.about import AboutDialog
-    from src.main.python.plotlyst.view.main_window import MainWindow
-    from src.main.python.plotlyst.view.stylesheet import APP_STYLESHEET
+    from plotlyst.common import EXIT_CODE_RESTART
+    from plotlyst.core.client import json_client
+    from plotlyst.event.handler import DialogExceptionHandler
+    from plotlyst.view.dialog.about import AboutDialog
+    from plotlyst.view.main_window import MainWindow
+    from plotlyst.view.stylesheet import APP_STYLESHEET
 except Exception as ex:
     appctxt = ApplicationContext()
     QMessageBox.critical(None, 'Could not launch application', traceback.format_exc())

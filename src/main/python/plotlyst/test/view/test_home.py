@@ -1,8 +1,8 @@
-from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.test.common import go_to_home, patch_confirmed, go_to_novel, type_text
-from src.main.python.plotlyst.view.home_view import HomeView
-from src.main.python.plotlyst.view.main_window import MainWindow
-from src.main.python.plotlyst.view.novel_view import NovelView
+from plotlyst.core.client import client
+from plotlyst.test.common import go_to_home, patch_confirmed, go_to_novel, type_text
+from plotlyst.view.home_view import HomeView
+from plotlyst.view.main_window import MainWindow
+from plotlyst.view.novel_view import NovelView
 
 
 def test_delete_novel(qtbot, filled_window: MainWindow, monkeypatch):

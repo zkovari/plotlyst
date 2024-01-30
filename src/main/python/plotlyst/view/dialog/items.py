@@ -21,9 +21,9 @@ from typing import List
 
 from PyQt6.QtWidgets import QDialog
 
-from src.main.python.plotlyst.core.domain import SelectionItem
-from src.main.python.plotlyst.model.common import SelectionItemsModel
-from src.main.python.plotlyst.view.generated.items_editor_dialog_ui import Ui_ItemsEditorDialog
+from plotlyst.core.domain import SelectionItem
+from plotlyst.model.common import SelectionItemsModel
+from plotlyst.view.generated.items_editor_dialog_ui import Ui_ItemsEditorDialog
 
 
 class ItemsEditorDialog(QDialog, Ui_ItemsEditorDialog):

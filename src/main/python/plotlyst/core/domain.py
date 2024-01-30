@@ -30,10 +30,10 @@ from PyQt6.QtCore import Qt
 from dataclasses_json import dataclass_json, Undefined, config
 from overrides import overrides
 
-from src.main.python.plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_field, \
+from plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_field, \
     mbti_field, ProfileTemplate, default_character_profiles, enneagram_choices, \
     mbti_choices, Role, summary_field, exclude_if_false, antagonist_role
-from src.main.python.plotlyst.env import app_env
+from plotlyst.env import app_env
 
 
 @dataclass

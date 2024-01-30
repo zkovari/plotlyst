@@ -25,10 +25,10 @@ from PyQt6.QtGui import QIcon
 from overrides import overrides
 from qthandy import vspacer, sp
 
-from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
-from src.main.python.plotlyst.core.domain import NovelDescriptor
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
+from plotlyst.common import PLOTLYST_MAIN_COLOR
+from plotlyst.core.domain import NovelDescriptor
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
 
 class NovelNode(ContainerNode):

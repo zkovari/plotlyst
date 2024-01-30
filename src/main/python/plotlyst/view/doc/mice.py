@@ -26,12 +26,12 @@ from PyQt6.QtWidgets import QWidget
 from qthandy import incr_font, vbox, retain_when_hidden, gc, vspacer
 from qthandy.filter import VisibilityToggleEventFilter
 
-from src.main.python.plotlyst.core.domain import MiceQuotient, Document, MiceThread, MiceType, Scene
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.view.generated.mice_doc_ui import Ui_MiceQuotientDoc
-from src.main.python.plotlyst.view.generated.mice_thread_ui import Ui_MiceThread
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.scenes import SceneLabelLinkWidget
+from plotlyst.core.domain import MiceQuotient, Document, MiceThread, MiceType, Scene
+from plotlyst.env import app_env
+from plotlyst.view.generated.mice_doc_ui import Ui_MiceQuotientDoc
+from plotlyst.view.generated.mice_thread_ui import Ui_MiceThread
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.scenes import SceneLabelLinkWidget
 
 mice_colors: Dict[MiceType, str] = {MiceType.MILIEU: '#2d6a4f',
                                     MiceType.INQUIRY: '#7b2cbf',

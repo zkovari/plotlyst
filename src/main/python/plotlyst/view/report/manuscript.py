@@ -1,9 +1,9 @@
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel
-from src.main.python.plotlyst.view.generated.report.manuscript_report_ui import Ui_ManuscriptReport
-from src.main.python.plotlyst.view.report import AbstractReport
-from src.main.python.plotlyst.view.widget.chart import ManuscriptLengthChart
+from plotlyst.core.domain import Novel
+from plotlyst.view.generated.report.manuscript_report_ui import Ui_ManuscriptReport
+from plotlyst.view.report import AbstractReport
+from plotlyst.view.widget.chart import ManuscriptLengthChart
 
 
 class ManuscriptReport(AbstractReport, Ui_ManuscriptReport):

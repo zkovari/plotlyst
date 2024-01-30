@@ -1,8 +1,8 @@
-from src.main.python.plotlyst.core.client import client, json_client
-from src.main.python.plotlyst.core.domain import Novel, Scene, default_story_structures, three_act_structure, \
+from plotlyst.core.client import client, json_client
+from plotlyst.core.domain import Novel, Scene, default_story_structures, three_act_structure, \
     SceneStoryBeat, ScenePurposeType
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.test.conftest import init_project
+from plotlyst.env import app_env
+from plotlyst.test.conftest import init_project
 
 
 def test_insert_novel(test_client):

@@ -26,33 +26,33 @@ from qthandy import transparent, incr_font, italic, busy, retain_when_hidden, in
 from qthandy.filter import VisibilityToggleEventFilter, InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import NAV_BAR_BUTTON_DEFAULT_COLOR, \
+from plotlyst.common import NAV_BAR_BUTTON_DEFAULT_COLOR, \
     NAV_BAR_BUTTON_CHECKED_COLOR
-from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import NovelDescriptor
-from src.main.python.plotlyst.core.help import home_page_welcome_text
-from src.main.python.plotlyst.event.core import emit_global_event, Event
-from src.main.python.plotlyst.event.handler import global_event_dispatcher
-from src.main.python.plotlyst.events import NovelDeletedEvent, NovelUpdatedEvent
-from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.service.persistence import flush_or_fail
-from src.main.python.plotlyst.service.tour import TourService
-from src.main.python.plotlyst.view._view import AbstractView
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, action, \
+from plotlyst.core.client import client
+from plotlyst.core.domain import NovelDescriptor
+from plotlyst.core.help import home_page_welcome_text
+from plotlyst.event.core import emit_global_event, Event
+from plotlyst.event.handler import global_event_dispatcher
+from plotlyst.events import NovelDeletedEvent, NovelUpdatedEvent
+from plotlyst.resources import resource_registry
+from plotlyst.service.persistence import flush_or_fail
+from plotlyst.service.tour import TourService
+from plotlyst.view._view import AbstractView
+from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, action, \
     TooltipPositionEventFilter
-from src.main.python.plotlyst.view.dialog.home import StoryCreationDialog
-from src.main.python.plotlyst.view.generated.home_view_ui import Ui_HomeView
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.style.base import apply_border_image
-from src.main.python.plotlyst.view.widget.confirm import confirmed
-from src.main.python.plotlyst.view.widget.library import ShelvesTreeView
-from src.main.python.plotlyst.view.widget.tour import TutorialsTreeView, Tutorial
-from src.main.python.plotlyst.view.widget.tour.content import tutorial_titles, tutorial_descriptions
-from src.main.python.plotlyst.view.widget.tour.core import LibraryTourEvent, NewStoryButtonTourEvent, \
+from plotlyst.view.dialog.home import StoryCreationDialog
+from plotlyst.view.generated.home_view_ui import Ui_HomeView
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.style.base import apply_border_image
+from plotlyst.view.widget.confirm import confirmed
+from plotlyst.view.widget.library import ShelvesTreeView
+from plotlyst.view.widget.tour import TutorialsTreeView, Tutorial
+from plotlyst.view.widget.tour.content import tutorial_titles, tutorial_descriptions
+from plotlyst.view.widget.tour.core import LibraryTourEvent, NewStoryButtonTourEvent, \
     NewStoryDialogOpenTourEvent, TutorialNovelSelectTourEvent, NovelDisplayTourEvent, tutorial_novel, \
     NovelOpenButtonTourEvent, TutorialNovelCloseTourEvent
-from src.main.python.plotlyst.view.widget.tree import TreeSettings
-from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
+from plotlyst.view.widget.tree import TreeSettings
+from plotlyst.view.widget.utility import IconSelectorButton
 
 
 class HomeView(AbstractView):

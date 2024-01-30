@@ -27,15 +27,15 @@ from PyQt6.QtGui import QBrush, QColor
 from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel, Scene, CharacterArc, Character, \
+from plotlyst.core.domain import Novel, Scene, CharacterArc, Character, \
     SelectionItem, SceneStage, SceneStructureAgenda, ScenePurposeType
-from src.main.python.plotlyst.event.core import emit_event
-from src.main.python.plotlyst.events import SceneStatusChangedEvent
-from src.main.python.plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel, SelectionItemsModel
-from src.main.python.plotlyst.service.cache import acts_registry
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import emoji_font
-from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+from plotlyst.event.core import emit_event
+from plotlyst.events import SceneStatusChangedEvent
+from plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel, SelectionItemsModel
+from plotlyst.service.cache import acts_registry
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import emoji_font
+from plotlyst.view.icons import IconRegistry, avatars
 
 
 class BaseScenesTableModel:

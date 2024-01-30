@@ -29,12 +29,12 @@ from qthandy import vbox, bold, line, margins, spacer, grid, hbox, italic
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
-from src.main.python.plotlyst.core.domain import TemplateValue, Topic, TopicType
-from src.main.python.plotlyst.view.common import tool_btn, push_btn, action, fade_out_and_gc
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import group
-from src.main.python.plotlyst.view.widget.button import CollapseButton
-from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, RemovalButton
+from plotlyst.core.domain import TemplateValue, Topic, TopicType
+from plotlyst.view.common import tool_btn, push_btn, action, fade_out_and_gc
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.layout import group
+from plotlyst.view.widget.button import CollapseButton
+from plotlyst.view.widget.input import AutoAdjustableTextEdit, RemovalButton
 
 topics: Dict[TopicType, List[Topic]] = {
     TopicType.Physical: [
