@@ -37,7 +37,7 @@ try:
     from PyQt6.QtGui import QFont
     from PyQt6.QtWidgets import QApplication, QMessageBox
     from fbs_runtime.application_context.PyQt6 import ApplicationContext
-    from fbs_runtime import PUBLIC_SETTINGS, platform
+    from fbs_runtime import platform
     from fbs_runtime.application_context import cached_property, is_frozen
     from fbs_runtime.excepthook.sentry import SentryExceptionHandler
 
@@ -63,26 +63,11 @@ class AppContext(ApplicationContext):
     def exception_handlers(self):
         result = super().exception_handlers
         result.append(self.dialog_exception_handler)
-        if is_frozen():
-            result.append(self.sentry_exception_handler)
         return result
-
-    @cached_property
-    def sentry_exception_handler(self):
-        return SentryExceptionHandler(
-            PUBLIC_SETTINGS['sentry_dsn'],
-            PUBLIC_SETTINGS['version'],
-            PUBLIC_SETTINGS['environment'], callback=self._on_sentry_init
-        )
 
     @cached_property
     def dialog_exception_handler(self):
         return DialogExceptionHandler()
-
-    def _on_sentry_init(self):
-        scope = self.sentry_exception_handler.scope
-        from fbs_runtime import platform
-        scope.set_extra('os', platform.name())
 
 
 if __name__ == '__main__':
