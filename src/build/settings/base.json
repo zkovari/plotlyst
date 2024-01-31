@@ -1,6 +1,6 @@
 {
   "app_name": "Plotlyst",
   "author": "Zsolt Kovari",
-  "main_module": "plotlyst/__main__.py",
+  "main_module": "src/main/python/plotlyst/__main__.py",
   "version": "0.1.0"
 }
