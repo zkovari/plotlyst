@@ -39,7 +39,6 @@ try:
     from fbs_runtime.application_context.PyQt6 import ApplicationContext
     from fbs_runtime import platform
     from fbs_runtime.application_context import cached_property, is_frozen
-    from fbs_runtime.excepthook.sentry import SentryExceptionHandler
 
     from plotlyst.common import EXIT_CODE_RESTART
     from plotlyst.core.client import json_client
