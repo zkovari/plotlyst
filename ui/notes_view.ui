@@ -332,7 +332,7 @@
   <customwidget>
    <class>DocumentsTreeView</class>
    <extends>QTreeView</extends>
-   <header>src.main.python.plotlyst.view.widget.doc</header>
+   <header>plotlyst.view.widget.doc</header>
   </customwidget>
  </customwidgets>
  <resources/>

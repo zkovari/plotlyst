@@ -223,13 +223,13 @@
   <customwidget>
    <class>Subtitle</class>
    <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.display</header>
+   <header>plotlyst.view.widget.display</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>SecondaryActionToolButton</class>
    <extends>QToolButton</extends>
-   <header>src.main.python.plotlyst.view.widget.button</header>
+   <header>plotlyst.view.widget.button</header>
   </customwidget>
  </customwidgets>
  <resources/>

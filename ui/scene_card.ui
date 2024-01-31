@@ -337,13 +337,13 @@
   <customwidget>
    <class>LabelsWidget</class>
    <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.labels</header>
+   <header>plotlyst.view.widget.labels</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>SceneStageButton</class>
    <extends>QToolButton</extends>
-   <header>src.main.python.plotlyst.view.widget.scenes</header>
+   <header>plotlyst.view.widget.scenes</header>
   </customwidget>
  </customwidgets>
  <resources/>

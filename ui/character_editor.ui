@@ -777,27 +777,27 @@ border: 0px;
   <customwidget>
    <class>DocumentTextEditor</class>
    <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
+   <header>plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
    <class>CharacterAvatar</class>
    <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.characters</header>
+   <header>plotlyst.view.widget.characters</header>
   </customwidget>
   <customwidget>
    <class>ReturnButton</class>
    <extends>QPushButton</extends>
-   <header>src.main.python.plotlyst.view.widget.button</header>
+   <header>plotlyst.view.widget.button</header>
   </customwidget>
   <customwidget>
    <class>SecondaryActionPushButton</class>
    <extends>QPushButton</extends>
-   <header>src.main.python.plotlyst.view.widget.button</header>
+   <header>plotlyst.view.widget.button</header>
   </customwidget>
   <customwidget>
    <class>CharacterTimelineWidget</class>
    <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.character.editor</header>
+   <header>plotlyst.view.widget.character.editor</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

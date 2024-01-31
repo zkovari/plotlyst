@@ -48,7 +48,7 @@
   <customwidget>
    <class>ItemsEditorWidget</class>
    <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.items_editor</header>
+   <header>plotlyst.view.widget.items_editor</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

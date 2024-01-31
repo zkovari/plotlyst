@@ -1110,7 +1110,7 @@
   <customwidget>
    <class>CardsView</class>
    <extends>QFrame</extends>
-   <header>src.main.python.plotlyst.view.widget.cards</header>
+   <header>plotlyst.view.widget.cards</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

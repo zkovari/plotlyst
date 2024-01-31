@@ -918,37 +918,37 @@
   <customwidget>
    <class>WordsDisplay</class>
    <extends>QLabel</extends>
-   <header>src.main.python.plotlyst.view.widget.display</header>
+   <header>plotlyst.view.widget.display</header>
   </customwidget>
   <customwidget>
    <class>ChartView</class>
    <extends>QGraphicsView</extends>
-   <header>src.main.python.plotlyst.view.widget.display</header>
+   <header>plotlyst.view.widget.display</header>
   </customwidget>
   <customwidget>
    <class>SceneStageButton</class>
    <extends>QToolButton</extends>
-   <header>src.main.python.plotlyst.view.widget.scenes</header>
+   <header>plotlyst.view.widget.scenes</header>
   </customwidget>
   <customwidget>
    <class>ScenesTreeView</class>
    <extends>QTreeView</extends>
-   <header>src.main.python.plotlyst.view.widget.scene</header>
+   <header>plotlyst.view.widget.scene</header>
   </customwidget>
   <customwidget>
    <class>IconText</class>
    <extends>QPushButton</extends>
-   <header>src.main.python.plotlyst.view.widget.display</header>
+   <header>plotlyst.view.widget.display</header>
   </customwidget>
   <customwidget>
    <class>ManuscriptTextEditor</class>
    <extends>QTextEdit</extends>
-   <header>src.main.python.plotlyst.view.widget.manuscript</header>
+   <header>plotlyst.view.widget.manuscript</header>
   </customwidget>
   <customwidget>
    <class>Emoji</class>
    <extends>QLabel</extends>
-   <header>src.main.python.plotlyst.view.widget.display</header>
+   <header>plotlyst.view.widget.display</header>
   </customwidget>
  </customwidgets>
  <resources/>
