@@ -76,6 +76,8 @@ jobs:
           pip install git+https://github.com/plotlyst/qt-frames.git
           pip install git+https://github.com/plotlyst/qt-toolbox-widget.git
           pip install git+https://github.com/plotlyst/language_tool_python.git@plotlyst
+      - name: Set PYTHONPATH
+        run: echo "::set-env name=PYTHONPATH::src/main/python"
       - name: Test with pytest
         run: |
           python uic_gen.py
