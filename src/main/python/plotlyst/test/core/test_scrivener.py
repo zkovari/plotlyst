@@ -26,7 +26,7 @@ def test_not_existing_input(tmp_path):
 
 
 def test_import_with_acts(test_client):
-    folder = Path(sys.path[0]).joinpath('resources/scrivener/v3/NovelWithParts')
+    folder = Path(sys.path[0]).joinpath('../../../resources/scrivener/v3/NovelWithParts')
 
     importer = ScrivenerParser()
     novel: Novel = importer.parse_project(str(folder))
