@@ -18,6 +18,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install beeware
+          python -m pip install git+https://github.com/plotlyst/qt-uic.git
       - name: Generate code
         run: |
           qt-uic --source ui --target src/main/python/plotlyst/view/generated
