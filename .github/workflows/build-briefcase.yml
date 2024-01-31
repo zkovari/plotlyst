@@ -25,3 +25,9 @@ jobs:
         run: |
           briefcase build
           briefcase package
+      - uses: actions/upload-artifact@v2
+        with:
+          name: plotlyst-app
+          path: dist\Plotlyst-0.1.0.msi
+      
+
