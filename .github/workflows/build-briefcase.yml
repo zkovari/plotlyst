@@ -6,7 +6,11 @@ on:
 
 jobs:
   build:
-    runs-on: windows-2019
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-20.04, windows-2019, macos-11 ]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v3
@@ -31,6 +35,7 @@ jobs:
           briefcase build
           briefcase package
       - uses: actions/upload-artifact@v2
+        if: matrix.os == 'windows-2019'
         with:
           name: plotlyst-app
           path: dist\Plotlyst-0.1.0.msi
