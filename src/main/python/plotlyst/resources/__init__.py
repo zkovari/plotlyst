@@ -24,6 +24,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, Optional, List
 
+import pkg_resources
 from atomicwrites import atomic_write
 from dataclasses_json import Undefined, dataclass_json
 from fbs_runtime.application_context.PyQt6 import ApplicationContext
@@ -47,17 +48,18 @@ class ResourceRegistry:
         self._manuscript_docx_template = None
 
     def set_up(self, app_context: ApplicationContext):
-        self._cork = self.__get_resource(app_context, 'cork.wav')
-        self._frame1 = self.__get_resource(app_context, 'frame_1.png')
-        self._cover1 = self.__get_resource(app_context, 'cover_1.jpg')
-        self._paper_bg1 = self.__get_resource(app_context, 'paper_bg.jpg')
-        self._vintage_pocket_banner = self.__get_resource(app_context, 'antique.jpg')
-        self._banner = self.__get_resource(app_context, 'plotlyst_banner.png')
-        self._circular_frame1 = self.__get_resource(app_context, 'circular_frame1.png')
-        self._manuscript_docx_template = self.__get_resource(app_context, 'manuscript-template.docx')
+        self._cork = self.__get_resource('cork.wav')
+        self._frame1 = self.__get_resource('frame_1.png')
+        self._cover1 = self.__get_resource('cover_1.jpg')
+        self._paper_bg1 = self.__get_resource('paper_bg.jpg')
+        self._vintage_pocket_banner = self.__get_resource('antique.jpg')
+        self._banner = self.__get_resource('plotlyst_banner.png')
+        self._circular_frame1 = self.__get_resource('circular_frame1.png')
+        self._manuscript_docx_template = self.__get_resource('manuscript-template.docx')
 
-    def __get_resource(self, app_context: ApplicationContext, name: str):
-        resource_url = app_context.get_resource(name)
+    def __get_resource(self, name: str):
+        resource_url = pkg_resources.resource_filename(__name__, f'images/{name}')
+        # resource_url2 = app_context.get_resource(name)
         if app_env.is_windows():
             resource_url = resource_url.replace('\\', '/')
 
