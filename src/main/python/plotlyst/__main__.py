@@ -65,6 +65,13 @@ class AppContext(ApplicationContext):
         return result
 
     @cached_property
+    def app(self):
+        result = self._qt_binding.QApplication([])
+        result.setApplicationName('Plotlyst')
+        result.setApplicationVersion('0.1.0')
+        return result
+
+    @cached_property
     def dialog_exception_handler(self):
         return DialogExceptionHandler()
 
