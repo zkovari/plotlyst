@@ -47,7 +47,7 @@ class ResourceRegistry:
         self._circular_frame1 = None
         self._manuscript_docx_template = None
 
-    def set_up(self, app_context: ApplicationContext):
+    def set_up(self):
         self._cork = self.__get_resource('cork.wav')
         self._frame1 = self.__get_resource('frame_1.png')
         self._cover1 = self.__get_resource('cover_1.jpg')

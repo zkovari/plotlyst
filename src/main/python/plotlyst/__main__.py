@@ -77,7 +77,12 @@ class AppContext(ApplicationContext):
 
 
 if __name__ == '__main__':
-    appctxt = AppContext()
+    if app_env.is_windows():
+        app = QApplication(sys.argv)
+        appctxt = None
+    else:
+        appctxt = AppContext()
+        app = appctxt.app
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=lambda mode: AppMode[mode.upper()], choices=list(AppMode), default=AppMode.PROD)
@@ -85,7 +90,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     app_env.mode = args.mode
     while True:
-        app = appctxt.app
         if platform.is_linux() and QApplication.font().pointSize() < 12:
             font = QFont('Helvetica', 12)
             QApplication.setFont(font)
@@ -97,7 +101,7 @@ if __name__ == '__main__':
         settings.init_org()
         if args.clear:
             settings.clear()
-        resource_registry.set_up(appctxt)
+        resource_registry.set_up()
         resource_manager.init()
 
         workspace: Optional[str] = settings.workspace()
@@ -133,7 +137,7 @@ if __name__ == '__main__':
             AboutDialog().exec()
             settings.set_launched_before()
 
-        exit_code = appctxt.app.exec_()
+        exit_code = app.exec_()
         flush_or_fail()
 
         if exit_code < EXIT_CODE_RESTART:
