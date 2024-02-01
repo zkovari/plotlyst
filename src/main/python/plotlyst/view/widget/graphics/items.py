@@ -227,6 +227,35 @@ class ConnectorType(Enum):
     Curved = 1
 
 
+class ConnectorCPSocket(QAbstractGraphicsShapeItem):
+    def __init__(self, size: int = 16, parent=None):
+        super().__init__(parent)
+        self._size = size
+        self.setCursor(Qt.CursorShape.SizeAllCursor)
+        self.setFlag(
+            QGraphicsItem.GraphicsItemFlag.ItemIsMovable |
+            QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
+
+    @overrides
+    def boundingRect(self):
+        return QRectF(0, 0, self._size, self._size)
+
+    @overrides
+    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
+        painter.setPen(QPen(QColor(PLOTLYST_SECONDARY_COLOR), 2))
+        radius = 5
+        painter.drawEllipse(QPointF(self._size / 2, self._size // 2), radius, radius)
+        # if self._hovered and self.networkScene().linkMode():
+        #     painter.drawEllipse(QPointF(self._size / 2, self._size // 2), 2, 2)
+
+    @overrides
+    def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
+        if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
+            print(value)
+            self.parentItem().rearrangeCP(value)
+        return super().itemChange(change, value)
+
+
 class ConnectorItem(QGraphicsPathItem):
 
     def __init__(self, source: AbstractSocketItem, target: AbstractSocketItem,
@@ -241,6 +270,8 @@ class ConnectorItem(QGraphicsPathItem):
         self._icon: Optional[str] = None
         self._defaultLineType: ConnectorType = ConnectorType.Curved
         self._line: bool = True if self._defaultLineType == ConnectorType.Linear else False
+        self._cp = ConnectorCPSocket(parent=self)
+        self._cp.setVisible(False)
         if pen:
             self.setPen(pen)
         else:
@@ -398,6 +429,12 @@ class ConnectorItem(QGraphicsPathItem):
             return path
         return super().shape()
 
+    @overrides
+    def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
+        if change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
+            self._onSelection(value)
+        return super().itemChange(change, value)
+
     def rearrange(self):
         self.setPos(self._source.sceneBoundingRect().center())
 
@@ -408,27 +445,44 @@ class ConnectorItem(QGraphicsPathItem):
         endPoint: QPointF = QPointF(width, height)
         endArrowAngle = math.degrees(math.atan2(-height / 2, width))
 
-        if self._defaultLineType != ConnectorType.Linear and self._inProximity(width, height):
-            self._line = True
-        else:
-            self._line = False
+        # if self._defaultLineType != ConnectorType.Linear and self._inProximity(width, height):
+        #     self._line = True
+        # else:
+        #     self._line = False
 
         path = QPainterPath()
-        if self._line:
-            self._rearrangeLinearConnector(path, width, height, endArrowAngle)
-        else:
+        if self._connector and self._connector.cp_x is not None:
             self._rearrangeCurvedConnector(path, width, height, endArrowAngle, endPoint)
+        else:
+            self._rearrangeLinearConnector(path, width, height, endArrowAngle)
+
+        # if self._line:
+        #     self._rearrangeLinearConnector(path, width, height, endArrowAngle)
+        # else:
+        #     self._rearrangeCurvedConnector(path, width, height, endArrowAngle, endPoint)
 
         self._arrowheadItem.setPos(width, height)
+        if not self._connector or self._connector.cp_x is None:
+            self._rearrangeCPSocket(path)
         self._rearrangeIcon(path)
         self._rearrangeText(path)
 
         self.setPath(path)
 
+    def rearrangeCP(self, pos: QPointF):
+        if self._connector:
+            self._connector.cp_x = pos.x()
+            self._connector.cp_y = pos.y()
+
+        self.rearrange()
+
     def colorChangedEvent(self, nodeItem: 'NodeItem'):
         if nodeItem is self._target.parentItem():
             if not self._connector.color:
                 self._setColor(QColor(nodeItem.node().color))
+
+    def _onSelection(self, selected: bool):
+        self._cp.setVisible(selected)
 
     def _rearrangeLinearConnector(self, path: QPainterPath, width: float, height: float, endArrowAngle: float):
         path.lineTo(width, height)
@@ -438,22 +492,22 @@ class ConnectorItem(QGraphicsPathItem):
                                   endPoint: QPointF):
         downward = height >= 0
 
-        if self._source.angle() >= 0:
-            if downward:
-                controlPoint = QPointF(width / 3, -height / 2)
-                endArrowAngle = math.degrees(math.atan2(-height / 2, width / 3))
-            else:
-                controlPoint = QPointF(0, height / 2)
-                endArrowAngle = math.degrees(math.atan2(-height / 2, width))
-        else:
-            if downward:
-                controlPoint = QPointF(width / 3, height / 2)
-                endArrowAngle = math.degrees(math.atan2(-height / 2, width / 3))
-            else:
-                controlPoint = QPointF(width / 2, -height / 2)
-                endArrowAngle = math.degrees(math.atan2(-height / 2, width / 2))
+        # if self._source.angle() >= 0:
+        #     if downward:
+        #         controlPoint = QPointF(width / 3, -height / 2)
+        #         endArrowAngle = math.degrees(math.atan2(-height / 2, width / 3))
+        #     else:
+        #         controlPoint = QPointF(0, height / 2)
+        #         endArrowAngle = math.degrees(math.atan2(-height / 2, width))
+        # else:
+        #     if downward:
+        #         controlPoint = QPointF(width / 3, height / 2)
+        #         endArrowAngle = math.degrees(math.atan2(-height / 2, width / 3))
+        #     else:
+        #         controlPoint = QPointF(width / 2, -height / 2)
+        #         endArrowAngle = math.degrees(math.atan2(-height / 2, width / 2))
 
-        path.quadTo(controlPoint, endPoint)
+        path.quadTo(QPointF(self._connector.cp_x, self._connector.cp_y), endPoint)
 
         self._arrowheadItem.setRotation(-endArrowAngle)
 
@@ -465,6 +519,11 @@ class ConnectorItem(QGraphicsPathItem):
                 point = path.pointAtPercent(0.6)
             self._iconBadge.setPos(point.x() - self._iconBadge.boundingRect().width() / 2,
                                    point.y() - self._iconBadge.boundingRect().height() / 2)
+
+    def _rearrangeCPSocket(self, path: QPainterPath):
+        point = path.pointAtPercent(0.4)
+        self._cp.setPos(point.x() - self._cp.boundingRect().width() / 2,
+                        point.y() - self._cp.boundingRect().height() / 2)
 
     def _rearrangeText(self, path: QPainterPath):
         if self._icon:
