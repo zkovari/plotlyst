@@ -54,6 +54,7 @@ description = "Plotlyst application"
 sources = [
     "src/main/python/plotlyst",
 ]
+icon = "src/main/icons/Icon"
 requires = [
     'qt-anim @ git+https://github.com/plotlyst/qt-anim.git',
     'qt-menu @ git+https://github.com/plotlyst/qt-menu.git',
