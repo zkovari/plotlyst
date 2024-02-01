@@ -21,9 +21,9 @@ from dataclasses import dataclass
 
 from language_tool_python import LanguageTool
 
-from src.main.python.plotlyst.core.domain import Character, NovelDescriptor, Scene, SceneStage, Task, NovelSetting, \
+from plotlyst.core.domain import Character, NovelDescriptor, Scene, SceneStage, Task, NovelSetting, \
     StoryStructure, Novel, Plot
-from src.main.python.plotlyst.event.core import Event
+from plotlyst.event.core import Event
 
 
 @dataclass

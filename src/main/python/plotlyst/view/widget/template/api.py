@@ -21,13 +21,13 @@ from typing import Optional, List
 
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Character
-from src.main.python.plotlyst.core.template import TemplateField, SelectionItem, \
+from plotlyst.core.domain import Character
+from plotlyst.core.template import TemplateField, SelectionItem, \
     enneagram_field, traits_field, ProfileTemplate
-from src.main.python.plotlyst.view.widget.character.editor import EnneagramSelector
-from src.main.python.plotlyst.view.widget.template.base import TemplateWidgetBase
-from src.main.python.plotlyst.view.widget.template.impl import TraitSelectionWidget
-from src.main.python.plotlyst.view.widget.template.profile import ProfileTemplateView
+from plotlyst.view.widget.character.editor import EnneagramSelector
+from plotlyst.view.widget.template.base import TemplateWidgetBase
+from plotlyst.view.widget.template.impl import TraitSelectionWidget
+from plotlyst.view.widget.template.profile import ProfileTemplateView
 
 
 class CharacterProfileTemplateView(ProfileTemplateView):

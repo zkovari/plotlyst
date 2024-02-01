@@ -29,14 +29,14 @@ from PyQt6.QtWidgets import QWidget, QToolButton, QScrollArea, QFrame, \
 from overrides import overrides
 from qthandy import vbox, gc
 
-from src.main.python.plotlyst.core.domain import TemplateValue
-from src.main.python.plotlyst.core.template import ProfileTemplate, TemplateField, HAlignment, VAlignment, \
+from plotlyst.core.domain import TemplateValue
+from plotlyst.core.template import ProfileTemplate, TemplateField, HAlignment, VAlignment, \
     ProfileElement, TemplateFieldType
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.template.base import TemplateWidgetBase, TemplateDisplayWidget, \
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.template.base import TemplateWidgetBase, TemplateDisplayWidget, \
     EditableTemplateWidget
-from src.main.python.plotlyst.view.widget.template.factory import TemplateFieldWidgetFactory
-from src.main.python.plotlyst.view.widget.template.impl import HeaderTemplateDisplayWidget
+from plotlyst.view.widget.template.factory import TemplateFieldWidgetFactory
+from plotlyst.view.widget.template.impl import HeaderTemplateDisplayWidget
 
 
 class _PlaceHolder(QFrame):

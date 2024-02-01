@@ -1,6 +1,6 @@
 from typing import Set
 
-from src.main.python.plotlyst.core.domain import default_story_structures, StoryBeatType
+from plotlyst.core.domain import default_story_structures, StoryBeatType
 
 
 def test_unique_story_structures():

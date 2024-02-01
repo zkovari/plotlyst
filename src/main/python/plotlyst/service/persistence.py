@@ -27,13 +27,13 @@ from typing import List, Optional, Set
 from PyQt6.QtCore import QTimer, QRunnable, QThreadPool, QObject
 from overrides import overrides
 
-from src.main.python.plotlyst.core.client import client, json_client
-from src.main.python.plotlyst.core.domain import Novel, Character, Scene, NovelDescriptor, Document, Plot, Diagram, \
+from plotlyst.core.client import client, json_client
+from plotlyst.core.domain import Novel, Character, Scene, NovelDescriptor, Document, Plot, Diagram, \
     WorldBuilding
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import emit_event
-from src.main.python.plotlyst.events import StorylineCharacterAssociationChanged
-from src.main.python.plotlyst.view.widget.confirm import confirmed
+from plotlyst.env import app_env
+from plotlyst.event.core import emit_event
+from plotlyst.events import StorylineCharacterAssociationChanged
+from plotlyst.view.widget.confirm import confirmed
 
 
 class OperationType(Enum):

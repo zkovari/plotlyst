@@ -269,12 +269,12 @@
   <customwidget>
    <class>Toggle</class>
    <extends>QCheckBox</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
+   <header>plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
    <class>AutoAdjustableTextEdit</class>
    <extends>QTextEdit</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
+   <header>plotlyst.view.widget.input</header>
   </customwidget>
  </customwidgets>
  <resources/>

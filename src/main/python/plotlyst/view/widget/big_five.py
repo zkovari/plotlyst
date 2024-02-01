@@ -28,14 +28,14 @@ from PyQt6.QtWidgets import QWidget, QLabel, QScrollArea, QGridLayout, QSlider
 from overrides import overrides
 from qthandy import vbox, bold, pointy, hbox, grid, decr_font, italic
 
-from src.main.python.plotlyst.core.domain import Character, BigFiveDimension, BigFiveFacet, agreeableness, \
+from plotlyst.core.domain import Character, BigFiveDimension, BigFiveFacet, agreeableness, \
     conscientiousness, neuroticism, extroversion, openness
-from src.main.python.plotlyst.core.text import html
-from src.main.python.plotlyst.view.common import icon_to_html_img
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.style.slider import apply_slider_color
-from src.main.python.plotlyst.view.widget.chart import PolarBaseChart
-from src.main.python.plotlyst.view.widget.display import ChartView, IconText
+from plotlyst.core.text import html
+from plotlyst.view.common import icon_to_html_img
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.style.slider import apply_slider_color
+from plotlyst.view.widget.chart import PolarBaseChart
+from plotlyst.view.widget.display import ChartView, IconText
 
 
 def dimension_from(name: str) -> BigFiveDimension:

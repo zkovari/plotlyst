@@ -29,21 +29,21 @@ from qthandy import transparent, sp, vbox, hbox, vspacer, incr_font, pointy, gri
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
-from src.main.python.plotlyst.core.domain import Novel, NovelSetting
-from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatchers
-from src.main.python.plotlyst.events import NovelMindmapToggleEvent, NovelPanelCustomizationEvent, \
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
+from plotlyst.core.domain import Novel, NovelSetting
+from plotlyst.event.core import emit_event, EventListener, Event
+from plotlyst.event.handler import event_dispatchers
+from plotlyst.events import NovelMindmapToggleEvent, NovelPanelCustomizationEvent, \
     NovelStructureToggleEvent, NovelStorylinesToggleEvent, NovelCharactersToggleEvent, NovelScenesToggleEvent, \
     NovelWorldBuildingToggleEvent, NovelManuscriptToggleEvent, NovelDocumentsToggleEvent, NovelManagementToggleEvent, \
     NovelEmotionTrackingToggleEvent, NovelMotivationTrackingToggleEvent, NovelConflictTrackingToggleEvent, \
     NovelPovTrackingToggleEvent
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import label, ButtonPressResizeEventFilter
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.style.base import apply_white_menu
-from src.main.python.plotlyst.view.style.button import apply_button_palette_color
-from src.main.python.plotlyst.view.widget.input import Toggle
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import label, ButtonPressResizeEventFilter
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.style.base import apply_white_menu
+from plotlyst.view.style.button import apply_button_palette_color
+from plotlyst.view.widget.input import Toggle
 
 setting_titles: Dict[NovelSetting, str] = {
     NovelSetting.Structure: 'Story structure',

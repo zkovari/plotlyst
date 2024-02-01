@@ -1,7 +1,7 @@
-from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.test.common import go_to_home, create_novel
-from src.main.python.plotlyst.view.home_view import HomeView
-from src.main.python.plotlyst.view.main_window import MainWindow
+from plotlyst.core.client import client
+from plotlyst.test.common import go_to_home, create_novel
+from plotlyst.view.home_view import HomeView
+from plotlyst.view.main_window import MainWindow
 
 
 def assert_views(window: MainWindow, visible: bool = True):

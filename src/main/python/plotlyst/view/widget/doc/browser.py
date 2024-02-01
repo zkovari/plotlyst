@@ -26,13 +26,13 @@ from qthandy import clear_layout, vspacer, translucent, gc, ask_confirmation, re
 from qthandy.filter import DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import recursive
-from src.main.python.plotlyst.core.domain import Document, Novel, DocumentType, Character
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import fade_out_and_gc, action
-from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
-from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
+from plotlyst.common import recursive
+from plotlyst.core.domain import Document, Novel, DocumentType, Character
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import fade_out_and_gc, action
+from plotlyst.view.icons import IconRegistry, avatars
+from plotlyst.view.widget.characters import CharacterSelectorMenu
+from plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
 
 class DocumentAdditionMenu(MenuWidget):

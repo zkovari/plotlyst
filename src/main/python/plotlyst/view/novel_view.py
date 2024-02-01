@@ -24,24 +24,24 @@ from overrides import overrides
 from qthandy import retain_when_hidden, decr_icon, gc
 from qthandy.filter import OpacityEventFilter
 
-from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
-from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Document, NovelSetting
-from src.main.python.plotlyst.core.help import synopsis_editor_placeholder
-from src.main.python.plotlyst.event.core import emit_global_event, Event
-from src.main.python.plotlyst.events import NovelUpdatedEvent, \
+from plotlyst.common import PLOTLYST_MAIN_COLOR
+from plotlyst.core.client import json_client
+from plotlyst.core.domain import Novel, Document, NovelSetting
+from plotlyst.core.help import synopsis_editor_placeholder
+from plotlyst.event.core import emit_global_event, Event
+from plotlyst.events import NovelUpdatedEvent, \
     SceneChangedEvent, NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelMindmapToggleEvent, \
     NovelPanelCustomizationEvent
-from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon, set_tab_visible, tool_btn
-from src.main.python.plotlyst.view.dialog.novel import NovelEditionDialog, SynopsisEditorDialog
-from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.style.base import apply_border_image
-from src.main.python.plotlyst.view.widget.plot.editor import PlotEditor
-from src.main.python.plotlyst.view.widget.settings import NovelSettingsWidget
-from src.main.python.plotlyst.view.widget.story_map import EventsMindMapView
+from plotlyst.resources import resource_registry
+from plotlyst.view._view import AbstractNovelView
+from plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon, set_tab_visible, tool_btn
+from plotlyst.view.dialog.novel import NovelEditionDialog, SynopsisEditorDialog
+from plotlyst.view.generated.novel_view_ui import Ui_NovelView
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.style.base import apply_border_image
+from plotlyst.view.widget.plot.editor import PlotEditor
+from plotlyst.view.widget.settings import NovelSettingsWidget
+from plotlyst.view.widget.story_map import EventsMindMapView
 
 
 class NovelView(AbstractNovelView):

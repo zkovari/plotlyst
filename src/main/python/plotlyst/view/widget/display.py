@@ -33,14 +33,14 @@ from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon, point
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR
-from src.main.python.plotlyst.core.help import mid_revision_scene_structure_help
-from src.main.python.plotlyst.core.template import Role, protagonist_role
-from src.main.python.plotlyst.core.text import wc
-from src.main.python.plotlyst.view.common import emoji_font, insert_before_the_end, \
+from plotlyst.common import PLOTLYST_TERTIARY_COLOR
+from plotlyst.core.help import mid_revision_scene_structure_help
+from plotlyst.core.template import Role, protagonist_role
+from plotlyst.core.text import wc
+from plotlyst.view.common import emoji_font, insert_before_the_end, \
     ButtonPressResizeEventFilter, restyle, label, frame, shadow, tool_btn, push_btn, action, open_url
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import group
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.layout import group
 
 
 class ChartView(QChartView):

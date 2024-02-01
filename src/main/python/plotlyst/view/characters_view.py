@@ -29,31 +29,31 @@ from qthandy import busy, gc, incr_font, bold, retain_when_hidden
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
-from src.main.python.plotlyst.core.domain import Novel, Character, LayoutType, CardSizeRatio
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
-from src.main.python.plotlyst.event.handler import event_dispatchers, global_event_dispatcher
-from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent, NovelSyncEvent
-from src.main.python.plotlyst.model.characters_model import CharactersTableModel
-from src.main.python.plotlyst.model.common import proxy
-from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.service.persistence import delete_character
-from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.character_editor import CharacterEditor
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, \
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from plotlyst.core.domain import Novel, Character, LayoutType, CardSizeRatio
+from plotlyst.env import app_env
+from plotlyst.event.core import EventListener, Event, emit_event
+from plotlyst.event.handler import event_dispatchers, global_event_dispatcher
+from plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent, NovelSyncEvent
+from plotlyst.model.characters_model import CharactersTableModel
+from plotlyst.model.common import proxy
+from plotlyst.resources import resource_registry
+from plotlyst.service.persistence import delete_character
+from plotlyst.view._view import AbstractNovelView
+from plotlyst.view.character_editor import CharacterEditor
+from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, \
     action
-from src.main.python.plotlyst.view.generated.characters_title_ui import Ui_CharactersTitle
-from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.style.base import apply_bg_image
-from src.main.python.plotlyst.view.widget.cards import CharacterCard
-from src.main.python.plotlyst.view.widget.character.comp import CharacterComparisonWidget, \
+from plotlyst.view.generated.characters_title_ui import Ui_CharactersTitle
+from plotlyst.view.generated.characters_view_ui import Ui_CharactersView
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.style.base import apply_bg_image
+from plotlyst.view.widget.cards import CharacterCard
+from plotlyst.view.widget.character.comp import CharacterComparisonWidget, \
     CharacterComparisonAttribute
-from src.main.python.plotlyst.view.widget.character.comp import CharactersTreeView
-from src.main.python.plotlyst.view.widget.character.network import CharacterNetworkView
-from src.main.python.plotlyst.view.widget.characters import CharactersProgressWidget
-from src.main.python.plotlyst.view.widget.tour.core import CharacterNewButtonTourEvent, TourEvent, \
+from plotlyst.view.widget.character.comp import CharactersTreeView
+from plotlyst.view.widget.character.network import CharacterNetworkView
+from plotlyst.view.widget.characters import CharactersProgressWidget
+from plotlyst.view.widget.tour.core import CharacterNewButtonTourEvent, TourEvent, \
     CharacterCardTourEvent, CharacterPerspectivesTourEvent, CharacterPerspectiveCardsTourEvent, \
     CharacterPerspectiveTableTourEvent, CharacterPerspectiveNetworkTourEvent, CharacterPerspectiveComparisonTourEvent, \
     CharacterPerspectiveProgressTourEvent, CharacterDisplayTourEvent

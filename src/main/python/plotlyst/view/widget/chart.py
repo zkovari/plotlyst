@@ -26,15 +26,15 @@ from PyQt6.QtGui import QColor, QCursor, QIcon, QFont
 from PyQt6.QtWidgets import QToolTip, QApplication
 from overrides import overrides
 
-from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, CHARACTER_MAJOR_COLOR, \
+from plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, CHARACTER_MAJOR_COLOR, \
     CHARACTER_SECONDARY_COLOR, CHARACTER_MINOR_COLOR, RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Character, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS, Novel
-from src.main.python.plotlyst.core.template import enneagram_choices, supporter_role, guide_role, sidekick_role, \
+from plotlyst.core.domain import Character, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS, Novel
+from plotlyst.core.template import enneagram_choices, supporter_role, guide_role, sidekick_role, \
     antagonist_role, contagonist_role, adversary_role, henchmen_role, confidant_role, tertiary_role, SelectionItem, \
     secondary_role
-from src.main.python.plotlyst.service.cache import acts_registry
-from src.main.python.plotlyst.view.common import icon_to_html_img
-from src.main.python.plotlyst.view.icons import IconRegistry
+from plotlyst.service.cache import acts_registry
+from plotlyst.view.common import icon_to_html_img
+from plotlyst.view.icons import IconRegistry
 
 
 class _AbstractChart:

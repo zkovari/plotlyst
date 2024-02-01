@@ -25,15 +25,15 @@ from overrides import overrides
 from qthandy import vline
 from qtmenu import GridMenuWidget
 
-from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Diagram, Relation, Node
-from src.main.python.plotlyst.core.domain import Novel, Character, DiagramNodeType
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import action
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
-from src.main.python.plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene
-from src.main.python.plotlyst.view.widget.graphics.editor import ConnectorToolbar, RelationsButton
+from plotlyst.core.client import json_client
+from plotlyst.core.domain import Diagram, Relation, Node
+from plotlyst.core.domain import Novel, Character, DiagramNodeType
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import action
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.characters import CharacterSelectorMenu
+from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene
+from plotlyst.view.widget.graphics.editor import ConnectorToolbar, RelationsButton
 
 
 class RelationsEditorScene(NetworkScene):

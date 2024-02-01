@@ -28,16 +28,16 @@ from PyQt6.QtWidgets import QWidget, QDialog
 from overrides import overrides
 from qthandy import line, vbox, margins, hbox, spacer, sp, incr_icon, transparent, italic
 
-from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
-from src.main.python.plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat, motion_beat, \
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat, motion_beat, \
     disturbance_beat, characteristic_moment_beat, normal_world_beat, general_beat, turn_beat, twist_beat
-from src.main.python.plotlyst.view.common import label, scrolled, push_btn
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import group
-from src.main.python.plotlyst.view.widget.display import PopupDialog, Icon
-from src.main.python.plotlyst.view.widget.outline import OutlineTimelineWidget, OutlineItemWidget
-from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget
-from src.main.python.plotlyst.view.widget.structure.beat import BeatsPreview
+from plotlyst.view.common import label, scrolled, push_btn
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.layout import group
+from plotlyst.view.widget.display import PopupDialog, Icon
+from plotlyst.view.widget.outline import OutlineTimelineWidget, OutlineItemWidget
+from plotlyst.view.widget.scenes import SceneStoryStructureWidget
+from plotlyst.view.widget.structure.beat import BeatsPreview
 
 
 class StoryStructureBeatWidget(OutlineItemWidget):

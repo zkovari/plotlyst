@@ -31,19 +31,19 @@ from qthandy import vbox, hbox, spacer, sp, flow, vline, clear_layout, bold, inc
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
-from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
-from src.main.python.plotlyst.core.domain import Novel, Scene, ReaderQuestion, SceneReaderQuestion, ReaderQuestionType, \
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from plotlyst.core.domain import Novel, Scene, ReaderQuestion, SceneReaderQuestion, ReaderQuestionType, \
     ReaderInformationType, SceneReaderInformation
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import push_btn, link_buttons_to_pages, shadow, scroll_area, \
+from plotlyst.env import app_env
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import push_btn, link_buttons_to_pages, shadow, scroll_area, \
     insert_before_the_end, wrap, fade_out_and_gc, action, label, scrolled, tool_btn
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.style.base import apply_white_menu
-from src.main.python.plotlyst.view.widget.button import DotsMenuButton
-from src.main.python.plotlyst.view.widget.confirm import confirmed
-from src.main.python.plotlyst.view.widget.display import LazyWidget, Icon, IconText
-from src.main.python.plotlyst.view.widget.input import RemovalButton
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.style.base import apply_white_menu
+from plotlyst.view.widget.button import DotsMenuButton
+from plotlyst.view.widget.confirm import confirmed
+from plotlyst.view.widget.display import LazyWidget, Icon, IconText
+from plotlyst.view.widget.input import RemovalButton
 
 
 class QuestionState(Enum):

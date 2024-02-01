@@ -24,22 +24,22 @@ from PyQt6.QtWidgets import QDialog, QFileDialog
 from qthandy import incr_font
 from qthandy.filter import OpacityEventFilter
 
-from src.main.python.plotlyst.common import MAXIMUM_SIZE
-from src.main.python.plotlyst.core.domain import Novel
-from src.main.python.plotlyst.core.scrivener import ScrivenerParser
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import EventListener, Event
-from src.main.python.plotlyst.event.handler import global_event_dispatcher
-from src.main.python.plotlyst.resources import resource_registry, ResourceType
-from src.main.python.plotlyst.service.tour import TourService
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter
-from src.main.python.plotlyst.view.generated.story_creation_dialog_ui import Ui_StoryCreationDialog
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.input import Toggle
-from src.main.python.plotlyst.view.widget.novel import NovelCustomizationWizard
-from src.main.python.plotlyst.view.widget.tour.core import NewStoryTitleInDialogTourEvent, \
+from plotlyst.common import MAXIMUM_SIZE
+from plotlyst.core.domain import Novel
+from plotlyst.core.scrivener import ScrivenerParser
+from plotlyst.env import app_env
+from plotlyst.event.core import EventListener, Event
+from plotlyst.event.handler import global_event_dispatcher
+from plotlyst.resources import resource_registry, ResourceType
+from plotlyst.service.tour import TourService
+from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter
+from plotlyst.view.generated.story_creation_dialog_ui import Ui_StoryCreationDialog
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.input import Toggle
+from plotlyst.view.widget.novel import NovelCustomizationWizard
+from plotlyst.view.widget.tour.core import NewStoryTitleInDialogTourEvent, \
     NewStoryTitleFillInDialogTourEvent, NewStoryDialogOkayButtonTourEvent, NewStoryDialogWizardCustomizationTourEvent
-from src.main.python.plotlyst.view.widget.utility import ask_for_resource
+from plotlyst.view.widget.utility import ask_for_resource
 
 
 class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):

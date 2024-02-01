@@ -30,15 +30,15 @@ from qthandy import hbox, spacer, sp, retain_when_hidden, bold, vbox, translucen
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.core.domain import Motivation, Novel, Scene, SceneStructureAgenda
-from src.main.python.plotlyst.view.common import push_btn, label, fade_out_and_gc, tool_btn
-from src.main.python.plotlyst.view.generated.scene_goal_stakes_ui import Ui_GoalReferenceStakesEditor
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.style.base import apply_white_menu
-from src.main.python.plotlyst.view.widget.button import ChargeButton
-from src.main.python.plotlyst.view.widget.character.editor import EmotionEditorSlider
-from src.main.python.plotlyst.view.widget.input import RemovalButton
-from src.main.python.plotlyst.view.widget.scene.conflict import ConflictIntensityEditor, CharacterConflictSelector
+from plotlyst.core.domain import Motivation, Novel, Scene, SceneStructureAgenda
+from plotlyst.view.common import push_btn, label, fade_out_and_gc, tool_btn
+from plotlyst.view.generated.scene_goal_stakes_ui import Ui_GoalReferenceStakesEditor
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.style.base import apply_white_menu
+from plotlyst.view.widget.button import ChargeButton
+from plotlyst.view.widget.character.editor import EmotionEditorSlider
+from plotlyst.view.widget.input import RemovalButton
+from plotlyst.view.widget.scene.conflict import ConflictIntensityEditor, CharacterConflictSelector
 
 
 class MotivationDisplay(QWidget, Ui_GoalReferenceStakesEditor):

@@ -21,13 +21,13 @@ from overrides import overrides
 from qthandy import bold
 from qthandy.filter import InstantTooltipEventFilter
 
-from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
-from src.main.python.plotlyst.core.domain import Novel
-from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import scroll_to_bottom, ButtonPressResizeEventFilter
-from src.main.python.plotlyst.view.generated.board_view_ui import Ui_BoardView
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.task import BoardWidget
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from plotlyst.core.domain import Novel
+from plotlyst.view._view import AbstractNovelView
+from plotlyst.view.common import scroll_to_bottom, ButtonPressResizeEventFilter
+from plotlyst.view.generated.board_view_ui import Ui_BoardView
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.task import BoardWidget
 
 
 class BoardView(AbstractNovelView):

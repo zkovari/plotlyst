@@ -27,22 +27,22 @@ from overrides import overrides
 from qthandy import bold, vbox
 from qthandy.filter import OpacityEventFilter
 
-from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
-from src.main.python.plotlyst.core.domain import Novel
-from src.main.python.plotlyst.event.core import EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatchers
-from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent, \
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from plotlyst.core.domain import Novel
+from plotlyst.event.core import EventListener, Event
+from plotlyst.event.handler import event_dispatchers
+from plotlyst.events import CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent, \
     CharacterDeletedEvent, NovelSyncEvent, StorylineCreatedEvent, StorylineRemovedEvent
-from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, scrolled
-from src.main.python.plotlyst.view.generated.reports_view_ui import Ui_ReportsView
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.report import AbstractReport
-from src.main.python.plotlyst.view.report.character import CharacterReport
-from src.main.python.plotlyst.view.report.conflict import ConflictReport
-from src.main.python.plotlyst.view.report.manuscript import ManuscriptReport
-from src.main.python.plotlyst.view.report.plot import ArcReport
-from src.main.python.plotlyst.view.report.scene import SceneReport
+from plotlyst.view._view import AbstractNovelView
+from plotlyst.view.common import link_buttons_to_pages, scrolled
+from plotlyst.view.generated.reports_view_ui import Ui_ReportsView
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.report import AbstractReport
+from plotlyst.view.report.character import CharacterReport
+from plotlyst.view.report.conflict import ConflictReport
+from plotlyst.view.report.manuscript import ManuscriptReport
+from plotlyst.view.report.plot import ArcReport
+from plotlyst.view.report.scene import SceneReport
 
 
 class ReportType(Enum):

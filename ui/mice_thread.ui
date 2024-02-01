@@ -93,12 +93,12 @@
   <customwidget>
    <class>Icon</class>
    <extends>QToolButton</extends>
-   <header>src.main.python.plotlyst.view.widget.display</header>
+   <header>plotlyst.view.widget.display</header>
   </customwidget>
   <customwidget>
    <class>RemovalButton</class>
    <extends>QToolButton</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
+   <header>plotlyst.view.widget.input</header>
   </customwidget>
  </customwidgets>
  <resources/>

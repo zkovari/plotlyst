@@ -29,11 +29,11 @@ from qtanim import fade_in
 from qthandy import vbox, vspacer, hbox, clear_layout, retain_when_hidden, margins, gc, translucent, decr_font
 from qthandy.filter import DragEventFilter, DropEventFilter, ObjectReferenceMimeData
 
-from src.main.python.plotlyst.view.common import fade_out_and_gc, wrap
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
-from src.main.python.plotlyst.view.widget.display import Icon
-from src.main.python.plotlyst.view.widget.input import RemovalButton
+from plotlyst.view.common import fade_out_and_gc, wrap
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.button import SecondaryActionPushButton
+from plotlyst.view.widget.display import Icon
+from plotlyst.view.widget.input import RemovalButton
 
 LIST_ITEM_MIME_TYPE = 'application/list-item'
 

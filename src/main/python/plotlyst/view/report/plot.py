@@ -28,14 +28,14 @@ from PyQt6.QtGui import QPen, QColor, QShowEvent
 from overrides import overrides
 from qthandy import clear_layout, vspacer, gc
 
-from src.main.python.plotlyst.common import clamp
-from src.main.python.plotlyst.core.domain import Novel, Plot, Character, Motivation
-from src.main.python.plotlyst.view.common import icon_to_html_img
-from src.main.python.plotlyst.view.generated.report.plot_report_ui import Ui_PlotReport
-from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.report import AbstractReport
-from src.main.python.plotlyst.view.widget.chart import BaseChart
-from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, EyeToggleNode
+from plotlyst.common import clamp
+from plotlyst.core.domain import Novel, Plot, Character, Motivation
+from plotlyst.view.common import icon_to_html_img
+from plotlyst.view.generated.report.plot_report_ui import Ui_PlotReport
+from plotlyst.view.icons import IconRegistry, avatars
+from plotlyst.view.report import AbstractReport
+from plotlyst.view.widget.chart import BaseChart
+from plotlyst.view.widget.tree import TreeView, ContainerNode, EyeToggleNode
 
 
 class PlotArcNode(EyeToggleNode):

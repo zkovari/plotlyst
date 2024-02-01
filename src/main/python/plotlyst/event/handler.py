@@ -26,12 +26,12 @@ from PyQt6.QtCore import QTimer, Qt, QObject
 from PyQt6.QtGui import QCursor
 from PyQt6.QtWidgets import QMessageBox, QWidget, QStatusBar, QApplication
 
-from src.main.python.plotlyst.core.domain import Novel
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import EventLog, Severity, \
+from plotlyst.core.domain import Novel
+from plotlyst.env import app_env
+from plotlyst.event.core import EventLog, Severity, \
     emit_critical, EventListener, Event
-from src.main.python.plotlyst.view.dialog.error import ErrorMessageBox
-from src.main.python.plotlyst.view.style.base import apply_color
+from plotlyst.view.dialog.error import ErrorMessageBox
+from plotlyst.view.style.base import apply_color
 
 
 class EventLogHandler:

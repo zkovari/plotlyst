@@ -55,7 +55,7 @@
   <customwidget>
    <class>DocumentTextEditor</class>
    <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
+   <header>plotlyst.view.widget.input</header>
   </customwidget>
  </customwidgets>
  <resources/>

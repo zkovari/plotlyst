@@ -31,25 +31,25 @@ from qthandy import translucent, gc, flow, ask_confirmation, hbox, clear_layout,
     incr_font, bold, busy
 from qthandy.filter import OpacityEventFilter
 
-from src.main.python.plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR
-from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
+from plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR
+from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     Character
-from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
-from src.main.python.plotlyst.event.handler import event_dispatchers
-from src.main.python.plotlyst.events import NovelStoryStructureUpdated, CharacterChangedEvent, CharacterDeletedEvent, \
+from plotlyst.event.core import EventListener, Event, emit_event
+from plotlyst.event.handler import event_dispatchers
+from plotlyst.events import NovelStoryStructureUpdated, CharacterChangedEvent, CharacterDeletedEvent, \
     NovelSyncEvent, NovelStoryStructureActivationRequest
-from src.main.python.plotlyst.service.cache import acts_registry
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon, label, frame, shadow
-from src.main.python.plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
-from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
-from src.main.python.plotlyst.view.widget.display import IconText
-from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
-from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget
-from src.main.python.plotlyst.view.widget.structure.beat import BeatsPreview
-from src.main.python.plotlyst.view.widget.structure.outline import StoryStructureOutline
-from src.main.python.plotlyst.view.widget.structure.selector import StoryStructureSelectorDialog
+from plotlyst.service.cache import acts_registry
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon, label, frame, shadow
+from plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
+from plotlyst.view.icons import IconRegistry, avatars
+from plotlyst.view.widget.characters import CharacterSelectorMenu
+from plotlyst.view.widget.display import IconText
+from plotlyst.view.widget.input import AutoAdjustableTextEdit
+from plotlyst.view.widget.scenes import SceneStoryStructureWidget
+from plotlyst.view.widget.structure.beat import BeatsPreview
+from plotlyst.view.widget.structure.outline import StoryStructureOutline
+from plotlyst.view.widget.structure.selector import StoryStructureSelectorDialog
 
 
 class _StoryStructureButton(QPushButton):

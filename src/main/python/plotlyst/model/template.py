@@ -24,8 +24,8 @@ from PyQt6.QtGui import QBrush, QColor
 from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 
-from src.main.python.plotlyst.core.template import TemplateField, SelectionItem
-from src.main.python.plotlyst.model.common import SelectionItemsModel
+from plotlyst.core.template import TemplateField, SelectionItem
+from plotlyst.model.common import SelectionItemsModel
 
 
 class TemplateFieldSelectionModel(SelectionItemsModel):

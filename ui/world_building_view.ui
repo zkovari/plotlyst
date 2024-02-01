@@ -672,12 +672,12 @@
   <customwidget>
    <class>WorldBuildingTreeView</class>
    <extends>QTreeView</extends>
-   <header>src.main.python.plotlyst.view.widget.world</header>
+   <header>plotlyst.view.widget.world</header>
   </customwidget>
   <customwidget>
    <class>Toggle</class>
    <extends>QCheckBox</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
+   <header>plotlyst.view.widget.input</header>
   </customwidget>
  </customwidgets>
  <resources/>

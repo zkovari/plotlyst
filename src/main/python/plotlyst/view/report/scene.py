@@ -4,13 +4,13 @@ from typing import Optional
 from PyQt6.QtCharts import QPieSeries
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel
-from src.main.python.plotlyst.core.text import html
-from src.main.python.plotlyst.service.cache import acts_registry
-from src.main.python.plotlyst.view.generated.report.scene_report_ui import Ui_SceneReport
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.report import AbstractReport
-from src.main.python.plotlyst.view.widget.chart import BaseChart, ActDistributionChart
+from plotlyst.core.domain import Novel
+from plotlyst.core.text import html
+from plotlyst.service.cache import acts_registry
+from plotlyst.view.generated.report.scene_report_ui import Ui_SceneReport
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.report import AbstractReport
+from plotlyst.view.widget.chart import BaseChart, ActDistributionChart
 
 
 class SceneReport(AbstractReport, Ui_SceneReport):

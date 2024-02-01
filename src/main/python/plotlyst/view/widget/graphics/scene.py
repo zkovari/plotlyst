@@ -29,9 +29,9 @@ from PyQt6.QtGui import QTransform, \
 from PyQt6.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QApplication
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Node, Diagram, DiagramNodeType, Connector, PlaceholderCharacter, \
+from plotlyst.core.domain import Node, Diagram, DiagramNodeType, Connector, PlaceholderCharacter, \
     Character, to_node
-from src.main.python.plotlyst.view.widget.graphics import NodeItem, CharacterItem, PlaceholderSocketItem, ConnectorItem, \
+from plotlyst.view.widget.graphics import NodeItem, CharacterItem, PlaceholderSocketItem, ConnectorItem, \
     AbstractSocketItem, EventItem
 
 

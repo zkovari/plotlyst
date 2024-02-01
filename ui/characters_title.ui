@@ -118,17 +118,17 @@
   <customwidget>
    <class>MajorRoleIcon</class>
    <extends>QPushButton</extends>
-   <header>src.main.python.plotlyst.view.widget.display</header>
+   <header>plotlyst.view.widget.display</header>
   </customwidget>
   <customwidget>
    <class>SecondaryRoleIcon</class>
    <extends>QPushButton</extends>
-   <header>src.main.python.plotlyst.view.widget.display</header>
+   <header>plotlyst.view.widget.display</header>
   </customwidget>
   <customwidget>
    <class>MinorRoleIcon</class>
    <extends>QPushButton</extends>
-   <header>src.main.python.plotlyst.view.widget.display</header>
+   <header>plotlyst.view.widget.display</header>
   </customwidget>
  </customwidgets>
  <resources/>

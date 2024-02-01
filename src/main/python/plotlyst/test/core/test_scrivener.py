@@ -4,9 +4,9 @@ from uuid import UUID
 
 import pytest
 
-from src.main.python.plotlyst.core.domain import Novel, Chapter, Scene, SceneStructureAgenda, Character, ImportOrigin, \
+from plotlyst.core.domain import Novel, Chapter, Scene, SceneStructureAgenda, Character, ImportOrigin, \
     ImportOriginType
-from src.main.python.plotlyst.core.scrivener import ScrivenerParser
+from plotlyst.core.scrivener import ScrivenerParser
 
 
 def test_empty_folder(tmp_path):
@@ -26,7 +26,7 @@ def test_not_existing_input(tmp_path):
 
 
 def test_import_with_acts(test_client):
-    folder = Path(sys.path[0]).joinpath('resources/scrivener/v3/NovelWithParts')
+    folder = Path(sys.path[0]).joinpath('../../../resources/scrivener/v3/NovelWithParts')
 
     importer = ScrivenerParser()
     novel: Novel = importer.parse_project(str(folder))

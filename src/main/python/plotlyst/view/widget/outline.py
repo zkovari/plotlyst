@@ -31,12 +31,12 @@ from qthandy import sp, curved_flow, clear_layout, vbox, bold, decr_font, gc, po
     hbox
 from qthandy.filter import DragEventFilter
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Novel, OutlineItem, LayoutType
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.view.common import fade_out_and_gc, to_rgba_str, shadow
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.input import RemovalButton
+from plotlyst.common import RELAXED_WHITE_COLOR
+from plotlyst.core.domain import Novel, OutlineItem, LayoutType
+from plotlyst.env import app_env
+from plotlyst.view.common import fade_out_and_gc, to_rgba_str, shadow
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.input import RemovalButton
 
 
 class OutlineItemWidget(QWidget):

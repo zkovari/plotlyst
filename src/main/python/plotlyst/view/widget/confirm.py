@@ -23,8 +23,8 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QDialog, QWidget
 from qthandy import line, hbox, sp, vspacer
 
-from src.main.python.plotlyst.view.common import label, push_btn
-from src.main.python.plotlyst.view.widget.display import PopupDialog
+from plotlyst.view.common import label, push_btn
+from plotlyst.view.widget.display import PopupDialog
 
 
 @dataclass

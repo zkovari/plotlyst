@@ -35,33 +35,33 @@ from qthandy import transparent, translucent, flow, \
 from qthandy.filter import InstantTooltipEventFilter, DragEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR, PLOTLYST_SECONDARY_COLOR
-from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Scene, Novel, SceneOutcome, StoryBeat, StoryBeatType, Tag, SceneStage, \
+from plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR, PLOTLYST_SECONDARY_COLOR
+from plotlyst.core.client import json_client
+from plotlyst.core.domain import Scene, Novel, SceneOutcome, StoryBeat, StoryBeatType, Tag, SceneStage, \
     ReaderPosition, InformationAcquisition, Document, \
     StoryStructure, NovelSetting, CardSizeRatio
-from src.main.python.plotlyst.core.help import scene_disaster_outcome_help, scene_trade_off_outcome_help, \
+from plotlyst.core.help import scene_disaster_outcome_help, scene_trade_off_outcome_help, \
     scene_resolution_outcome_help, scene_motion_outcome_help
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import emit_critical, Event, EventListener, emit_event
-from src.main.python.plotlyst.event.handler import event_dispatchers
-from src.main.python.plotlyst.events import SceneStatusChangedEvent, \
+from plotlyst.env import app_env
+from plotlyst.event.core import emit_critical, Event, EventListener, emit_event
+from plotlyst.event.handler import event_dispatchers
+from plotlyst.events import SceneStatusChangedEvent, \
     ActiveSceneStageChanged, AvailableSceneStagesChanged
-from src.main.python.plotlyst.model.novel import NovelTagsTreeModel, TagNode
-from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
-from src.main.python.plotlyst.service.cache import acts_registry
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import PopupMenuBuilder, action, stretch_col, \
+from plotlyst.model.novel import NovelTagsTreeModel, TagNode
+from plotlyst.model.scenes_model import ScenesTableModel
+from plotlyst.service.cache import acts_registry
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import PopupMenuBuilder, action, stretch_col, \
     tool_btn, label, ExclusiveOptionalButtonGroup
-from src.main.python.plotlyst.view.generated.scene_drive_editor_ui import Ui_SceneDriveTrackingEditor
-from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui import Ui_ScenesViewPreferences
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import group
-from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton, \
+from plotlyst.view.generated.scene_drive_editor_ui import Ui_SceneDriveTrackingEditor
+from plotlyst.view.generated.scenes_view_preferences_widget_ui import Ui_ScenesViewPreferences
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.layout import group
+from plotlyst.view.widget.button import SecondaryActionPushButton, \
     FadeOutButtonGroup
-from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButtons
-from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
-from src.main.python.plotlyst.view.widget.labels import SelectionItemLabel, SceneLabel
+from plotlyst.view.widget.characters import CharacterSelectorButtons
+from plotlyst.view.widget.input import DocumentTextEditor
+from plotlyst.view.widget.labels import SelectionItemLabel, SceneLabel
 
 
 class SceneOutcomeSelector(QWidget):

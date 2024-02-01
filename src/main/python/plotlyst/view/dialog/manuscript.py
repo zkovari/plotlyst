@@ -25,8 +25,8 @@ from PyQt6.QtPrintSupport import QPrintPreviewWidget, QPrinter
 from PyQt6.QtWidgets import QDialog
 from qthandy import vbox
 
-from src.main.python.plotlyst.core.domain import Novel
-from src.main.python.plotlyst.service.manuscript import format_manuscript
+from plotlyst.core.domain import Novel
+from plotlyst.service.manuscript import format_manuscript
 
 
 class ManuscriptPreviewDialog(QDialog):

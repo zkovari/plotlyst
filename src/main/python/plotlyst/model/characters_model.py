@@ -24,9 +24,9 @@ from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Character, Novel, Scene, SelectionItem, enneagram_field
-from src.main.python.plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel
-from src.main.python.plotlyst.view.icons import avatars, IconRegistry
+from plotlyst.core.domain import Character, Novel, Scene, SelectionItem, enneagram_field
+from plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel
+from plotlyst.view.icons import avatars, IconRegistry
 
 
 class CharactersTableModel(AbstractHorizontalHeaderBasedTableModel):

@@ -26,10 +26,10 @@ from PyQt6.QtWidgets import QWidget
 from qthandy import vbox, vspacer
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
-from src.main.python.plotlyst.core.domain import Character, Topic, TemplateValue, TopicType
-from src.main.python.plotlyst.view.common import push_btn, scrolled, action
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.topic import TopicsEditor, topic_ids
+from plotlyst.core.domain import Character, Topic, TemplateValue, TopicType
+from plotlyst.view.common import push_btn, scrolled, action
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.topic import TopicsEditor, topic_ids
 
 
 # default_topics: List[Topic] = [

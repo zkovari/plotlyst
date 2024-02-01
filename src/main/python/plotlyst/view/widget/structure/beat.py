@@ -29,19 +29,19 @@ from overrides import overrides
 from qthandy import vspacer, translucent, transparent, gc, bold, clear_layout, retain_when_hidden, grid, decr_icon, \
     italic
 
-from src.main.python.plotlyst.common import act_color, RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
+from plotlyst.common import act_color, RELAXED_WHITE_COLOR
+from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     Scene, StoryBeatType, midpoints
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
-from src.main.python.plotlyst.event.handler import event_dispatchers
-from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
-from src.main.python.plotlyst.service.cache import acts_registry
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import DelayedSignalSlotConnector
-from src.main.python.plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
-from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget, SceneSelector
+from plotlyst.env import app_env
+from plotlyst.event.core import EventListener, Event, emit_event
+from plotlyst.event.handler import event_dispatchers
+from plotlyst.events import SceneChangedEvent, SceneDeletedEvent
+from plotlyst.service.cache import acts_registry
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import DelayedSignalSlotConnector
+from plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
+from plotlyst.view.icons import IconRegistry, avatars
+from plotlyst.view.widget.scenes import SceneStoryStructureWidget, SceneSelector
 
 
 class BeatWidget(QFrame, Ui_BeatWidget, EventListener):

@@ -25,8 +25,8 @@ from typing import List
 
 from PyQt6.QtCore import QObject
 
-from src.main.python.plotlyst.core.domain import Novel, three_act_structure, Document
-from src.main.python.plotlyst.event.core import Event
+from plotlyst.core.domain import Novel, three_act_structure, Document
+from plotlyst.event.core import Event
 
 
 # flake8: noqa

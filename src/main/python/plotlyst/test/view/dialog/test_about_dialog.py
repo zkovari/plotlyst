@@ -1,4 +1,4 @@
-from src.main.python.plotlyst.view.dialog.about import AboutDialog
+from plotlyst.view.dialog.about import AboutDialog
 
 
 def test_about_dialog(qtbot):

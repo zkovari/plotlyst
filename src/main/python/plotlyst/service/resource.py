@@ -29,9 +29,9 @@ from PyQt6.QtGui import QImage
 from overrides import overrides
 from pypandoc import download_pandoc
 
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import emit_global_event
-from src.main.python.plotlyst.resources import ResourceType, resource_manager, ResourceDownloadedEvent, \
+from plotlyst.env import app_env
+from plotlyst.event.core import emit_global_event
+from plotlyst.resources import ResourceType, resource_manager, ResourceDownloadedEvent, \
     ResourceRemovedEvent, is_nltk, PANDOC_VERSION, ResourceExtension
 
 

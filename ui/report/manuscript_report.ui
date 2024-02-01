@@ -78,7 +78,7 @@
   <customwidget>
    <class>ChartView</class>
    <extends>QGraphicsView</extends>
-   <header>src.main.python.plotlyst.view.widget.display</header>
+   <header>plotlyst.view.widget.display</header>
   </customwidget>
  </customwidgets>
  <resources/>

@@ -27,16 +27,16 @@ from PyQt6.QtWidgets import QDialog, QToolButton
 from overrides import overrides
 from qthandy import ask_confirmation
 
-from src.main.python.plotlyst.core.domain import Novel
-from src.main.python.plotlyst.core.template import age_field, \
+from plotlyst.core.domain import Novel
+from plotlyst.core.template import age_field, \
     enneagram_field, TemplateField, TemplateFieldType, ProfileTemplate, misbelief_field, \
     default_character_profiles, mbti_field, traits_field
-from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import emoji_font
-from src.main.python.plotlyst.view.generated.character_profile_editor_dialog_ui import Ui_CharacterProfileEditorDialog
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.template.profile import ProfileTemplateEditor
+from plotlyst.model.template import TemplateFieldSelectionModel
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import emoji_font
+from plotlyst.view.generated.character_profile_editor_dialog_ui import Ui_CharacterProfileEditorDialog
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.template.profile import ProfileTemplateEditor
 
 
 class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):

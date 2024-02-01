@@ -24,10 +24,10 @@ from PyQt6.QtCore import QObject
 from PyQt6.QtWidgets import QWidget, QDialog
 from qttour import TourManager, TourSequence, TourStep
 
-from src.main.python.plotlyst.event.core import emit_global_event
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.widget.tour import Tutorial
-from src.main.python.plotlyst.view.widget.tour.core import COLOR_ON_NAVBAR, tour_events, TourEvent, tour_teardowns, \
+from plotlyst.event.core import emit_global_event
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.widget.tour import Tutorial
+from plotlyst.view.widget.tour.core import COLOR_ON_NAVBAR, tour_events, TourEvent, tour_teardowns, \
     TutorialNovelCloseTourEvent
 
 

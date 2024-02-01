@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Dict
 
-from src.main.python.plotlyst.view.widget.tour import Tutorial
+from plotlyst.view.widget.tour import Tutorial
 
 # flake8: noqa
 tutorial_titles: Dict[Tutorial, str] = {

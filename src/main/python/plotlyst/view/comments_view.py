@@ -24,12 +24,12 @@ from PyQt6.QtWidgets import QFrame
 from overrides import overrides
 from qthandy import ask_confirmation, gc
 
-from src.main.python.plotlyst.core.domain import Novel, Comment, Scene, Event
-from src.main.python.plotlyst.events import SceneSelectedEvent, SceneSelectionClearedEvent
-from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.generated.comment_widget_ui import Ui_CommentWidget
-from src.main.python.plotlyst.view.generated.comments_view_ui import Ui_CommentsView
-from src.main.python.plotlyst.view.icons import IconRegistry
+from plotlyst.core.domain import Novel, Comment, Scene, Event
+from plotlyst.events import SceneSelectedEvent, SceneSelectionClearedEvent
+from plotlyst.view._view import AbstractNovelView
+from plotlyst.view.generated.comment_widget_ui import Ui_CommentWidget
+from plotlyst.view.generated.comments_view_ui import Ui_CommentsView
+from plotlyst.view.icons import IconRegistry
 
 
 class CommentsView(AbstractNovelView):

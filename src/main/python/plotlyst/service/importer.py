@@ -26,14 +26,14 @@ from PyQt6.QtGui import QIcon
 from overrides import overrides
 from qthandy import busy
 
-from src.main.python.plotlyst.core.domain import Novel, Character, Chapter, Scene
-from src.main.python.plotlyst.core.scrivener import ScrivenerParser
-from src.main.python.plotlyst.event.core import emit_event
-from src.main.python.plotlyst.events import NovelSyncEvent, NovelAboutToSyncEvent, CharacterDeletedEvent, \
+from plotlyst.core.domain import Novel, Character, Chapter, Scene
+from plotlyst.core.scrivener import ScrivenerParser
+from plotlyst.event.core import emit_event
+from plotlyst.events import NovelSyncEvent, NovelAboutToSyncEvent, CharacterDeletedEvent, \
     SceneDeletedEvent
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, flush_or_fail, delete_character, \
+from plotlyst.service.persistence import RepositoryPersistenceManager, flush_or_fail, delete_character, \
     delete_scene
-from src.main.python.plotlyst.view.icons import IconRegistry
+from plotlyst.view.icons import IconRegistry
 
 
 class SyncImporter(QObject):

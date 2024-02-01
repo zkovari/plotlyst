@@ -30,14 +30,14 @@ from qthandy import vbox, hbox, transparent, retain_when_hidden, spacer, sp, dec
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.core.domain import Novel, Scene, ScenePlotReference, PlotValue, ScenePlotValueCharge, \
+from plotlyst.core.domain import Novel, Scene, ScenePlotReference, PlotValue, ScenePlotValueCharge, \
     Plot, PlotType
-from src.main.python.plotlyst.view.common import action, tool_btn
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.style.base import apply_white_menu
-from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton
-from src.main.python.plotlyst.view.widget.input import RemovalButton
-from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
+from plotlyst.view.common import action, tool_btn
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.style.base import apply_white_menu
+from plotlyst.view.widget.button import SecondaryActionToolButton
+from plotlyst.view.widget.input import RemovalButton
+from plotlyst.view.widget.labels import PlotValueLabel
 
 
 class PlotValuesDisplay(QWidget):

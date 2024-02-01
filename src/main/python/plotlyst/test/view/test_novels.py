@@ -1,9 +1,9 @@
-from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import SceneStoryBeat, save_the_cat
-from src.main.python.plotlyst.test.common import create_plot, go_to_novel, patch_confirmed, go_to_scenes
-from src.main.python.plotlyst.view.main_window import MainWindow
-from src.main.python.plotlyst.view.novel_view import NovelView
-from src.main.python.plotlyst.view.widget.structure.selector import StoryStructureSelectorDialog
+from plotlyst.core.client import client
+from plotlyst.core.domain import SceneStoryBeat, save_the_cat
+from plotlyst.test.common import create_plot, go_to_novel, patch_confirmed, go_to_scenes
+from plotlyst.view.main_window import MainWindow
+from plotlyst.view.novel_view import NovelView
+from plotlyst.view.widget.structure.selector import StoryStructureSelectorDialog
 
 
 def test_create_plot(qtbot, filled_window: MainWindow):

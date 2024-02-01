@@ -32,33 +32,33 @@ from qthandy import bold, flow, incr_font, \
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
+from plotlyst.common import RELAXED_WHITE_COLOR
+from plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
     PlotPrincipleType, PlotProgressionItem, \
     PlotProgressionItemType
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
-from src.main.python.plotlyst.event.handler import event_dispatchers
-from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent, StorylineCreatedEvent, \
+from plotlyst.env import app_env
+from plotlyst.event.core import EventListener, Event, emit_event
+from plotlyst.event.handler import event_dispatchers
+from plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent, StorylineCreatedEvent, \
     StorylineRemovedEvent, StorylineCharacterAssociationChanged
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
-from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
-from src.main.python.plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter, \
+from plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
+from plotlyst.settings import STORY_LINE_COLOR_CODES
+from plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter, \
     insert_before_the_end, label
-from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
-from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
-from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
-from src.main.python.plotlyst.view.generated.plot_widget_ui import Ui_PlotWidget
-from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
-from src.main.python.plotlyst.view.widget.characters import CharacterAvatar, CharacterSelectorMenu
-from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
-from src.main.python.plotlyst.view.widget.plot.matrix import StorylinesImpactMatrix
-from src.main.python.plotlyst.view.widget.plot.principle import PlotPrincipleSelectorMenu, PlotPrincipleEditor, \
+from plotlyst.view.dialog.novel import PlotValueEditorDialog
+from plotlyst.view.dialog.utility import IconSelectorDialog
+from plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
+from plotlyst.view.generated.plot_widget_ui import Ui_PlotWidget
+from plotlyst.view.icons import IconRegistry, avatars
+from plotlyst.view.widget.button import SecondaryActionPushButton
+from plotlyst.view.widget.characters import CharacterAvatar, CharacterSelectorMenu
+from plotlyst.view.widget.labels import PlotValueLabel
+from plotlyst.view.widget.plot.matrix import StorylinesImpactMatrix
+from plotlyst.view.widget.plot.principle import PlotPrincipleSelectorMenu, PlotPrincipleEditor, \
     PrincipleSelectorObject, GenrePrincipleSelectorDialog, PlotDynamicPrincipleSelectorMenu
-from src.main.python.plotlyst.view.widget.plot.progression import PlotEventsTimeline, DynamicPlotPrinciplesEditor
-from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
-from src.main.python.plotlyst.view.widget.utility import ColorPicker
+from plotlyst.view.widget.plot.progression import PlotEventsTimeline, DynamicPlotPrinciplesEditor
+from plotlyst.view.widget.tree import TreeView, ContainerNode
+from plotlyst.view.widget.utility import ColorPicker
 
 
 class PlotNode(ContainerNode):

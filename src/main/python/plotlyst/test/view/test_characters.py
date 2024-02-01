@@ -1,8 +1,8 @@
-from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.test.common import create_character, go_to_characters, click_on_item, patch_confirmed, \
+from plotlyst.core.client import client
+from plotlyst.test.common import create_character, go_to_characters, click_on_item, patch_confirmed, \
     go_to_scenes
-from src.main.python.plotlyst.view.characters_view import CharactersView
-from src.main.python.plotlyst.view.main_window import MainWindow
+from plotlyst.view.characters_view import CharactersView
+from plotlyst.view.main_window import MainWindow
 
 
 def test_create_character(qtbot, filled_window: MainWindow):

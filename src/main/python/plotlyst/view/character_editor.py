@@ -27,28 +27,28 @@ from qthandy import translucent, btn_popup, bold, italic, margins
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
-from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Character, Document, MALE, FEMALE, SelectionItem
-from src.main.python.plotlyst.core.template import protagonist_role
-from src.main.python.plotlyst.event.core import EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatchers, global_event_dispatcher
-from src.main.python.plotlyst.events import NovelAboutToSyncEvent
-from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.service.tour import TourService
-from src.main.python.plotlyst.view.common import emoji_font, set_tab_icon, wrap, ButtonPressResizeEventFilter
-from src.main.python.plotlyst.view.dialog.template import customize_character_profile
-from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.style.base import apply_bg_image, apply_white_menu
-from src.main.python.plotlyst.view.widget.big_five import BigFivePersonalityWidget
-from src.main.python.plotlyst.view.widget.character.editor import CharacterAgeEditor
-from src.main.python.plotlyst.view.widget.character.editor import CharacterRoleSelector
-from src.main.python.plotlyst.view.widget.character.plan import CharacterPlansWidget
-from src.main.python.plotlyst.view.widget.character.topic import CharacterTopicsEditor
-from src.main.python.plotlyst.view.widget.template import CharacterProfileTemplateView
-from src.main.python.plotlyst.view.widget.tour.core import CharacterEditorTourEvent, \
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from plotlyst.core.client import json_client
+from plotlyst.core.domain import Novel, Character, Document, MALE, FEMALE, SelectionItem
+from plotlyst.core.template import protagonist_role
+from plotlyst.event.core import EventListener, Event
+from plotlyst.event.handler import event_dispatchers, global_event_dispatcher
+from plotlyst.events import NovelAboutToSyncEvent
+from plotlyst.resources import resource_registry
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.service.tour import TourService
+from plotlyst.view.common import emoji_font, set_tab_icon, wrap, ButtonPressResizeEventFilter
+from plotlyst.view.dialog.template import customize_character_profile
+from plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.style.base import apply_bg_image, apply_white_menu
+from plotlyst.view.widget.big_five import BigFivePersonalityWidget
+from plotlyst.view.widget.character.editor import CharacterAgeEditor
+from plotlyst.view.widget.character.editor import CharacterRoleSelector
+from plotlyst.view.widget.character.plan import CharacterPlansWidget
+from plotlyst.view.widget.character.topic import CharacterTopicsEditor
+from plotlyst.view.widget.template import CharacterProfileTemplateView
+from plotlyst.view.widget.tour.core import CharacterEditorTourEvent, \
     CharacterEditorNameLineEditTourEvent, TourEvent, CharacterEditorNameFilledTourEvent, \
     CharacterEditorAvatarDisplayTourEvent, CharacterEditorAvatarMenuTourEvent, CharacterEditorBackButtonTourEvent, \
     CharacterEditorAvatarMenuCloseTourEvent

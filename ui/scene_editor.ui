@@ -841,39 +841,39 @@
   <customwidget>
    <class>ScenesTreeView</class>
    <extends>QTreeView</extends>
-   <header>src.main.python.plotlyst.view.widget.scene</header>
+   <header>plotlyst.view.widget.scene</header>
   </customwidget>
   <customwidget>
    <class>SceneStoryStructureWidget</class>
    <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.scenes</header>
+   <header>plotlyst.view.widget.scenes</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>DocumentTextEditor</class>
    <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
+   <header>plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
    <class>CharacterAvatar</class>
    <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.characters</header>
+   <header>plotlyst.view.widget.characters</header>
   </customwidget>
   <customwidget>
    <class>ReturnButton</class>
    <extends>QPushButton</extends>
-   <header>src.main.python.plotlyst.view.widget.button</header>
+   <header>plotlyst.view.widget.button</header>
   </customwidget>
   <customwidget>
    <class>LabelsWidget</class>
    <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.labels</header>
+   <header>plotlyst.view.widget.labels</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>SceneStructureWidget</class>
    <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.scene</header>
+   <header>plotlyst.view.widget.scene</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

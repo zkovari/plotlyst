@@ -32,29 +32,29 @@ from qthandy import vbox, vspacer, transparent, sp, line, incr_font, hbox, point
 from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget, GridMenuWidget
 
-from src.main.python.plotlyst.common import raise_unrecognized_arg, CONFLICT_SELF_COLOR, RELAXED_WHITE_COLOR, \
+from plotlyst.common import raise_unrecognized_arg, CONFLICT_SELF_COLOR, RELAXED_WHITE_COLOR, \
     PLOTLYST_SECONDARY_COLOR
-from src.main.python.plotlyst.core.domain import Scene, Novel, ScenePurpose, advance_story_scene_purpose, \
+from plotlyst.core.domain import Scene, Novel, ScenePurpose, advance_story_scene_purpose, \
     ScenePurposeType, reaction_story_scene_purpose, character_story_scene_purpose, setup_story_scene_purpose, \
     emotion_story_scene_purpose, exposition_story_scene_purpose, scene_purposes, Character, StoryElement, \
     StoryElementType, SceneOutcome, SceneStructureAgenda, Motivation, Plot, NovelSetting
-from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
-from src.main.python.plotlyst.event.handler import event_dispatchers
-from src.main.python.plotlyst.events import SceneChangedEvent, NovelEmotionTrackingToggleEvent, \
+from plotlyst.event.core import EventListener, Event, emit_event
+from plotlyst.event.handler import event_dispatchers
+from plotlyst.events import SceneChangedEvent, NovelEmotionTrackingToggleEvent, \
     NovelMotivationTrackingToggleEvent, NovelConflictTrackingToggleEvent, NovelPanelCustomizationEvent, \
     NovelPovTrackingToggleEvent
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import DelayedSignalSlotConnector, action, wrap, label, scrolled, \
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import DelayedSignalSlotConnector, action, wrap, label, scrolled, \
     ButtonPressResizeEventFilter, push_btn, tool_btn, insert_before_the_end, fade_out_and_gc
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import group
-from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
-from src.main.python.plotlyst.view.widget.display import Icon
-from src.main.python.plotlyst.view.widget.input import RemovalButton
-from src.main.python.plotlyst.view.widget.plot.selector import StorylineSelectorMenu
-from src.main.python.plotlyst.view.widget.scene.agency import SceneAgendaEmotionEditor, SceneAgendaMotivationEditor, \
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.layout import group
+from plotlyst.view.widget.characters import CharacterSelectorButton
+from plotlyst.view.widget.display import Icon
+from plotlyst.view.widget.input import RemovalButton
+from plotlyst.view.widget.plot.selector import StorylineSelectorMenu
+from plotlyst.view.widget.scene.agency import SceneAgendaEmotionEditor, SceneAgendaMotivationEditor, \
     SceneAgendaConflictEditor
-from src.main.python.plotlyst.view.widget.scenes import SceneOutcomeSelector
+from plotlyst.view.widget.scenes import SceneOutcomeSelector
 
 
 class SceneMiniEditor(QWidget, EventListener):

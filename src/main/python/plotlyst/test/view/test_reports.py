@@ -2,11 +2,11 @@ from functools import partial
 
 from PyQt6.QtWidgets import QComboBox
 
-from src.main.python.plotlyst.core.domain import VERY_UNHAPPY, UNHAPPY, NEUTRAL, VERY_HAPPY, HAPPY
-from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
-from src.main.python.plotlyst.test.common import go_to_reports, edit_item, click_on_item
-from src.main.python.plotlyst.view.main_window import MainWindow
-from src.main.python.plotlyst.view.reports_view import ReportsView
+from plotlyst.core.domain import VERY_UNHAPPY, UNHAPPY, NEUTRAL, VERY_HAPPY, HAPPY
+from plotlyst.model.scenes_model import ScenesTableModel
+from plotlyst.test.common import go_to_reports, edit_item, click_on_item
+from plotlyst.view.main_window import MainWindow
+from plotlyst.view.reports_view import ReportsView
 
 
 def test_character_report_display(qtbot, filled_window: MainWindow):

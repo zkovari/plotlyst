@@ -1,5 +1,5 @@
-from src.main.python.plotlyst.test.common import show_widget
-from src.main.python.plotlyst.view.dialog.utility import ArtbreederDialog
+from plotlyst.test.common import show_widget
+from plotlyst.view.dialog.utility import ArtbreederDialog
 
 
 def test_artbreeder_picker(qtbot):

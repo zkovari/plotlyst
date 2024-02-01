@@ -28,25 +28,24 @@ try:
 
     from overrides import overrides
 
-    from src.main.python.plotlyst.env import AppMode, app_env
-    from src.main.python.plotlyst.resources import resource_registry, resource_manager
-    from src.main.python.plotlyst.settings import settings
-    from src.main.python.plotlyst.service.persistence import flush_or_fail
-    from src.main.python.plotlyst.service.dir import select_new_project_directory, default_directory
+    from plotlyst.env import AppMode, app_env
+    from plotlyst.resources import resource_registry, resource_manager
+    from plotlyst.settings import settings
+    from plotlyst.service.persistence import flush_or_fail
+    from plotlyst.service.dir import select_new_project_directory, default_directory
 
     from PyQt6.QtGui import QFont
     from PyQt6.QtWidgets import QApplication, QMessageBox
     from fbs_runtime.application_context.PyQt6 import ApplicationContext
-    from fbs_runtime import PUBLIC_SETTINGS, platform
+    from fbs_runtime import platform
     from fbs_runtime.application_context import cached_property, is_frozen
-    from fbs_runtime.excepthook.sentry import SentryExceptionHandler
 
-    from src.main.python.plotlyst.common import EXIT_CODE_RESTART
-    from src.main.python.plotlyst.core.client import json_client
-    from src.main.python.plotlyst.event.handler import DialogExceptionHandler
-    from src.main.python.plotlyst.view.dialog.about import AboutDialog
-    from src.main.python.plotlyst.view.main_window import MainWindow
-    from src.main.python.plotlyst.view.stylesheet import APP_STYLESHEET
+    from plotlyst.common import EXIT_CODE_RESTART
+    from plotlyst.core.client import json_client
+    from plotlyst.event.handler import DialogExceptionHandler
+    from plotlyst.view.dialog.about import AboutDialog
+    from plotlyst.view.main_window import MainWindow
+    from plotlyst.view.stylesheet import APP_STYLESHEET
 except Exception as ex:
     appctxt = ApplicationContext()
     QMessageBox.critical(None, 'Could not launch application', traceback.format_exc())
@@ -63,30 +62,27 @@ class AppContext(ApplicationContext):
     def exception_handlers(self):
         result = super().exception_handlers
         result.append(self.dialog_exception_handler)
-        if is_frozen():
-            result.append(self.sentry_exception_handler)
         return result
 
     @cached_property
-    def sentry_exception_handler(self):
-        return SentryExceptionHandler(
-            PUBLIC_SETTINGS['sentry_dsn'],
-            PUBLIC_SETTINGS['version'],
-            PUBLIC_SETTINGS['environment'], callback=self._on_sentry_init
-        )
+    def app(self):
+        result = self._qt_binding.QApplication([])
+        result.setApplicationName('Plotlyst')
+        result.setApplicationVersion('0.1.0')
+        return result
 
     @cached_property
     def dialog_exception_handler(self):
         return DialogExceptionHandler()
 
-    def _on_sentry_init(self):
-        scope = self.sentry_exception_handler.scope
-        from fbs_runtime import platform
-        scope.set_extra('os', platform.name())
-
 
 if __name__ == '__main__':
-    appctxt = AppContext()
+    if app_env.is_windows():
+        app = QApplication(sys.argv)
+        appctxt = None
+    else:
+        appctxt = AppContext()
+        app = appctxt.app
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=lambda mode: AppMode[mode.upper()], choices=list(AppMode), default=AppMode.PROD)
@@ -94,7 +90,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     app_env.mode = args.mode
     while True:
-        app = appctxt.app
         if platform.is_linux() and QApplication.font().pointSize() < 12:
             font = QFont('Helvetica', 12)
             QApplication.setFont(font)
@@ -106,7 +101,7 @@ if __name__ == '__main__':
         settings.init_org()
         if args.clear:
             settings.clear()
-        resource_registry.set_up(appctxt)
+        resource_registry.set_up()
         resource_manager.init()
 
         workspace: Optional[str] = settings.workspace()
@@ -142,11 +137,11 @@ if __name__ == '__main__':
             AboutDialog().exec()
             settings.set_launched_before()
 
-        exit_code = appctxt.app.exec_()
+        exit_code = app.exec_()
         flush_or_fail()
 
         if exit_code < EXIT_CODE_RESTART:
-            break
+            sys.exit(exit_code)
 
         # restart process
         subprocess.call('./gen.sh')

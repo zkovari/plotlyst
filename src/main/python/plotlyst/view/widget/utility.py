@@ -28,20 +28,20 @@ from qthandy import flow, transparent, pointy, hbox, grid, vspacer, italic, unde
     spacer, line, decr_icon, ask_confirmation, vline
 from qthandy.filter import OpacityEventFilter
 
-from src.main.python.plotlyst.common import PLOTLYST_MAIN_COMPLEMENTARY_COLOR
-from src.main.python.plotlyst.event.core import EventListener, Event
-from src.main.python.plotlyst.event.handler import global_event_dispatcher
-from src.main.python.plotlyst.model.common import proxy
-from src.main.python.plotlyst.resources import ResourceType, resource_manager, ResourceDescriptor, \
+from plotlyst.common import PLOTLYST_MAIN_COMPLEMENTARY_COLOR
+from plotlyst.event.core import EventListener, Event
+from plotlyst.event.handler import global_event_dispatcher
+from plotlyst.model.common import proxy
+from plotlyst.resources import ResourceType, resource_manager, ResourceDescriptor, \
     ResourceStatusChangedEvent
-from src.main.python.plotlyst.service.resource import remove_resource, download_resource
-from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, spin, tool_btn
-from src.main.python.plotlyst.view.generated.icon_selector_widget_ui import Ui_IconsSelectorWidget
-from src.main.python.plotlyst.view.generated.resource_manager_dialog_ui import Ui_ResourceManagerDialog
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import group
-from src.main.python.plotlyst.view.widget._icons import icons_registry
-from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton
+from plotlyst.service.resource import remove_resource, download_resource
+from plotlyst.view.common import ButtonPressResizeEventFilter, spin, tool_btn
+from plotlyst.view.generated.icon_selector_widget_ui import Ui_IconsSelectorWidget
+from plotlyst.view.generated.resource_manager_dialog_ui import Ui_ResourceManagerDialog
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.layout import group
+from plotlyst.view.widget._icons import icons_registry
+from plotlyst.view.widget.button import SecondaryActionToolButton
 
 
 class ColorButton(QToolButton):

@@ -31,17 +31,17 @@ from overrides import overrides
 from qthandy import hbox, margins, sp, vbox, grid, pointy, vline, decr_icon, transparent, retain_when_hidden
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR
-from src.main.python.plotlyst.core.domain import DiagramNodeType, NODE_SUBTYPE_DISTURBANCE, NODE_SUBTYPE_CONFLICT, \
+from plotlyst.common import PLOTLYST_TERTIARY_COLOR
+from plotlyst.core.domain import DiagramNodeType, NODE_SUBTYPE_DISTURBANCE, NODE_SUBTYPE_CONFLICT, \
     NODE_SUBTYPE_GOAL, NODE_SUBTYPE_BACKSTORY, \
     NODE_SUBTYPE_INTERNAL_CONFLICT
-from src.main.python.plotlyst.view.common import shadow, tool_btn, ExclusiveOptionalButtonGroup
-from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import group
-from src.main.python.plotlyst.view.widget.graphics.items import EventItem, ConnectorItem
-from src.main.python.plotlyst.view.widget.input import FontSizeSpinBox, AutoAdjustableLineEdit
-from src.main.python.plotlyst.view.widget.utility import ColorPicker
+from plotlyst.view.common import shadow, tool_btn, ExclusiveOptionalButtonGroup
+from plotlyst.view.dialog.utility import IconSelectorDialog
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.layout import group
+from plotlyst.view.widget.graphics.items import EventItem, ConnectorItem
+from plotlyst.view.widget.input import FontSizeSpinBox, AutoAdjustableLineEdit
+from plotlyst.view.widget.utility import ColorPicker
 
 
 class ZoomBar(QFrame):

@@ -30,16 +30,16 @@ from qthandy import busy, vbox, vspacer, sp, line, decr_icon, incr_font, flow
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
-from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Novel, WorldBuildingMap, WorldBuildingMarker
-from src.main.python.plotlyst.service.image import load_image, upload_image, LoadedImage
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import tool_btn, action, shadow, scrolled, wrap
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.button import CollapseButton
-from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView
-from src.main.python.plotlyst.view.widget.graphics.editor import ZoomBar
-from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
+from plotlyst.core.domain import Novel, WorldBuildingMap, WorldBuildingMarker
+from plotlyst.service.image import load_image, upload_image, LoadedImage
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import tool_btn, action, shadow, scrolled, wrap
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.button import CollapseButton
+from plotlyst.view.widget.graphics import BaseGraphicsView
+from plotlyst.view.widget.graphics.editor import ZoomBar
+from plotlyst.view.widget.input import AutoAdjustableTextEdit
 
 
 class PopupText(QFrame):

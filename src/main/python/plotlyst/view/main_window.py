@@ -32,54 +32,54 @@ from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qttextedit.ops import DEFAULT_FONT_FAMILIES
 from textstat import textstat
 
-from src.main.python.plotlyst.common import EXIT_CODE_RESTART, NAV_BAR_BUTTON_DEFAULT_COLOR, \
+from plotlyst.common import EXIT_CODE_RESTART, NAV_BAR_BUTTON_DEFAULT_COLOR, \
     NAV_BAR_BUTTON_CHECKED_COLOR, PLOTLYST_MAIN_COLOR
-from src.main.python.plotlyst.core.client import client, json_client
-from src.main.python.plotlyst.core.domain import Novel, NovelPanel, ScenesView, NovelSetting
-from src.main.python.plotlyst.core.text import sentence_count
-from src.main.python.plotlyst.env import app_env, open_location
-from src.main.python.plotlyst.event.core import event_log_reporter, EventListener, Event, global_event_sender, \
+from plotlyst.core.client import client, json_client
+from plotlyst.core.domain import Novel, NovelPanel, ScenesView, NovelSetting
+from plotlyst.core.text import sentence_count
+from plotlyst.env import app_env, open_location
+from plotlyst.event.core import event_log_reporter, EventListener, Event, global_event_sender, \
     emit_info, event_senders, EventSender
-from src.main.python.plotlyst.event.handler import EventLogHandler, global_event_dispatcher, event_dispatchers, \
+from plotlyst.event.handler import EventLogHandler, global_event_dispatcher, event_dispatchers, \
     EventDispatcher
-from src.main.python.plotlyst.events import NovelDeletedEvent, \
+from plotlyst.events import NovelDeletedEvent, \
     NovelUpdatedEvent, OpenDistractionFreeMode, ExitDistractionFreeMode, CloseNovelEvent, NovelPanelCustomizationEvent, \
     NovelWorldBuildingToggleEvent, NovelCharactersToggleEvent, NovelScenesToggleEvent, NovelDocumentsToggleEvent, \
     NovelManagementToggleEvent, NovelManuscriptToggleEvent
-from src.main.python.plotlyst.resources import resource_manager, ResourceType, ResourceDownloadedEvent
-from src.main.python.plotlyst.service.cache import acts_registry, characters_registry
-from src.main.python.plotlyst.service.dir import select_new_project_directory
-from src.main.python.plotlyst.service.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
-from src.main.python.plotlyst.service.importer import ScrivenerSyncImporter
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.service.resource import download_resource, download_nltk_resources
-from src.main.python.plotlyst.service.tour import TourService
-from src.main.python.plotlyst.settings import settings
-from src.main.python.plotlyst.view._view import AbstractView
-from src.main.python.plotlyst.view.board_view import BoardView
-from src.main.python.plotlyst.view.characters_view import CharactersView
-from src.main.python.plotlyst.view.comments_view import CommentsView
-from src.main.python.plotlyst.view.common import TooltipPositionEventFilter
-from src.main.python.plotlyst.view.dialog.about import AboutDialog
-from src.main.python.plotlyst.view.dialog.manuscript import ManuscriptPreviewDialog
-from src.main.python.plotlyst.view.dialog.template import customize_character_profile
-from src.main.python.plotlyst.view.docs_view import DocumentsView
-from src.main.python.plotlyst.view.generated.main_window_ui import Ui_MainWindow
-from src.main.python.plotlyst.view.home_view import HomeView
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.manuscript_view import ManuscriptView
-from src.main.python.plotlyst.view.novel_view import NovelView
-from src.main.python.plotlyst.view.reports_view import ReportsView
-from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
-from src.main.python.plotlyst.view.widget.button import ToolbarButton, NovelSyncButton
-from src.main.python.plotlyst.view.widget.input import CapitalizationEventFilter
-from src.main.python.plotlyst.view.widget.settings import NovelQuickPanelCustomizationButton
-from src.main.python.plotlyst.view.widget.tour.core import TutorialNovelOpenTourEvent, tutorial_novel, \
+from plotlyst.resources import resource_manager, ResourceType, ResourceDownloadedEvent
+from plotlyst.service.cache import acts_registry, characters_registry
+from plotlyst.service.dir import select_new_project_directory
+from plotlyst.service.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
+from plotlyst.service.importer import ScrivenerSyncImporter
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.service.resource import download_resource, download_nltk_resources
+from plotlyst.service.tour import TourService
+from plotlyst.settings import settings
+from plotlyst.view._view import AbstractView
+from plotlyst.view.board_view import BoardView
+from plotlyst.view.characters_view import CharactersView
+from plotlyst.view.comments_view import CommentsView
+from plotlyst.view.common import TooltipPositionEventFilter
+from plotlyst.view.dialog.about import AboutDialog
+from plotlyst.view.dialog.manuscript import ManuscriptPreviewDialog
+from plotlyst.view.dialog.template import customize_character_profile
+from plotlyst.view.docs_view import DocumentsView
+from plotlyst.view.generated.main_window_ui import Ui_MainWindow
+from plotlyst.view.home_view import HomeView
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.manuscript_view import ManuscriptView
+from plotlyst.view.novel_view import NovelView
+from plotlyst.view.reports_view import ReportsView
+from plotlyst.view.scenes_view import ScenesOutlineView
+from plotlyst.view.widget.button import ToolbarButton, NovelSyncButton
+from plotlyst.view.widget.input import CapitalizationEventFilter
+from plotlyst.view.widget.settings import NovelQuickPanelCustomizationButton
+from plotlyst.view.widget.tour.core import TutorialNovelOpenTourEvent, tutorial_novel, \
     TutorialNovelCloseTourEvent, NovelTopLevelButtonTourEvent, HomeTopLevelButtonTourEvent, NovelEditorDisplayTourEvent, \
     AllNovelViewsTourEvent, GeneralNovelViewTourEvent, CharacterViewTourEvent, ScenesViewTourEvent, \
     DocumentsViewTourEvent, ManuscriptViewTourEvent, AnalysisViewTourEvent, BoardViewTourEvent, BaseNovelViewTourEvent
-from src.main.python.plotlyst.view.widget.utility import ResourceManagerDialog
-from src.main.python.plotlyst.view.world_building_view import WorldBuildingView
+from plotlyst.view.widget.utility import ResourceManagerDialog
+from plotlyst.view.world_building_view import WorldBuildingView
 
 textstat.sentence_count = sentence_count
 

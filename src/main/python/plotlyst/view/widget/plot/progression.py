@@ -28,20 +28,20 @@ from qthandy import vbox, incr_icon, bold, spacer, retain_when_hidden, transluce
 from qthandy.filter import VisibilityToggleEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
-from src.main.python.plotlyst.core.domain import Novel, PlotType, PlotProgressionItem, \
+from plotlyst.core.domain import Novel, PlotType, PlotProgressionItem, \
     PlotProgressionItemType, DynamicPlotPrincipleGroupType, DynamicPlotPrinciple, DynamicPlotPrincipleType, Plot, \
     DynamicPlotPrincipleGroup, LayoutType, Character
-from src.main.python.plotlyst.service.cache import characters_registry
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import frame, fade_out_and_gc, action
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import group
-from src.main.python.plotlyst.view.style.button import apply_button_palette_color
-from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
-from src.main.python.plotlyst.view.widget.confirm import confirmed
-from src.main.python.plotlyst.view.widget.display import IconText
-from src.main.python.plotlyst.view.widget.input import RemovalButton
-from src.main.python.plotlyst.view.widget.outline import OutlineItemWidget, OutlineTimelineWidget
+from plotlyst.service.cache import characters_registry
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import frame, fade_out_and_gc, action
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.layout import group
+from plotlyst.view.style.button import apply_button_palette_color
+from plotlyst.view.widget.characters import CharacterSelectorButton
+from plotlyst.view.widget.confirm import confirmed
+from plotlyst.view.widget.display import IconText
+from plotlyst.view.widget.input import RemovalButton
+from plotlyst.view.widget.outline import OutlineItemWidget, OutlineTimelineWidget
 
 storyline_progression_steps_descriptions = {
     PlotType.Main: {

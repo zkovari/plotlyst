@@ -23,7 +23,7 @@ from typing import Optional
 
 from PyQt6.QtWidgets import QMessageBox, QFileDialog
 
-from src.main.python.plotlyst.env import app_env
+from plotlyst.env import app_env
 
 
 def select_new_project_directory() -> Optional[str]:
@@ -53,7 +53,7 @@ def default_directory() -> Optional[str]:
     if app_env.is_mac():
         plotlyst = home.joinpath('Plotlyst')
     elif app_env.is_windows():
-        from src.main.python.plotlyst.service._win_known_folders import get_windows_path, FOLDERID, UserHandle, \
+        from plotlyst.service._win_known_folders import get_windows_path, FOLDERID, UserHandle, \
             PathNotFoundException
         try:
             plotlyst = get_windows_path(FOLDERID.Documents, UserHandle.current)

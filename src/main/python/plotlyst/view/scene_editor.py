@@ -31,29 +31,29 @@ from qthandy import underline, incr_font, margins, pointy, hbox, clear_layout, b
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
-from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Scene, Document, StoryBeat, \
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from plotlyst.core.client import json_client
+from plotlyst.core.domain import Novel, Scene, Document, StoryBeat, \
     Character, ScenePurposeType, ScenePurpose, Plot, ScenePlotReference, NovelSetting
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
-from src.main.python.plotlyst.event.handler import event_dispatchers
-from src.main.python.plotlyst.events import NovelAboutToSyncEvent, SceneStoryBeatChangedEvent, \
+from plotlyst.env import app_env
+from plotlyst.event.core import EventListener, Event, emit_event
+from plotlyst.event.handler import event_dispatchers
+from plotlyst.events import NovelAboutToSyncEvent, SceneStoryBeatChangedEvent, \
     NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelPovTrackingToggleEvent
-from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
-from src.main.python.plotlyst.service.cache import acts_registry
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, set_tab_icon, \
+from plotlyst.model.characters_model import CharactersSceneAssociationTableModel
+from plotlyst.service.cache import acts_registry
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, set_tab_icon, \
     push_btn, fade_out_and_gc
-from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
-from src.main.python.plotlyst.view.widget.labels import CharacterLabel
-from src.main.python.plotlyst.view.widget.scene.editor import ScenePurposeSelectorWidget, ScenePurposeTypeButton, \
+from plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.characters import CharacterSelectorMenu
+from plotlyst.view.widget.labels import CharacterLabel
+from plotlyst.view.widget.scene.editor import ScenePurposeSelectorWidget, ScenePurposeTypeButton, \
     SceneStorylineEditor, SceneAgendaEditor, SceneElementWidget
-from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotLabels, \
+from plotlyst.view.widget.scene.plot import ScenePlotLabels, \
     ScenePlotSelectorMenu
-from src.main.python.plotlyst.view.widget.scene.reader_drive import ReaderCuriosityEditor, ReaderInformationEditor
+from plotlyst.view.widget.scene.reader_drive import ReaderCuriosityEditor, ReaderInformationEditor
 
 
 class SceneEditor(QObject, EventListener):

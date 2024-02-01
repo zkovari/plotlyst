@@ -473,13 +473,13 @@
   <customwidget>
    <class>Subtitle</class>
    <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.display</header>
+   <header>plotlyst.view.widget.display</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>ImportedNovelOverview</class>
    <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.novel</header>
+   <header>plotlyst.view.widget.novel</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

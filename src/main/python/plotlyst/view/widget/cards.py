@@ -30,15 +30,15 @@ from overrides import overrides
 from qthandy import clear_layout, retain_when_hidden, transparent, flow, translucent, gc
 from qthandy.filter import DragEventFilter, DropEventFilter
 
-from src.main.python.plotlyst.common import act_color
-from src.main.python.plotlyst.core.domain import Character, Scene, Novel, NovelSetting, CardSizeRatio
-from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
-from src.main.python.plotlyst.service.cache import acts_registry
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.generated.character_card_ui import Ui_CharacterCard
-from src.main.python.plotlyst.view.generated.scene_card_ui import Ui_SceneCard
-from src.main.python.plotlyst.view.icons import IconRegistry, set_avatar, avatars
-from src.main.python.plotlyst.view.widget.labels import CharacterAvatarLabel
+from plotlyst.common import act_color
+from plotlyst.core.domain import Character, Scene, Novel, NovelSetting, CardSizeRatio
+from plotlyst.core.help import enneagram_help, mbti_help
+from plotlyst.service.cache import acts_registry
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.generated.character_card_ui import Ui_CharacterCard
+from plotlyst.view.generated.scene_card_ui import Ui_SceneCard
+from plotlyst.view.icons import IconRegistry, set_avatar, avatars
+from plotlyst.view.widget.labels import CharacterAvatarLabel
 
 
 class CardMimeData(QMimeData):

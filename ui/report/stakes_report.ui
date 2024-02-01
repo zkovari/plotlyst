@@ -41,12 +41,12 @@
   <customwidget>
    <class>ChartView</class>
    <extends>QGraphicsView</extends>
-   <header>src.main.python.plotlyst.view.widget.display</header>
+   <header>plotlyst.view.widget.display</header>
   </customwidget>
   <customwidget>
    <class>CharacterSelectorButtons</class>
    <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.characters</header>
+   <header>plotlyst.view.widget.characters</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

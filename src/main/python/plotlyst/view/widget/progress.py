@@ -27,18 +27,18 @@ from PyQt6.QtGui import QPainter, QColor, QPaintEvent, QPen, QPainterPath, QFont
 from PyQt6.QtWidgets import QWidget, QSizePolicy
 from overrides import overrides
 
-from src.main.python.plotlyst.common import CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR, CHARACTER_MINOR_COLOR, \
+from plotlyst.common import CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR, CHARACTER_MINOR_COLOR, \
     RELAXED_WHITE_COLOR, ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, PLOTLYST_MAIN_COLOR
-from src.main.python.plotlyst.core.domain import Novel, SceneStage
-from src.main.python.plotlyst.core.template import RoleImportance
-from src.main.python.plotlyst.event.core import EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatchers
-from src.main.python.plotlyst.events import SceneStatusChangedEvent
-from src.main.python.plotlyst.service.cache import acts_registry
-from src.main.python.plotlyst.view.common import icon_to_html_img
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.chart import BaseChart
-from src.main.python.plotlyst.view.widget.display import ChartView
+from plotlyst.core.domain import Novel, SceneStage
+from plotlyst.core.template import RoleImportance
+from plotlyst.event.core import EventListener, Event
+from plotlyst.event.handler import event_dispatchers
+from plotlyst.events import SceneStatusChangedEvent
+from plotlyst.service.cache import acts_registry
+from plotlyst.view.common import icon_to_html_img
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.chart import BaseChart
+from plotlyst.view.widget.display import ChartView
 
 
 class ProgressChartView(ChartView):

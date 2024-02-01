@@ -28,14 +28,14 @@ from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QFrame, \
 from overrides import overrides
 from qthandy import sp, incr_icon, vbox
 
-from src.main.python.plotlyst.core.domain import Diagram, DiagramNodeType, Character
-from src.main.python.plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButtonGroup, \
+from plotlyst.core.domain import Diagram, DiagramNodeType, Character
+from plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButtonGroup, \
     TooltipPositionEventFilter
-from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
-from src.main.python.plotlyst.view.widget.graphics import CharacterItem, ConnectorItem
-from src.main.python.plotlyst.view.widget.graphics.editor import ZoomBar, ConnectorToolbar
-from src.main.python.plotlyst.view.widget.graphics.items import NodeItem, EventItem
-from src.main.python.plotlyst.view.widget.graphics.scene import NetworkScene
+from plotlyst.view.widget.characters import CharacterSelectorMenu
+from plotlyst.view.widget.graphics import CharacterItem, ConnectorItem
+from plotlyst.view.widget.graphics.editor import ZoomBar, ConnectorToolbar
+from plotlyst.view.widget.graphics.items import NodeItem, EventItem
+from plotlyst.view.widget.graphics.scene import NetworkScene
 
 
 class BaseGraphicsView(QGraphicsView):

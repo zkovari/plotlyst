@@ -31,14 +31,14 @@ from overrides import overrides
 from qthandy import hbox, FlowLayout, bold, underline
 from qthandy.filter import InstantTooltipEventFilter
 
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.service.resource import JsonDownloadWorker, JsonDownloadResult, ImageDownloadResult, \
+from plotlyst.env import app_env
+from plotlyst.service.resource import JsonDownloadWorker, JsonDownloadResult, ImageDownloadResult, \
     ImagesDownloadWorker
-from src.main.python.plotlyst.view.common import rounded_pixmap, open_url
-from src.main.python.plotlyst.view.generated.artbreeder_picker_dialog_ui import Ui_ArtbreederPickerDialog
-from src.main.python.plotlyst.view.generated.image_crop_dialog_ui import Ui_ImageCropDialog
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.utility import IconSelectorWidget
+from plotlyst.view.common import rounded_pixmap, open_url
+from plotlyst.view.generated.artbreeder_picker_dialog_ui import Ui_ArtbreederPickerDialog
+from plotlyst.view.generated.image_crop_dialog_ui import Ui_ImageCropDialog
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.utility import IconSelectorWidget
 
 
 class IconSelectorDialog(QDialog):

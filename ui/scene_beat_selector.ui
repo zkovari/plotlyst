@@ -202,7 +202,7 @@
   <customwidget>
    <class>SecondaryActionPushButton</class>
    <extends>QPushButton</extends>
-   <header>src.main.python.plotlyst.view.widget.button</header>
+   <header>plotlyst.view.widget.button</header>
   </customwidget>
  </customwidgets>
  <resources/>

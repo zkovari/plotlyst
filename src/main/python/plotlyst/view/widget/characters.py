@@ -32,28 +32,28 @@ from qthandy import vspacer, transparent, gc, line, spacer, clear_layout, hbox, 
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Novel, Character, NovelSetting
-from src.main.python.plotlyst.core.template import SelectionItem, TemplateFieldType, TemplateField, RoleImportance, \
+from plotlyst.common import RELAXED_WHITE_COLOR
+from plotlyst.core.domain import Novel, Character, NovelSetting
+from plotlyst.core.template import SelectionItem, TemplateFieldType, TemplateField, RoleImportance, \
     strengths_weaknesses_field
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatchers
-from src.main.python.plotlyst.events import CharacterSummaryChangedEvent, NovelConflictTrackingToggleEvent
-from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
-from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
+from plotlyst.env import app_env
+from plotlyst.event.core import EventListener, Event
+from plotlyst.event.handler import event_dispatchers
+from plotlyst.events import CharacterSummaryChangedEvent, NovelConflictTrackingToggleEvent
+from plotlyst.model.common import DistributionFilterProxyModel
+from plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
     ConflictScenesDistributionTableModel, TagScenesDistributionTableModel
-from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.view.common import action, ButtonPressResizeEventFilter, tool_btn
-from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog, ArtbreederDialog, ImageCropDialog
-from src.main.python.plotlyst.view.generated.avatar_selectors_ui import Ui_AvatarSelectors
-from src.main.python.plotlyst.view.generated.characters_progress_widget_ui import Ui_CharactersProgressWidget
-from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
-from src.main.python.plotlyst.view.icons import avatars, IconRegistry
-from src.main.python.plotlyst.view.style.base import apply_border_image
-from src.main.python.plotlyst.view.widget.display import IconText, Icon
-from src.main.python.plotlyst.view.widget.labels import CharacterLabel
-from src.main.python.plotlyst.view.widget.progress import CircularProgressBar, ProgressTooltipMode, \
+from plotlyst.resources import resource_registry
+from plotlyst.view.common import action, ButtonPressResizeEventFilter, tool_btn
+from plotlyst.view.dialog.utility import IconSelectorDialog, ArtbreederDialog, ImageCropDialog
+from plotlyst.view.generated.avatar_selectors_ui import Ui_AvatarSelectors
+from plotlyst.view.generated.characters_progress_widget_ui import Ui_CharactersProgressWidget
+from plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
+from plotlyst.view.icons import avatars, IconRegistry
+from plotlyst.view.style.base import apply_border_image
+from plotlyst.view.widget.display import IconText, Icon
+from plotlyst.view.widget.labels import CharacterLabel
+from plotlyst.view.widget.progress import CircularProgressBar, ProgressTooltipMode, \
     CharacterRoleProgressChart
 
 

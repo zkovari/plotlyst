@@ -1,4 +1,4 @@
-from src.main.python.plotlyst.common import camel_to_whitespace
+from plotlyst.common import camel_to_whitespace
 
 
 def test_camel_to_whitespace():

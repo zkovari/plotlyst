@@ -26,15 +26,15 @@ from PyQt6.QtGui import QColor, QCursor, QPen
 from PyQt6.QtWidgets import QToolTip
 from overrides import overrides
 
-from src.main.python.plotlyst.common import CONFLICT_CHARACTER_COLOR, CONFLICT_NATURE_COLOR, CONFLICT_TECHNOLOGY_COLOR, \
+from plotlyst.common import CONFLICT_CHARACTER_COLOR, CONFLICT_NATURE_COLOR, CONFLICT_TECHNOLOGY_COLOR, \
     CONFLICT_SOCIETY_COLOR, CONFLICT_SUPERNATURAL_COLOR, CONFLICT_SELF_COLOR
-from src.main.python.plotlyst.core.domain import Novel, Character, ConflictType
-from src.main.python.plotlyst.core.text import html
-from src.main.python.plotlyst.view.common import icon_to_html_img
-from src.main.python.plotlyst.view.generated.report.conflict_report_ui import Ui_ConflictReport
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.report import AbstractReport
-from src.main.python.plotlyst.view.widget.chart import BaseChart, GenderCharacterChart, SupporterRoleChart, \
+from plotlyst.core.domain import Novel, Character, ConflictType
+from plotlyst.core.text import html
+from plotlyst.view.common import icon_to_html_img
+from plotlyst.view.generated.report.conflict_report_ui import Ui_ConflictReport
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.report import AbstractReport
+from plotlyst.view.widget.chart import BaseChart, GenderCharacterChart, SupporterRoleChart, \
     EnneagramChart
 
 

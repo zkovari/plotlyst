@@ -25,20 +25,20 @@ from PyQt6.QtGui import QColor, QPixmap
 from overrides import overrides
 from qthandy import line
 
-from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
-from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, shadow, \
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from plotlyst.core.domain import Novel, WorldBuildingEntity
+from plotlyst.env import app_env
+from plotlyst.resources import resource_registry
+from plotlyst.view._view import AbstractNovelView
+from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, shadow, \
     insert_before_the_end
-from src.main.python.plotlyst.view.generated.world_building_view_ui import Ui_WorldBuildingView
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.style.base import apply_bg_image
-from src.main.python.plotlyst.view.widget.tree import TreeSettings
-from src.main.python.plotlyst.view.widget.world.editor import EntityAdditionMenu, WorldBuildingEntityEditor, \
+from plotlyst.view.generated.world_building_view_ui import Ui_WorldBuildingView
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.style.base import apply_bg_image
+from plotlyst.view.widget.tree import TreeSettings
+from plotlyst.view.widget.world.editor import EntityAdditionMenu, WorldBuildingEntityEditor, \
     WorldBuildingGlossaryEditor
-from src.main.python.plotlyst.view.widget.world.map import WorldBuildingMapView
+from plotlyst.view.widget.world.map import WorldBuildingMapView
 
 
 class WorldBuildingView(AbstractNovelView):

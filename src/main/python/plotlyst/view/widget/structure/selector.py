@@ -29,20 +29,20 @@ from qthandy import vspacer, spacer, transparent, bold, vbox, incr_font, \
     hbox, margins, underline, line, pointy
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import ACT_THREE_COLOR
-from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
+from plotlyst.common import ACT_THREE_COLOR
+from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     save_the_cat, three_act_structure, heros_journey, hook_beat, motion_beat, \
     disturbance_beat, normal_world_beat, characteristic_moment_beat, midpoint, midpoint_ponr, midpoint_mirror, \
     midpoint_proactive, crisis, first_plot_point, first_plot_point_ponr, first_plot_points, midpoints
-from src.main.python.plotlyst.view.common import ExclusiveOptionalButtonGroup
-from src.main.python.plotlyst.view.generated.story_structure_selector_dialog_ui import Ui_StoryStructureSelectorDialog
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import group
-from src.main.python.plotlyst.view.style.base import apply_white_menu
-from src.main.python.plotlyst.view.widget.display import IconText
-from src.main.python.plotlyst.view.widget.input import Toggle
-from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget
-from src.main.python.plotlyst.view.widget.structure.beat import BeatsPreview
+from plotlyst.view.common import ExclusiveOptionalButtonGroup
+from plotlyst.view.generated.story_structure_selector_dialog_ui import Ui_StoryStructureSelectorDialog
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.layout import group
+from plotlyst.view.style.base import apply_white_menu
+from plotlyst.view.widget.display import IconText
+from plotlyst.view.widget.input import Toggle
+from plotlyst.view.widget.scenes import SceneStoryStructureWidget
+from plotlyst.view.widget.structure.beat import BeatsPreview
 
 
 class _AbstractStructureEditorWidget(QWidget):

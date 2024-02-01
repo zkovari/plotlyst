@@ -28,11 +28,11 @@ from overrides import overrides
 from qthandy import vbox, hbox, bold, margins, clear_layout, transparent, retain_when_hidden, incr_font
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, action
-from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.button import EyeToggle
-from src.main.python.plotlyst.view.widget.display import Icon
+from plotlyst.view.common import ButtonPressResizeEventFilter, action
+from plotlyst.view.dialog.utility import IconSelectorDialog
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.button import EyeToggle
+from plotlyst.view.widget.display import Icon
 
 
 @dataclass

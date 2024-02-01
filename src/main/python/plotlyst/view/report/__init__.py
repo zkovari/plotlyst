@@ -21,8 +21,8 @@ from abc import abstractmethod
 
 from PyQt6.QtWidgets import QWidget
 
-from src.main.python.plotlyst.core.domain import Novel
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.core.domain import Novel
+from plotlyst.service.persistence import RepositoryPersistenceManager
 
 
 class AbstractReport(QWidget):

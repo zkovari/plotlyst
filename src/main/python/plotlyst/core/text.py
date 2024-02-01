@@ -23,7 +23,7 @@ import nltk
 from qttextedit import OBJECT_REPLACEMENT_CHARACTER
 from textstat import textstat
 
-from src.main.python.plotlyst.core.domain import StoryStructure
+from plotlyst.core.domain import StoryStructure
 
 
 class TextBuilder:

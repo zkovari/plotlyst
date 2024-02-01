@@ -26,11 +26,11 @@ from PyQt6.QtGui import QFont, QColor, QBrush
 from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 
-from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
-from src.main.python.plotlyst.core.domain import SelectionItem, Novel, Scene
-from src.main.python.plotlyst.model.tree_model import TreeItemModel
-from src.main.python.plotlyst.service.cache import acts_registry
-from src.main.python.plotlyst.view.icons import IconRegistry
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from plotlyst.core.domain import SelectionItem, Novel, Scene
+from plotlyst.model.tree_model import TreeItemModel
+from plotlyst.service.cache import acts_registry
+from plotlyst.view.icons import IconRegistry
 
 
 def emit_column_changed_in_tree(model: TreeItemModel, column: int, parent: QModelIndex):

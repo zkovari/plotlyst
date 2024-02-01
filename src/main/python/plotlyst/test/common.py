@@ -25,16 +25,16 @@ from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QAbstractItemView, QMenu, QMessageBox, QDialog, QApplication
 from qttextedit import RichTextEditor
 
-from src.main.python.plotlyst.core.domain import PlotType
-from src.main.python.plotlyst.view.characters_view import CharactersView
-from src.main.python.plotlyst.view.dialog.home import StoryCreationDialog
-from src.main.python.plotlyst.view.docs_view import DocumentsView
-from src.main.python.plotlyst.view.home_view import HomeView
-from src.main.python.plotlyst.view.main_window import MainWindow
-from src.main.python.plotlyst.view.novel_view import NovelView
-from src.main.python.plotlyst.view.reports_view import ReportsView
-from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
-from src.main.python.plotlyst.view.widget.confirm import ConfirmationDialog
+from plotlyst.core.domain import PlotType
+from plotlyst.view.characters_view import CharactersView
+from plotlyst.view.dialog.home import StoryCreationDialog
+from plotlyst.view.docs_view import DocumentsView
+from plotlyst.view.home_view import HomeView
+from plotlyst.view.main_window import MainWindow
+from plotlyst.view.novel_view import NovelView
+from plotlyst.view.reports_view import ReportsView
+from plotlyst.view.scenes_view import ScenesOutlineView
+from plotlyst.view.widget.confirm import ConfirmationDialog
 
 
 def show_widget(qtbot, widget):

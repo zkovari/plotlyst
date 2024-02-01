@@ -1,6 +1,6 @@
-from src.main.python.plotlyst.core.domain import Novel, default_story_structures
-from src.main.python.plotlyst.view.scene_editor import SceneEditor
-from src.main.python.plotlyst.view.stylesheet import APP_STYLESHEET
+from plotlyst.core.domain import Novel, default_story_structures
+from plotlyst.view.scene_editor import SceneEditor
+from plotlyst.view.stylesheet import APP_STYLESHEET
 
 
 def editor(qtbot, novel: Novel):

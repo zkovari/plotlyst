@@ -178,7 +178,7 @@ p, li { white-space: pre-wrap; }
   <customwidget>
    <class>RoleIcon</class>
    <extends>QPushButton</extends>
-   <header>src.main.python.plotlyst.view.widget.display</header>
+   <header>plotlyst.view.widget.display</header>
   </customwidget>
  </customwidgets>
  <resources/>

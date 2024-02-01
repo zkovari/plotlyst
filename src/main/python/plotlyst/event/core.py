@@ -24,7 +24,7 @@ from typing import Optional, Any, Dict
 
 from PyQt6.QtCore import pyqtSignal, QObject, QTimer
 
-from src.main.python.plotlyst.core.domain import Novel
+from plotlyst.core.domain import Novel
 
 
 class Severity(Enum):

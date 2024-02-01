@@ -689,35 +689,35 @@
   <customwidget>
    <class>DocumentTextEditor</class>
    <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
+   <header>plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
    <class>Subtitle</class>
    <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.display</header>
+   <header>plotlyst.view.widget.display</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>WordsDisplay</class>
    <extends>QLabel</extends>
-   <header>src.main.python.plotlyst.view.widget.display</header>
+   <header>plotlyst.view.widget.display</header>
   </customwidget>
   <customwidget>
    <class>StoryStructureEditor</class>
    <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.structure</header>
+   <header>plotlyst.view.widget.structure</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>TagsEditor</class>
    <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.novel</header>
+   <header>plotlyst.view.widget.novel</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>AutoAdjustableTextEdit</class>
    <extends>QTextEdit</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
+   <header>plotlyst.view.widget.input</header>
   </customwidget>
  </customwidgets>
  <resources/>

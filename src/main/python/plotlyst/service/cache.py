@@ -21,10 +21,10 @@ from typing import Optional, Dict, Set
 
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel, Scene, StoryBeat, Character
-from src.main.python.plotlyst.event.core import EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatchers
-from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, SceneStoryBeatChangedEvent, \
+from plotlyst.core.domain import Novel, Scene, StoryBeat, Character
+from plotlyst.event.core import EventListener, Event
+from plotlyst.event.handler import event_dispatchers
+from plotlyst.events import SceneChangedEvent, SceneDeletedEvent, SceneStoryBeatChangedEvent, \
     CharacterChangedEvent, CharacterDeletedEvent
 
 

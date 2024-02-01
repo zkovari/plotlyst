@@ -25,13 +25,13 @@ from PyQt6.QtWidgets import QWidget, QButtonGroup
 from overrides import overrides
 from qthandy import busy
 
-from src.main.python.plotlyst.core.domain import Novel
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import EventListener, Event
-from src.main.python.plotlyst.event.handler import global_event_dispatcher, event_dispatchers
-from src.main.python.plotlyst.events import CharacterDeletedEvent, NovelSyncEvent
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.service.tour import TourService
+from plotlyst.core.domain import Novel
+from plotlyst.env import app_env
+from plotlyst.event.core import EventListener, Event
+from plotlyst.event.handler import global_event_dispatcher, event_dispatchers
+from plotlyst.events import CharacterDeletedEvent, NovelSyncEvent
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.service.tour import TourService
 
 
 class AbstractView(QObject, EventListener):

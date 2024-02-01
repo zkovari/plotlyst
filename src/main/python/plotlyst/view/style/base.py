@@ -24,7 +24,7 @@ from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
+from plotlyst.common import RELAXED_WHITE_COLOR
 
 style = '''
 * {

@@ -40,27 +40,27 @@ from qtmenu import MenuWidget, group
 from qttextedit import RichTextEditor, TextBlockState, remove_font, OBJECT_REPLACEMENT_CHARACTER
 from textstat import textstat
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, DEFAULT_MANUSCRIPT_LINE_SPACE, \
+from plotlyst.common import RELAXED_WHITE_COLOR, DEFAULT_MANUSCRIPT_LINE_SPACE, \
     DEFAULT_MANUSCRIPT_INDENT, PLOTLYST_TERTIARY_COLOR
-from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Scene, TextStatistics, DocumentStatistics, DocumentProgress
-from src.main.python.plotlyst.core.sprint import TimerModel
-from src.main.python.plotlyst.core.text import wc, sentence_count, clean_text
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.service.manuscript import export_manuscript_to_docx, daily_progress, \
+from plotlyst.core.client import json_client
+from plotlyst.core.domain import Novel, Scene, TextStatistics, DocumentStatistics, DocumentProgress
+from plotlyst.core.sprint import TimerModel
+from plotlyst.core.text import wc, sentence_count, clean_text
+from plotlyst.env import app_env
+from plotlyst.resources import resource_registry
+from plotlyst.service.manuscript import export_manuscript_to_docx, daily_progress, \
     daily_overall_progress, find_daily_overall_progress
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import scroll_to_top, spin, ButtonPressResizeEventFilter, label, push_btn
-from src.main.python.plotlyst.view.generated.distraction_free_manuscript_editor_ui import \
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import scroll_to_top, spin, ButtonPressResizeEventFilter, label, push_btn
+from plotlyst.view.generated.distraction_free_manuscript_editor_ui import \
     Ui_DistractionFreeManuscriptEditor
-from src.main.python.plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget
-from src.main.python.plotlyst.view.generated.readability_widget_ui import Ui_ReadabilityWidget
-from src.main.python.plotlyst.view.generated.sprint_widget_ui import Ui_SprintWidget
-from src.main.python.plotlyst.view.generated.timer_setup_widget_ui import Ui_TimerSetupWidget
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.display import WordsDisplay, IconText
-from src.main.python.plotlyst.view.widget.input import TextEditBase, GrammarHighlighter, GrammarHighlightStyle
+from plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget
+from plotlyst.view.generated.readability_widget_ui import Ui_ReadabilityWidget
+from plotlyst.view.generated.sprint_widget_ui import Ui_SprintWidget
+from plotlyst.view.generated.timer_setup_widget_ui import Ui_TimerSetupWidget
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.display import WordsDisplay, IconText
+from plotlyst.view.widget.input import TextEditBase, GrammarHighlighter, GrammarHighlightStyle
 
 
 class TimerSetupWidget(QWidget, Ui_TimerSetupWidget):
