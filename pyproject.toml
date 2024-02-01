@@ -58,7 +58,7 @@ requires = [
     'qt-anim @ git+https://github.com/plotlyst/qt-anim.git',
     'qt-menu @ git+https://github.com/plotlyst/qt-menu.git',
     'qt-tour @ git+https://github.com/plotlyst/qt-tour.git',
-    'fbs @ git+https://github.com/plotlyst/fbs.git@plotlyst',
+    'fbs @ git+https://github.com/plotlyst/fbs.git@frozen',
     'qt-textedit @ git+https://github.com/plotlyst/qt-textedit.git',
     'language_tool_python @ git+https://github.com/plotlyst/language_tool_python.git@plotlyst'
 ]
