@@ -141,7 +141,7 @@ if __name__ == '__main__':
         flush_or_fail()
 
         if exit_code < EXIT_CODE_RESTART:
-            break
+            sys.exit(exit_code)
 
         # restart process
         subprocess.call('./gen.sh')
