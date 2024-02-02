@@ -251,7 +251,6 @@ class ConnectorCPSocket(QAbstractGraphicsShapeItem):
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
-            print(value)
             self.parentItem().rearrangeCP(value)
         return super().itemChange(change, value)
 
@@ -322,7 +321,10 @@ class ConnectorItem(QGraphicsPathItem):
         self.setColor(QColor(color))
         if connector.icon:
             self.setIcon(connector.icon)
+        if connector.cp_x is not None:
+            self._cp.setPos(connector.cp_x, connector.cp_y)
         self._connector = connector
+        self.rearrange()
 
     def penStyle(self) -> Qt.PenStyle:
         return self.pen().style()
@@ -445,21 +447,11 @@ class ConnectorItem(QGraphicsPathItem):
         endPoint: QPointF = QPointF(width, height)
         endArrowAngle = math.degrees(math.atan2(-height / 2, width))
 
-        # if self._defaultLineType != ConnectorType.Linear and self._inProximity(width, height):
-        #     self._line = True
-        # else:
-        #     self._line = False
-
         path = QPainterPath()
         if self._connector and self._connector.cp_x is not None:
             self._rearrangeCurvedConnector(path, width, height, endArrowAngle, endPoint)
         else:
             self._rearrangeLinearConnector(path, width, height, endArrowAngle)
-
-        # if self._line:
-        #     self._rearrangeLinearConnector(path, width, height, endArrowAngle)
-        # else:
-        #     self._rearrangeCurvedConnector(path, width, height, endArrowAngle, endPoint)
 
         self._arrowheadItem.setPos(width, height)
         if not self._connector or self._connector.cp_x is None:
@@ -474,7 +466,9 @@ class ConnectorItem(QGraphicsPathItem):
             self._connector.cp_x = pos.x()
             self._connector.cp_y = pos.y()
 
-        self.rearrange()
+            self.rearrange()
+            if self.networkScene():
+                self.networkScene().connectorChangedEvent(self)
 
     def colorChangedEvent(self, nodeItem: 'NodeItem'):
         if nodeItem is self._target.parentItem():
