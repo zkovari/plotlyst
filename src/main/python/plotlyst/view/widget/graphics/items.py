@@ -235,6 +235,11 @@ class ConnectorCPSocket(QAbstractGraphicsShapeItem):
         self.setFlag(
             QGraphicsItem.GraphicsItemFlag.ItemIsMovable |
             QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
+        self._color = QColor('black')
+
+    def setColor(self, color: QColor):
+        self._color = color
+        self.update()
 
     @overrides
     def boundingRect(self):
@@ -242,11 +247,9 @@ class ConnectorCPSocket(QAbstractGraphicsShapeItem):
 
     @overrides
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
-        painter.setPen(QPen(QColor(PLOTLYST_SECONDARY_COLOR), 2))
+        painter.setPen(QPen(self._color, 2))
         radius = 5
         painter.drawEllipse(QPointF(self._size / 2, self._size // 2), radius, radius)
-        # if self._hovered and self.networkScene().linkMode():
-        #     painter.drawEllipse(QPointF(self._size / 2, self._size // 2), 2, 2)
 
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
@@ -541,6 +544,8 @@ class ConnectorItem(QGraphicsPathItem):
 
         if self._icon:
             self._iconBadge.setIcon(IconRegistry.from_name(self._icon, self._color.name()), self._color)
+
+        self._cp.setColor(color)
 
     def _inProximity(self, width: float, height: float) -> bool:
         return abs(height) < 5 or abs(width) < 100
