@@ -2754,6 +2754,8 @@ class Connector:
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
     color: str = field(default='', metadata=config(exclude=exclude_if_empty))
     text: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    cp_x: Optional[float] = None
+    cp_y: Optional[float] = None
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
