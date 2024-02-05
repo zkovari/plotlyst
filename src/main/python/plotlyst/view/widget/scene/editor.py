@@ -54,6 +54,7 @@ from plotlyst.view.widget.input import RemovalButton
 from plotlyst.view.widget.plot.selector import StorylineSelectorMenu
 from plotlyst.view.widget.scene.agency import SceneAgendaEmotionEditor, SceneAgendaMotivationEditor, \
     SceneAgendaConflictEditor
+from plotlyst.view.widget.scene.plot import ProgressEditor
 from plotlyst.view.widget.scenes import SceneOutcomeSelector
 
 
@@ -1791,70 +1792,28 @@ class SceneAgendaEditor(AbstractSceneElementsEditor, EventListener):
         self._conflictEditor.setVisible(elements_visible and self._novel.prefs.toggled(NovelSetting.Track_conflict))
 
 
-class SceneProgressEditor(QWidget):
+class SceneProgressEditor(ProgressEditor):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._scene: Optional[Scene] = None
-        hbox(self)
-
-        self._idleIcon = IconRegistry.from_name('mdi.chevron-double-up', 'lightgrey')
-        self.btnProgress = tool_btn(self._idleIcon, transparent_=True, pointy_=False)
-        self.btnProgress.setIconSize(QSize(76, 76))
-
-        self.posCharge = tool_btn(IconRegistry.plus_circle_icon('grey'), transparent_=True)
-        decr_icon(self.posCharge, 4)
-        self.posCharge.clicked.connect(lambda: self._changeCharge(1))
-        retain_when_hidden(self.posCharge)
-        self.negCharge = tool_btn(IconRegistry.minus_icon('grey'), transparent_=True)
-        decr_icon(self.negCharge, 4)
-        self.negCharge.clicked.connect(lambda: self._changeCharge(-1))
-        retain_when_hidden(self.negCharge)
-
-        self.posCharge.setHidden(True)
-        self.negCharge.setHidden(True)
-
-        self.wdgSize = QWidget()
-        vbox(self.wdgSize, 0, 0)
-        self.wdgSize.layout().addWidget(self.posCharge)
-        self.wdgSize.layout().addWidget(self.negCharge)
-
-        self.layout().addWidget(self.btnProgress)
-        self.layout().addWidget(self.wdgSize, alignment=Qt.AlignmentFlag.AlignVCenter)
-
-    @overrides
-    def enterEvent(self, event: QEnterEvent) -> None:
-        self.posCharge.setVisible(True)
-        self.negCharge.setVisible(True)
-
-    @overrides
-    def leaveEvent(self, event: QEvent) -> None:
-        self.posCharge.setHidden(True)
-        self.negCharge.setHidden(True)
 
     def setScene(self, scene: Scene):
         self._scene = scene
         self.refresh()
 
-    def refresh(self):
-        if self._scene.progress == 0:
-            self.btnProgress.setIcon(self._idleIcon)
-        else:
-            self.btnProgress.setIcon(IconRegistry.charge_icon(self._scene.progress))
-
-        self._updateButtons()
-
+    @overrides
     def _changeCharge(self, charge: int):
         if not self._scene:
             return
         self._scene.progress += charge
         self.refresh()
 
-    def _updateButtons(self):
-        self.posCharge.setEnabled(True)
-        self.negCharge.setEnabled(True)
-
+    @overrides
+    def charge(self) -> int:
         if self._scene:
-            if self._scene.progress == 3:
-                self.posCharge.setDisabled(True)
-            elif self._scene.progress == -3:
-                self.negCharge.setDisabled(True)
+            for ref in self._scene.plot_values:
+                if ref.data.charge:
+                    return ref.data.charge
+            return self._scene.progress
+
+        return 0

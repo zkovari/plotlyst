@@ -340,6 +340,7 @@ class SceneEditor(QObject, EventListener):
     def _add_plot_ref(self, plotRef: ScenePlotReference) -> ScenePlotLabels:
         labels = ScenePlotLabels(plotRef)
         labels.reset.connect(partial(self._storyline_removed, labels, plotRef))
+        labels.generalProgressCharged.connect(self._progressEditor.refresh)
         self.ui.wdgStorylines.layout().addWidget(labels)
         self._btnPlotSelector.setText('')
 

@@ -1244,6 +1244,7 @@ class ScenePlotValueCharge:
 @dataclass
 class ScenePlotReferenceData:
     comment: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    charge: int = 0
     values: List[ScenePlotValueCharge] = field(default_factory=list)
 
 
