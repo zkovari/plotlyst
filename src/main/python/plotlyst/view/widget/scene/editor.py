@@ -1789,3 +1789,8 @@ class SceneAgendaEditor(AbstractSceneElementsEditor, EventListener):
         self._emotionEditor.setVisible(elements_visible and self._novel.prefs.toggled(NovelSetting.Track_emotion))
         self._motivationEditor.setVisible(elements_visible and self._novel.prefs.toggled(NovelSetting.Track_motivation))
         self._conflictEditor.setVisible(elements_visible and self._novel.prefs.toggled(NovelSetting.Track_conflict))
+
+
+class SceneProgressEditor(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
