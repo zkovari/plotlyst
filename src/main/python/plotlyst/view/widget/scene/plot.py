@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QToolButton, QGraphicsDropShadowEffect, QTe
 from overrides import overrides
 from qthandy import vbox, hbox, transparent, retain_when_hidden, spacer, sp, decr_icon, line, vline, \
     margins
-from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
+from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.core.domain import Novel, Scene, ScenePlotReference, PlotValue, ScenePlotValueCharge, \
@@ -37,6 +37,7 @@ from plotlyst.view.common import action, tool_btn, wrap
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.button import SecondaryActionToolButton
+from plotlyst.view.widget.display import Icon
 from plotlyst.view.widget.input import RemovalButton
 from plotlyst.view.widget.labels import PlotValueLabel
 
@@ -81,38 +82,44 @@ class ProgressEditor(QWidget):
         hbox(self, spacing=0)
 
         self._idleIcon = IconRegistry.from_name('mdi.chevron-double-up', 'lightgrey')
+        self._chargeEnabled: bool = True
         self.btnProgress = tool_btn(self._idleIcon, transparent_=True, pointy_=False)
         self.btnProgress.setIconSize(QSize(76, 76))
 
         self.posCharge = tool_btn(IconRegistry.plus_circle_icon('grey'), transparent_=True)
         decr_icon(self.posCharge, 4)
         self.posCharge.clicked.connect(lambda: self._changeCharge(1))
-        retain_when_hidden(self.posCharge)
         self.negCharge = tool_btn(IconRegistry.minus_icon('grey'), transparent_=True)
         decr_icon(self.negCharge, 4)
         self.negCharge.clicked.connect(lambda: self._changeCharge(-1))
-        retain_when_hidden(self.negCharge)
 
-        self.posCharge.setHidden(True)
-        self.negCharge.setHidden(True)
+        self.btnLock = Icon()
+        self.btnLock.setIcon(IconRegistry.from_name('fa5s.lock', 'grey'))
+        self.btnLock.installEventFilter(InstantTooltipEventFilter(self.btnLock))
+        self.btnLock.setHidden(True)
 
         self.wdgSize = QWidget()
         vbox(self.wdgSize, 0, 0)
         self.wdgSize.layout().addWidget(self.posCharge)
         self.wdgSize.layout().addWidget(self.negCharge)
+        retain_when_hidden(self.wdgSize)
+        self.wdgSize.setHidden(True)
 
         self.layout().addWidget(self.btnProgress)
         self.layout().addWidget(self.wdgSize, alignment=Qt.AlignmentFlag.AlignVCenter)
+        self.layout().addWidget(self.btnLock, alignment=Qt.AlignmentFlag.AlignVCenter)
 
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
-        self.posCharge.setVisible(True)
-        self.negCharge.setVisible(True)
+        if self._chargeEnabled:
+            self.wdgSize.setVisible(True)
+        else:
+            self.btnLock.setVisible(True)
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
-        self.posCharge.setHidden(True)
-        self.negCharge.setHidden(True)
+        self.wdgSize.setHidden(True)
+        self.btnLock.setHidden(True)
 
     def refresh(self):
         if self.charge() == 0:
@@ -146,16 +153,6 @@ class ScenePlotGeneralProgressEditor(ProgressEditor):
     def __init__(self, plotReference: ScenePlotReference, parent=None):
         super().__init__(parent)
         self.plotReference = plotReference
-
-        # self.plot_value_charge: Optional[ScenePlotValueCharge] = None
-        # for v in self.plotReference.data.values:
-        #     if v.plot_value_id == plotReference.plot.default_value.id:
-        #         self.plot_value_charge = v
-        #
-        # if self.plot_value_charge is None:
-        #     self.plot_value_charge = ScenePlotValueCharge(self.plotReference.plot.id, 0)
-        #     self.plotReference.data.values.append(self.plot_value_charge)
-
         self.refresh()
 
     @abstractmethod

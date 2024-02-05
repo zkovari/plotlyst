@@ -1796,10 +1796,21 @@ class SceneProgressEditor(ProgressEditor):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._scene: Optional[Scene] = None
+        self.btnLock.setToolTip('Scene progression is calculated from the associated storylines')
 
     def setScene(self, scene: Scene):
         self._scene = scene
         self.refresh()
+
+    @overrides
+    def refresh(self):
+        self._chargeEnabled = True
+        for ref in self._scene.plot_values:
+            if ref.data.charge:
+                self._chargeEnabled = False
+                break
+
+        super().refresh()
 
     @overrides
     def _changeCharge(self, charge: int):

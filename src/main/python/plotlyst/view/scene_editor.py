@@ -324,6 +324,7 @@ class SceneEditor(QObject, EventListener):
     def _storyline_removed(self, labels: ScenePlotLabels, plotRef: ScenePlotReference):
         fade_out_and_gc(self.ui.wdgStorylines.layout(), labels)
         self.scene.plot_values.remove(plotRef)
+        self._progressEditor.refresh()
 
     def _storyline_linked(self, element: SceneElementWidget, storyline: Plot):
         if next((x for x in self.scene.plot_values if x.plot.id == storyline.id), None) is None:
