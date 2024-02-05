@@ -50,7 +50,7 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.labels import CharacterLabel
 from plotlyst.view.widget.scene.editor import ScenePurposeSelectorWidget, ScenePurposeTypeButton, \
-    SceneStorylineEditor, SceneAgendaEditor, SceneElementWidget
+    SceneStorylineEditor, SceneAgendaEditor, SceneElementWidget, SceneProgressEditor
 from plotlyst.view.widget.scene.plot import ScenePlotLabels, \
     ScenePlotSelectorMenu
 from plotlyst.view.widget.scene.reader_drive import ReaderCuriosityEditor, ReaderInformationEditor
@@ -113,6 +113,9 @@ class SceneEditor(QObject, EventListener):
         self._povMenu.selected.connect(self._pov_changed)
         self.ui.wdgPov.btnAvatar.setText('POV')
         self.ui.wdgPov.setFixedSize(170, 170)
+
+        self._progressEditor = SceneProgressEditor()
+        self.ui.wdgTop.layout().addWidget(self._progressEditor)
 
         self.ui.textNotes.setTitleVisible(False)
         self.ui.textNotes.setPlaceholderText("Scene notes")
@@ -221,6 +224,7 @@ class SceneEditor(QObject, EventListener):
         self._agencyEditor.setScene(self.scene)
         self._curiosityEditor.setScene(self.scene)
         self._informationEditor.setScene(self.scene)
+        self._progressEditor.setScene(self.scene)
 
         self.ui.lineTitle.setText(self.scene.title)
         self.ui.textSynopsis.setText(self.scene.synopsis)

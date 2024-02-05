@@ -1624,6 +1624,7 @@ class Scene:
     structure: List[SceneStructureItem] = field(default_factory=list)
     questions: List[SceneReaderQuestion] = field(default_factory=list)
     info: List[SceneReaderInformation] = field(default_factory=list)
+    progress: int = 0
 
     def beat(self, novel: 'Novel') -> Optional[StoryBeat]:
         structure = novel.active_story_structure
