@@ -27,7 +27,7 @@ from PyQt6.QtGui import QColor, QMouseEvent, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QToolButton, QGraphicsDropShadowEffect, QTextEdit
 from overrides import overrides
 from qthandy import vbox, hbox, transparent, retain_when_hidden, spacer, sp, decr_icon, line, vline, \
-    margins
+    margins, italic
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget
 
@@ -36,6 +36,7 @@ from plotlyst.core.domain import Novel, Scene, ScenePlotReference, PlotValue, Sc
 from plotlyst.view.common import action, tool_btn, wrap
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_white_menu
+from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.button import SecondaryActionToolButton
 from plotlyst.view.widget.display import Icon
 from plotlyst.view.widget.input import RemovalButton
@@ -84,6 +85,9 @@ class ProgressEditor(QWidget):
         self._idleIcon = IconRegistry.from_name('mdi.chevron-double-up', 'lightgrey')
         self._chargeEnabled: bool = True
         self.btnProgress = tool_btn(self._idleIcon, transparent_=True, pointy_=False)
+        self.btnProgress.setText('Progress')
+        italic(self.btnProgress)
+        apply_button_palette_color(self.btnProgress, 'grey')
         self.btnProgress.setIconSize(QSize(76, 76))
 
         self.posCharge = tool_btn(IconRegistry.plus_circle_icon('grey'), transparent_=True)
@@ -124,8 +128,10 @@ class ProgressEditor(QWidget):
     def refresh(self):
         if self.charge() == 0:
             self.btnProgress.setIcon(self._idleIcon)
+            self.btnProgress.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         else:
             self.btnProgress.setIcon(IconRegistry.charge_icon(self.charge()))
+            self.btnProgress.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
 
         self._updateButtons()
 
