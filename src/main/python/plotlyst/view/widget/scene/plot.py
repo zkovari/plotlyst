@@ -137,14 +137,20 @@ class ProgressEditor(QWidget):
     def refresh(self):
         if self.charge() == 0:
             self.btnProgress.setIcon(self._idleIcon)
-        else:
-            self.btnProgress.setIcon(IconRegistry.charge_icon(self.charge()))
-
         if self.altCharge() == 0:
             self.btnProgressAlt.setHidden(True)
+
+        if self.charge() == abs(self.altCharge()):
+            if self.charge():
+                self.btnProgress.setIcon(IconRegistry.trade_off_charge_icon(self.charge()))
+            else:
+                self.btnProgress.setIcon(self._idleIcon)
+            self.btnProgressAlt.setHidden(True)
         else:
-            self.btnProgressAlt.setVisible(True)
-            self.btnProgressAlt.setIcon(IconRegistry.charge_icon(self.altCharge()))
+            self.btnProgress.setIcon(IconRegistry.charge_icon(self.charge()))
+            if self.altCharge():
+                self.btnProgressAlt.setVisible(True)
+                self.btnProgressAlt.setIcon(IconRegistry.charge_icon(self.altCharge()))
 
         self._updateButtons()
 

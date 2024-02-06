@@ -1819,9 +1819,6 @@ class SceneProgressEditor(ProgressEditor):
                 else:
                     negCharge = min(negCharge, ref.data.charge)
 
-        # if posCharge > abs(negCharge):
-        #     self._charge = posCharge
-        #     self._altCharge = negCharge
         if abs(negCharge) > posCharge:
             self._charge = negCharge
             self._altCharge = posCharge
