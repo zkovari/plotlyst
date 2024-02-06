@@ -612,17 +612,29 @@ class IconRegistry:
         if charge == 0:
             return IconRegistry.from_name('mdi.wave', 'grey')
         elif charge == 1:
-            return IconRegistry.from_name('mdi.chevron-up', '#2d6a4f')
+            return IconRegistry.from_name('mdi.chevron-up', '#52b788')
         elif charge == 2:
             return IconRegistry.from_name('mdi.chevron-double-up', '#40916c')
         elif charge >= 3:
-            return IconRegistry.from_name('mdi.chevron-triple-up', '#52b788')
+            return IconRegistry.from_name('mdi.chevron-triple-up', '#2d6a4f')
         elif charge == -1:
             return IconRegistry.from_name('mdi.chevron-down', '#dc2f02')
         elif charge == -2:
             return IconRegistry.from_name('mdi.chevron-double-down', '#d00000')
         else:
             return IconRegistry.from_name('mdi.chevron-triple-down', '#9d0208')
+
+    @staticmethod
+    def trade_off_charge_icon(charge: int = 1) -> QIcon:
+        color = '#832161'
+        if charge == 0:
+            return IconRegistry.from_name('mdi.wave', color)
+        elif charge == 1:
+            return IconRegistry.from_name('mdi.chevron-right', color)
+        elif charge == 2:
+            return IconRegistry.from_name('mdi.chevron-double-right', color)
+        elif charge >= 3:
+            return IconRegistry.from_name('mdi.chevron-triple-right', color)
 
     @staticmethod
     def male_gender_icon(color: str = 'black') -> QIcon:

@@ -17,25 +17,28 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from abc import abstractmethod
 from functools import partial
 from typing import Optional, Dict
 
 import qtanim
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QMouseEvent
+from PyQt6.QtCore import Qt, pyqtSignal, QSize, QEvent
+from PyQt6.QtGui import QColor, QMouseEvent, QEnterEvent, QResizeEvent
 from PyQt6.QtWidgets import QWidget, QToolButton, QGraphicsDropShadowEffect, QTextEdit
 from overrides import overrides
 from qthandy import vbox, hbox, transparent, retain_when_hidden, spacer, sp, decr_icon, line, vline, \
-    margins
-from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
+    margins, italic
+from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.core.domain import Novel, Scene, ScenePlotReference, PlotValue, ScenePlotValueCharge, \
     Plot, PlotType
-from plotlyst.view.common import action, tool_btn
+from plotlyst.view.common import action, tool_btn, wrap
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_white_menu
+from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.button import SecondaryActionToolButton
+from plotlyst.view.widget.display import Icon
 from plotlyst.view.widget.input import RemovalButton
 from plotlyst.view.widget.labels import PlotValueLabel
 
@@ -72,6 +75,123 @@ class PlotValuesDisplay(QWidget):
             effect.setOffset(5 * abs(charge.charge), 0)
             effect.setBlurRadius(25)
             lbl.setGraphicsEffect(effect)
+
+
+class ProgressEditor(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        hbox(self, spacing=0)
+
+        self._idleIcon = IconRegistry.from_name('mdi.chevron-double-up', 'lightgrey')
+        self._chargeEnabled: bool = True
+        self.btnProgress = tool_btn(self._idleIcon, transparent_=True, pointy_=False)
+        self.btnProgress.setText('Progress')
+        self.btnProgress.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        italic(self.btnProgress)
+        apply_button_palette_color(self.btnProgress, 'grey')
+        self.btnProgress.setIconSize(QSize(76, 76))
+
+        self.btnProgressAlt = tool_btn(self._idleIcon, transparent_=True, pointy_=False, parent=self.btnProgress)
+        self.btnProgressAlt.setHidden(True)
+
+        self.posCharge = tool_btn(IconRegistry.plus_circle_icon('grey'), transparent_=True)
+        decr_icon(self.posCharge, 4)
+        self.posCharge.clicked.connect(lambda: self._changeCharge(1))
+        self.negCharge = tool_btn(IconRegistry.minus_icon('grey'), transparent_=True)
+        decr_icon(self.negCharge, 4)
+        self.negCharge.clicked.connect(lambda: self._changeCharge(-1))
+
+        self.btnLock = Icon()
+        self.btnLock.setIcon(IconRegistry.from_name('fa5s.lock', 'grey'))
+        self.btnLock.installEventFilter(InstantTooltipEventFilter(self.btnLock))
+        self.btnLock.setHidden(True)
+
+        self.wdgSize = QWidget()
+        vbox(self.wdgSize, 0, 0)
+        self.wdgSize.layout().addWidget(self.posCharge)
+        self.wdgSize.layout().addWidget(self.negCharge)
+        retain_when_hidden(self.wdgSize)
+        self.wdgSize.setHidden(True)
+
+        self.layout().addWidget(self.btnProgress)
+        self.layout().addWidget(self.wdgSize, alignment=Qt.AlignmentFlag.AlignVCenter)
+        self.layout().addWidget(self.btnLock, alignment=Qt.AlignmentFlag.AlignVCenter)
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        if self._chargeEnabled:
+            self.wdgSize.setVisible(True)
+        else:
+            self.btnLock.setVisible(True)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self.wdgSize.setHidden(True)
+        self.btnLock.setHidden(True)
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        self.btnProgressAlt.setGeometry(self.btnProgress.size().width() - 20, self.btnProgress.size().height() - 40, 20,
+                                        20)
+
+    def refresh(self):
+        if self.charge() == 0:
+            self.btnProgress.setIcon(self._idleIcon)
+        if self.altCharge() == 0:
+            self.btnProgressAlt.setHidden(True)
+
+        if self.charge() == abs(self.altCharge()):
+            if self.charge():
+                self.btnProgress.setIcon(IconRegistry.trade_off_charge_icon(self.charge()))
+            else:
+                self.btnProgress.setIcon(self._idleIcon)
+            self.btnProgressAlt.setHidden(True)
+        else:
+            self.btnProgress.setIcon(IconRegistry.charge_icon(self.charge()))
+            if self.altCharge():
+                self.btnProgressAlt.setVisible(True)
+                self.btnProgressAlt.setIcon(IconRegistry.charge_icon(self.altCharge()))
+
+        self._updateButtons()
+
+    @abstractmethod
+    def charge(self) -> int:
+        pass
+
+    def altCharge(self) -> int:
+        return 0
+
+    @abstractmethod
+    def _changeCharge(self, charge: int):
+        pass
+
+    def _updateButtons(self):
+        self.posCharge.setEnabled(True)
+        self.negCharge.setEnabled(True)
+
+        if self.charge() == 3:
+            self.posCharge.setDisabled(True)
+        elif self.charge() == -3:
+            self.negCharge.setDisabled(True)
+
+
+class ScenePlotGeneralProgressEditor(ProgressEditor):
+    charged = pyqtSignal()
+
+    def __init__(self, plotReference: ScenePlotReference, parent=None):
+        super().__init__(parent)
+        self.plotReference = plotReference
+        self.refresh()
+
+    @abstractmethod
+    def charge(self) -> int:
+        return self.plotReference.data.charge
+
+    @overrides
+    def _changeCharge(self, charge: int):
+        self.plotReference.data.charge += charge
+        self.refresh()
+        self.charged.emit()
 
 
 class ScenePlotValueChargeWidget(QWidget):
@@ -148,6 +268,7 @@ class ScenePlotValueChargeWidget(QWidget):
 
 class ScenePlotValueEditor(QWidget):
     charged = pyqtSignal(PlotValue, ScenePlotValueCharge)
+    generalProgressCharged = pyqtSignal()
 
     def __init__(self, plotReference: ScenePlotReference, parent=None):
         super().__init__(parent)
@@ -160,17 +281,16 @@ class ScenePlotValueEditor(QWidget):
         self._text.setProperty('rounded', True)
         self._text.setProperty('white-bg', True)
         self._text.setPlaceholderText('Describe how the scene is related to this storyline')
-        self._text.setMaximumSize(200, 180)
+        self._text.setMaximumSize(180, 150)
         self._text.setText(self.plotReference.data.comment)
         self._text.textChanged.connect(self._textChanged)
         self.layout().addWidget(self._text)
         self.layout().addWidget(line(color='lightgrey'))
 
         if self.plotReference.plot.default_value_enabled:
-            wdg = ScenePlotValueChargeWidget(self.plotReference, self.plotReference.plot.default_value)
-            wdg.charged.connect(self.charged.emit)
-            # self.layout().addWidget(QLabel('General progress or setback'))
-            self.layout().addWidget(wdg)
+            wdg = ScenePlotGeneralProgressEditor(self.plotReference)
+            wdg.charged.connect(self.generalProgressCharged)
+            self.layout().addWidget(wrap(wdg, margin_left=15), alignment=Qt.AlignmentFlag.AlignCenter)
             self.layout().addWidget(line(color='lightgrey'))
 
         # if self.plotReference.plot.values:
@@ -238,6 +358,7 @@ class ScenePlotSelectorMenu(MenuWidget):
 
 class ScenePlotLabels(QWidget):
     reset = pyqtSignal()
+    generalProgressCharged = pyqtSignal()
 
     def __init__(self, plotref: ScenePlotReference, parent=None):
         super().__init__(parent)
@@ -259,6 +380,7 @@ class ScenePlotLabels(QWidget):
 
         self._plotValueDisplay = PlotValuesDisplay(self._plotref)
         self._plotValueEditor.charged.connect(self._plotValueDisplay.updateValue)
+        self._plotValueEditor.generalProgressCharged.connect(self.generalProgressCharged)
 
         for value in self._plotref.data.values:
             plot_value = value.plot_value(self._plotref.plot)

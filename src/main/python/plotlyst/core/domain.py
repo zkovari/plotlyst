@@ -1244,6 +1244,7 @@ class ScenePlotValueCharge:
 @dataclass
 class ScenePlotReferenceData:
     comment: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    charge: int = 0
     values: List[ScenePlotValueCharge] = field(default_factory=list)
 
 
@@ -1624,6 +1625,7 @@ class Scene:
     structure: List[SceneStructureItem] = field(default_factory=list)
     questions: List[SceneReaderQuestion] = field(default_factory=list)
     info: List[SceneReaderInformation] = field(default_factory=list)
+    progress: int = 0
 
     def beat(self, novel: 'Novel') -> Optional[StoryBeat]:
         structure = novel.active_story_structure

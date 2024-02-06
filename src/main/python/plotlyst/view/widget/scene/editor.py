@@ -54,6 +54,7 @@ from plotlyst.view.widget.input import RemovalButton
 from plotlyst.view.widget.plot.selector import StorylineSelectorMenu
 from plotlyst.view.widget.scene.agency import SceneAgendaEmotionEditor, SceneAgendaMotivationEditor, \
     SceneAgendaConflictEditor
+from plotlyst.view.widget.scene.plot import ProgressEditor
 from plotlyst.view.widget.scenes import SceneOutcomeSelector
 
 
@@ -1789,3 +1790,63 @@ class SceneAgendaEditor(AbstractSceneElementsEditor, EventListener):
         self._emotionEditor.setVisible(elements_visible and self._novel.prefs.toggled(NovelSetting.Track_emotion))
         self._motivationEditor.setVisible(elements_visible and self._novel.prefs.toggled(NovelSetting.Track_motivation))
         self._conflictEditor.setVisible(elements_visible and self._novel.prefs.toggled(NovelSetting.Track_conflict))
+
+
+class SceneProgressEditor(ProgressEditor):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._scene: Optional[Scene] = None
+        self._charge: int = 0
+        self._altCharge: int = 0
+        self.btnLock.setToolTip('Scene progression is calculated from the associated storylines')
+
+    def setScene(self, scene: Scene):
+        self._scene = scene
+        self.refresh()
+
+    @overrides
+    def refresh(self):
+        self._chargeEnabled = True
+        self._charge = 0
+        self._altCharge = 0
+        posCharge = 0
+        negCharge = 0
+        for ref in self._scene.plot_values:
+            if ref.data.charge:
+                self._chargeEnabled = False
+                if ref.data.charge > 0:
+                    posCharge = max(posCharge, ref.data.charge)
+                else:
+                    negCharge = min(negCharge, ref.data.charge)
+
+        if abs(negCharge) > posCharge:
+            self._charge = negCharge
+            self._altCharge = posCharge
+        else:
+            self._charge = posCharge
+            self._altCharge = negCharge
+
+        super().refresh()
+
+    @overrides
+    def _changeCharge(self, charge: int):
+        if not self._scene:
+            return
+        self._scene.progress += charge
+        self.refresh()
+
+    @overrides
+    def charge(self) -> int:
+        if self._scene:
+            if self._charge:
+                return self._charge
+            return self._scene.progress
+
+        return 0
+
+    @overrides
+    def altCharge(self) -> int:
+        if self._scene:
+            if self._altCharge:
+                return self._altCharge
+        return 0
