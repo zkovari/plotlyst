@@ -23,7 +23,7 @@ from typing import Optional, Dict
 
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QSize, QEvent
-from PyQt6.QtGui import QColor, QMouseEvent, QEnterEvent
+from PyQt6.QtGui import QColor, QMouseEvent, QEnterEvent, QResizeEvent
 from PyQt6.QtWidgets import QWidget, QToolButton, QGraphicsDropShadowEffect, QTextEdit
 from overrides import overrides
 from qthandy import vbox, hbox, transparent, retain_when_hidden, spacer, sp, decr_icon, line, vline, \
@@ -90,6 +90,9 @@ class ProgressEditor(QWidget):
         apply_button_palette_color(self.btnProgress, 'grey')
         self.btnProgress.setIconSize(QSize(76, 76))
 
+        self.btnProgressAlt = tool_btn(self._idleIcon, transparent_=True, pointy_=False, parent=self.btnProgress)
+        self.btnProgressAlt.setHidden(True)
+
         self.posCharge = tool_btn(IconRegistry.plus_circle_icon('grey'), transparent_=True)
         decr_icon(self.posCharge, 4)
         self.posCharge.clicked.connect(lambda: self._changeCharge(1))
@@ -125,6 +128,11 @@ class ProgressEditor(QWidget):
         self.wdgSize.setHidden(True)
         self.btnLock.setHidden(True)
 
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        self.btnProgressAlt.setGeometry(self.btnProgress.size().width() - 20, self.btnProgress.size().height() - 20, 20,
+                                        20)
+
     def refresh(self):
         if self.charge() == 0:
             self.btnProgress.setIcon(self._idleIcon)
@@ -133,11 +141,20 @@ class ProgressEditor(QWidget):
             self.btnProgress.setIcon(IconRegistry.charge_icon(self.charge()))
             self.btnProgress.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
 
+        if self.altCharge() == 0:
+            self.btnProgressAlt.setHidden(True)
+        else:
+            self.btnProgressAlt.setVisible(True)
+            self.btnProgressAlt.setIcon(IconRegistry.charge_icon(self.altCharge()))
+
         self._updateButtons()
 
     @abstractmethod
     def charge(self) -> int:
         pass
+
+    def altCharge(self) -> int:
+        return 0
 
     @abstractmethod
     def _changeCharge(self, charge: int):
