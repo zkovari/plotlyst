@@ -99,7 +99,7 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.pencil', color, color_on=color_on)
 
     @staticmethod
-    def plus_edit_icon(color: str = '#004385') -> QIcon:
+    def plus_edit_icon(color: str = PLOTLYST_SECONDARY_COLOR) -> QIcon:
         return IconRegistry.from_name('mdi.pencil-plus', color=color)
 
     @staticmethod
