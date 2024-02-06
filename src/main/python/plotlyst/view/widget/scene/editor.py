@@ -1796,6 +1796,8 @@ class SceneProgressEditor(ProgressEditor):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._scene: Optional[Scene] = None
+        self._charge: int = 0
+        self._altCharge: int = 0
         self.btnLock.setToolTip('Scene progression is calculated from the associated storylines')
 
     def setScene(self, scene: Scene):
@@ -1805,10 +1807,27 @@ class SceneProgressEditor(ProgressEditor):
     @overrides
     def refresh(self):
         self._chargeEnabled = True
+        self._charge = 0
+        self._altCharge = 0
+        posCharge = 0
+        negCharge = 0
         for ref in self._scene.plot_values:
             if ref.data.charge:
                 self._chargeEnabled = False
-                break
+                if ref.data.charge > 0:
+                    posCharge = max(posCharge, ref.data.charge)
+                else:
+                    negCharge = min(negCharge, ref.data.charge)
+
+        # if posCharge > abs(negCharge):
+        #     self._charge = posCharge
+        #     self._altCharge = negCharge
+        if abs(negCharge) > posCharge:
+            self._charge = negCharge
+            self._altCharge = posCharge
+        else:
+            self._charge = posCharge
+            self._altCharge = negCharge
 
         super().refresh()
 
@@ -1822,9 +1841,15 @@ class SceneProgressEditor(ProgressEditor):
     @overrides
     def charge(self) -> int:
         if self._scene:
-            for ref in self._scene.plot_values:
-                if ref.data.charge:
-                    return ref.data.charge
+            if self._charge:
+                return self._charge
             return self._scene.progress
 
+        return 0
+
+    @overrides
+    def altCharge(self) -> int:
+        if self._scene:
+            if self._altCharge:
+                return self._altCharge
         return 0

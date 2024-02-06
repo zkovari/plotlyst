@@ -86,6 +86,7 @@ class ProgressEditor(QWidget):
         self._chargeEnabled: bool = True
         self.btnProgress = tool_btn(self._idleIcon, transparent_=True, pointy_=False)
         self.btnProgress.setText('Progress')
+        self.btnProgress.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         italic(self.btnProgress)
         apply_button_palette_color(self.btnProgress, 'grey')
         self.btnProgress.setIconSize(QSize(76, 76))
@@ -130,16 +131,14 @@ class ProgressEditor(QWidget):
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
-        self.btnProgressAlt.setGeometry(self.btnProgress.size().width() - 20, self.btnProgress.size().height() - 20, 20,
+        self.btnProgressAlt.setGeometry(self.btnProgress.size().width() - 20, self.btnProgress.size().height() - 40, 20,
                                         20)
 
     def refresh(self):
         if self.charge() == 0:
             self.btnProgress.setIcon(self._idleIcon)
-            self.btnProgress.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         else:
             self.btnProgress.setIcon(IconRegistry.charge_icon(self.charge()))
-            self.btnProgress.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
 
         if self.altCharge() == 0:
             self.btnProgressAlt.setHidden(True)
