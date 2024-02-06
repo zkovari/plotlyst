@@ -177,6 +177,7 @@ class SceneInfo:
     structure: List[SceneStructureItem] = field(default_factory=list)
     questions: List[SceneReaderQuestion] = field(default_factory=list)
     info: List[SceneReaderInformation] = field(default_factory=list)
+    progress: int = 0
 
 
 @dataclass
@@ -560,7 +561,8 @@ class JsonClient:
                               comments=info.comments, tag_references=info.tag_references,
                               document=info.document, manuscript=info.manuscript, drive=info.drive,
                               purpose=info.purpose, outcome=info.outcome, story_elements=info.story_elements,
-                              structure=info.structure, questions=info.questions, info=info.info)
+                              structure=info.structure, questions=info.questions, info=info.info,
+                              progress=info.progress)
                 scenes.append(scene)
 
         tag_types = novel_info.tag_types
@@ -678,7 +680,7 @@ class JsonClient:
                          tag_references=scene.tag_references, document=scene.document, manuscript=scene.manuscript,
                          drive=scene.drive, purpose=scene.purpose, outcome=scene.outcome,
                          story_elements=scene.story_elements,
-                         structure=scene.structure, questions=scene.questions, info=scene.info)
+                         structure=scene.structure, questions=scene.questions, info=scene.info, progress=scene.progress)
         self.__persist_info(self.scenes_dir(novel), info)
 
     def _persist_diagram(self, novel: Novel, diagram: Diagram):
