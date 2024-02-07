@@ -40,7 +40,7 @@ class StorylineSelectorMenu(MenuWidget):
             PlotType.Main: True,
             PlotType.Internal: True,
             PlotType.Subplot: True,
-            PlotType.Relation: False,
+            PlotType.Relation: True,
         }
         self.aboutToShow.connect(self._beforeShow)
 

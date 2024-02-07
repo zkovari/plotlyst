@@ -32,7 +32,7 @@ from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, Inst
 from qtmenu import MenuWidget
 
 from plotlyst.core.domain import Novel, Scene, ScenePlotReference, PlotValue, ScenePlotValueCharge, \
-    Plot, PlotType
+    Plot
 from plotlyst.view.common import action, tool_btn, wrap
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_white_menu
@@ -316,22 +316,8 @@ class ScenePlotSelectorMenu(MenuWidget):
         super().__init__(parent)
         self._novel = novel
         self._scene: Optional[Scene] = None
-        self._filters: Dict[PlotType, bool] = {
-            PlotType.Global: True,
-            PlotType.Main: True,
-            PlotType.Internal: True,
-            PlotType.Subplot: True,
-            PlotType.Relation: False,
-        }
 
         self.aboutToShow.connect(self._beforeShow)
-
-    def filterPlotType(self, plotType: PlotType, filtered: bool):
-        self._filters[plotType] = filtered
-
-    def filterAll(self, filtered: bool):
-        for k in self._filters.keys():
-            self._filters[k] = filtered
 
     def setScene(self, scene: Scene):
         self._scene = scene
@@ -344,8 +330,6 @@ class ScenePlotSelectorMenu(MenuWidget):
         self.addSection('Link storylines to this scene')
         self.addSeparator()
         for plot in self._novel.plots:
-            if not self._filters[plot.plot_type]:
-                continue
             action_ = action(plot.text, IconRegistry.from_name(plot.icon, plot.icon_color),
                              partial(self.plotSelected.emit, plot))
             if plot.id in occupied_plot_ids:
