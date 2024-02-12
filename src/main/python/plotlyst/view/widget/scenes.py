@@ -750,9 +750,17 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.cbPurpose.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_PURPOSE))
         self.cbStage.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_STAGE))
 
+        self.cbTableStorylines.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_STORYLINES))
+        self.cbTableCharacters.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_CHARACTERS))
+        self.cbTablePurpose.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_PURPOSE))
+
         self.cbPov.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_CARD_POV))
         self.cbPurpose.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_CARD_PURPOSE))
         self.cbStage.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_CARD_STAGE))
+
+        self.cbTableStorylines.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_TABLE_STORYLINES))
+        self.cbTableCharacters.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_TABLE_CHARACTERS))
+        self.cbTablePurpose.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_TABLE_PURPOSE))
 
         self.sliderCards.setValue(self.novel.prefs.setting(NovelSetting.SCENE_CARD_WIDTH, self.DEFAULT_CARD_WIDTH))
         self.sliderCards.valueChanged.connect(self.cardWidthChanged)
