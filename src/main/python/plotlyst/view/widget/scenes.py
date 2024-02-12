@@ -52,7 +52,7 @@ from plotlyst.model.scenes_model import ScenesTableModel
 from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import PopupMenuBuilder, action, stretch_col, \
-    tool_btn, label, ExclusiveOptionalButtonGroup
+    tool_btn, label, ExclusiveOptionalButtonGroup, set_tab_icon
 from plotlyst.view.generated.scene_drive_editor_ui import Ui_SceneDriveTrackingEditor
 from plotlyst.view.generated.scenes_view_preferences_widget_ui import Ui_ScenesViewPreferences
 from plotlyst.view.icons import IconRegistry
@@ -734,7 +734,12 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.btnStorylines.setIcon(IconRegistry.storylines_icon())
         self.btnStage.setIcon(IconRegistry.progress_check_icon())
 
+        self.btnTableStorylines.setIcon(IconRegistry.storylines_icon())
+        self.btnTableCharacters.setIcon(IconRegistry.character_icon())
+        self.btnTablePurpose.setIcon(IconRegistry.from_name('fa5s.yin-yang'))
+
         self.tabCards.layout().insertWidget(1, line(color='lightgrey'))
+        self.tabTable.layout().insertWidget(1, line(color='lightgrey'))
         # self.tabCards.layout().insertWidget(6, wrap(line(color='lightgrey'), margin_left=10))
 
         self.btnGroup = ExclusiveOptionalButtonGroup()
@@ -760,7 +765,8 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.wdgCharacters.setHidden(True)
         self.wdgStorylines.setHidden(True)
 
-        self.tabWidget.setTabIcon(self.tabWidget.indexOf(self.tabCards), IconRegistry.cards_icon())
+        set_tab_icon(self.tabWidget, self.tabCards, IconRegistry.cards_icon())
+        set_tab_icon(self.tabWidget, self.tabTable, IconRegistry.table_icon())
 
 
 class SceneNotesEditor(DocumentTextEditor):
