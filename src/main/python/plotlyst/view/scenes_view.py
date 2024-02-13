@@ -227,15 +227,6 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.cards.cardEntered.connect(lambda x: self.ui.wdgStoryStructure.highlightScene(x.scene))
         self.ui.cards.cardCustomContextMenuRequested.connect(self._show_card_menu)
 
-        self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
-        self.ui.btnCardsView.setChecked(True)
-
-        self.ui.wdgStoryStructureParent.setHidden(True)
-        self.ui.wdgStoryStructure.setBeatCursor(Qt.CursorShape.ArrowCursor)
-        self.ui.wdgStoryStructure.setStructure(self.novel)
-        self.ui.wdgStoryStructure.setActsClickable(False)
-
-        self.ui.btnFilter.setIcon(IconRegistry.filter_icon())
         self.ui.btnPreferences.setIcon(IconRegistry.preferences_icon())
         self.prefs_widget = ScenesPreferencesWidget(self.novel)
         self.prefs_widget.settingToggled.connect(self._scene_prefs_toggled)
@@ -246,6 +237,16 @@ class ScenesOutlineView(AbstractNovelView):
         menu = MenuWidget(self.ui.btnPreferences)
         apply_white_menu(menu)
         menu.addWidget(self.prefs_widget)
+
+        self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
+        self.ui.btnCardsView.setChecked(True)
+
+        self.ui.wdgStoryStructureParent.setHidden(True)
+        self.ui.wdgStoryStructure.setBeatCursor(Qt.CursorShape.ArrowCursor)
+        self.ui.wdgStoryStructure.setStructure(self.novel)
+        self.ui.wdgStoryStructure.setActsClickable(False)
+
+        self.ui.btnFilter.setIcon(IconRegistry.filter_icon())
 
         self._scene_filter = SceneFilterWidget(self.novel)
         filterMenu = MenuWidget(self.ui.btnFilter)
@@ -348,6 +349,7 @@ class ScenesOutlineView(AbstractNovelView):
         elif self.ui.btnCardsView.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageCards)
             self.ui.tblScenes.clearSelection()
+            self.prefs_widget.showCardsTab()
         elif self.ui.btnStorymap.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageStorymap)
             self.ui.tblScenes.clearSelection()
@@ -381,9 +383,10 @@ class ScenesOutlineView(AbstractNovelView):
                 self.characters_distribution.setActsFilter(1, self.ui.btnAct1.isChecked())
                 self.characters_distribution.setActsFilter(2, self.ui.btnAct2.isChecked())
                 self.characters_distribution.setActsFilter(3, self.ui.btnAct3.isChecked())
-        else:
+        elif self.ui.btnTableView.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageDefault)
             self.ui.tblSceneStages.clearSelection()
+            self.prefs_widget.showTableTab()
 
         self.tblModel.setRelaxColors(relax_colors)
         self._toggle_table_columns(columns)

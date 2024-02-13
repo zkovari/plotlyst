@@ -776,6 +776,12 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         set_tab_icon(self.tabWidget, self.tabCards, IconRegistry.cards_icon())
         set_tab_icon(self.tabWidget, self.tabTable, IconRegistry.table_icon())
 
+    def showCardsTab(self):
+        self.tabWidget.setCurrentWidget(self.tabCards)
+
+    def showTableTab(self):
+        self.tabWidget.setCurrentWidget(self.tabTable)
+
 
 class SceneNotesEditor(DocumentTextEditor):
 
