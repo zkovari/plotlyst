@@ -52,7 +52,7 @@ from plotlyst.model.scenes_model import ScenesTableModel
 from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import PopupMenuBuilder, action, stretch_col, \
-    tool_btn, label, ExclusiveOptionalButtonGroup
+    tool_btn, label, ExclusiveOptionalButtonGroup, set_tab_icon
 from plotlyst.view.generated.scene_drive_editor_ui import Ui_SceneDriveTrackingEditor
 from plotlyst.view.generated.scenes_view_preferences_widget_ui import Ui_ScenesViewPreferences
 from plotlyst.view.icons import IconRegistry
@@ -734,7 +734,13 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.btnStorylines.setIcon(IconRegistry.storylines_icon())
         self.btnStage.setIcon(IconRegistry.progress_check_icon())
 
+        self.btnTablePov.setIcon(IconRegistry.eye_open_icon())
+        self.btnTableStorylines.setIcon(IconRegistry.storylines_icon())
+        self.btnTableCharacters.setIcon(IconRegistry.character_icon())
+        self.btnTablePurpose.setIcon(IconRegistry.from_name('fa5s.yin-yang'))
+
         self.tabCards.layout().insertWidget(1, line(color='lightgrey'))
+        self.tabTable.layout().insertWidget(1, line(color='lightgrey'))
         # self.tabCards.layout().insertWidget(6, wrap(line(color='lightgrey'), margin_left=10))
 
         self.btnGroup = ExclusiveOptionalButtonGroup()
@@ -745,9 +751,19 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.cbPurpose.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_PURPOSE))
         self.cbStage.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_STAGE))
 
+        self.cbTablePov.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_POV))
+        self.cbTableStorylines.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_STORYLINES))
+        self.cbTableCharacters.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_CHARACTERS))
+        self.cbTablePurpose.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_PURPOSE))
+
         self.cbPov.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_CARD_POV))
         self.cbPurpose.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_CARD_PURPOSE))
         self.cbStage.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_CARD_STAGE))
+
+        self.cbTablePov.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_TABLE_POV))
+        self.cbTableStorylines.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_TABLE_STORYLINES))
+        self.cbTableCharacters.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_TABLE_CHARACTERS))
+        self.cbTablePurpose.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_TABLE_PURPOSE))
 
         self.sliderCards.setValue(self.novel.prefs.setting(NovelSetting.SCENE_CARD_WIDTH, self.DEFAULT_CARD_WIDTH))
         self.sliderCards.valueChanged.connect(self.cardWidthChanged)
@@ -760,7 +776,14 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.wdgCharacters.setHidden(True)
         self.wdgStorylines.setHidden(True)
 
-        self.tabWidget.setTabIcon(self.tabWidget.indexOf(self.tabCards), IconRegistry.cards_icon())
+        set_tab_icon(self.tabWidget, self.tabCards, IconRegistry.cards_icon())
+        set_tab_icon(self.tabWidget, self.tabTable, IconRegistry.table_icon())
+
+    def showCardsTab(self):
+        self.tabWidget.setCurrentWidget(self.tabCards)
+
+    def showTableTab(self):
+        self.tabWidget.setCurrentWidget(self.tabTable)
 
 
 class SceneNotesEditor(DocumentTextEditor):

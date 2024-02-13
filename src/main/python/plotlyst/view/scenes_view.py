@@ -134,9 +134,6 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.tblModel = ScenesTableModel(novel)
         self.tblModel.setDragEnabled(not self.novel.is_readonly())
-        self._default_columns = [ScenesTableModel.ColTitle, ScenesTableModel.ColPov, ScenesTableModel.ColType,
-                                 ScenesTableModel.ColCharacters,
-                                 ScenesTableModel.ColSynopsis]
         self._proxy = ScenesFilterProxyModel()
         self._proxy.setSourceModel(self.tblModel)
         self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
@@ -230,15 +227,6 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.cards.cardEntered.connect(lambda x: self.ui.wdgStoryStructure.highlightScene(x.scene))
         self.ui.cards.cardCustomContextMenuRequested.connect(self._show_card_menu)
 
-        self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
-        self.ui.btnCardsView.setChecked(True)
-
-        self.ui.wdgStoryStructureParent.setHidden(True)
-        self.ui.wdgStoryStructure.setBeatCursor(Qt.CursorShape.ArrowCursor)
-        self.ui.wdgStoryStructure.setStructure(self.novel)
-        self.ui.wdgStoryStructure.setActsClickable(False)
-
-        self.ui.btnFilter.setIcon(IconRegistry.filter_icon())
         self.ui.btnPreferences.setIcon(IconRegistry.preferences_icon())
         self.prefs_widget = ScenesPreferencesWidget(self.novel)
         self.prefs_widget.settingToggled.connect(self._scene_prefs_toggled)
@@ -249,6 +237,16 @@ class ScenesOutlineView(AbstractNovelView):
         menu = MenuWidget(self.ui.btnPreferences)
         apply_white_menu(menu)
         menu.addWidget(self.prefs_widget)
+
+        self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
+        self.ui.btnCardsView.setChecked(True)
+
+        self.ui.wdgStoryStructureParent.setHidden(True)
+        self.ui.wdgStoryStructure.setBeatCursor(Qt.CursorShape.ArrowCursor)
+        self.ui.wdgStoryStructure.setStructure(self.novel)
+        self.ui.wdgStoryStructure.setActsClickable(False)
+
+        self.ui.btnFilter.setIcon(IconRegistry.filter_icon())
 
         self._scene_filter = SceneFilterWidget(self.novel)
         filterMenu = MenuWidget(self.ui.btnFilter)
@@ -341,7 +339,7 @@ class ScenesOutlineView(AbstractNovelView):
     def _switch_view(self):
         height = 50
         relax_colors = False
-        columns = self._default_columns
+        columns = self._default_columns()
 
         if self.ui.btnStatusView.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageStages)
@@ -351,6 +349,7 @@ class ScenesOutlineView(AbstractNovelView):
         elif self.ui.btnCardsView.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageCards)
             self.ui.tblScenes.clearSelection()
+            self.prefs_widget.showCardsTab()
         elif self.ui.btnStorymap.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageStorymap)
             self.ui.tblScenes.clearSelection()
@@ -384,20 +383,13 @@ class ScenesOutlineView(AbstractNovelView):
                 self.characters_distribution.setActsFilter(1, self.ui.btnAct1.isChecked())
                 self.characters_distribution.setActsFilter(2, self.ui.btnAct2.isChecked())
                 self.characters_distribution.setActsFilter(3, self.ui.btnAct3.isChecked())
-        else:
+        elif self.ui.btnTableView.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageDefault)
             self.ui.tblSceneStages.clearSelection()
+            self.prefs_widget.showTableTab()
 
         self.tblModel.setRelaxColors(relax_colors)
-        for col in range(self.tblModel.columnCount()):
-            if col in columns:
-                if col == self.tblModel.ColPov:
-                    self.ui.tblScenes.setColumnHidden(self.tblModel.ColPov,
-                                                      not self.novel.prefs.toggled(NovelSetting.Track_pov))
-                else:
-                    self.ui.tblScenes.showColumn(col)
-                continue
-            self.ui.tblScenes.hideColumn(col)
+        self._toggle_table_columns(columns)
 
         self.ui.tblScenes.verticalHeader().setDefaultSectionSize(height)
 
@@ -699,7 +691,10 @@ class ScenesOutlineView(AbstractNovelView):
         self.novel.prefs.settings[setting.value] = toggled
         self.repo.update_novel(self.novel)
 
-        self.ui.cards.setSetting(setting, toggled)
+        if setting.scene_card_setting():
+            self.ui.cards.setSetting(setting, toggled)
+        elif setting.scene_table_setting():
+            self._toggle_table_columns(self._default_columns())
 
     def _scene_card_width_changed(self, width: int):
         self.novel.prefs.settings[NovelSetting.SCENE_CARD_WIDTH.value] = width
@@ -709,3 +704,30 @@ class ScenesOutlineView(AbstractNovelView):
 
     def _scene_card_ratio_changed(self, ratio: CardSizeRatio):
         self.ui.cards.setCardsSizeRatio(ratio)
+
+    def _default_columns(self) -> List[int]:
+        default_columns = [ScenesTableModel.ColTitle]
+
+        if self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_POV):
+            default_columns.append(ScenesTableModel.ColPov)
+        if self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_STORYLINES):
+            default_columns.append(ScenesTableModel.ColStorylines)
+        if self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_CHARACTERS):
+            default_columns.append(ScenesTableModel.ColCharacters)
+        if self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_PURPOSE):
+            default_columns.append(ScenesTableModel.ColType)
+
+        default_columns.append(ScenesTableModel.ColSynopsis)
+
+        return default_columns
+
+    def _toggle_table_columns(self, columns: List[int]):
+        for col in range(self.tblModel.columnCount()):
+            if col in columns:
+                if col == self.tblModel.ColPov:
+                    self.ui.tblScenes.setColumnHidden(self.tblModel.ColPov,
+                                                      not self.novel.prefs.toggled(NovelSetting.Track_pov))
+                else:
+                    self.ui.tblScenes.showColumn(col)
+                continue
+            self.ui.tblScenes.hideColumn(col)

@@ -2866,6 +2866,16 @@ class NovelSetting(Enum):
     SCENE_CARD_STAGE = 'scene_card_stage'
     SCENE_CARD_MIDDLE = 'scene_card_middle_display'
     SCENE_CARD_WIDTH = 'scene_card_width'
+    SCENE_TABLE_POV = 'scene_table_pov'
+    SCENE_TABLE_PURPOSE = 'scene_table_purpose'
+    SCENE_TABLE_CHARACTERS = 'scene_table_characters'
+    SCENE_TABLE_STORYLINES = 'scene_table_storylines'
+
+    def scene_card_setting(self) -> bool:
+        return self.name.startswith('SCENE_CARD')
+
+    def scene_table_setting(self) -> bool:
+        return self.name.startswith('SCENE_TABLE')
 
 
 @dataclass

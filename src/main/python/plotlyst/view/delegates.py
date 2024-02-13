@@ -20,21 +20,22 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, QModelIndex, \
-    QAbstractItemModel, QSize
-from PyQt6.QtGui import QPainter
+    QAbstractItemModel
+from PyQt6.QtGui import QPainter, QIcon
 from PyQt6.QtWidgets import QWidget, QStyledItemDelegate, \
     QStyleOptionViewItem, QTextEdit, QComboBox, QLineEdit, QSpinBox
 from overrides import overrides
 
-from plotlyst.core.domain import Scene, VERY_UNHAPPY, UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY, \
-    Character
+from plotlyst.core.domain import Scene, Character
 from plotlyst.model.scenes_model import ScenesTableModel
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.icons import IconRegistry, avatars
+from plotlyst.view.icons import avatars, IconRegistry
 
 
 class ScenesViewDelegate(QStyledItemDelegate):
     avatarSize: int = 24
+    iconSize: int = 20
+    spacing: int = 3
 
     @overrides
     def paint(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', index: QModelIndex) -> None:
@@ -42,60 +43,43 @@ class ScenesViewDelegate(QStyledItemDelegate):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         if index.column() == ScenesTableModel.ColCharacters:
             scene: Scene = index.data(ScenesTableModel.SceneRole)
-            x = 3
+            x = self.spacing
             for char in scene.characters:
                 self._drawAvatar(painter, option, x, char)
-                x += 27
-                if x + 27 >= option.rect.width():
+                x += self.spacing + self.avatarSize
+                if x + self.spacing + self.avatarSize >= option.rect.width():
+                    return
+        elif index.column() == ScenesTableModel.ColStorylines:
+            scene: Scene = index.data(ScenesTableModel.SceneRole)
+            x = self.spacing
+            for plot in scene.plots():
+                self._drawIcon(painter, IconRegistry.from_name(plot.icon, plot.icon_color), option, x, self.iconSize)
+                x += self.spacing + self.iconSize
+                if x + self.spacing + self.iconSize >= option.rect.width():
                     return
 
-        elif index.column() == ScenesTableModel.ColArc:
-            scene = index.data(ScenesTableModel.SceneRole)
-            painter.drawPixmap(option.rect.x() + 3, option.rect.y() + 2,
-                               IconRegistry.emotion_icon_from_feeling(scene.pov_arc()).pixmap(
-                                   QSize(self.avatarSize, self.avatarSize)))
-
     def _drawAvatar(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', x: int, character: Character):
-        painter.drawPixmap(option.rect.x() + x, option.rect.y() + 8,
-                           avatars.avatar(character).pixmap(self.avatarSize, self.avatarSize))
+        self._drawIcon(painter, avatars.avatar(character), option, x, self.avatarSize)
+
+    def _drawIcon(self, painter: QtGui.QPainter, icon: QIcon, option: 'QStyleOptionViewItem', x: int, size: int):
+        icon.paint(painter, option.rect.x() + x, option.rect.y() + 8, size,
+                   size)
 
     @overrides
     def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
-        if index.column() == ScenesTableModel.ColArc:
-            return QComboBox(parent)
         if index.column() == ScenesTableModel.ColTime:
             return QSpinBox(parent)
         return QTextEdit(parent)
 
     @overrides
     def setEditorData(self, editor: QWidget, index: QModelIndex):
-        edit_data = index.data(Qt.EditRole)
+        edit_data = index.data(Qt.ItemDataRole.EditRole)
         if not edit_data:
             edit_data = index.data(Qt.ItemDataRole.DisplayRole)
         if isinstance(editor, QTextEdit) or isinstance(editor, QLineEdit):
             editor.setText(str(edit_data))
         elif isinstance(editor, QSpinBox):
             editor.setValue(edit_data)
-        elif isinstance(editor, QComboBox):
-            arc = index.data(ScenesTableModel.SceneRole).pov_arc()
-            editor.addItem(IconRegistry.emotion_icon_from_feeling(VERY_UNHAPPY), '', VERY_UNHAPPY)
-            if arc == VERY_UNHAPPY:
-                editor.setCurrentIndex(0)
-            editor.addItem(IconRegistry.emotion_icon_from_feeling(UNHAPPY), '', UNHAPPY)
-            if arc == UNHAPPY:
-                editor.setCurrentIndex(1)
-            editor.addItem(IconRegistry.emotion_icon_from_feeling(NEUTRAL), '', NEUTRAL)
-            if arc == NEUTRAL:
-                editor.setCurrentIndex(2)
-            editor.addItem(IconRegistry.emotion_icon_from_feeling(HAPPY), '', HAPPY)
-            if arc == HAPPY:
-                editor.setCurrentIndex(3)
-            editor.addItem(IconRegistry.emotion_icon_from_feeling(VERY_HAPPY), '', VERY_HAPPY)
-            if arc == VERY_HAPPY:
-                editor.setCurrentIndex(4)
-
-            editor.activated.connect(lambda: self._commit_and_close(editor))
-            editor.showPopup()
 
     @overrides
     def setModelData(self, editor: QWidget, model: QAbstractItemModel, index: QModelIndex):
