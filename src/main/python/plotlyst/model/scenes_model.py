@@ -56,19 +56,21 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
 
     ColPov = 0
     ColTitle = 1
-    ColCharacters = 2
-    ColType = 3
-    ColTime = 4
-    ColArc = 5
-    ColSynopsis = 6
+    ColStorylines = 2
+    ColCharacters = 3
+    ColType = 4
+    ColTime = 5
+    ColArc = 6
+    ColSynopsis = 7
 
     def __init__(self, novel: Novel, parent=None):
         self.novel = novel
         self._data: List[Scene] = novel.scenes
-        _headers = [''] * 7
+        _headers = [''] * 8
         _headers[self.ColTitle] = 'Title'
         _headers[self.ColType] = 'Type'
         _headers[self.ColPov] = 'POV'
+        _headers[self.ColStorylines] = 'Storylines'
         _headers[self.ColCharacters] = 'Characters'
         _headers[self.ColTime] = 'Day'
         _headers[self.ColArc] = 'Arc'

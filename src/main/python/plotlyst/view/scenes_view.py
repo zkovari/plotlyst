@@ -708,6 +708,8 @@ class ScenesOutlineView(AbstractNovelView):
     def _default_columns(self) -> List[int]:
         default_columns = [ScenesTableModel.ColTitle, ScenesTableModel.ColPov]
 
+        if self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_STORYLINES):
+            default_columns.append(ScenesTableModel.ColStorylines)
         if self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_CHARACTERS):
             default_columns.append(ScenesTableModel.ColCharacters)
         if self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_PURPOSE):
