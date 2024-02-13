@@ -40,7 +40,7 @@ class CharactersTableModel(AbstractHorizontalHeaderBasedTableModel):
     ColSummary = 4
 
     def __init__(self, novel: Novel, parent=None):
-        self._data: List[Character] = novel.characters
+        self._novel = novel
         _headers = [''] * 5
         _headers[self.ColName] = 'Name'
         _headers[self.ColRole] = ''
@@ -51,11 +51,11 @@ class CharactersTableModel(AbstractHorizontalHeaderBasedTableModel):
 
     @overrides
     def rowCount(self, parent: QModelIndex = Qt.ItemDataRole.DisplayRole) -> int:
-        return len(self._data)
+        return len(self._novel.characters)
 
     @overrides
     def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
-        character: Character = self._data[index.row()]
+        character: Character = self._novel.characters[index.row()]
         if role == self.CharacterRole:
             return character
 
@@ -100,6 +100,8 @@ class CharactersSceneAssociationTableModel(CharactersTableModel):
 
     def setScene(self, scene: Scene):
         self.scene = scene
+        self.beginResetModel()
+        self.endResetModel()
 
     @overrides
     def columnCount(self, parent: QModelIndex = Qt.ItemDataRole.DisplayRole) -> int:
@@ -110,7 +112,7 @@ class CharactersSceneAssociationTableModel(CharactersTableModel):
         if not self.scene:
             return QVariant()
 
-        character: Character = self._data[index.row()]
+        character: Character = self._novel.characters[index.row()]
         if character is self.scene.pov:
             if role == Qt.ItemDataRole.ToolTipRole:
                 return 'POV character'
@@ -131,12 +133,12 @@ class CharactersSceneAssociationTableModel(CharactersTableModel):
         flags = super().flags(index)
         if not self.scene:
             return flags
-        if self._data[index.row()] is self.scene.pov:
+        if self._novel.characters[index.row()] is self.scene.pov:
             return Qt.ItemFlag.NoItemFlags
         return flags | Qt.ItemFlag.ItemIsUserCheckable
 
     def toggleSelection(self, index: QModelIndex):
-        character = self._data[index.row()]
+        character = self._novel.characters[index.row()]
         if character is self.scene.pov:
             return
         if character in self.scene.characters:
