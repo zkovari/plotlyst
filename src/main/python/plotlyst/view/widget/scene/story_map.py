@@ -334,9 +334,9 @@ class _ScenesLineWidget(QWidget):
         self.novel = novel
 
         if vertical:
-            vbox(self, margin=0)
+            vbox(self, margin=0, spacing=5)
         else:
-            hbox(self, margin=0)
+            hbox(self, margin=0, spacing=12)
 
         wdgEmpty = QWidget()
         wdgEmpty.setFixedSize(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT)
