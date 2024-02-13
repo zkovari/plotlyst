@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, QModelIndex, \
     QAbstractItemModel
-from PyQt6.QtGui import QPainter
+from PyQt6.QtGui import QPainter, QIcon
 from PyQt6.QtWidgets import QWidget, QStyledItemDelegate, \
     QStyleOptionViewItem, QTextEdit, QComboBox, QLineEdit, QSpinBox
 from overrides import overrides
@@ -29,11 +29,12 @@ from overrides import overrides
 from plotlyst.core.domain import Scene, Character
 from plotlyst.model.scenes_model import ScenesTableModel
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.icons import avatars
+from plotlyst.view.icons import avatars, IconRegistry
 
 
 class ScenesViewDelegate(QStyledItemDelegate):
     avatarSize: int = 24
+    iconSize: int = 20
     spacing: int = 3
 
     @overrides
@@ -49,11 +50,20 @@ class ScenesViewDelegate(QStyledItemDelegate):
                 if x + self.spacing + self.avatarSize >= option.rect.width():
                     return
         elif index.column() == ScenesTableModel.ColStorylines:
-            pass
+            scene: Scene = index.data(ScenesTableModel.SceneRole)
+            x = self.spacing
+            for plot in scene.plots():
+                self._drawIcon(painter, IconRegistry.from_name(plot.icon, plot.icon_color), option, x, self.iconSize)
+                x += self.spacing + self.iconSize
+                if x + self.spacing + self.iconSize >= option.rect.width():
+                    return
 
     def _drawAvatar(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', x: int, character: Character):
-        avatars.avatar(character).paint(painter, option.rect.x() + x, option.rect.y() + 8, self.avatarSize,
-                                        self.avatarSize)
+        self._drawIcon(painter, avatars.avatar(character), option, x, self.avatarSize)
+
+    def _drawIcon(self, painter: QtGui.QPainter, icon: QIcon, option: 'QStyleOptionViewItem', x: int, size: int):
+        icon.paint(painter, option.rect.x() + x, option.rect.y() + 8, size,
+                   size)
 
     @overrides
     def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
