@@ -134,9 +134,6 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.tblModel = ScenesTableModel(novel)
         self.tblModel.setDragEnabled(not self.novel.is_readonly())
-        self._default_columns = [ScenesTableModel.ColTitle, ScenesTableModel.ColPov, ScenesTableModel.ColType,
-                                 ScenesTableModel.ColCharacters,
-                                 ScenesTableModel.ColSynopsis]
         self._proxy = ScenesFilterProxyModel()
         self._proxy.setSourceModel(self.tblModel)
         self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
@@ -341,7 +338,7 @@ class ScenesOutlineView(AbstractNovelView):
     def _switch_view(self):
         height = 50
         relax_colors = False
-        columns = self._default_columns
+        columns = self._default_columns()
 
         if self.ui.btnStatusView.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageStages)
@@ -389,15 +386,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.tblSceneStages.clearSelection()
 
         self.tblModel.setRelaxColors(relax_colors)
-        for col in range(self.tblModel.columnCount()):
-            if col in columns:
-                if col == self.tblModel.ColPov:
-                    self.ui.tblScenes.setColumnHidden(self.tblModel.ColPov,
-                                                      not self.novel.prefs.toggled(NovelSetting.Track_pov))
-                else:
-                    self.ui.tblScenes.showColumn(col)
-                continue
-            self.ui.tblScenes.hideColumn(col)
+        self._toggle_table_columns(columns)
 
         self.ui.tblScenes.verticalHeader().setDefaultSectionSize(height)
 
@@ -699,7 +688,10 @@ class ScenesOutlineView(AbstractNovelView):
         self.novel.prefs.settings[setting.value] = toggled
         self.repo.update_novel(self.novel)
 
-        self.ui.cards.setSetting(setting, toggled)
+        if setting.scene_card_setting():
+            self.ui.cards.setSetting(setting, toggled)
+        elif setting.scene_table_setting():
+            self._toggle_table_columns(self._default_columns())
 
     def _scene_card_width_changed(self, width: int):
         self.novel.prefs.settings[NovelSetting.SCENE_CARD_WIDTH.value] = width
@@ -709,3 +701,26 @@ class ScenesOutlineView(AbstractNovelView):
 
     def _scene_card_ratio_changed(self, ratio: CardSizeRatio):
         self.ui.cards.setCardsSizeRatio(ratio)
+
+    def _default_columns(self) -> List[int]:
+        default_columns = [ScenesTableModel.ColTitle, ScenesTableModel.ColPov]
+
+        if self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_CHARACTERS):
+            default_columns.append(ScenesTableModel.ColCharacters)
+        if self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_PURPOSE):
+            default_columns.append(ScenesTableModel.ColType)
+
+        default_columns.append(ScenesTableModel.ColSynopsis)
+
+        return default_columns
+
+    def _toggle_table_columns(self, columns: List[int]):
+        for col in range(self.tblModel.columnCount()):
+            if col in columns:
+                if col == self.tblModel.ColPov:
+                    self.ui.tblScenes.setColumnHidden(self.tblModel.ColPov,
+                                                      not self.novel.prefs.toggled(NovelSetting.Track_pov))
+                else:
+                    self.ui.tblScenes.showColumn(col)
+                continue
+            self.ui.tblScenes.hideColumn(col)

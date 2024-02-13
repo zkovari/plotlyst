@@ -2870,6 +2870,12 @@ class NovelSetting(Enum):
     SCENE_TABLE_CHARACTERS = 'scene_table_characters'
     SCENE_TABLE_STORYLINES = 'scene_table_storylines'
 
+    def scene_card_setting(self) -> bool:
+        return self.name.startswith('SCENE_CARD')
+
+    def scene_table_setting(self) -> bool:
+        return self.name.startswith('SCENE_TABLE')
+
 
 @dataclass
 class NovelPreferences:
