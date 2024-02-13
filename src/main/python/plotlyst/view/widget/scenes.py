@@ -734,6 +734,7 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.btnStorylines.setIcon(IconRegistry.storylines_icon())
         self.btnStage.setIcon(IconRegistry.progress_check_icon())
 
+        self.btnTablePov.setIcon(IconRegistry.eye_open_icon())
         self.btnTableStorylines.setIcon(IconRegistry.storylines_icon())
         self.btnTableCharacters.setIcon(IconRegistry.character_icon())
         self.btnTablePurpose.setIcon(IconRegistry.from_name('fa5s.yin-yang'))
@@ -750,6 +751,7 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.cbPurpose.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_PURPOSE))
         self.cbStage.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_STAGE))
 
+        self.cbTablePov.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_POV))
         self.cbTableStorylines.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_STORYLINES))
         self.cbTableCharacters.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_CHARACTERS))
         self.cbTablePurpose.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_PURPOSE))
@@ -758,6 +760,7 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.cbPurpose.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_CARD_PURPOSE))
         self.cbStage.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_CARD_STAGE))
 
+        self.cbTablePov.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_TABLE_POV))
         self.cbTableStorylines.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_TABLE_STORYLINES))
         self.cbTableCharacters.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_TABLE_CHARACTERS))
         self.cbTablePurpose.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_TABLE_PURPOSE))

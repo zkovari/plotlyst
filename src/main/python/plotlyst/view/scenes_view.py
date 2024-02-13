@@ -706,8 +706,10 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.cards.setCardsSizeRatio(ratio)
 
     def _default_columns(self) -> List[int]:
-        default_columns = [ScenesTableModel.ColTitle, ScenesTableModel.ColPov]
+        default_columns = [ScenesTableModel.ColTitle]
 
+        if self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_POV):
+            default_columns.append(ScenesTableModel.ColPov)
         if self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_STORYLINES):
             default_columns.append(ScenesTableModel.ColStorylines)
         if self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_CHARACTERS):
