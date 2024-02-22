@@ -85,6 +85,11 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
         self._motion_action_icon = IconRegistry.action_scene_icon(motion=True)
         self._reaction_icon = IconRegistry.reaction_scene_icon()
 
+        self._character_insight_icon = IconRegistry.character_development_scene_icon()
+        self._emotion_icon = IconRegistry.emotion_scene_icon()
+        self._setup_icon = IconRegistry.setup_scene_icon()
+        self._exposition_icon = IconRegistry.exposition_scene_icon()
+
     def setDragEnabled(self, enabled: bool):
         self._dragEnabled = enabled
 
@@ -123,6 +128,14 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
                     return self._action_icon
                 elif scene.purpose == ScenePurposeType.Reaction:
                     return self._reaction_icon
+                elif scene.purpose == ScenePurposeType.Setup:
+                    return self._setup_icon
+                elif scene.purpose == ScenePurposeType.Emotion:
+                    return self._emotion_icon
+                elif scene.purpose == ScenePurposeType.Character:
+                    return self._character_insight_icon
+                elif scene.purpose == ScenePurposeType.Exposition:
+                    return self._exposition_icon
             elif index.column() == self.ColPov:
                 if scene.pov:
                     return avatars.avatar(scene.pov)
