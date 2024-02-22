@@ -160,7 +160,7 @@ class StorylinesConnectionWidget(QWidget):
 
     def _updateType(self):
         self._icon.setIcon(IconRegistry.from_name(self._link.type.icon()))
-        self._icon.setText(self._link.type.name)
+        self._icon.setText(self._link.type.display_name())
         self._icon.setToolTip(self._link.type.desc())
         self._text.setPlaceholderText(self._link.type.desc())
 

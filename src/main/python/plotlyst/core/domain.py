@@ -1048,6 +1048,14 @@ class StorylineLinkType(Enum):
     Resolve = auto()
     Compete = auto()
 
+    def display_name(self) -> str:
+        if self == StorylineLinkType.Reflect_char:
+            return 'Reflect character'
+        elif self == StorylineLinkType.Reflect_plot:
+            return 'Reflect plot'
+
+        return self.name
+
     def icon(self) -> str:
         if self == StorylineLinkType.Catalyst:
             return 'fa5s.vial'
