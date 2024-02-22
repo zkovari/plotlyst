@@ -216,6 +216,8 @@ class ImageCropDialog(QDialog, Ui_ImageCropDialog):
         else:
             w = pixmap.width()
             h = pixmap.height()
+        w = int(w)
+        h = int(h)
 
         self.frame.setFixedSize(min(w, h), min(w, h))
         self.scaled = pixmap.scaled(w, h, Qt.AspectRatioMode.KeepAspectRatio,
