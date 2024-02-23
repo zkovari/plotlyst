@@ -134,10 +134,12 @@ class Timer:
     def start(self):
         self._start = timer()
 
-    def end(self) -> float:
+    def end(self, suffix: str = '') -> float:
         end = timer()
         self._elapsed = end - self._start
-        print(f'{self._prefix}: {self._elapsed}')
+        if suffix:
+            suffix = f'[{suffix}]'
+        print(f'{self._prefix}: {self._elapsed} {suffix}')
 
         return self._elapsed
 
