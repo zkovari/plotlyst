@@ -41,7 +41,7 @@ from plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStru
     SceneSelectedEvent, SceneSelectionClearedEvent, ActiveSceneStageChanged, \
     ChapterChangedEvent, AvailableSceneStagesChanged, CharacterChangedEvent, CharacterDeletedEvent, \
     NovelAboutToSyncEvent, NovelSyncEvent, NovelStoryStructureActivationRequest, NovelPanelCustomizationEvent, \
-    NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelPovTrackingToggleEvent
+    NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelPovTrackingToggleEvent, SceneAddedEvent
 from plotlyst.events import SceneOrderChangedEvent
 from plotlyst.model.common import SelectionItemsModel
 from plotlyst.model.novel import NovelStagesModel
@@ -112,7 +112,7 @@ class ScenesOutlineView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
         super().__init__(novel,
-                         [NovelStoryStructureUpdated, CharacterChangedEvent, SceneChangedEvent, ChapterChangedEvent,
+                         [NovelStoryStructureUpdated, CharacterChangedEvent, SceneAddedEvent, SceneChangedEvent, ChapterChangedEvent,
                           SceneDeletedEvent,
                           SceneOrderChangedEvent, NovelAboutToSyncEvent, NovelStorylinesToggleEvent,
                           NovelStructureToggleEvent, NovelPovTrackingToggleEvent])
@@ -312,6 +312,7 @@ class ScenesOutlineView(AbstractNovelView):
 
         super(ScenesOutlineView, self).event_received(event)
 
+    @busy
     @overrides
     def refresh(self):
         self.tblModel.modelReset.emit()
