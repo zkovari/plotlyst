@@ -50,6 +50,7 @@ class BaseScenesTableModel:
 class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableModel):
     orderChanged = pyqtSignal()
     valueChanged = pyqtSignal(QModelIndex)
+    sceneChanged = pyqtSignal(Scene)
     SceneRole = Qt.ItemDataRole.UserRole + 1
 
     MimeType: str = 'application/scene'
@@ -183,6 +184,7 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
         else:
             return False
         self.valueChanged.emit(index)
+        self.sceneChanged.emit(scene)
         return True
 
     @overrides
