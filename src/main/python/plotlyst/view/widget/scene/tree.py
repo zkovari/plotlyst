@@ -35,7 +35,7 @@ from plotlyst.core.domain import Scene, Novel, Chapter, ChapterType
 from plotlyst.event.core import Event, EventListener, emit_event
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import SceneDeletedEvent, \
-    SceneChangedEvent
+    SceneChangedEvent, SceneAddedEvent
 from plotlyst.events import SceneOrderChangedEvent, ChapterChangedEvent
 from plotlyst.service.persistence import RepositoryPersistenceManager, delete_scene
 from plotlyst.view.common import action, insert_before_the_end
@@ -194,7 +194,7 @@ class ScenesTreeView(TreeView, EventListener):
     def setNovel(self, novel: Novel, readOnly: bool = False):
         self._novel = novel
         dispatcher = event_dispatchers.instance(self._novel)
-        dispatcher.register(self, SceneOrderChangedEvent, SceneDeletedEvent, SceneChangedEvent)
+        dispatcher.register(self, SceneOrderChangedEvent, SceneDeletedEvent, SceneAddedEvent, SceneChangedEvent)
         self._readOnly = readOnly
 
         self.refresh()
@@ -284,7 +284,7 @@ class ScenesTreeView(TreeView, EventListener):
         insert_before_the_end(self._centralWidget, wdg)
 
         self.repo.insert_scene(self._novel, scene)
-        emit_event(self._novel, SceneChangedEvent(self, scene), delay=10)
+        emit_event(self._novel, SceneAddedEvent(self, scene), delay=10)
         self.sceneAdded.emit(scene)
 
     def addPrologue(self):

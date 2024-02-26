@@ -42,6 +42,11 @@ class CharacterDeletedEvent(Event):
 
 
 @dataclass
+class SceneAddedEvent(Event):
+    scene: Scene
+
+
+@dataclass
 class SceneChangedEvent(Event):
     scene: Scene
 
