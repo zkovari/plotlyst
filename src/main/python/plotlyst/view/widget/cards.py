@@ -24,7 +24,7 @@ from typing import Optional, List, Dict, Iterable, Set, Any
 import qtanim
 from PyQt6 import QtGui
 from PyQt6.QtCore import pyqtSignal, QSize, Qt, QEvent, QPoint, QMimeData, QTimer
-from PyQt6.QtGui import QDragEnterEvent, QDragMoveEvent, QColor, QAction
+from PyQt6.QtGui import QDragEnterEvent, QDragMoveEvent, QColor, QAction, QIcon
 from PyQt6.QtWidgets import QFrame, QApplication, QToolButton
 from overrides import overrides
 from qthandy import clear_layout, retain_when_hidden, transparent, flow, translucent, gc
@@ -86,6 +86,12 @@ class Card(QFrame):
 
     def clearSelection(self):
         self._setStyleSheet()
+
+    def refresh(self):
+        pass
+
+    def quickRefresh(self):
+        pass
 
     @abstractmethod
     def mimeType(self) -> str:
@@ -174,41 +180,20 @@ class SceneCard(Ui_SceneCard, Card):
         self.wdgCharacters.layout().setSpacing(1)
 
         self.textTitle.setFontPointSize(QApplication.font().pointSize() + 1)
-        self.textTitle.setText(self.scene.title_or_index(self.novel))
-        self.textTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.textSynopsis.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.textSynopsis.setText(scene.synopsis)
 
         self.btnPov.clicked.connect(self.select)
         self.btnStage.clicked.connect(self.select)
-
-        if scene.pov:
-            self.btnPov.setIcon(avatars.avatar(scene.pov))
-        for char in scene.characters:
-            self.wdgCharacters.addLabel(CharacterAvatarLabel(char, 20))
 
         self.btnBeat = QToolButton(self)
         self.btnBeat.setIconSize(QSize(28, 28))
         transparent(self.btnBeat)
 
-        beat = self.scene.beat(self.novel)
-        if beat and beat.icon:
-            self.btnBeat.setIcon(IconRegistry.scene_beat_badge_icon(beat.icon, beat.icon_color, act_color(beat.act)))
-            self.btnBeat.setToolTip(beat.text)
-        else:
-            self.btnBeat.setHidden(True)
-
-        icon = IconRegistry.scene_type_icon(self.scene)
-        if icon:
-            self.lblType.setPixmap(icon.pixmap(QSize(24, 24)))
-        else:
-            self.lblType.clear()
         retain_when_hidden(self.lblType)
 
-        self.btnStage.setScene(self.scene, self.novel)
-
         self._setStyleSheet()
+        self.refresh()
 
         self._stageVisible = self.novel.prefs.toggled(NovelSetting.SCENE_CARD_STAGE)
         self.btnPov.setVisible(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_POV))
@@ -219,6 +204,41 @@ class SceneCard(Ui_SceneCard, Card):
     @overrides
     def mimeType(self) -> str:
         return 'application/scene-card'
+
+    @overrides
+    def refresh(self):
+        self.quickRefresh()
+        self.textSynopsis.setText(self.scene.synopsis)
+
+        if self.scene.pov:
+            self.btnPov.setIcon(avatars.avatar(self.scene.pov))
+        else:
+            self.btnPov.setIcon(QIcon())
+
+        clear_layout(self.wdgCharacters)
+        for char in self.scene.characters:
+            self.wdgCharacters.addLabel(CharacterAvatarLabel(char, 20))
+
+        beat = self.scene.beat(self.novel)
+        if beat and beat.icon:
+            self.btnBeat.setIcon(IconRegistry.scene_beat_badge_icon(beat.icon, beat.icon_color, act_color(beat.act)))
+            self.btnBeat.setToolTip(beat.text)
+            self.btnBeat.setVisible(True)
+        else:
+            self.btnBeat.setHidden(True)
+
+        icon = IconRegistry.scene_type_icon(self.scene)
+        if icon:
+            self.lblType.setPixmap(icon.pixmap(QSize(24, 24)))
+        else:
+            self.lblType.clear()
+
+        self.btnStage.setScene(self.scene, self.novel)
+
+    @overrides
+    def quickRefresh(self):
+        self.textTitle.setText(self.scene.title_or_index(self.novel))
+        self.textTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     @overrides
     def data(self) -> Any:
@@ -359,6 +379,37 @@ class CardsView(QFrame):
         self._initCardWidget(card)
         self._layout.addWidget(card)
 
+    def insertAfter(self, ref: Card, card: Card):
+        self._initCardWidget(card)
+        i = self._layout.indexOf(ref)
+        self._layout.insertWidget(i + 1, card)
+
+    def insertAt(self, index: int, card: Card):
+        self._initCardWidget(card)
+        self._layout.insertWidget(index, card)
+
+    def remove(self, obj: Any):
+        self._selected = None
+        card = self._cards.pop(obj)
+        if card:
+            card.setDisabled(True)
+            card.setVisible(False)
+            self._layout.removeWidget(card)
+            gc(card)
+
+        for card in self._cards.values():
+            card.quickRefresh()
+
+    def reorderCards(self, data: List[Any]):
+        self._selected = None
+        clear_layout(self._layout, auto_delete=False)
+
+        for obj in data:
+            card = self._cards.get(obj)
+            if card:
+                self._layout.addWidget(card)
+                card.quickRefresh()
+
     def selectCard(self, ref: Any):
         card = self._cards.get(ref, None)
         if card is not None:
@@ -368,6 +419,9 @@ class CardsView(QFrame):
         item = self._layout.itemAt(pos)
         if item and item.widget():
             return item.widget()
+
+    def card(self, item: Any) -> Optional[Card]:
+        return self._cards.get(item, None)
 
     def setCardsWidth(self, value: int):
         self._cardsWidth = value

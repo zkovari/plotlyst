@@ -112,12 +112,15 @@ class ScenesOutlineView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
         super().__init__(novel,
-                         [NovelStoryStructureUpdated, CharacterChangedEvent, SceneAddedEvent, SceneChangedEvent, ChapterChangedEvent,
+                         [NovelStoryStructureUpdated, CharacterChangedEvent, SceneAddedEvent, SceneChangedEvent,
+                          ChapterChangedEvent,
                           SceneDeletedEvent,
                           SceneOrderChangedEvent, NovelAboutToSyncEvent, NovelStorylinesToggleEvent,
                           NovelStructureToggleEvent, NovelPovTrackingToggleEvent])
         self.ui = Ui_ScenesView()
         self.ui.setupUi(self.widget)
+
+        self._scene_added: Optional[Scene] = None
 
         self.title = ScenesTitle(self.novel)
         self.ui.wdgTitleParent.layout().addWidget(self.title)
@@ -144,6 +147,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.tblScenes.verticalHeader().setFixedWidth(40)
         self.ui.tblScenes.verticalHeader().setVisible(True)
         self.tblModel.orderChanged.connect(self._on_scene_moved)
+        self.tblModel.sceneChanged.connect(self._on_scene_changed)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColTitle, 250)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColCharacters, 170)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColType, 55)
@@ -295,6 +299,20 @@ class ScenesOutlineView(AbstractNovelView):
     def event_received(self, event: Event):
         if isinstance(event, (CharacterChangedEvent, CharacterDeletedEvent)):
             self._scene_filter.povFilter.updateCharacters(self.novel.pov_characters(), checkAll=True)
+        elif isinstance(event, SceneChangedEvent):
+            self._handle_scene_changed(event.scene)
+            return
+        elif isinstance(event, SceneDeletedEvent):
+            self._handle_scene_deletion(event.scene)
+            return
+        elif isinstance(event, SceneAddedEvent):
+            i = self.novel.scenes.index(event.scene)
+            card = self.__init_card_widget(event.scene)
+            self.ui.cards.insertAt(i, card)
+            return
+        elif isinstance(event, SceneOrderChangedEvent):
+            self.ui.cards.reorderCards(self.novel.scenes)
+            return
         elif isinstance(event, NovelStoryStructureUpdated):
             if self.ui.btnStoryStructure.isChecked():
                 self.ui.btnStoryStructureSelector.setVisible(len(self.novel.story_structures) > 1)
@@ -446,6 +464,8 @@ class ScenesOutlineView(AbstractNovelView):
     def _switch_to_editor(self, scene: Scene):
         self.title.setHidden(True)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
+        if self._scene_added is not None:
+            self.editor.refresh()
         self.editor.set_scene(scene)
         self.editor.ui.lineTitle.setFocus()
 
@@ -456,13 +476,20 @@ class ScenesOutlineView(AbstractNovelView):
         self._scene_filter.povFilter.updateCharacters(self.novel.pov_characters(), checkAll=True)
 
         emit_event(self.novel, SceneChangedEvent(self, self.editor.scene))
-        self.refresh()
+        self._handle_scene_changed(self.editor.scene)
+        if self._scene_added is not None:
+            emit_event(self.novel, SceneAddedEvent(self, self._scene_added), delay=10)
+        self._scene_added = None
 
     @busy
     def _new_scene(self, _):
         scene = self.novel.new_scene()
         self.novel.scenes.append(scene)
         self.repo.insert_scene(self.novel, scene)
+
+        card = self.__init_card_widget(scene)
+        self.ui.cards.addCard(card)
+        self._scene_added = scene
         self._switch_to_editor(scene)
 
     def _show_card_menu(self, card: SceneCard, _: QPoint):
@@ -484,8 +511,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.cards.clear()
 
         for scene in self.novel.scenes:
-            card = SceneCard(scene, self.novel, self.ui.cards)
-            card.setDragEnabled(not self.novel.is_readonly())
+            card = self.__init_card_widget(scene)
             self.ui.cards.addCard(card)
 
         # restore scrollbar that might have moved
@@ -493,6 +519,11 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.scrollArea.verticalScrollBar().setValue(bar_value)
 
         self._filter_cards()
+
+    def __init_card_widget(self, scene: Scene) -> SceneCard:
+        card = SceneCard(scene, self.novel, self.ui.cards)
+        card.setDragEnabled(not self.novel.is_readonly())
+        return card
 
     def _filter_cards(self):
         self._card_filter.setActsFilter(
@@ -637,16 +668,19 @@ class ScenesOutlineView(AbstractNovelView):
     def _insert_scene_after(self, scene: Scene, chapter: Optional[Chapter] = None):
         new_scene = self.novel.insert_scene_after(scene, chapter)
         self.repo.insert_scene(self.novel, new_scene)
-        emit_event(self.novel, SceneChangedEvent(self, new_scene))
 
-        self.refresh()
+        ref_card = self.ui.cards.card(scene)
+        card = self.__init_card_widget(new_scene)
+        self.ui.cards.insertAfter(ref_card, card)
+
+        self._scene_added = new_scene
         self._switch_to_editor(new_scene)
 
     def _on_delete(self):
         scene: Optional[Scene] = self._selected_scene()
         if scene and delete_scene(self.novel, scene):
+            self._handle_scene_deletion(scene)
             emit_event(self.novel, SceneDeletedEvent(self, scene))
-            self.refresh()
 
         # elif not scene:
         #     chapters = self.ui.treeChapters.selectedChapters()
@@ -676,6 +710,19 @@ class ScenesOutlineView(AbstractNovelView):
     def _on_scene_moved(self):
         self.repo.update_novel(self.novel)
         self.refresh()
+
+    def _on_scene_changed(self, scene: Scene):
+        emit_event(self.novel, SceneChangedEvent(self, scene))
+        self._handle_scene_changed(scene)
+
+    def _handle_scene_changed(self, scene: Scene):
+        card = self.ui.cards.card(scene)
+        if card:
+            card.refresh()
+
+    def _handle_scene_deletion(self, scene: Scene):
+        self.selected_card = None
+        self.ui.cards.remove(scene)
 
     def _story_map_mode_clicked(self):
         if self.ui.btnStoryMapDisplay.isChecked():
