@@ -59,7 +59,7 @@ from plotlyst.view.widget.utility import ask_for_resource
 class ManuscriptView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        super().__init__(novel, [NovelUpdatedEvent, SceneChangedEvent, ChapterChangedEvent, SceneDeletedEvent])
+        super().__init__(novel, [NovelUpdatedEvent])
         self.ui = Ui_ManuscriptView()
         self.ui.setupUi(self.widget)
         self.ui.splitter.setSizes([150, 500])
