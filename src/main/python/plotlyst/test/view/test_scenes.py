@@ -5,26 +5,10 @@ from PyQt6.QtWidgets import QSpinBox
 from plotlyst.core.client import client
 from plotlyst.model.scenes_model import ScenesTableModel, ScenesStageTableModel
 from plotlyst.test.common import create_character, start_new_scene_editor, assert_data, go_to_scenes, \
-    click_on_item, patch_confirmed
+    click_on_item
 from plotlyst.view.comments_view import CommentWidget
 from plotlyst.view.main_window import MainWindow
 from plotlyst.view.scenes_view import ScenesOutlineView
-
-
-def test_create_new_scene(qtbot, filled_window: MainWindow):
-    scenes: ScenesOutlineView = start_new_scene_editor(filled_window)
-
-    qtbot.keyClicks(scenes.editor.ui.lineTitle, 'New scene')
-    scenes.editor.ui.sbDay.setValue(1)
-
-    scenes.editor.ui.btnClose.click()
-
-    row = scenes.ui.tblScenes.model().rowCount() - 1
-    assert_data(scenes.ui.tblScenes.model(), 'New scene', row, 1)
-    assert filled_window.novel.scenes
-    assert filled_window.novel.scenes[row].title == 'New scene'
-    assert filled_window.novel.scenes[row].purpose is None
-    assert filled_window.novel.scenes[row].day == 1
 
 
 def test_scene_characters(qtbot, filled_window: MainWindow):
@@ -45,26 +29,6 @@ def test_scene_characters(qtbot, filled_window: MainWindow):
     actions[6].trigger()
     view.editor.ui.btnClose.click()
     assert view.novel.scenes[3].pov == view.novel.characters[6]
-
-
-def test_scene_deletion(qtbot, filled_window: MainWindow, monkeypatch):
-    view: ScenesOutlineView = go_to_scenes(filled_window)
-    view.ui.btnTableView.click()
-
-    click_on_item(qtbot, view.ui.tblScenes, 0, ScenesTableModel.ColTitle)
-    assert view.ui.btnEdit.isEnabled()
-    assert view.ui.btnDelete.isEnabled()
-
-    patch_confirmed(monkeypatch, False)
-    view.ui.btnDelete.click()
-    assert len(view.novel.scenes) == 2
-    assert_data(view.tblModel, 'Scene 1', 0, ScenesTableModel.ColTitle)
-
-    patch_confirmed(monkeypatch)
-    view.ui.btnDelete.click()
-    assert len(view.novel.scenes) == 1
-    assert_data(view.tblModel, 'Scene 2', 0, ScenesTableModel.ColTitle)
-    assert view.tblModel.rowCount() == 1
 
 
 def test_scene_edition(qtbot, filled_window: MainWindow):

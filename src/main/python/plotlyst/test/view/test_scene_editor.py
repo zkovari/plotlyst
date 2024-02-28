@@ -19,6 +19,7 @@ def test_editor_with_new_scene(qtbot):
     view: SceneEditor = editor(qtbot, novel)
     scene = novel.new_scene()
     novel.scenes.append(scene)
+    view.refresh()
     view.set_scene(scene)
 
     assert view.ui.wdgPov.btnAvatar.text() == 'POV'
