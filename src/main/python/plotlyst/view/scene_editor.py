@@ -39,7 +39,7 @@ from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, Event, emit_event
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import NovelAboutToSyncEvent, SceneStoryBeatChangedEvent, \
-    NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelPovTrackingToggleEvent
+    NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelPovTrackingToggleEvent, SceneChangedEvent
 from plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
@@ -405,6 +405,7 @@ class SceneEditor(QObject, EventListener):
         #     self.repo.insert_scene(self.novel, self.scene)
         # else:
         self.repo.update_scene(self.scene)
+        emit_event(self.novel, SceneChangedEvent(self, self.scene))
 
         if not self.scene.document:
             self.scene.document = Document('', scene_id=self.scene.id)
