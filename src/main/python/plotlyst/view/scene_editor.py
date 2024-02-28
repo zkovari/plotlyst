@@ -195,7 +195,8 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgPov.setVisible(self.novel.prefs.toggled(NovelSetting.Track_pov))
 
         dispatcher = event_dispatchers.instance(self.novel)
-        dispatcher.register(self, NovelAboutToSyncEvent, NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelPovTrackingToggleEvent)
+        dispatcher.register(self, NovelAboutToSyncEvent, NovelStorylinesToggleEvent, NovelStructureToggleEvent,
+                            NovelPovTrackingToggleEvent)
 
     @overrides
     def event_received(self, event: Event):
@@ -210,9 +211,11 @@ class SceneEditor(QObject, EventListener):
         elif isinstance(event, NovelPovTrackingToggleEvent):
             self.ui.wdgPov.setVisible(event.toggled)
 
+    def refresh(self):
+        self.ui.treeScenes.refresh()
+
     def set_scene(self, scene: Scene):
         self.scene = scene
-        self.ui.treeScenes.refresh()
         self.ui.treeScenes.selectScene(self.scene)
 
         self._update_pov_avatar()
