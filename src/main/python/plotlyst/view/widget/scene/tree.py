@@ -24,6 +24,7 @@ from typing import List
 
 from PyQt6.QtCore import QMimeData, QPointF
 from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QShowEvent
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 from qthandy import gc, translucent, clear_layout, vbox, margins
@@ -167,6 +168,8 @@ class ScenesTreeView(TreeView, EventListener):
         self._readOnly = False
         self._settings = settings
 
+        self._refreshNeeded = False
+
         self._chapters: Dict[Chapter, ChapterWidget] = {}
         self._scenes: Dict[Scene, SceneWidget] = {}
         self._selectedScenes: Set[Scene] = set()
@@ -194,7 +197,8 @@ class ScenesTreeView(TreeView, EventListener):
     def setNovel(self, novel: Novel, readOnly: bool = False):
         self._novel = novel
         dispatcher = event_dispatchers.instance(self._novel)
-        dispatcher.register(self, SceneOrderChangedEvent, SceneDeletedEvent, SceneAddedEvent, SceneChangedEvent)
+        dispatcher.register(self, SceneOrderChangedEvent, ChapterChangedEvent, SceneDeletedEvent, SceneAddedEvent,
+                            SceneChangedEvent)
         self._readOnly = readOnly
 
         self.refresh()
@@ -205,7 +209,13 @@ class ScenesTreeView(TreeView, EventListener):
     def selectedChapters(self) -> List[Chapter]:
         return list(self._selectedChapters)
 
+    @overrides
+    def showEvent(self, _: QShowEvent) -> None:
+        if self._refreshNeeded:
+            self.refresh()
+
     def refresh(self):
+        self._refreshNeeded = False
         self.clearSelection()
         clear_layout(self._centralWidget, auto_delete=False)
 
@@ -328,8 +338,14 @@ class ScenesTreeView(TreeView, EventListener):
             wdg = self._scenes.get(event.scene)
             if wdg is not None:
                 wdg.refresh()
-        elif isinstance(event, SceneOrderChangedEvent):
+        elif isinstance(event, (SceneAddedEvent, SceneOrderChangedEvent, ChapterChangedEvent)):
+            self._tryRefresh()
+
+    def _tryRefresh(self):
+        if self.isVisible():
             self.refresh()
+        else:
+            self._refreshNeeded = True
 
     def _addScene(self, chapterWdg: ChapterWidget):
         scene = self._novel.new_scene()
@@ -340,6 +356,7 @@ class ScenesTreeView(TreeView, EventListener):
         sceneWdg = self.__initSceneWidget(scene)
         chapterWdg.addChild(sceneWdg)
 
+        emit_event(self._novel, SceneAddedEvent(self, scene), delay=10)
         self._reorderScenes()
         self.sceneAdded.emit(scene)
 
