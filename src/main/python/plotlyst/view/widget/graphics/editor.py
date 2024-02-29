@@ -211,8 +211,7 @@ class TextNoteEditorPopup(MenuWidget):
         self._textEdit.setFocus()
 
     def _textChanged(self):
-        self._frame.updateGeometry()
-        self.updateGeometry()
+        self.setFixedHeight(self._textEdit.height() + 5)
 
 
 class EventSelectorWidget(SecondarySelectorWidget):
