@@ -30,7 +30,7 @@ from qthandy import sp, incr_icon, vbox
 
 from plotlyst.core.domain import Diagram, DiagramNodeType, Character
 from plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButtonGroup, \
-    TooltipPositionEventFilter
+    TooltipPositionEventFilter, label
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.graphics import CharacterItem, ConnectorItem
 from plotlyst.view.widget.graphics.editor import ZoomBar, ConnectorToolbar
@@ -132,6 +132,10 @@ class NetworkGraphicsView(BaseGraphicsView):
         self._wdgZoomBar = ZoomBar(self)
         self._wdgZoomBar.zoomed.connect(self._scale)
 
+        self._helpLabel = label('Click on the canvas', italic=True, description=True, parent=self)
+        self._helpLabel.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self._helpLabel.setHidden(True)
+
         self._controlsNavBar = self._roundedFrame()
         sp(self._controlsNavBar).h_max()
         shadow(self._controlsNavBar)
@@ -186,6 +190,8 @@ class NetworkGraphicsView(BaseGraphicsView):
         return btn
 
     def _startAddition(self, itemType: DiagramNodeType, subType: str = ''):
+        self._helpLabel.setVisible(True)
+
         for btn in self._btnGroup.buttons():
             if not btn.isChecked():
                 btn.setDisabled(True)
@@ -198,6 +204,8 @@ class NetworkGraphicsView(BaseGraphicsView):
         self._hideItemToolbar()
 
     def _endAddition(self, itemType: Optional[DiagramNodeType] = None, item: Optional[NodeItem] = None):
+        self._helpLabel.setHidden(True)
+
         for btn in self._btnGroup.buttons():
             btn.setEnabled(True)
             if btn.isChecked():
@@ -220,6 +228,8 @@ class NetworkGraphicsView(BaseGraphicsView):
                                      self._wdgZoomBar.sizeHint().height())
         self._controlsNavBar.setGeometry(10, 100, self._controlsNavBar.sizeHint().width(),
                                          self._controlsNavBar.sizeHint().height())
+        self._helpLabel.setGeometry(10, 70, self._helpLabel.sizeHint().width(),
+                                    self._helpLabel.sizeHint().height())
 
     def _initScene(self):
         return NetworkScene()

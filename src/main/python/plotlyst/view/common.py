@@ -450,8 +450,8 @@ def frame(parent=None):
 
 def label(text: str = '', bold: Optional[bool] = None, italic: Optional[bool] = None, underline: Optional[bool] = None,
           description: Optional[bool] = None, wordWrap: Optional[bool] = None, h1: Optional[bool] = None,
-          h2: Optional[bool] = None, h3: Optional[bool] = None, h4: Optional[bool] = None, color=None) -> QLabel:
-    lbl = QLabel(text)
+          h2: Optional[bool] = None, h3: Optional[bool] = None, h4: Optional[bool] = None, color=None, parent=None) -> QLabel:
+    lbl = QLabel(text, parent)
     font = lbl.font()
     if bold:
         font.setBold(bold)
