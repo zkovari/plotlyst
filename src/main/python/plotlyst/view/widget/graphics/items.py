@@ -981,8 +981,8 @@ class NoteItem(NodeItem):
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
         if self.isSelected():
             painter.setPen(QPen(Qt.GlobalColor.gray, 2, Qt.PenStyle.DashLine))
-            painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth + 2*self.Padding,
-                                    self._nestedRectHeight + 2*self.Padding, 2, 2)
+            painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth + 2 * self.Padding,
+                                    self._nestedRectHeight + 2 * self.Padding, 2, 2)
         painter.setPen(QPen(QColor(self._node.color), 1))
         painter.setBrush(QColor(WHITE_COLOR))
         painter.drawRoundedRect(self.Margin + self.Padding, self.Margin + self.Padding, self._nestedRectWidth,
