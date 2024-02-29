@@ -958,3 +958,24 @@ class EventItem(NodeItem):
                                       self._height - self.Margin + socketPadding)
         self._socketBottomRight.setPos(self._nestedRectWidth + socketRad, self._height - self.Margin + socketPadding)
         self._socketLeft.setPos(socketPadding, self._height / 2 - socketRad)
+
+
+class NoteItem(NodeItem):
+    Margin: int = 20
+
+    def __init__(self, node: Node, parent=None):
+        super().__init__(node, parent)
+
+    @overrides
+    def socket(self, angle: float) -> AbstractSocketItem:
+        pass
+
+    @overrides
+    def boundingRect(self) -> QRectF:
+        return QRectF(0, 0, 100, 100)
+
+    @overrides
+    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+        painter.setPen(QPen(QColor(self._node.color), 1))
+        painter.setBrush(QColor(WHITE_COLOR))
+        painter.drawRoundedRect(self.Margin, self.Margin, 50, 50, 6, 6)

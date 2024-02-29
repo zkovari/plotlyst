@@ -74,6 +74,8 @@ class EventsMindMapView(NetworkGraphicsView):
         super().__init__(parent)
         self._btnAddEvent = self._newControlButton(
             IconRegistry.from_name('mdi6.shape-square-rounded-plus'), 'Add new event', DiagramNodeType.EVENT)
+        self._btnAddNote = self._newControlButton(
+            IconRegistry.from_name('msc.note'), 'Add new note', DiagramNodeType.NOTE)
         self._btnAddCharacter = self._newControlButton(
             IconRegistry.character_icon('#040406'), 'Add new character', DiagramNodeType.CHARACTER)
         self._btnAddSticker = self._newControlButton(IconRegistry.from_name('mdi6.sticker-circle-outline'),

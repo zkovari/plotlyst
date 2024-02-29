@@ -2689,6 +2689,7 @@ class DiagramNodeType(Enum):
     EVENT = 'event'
     COMMENT = 'comment'
     SETUP = 'setup'
+    NOTE = 'note'
 
     def mimeType(self) -> str:
         return f'application/node-{self.value}'
