@@ -34,6 +34,7 @@ from qthandy import pointy
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR, \
     WHITE_COLOR
 from plotlyst.core.domain import Node, Relation, Connector, Character, DiagramNodeType, to_node
+from plotlyst.view.common import shadow
 from plotlyst.view.icons import IconRegistry, avatars
 
 
@@ -963,11 +964,23 @@ class EventItem(NodeItem):
 class NoteItem(NodeItem):
     Margin: int = 20
     Padding: int = 2
+    TextPadding: int = 20
 
     def __init__(self, node: Node, parent=None):
         super().__init__(node, parent)
-        self._nestedRectWidth = 50
-        self._nestedRectHeight = 50
+        self._font = QApplication.font()
+        self._metrics = QFontMetrics(self._font)
+        self._nestedRectWidth = 200
+        self._nestedRectHeight = 70
+        self._width = self._nestedRectWidth + 2 * self.Padding + 2 * self.Margin
+        self._height = self._nestedRectHeight + 2 * self.Padding + 2 * self.Margin
+        self._textRect: QRect = QRect(self.Margin + self.Padding + self.TextPadding,
+                                      self.Margin + self.Padding + self.TextPadding,
+                                      self._nestedRectWidth - 2 * self.TextPadding,
+                                      self._nestedRectHeight - 2 * self.TextPadding)
+        self._text = ''
+        self._placeholderText = 'Begin typing'
+        shadow(self)
 
     @overrides
     def socket(self, angle: float) -> AbstractSocketItem:
@@ -975,7 +988,7 @@ class NoteItem(NodeItem):
 
     @overrides
     def boundingRect(self) -> QRectF:
-        return QRectF(0, 0, 100, 100)
+        return QRectF(0, 0, self._width, self._height)
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
@@ -983,7 +996,16 @@ class NoteItem(NodeItem):
             painter.setPen(QPen(Qt.GlobalColor.gray, 2, Qt.PenStyle.DashLine))
             painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth + 2 * self.Padding,
                                     self._nestedRectHeight + 2 * self.Padding, 2, 2)
-        painter.setPen(QPen(QColor(self._node.color), 1))
+
+        painter.setPen(QPen(QColor('lightgrey'), 1))
         painter.setBrush(QColor(WHITE_COLOR))
         painter.drawRoundedRect(self.Margin + self.Padding, self.Margin + self.Padding, self._nestedRectWidth,
                                 self._nestedRectHeight, 6, 6)
+
+        if self._text:
+            painter.setPen(QPen(QColor(self._node.color), 1))
+        else:
+            painter.setPen(QPen(QColor('grey'), 1))
+        painter.setFont(self._font)
+        painter.drawText(self._textRect, Qt.AlignmentFlag.AlignLeft,
+                         self._text if self._text else self._placeholderText)
