@@ -1009,3 +1009,7 @@ class NoteItem(NodeItem):
         painter.setFont(self._font)
         painter.drawText(self._textRect, Qt.AlignmentFlag.AlignLeft,
                          self._text if self._text else self._placeholderText)
+
+    @overrides
+    def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        self.networkScene().editItemEvent(self)

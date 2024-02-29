@@ -37,6 +37,7 @@ from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, Eve
     NodeItem
 from plotlyst.view.widget.graphics.editor import EventSelectorWidget, TextLineEditorPopup, \
     EventItemToolbar, ConnectorToolbar, SecondarySelectorWidget
+from plotlyst.view.widget.graphics.items import NoteItem
 
 
 class EventsMindMapScene(NetworkScene):
@@ -51,7 +52,7 @@ class EventsMindMapScene(NetworkScene):
         super().keyPressEvent(event)
         if not event.modifiers() and not event.key() == Qt.Key.Key_Escape and len(self.selectedItems()) == 1:
             item = self.selectedItems()[0]
-            if isinstance(item, EventItem):
+            if isinstance(item, (EventItem, NoteItem)):
                 self.editItem.emit(item)
 
     @overrides
@@ -164,6 +165,10 @@ class EventsMindMapView(NetworkGraphicsView):
         popup.exec(self.mapToGlobal(view_pos))
 
         popup.aboutToHide.connect(lambda: setText(popup.text()))
+
+    @overrides
+    def _editNoteItem(self, item: NoteItem):
+        print('edit note')
 
     @overrides
     def _showEventItemToolbar(self, item: EventItem):

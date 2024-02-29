@@ -35,7 +35,7 @@ from plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButto
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.graphics import CharacterItem, ConnectorItem
 from plotlyst.view.widget.graphics.editor import ZoomBar, ConnectorToolbar
-from plotlyst.view.widget.graphics.items import NodeItem, EventItem
+from plotlyst.view.widget.graphics.items import NodeItem, EventItem, NoteItem
 from plotlyst.view.widget.graphics.scene import NetworkScene
 
 
@@ -252,6 +252,8 @@ class NetworkGraphicsView(BaseGraphicsView):
             self._editCharacterItem(item)
         elif isinstance(item, EventItem):
             self._editEventItem(item)
+        elif isinstance(item, NoteItem):
+            self._editNoteItem(item)
 
     def _showItemToolbar(self, item: NodeItem):
         if isinstance(item, ConnectorItem):
@@ -271,6 +273,9 @@ class NetworkGraphicsView(BaseGraphicsView):
         popup.exec(self.mapToGlobal(view_pos))
 
     def _editEventItem(self, item: EventItem):
+        pass
+
+    def _editNoteItem(self, item: NoteItem):
         pass
 
     def _showConnectorToolbar(self, item: ConnectorItem):
