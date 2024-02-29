@@ -26,7 +26,8 @@ import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QPointF, QPoint, QObject
 from PyQt6.QtGui import QTransform, \
     QKeyEvent, QKeySequence, QCursor
-from PyQt6.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QApplication
+from PyQt6.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QApplication, \
+    QGraphicsSceneDragDropEvent
 from overrides import overrides
 
 from plotlyst.core.domain import Node, Diagram, DiagramNodeType, Connector, PlaceholderCharacter, \
@@ -202,6 +203,22 @@ class NetworkScene(QGraphicsScene):
             pos = self._cursorScenePos()
             if pos:
                 self._addNewItem(pos, DiagramNodeType.EVENT)
+
+    @overrides
+    def dragEnterEvent(self, event: QGraphicsSceneDragDropEvent) -> None:
+        if event.mimeData().formats()[0].startswith('application/node'):
+            event.accept()
+        else:
+            event.ignore()
+
+    @overrides
+    def dragMoveEvent(self, event: QGraphicsSceneDragDropEvent) -> None:
+        event.accept()
+
+    @overrides
+    def dropEvent(self, event: QGraphicsSceneDragDropEvent) -> None:
+        self._addNewItem(event.scenePos(), event.mimeData().reference())
+        event.accept()
 
     def itemChangedEvent(self, item: NodeItem):
         self.itemMoved.emit(item)

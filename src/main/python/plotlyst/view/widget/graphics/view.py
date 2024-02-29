@@ -27,6 +27,7 @@ from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QFrame, \
     QToolButton, QApplication, QWidget
 from overrides import overrides
 from qthandy import sp, incr_icon, vbox
+from qthandy.filter import DragEventFilter
 
 from plotlyst.core.domain import Diagram, DiagramNodeType, Character
 from plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButtonGroup, \
@@ -179,6 +180,7 @@ class NetworkGraphicsView(BaseGraphicsView):
                        True, icon_resize=False,
                        properties=['transparent-rounded-bg-on-hover', 'top-selector'],
                        parent=self._controlsNavBar)
+        btn.installEventFilter(DragEventFilter(btn, itemType.mimeType(), lambda x: itemType))
 
         btn.installEventFilter(TooltipPositionEventFilter(btn))
         incr_icon(btn, 2)

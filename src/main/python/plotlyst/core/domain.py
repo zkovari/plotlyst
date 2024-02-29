@@ -2690,6 +2690,9 @@ class DiagramNodeType(Enum):
     COMMENT = 'comment'
     SETUP = 'setup'
 
+    def mimeType(self) -> str:
+        return f'application/node-{self.value}'
+
 
 NODE_SUBTYPE_GOAL = 'goal'
 NODE_SUBTYPE_CONFLICT = 'conflict'
