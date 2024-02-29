@@ -332,6 +332,8 @@ class NetworkScene(QGraphicsScene):
             if character is None:
                 character = PlaceholderCharacter('Character')
             item = CharacterItem(character, node)
+        elif node.type == DiagramNodeType.NOTE:
+            item = NoteItem(node)
         else:
             item = EventItem(node)
 
