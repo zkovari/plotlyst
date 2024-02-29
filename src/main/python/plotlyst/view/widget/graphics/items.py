@@ -962,9 +962,12 @@ class EventItem(NodeItem):
 
 class NoteItem(NodeItem):
     Margin: int = 20
+    Padding: int = 2
 
     def __init__(self, node: Node, parent=None):
         super().__init__(node, parent)
+        self._nestedRectWidth = 50
+        self._nestedRectHeight = 50
 
     @overrides
     def socket(self, angle: float) -> AbstractSocketItem:
@@ -976,6 +979,11 @@ class NoteItem(NodeItem):
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+        if self.isSelected():
+            painter.setPen(QPen(Qt.GlobalColor.gray, 2, Qt.PenStyle.DashLine))
+            painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth + 2*self.Padding,
+                                    self._nestedRectHeight + 2*self.Padding, 2, 2)
         painter.setPen(QPen(QColor(self._node.color), 1))
         painter.setBrush(QColor(WHITE_COLOR))
-        painter.drawRoundedRect(self.Margin, self.Margin, 50, 50, 6, 6)
+        painter.drawRoundedRect(self.Margin + self.Padding, self.Margin + self.Padding, self._nestedRectWidth,
+                                self._nestedRectHeight, 6, 6)
