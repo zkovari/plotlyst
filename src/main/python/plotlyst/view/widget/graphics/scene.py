@@ -204,6 +204,8 @@ class NetworkScene(QGraphicsScene):
             pos = self._cursorScenePos()
             if pos:
                 self._addNewItem(pos, DiagramNodeType.EVENT)
+        else:
+            super().mouseDoubleClickEvent(event)
 
     @overrides
     def dragEnterEvent(self, event: QGraphicsSceneDragDropEvent) -> None:
