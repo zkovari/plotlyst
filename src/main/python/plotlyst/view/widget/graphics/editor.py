@@ -40,7 +40,7 @@ from plotlyst.view.dialog.utility import IconSelectorDialog
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.graphics.items import EventItem, ConnectorItem
-from plotlyst.view.widget.input import FontSizeSpinBox, AutoAdjustableLineEdit
+from plotlyst.view.widget.input import FontSizeSpinBox, AutoAdjustableLineEdit, AutoAdjustableTextEdit
 from plotlyst.view.widget.utility import ColorPicker
 
 
@@ -182,6 +182,37 @@ class TextLineEditorPopup(MenuWidget):
 
     def text(self) -> str:
         return self._lineEdit.text()
+
+
+class TextNoteEditorPopup(MenuWidget):
+
+    def __init__(self, text: str, rect: QRect, parent=None, placeholder: str = 'Begin typing'):
+        super().__init__(parent)
+        transparent(self)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+
+        self._textEdit = AutoAdjustableTextEdit()
+        self._textEdit.setFixedWidth(rect.width())
+        self._textEdit.setPlaceholderText(placeholder)
+        # self._textEdit.setText(text)
+        self._textEdit.textChanged.connect(self._textChanged)
+        self._textEdit.setHtml('<html>Test<p>asd')
+
+        self.addWidget(self._textEdit)
+        sp(self).v_fixed()
+        sp(self._frame).v_fixed()
+
+    @overrides
+    def setFont(self, font: QFont):
+        self._textEdit.setFont(font)
+
+    @overrides
+    def showEvent(self, QShowEvent):
+        self._textEdit.setFocus()
+
+    def _textChanged(self):
+        self._frame.updateGeometry()
+        self.updateGeometry()
 
 
 class EventSelectorWidget(SecondarySelectorWidget):

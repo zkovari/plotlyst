@@ -982,6 +982,9 @@ class NoteItem(NodeItem):
         self._placeholderText = 'Begin typing'
         shadow(self)
 
+    def text(self) -> str:
+        return self._text
+
     @overrides
     def socket(self, angle: float) -> AbstractSocketItem:
         pass
@@ -989,6 +992,12 @@ class NoteItem(NodeItem):
     @overrides
     def boundingRect(self) -> QRectF:
         return QRectF(0, 0, self._width, self._height)
+
+    def textRect(self) -> QRect:
+        return self._textRect
+
+    def textSceneRect(self) -> QRectF:
+        return self.mapRectToScene(self._textRect.toRectF())
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:

@@ -36,7 +36,7 @@ from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, EventItem, \
     NodeItem
 from plotlyst.view.widget.graphics.editor import EventSelectorWidget, TextLineEditorPopup, \
-    EventItemToolbar, ConnectorToolbar, SecondarySelectorWidget
+    EventItemToolbar, ConnectorToolbar, SecondarySelectorWidget, TextNoteEditorPopup
 from plotlyst.view.widget.graphics.items import NoteItem
 
 
@@ -168,7 +168,12 @@ class EventsMindMapView(NetworkGraphicsView):
 
     @overrides
     def _editNoteItem(self, item: NoteItem):
-        print('edit note')
+        popup = TextNoteEditorPopup(item.text(), item.textRect(), parent=self)
+        font = QApplication.font()
+        popup.setFont(font)
+
+        view_pos = self.mapFromScene(item.textSceneRect().topLeft())
+        popup.exec(self.mapToGlobal(view_pos))
 
     @overrides
     def _showEventItemToolbar(self, item: EventItem):
