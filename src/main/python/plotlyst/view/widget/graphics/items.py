@@ -969,21 +969,29 @@ class NoteItem(NodeItem):
     def __init__(self, node: Node, parent=None):
         super().__init__(node, parent)
         self._font = QApplication.font()
-        self._metrics = QFontMetrics(self._font)
+        self._textRect: QRect = QRect(self.Margin + self.Padding + self.TextPadding,
+                                      self.Margin + self.Padding + self.TextPadding,
+                                      140, node.height if node.height else 30,
+                                      )
         self._nestedRectWidth = 200
         self._nestedRectHeight = 70
         self._width = self._nestedRectWidth + 2 * self.Padding + 2 * self.Margin
         self._height = self._nestedRectHeight + 2 * self.Padding + 2 * self.Margin
-        self._textRect: QRect = QRect(self.Margin + self.Padding + self.TextPadding,
-                                      self.Margin + self.Padding + self.TextPadding,
-                                      self._nestedRectWidth - 2 * self.TextPadding,
-                                      self._nestedRectHeight - 2 * self.TextPadding)
-        self._text = ''
         self._placeholderText = 'Begin typing'
+
+        self._recalculateRect()
         shadow(self)
 
     def text(self) -> str:
-        return self._text
+        return self._node.text
+
+    def setText(self, text: str, height: int):
+        self._node.text = text
+        self._textRect.setHeight(height)
+        self._node.height = height
+
+        self.networkScene().nodeChangedEvent(self._node)
+        self._refresh()
 
     @overrides
     def socket(self, angle: float) -> AbstractSocketItem:
@@ -1011,14 +1019,26 @@ class NoteItem(NodeItem):
         painter.drawRoundedRect(self.Margin + self.Padding, self.Margin + self.Padding, self._nestedRectWidth,
                                 self._nestedRectHeight, 6, 6)
 
-        if self._text:
+        if self._node.text:
             painter.setPen(QPen(QColor(self._node.color), 1))
         else:
             painter.setPen(QPen(QColor('grey'), 1))
         painter.setFont(self._font)
-        painter.drawText(self._textRect, Qt.AlignmentFlag.AlignLeft,
-                         self._text if self._text else self._placeholderText)
+        painter.drawText(self._textRect, Qt.AlignmentFlag.AlignLeft | Qt.TextFlag.TextWordWrap,
+                         self._node.text if self._node.text else self._placeholderText)
 
     @overrides
     def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         self.networkScene().editItemEvent(self)
+
+    def _refresh(self):
+        self._recalculateRect()
+        self.prepareGeometryChange()
+        self.update()
+        self.rearrangeConnectors()
+
+    def _recalculateRect(self):
+        self._nestedRectWidth = self._textRect.width() + 2 * self.TextPadding
+        self._nestedRectHeight = self._textRect.height() + 2 * self.TextPadding
+        self._width = self._nestedRectWidth + 2 * self.Padding + 2 * self.Margin
+        self._height = self._nestedRectHeight + 2 * self.Padding + 2 * self.Margin

@@ -162,17 +162,18 @@ class EventsMindMapView(NetworkGraphicsView):
         font.setPointSize(max(int(item.fontSize() * self._scaledFactor), font.pointSize()))
         popup.setFont(font)
         view_pos = self.mapFromScene(item.textSceneRect().topLeft())
-        popup.exec(self.mapToGlobal(view_pos))
-
         popup.aboutToHide.connect(lambda: setText(popup.text()))
+
+        popup.exec(self.mapToGlobal(view_pos))
 
     @overrides
     def _editNoteItem(self, item: NoteItem):
-        popup = TextNoteEditorPopup(item.text(), item.textRect(), parent=self)
+        popup = TextNoteEditorPopup(item, parent=self)
         font = QApplication.font()
         popup.setFont(font)
 
         view_pos = self.mapFromScene(item.textSceneRect().topLeft())
+
         popup.exec(self.mapToGlobal(view_pos))
 
     @overrides
