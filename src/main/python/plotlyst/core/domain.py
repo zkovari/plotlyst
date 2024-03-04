@@ -2689,6 +2689,7 @@ class DiagramNodeType(Enum):
     EVENT = 'event'
     COMMENT = 'comment'
     SETUP = 'setup'
+    NOTE = 'note'
 
     def mimeType(self) -> str:
         return f'application/node-{self.value}'
@@ -2720,6 +2721,8 @@ class Node(CharacterBased):
     bold: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     italic: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     underline: bool = field(default=False, metadata=config(exclude=exclude_if_false))
+    width: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    height: int = field(default=0, metadata=config(exclude=exclude_if_empty))
 
     def __post_init__(self):
         self._character: Optional[Character] = None

@@ -36,7 +36,8 @@ from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, EventItem, \
     NodeItem
 from plotlyst.view.widget.graphics.editor import EventSelectorWidget, TextLineEditorPopup, \
-    EventItemToolbar, ConnectorToolbar, SecondarySelectorWidget
+    EventItemToolbar, ConnectorToolbar, SecondarySelectorWidget, TextNoteEditorPopup
+from plotlyst.view.widget.graphics.items import NoteItem
 
 
 class EventsMindMapScene(NetworkScene):
@@ -51,7 +52,7 @@ class EventsMindMapScene(NetworkScene):
         super().keyPressEvent(event)
         if not event.modifiers() and not event.key() == Qt.Key.Key_Escape and len(self.selectedItems()) == 1:
             item = self.selectedItems()[0]
-            if isinstance(item, EventItem):
+            if isinstance(item, (EventItem, NoteItem)):
                 self.editItem.emit(item)
 
     @overrides
@@ -74,6 +75,8 @@ class EventsMindMapView(NetworkGraphicsView):
         super().__init__(parent)
         self._btnAddEvent = self._newControlButton(
             IconRegistry.from_name('mdi6.shape-square-rounded-plus'), 'Add new event', DiagramNodeType.EVENT)
+        self._btnAddNote = self._newControlButton(
+            IconRegistry.from_name('msc.note'), 'Add new note', DiagramNodeType.NOTE)
         self._btnAddCharacter = self._newControlButton(
             IconRegistry.character_icon('#040406'), 'Add new character', DiagramNodeType.CHARACTER)
         self._btnAddSticker = self._newControlButton(IconRegistry.from_name('mdi6.sticker-circle-outline'),
@@ -159,9 +162,19 @@ class EventsMindMapView(NetworkGraphicsView):
         font.setPointSize(max(int(item.fontSize() * self._scaledFactor), font.pointSize()))
         popup.setFont(font)
         view_pos = self.mapFromScene(item.textSceneRect().topLeft())
+        popup.aboutToHide.connect(lambda: setText(popup.text()))
+
         popup.exec(self.mapToGlobal(view_pos))
 
-        popup.aboutToHide.connect(lambda: setText(popup.text()))
+    @overrides
+    def _editNoteItem(self, item: NoteItem):
+        popup = TextNoteEditorPopup(item, parent=self)
+        font = QApplication.font()
+        popup.setFont(font)
+
+        view_pos = self.mapFromScene(item.textSceneRect().topLeft())
+
+        popup.exec(self.mapToGlobal(view_pos), animated=False)
 
     @overrides
     def _showEventItemToolbar(self, item: EventItem):

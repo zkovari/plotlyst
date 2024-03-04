@@ -34,6 +34,7 @@ from qthandy import pointy
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR, \
     WHITE_COLOR
 from plotlyst.core.domain import Node, Relation, Connector, Character, DiagramNodeType, to_node
+from plotlyst.view.common import shadow
 from plotlyst.view.icons import IconRegistry, avatars
 
 
@@ -66,6 +67,39 @@ def alt_modifier(event: QGraphicsSceneHoverEvent) -> bool:
     return event.modifiers() & Qt.KeyboardModifier.AltModifier
 
 
+class ResizeIconItem(QAbstractGraphicsShapeItem):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._size: int = 32
+        self._icon = IconRegistry.from_name('mdi.resize-bottom-right', 'grey')
+        self._activated = False
+
+        self.setCursor(Qt.CursorShape.SizeFDiagCursor)
+        self.setFlag(
+            QGraphicsItem.GraphicsItemFlag.ItemIsMovable |
+            QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
+
+    @overrides
+    def boundingRect(self) -> QRectF:
+        return QRectF(0, 0, self._size, self._size)
+
+    @overrides
+    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+        self._icon.paint(painter, 3, 3, self._size - 5, self._size - 5)
+
+    @overrides
+    def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
+        if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged and self._activated:
+            self.parentItem().rearrangeSize(value)
+        return super().itemChange(change, value)
+
+    def activate(self):
+        self._activated = True
+
+    def deactivate(self):
+        self._activated = False
+
+
 class IconBadge(QAbstractGraphicsShapeItem):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -85,8 +119,6 @@ class IconBadge(QAbstractGraphicsShapeItem):
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-
         painter.setPen(QPen(self._color, 2))
         painter.setBrush(QColor(RELAXED_WHITE_COLOR))
         painter.drawEllipse(0, 0, self._size, self._size)
@@ -958,3 +990,136 @@ class EventItem(NodeItem):
                                       self._height - self.Margin + socketPadding)
         self._socketBottomRight.setPos(self._nestedRectWidth + socketRad, self._height - self.Margin + socketPadding)
         self._socketLeft.setPos(socketPadding, self._height / 2 - socketRad)
+
+
+class NoteItem(NodeItem):
+    Margin: int = 20
+    Padding: int = 2
+    TextPadding: int = 20
+
+    def __init__(self, node: Node, parent=None):
+        super().__init__(node, parent)
+        self._font = QApplication.font()
+        self._textRect: QRect = QRect(self.Margin + self.Padding + self.TextPadding,
+                                      self.Margin + self.Padding + self.TextPadding,
+                                      node.width if node.width else 140, node.height if node.height else 30,
+                                      )
+        self._nestedRectWidth = 200
+        self._nestedRectHeight = 70
+        self._width = self._nestedRectWidth + 2 * self.Padding + 2 * self.Margin
+        self._height = self._nestedRectHeight + 2 * self.Padding + 2 * self.Margin
+        self._placeholderText = 'Begin typing'
+
+        self._socketLeft = DotCircleSocketItem(180, parent=self)
+        self._socketTopCenter = DotCircleSocketItem(90, parent=self)
+        self._socketRight = DotCircleSocketItem(0, parent=self)
+        self._socketBottomCenter = DotCircleSocketItem(-90, parent=self)
+        self._sockets.extend([self._socketLeft, self._socketTopCenter, self._socketRight, self._socketBottomCenter])
+        self._setSocketsVisible(False)
+
+        self._resizeItem = ResizeIconItem(self)
+
+        self._recalculateRect()
+        shadow(self)
+
+    def text(self) -> str:
+        return self._node.text
+
+    def setText(self, text: str, height: int):
+        self._node.text = text
+        self._textRect.setHeight(height)
+        self._node.height = height
+
+        self.networkScene().nodeChangedEvent(self._node)
+        self._refresh()
+
+    @overrides
+    def socket(self, angle: float) -> AbstractSocketItem:
+        if angle == 0:
+            return self._socketRight
+        elif angle == 90:
+            return self._socketTopCenter
+        elif angle == 180:
+            return self._socketLeft
+        elif angle == -90:
+            return self._socketBottomCenter
+
+    @overrides
+    def boundingRect(self) -> QRectF:
+        return QRectF(0, 0, self._width, self._height)
+
+    def textRect(self) -> QRect:
+        return self._textRect
+
+    def textSceneRect(self) -> QRectF:
+        return self.mapRectToScene(self._textRect.toRectF())
+
+    def rearrangeSize(self, pos: QPointF):
+        height = int(pos.y()) - self.TextPadding
+        width = int(pos.x()) - self.TextPadding
+        self._textRect.setWidth(width)
+        self._textRect.setHeight(height)
+
+        self._node.height = height
+        self._node.width = width
+        self.networkScene().nodeChangedEvent(self._node)
+        self._refresh()
+
+    @overrides
+    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+        if self.isSelected():
+            painter.setPen(QPen(Qt.GlobalColor.gray, 2, Qt.PenStyle.DashLine))
+            painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth + 2 * self.Padding,
+                                    self._nestedRectHeight + 2 * self.Padding, 2, 2)
+
+        painter.setPen(QPen(QColor('lightgrey'), 1))
+        painter.setBrush(QColor(WHITE_COLOR))
+        painter.drawRoundedRect(self.Margin + self.Padding, self.Margin + self.Padding, self._nestedRectWidth,
+                                self._nestedRectHeight, 6, 6)
+
+        if self._node.text:
+            painter.setPen(QPen(QColor(self._node.color), 1))
+        else:
+            painter.setPen(QPen(QColor('grey'), 1))
+        painter.setFont(self._font)
+        painter.drawText(self._textRect, Qt.AlignmentFlag.AlignLeft | Qt.TextFlag.TextWordWrap,
+                         self._node.text if self._node.text else self._placeholderText)
+
+    @overrides
+    def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        self.networkScene().editItemEvent(self)
+
+    def _setSocketsVisible(self, visible: bool = True):
+        for socket in self._sockets:
+            socket.setVisible(visible)
+
+    @overrides
+    def _onSelection(self, selected: bool):
+        super()._onSelection(selected)
+        self._setSocketsVisible(selected)
+        self._resizeItem.setVisible(not selected)
+
+    def _refresh(self):
+        self._recalculateRect()
+        self.prepareGeometryChange()
+        self.update()
+        self.rearrangeConnectors()
+
+    def _recalculateRect(self):
+        self._nestedRectWidth = self._textRect.width() + 2 * self.TextPadding
+        self._nestedRectHeight = self._textRect.height() + 2 * self.TextPadding
+        self._width = self._nestedRectWidth + 2 * self.Padding + 2 * self.Margin
+        self._height = self._nestedRectHeight + 2 * self.Padding + 2 * self.Margin
+
+        socketWidth = self._socketLeft.boundingRect().width()
+        socketRad = socketWidth / 2
+        socketPadding = (self.Margin - socketWidth) / 2
+        self._socketTopCenter.setPos(self._width / 2 - socketRad, socketPadding)
+        self._socketRight.setPos(self._width - self.Margin + socketPadding, self._height / 2 - socketRad)
+        self._socketBottomCenter.setPos(self._width / 2 - socketRad, self._height - self.Margin + socketPadding)
+        self._socketLeft.setPos(socketPadding, self._height / 2 - socketRad)
+
+        self._resizeItem.deactivate()
+        self._resizeItem.setPos(self._textRect.width() + self.TextPadding + 10,
+                                self._textRect.height() + self.TextPadding + 10)
+        self._resizeItem.activate()

@@ -34,6 +34,7 @@ from plotlyst.core.domain import Node, Diagram, DiagramNodeType, Connector, Plac
     Character, to_node
 from plotlyst.view.widget.graphics import NodeItem, CharacterItem, PlaceholderSocketItem, ConnectorItem, \
     AbstractSocketItem, EventItem
+from plotlyst.view.widget.graphics.items import NoteItem
 
 
 @dataclass
@@ -203,6 +204,8 @@ class NetworkScene(QGraphicsScene):
             pos = self._cursorScenePos()
             if pos:
                 self._addNewItem(pos, DiagramNodeType.EVENT)
+        else:
+            super().mouseDoubleClickEvent(event)
 
     @overrides
     def dragEnterEvent(self, event: QGraphicsSceneDragDropEvent) -> None:
@@ -242,6 +245,13 @@ class NetworkScene(QGraphicsScene):
                              default_size=QApplication.font().pointSize())
         node.x = node.x - EventItem.Margin - EventItem.Padding
         node.y = node.y - EventItem.Margin - EventItem.Padding
+        return node
+
+    @staticmethod
+    def toNoteNode(scenePos: QPointF) -> Node:
+        node = Node(scenePos.x(), scenePos.y(), type=DiagramNodeType.NOTE)
+        node.x = node.x - NoteItem.Margin
+        node.y = node.y - NoteItem.Margin
         return node
 
     def _removeItem(self, item: QGraphicsItem):
@@ -302,6 +312,8 @@ class NetworkScene(QGraphicsScene):
             item = CharacterItem(PlaceholderCharacter('Character'), self.toCharacterNode(scenePos))
         # elif itemType in [DiagramNodeType.COMMENT, DiagramNodeType.STICKER]:
         #     item = StickerItem(Node(scenePos.x(), scenePos.y(), itemType, subType))
+        elif itemType == DiagramNodeType.NOTE:
+            item = NoteItem(self.toNoteNode(scenePos))
         else:
             item = EventItem(self.toEventNode(scenePos, itemType, subType))
 
@@ -322,6 +334,8 @@ class NetworkScene(QGraphicsScene):
             if character is None:
                 character = PlaceholderCharacter('Character')
             item = CharacterItem(character, node)
+        elif node.type == DiagramNodeType.NOTE:
+            item = NoteItem(node)
         else:
             item = EventItem(node)
 

@@ -56,6 +56,8 @@ from plotlyst.view.widget.lang import GrammarPopupMenu
 
 
 class AutoAdjustableTextEdit(EnhancedTextEdit):
+    resizedOnShow = pyqtSignal()
+
     def __init__(self, parent=None, height: int = 25):
         super(AutoAdjustableTextEdit, self).__init__(parent)
         self.textChanged.connect(self._resizeToContent)
@@ -78,6 +80,7 @@ class AutoAdjustableTextEdit(EnhancedTextEdit):
         if not self._resizedOnShow:
             self._resizeToContent()
             self._resizedOnShow = True
+            self.resizedOnShow.emit()
 
     def _resizeToContent(self):
         padding = self.contentsMargins().top() + self.contentsMargins().bottom() + 2 * self.document().documentMargin()

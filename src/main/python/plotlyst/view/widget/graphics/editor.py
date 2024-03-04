@@ -39,8 +39,8 @@ from plotlyst.view.common import shadow, tool_btn, ExclusiveOptionalButtonGroup
 from plotlyst.view.dialog.utility import IconSelectorDialog
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
-from plotlyst.view.widget.graphics.items import EventItem, ConnectorItem
-from plotlyst.view.widget.input import FontSizeSpinBox, AutoAdjustableLineEdit
+from plotlyst.view.widget.graphics.items import EventItem, ConnectorItem, NoteItem
+from plotlyst.view.widget.input import FontSizeSpinBox, AutoAdjustableLineEdit, AutoAdjustableTextEdit
 from plotlyst.view.widget.utility import ColorPicker
 
 
@@ -182,6 +182,44 @@ class TextLineEditorPopup(MenuWidget):
 
     def text(self) -> str:
         return self._lineEdit.text()
+
+
+class TextNoteEditorPopup(MenuWidget):
+
+    def __init__(self, item: NoteItem, parent=None, placeholder: str = 'Begin typing'):
+        super().__init__(parent)
+        transparent(self)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self._item = item
+
+        self._textEdit = AutoAdjustableTextEdit()
+        self._textEdit.setProperty('white-bg', True)
+        self._textEdit.setProperty('rounded', True)
+        self._textEdit.setFixedWidth(item.textRect().width())
+        self._textEdit.setPlaceholderText(placeholder)
+        self._textEdit.setText(item.text())
+        self._textEdit.textChanged.connect(self._textChanged)
+        self._textEdit.resizedOnShow.connect(self._resized)
+
+        self.addWidget(self._textEdit)
+
+    @overrides
+    def setFont(self, font: QFont):
+        self._textEdit.setFont(font)
+
+    @overrides
+    def showEvent(self, QShowEvent):
+        self._textEdit.setFocus()
+
+    def text(self) -> str:
+        return self._textEdit.toPlainText()
+
+    def _textChanged(self):
+        self._resized()
+        self._item.setText(self.text(), self._textEdit.height())
+
+    def _resized(self):
+        self.setFixedHeight(self._textEdit.height() + 5)
 
 
 class EventSelectorWidget(SecondarySelectorWidget):

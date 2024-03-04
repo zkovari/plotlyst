@@ -31,7 +31,7 @@ from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemVie
     QMenu, QAbstractButton, \
     QStackedWidget, QAbstractScrollArea, QLineEdit, QHeaderView, QScrollArea, QFrame, QTabWidget, \
     QGraphicsDropShadowEffect, QTableView, QPushButton, QToolButton, QButtonGroup, QToolTip, QApplication, QMainWindow, \
-    QLabel
+    QLabel, QGraphicsObject
 from fbs_runtime import platform
 from overrides import overrides
 from qtanim import fade_out
@@ -286,7 +286,9 @@ def restyle(widget: QWidget):
 
 
 def shadow(wdg: QWidget, offset: int = 2, radius: int = 0, color=Qt.GlobalColor.lightGray):
-    effect = QGraphicsDropShadowEffect(wdg)
+    effect = QGraphicsDropShadowEffect()
+    if isinstance(wdg, QObject) and not isinstance(wdg, QGraphicsObject):
+        effect.setParent(wdg)
     effect.setBlurRadius(radius)
     effect.setOffset(offset, offset)
     effect.setColor(color)
@@ -450,7 +452,8 @@ def frame(parent=None):
 
 def label(text: str = '', bold: Optional[bool] = None, italic: Optional[bool] = None, underline: Optional[bool] = None,
           description: Optional[bool] = None, wordWrap: Optional[bool] = None, h1: Optional[bool] = None,
-          h2: Optional[bool] = None, h3: Optional[bool] = None, h4: Optional[bool] = None, color=None, parent=None) -> QLabel:
+          h2: Optional[bool] = None, h3: Optional[bool] = None, h4: Optional[bool] = None, color=None,
+          parent=None) -> QLabel:
     lbl = QLabel(text, parent)
     font = lbl.font()
     if bold:
