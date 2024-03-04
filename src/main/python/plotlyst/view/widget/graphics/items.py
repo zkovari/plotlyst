@@ -67,6 +67,39 @@ def alt_modifier(event: QGraphicsSceneHoverEvent) -> bool:
     return event.modifiers() & Qt.KeyboardModifier.AltModifier
 
 
+class ResizeIconItem(QAbstractGraphicsShapeItem):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._size: int = 32
+        self._icon = IconRegistry.from_name('mdi.resize-bottom-right', 'grey')
+        self._activated = False
+
+        self.setCursor(Qt.CursorShape.SizeFDiagCursor)
+        self.setFlag(
+            QGraphicsItem.GraphicsItemFlag.ItemIsMovable |
+            QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
+
+    @overrides
+    def boundingRect(self) -> QRectF:
+        return QRectF(0, 0, self._size, self._size)
+
+    @overrides
+    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+        self._icon.paint(painter, 3, 3, self._size - 5, self._size - 5)
+
+    @overrides
+    def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
+        if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged and self._activated:
+            self.parentItem().rearrangeSize(value)
+        return super().itemChange(change, value)
+
+    def activate(self):
+        self._activated = True
+
+    def deactivate(self):
+        self._activated = False
+
+
 class IconBadge(QAbstractGraphicsShapeItem):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -86,8 +119,6 @@ class IconBadge(QAbstractGraphicsShapeItem):
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-
         painter.setPen(QPen(self._color, 2))
         painter.setBrush(QColor(RELAXED_WHITE_COLOR))
         painter.drawEllipse(0, 0, self._size, self._size)
@@ -971,7 +1002,7 @@ class NoteItem(NodeItem):
         self._font = QApplication.font()
         self._textRect: QRect = QRect(self.Margin + self.Padding + self.TextPadding,
                                       self.Margin + self.Padding + self.TextPadding,
-                                      140, node.height if node.height else 30,
+                                      node.width if node.width else 140, node.height if node.height else 30,
                                       )
         self._nestedRectWidth = 200
         self._nestedRectHeight = 70
@@ -985,6 +1016,8 @@ class NoteItem(NodeItem):
         self._socketBottomCenter = DotCircleSocketItem(-90, parent=self)
         self._sockets.extend([self._socketLeft, self._socketTopCenter, self._socketRight, self._socketBottomCenter])
         self._setSocketsVisible(False)
+
+        self._resizeItem = ResizeIconItem(self)
 
         self._recalculateRect()
         shadow(self)
@@ -1021,6 +1054,17 @@ class NoteItem(NodeItem):
     def textSceneRect(self) -> QRectF:
         return self.mapRectToScene(self._textRect.toRectF())
 
+    def rearrangeSize(self, pos: QPointF):
+        height = int(pos.y()) - self.TextPadding
+        width = int(pos.x()) - self.TextPadding
+        self._textRect.setWidth(width)
+        self._textRect.setHeight(height)
+
+        self._node.height = height
+        self._node.width = width
+        self.networkScene().nodeChangedEvent(self._node)
+        self._refresh()
+
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
         if self.isSelected():
@@ -1053,6 +1097,7 @@ class NoteItem(NodeItem):
     def _onSelection(self, selected: bool):
         super()._onSelection(selected)
         self._setSocketsVisible(selected)
+        self._resizeItem.setVisible(not selected)
 
     def _refresh(self):
         self._recalculateRect()
@@ -1073,3 +1118,8 @@ class NoteItem(NodeItem):
         self._socketRight.setPos(self._width - self.Margin + socketPadding, self._height / 2 - socketRad)
         self._socketBottomCenter.setPos(self._width / 2 - socketRad, self._height - self.Margin + socketPadding)
         self._socketLeft.setPos(socketPadding, self._height / 2 - socketRad)
+
+        self._resizeItem.deactivate()
+        self._resizeItem.setPos(self._textRect.width() + self.TextPadding + 10,
+                                self._textRect.height() + self.TextPadding + 10)
+        self._resizeItem.activate()
