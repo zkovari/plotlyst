@@ -979,6 +979,13 @@ class NoteItem(NodeItem):
         self._height = self._nestedRectHeight + 2 * self.Padding + 2 * self.Margin
         self._placeholderText = 'Begin typing'
 
+        self._socketLeft = DotCircleSocketItem(180, parent=self)
+        self._socketTopCenter = DotCircleSocketItem(90, parent=self)
+        self._socketRight = DotCircleSocketItem(0, parent=self)
+        self._socketBottomCenter = DotCircleSocketItem(-90, parent=self)
+        self._sockets.extend([self._socketLeft, self._socketTopCenter, self._socketRight, self._socketBottomCenter])
+        self._setSocketsVisible(False)
+
         self._recalculateRect()
         shadow(self)
 
@@ -995,7 +1002,14 @@ class NoteItem(NodeItem):
 
     @overrides
     def socket(self, angle: float) -> AbstractSocketItem:
-        pass
+        if angle == 0:
+            return self._socketRight
+        elif angle == 90:
+            return self._socketTopCenter
+        elif angle == 180:
+            return self._socketLeft
+        elif angle == -90:
+            return self._socketBottomCenter
 
     @overrides
     def boundingRect(self) -> QRectF:
@@ -1031,6 +1045,15 @@ class NoteItem(NodeItem):
     def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         self.networkScene().editItemEvent(self)
 
+    def _setSocketsVisible(self, visible: bool = True):
+        for socket in self._sockets:
+            socket.setVisible(visible)
+
+    @overrides
+    def _onSelection(self, selected: bool):
+        super()._onSelection(selected)
+        self._setSocketsVisible(selected)
+
     def _refresh(self):
         self._recalculateRect()
         self.prepareGeometryChange()
@@ -1042,3 +1065,11 @@ class NoteItem(NodeItem):
         self._nestedRectHeight = self._textRect.height() + 2 * self.TextPadding
         self._width = self._nestedRectWidth + 2 * self.Padding + 2 * self.Margin
         self._height = self._nestedRectHeight + 2 * self.Padding + 2 * self.Margin
+
+        socketWidth = self._socketLeft.boundingRect().width()
+        socketRad = socketWidth / 2
+        socketPadding = (self.Margin - socketWidth) / 2
+        self._socketTopCenter.setPos(self._width / 2 - socketRad, socketPadding)
+        self._socketRight.setPos(self._width - self.Margin + socketPadding, self._height / 2 - socketRad)
+        self._socketBottomCenter.setPos(self._width / 2 - socketRad, self._height - self.Margin + socketPadding)
+        self._socketLeft.setPos(socketPadding, self._height / 2 - socketRad)
