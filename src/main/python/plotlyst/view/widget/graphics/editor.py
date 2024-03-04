@@ -199,10 +199,9 @@ class TextNoteEditorPopup(MenuWidget):
         self._textEdit.setPlaceholderText(placeholder)
         self._textEdit.setText(item.text())
         self._textEdit.textChanged.connect(self._textChanged)
+        self._textEdit.resizedOnShow.connect(self._resized)
 
         self.addWidget(self._textEdit)
-        sp(self).v_fixed()
-        sp(self._frame).v_fixed()
 
     @overrides
     def setFont(self, font: QFont):
@@ -216,8 +215,11 @@ class TextNoteEditorPopup(MenuWidget):
         return self._textEdit.toPlainText()
 
     def _textChanged(self):
-        self.setFixedHeight(self._textEdit.height() + 5)
+        self._resized()
         self._item.setText(self.text(), self._textEdit.height())
+
+    def _resized(self):
+        self.setFixedHeight(self._textEdit.height() + 5)
 
 
 class EventSelectorWidget(SecondarySelectorWidget):

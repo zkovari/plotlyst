@@ -174,7 +174,7 @@ class EventsMindMapView(NetworkGraphicsView):
 
         view_pos = self.mapFromScene(item.textSceneRect().topLeft())
 
-        popup.exec(self.mapToGlobal(view_pos))
+        popup.exec(self.mapToGlobal(view_pos), animated=False)
 
     @overrides
     def _showEventItemToolbar(self, item: EventItem):
