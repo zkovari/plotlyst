@@ -480,13 +480,12 @@ class ConnectorItem(QGraphicsPathItem):
         width: float = end.x() - start.x()
         height: float = end.y() - start.y()
         endPoint: QPointF = QPointF(width, height)
-        endArrowAngle = math.degrees(math.atan2(-height / 2, width))
 
         path = QPainterPath()
         if self._connector and self._connector.cp_x is not None:
-            self._rearrangeCurvedConnector(path, width, height, endArrowAngle, endPoint)
+            self._rearrangeCurvedConnector(path, endPoint)
         else:
-            self._rearrangeLinearConnector(path, width, height, endArrowAngle)
+            self._rearrangeLinearConnector(path, width, height)
 
         self._arrowheadItem.setPos(width, height)
         if not self._connector or self._connector.cp_x is None:
@@ -513,32 +512,19 @@ class ConnectorItem(QGraphicsPathItem):
     def _onSelection(self, selected: bool):
         self._cp.setVisible(selected)
 
-    def _rearrangeLinearConnector(self, path: QPainterPath, width: float, height: float, endArrowAngle: float):
+    def _rearrangeLinearConnector(self, path: QPainterPath, width: float, height: float):
         path.lineTo(width, height)
-        self._arrowheadItem.setRotation(-endArrowAngle)
+        endArrowAngle = math.degrees(math.atan2(height, width))
+        self._arrowheadItem.setRotation(endArrowAngle)
 
-    def _rearrangeCurvedConnector(self, path: QPainterPath, width: float, height: float, endArrowAngle: float,
-                                  endPoint: QPointF):
-        downward = height >= 0
-
-        # if self._source.angle() >= 0:
-        #     if downward:
-        #         controlPoint = QPointF(width / 3, -height / 2)
-        #         endArrowAngle = math.degrees(math.atan2(-height / 2, width / 3))
-        #     else:
-        #         controlPoint = QPointF(0, height / 2)
-        #         endArrowAngle = math.degrees(math.atan2(-height / 2, width))
-        # else:
-        #     if downward:
-        #         controlPoint = QPointF(width / 3, height / 2)
-        #         endArrowAngle = math.degrees(math.atan2(-height / 2, width / 3))
-        #     else:
-        #         controlPoint = QPointF(width / 2, -height / 2)
-        #         endArrowAngle = math.degrees(math.atan2(-height / 2, width / 2))
-
+    def _rearrangeCurvedConnector(self, path: QPainterPath, endPoint: QPointF):
         path.quadTo(QPointF(self._connector.cp_x, self._connector.cp_y), endPoint)
 
-        self._arrowheadItem.setRotation(-endArrowAngle)
+        end = path.pointAtPercent(1)
+        close_to_end = path.pointAtPercent(0.98)
+        endArrowAngle = math.degrees(math.atan2(end.y() - close_to_end.y(), end.x() - close_to_end.x()))
+
+        self._arrowheadItem.setRotation(endArrowAngle)
 
     def _rearrangeIcon(self, path: QPainterPath):
         if self._icon:
@@ -991,7 +977,8 @@ class EventItem(NodeItem):
         self._socketBottomCenter.setPos(self._width / 2 - socketRad, self._height - self.Margin + socketPadding)
         self._socketBottomLeft.setPos(self._nestedRectWidth / 3 - socketRad,
                                       self._height - self.Margin + socketPadding)
-        self._socketBottomRight.setPos(self._socketBottomCenter.pos().x() + centerDistance, self._height - self.Margin + socketPadding)
+        self._socketBottomRight.setPos(self._socketBottomCenter.pos().x() + centerDistance,
+                                       self._height - self.Margin + socketPadding)
         self._socketLeft.setPos(socketPadding, self._height / 2 - socketRad)
 
 
