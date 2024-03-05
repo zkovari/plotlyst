@@ -855,6 +855,7 @@ class EventItem(NodeItem):
         if self.networkScene().linkMode() or alt_modifier(event):
             self._setSocketsVisible()
 
+    @overrides
     def hoverMoveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         if not self.networkScene().linkMode() and alt_modifier(event):
             self._setSocketsVisible()
@@ -1020,6 +1021,7 @@ class NoteItem(NodeItem):
         self._resizeItem = ResizeIconItem(self)
 
         self._recalculateRect()
+        self._resizeItem.setVisible(False)
         shadow(self)
 
     def text(self) -> str:
@@ -1032,6 +1034,15 @@ class NoteItem(NodeItem):
 
         self.networkScene().nodeChangedEvent(self._node)
         self._refresh()
+
+    @overrides
+    def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        if not self.isSelected():
+            self._resizeItem.setVisible(True)
+
+    @overrides
+    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        self._resizeItem.setVisible(False)
 
     @overrides
     def socket(self, angle: float) -> AbstractSocketItem:
