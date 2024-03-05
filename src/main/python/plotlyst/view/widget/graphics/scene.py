@@ -34,7 +34,7 @@ from plotlyst.core.domain import Node, Diagram, DiagramNodeType, Connector, Plac
     Character, to_node
 from plotlyst.view.widget.graphics import NodeItem, CharacterItem, PlaceholderSocketItem, ConnectorItem, \
     AbstractSocketItem, EventItem
-from plotlyst.view.widget.graphics.items import NoteItem
+from plotlyst.view.widget.graphics.items import NoteItem, ImageItem
 
 
 @dataclass
@@ -254,6 +254,13 @@ class NetworkScene(QGraphicsScene):
         node.y = node.y - NoteItem.Margin
         return node
 
+    @staticmethod
+    def toImageNode(scenePos: QPointF) -> Node:
+        node = Node(scenePos.x(), scenePos.y(), type=DiagramNodeType.IMAGE)
+        node.x = node.x - ImageItem.Margin
+        node.y = node.y - ImageItem.Margin
+        return node
+
     def _removeItem(self, item: QGraphicsItem):
         if isinstance(item, NodeItem):
             for connectorItem in item.connectors():
@@ -314,6 +321,8 @@ class NetworkScene(QGraphicsScene):
         #     item = StickerItem(Node(scenePos.x(), scenePos.y(), itemType, subType))
         elif itemType == DiagramNodeType.NOTE:
             item = NoteItem(self.toNoteNode(scenePos))
+        elif itemType == DiagramNodeType.IMAGE:
+            item = ImageItem(self.toImageNode(scenePos))
         else:
             item = EventItem(self.toEventNode(scenePos, itemType, subType))
 
@@ -336,6 +345,8 @@ class NetworkScene(QGraphicsScene):
             item = CharacterItem(character, node)
         elif node.type == DiagramNodeType.NOTE:
             item = NoteItem(node)
+        elif node.type == DiagramNodeType.IMAGE:
+            item = ImageItem(node)
         else:
             item = EventItem(node)
 

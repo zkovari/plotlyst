@@ -1123,3 +1123,42 @@ class NoteItem(NodeItem):
         self._resizeItem.setPos(self._textRect.width() + self.TextPadding + 10,
                                 self._textRect.height() + self.TextPadding + 10)
         self._resizeItem.activate()
+
+
+class ImageItem(NodeItem):
+    Margin: int = 20
+    Padding: int = 2
+    PlaceholderPadding: int = 20
+
+    def __init__(self, node: Node, parent=None):
+        super().__init__(node, parent)
+        self._imageSize = 200
+        self._size = 200 + self.Margin * 2 + self.Padding * 2
+
+        self._recalculateRect()
+
+    @overrides
+    def boundingRect(self) -> QRectF:
+        return QRectF(0, 0, self._size, self._size)
+
+    @overrides
+    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+        if self.isSelected():
+            painter.setPen(QPen(Qt.GlobalColor.gray, 2, Qt.PenStyle.DashLine))
+            painter.drawRoundedRect(self.Margin, self.Margin, self._imageSize + 2 * self.Padding,
+                                    self._imageSize + 2 * self.Padding, 2, 2)
+
+        painter.setPen(QPen(QColor('lightgrey'), 1))
+        painter.setBrush(QColor(WHITE_COLOR))
+        painter.drawRoundedRect(self.Margin + self.Padding, self.Margin + self.Padding, self._imageSize,
+                                self._imageSize, 6, 6)
+
+        if self._node.image_ref is None:
+            IconRegistry.image_icon(color='lightgrey').paint(painter,
+                                                             self.Margin + self.Padding + self.PlaceholderPadding,
+                                                             self.Margin + self.Padding + self.PlaceholderPadding,
+                                                             self._imageSize - 2 * self.PlaceholderPadding,
+                                                             self._imageSize - 2 * self.PlaceholderPadding)
+
+    def _recalculateRect(self):
+        self._size = 200 + self.Margin * 2 + self.Padding * 2
