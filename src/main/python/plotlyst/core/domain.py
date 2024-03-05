@@ -2724,6 +2724,7 @@ class Node(CharacterBased):
     underline: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     width: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     height: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    image_ref: Optional[ImageRef] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
     def __post_init__(self):
         self._character: Optional[Character] = None
