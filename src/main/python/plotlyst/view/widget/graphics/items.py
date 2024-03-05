@@ -24,7 +24,7 @@ from enum import Enum
 from typing import Any, Optional, List
 
 from PyQt6.QtCore import Qt, QTimer, QRectF, QPointF, QPoint, QRect
-from PyQt6.QtGui import QPainter, QPen, QPainterPath, QColor, QIcon, QPolygonF, QBrush, QFontMetrics
+from PyQt6.QtGui import QPainter, QPen, QPainterPath, QColor, QIcon, QPolygonF, QBrush, QFontMetrics, QImage
 from PyQt6.QtWidgets import QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QGraphicsSceneMouseEvent, \
     QStyleOptionGraphicsItem, QWidget, \
     QGraphicsSceneHoverEvent, QGraphicsPolygonItem, QApplication, QGraphicsTextItem
@@ -34,6 +34,7 @@ from qthandy import pointy
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR, \
     WHITE_COLOR
 from plotlyst.core.domain import Node, Relation, Connector, Character, DiagramNodeType, to_node
+from plotlyst.service.image import LoadedImage
 from plotlyst.view.common import shadow
 from plotlyst.view.icons import IconRegistry, avatars
 
@@ -1134,12 +1135,60 @@ class ImageItem(NodeItem):
         super().__init__(node, parent)
         self._imageSize = 200
         self._size = 200 + self.Margin * 2 + self.Padding * 2
+        self._imageRect = QRect(self.Margin + self.Padding, self.Margin + self.Padding, self._imageSize,
+                                self._imageSize)
+        self._placeholderPadding = 0
+        self._image: Optional[QImage] = None
+
+        self._placeholderColor = 'lightgrey'
+
+        if self._node.image_ref is None:
+            pointy(self)
+            self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
 
         self._recalculateRect()
+
+    def hasImage(self) -> bool:
+        return self._node.image_ref is not None
+
+    def setLoadedImage(self, image: LoadedImage):
+        self._image = image.image
+        self._node.image_ref = image.ref
+        self.setCursor(Qt.CursorShape.ArrowCursor)
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
+
+        self.update()
 
     @overrides
     def boundingRect(self) -> QRectF:
         return QRectF(0, 0, self._size, self._size)
+
+    @overrides
+    def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        if not self.hasImage():
+            self._placeholderColor = 'grey'
+            self.update()
+
+    @overrides
+    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        if not self.hasImage():
+            self._placeholderColor = 'lightgrey'
+            self.update()
+
+    @overrides
+    def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        if not self.hasImage():
+            self._placeholderPadding = 4
+            self.update()
+        super().mousePressEvent(event)
+
+    @overrides
+    def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        if not self.hasImage():
+            self._placeholderPadding = 0
+            self.update()
+            self.networkScene().requestImageUpload(self)
+        super().mouseReleaseEvent(event)
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
@@ -1148,17 +1197,19 @@ class ImageItem(NodeItem):
             painter.drawRoundedRect(self.Margin, self.Margin, self._imageSize + 2 * self.Padding,
                                     self._imageSize + 2 * self.Padding, 2, 2)
 
-        painter.setPen(QPen(QColor('lightgrey'), 1))
-        painter.setBrush(QColor(WHITE_COLOR))
-        painter.drawRoundedRect(self.Margin + self.Padding, self.Margin + self.Padding, self._imageSize,
-                                self._imageSize, 6, 6)
-
-        if self._node.image_ref is None:
-            IconRegistry.image_icon(color='lightgrey').paint(painter,
-                                                             self.Margin + self.Padding + self.PlaceholderPadding,
-                                                             self.Margin + self.Padding + self.PlaceholderPadding,
-                                                             self._imageSize - 2 * self.PlaceholderPadding,
-                                                             self._imageSize - 2 * self.PlaceholderPadding)
+        if self.hasImage():
+            if self._image:
+                painter.drawImage(self._imageRect, self._image)
+        else:
+            painter.setPen(QPen(QColor('lightgrey'), 1))
+            painter.setBrush(QColor(WHITE_COLOR))
+            painter.drawRoundedRect(self.Margin + self.Padding, self.Margin + self.Padding, self._imageSize,
+                                    self._imageSize, 6, 6)
+            IconRegistry.image_icon(color=self._placeholderColor).paint(painter,
+                                                                        self.Margin + self.Padding + self.PlaceholderPadding,
+                                                                        self.Margin + self.Padding + self.PlaceholderPadding,
+                                                                        self._imageSize - 2 * self.PlaceholderPadding - self._placeholderPadding,
+                                                                        self._imageSize - 2 * self.PlaceholderPadding - self._placeholderPadding)
 
     def _recalculateRect(self):
         self._size = 200 + self.Margin * 2 + self.Padding * 2

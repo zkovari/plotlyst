@@ -30,6 +30,7 @@ from plotlyst.core.client import json_client
 from plotlyst.core.domain import Character, DiagramNodeType, NODE_SUBTYPE_TOOL, NODE_SUBTYPE_COST
 from plotlyst.core.domain import Node
 from plotlyst.core.domain import Novel
+from plotlyst.service.image import LoadedImage, upload_image
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.characters import CharacterSelectorMenu
@@ -66,6 +67,10 @@ class EventsMindMapScene(NetworkScene):
     @overrides
     def _save(self):
         self.repo.update_diagram(self._novel, self._diagram)
+
+    @overrides
+    def _uploadImage(self) -> Optional[LoadedImage]:
+        return upload_image(self._novel)
 
 
 class EventsMindMapView(NetworkGraphicsView):

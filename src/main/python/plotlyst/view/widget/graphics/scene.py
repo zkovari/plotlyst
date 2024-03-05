@@ -32,6 +32,7 @@ from overrides import overrides
 
 from plotlyst.core.domain import Node, Diagram, DiagramNodeType, Connector, PlaceholderCharacter, \
     Character, to_node
+from plotlyst.service.image import LoadedImage
 from plotlyst.view.widget.graphics import NodeItem, CharacterItem, PlaceholderSocketItem, ConnectorItem, \
     AbstractSocketItem, EventItem
 from plotlyst.view.widget.graphics.items import NoteItem, ImageItem
@@ -229,6 +230,11 @@ class NetworkScene(QGraphicsScene):
     def nodeChangedEvent(self, node: Node):
         self._save()
 
+    def requestImageUpload(self, item: ImageItem):
+        image = self._uploadImage()
+        if image:
+            item.setLoadedImage(image)
+
     def connectorChangedEvent(self, connector: ConnectorItem):
         self._save()
 
@@ -363,6 +369,9 @@ class NetworkScene(QGraphicsScene):
 
     @abstractmethod
     def _character(self, node: Node) -> Optional[Character]:
+        pass
+
+    def _uploadImage(self) -> Optional[LoadedImage]:
         pass
 
     def _onLink(self, sourceNode: NodeItem, sourceSocket: AbstractSocketItem, targetNode: NodeItem,
