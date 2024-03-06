@@ -29,7 +29,7 @@ from overrides import overrides
 from qthandy import sp, incr_icon, vbox
 from qthandy.filter import DragEventFilter
 
-from plotlyst.core.domain import Diagram, DiagramNodeType, Character
+from plotlyst.core.domain import Diagram, GraphicsItemType, Character
 from plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButtonGroup, \
     TooltipPositionEventFilter, label
 from plotlyst.view.widget.characters import CharacterSelectorMenu
@@ -104,6 +104,12 @@ class BaseGraphicsView(QGraphicsView):
     def scaledFactor(self) -> float:
         return self._scaledFactor
 
+    def _roundedFrame(self) -> QFrame:
+        frame_ = frame(self)
+        frame_.setProperty('relaxed-white-bg', True)
+        frame_.setProperty('rounded', True)
+        return frame_
+
     def _scale(self, scale: float):
         self._scaledFactor += scale
         self.scale(1.0 + scale, 1.0 + scale)
@@ -168,14 +174,14 @@ class NetworkGraphicsView(BaseGraphicsView):
         super()._scale(scale)
         self._wdgZoomBar.updateScaledFactor(self.scaledFactor())
 
-    def _mainControlClicked(self, itemType: DiagramNodeType, checked: bool):
+    def _mainControlClicked(self, itemType: GraphicsItemType, checked: bool):
         if checked:
             self._startAddition(itemType)
         else:
             self._endAddition()
             self._scene.endAdditionMode()
 
-    def _newControlButton(self, icon: QIcon, tooltip: str, itemType: DiagramNodeType) -> QToolButton:
+    def _newControlButton(self, icon: QIcon, tooltip: str, itemType: GraphicsItemType) -> QToolButton:
         btn = tool_btn(icon, tooltip,
                        True, icon_resize=False,
                        properties=['transparent-rounded-bg-on-hover', 'top-selector'],
@@ -191,7 +197,7 @@ class NetworkGraphicsView(BaseGraphicsView):
 
         return btn
 
-    def _startAddition(self, itemType: DiagramNodeType, subType: str = ''):
+    def _startAddition(self, itemType: GraphicsItemType, subType: str = ''):
         self._helpLabel.setVisible(True)
 
         for btn in self._btnGroup.buttons():
@@ -205,7 +211,7 @@ class NetworkGraphicsView(BaseGraphicsView):
         self.setToolTip(f'Click to add a new {itemType.name.lower()}')
         self._hideItemToolbar()
 
-    def _endAddition(self, itemType: Optional[DiagramNodeType] = None, item: Optional[NodeItem] = None):
+    def _endAddition(self, itemType: Optional[GraphicsItemType] = None, item: Optional[NodeItem] = None):
         self._helpLabel.setHidden(True)
 
         for btn in self._btnGroup.buttons():
@@ -218,11 +224,7 @@ class NetworkGraphicsView(BaseGraphicsView):
         if item is not None and isinstance(item, CharacterItem):
             QTimer.singleShot(100, lambda: self._editCharacterItem(item))
 
-    def _roundedFrame(self) -> QFrame:
-        frame_ = frame(self)
-        frame_.setProperty('relaxed-white-bg', True)
-        frame_.setProperty('rounded', True)
-        return frame_
+
 
     def _arrangeSideBars(self):
         self._wdgZoomBar.setGeometry(10, self.height() - self._wdgZoomBar.sizeHint().height() - 10,

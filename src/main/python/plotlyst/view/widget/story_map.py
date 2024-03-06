@@ -27,7 +27,7 @@ from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 
 from plotlyst.core.client import json_client
-from plotlyst.core.domain import Character, DiagramNodeType, NODE_SUBTYPE_TOOL, NODE_SUBTYPE_COST
+from plotlyst.core.domain import Character, GraphicsItemType, NODE_SUBTYPE_TOOL, NODE_SUBTYPE_COST
 from plotlyst.core.domain import Node
 from plotlyst.core.domain import Novel
 from plotlyst.service.image import LoadedImage, upload_image, load_image
@@ -83,16 +83,16 @@ class EventsMindMapView(NetworkGraphicsView):
         self._novel = novel
         super().__init__(parent)
         self._btnAddEvent = self._newControlButton(
-            IconRegistry.from_name('mdi6.shape-square-rounded-plus'), 'Add new event', DiagramNodeType.EVENT)
+            IconRegistry.from_name('mdi6.shape-square-rounded-plus'), 'Add new event', GraphicsItemType.EVENT)
         self._btnAddNote = self._newControlButton(
-            IconRegistry.from_name('msc.note'), 'Add new note', DiagramNodeType.NOTE)
+            IconRegistry.from_name('msc.note'), 'Add new note', GraphicsItemType.NOTE)
         self._btnAddCharacter = self._newControlButton(
-            IconRegistry.character_icon('#040406'), 'Add new character', DiagramNodeType.CHARACTER)
+            IconRegistry.character_icon('#040406'), 'Add new character', GraphicsItemType.CHARACTER)
         self._btnAddImage = self._newControlButton(IconRegistry.image_icon(), 'Add new image',
-                                                   DiagramNodeType.IMAGE)
+                                                   GraphicsItemType.IMAGE)
         self._btnAddSticker = self._newControlButton(IconRegistry.from_name('mdi6.sticker-circle-outline'),
                                                      'Add new sticker',
-                                                     DiagramNodeType.COMMENT)
+                                                     GraphicsItemType.COMMENT)
         self._btnAddSticker.setDisabled(True)
         self._btnAddSticker.setToolTip('Feature is not yet available')
 
@@ -124,21 +124,21 @@ class EventsMindMapView(NetworkGraphicsView):
             self.setDiagram(self._novel.events_map)
 
     @overrides
-    def _startAddition(self, itemType: DiagramNodeType, subType: str = ''):
+    def _startAddition(self, itemType: GraphicsItemType, subType: str = ''):
         super()._startAddition(itemType, subType)
 
-        if itemType == DiagramNodeType.EVENT:
+        if itemType == GraphicsItemType.EVENT:
             self._wdgSecondaryEventSelector.setVisible(True)
             self._wdgSecondaryStickerSelector.setHidden(True)
-        elif itemType == DiagramNodeType.COMMENT:
+        elif itemType == GraphicsItemType.COMMENT:
             self._wdgSecondaryStickerSelector.setVisible(True)
             self._wdgSecondaryEventSelector.setHidden(True)
-        elif itemType == DiagramNodeType.CHARACTER:
+        elif itemType == GraphicsItemType.CHARACTER:
             self._wdgSecondaryStickerSelector.setHidden(True)
             self._wdgSecondaryEventSelector.setHidden(True)
 
     @overrides
-    def _endAddition(self, itemType: Optional[DiagramNodeType] = None, item: Optional[NodeItem] = None):
+    def _endAddition(self, itemType: Optional[GraphicsItemType] = None, item: Optional[NodeItem] = None):
         super()._endAddition(itemType, item)
         self._wdgSecondaryEventSelector.setHidden(True)
         self._wdgSecondaryStickerSelector.setHidden(True)
@@ -201,13 +201,13 @@ class EventsMindMapView(NetworkGraphicsView):
 class StickerSelectorWidget(SecondarySelectorWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._btnComment = self.addItemTypeButton(DiagramNodeType.COMMENT,
+        self._btnComment = self.addItemTypeButton(GraphicsItemType.COMMENT,
                                                   IconRegistry.from_name('mdi.comment-text-outline'),
                                                   'Add new comment', 0, 0)
-        self._btnTool = self.addItemTypeButton(DiagramNodeType.STICKER, IconRegistry.tool_icon('black', 'black'),
+        self._btnTool = self.addItemTypeButton(GraphicsItemType.STICKER, IconRegistry.tool_icon('black', 'black'),
                                                'Add new tool',
                                                0, 1, subType=NODE_SUBTYPE_TOOL)
-        self._btnCost = self.addItemTypeButton(DiagramNodeType.STICKER, IconRegistry.cost_icon('black', 'black'),
+        self._btnCost = self.addItemTypeButton(GraphicsItemType.STICKER, IconRegistry.cost_icon('black', 'black'),
                                                'Add new cost',
                                                1, 0, subType=NODE_SUBTYPE_COST)
 

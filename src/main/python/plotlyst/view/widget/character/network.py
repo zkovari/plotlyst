@@ -27,7 +27,7 @@ from qtmenu import GridMenuWidget
 
 from plotlyst.core.client import json_client
 from plotlyst.core.domain import Diagram, Relation, Node
-from plotlyst.core.domain import Novel, Character, DiagramNodeType
+from plotlyst.core.domain import Novel, Character, GraphicsItemType
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import action
 from plotlyst.view.icons import IconRegistry
@@ -62,9 +62,9 @@ class CharacterNetworkView(NetworkGraphicsView):
         super(CharacterNetworkView, self).__init__(parent)
 
         self._btnAddCharacter = self._newControlButton(IconRegistry.character_icon('#040406'), 'Add new character',
-                                                       DiagramNodeType.CHARACTER)
+                                                       GraphicsItemType.CHARACTER)
         self._btnAddSticker = self._newControlButton(IconRegistry.from_name('mdi6.sticker-circle-outline'),
-                                                     'Add new sticker', DiagramNodeType.STICKER)
+                                                     'Add new sticker', GraphicsItemType.STICKER)
         self._btnAddSticker.setDisabled(True)
         self._btnAddSticker.setToolTip('Feature is not yet available')
 

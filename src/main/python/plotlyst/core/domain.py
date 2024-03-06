@@ -2683,7 +2683,7 @@ def default_tags() -> Dict[TagType, List[Tag]]:
     return tags
 
 
-class DiagramNodeType(Enum):
+class GraphicsItemType(Enum):
     CHARACTER = 'character'
     STICKER = 'sticker'
     EVENT = 'event'
@@ -2711,7 +2711,7 @@ NODE_SUBTYPE_COST = 'cost'
 class Node(CharacterBased):
     x: float
     y: float
-    type: DiagramNodeType
+    type: GraphicsItemType
     subtype: str = field(default='', metadata=config(exclude=exclude_if_empty))
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     character_id: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
@@ -2730,9 +2730,9 @@ class Node(CharacterBased):
         self._character: Optional[Character] = None
 
 
-def to_node(x: float, y: float, type: DiagramNodeType, subtype: str = '', default_size: int = 12) -> Node:
+def to_node(x: float, y: float, type: GraphicsItemType, subtype: str = '', default_size: int = 12) -> Node:
     node = Node(x, y, type=type, subtype=subtype)
-    if type == DiagramNodeType.EVENT:
+    if type == GraphicsItemType.EVENT:
         node.size = max(20 if app_env.is_mac() else 16, default_size)
         if subtype in [NODE_SUBTYPE_BACKSTORY, NODE_SUBTYPE_INTERNAL_CONFLICT]:
             node.size = max(16 if app_env.is_mac() else 14, default_size - 1)

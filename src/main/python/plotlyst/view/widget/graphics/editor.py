@@ -32,7 +32,7 @@ from qthandy import hbox, margins, sp, vbox, grid, pointy, vline, decr_icon, tra
 from qtmenu import MenuWidget
 
 from plotlyst.common import PLOTLYST_TERTIARY_COLOR
-from plotlyst.core.domain import DiagramNodeType, NODE_SUBTYPE_DISTURBANCE, NODE_SUBTYPE_CONFLICT, \
+from plotlyst.core.domain import GraphicsItemType, NODE_SUBTYPE_DISTURBANCE, NODE_SUBTYPE_CONFLICT, \
     NODE_SUBTYPE_GOAL, NODE_SUBTYPE_BACKSTORY, \
     NODE_SUBTYPE_INTERNAL_CONFLICT
 from plotlyst.view.common import shadow, tool_btn, ExclusiveOptionalButtonGroup
@@ -84,7 +84,7 @@ class ZoomBar(QFrame):
 
 
 class SecondarySelectorWidget(QFrame):
-    selected = pyqtSignal(DiagramNodeType, str)
+    selected = pyqtSignal(GraphicsItemType, str)
 
     def __init__(self, parent=None, optional: bool = False):
         super().__init__(parent)
@@ -113,7 +113,7 @@ class SecondarySelectorWidget(QFrame):
 
         return btn
 
-    def addItemTypeButton(self, itemType: DiagramNodeType, icon: QIcon, tooltip: str, row: int,
+    def addItemTypeButton(self, itemType: GraphicsItemType, icon: QIcon, tooltip: str, row: int,
                           col: int, subType: str = '') -> QToolButton:
         def clicked(toggled: bool):
             if toggled:
@@ -227,26 +227,26 @@ class EventSelectorWidget(SecondarySelectorWidget):
         super().__init__(parent)
         self._grid.addWidget(QLabel('Events'), 0, 0, 1, 3)
 
-        self._btnGeneral = self.addItemTypeButton(DiagramNodeType.EVENT,
+        self._btnGeneral = self.addItemTypeButton(GraphicsItemType.EVENT,
                                                   IconRegistry.from_name('mdi.square-rounded-outline'),
                                                   'General event', 1, 0)
-        self._btnGoal = self.addItemTypeButton(DiagramNodeType.EVENT, IconRegistry.goal_icon('black', 'black'),
+        self._btnGoal = self.addItemTypeButton(GraphicsItemType.EVENT, IconRegistry.goal_icon('black', 'black'),
                                                'Goal or action',
                                                1, 1, subType=NODE_SUBTYPE_GOAL)
-        self._btnConflict = self.addItemTypeButton(DiagramNodeType.EVENT,
+        self._btnConflict = self.addItemTypeButton(GraphicsItemType.EVENT,
                                                    IconRegistry.conflict_icon('black', 'black'),
                                                    'Conflict', 1, 2, subType=NODE_SUBTYPE_CONFLICT)
-        self._btnDisturbance = self.addItemTypeButton(DiagramNodeType.EVENT,
+        self._btnDisturbance = self.addItemTypeButton(GraphicsItemType.EVENT,
                                                       IconRegistry.inciting_incident_icon('black'),
                                                       'Inciting incident', 2,
                                                       0, subType=NODE_SUBTYPE_DISTURBANCE)
 
         self._grid.addWidget(QLabel('Internal'), 3, 0, 1, 3)
-        self._btnInternalConflict = self.addItemTypeButton(DiagramNodeType.EVENT,
+        self._btnInternalConflict = self.addItemTypeButton(GraphicsItemType.EVENT,
                                                            IconRegistry.conflict_self_icon('black', 'black'),
                                                            'Internal conflict', 4, 0,
                                                            subType=NODE_SUBTYPE_INTERNAL_CONFLICT)
-        self._btnBackstory = self.addItemTypeButton(DiagramNodeType.EVENT,
+        self._btnBackstory = self.addItemTypeButton(GraphicsItemType.EVENT,
                                                     IconRegistry.backstory_icon('black', 'black'),
                                                     'Backstory', 4, 1, subType=NODE_SUBTYPE_BACKSTORY)
 
@@ -442,7 +442,7 @@ class EventItemToolbar(PaintedItemBasedToolbar):
             self._item.setFontSettings(bold=self._btnBold.isChecked(), italic=self._btnItalic.isChecked(),
                                        underline=self._btnUnderline.isChecked())
 
-    def _typeChanged(self, itemType: DiagramNodeType, subtype: str):
+    def _typeChanged(self, itemType: GraphicsItemType, subtype: str):
         if self._item:
             self._item.setItemType(itemType, subtype)
 

@@ -30,7 +30,7 @@ from PyQt6.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEv
     QGraphicsSceneDragDropEvent
 from overrides import overrides
 
-from plotlyst.core.domain import Node, Diagram, DiagramNodeType, Connector, PlaceholderCharacter, \
+from plotlyst.core.domain import Node, Diagram, GraphicsItemType, Connector, PlaceholderCharacter, \
     Character, to_node
 from plotlyst.service.image import LoadedImage
 from plotlyst.view.widget.graphics import NodeItem, CharacterItem, PlaceholderSocketItem, ConnectorItem, \
@@ -40,13 +40,13 @@ from plotlyst.view.widget.graphics.items import NoteItem, ImageItem
 
 @dataclass
 class ItemDescriptor:
-    mode: DiagramNodeType
+    mode: GraphicsItemType
     subType: str = ''
 
 
 class NetworkScene(QGraphicsScene):
     cancelItemAddition = pyqtSignal()
-    itemAdded = pyqtSignal(DiagramNodeType, NodeItem)
+    itemAdded = pyqtSignal(GraphicsItemType, NodeItem)
     editItem = pyqtSignal(NodeItem)
     itemMoved = pyqtSignal(NodeItem)
     hideItemEditor = pyqtSignal()
@@ -84,7 +84,7 @@ class NetworkScene(QGraphicsScene):
     def isAdditionMode(self) -> bool:
         return self._additionDescriptor is not None
 
-    def startAdditionMode(self, itemType: DiagramNodeType, subType: str = ''):
+    def startAdditionMode(self, itemType: GraphicsItemType, subType: str = ''):
         self._additionDescriptor = ItemDescriptor(itemType, subType)
 
     def endAdditionMode(self):
@@ -170,7 +170,7 @@ class NetworkScene(QGraphicsScene):
             if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
                 pos = self._cursorScenePos()
                 if pos:
-                    self._addNewItem(pos, DiagramNodeType.EVENT)
+                    self._addNewItem(pos, GraphicsItemType.EVENT)
             else:
                 pass
         elif event.button() & Qt.MouseButton.RightButton or event.button() & Qt.MouseButton.MiddleButton:
@@ -204,7 +204,7 @@ class NetworkScene(QGraphicsScene):
                 event.button() & Qt.MouseButton.LeftButton and not self.itemAt(event.scenePos(), QTransform())):
             pos = self._cursorScenePos()
             if pos:
-                self._addNewItem(pos, DiagramNodeType.EVENT)
+                self._addNewItem(pos, GraphicsItemType.EVENT)
         else:
             super().mouseDoubleClickEvent(event)
 
@@ -245,13 +245,13 @@ class NetworkScene(QGraphicsScene):
 
     @staticmethod
     def toCharacterNode(scenePos: QPointF) -> Node:
-        node = Node(scenePos.x(), scenePos.y(), type=DiagramNodeType.CHARACTER)
+        node = Node(scenePos.x(), scenePos.y(), type=GraphicsItemType.CHARACTER)
         node.x = node.x - CharacterItem.Margin
         node.y = node.y - CharacterItem.Margin
         return node
 
     @staticmethod
-    def toEventNode(scenePos: QPointF, itemType: DiagramNodeType, subType: str = '') -> Node:
+    def toEventNode(scenePos: QPointF, itemType: GraphicsItemType, subType: str = '') -> Node:
         node: Node = to_node(scenePos.x(), scenePos.y(), itemType, subType,
                              default_size=QApplication.font().pointSize())
         node.x = node.x - EventItem.Margin - EventItem.Padding
@@ -260,14 +260,14 @@ class NetworkScene(QGraphicsScene):
 
     @staticmethod
     def toNoteNode(scenePos: QPointF) -> Node:
-        node = Node(scenePos.x(), scenePos.y(), type=DiagramNodeType.NOTE)
+        node = Node(scenePos.x(), scenePos.y(), type=GraphicsItemType.NOTE)
         node.x = node.x - NoteItem.Margin
         node.y = node.y - NoteItem.Margin
         return node
 
     @staticmethod
     def toImageNode(scenePos: QPointF) -> Node:
-        node = Node(scenePos.x(), scenePos.y(), type=DiagramNodeType.IMAGE)
+        node = Node(scenePos.x(), scenePos.y(), type=GraphicsItemType.IMAGE)
         node.x = node.x - ImageItem.Margin
         node.y = node.y - ImageItem.Margin
         return node
@@ -325,14 +325,14 @@ class NetworkScene(QGraphicsScene):
         viewPos: QPoint = view.mapFromGlobal(QCursor.pos())
         return view.mapToScene(viewPos)
 
-    def _addNewItem(self, scenePos: QPointF, itemType: DiagramNodeType, subType: str = '') -> NodeItem:
-        if itemType == DiagramNodeType.CHARACTER:
+    def _addNewItem(self, scenePos: QPointF, itemType: GraphicsItemType, subType: str = '') -> NodeItem:
+        if itemType == GraphicsItemType.CHARACTER:
             item = CharacterItem(PlaceholderCharacter('Character'), self.toCharacterNode(scenePos))
         # elif itemType in [DiagramNodeType.COMMENT, DiagramNodeType.STICKER]:
         #     item = StickerItem(Node(scenePos.x(), scenePos.y(), itemType, subType))
-        elif itemType == DiagramNodeType.NOTE:
+        elif itemType == GraphicsItemType.NOTE:
             item = NoteItem(self.toNoteNode(scenePos))
-        elif itemType == DiagramNodeType.IMAGE:
+        elif itemType == GraphicsItemType.IMAGE:
             item = ImageItem(self.toImageNode(scenePos))
         else:
             item = EventItem(self.toEventNode(scenePos, itemType, subType))
@@ -349,14 +349,14 @@ class NetworkScene(QGraphicsScene):
         return item
 
     def _addNode(self, node: Node) -> NodeItem:
-        if node.type == DiagramNodeType.CHARACTER:
+        if node.type == GraphicsItemType.CHARACTER:
             character = self._character(node)
             if character is None:
                 character = PlaceholderCharacter('Character')
             item = CharacterItem(character, node)
-        elif node.type == DiagramNodeType.NOTE:
+        elif node.type == GraphicsItemType.NOTE:
             item = NoteItem(node)
-        elif node.type == DiagramNodeType.IMAGE:
+        elif node.type == GraphicsItemType.IMAGE:
             item = ImageItem(node)
         else:
             item = EventItem(node)

@@ -33,7 +33,7 @@ from qthandy import pointy
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR, \
     WHITE_COLOR
-from plotlyst.core.domain import Node, Relation, Connector, Character, DiagramNodeType, to_node
+from plotlyst.core.domain import Node, Relation, Connector, Character, GraphicsItemType, to_node
 from plotlyst.service.image import LoadedImage
 from plotlyst.view.common import shadow, calculate_resized_dimensions
 from plotlyst.view.icons import IconRegistry, avatars
@@ -811,7 +811,7 @@ class EventItem(NodeItem):
         self._refresh()
         self.networkScene().nodeChangedEvent(self._node)
 
-    def setItemType(self, itemType: DiagramNodeType, subType: str = ''):
+    def setItemType(self, itemType: GraphicsItemType, subType: str = ''):
         new_node = to_node(0, 0, itemType, subType, default_size=QApplication.font().pointSize())
         self._node.type = new_node.type
         self._node.subtype = new_node.subtype

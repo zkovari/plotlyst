@@ -26,7 +26,7 @@ from PyQt6.QtWidgets import QWidget, QStyleOptionGraphicsItem, \
 from overrides import overrides
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
-from plotlyst.core.domain import Node, DiagramNodeType
+from plotlyst.core.domain import Node, GraphicsItemType
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.graphics import NodeItem
 
@@ -37,11 +37,11 @@ class StickerItem(NodeItem):
     def __init__(self, node: Node, parent=None):
         super().__init__(node, parent)
         self._size = 28
-        if type == DiagramNodeType.COMMENT:
+        if type == GraphicsItemType.COMMENT:
             self._icon = IconRegistry.from_name('mdi.comment-text', PLOTLYST_SECONDARY_COLOR)
-        elif type == DiagramNodeType.TOOL:
+        elif type == GraphicsItemType.TOOL:
             self._icon = IconRegistry.tool_icon()
-        if type == DiagramNodeType.COST:
+        if type == GraphicsItemType.COST:
             self._icon = IconRegistry.cost_icon()
 
         self.setFlag(
