@@ -1141,6 +1141,7 @@ class ImageItem(NodeItem):
     Margin: int = 20
     Padding: int = 2
     PlaceholderPadding: int = 20
+    MinimumImageSize: int = 30
 
     def __init__(self, node: Node, parent=None):
         super().__init__(node, parent)
@@ -1212,6 +1213,10 @@ class ImageItem(NodeItem):
     def rearrangeSize(self, pos: QPointF):
         height = int(pos.y())
         width = int(pos.x())
+        if width < self.MinimumImageSize or height < self.MinimumImageSize:
+            self._recalculateRect()
+            return
+
         self._imageWidth = width
         self._imageHeight = height
 
