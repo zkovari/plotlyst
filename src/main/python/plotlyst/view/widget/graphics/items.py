@@ -72,6 +72,8 @@ class ResizeIconItem(QAbstractGraphicsShapeItem):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._size: int = 32
+        self._ratio: float = 1
+        self._keepAspectRatio = False
         self._icon = IconRegistry.from_name('mdi.resize-bottom-right', 'grey')
         self._activated = False
 
@@ -79,6 +81,12 @@ class ResizeIconItem(QAbstractGraphicsShapeItem):
         self.setFlag(
             QGraphicsItem.GraphicsItemFlag.ItemIsMovable |
             QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
+
+    def setRatio(self, ratio: float):
+        self._ratio = ratio
+
+    def setKeepAspectRatio(self, keep: bool):
+        self._keepAspectRatio = keep
 
     @overrides
     def boundingRect(self) -> QRectF:
@@ -91,6 +99,9 @@ class ResizeIconItem(QAbstractGraphicsShapeItem):
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged and self._activated:
+            if self._keepAspectRatio:
+                value.setY(value.x() / self._ratio)
+                self.setPos(value)
             self.parentItem().rearrangeSize(value)
         return super().itemChange(change, value)
 
@@ -1148,7 +1159,13 @@ class ImageItem(NodeItem):
             pointy(self)
             self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
 
+        self._resizeItem = ResizeIconItem(self)
+        self._resizeItem.setKeepAspectRatio(True)
+        self._resizeItem.setRatio(self._imageWidth / self._imageHeight)
+
+
         self._recalculateRect()
+        self._resizeItem.setVisible(False)
 
     def hasImage(self) -> bool:
         return self._node.image_ref is not None
@@ -1167,11 +1184,27 @@ class ImageItem(NodeItem):
         self._imageHeight = h
         self._node.width = w
         self._node.height = h
+        self._resizeItem.setRatio(self._imageWidth / self._imageHeight)
 
         self._recalculateRect()
         self.prepareGeometryChange()
         self.update()
 
+        self.networkScene().nodeChangedEvent(self._node)
+
+    def rearrangeSize(self, pos: QPointF):
+        ratio = self._imageWidth / self._imageHeight
+        height = int(pos.y())
+        width = int(pos.x())
+        self._imageWidth = width
+        self._imageHeight = height
+
+        self._recalculateRect()
+        self.prepareGeometryChange()
+        self.update()
+
+        self._node.width = self._imageWidth
+        self._node.height = self._imageHeight
         self.networkScene().nodeChangedEvent(self._node)
 
     @overrides
@@ -1180,13 +1213,17 @@ class ImageItem(NodeItem):
 
     @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        if not self.hasImage():
+        if self.hasImage() and not self.isSelected():
+            self._resizeItem.setVisible(True)
+        elif not self.hasImage():
             self._placeholderColor = 'grey'
             self.update()
 
     @overrides
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        if not self.hasImage():
+        if self.hasImage():
+            self._resizeItem.setVisible(False)
+        else:
             self._placeholderColor = 'lightgrey'
             self.update()
 
@@ -1233,3 +1270,8 @@ class ImageItem(NodeItem):
         self._height = self._imageHeight + self.Margin * 2 + self.Padding * 2
         self._imageRect = QRect(self.Margin + self.Padding, self.Margin + self.Padding, self._imageWidth,
                                 self._imageHeight)
+
+        self._resizeItem.deactivate()
+        self._resizeItem.setPos(self._imageRect.width() - 10,
+                                self._imageRect.height() - 10)
+        self._resizeItem.activate()
