@@ -1040,10 +1040,20 @@ class NoteItem(NodeItem):
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         if not self.isSelected():
             self._resizeItem.setVisible(True)
+            if self.networkScene().linkMode() or alt_modifier(event):
+                self._setSocketsVisible()
+
+    @overrides
+    def hoverMoveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        if not self.networkScene().linkMode() and alt_modifier(event):
+            self._setSocketsVisible()
 
     @overrides
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         self._resizeItem.setVisible(False)
+
+        if not self.isSelected():
+            self._setSocketsVisible(False)
 
     @overrides
     def socket(self, angle: float) -> AbstractSocketItem:
@@ -1232,14 +1242,23 @@ class ImageItem(NodeItem):
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         if self.hasImage() and not self.isSelected():
             self._resizeItem.setVisible(True)
+            if self.networkScene().linkMode() or alt_modifier(event):
+                self._setSocketsVisible()
         elif not self.hasImage():
             self._placeholderColor = 'grey'
             self.update()
 
     @overrides
+    def hoverMoveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        if self.hasImage() and not self.networkScene().linkMode() and alt_modifier(event):
+            self._setSocketsVisible()
+
+    @overrides
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         if self.hasImage():
             self._resizeItem.setVisible(False)
+            if not self.isSelected():
+                self._setSocketsVisible(False)
         else:
             self._placeholderColor = 'lightgrey'
             self.update()
