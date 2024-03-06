@@ -1146,10 +1146,14 @@ class ImageItem(NodeItem):
             pointy(self)
             self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
 
+
         self._recalculateRect()
 
     def hasImage(self) -> bool:
         return self._node.image_ref is not None
+
+    def setImage(self, image: QImage):
+        self._image = image
 
     def setLoadedImage(self, image: LoadedImage):
         self._image = image.image
@@ -1158,6 +1162,8 @@ class ImageItem(NodeItem):
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
 
         self.update()
+
+        self.networkScene().nodeChangedEvent(self._node)
 
     @overrides
     def boundingRect(self) -> QRectF:
@@ -1198,6 +1204,8 @@ class ImageItem(NodeItem):
                                     self._imageSize + 2 * self.Padding, 2, 2)
 
         if self.hasImage():
+            if not self._image:
+                self.networkScene().loadImage(self)
             if self._image:
                 painter.drawImage(self._imageRect, self._image)
         else:

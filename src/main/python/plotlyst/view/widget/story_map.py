@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QKeyEvent
+from PyQt6.QtGui import QKeyEvent, QImage
 from PyQt6.QtGui import QShowEvent
 from PyQt6.QtWidgets import QApplication
 from overrides import overrides
@@ -30,7 +30,7 @@ from plotlyst.core.client import json_client
 from plotlyst.core.domain import Character, DiagramNodeType, NODE_SUBTYPE_TOOL, NODE_SUBTYPE_COST
 from plotlyst.core.domain import Node
 from plotlyst.core.domain import Novel
-from plotlyst.service.image import LoadedImage, upload_image
+from plotlyst.service.image import LoadedImage, upload_image, load_image
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.characters import CharacterSelectorMenu
@@ -71,6 +71,10 @@ class EventsMindMapScene(NetworkScene):
     @overrides
     def _uploadImage(self) -> Optional[LoadedImage]:
         return upload_image(self._novel)
+
+    @overrides
+    def _loadImage(self, node: Node) -> Optional[QImage]:
+        return load_image(self._novel, node.image_ref)
 
 
 class EventsMindMapView(NetworkGraphicsView):

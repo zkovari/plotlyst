@@ -25,7 +25,7 @@ from typing import Optional, Dict
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QPointF, QPoint, QObject
 from PyQt6.QtGui import QTransform, \
-    QKeyEvent, QKeySequence, QCursor
+    QKeyEvent, QKeySequence, QCursor, QImage
 from PyQt6.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QApplication, \
     QGraphicsSceneDragDropEvent
 from overrides import overrides
@@ -235,6 +235,11 @@ class NetworkScene(QGraphicsScene):
         if image:
             item.setLoadedImage(image)
 
+    def loadImage(self, item: ImageItem):
+        image = self._loadImage(item.node())
+        if image:
+            item.setImage(image)
+
     def connectorChangedEvent(self, connector: ConnectorItem):
         self._save()
 
@@ -372,6 +377,9 @@ class NetworkScene(QGraphicsScene):
         pass
 
     def _uploadImage(self) -> Optional[LoadedImage]:
+        pass
+
+    def _loadImage(self, node: Node) -> Optional[QImage]:
         pass
 
     def _onLink(self, sourceNode: NodeItem, sourceSocket: AbstractSocketItem, targetNode: NodeItem,
