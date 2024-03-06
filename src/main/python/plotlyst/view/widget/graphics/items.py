@@ -1193,9 +1193,7 @@ class ImageItem(NodeItem):
         self._node.height = h
         self._resizeItem.setRatio(self._imageWidth / self._imageHeight)
 
-        self._recalculateRect()
-        self.prepareGeometryChange()
-        self.update()
+        self._refresh()
 
         self.networkScene().nodeChangedEvent(self._node)
 
@@ -1220,9 +1218,7 @@ class ImageItem(NodeItem):
         self._imageWidth = width
         self._imageHeight = height
 
-        self._recalculateRect()
-        self.prepareGeometryChange()
-        self.update()
+        self._refresh()
 
         self._node.width = self._imageWidth
         self._node.height = self._imageHeight
@@ -1285,6 +1281,12 @@ class ImageItem(NodeItem):
                                                                         self.Margin + self.Padding + self.PlaceholderPadding,
                                                                         self._imageWidth - 2 * self.PlaceholderPadding - self._placeholderPadding,
                                                                         self._imageHeight - 2 * self.PlaceholderPadding - self._placeholderPadding)
+
+    def _refresh(self):
+        self._recalculateRect()
+        self.prepareGeometryChange()
+        self.update()
+        self.rearrangeConnectors()
 
     def _recalculateRect(self):
         self._width = self._imageWidth + self.Margin * 2 + self.Padding * 2
