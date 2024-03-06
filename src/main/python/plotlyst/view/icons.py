@@ -267,6 +267,10 @@ class IconRegistry:
         return IconRegistry.from_name('ei.graph')
 
     @staticmethod
+    def image_icon(**kwargs) -> QIcon:
+        return IconRegistry.from_name('fa5s.image', **kwargs)
+
+    @staticmethod
     def wip_icon() -> QIcon:
         return IconRegistry.from_name('mdi.progress-question')
 

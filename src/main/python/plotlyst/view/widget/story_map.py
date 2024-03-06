@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QKeyEvent
+from PyQt6.QtGui import QKeyEvent, QImage
 from PyQt6.QtGui import QShowEvent
 from PyQt6.QtWidgets import QApplication
 from overrides import overrides
@@ -30,6 +30,7 @@ from plotlyst.core.client import json_client
 from plotlyst.core.domain import Character, DiagramNodeType, NODE_SUBTYPE_TOOL, NODE_SUBTYPE_COST
 from plotlyst.core.domain import Node
 from plotlyst.core.domain import Novel
+from plotlyst.service.image import LoadedImage, upload_image, load_image
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.characters import CharacterSelectorMenu
@@ -67,6 +68,14 @@ class EventsMindMapScene(NetworkScene):
     def _save(self):
         self.repo.update_diagram(self._novel, self._diagram)
 
+    @overrides
+    def _uploadImage(self) -> Optional[LoadedImage]:
+        return upload_image(self._novel)
+
+    @overrides
+    def _loadImage(self, node: Node) -> Optional[QImage]:
+        return load_image(self._novel, node.image_ref)
+
 
 class EventsMindMapView(NetworkGraphicsView):
 
@@ -79,6 +88,8 @@ class EventsMindMapView(NetworkGraphicsView):
             IconRegistry.from_name('msc.note'), 'Add new note', DiagramNodeType.NOTE)
         self._btnAddCharacter = self._newControlButton(
             IconRegistry.character_icon('#040406'), 'Add new character', DiagramNodeType.CHARACTER)
+        self._btnAddImage = self._newControlButton(IconRegistry.image_icon(), 'Add new image',
+                                                   DiagramNodeType.IMAGE)
         self._btnAddSticker = self._newControlButton(IconRegistry.from_name('mdi6.sticker-circle-outline'),
                                                      'Add new sticker',
                                                      DiagramNodeType.COMMENT)

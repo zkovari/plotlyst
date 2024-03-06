@@ -582,3 +582,18 @@ def open_url(url: str):
 
 def to_rgba_str(color: QColor, alpha: int = 255) -> str:
     return f'rgba({color.red()}, {color.green()}, {color.blue()}, {alpha})'
+
+
+def calculate_resized_dimensions(width: int, height: int, max_size: int = 512):
+    if max(width, height) > max_size:
+        ratio = width / height
+        if width > height:
+            w, h = max_size, max_size / ratio
+        elif width < height:
+            w, h = max_size * ratio, max_size
+        else:
+            w = h = max_size
+    else:
+        w, h = width, height
+
+    return int(w), int(h)

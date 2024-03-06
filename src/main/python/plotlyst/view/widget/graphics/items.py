@@ -24,7 +24,7 @@ from enum import Enum
 from typing import Any, Optional, List
 
 from PyQt6.QtCore import Qt, QTimer, QRectF, QPointF, QPoint, QRect
-from PyQt6.QtGui import QPainter, QPen, QPainterPath, QColor, QIcon, QPolygonF, QBrush, QFontMetrics
+from PyQt6.QtGui import QPainter, QPen, QPainterPath, QColor, QIcon, QPolygonF, QBrush, QFontMetrics, QImage
 from PyQt6.QtWidgets import QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QGraphicsSceneMouseEvent, \
     QStyleOptionGraphicsItem, QWidget, \
     QGraphicsSceneHoverEvent, QGraphicsPolygonItem, QApplication, QGraphicsTextItem
@@ -34,7 +34,8 @@ from qthandy import pointy
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR, \
     WHITE_COLOR
 from plotlyst.core.domain import Node, Relation, Connector, Character, DiagramNodeType, to_node
-from plotlyst.view.common import shadow
+from plotlyst.service.image import LoadedImage
+from plotlyst.view.common import shadow, calculate_resized_dimensions
 from plotlyst.view.icons import IconRegistry, avatars
 
 
@@ -71,6 +72,8 @@ class ResizeIconItem(QAbstractGraphicsShapeItem):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._size: int = 32
+        self._ratio: float = 1
+        self._keepAspectRatio = False
         self._icon = IconRegistry.from_name('mdi.resize-bottom-right', 'grey')
         self._activated = False
 
@@ -78,6 +81,12 @@ class ResizeIconItem(QAbstractGraphicsShapeItem):
         self.setFlag(
             QGraphicsItem.GraphicsItemFlag.ItemIsMovable |
             QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
+
+    def setRatio(self, ratio: float):
+        self._ratio = ratio
+
+    def setKeepAspectRatio(self, keep: bool):
+        self._keepAspectRatio = keep
 
     @overrides
     def boundingRect(self) -> QRectF:
@@ -90,6 +99,9 @@ class ResizeIconItem(QAbstractGraphicsShapeItem):
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged and self._activated:
+            if self._keepAspectRatio:
+                value.setY(value.x() / self._ratio)
+                self.setPos(value)
             self.parentItem().rearrangeSize(value)
         return super().itemChange(change, value)
 
@@ -1028,10 +1040,20 @@ class NoteItem(NodeItem):
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         if not self.isSelected():
             self._resizeItem.setVisible(True)
+            if self.networkScene().linkMode() or alt_modifier(event):
+                self._setSocketsVisible()
+
+    @overrides
+    def hoverMoveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        if not self.networkScene().linkMode() and alt_modifier(event):
+            self._setSocketsVisible()
 
     @overrides
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         self._resizeItem.setVisible(False)
+
+        if not self.isSelected():
+            self._setSocketsVisible(False)
 
     @overrides
     def socket(self, angle: float) -> AbstractSocketItem:
@@ -1123,3 +1145,193 @@ class NoteItem(NodeItem):
         self._resizeItem.setPos(self._textRect.width() + self.TextPadding + 10,
                                 self._textRect.height() + self.TextPadding + 10)
         self._resizeItem.activate()
+
+
+class ImageItem(NodeItem):
+    Margin: int = 20
+    Padding: int = 2
+    PlaceholderPadding: int = 20
+    MinimumImageSize: int = 30
+
+    def __init__(self, node: Node, parent=None):
+        super().__init__(node, parent)
+        self._imageWidth = node.width if node.width else 200
+        self._imageHeight = node.height if node.height else 200
+        self._imageRect = QRect(self.Margin + self.Padding, self.Margin + self.Padding, self._imageWidth,
+                                self._imageHeight)
+        self._image: Optional[QImage] = None
+
+        self._width = 0
+        self._height = 0
+        self._placeholderPadding = 0
+        self._placeholderColor = 'lightgrey'
+
+        if self._node.image_ref is None:
+            pointy(self)
+            self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
+
+        self._socketLeft = DotCircleSocketItem(180, parent=self)
+        self._socketTopCenter = DotCircleSocketItem(90, parent=self)
+        self._socketRight = DotCircleSocketItem(0, parent=self)
+        self._socketBottomCenter = DotCircleSocketItem(-90, parent=self)
+        self._sockets.extend([self._socketLeft, self._socketTopCenter, self._socketRight, self._socketBottomCenter])
+        self._setSocketsVisible(False)
+
+        self._resizeItem = ResizeIconItem(self)
+        self._resizeItem.setKeepAspectRatio(True)
+        self._resizeItem.setRatio(self._imageWidth / self._imageHeight)
+
+        self._recalculateRect()
+        self._resizeItem.setVisible(False)
+
+    def hasImage(self) -> bool:
+        return self._node.image_ref is not None
+
+    def setImage(self, image: QImage):
+        self._image = image
+
+    def setLoadedImage(self, image: LoadedImage):
+        self.setImage(image.image)
+        self._node.image_ref = image.ref
+        self.setCursor(Qt.CursorShape.ArrowCursor)
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
+
+        w, h = calculate_resized_dimensions(self._image.width(), self._image.height(), 200)
+        self._imageWidth = w
+        self._imageHeight = h
+        self._node.width = w
+        self._node.height = h
+        self._resizeItem.setRatio(self._imageWidth / self._imageHeight)
+
+        self._refresh()
+
+        self.networkScene().nodeChangedEvent(self._node)
+
+    @overrides
+    def socket(self, angle: float) -> AbstractSocketItem:
+        if angle == 0:
+            return self._socketRight
+        elif angle == 90:
+            return self._socketTopCenter
+        elif angle == 180:
+            return self._socketLeft
+        elif angle == -90:
+            return self._socketBottomCenter
+
+    def rearrangeSize(self, pos: QPointF):
+        height = int(pos.y())
+        width = int(pos.x())
+        if width < self.MinimumImageSize or height < self.MinimumImageSize:
+            self._recalculateRect()
+            return
+
+        self._imageWidth = width
+        self._imageHeight = height
+
+        self._refresh()
+
+        self._node.width = self._imageWidth
+        self._node.height = self._imageHeight
+        self.networkScene().nodeChangedEvent(self._node)
+
+    @overrides
+    def boundingRect(self) -> QRectF:
+        return QRectF(0, 0, self._width, self._height)
+
+    @overrides
+    def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        if self.hasImage() and not self.isSelected():
+            self._resizeItem.setVisible(True)
+            if self.networkScene().linkMode() or alt_modifier(event):
+                self._setSocketsVisible()
+        elif not self.hasImage():
+            self._placeholderColor = 'grey'
+            self.update()
+
+    @overrides
+    def hoverMoveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        if self.hasImage() and not self.networkScene().linkMode() and alt_modifier(event):
+            self._setSocketsVisible()
+
+    @overrides
+    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        if self.hasImage():
+            self._resizeItem.setVisible(False)
+            if not self.isSelected():
+                self._setSocketsVisible(False)
+        else:
+            self._placeholderColor = 'lightgrey'
+            self.update()
+
+    @overrides
+    def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        if not self.hasImage():
+            self._placeholderPadding = 4
+            self.update()
+        super().mousePressEvent(event)
+
+    @overrides
+    def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        if not self.hasImage():
+            self._placeholderPadding = 0
+            self.update()
+            self.networkScene().requestImageUpload(self)
+        super().mouseReleaseEvent(event)
+
+    @overrides
+    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+        if self.isSelected():
+            painter.setPen(QPen(Qt.GlobalColor.gray, 2, Qt.PenStyle.DashLine))
+            painter.drawRoundedRect(self.Margin, self.Margin, self._imageWidth + 2 * self.Padding,
+                                    self._imageHeight + 2 * self.Padding, 2, 2)
+
+        if self.hasImage():
+            if not self._image:
+                self.networkScene().loadImage(self)
+            if self._image:
+                painter.drawImage(self._imageRect, self._image)
+        else:
+            painter.setPen(QPen(QColor('lightgrey'), 1))
+            painter.setBrush(QColor(WHITE_COLOR))
+            painter.drawRoundedRect(self.Margin + self.Padding, self.Margin + self.Padding, self._imageWidth,
+                                    self._imageHeight, 6, 6)
+            IconRegistry.image_icon(color=self._placeholderColor).paint(painter,
+                                                                        self.Margin + self.Padding + self.PlaceholderPadding,
+                                                                        self.Margin + self.Padding + self.PlaceholderPadding,
+                                                                        self._imageWidth - 2 * self.PlaceholderPadding - self._placeholderPadding,
+                                                                        self._imageHeight - 2 * self.PlaceholderPadding - self._placeholderPadding)
+
+    def _refresh(self):
+        self._recalculateRect()
+        self.prepareGeometryChange()
+        self.update()
+        self.rearrangeConnectors()
+
+    def _recalculateRect(self):
+        self._width = self._imageWidth + self.Margin * 2 + self.Padding * 2
+        self._height = self._imageHeight + self.Margin * 2 + self.Padding * 2
+        self._imageRect = QRect(self.Margin + self.Padding, self.Margin + self.Padding, self._imageWidth,
+                                self._imageHeight)
+
+        socketWidth = self._socketLeft.boundingRect().width()
+        socketRad = socketWidth / 2
+        socketPadding = (self.Margin - socketWidth) / 2
+        self._socketTopCenter.setPos(self._width / 2 - socketRad, socketPadding)
+        self._socketRight.setPos(self._width - self.Margin + socketPadding, self._height / 2 - socketRad)
+        self._socketBottomCenter.setPos(self._width / 2 - socketRad, self._height - self.Margin + socketPadding)
+        self._socketLeft.setPos(socketPadding, self._height / 2 - socketRad)
+
+        self._resizeItem.deactivate()
+        self._resizeItem.setPos(self._imageRect.width() - 10,
+                                self._imageRect.height() - 10)
+        self._resizeItem.activate()
+
+    @overrides
+    def _onSelection(self, selected: bool):
+        super()._onSelection(selected)
+        self._setSocketsVisible(selected)
+        self._resizeItem.setVisible(not selected)
+
+    def _setSocketsVisible(self, visible: bool = True):
+        for socket in self._sockets:
+            socket.setVisible(visible)

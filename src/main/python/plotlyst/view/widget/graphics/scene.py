@@ -25,16 +25,17 @@ from typing import Optional, Dict
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QPointF, QPoint, QObject
 from PyQt6.QtGui import QTransform, \
-    QKeyEvent, QKeySequence, QCursor
+    QKeyEvent, QKeySequence, QCursor, QImage
 from PyQt6.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QApplication, \
     QGraphicsSceneDragDropEvent
 from overrides import overrides
 
 from plotlyst.core.domain import Node, Diagram, DiagramNodeType, Connector, PlaceholderCharacter, \
     Character, to_node
+from plotlyst.service.image import LoadedImage
 from plotlyst.view.widget.graphics import NodeItem, CharacterItem, PlaceholderSocketItem, ConnectorItem, \
     AbstractSocketItem, EventItem
-from plotlyst.view.widget.graphics.items import NoteItem
+from plotlyst.view.widget.graphics.items import NoteItem, ImageItem
 
 
 @dataclass
@@ -229,6 +230,16 @@ class NetworkScene(QGraphicsScene):
     def nodeChangedEvent(self, node: Node):
         self._save()
 
+    def requestImageUpload(self, item: ImageItem):
+        image = self._uploadImage()
+        if image:
+            item.setLoadedImage(image)
+
+    def loadImage(self, item: ImageItem):
+        image = self._loadImage(item.node())
+        if image:
+            item.setImage(image)
+
     def connectorChangedEvent(self, connector: ConnectorItem):
         self._save()
 
@@ -252,6 +263,13 @@ class NetworkScene(QGraphicsScene):
         node = Node(scenePos.x(), scenePos.y(), type=DiagramNodeType.NOTE)
         node.x = node.x - NoteItem.Margin
         node.y = node.y - NoteItem.Margin
+        return node
+
+    @staticmethod
+    def toImageNode(scenePos: QPointF) -> Node:
+        node = Node(scenePos.x(), scenePos.y(), type=DiagramNodeType.IMAGE)
+        node.x = node.x - ImageItem.Margin
+        node.y = node.y - ImageItem.Margin
         return node
 
     def _removeItem(self, item: QGraphicsItem):
@@ -314,6 +332,8 @@ class NetworkScene(QGraphicsScene):
         #     item = StickerItem(Node(scenePos.x(), scenePos.y(), itemType, subType))
         elif itemType == DiagramNodeType.NOTE:
             item = NoteItem(self.toNoteNode(scenePos))
+        elif itemType == DiagramNodeType.IMAGE:
+            item = ImageItem(self.toImageNode(scenePos))
         else:
             item = EventItem(self.toEventNode(scenePos, itemType, subType))
 
@@ -336,6 +356,8 @@ class NetworkScene(QGraphicsScene):
             item = CharacterItem(character, node)
         elif node.type == DiagramNodeType.NOTE:
             item = NoteItem(node)
+        elif node.type == DiagramNodeType.IMAGE:
+            item = ImageItem(node)
         else:
             item = EventItem(node)
 
@@ -352,6 +374,12 @@ class NetworkScene(QGraphicsScene):
 
     @abstractmethod
     def _character(self, node: Node) -> Optional[Character]:
+        pass
+
+    def _uploadImage(self) -> Optional[LoadedImage]:
+        pass
+
+    def _loadImage(self, node: Node) -> Optional[QImage]:
         pass
 
     def _onLink(self, sourceNode: NodeItem, sourceSocket: AbstractSocketItem, targetNode: NodeItem,
