@@ -35,7 +35,7 @@ from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTL
     WHITE_COLOR
 from plotlyst.core.domain import Node, Relation, Connector, Character, DiagramNodeType, to_node
 from plotlyst.service.image import LoadedImage
-from plotlyst.view.common import shadow
+from plotlyst.view.common import shadow, calculate_resized_dimensions
 from plotlyst.view.icons import IconRegistry, avatars
 
 
@@ -1133,13 +1133,15 @@ class ImageItem(NodeItem):
 
     def __init__(self, node: Node, parent=None):
         super().__init__(node, parent)
-        self._imageSize = 200
-        self._size = 200 + self.Margin * 2 + self.Padding * 2
-        self._imageRect = QRect(self.Margin + self.Padding, self.Margin + self.Padding, self._imageSize,
-                                self._imageSize)
-        self._placeholderPadding = 0
+        self._imageWidth = node.width if node.width else 200
+        self._imageHeight = node.height if node.height else 200
+        self._imageRect = QRect(self.Margin + self.Padding, self.Margin + self.Padding, self._imageWidth,
+                                self._imageHeight)
         self._image: Optional[QImage] = None
 
+        self._width = 0
+        self._height = 0
+        self._placeholderPadding = 0
         self._placeholderColor = 'lightgrey'
 
         if self._node.image_ref is None:
@@ -1160,13 +1162,21 @@ class ImageItem(NodeItem):
         self.setCursor(Qt.CursorShape.ArrowCursor)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
 
+        w, h = calculate_resized_dimensions(self._image.width(), self._image.height(), 200)
+        self._imageWidth = w
+        self._imageHeight = h
+        self._node.width = w
+        self._node.height = h
+
+        self._recalculateRect()
+        self.prepareGeometryChange()
         self.update()
 
         self.networkScene().nodeChangedEvent(self._node)
 
     @overrides
     def boundingRect(self) -> QRectF:
-        return QRectF(0, 0, self._size, self._size)
+        return QRectF(0, 0, self._width, self._height)
 
     @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
@@ -1199,8 +1209,8 @@ class ImageItem(NodeItem):
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
         if self.isSelected():
             painter.setPen(QPen(Qt.GlobalColor.gray, 2, Qt.PenStyle.DashLine))
-            painter.drawRoundedRect(self.Margin, self.Margin, self._imageSize + 2 * self.Padding,
-                                    self._imageSize + 2 * self.Padding, 2, 2)
+            painter.drawRoundedRect(self.Margin, self.Margin, self._imageWidth + 2 * self.Padding,
+                                    self._imageHeight + 2 * self.Padding, 2, 2)
 
         if self.hasImage():
             if not self._image:
@@ -1210,13 +1220,16 @@ class ImageItem(NodeItem):
         else:
             painter.setPen(QPen(QColor('lightgrey'), 1))
             painter.setBrush(QColor(WHITE_COLOR))
-            painter.drawRoundedRect(self.Margin + self.Padding, self.Margin + self.Padding, self._imageSize,
-                                    self._imageSize, 6, 6)
+            painter.drawRoundedRect(self.Margin + self.Padding, self.Margin + self.Padding, self._imageWidth,
+                                    self._imageHeight, 6, 6)
             IconRegistry.image_icon(color=self._placeholderColor).paint(painter,
                                                                         self.Margin + self.Padding + self.PlaceholderPadding,
                                                                         self.Margin + self.Padding + self.PlaceholderPadding,
-                                                                        self._imageSize - 2 * self.PlaceholderPadding - self._placeholderPadding,
-                                                                        self._imageSize - 2 * self.PlaceholderPadding - self._placeholderPadding)
+                                                                        self._imageWidth - 2 * self.PlaceholderPadding - self._placeholderPadding,
+                                                                        self._imageHeight - 2 * self.PlaceholderPadding - self._placeholderPadding)
 
     def _recalculateRect(self):
-        self._size = 200 + self.Margin * 2 + self.Padding * 2
+        self._width = self._imageWidth + self.Margin * 2 + self.Padding * 2
+        self._height = self._imageHeight + self.Margin * 2 + self.Padding * 2
+        self._imageRect = QRect(self.Margin + self.Padding, self.Margin + self.Padding, self._imageWidth,
+                                self._imageHeight)
