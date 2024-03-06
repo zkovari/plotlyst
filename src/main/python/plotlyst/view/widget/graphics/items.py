@@ -1146,7 +1146,6 @@ class ImageItem(NodeItem):
             pointy(self)
             self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
 
-
         self._recalculateRect()
 
     def hasImage(self) -> bool:
@@ -1156,7 +1155,7 @@ class ImageItem(NodeItem):
         self._image = image
 
     def setLoadedImage(self, image: LoadedImage):
-        self._image = image.image
+        self.setImage(image.image)
         self._node.image_ref = image.ref
         self.setCursor(Qt.CursorShape.ArrowCursor)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
