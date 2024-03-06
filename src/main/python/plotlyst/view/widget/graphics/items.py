@@ -1159,10 +1159,16 @@ class ImageItem(NodeItem):
             pointy(self)
             self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
 
+        self._socketLeft = DotCircleSocketItem(180, parent=self)
+        self._socketTopCenter = DotCircleSocketItem(90, parent=self)
+        self._socketRight = DotCircleSocketItem(0, parent=self)
+        self._socketBottomCenter = DotCircleSocketItem(-90, parent=self)
+        self._sockets.extend([self._socketLeft, self._socketTopCenter, self._socketRight, self._socketBottomCenter])
+        self._setSocketsVisible(False)
+
         self._resizeItem = ResizeIconItem(self)
         self._resizeItem.setKeepAspectRatio(True)
         self._resizeItem.setRatio(self._imageWidth / self._imageHeight)
-
 
         self._recalculateRect()
         self._resizeItem.setVisible(False)
@@ -1192,8 +1198,18 @@ class ImageItem(NodeItem):
 
         self.networkScene().nodeChangedEvent(self._node)
 
+    @overrides
+    def socket(self, angle: float) -> AbstractSocketItem:
+        if angle == 0:
+            return self._socketRight
+        elif angle == 90:
+            return self._socketTopCenter
+        elif angle == 180:
+            return self._socketLeft
+        elif angle == -90:
+            return self._socketBottomCenter
+
     def rearrangeSize(self, pos: QPointF):
-        ratio = self._imageWidth / self._imageHeight
         height = int(pos.y())
         width = int(pos.x())
         self._imageWidth = width
@@ -1271,7 +1287,25 @@ class ImageItem(NodeItem):
         self._imageRect = QRect(self.Margin + self.Padding, self.Margin + self.Padding, self._imageWidth,
                                 self._imageHeight)
 
+        socketWidth = self._socketLeft.boundingRect().width()
+        socketRad = socketWidth / 2
+        socketPadding = (self.Margin - socketWidth) / 2
+        self._socketTopCenter.setPos(self._width / 2 - socketRad, socketPadding)
+        self._socketRight.setPos(self._width - self.Margin + socketPadding, self._height / 2 - socketRad)
+        self._socketBottomCenter.setPos(self._width / 2 - socketRad, self._height - self.Margin + socketPadding)
+        self._socketLeft.setPos(socketPadding, self._height / 2 - socketRad)
+
         self._resizeItem.deactivate()
         self._resizeItem.setPos(self._imageRect.width() - 10,
                                 self._imageRect.height() - 10)
         self._resizeItem.activate()
+
+    @overrides
+    def _onSelection(self, selected: bool):
+        super()._onSelection(selected)
+        self._setSocketsVisible(selected)
+        self._resizeItem.setVisible(not selected)
+
+    def _setSocketsVisible(self, visible: bool = True):
+        for socket in self._sockets:
+            socket.setVisible(visible)
