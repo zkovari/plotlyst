@@ -34,7 +34,7 @@ from qthandy.filter import InstantTooltipEventFilter
 from plotlyst.env import app_env
 from plotlyst.service.resource import JsonDownloadWorker, JsonDownloadResult, ImageDownloadResult, \
     ImagesDownloadWorker
-from plotlyst.view.common import rounded_pixmap, open_url
+from plotlyst.view.common import rounded_pixmap, open_url, calculate_resized_dimensions
 from plotlyst.view.generated.artbreeder_picker_dialog_ui import Ui_ArtbreederPickerDialog
 from plotlyst.view.generated.image_crop_dialog_ui import Ui_ImageCropDialog
 from plotlyst.view.icons import IconRegistry
@@ -202,22 +202,7 @@ class ImageCropDialog(QDialog, Ui_ImageCropDialog):
         self.cropped = None
 
     def display(self, pixmap: QPixmap) -> Optional[QPixmap]:
-        ratio = pixmap.width() / pixmap.height()
-
-        if max(pixmap.width(), pixmap.height()) > 512:
-            if pixmap.width() > pixmap.height():
-                w = 512
-                h = 512 / ratio
-            elif pixmap.width() < pixmap.height():
-                h = 512
-                w = 512 * ratio
-            else:
-                h = w = 512
-        else:
-            w = pixmap.width()
-            h = pixmap.height()
-        w = int(w)
-        h = int(h)
+        w, h = calculate_resized_dimensions(pixmap.width(), pixmap.height(), max_size=512)
 
         self.frame.setFixedSize(min(w, h), min(w, h))
         self.scaled = pixmap.scaled(w, h, Qt.AspectRatioMode.KeepAspectRatio,
