@@ -45,7 +45,7 @@ class BaseTreeWidget(QWidget):
     deleted = pyqtSignal()
     iconChanged = pyqtSignal()
 
-    def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None):
+    def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None, settings: Optional[TreeSettings] = None):
         super(BaseTreeWidget, self).__init__(parent)
         self._menuEnabled: bool = True
         self._plusEnabled: bool = True
@@ -172,7 +172,7 @@ class ContainerNode(BaseTreeWidget):
 
     def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None, settings: Optional[TreeSettings] = None,
                  readOnly: bool = False):
-        super(ContainerNode, self).__init__(title, icon, parent)
+        super(ContainerNode, self).__init__(title, icon, parent, settings)
         vbox(self, 0, 0)
 
         self._container = QWidget(self)
