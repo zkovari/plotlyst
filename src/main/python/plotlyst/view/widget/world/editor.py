@@ -266,6 +266,9 @@ class WorldBuildingEntityElementWidget(QWidget):
                                      20, 20)
         super().resizeEvent(event)
 
+    def activate(self):
+        pass
+
     @staticmethod
     def newWidget(novel: Novel, element: WorldBuildingEntityElement,
                   parent: Optional[
@@ -642,6 +645,10 @@ class HighlightedTextElementEditor(WorldBuildingEntityElementWidget):
 
         self.layout().addWidget(self.frame)
 
+    @overrides
+    def activate(self):
+        self.textEdit.setFocus()
+
     def _textChanged(self):
         self.element.text = self.textEdit.toMarkdown()
         self.save()
@@ -940,6 +947,7 @@ class WorldBuildingEntityEditor(QWidget):
 
         insert_before_the_end(self.wdgEditorSide, wdg, 2)
         qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
+        wdg.activate()
 
         self._entity.side_elements.append(element)
         self.repo.update_world(self._novel)
