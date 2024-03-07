@@ -761,7 +761,6 @@ class WorldBuildingEntityEditor(QWidget):
 
     def _selectNewTopic(self):
         topics = TopicSelectionDialog.popup()
-        # topics = dialog.display()
         if topics:
             for topic in topics:
                 self._addNewSection(topic)
