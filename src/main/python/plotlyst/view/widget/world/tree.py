@@ -20,8 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Optional, Dict, Set
 
-from PyQt6.QtCore import pyqtSignal
-from qthandy import vspacer, clear_layout, transparent
+from PyQt6.QtCore import pyqtSignal, QMimeData, Qt, QPointF
+from qthandy import vspacer, clear_layout, transparent, translucent, gc
+from qthandy.filter import DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.common import recursive
@@ -110,6 +111,7 @@ class RootNode(EntityNode):
 
 
 class WorldBuildingTreeView(TreeView):
+    WORLD_ENTITY_MIMETYPE = 'application/world-entity'
     entitySelected = pyqtSignal(WorldBuildingEntity)
 
     def __init__(self, parent=None, settings: Optional[TreeSettings] = None):
@@ -120,6 +122,9 @@ class WorldBuildingTreeView(TreeView):
         self._entities: Dict[WorldBuildingEntity, EntityNode] = {}
         self._selectedEntities: Set[WorldBuildingEntity] = set()
         transparent(self)
+
+        self._dummyWdg: Optional[EntityNode] = None
+        self._toBeRemoved: Optional[EntityNode] = None
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -191,11 +196,93 @@ class WorldBuildingTreeView(TreeView):
         fade_out_and_gc(node.parent(), node)
         self.repo.update_world(self._novel)
 
+    def _dragStarted(self, wdg: EntityNode):
+        wdg.setHidden(True)
+        self._dummyWdg = EntityNode(wdg.entity(), settings=self._settings)
+        self._dummyWdg.setPlusButtonEnabled(False)
+        self._dummyWdg.setMenuEnabled(False)
+        translucent(self._dummyWdg)
+        self._dummyWdg.setHidden(True)
+        self._dummyWdg.setParent(self._centralWidget)
+        self._dummyWdg.setAcceptDrops(True)
+        self._dummyWdg.installEventFilter(
+            DropEventFilter(self._dummyWdg, [self.WORLD_ENTITY_MIMETYPE], droppedSlot=self._drop))
+
+    def _dragStopped(self, wdg: EntityNode):
+        if self._dummyWdg:
+            gc(self._dummyWdg)
+            self._dummyWdg = None
+
+        if self._toBeRemoved:
+            gc(self._toBeRemoved)
+            self._toBeRemoved = None
+        else:
+            wdg.setVisible(True)
+
+    def _dragMovedOnEntity(self, wdg: EntityNode, edge: Qt.Edge, point: QPointF):
+        i = wdg.parent().layout().indexOf(wdg)
+        if edge == Qt.Edge.TopEdge:
+            wdg.parent().layout().insertWidget(i, self._dummyWdg)
+        elif point.x() > 50:
+            wdg.insertChild(0, self._dummyWdg)
+        else:
+            wdg.parent().layout().insertWidget(i + 1, self._dummyWdg)
+
+        self._dummyWdg.setVisible(True)
+
+    def _drop(self, mimeData: QMimeData):
+        self.clearSelection()
+
+        if self._dummyWdg.isHidden():
+            return
+        ref: WorldBuildingEntity = mimeData.reference()
+        self._toBeRemoved = self._entities[ref]
+        new_widget = self.__initEntityWidget(ref)
+        for child in self._toBeRemoved.childrenWidgets():
+            new_widget.addChild(child)
+
+        entity_parent_wdg: EntityNode = self._dummyWdg.parent().parent()
+        new_index = entity_parent_wdg.containerWidget().layout().indexOf(self._dummyWdg)
+        if self._toBeRemoved.parent() is not self._centralWidget and \
+                self._toBeRemoved.parent().parent() is self._dummyWdg.parent().parent():  # swap under same parent doc
+            old_index = entity_parent_wdg.indexOf(self._toBeRemoved)
+            entity_parent_wdg.entity().children.remove(ref)
+            if old_index < new_index:
+                entity_parent_wdg.entity().children.insert(new_index - 1, ref)
+            else:
+                entity_parent_wdg.entity().children.insert(new_index, ref)
+        else:
+            self._removeFromParentEntity(ref, self._toBeRemoved)
+            entity_parent_wdg.entity().children.insert(new_index, ref)
+
+        entity_parent_wdg.insertChild(new_index, new_widget)
+
+        self._dummyWdg.setHidden(True)
+        self.repo.update_world(self._novel)
+
+    def _removeFromParentEntity(self, entity: WorldBuildingEntity, wdg: EntityNode):
+        parent: EntityNode = wdg.parent().parent()
+        parent.entity().children.remove(entity)
+
     def __initEntityWidget(self, entity: WorldBuildingEntity) -> EntityNode:
         node = EntityNode(entity, settings=self._settings)
         node.selectionChanged.connect(partial(self._entitySelectionChanged, node))
         node.addEntity.connect(partial(self._addEntity, node))
         node.deleted.connect(partial(self._removeEntity, node))
+
+        node.installEventFilter(
+            DragEventFilter(node, self.WORLD_ENTITY_MIMETYPE, dataFunc=lambda node: node.entity(),
+                            grabbed=node.titleLabel(),
+                            startedSlot=partial(self._dragStarted, node),
+                            finishedSlot=partial(self._dragStopped, node)))
+        node.titleWidget().setAcceptDrops(True)
+        node.titleWidget().installEventFilter(
+            DropEventFilter(node, [self.WORLD_ENTITY_MIMETYPE],
+                            motionDetection=Qt.Orientation.Vertical,
+                            motionSlot=partial(self._dragMovedOnEntity, node),
+                            droppedSlot=self._drop
+                            )
+        )
 
         self._entities[entity] = node
         return node

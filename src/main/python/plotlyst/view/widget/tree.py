@@ -237,6 +237,9 @@ class ContainerNode(BaseTreeWidget):
         self._container.setVisible(True)
         self._container.layout().insertWidget(i, wdg)
 
+    def indexOf(self, wdg: QWidget) -> int:
+        return self._container.layout().indexOf(wdg)
+
     def clearChildren(self):
         clear_layout(self._container)
         self._container.setHidden(True)
