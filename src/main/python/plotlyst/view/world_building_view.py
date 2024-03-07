@@ -36,8 +36,8 @@ from plotlyst.view.generated.world_building_view_ui import Ui_WorldBuildingView
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_bg_image
 from plotlyst.view.widget.tree import TreeSettings
-from plotlyst.view.widget.world.editor import EntityAdditionMenu, WorldBuildingEntityEditor, \
-    WorldBuildingGlossaryEditor
+from plotlyst.view.widget.world.editor import EntityAdditionMenu, WorldBuildingEntityEditor
+from plotlyst.view.widget.world.glossary import WorldBuildingGlossaryEditor
 from plotlyst.view.widget.world.map import WorldBuildingMapView
 
 
