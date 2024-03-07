@@ -70,6 +70,7 @@ class AutoAdjustableTextEdit(EnhancedTextEdit):
 
         self.setDocumentMargin(0)
         self.setSidebarEnabled(False)
+        self.setCommandsEnabled(False)
 
     @overrides
     def setText(self, text: str) -> None:
