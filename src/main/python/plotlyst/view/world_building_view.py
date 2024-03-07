@@ -124,8 +124,7 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.readerModeToggle.setHidden(True)
         self.ui.btnHistoryView.setHidden(True)
 
-        self.ui.btnTreeToggle.setChecked(False)
-        self.ui.wdgWorldContainer.setHidden(True)
+        self.ui.btnTreeToggle.setChecked(True)
 
     @overrides
     def refresh(self):
