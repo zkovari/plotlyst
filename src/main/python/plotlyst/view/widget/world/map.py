@@ -416,6 +416,11 @@ class WorldBuildingMapView(BaseGraphicsView):
         self._wdgZoomBar = ZoomBar(self)
         self._wdgZoomBar.zoomed.connect(self._scale)
 
+        self._controlsNavBar = self._roundedFrame()
+        sp(self._controlsNavBar).h_max()
+        shadow(self._controlsNavBar)
+        vbox(self._controlsNavBar, 5, 6)
+
         self._wdgEditor = EntityEditorWidget(self)
         self._wdgEditor.setHidden(True)
 
