@@ -119,7 +119,6 @@ class WorldBuildingTreeView(TreeView):
         self._root: Optional[RootNode] = None
         self._entities: Dict[WorldBuildingEntity, EntityNode] = {}
         self._selectedEntities: Set[WorldBuildingEntity] = set()
-        self._centralWidget.setStyleSheet('background: #ede0d4;')
         transparent(self)
 
         self.repo = RepositoryPersistenceManager.instance()
@@ -130,6 +129,7 @@ class WorldBuildingTreeView(TreeView):
 
     def setSettings(self, settings: TreeSettings):
         self._settings = settings
+        self._centralWidget.setStyleSheet(f'#centralWidget {{background: {settings.bg_color};}}')
 
     def setNovel(self, novel: Novel):
         self._novel = novel

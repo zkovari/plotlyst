@@ -38,6 +38,11 @@ from plotlyst.view.widget.display import Icon
 @dataclass
 class TreeSettings:
     font_incr: int = 0
+    bg_color: str = ''
+    action_buttons_color: str = 'grey'
+    selection_bg_color: str = '#D8D5D5'
+    selection_text_color: str = ''
+    hover_bg_color: str = '#E9E7E7'
 
 
 class BaseTreeWidget(QWidget):
@@ -45,10 +50,15 @@ class BaseTreeWidget(QWidget):
     deleted = pyqtSignal()
     iconChanged = pyqtSignal()
 
-    def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None):
+    def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None, settings: Optional[TreeSettings] = None):
         super(BaseTreeWidget, self).__init__(parent)
         self._menuEnabled: bool = True
         self._plusEnabled: bool = True
+
+        if settings is None:
+            self._settings = TreeSettings()
+        else:
+            self._settings = settings
 
         self._selectionEnabled: bool = True
         self._selected: bool = False
@@ -66,14 +76,14 @@ class BaseTreeWidget(QWidget):
 
         self._btnMenu = QToolButton()
         transparent(self._btnMenu)
-        self._btnMenu.setIcon(IconRegistry.dots_icon('grey', vertical=True))
+        self._btnMenu.setIcon(IconRegistry.dots_icon(self._settings.action_buttons_color, vertical=True))
         self._btnMenu.setIconSize(QSize(18, 18))
         self._btnMenu.setHidden(True)
         retain_when_hidden(self._btnMenu)
 
         self._btnAdd = QToolButton()
         transparent(self._btnAdd)
-        self._btnAdd.setIcon(IconRegistry.plus_icon('grey'))
+        self._btnAdd.setIcon(IconRegistry.plus_icon(self._settings.action_buttons_color))
         self._btnAddPressFilter = ButtonPressResizeEventFilter(self._btnAdd)
         self._btnAdd.installEventFilter(self._btnAddPressFilter)
         self._btnAdd.setHidden(True)
@@ -158,10 +168,10 @@ class BaseTreeWidget(QWidget):
 
     def _reStyle(self):
         if self._selected:
-            self._wdgTitle.setStyleSheet('''
-                    #wdgTitle {
-                        background-color: #D8D5D5;
-                    }
+            self._wdgTitle.setStyleSheet(f'''
+                    #wdgTitle {{
+                        background-color: {self._settings.selection_bg_color};
+                    }}
                 ''')
         else:
             self._wdgTitle.setStyleSheet('')
@@ -172,7 +182,7 @@ class ContainerNode(BaseTreeWidget):
 
     def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None, settings: Optional[TreeSettings] = None,
                  readOnly: bool = False):
-        super(ContainerNode, self).__init__(title, icon, parent)
+        super(ContainerNode, self).__init__(title, icon, parent, settings)
         vbox(self, 0, 0)
 
         self._container = QWidget(self)
@@ -199,7 +209,7 @@ class ContainerNode(BaseTreeWidget):
                 if self._plusEnabled and self.isEnabled():
                     self._btnAdd.setVisible(True)
                 if not self._selected and self.isEnabled():
-                    self._wdgTitle.setStyleSheet('#wdgTitle {background-color: #E9E7E7;}')
+                    self._wdgTitle.setStyleSheet(f'#wdgTitle {{background-color: {self._settings.hover_bg_color};}}')
             elif event.type() == QEvent.Type.Leave:
                 if (self._menuEnabled and self._btnMenu.menu().isVisible()) or \
                         (self._plusEnabled and self._btnAdd.menu() and self._btnAdd.menu().isVisible()):
@@ -277,6 +287,7 @@ class TreeView(QScrollArea):
         self.setFrameShape(QFrame.Shape.NoFrame)
 
         self._centralWidget = QWidget(self)
+        self._centralWidget.setObjectName('centralWidget')
         self.setWidget(self._centralWidget)
         vbox(self._centralWidget, spacing=0)
 

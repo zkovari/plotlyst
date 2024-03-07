@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from dataclasses import dataclass
 from typing import Optional
 
 import qtanim
@@ -42,6 +43,14 @@ from plotlyst.view.widget.world.map import WorldBuildingMapView
 from plotlyst.view.widget.world.tree import EntityAdditionMenu
 
 
+@dataclass
+class WorldBuildingPalette:
+    bg_color: str
+    primary_color: str
+    secondary_color: str
+    tertiary_color: str
+
+
 class WorldBuildingView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
@@ -51,13 +60,15 @@ class WorldBuildingView(AbstractNovelView):
         apply_bg_image(self.ui.pageEntity, resource_registry.paper_bg)
         apply_bg_image(self.ui.pageGlossary, resource_registry.paper_bg)
         apply_bg_image(self.ui.scrollAreaWidgetContents, resource_registry.paper_bg)
+        self._palette = WorldBuildingPalette(bg_color='#ede0d4', primary_color='#510442', secondary_color='#DABFA7',
+                                             tertiary_color='#E3D0BD')
         # background: #F2F2F2;
         # 692345;
-        self.ui.wdgCenterEditor.setStyleSheet('''
-        #wdgCenterEditor {
-            background: #ede0d4;
+        self.ui.wdgCenterEditor.setStyleSheet(f'''
+        #wdgCenterEditor {{
+            background: {self._palette.bg_color};
             border-radius: 12px;
-        }
+        }}
         ''')
         self.ui.lblBanner.setPixmap(QPixmap(resource_registry.vintage_pocket_banner))
 
@@ -72,7 +83,7 @@ class WorldBuildingView(AbstractNovelView):
         self._additionMenu.entityTriggered.connect(self.ui.treeWorld.addEntity)
         self.ui.iconReaderMode.setIcon(IconRegistry.from_name('fa5s.eye'))
 
-        self.ui.wdgSeparator.layout().addWidget(line(color='#510442'))
+        self.ui.wdgSeparator.layout().addWidget(line(color=self._palette.primary_color))
 
         self.ui.btnWorldView.setIcon(IconRegistry.world_building_icon())
         self.ui.btnMapView.setIcon(IconRegistry.from_name('fa5s.map-marked-alt', color_on=PLOTLYST_SECONDARY_COLOR))
@@ -80,7 +91,7 @@ class WorldBuildingView(AbstractNovelView):
             IconRegistry.from_name('mdi.timeline-outline', color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnGlossaryView.setIcon(IconRegistry.from_name('mdi.book-alphabet', color_on=PLOTLYST_SECONDARY_COLOR))
 
-        self.ui.splitterNav.setSizes([100, 500])
+        self.ui.splitterNav.setSizes([150, 500])
         font = self.ui.lineName.font()
         font.setPointSize(32)
         if app_env.is_mac():
@@ -96,7 +107,7 @@ class WorldBuildingView(AbstractNovelView):
         QLineEdit {{
             border: 0px;
             background-color: rgba(0, 0, 0, 0);
-            color: #510442; 
+            color: {self._palette.primary_color}; 
         }}''')
 
         self.ui.lineName.textEdited.connect(self._name_edited)
@@ -104,7 +115,11 @@ class WorldBuildingView(AbstractNovelView):
         self._editor = WorldBuildingEntityEditor(self.novel)
         insert_before_the_end(self.ui.wdgCenterEditor, self._editor)
 
-        self.ui.treeWorld.setSettings(TreeSettings(font_incr=2))
+        self.ui.treeWorld.setSettings(TreeSettings(font_incr=2, bg_color=self._palette.bg_color,
+                                                   action_buttons_color=self._palette.primary_color,
+                                                   selection_bg_color=self._palette.secondary_color,
+                                                   hover_bg_color=self._palette.tertiary_color,
+                                                   selection_text_color=self._palette.primary_color))
         self.ui.treeWorld.setNovel(self.novel)
         self.ui.treeWorld.entitySelected.connect(self._selection_changed)
         self.ui.treeWorld.selectRoot()
