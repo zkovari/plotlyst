@@ -80,6 +80,8 @@ class WorldBuildingEntityElementWidget(QWidget):
         self._btnCornerButtonOffsetY = 1
         self._btnCornerButtonOffsetX = 20
 
+        sp(self).v_max()
+
     def save(self):
         RepositoryPersistenceManager.instance().update_world(self.novel)
 
@@ -713,6 +715,7 @@ class WorldBuildingEntityEditor(QWidget):
 
         self._addPlaceholder()
         self._addPlaceholder(False)
+        self.wdgEditorMiddle.layout().addWidget(vspacer())
         self.wdgEditorSide.layout().addWidget(vspacer())
 
     def _addPlaceholder(self, middle: bool = True):
@@ -750,7 +753,7 @@ class WorldBuildingEntityEditor(QWidget):
             header.title = topic.text
             header.icon = topic.icon
         wdg = self.__initElementWidget(element, True)
-        insert_before_the_end(self.wdgEditorMiddle, wdg)
+        insert_before_the_end(self.wdgEditorMiddle, wdg, 2)
         qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
 
         self._entity.elements.append(element)
