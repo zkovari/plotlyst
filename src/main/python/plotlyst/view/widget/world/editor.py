@@ -817,7 +817,9 @@ class EntityLayoutSettings(QWidget):
         hbox(self)
 
         self.btnCentral = self._btn(IconRegistry.from_name('ri.layout-top-fill'))
+        self.btnCentral.setToolTip('Content is at the center')
         self.btnSide = self._btn(IconRegistry.from_name('ri.layout-fill'))
+        self.btnSide.setToolTip('Content is also available on the side')
         self.layout().addWidget(spacer())
         self.layout().addWidget(self.btnCentral)
         self.layout().addWidget(self.btnSide)
@@ -828,8 +830,6 @@ class EntityLayoutSettings(QWidget):
         self.btnGroup.addButton(self.btnCentral)
         self.btnGroup.addButton(self.btnSide)
         self.btnGroup.buttonClicked.connect(self._clicked)
-
-        self.btnCentral.setChecked(True)
 
     def setEntity(self, entity: WorldBuildingEntity):
         if entity.side_visible:
