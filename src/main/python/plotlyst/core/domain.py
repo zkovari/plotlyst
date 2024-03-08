@@ -32,7 +32,7 @@ from overrides import overrides
 
 from plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_field, \
     mbti_field, ProfileTemplate, default_character_profiles, enneagram_choices, \
-    mbti_choices, Role, summary_field, exclude_if_false, antagonist_role
+    mbti_choices, Role, summary_field, exclude_if_false, antagonist_role, exclude_if_true
 from plotlyst.env import app_env
 
 
@@ -1796,6 +1796,7 @@ class WorldBuildingEntity:
     elements: List[WorldBuildingEntityElement] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     side_elements: List[WorldBuildingEntityElement] = field(default_factory=list,
                                                             metadata=config(exclude=exclude_if_empty))
+    side_visible: bool = field(default=True, metadata=config(exclude=exclude_if_true))
 
     @overrides
     def __eq__(self, other: 'WorldBuildingEntity'):

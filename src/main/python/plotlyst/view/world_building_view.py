@@ -39,7 +39,7 @@ from plotlyst.view.generated.world_building_view_ui import Ui_WorldBuildingView
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_bg_image
 from plotlyst.view.widget.tree import TreeSettings
-from plotlyst.view.widget.world.editor import WorldBuildingEntityEditor, EditorSettingsMenu
+from plotlyst.view.widget.world.editor import WorldBuildingEntityEditor, EditorSettingsMenu, EntityLayoutType
 from plotlyst.view.widget.world.glossary import WorldBuildingGlossaryEditor
 from plotlyst.view.widget.world.map import WorldBuildingMapView
 from plotlyst.view.widget.world.tree import EntityAdditionMenu
@@ -85,6 +85,7 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.wdgCenterEditor.setMaximumWidth(width)
         self._menuSettings = EditorSettingsMenu(self.ui.btnSettings, width)
         self._menuSettings.widthChanged.connect(self._editor_max_width_changed)
+        self._menuSettings.layoutChanged.connect(self._layout_changed)
         self.ui.btnSettings.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnSettings))
         self.ui.btnSettings.installEventFilter(OpacityEventFilter(self.ui.btnSettings, 0.9, leaveOpacity=0.7))
         shadow(self.ui.wdgWorldContainer)
@@ -157,6 +158,7 @@ class WorldBuildingView(AbstractNovelView):
 
     def _selection_changed(self, entity: WorldBuildingEntity):
         self._entity = entity
+        self._menuSettings.setEntity(self._entity)
         self.ui.lineName.setText(self._entity.name)
         #         self._entity.elements = [
         #             WorldBuildingEntityElement(WorldBuildingEntityElementType.Text, text="""The Elensh people is a group that has had a cultural identity for many hundreds of years. They're primarily found in Olinthis as well as the southern parts of Elken. They are the main people of Olinthis but are considered a minority in Elken, though they're generally respected both places.
@@ -205,3 +207,13 @@ class WorldBuildingView(AbstractNovelView):
     def _editor_max_width_changed(self, value: int):
         self.ui.wdgCenterEditor.setMaximumWidth(value)
         settings.set_worldbuilding_editor_max_width(value)
+
+    def _layout_changed(self, layoutType: EntityLayoutType):
+        if self._entity:
+            if layoutType == EntityLayoutType.SIDE:
+                self._entity.side_visible = True
+            else:
+                self._entity.side_visible = False
+
+            self.repo.update_world(self.novel)
+            self._editor.layoutChangedEvent()

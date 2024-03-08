@@ -17,13 +17,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from enum import Enum
 from functools import partial
 from typing import Optional, Dict, List
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QSize
-from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMouseEvent, QColor
-from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QDialog, QGridLayout, QSlider
+from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMouseEvent, QColor, QIcon
+from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QDialog, QGridLayout, QSlider, QToolButton, QButtonGroup
 from overrides import overrides
 from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy, \
     grid, flow, spacer, line, incr_icon
@@ -719,6 +720,11 @@ class WorldBuildingEntityEditor(QWidget):
         self.wdgEditorMiddle.layout().addWidget(vspacer())
         self.wdgEditorSide.layout().addWidget(vspacer())
 
+        self.wdgEditorSide.setVisible(self._entity.side_visible)
+
+    def layoutChangedEvent(self):
+        self.wdgEditorSide.setVisible(self._entity.side_visible)
+
     def _addPlaceholder(self, middle: bool = True):
         wdg = push_btn(IconRegistry.plus_icon('grey'), 'Add section' if middle else 'Add block', transparent_=True)
         if middle:
@@ -798,8 +804,68 @@ class WorldBuildingEntityEditor(QWidget):
         return wdg
 
 
+class EntityLayoutType(Enum):
+    CENTER = 0
+    SIDE = 1
+
+
+class EntityLayoutSettings(QWidget):
+    layoutChanged = pyqtSignal(EntityLayoutType)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        hbox(self)
+
+        self.btnCentral = self._btn(IconRegistry.from_name('ri.layout-top-fill'))
+        self.btnSide = self._btn(IconRegistry.from_name('ri.layout-fill'))
+        self.layout().addWidget(spacer())
+        self.layout().addWidget(self.btnCentral)
+        self.layout().addWidget(self.btnSide)
+        self.layout().addWidget(spacer())
+
+        self.btnGroup = QButtonGroup()
+        self.btnGroup.setExclusive(True)
+        self.btnGroup.addButton(self.btnCentral)
+        self.btnGroup.addButton(self.btnSide)
+        self.btnGroup.buttonClicked.connect(self._clicked)
+
+        self.btnCentral.setChecked(True)
+
+    def setEntity(self, entity: WorldBuildingEntity):
+        if entity.side_visible:
+            self.btnSide.setChecked(True)
+        else:
+            self.btnCentral.setChecked(True)
+
+    def _clicked(self):
+        if self.btnCentral.isChecked():
+            self.layoutChanged.emit(EntityLayoutType.CENTER)
+        elif self.btnSide.isChecked():
+            self.layoutChanged.emit(EntityLayoutType.SIDE)
+
+    def _btn(self, icon: QIcon) -> QToolButton:
+        btn = tool_btn(icon, checkable=True)
+        btn.installEventFilter(OpacityEventFilter(btn, ignoreCheckedButton=True))
+        btn.setIconSize(QSize(32, 32))
+        btn.setStyleSheet('''
+                            QToolButton {
+                                border: 1px hidden lightgrey;
+                                padding: 8px;
+                                border-radius: 25px;
+                            }
+                            QToolButton:hover:!checked {
+                                background: #FCF5FE;
+                            }
+                            QToolButton:checked {
+                                background: #D4B8E0;
+                            }
+                            ''')
+        return btn
+
+
 class EditorSettingsMenu(TabularGridMenuWidget):
     widthChanged = pyqtSignal(int)
+    layoutChanged = pyqtSignal(EntityLayoutType)
 
     def __init__(self, parent, defaultWidth: int):
         super().__init__(parent)
@@ -816,4 +882,12 @@ class EditorSettingsMenu(TabularGridMenuWidget):
         self._widthSlider.valueChanged.connect(self.widthChanged)
         self.addWidget(self.tabWorld, wrap(self._widthSlider, margin_left=10, margin_bottom=15), 1, 0)
 
+        self.addSection(self.tabEntity, 'Layout', 0, 0, icon=IconRegistry.from_name('ri.layout-line'))
+        self.layoutSettings = EntityLayoutSettings()
+        self.layoutSettings.layoutChanged.connect(self.layoutChanged)
+        self.addWidget(self.tabEntity, self.layoutSettings, 1, 0)
+
         apply_white_menu(self)
+
+    def setEntity(self, entity: WorldBuildingEntity):
+        self.layoutSettings.setEntity(entity)
