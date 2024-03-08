@@ -25,11 +25,13 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QPixmap
 from overrides import overrides
 from qthandy import line
+from qthandy.filter import OpacityEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Novel, WorldBuildingEntity
 from plotlyst.env import app_env
 from plotlyst.resources import resource_registry
+from plotlyst.settings import settings
 from plotlyst.view._view import AbstractNovelView
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, shadow, \
     insert_before_the_end
@@ -37,7 +39,7 @@ from plotlyst.view.generated.world_building_view_ui import Ui_WorldBuildingView
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_bg_image
 from plotlyst.view.widget.tree import TreeSettings
-from plotlyst.view.widget.world.editor import WorldBuildingEntityEditor
+from plotlyst.view.widget.world.editor import WorldBuildingEntityEditor, EditorSettingsMenu, EntityLayoutType
 from plotlyst.view.widget.world.glossary import WorldBuildingGlossaryEditor
 from plotlyst.view.widget.world.map import WorldBuildingMapView
 from plotlyst.view.widget.world.tree import EntityAdditionMenu
@@ -78,6 +80,14 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.btnNew.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnNew))
         self.ui.btnTreeToggle.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
         self.ui.btnTreeToggle.clicked.connect(lambda x: qtanim.toggle_expansion(self.ui.wdgWorldContainer, x))
+        self.ui.btnSettings.setIcon(IconRegistry.cog_icon())
+        width = settings.worldbuilding_editor_max_width()
+        self.ui.wdgCenterEditor.setMaximumWidth(width)
+        self._menuSettings = EditorSettingsMenu(self.ui.btnSettings, width)
+        self._menuSettings.widthChanged.connect(self._editor_max_width_changed)
+        self._menuSettings.layoutChanged.connect(self._layout_changed)
+        self.ui.btnSettings.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnSettings))
+        self.ui.btnSettings.installEventFilter(OpacityEventFilter(self.ui.btnSettings, 0.9, leaveOpacity=0.7))
         shadow(self.ui.wdgWorldContainer)
         self._additionMenu = EntityAdditionMenu(self.ui.btnNew)
         self._additionMenu.entityTriggered.connect(self.ui.treeWorld.addEntity)
@@ -148,40 +158,9 @@ class WorldBuildingView(AbstractNovelView):
 
     def _selection_changed(self, entity: WorldBuildingEntity):
         self._entity = entity
+        self._menuSettings.setEntity(self._entity)
         self.ui.lineName.setText(self._entity.name)
-        #         self._entity.elements = [
-        #             WorldBuildingEntityElement(WorldBuildingEntityElementType.Text, text="""The Elensh people is a group that has had a cultural identity for many hundreds of years. They're primarily found in Olinthis as well as the southern parts of Elken. They are the main people of Olinthis but are considered a minority in Elken, though they're generally respected both places.
-        # They're known as the people of the flowers, because many of their traditions feature colourful flowers and they're known for being the best flower traders through many parts of Dysvoll."""),
-        #             WorldBuildingEntityElement(WorldBuildingEntityElementType.Section, title='Fauna', blocks=[
-        #                 WorldBuildingEntityElement(WorldBuildingEntityElementType.Header, title='Fauna'),
-        #                 WorldBuildingEntityElement(WorldBuildingEntityElementType.Quote,
-        #                                            text='This is a quoted text said by a smart person', ref='Beril'),
-        #                 WorldBuildingEntityElement(WorldBuildingEntityElementType.Text)
-        #             ]),
-        #
-        #         ]
         self._editor.setEntity(self._entity)
-        # self._btnIcon.setVisible(True)
-        # self.ui.tabWidget.setVisible(True)
-        # if entity.icon:
-        #     self._btnIcon.selectIcon(self._entity.icon, self._entity.icon_color)
-        # else:
-        #     self._btnIcon.reset()
-
-        # if entity.type == WorldBuildingEntityType.SETTING:
-        #     set_tab_visible(self.ui.tabWidget, self.ui.tabPerception)
-        #     set_tab_visible(self.ui.tabWidget, self.ui.tabGoals, False)
-        #     self._setting_template.setEntity(self._entity)
-        # elif entity.type == WorldBuildingEntityType.GROUP:
-        #     set_tab_visible(self.ui.tabWidget, self.ui.tabPerception, False)
-        #     set_tab_visible(self.ui.tabWidget, self.ui.tabGoals, False)
-        #     # self._group_template.setEntity(self._entity)
-        # elif entity.type == WorldBuildingEntityType.CONTAINER:
-        #     self.ui.tabWidget.setHidden(True)
-        #     self._btnIcon.setHidden(True)
-        # else:
-        #     set_tab_visible(self.ui.tabWidget, self.ui.tabPerception, False)
-        #     set_tab_visible(self.ui.tabWidget, self.ui.tabGoals, False)
 
     def _name_edited(self, name: str):
         self._entity.name = name
@@ -192,3 +171,17 @@ class WorldBuildingView(AbstractNovelView):
         self._entity.icon = icon_name
         self._entity.icon_color = color.name()
         self.ui.treeWorld.updateEntity(self._entity)
+
+    def _editor_max_width_changed(self, value: int):
+        self.ui.wdgCenterEditor.setMaximumWidth(value)
+        settings.set_worldbuilding_editor_max_width(value)
+
+    def _layout_changed(self, layoutType: EntityLayoutType):
+        if self._entity:
+            if layoutType == EntityLayoutType.SIDE:
+                self._entity.side_visible = True
+            else:
+                self._entity.side_visible = False
+
+            self.repo.update_world(self.novel)
+            self._editor.layoutChangedEvent()
