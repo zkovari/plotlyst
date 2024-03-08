@@ -25,11 +25,13 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QPixmap
 from overrides import overrides
 from qthandy import line
+from qthandy.filter import OpacityEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Novel, WorldBuildingEntity
 from plotlyst.env import app_env
 from plotlyst.resources import resource_registry
+from plotlyst.settings import settings
 from plotlyst.view._view import AbstractNovelView
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, shadow, \
     insert_before_the_end
@@ -37,7 +39,7 @@ from plotlyst.view.generated.world_building_view_ui import Ui_WorldBuildingView
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_bg_image
 from plotlyst.view.widget.tree import TreeSettings
-from plotlyst.view.widget.world.editor import WorldBuildingEntityEditor
+from plotlyst.view.widget.world.editor import WorldBuildingEntityEditor, EditorSettingsMenu
 from plotlyst.view.widget.world.glossary import WorldBuildingGlossaryEditor
 from plotlyst.view.widget.world.map import WorldBuildingMapView
 from plotlyst.view.widget.world.tree import EntityAdditionMenu
@@ -78,6 +80,13 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.btnNew.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnNew))
         self.ui.btnTreeToggle.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
         self.ui.btnTreeToggle.clicked.connect(lambda x: qtanim.toggle_expansion(self.ui.wdgWorldContainer, x))
+        self.ui.btnSettings.setIcon(IconRegistry.cog_icon())
+        width = settings.worldbuilding_editor_max_width()
+        self.ui.wdgCenterEditor.setMaximumWidth(width)
+        self._menuSettings = EditorSettingsMenu(self.ui.btnSettings, width)
+        self._menuSettings.widthChanged.connect(self._editor_max_width_changed)
+        self.ui.btnSettings.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnSettings))
+        self.ui.btnSettings.installEventFilter(OpacityEventFilter(self.ui.btnSettings, 0.9, leaveOpacity=0.7))
         shadow(self.ui.wdgWorldContainer)
         self._additionMenu = EntityAdditionMenu(self.ui.btnNew)
         self._additionMenu.entityTriggered.connect(self.ui.treeWorld.addEntity)
@@ -192,3 +201,7 @@ class WorldBuildingView(AbstractNovelView):
         self._entity.icon = icon_name
         self._entity.icon_color = color.name()
         self.ui.treeWorld.updateEntity(self._entity)
+
+    def _editor_max_width_changed(self, value: int):
+        self.ui.wdgCenterEditor.setMaximumWidth(value)
+        settings.set_worldbuilding_editor_max_width(value)

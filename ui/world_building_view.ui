@@ -214,7 +214,7 @@
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="pageEntity">
       <property name="bg-image" stdset="0">
@@ -253,6 +253,9 @@
           </property>
           <property name="leftMargin">
            <number>8</number>
+          </property>
+          <property name="rightMargin">
+           <number>10</number>
           </property>
           <property name="bottomMargin">
            <number>5</number>
@@ -324,6 +327,19 @@
             </property>
            </spacer>
           </item>
+          <item>
+           <widget class="QToolButton" name="btnSettings">
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="transparent" stdset="0">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>
@@ -385,8 +401,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>490</width>
-             <height>136</height>
+             <width>609</width>
+             <height>592</height>
             </rect>
            </property>
            <property name="sizePolicy">

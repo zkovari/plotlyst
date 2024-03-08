@@ -23,12 +23,12 @@ from typing import Optional, Dict, List
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QSize
 from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMouseEvent, QColor
-from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QDialog, QGridLayout
+from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QDialog, QGridLayout, QSlider
 from overrides import overrides
 from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy, \
     grid, flow, spacer, line, incr_icon
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter
-from qtmenu import MenuWidget
+from qtmenu import MenuWidget, TabularGridMenuWidget
 
 from plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityElement, WorldBuildingEntityElementType, \
     BackstoryEvent, Variable, VariableType, \
@@ -36,9 +36,10 @@ from plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntity
 from plotlyst.env import app_env
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import action, push_btn, frame, insert_before_the_end, fade_out_and_gc, \
-    tool_btn, label, scrolled
+    tool_btn, label, scrolled, wrap
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
+from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.style.text import apply_text_color
 from plotlyst.view.widget.button import DotsMenuButton
 from plotlyst.view.widget.display import Icon, PopupDialog
@@ -795,3 +796,24 @@ class WorldBuildingEntityEditor(QWidget):
             wdg.btnRemove.clicked.connect(partial(self._removeSideBlock, wdg))
 
         return wdg
+
+
+class EditorSettingsMenu(TabularGridMenuWidget):
+    widthChanged = pyqtSignal(int)
+
+    def __init__(self, parent, defaultWidth: int):
+        super().__init__(parent)
+
+        self.tabWorld = self.addTab('World')
+        margins(self.tabWorld, top=15, left=5, right=15)
+        self.tabEntity = self.addTab('Entity')
+
+        self.addSection(self.tabWorld, 'Editor max width', 0, 0, icon=IconRegistry.from_name('ei.resize-horizontal'))
+        self._widthSlider = QSlider(Qt.Orientation.Horizontal)
+        self._widthSlider.setMinimum(800)
+        self._widthSlider.setMaximum(1200)
+        self._widthSlider.setValue(defaultWidth)
+        self._widthSlider.valueChanged.connect(self.widthChanged)
+        self.addWidget(self.tabWorld, wrap(self._widthSlider, margin_left=10, margin_bottom=15), 1, 0)
+
+        apply_white_menu(self)
