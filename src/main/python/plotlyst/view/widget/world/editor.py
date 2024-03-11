@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QDialog, QGridLayout,
 from overrides import overrides
 from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy, \
     grid, flow, spacer, line, incr_icon
-from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter
+from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter, DragEventFilter
 from qtmenu import MenuWidget, TabularGridMenuWidget
 
 from plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityElement, WorldBuildingEntityElementType, \
@@ -43,7 +43,7 @@ from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.style.text import apply_text_color
 from plotlyst.view.widget.button import DotsMenuButton
-from plotlyst.view.widget.display import Icon, PopupDialog
+from plotlyst.view.widget.display import Icon, PopupDialog, DragIcon
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, RemovalButton
 from plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
 from plotlyst.view.widget.world._topics import ecological_topics, cultural_topics, historical_topics, \
@@ -72,6 +72,17 @@ class WorldBuildingEntityElementWidget(QWidget):
         self.btnAdd.setHidden(True)
         retain_when_hidden(self.btnAdd)
 
+        self.btnDrag = DragIcon(self)
+        self.btnDrag.setHidden(True)
+        if self.element.type not in [WorldBuildingEntityElementType.Section,
+                                     WorldBuildingEntityElementType.Main_Section]:
+            self.installEventFilter(VisibilityToggleEventFilter(self.btnDrag, self))
+            self.btnDrag.installEventFilter(
+                DragEventFilter(self, f'application/world-block-{self.element.type.name}',
+                                dataFunc=lambda x: self.element,
+                                grabbed=self,
+                                startedSlot=self._dragStarted, finishedSlot=self._dragStopped))
+
         self.btnRemove = RemovalButton(self, colorOff='grey', colorOn='#510442', colorHover='darkgrey')
         if self._removalEnabled:
             self.installEventFilter(VisibilityToggleEventFilter(self.btnRemove, self))
@@ -99,6 +110,9 @@ class WorldBuildingEntityElementWidget(QWidget):
         elif self._menuEnabled:
             self.btnMenu.setGeometry(event.size().width() - self._btnCornerButtonOffsetX, self._btnCornerButtonOffsetY,
                                      20, 20)
+
+        self.btnDrag.setGeometry(0, 0, 20, 20)
+
         super().resizeEvent(event)
 
     def activate(self):
@@ -133,6 +147,12 @@ class WorldBuildingEntityElementWidget(QWidget):
         return self.parent() and not isinstance(
             self.parent(), MainSectionElementEditor)
 
+    def _dragStarted(self):
+        pass
+
+    def _dragStopped(self):
+        pass
+
 
 class TextElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
@@ -163,6 +183,7 @@ class TextElementEditor(WorldBuildingEntityElementWidget):
         self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
         self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
         self.btnRemove.raise_()
+        self.btnDrag.raise_()
 
     def _textChanged(self):
         self.element.text = self.textEdit.toMarkdown()
@@ -231,6 +252,7 @@ class HeaderElementEditor(WorldBuildingEntityElementWidget):
 
         self._btnCornerButtonOffsetY = 7
         self.btnRemove.raise_()
+        self.btnDrag.raise_()
 
     def _titleEdited(self, title: str):
         self.element.title = title
@@ -419,6 +441,7 @@ class VariablesElementEditor(WorldBuildingEntityElementWidget):
 
         self.btnMenu.raise_()
         self.menu.aboutToShow.connect(self._fillMenu)
+        self.btnDrag.raise_()
 
     def _addNew(self):
         variable = VariableEditorDialog.edit()
@@ -485,6 +508,7 @@ class HighlightedTextElementEditor(WorldBuildingEntityElementWidget):
         vbox(self.frame, 10).addWidget(self.textEdit)
 
         self.layout().addWidget(self.frame)
+        self.btnDrag.raise_()
 
     @overrides
     def activate(self):
