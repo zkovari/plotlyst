@@ -1756,6 +1756,7 @@ class WorldBuildingEntityElementType(Enum):
     Comments = 7
     Section = 8
     Highlight = 9
+    Main_Section = 10
 
 
 @dataclass

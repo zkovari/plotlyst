@@ -71,8 +71,11 @@ class EntityAdditionMenu(MenuWidget):
             name = 'New entity'
             icon_name = ''
 
+        main_section = WorldBuildingEntityElement(WorldBuildingEntityElementType.Main_Section)
+        main_section.blocks.append(WorldBuildingEntityElement(WorldBuildingEntityElementType.Header))
+        main_section.blocks.append(WorldBuildingEntityElement(WorldBuildingEntityElementType.Text))
         entity = WorldBuildingEntity(name, icon=icon_name, type=wdType,
-                                     elements=[WorldBuildingEntityElement(WorldBuildingEntityElementType.Text)])
+                                     elements=[main_section])
 
         self.entityTriggered.emit(entity)
 

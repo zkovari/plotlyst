@@ -62,9 +62,13 @@ class WorldBuildingEntityElementWidget(QWidget):
         if removalEnabled and removalEnabled == menuEnabled:
             raise ValueError('Cannot allow both removal and menu for WorldBuildingEntityElementWidget')
 
+        vbox(self, 0)
+        if self._underSection():
+            margins(self, left=15)
+
         self.btnAdd = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True, tooltip='Insert new block')
         self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd))
-        decr_icon(self.btnAdd)
+        decr_icon(self.btnAdd, 4)
         self.btnAdd.setHidden(True)
         retain_when_hidden(self.btnAdd)
 
@@ -103,11 +107,13 @@ class WorldBuildingEntityElementWidget(QWidget):
     @staticmethod
     def newWidget(novel: Novel, element: WorldBuildingEntityElement,
                   parent: Optional[
-                      'WorldBuildingEntitySectionElementEditor'] = None) -> 'WorldBuildingEntityElementWidget':
+                      'SectionElementEditor'] = None) -> 'WorldBuildingEntityElementWidget':
         if element.type == WorldBuildingEntityElementType.Text:
             return TextElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Section:
-            return WorldBuildingEntitySectionElementEditor(novel, element, parent)
+            return SectionElementEditor(novel, element, parent)
+        elif element.type == WorldBuildingEntityElementType.Main_Section:
+            return MainSectionElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Header:
             return HeaderElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Quote:
@@ -121,10 +127,16 @@ class WorldBuildingEntityElementWidget(QWidget):
         else:
             raise ValueError(f'Unsupported WorldBuildingEntityElement type {element.type}')
 
+    def _underSection(self) -> bool:
+        if self.element.type == WorldBuildingEntityElementType.Section or self.element.type == WorldBuildingEntityElementType.Header:
+            return False
+        return self.parent() and not isinstance(
+            self.parent(), MainSectionElementEditor)
+
 
 class TextElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
-        super().__init__(novel, element, parent, removalEnabled=True if parent else False)
+        super().__init__(novel, element, parent)
         self._capitalized = False
 
         self.textEdit = AutoAdjustableTextEdit()
@@ -144,12 +156,10 @@ class TextElementEditor(WorldBuildingEntityElementWidget):
         font.setFamily(family)
         self.textEdit.setFont(font)
 
-        vbox(self, 0, 0).addWidget(self.textEdit)
-        if parent:
-            margins(self, left=15)
-            self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
-            self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
-            self.btnRemove.raise_()
+        self.layout().addWidget(self.textEdit)
+        self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
+        self.btnRemove.raise_()
 
     def _textChanged(self):
         self.element.text = self.textEdit.toMarkdown()
@@ -174,10 +184,11 @@ class TextElementEditor(WorldBuildingEntityElementWidget):
 
 class HeaderElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
-        super().__init__(novel, element, parent)
+        super().__init__(novel, element, parent,
+                         removalEnabled=False if isinstance(parent, MainSectionElementEditor) else True)
 
-        vbox(self, 0)
-        margins(self, top=10, bottom=10)
+        if isinstance(parent, MainSectionElementEditor):
+            self.layout().setSpacing(0)
 
         self.icon = Icon()
         self.icon.setIconSize(QSize(32, 32))
@@ -212,9 +223,8 @@ class HeaderElementEditor(WorldBuildingEntityElementWidget):
             background: #DABFA7;
         }''')
 
-        if parent:
-            self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
-            self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
+        self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
 
         self._btnCornerButtonOffsetY = 7
         self.btnRemove.raise_()
@@ -228,8 +238,8 @@ class QuoteElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent)
 
-        vbox(self, 0, 0)
-        margins(self, left=15, right=15, top=5, bottom=5)
+        if self._underSection():
+            margins(self, left=15, right=15, top=5, bottom=5)
         self.textEdit = AutoAdjustableTextEdit()
         self.textEdit.setStyleSheet(f'''
                 border: 0px;
@@ -281,9 +291,8 @@ class QuoteElementEditor(WorldBuildingEntityElementWidget):
                     background: #E3D0BD;
                 }''')
 
-        if parent:
-            self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
-            self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
+        self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
 
         self.btnRemove.raise_()
 
@@ -377,7 +386,6 @@ class VariableWidget(QWidget):
 class VariablesElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent, removalEnabled=False, menuEnabled=True)
-        vbox(self, 5)
         margins(self, right=15)
 
         self._btnCornerButtonOffsetX = 37
@@ -452,7 +460,6 @@ class VariablesElementEditor(WorldBuildingEntityElementWidget):
 class HighlightedTextElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent)
-        vbox(self, 5)
         margins(self, right=15)
 
         self.frame = frame()
@@ -511,19 +518,18 @@ class TimelineElementEditor(WorldBuildingEntityElementWidget):
         super().__init__(novel, element, parent)
 
         self.timeline = EntityTimelineWidget(element)
-        vbox(self, 0, 0).addWidget(self.timeline)
+        self.layout().addWidget(self.timeline)
         self.timeline.changed.connect(self.save)
 
         self.btnRemove.raise_()
 
 
-class WorldBuildingEntitySectionElementEditor(WorldBuildingEntityElementWidget):
+class SectionElementEditor(WorldBuildingEntityElementWidget):
     removed = pyqtSignal()
 
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent, removalEnabled=False)
 
-        vbox(self, 0)
         for element in self.element.blocks:
             wdg = self.__initBlockWidget(element)
             self.layout().addWidget(wdg)
@@ -557,6 +563,14 @@ class WorldBuildingEntitySectionElementEditor(WorldBuildingEntityElementWidget):
         wdg.btnRemove.clicked.connect(partial(self._removeBlock, wdg))
 
         return wdg
+
+
+class MainSectionElementEditor(SectionElementEditor):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
+        super().__init__(novel, element, parent)
+        item = self.layout().itemAt(0)
+        if item and item.widget():
+            item.widget().frame.setHidden(True)
 
 
 class TopicSelectionDialog(PopupDialog):
@@ -688,10 +702,10 @@ class WorldBuildingEntityEditor(QWidget):
 
         self.wdgEditorMiddle = QWidget()
         vbox(self.wdgEditorMiddle, spacing=10)
-        margins(self.wdgEditorMiddle, left=15, bottom=20)
+        margins(self.wdgEditorMiddle, left=20, bottom=20)
         self.wdgEditorSide = QWidget()
-        vbox(self.wdgEditorSide)
-        margins(self.wdgEditorSide, left=10, right=15)
+        vbox(self.wdgEditorSide, 7, spacing=10)
+        margins(self.wdgEditorSide, left=15, right=15)
 
         splitter = QSplitter()
         splitter.setChildrenCollapsible(False)
@@ -796,7 +810,7 @@ class WorldBuildingEntityEditor(QWidget):
     def __initElementWidget(self, element: WorldBuildingEntityElement,
                             middle: bool) -> WorldBuildingEntityElementWidget:
         wdg = WorldBuildingEntityElementWidget.newWidget(self._novel, element)
-        if middle and isinstance(wdg, WorldBuildingEntitySectionElementEditor):
+        if middle and isinstance(wdg, SectionElementEditor):
             wdg.removed.connect(partial(self._removeSection, wdg))
         elif not middle:
             wdg.btnRemove.clicked.connect(partial(self._removeSideBlock, wdg))
