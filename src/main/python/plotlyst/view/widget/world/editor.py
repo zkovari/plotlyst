@@ -141,7 +141,10 @@ class TextElementEditor(WorldBuildingEntityElementWidget):
 
         self.textEdit = AutoAdjustableTextEdit()
         self.textEdit.setProperty('transparent', True)
-        self.textEdit.setPlaceholderText('Describe this entity...')
+        if self._underSection():
+            self.textEdit.setPlaceholderText('Describe this section...')
+        else:
+            self.textEdit.setPlaceholderText('Describe this entity...')
         self.textEdit.textChanged.connect(self._textChanged)
         self.textEdit.setMarkdown(element.text)
 
