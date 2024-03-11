@@ -86,7 +86,8 @@ class AutoAdjustableTextEdit(EnhancedTextEdit):
     @overrides
     def resizeEvent(self, event: QResizeEvent):
         super().resizeEvent(event)
-        self._resizeToContent()
+        if self._resizedOnShow:
+            self._resizeToContent()
 
     def _resizeToContent(self):
         padding = self.contentsMargins().top() + self.contentsMargins().bottom() + 2 * self.document().documentMargin()
