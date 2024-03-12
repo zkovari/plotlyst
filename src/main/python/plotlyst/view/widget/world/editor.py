@@ -765,6 +765,8 @@ class WorldBuildingEntityEditor(QWidget):
         vbox(self, 0, 0).addWidget(splitter)
 
         self._placeholderWidget: Optional[QWidget] = None
+        self._dragged: Optional[QWidget] = None
+        self._toBeRemoved: Optional[QWidget] = None
         self._lastMovedWdg = None
         self._lastMovedDirection = None
 
@@ -875,7 +877,15 @@ class WorldBuildingEntityEditor(QWidget):
         if self._placeholderWidget:
             gc(self._placeholderWidget)
             self._dummyWdg = None
-        wdg.setVisible(True)
+
+        if self._toBeRemoved:
+            gc(self._toBeRemoved)
+            self._toBeRemoved = None
+        else:
+            if isinstance(wdg, HeaderElementEditor):
+                wdg.parent().setVisible(True)
+            else:
+                wdg.setVisible(True)
 
     def dragMoved(self, wdg: WorldBuildingEntityElementWidget, edge: Qt.Edge, point: QPointF):
         if wdg is self._lastMovedWdg and edge == self._lastMovedDirection:
