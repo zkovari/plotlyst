@@ -542,6 +542,7 @@ class TimelineElementEditor(WorldBuildingEntityElementWidget):
 
 class SectionElementEditor(WorldBuildingEntityElementWidget):
     WORLD_BLOCK_MIMETYPE = 'application/world-block'
+    WORLD_SECTION_MIMETYPE = 'application/world-section'
     removed = pyqtSignal()
 
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent, editor: 'WorldBuildingEntityEditor'):
@@ -550,6 +551,14 @@ class SectionElementEditor(WorldBuildingEntityElementWidget):
         for element in self.element.blocks:
             wdg = self.__initBlockWidget(element)
             self.layout().addWidget(wdg)
+
+        self.setAcceptDrops(True)
+        self.installEventFilter(
+            DropEventFilter(self, [self.WORLD_SECTION_MIMETYPE],
+                            motionDetection=Qt.Orientation.Vertical,
+                            motionSlot=partial(self.editor().dragMoved, self),
+                            droppedSlot=self.editor().dropSection
+                            ))
 
     def _addBlock(self, wdg: WorldBuildingEntityElementWidget, type_: WorldBuildingEntityElementType):
         element = WorldBuildingEntityElement(type_)
@@ -582,8 +591,10 @@ class SectionElementEditor(WorldBuildingEntityElementWidget):
         menu.newBlockSelected.connect(partial(self._addBlock, wdg))
         wdg.btnRemove.clicked.connect(partial(self._removeBlock, wdg))
 
+        mimeType = self.WORLD_SECTION_MIMETYPE if element.type == WorldBuildingEntityElementType.Header else self.WORLD_BLOCK_MIMETYPE
+
         wdg.btnDrag.installEventFilter(
-            DragEventFilter(wdg, self.WORLD_BLOCK_MIMETYPE,
+            DragEventFilter(wdg, mimeType,
                             dataFunc=lambda x: wdg.element,
                             grabbed=wdg,
                             startedSlot=partial(self.editor().dragStarted, wdg),
@@ -731,6 +742,7 @@ class SideBlockAdditionMenu(MenuWidget):
 
 class WorldBuildingEntityEditor(QWidget):
     WORLD_BLOCK_MIMETYPE = 'application/world-block'
+    WORLD_SECTION_MIMETYPE = 'application/world-section'
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -854,7 +866,10 @@ class WorldBuildingEntityEditor(QWidget):
         self._placeholderWidget.setAcceptDrops(True)
         self._placeholderWidget.installEventFilter(
             DropEventFilter(self._placeholderWidget, [self.WORLD_BLOCK_MIMETYPE], droppedSlot=self.drop))
-        wdg.setHidden(True)
+        if isinstance(wdg, HeaderElementEditor):
+            wdg.parent().setHidden(True)
+        else:
+            wdg.setHidden(True)
 
     def dragStopped(self, wdg: WorldBuildingEntityElementWidget):
         if self._placeholderWidget:
@@ -880,9 +895,14 @@ class WorldBuildingEntityEditor(QWidget):
 
         self._lastMovedWdg = wdg
         self._lastMovedDirection = edge
-        self._placeholderWidget.setVisible(True)
+        qtanim.fade_in(self._placeholderWidget, 150)
 
     def drop(self, mimeData: QMimeData):
+        if self._placeholderWidget.isHidden():
+            return
+        ref: WorldBuildingEntityElement = mimeData.reference()
+
+    def dropSection(self, mimeData: QMimeData):
         pass
 
     def __initElementWidget(self, element: WorldBuildingEntityElement,
