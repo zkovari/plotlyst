@@ -22,13 +22,14 @@ from functools import partial
 from typing import Optional, Dict, List
 
 import qtanim
-from PyQt6.QtCore import pyqtSignal, Qt, QSize
+from PyQt6.QtCore import pyqtSignal, Qt, QSize, QMimeData, QPointF
 from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMouseEvent, QColor, QIcon
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QDialog, QGridLayout, QSlider, QToolButton, QButtonGroup
 from overrides import overrides
 from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy, \
-    grid, flow, spacer, line, incr_icon
-from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter, DragEventFilter
+    grid, flow, spacer, line, incr_icon, gc
+from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter, DragEventFilter, \
+    DropEventFilter
 from qtmenu import MenuWidget, TabularGridMenuWidget
 
 from plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityElement, WorldBuildingEntityElementType, \
@@ -77,11 +78,6 @@ class WorldBuildingEntityElementWidget(QWidget):
         if self.element.type not in [WorldBuildingEntityElementType.Section,
                                      WorldBuildingEntityElementType.Main_Section]:
             self.installEventFilter(VisibilityToggleEventFilter(self.btnDrag, self))
-            self.btnDrag.installEventFilter(
-                DragEventFilter(self, f'application/world-block-{self.element.type.name}',
-                                dataFunc=lambda x: self.element,
-                                grabbed=self,
-                                startedSlot=self._dragStarted, finishedSlot=self._dragStopped))
 
         self.btnRemove = RemovalButton(self, colorOff='grey', colorOn='#510442', colorHover='darkgrey')
         if self._removalEnabled:
@@ -119,15 +115,14 @@ class WorldBuildingEntityElementWidget(QWidget):
         pass
 
     @staticmethod
-    def newWidget(novel: Novel, element: WorldBuildingEntityElement,
-                  parent: Optional[
-                      'SectionElementEditor'] = None) -> 'WorldBuildingEntityElementWidget':
+    def newWidget(novel: Novel, element: WorldBuildingEntityElement, parent: Optional[QWidget] = None,
+                  editor: Optional['WorldBuildingEntityEditor'] = None) -> 'WorldBuildingEntityElementWidget':
         if element.type == WorldBuildingEntityElementType.Text:
             return TextElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Section:
-            return SectionElementEditor(novel, element, parent)
+            return SectionElementEditor(novel, element, parent, editor)
         elif element.type == WorldBuildingEntityElementType.Main_Section:
-            return MainSectionElementEditor(novel, element, parent)
+            return MainSectionElementEditor(novel, element, parent, editor)
         elif element.type == WorldBuildingEntityElementType.Header:
             return HeaderElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Quote:
@@ -145,13 +140,7 @@ class WorldBuildingEntityElementWidget(QWidget):
         if self.element.type == WorldBuildingEntityElementType.Section or self.element.type == WorldBuildingEntityElementType.Header:
             return False
         return self.parent() and not isinstance(
-            self.parent(), MainSectionElementEditor)
-
-    def _dragStarted(self):
-        pass
-
-    def _dragStopped(self):
-        pass
+            self.parent(), (MainSectionElementEditor, WorldBuildingEntityEditor))
 
 
 class TextElementEditor(WorldBuildingEntityElementWidget):
@@ -552,11 +541,12 @@ class TimelineElementEditor(WorldBuildingEntityElementWidget):
 
 
 class SectionElementEditor(WorldBuildingEntityElementWidget):
+    WORLD_BLOCK_MIMETYPE = 'application/world-block'
     removed = pyqtSignal()
 
-    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent, editor: 'WorldBuildingEntityEditor'):
         super().__init__(novel, element, parent, removalEnabled=False)
-
+        self._editor = editor
         for element in self.element.blocks:
             wdg = self.__initBlockWidget(element)
             self.layout().addWidget(wdg)
@@ -583,18 +573,36 @@ class SectionElementEditor(WorldBuildingEntityElementWidget):
         self.save()
         fade_out_and_gc(self, widget)
 
+    def editor(self) -> 'WorldBuildingEntityEditor':
+        return self._editor
+
     def __initBlockWidget(self, element: WorldBuildingEntityElement) -> WorldBuildingEntityElementWidget:
         wdg = WorldBuildingEntityElementWidget.newWidget(self.novel, element, self)
         menu = MainBlockAdditionMenu(wdg.btnAdd)
         menu.newBlockSelected.connect(partial(self._addBlock, wdg))
         wdg.btnRemove.clicked.connect(partial(self._removeBlock, wdg))
 
+        wdg.btnDrag.installEventFilter(
+            DragEventFilter(wdg, self.WORLD_BLOCK_MIMETYPE,
+                            dataFunc=lambda x: wdg.element,
+                            grabbed=wdg,
+                            startedSlot=partial(self.editor().dragStarted, wdg),
+                            finishedSlot=partial(self.editor().dragStopped, wdg)))
+        wdg.setAcceptDrops(True)
+        wdg.installEventFilter(
+            DropEventFilter(wdg, [self.WORLD_BLOCK_MIMETYPE],
+                            motionDetection=Qt.Orientation.Vertical,
+                            motionSlot=partial(self.editor().dragMoved, wdg),
+                            droppedSlot=self.editor().drop
+                            )
+        )
+
         return wdg
 
 
 class MainSectionElementEditor(SectionElementEditor):
-    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
-        super().__init__(novel, element, parent)
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None, editor=None):
+        super().__init__(novel, element, parent, editor)
         item = self.layout().itemAt(0)
         if item and item.widget():
             item.widget().frame.setHidden(True)
@@ -722,6 +730,8 @@ class SideBlockAdditionMenu(MenuWidget):
 
 
 class WorldBuildingEntityEditor(QWidget):
+    WORLD_BLOCK_MIMETYPE = 'application/world-block'
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
@@ -741,6 +751,10 @@ class WorldBuildingEntityEditor(QWidget):
         splitter.setSizes([500, 170])
 
         vbox(self, 0, 0).addWidget(splitter)
+
+        self._placeholderWidget: Optional[QWidget] = None
+        self._lastMovedWdg = None
+        self._lastMovedDirection = None
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -834,9 +848,46 @@ class WorldBuildingEntityEditor(QWidget):
         fade_out_and_gc(self.wdgEditorSide, wdg)
         self.repo.update_world(self._novel)
 
+    def dragStarted(self, wdg: WorldBuildingEntityElementWidget):
+        self._placeholderWidget = line(parent=self, color='#510442')
+        self._placeholderWidget.setHidden(True)
+        self._placeholderWidget.setAcceptDrops(True)
+        self._placeholderWidget.installEventFilter(
+            DropEventFilter(self._placeholderWidget, [self.WORLD_BLOCK_MIMETYPE], droppedSlot=self.drop))
+        wdg.setHidden(True)
+
+    def dragStopped(self, wdg: WorldBuildingEntityElementWidget):
+        if self._placeholderWidget:
+            gc(self._placeholderWidget)
+            self._dummyWdg = None
+        wdg.setVisible(True)
+
+    def dragMoved(self, wdg: WorldBuildingEntityElementWidget, edge: Qt.Edge, point: QPointF):
+        if wdg is self._lastMovedWdg and edge == self._lastMovedDirection:
+            return
+
+        if self._placeholderWidget.parent() is wdg.parent():
+            wdg.parent().layout().removeWidget(self._placeholderWidget)
+            self._placeholderWidget.setHidden(True)
+
+        i = wdg.parent().layout().indexOf(wdg)
+        if edge == Qt.Edge.TopEdge:
+            if isinstance(wdg, HeaderElementEditor):
+                return
+            wdg.parent().layout().insertWidget(i, self._placeholderWidget)
+        else:
+            wdg.parent().layout().insertWidget(i + 1, self._placeholderWidget)
+
+        self._lastMovedWdg = wdg
+        self._lastMovedDirection = edge
+        self._placeholderWidget.setVisible(True)
+
+    def drop(self, mimeData: QMimeData):
+        pass
+
     def __initElementWidget(self, element: WorldBuildingEntityElement,
                             middle: bool) -> WorldBuildingEntityElementWidget:
-        wdg = WorldBuildingEntityElementWidget.newWidget(self._novel, element)
+        wdg = WorldBuildingEntityElementWidget.newWidget(self._novel, element, self, editor=self)
         if middle and isinstance(wdg, SectionElementEditor):
             wdg.removed.connect(partial(self._removeSection, wdg))
         elif not middle:
