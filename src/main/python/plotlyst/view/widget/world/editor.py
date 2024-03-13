@@ -868,7 +868,10 @@ class WorldBuildingEntityEditor(QWidget):
         self.repo.update_world(self._novel)
 
     def dragStarted(self, wdg: WorldBuildingEntityElementWidget):
-        self._dragged = wdg
+        if isinstance(wdg, HeaderElementEditor):
+            self._dragged = wdg.parent()
+        else:
+            self._dragged = wdg
         self._placeholderWidget = line(parent=self, color='#510442')
         self._placeholderWidget.setHidden(True)
         self._placeholderWidget.setAcceptDrops(True)
@@ -905,7 +908,7 @@ class WorldBuildingEntityEditor(QWidget):
 
         i = wdg.parent().layout().indexOf(wdg)
         if edge == Qt.Edge.TopEdge:
-            if isinstance(wdg, HeaderElementEditor):
+            if isinstance(wdg, (HeaderElementEditor, MainSectionElementEditor)):
                 return
             wdg.parent().layout().insertWidget(i, self._placeholderWidget)
         else:
@@ -918,15 +921,13 @@ class WorldBuildingEntityEditor(QWidget):
     def drop(self, mimeData: QMimeData):
         if self._placeholderWidget.isHidden():
             return
-        ref: WorldBuildingEntityElement = mimeData.reference()
+        # ref: WorldBuildingEntityElement = mimeData.reference()
 
         new_index = self._placeholderWidget.parent().layout().indexOf(self._placeholderWidget)
-        if isinstance(self._dragged, HeaderElementEditor):
-            self._dropSection(ref)
+        if isinstance(self._dragged, SectionElementEditor):
+            self._dropSection(self._dragged.element, new_index)
         else:
-            self._dropBlock(ref, new_index)
-
-        self._placeholderWidget.parent().insertElement(new_index, ref)
+            self._dropBlock(self._dragged.element, new_index)
 
         self._placeholderWidget.setHidden(True)
         self._toBeRemoved = self._dragged
@@ -946,8 +947,19 @@ class WorldBuildingEntityEditor(QWidget):
             self._dragged.parent().element.blocks.remove(ref)
             self._placeholderWidget.parent().element.blocks.insert(new_index, ref)
 
-    def _dropSection(self, ref: WorldBuildingEntityElement):
-        pass
+        self._placeholderWidget.parent().insertElement(new_index, ref)
+
+    def _dropSection(self, ref: WorldBuildingEntityElement, new_index: int):
+        old_index = self.wdgEditorMiddle.layout().indexOf(self._dragged)
+        self._entity.elements.remove(ref)
+
+        if old_index < new_index:
+            self._entity.elements.insert(new_index - 1, ref)
+        else:
+            self._entity.elements.insert(new_index, ref)
+
+        wdg = self.__initElementWidget(ref, True)
+        self.wdgEditorMiddle.layout().insertWidget(new_index, wdg)
 
     def __initElementWidget(self, element: WorldBuildingEntityElement,
                             middle: bool) -> WorldBuildingEntityElementWidget:
