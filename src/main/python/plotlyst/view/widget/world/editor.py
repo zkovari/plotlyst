@@ -309,6 +309,7 @@ class QuoteElementEditor(WorldBuildingEntityElementWidget):
         self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
 
         self.btnRemove.raise_()
+        self.btnDrag.raise_()
 
     def _quoteChanged(self):
         self.element.text = self.textEdit.toMarkdown()
@@ -557,8 +558,15 @@ class SectionElementEditor(WorldBuildingEntityElementWidget):
             DropEventFilter(self, [self.WORLD_SECTION_MIMETYPE],
                             motionDetection=Qt.Orientation.Vertical,
                             motionSlot=partial(self.editor().dragMoved, self),
-                            droppedSlot=self.editor().dropSection
+                            droppedSlot=self.editor().drop
                             ))
+
+    def editor(self) -> 'WorldBuildingEntityEditor':
+        return self._editor
+
+    def insertElement(self, i: int, element: WorldBuildingEntityElement):
+        wdg = self.__initBlockWidget(element)
+        self.layout().insertWidget(i, wdg)
 
     def _addBlock(self, wdg: WorldBuildingEntityElementWidget, type_: WorldBuildingEntityElementType):
         element = WorldBuildingEntityElement(type_)
@@ -581,9 +589,6 @@ class SectionElementEditor(WorldBuildingEntityElementWidget):
         self.element.blocks.remove(widget.element)
         self.save()
         fade_out_and_gc(self, widget)
-
-    def editor(self) -> 'WorldBuildingEntityEditor':
-        return self._editor
 
     def __initBlockWidget(self, element: WorldBuildingEntityElement) -> WorldBuildingEntityElementWidget:
         wdg = WorldBuildingEntityElementWidget.newWidget(self.novel, element, self)
@@ -863,11 +868,13 @@ class WorldBuildingEntityEditor(QWidget):
         self.repo.update_world(self._novel)
 
     def dragStarted(self, wdg: WorldBuildingEntityElementWidget):
+        self._dragged = wdg
         self._placeholderWidget = line(parent=self, color='#510442')
         self._placeholderWidget.setHidden(True)
         self._placeholderWidget.setAcceptDrops(True)
         self._placeholderWidget.installEventFilter(
-            DropEventFilter(self._placeholderWidget, [self.WORLD_BLOCK_MIMETYPE], droppedSlot=self.drop))
+            DropEventFilter(self._placeholderWidget, [self.WORLD_BLOCK_MIMETYPE, self.WORLD_SECTION_MIMETYPE],
+                            droppedSlot=self.drop))
         if isinstance(wdg, HeaderElementEditor):
             wdg.parent().setHidden(True)
         else:
@@ -876,7 +883,8 @@ class WorldBuildingEntityEditor(QWidget):
     def dragStopped(self, wdg: WorldBuildingEntityElementWidget):
         if self._placeholderWidget:
             gc(self._placeholderWidget)
-            self._dummyWdg = None
+            self._placeholderWidget = None
+        self._dragged = None
 
         if self._toBeRemoved:
             gc(self._toBeRemoved)
@@ -912,7 +920,33 @@ class WorldBuildingEntityEditor(QWidget):
             return
         ref: WorldBuildingEntityElement = mimeData.reference()
 
-    def dropSection(self, mimeData: QMimeData):
+        new_index = self._placeholderWidget.parent().layout().indexOf(self._placeholderWidget)
+        if isinstance(self._dragged, HeaderElementEditor):
+            self._dropSection(ref)
+        else:
+            self._dropBlock(ref, new_index)
+
+        self._placeholderWidget.parent().insertElement(new_index, ref)
+
+        self._placeholderWidget.setHidden(True)
+        self._toBeRemoved = self._dragged
+
+        self.repo.update_world(self._novel)
+
+    def _dropBlock(self, ref: WorldBuildingEntityElement, new_index: int):
+        if self._dragged.parent() is self._placeholderWidget.parent():
+            old_index = self._dragged.parent().layout().indexOf(self._dragged)
+            self._dragged.parent().element.blocks.remove(ref)
+
+            if old_index < new_index:
+                self._placeholderWidget.parent().element.blocks.insert(new_index - 1, ref)
+            else:
+                self._placeholderWidget.parent().element.blocks.insert(new_index, ref)
+        else:
+            self._dragged.parent().element.blocks.remove(ref)
+            self._placeholderWidget.parent().element.blocks.insert(new_index, ref)
+
+    def _dropSection(self, ref: WorldBuildingEntityElement):
         pass
 
     def __initElementWidget(self, element: WorldBuildingEntityElement,
