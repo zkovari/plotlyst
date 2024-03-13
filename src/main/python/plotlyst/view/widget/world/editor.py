@@ -76,7 +76,9 @@ class WorldBuildingEntityElementWidget(QWidget):
         self.btnDrag = DragIcon(self)
         self.btnDrag.setHidden(True)
         if self.element.type not in [WorldBuildingEntityElementType.Section,
-                                     WorldBuildingEntityElementType.Main_Section]:
+                                     WorldBuildingEntityElementType.Main_Section,
+                                     WorldBuildingEntityElementType.Variables,
+                                     WorldBuildingEntityElementType.Highlight]:
             self.installEventFilter(VisibilityToggleEventFilter(self.btnDrag, self))
 
         self.btnRemove = RemovalButton(self, colorOff='grey', colorOn='#510442', colorHover='darkgrey')
