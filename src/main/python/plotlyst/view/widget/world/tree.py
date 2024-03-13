@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Optional, Dict, Set
 
-from PyQt6.QtCore import pyqtSignal, QMimeData, Qt, QPointF
+from PyQt6.QtCore import pyqtSignal, QMimeData, Qt, QPointF, QTimer
 from qthandy import vspacer, clear_layout, transparent, translucent, gc
 from qthandy.filter import DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget
@@ -180,7 +180,7 @@ class WorldBuildingTreeView(TreeView):
         if selected:
             self.clearSelection()
             self._selectedEntities.add(node.entity())
-            self.entitySelected.emit(node.entity())
+            QTimer.singleShot(10, lambda: self.entitySelected.emit(node.entity()))
         elif node.entity() in self._selectedEntities:
             self._selectedEntities.remove(node.entity())
 

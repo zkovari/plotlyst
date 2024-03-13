@@ -424,3 +424,11 @@ class TruitySourceWidget(QWidget):
         ref.installEventFilter(OpacityEventFilter(ref, 0.8, 0.5))
 
         hbox(self).addWidget(ref)
+
+
+class DragIcon(Icon):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setIcon(IconRegistry.hashtag_icon('grey'))
+        self.setIconSize(QSize(14, 14))
+        self.setCursor(Qt.CursorShape.OpenHandCursor)
