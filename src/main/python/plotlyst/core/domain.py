@@ -1771,6 +1771,7 @@ class WorldBuildingEntityElement:
     blocks: List['WorldBuildingEntityElement'] = field(default_factory=list,
                                                        metadata=config(exclude=exclude_if_empty))
     variables: List[Variable] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    image_ref: Optional[ImageRef] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
     @overrides
     def __eq__(self, other: 'WorldBuildingEntityElement'):
