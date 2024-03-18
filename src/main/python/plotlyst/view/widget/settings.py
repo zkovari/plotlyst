@@ -47,7 +47,7 @@ from plotlyst.view.widget.input import Toggle
 
 setting_titles: Dict[NovelSetting, str] = {
     NovelSetting.Structure: 'Story structure',
-    NovelSetting.Mindmap: 'Events map',
+    NovelSetting.Mindmap: 'Mindmap',
     NovelSetting.Storylines: 'Storylines',
     NovelSetting.Characters: 'Characters',
     NovelSetting.Scenes: 'Scenes',
@@ -62,7 +62,7 @@ setting_titles: Dict[NovelSetting, str] = {
 }
 setting_descriptions: Dict[NovelSetting, str] = {
     NovelSetting.Structure: "Follow a story structure to help you with your story's pacing and escalation",
-    NovelSetting.Mindmap: "Visualize your story's events in a mindmap. Ideal for brainstorming or any other stage in writing",
+    NovelSetting.Mindmap: "Visualize your story in a mindmap. Ideal for brainstorming or any other stage in writing",
     NovelSetting.Storylines: "Create separate storylines for plot, character's change, subplots, or relationship plots",
     NovelSetting.Characters: "Create a cast of characters with different roles, personalities, backstories, goals, and relationships among them",
     NovelSetting.Scenes: "Create scene cards for early outlining or later revision purposes to have characters, conflicts, or storylines associated to the scenes",
