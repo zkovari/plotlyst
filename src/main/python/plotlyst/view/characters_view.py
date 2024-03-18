@@ -147,7 +147,8 @@ class CharactersView(AbstractNovelView):
         self.ui.btnVerticalComparison.setIcon(IconRegistry.from_name('ph.rows-bold'))
         self.ui.btnGridComparison.setIcon(IconRegistry.from_name('ph.grid-four-bold'))
         self.ui.btnSummaryComparison.setIcon(IconRegistry.synopsis_icon(color_on=PLOTLYST_SECONDARY_COLOR))
-        self.ui.btnBigFiveComparison.setIcon(IconRegistry.big_five_icon(color_on=PLOTLYST_SECONDARY_COLOR))
+        # self.ui.btnBigFiveComparison.setIcon(IconRegistry.big_five_icon(color_on=PLOTLYST_SECONDARY_COLOR))
+        self.ui.btnBigFiveComparison.setHidden(True)
         self.ui.btnFacultiesComparison.setIcon(
             IconRegistry.from_name('mdi6.head-lightbulb', color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnBackstoryComparison.setIcon(IconRegistry.backstory_icon('black', color_on=PLOTLYST_SECONDARY_COLOR))
@@ -170,8 +171,8 @@ class CharactersView(AbstractNovelView):
             lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.SUMMARY))
         self.ui.btnFacultiesComparison.clicked.connect(
             lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.FACULTIES))
-        self.ui.btnBigFiveComparison.clicked.connect(
-            lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.BIG_FIVE))
+        # self.ui.btnBigFiveComparison.clicked.connect(
+        #     lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.BIG_FIVE))
         self.ui.btnBackstoryComparison.clicked.connect(
             lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.BACKSTORY))
         for btn in self.ui.btnGroupComparison.buttons():
