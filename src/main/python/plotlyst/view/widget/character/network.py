@@ -63,10 +63,10 @@ class CharacterNetworkView(NetworkGraphicsView):
 
         self._btnAddCharacter = self._newControlButton(IconRegistry.character_icon('#040406'), 'Add new character',
                                                        GraphicsItemType.CHARACTER)
-        self._btnAddSticker = self._newControlButton(IconRegistry.from_name('mdi6.sticker-circle-outline'),
-                                                     'Add new sticker', GraphicsItemType.STICKER)
-        self._btnAddSticker.setDisabled(True)
-        self._btnAddSticker.setToolTip('Feature is not yet available')
+        # self._btnAddSticker = self._newControlButton(IconRegistry.from_name('mdi6.sticker-circle-outline'),
+        #                                              'Add new sticker', GraphicsItemType.STICKER)
+        # self._btnAddSticker.setDisabled(True)
+        # self._btnAddSticker.setToolTip('Feature is not yet available')
 
         self._connectorEditor = RelationConnectorToolbar(self)
         self._connectorEditor.setVisible(False)
