@@ -572,6 +572,7 @@ class StoryBeat(OutlineItem):
     enabled: bool = True
     notes: str = field(default='', metadata=config(exclude=exclude_if_empty))
     custom: bool = False
+    placeholder: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
     @overrides
     def __eq__(self, other: 'StoryBeat'):
@@ -1984,7 +1985,7 @@ motion_beat = StoryBeat(text='Motion',
                         id=uuid.UUID('f9120632-3e27-405e-b404-543f9c5b12ca'),
                         icon='mdi.motion-outline',
                         icon_color='#d4a373',
-                        description='Sets the story in motion with enough intrigue to create narrative drive, but without establishing the story yet.',
+                        description='Sets the story in motion with enough intrigue to create narrative drive, without establishing the story yet.',
                         act=1, percentage=1)
 disturbance_beat = StoryBeat(text='Disturbance',
                              id=uuid.UUID('a954f949-8be9-46d6-8ebf-f9f76f482944'),
@@ -1996,13 +1997,13 @@ characteristic_moment_beat = StoryBeat(text='Characteristic Moment',
                                        id=uuid.UUID('b50c32e4-1927-4633-b5a3-9765aeaee7ad'),
                                        icon='mdi6.human-scooter',
                                        icon_color='#457b9d',
-                                       description="Introduces the protagonist, highlighting their character traits and core personality, possibly flaws as well.",
+                                       description="Introduces the protagonist, highlighting their core personality, possibly flaws, goals, or weaknesses.",
                                        act=1, percentage=1)
 normal_world_beat = StoryBeat(text='Normal World',
                               id=uuid.UUID('79ebc3b6-6b02-4d2d-8fdd-12274b8bb412'),
                               icon='fa5.image',
                               icon_color='#1ea896',
-                              description="Establishes the setting alongside the protagonist before the first major change in the story would happen.",
+                              description="Establishes the setting alongside the protagonist before the first major event in the story would happen.",
                               act=1, percentage=1)
 
 turn_beat = StoryBeat(text='Turn',
@@ -2028,6 +2029,7 @@ first_plot_point_ponr = StoryBeat(text='First Plot Point',
                                   icon='fa5s.door-closed',
                                   icon_color='#2a4494',
                                   description="It propels the protagonist into the central conflict through the character's irreversible decision. There's no going back now.",
+                                  placeholder="It propels the protagonist into the central conflict through the character's irreversible decision",
                                   id=uuid.UUID('d94e8ecd-c60d-4e7b-9817-47877ea1402f'), act=1,
                                   ends_act=True, percentage=20)
 
@@ -2035,6 +2037,7 @@ second_plot_point = StoryBeat(text='Second Plot Point',
                               id=uuid.UUID('95705e5e-a6b8-4abe-b2ea-426f2ae8d020'),
                               icon='mdi6.chevron-triple-right',
                               description="It propels the protagonist towards the climax to face the main conflict, often through a new twist, revelation, or turning point.",
+                              placeholder="It propels the protagonist towards the climax to face the main conflict",
                               icon_color='#6a0136',
                               act=2, ends_act=True, percentage=80)
 
@@ -2048,7 +2051,8 @@ second_plot_point_aha = StoryBeat(text='Aha moment',
 midpoint = StoryBeat(text='Midpoint',
                      icon='mdi.middleware-outline',
                      icon_color='#2e86ab',
-                     description="Intensifies the conflict and raises the stakes by often involving a major relevation or turning point. It may shift the story into a different direction.",
+                     description="Intensifies the conflict or raises the stakes by often involving a major revelation or turning point. It may shift the story into a different direction.",
+                     placeholder="Intensifies the conflict or raises the stakes by often involving a major revelation or turning point",
                      id=uuid.UUID('3f817e10-85d1-46af-91c6-70f1ad5c0542'),
                      act=2, percentage=50)
 midpoint_ponr = StoryBeat('Point of No Return',
@@ -2089,7 +2093,8 @@ three_act_structure = StoryStructure(title='Three Act Structure',
                                             StoryBeat(text='Inciting Incident',
                                                       icon='mdi.bell-alert-outline',
                                                       icon_color='#a2ad59',
-                                                      description="The first event that truly changes the protagonist's status quo and thus establishes the story. Often an external conflict is involved that raises the stakes and sets the protagonist in a new direction.",
+                                                      description="An event that changes the protagonist's life and might establishes the story. Often an external conflict is involved that sets the protagonist in a new direction.",
+                                                      placeholder="An event that changes the protagonist's life and might establishes the story",
                                                       id=uuid.UUID('a0c2d94a-b53c-485e-a279-f2548bdb38ec'),
                                                       act=1, percentage=10),
                                             first_plot_point,
@@ -2117,7 +2122,8 @@ three_act_structure = StoryStructure(title='Three Act Structure',
                                             StoryBeat(text='Climax',
                                                       icon='fa5s.chevron-up',
                                                       icon_color='#ce2d4f',
-                                                      description="The highest point of tension. The final confrontation between the protagonist and the antagonist. The story's main dramatic question is resolved.",
+                                                      description="The highest point of tension. The final confrontation between the protagonist and the antagonist. The story's central conflict is resolved.",
+                                                      placeholder="The final confrontation where the story's central conflict is resolved",
                                                       id=uuid.UUID('342eb27c-52ff-40c2-8c5e-cf563d4e38bc'),
                                                       act=3, percentage=97),
                                             StoryBeat(text='Resolution',
@@ -2135,6 +2141,7 @@ save_the_cat = StoryStructure(title='Save the Cat',
                                                icon='fa5.image',
                                                icon_color='#1ea896',
                                                description="Establishes the setting and introduces the protagonist. Bonus: hints at the main character's flaws and desires.",
+                                               placeholder="Establishes the setting and introduces the protagonist",
                                                id=uuid.UUID('249bba52-98b8-4577-8b3c-94481f6bf622'),
                                                act=1, percentage=1),
                                      StoryBeat(text='Setup',
@@ -2147,12 +2154,14 @@ save_the_cat = StoryStructure(title='Save the Cat',
                                                icon='ei.idea-alt',
                                                icon_color='#f72585',
                                                description="Hints at the lesson that the protagonist will learn by the end of the story. At this point they ignore it.",
+                                               placeholder="Hints at the lesson that the protagonist will learn by the end of the story",
                                                id=uuid.UUID('1c8b0903-f169-48d5-bcec-3e842f360150'),
                                                act=1, percentage=5),
                                      StoryBeat(text='Catalyst',
                                                icon='fa5s.vial',
                                                icon_color='#822faf',
                                                description="The first event that truly changes the protagonist's status quo. Often external conflict is involved that raises the stakes and sets the protagonist in a new direction.",
+                                               placeholder="The first event that truly changes the protagonist's status quo",
                                                id=uuid.UUID('cc3d8641-bcdf-402b-ba84-7ff59b2cc76a'),
                                                act=1, percentage=10),
                                      StoryBeat(text='Debate',
@@ -2165,12 +2174,14 @@ save_the_cat = StoryStructure(title='Save the Cat',
                                                icon='mdi6.clock-time-three-outline',
                                                icon_color='#1bbc9c',
                                                description="Start of Act 2. The protagonist enters a new world, sometimes physically, by making a decision and addressing the Catalyst event.",
+                                               placeholder="Start of Act 2. The protagonist enters a new world, sometimes physically",
                                                id=uuid.UUID('43eb267f-2840-437b-9eac-9e52d80eba2b'),
                                                act=1, ends_act=True, percentage=20),
                                      StoryBeat(text='B Story',
                                                icon='mdi.alpha-b-box',
                                                icon_color='#a6808c',
                                                description="Introduction of a new character who represents the B Story, which is the thematic or spiritual story of the protagonist's journey.",
+                                               placeholder="Introduction of a new character who represents the B Story",
                                                id=uuid.UUID('64229c74-5513-4391-9b45-c54ad106c137'),
                                                act=2, percentage=22),
                                      StoryBeat(text='Fun and Games',
@@ -2183,6 +2194,7 @@ save_the_cat = StoryStructure(title='Save the Cat',
                                                icon='mdi.middleware-outline',
                                                icon_color='#2e86ab',
                                                description="A false defeat or false victory moment that raises the stakes. Often Story A and Story B intersect. The protagonist turns to proactive from reactive.",
+                                               placeholder="A false defeat or false victory moment that often raises the stakes",
                                                id=uuid.UUID('af4fb4e9-f287-47b6-b219-be75af752622'),
                                                act=2, percentage=50),
                                      StoryBeat(text='Bad Guys Close In',
@@ -2213,6 +2225,7 @@ save_the_cat = StoryStructure(title='Save the Cat',
                                                icon='mdi.clock-time-nine-outline',
                                                icon_color='#e85d04',
                                                description='An a-ha moment for the protagonist. They realize that they have to change. They know how to fix their flaws and thus resolve the story.',
+                                               placeholder="An a-ha moment for the protagonist. They realize that they have to change",
                                                id=uuid.UUID('677f83ad-355a-47fb-8ff7-812997bdb23a'),
                                                act=2, ends_act=True, percentage=80),
                                      StoryBeat(text='Finale',
@@ -2242,7 +2255,7 @@ save_the_cat = StoryStructure(title='Save the Cat',
                                      StoryBeat(text='Dig Deep Down',
                                                icon='mdi.shovel',
                                                icon_color='#b08968',
-                                               description='A new plan is necessary. The protegonist must find the truth and act accordingly.',
+                                               description='A new plan is necessary. The protagonist must find the truth and act accordingly.',
                                                id=uuid.UUID('a5c4d0aa-9811-4988-8611-3483b2499732'),
                                                act=3, percentage=90),
                                      StoryBeat(text='Execute a New Plan',
@@ -3000,10 +3013,10 @@ class Novel(NovelDescriptor):
     def new_novel(title: str = '') -> 'Novel':
         novel = Novel(title)
         copied_structure = copy.deepcopy(three_act_structure)
-        copied_structure.beats[0].enabled = False # hook
-        copied_structure.beats[3].enabled = False # pinch 1
-        copied_structure.beats[5].enabled = False # pinch 2
-        copied_structure.beats[8].enabled = False # crisis
+        copied_structure.beats[0].enabled = False  # hook
+        copied_structure.beats[3].enabled = False  # pinch 1
+        copied_structure.beats[5].enabled = False  # pinch 2
+        copied_structure.beats[8].enabled = False  # crisis
         novel.story_structures = [copied_structure]
         chapter = Chapter('Chapter 1')
         novel.chapters.append(chapter)
