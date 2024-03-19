@@ -24,17 +24,18 @@ import qtanim
 from PyQt6.QtCore import Qt, QPoint, QSize, QPointF, QRectF, pyqtSignal, QTimer, QObject
 from PyQt6.QtGui import QColor, QPixmap, QShowEvent, QResizeEvent, QImage, QPainter, QKeyEvent, QIcon
 from PyQt6.QtWidgets import QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem, QAbstractGraphicsShapeItem, QWidget, \
-    QGraphicsSceneMouseEvent, QGraphicsOpacityEffect, QGraphicsDropShadowEffect, QFrame, QTextEdit, QLineEdit
+    QGraphicsSceneMouseEvent, QGraphicsOpacityEffect, QGraphicsDropShadowEffect, QFrame, QTextEdit, QLineEdit, \
+    QApplication, QGraphicsSceneDragDropEvent
 from overrides import overrides
-from qthandy import busy, vbox, vspacer, sp, line, decr_icon, incr_font, flow
-from qthandy.filter import OpacityEventFilter
+from qthandy import busy, vbox, vspacer, sp, line, decr_icon, incr_font, flow, incr_icon
+from qthandy.filter import OpacityEventFilter, DragEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
-from plotlyst.core.domain import Novel, WorldBuildingMap, WorldBuildingMarker
+from plotlyst.core.domain import Novel, WorldBuildingMap, WorldBuildingMarker, GraphicsItemType
 from plotlyst.service.image import load_image, upload_image, LoadedImage
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import tool_btn, action, shadow, scrolled, wrap
+from plotlyst.view.common import tool_btn, action, shadow, scrolled, wrap, TooltipPositionEventFilter
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.button import CollapseButton
 from plotlyst.view.widget.graphics import BaseGraphicsView
@@ -334,17 +335,23 @@ class MarkerItem(QAbstractGraphicsShapeItem):
 class WorldBuildingMapScene(QGraphicsScene):
     showPopup = pyqtSignal(MarkerItem)
     hidePopup = pyqtSignal()
+    cancelItemAddition = pyqtSignal()
+    itemAdded = pyqtSignal()
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
         self._map: Optional[WorldBuildingMap] = None
         self._animParent = QObject()
+        self._additionMode: bool = False
 
         self.repo = RepositoryPersistenceManager.instance()
 
     def map(self) -> Optional[WorldBuildingMap]:
         return self._map
+
+    def isAdditionMode(self) -> bool:
+        return self._additionMode
 
     def showPopupEvent(self, item: MarkerItem):
         self.showPopup.emit(item)
@@ -354,9 +361,30 @@ class WorldBuildingMapScene(QGraphicsScene):
 
     @overrides
     def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_Escape:
+            if self.isAdditionMode():
+                self.cancelItemAddition.emit()
+                self.endAdditionMode()
+
         if event.key() == Qt.Key.Key_Delete or event.key() == Qt.Key.Key_Backspace:
             for item in self.selectedItems():
                 self._removeItem(item)
+
+    @overrides
+    def dragEnterEvent(self, event: QGraphicsSceneDragDropEvent) -> None:
+        if event.mimeData().formats()[0].startswith('application/node'):
+            event.accept()
+        else:
+            event.ignore()
+
+    @overrides
+    def dragMoveEvent(self, event: QGraphicsSceneDragDropEvent) -> None:
+        event.accept()
+
+    @overrides
+    def dropEvent(self, event: QGraphicsSceneDragDropEvent) -> None:
+        self._addMarker(event.scenePos())
+        event.accept()
 
     @busy
     def loadMap(self, map: WorldBuildingMap) -> Optional[QGraphicsPixmapItem]:
@@ -378,12 +406,28 @@ class WorldBuildingMapScene(QGraphicsScene):
             self._map = None
 
     @overrides
+    def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        if self.isAdditionMode() and event.button() & Qt.MouseButton.RightButton:
+            self.cancelItemAddition.emit()
+            self.endAdditionMode()
+        elif self.isAdditionMode():
+            self._addMarker(event.scenePos())
+
+        super().mouseReleaseEvent(event)
+
+    @overrides
     def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         if self._map:
             self._addMarker(event.scenePos())
 
     def markerChangedEvent(self, _: MarkerItem):
         self.repo.update_world(self._novel)
+
+    def startAdditionMode(self, _: GraphicsItemType):
+        self._additionMode = True
+
+    def endAdditionMode(self):
+        self._additionMode = False
 
     def _addMarker(self, pos: QPointF):
         pos = pos - QPointF(MarkerItem.DEFAULT_MARKER_WIDTH / 2, MarkerItem.DEFAULT_MARKER_HEIGHT)
@@ -395,6 +439,9 @@ class WorldBuildingMapScene(QGraphicsScene):
 
         anim = qtanim.fade_in(markerItem)
         anim.setParent(self._animParent)
+
+        self.itemAdded.emit()
+        self.endAdditionMode()
 
     def _removeItem(self, item: QGraphicsItem):
         def remove():
@@ -420,6 +467,10 @@ class WorldBuildingMapView(BaseGraphicsView):
         sp(self._controlsNavBar).h_max()
         shadow(self._controlsNavBar)
         vbox(self._controlsNavBar, 5, 6)
+
+        self._btnAddMarker = self._newControlButton(IconRegistry.from_name('fa5s.map-marker'),
+                                                    'Add new marker (or double-click on the map)',
+                                                    GraphicsItemType.MAP_MARKER)
 
         self._wdgEditor = EntityEditorWidget(self)
         self._wdgEditor.setHidden(True)
@@ -449,6 +500,8 @@ class WorldBuildingMapView(BaseGraphicsView):
         self._scene.selectionChanged.connect(self._selectionChanged)
         self._scene.showPopup.connect(self._showPopup)
         self._scene.hidePopup.connect(self._hidePopup)
+        self._scene.itemAdded.connect(self._endAddition)
+        self._scene.cancelItemAddition.connect(self._endAddition)
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -492,10 +545,47 @@ class WorldBuildingMapView(BaseGraphicsView):
                                   self._btnEdit.sizeHint().width(),
                                   self._btnEdit.sizeHint().height())
 
+        self._controlsNavBar.setGeometry(10, 100, self._controlsNavBar.sizeHint().width(),
+                                         self._controlsNavBar.sizeHint().height())
+
         self._wdgEditor.setGeometry(self.width() - self._wdgEditor.width() - 20,
                                     20,
                                     self._wdgEditor.width(),
                                     self._wdgEditor.sizeHint().height())
+
+    def _newControlButton(self, icon: QIcon, tooltip: str, itemType: GraphicsItemType):
+        btn = tool_btn(icon, tooltip,
+                       True, icon_resize=False,
+                       properties=['transparent-rounded-bg-on-hover', 'top-selector'],
+                       parent=self._controlsNavBar)
+        btn.installEventFilter(DragEventFilter(btn, itemType.mimeType(), lambda x: itemType))
+
+        btn.installEventFilter(TooltipPositionEventFilter(btn))
+        incr_icon(btn, 2)
+
+        self._controlsNavBar.layout().addWidget(btn)
+        btn.clicked.connect(partial(self._mainControlClicked, itemType))
+
+        return btn
+
+    def _mainControlClicked(self, itemType: GraphicsItemType, checked: bool):
+        if checked:
+            self._startAddition(itemType)
+        else:
+            self._endAddition()
+            self._scene.endAdditionMode()
+
+    def _startAddition(self, itemType: GraphicsItemType):
+        if not QApplication.overrideCursor():
+            QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
+
+        self._scene.startAdditionMode(itemType)
+        self.setToolTip('Click to add a new marker')
+
+    def _endAddition(self):
+        self._btnAddMarker.setChecked(False)
+        QApplication.restoreOverrideCursor()
+        self.setToolTip('')
 
     def _loadMap(self, map: WorldBuildingMap):
         self._bgItem = self._scene.loadMap(map)

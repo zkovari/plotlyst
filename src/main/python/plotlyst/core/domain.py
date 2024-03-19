@@ -2706,6 +2706,7 @@ class GraphicsItemType(Enum):
     SETUP = 'setup'
     NOTE = 'note'
     IMAGE = 'image'
+    MAP_MARKER = 'map_marker'
 
     def mimeType(self) -> str:
         return f'application/node-{self.value}'

@@ -224,8 +224,6 @@ class NetworkGraphicsView(BaseGraphicsView):
         if item is not None and isinstance(item, CharacterItem):
             QTimer.singleShot(100, lambda: self._editCharacterItem(item))
 
-
-
     def _arrangeSideBars(self):
         self._wdgZoomBar.setGeometry(10, self.height() - self._wdgZoomBar.sizeHint().height() - 10,
                                      self._wdgZoomBar.sizeHint().width(),
