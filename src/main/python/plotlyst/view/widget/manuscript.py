@@ -34,7 +34,7 @@ from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit, QButton
 from nltk import WhitespaceTokenizer
 from overrides import overrides
 from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins, vbox, line, bold, vline, decr_font, \
-    underline
+    underline, transparent
 from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget, group
 from qttextedit import RichTextEditor, TextBlockState, remove_font, OBJECT_REPLACEMENT_CHARACTER
@@ -81,9 +81,17 @@ class SprintWidget(QWidget, Ui_SprintWidget):
         self.setModel(TimerModel())
 
         self._toggleState(False)
+        transparent(self.time)
+        transparent(self.btnPause)
+        transparent(self.btnReset)
 
         self.btnTimer.setIcon(IconRegistry.timer_icon())
-        self.btnReset.setIcon(IconRegistry.restore_alert_icon('#9b2226'))
+        self.btnPause.installEventFilter(OpacityEventFilter(self.btnPause, leaveOpacity=0.7))
+        self.btnPause.installEventFilter(ButtonPressResizeEventFilter(self.btnPause))
+        self.btnReset.setIcon(IconRegistry.restore_alert_icon('#ED6868'))
+        self.btnReset.installEventFilter(OpacityEventFilter(self.btnReset, leaveOpacity=0.7))
+        self.btnReset.installEventFilter(ButtonPressResizeEventFilter(self.btnReset))
+
         self._timer_setup = TimerSetupWidget()
         self._menu = MenuWidget(self.btnTimer)
         self._menu.addWidget(self._timer_setup)
@@ -118,7 +126,7 @@ class SprintWidget(QWidget, Ui_SprintWidget):
         self.time.setVisible(running)
         if running:
             self.btnPause.setChecked(True)
-            self.btnPause.setIcon(IconRegistry.pause_icon())
+            self.btnPause.setIcon(IconRegistry.pause_icon(color='grey'))
         if self._compact:
             self.btnTimer.setHidden(running)
             retain_when_hidden(self.btnPause)
@@ -137,7 +145,7 @@ class SprintWidget(QWidget, Ui_SprintWidget):
     def _pauseStartTimer(self, played: bool):
         self.model().toggle()
         if played:
-            self.btnPause.setIcon(IconRegistry.pause_icon())
+            self.btnPause.setIcon(IconRegistry.pause_icon(color='grey'))
         else:
             self.btnPause.setIcon(IconRegistry.play_icon())
 
