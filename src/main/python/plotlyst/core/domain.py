@@ -2999,7 +2999,12 @@ class Novel(NovelDescriptor):
     @staticmethod
     def new_novel(title: str = '') -> 'Novel':
         novel = Novel(title)
-        novel.story_structures = [copy.deepcopy(three_act_structure)]
+        copied_structure = copy.deepcopy(three_act_structure)
+        copied_structure.beats[0].enabled = False # hook
+        copied_structure.beats[3].enabled = False # pinch 1
+        copied_structure.beats[5].enabled = False # pinch 2
+        copied_structure.beats[8].enabled = False # crisis
+        novel.story_structures = [copied_structure]
         chapter = Chapter('Chapter 1')
         novel.chapters.append(chapter)
 
