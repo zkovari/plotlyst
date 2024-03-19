@@ -143,7 +143,6 @@ class RelationConnectorToolbar(ConnectorToolbar):
         self._btnRelationType = RelationsButton()
 
         self._relationSelector: Optional[RelationSelector] = None
-        self._btnText.setHidden(True)
 
         self._toolbar.layout().insertWidget(0, self._btnRelationType)
         self._toolbar.layout().insertWidget(1, vline())
