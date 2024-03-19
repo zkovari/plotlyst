@@ -1,1 +1,1 @@
-from .editor import WorldBuildingTreeView
+from .tree import WorldBuildingTreeView

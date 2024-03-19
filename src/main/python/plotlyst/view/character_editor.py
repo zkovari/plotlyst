@@ -37,7 +37,7 @@ from plotlyst.events import NovelAboutToSyncEvent
 from plotlyst.resources import resource_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.service.tour import TourService
-from plotlyst.view.common import emoji_font, set_tab_icon, wrap, ButtonPressResizeEventFilter
+from plotlyst.view.common import emoji_font, set_tab_icon, wrap, ButtonPressResizeEventFilter, set_tab_visible
 from plotlyst.view.dialog.template import customize_character_profile
 from plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from plotlyst.view.icons import IconRegistry
@@ -160,9 +160,11 @@ class CharacterEditor(QObject, EventListener):
         set_tab_icon(self.ui.tabAttributes, self.ui.tabNotes, IconRegistry.document_edition_icon())
         set_tab_icon(self.ui.tabAttributes, self.ui.tabGoals, IconRegistry.goal_icon('black', PLOTLYST_SECONDARY_COLOR))
 
-        self._bigFive = BigFivePersonalityWidget()
-        self._bigFive.setCharacter(self.character)
-        self.ui.tabBigFive.layout().addWidget(self._bigFive)
+        # self._bigFive = BigFivePersonalityWidget()
+        # self._bigFive.setCharacter(self.character)
+        # self.ui.tabBigFive.layout().addWidget(self._bigFive)
+        set_tab_visible(self.ui.tabAttributes, self.ui.tabBigFive, False)
+        set_tab_visible(self.ui.tabAttributes, self.ui.tabGoals, False)
 
         self.ui.wdgAvatar.btnAvatar.setToolTip('Character avatar. Click to add an image')
         self.ui.wdgAvatar.setCharacter(self.character)

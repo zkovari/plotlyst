@@ -266,19 +266,21 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             incr_font(btn)
         self.btnDynamicPrinciples.clicked.connect(lambda: self._dynamicPrincipleSelectorMenu.exec())
 
-        self.btnValues.setText('' if self.plot.values else 'Values')
-        self.btnValues.setIcon(IconRegistry.from_name('fa5s.chevron-circle-down', 'grey'))
-        self.btnValues.installEventFilter(OpacityEventFilter(self.btnValues, 0.9, 0.7))
-        self.btnValues.clicked.connect(self._newValue)
-        hbox(self.wdgValues)
-        self._btnAddValue = SecondaryActionPushButton(self)
-        self._btnAddValue.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
-        decr_font(self._btnAddValue)
-        self._btnAddValue.setIconSize(QSize(14, 14))
-        retain_when_hidden(self._btnAddValue)
-        self._btnAddValue.setIcon(IconRegistry.plus_icon('grey'))
-        for value in self.plot.values:
-            self._addValue(value)
+        self.btnValues.setHidden(True)
+        # self.btnValues.setText('' if self.plot.values else 'Values')
+        # self.btnValues.setIcon(IconRegistry.from_name('fa5s.chevron-circle-down', 'grey'))
+        # self.btnValues.installEventFilter(OpacityEventFilter(self.btnValues, 0.9, 0.7))
+        # self.btnValues.clicked.connect(self._newValue)
+        # hbox(self.wdgValues)
+        self.wdgValues.setHidden(True)
+        # self._btnAddValue = SecondaryActionPushButton(self)
+        # self._btnAddValue.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+        # decr_font(self._btnAddValue)
+        # self._btnAddValue.setIconSize(QSize(14, 14))
+        # retain_when_hidden(self._btnAddValue)
+        # self._btnAddValue.setIcon(IconRegistry.plus_icon('grey'))
+        # for value in self.plot.values:
+        #     self._addValue(value)
 
         self.btnRelationArrow.setHidden(True)
         self._characterRelationSelector: Optional[CharacterAvatar] = None
@@ -321,12 +323,12 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             if character is not None:
                 self._characterSelector.setCharacter(character)
 
-        self.wdgValues.layout().addWidget(self._btnAddValue)
-        self.wdgValues.layout().addWidget(spacer())
-        self._btnAddValue.clicked.connect(self._newValue)
+        # self.wdgValues.layout().addWidget(self._btnAddValue)
+        # self.wdgValues.layout().addWidget(spacer())
+        # self._btnAddValue.clicked.connect(self._newValue)
 
         self.installEventFilter(VisibilityToggleEventFilter(target=self.btnSettings, parent=self))
-        self.installEventFilter(VisibilityToggleEventFilter(target=self._btnAddValue, parent=self))
+        # self.installEventFilter(VisibilityToggleEventFilter(target=self._btnAddValue, parent=self))
         self.installEventFilter(VisibilityToggleEventFilter(target=self.btnPrincipleEditor, parent=self))
         self.installEventFilter(VisibilityToggleEventFilter(target=self.btnDynamicPrincipleEditor, parent=self))
 
@@ -431,7 +433,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
                 wdg = self._principles.pop(principle.type)
                 fade_out_and_gc(self.wdgPrinciples, wdg)
 
-        self._btnAddValue.setVisible(True)
+        # self._btnAddValue.setVisible(True)
         self.btnSettings.setVisible(True)
         self.btnPrincipleEditor.setVisible(True)
 

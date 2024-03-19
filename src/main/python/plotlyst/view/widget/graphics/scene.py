@@ -141,6 +141,8 @@ class NetworkScene(QGraphicsScene):
 
         self.addItem(connectorItem)
         self.endLink()
+        sourceNode.setSelected(False)
+        connectorItem.setSelected(True)
 
     def editItemEvent(self, item: Node):
         self.editItem.emit(item)

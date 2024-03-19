@@ -17,209 +17,39 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from enum import Enum
 from functools import partial
-from typing import Optional, Dict, Set, Any, List
+from typing import Optional, Dict, List
 
 import qtanim
-from PyQt6.QtCore import pyqtSignal, Qt, QModelIndex, QSize
-from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMouseEvent, QColor
-from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QTableView, QApplication, QDialog, QGridLayout
+from PyQt6.QtCore import pyqtSignal, Qt, QSize, QMimeData, QPointF
+from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMouseEvent, QColor, QIcon
+from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QDialog, QGridLayout, QSlider, QToolButton, QButtonGroup
 from overrides import overrides
 from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy, \
-    grid, flow, spacer, line, incr_icon
-from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter
-from qtmenu import MenuWidget
+    grid, flow, spacer, line, incr_icon, gc
+from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter, DragEventFilter, \
+    DropEventFilter
+from qtmenu import MenuWidget, TabularGridMenuWidget
 
-from plotlyst.common import recursive, IGNORE_CAPITALIZATION_PROPERTY
-from plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityType, \
-    WorldBuildingEntityElement, WorldBuildingEntityElementType, GlossaryItem, BackstoryEvent, Variable, VariableType, \
+from plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityElement, WorldBuildingEntityElementType, \
+    BackstoryEvent, Variable, VariableType, \
     Topic
-from plotlyst.core.template import SelectionItem
 from plotlyst.env import app_env
-from plotlyst.model.common import SelectionItemsModel
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import action, push_btn, frame, insert_before_the_end, fade_out_and_gc, \
-    tool_btn, label, scrolled
+    tool_btn, label, scrolled, wrap
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
+from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.style.text import apply_text_color
 from plotlyst.view.widget.button import DotsMenuButton
-from plotlyst.view.widget.display import Icon, PopupDialog
+from plotlyst.view.widget.display import Icon, PopupDialog, DragIcon
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, RemovalButton
-from plotlyst.view.widget.items_editor import ItemsEditorWidget
 from plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
-from plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 from plotlyst.view.widget.world._topics import ecological_topics, cultural_topics, historical_topics, \
     linguistic_topics, technological_topics, economic_topics, infrastructural_topics, religious_topics, \
     fantastic_topics, nefarious_topics, environmental_topics
-
-
-class EntityAdditionMenu(MenuWidget):
-    entityTriggered = pyqtSignal(WorldBuildingEntity)
-
-    def __init__(self, parent=None):
-        super(EntityAdditionMenu, self).__init__(parent)
-        self.addAction(action('Entity', IconRegistry.world_building_icon(),
-                              slot=lambda: self._triggered(WorldBuildingEntityType.ABSTRACT),
-                              tooltip='Any physical, human, or abstract entity in the world, e.g., location, kingdom, magic, God, etc.'))
-        self.addSeparator()
-
-        submenu = MenuWidget()
-        submenu.setTitle('Link')
-        submenu.setIcon(IconRegistry.from_name('fa5s.link'))
-        submenu.setDisabled(True)
-        submenu.addAction(action('Location', IconRegistry.location_icon()))
-        submenu.addAction(action('Social group', IconRegistry.group_icon()))
-        submenu.addAction(action('Character', IconRegistry.character_icon()))
-
-        self.addMenu(submenu)
-
-    def _triggered(self, wdType: WorldBuildingEntityType):
-        if wdType == WorldBuildingEntityType.SETTING:
-            name = 'New location'
-            icon_name = 'fa5s.map-pin'
-        elif wdType == WorldBuildingEntityType.GROUP:
-            name = 'New group'
-            icon_name = 'mdi.account-group'
-        elif wdType == WorldBuildingEntityType.ITEM:
-            name = 'New item'
-            icon_name = ''
-        elif wdType == WorldBuildingEntityType.CONTAINER:
-            name = 'Container'
-            icon_name = ''
-        else:
-            name = 'New entity'
-            icon_name = ''
-
-        entity = WorldBuildingEntity(name, icon=icon_name, type=wdType,
-                                     elements=[WorldBuildingEntityElement(WorldBuildingEntityElementType.Text)])
-
-        self.entityTriggered.emit(entity)
-
-
-class EntityNode(ContainerNode):
-    addEntity = pyqtSignal(WorldBuildingEntity)
-
-    def __init__(self, entity: WorldBuildingEntity, parent=None, settings: Optional[TreeSettings] = None):
-        super(EntityNode, self).__init__(entity.name, parent=parent, settings=settings)
-        self._entity = entity
-        self.setPlusButtonEnabled(True)
-        self._additionMenu = EntityAdditionMenu(self._btnAdd)
-        self._additionMenu.entityTriggered.connect(self.addEntity.emit)
-        self.setPlusMenu(self._additionMenu)
-        self.refresh()
-
-    def entity(self) -> WorldBuildingEntity:
-        return self._entity
-
-    def refresh(self):
-        self._lblTitle.setText(self._entity.name)
-
-        if self._entity.icon:
-            self._icon.setIcon(IconRegistry.from_name(self._entity.icon, self._entity.icon_color))
-            self._icon.setVisible(True)
-        else:
-            self._icon.setHidden(True)
-
-
-class RootNode(EntityNode):
-
-    def __init__(self, entity: WorldBuildingEntity, parent=None, settings: Optional[TreeSettings] = None):
-        super(RootNode, self).__init__(entity, parent=parent, settings=settings)
-        self.setMenuEnabled(False)
-        self.setPlusButtonEnabled(False)
-
-
-class WorldBuildingTreeView(TreeView):
-    entitySelected = pyqtSignal(WorldBuildingEntity)
-
-    def __init__(self, parent=None, settings: Optional[TreeSettings] = None):
-        super(WorldBuildingTreeView, self).__init__(parent)
-        self._novel: Optional[Novel] = None
-        self._settings: Optional[TreeSettings] = settings
-        self._root: Optional[RootNode] = None
-        self._entities: Dict[WorldBuildingEntity, EntityNode] = {}
-        self._selectedEntities: Set[WorldBuildingEntity] = set()
-        self._centralWidget.setStyleSheet('background: #ede0d4;')
-        transparent(self)
-
-        self.repo = RepositoryPersistenceManager.instance()
-
-    def selectRoot(self):
-        self._root.select()
-        self._entitySelectionChanged(self._root, self._root.isSelected())
-
-    def setSettings(self, settings: TreeSettings):
-        self._settings = settings
-
-    def setNovel(self, novel: Novel):
-        self._novel = novel
-        self._root = RootNode(self._novel.world.root_entity, settings=self._settings)
-        self._root.selectionChanged.connect(partial(self._entitySelectionChanged, self._root))
-        self.refresh()
-
-    def addEntity(self, entity: WorldBuildingEntity):
-        wdg = self.__initEntityWidget(entity)
-        self._root.addChild(wdg)
-        self._novel.world.root_entity.children.append(entity)
-        self.repo.update_world(self._novel)
-
-    def refresh(self):
-        def addChildWdg(parent: WorldBuildingEntity, child: WorldBuildingEntity):
-            childWdg = self.__initEntityWidget(child)
-            self._entities[parent].addChild(childWdg)
-
-        self.clearSelection()
-        self._entities.clear()
-        clear_layout(self._centralWidget)
-
-        self._entities[self._novel.world.root_entity] = self._root
-        self._centralWidget.layout().addWidget(self._root)
-        for entity in self._novel.world.root_entity.children:
-            wdg = self.__initEntityWidget(entity)
-            self._root.addChild(wdg)
-            recursive(entity, lambda parent: parent.children, addChildWdg)
-        self._centralWidget.layout().addWidget(vspacer())
-
-    def updateEntity(self, entity: WorldBuildingEntity):
-        self._entities[entity].refresh()
-
-    def clearSelection(self):
-        for entity in self._selectedEntities:
-            self._entities[entity].deselect()
-        self._selectedEntities.clear()
-
-    def _entitySelectionChanged(self, node: EntityNode, selected: bool):
-        if selected:
-            self.clearSelection()
-            self._selectedEntities.add(node.entity())
-            self.entitySelected.emit(node.entity())
-        elif node.entity() in self._selectedEntities:
-            self._selectedEntities.remove(node.entity())
-
-    def _addEntity(self, parent: EntityNode, entity: WorldBuildingEntity):
-        wdg = self.__initEntityWidget(entity)
-        parent.addChild(wdg)
-        parent.entity().children.append(entity)
-        self.repo.update_world(self._novel)
-
-    def _removeEntity(self, node: EntityNode):
-        entity = node.entity()
-        self.clearSelection()
-        self.selectRoot()
-
-        node.parent().parent().entity().children.remove(entity)
-        fade_out_and_gc(node.parent(), node)
-        self.repo.update_world(self._novel)
-
-    def __initEntityWidget(self, entity: WorldBuildingEntity) -> EntityNode:
-        node = EntityNode(entity, settings=self._settings)
-        node.selectionChanged.connect(partial(self._entitySelectionChanged, node))
-        node.addEntity.connect(partial(self._addEntity, node))
-        node.deleted.connect(partial(self._removeEntity, node))
-
-        self._entities[entity] = node
-        return node
 
 
 class WorldBuildingEntityElementWidget(QWidget):
@@ -233,11 +63,23 @@ class WorldBuildingEntityElementWidget(QWidget):
         if removalEnabled and removalEnabled == menuEnabled:
             raise ValueError('Cannot allow both removal and menu for WorldBuildingEntityElementWidget')
 
+        vbox(self, 0)
+        if self._underSection():
+            margins(self, left=15)
+
         self.btnAdd = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True, tooltip='Insert new block')
         self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd))
-        decr_icon(self.btnAdd)
+        decr_icon(self.btnAdd, 4)
         self.btnAdd.setHidden(True)
         retain_when_hidden(self.btnAdd)
+
+        self.btnDrag = DragIcon(self)
+        self.btnDrag.setHidden(True)
+        if self.element.type not in [WorldBuildingEntityElementType.Section,
+                                     WorldBuildingEntityElementType.Main_Section,
+                                     WorldBuildingEntityElementType.Variables,
+                                     WorldBuildingEntityElementType.Highlight]:
+            self.installEventFilter(VisibilityToggleEventFilter(self.btnDrag, self))
 
         self.btnRemove = RemovalButton(self, colorOff='grey', colorOn='#510442', colorHover='darkgrey')
         if self._removalEnabled:
@@ -253,6 +95,8 @@ class WorldBuildingEntityElementWidget(QWidget):
         self._btnCornerButtonOffsetY = 1
         self._btnCornerButtonOffsetX = 20
 
+        sp(self).v_max()
+
     def save(self):
         RepositoryPersistenceManager.instance().update_world(self.novel)
 
@@ -264,16 +108,23 @@ class WorldBuildingEntityElementWidget(QWidget):
         elif self._menuEnabled:
             self.btnMenu.setGeometry(event.size().width() - self._btnCornerButtonOffsetX, self._btnCornerButtonOffsetY,
                                      20, 20)
+
+        self.btnDrag.setGeometry(0, 0, 20, 20)
+
         super().resizeEvent(event)
 
+    def activate(self):
+        pass
+
     @staticmethod
-    def newWidget(novel: Novel, element: WorldBuildingEntityElement,
-                  parent: Optional[
-                      'WorldBuildingEntitySectionElementEditor'] = None) -> 'WorldBuildingEntityElementWidget':
+    def newWidget(novel: Novel, element: WorldBuildingEntityElement, parent: Optional[QWidget] = None,
+                  editor: Optional['WorldBuildingEntityEditor'] = None) -> 'WorldBuildingEntityElementWidget':
         if element.type == WorldBuildingEntityElementType.Text:
             return TextElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Section:
-            return WorldBuildingEntitySectionElementEditor(novel, element, parent)
+            return SectionElementEditor(novel, element, parent, editor)
+        elif element.type == WorldBuildingEntityElementType.Main_Section:
+            return MainSectionElementEditor(novel, element, parent, editor)
         elif element.type == WorldBuildingEntityElementType.Header:
             return HeaderElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Quote:
@@ -287,15 +138,24 @@ class WorldBuildingEntityElementWidget(QWidget):
         else:
             raise ValueError(f'Unsupported WorldBuildingEntityElement type {element.type}')
 
+    def _underSection(self) -> bool:
+        if self.element.type == WorldBuildingEntityElementType.Section or self.element.type == WorldBuildingEntityElementType.Header:
+            return False
+        return self.parent() and not isinstance(
+            self.parent(), (MainSectionElementEditor, WorldBuildingEntityEditor))
+
 
 class TextElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
-        super().__init__(novel, element, parent, removalEnabled=True if parent else False)
+        super().__init__(novel, element, parent)
         self._capitalized = False
 
         self.textEdit = AutoAdjustableTextEdit()
         self.textEdit.setProperty('transparent', True)
-        self.textEdit.setPlaceholderText('Describe this entity...')
+        if self._underSection():
+            self.textEdit.setPlaceholderText('Describe this section...')
+        else:
+            self.textEdit.setPlaceholderText('Describe this entity...')
         self.textEdit.textChanged.connect(self._textChanged)
         self.textEdit.setMarkdown(element.text)
 
@@ -310,12 +170,11 @@ class TextElementEditor(WorldBuildingEntityElementWidget):
         font.setFamily(family)
         self.textEdit.setFont(font)
 
-        vbox(self, 0, 0).addWidget(self.textEdit)
-        if parent:
-            margins(self, left=15)
-            self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
-            self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
-            self.btnRemove.raise_()
+        self.layout().addWidget(self.textEdit)
+        self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
+        self.btnRemove.raise_()
+        self.btnDrag.raise_()
 
     def _textChanged(self):
         self.element.text = self.textEdit.toMarkdown()
@@ -340,10 +199,11 @@ class TextElementEditor(WorldBuildingEntityElementWidget):
 
 class HeaderElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
-        super().__init__(novel, element, parent)
+        super().__init__(novel, element, parent,
+                         removalEnabled=False if isinstance(parent, MainSectionElementEditor) else True)
 
-        vbox(self, 0)
-        margins(self, top=10, bottom=10)
+        if isinstance(parent, MainSectionElementEditor):
+            self.layout().setSpacing(0)
 
         self.icon = Icon()
         self.icon.setIconSize(QSize(32, 32))
@@ -378,12 +238,12 @@ class HeaderElementEditor(WorldBuildingEntityElementWidget):
             background: #DABFA7;
         }''')
 
-        if parent:
-            self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
-            self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
+        self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
 
         self._btnCornerButtonOffsetY = 7
         self.btnRemove.raise_()
+        self.btnDrag.raise_()
 
     def _titleEdited(self, title: str):
         self.element.title = title
@@ -394,8 +254,8 @@ class QuoteElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent)
 
-        vbox(self, 0, 0)
-        margins(self, left=15, right=15, top=5, bottom=5)
+        if self._underSection():
+            margins(self, left=15, right=15, top=5, bottom=5)
         self.textEdit = AutoAdjustableTextEdit()
         self.textEdit.setStyleSheet(f'''
                 border: 0px;
@@ -447,11 +307,11 @@ class QuoteElementEditor(WorldBuildingEntityElementWidget):
                     background: #E3D0BD;
                 }''')
 
-        if parent:
-            self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
-            self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
+        self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
 
         self.btnRemove.raise_()
+        self.btnDrag.raise_()
 
     def _quoteChanged(self):
         self.element.text = self.textEdit.toMarkdown()
@@ -543,7 +403,6 @@ class VariableWidget(QWidget):
 class VariablesElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent, removalEnabled=False, menuEnabled=True)
-        vbox(self, 5)
         margins(self, right=15)
 
         self._btnCornerButtonOffsetX = 37
@@ -574,6 +433,7 @@ class VariablesElementEditor(WorldBuildingEntityElementWidget):
 
         self.btnMenu.raise_()
         self.menu.aboutToShow.connect(self._fillMenu)
+        self.btnDrag.raise_()
 
     def _addNew(self):
         variable = VariableEditorDialog.edit()
@@ -618,7 +478,6 @@ class VariablesElementEditor(WorldBuildingEntityElementWidget):
 class HighlightedTextElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent)
-        vbox(self, 5)
         margins(self, right=15)
 
         self.frame = frame()
@@ -641,6 +500,11 @@ class HighlightedTextElementEditor(WorldBuildingEntityElementWidget):
         vbox(self.frame, 10).addWidget(self.textEdit)
 
         self.layout().addWidget(self.frame)
+        self.btnDrag.raise_()
+
+    @overrides
+    def activate(self):
+        self.textEdit.setFocus()
 
     def _textChanged(self):
         self.element.text = self.textEdit.toMarkdown()
@@ -673,22 +537,38 @@ class TimelineElementEditor(WorldBuildingEntityElementWidget):
         super().__init__(novel, element, parent)
 
         self.timeline = EntityTimelineWidget(element)
-        vbox(self, 0, 0).addWidget(self.timeline)
+        self.layout().addWidget(self.timeline)
         self.timeline.changed.connect(self.save)
 
         self.btnRemove.raise_()
 
 
-class WorldBuildingEntitySectionElementEditor(WorldBuildingEntityElementWidget):
+class SectionElementEditor(WorldBuildingEntityElementWidget):
+    WORLD_BLOCK_MIMETYPE = 'application/world-block'
+    WORLD_SECTION_MIMETYPE = 'application/world-section'
     removed = pyqtSignal()
 
-    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent, editor: 'WorldBuildingEntityEditor'):
         super().__init__(novel, element, parent, removalEnabled=False)
-
-        vbox(self, 0)
+        self._editor = editor
         for element in self.element.blocks:
             wdg = self.__initBlockWidget(element)
             self.layout().addWidget(wdg)
+
+        self.setAcceptDrops(True)
+        self.installEventFilter(
+            DropEventFilter(self, [self.WORLD_SECTION_MIMETYPE],
+                            motionDetection=Qt.Orientation.Vertical,
+                            motionSlot=partial(self.editor().dragMoved, self),
+                            droppedSlot=self.editor().drop
+                            ))
+
+    def editor(self) -> 'WorldBuildingEntityEditor':
+        return self._editor
+
+    def insertElement(self, i: int, element: WorldBuildingEntityElement):
+        wdg = self.__initBlockWidget(element)
+        self.layout().insertWidget(i, wdg)
 
     def _addBlock(self, wdg: WorldBuildingEntityElementWidget, type_: WorldBuildingEntityElementType):
         element = WorldBuildingEntityElement(type_)
@@ -718,7 +598,32 @@ class WorldBuildingEntitySectionElementEditor(WorldBuildingEntityElementWidget):
         menu.newBlockSelected.connect(partial(self._addBlock, wdg))
         wdg.btnRemove.clicked.connect(partial(self._removeBlock, wdg))
 
+        mimeType = self.WORLD_SECTION_MIMETYPE if element.type == WorldBuildingEntityElementType.Header else self.WORLD_BLOCK_MIMETYPE
+
+        wdg.btnDrag.installEventFilter(
+            DragEventFilter(wdg, mimeType,
+                            dataFunc=lambda x: wdg.element,
+                            grabbed=wdg,
+                            startedSlot=partial(self.editor().dragStarted, wdg),
+                            finishedSlot=partial(self.editor().dragStopped, wdg)))
+        wdg.setAcceptDrops(True)
+        wdg.installEventFilter(
+            DropEventFilter(wdg, [self.WORLD_BLOCK_MIMETYPE],
+                            motionDetection=Qt.Orientation.Vertical,
+                            motionSlot=partial(self.editor().dragMoved, wdg),
+                            droppedSlot=self.editor().drop
+                            )
+        )
+
         return wdg
+
+
+class MainSectionElementEditor(SectionElementEditor):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None, editor=None):
+        super().__init__(novel, element, parent, editor)
+        item = self.layout().itemAt(0)
+        if item and item.widget():
+            item.widget().frame.setHidden(True)
 
 
 class TopicSelectionDialog(PopupDialog):
@@ -843,6 +748,9 @@ class SideBlockAdditionMenu(MenuWidget):
 
 
 class WorldBuildingEntityEditor(QWidget):
+    WORLD_BLOCK_MIMETYPE = 'application/world-block'
+    WORLD_SECTION_MIMETYPE = 'application/world-section'
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
@@ -850,10 +758,10 @@ class WorldBuildingEntityEditor(QWidget):
 
         self.wdgEditorMiddle = QWidget()
         vbox(self.wdgEditorMiddle, spacing=10)
-        margins(self.wdgEditorMiddle, left=15, bottom=20)
+        margins(self.wdgEditorMiddle, left=20, bottom=20)
         self.wdgEditorSide = QWidget()
-        vbox(self.wdgEditorSide)
-        margins(self.wdgEditorSide, left=10, right=15)
+        vbox(self.wdgEditorSide, 7, spacing=10)
+        margins(self.wdgEditorSide, left=15, right=15)
 
         splitter = QSplitter()
         splitter.setChildrenCollapsible(False)
@@ -862,6 +770,12 @@ class WorldBuildingEntityEditor(QWidget):
         splitter.setSizes([500, 170])
 
         vbox(self, 0, 0).addWidget(splitter)
+
+        self._placeholderWidget: Optional[QWidget] = None
+        self._dragged: Optional[QWidget] = None
+        self._toBeRemoved: Optional[QWidget] = None
+        self._lastMovedWdg = None
+        self._lastMovedDirection = None
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -879,7 +793,13 @@ class WorldBuildingEntityEditor(QWidget):
 
         self._addPlaceholder()
         self._addPlaceholder(False)
+        self.wdgEditorMiddle.layout().addWidget(vspacer())
         self.wdgEditorSide.layout().addWidget(vspacer())
+
+        self.wdgEditorSide.setVisible(self._entity.side_visible)
+
+    def layoutChangedEvent(self):
+        self.wdgEditorSide.setVisible(self._entity.side_visible)
 
     def _addPlaceholder(self, middle: bool = True):
         wdg = push_btn(IconRegistry.plus_icon('grey'), 'Add section' if middle else 'Add block', transparent_=True)
@@ -916,7 +836,7 @@ class WorldBuildingEntityEditor(QWidget):
             header.title = topic.text
             header.icon = topic.icon
         wdg = self.__initElementWidget(element, True)
-        insert_before_the_end(self.wdgEditorMiddle, wdg)
+        insert_before_the_end(self.wdgEditorMiddle, wdg, 2)
         qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
 
         self._entity.elements.append(element)
@@ -924,7 +844,6 @@ class WorldBuildingEntityEditor(QWidget):
 
     def _selectNewTopic(self):
         topics = TopicSelectionDialog.popup()
-        # topics = dialog.display()
         if topics:
             for topic in topics:
                 self._addNewSection(topic)
@@ -940,6 +859,7 @@ class WorldBuildingEntityEditor(QWidget):
 
         insert_before_the_end(self.wdgEditorSide, wdg, 2)
         qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
+        wdg.activate()
 
         self._entity.side_elements.append(element)
         self.repo.update_world(self._novel)
@@ -949,10 +869,104 @@ class WorldBuildingEntityEditor(QWidget):
         fade_out_and_gc(self.wdgEditorSide, wdg)
         self.repo.update_world(self._novel)
 
+    def dragStarted(self, wdg: WorldBuildingEntityElementWidget):
+        if isinstance(wdg, HeaderElementEditor):
+            self._dragged = wdg.parent()
+        else:
+            self._dragged = wdg
+        self._placeholderWidget = line(parent=self, color='#510442')
+        self._placeholderWidget.setHidden(True)
+        self._placeholderWidget.setAcceptDrops(True)
+        self._placeholderWidget.installEventFilter(
+            DropEventFilter(self._placeholderWidget, [self.WORLD_BLOCK_MIMETYPE, self.WORLD_SECTION_MIMETYPE],
+                            droppedSlot=self.drop))
+        if isinstance(wdg, HeaderElementEditor):
+            wdg.parent().setHidden(True)
+        else:
+            wdg.setHidden(True)
+
+    def dragStopped(self, wdg: WorldBuildingEntityElementWidget):
+        if self._placeholderWidget:
+            gc(self._placeholderWidget)
+            self._placeholderWidget = None
+        self._dragged = None
+
+        if self._toBeRemoved:
+            gc(self._toBeRemoved)
+            self._toBeRemoved = None
+        else:
+            if isinstance(wdg, HeaderElementEditor):
+                wdg.parent().setVisible(True)
+            else:
+                wdg.setVisible(True)
+
+    def dragMoved(self, wdg: WorldBuildingEntityElementWidget, edge: Qt.Edge, point: QPointF):
+        if wdg is self._lastMovedWdg and edge == self._lastMovedDirection:
+            return
+
+        if self._placeholderWidget.parent() is wdg.parent():
+            wdg.parent().layout().removeWidget(self._placeholderWidget)
+            self._placeholderWidget.setHidden(True)
+
+        i = wdg.parent().layout().indexOf(wdg)
+        if edge == Qt.Edge.TopEdge:
+            if isinstance(wdg, (HeaderElementEditor, MainSectionElementEditor)):
+                return
+            wdg.parent().layout().insertWidget(i, self._placeholderWidget)
+        else:
+            wdg.parent().layout().insertWidget(i + 1, self._placeholderWidget)
+
+        self._lastMovedWdg = wdg
+        self._lastMovedDirection = edge
+        qtanim.fade_in(self._placeholderWidget, 150)
+
+    def drop(self, mimeData: QMimeData):
+        if self._placeholderWidget.isHidden():
+            return
+        # ref: WorldBuildingEntityElement = mimeData.reference()
+
+        new_index = self._placeholderWidget.parent().layout().indexOf(self._placeholderWidget)
+        if isinstance(self._dragged, SectionElementEditor):
+            self._dropSection(self._dragged.element, new_index)
+        else:
+            self._dropBlock(self._dragged.element, new_index)
+
+        self._placeholderWidget.setHidden(True)
+        self._toBeRemoved = self._dragged
+
+        self.repo.update_world(self._novel)
+
+    def _dropBlock(self, ref: WorldBuildingEntityElement, new_index: int):
+        if self._dragged.parent() is self._placeholderWidget.parent():
+            old_index = self._dragged.parent().layout().indexOf(self._dragged)
+            self._dragged.parent().element.blocks.remove(ref)
+
+            if old_index < new_index:
+                self._placeholderWidget.parent().element.blocks.insert(new_index - 1, ref)
+            else:
+                self._placeholderWidget.parent().element.blocks.insert(new_index, ref)
+        else:
+            self._dragged.parent().element.blocks.remove(ref)
+            self._placeholderWidget.parent().element.blocks.insert(new_index, ref)
+
+        self._placeholderWidget.parent().insertElement(new_index, ref)
+
+    def _dropSection(self, ref: WorldBuildingEntityElement, new_index: int):
+        old_index = self.wdgEditorMiddle.layout().indexOf(self._dragged)
+        self._entity.elements.remove(ref)
+
+        if old_index < new_index:
+            self._entity.elements.insert(new_index - 1, ref)
+        else:
+            self._entity.elements.insert(new_index, ref)
+
+        wdg = self.__initElementWidget(ref, True)
+        self.wdgEditorMiddle.layout().insertWidget(new_index, wdg)
+
     def __initElementWidget(self, element: WorldBuildingEntityElement,
                             middle: bool) -> WorldBuildingEntityElementWidget:
-        wdg = WorldBuildingEntityElementWidget.newWidget(self._novel, element)
-        if middle and isinstance(wdg, WorldBuildingEntitySectionElementEditor):
+        wdg = WorldBuildingEntityElementWidget.newWidget(self._novel, element, self, editor=self)
+        if middle and isinstance(wdg, SectionElementEditor):
             wdg.removed.connect(partial(self._removeSection, wdg))
         elif not middle:
             wdg.btnRemove.clicked.connect(partial(self._removeSideBlock, wdg))
@@ -960,162 +974,90 @@ class WorldBuildingEntityEditor(QWidget):
         return wdg
 
 
-class GlossaryModel(SelectionItemsModel):
-    glossaryRemoved = pyqtSignal()
+class EntityLayoutType(Enum):
+    CENTER = 0
+    SIDE = 1
 
-    def __init__(self, novel: Novel, parent=None):
+
+class EntityLayoutSettings(QWidget):
+    layoutChanged = pyqtSignal(EntityLayoutType)
+
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self._novel = novel
-        self._items = list(self._novel.world.glossary.values())
+        hbox(self)
 
-    @overrides
-    def rowCount(self, parent: QModelIndex = None) -> int:
-        return len(self._items)
+        self.btnCentral = self._btn(IconRegistry.from_name('ri.layout-top-fill'))
+        self.btnCentral.setToolTip('Content is at the center')
+        self.btnSide = self._btn(IconRegistry.from_name('ri.layout-fill'))
+        self.btnSide.setToolTip('Content is also available on the side')
+        self.layout().addWidget(spacer())
+        self.layout().addWidget(self.btnCentral)
+        self.layout().addWidget(self.btnSide)
+        self.layout().addWidget(spacer())
 
-    @overrides
-    def columnCount(self, parent: QModelIndex = None) -> int:
-        return 4
+        self.btnGroup = QButtonGroup()
+        self.btnGroup.setExclusive(True)
+        self.btnGroup.addButton(self.btnCentral)
+        self.btnGroup.addButton(self.btnSide)
+        self.btnGroup.buttonClicked.connect(self._clicked)
 
-    @overrides
-    def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
-        if role == Qt.ItemDataRole.FontRole:
-            font = QApplication.font()
-            font.setPointSize(13)
-            if index.column() == self.ColName:
-                font.setBold(True)
-            return font
-        if index.column() == self.ColName:
-            if role == Qt.ItemDataRole.DisplayRole:
-                return self._items[index.row()].key
-            if role == Qt.ItemDataRole.TextAlignmentRole:
-                return Qt.AlignmentFlag.AlignTop
-        if index.column() == 3:
-            if role == Qt.ItemDataRole.DisplayRole:
-                return self._items[index.row()].text
-        return super().data(index, role)
+    def setEntity(self, entity: WorldBuildingEntity):
+        if entity.side_visible:
+            self.btnSide.setChecked(True)
+        else:
+            self.btnCentral.setChecked(True)
 
-    def refresh(self):
-        self._items = list(self._novel.world.glossary.values())
-        self.modelReset.emit()
+    def _clicked(self):
+        if self.btnCentral.isChecked():
+            self.layoutChanged.emit(EntityLayoutType.CENTER)
+        elif self.btnSide.isChecked():
+            self.layoutChanged.emit(EntityLayoutType.SIDE)
 
-    @overrides
-    def _newItem(self) -> QModelIndex:
-        pass
-
-    @overrides
-    def _insertItem(self, row: int) -> QModelIndex:
-        pass
-
-    @overrides
-    def item(self, index: QModelIndex) -> SelectionItem:
-        return self._items[index.row()]
-
-    @overrides
-    def remove(self, index: QModelIndex):
-        glossary = self._items[index.row()]
-        self._novel.world.glossary.pop(glossary.key)
-        self.refresh()
-        self.glossaryRemoved.emit()
+    def _btn(self, icon: QIcon) -> QToolButton:
+        btn = tool_btn(icon, checkable=True)
+        btn.installEventFilter(OpacityEventFilter(btn, ignoreCheckedButton=True))
+        btn.setIconSize(QSize(32, 32))
+        btn.setStyleSheet('''
+                            QToolButton {
+                                border: 1px hidden lightgrey;
+                                padding: 8px;
+                                border-radius: 25px;
+                            }
+                            QToolButton:hover:!checked {
+                                background: #FCF5FE;
+                            }
+                            QToolButton:checked {
+                                background: #D4B8E0;
+                            }
+                            ''')
+        return btn
 
 
-class GlossaryEditorDialog(PopupDialog):
-    def __init__(self, glossary: Optional[GlossaryItem] = None, parent=None):
+class EditorSettingsMenu(TabularGridMenuWidget):
+    widthChanged = pyqtSignal(int)
+    layoutChanged = pyqtSignal(EntityLayoutType)
+
+    def __init__(self, parent, defaultWidth: int):
         super().__init__(parent)
-        self._glossary = glossary
 
-        self.lineKey = QLineEdit()
-        self.lineKey.setProperty('white-bg', True)
-        self.lineKey.setProperty('rounded', True)
-        self.lineKey.setProperty(IGNORE_CAPITALIZATION_PROPERTY, True)
-        self.lineKey.setPlaceholderText('Term')
-        self.lineKey.textChanged.connect(self._keyChanged)
+        self.tabWorld = self.addTab('World')
+        margins(self.tabWorld, top=15, left=5, right=15)
+        self.tabEntity = self.addTab('Entity')
 
-        self.textDefinition = AutoAdjustableTextEdit(height=150)
-        self.textDefinition.setProperty('white-bg', True)
-        self.textDefinition.setProperty('rounded', True)
-        self.textDefinition.setPlaceholderText('Define term')
+        self.addSection(self.tabWorld, 'Editor max width', 0, 0, icon=IconRegistry.from_name('ei.resize-horizontal'))
+        self._widthSlider = QSlider(Qt.Orientation.Horizontal)
+        self._widthSlider.setMinimum(800)
+        self._widthSlider.setMaximum(1200)
+        self._widthSlider.setValue(defaultWidth)
+        self._widthSlider.valueChanged.connect(self.widthChanged)
+        self.addWidget(self.tabWorld, wrap(self._widthSlider, margin_left=10, margin_bottom=15), 1, 0)
 
-        self.wdgTitle = QWidget()
-        hbox(self.wdgTitle)
-        self.wdgTitle.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
+        self.addSection(self.tabEntity, 'Layout', 0, 0, icon=IconRegistry.from_name('ri.layout-line'))
+        self.layoutSettings = EntityLayoutSettings()
+        self.layoutSettings.layoutChanged.connect(self.layoutChanged)
+        self.addWidget(self.tabEntity, self.layoutSettings, 1, 0)
 
-        self.btnConfirm = push_btn(text='Confirm', properties=['base', 'positive'])
-        sp(self.btnConfirm).h_exp()
-        self.btnConfirm.clicked.connect(self.accept)
-        self.btnConfirm.setDisabled(True)
-        self.btnConfirm.installEventFilter(
-            DisabledClickEventFilter(self.btnConfirm, lambda: qtanim.shake(self.lineKey)))
+        apply_white_menu(self)
 
-        if self._glossary:
-            self.lineKey.setText(self._glossary.key)
-            self.textDefinition.setText(self._glossary.text)
-
-        self.frame.layout().addWidget(self.wdgTitle)
-        self.frame.layout().addWidget(self.lineKey)
-        self.frame.layout().addWidget(self.textDefinition)
-        self.frame.layout().addWidget(self.btnConfirm)
-
-    def display(self) -> GlossaryItem:
-        result = self.exec()
-
-        if result == QDialog.DialogCode.Accepted:
-            if self._glossary is None:
-                self._glossary = GlossaryItem('')
-            self._glossary.key = self.lineKey.text()
-            self._glossary.text = self.textDefinition.toMarkdown().strip()
-
-            return self._glossary
-
-    def _keyChanged(self, key: str):
-        self.btnConfirm.setEnabled(len(key) > 0)
-
-    @classmethod
-    def edit(cls, glossary: Optional[GlossaryItem] = None) -> Optional[GlossaryItem]:
-        return cls.popup(glossary)
-
-
-class WorldBuildingGlossaryEditor(QWidget):
-    def __init__(self, novel: Novel, parent=None):
-        super().__init__(parent)
-        self._novel = novel
-        vbox(self)
-        self.editor = ItemsEditorWidget()
-        self.editor.setInlineEditionEnabled(False)
-        self.editor.setInlineAdditionEnabled(False)
-        self.editor.btnAdd.clicked.connect(self._addNew)
-        self.editor.editRequested.connect(self._edit)
-        self.glossaryModel = GlossaryModel(self._novel)
-        self.editor.setModel(self.glossaryModel)
-        self.editor.tableView.setColumnHidden(GlossaryModel.ColIcon, True)
-        self.editor.tableView.setColumnWidth(GlossaryModel.ColName, 200)
-        self.editor.tableView.setContentsMargins(10, 15, 10, 5)
-
-        self.glossaryModel.modelReset.connect(self.editor.tableView.resizeRowsToContents)
-        self.glossaryModel.glossaryRemoved.connect(self._save)
-
-        self.editor.tableView.setStyleSheet('QTableView::item { border: 0px; padding: 5px; }')
-        self.editor.tableView.resizeRowsToContents()
-        self.editor.tableView.setAlternatingRowColors(True)
-        self.editor.tableView.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
-
-        self.layout().addWidget(self.editor)
-        self.repo = RepositoryPersistenceManager.instance()
-
-    def _addNew(self):
-        glossary = GlossaryEditorDialog.edit()
-        if glossary:
-            self._updateGlossary(glossary)
-
-    def _edit(self, item: GlossaryItem):
-        edited_glossary = GlossaryEditorDialog.edit(item)
-        if edited_glossary:
-            self._novel.world.glossary.pop(item.key)
-            self._updateGlossary(edited_glossary)
-
-    def _updateGlossary(self, glossary: GlossaryItem):
-        self._novel.world.glossary[glossary.key] = glossary
-        self.glossaryModel.refresh()
-        self._save()
-
-    def _save(self):
-        self.repo.update_world(self._novel)
+    def setEntity(self, entity: WorldBuildingEntity):
+        self.layoutSettings.setEntity(entity)

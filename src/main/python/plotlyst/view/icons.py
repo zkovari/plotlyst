@@ -575,12 +575,12 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.butterfly-outline', color=color, color_on=color_on)
 
     @staticmethod
-    def pause_icon() -> QIcon:
-        return IconRegistry.from_name('fa5s.pause', '#3f37c9')
+    def pause_icon(**kwargs) -> QIcon:
+        return IconRegistry.from_name('fa5s.pause', **kwargs)
 
     @staticmethod
     def play_icon() -> QIcon:
-        return IconRegistry.from_name('fa5s.play', '#2a9d8f')
+        return IconRegistry.from_name('fa5s.play', PLOTLYST_SECONDARY_COLOR)
 
     @staticmethod
     def context_icon() -> QIcon:

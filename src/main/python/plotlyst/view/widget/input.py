@@ -27,7 +27,7 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize, pyqtSignal, QModelIndex, QItemSelectionModel
 from PyQt6.QtGui import QFont, QTextCursor, QTextCharFormat, QKeyEvent, QPaintEvent, QPainter, QBrush, QLinearGradient, \
     QColor, QSyntaxHighlighter, \
-    QTextDocument, QTextBlockUserData, QIcon
+    QTextDocument, QTextBlockUserData, QIcon, QResizeEvent
 from PyQt6.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QMenu, \
     QApplication, QToolButton, QLineEdit, QWidgetAction, QListView, QSpinBox, QWidget, QLabel, QDialog
 from language_tool_python import LanguageTool
@@ -70,6 +70,7 @@ class AutoAdjustableTextEdit(EnhancedTextEdit):
 
         self.setDocumentMargin(0)
         self.setSidebarEnabled(False)
+        self.setCommandsEnabled(False)
 
     @overrides
     def setText(self, text: str) -> None:
@@ -81,6 +82,12 @@ class AutoAdjustableTextEdit(EnhancedTextEdit):
             self._resizeToContent()
             self._resizedOnShow = True
             self.resizedOnShow.emit()
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent):
+        super().resizeEvent(event)
+        if self._resizedOnShow:
+            self._resizeToContent()
 
     def _resizeToContent(self):
         padding = self.contentsMargins().top() + self.contentsMargins().bottom() + 2 * self.document().documentMargin()

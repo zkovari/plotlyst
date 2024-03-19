@@ -90,11 +90,11 @@ class EventsMindMapView(NetworkGraphicsView):
             IconRegistry.character_icon('#040406'), 'Add new character', GraphicsItemType.CHARACTER)
         self._btnAddImage = self._newControlButton(IconRegistry.image_icon(), 'Add new image',
                                                    GraphicsItemType.IMAGE)
-        self._btnAddSticker = self._newControlButton(IconRegistry.from_name('mdi6.sticker-circle-outline'),
-                                                     'Add new sticker',
-                                                     GraphicsItemType.COMMENT)
-        self._btnAddSticker.setDisabled(True)
-        self._btnAddSticker.setToolTip('Feature is not yet available')
+        # self._btnAddSticker = self._newControlButton(IconRegistry.from_name('mdi6.sticker-circle-outline'),
+        #                                              'Add new sticker',
+        #                                              GraphicsItemType.COMMENT)
+        # self._btnAddSticker.setDisabled(True)
+        # self._btnAddSticker.setToolTip('Feature is not yet available')
 
         self._wdgSecondaryEventSelector = EventSelectorWidget(self)
         self._wdgSecondaryEventSelector.setVisible(False)
@@ -157,11 +157,11 @@ class EventsMindMapView(NetworkGraphicsView):
                                                     self._wdgSecondaryEventSelector.sizeHint().width(),
                                                     self._wdgSecondaryEventSelector.sizeHint().height())
 
-        secondary_x = self._controlsNavBar.pos().x() + self._controlsNavBar.sizeHint().width() + 5
-        secondary_y = self._controlsNavBar.pos().y() + self._btnAddSticker.pos().y()
-        self._wdgSecondaryStickerSelector.setGeometry(secondary_x, secondary_y,
-                                                      self._wdgSecondaryStickerSelector.sizeHint().width(),
-                                                      self._wdgSecondaryStickerSelector.sizeHint().height())
+        # secondary_x = self._controlsNavBar.pos().x() + self._controlsNavBar.sizeHint().width() + 5
+        # secondary_y = self._controlsNavBar.pos().y() + self._btnAddSticker.pos().y()
+        # self._wdgSecondaryStickerSelector.setGeometry(secondary_x, secondary_y,
+        #                                               self._wdgSecondaryStickerSelector.sizeHint().width(),
+        #                                               self._wdgSecondaryStickerSelector.sizeHint().height())
 
     @overrides
     def _editEventItem(self, item: EventItem):

@@ -236,10 +236,10 @@ class DocumentsTreeView(TreeView):
             new_index = doc_parent_wdg.containerWidget().layout().indexOf(self._dummyWdg)
             if self._toBeRemoved.parent() is not self._centralWidget and \
                     self._toBeRemoved.parent().parent() is self._dummyWdg.parent().parent():  # swap under same parent doc
-                old_index = doc_parent_wdg.layout().indexOf(self._toBeRemoved)
+                old_index = doc_parent_wdg.indexOf(self._toBeRemoved)
                 doc_parent_wdg.doc().children.remove(ref)
                 if old_index < new_index:
-                    doc_parent_wdg.insertChild(new_index - 1, new_widget)
+                    doc_parent_wdg.doc().children.insert(new_index - 1, ref)
                 else:
                     doc_parent_wdg.doc().children.insert(new_index, ref)
             else:
@@ -300,7 +300,7 @@ class DocumentsTreeView(TreeView):
                             finishedSlot=partial(self._dragStopped, wdg)))
         wdg.titleWidget().setAcceptDrops(True)
         wdg.titleWidget().installEventFilter(
-            DropEventFilter(wdg, [self.DOC_MIME_TYPE, self.DOC_MIME_TYPE],
+            DropEventFilter(wdg, [self.DOC_MIME_TYPE],
                             motionDetection=Qt.Orientation.Vertical,
                             motionSlot=partial(self._dragMovedOnDoc, wdg),
                             droppedSlot=self._drop

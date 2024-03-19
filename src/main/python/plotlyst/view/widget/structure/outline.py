@@ -50,7 +50,9 @@ class StoryStructureBeatWidget(OutlineItemWidget):
         self._btnIcon.removeEventFilter(self._dragEventFilter)
         self._btnIcon.setCursor(Qt.CursorShape.ArrowCursor)
         self.setAcceptDrops(False)
-        self._initStyle(name=self.beat.text, desc=self.beat.description)
+        self._initStyle(name=self.beat.text,
+                        desc=self.beat.placeholder if self.beat.placeholder else self.beat.description,
+                        tooltip=self.beat.description)
 
     def attachStructurePreview(self, structurePreview: SceneStoryStructureWidget):
         self._structurePreview = structurePreview

@@ -21,7 +21,7 @@ from abc import abstractmethod
 from functools import partial
 from typing import Optional, Any, List
 
-from PyQt6.QtCore import Qt, QSize, pyqtSignal, QEvent, QObject, QPoint
+from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QObject, QPoint
 from PyQt6.QtWidgets import QScrollArea, QFrame, QLineEdit
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
@@ -30,9 +30,8 @@ from qthandy import vbox, vspacer, hbox, clear_layout, retain_when_hidden, margi
 from qthandy.filter import DragEventFilter, DropEventFilter, ObjectReferenceMimeData
 
 from plotlyst.view.common import fade_out_and_gc, wrap
-from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.button import SecondaryActionPushButton
-from plotlyst.view.widget.display import Icon
+from plotlyst.view.widget.display import DragIcon
 from plotlyst.view.widget.input import RemovalButton
 
 LIST_ITEM_MIME_TYPE = 'application/list-item'
@@ -49,10 +48,7 @@ class ListItemWidget(QWidget):
         hbox(self, spacing=1)
         margins(self, left=0)
         self._item = item
-        self._btnDrag = Icon()
-        self._btnDrag.setIcon(IconRegistry.hashtag_icon('grey'))
-        self._btnDrag.setIconSize(QSize(12, 12))
-        self._btnDrag.setCursor(Qt.CursorShape.OpenHandCursor)
+        self._btnDrag = DragIcon()
 
         self._lineEdit = QLineEdit()
         self._lineEdit.setPlaceholderText('Fill out...')

@@ -27,6 +27,7 @@ class AppSettings:
     LAUNCHED_BEFORE = 'launchedBefore'
     LAST_NOVEL_ID = 'lastNovelId'
     TOOLBAR_QUICK_SETTINGS = 'toolbarQuickSettings'
+    WORLDBUILDING_EDITOR_MAX_WIDTH = 'worldbuildingEditorMaxWidth'
 
     def __init__(self):
         self._settings: QSettings = QSettings()
@@ -72,6 +73,12 @@ class AppSettings:
 
     def set_toolbar_quick_settings(self, visible: bool):
         self._settings.setValue(self.TOOLBAR_QUICK_SETTINGS, visible)
+
+    def worldbuilding_editor_max_width(self) -> int:
+        return self._settings.value(self.WORLDBUILDING_EDITOR_MAX_WIDTH, 1000, type=int)
+
+    def set_worldbuilding_editor_max_width(self, value: int):
+        self._settings.setValue(self.WORLDBUILDING_EDITOR_MAX_WIDTH, value)
 
 
 settings = AppSettings()

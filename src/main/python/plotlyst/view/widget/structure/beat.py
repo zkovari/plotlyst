@@ -70,7 +70,7 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         self.layoutRight.insertWidget(0, self.btnSceneSelector,
                                       alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
         self.btnSceneSelector.setHidden(True)
-        self.btnSceneSelector.sceneSelected.connect(self._sceneLinked)
+        # self.btnSceneSelector.sceneSelected.connect(self._sceneLinked)
         transparent(self.wdgToggleParent)
 
         retain_when_hidden(self.cbToggle)
@@ -141,7 +141,7 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         if event.type() == QEvent.Type.Enter:
             if self._canBeToggled() and self._infoPage():
                 self.cbToggle.setVisible(True)
-            self.btnSceneSelector.setVisible(self._infoPage() and self._checkOccupiedBeats and self.beat.enabled)
+            # self.btnSceneSelector.setVisible(self._infoPage() and self._checkOccupiedBeats and self.beat.enabled)
             self.setStyleSheet(f'.BeatWidget {{background-color: {act_color(self.beat.act, translucent=True)};}}')
             self.beatHighlighted.emit(self.beat)
         elif event.type() == QEvent.Type.Leave:
@@ -174,7 +174,7 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
     def _beatClicked(self, checked: bool):
         self.beat.enabled = checked
         self.beatToggled.emit(self.beat)
-        self.btnSceneSelector.setVisible(self._infoPage() and self._checkOccupiedBeats and self.beat.enabled)
+        # self.btnSceneSelector.setVisible(self._infoPage() and self._checkOccupiedBeats and self.beat.enabled)
 
     def _sceneLinked(self, scene: Scene):
         scene.link_beat(app_env.novel.active_story_structure, self.beat)

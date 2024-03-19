@@ -128,7 +128,7 @@ class OutlineItemWidget(QWidget):
     def _beatDataFunc(self, btn):
         return id(self)
 
-    def _initStyle(self, name: Optional[str] = None, desc: Optional[str] = None):
+    def _initStyle(self, name: Optional[str] = None, desc: Optional[str] = None, tooltip: Optional[str] = None):
         color = self._color()
         color_translucent = to_rgba_str(QColor(color), self._colorAlpha)
         self._btnIcon.setStyleSheet(f'''
@@ -145,9 +145,11 @@ class OutlineItemWidget(QWidget):
         if desc is None:
             desc = self._descriptions()[self.item.type]
         self._text.setPlaceholderText(desc)
-        self._btnName.setToolTip(desc)
-        self._text.setToolTip(desc)
-        self._btnIcon.setToolTip(desc)
+        if tooltip is None:
+            tooltip = desc
+        self._btnName.setToolTip(tooltip)
+        self._text.setToolTip(tooltip)
+        self._btnIcon.setToolTip(tooltip)
 
         if name is None:
             name = self.item.type.name
