@@ -367,10 +367,6 @@ class ImageElementEditor(WorldBuildingEntityElementWidget):
     def resizeEvent(self, event: QResizeEvent) -> None:
         if self._image:
             w, h = calculate_resized_dimensions(self._image.width(), self._image.height(), self.parent().width() - 20)
-            self.lblImage.setPixmap(
-                QPixmap.fromImage(self._image).scaled(w, h,
-                                                      Qt.AspectRatioMode.KeepAspectRatio,
-                                                      Qt.TransformationMode.SmoothTransformation))
             self.lblImage.setMinimumSize(int(w * 0.98), int(h * 0.98))
             self.lblImage.setMaximumSize(w, h)
         else:
