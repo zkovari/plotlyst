@@ -447,7 +447,7 @@ class ImageWidget(QWidget):
         self._image = image
         w, h = calculate_resized_dimensions(self._image.width(), self._image.height(), self.parent().width() - 20)
         print(f'set image {w} {h}')
-        self.setFixedSize(w, h)
+        # self.setFixedSize(w, h)
         self.updateGeometry()
         self.adjustSize()
         self.update()
@@ -470,13 +470,13 @@ class ImageWidget(QWidget):
     #         print(f'msh {w} {h}')
     #         return QSize(w, h)
 
-    @overrides
-    def resizeEvent(self, a0: QResizeEvent) -> None:
-        if self._image is None:
-            return
-        w, h = calculate_resized_dimensions(self._image.width(), self._image.height(), self.parent().width() - 20)
-        print(f'resize {w} {h}')
-        self.setFixedSize(w, h)
+    # @overrides
+    # def resizeEvent(self, a0: QResizeEvent) -> None:
+    #     if self._image is None:
+    #         return
+    #     w, h = calculate_resized_dimensions(self._image.width(), self._image.height(), self.parent().width() - 20)
+    #     print(f'resize {w} {h}')
+    #     self.setFixedSize(w, h)
         # self.updateGeometry()
 
     @overrides
