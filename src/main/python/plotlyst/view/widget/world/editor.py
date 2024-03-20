@@ -23,11 +23,13 @@ from typing import Optional, Dict, List
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QMimeData, QPointF
-from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMouseEvent, QColor, QIcon
-from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QDialog, QGridLayout, QSlider, QToolButton, QButtonGroup
+from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMouseEvent, QColor, QIcon, QImage, \
+    QShowEvent, QPixmap
+from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QDialog, QGridLayout, QSlider, QToolButton, QButtonGroup, \
+    QLabel
 from overrides import overrides
 from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy, \
-    grid, flow, spacer, line, incr_icon, gc
+    grid, flow, spacer, line, incr_icon, gc, translucent
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter, DragEventFilter, \
     DropEventFilter
 from qtmenu import MenuWidget, TabularGridMenuWidget
@@ -36,9 +38,10 @@ from plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntity
     BackstoryEvent, Variable, VariableType, \
     Topic
 from plotlyst.env import app_env
+from plotlyst.service.image import upload_image, load_image
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import action, push_btn, frame, insert_before_the_end, fade_out_and_gc, \
-    tool_btn, label, scrolled, wrap
+    tool_btn, label, scrolled, wrap, calculate_resized_dimensions
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
@@ -129,6 +132,8 @@ class WorldBuildingEntityElementWidget(QWidget):
             return HeaderElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Quote:
             return QuoteElementEditor(novel, element, parent)
+        elif element.type == WorldBuildingEntityElementType.Image:
+            return ImageElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Variables:
             return VariablesElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Highlight:
@@ -320,6 +325,79 @@ class QuoteElementEditor(WorldBuildingEntityElementWidget):
     def _quoteRefEdited(self, text: str):
         self.element.ref = text
         self.save()
+
+
+class ImageElementEditor(WorldBuildingEntityElementWidget):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
+        super().__init__(novel, element, parent)
+        margins(self, left=10, right=10)
+
+        self.lblImage = QLabel('')
+        self.lblImage.setScaledContents(True)
+        self._image: Optional[QImage] = None
+        if self.element.image_ref is None:
+            self.lblImage.setPixmap(IconRegistry.image_icon(color='grey').pixmap(256, 256))
+            pointy(self)
+            self._opacityFilter = OpacityEventFilter(self)
+            self.installEventFilter(self._opacityFilter)
+        else:
+            image = QImage(256, 256, QImage.Format.Format_RGB32)
+            image.fill(Qt.GlobalColor.gray)
+            self.lblImage.setPixmap(QPixmap.fromImage(image))
+
+        self.layout().addWidget(self.lblImage, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
+
+        self.btnRemove.raise_()
+        self.btnDrag.raise_()
+
+    @overrides
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        if self.element.image_ref is None:
+            self.lblImage.setPixmap(IconRegistry.image_icon(color='grey').pixmap(248, 248))
+
+    @overrides
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        if self.element.image_ref is None:
+            self.lblImage.setPixmap(IconRegistry.image_icon(color='grey').pixmap(256, 256))
+            self._uploadImage()
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        if self._image:
+            w, h = calculate_resized_dimensions(self._image.width(), self._image.height(), self.parent().width() - 20)
+            self.lblImage.setMinimumSize(int(w * 0.98), int(h * 0.98))
+            self.lblImage.setMaximumSize(w, h)
+        else:
+            super().resizeEvent(event)
+
+    @overrides
+    def showEvent(self, a0: QShowEvent) -> None:
+        if self.element.image_ref and self._image is None:
+            self._image = load_image(self.novel, self.element.image_ref)
+            self._setImage()
+
+    def _uploadImage(self):
+        loaded_image = upload_image(self.novel)
+        if loaded_image:
+            self.element.image_ref = loaded_image.ref
+            self._image = loaded_image.image
+            self._setImage()
+
+            self.setCursor(Qt.CursorShape.ArrowCursor)
+            self.removeEventFilter(self._opacityFilter)
+            translucent(self, 1.0)
+
+            self.save()
+
+    def _setImage(self):
+        if self._image:
+            w, h = calculate_resized_dimensions(self._image.width(), self._image.height(), self.parent().width() - 20)
+            self.lblImage.setPixmap(
+                QPixmap.fromImage(self._image).scaled(w, h,
+                                                      Qt.AspectRatioMode.KeepAspectRatio,
+                                                      Qt.TransformationMode.SmoothTransformation))
 
 
 class VariableEditorDialog(PopupDialog):
@@ -732,6 +810,8 @@ class MainBlockAdditionMenu(MenuWidget):
                               slot=lambda: self.newBlockSelected.emit(WorldBuildingEntityElementType.Text)))
         self.addAction(action('Quote', IconRegistry.from_name('ei.quote-right-alt'),
                               slot=lambda: self.newBlockSelected.emit(WorldBuildingEntityElementType.Quote)))
+        self.addAction(action('Image', IconRegistry.image_icon(),
+                              slot=lambda: self.newBlockSelected.emit(WorldBuildingEntityElementType.Image)))
         self.addAction(action('Timeline', IconRegistry.from_name('mdi.timeline'),
                               slot=lambda: self.newBlockSelected.emit(WorldBuildingEntityElementType.Timeline)))
 
