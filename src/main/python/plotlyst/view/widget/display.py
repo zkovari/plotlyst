@@ -24,12 +24,12 @@ import emoji
 import qtanim
 from PyQt6.QtCharts import QChartView
 from PyQt6.QtCore import pyqtProperty, QSize, Qt, QPoint
-from PyQt6.QtGui import QPainter, QShowEvent, QColor, QPaintEvent, QBrush, QKeyEvent, QImage, QResizeEvent
+from PyQt6.QtGui import QPainter, QShowEvent, QColor, QPaintEvent, QBrush, QKeyEvent, QImage
 from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy, QTextBrowser, QFrame, QDialog, \
     QApplication
 from overrides import overrides
 from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon, pointy, hbox, busy, italic, decr_font, \
-    margins, sp
+    margins
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -38,8 +38,7 @@ from plotlyst.core.help import mid_revision_scene_structure_help
 from plotlyst.core.template import Role, protagonist_role
 from plotlyst.core.text import wc
 from plotlyst.view.common import emoji_font, insert_before_the_end, \
-    ButtonPressResizeEventFilter, restyle, label, frame, shadow, tool_btn, push_btn, action, open_url, \
-    calculate_resized_dimensions
+    ButtonPressResizeEventFilter, restyle, label, frame, shadow, tool_btn, push_btn, action, open_url
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 
@@ -439,54 +438,17 @@ class ImageWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._image: Optional[QImage] = None
-        # self.setMinimumSize(50, 50)
-        # sp(self).h_exp().v_exp()
 
     def setImage(self, image: QImage):
-        # print('set image')
         self._image = image
-        w, h = calculate_resized_dimensions(self._image.width(), self._image.height(), self.parent().width() - 20)
-        print(f'set image {w} {h}')
-        # self.setFixedSize(w, h)
-        self.updateGeometry()
-        self.adjustSize()
         self.update()
-
-    # @overrides
-    # def sizeHint(self) -> QSize:
-    #     if self._image is None:
-    #         return super().sizeHint()
-    #     else:
-    #         w, h = calculate_resized_dimensions(self._image.width(), self._image.height(), self.parent().width() - 20)
-    #         print(f'sh {w} {h}')
-    #         return QSize(w, h)
-
-    # @overrides
-    # def minimumSizeHint(self) -> QSize:
-    #     if self._image is None:
-    #         return super().minimumSizeHint()
-    #     else:
-    #         w, h = calculate_resized_dimensions(self._image.width(), self._image.height(), self.parent().width() - 20)
-    #         print(f'msh {w} {h}')
-    #         return QSize(w, h)
-
-    # @overrides
-    # def resizeEvent(self, a0: QResizeEvent) -> None:
-    #     if self._image is None:
-    #         return
-    #     w, h = calculate_resized_dimensions(self._image.width(), self._image.height(), self.parent().width() - 20)
-    #     print(f'resize {w} {h}')
-    #     self.setFixedSize(w, h)
-        # self.updateGeometry()
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
         if self._image is None:
-            print('null')
             return
 
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        # print('paint image')
         painter.drawImage(self.rect(), self._image)
