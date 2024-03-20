@@ -24,9 +24,9 @@ from typing import Optional, Dict, List
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QMimeData, QPointF
 from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMouseEvent, QColor, QIcon, QImage, \
-    QShowEvent
+    QShowEvent, QPixmap
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QDialog, QGridLayout, QSlider, QToolButton, QButtonGroup, \
-    QLabel, QSizePolicy
+    QLabel
 from overrides import overrides
 from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy, \
     grid, flow, spacer, line, incr_icon, gc, translucent
@@ -47,7 +47,7 @@ from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.style.text import apply_text_color
 from plotlyst.view.widget.button import DotsMenuButton
-from plotlyst.view.widget.display import Icon, PopupDialog, DragIcon, ImageWidget
+from plotlyst.view.widget.display import Icon, PopupDialog, DragIcon
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, RemovalButton
 from plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
 from plotlyst.view.widget.world._topics import ecological_topics, cultural_topics, historical_topics, \
@@ -331,38 +331,23 @@ class ImageElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent)
         margins(self, left=10, right=10)
-        # sp(self).h_exp().v_exp()
 
-        self.lblImage = QLabel('Test text 12345678910 11121314151617181920')
-        # self.lblImage.setWordWrap(True)
+        self.lblImage = QLabel('')
         self.lblImage.setScaledContents(True)
-        # self.lblImage.setMinimumSize(248, 248)
         self._image: Optional[QImage] = None
         if self.element.image_ref is None:
             self.lblImage.setPixmap(IconRegistry.image_icon(color='grey').pixmap(256, 256))
             pointy(self)
             self._opacityFilter = OpacityEventFilter(self)
             self.installEventFilter(self._opacityFilter)
-        # else:
-        # image = QImage(256, 256, QImage.Format.Format_RGB32)
-        # image.fill(Qt.GlobalColor.gray)
-        # self.lblImage.setPixmap(QPixmap.fromImage(image))
+        else:
+            image = QImage(256, 256, QImage.Format.Format_RGB32)
+            image.fill(Qt.GlobalColor.gray)
+            self.lblImage.setPixmap(QPixmap.fromImage(image))
 
-        self._imageDisplay = ImageWidget(self)
-        sp(self._imageDisplay).h_exp().v_exp()
-        # self._imageDisplay.setMinimumSize(100, 100)
-
-        # self.layout().addWidget(self.lblImage, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.layout().addWidget(self._imageDisplay, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self.lblImage, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
         self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
-
-        # sp(self.lblImage).h_exp().v_exp()
-        # sp(self).h_exp().v_exp()
-        policy = self.lblImage.sizePolicy()
-        policy.setHorizontalPolicy(QSizePolicy.Policy.Ignored)
-        policy.setVerticalPolicy(QSizePolicy.Policy.Ignored)
-        # self.lblImage.setSizePolicy(policy)
 
         self.btnRemove.raise_()
         self.btnDrag.raise_()
@@ -381,28 +366,15 @@ class ImageElementEditor(WorldBuildingEntityElementWidget):
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
         if self._image:
-            print(f'resize {event.size()}')
             w, h = calculate_resized_dimensions(self._image.width(), self._image.height(), self.parent().width() - 20)
-            # self._imageDisplay.setMinimumHeight(h)
-            # self._imageDisplay.setMinimumWidth(w - 5)
-            self._imageDisplay.setMinimumSize(int(w * 0.98), int(h * 0.98))
-            self._imageDisplay.setMaximumSize(w, h)
-            # self.lblImage.setPixmap(
-            #     QPixmap.fromImage(self._image).scaled(w, h,
-            #                                           Qt.AspectRatioMode.KeepAspectRatio,
-            #                                           Qt.TransformationMode.SmoothTransformation))
-            # self.lblImage.adjustSize()
+            self.lblImage.setPixmap(
+                QPixmap.fromImage(self._image).scaled(w, h,
+                                                      Qt.AspectRatioMode.KeepAspectRatio,
+                                                      Qt.TransformationMode.SmoothTransformation))
+            self.lblImage.setMinimumSize(int(w * 0.98), int(h * 0.98))
+            self.lblImage.setMaximumSize(w, h)
         else:
             super().resizeEvent(event)
-
-    # @overrides
-    # def sizeHint(self) -> QSize:
-    #     if self._image is None:
-    #         return super().sizeHint()
-    #     else:
-    #         w, h = calculate_resized_dimensions(self._image.width(), self._image.height(), self.parent().width() - 20)
-    #         # print(f'size hint {w} {h}')
-    #         return QSize(w, h)
 
     @overrides
     def showEvent(self, a0: QShowEvent) -> None:
@@ -425,19 +397,11 @@ class ImageElementEditor(WorldBuildingEntityElementWidget):
 
     def _setImage(self):
         if self._image:
-            print(f'set image {self.parent().width()} {self._image.height()}')
             w, h = calculate_resized_dimensions(self._image.width(), self._image.height(), self.parent().width() - 20)
-            print(f'calculate {w} {h}')
-            # self.lblImage.setPixmap(
-            #     QPixmap.fromImage(self._image).scaled(w, h,
-            #                                           Qt.AspectRatioMode.KeepAspectRatio,
-            #                                           Qt.TransformationMode.SmoothTransformation))
-            # self.lblImage.setMaximumSize(w, h)
-            self._imageDisplay.setMinimumSize(50, 50)
-            self._imageDisplay.setMaximumSize(w, h)
-            self._imageDisplay.setImage(self._image)
-            # self.lblImage.adjustSize()
-            # self.lblImage.setFixedSize(w, h)
+            self.lblImage.setPixmap(
+                QPixmap.fromImage(self._image).scaled(w, h,
+                                                      Qt.AspectRatioMode.KeepAspectRatio,
+                                                      Qt.TransformationMode.SmoothTransformation))
 
 
 class VariableEditorDialog(PopupDialog):

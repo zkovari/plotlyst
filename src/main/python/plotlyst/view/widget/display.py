@@ -24,7 +24,7 @@ import emoji
 import qtanim
 from PyQt6.QtCharts import QChartView
 from PyQt6.QtCore import pyqtProperty, QSize, Qt, QPoint
-from PyQt6.QtGui import QPainter, QShowEvent, QColor, QPaintEvent, QBrush, QKeyEvent, QImage
+from PyQt6.QtGui import QPainter, QShowEvent, QColor, QPaintEvent, QBrush, QKeyEvent
 from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy, QTextBrowser, QFrame, QDialog, \
     QApplication
 from overrides import overrides
@@ -432,23 +432,3 @@ class DragIcon(Icon):
         self.setIcon(IconRegistry.hashtag_icon('grey'))
         self.setIconSize(QSize(14, 14))
         self.setCursor(Qt.CursorShape.OpenHandCursor)
-
-
-class ImageWidget(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._image: Optional[QImage] = None
-
-    def setImage(self, image: QImage):
-        self._image = image
-        self.update()
-
-    @overrides
-    def paintEvent(self, event: QPaintEvent) -> None:
-        if self._image is None:
-            return
-
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-
-        painter.drawImage(self.rect(), self._image)
