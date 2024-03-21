@@ -278,26 +278,24 @@ class StoryArcChart(BaseChart):
     def _storylineSeries(self, storyline: Plot) -> List[QAbstractSeries]:
         all_series = []
 
-        for value in storyline.values:
-            charge = 0
-            series = QSplineSeries()
-            all_series.append(series)
-            series.setName(icon_to_html_img(IconRegistry.from_name(value.icon, value.icon_color)) + value.text)
-            pen = QPen()
-            pen.setColor(QColor(value.icon_color))
-            pen.setWidth(2)
-            series.setPen(pen)
-            series.append(0, charge)
-
-            for i, scene in enumerate(self.novel.scenes):
-                for scene_ref in scene.plot_values:
-                    if scene_ref.plot.id != storyline.id:
-                        continue
-                    for scene_p_value in scene_ref.data.values:
-                        if scene_p_value.plot_value_id == value.id:
-                            charge += scene_p_value.charge
-                            series.append(i + 1, clamp(charge, self.MIN, self.MAX))
-
+        # for value in storyline.values:
+        charge = 0
+        series = QSplineSeries()
+        all_series.append(series)
+        series.setName(icon_to_html_img(IconRegistry.from_name(storyline.icon, storyline.icon_color)) + storyline.text)
+        pen = QPen()
+        pen.setColor(QColor(storyline.icon_color))
+        pen.setWidth(2)
+        series.setPen(pen)
+        series.append(0, charge)
+        for i, scene in enumerate(self.novel.scenes):
+            for scene_ref in scene.plot_values:
+                if scene_ref.plot.id != storyline.id:
+                    continue
+                # for scene_p_value in scene_ref.data.values:
+                #     if scene_p_value.plot_value_id == value.id:
+                charge += scene_ref.data.charge
+                series.append(i + 1, clamp(charge, self.MIN, self.MAX))
         return all_series
 
     def _conflictSeries(self, character: Optional[Character] = None) -> QAbstractSeries:
