@@ -1168,7 +1168,6 @@ class ImageItem(NodeItem):
 
         if self._node.image_ref is None:
             pointy(self)
-            self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
 
         self._socketLeft = DotCircleSocketItem(180, parent=self)
         self._socketTopCenter = DotCircleSocketItem(90, parent=self)
