@@ -1111,7 +1111,6 @@ class ManuscriptProgressCalendar(QCalendarWidget):
 
             progress = find_daily_overall_progress(self._novel, date.toString(Qt.DateFormat.ISODate))
             if progress:
-                painter.save()
                 painter.setPen(QColor('#BB90CE'))
                 if progress.added + progress.removed >= 1500:
                     painter.setBrush(QColor('#C8A4D7'))
@@ -1121,5 +1120,9 @@ class ManuscriptProgressCalendar(QCalendarWidget):
                     painter.setBrush(QColor(RELAXED_WHITE_COLOR))
                 rad = rect.width() // 2 - 1
                 painter.drawEllipse(rect.center() + QPoint(1, 1), rad, rad)
-                painter.restore()
+            
+            if date > self.maximumDate():
+                painter.setPen(QColor('grey'))
+            else:
+                painter.setPen(QColor('black'))
             painter.drawText(rect.toRectF(), str(date.day()), option)
