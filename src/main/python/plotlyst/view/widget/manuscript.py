@@ -41,7 +41,7 @@ from qttextedit import RichTextEditor, TextBlockState, remove_font, OBJECT_REPLA
 from textstat import textstat
 
 from plotlyst.common import RELAXED_WHITE_COLOR, DEFAULT_MANUSCRIPT_LINE_SPACE, \
-    DEFAULT_MANUSCRIPT_INDENT, PLOTLYST_TERTIARY_COLOR
+    DEFAULT_MANUSCRIPT_INDENT, PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.client import json_client
 from plotlyst.core.domain import Novel, Scene, TextStatistics, DocumentStatistics, DocumentProgress
 from plotlyst.core.sprint import TimerModel
@@ -1077,8 +1077,11 @@ class ManuscriptProgressCalendar(QCalendarWidget):
 
         self.setVerticalHeaderFormat(QCalendarWidget.VerticalHeaderFormat.NoVerticalHeader)
         self.setHorizontalHeaderFormat(QCalendarWidget.HorizontalHeaderFormat.NoHorizontalHeader)
-        self.setNavigationBarVisible(False)
-        self.setSelectionMode(QCalendarWidget.SelectionMode.NoSelection)
+        self.setNavigationBarVisible(True)
+        self.setSelectionMode(QCalendarWidget.SelectionMode.SingleSelection)
+        self.setFirstDayOfWeek(Qt.DayOfWeek.Monday)
+        item = self.layout().itemAt(0)
+        item.widget().setStyleSheet(f'.QWidget {{background-color: {PLOTLYST_SECONDARY_COLOR};}}')
         item = self.layout().itemAt(1)
         if isinstance(item.widget(), QTableView):
             item.widget().setStyleSheet(f'''
@@ -1094,6 +1097,7 @@ class ManuscriptProgressCalendar(QCalendarWidget):
     def showEvent(self, event: QShowEvent) -> None:
         if QDate.currentDate() != self.maximumDate():
             self.setMaximumDate(QDate.currentDate())
+            self.showToday()
 
     @overrides
     def paintCell(self, painter: QtGui.QPainter, rect: QRect, date: QDate) -> None:
