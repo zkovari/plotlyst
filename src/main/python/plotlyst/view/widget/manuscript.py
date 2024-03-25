@@ -1106,12 +1106,9 @@ class ManuscriptProgressCalendar(QCalendarWidget):
         if date.month() == self.monthShown():
             option = QTextOption()
             option.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            if date == self.maximumDate():
-                bold(painter)
-                underline(painter)
-            else:
-                bold(painter, False)
-                underline(painter, False)
+            bold(painter, date == self.maximumDate())
+            underline(painter, date == self.maximumDate())
+
             progress = find_daily_overall_progress(self._novel, date.toString(Qt.DateFormat.ISODate))
             if progress:
                 painter.save()
