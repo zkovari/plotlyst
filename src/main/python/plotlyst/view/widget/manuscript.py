@@ -34,7 +34,7 @@ from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit, QButton
 from nltk import WhitespaceTokenizer
 from overrides import overrides
 from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins, vbox, line, bold, vline, decr_font, \
-    underline, transparent
+    underline, transparent, italic, decr_icon
 from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget, group
 from qttextedit import RichTextEditor, TextBlockState, remove_font, OBJECT_REPLACEMENT_CHARACTER
@@ -1038,7 +1038,13 @@ class ManuscriptExportWidget(QWidget):
             export_manuscript_to_docx(self._novel)
 
 
+def date_to_str(date: QDate) -> str:
+    return date.toString(Qt.DateFormat.ISODate)
+
+
 class ManuscriptDailyProgress(QWidget):
+    jumpToToday = pyqtSignal()
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
@@ -1048,17 +1054,36 @@ class ManuscriptDailyProgress(QWidget):
         self.btnDay.setText('Today')
         self.btnDay.setIcon(IconRegistry.from_name('mdi.calendar-month-outline'))
 
+        self.btnJumpToToday = push_btn(IconRegistry.from_name('fa5s.arrow-right'), 'Jump to today', transparent_=True)
+        retain_when_hidden(self.btnJumpToToday)
+        italic(self.btnJumpToToday)
+        self.btnJumpToToday.installEventFilter(OpacityEventFilter(self.btnJumpToToday, enterOpacity=0.7))
+        decr_icon(self.btnJumpToToday, 3)
+        decr_font(self.btnJumpToToday, 3)
+        self.btnJumpToToday.clicked.connect(self.jumpToToday)
+
         self.lblAdded = label('', color='darkgreen', h3=True)
         self.lblRemoved = label('', color='grey', h3=True)
 
-        self.layout().addWidget(self.btnDay, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(group(self.btnDay, self.btnJumpToToday))
         self.layout().addWidget(group(self.lblAdded, vline(), self.lblRemoved), alignment=Qt.AlignmentFlag.AlignRight)
         lbl = label('Added/Removed', description=True)
         decr_font(lbl)
         self.layout().addWidget(lbl, alignment=Qt.AlignmentFlag.AlignRight)
 
     def refresh(self):
-        progress = find_daily_overall_progress(self._novel)
+        self.setDate(QDate.currentDate())
+
+    def setDate(self, date: QDate):
+        date_str = date_to_str(date)
+        if date == QDate.currentDate():
+            self.btnDay.setText('Today')
+            self.btnJumpToToday.setHidden(True)
+        else:
+            self.btnDay.setText(date_str[5:].replace('-', '/'))
+            self.btnJumpToToday.setVisible(True)
+
+        progress = find_daily_overall_progress(self._novel, date_str)
         if progress:
             self.setProgress(progress)
         else:
@@ -1071,6 +1096,8 @@ class ManuscriptDailyProgress(QWidget):
 
 
 class ManuscriptProgressCalendar(QCalendarWidget):
+    dayChanged = pyqtSignal(QDate)
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
@@ -1100,16 +1127,22 @@ class ManuscriptProgressCalendar(QCalendarWidget):
             self.showToday()
 
     @overrides
+    def showToday(self) -> None:
+        super().showToday()
+        self.setSelectedDate(QDate.currentDate())
+        self.dayChanged.emit(self.maximumDate())
+
+    @overrides
     def paintCell(self, painter: QtGui.QPainter, rect: QRect, date: QDate) -> None:
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         if date.month() == self.monthShown():
             option = QTextOption()
             option.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            bold(painter, date == self.maximumDate())
-            underline(painter, date == self.maximumDate())
+            bold(painter, date == self.selectedDate())
+            underline(painter, date == self.selectedDate())
 
-            progress = find_daily_overall_progress(self._novel, date.toString(Qt.DateFormat.ISODate))
+            progress = find_daily_overall_progress(self._novel, date_to_str(date))
             if progress:
                 painter.setPen(QColor('#BB90CE'))
                 if progress.added + progress.removed >= 1500:
@@ -1120,7 +1153,7 @@ class ManuscriptProgressCalendar(QCalendarWidget):
                     painter.setBrush(QColor(RELAXED_WHITE_COLOR))
                 rad = rect.width() // 2 - 1
                 painter.drawEllipse(rect.center() + QPoint(1, 1), rad, rad)
-            
+
             if date > self.maximumDate():
                 painter.setPen(QColor('grey'))
             else:

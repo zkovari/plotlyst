@@ -107,6 +107,9 @@ class ManuscriptView(AbstractNovelView):
         self._manuscriptDailyProgressDisplay.refresh()
 
         self._progressCalendar = ManuscriptProgressCalendar(self.novel)
+        self._progressCalendar.clicked.connect(self._manuscriptDailyProgressDisplay.setDate)
+        self._progressCalendar.dayChanged.connect(self._manuscriptDailyProgressDisplay.setDate)
+        self._manuscriptDailyProgressDisplay.jumpToToday.connect(self._progressCalendar.showToday)
         self.ui.pageProgress.layout().addWidget(self._manuscriptDailyProgressDisplay)
         self.ui.pageProgress.layout().addWidget(vspacer(20))
         self.ui.pageProgress.layout().addWidget(self._progressCalendar)
