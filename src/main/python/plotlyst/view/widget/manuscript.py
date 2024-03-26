@@ -28,9 +28,10 @@ from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObj
     QRect, QDate, QPoint
 from PyQt6.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter, QKeyEvent, \
     QMouseEvent, QTextCursor, QFont, QScreen, QTextFormat, QTextObjectInterface, QPainter, QTextBlockFormat, \
-    QFontMetrics, QTextOption, QShowEvent
+    QFontMetrics, QTextOption, QShowEvent, QIcon
 from PyQt6.QtMultimedia import QSoundEffect
-from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit, QButtonGroup, QCalendarWidget, QTableView
+from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit, QButtonGroup, QCalendarWidget, QTableView, \
+    QPushButton
 from nltk import WhitespaceTokenizer
 from overrides import overrides
 from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins, vbox, line, bold, vline, decr_font, \
@@ -59,6 +60,7 @@ from plotlyst.view.generated.readability_widget_ui import Ui_ReadabilityWidget
 from plotlyst.view.generated.sprint_widget_ui import Ui_SprintWidget
 from plotlyst.view.generated.timer_setup_widget_ui import Ui_TimerSetupWidget
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.display import WordsDisplay, IconText
 from plotlyst.view.widget.input import TextEditBase, GrammarHighlighter, GrammarHighlightStyle
 
@@ -1159,3 +1161,26 @@ class ManuscriptProgressCalendar(QCalendarWidget):
             else:
                 painter.setPen(QColor('black'))
             painter.drawText(rect.toRectF(), str(date.day()), option)
+
+
+class ManuscriptProgressCalendarLegend(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        vbox(self)
+        margins(self, left=15)
+
+        self.layout().addWidget(self._legend(IconRegistry.from_name('fa5.square', color='#BB90CE'), '1+ words'),
+                                alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self._legend(IconRegistry.from_name('fa5s.square', color='#EDE1F2'), '450+ words'),
+                                alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self._legend(IconRegistry.from_name('fa5s.square', color='#C8A4D7'), '1500+ words'),
+                                alignment=Qt.AlignmentFlag.AlignLeft)
+
+    def _legend(self, icon: QIcon, text: str) -> QPushButton:
+        legend = IconText()
+        apply_button_palette_color(legend, 'grey')
+        legend.setIcon(icon)
+        legend.setText(text)
+
+        return legend

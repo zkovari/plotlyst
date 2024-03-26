@@ -48,7 +48,7 @@ from plotlyst.view.widget.display import Icon, ChartView
 from plotlyst.view.widget.input import Toggle
 from plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
     DistractionFreeManuscriptEditor, SprintWidget, ReadabilityWidget, ManuscriptExportWidget, \
-    ManuscriptProgressCalendar, ManuscriptDailyProgress
+    ManuscriptProgressCalendar, ManuscriptDailyProgress, ManuscriptProgressCalendarLegend
 from plotlyst.view.widget.progress import ProgressChart
 from plotlyst.view.widget.scene.editor import SceneMiniEditor
 from plotlyst.view.widget.scenes import SceneNotesEditor
@@ -113,6 +113,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.pageProgress.layout().addWidget(self._manuscriptDailyProgressDisplay)
         self.ui.pageProgress.layout().addWidget(vspacer(20))
         self.ui.pageProgress.layout().addWidget(self._progressCalendar)
+        self.ui.pageProgress.layout().addWidget(ManuscriptProgressCalendarLegend())
         self.ui.pageProgress.layout().addWidget(vspacer())
 
         self._btnDistractionFree = tool_btn(IconRegistry.expand_icon(), 'Enter distraction-free mode', base=True)
