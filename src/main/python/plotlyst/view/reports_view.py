@@ -219,7 +219,7 @@ class ReportsView(AbstractNovelView):
                                                       (self.ui.btnArc, self._page_arc),
                                                       (self.ui.btnManuscript, self._page_manuscript)])
 
-        self.ui.btnArc.setChecked(True)
+        self.ui.btnCharacters.setChecked(True)
 
     @overrides
     def refresh(self):

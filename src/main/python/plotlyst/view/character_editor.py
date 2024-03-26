@@ -200,7 +200,7 @@ class CharacterEditor(QObject, EventListener):
         if self.character.role:
             self._display_role()
 
-        self.ui.tabAttributes.setCurrentWidget(self.ui.tabTopics)
+        self.ui.tabAttributes.setCurrentWidget(self.ui.tabBackstory)
 
         self.repo = RepositoryPersistenceManager.instance()
         dispatcher = event_dispatchers.instance(self.novel)
