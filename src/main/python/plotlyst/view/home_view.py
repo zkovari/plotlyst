@@ -27,7 +27,7 @@ from qthandy.filter import VisibilityToggleEventFilter, InstantTooltipEventFilte
 from qtmenu import MenuWidget
 
 from plotlyst.common import NAV_BAR_BUTTON_DEFAULT_COLOR, \
-    NAV_BAR_BUTTON_CHECKED_COLOR
+    NAV_BAR_BUTTON_CHECKED_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.client import client
 from plotlyst.core.domain import NovelDescriptor
 from plotlyst.core.help import home_page_welcome_text
@@ -39,7 +39,7 @@ from plotlyst.service.persistence import flush_or_fail
 from plotlyst.service.tour import TourService
 from plotlyst.view._view import AbstractView
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, action, \
-    TooltipPositionEventFilter
+    TooltipPositionEventFilter, open_url
 from plotlyst.view.dialog.home import StoryCreationDialog
 from plotlyst.view.generated.home_view_ui import Ui_HomeView
 from plotlyst.view.icons import IconRegistry
@@ -69,12 +69,26 @@ class HomeView(AbstractView):
         self._tour_service = TourService.instance()
 
         self.ui.lblBanner.setPixmap(QPixmap(resource_registry.banner))
-        self.ui.btnTwitter.setIcon(IconRegistry.from_name('fa5b.twitter', 'white'))
-        self.ui.btnInstagram.setIcon(IconRegistry.from_name('fa5b.instagram', 'white'))
-        self.ui.btnFacebook.setIcon(IconRegistry.from_name('fa5b.facebook', 'white'))
-        transparent(self.ui.btnTwitter)
-        transparent(self.ui.btnInstagram)
-        transparent(self.ui.btnFacebook)
+        self.ui.btnTwitter.setIcon(IconRegistry.from_name('fa5b.twitter', RELAXED_WHITE_COLOR))
+        self.ui.btnInstagram.setIcon(IconRegistry.from_name('fa5b.instagram', RELAXED_WHITE_COLOR))
+        self.ui.btnFacebook.setIcon(IconRegistry.from_name('fa5b.facebook', RELAXED_WHITE_COLOR))
+        self.ui.btnYoutube.setIcon(IconRegistry.from_name('fa5b.youtube', RELAXED_WHITE_COLOR))
+        self.ui.btnPinterest.setIcon(IconRegistry.from_name('fa5b.pinterest', RELAXED_WHITE_COLOR))
+        self.ui.btnTwitter.installEventFilter(OpacityEventFilter(self.ui.btnTwitter, leaveOpacity=0.8))
+        self.ui.btnInstagram.installEventFilter(OpacityEventFilter(self.ui.btnInstagram, leaveOpacity=0.8))
+        self.ui.btnFacebook.installEventFilter(OpacityEventFilter(self.ui.btnFacebook, leaveOpacity=0.8))
+        self.ui.btnYoutube.installEventFilter(OpacityEventFilter(self.ui.btnYoutube, leaveOpacity=0.8))
+        self.ui.btnPinterest.installEventFilter(OpacityEventFilter(self.ui.btnPinterest, leaveOpacity=0.8))
+        self.ui.btnTwitter.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnTwitter))
+        self.ui.btnInstagram.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnInstagram))
+        self.ui.btnFacebook.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnFacebook))
+        self.ui.btnYoutube.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnYoutube))
+        self.ui.btnPinterest.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnPinterest))
+        self.ui.btnTwitter.clicked.connect(lambda: open_url('https://twitter.com/plotlyst'))
+        self.ui.btnInstagram.clicked.connect(lambda: open_url('https://www.instagram.com/plotlyst'))
+        self.ui.btnFacebook.clicked.connect(lambda: open_url('https://www.facebook.com/people/Plotlyst/61557773998679/'))
+        self.ui.btnYoutube.clicked.connect(lambda: open_url('https://www.youtube.com/@Plotlyst'))
+        self.ui.btnPinterest.clicked.connect(lambda: open_url('https://pinterest.com/Plotlyst'))
 
         self.ui.btnLibrary.setIcon(
             IconRegistry.from_name('mdi.bookshelf', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))

@@ -60,7 +60,13 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_5">
         <property name="spacing">
-         <number>2</number>
+         <number>5</number>
+        </property>
+        <property name="rightMargin">
+         <number>10</number>
+        </property>
+        <property name="bottomMargin">
+         <number>8</number>
         </property>
         <item>
          <spacer name="horizontalSpacer_2">
@@ -76,32 +82,82 @@
          </spacer>
         </item>
         <item>
-         <widget class="QToolButton" name="btnTwitter">
+         <widget class="QToolButton" name="btnFacebook">
+          <property name="cursor">
+           <cursorShape>PointingHandCursor</cursorShape>
+          </property>
           <property name="toolTip">
-           <string>Twitter</string>
+           <string>Facebook</string>
           </property>
           <property name="text">
            <string/>
+          </property>
+          <property name="transparent" stdset="0">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="btnYoutube">
+          <property name="cursor">
+           <cursorShape>PointingHandCursor</cursorShape>
+          </property>
+          <property name="toolTip">
+           <string>Youtube</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="transparent" stdset="0">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QToolButton" name="btnInstagram">
+          <property name="cursor">
+           <cursorShape>PointingHandCursor</cursorShape>
+          </property>
           <property name="toolTip">
            <string>Instagram</string>
           </property>
           <property name="text">
            <string/>
           </property>
+          <property name="transparent" stdset="0">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
         <item>
-         <widget class="QToolButton" name="btnFacebook">
+         <widget class="QToolButton" name="btnTwitter">
+          <property name="cursor">
+           <cursorShape>PointingHandCursor</cursorShape>
+          </property>
           <property name="toolTip">
-           <string>Facebook</string>
+           <string>Twitter</string>
           </property>
           <property name="text">
            <string/>
+          </property>
+          <property name="transparent" stdset="0">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="btnPinterest">
+          <property name="cursor">
+           <cursorShape>PointingHandCursor</cursorShape>
+          </property>
+          <property name="toolTip">
+           <string>Pinterest</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="transparent" stdset="0">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
