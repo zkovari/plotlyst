@@ -45,11 +45,24 @@
        <number>10</number>
       </property>
       <property name="rightMargin">
-       <number>0</number>
+       <number>10</number>
       </property>
       <property name="bottomMargin">
        <number>0</number>
       </property>
+      <item alignment="Qt::AlignRight">
+       <widget class="QPushButton" name="btnWebsite">
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
+        <property name="text">
+         <string>www.plotlyst.com</string>
+        </property>
+        <property name="transparent" stdset="0">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
       <item alignment="Qt::AlignHCenter">
        <widget class="QLabel" name="lblBanner">
         <property name="text">
@@ -62,8 +75,11 @@
         <property name="spacing">
          <number>5</number>
         </property>
-        <property name="rightMargin">
+        <property name="leftMargin">
          <number>10</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
         </property>
         <property name="bottomMargin">
          <number>8</number>

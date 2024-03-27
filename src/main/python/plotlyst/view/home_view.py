@@ -44,6 +44,7 @@ from plotlyst.view.dialog.home import StoryCreationDialog
 from plotlyst.view.generated.home_view_ui import Ui_HomeView
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_border_image
+from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.library import ShelvesTreeView
 from plotlyst.view.widget.tour import TutorialsTreeView, Tutorial
@@ -86,9 +87,15 @@ class HomeView(AbstractView):
         self.ui.btnPinterest.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnPinterest))
         self.ui.btnTwitter.clicked.connect(lambda: open_url('https://twitter.com/plotlyst'))
         self.ui.btnInstagram.clicked.connect(lambda: open_url('https://www.instagram.com/plotlyst'))
-        self.ui.btnFacebook.clicked.connect(lambda: open_url('https://www.facebook.com/people/Plotlyst/61557773998679/'))
+        self.ui.btnFacebook.clicked.connect(
+            lambda: open_url('https://www.facebook.com/people/Plotlyst/61557773998679/'))
         self.ui.btnYoutube.clicked.connect(lambda: open_url('https://www.youtube.com/@Plotlyst'))
         self.ui.btnPinterest.clicked.connect(lambda: open_url('https://pinterest.com/Plotlyst'))
+
+        apply_button_palette_color(self.ui.btnWebsite, RELAXED_WHITE_COLOR)
+        italic(self.ui.btnWebsite)
+        self.ui.btnWebsite.installEventFilter(OpacityEventFilter(self.ui.btnWebsite, leaveOpacity=0.8))
+        self.ui.btnWebsite.clicked.connect(lambda: open_url('https://www.plotlyst.com'))
 
         self.ui.btnLibrary.setIcon(
             IconRegistry.from_name('mdi.bookshelf', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
