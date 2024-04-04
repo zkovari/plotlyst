@@ -52,14 +52,14 @@ jobs:
           sudo gem install --no-document fpm
       - if: matrix.os == 'macos-11'
         name: Install fpm on Mac
-        run: |
-          gem install public_suffix -v 4.0.7
-          gem install --no-document fpm
+        uses: fortran-lang/setup-fpm@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - if: matrix.os == 'windows-2019'
         name: Install fpm on Windows
-        run: |
-          gem install public_suffix -v 4.0.7
-          gem install --no-document fpm
+        uses: fortran-lang/setup-fpm@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Python dependencies
         run: |
