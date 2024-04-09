@@ -377,7 +377,7 @@ class TopicWidget(QWidget):
         self.btnHeader = push_btn(IconRegistry.from_name(topic.icon, topic.icon_color), topic.text,
                                   tooltip=topic.description, transparent_=True)
 
-        self.textEdit = AutoAdjustableTextEdit(height=40)
+        self.textEdit = AutoAdjustableTextEdit(height=60)
         self.textEdit.setProperty('rounded', True)
         self.textEdit.setProperty('white-bg', True)
         self.textEdit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
