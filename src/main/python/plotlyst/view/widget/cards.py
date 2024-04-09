@@ -30,7 +30,7 @@ from overrides import overrides
 from qthandy import clear_layout, retain_when_hidden, transparent, flow, translucent, gc
 from qthandy.filter import DragEventFilter, DropEventFilter
 
-from plotlyst.common import act_color
+from plotlyst.common import act_color, PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Character, Scene, Novel, NovelSetting, CardSizeRatio
 from plotlyst.core.help import enneagram_help, mbti_help
 from plotlyst.service.cache import acts_registry
@@ -68,7 +68,7 @@ class Card(QFrame):
 
     @overrides
     def enterEvent(self, event: QEvent) -> None:
-        qtanim.glow(self, color=QColor('#0096c7'))
+        qtanim.glow(self, color=QColor(PLOTLYST_TERTIARY_COLOR))
         self.cursorEntered.emit()
 
     @overrides
@@ -123,7 +123,7 @@ class Card(QFrame):
         return 4 if selected else 2
 
     def _borderColor(self, selected: bool = False) -> str:
-        return '#2a4d69' if selected else '#adcbe3'
+        return PLOTLYST_SECONDARY_COLOR if selected else 'lightgrey'
 
 
 class CharacterCard(Ui_CharacterCard, Card):
