@@ -1496,7 +1496,8 @@ advance_story_scene_purpose = ScenePurpose(ScenePurposeType.Story, 'Advance\nsto
                                                     ScenePurposeType.Setup],
                                            pacing='fast-medium')
 reaction_story_scene_purpose = ScenePurpose(ScenePurposeType.Reaction, 'Reaction',
-                                            keywords=['reflection', 'dilemma', 'decision', 'introspection', 'analysis',
+                                            keywords=['reaction', 'reflection', 'dilemma', 'decision', 'introspection',
+                                                      'analysis',
                                                       'new goal'],
                                             include=[ScenePurposeType.Character, ScenePurposeType.Emotion],
                                             pacing='medium-slow')
