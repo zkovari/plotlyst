@@ -491,7 +491,7 @@ border: 0px;
        <enum>Qt::ClickFocus</enum>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tabTopics">
        <property name="relaxed-white-bg" stdset="0">
@@ -505,10 +505,10 @@ border: 0px;
          <number>3</number>
         </property>
         <property name="leftMargin">
-         <number>0</number>
+         <number>10</number>
         </property>
         <property name="topMargin">
-         <number>0</number>
+         <number>15</number>
         </property>
         <property name="rightMargin">
          <number>0</number>
@@ -527,10 +527,10 @@ border: 0px;
          <number>3</number>
         </property>
         <property name="leftMargin">
-         <number>2</number>
+         <number>0</number>
         </property>
         <property name="topMargin">
-         <number>2</number>
+         <number>15</number>
         </property>
         <property name="rightMargin">
          <number>2</number>
@@ -544,13 +544,13 @@ border: 0px;
            <number>3</number>
           </property>
           <property name="leftMargin">
-           <number>4</number>
+           <number>10</number>
           </property>
           <property name="topMargin">
-           <number>2</number>
+           <number>0</number>
           </property>
           <property name="rightMargin">
-           <number>2</number>
+           <number>0</number>
           </property>
           <property name="bottomMargin">
            <number>10</number>
@@ -605,8 +605,8 @@ border: 0px;
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>98</width>
-             <height>156</height>
+             <width>325</width>
+             <height>543</height>
             </rect>
            </property>
            <property name="bg-image" stdset="0">
@@ -752,10 +752,10 @@ border: 0px;
          <number>3</number>
         </property>
         <property name="leftMargin">
-         <number>3</number>
+         <number>10</number>
         </property>
         <property name="topMargin">
-         <number>9</number>
+         <number>15</number>
         </property>
         <property name="rightMargin">
          <number>3</number>
