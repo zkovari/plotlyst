@@ -685,18 +685,12 @@ def default_character_profiles() -> List[ProfileTemplate]:
     fields = [ProfileElement(summary_title, 0, 0, col_span=2),
               ProfileElement(summary_field, 1, 0, col_span=2, margins=Margins(left=15)),
 
-              ProfileElement(personality_title, 2, 0, col_span=2),
-              ProfileElement(enneagram_field, 3, 0, margins=Margins(left=15)),
-              ProfileElement(mbti_field, 3, 1),
+              ProfileElement(personality_title, 2, 0, col_span=2, margins=Margins(bottom=10)),
+              ProfileElement(enneagram_field, 3, 0, margins=Margins(left=15, bottom=10)),
+              ProfileElement(mbti_field, 3, 1, margins=Margins(bottom=10)),
 
-              ProfileElement(TemplateField('', TemplateFieldType.DISPLAY_LINE), 4, 0, col_span=2,
-                             margins=Margins(left=15)),
-
-              ProfileElement(love_style_field, 5, 0, margins=Margins(left=15)),
-              ProfileElement(disc_field, 5, 1),
-
-              ProfileElement(TemplateField('', TemplateFieldType.DISPLAY_LINE), 6, 0, col_span=2,
-                             margins=Margins(left=15)),
+              ProfileElement(love_style_field, 5, 0, margins=Margins(left=15, bottom=10)),
+              ProfileElement(disc_field, 5, 1, margins=Margins(bottom=10)),
 
               ProfileElement(traits_field, 7, 0, col_span=2, margins=Margins(left=15)),
 
