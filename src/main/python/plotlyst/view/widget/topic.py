@@ -21,6 +21,7 @@ import uuid
 from functools import partial
 from typing import Dict, List
 
+import qtanim
 from PyQt6.QtCore import Qt, QSize, pyqtSignal, QEvent
 from PyQt6.QtGui import QAction, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QTextEdit, QGridLayout
@@ -143,7 +144,7 @@ topics: Dict[TopicType, List[Topic]] = {
               description="Fears related to personal health and safety"),
         Topic('Isolation and abandonment fears', TopicType.Fears, uuid.UUID('051dcd55-7e32-4028-9580-823f2ffd5bd7'),
               'ri.ghost-2-fill',
-              description="fears related to loneliness, isolation, or being abandoned"),
+              description="Fears related to loneliness, isolation, or being abandoned"),
         Topic('Existential fears', TopicType.Fears, uuid.UUID('b7fda0c7-08cc-458e-abf5-5d052be71733'),
               'ri.ghost-2-fill',
               description="Fears related to existential questions and concerns about life and death, e.g., meaninglessness or mortality"),
@@ -341,7 +342,7 @@ class TopicGroupWidget(QWidget):
     def leaveEvent(self, _: QEvent) -> None:
         self.btnRemoval.setHidden(True)
 
-    def addTopic(self, topic: Topic, value: TemplateValue):
+    def addTopic(self, topic: Topic, value: TemplateValue) -> 'TopicWidget':
         wdg = TopicWidget(topic, value)
         wdg.removalRequested.connect(partial(self._removeTopic, topic))
         self._topicWidgets[topic] = wdg
@@ -352,9 +353,16 @@ class TopicGroupWidget(QWidget):
         self.btnAddTopic.setHidden(True)
         self.btnRemoval.setHidden(True)
 
+        return wdg
+
     def _addNewTopic(self, topic: Topic):
+        def activate():
+            wdg.activate()
+
         value = TemplateValue(topic.id, '')
-        self.addTopic(topic, value)
+        wdg = self.addTopic(topic, value)
+
+        qtanim.fade_in(wdg, duration=150, teardown=activate)
 
         self.topicAdded.emit(topic, value)
 
@@ -402,7 +410,6 @@ class TopicWidget(QWidget):
 
     def activate(self):
         self.textEdit.setFocus()
-        self.textEdit.setPlaceholderText(f'Write about {self._topic.text.lower()}')
 
     def value(self):
         return self._value
