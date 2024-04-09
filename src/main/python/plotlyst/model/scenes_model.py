@@ -87,7 +87,7 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
         self._reaction_icon = IconRegistry.reaction_scene_icon()
 
         self._character_insight_icon = IconRegistry.character_development_scene_icon()
-        self._emotion_icon = IconRegistry.emotion_scene_icon()
+        self._emotion_icon = IconRegistry.mood_scene_icon()
         self._setup_icon = IconRegistry.setup_scene_icon()
         self._exposition_icon = IconRegistry.exposition_scene_icon()
 

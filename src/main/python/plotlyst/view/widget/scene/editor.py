@@ -178,7 +178,7 @@ def purpose_icon(purpose_type: ScenePurposeType) -> QIcon:
     elif purpose_type == ScenePurposeType.Character:
         return IconRegistry.character_development_scene_icon()
     elif purpose_type == ScenePurposeType.Emotion:
-        return IconRegistry.emotion_scene_icon()
+        return IconRegistry.mood_scene_icon()
     elif purpose_type == ScenePurposeType.Setup:
         return IconRegistry.setup_scene_icon()
     elif purpose_type == ScenePurposeType.Exposition:
@@ -227,7 +227,7 @@ class ScenePurposeTypeButton(QPushButton):
         elif self._scene.purpose == ScenePurposeType.Character:
             self.setIcon(IconRegistry.character_development_scene_icon())
         elif self._scene.purpose == ScenePurposeType.Emotion:
-            self.setIcon(IconRegistry.emotion_scene_icon())
+            self.setIcon(IconRegistry.mood_scene_icon())
 
         if self._scene.purpose == ScenePurposeType.Other:
             italic(self, True)
@@ -391,7 +391,7 @@ class ScenePurposeSelectorWidget(QWidget):
         super().__init__(parent)
 
         vbox(self)
-        self._btnSkip = QPushButton('Ignore')
+        self._btnSkip = QPushButton('Skip')
         self._btnSkip.setIcon(IconRegistry.from_name('ri.share-forward-fill'))
         underline(self._btnSkip)
         transparent(self._btnSkip)

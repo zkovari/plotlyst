@@ -212,7 +212,7 @@ class IconRegistry:
         elif scene.purpose == ScenePurposeType.Character:
             return IconRegistry.character_development_scene_icon()
         elif scene.purpose == ScenePurposeType.Emotion:
-            return IconRegistry.emotion_scene_icon()
+            return IconRegistry.mood_scene_icon()
         elif scene.purpose == ScenePurposeType.Setup:
             return IconRegistry.setup_scene_icon()
         elif scene.purpose == ScenePurposeType.Exposition:
@@ -243,8 +243,8 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.account-cog', 'grey', 'black')
 
     @staticmethod
-    def emotion_scene_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.emoticon-neutral-outline', 'grey', 'black')
+    def mood_scene_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.butterfly-outline', 'grey', 'black')
 
     @staticmethod
     def summary_scene_icon() -> QIcon:
