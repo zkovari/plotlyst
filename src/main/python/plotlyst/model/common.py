@@ -55,7 +55,7 @@ class AbstractHorizontalHeaderBasedTableModel(QAbstractTableModel):
 
     @overrides
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
-        if role == Qt.ItemDataRole.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole or role == Qt.ItemDataRole.ToolTipRole:
             if orientation == Qt.Orientation.Horizontal:
                 return self.headers[section]
 

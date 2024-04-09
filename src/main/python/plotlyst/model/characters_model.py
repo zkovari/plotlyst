@@ -17,13 +17,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import List, Any, Optional
+from typing import Any, Optional
 
 from PyQt6.QtCore import QModelIndex, Qt, QVariant, pyqtSignal
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 
+from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Character, Novel, Scene, SelectionItem, enneagram_field
 from plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel
 from plotlyst.view.icons import avatars, IconRegistry
@@ -52,6 +53,22 @@ class CharactersTableModel(AbstractHorizontalHeaderBasedTableModel):
     @overrides
     def rowCount(self, parent: QModelIndex = Qt.ItemDataRole.DisplayRole) -> int:
         return len(self._novel.characters)
+
+    @overrides
+    def headerData(self, section: int, orientation: Qt.Orientation, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
+        if orientation == Qt.Orientation.Horizontal:
+            if section == self.ColRole:
+                if role == Qt.ItemDataRole.DecorationRole:
+                    return IconRegistry.from_name('fa5s.chess-bishop', color=RELAXED_WHITE_COLOR)
+                elif role == Qt.ItemDataRole.ToolTipRole:
+                    return 'Character role'
+            elif section == self.ColEnneagram:
+                if role == Qt.ItemDataRole.DecorationRole:
+                    return IconRegistry.from_name('mdi.numeric-9-circle', color=RELAXED_WHITE_COLOR)
+                elif role == Qt.ItemDataRole.ToolTipRole:
+                    return 'Enneagram'
+            else:
+                return super().headerData(section, orientation, role)
 
     @overrides
     def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
