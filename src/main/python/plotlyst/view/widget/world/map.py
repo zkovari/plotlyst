@@ -462,11 +462,13 @@ class WorldBuildingMapView(BaseGraphicsView):
 
         self._wdgZoomBar = ZoomBar(self)
         self._wdgZoomBar.zoomed.connect(self._scale)
+        self._wdgZoomBar.setHidden(True)
 
         self._controlsNavBar = self._roundedFrame()
         sp(self._controlsNavBar).h_max()
         shadow(self._controlsNavBar)
         vbox(self._controlsNavBar, 5, 6)
+        self._controlsNavBar.setHidden(True)
 
         self._btnAddMarker = self._newControlButton(IconRegistry.from_name('fa5s.map-marker'),
                                                     'Add new marker (or double-click on the map)',
@@ -593,6 +595,8 @@ class WorldBuildingMapView(BaseGraphicsView):
             # call to calculate rect size
             _ = self._scene.sceneRect()
             self.centerOn(self._bgItem)
+            self._controlsNavBar.setVisible(True)
+            self._wdgZoomBar.setVisible(True)
 
     def _addNewMap(self):
         loadedImage: Optional[LoadedImage] = upload_image(self._novel)
