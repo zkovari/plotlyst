@@ -313,7 +313,7 @@ class ScenePurposeWidget(QFrame):
             lbl = label(self._purpose.pacing, description=True)
             self._wdgInfo.layout().addWidget(wrap(lbl, margin_left=5))
         if self._purpose.include:
-            lbl = label('May include:', underline=True)
+            lbl = label('Often contains:', underline=True)
             icons = QWidget()
             icons.setToolTip(self._purpose.help_include)
             hbox(icons, 0, 3)
