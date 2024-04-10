@@ -39,7 +39,7 @@ from plotlyst.view.generated.world_building_view_ui import Ui_WorldBuildingView
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_bg_image
 from plotlyst.view.widget.tree import TreeSettings
-from plotlyst.view.widget.world.editor import WorldBuildingEntityEditor, EditorSettingsMenu, EntityLayoutType
+from plotlyst.view.widget.world.editor import WorldBuildingEntityEditor, WorldBuildingEditorSettingsWidget, EntityLayoutType
 from plotlyst.view.widget.world.glossary import WorldBuildingGlossaryEditor
 from plotlyst.view.widget.world.map import WorldBuildingMapView
 from plotlyst.view.widget.world.tree import EntityAdditionMenu
@@ -81,11 +81,18 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.btnTreeToggle.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
         self.ui.btnTreeToggle.clicked.connect(lambda x: qtanim.toggle_expansion(self.ui.wdgWorldContainer, x))
         self.ui.btnSettings.setIcon(IconRegistry.cog_icon())
+
         width = settings.worldbuilding_editor_max_width()
         self.ui.wdgCenterEditor.setMaximumWidth(width)
-        self._menuSettings = EditorSettingsMenu(self.ui.btnSettings, width)
-        self._menuSettings.widthChanged.connect(self._editor_max_width_changed)
-        self._menuSettings.layoutChanged.connect(self._layout_changed)
+        self.ui.wdgSideBar.setStyleSheet(f'#wdgSideBar {{background: {self._palette.bg_color};}}')
+        self._wdgSettings = WorldBuildingEditorSettingsWidget(width)
+        self._wdgSettings.setMaximumWidth(150)
+        self.ui.wdgSideBar.layout().addWidget(self._wdgSettings, alignment=Qt.AlignmentFlag.AlignRight)
+        self._wdgSettings.widthChanged.connect(self._editor_max_width_changed)
+        self._wdgSettings.layoutChanged.connect(self._layout_changed)
+        self.ui.btnSettings.clicked.connect(lambda x: qtanim.toggle_expansion(self.ui.wdgSideBar, x))
+        self.ui.wdgSideBar.setHidden(True)
+
         self.ui.btnSettings.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnSettings))
         self.ui.btnSettings.installEventFilter(OpacityEventFilter(self.ui.btnSettings, 0.9, leaveOpacity=0.7))
         shadow(self.ui.wdgWorldContainer)
@@ -158,7 +165,7 @@ class WorldBuildingView(AbstractNovelView):
 
     def _selection_changed(self, entity: WorldBuildingEntity):
         self._entity = entity
-        self._menuSettings.setEntity(self._entity)
+        self._wdgSettings.setEntity(self._entity)
         self.ui.lineName.setText(self._entity.name)
         self._editor.setEntity(self._entity)
 

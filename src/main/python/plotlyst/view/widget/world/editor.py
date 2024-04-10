@@ -32,7 +32,7 @@ from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp,
     grid, flow, spacer, line, incr_icon, gc, translucent
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter, DragEventFilter, \
     DropEventFilter
-from qtmenu import MenuWidget, TabularGridMenuWidget
+from qtmenu import MenuWidget
 
 from plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityElement, WorldBuildingEntityElementType, \
     BackstoryEvent, Variable, VariableType, \
@@ -44,7 +44,6 @@ from plotlyst.view.common import action, push_btn, frame, insert_before_the_end,
     tool_btn, label, scrolled, wrap, calculate_resized_dimensions
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
-from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.style.text import apply_text_color
 from plotlyst.view.widget.button import DotsMenuButton
 from plotlyst.view.widget.display import Icon, PopupDialog, DragIcon
@@ -1113,31 +1112,32 @@ class EntityLayoutSettings(QWidget):
         return btn
 
 
-class EditorSettingsMenu(TabularGridMenuWidget):
+class WorldBuildingEditorSettingsWidget(QWidget):
     widthChanged = pyqtSignal(int)
     layoutChanged = pyqtSignal(EntityLayoutType)
 
-    def __init__(self, parent, defaultWidth: int):
+    def __init__(self, defaultWidth: int, parent=None):
         super().__init__(parent)
+        vbox(self)
+        margins(self, top=15, left=5, right=15)
+        self.layout().addWidget(label('Entity settings', bold=True, underline=True))
+        self.layout().addWidget(wrap(label('Layout'), margin_left=5))
+        self.layoutSettings = EntityLayoutSettings()
+        self.layoutSettings.layoutChanged.connect(self.layoutChanged)
+        self.layout().addWidget(self.layoutSettings)
 
-        self.tabWorld = self.addTab('World')
-        margins(self.tabWorld, top=15, left=5, right=15)
-        self.tabEntity = self.addTab('Entity')
+        self.layout().addWidget(line())
 
-        self.addSection(self.tabWorld, 'Editor max width', 0, 0, icon=IconRegistry.from_name('ei.resize-horizontal'))
+        self.layout().addWidget(label('Global settings', bold=True, underline=True))
+        self.layout().addWidget(wrap(label('Editor max width'), margin_left=5))
         self._widthSlider = QSlider(Qt.Orientation.Horizontal)
         self._widthSlider.setMinimum(800)
         self._widthSlider.setMaximum(1200)
         self._widthSlider.setValue(defaultWidth)
         self._widthSlider.valueChanged.connect(self.widthChanged)
-        self.addWidget(self.tabWorld, wrap(self._widthSlider, margin_left=10, margin_bottom=15), 1, 0)
+        self.layout().addWidget(wrap(self._widthSlider, margin_left=15))
 
-        self.addSection(self.tabEntity, 'Layout', 0, 0, icon=IconRegistry.from_name('ri.layout-line'))
-        self.layoutSettings = EntityLayoutSettings()
-        self.layoutSettings.layoutChanged.connect(self.layoutChanged)
-        self.addWidget(self.tabEntity, self.layoutSettings, 1, 0)
-
-        apply_white_menu(self)
+        self.layout().addWidget(vspacer())
 
     def setEntity(self, entity: WorldBuildingEntity):
         self.layoutSettings.setEntity(entity)
