@@ -28,9 +28,9 @@ from PyQt6.QtWidgets import QWidget, QFrame
 from overrides import overrides
 from qthandy import bold, flow, incr_font, \
     margins, ask_confirmation, italic, retain_when_hidden, transparent, \
-    clear_layout, vspacer, decr_font, decr_icon, hbox, spacer, sp, pointy, incr_icon, translucent
+    clear_layout, vspacer, decr_icon, spacer, sp, pointy, incr_icon, translucent
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
-from qtmenu import MenuWidget
+from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
@@ -50,7 +50,7 @@ from plotlyst.view.dialog.utility import IconSelectorDialog
 from plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
 from plotlyst.view.generated.plot_widget_ui import Ui_PlotWidget
 from plotlyst.view.icons import IconRegistry, avatars
-from plotlyst.view.widget.button import SecondaryActionPushButton
+from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.characters import CharacterAvatar, CharacterSelectorMenu
 from plotlyst.view.widget.labels import PlotValueLabel
 from plotlyst.view.widget.plot.matrix import StorylinesImpactMatrix
@@ -558,19 +558,30 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         self.btnImpactMatrix.clicked.connect(self._displayImpactMatrix)
 
         menu = MenuWidget(self.btnAdd)
-        menu.addAction(action('Main plot', IconRegistry.storylines_icon(), lambda: self.newPlot(PlotType.Main)))
+        menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         menu.addAction(
-            action('Character arc', IconRegistry.conflict_self_icon(), lambda: self.newPlot(PlotType.Internal)))
-        menu.addAction(action('Subplot', IconRegistry.subplot_icon(), lambda: self.newPlot(PlotType.Subplot)))
+            action('Main plot', IconRegistry.storylines_icon(), slot=lambda: self.newPlot(PlotType.Main),
+                   tooltip="The central storyline that drives the narrative"))
+        menu.addAction(
+            action('Character arc', IconRegistry.conflict_self_icon(), lambda: self.newPlot(PlotType.Internal),
+                   tooltip="The transformation or personal growth of a character"))
+        menu.addAction(
+            action('Subplot', IconRegistry.subplot_icon(), lambda: self.newPlot(PlotType.Subplot),
+                   tooltip="A secondary storyline to complement the main plot"))
 
         submenu = MenuWidget()
         submenu.setTitle('Other')
+        submenu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         submenu.addAction(action('Relationship plot', IconRegistry.from_name('fa5s.people-arrows'),
-                                 slot=lambda: self.newPlot(PlotType.Relation)))
+                                 slot=lambda: self.newPlot(PlotType.Relation),
+                                 tooltip="Relationship dynamics between two characters"))
         submenu.addAction(action('Global storyline', IconRegistry.from_name('fa5s.globe'),
-                                 slot=lambda: self.newPlot(PlotType.Global)))
+                                 slot=lambda: self.newPlot(PlotType.Global),
+                                 tooltip="A broader storyline that can encompass multiple storylines without serving as the central plot itself"))
         menu.addSeparator()
         menu.addMenu(submenu)
+        apply_white_menu(submenu)
+        apply_white_menu(menu)
 
         self.repo = RepositoryPersistenceManager.instance()
 
