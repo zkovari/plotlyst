@@ -323,6 +323,12 @@ class OverlayWidget(QFrame):
         self.setStyleSheet("background-color: rgba(0, 0, 0, 100);")
         self.setFixedSize(self.parent().size())
 
+    @staticmethod
+    def getActiveWindowOverlay() -> 'OverlayWidget':
+        window = QApplication.activeWindow()
+        overlay = OverlayWidget(window)
+        return overlay
+
 
 class StageRecommendationBadge(QFrame):
     def __init__(self, parent=None):

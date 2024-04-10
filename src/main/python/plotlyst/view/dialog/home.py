@@ -35,6 +35,7 @@ from plotlyst.service.tour import TourService
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter
 from plotlyst.view.generated.story_creation_dialog_ui import Ui_StoryCreationDialog
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.display import OverlayWidget
 from plotlyst.view.widget.input import Toggle
 from plotlyst.view.widget.novel import NovelCustomizationWizard
 from plotlyst.view.widget.tour.core import NewStoryTitleInDialogTourEvent, \
@@ -92,8 +93,16 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         self.resize(700, 550)
 
     def display(self) -> Optional[Novel]:
+        overlay = OverlayWidget.getActiveWindowOverlay()
+        overlay.show()
+
         self._scrivenerNovel = None
-        result = self.exec()
+
+        try:
+            result = self.exec()
+        finally:
+            overlay.setHidden(True)
+
         if result == QDialog.DialogCode.Rejected:
             return None
 
