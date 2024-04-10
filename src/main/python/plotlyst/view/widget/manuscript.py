@@ -31,11 +31,11 @@ from PyQt6.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyn
     QFontMetrics, QTextOption, QShowEvent, QIcon
 from PyQt6.QtMultimedia import QSoundEffect
 from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit, QButtonGroup, QCalendarWidget, QTableView, \
-    QPushButton
+    QPushButton, QToolButton, QWidgetItem
 from nltk import WhitespaceTokenizer
 from overrides import overrides
 from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins, vbox, line, bold, vline, decr_font, \
-    underline, transparent, italic, decr_icon
+    underline, transparent, italic, decr_icon, pointy
 from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget, group
 from qttextedit import RichTextEditor, TextBlockState, remove_font, OBJECT_REPLACEMENT_CHARACTER
@@ -1111,6 +1111,10 @@ class ManuscriptProgressCalendar(QCalendarWidget):
         self.setFirstDayOfWeek(Qt.DayOfWeek.Monday)
         item = self.layout().itemAt(0)
         item.widget().setStyleSheet(f'.QWidget {{background-color: {PLOTLYST_SECONDARY_COLOR};}}')
+
+        self._initButton(item.widget().layout().itemAt(0), 'ei.circle-arrow-left')
+        self._initButton(item.widget().layout().itemAt(6), 'ei.circle-arrow-right')
+
         item = self.layout().itemAt(1)
         if isinstance(item.widget(), QTableView):
             item.widget().setStyleSheet(f'''
@@ -1161,6 +1165,13 @@ class ManuscriptProgressCalendar(QCalendarWidget):
             else:
                 painter.setPen(QColor('black'))
             painter.drawText(rect.toRectF(), str(date.day()), option)
+
+    def _initButton(self, btnItem: QWidgetItem, icon: str):
+        if btnItem and btnItem.widget() and isinstance(btnItem.widget(), QToolButton):
+            btn = btnItem.widget()
+            transparent(btn)
+            pointy(btn)
+            btn.setIcon(IconRegistry.from_name(icon, RELAXED_WHITE_COLOR))
 
 
 class ManuscriptProgressCalendarLegend(QWidget):
