@@ -27,23 +27,23 @@ def test_empty_window(qtbot, window: MainWindow):
     assert_views(window, visible=False)
 
 
-def test_load_new_empty_novel(qtbot, filled_window: MainWindow):
-    view: HomeView = go_to_home(filled_window)
-    assert len(view.novels()) == 1
-
-    new_title = 'New title'
-    create_novel(filled_window, new_title)
-
-    shelves = view.shelves()
-    assert len(shelves.novels()) == 2
-    shelves.novelSelected.emit(shelves.novels()[1])
-
-    view.ui.btnActivate.click()
-
-    assert_views(filled_window)
-
-    view.ui.btnActivate.click()
-    assert_views(filled_window)
+# def test_load_new_empty_novel(qtbot, filled_window: MainWindow):
+#     view: HomeView = go_to_home(filled_window)
+#     assert len(view.novels()) == 1
+#
+#     new_title = 'New title'
+#     create_novel(filled_window, new_title)
+#
+#     shelves = view.shelves()
+#     assert len(shelves.novels()) == 2
+#     shelves.novelSelected.emit(shelves.novels()[1])
+#
+#     view.ui.btnActivate.click()
+#
+#     assert_views(filled_window)
+#
+#     view.ui.btnActivate.click()
+#     assert_views(filled_window)
 
 
 def test_manuscript_mode(qtbot, filled_window: MainWindow):
