@@ -535,8 +535,13 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.wdgStoryStructureParent.setVisible(toggled)
         if toggled:
             self.ui.btnStoryStructureSelector.setVisible(len(self.novel.story_structures) > 1)
+            if self.ui.btnStoryStructureSelector.isVisible():
+                self.ui.btnStoryStructure.setProperty('side-button-right', True)
+                restyle(self.ui.btnStoryStructure)
         else:
             self.ui.btnStoryStructureSelector.setHidden(True)
+            self.ui.btnStoryStructure.setProperty('side-button-right', False)
+            restyle(self.ui.btnStoryStructure)
 
     @busy
     def _active_story_structure_changed(self, structure: StoryStructure):

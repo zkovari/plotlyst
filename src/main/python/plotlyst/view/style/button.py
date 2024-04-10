@@ -222,8 +222,6 @@ btn_style_structure_customization = """
     }
 """
 
-# Continued from the previous code
-
 btn_style_tool_button_base = """
     QToolButton::menu-indicator {
         width:0px;
@@ -235,7 +233,17 @@ btn_style_tool_button_base = """
         border-radius: 6px;
         padding: 2px;
     }
-
+    
+    QToolButton[side-button-right=true] {
+        border-bottom-right-radius: 0px;
+        border-top-right-radius: 0px;
+    }
+    
+    QToolButton[side-button-left=true] {
+        border-bottom-left-radius: 0px;
+        border-top-left-radius: 0px;
+    }
+    
     QToolButton:hover[base=true] {
         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                           stop: 0 #c3c4c7, stop: 1 #f6f7fa);

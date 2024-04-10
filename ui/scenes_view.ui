@@ -627,6 +627,9 @@
               <property name="base" stdset="0">
                <bool>true</bool>
               </property>
+              <property name="side-button-left" stdset="0">
+               <bool>true</bool>
+              </property>
              </widget>
             </item>
            </layout>
@@ -1385,7 +1388,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="btnGroupStoryMapView"/>
   <buttongroup name="btnGroupViews"/>
+  <buttongroup name="btnGroupStoryMapView"/>
  </buttongroups>
 </ui>
