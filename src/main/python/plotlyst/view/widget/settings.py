@@ -25,7 +25,7 @@ from PyQt6.QtCore import pyqtSignal, Qt, QSize, QEvent
 from PyQt6.QtGui import QIcon, QColor
 from PyQt6.QtWidgets import QWidget, QPushButton, QToolButton, QGridLayout
 from overrides import overrides
-from qthandy import transparent, sp, vbox, hbox, vspacer, incr_font, pointy, grid, margins
+from qthandy import transparent, sp, vbox, hbox, vspacer, incr_font, pointy, grid, margins, line
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -37,7 +37,8 @@ from plotlyst.events import NovelMindmapToggleEvent, NovelPanelCustomizationEven
     NovelStructureToggleEvent, NovelStorylinesToggleEvent, NovelCharactersToggleEvent, NovelScenesToggleEvent, \
     NovelWorldBuildingToggleEvent, NovelManuscriptToggleEvent, NovelDocumentsToggleEvent, NovelManagementToggleEvent, \
     NovelEmotionTrackingToggleEvent, NovelMotivationTrackingToggleEvent, NovelConflictTrackingToggleEvent, \
-    NovelPovTrackingToggleEvent
+    NovelPovTrackingToggleEvent, NovelCharacterEnneagramToggleEvent, NovelCharacterMbtiToggleEvent, \
+    NovelCharacterLoveStyleToggleEvent, NovelCharacterWorkStyleToggleEvent
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import label, ButtonPressResizeEventFilter
 from plotlyst.view.icons import IconRegistry
@@ -58,7 +59,11 @@ setting_titles: Dict[NovelSetting, str] = {
     NovelSetting.Manuscript: 'Manuscript',
     NovelSetting.Documents: 'Documents',
     NovelSetting.Management: 'Task management',
-    NovelSetting.Track_pov: 'Point of view'
+    NovelSetting.Track_pov: 'Point of view',
+    NovelSetting.Character_enneagram: 'Enneagram personality type',
+    NovelSetting.Character_mbti: 'MBTI personality type',
+    NovelSetting.Character_love_style: 'Love style',
+    NovelSetting.Character_work_style: 'Work style',
 }
 setting_descriptions: Dict[NovelSetting, str] = {
     NovelSetting.Structure: "Follow a story structure to help you with your story's pacing and escalation",
@@ -69,11 +74,15 @@ setting_descriptions: Dict[NovelSetting, str] = {
     NovelSetting.Track_emotion: "Track and visualize how characters' emotions shift between positive and negative throughout the scenes",
     NovelSetting.Track_motivation: "Track and visualize how characters' motivation change throughout the scenes",
     NovelSetting.Track_conflict: 'Track the frequency and the type of conflicts the characters face',
-    NovelSetting.World_building: "[BETA] Develop your story's world by creating fictional settings and lore",
+    NovelSetting.World_building: "Develop your story's world by creating fictional settings and lore",
     NovelSetting.Manuscript: "Write your story in Plotlyst using the manuscript panel",
     NovelSetting.Documents: "Add documents for your planning or research",
     NovelSetting.Management: "Stay organized by tracking your tasks in a simple Kanban board",
-    NovelSetting.Track_pov: "Track the point of view characters of your story"
+    NovelSetting.Track_pov: "Track the point of view characters of your story",
+    NovelSetting.Character_enneagram: 'Consider enneagram personality type for characters',
+    NovelSetting.Character_mbti: 'Consider MBTI personality type for characters',
+    NovelSetting.Character_love_style: "Consider the characters' preferred love style",
+    NovelSetting.Character_work_style: "Consider the characters' most typical working style",
 }
 
 panel_events = [NovelMindmapToggleEvent, NovelCharactersToggleEvent,
@@ -87,6 +96,10 @@ setting_events: Dict[NovelSetting, NovelPanelCustomizationEvent] = {
     NovelSetting.Mindmap: NovelMindmapToggleEvent,
     NovelSetting.Storylines: NovelStorylinesToggleEvent,
     NovelSetting.Characters: NovelCharactersToggleEvent,
+    NovelSetting.Character_enneagram: NovelCharacterEnneagramToggleEvent,
+    NovelSetting.Character_mbti: NovelCharacterMbtiToggleEvent,
+    NovelSetting.Character_love_style: NovelCharacterLoveStyleToggleEvent,
+    NovelSetting.Character_work_style: NovelCharacterWorkStyleToggleEvent,
     NovelSetting.Scenes: NovelScenesToggleEvent,
     NovelSetting.Track_emotion: NovelEmotionTrackingToggleEvent,
     NovelSetting.Track_motivation: NovelMotivationTrackingToggleEvent,
@@ -108,6 +121,14 @@ def setting_icon(setting: NovelSetting, color=PLOTLYST_SECONDARY_COLOR, color_on
         return IconRegistry.storylines_icon(color=color, color_on=color_on)
     elif setting == NovelSetting.Characters:
         return IconRegistry.character_icon(color=color, color_on=color_on)
+    elif setting == NovelSetting.Character_enneagram:
+        return IconRegistry.from_name('mdi.numeric-9-circle', color=color, color_on=color_on)
+    elif setting == NovelSetting.Character_mbti:
+        return IconRegistry.from_name('mdi.head-question-outline', color=color, color_on=color_on)
+    elif setting == NovelSetting.Character_love_style:
+        return IconRegistry.from_name('fa5s.heart', color=color, color_on=color_on)
+    elif setting == NovelSetting.Character_work_style:
+        return IconRegistry.from_name('fa5s.briefcase', color=color, color_on=color_on)
     elif setting == NovelSetting.Scenes:
         return IconRegistry.scene_icon(color=color, color_on=color_on)
     elif setting == NovelSetting.Track_emotion:
@@ -388,7 +409,12 @@ class NovelSettingsWidget(QWidget, EventListener):
         self._addSettingToggle(NovelSetting.Mindmap)
         self._addSettingToggle(NovelSetting.Structure)
         self._addSettingToggle(NovelSetting.Storylines)
-        self._addSettingToggle(NovelSetting.Characters)
+        wdgCharacters = self._addSettingToggle(NovelSetting.Characters)
+        self._addSettingToggle(NovelSetting.Character_enneagram, wdgCharacters)
+        self._addSettingToggle(NovelSetting.Character_mbti, wdgCharacters)
+        self._addSettingToggle(NovelSetting.Character_love_style, wdgCharacters)
+        self._addSettingToggle(NovelSetting.Character_work_style, wdgCharacters)
+
         wdgScenes = self._addSettingToggle(NovelSetting.Scenes)
         self._addSettingToggle(NovelSetting.Track_pov, wdgScenes)
         # wdgPov = NovelPovSettingWidget()
@@ -418,6 +444,7 @@ class NovelSettingsWidget(QWidget, EventListener):
             parent.addChild(toggle)
         else:
             self.layout().addWidget(toggle)
+            self.layout().addWidget(line())
 
         return toggle
 

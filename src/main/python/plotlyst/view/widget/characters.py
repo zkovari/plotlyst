@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from dataclasses import dataclass
 from functools import partial
-from typing import Iterable, List, Optional, Dict, Union
+from typing import Iterable, List, Optional, Dict, Union, Tuple
 
 from PyQt6.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QByteArray, QBuffer, QIODevice
 from PyQt6.QtGui import QIcon, QColor, QImageReader, QImage, QPixmap, \
@@ -718,7 +718,8 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
         self._addLabel(self.RowGender, 'Gender', IconRegistry.male_gender_icon())
         self._addLine(self.RowGender + 1)
 
-        fields = {}
+        fields: Dict[str, Tuple[
+            CharactersProgressWidget.Header, TemplateField]] = {}  # field ids pointing to their fields and headers
         headers: Dict[CharactersProgressWidget.Header, int] = {}
         header: Optional[CharactersProgressWidget.Header] = None
         row = self.RowGender + 1
@@ -729,8 +730,9 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
                 header = self.Header(el.field, row)
                 headers[header] = 0
             elif not el.field.type.name.startswith('DISPLAY') and header:
-                fields[str(el.field.id)] = header
-                header.max_value = header.max_value + 1
+                fields[str(el.field.id)] = (header, el.field)
+                if el.field.enabled:
+                    header.max_value = header.max_value + 1
 
         row += 1
         self._addLine(row)
@@ -746,7 +748,8 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
         self._chartSecondary.refresh()
         self._chartMinor.refresh()
 
-    def _updateForCharacter(self, char: Character, fields, headers, row: int, col: int):
+    def _updateForCharacter(self, char: Character, fields: Dict[str, Tuple[Header, TemplateField]], headers, row: int,
+                            col: int):
         name_progress = CircularProgressBar(parent=self)
         if char.name:
             name_progress.setValue(1)
@@ -771,7 +774,10 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
         for value in char.template_values:
             if str(value.id) not in fields.keys():
                 continue
-            header = fields[str(value.id)]
+            if not fields[str(value.id)][1].enabled:
+                continue
+
+            header = fields[str(value.id)][0]
             if not header.header.required and char.is_minor():
                 continue
             if not char.disabled_template_headers.get(str(header.header.id), header.header.enabled):

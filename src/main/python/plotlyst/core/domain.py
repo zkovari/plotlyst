@@ -2905,6 +2905,10 @@ class NovelSetting(Enum):
     SCENE_TABLE_PURPOSE = 'scene_table_purpose'
     SCENE_TABLE_CHARACTERS = 'scene_table_characters'
     SCENE_TABLE_STORYLINES = 'scene_table_storylines'
+    Character_enneagram = 'character_enneagram'
+    Character_mbti = 'character_mbti'
+    Character_love_style = 'character_love_style'
+    Character_work_style = 'character_work_style'
 
     def scene_card_setting(self) -> bool:
         return self.name.startswith('SCENE_CARD')

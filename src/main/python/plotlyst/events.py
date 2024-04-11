@@ -159,6 +159,26 @@ class NovelCharactersToggleEvent(NovelPanelCustomizationEvent):
 
 
 @dataclass
+class NovelCharacterEnneagramToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
+class NovelCharacterMbtiToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
+class NovelCharacterLoveStyleToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
+class NovelCharacterWorkStyleToggleEvent(NovelPanelCustomizationEvent):
+    pass
+
+
+@dataclass
 class NovelScenesToggleEvent(NovelPanelCustomizationEvent):
     pass
 

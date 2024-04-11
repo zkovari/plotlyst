@@ -31,10 +31,13 @@ from qtmenu import MenuWidget
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Novel, Character, LayoutType, CardSizeRatio
+from plotlyst.core.template import enneagram_field, mbti_field, love_style_field, disc_field
 from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, Event, emit_event
 from plotlyst.event.handler import event_dispatchers, global_event_dispatcher
-from plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent, NovelSyncEvent
+from plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent, NovelSyncEvent, NovelPanelCustomizationEvent, \
+    NovelCharacterEnneagramToggleEvent, NovelCharacterMbtiToggleEvent, NovelCharacterLoveStyleToggleEvent, \
+    NovelCharacterWorkStyleToggleEvent
 from plotlyst.model.characters_model import CharactersTableModel
 from plotlyst.model.common import proxy
 from plotlyst.resources import resource_registry
@@ -89,7 +92,8 @@ class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
 class CharactersView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        super().__init__(novel)
+        super().__init__(novel, event_types=[NovelCharacterEnneagramToggleEvent, NovelCharacterMbtiToggleEvent,
+                                             NovelCharacterLoveStyleToggleEvent, NovelCharacterWorkStyleToggleEvent])
         self.ui = Ui_CharactersView()
         self.ui.setupUi(self.widget)
         self.editor: Optional[CharacterEditor] = None
@@ -212,6 +216,8 @@ class CharactersView(AbstractNovelView):
     def event_received(self, event: Event):
         if isinstance(event, TourEvent):
             self.__handle_tour_event(event)
+        elif isinstance(event, NovelPanelCustomizationEvent):
+            self.__handle_customizatio_event(event)
         else:
             super().event_received(event)
 
@@ -378,3 +384,21 @@ class CharactersView(AbstractNovelView):
             self._tour_service.addWidget(self.ui.btnProgressView, event)
         elif isinstance(event, CharacterDisplayTourEvent):
             self._tour_service.addWidget(self.widget, event)
+
+    def __handle_customizatio_event(self, event: NovelPanelCustomizationEvent):
+        if isinstance(event, NovelCharacterEnneagramToggleEvent):
+            field = enneagram_field
+        elif isinstance(event, NovelCharacterMbtiToggleEvent):
+            field = mbti_field
+        elif isinstance(event, NovelCharacterLoveStyleToggleEvent):
+            field = love_style_field
+        elif isinstance(event, NovelCharacterWorkStyleToggleEvent):
+            field = disc_field
+        else:
+            return
+
+        for el in self.novel.character_profiles[0].elements:
+            if field.id == el.field.id:
+                el.field.enabled = event.toggled
+                self.repo.update_novel(self.novel)
+                break

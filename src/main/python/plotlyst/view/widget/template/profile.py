@@ -94,6 +94,8 @@ class _ProfileTemplateBase(QWidget):
         self._headers.clear()
 
         for el in self._profile.elements:
+            if not el.field.enabled:
+                continue
             widget = TemplateFieldWidgetFactory.widget(el.field, self)
             if el.margins:
                 widget.setContentsMargins(el.margins.left, el.margins.top, el.margins.right, el.margins.bottom)
