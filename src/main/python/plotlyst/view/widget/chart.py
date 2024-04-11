@@ -304,28 +304,39 @@ class EnneagramChart(BaseChart):
 class ManuscriptLengthChart(BaseChart):
     def __init__(self, parent=None):
         super(ManuscriptLengthChart, self).__init__(parent)
-        self.setTitle('<b>Manuscript length per chapters</b>')
+        self._byScenes: bool = False
+
+    def setDisplayByScenes(self, display: bool):
+        self._byScenes = display
 
     def refresh(self, novel: Novel):
         self.reset()
+        self.setTitle(f'<b>Manuscript length per {"scenes" if self._byScenes else "chapters"}</b>')
 
-        self.setMinimumWidth(max(len(novel.chapters), 15) * 35)
-
-        set_ = QBarSet('Chapter')
-        for i, chapter in enumerate(novel.chapters):
-            chapter_wc = 0
-            for scene in novel.scenes_in_chapter(chapter):
+        self.setMinimumWidth(max(len(self._xData(novel)), 15) * 35)
+        if self._byScenes:
+            set_ = QBarSet('Scene')
+            for scene in novel.scenes:
+                scene_wc = 0
                 if scene.manuscript and scene.manuscript.statistics:
-                    chapter_wc += scene.manuscript.statistics.wc
-            set_.append(chapter_wc)
+                    scene_wc += scene.manuscript.statistics.wc
+                set_.append(scene_wc)
+        else:
+            set_ = QBarSet('Chapter')
+            for i, chapter in enumerate(novel.chapters):
+                chapter_wc = 0
+                for scene in novel.scenes_in_chapter(chapter):
+                    if scene.manuscript and scene.manuscript.statistics:
+                        chapter_wc += scene.manuscript.statistics.wc
+                set_.append(chapter_wc)
 
         series = QBarSeries()
         series.append(set_)
-        if len(novel.chapters) < 5:
+        if len(self._xData(novel)) < 5:
             series.setBarWidth(0.1)
 
         axis_x = QBarCategoryAxis()
-        axis_x_values = [*range(1, len(novel.chapters) + 1)]
+        axis_x_values = [*range(1, len(self._xData(novel)) + 1)]
         axis_x_values = [str(x) for x in axis_x_values]
         axis_x.append(axis_x_values)
         self.addAxis(axis_x, Qt.AlignmentFlag.AlignBottom)
@@ -336,6 +347,12 @@ class ManuscriptLengthChart(BaseChart):
         self.addSeries(series)
         series.attachAxis(axis_x)
         series.attachAxis(axis_y)
+
+    def _xData(self, novel: Novel):
+        if self._byScenes:
+            return novel.scenes
+        else:
+            return novel.chapters
 
 
 class ActDistributionChart(BaseChart):

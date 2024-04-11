@@ -12,9 +12,14 @@ class ManuscriptReport(AbstractReport, Ui_ManuscriptReport):
         super(ManuscriptReport, self).__init__(novel, parent)
         self.chart_manuscript = ManuscriptLengthChart()
         self.chartChaptersLength.setChart(self.chart_manuscript)
+        self.cbScenesToggle.toggled.connect(self.setDisplayByScenes)
 
         self.refresh()
 
     @overrides
     def refresh(self):
+        self.chart_manuscript.refresh(self.novel)
+
+    def setDisplayByScenes(self, display: bool):
+        self.chart_manuscript.setDisplayByScenes(display)
         self.chart_manuscript.refresh(self.novel)
