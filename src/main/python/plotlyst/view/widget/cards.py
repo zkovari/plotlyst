@@ -38,6 +38,7 @@ from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.generated.character_card_ui import Ui_CharacterCard
 from plotlyst.view.generated.scene_card_ui import Ui_SceneCard
 from plotlyst.view.icons import IconRegistry, set_avatar, avatars
+from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.labels import CharacterAvatarLabel
 
 
@@ -145,7 +146,7 @@ class CharacterCard(Ui_CharacterCard, Card):
             self.btnEnneagram.setToolTip(enneagram_help[enneagram.text])
         mbti = self.character.mbti()
         if mbti:
-            self.btnMbti.setStyleSheet(f'color: {mbti.icon_color};border:0px;')
+            apply_button_palette_color(self.btnMbti, mbti.icon_color)
             self.btnMbti.setText(mbti.text)
             self.btnMbti.setIcon(IconRegistry.from_name(mbti.icon, mbti.icon_color))
             self.btnMbti.setToolTip(mbti_help[mbti.text])
