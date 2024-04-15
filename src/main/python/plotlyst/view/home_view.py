@@ -39,7 +39,7 @@ from plotlyst.service.persistence import flush_or_fail
 from plotlyst.service.tour import TourService
 from plotlyst.view._view import AbstractView
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, action, \
-    TooltipPositionEventFilter, open_url
+    TooltipPositionEventFilter, open_url, push_btn, wrap
 from plotlyst.view.dialog.home import StoryCreationDialog
 from plotlyst.view.generated.home_view_ui import Ui_HomeView
 from plotlyst.view.icons import IconRegistry
@@ -161,8 +161,13 @@ class HomeView(AbstractView):
         menu = MenuWidget(self.ui.btnNovelSettings)
         menu.addAction(action('Delete', IconRegistry.trash_can_icon(), lambda: self._on_delete()))
 
+        self._btnAddNew = push_btn(IconRegistry.plus_icon(RELAXED_WHITE_COLOR), tooltip='Add a new story',
+                                   properties=['base', 'positive'])
+        self._btnAddNew.clicked.connect(self._add_new_novel)
         self._shelvesTreeView = ShelvesTreeView(settings=TreeSettings(font_incr=1))
         self.ui.splitterLibrary.setSizes([150, 500])
+        self.ui.wdgShelvesParent.layout().addWidget(wrap(self._btnAddNew, margin_left=10, margin_top=10),
+                                                    alignment=Qt.AlignmentFlag.AlignLeft)
         self.ui.wdgShelvesParent.layout().addWidget(self._shelvesTreeView)
         self._shelvesTreeView.novelSelected.connect(self._novel_selected)
         self._shelvesTreeView.novelChanged.connect(self._novel_changed_in_browser)

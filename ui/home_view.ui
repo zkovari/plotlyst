@@ -684,7 +684,7 @@ It offers a range of tools to support various stages of novel writing, including
                     <cursorShape>PointingHandCursor</cursorShape>
                    </property>
                    <property name="toolTip">
-                    <string>Add new story</string>
+                    <string>Add a new story</string>
                    </property>
                    <property name="text">
                     <string>Add a new story</string>
