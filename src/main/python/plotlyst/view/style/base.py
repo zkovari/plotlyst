@@ -135,6 +135,20 @@ TaskWidget {
     border-radius: 6px;
 }
 
+QSplitter::handle:horizontal {
+    width: 20px;
+    border: 0px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+QSplitter::handle:horizontal:hover {
+    border-left: 2px dashed #4B0763;
+}
+
+QSplitter::handle:horizontal:pressed {
+    border-left: 2px solid #4B0763;
+}
+
 '''
 
 
