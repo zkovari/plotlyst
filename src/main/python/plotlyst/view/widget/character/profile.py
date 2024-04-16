@@ -26,8 +26,9 @@ from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 from qthandy import vbox, clear_layout, hbox, bold, underline, spacer, vspacer
 
-from plotlyst.core.domain import Character, CharacterProfileSectionType, CharacterProfileSectionReference
-from plotlyst.view.common import tool_btn
+from plotlyst.core.domain import Character, CharacterProfileSectionType, CharacterProfileSectionReference, \
+    CharacterProfileFieldReference, CharacterProfileFieldType
+from plotlyst.view.common import tool_btn, label, wrap
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.button import CollapseButton
 from plotlyst.view.widget.progress import CircularProgressBar
@@ -36,9 +37,6 @@ from plotlyst.view.widget.progress import CircularProgressBar
 class ProfileFieldWidget(QWidget):
     valueFilled = pyqtSignal(float)
     valueReset = pyqtSignal()
-
-    # def __init__(self, parent=None):
-    #     super().__init__(parent)
 
 
 class ProfileSectionWidget(ProfileFieldWidget):
@@ -67,10 +65,10 @@ class ProfileSectionWidget(ProfileFieldWidget):
 
     def attachWidget(self, widget: ProfileFieldWidget):
         self.children.append(widget)
-        if not widget.field.type.is_display():
-            self.progressStatuses[widget] = False
-        widget.valueFilled.connect(partial(self._valueFilled, widget))
-        widget.valueReset.connect(partial(self._valueReset, widget))
+        # if not widget.field.type.is_display():
+        self.progressStatuses[widget] = False
+        # widget.valueFilled.connect(partial(self._valueFilled, widget))
+        # widget.valueReset.connect(partial(self._valueReset, widget))
 
     def updateProgress(self):
         self.progress.setMaxValue(len(self.progressStatuses.keys()))
@@ -113,14 +111,31 @@ class CharacterProfileEditor(QWidget):
         character.profile.clear()
         character.profile.extend(
             [
-                CharacterProfileSectionReference(CharacterProfileSectionType.Summary),
-                CharacterProfileSectionReference(CharacterProfileSectionType.Personality),
-                CharacterProfileSectionReference(CharacterProfileSectionType.Philosophy),
-                CharacterProfileSectionReference(CharacterProfileSectionType.Strengths),
-                CharacterProfileSectionReference(CharacterProfileSectionType.Faculties),
-                CharacterProfileSectionReference(CharacterProfileSectionType.Flaws),
-                CharacterProfileSectionReference(CharacterProfileSectionType.Baggage),
-                CharacterProfileSectionReference(CharacterProfileSectionType.Goals),
+                CharacterProfileSectionReference(CharacterProfileSectionType.Summary, fields=[
+                    CharacterProfileFieldReference(CharacterProfileFieldType.Field_Summary)
+                ]),
+                CharacterProfileSectionReference(CharacterProfileSectionType.Personality, fields=[
+                    CharacterProfileFieldReference(CharacterProfileFieldType.Field_Personality),
+                    CharacterProfileFieldReference(CharacterProfileFieldType.Field_Traits),
+                ]),
+                CharacterProfileSectionReference(CharacterProfileSectionType.Philosophy, fields=[
+                    CharacterProfileFieldReference(CharacterProfileFieldType.Field_Values)
+                ]),
+                CharacterProfileSectionReference(CharacterProfileSectionType.Strengths, fields=[
+                    CharacterProfileFieldReference(CharacterProfileFieldType.Field_Strengths)
+                ]),
+                CharacterProfileSectionReference(CharacterProfileSectionType.Faculties, fields=[
+                    CharacterProfileFieldReference(CharacterProfileFieldType.Field_Faculties)
+                ]),
+                CharacterProfileSectionReference(CharacterProfileSectionType.Flaws, fields=[
+                    CharacterProfileFieldReference(CharacterProfileFieldType.Field_Flaws)
+                ]),
+                CharacterProfileSectionReference(CharacterProfileSectionType.Baggage, fields=[
+                    CharacterProfileFieldReference(CharacterProfileFieldType.Field_Baggage)
+                ]),
+                CharacterProfileSectionReference(CharacterProfileSectionType.Goals, fields=[
+                    CharacterProfileFieldReference(CharacterProfileFieldType.Field_Goals)
+                ]),
 
             ]
         )
@@ -137,5 +152,9 @@ class CharacterProfileEditor(QWidget):
         for section in self._character.profile:
             wdg = ProfileSectionWidget(section)
             self.layout().addWidget(wdg)
+            for field in section.fields:
+                fieldWdg = label(field.type.name)
+                self.layout().addWidget(wrap(fieldWdg, margin_left=20))
+                wdg.attachWidget(fieldWdg)
 
         self.layout().addWidget(vspacer())
