@@ -38,7 +38,6 @@ from plotlyst.resources import resource_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.service.tour import TourService
 from plotlyst.view.common import emoji_font, set_tab_icon, wrap, ButtonPressResizeEventFilter, set_tab_visible
-from plotlyst.view.dialog.template import customize_character_profile
 from plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_bg_image, apply_white_menu
@@ -47,7 +46,6 @@ from plotlyst.view.widget.character.editor import CharacterRoleSelector
 from plotlyst.view.widget.character.plan import CharacterPlansWidget
 from plotlyst.view.widget.character.profile import CharacterProfileEditor
 from plotlyst.view.widget.character.topic import CharacterTopicsEditor
-from plotlyst.view.widget.template import CharacterProfileTemplateView
 from plotlyst.view.widget.tour.core import CharacterEditorTourEvent, \
     CharacterEditorNameLineEditTourEvent, TourEvent, CharacterEditorNameFilledTourEvent, \
     CharacterEditorAvatarDisplayTourEvent, CharacterEditorAvatarMenuTourEvent, CharacterEditorBackButtonTourEvent, \
@@ -219,13 +217,6 @@ class CharacterEditor(QObject, EventListener):
             self.__handle_tour_event(event)
         elif isinstance(event, NovelAboutToSyncEvent):
             self._save()
-
-    def _customize_profile(self):
-        profile_index = 0
-        updated = customize_character_profile(self.novel, profile_index, self.widget)
-        if not updated:
-            return
-        self.profile = CharacterProfileTemplateView(self.character, self.novel.character_profiles[profile_index])
 
     def _name_edited(self, text: str):
         self.character.name = text

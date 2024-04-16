@@ -388,6 +388,47 @@ class CharacterPreferences:
     avatar: AvatarPreferences = field(default_factory=AvatarPreferences)
 
 
+class CharacterProfileSectionType(Enum):
+    Summary = 'summary'
+    Personality = 'personality'
+    Philosophy = 'philosophy'
+    Strengths = 'strengths and weaknesses'
+    Faculties = 'faculties'
+    Flaws = 'flaws'
+    Baggage = 'baggage'
+    Goals = 'goals'
+
+
+class CharacterProfileFieldType(Enum):
+    Text = 'text'
+    Image = 'image'
+    Labels = 'labels'
+    Bar = 'bar'
+    Field_Summary = 'summary'
+    Field_Personality = 'personality'
+    Field_Traits = 'traits'
+    Field_Values = 'values'
+    Field_Strengths = 'strengths'
+    Field_Faculties = 'faculties'
+    Field_Flaws = 'flaws'
+    Field_Baggage = 'baggage'
+    Field_Goals = 'goals'
+
+
+@dataclass
+class CharacterProfileFieldReference:
+    type: CharacterProfileFieldType
+    ref: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
+    value: Optional[Any] = field(default=None, metadata=config(exclude=exclude_if_empty))
+
+
+@dataclass
+class CharacterProfileSectionReference:
+    type: Optional[CharacterProfileSectionType] = field(default=None, metadata=config(exclude=exclude_if_empty))
+    ref: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
+    fields: List[CharacterProfileFieldReference] = field(default_factory=list)
+
+
 @dataclass
 class Character:
     name: str
@@ -407,6 +448,7 @@ class Character:
     prefs: CharacterPreferences = field(default_factory=CharacterPreferences)
     topics: List[TemplateValue] = field(default_factory=list)
     big_five: Dict[str, List[int]] = field(default_factory=default_big_five_values)
+    profile: List[CharacterProfileSectionReference] = field(default_factory=list)
 
     def enneagram(self) -> Optional[SelectionItem]:
         for value in self.template_values:

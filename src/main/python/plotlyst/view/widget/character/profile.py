@@ -22,7 +22,7 @@ from typing import Optional
 from PyQt6.QtGui import QResizeEvent
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import vbox
+from qthandy import vbox, clear_layout
 
 from plotlyst.core.domain import Character
 from plotlyst.view.common import tool_btn
@@ -40,8 +40,12 @@ class CharacterProfileEditor(QWidget):
 
     def setCharacter(self, character: Character):
         self._character = character
+        self.refresh()
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
         self.btnCustomize.setGeometry(event.size().width() - 30, 2, 25, 25)
+
+    def refresh(self):
+        clear_layout(self)
