@@ -42,10 +42,10 @@ from plotlyst.view.dialog.template import customize_character_profile
 from plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_bg_image, apply_white_menu
-from plotlyst.view.widget.big_five import BigFivePersonalityWidget
 from plotlyst.view.widget.character.editor import CharacterAgeEditor
 from plotlyst.view.widget.character.editor import CharacterRoleSelector
 from plotlyst.view.widget.character.plan import CharacterPlansWidget
+from plotlyst.view.widget.character.profile import CharacterProfileEditor
 from plotlyst.view.widget.character.topic import CharacterTopicsEditor
 from plotlyst.view.widget.template import CharacterProfileTemplateView
 from plotlyst.view.widget.tour.core import CharacterEditorTourEvent, \
@@ -186,7 +186,8 @@ class CharacterEditor(QObject, EventListener):
         self.wdgTopicsEditor.setCharacter(self.character)
         self.ui.tabTopics.layout().addWidget(self.wdgTopicsEditor)
 
-        self.profile = CharacterProfileTemplateView(self.character, self.novel.character_profiles[0])
+        self.profile = CharacterProfileEditor()
+        self.profile.setCharacter(self.character)
         self.ui.wdgProfile.layout().addWidget(self.profile)
 
         self.ui.wdgBackstory.setCharacter(self.character)
