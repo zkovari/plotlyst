@@ -25,8 +25,7 @@ from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 from qthandy import vbox, clear_layout, hbox, bold, underline, spacer, vspacer, margins
 
-from plotlyst.core.domain import Character, CharacterProfileSectionType, CharacterProfileSectionReference, \
-    CharacterProfileFieldReference, CharacterProfileFieldType
+from plotlyst.core.domain import Character, CharacterProfileSectionReference
 from plotlyst.view.common import tool_btn, label
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.button import CollapseButton
@@ -115,38 +114,6 @@ class CharacterProfileEditor(QWidget):
 
     def setCharacter(self, character: Character):
         self._character = character
-
-        character.profile.clear()
-        character.profile.extend(
-            [
-                CharacterProfileSectionReference(CharacterProfileSectionType.Summary, fields=[
-                    CharacterProfileFieldReference(CharacterProfileFieldType.Field_Summary)
-                ]),
-                CharacterProfileSectionReference(CharacterProfileSectionType.Personality, fields=[
-                    CharacterProfileFieldReference(CharacterProfileFieldType.Field_Personality),
-                    CharacterProfileFieldReference(CharacterProfileFieldType.Field_Traits),
-                ]),
-                CharacterProfileSectionReference(CharacterProfileSectionType.Philosophy, fields=[
-                    CharacterProfileFieldReference(CharacterProfileFieldType.Field_Values)
-                ]),
-                CharacterProfileSectionReference(CharacterProfileSectionType.Strengths, fields=[
-                    CharacterProfileFieldReference(CharacterProfileFieldType.Field_Strengths)
-                ]),
-                CharacterProfileSectionReference(CharacterProfileSectionType.Faculties, fields=[
-                    CharacterProfileFieldReference(CharacterProfileFieldType.Field_Faculties)
-                ]),
-                CharacterProfileSectionReference(CharacterProfileSectionType.Flaws, fields=[
-                    CharacterProfileFieldReference(CharacterProfileFieldType.Field_Flaws)
-                ]),
-                CharacterProfileSectionReference(CharacterProfileSectionType.Baggage, fields=[
-                    CharacterProfileFieldReference(CharacterProfileFieldType.Field_Baggage)
-                ]),
-                CharacterProfileSectionReference(CharacterProfileSectionType.Goals, fields=[
-                    CharacterProfileFieldReference(CharacterProfileFieldType.Field_Goals)
-                ]),
-
-            ]
-        )
         self.refresh()
 
     @overrides

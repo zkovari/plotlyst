@@ -429,6 +429,36 @@ class CharacterProfileSectionReference:
     fields: List[CharacterProfileFieldReference] = field(default_factory=list)
 
 
+def default_character_profile() -> List[CharacterProfileSectionReference]:
+    return [
+        CharacterProfileSectionReference(CharacterProfileSectionType.Summary, fields=[
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Summary)
+        ]),
+        CharacterProfileSectionReference(CharacterProfileSectionType.Personality, fields=[
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Personality),
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Traits),
+        ]),
+        CharacterProfileSectionReference(CharacterProfileSectionType.Philosophy, fields=[
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Values)
+        ]),
+        CharacterProfileSectionReference(CharacterProfileSectionType.Strengths, fields=[
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Strengths)
+        ]),
+        CharacterProfileSectionReference(CharacterProfileSectionType.Faculties, fields=[
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Faculties)
+        ]),
+        CharacterProfileSectionReference(CharacterProfileSectionType.Flaws, fields=[
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Flaws)
+        ]),
+        CharacterProfileSectionReference(CharacterProfileSectionType.Baggage, fields=[
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Baggage)
+        ]),
+        CharacterProfileSectionReference(CharacterProfileSectionType.Goals, fields=[
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Goals)
+        ])
+    ]
+
+
 @dataclass
 class Character:
     name: str
@@ -448,7 +478,7 @@ class Character:
     prefs: CharacterPreferences = field(default_factory=CharacterPreferences)
     topics: List[TemplateValue] = field(default_factory=list)
     big_five: Dict[str, List[int]] = field(default_factory=default_big_five_values)
-    profile: List[CharacterProfileSectionReference] = field(default_factory=list)
+    profile: List[CharacterProfileSectionReference] = field(default_factory=default_character_profile)
 
     def enneagram(self) -> Optional[SelectionItem]:
         for value in self.template_values:
