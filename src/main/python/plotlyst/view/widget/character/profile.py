@@ -17,24 +17,66 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional, List, Dict
+from abc import abstractmethod
+from functools import partial
+from typing import Optional, List, Dict, Any
 
 from PyQt6.QtCore import pyqtSignal, Qt, QSize
 from PyQt6.QtGui import QResizeEvent
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QWidget, QLabel, QSizePolicy
 from overrides import overrides
 from qthandy import vbox, clear_layout, hbox, bold, underline, spacer, vspacer, margins
 
-from plotlyst.core.domain import Character, CharacterProfileSectionReference
-from plotlyst.view.common import tool_btn, label
+from plotlyst.core.domain import Character, CharacterProfileSectionReference, CharacterProfileFieldReference, \
+    CharacterProfileFieldType
+from plotlyst.env import app_env
+from plotlyst.view.common import tool_btn
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.layout import group
 from plotlyst.view.widget.button import CollapseButton
+from plotlyst.view.widget.input import AutoAdjustableTextEdit
 from plotlyst.view.widget.progress import CircularProgressBar
 
 
 class ProfileFieldWidget(QWidget):
     valueFilled = pyqtSignal(float)
     valueReset = pyqtSignal()
+
+
+class TemplateFieldWidgetBase(ProfileFieldWidget):
+    def __init__(self, parent=None):
+        super(TemplateFieldWidgetBase, self).__init__(parent)
+        self.lblEmoji = QLabel(self)
+        self.lblEmoji.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        # self.lblEmoji.setToolTip(field.description if field.description else field.placeholder)
+        self.lblName = QLabel(self)
+        self.lblName.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        # self.lblName.setText(self.field.name)
+        # self.lblName.setToolTip(field.description if field.description else field.placeholder)
+
+        # if self.field.emoji:
+        #     self.updateEmoji(emoji.emojize(self.field.emoji))
+        # else:
+        self.lblName.setHidden(True)
+        self.lblEmoji.setHidden(True)
+
+        # if not field.show_label:
+        #     self.lblName.setHidden(True)
+
+        if app_env.is_mac():
+            self._boxSpacing = 1
+            self._boxMargin = 0
+        else:
+            self._boxSpacing = 3
+            self._boxMargin = 1
+
+    @abstractmethod
+    def value(self) -> Any:
+        pass
+
+    @abstractmethod
+    def setValue(self, value: Any):
+        pass
 
 
 class ProfileSectionWidget(ProfileFieldWidget):
@@ -75,8 +117,8 @@ class ProfileSectionWidget(ProfileFieldWidget):
         self.wdgContainer.layout().addWidget(widget)
         # if not widget.field.type.is_display():
         self.progressStatuses[widget] = False
-        # widget.valueFilled.connect(partial(self._valueFilled, widget))
-        # widget.valueReset.connect(partial(self._valueReset, widget))
+        widget.valueFilled.connect(partial(self._valueFilled, widget))
+        widget.valueReset.connect(partial(self._valueReset, widget))
 
     def updateProgress(self):
         self.progress.setMaxValue(len(self.progressStatuses.keys()))
@@ -101,6 +143,60 @@ class ProfileSectionWidget(ProfileFieldWidget):
 
         self.progressStatuses[widget] = 0
         self.progress.setValue(sum(self.progressStatuses.values()))
+
+
+class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
+    def __init__(self, field: CharacterProfileFieldReference, parent=None, minHeight: int = 60):
+        super(SmallTextTemplateFieldWidget, self).__init__(parent)
+        self.field = field
+        _layout = vbox(self, margin=self._boxMargin, spacing=self._boxSpacing)
+        self.wdgEditor = AutoAdjustableTextEdit(height=minHeight)
+        self.wdgEditor.setProperty('white-bg', True)
+        self.wdgEditor.setProperty('rounded', True)
+        self.wdgEditor.setAcceptRichText(False)
+        self.wdgEditor.setTabChangesFocus(True)
+        # self.wdgEditor.setPlaceholderText(field.placeholder)
+        # self.wdgEditor.setToolTip(field.description if field.description else field.placeholder)
+        self.setMaximumWidth(600)
+
+        self._filledBefore: bool = False
+
+        # self.btnNotes = QToolButton()
+
+        self.wdgTop = group(self.lblEmoji, self.lblName, spacer())
+        _layout.addWidget(self.wdgTop)
+        _layout.addWidget(self.wdgEditor)
+
+        self.wdgEditor.textChanged.connect(self._textChanged)
+
+    @overrides
+    def value(self) -> Any:
+        return self.wdgEditor.toPlainText()
+
+    @overrides
+    def setValue(self, value: Any):
+        self.wdgEditor.setText(value)
+
+    def _textChanged(self):
+        if self.wdgEditor.toPlainText() and not self._filledBefore:
+            self.valueFilled.emit(1)
+            self._filledBefore = True
+        elif not self.wdgEditor.toPlainText():
+            self.valueReset.emit()
+            self._filledBefore = False
+
+
+class SummaryField(SmallTextTemplateFieldWidget):
+    def __init__(self, ref: CharacterProfileFieldReference, parent=None):
+        super().__init__(ref, parent)
+        self.wdgEditor.setPlaceholderText("Summarize your character's role in the story")
+
+
+def field_widget(ref: CharacterProfileFieldReference) -> TemplateFieldWidgetBase:
+    if ref.type == CharacterProfileFieldType.Field_Summary:
+        return SummaryField(ref)
+    else:
+        return SmallTextTemplateFieldWidget(ref)
 
 
 class CharacterProfileEditor(QWidget):
@@ -128,7 +224,9 @@ class CharacterProfileEditor(QWidget):
             wdg = ProfileSectionWidget(section)
             self.layout().addWidget(wdg)
             for field in section.fields:
-                fieldWdg = label(field.type.name)
+                fieldWdg = field_widget(field)
                 wdg.attachWidget(fieldWdg)
 
         self.layout().addWidget(vspacer())
+
+        self.btnCustomize.raise_()
