@@ -333,7 +333,7 @@ class CharacterEditor(QObject, EventListener):
             else:
                 self.character.role.icon = 'fa5s.chess-king'
         self.character.name = self.ui.lineName.text()
-        self.character.template_values = self.profile.values()
+        # self.character.template_values = self.profile.values()
 
         self.repo.update_character(self.character, self.ui.wdgAvatar.imageUploaded())
         self.repo.update_novel(self.novel)  # TODO temporary to update custom labels
