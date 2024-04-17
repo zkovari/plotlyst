@@ -146,23 +146,17 @@ class ProfileSectionWidget(ProfileFieldWidget):
 
 
 class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
-    def __init__(self, field: CharacterProfileFieldReference, parent=None, minHeight: int = 60):
+    def __init__(self, parent=None, minHeight: int = 60):
         super(SmallTextTemplateFieldWidget, self).__init__(parent)
-        self.field = field
         _layout = vbox(self, margin=self._boxMargin, spacing=self._boxSpacing)
         self.wdgEditor = AutoAdjustableTextEdit(height=minHeight)
         self.wdgEditor.setProperty('white-bg', True)
         self.wdgEditor.setProperty('rounded', True)
         self.wdgEditor.setAcceptRichText(False)
         self.wdgEditor.setTabChangesFocus(True)
-        self.wdgEditor.setText(self.field.value)
-        # self.wdgEditor.setPlaceholderText(field.placeholder)
-        # self.wdgEditor.setToolTip(field.description if field.description else field.placeholder)
         self.setMaximumWidth(600)
 
         self._filledBefore: bool = False
-
-        # self.btnNotes = QToolButton()
 
         self.wdgTop = group(self.lblEmoji, self.lblName, spacer())
         _layout.addWidget(self.wdgTop)
@@ -190,12 +184,24 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
         self._saveText(text)
 
     def _saveText(self, text: str):
+        pass
+
+
+class NoteField(SmallTextTemplateFieldWidget):
+    def __init__(self, field: CharacterProfileFieldReference, parent=None):
+        super().__init__(parent)
+        self.field = field
+        self.wdgEditor.setText(self.field.value)
+        self.wdgEditor.setPlaceholderText('Write your notes...')
+
+    @overrides
+    def _saveText(self, text: str):
         self.field.value = text
 
 
 class SummaryField(SmallTextTemplateFieldWidget):
-    def __init__(self, ref: CharacterProfileFieldReference, character: Character, parent=None):
-        super().__init__(ref, parent)
+    def __init__(self, character: Character, parent=None):
+        super().__init__(parent=parent)
         self.character = character
         self.wdgEditor.setPlaceholderText("Summarize your character's role in the story")
         self.wdgEditor.setText(self.character.summary)
@@ -207,9 +213,9 @@ class SummaryField(SmallTextTemplateFieldWidget):
 
 def field_widget(ref: CharacterProfileFieldReference, character: Character) -> TemplateFieldWidgetBase:
     if ref.type == CharacterProfileFieldType.Field_Summary:
-        return SummaryField(ref, character)
+        return SummaryField(character)
     else:
-        return SmallTextTemplateFieldWidget(ref)
+        return NoteField(ref)
 
 
 class CharacterProfileEditor(QWidget):
