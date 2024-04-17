@@ -155,6 +155,7 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
         self.wdgEditor.setProperty('rounded', True)
         self.wdgEditor.setAcceptRichText(False)
         self.wdgEditor.setTabChangesFocus(True)
+        self.wdgEditor.setText(self.field.value)
         # self.wdgEditor.setPlaceholderText(field.placeholder)
         # self.wdgEditor.setToolTip(field.description if field.description else field.placeholder)
         self.setMaximumWidth(600)
@@ -178,12 +179,15 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
         self.wdgEditor.setText(value)
 
     def _textChanged(self):
-        if self.wdgEditor.toPlainText() and not self._filledBefore:
+        text = self.wdgEditor.toPlainText()
+        self.field.value = text
+        if text and not self._filledBefore:
             self.valueFilled.emit(1)
             self._filledBefore = True
-        elif not self.wdgEditor.toPlainText():
+        elif not text:
             self.valueReset.emit()
             self._filledBefore = False
+
 
 
 class SummaryField(SmallTextTemplateFieldWidget):
