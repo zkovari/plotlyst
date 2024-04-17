@@ -21,18 +21,22 @@ from abc import abstractmethod
 from functools import partial
 from typing import Optional, List, Dict, Any
 
+import emoji
 from PyQt6.QtCore import pyqtSignal, Qt, QSize
-from PyQt6.QtGui import QResizeEvent
-from PyQt6.QtWidgets import QWidget, QLabel, QSizePolicy
+from PyQt6.QtGui import QResizeEvent, QWheelEvent
+from PyQt6.QtWidgets import QWidget, QLabel, QSizePolicy, QSlider
 from overrides import overrides
-from qthandy import vbox, clear_layout, hbox, bold, underline, spacer, vspacer, margins
+from qthandy import vbox, clear_layout, hbox, bold, underline, spacer, vspacer, margins, pointy
 
 from plotlyst.core.domain import Character, CharacterProfileSectionReference, CharacterProfileFieldReference, \
     CharacterProfileFieldType
+from plotlyst.core.template import TemplateField, iq_field, eq_field, rationalism_field, willpower_field, \
+    creativity_field
 from plotlyst.env import app_env
-from plotlyst.view.common import tool_btn
+from plotlyst.view.common import tool_btn, wrap, emoji_font
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
+from plotlyst.view.style.slider import apply_slider_color
 from plotlyst.view.widget.button import CollapseButton
 from plotlyst.view.widget.input import AutoAdjustableTextEdit
 from plotlyst.view.widget.progress import CircularProgressBar
@@ -78,6 +82,11 @@ class TemplateFieldWidgetBase(ProfileFieldWidget):
     def setValue(self, value: Any):
         pass
 
+    def updateEmoji(self, emoji: str):
+        self.lblEmoji.setFont(emoji_font())
+        self.lblEmoji.setText(emoji)
+        self.lblEmoji.setVisible(True)
+
 
 class ProfileSectionWidget(ProfileFieldWidget):
     headerEnabledChanged = pyqtSignal(bool)
@@ -115,7 +124,6 @@ class ProfileSectionWidget(ProfileFieldWidget):
     def attachWidget(self, widget: ProfileFieldWidget):
         self.children.append(widget)
         self.wdgContainer.layout().addWidget(widget)
-        # if not widget.field.type.is_display():
         self.progressStatuses[widget] = False
         widget.valueFilled.connect(partial(self._valueFilled, widget))
         widget.valueReset.connect(partial(self._valueReset, widget))
@@ -191,7 +199,7 @@ class NoteField(SmallTextTemplateFieldWidget):
     def __init__(self, field: CharacterProfileFieldReference, parent=None):
         super().__init__(parent)
         self.field = field
-        self.wdgEditor.setText(self.field.value)
+        self.setValue(self.field.value)
         self.wdgEditor.setPlaceholderText('Write your notes...')
 
     @overrides
@@ -210,16 +218,103 @@ class SummaryField(SmallTextTemplateFieldWidget):
         super().__init__(parent=parent)
         self.character = character
         self.wdgEditor.setPlaceholderText("Summarize your character's role in the story")
-        self.wdgEditor.setText(self.character.summary)
+        self.setValue(self.character.summary)
 
     @overrides
     def _saveText(self, text: str):
         self.character.summary = text
 
 
+class BarSlider(QSlider):
+    @overrides
+    def wheelEvent(self, event: QWheelEvent) -> None:
+        event.ignore()
+
+
+class BarTemplateFieldWidget(TemplateFieldWidgetBase):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        _layout = vbox(self)
+        self.wdgEditor = BarSlider(Qt.Orientation.Horizontal)
+        pointy(self.wdgEditor)
+        self.wdgEditor.setPageStep(5)
+        self.setMaximumWidth(600)
+
+        _layout.addWidget(group(self.lblEmoji, self.lblName, spacer()))
+        # if self.field.compact:
+        #     editor = group(self.wdgEditor, spacer())
+        #     margins(editor, left=5)
+        #     _layout.addWidget(editor)
+        # else:
+        _layout.addWidget(wrap(self.wdgEditor, margin_left=5))
+
+        self.wdgEditor.valueChanged.connect(self._valueChanged)
+
+    @overrides
+    def value(self) -> Any:
+        return self.wdgEditor.value()
+
+    @overrides
+    def setValue(self, value: Any):
+        self.wdgEditor.setValue(value)
+
+    def _valueChanged(self, value: int):
+        if value:
+            self.valueFilled.emit(1)
+        else:
+            self.valueReset.emit()
+        self._saveValue(value)
+
+    def _saveValue(self, value: int):
+        pass
+
+
+class FacultyField(BarTemplateFieldWidget):
+    def __init__(self, ref: CharacterProfileFieldReference, field: TemplateField, character: Character, parent=None):
+        super().__init__(parent)
+        self.ref = ref
+        self.field = field
+        self.character = character
+
+        self.lblEmoji.setToolTip(field.description if field.description else field.placeholder)
+        self.lblName.setText(self.field.name)
+        self.lblName.setVisible(True)
+        self.lblName.setToolTip(field.description if field.description else field.placeholder)
+
+        if self.field.emoji:
+            self.updateEmoji(emoji.emojize(self.field.emoji))
+        else:
+            self.lblEmoji.setHidden(True)
+
+        self.wdgEditor.setMinimum(field.min_value)
+        self.wdgEditor.setMaximum(field.max_value)
+        if field.color:
+            apply_slider_color(self.wdgEditor, field.color)
+
+        self.setValue(self.character.faculties.get(self.ref.type.value, 0))
+
+    @overrides
+    def _saveValue(self, value: int):
+        self.character.faculties[self.ref.type.value] = value
+
+
 def field_widget(ref: CharacterProfileFieldReference, character: Character) -> TemplateFieldWidgetBase:
     if ref.type == CharacterProfileFieldType.Field_Summary:
         return SummaryField(character)
+    if ref.type.name.startswith('Field_Faculties'):
+        if ref.type == CharacterProfileFieldType.Field_Faculties_IQ:
+            field = iq_field
+        elif ref.type == CharacterProfileFieldType.Field_Faculties_EQ:
+            field = eq_field
+        elif ref.type == CharacterProfileFieldType.Field_Faculties_Rationalism:
+            field = rationalism_field
+        elif ref.type == CharacterProfileFieldType.Field_Faculties_Willpower:
+            field = willpower_field
+        elif ref.type == CharacterProfileFieldType.Field_Faculties_Creativity:
+            field = creativity_field
+        else:
+            raise ValueError(f'Unrecognized field type {ref.type}')
+        return FacultyField(ref, field, character)
     else:
         return NoteField(ref)
 

@@ -409,7 +409,11 @@ class CharacterProfileFieldType(Enum):
     Field_Traits = 'traits'
     Field_Values = 'values'
     Field_Strengths = 'strengths'
-    Field_Faculties = 'faculties'
+    Field_Faculties_IQ = 'iq'
+    Field_Faculties_EQ = 'eq'
+    Field_Faculties_Rationalism = 'rationalism'
+    Field_Faculties_Creativity = 'creativity'
+    Field_Faculties_Willpower = 'willpower'
     Field_Flaws = 'flaws'
     Field_Baggage = 'baggage'
     Field_Goals = 'goals'
@@ -445,7 +449,11 @@ def default_character_profile() -> List[CharacterProfileSectionReference]:
             CharacterProfileFieldReference(CharacterProfileFieldType.Field_Strengths)
         ]),
         CharacterProfileSectionReference(CharacterProfileSectionType.Faculties, fields=[
-            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Faculties)
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Faculties_IQ),
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Faculties_EQ),
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Faculties_Rationalism),
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Faculties_Willpower),
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Faculties_Creativity)
         ]),
         CharacterProfileSectionReference(CharacterProfileSectionType.Flaws, fields=[
             CharacterProfileFieldReference(CharacterProfileFieldType.Field_Flaws)
@@ -480,6 +488,7 @@ class Character:
     big_five: Dict[str, List[int]] = field(default_factory=default_big_five_values)
     profile: List[CharacterProfileSectionReference] = field(default_factory=default_character_profile)
     summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    faculties: Dict[str, int] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
 
     def enneagram(self) -> Optional[SelectionItem]:
         for value in self.template_values:

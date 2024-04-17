@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QLabel, QTextEdit
 from overrides import overrides
 from qthandy import vbox, hbox, line, flow, gc, vspacer, clear_layout, bold, margins
 
-from plotlyst.core.domain import Character, Novel, TemplateValue, LayoutType
+from plotlyst.core.domain import Character, Novel, TemplateValue, LayoutType, CharacterProfileFieldType
 from plotlyst.core.template import iq_field, eq_field, rationalism_field, creativity_field, \
     willpower_field, TemplateField
 from plotlyst.event.core import EventListener, Event, emit_event
@@ -143,16 +143,16 @@ class FacultiesDisplay(QWidget, BaseDisplay):
     @overrides
     def refresh(self):
         self._blockSave = True
-        for value in self._character.template_values:
-            if value.id == iq_field.id:
+        for k, value in self._character.faculties.items():
+            if k == CharacterProfileFieldType.Field_Faculties_IQ.value:
                 self._iqEditor.setValue(value)
-            elif value.id == eq_field.id:
+            elif k == CharacterProfileFieldType.Field_Faculties_EQ.value:
                 self._eqEditor.setValue(value)
-            elif value.id == rationalism_field.id:
+            elif k == CharacterProfileFieldType.Field_Faculties_Rationalism.value:
                 self._ratEditor.setValue(value)
-            elif value.id == creativity_field.id:
+            elif k == CharacterProfileFieldType.Field_Faculties_Creativity.value:
                 self._creaEditor.setValue(value)
-            elif value.id == willpower_field.id:
+            elif k == CharacterProfileFieldType.Field_Faculties_Willpower.value:
                 self._willEditor.setValue(value)
 
         self._blockSave = False
@@ -174,14 +174,15 @@ class FacultiesDisplay(QWidget, BaseDisplay):
             self.lblEmoji.setVisible(False)
 
         @overrides
-        def setValue(self, value: TemplateValue):
+        def setValue(self, value: int):
             self._value = value
-            super().setValue(value.value)
+            super().setValue(value)
 
         @overrides
         def _valueChanged(self, value: int):
-            self._value.value = value
-            self._display.save()
+            pass
+            # self._value.value = value
+            # self._display.save()
 
 
 class BackstoryDisplay(CharacterTimelineWidget, BaseDisplay):
