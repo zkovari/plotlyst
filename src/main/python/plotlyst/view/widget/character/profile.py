@@ -180,7 +180,6 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
 
     def _textChanged(self):
         text = self.wdgEditor.toPlainText()
-        self.field.value = text
         if text and not self._filledBefore:
             self.valueFilled.emit(1)
             self._filledBefore = True
@@ -188,17 +187,27 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
             self.valueReset.emit()
             self._filledBefore = False
 
+        self._saveText(text)
+
+    def _saveText(self, text: str):
+        self.field.value = text
 
 
 class SummaryField(SmallTextTemplateFieldWidget):
-    def __init__(self, ref: CharacterProfileFieldReference, parent=None):
+    def __init__(self, ref: CharacterProfileFieldReference, character: Character, parent=None):
         super().__init__(ref, parent)
+        self.character = character
         self.wdgEditor.setPlaceholderText("Summarize your character's role in the story")
+        self.wdgEditor.setText(self.character.summary)
+
+    @overrides
+    def _saveText(self, text: str):
+        self.character.summary = text
 
 
-def field_widget(ref: CharacterProfileFieldReference) -> TemplateFieldWidgetBase:
+def field_widget(ref: CharacterProfileFieldReference, character: Character) -> TemplateFieldWidgetBase:
     if ref.type == CharacterProfileFieldType.Field_Summary:
-        return SummaryField(ref)
+        return SummaryField(ref, character)
     else:
         return SmallTextTemplateFieldWidget(ref)
 
@@ -228,7 +237,7 @@ class CharacterProfileEditor(QWidget):
             wdg = ProfileSectionWidget(section)
             self.layout().addWidget(wdg)
             for field in section.fields:
-                fieldWdg = field_widget(field)
+                fieldWdg = field_widget(field, self._character)
                 wdg.attachWidget(fieldWdg)
 
         self.layout().addWidget(vspacer())

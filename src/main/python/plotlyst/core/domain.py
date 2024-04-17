@@ -32,7 +32,7 @@ from overrides import overrides
 
 from plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_field, \
     mbti_field, ProfileTemplate, default_character_profiles, enneagram_choices, \
-    mbti_choices, Role, summary_field, exclude_if_false, antagonist_role, exclude_if_true
+    mbti_choices, Role, exclude_if_false, antagonist_role, exclude_if_true
 from plotlyst.env import app_env
 
 
@@ -463,7 +463,7 @@ def default_character_profile() -> List[CharacterProfileSectionReference]:
 class Character:
     name: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
-    gender: str = ''
+    gender: str = field(default='', metadata=config(exclude=exclude_if_empty))
     role: Optional[Role] = None
     age: Optional[int] = None
     age_infinite: bool = field(default=False, metadata=config(exclude=exclude_if_false))
@@ -479,6 +479,7 @@ class Character:
     topics: List[TemplateValue] = field(default_factory=list)
     big_five: Dict[str, List[int]] = field(default_factory=default_big_five_values)
     profile: List[CharacterProfileSectionReference] = field(default_factory=default_character_profile)
+    summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
     def enneagram(self) -> Optional[SelectionItem]:
         for value in self.template_values:
@@ -489,19 +490,6 @@ class Character:
         for value in self.template_values:
             if value.id == mbti_field.id:
                 return mbti_choices.get(value.value)
-
-    def summary(self) -> str:
-        for value in self.template_values:
-            if value.id == summary_field.id:
-                return value.value
-
-        return ""
-
-    def set_summary(self, summary: str):
-        for tmpl_value in self.template_values:
-            if tmpl_value.id == summary_field.id:
-                tmpl_value.value = summary
-                break
 
     def is_major(self):
         return self.role and self.role.is_major()

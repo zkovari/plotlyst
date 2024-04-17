@@ -102,14 +102,14 @@ class SummaryDisplay(QTextEdit, BaseDisplay):
     @overrides
     def refresh(self):
         self._blockSave = True
-        self.setText(self._character.summary())
+        self.setText(self._character.summary)
         self._blockSave = False
 
     def _save(self):
         if self._blockSave:
             return
 
-        self._character.set_summary(self.toPlainText())
+        self._character.summary = self.toPlainText()
         self.repo.update_character(self._character)
         emit_event(self._novel, CharacterSummaryChangedEvent(self, self._character))
 
