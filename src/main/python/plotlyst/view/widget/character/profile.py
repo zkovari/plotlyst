@@ -199,6 +199,12 @@ class NoteField(SmallTextTemplateFieldWidget):
         self.field.value = text
 
 
+class CustomTextField(SmallTextTemplateFieldWidget):
+    def __init__(self, parent=None):
+        # add CustomCharacterProfileField
+        super().__init__(parent)
+
+
 class SummaryField(SmallTextTemplateFieldWidget):
     def __init__(self, character: Character, parent=None):
         super().__init__(parent=parent)
