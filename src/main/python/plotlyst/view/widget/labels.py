@@ -335,11 +335,7 @@ class LabelsEditorWidget(QFrame):
         self.clear()
 
         self.btnEdit = tool_btn(IconRegistry.plus_edit_icon(), transparent_=True)
-        # transparent(self.btnEdit)
-        # pointy(self.btnEdit)
-        # self.btnEdit.setIcon(IconRegistry.plus_edit_icon())
         self.btnEdit.installEventFilter(OpacityEventFilter(self.btnEdit, leaveOpacity=0.8))
-        # self.btnEdit.installEventFilter(ButtonPressResizeEventFilter(self.btnEdit))
 
         self._model = self._initModel()
         self._model.item_edited.connect(self._selectionChanged)
@@ -389,6 +385,10 @@ class LabelsEditorWidget(QFrame):
     def _initPopupWidget(self) -> QWidget:
         wdg = ItemsEditorWidget()
         wdg.setModel(self._model)
+        wdg.setInlineEditionEnabled(False)
+        wdg.setAdditionEnabled(False)
+        wdg.setRemoveEnabled(False)
+        wdg.toolbar.setHidden(True)
         return wdg
 
     def _selectionChanged(self):

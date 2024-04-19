@@ -253,10 +253,16 @@ class LabelsTemplateFieldWidget(TemplateFieldWidgetBase):
         self.wdgEditor.setValue(value)
 
     def _selectionChanged(self):
-        if self.wdgEditor.selectedItems():
+        value = self.value()
+        if value:
             self.valueFilled.emit(1)
         else:
             self.valueReset.emit()
+
+        self._saveValue(value)
+
+    def _saveValue(self, value: Any):
+        pass
 
 
 class TraitsFieldWidget(LabelsTemplateFieldWidget):
@@ -274,14 +280,8 @@ class TraitsFieldWidget(LabelsTemplateFieldWidget):
         return TraitSelectionWidget(traits_field)
 
     @overrides
-    def _selectionChanged(self):
-        traits = self.value()
-        if traits:
-            self.valueFilled.emit(1)
-        else:
-            self.valueReset.emit()
-
-        self.character.traits[:] = traits
+    def _saveValue(self, value: Any):
+        self.character.traits[:] = value
 
 
 class ValuesFieldWidget(LabelsTemplateFieldWidget):
@@ -292,9 +292,15 @@ class ValuesFieldWidget(LabelsTemplateFieldWidget):
         self.updateEmoji(emoji.emojize(':smiling_face_with_open_hands:'))
         self.updateLabel('Values')
 
+        self.setValue(self.character.values)
+
     @overrides
     def _editor(self) -> LabelsSelectionWidget:
         return LabelsSelectionWidget(values_field)
+
+    @overrides
+    def _saveValue(self, value: Any):
+        self.character.values[:] = value
 
 
 class BarSlider(QSlider):
