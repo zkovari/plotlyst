@@ -31,7 +31,7 @@ from qthandy import vbox, clear_layout, hbox, bold, underline, spacer, vspacer, 
 from plotlyst.core.domain import Character, CharacterProfileSectionReference, CharacterProfileFieldReference, \
     CharacterProfileFieldType
 from plotlyst.core.template import TemplateField, iq_field, eq_field, rationalism_field, willpower_field, \
-    creativity_field, traits_field
+    creativity_field, traits_field, values_field
 from plotlyst.env import app_env
 from plotlyst.view.common import tool_btn, wrap, emoji_font
 from plotlyst.view.icons import IconRegistry
@@ -40,7 +40,7 @@ from plotlyst.view.style.slider import apply_slider_color
 from plotlyst.view.widget.button import CollapseButton
 from plotlyst.view.widget.input import AutoAdjustableTextEdit
 from plotlyst.view.widget.progress import CircularProgressBar
-from plotlyst.view.widget.template.impl import TraitSelectionWidget
+from plotlyst.view.widget.template.impl import TraitSelectionWidget, LabelsSelectionWidget
 
 
 class ProfileFieldWidget(QWidget):
@@ -230,20 +230,19 @@ class SummaryField(SmallTextTemplateFieldWidget):
         self.character.summary = text
 
 
-class TraitsFieldWidget(TemplateFieldWidgetBase):
-    def __init__(self, character: Character, parent=None):
-        super(TraitsFieldWidget, self).__init__(parent)
-        self.character = character
-        self.wdgEditor = TraitSelectionWidget(traits_field, parent)
+class LabelsTemplateFieldWidget(TemplateFieldWidgetBase):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.wdgEditor = self._editor()
         _layout = vbox(self)
         _layout.addWidget(group(self.lblEmoji, self.lblName, spacer()))
         _layout.addWidget(self.wdgEditor)
 
-        self.updateEmoji(emoji.emojize(':dna:'))
-        self.updateLabel('Traits')
-
-        self.setValue(self.character.traits)
         self.wdgEditor.selectionChanged.connect(self._selectionChanged)
+
+    @abstractmethod
+    def _editor(self) -> LabelsSelectionWidget:
+        pass
 
     @overrides
     def value(self) -> Any:
@@ -254,6 +253,28 @@ class TraitsFieldWidget(TemplateFieldWidgetBase):
         self.wdgEditor.setValue(value)
 
     def _selectionChanged(self):
+        if self.wdgEditor.selectedItems():
+            self.valueFilled.emit(1)
+        else:
+            self.valueReset.emit()
+
+
+class TraitsFieldWidget(LabelsTemplateFieldWidget):
+    def __init__(self, character: Character, parent=None):
+        super(TraitsFieldWidget, self).__init__(parent)
+        self.character = character
+
+        self.updateEmoji(emoji.emojize(':dna:'))
+        self.updateLabel('Traits')
+
+        self.setValue(self.character.traits)
+
+    @overrides
+    def _editor(self) -> LabelsSelectionWidget:
+        return TraitSelectionWidget(traits_field)
+
+    @overrides
+    def _selectionChanged(self):
         traits = self.value()
         if traits:
             self.valueFilled.emit(1)
@@ -261,6 +282,19 @@ class TraitsFieldWidget(TemplateFieldWidgetBase):
             self.valueReset.emit()
 
         self.character.traits[:] = traits
+
+
+class ValuesFieldWidget(LabelsTemplateFieldWidget):
+    def __init__(self, character: Character, parent=None):
+        super().__init__(parent)
+        self.character = character
+
+        self.updateEmoji(emoji.emojize(':smiling_face_with_open_hands:'))
+        self.updateLabel('Values')
+
+    @overrides
+    def _editor(self) -> LabelsSelectionWidget:
+        return LabelsSelectionWidget(values_field)
 
 
 class BarSlider(QSlider):
@@ -355,6 +389,8 @@ def field_widget(ref: CharacterProfileFieldReference, character: Character) -> T
         return FacultyField(ref, field, character)
     elif ref.type == CharacterProfileFieldType.Field_Traits:
         return TraitsFieldWidget(character)
+    elif ref.type == CharacterProfileFieldType.Field_Values:
+        return ValuesFieldWidget(character)
     else:
         return NoteField(ref)
 

@@ -682,34 +682,9 @@ class WorkStyleFieldWidget(TemplateFieldWidgetBase):
         self.valueFilled.emit(1)
 
 
-class TraitsFieldWidget(TemplateFieldWidgetBase):
-    def __init__(self, field: TemplateField, parent=None):
-        super(TraitsFieldWidget, self).__init__(field, parent)
-        self.wdgEditor = TraitSelectionWidget(field, parent)
-        _layout = vbox(self)
-        _layout.addWidget(group(self.lblEmoji, self.lblName, spacer()))
-        _layout.addWidget(self.wdgEditor)
-
-        self.wdgEditor.selectionChanged.connect(self._selectionChanged)
-
-    @overrides
-    def value(self) -> Any:
-        return self.wdgEditor.value()
-
-    @overrides
-    def setValue(self, value: Any):
-        self.wdgEditor.setValue(value)
-
-    def _selectionChanged(self):
-        if self.wdgEditor.selectedItems():
-            self.valueFilled.emit(1)
-        else:
-            self.valueReset.emit()
-
-
 class LabelsTemplateFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
-        super(LabelsTemplateFieldWidget, self).__init__(field, parent)
+        super().__init__(field, parent)
         self.wdgEditor = LabelsSelectionWidget(field)
         _layout = vbox(self)
         _layout.addWidget(group(self.lblEmoji, self.lblName, spacer()))
