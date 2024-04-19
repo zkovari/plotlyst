@@ -489,6 +489,7 @@ class Character:
     profile: List[CharacterProfileSectionReference] = field(default_factory=default_character_profile)
     summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
     faculties: Dict[str, int] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
+    traits: List[str] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
 
     def enneagram(self) -> Optional[SelectionItem]:
         for value in self.template_values:
