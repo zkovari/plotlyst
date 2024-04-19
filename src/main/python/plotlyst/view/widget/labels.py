@@ -26,6 +26,7 @@ from PyQt6.QtWidgets import QWidget, QLabel, QFrame, QToolButton, QSizePolicy
 from overrides import overrides
 from qthandy import hbox, vline, vbox, clear_layout, transparent, btn_popup, flow
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
+from qtmenu import MenuWidget
 
 from plotlyst.common import truncate_string, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Character, Conflict, SelectionItem, Novel, ScenePlotReference, \
@@ -344,7 +345,8 @@ class LabelsEditorWidget(QFrame):
         self._popup = self._initPopupWidget()
         self._model.selection_changed.connect(self._selectionChanged)
 
-        btn_popup(self.btnEdit, self._popup)
+        menu = MenuWidget(self.btnEdit)
+        menu.addWidget(self._popup)
         self.layout().addWidget(self.btnEdit, alignment=Qt.AlignmentFlag.AlignTop)
 
         self._wdgLabels = LabelsWidget()
