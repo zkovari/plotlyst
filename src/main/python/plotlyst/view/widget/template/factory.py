@@ -21,14 +21,13 @@ from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QComboBox
 
 from plotlyst.core.template import TemplateField, TemplateFieldType, enneagram_field, mbti_field, \
-    SelectionItemType, SelectionItem, gmc_field, baggage_field, love_style_field, disc_field, flaws_field, \
-    strengths_weaknesses_field
+    SelectionItemType, SelectionItem, love_style_field, disc_field, strengths_weaknesses_field
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.template.impl import SubtitleTemplateDisplayWidget, \
     LabelTemplateDisplayWidget, HeaderTemplateDisplayWidget, LineTemplateDisplayWidget, IconTemplateDisplayWidget, \
     EnneagramFieldWidget, MbtiFieldWidget, NumericTemplateFieldWidget, SmallTextTemplateFieldWidget, \
-    LineTextTemplateFieldWidget, GmcFieldWidget, BaggageFieldWidget, \
-    BarTemplateFieldWidget, LoveStyleFieldWidget, WorkStyleFieldWidget, FlawsFieldWidget, StrengthsWeaknessesFieldWidget
+    LineTextTemplateFieldWidget, \
+    BarTemplateFieldWidget, LoveStyleFieldWidget, WorkStyleFieldWidget, StrengthsWeaknessesFieldWidget
 
 
 def _icon(item: SelectionItem) -> QIcon:
@@ -61,16 +60,16 @@ class TemplateFieldWidgetFactory:
             return LoveStyleFieldWidget(field, parent)
         elif field.id == disc_field.id:
             return WorkStyleFieldWidget(field, parent)
-        elif field.id == flaws_field.id:
-            return FlawsFieldWidget(field)
+        # elif field.id == flaws_field.id:
+        #     return FlawsFieldWidget(field)
         elif field.id == strengths_weaknesses_field.id:
             return StrengthsWeaknessesFieldWidget(field)
         # elif field.id == traits_field.id:
         #     return TraitsFieldWidget(field)
-        elif field.id == gmc_field.id:
-            return GmcFieldWidget(field)
-        elif field.id == baggage_field.id:
-            return BaggageFieldWidget(field)
+        # elif field.id == gmc_field.id:
+        #     return GmcFieldWidget(field)
+        # elif field.id == baggage_field.id:
+        #     return BaggageFieldWidget(field)
         elif field.type == TemplateFieldType.NUMERIC:
             return NumericTemplateFieldWidget(field, parent)
         elif field.type == TemplateFieldType.TEXT_SELECTION:

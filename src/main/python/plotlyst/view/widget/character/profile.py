@@ -17,28 +17,35 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import copy
 from abc import abstractmethod
 from functools import partial
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 
 import emoji
 from PyQt6.QtCore import pyqtSignal, Qt, QSize
 from PyQt6.QtGui import QResizeEvent, QWheelEvent
-from PyQt6.QtWidgets import QWidget, QLabel, QSizePolicy, QSlider
+from PyQt6.QtWidgets import QWidget, QLabel, QSizePolicy, QSlider, QToolButton, QVBoxLayout
 from overrides import overrides
-from qthandy import vbox, clear_layout, hbox, bold, underline, spacer, vspacer, margins, pointy
+from qthandy import vbox, clear_layout, hbox, bold, underline, spacer, vspacer, margins, pointy, retain_when_hidden, \
+    transparent, sp, gc, decr_font, line
+from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
+from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from plotlyst.core.domain import Character, CharacterProfileSectionReference, CharacterProfileFieldReference, \
     CharacterProfileFieldType
 from plotlyst.core.template import TemplateField, iq_field, eq_field, rationalism_field, willpower_field, \
-    creativity_field, traits_field, values_field
+    creativity_field, traits_field, values_field, flaw_placeholder_field, goal_field, internal_goal_field, stakes_field, \
+    conflict_field, motivation_field, methods_field, internal_motivation_field, internal_conflict_field, \
+    internal_stakes_field, gmc_field
 from plotlyst.env import app_env
-from plotlyst.view.common import tool_btn, wrap, emoji_font
+from plotlyst.view.common import tool_btn, wrap, emoji_font, action, insert_before_the_end
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.slider import apply_slider_color
-from plotlyst.view.widget.button import CollapseButton
-from plotlyst.view.widget.input import AutoAdjustableTextEdit
+from plotlyst.view.widget.button import CollapseButton, SecondaryActionPushButton
+from plotlyst.view.widget.display import Icon
+from plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle
 from plotlyst.view.widget.progress import CircularProgressBar
 from plotlyst.view.widget.template.impl import TraitSelectionWidget, LabelsSelectionWidget
 
@@ -213,9 +220,12 @@ class NoteField(SmallTextTemplateFieldWidget):
 
 
 class CustomTextField(SmallTextTemplateFieldWidget):
-    def __init__(self, parent=None):
-        # add CustomCharacterProfileField
-        super().__init__(parent)
+    def __init__(self, field: TemplateField, parent=None, minHeight: int = 60):
+        super().__init__(parent, minHeight=minHeight)
+        self.field = field
+        self.updateEmoji(emoji.emojize(self.field.emoji))
+        self.updateLabel(self.field.name)
+        self.wdgEditor.setPlaceholderText(self.field.placeholder)
 
 
 class SummaryField(SmallTextTemplateFieldWidget):
@@ -376,7 +386,319 @@ class FacultyField(BarTemplateFieldWidget):
         self.character.faculties[self.ref.type.value] = value
 
 
-def field_widget(ref: CharacterProfileFieldReference, character: Character) -> TemplateFieldWidgetBase:
+class FieldToggle(QWidget):
+    def __init__(self, field: TemplateField, parent=None):
+        super().__init__(parent)
+        self._field = field
+        hbox(self)
+
+        self._lblEmoji = QLabel(self)
+        self._lblEmoji.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        self._lblEmoji.setToolTip(field.description if field.description else field.placeholder)
+        self._lblName = QLabel(self)
+        self._lblName.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        self._lblName.setText(self._field.name)
+        self._lblName.setToolTip(field.description if field.description else field.placeholder)
+
+        if self._field.emoji:
+            self._lblEmoji.setFont(emoji_font())
+            self._lblEmoji.setText(emoji.emojize(self._field.emoji))
+        else:
+            self._lblEmoji.setHidden(True)
+
+        self.toggle = Toggle()
+
+        self.layout().addWidget(self._lblEmoji)
+        self.layout().addWidget(self._lblName)
+        self.layout().addWidget(spacer())
+        self.layout().addWidget(self.toggle)
+
+
+class FieldSelector(QWidget):
+    toggled = pyqtSignal(TemplateField, bool)
+    clicked = pyqtSignal(TemplateField, bool)
+
+    def __init__(self, fields: List[TemplateField], parent=None):
+        super().__init__(parent)
+        vbox(self)
+        self._fields: Dict[TemplateField, FieldToggle] = {}
+
+        for field in fields:
+            wdg = FieldToggle(field)
+            self._fields[field] = wdg
+            self.layout().addWidget(wdg)
+            wdg.toggle.toggled.connect(partial(self.toggled.emit, field))
+            wdg.toggle.clicked.connect(partial(self.clicked.emit, field))
+
+    def toggle(self, field: TemplateField):
+        self._fields[field].toggle.toggle()
+
+
+class _SecondaryFieldSelectorButton(QToolButton):
+    removalRequested = pyqtSignal()
+    renameRequested = pyqtSignal()
+
+    def __init__(self, field: TemplateField, selector: FieldSelector, enableRename: bool = False, parent=None):
+        super(_SecondaryFieldSelectorButton, self).__init__(parent)
+        self._field = field
+        self._selector = selector
+
+        retain_when_hidden(self)
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        transparent(self)
+        pointy(self)
+        self.setIconSize(QSize(22, 22))
+        self.setIcon(IconRegistry.plus_edit_icon())
+
+        menu = MenuWidget(self)
+        menu.addWidget(self._selector)
+        menu.addSeparator()
+
+        if enableRename:
+            menu.addAction(action('Rename', IconRegistry.edit_icon(), slot=self.renameRequested))
+            menu.addSeparator()
+
+        menu.addAction(action(f'Remove {self._field.name}', IconRegistry.trash_can_icon(), slot=self.removalRequested))
+        self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.7))
+
+
+class _PrimaryFieldWidget(QWidget):
+    removed = pyqtSignal()
+    renamed = pyqtSignal()
+    valueChanged = pyqtSignal()
+
+    def __init__(self, field: TemplateField, secondaryFields: List[TemplateField], parent=None):
+        super().__init__(parent)
+        self._field = field
+        self._secondaryFields = secondaryFields
+        self._secondaryFieldWidgets: Dict[TemplateField, Optional[SmallTextTemplateFieldWidget]] = {}
+        for sf in secondaryFields:
+            self._secondaryFieldWidgets[sf] = None
+        vbox(self, 0, 2)
+        self._primaryWdg = CustomTextField(field)
+        self._primaryWdg.valueFilled.connect(self.valueChanged.emit)
+        self._primaryWdg.valueReset.connect(self.valueChanged.emit)
+
+        self._selector = FieldSelector(secondaryFields)
+        btnSecondary = _SecondaryFieldSelectorButton(self._field, self._selector,
+                                                     enableRename=field.id == flaw_placeholder_field.id)
+        btnSecondary.removalRequested.connect(self.removed)
+        btnSecondary.renameRequested.connect(self.renamed)
+        self._selector.toggled.connect(self._toggleSecondaryField)
+        self._selector.clicked.connect(self._clickSecondaryField)
+        insert_before_the_end(self._primaryWdg.wdgTop, btnSecondary)
+
+        self._secondaryWdgContainer = QWidget()
+        vbox(self._secondaryWdgContainer, 0, 2)
+        margins(self._secondaryWdgContainer, left=40)
+        for _ in self._secondaryFields:
+            self._secondaryWdgContainer.layout().addWidget(spacer())
+
+        top = QWidget()
+        hbox(top)
+        top.layout().addWidget(self._primaryWdg)
+        spacer_ = spacer()
+        sp(spacer_).h_preferred()
+        top.layout().addWidget(spacer_)
+        self.layout().addWidget(top)
+        self.layout().addWidget(self._secondaryWdgContainer)
+
+        self.installEventFilter(VisibilityToggleEventFilter(btnSecondary, self._primaryWdg))
+
+    def field(self) -> TemplateField:
+        return self._field
+
+    def value(self) -> str:
+        return self._primaryWdg.value()
+
+    def setValue(self, value: str):
+        self._primaryWdg.setValue(value)
+
+    def refresh(self):
+        self._primaryWdg.refresh()
+
+    def secondaryFields(self) -> List[Tuple[str, str]]:
+        fields = []
+        for field, wdg in self._secondaryFieldWidgets.items():
+            if wdg is None:
+                continue
+            fields.append((str(field.id), wdg.value()))
+
+        return fields
+
+    def setSecondaryField(self, secondary: TemplateField, value: str):
+        self._selector.toggle(secondary)
+        self._secondaryFieldWidgets[secondary].setValue(value)
+
+    def _toggleSecondaryField(self, secondary: TemplateField, toggled: bool):
+        i = self._secondaryFields.index(secondary)
+
+        if toggled:
+            wdg = CustomTextField(secondary, minHeight=40)
+            wdg.valueFilled.connect(self.valueChanged.emit)
+            wdg.valueReset.connect(self.valueChanged.emit)
+            self._secondaryFieldWidgets[secondary] = wdg
+            item = self._secondaryWdgContainer.layout().itemAt(i)
+            icon = Icon()
+            icon.setIcon(IconRegistry.from_name('msc.dash', 'grey'))
+            spac = spacer()
+            sp(spac).h_preferred()
+            self._secondaryWdgContainer.layout().replaceWidget(item.widget(), group(icon, wdg, spac))
+        else:
+            self._secondaryWdgContainer.layout().replaceWidget(self._secondaryFieldWidgets[secondary], spacer())
+            gc(self._secondaryFieldWidgets[secondary])
+            self._secondaryFieldWidgets[secondary] = None
+
+    def _clickSecondaryField(self):
+        self.valueChanged.emit()
+
+
+class MultiLayerComplexTemplateWidgetBase(ProfileFieldWidget):
+    ID_KEY: str = 'id'
+    VALUE_KEY: str = 'value'
+    SECONDARY_KEY: str = 'secondary'
+    ALIAS_KEY = 'alias'
+
+    def __init__(self, field: TemplateField, character: Character, parent=None):
+        super().__init__(parent)
+        self.field = field
+        self.character = character
+        self._hasAlias = False
+        self._primaryWidgets: List[_PrimaryFieldWidget] = []
+
+        self._btnPrimary = SecondaryActionPushButton()
+        self._btnPrimary.setText(self._primaryButtonText())
+        self._btnPrimary.setIcon(IconRegistry.plus_icon('grey'))
+        decr_font(self._btnPrimary)
+        fields = self._primaryFields()
+        self._menu = MenuWidget(self._btnPrimary)
+        self._menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+        for field in fields:
+            self._menu.addAction(
+                action(field.name, icon=IconRegistry.from_name(field.icon), tooltip=field.description,
+                       slot=partial(self._addPrimaryField, field),
+                       parent=self._menu))
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        self._layout: QVBoxLayout = vbox(self, 0, 5)
+
+        self.layout().addWidget(wrap(self._btnPrimary, margin_left=5))
+        self._layout.addWidget(vspacer())
+
+    def value(self) -> Any:
+        def secondaryValues(primaryWdg: _PrimaryFieldWidget):
+            values = []
+            for field in primaryWdg.secondaryFields():
+                s_id, value_ = field
+                values.append({self.ID_KEY: s_id, self.VALUE_KEY: value_})
+            return values
+
+        value = {}
+        for i, primary_wdg in enumerate(self._primaryWidgets):
+            sid = str(primary_wdg.field().id)
+            sid += f'&{i}'
+            if self._hasAlias:
+                sid += f'&{primary_wdg.field().name}'
+            value[sid] = {self.VALUE_KEY: primary_wdg.value(),
+                          self.SECONDARY_KEY: secondaryValues(primary_wdg)}
+            if self._hasAlias:
+                value[sid][self.ALIAS_KEY] = primary_wdg.field().name
+
+        return value
+
+    def setValue(self, value: Any):
+        if value is None:
+            return
+        if isinstance(value, str):
+            return
+
+        primary_fields = self._primaryFields()
+        for k, v in value.items():
+            k = k.split('&')[0]
+            primary = next((x for x in primary_fields if str(x.id) == k), None)
+            if primary is None:
+                continue
+            if self._hasAlias and self.ALIAS_KEY in v.keys():
+                primary = copy.deepcopy(primary)
+                primary.name = v[self.ALIAS_KEY]
+            wdg = self._addPrimaryField(primary)
+            wdg.setValue(v[self.VALUE_KEY])
+
+            secondary_fields = self._secondaryFields(primary)
+            for secondary in v[self.SECONDARY_KEY]:
+                secondary_field = next((x for x in secondary_fields if str(x.id) == secondary[self.ID_KEY]), None)
+                if secondary_field:
+                    wdg.setSecondaryField(secondary_field, secondary[self.VALUE_KEY])
+
+        self._valueChanged()
+
+    def _primaryFields(self) -> List[TemplateField]:
+        return []
+
+    def _primaryButtonText(self) -> str:
+        return 'Add new item'
+
+    def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
+        return []
+
+    def _addPrimaryField(self, field: TemplateField) -> _PrimaryFieldWidget:
+        wdg = _PrimaryFieldWidget(field, self._secondaryFields(field))
+        self._primaryWidgets.append(wdg)
+        wdg.removed.connect(partial(self._removePrimaryField, wdg))
+        wdg.renamed.connect(partial(self._renamePrimaryField, wdg))
+        wdg.valueChanged.connect(self._valueChanged)
+        if self._layout.count() > 2:
+            self._layout.insertWidget(self._layout.count() - 2, line())
+        self._layout.insertWidget(self._layout.count() - 2, wdg)
+
+        return wdg
+
+    def _removePrimaryField(self, wdg: _PrimaryFieldWidget):
+        self._primaryWidgets.remove(wdg)
+        self._layout.removeWidget(wdg)
+        gc(wdg)
+
+    def _renamePrimaryField(self, wdg: _PrimaryFieldWidget):
+        pass
+
+    def _valueChanged(self):
+        count = 0
+        value = 0
+        for wdg in self._primaryWidgets:
+            count += 1
+            if wdg.value():
+                value += 1
+            for _, v in wdg.secondaryFields():
+                count += 1
+                if v:
+                    value += 1
+        self.valueFilled.emit(value / count if count else 0)
+
+
+class GmcFieldWidget(MultiLayerComplexTemplateWidgetBase):
+
+    @property
+    def wdgEditor(self):
+        return self
+
+    @overrides
+    def _primaryButtonText(self) -> str:
+        return 'Add new goal'
+
+    @overrides
+    def _primaryFields(self) -> List[TemplateField]:
+        return [goal_field, internal_goal_field]
+
+    @overrides
+    def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
+        if primary.id == goal_field.id:
+            return [stakes_field, conflict_field, motivation_field, methods_field, internal_motivation_field,
+                    internal_conflict_field,
+                    internal_stakes_field]
+        else:
+            return [methods_field, internal_motivation_field, internal_conflict_field, internal_stakes_field]
+
+
+def field_widget(ref: CharacterProfileFieldReference, character: Character) -> ProfileFieldWidget:
     if ref.type == CharacterProfileFieldType.Field_Summary:
         return SummaryField(character)
     elif ref.type.name.startswith('Field_Faculties'):
@@ -397,6 +719,9 @@ def field_widget(ref: CharacterProfileFieldReference, character: Character) -> T
         return TraitsFieldWidget(character)
     elif ref.type == CharacterProfileFieldType.Field_Values:
         return ValuesFieldWidget(character)
+    elif ref.type == CharacterProfileFieldType.Field_Goals:
+        return GmcFieldWidget(gmc_field, character)
+
     else:
         return NoteField(ref)
 
