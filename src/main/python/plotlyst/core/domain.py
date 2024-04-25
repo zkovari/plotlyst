@@ -467,6 +467,42 @@ def default_character_profile() -> List[CharacterProfileSectionReference]:
     ]
 
 
+class MultiAttributePrimaryType(Enum):
+    External_goal = 'external_goal'
+    Internal_goal = 'internal_goal'
+
+
+class MultiAttributeSecondaryType(Enum):
+    External_motivation = 'external_motivation'
+    Internal_motivation = 'internal_motivation'
+    External_conflict = 'external_conflict'
+    Internal_conflict = 'internal_conflict'
+    External_stakes = 'external_stakes'
+    Internal_stakes = 'internal_stakes'
+    Methods = 'methods'
+
+
+@dataclass
+class CharacterSecondaryAttribute:
+    type: MultiAttributeSecondaryType
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    value: str = field(default='', metadata=config(exclude=exclude_if_empty))
+
+
+@dataclass
+class CharacterMultiAttribute:
+    type: MultiAttributePrimaryType
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    value: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    attributes: Dict[str, CharacterSecondaryAttribute] = field(default_factory=dict,
+                                                               metadata=config(exclude=exclude_if_empty))
+    settings: Dict[str, Any] = field(default_factory=dict)
+
+    def attribute(self, type_: MultiAttributeSecondaryType) -> Optional[CharacterSecondaryAttribute]:
+        if self.settings.get(type_.value, False):
+            return self.attributes.get(type_.value)
+
+
 @dataclass
 class Character:
     name: str
@@ -491,6 +527,7 @@ class Character:
     faculties: Dict[str, int] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
     traits: List[str] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     values: List[str] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    gmc: List[CharacterMultiAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
 
     def enneagram(self) -> Optional[SelectionItem]:
         for value in self.template_values:
