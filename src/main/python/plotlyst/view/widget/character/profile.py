@@ -33,7 +33,7 @@ from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from plotlyst.core.domain import Character, CharacterProfileSectionReference, CharacterProfileFieldReference, \
     CharacterProfileFieldType, CharacterMultiAttribute, CharacterProfileSectionType, MultiAttributePrimaryType, \
-    MultiAttributeSecondaryType
+    MultiAttributeSecondaryType, CharacterSecondaryAttribute
 from plotlyst.core.template import TemplateField, iq_field, eq_field, rationalism_field, willpower_field, \
     creativity_field, traits_field, values_field, flaw_placeholder_field, goal_field, internal_goal_field, stakes_field, \
     conflict_field, motivation_field, methods_field, internal_motivation_field, internal_conflict_field, \
@@ -318,12 +318,19 @@ class NoteField(SmallTextTemplateFieldWidget):
 
 
 class CustomTextField(SmallTextTemplateFieldWidget):
-    def __init__(self, field: TemplateField, parent=None, minHeight: int = 60):
+    def __init__(self, field: TemplateField, attribute, parent=None, minHeight: int = 60):
         super().__init__(parent, minHeight=minHeight)
         self.field = field
+        self.attribute = attribute
         self.updateEmoji(emoji.emojize(self.field.emoji))
         self.updateLabel(self.field.name)
         self.wdgEditor.setPlaceholderText(self.field.placeholder)
+
+        self.setValue(self.attribute.value)
+
+    @overrides
+    def _saveText(self, text: str):
+        self.attribute.value = text
 
 
 class SummaryField(SmallTextTemplateFieldWidget):
@@ -575,7 +582,7 @@ class _PrimaryFieldWidget(QWidget):
         for sf in secondaryFields:
             self._secondaryFieldWidgets[sf] = None
         vbox(self, 0, 2)
-        self._primaryWdg = CustomTextField(field)
+        self._primaryWdg = CustomTextField(field, self.attribute)
         self._primaryWdg.valueFilled.connect(self.valueChanged.emit)
         self._primaryWdg.valueReset.connect(self.valueChanged.emit)
 
@@ -638,7 +645,12 @@ class _PrimaryFieldWidget(QWidget):
         i = self._secondaryFields.index(secondary)
 
         if toggled:
-            wdg = CustomTextField(secondary, minHeight=40)
+            type_ = character_secondary_attribute_type(secondary)
+            secondary_attribute = self.attribute.attributes.get(type_.value)
+            if secondary_attribute is None:
+                secondary_attribute = CharacterSecondaryAttribute(type_)
+                self.attribute.attributes[type_.value] = secondary_attribute
+            wdg = CustomTextField(secondary, secondary_attribute, minHeight=50)
             wdg.valueFilled.connect(self.valueChanged.emit)
             wdg.valueReset.connect(self.valueChanged.emit)
             self._secondaryFieldWidgets[secondary] = wdg
