@@ -458,9 +458,7 @@ def default_character_profile() -> List[CharacterProfileSectionReference]:
         CharacterProfileSectionReference(CharacterProfileSectionType.Flaws, fields=[
             CharacterProfileFieldReference(CharacterProfileFieldType.Field_Flaws)
         ]),
-        CharacterProfileSectionReference(CharacterProfileSectionType.Baggage, fields=[
-            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Baggage)
-        ]),
+        CharacterProfileSectionReference(CharacterProfileSectionType.Baggage),
         CharacterProfileSectionReference(CharacterProfileSectionType.Goals)
     ]
 
@@ -468,6 +466,11 @@ def default_character_profile() -> List[CharacterProfileSectionReference]:
 class MultiAttributePrimaryType(Enum):
     External_goal = 'external_goal'
     Internal_goal = 'internal_goal'
+    Ghost = 'ghost'
+    Wound = 'wound'
+    Demon = 'demon'
+    Fear = 'fear'
+    Misbelief = 'misbelief'
 
 
 class MultiAttributeSecondaryType(Enum):
@@ -478,6 +481,15 @@ class MultiAttributeSecondaryType(Enum):
     External_stakes = 'external_stakes'
     Internal_stakes = 'internal_stakes'
     Methods = 'methods'
+
+    Baggage_source = 'baggage_source'
+    Baggage_manifestation = 'baggage_manifestation'
+    Baggage_relation = 'baggage_relation'
+    Baggage_coping = 'baggage_coping'
+    Baggage_healing = 'baggage_healing'
+    Baggage_deterioration = 'baggage_deterioration'
+    Baggage_defense_mechanism = 'baggage_defense_mechanism'
+    Baggage_trigger = 'baggage_trigger'
 
 
 @dataclass
@@ -526,6 +538,7 @@ class Character:
     traits: List[str] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     values: List[str] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     gmc: List[CharacterMultiAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    baggage: List[CharacterMultiAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
 
     def enneagram(self) -> Optional[SelectionItem]:
         for value in self.template_values:

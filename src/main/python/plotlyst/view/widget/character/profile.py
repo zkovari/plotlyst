@@ -37,7 +37,9 @@ from plotlyst.core.domain import Character, CharacterProfileSectionReference, Ch
 from plotlyst.core.template import TemplateField, iq_field, eq_field, rationalism_field, willpower_field, \
     creativity_field, traits_field, values_field, flaw_placeholder_field, goal_field, internal_goal_field, stakes_field, \
     conflict_field, motivation_field, methods_field, internal_motivation_field, internal_conflict_field, \
-    internal_stakes_field
+    internal_stakes_field, baggage_source_field, baggage_manifestation_field, baggage_relation_field, \
+    baggage_coping_field, baggage_healing_field, baggage_deterioration_field, ghost_field, \
+    baggage_defense_mechanism_field, wound_field, demon_field, baggage_trigger_field, fear_field, misbelief_field
 from plotlyst.env import app_env
 from plotlyst.view.common import tool_btn, wrap, emoji_font, action, insert_before_the_end
 from plotlyst.view.icons import IconRegistry
@@ -126,6 +128,34 @@ def character_primary_attribute_type(field: TemplateField) -> MultiAttributePrim
         return MultiAttributePrimaryType.External_goal
     elif field is internal_goal_field:
         return MultiAttributePrimaryType.Internal_goal
+    elif field is ghost_field:
+        return MultiAttributePrimaryType.Ghost
+    elif field is wound_field:
+        return MultiAttributePrimaryType.Wound
+    elif field is demon_field:
+        return MultiAttributePrimaryType.Demon
+    elif field is fear_field:
+        return MultiAttributePrimaryType.Fear
+    elif field is misbelief_field:
+        return MultiAttributePrimaryType.Misbelief
+
+
+def character_primary_field(type_: MultiAttributePrimaryType) -> TemplateField:
+    if type_ == MultiAttributePrimaryType.External_goal:
+        return goal_field
+    elif type_ == MultiAttributePrimaryType.Internal_goal:
+        return internal_goal_field
+
+    elif type_ == MultiAttributePrimaryType.Ghost:
+        return ghost_field
+    elif type_ == MultiAttributePrimaryType.Wound:
+        return wound_field
+    elif type_ == MultiAttributePrimaryType.Fear:
+        return fear_field
+    elif type_ == MultiAttributePrimaryType.Demon:
+        return demon_field
+    elif type_ == MultiAttributePrimaryType.Misbelief:
+        return misbelief_field
 
 
 def character_secondary_attribute_type(field: TemplateField) -> MultiAttributeSecondaryType:
@@ -144,6 +174,23 @@ def character_secondary_attribute_type(field: TemplateField) -> MultiAttributeSe
     elif field is methods_field:
         return MultiAttributeSecondaryType.Methods
 
+    elif field is baggage_source_field:
+        return MultiAttributeSecondaryType.Baggage_source
+    elif field is baggage_manifestation_field:
+        return MultiAttributeSecondaryType.Baggage_manifestation
+    elif field is baggage_relation_field:
+        return MultiAttributeSecondaryType.Baggage_relation
+    elif field is baggage_coping_field:
+        return MultiAttributeSecondaryType.Baggage_coping
+    elif field is baggage_healing_field:
+        return MultiAttributeSecondaryType.Baggage_healing
+    elif field is baggage_deterioration_field:
+        return MultiAttributeSecondaryType.Baggage_deterioration
+    elif field is baggage_defense_mechanism_field:
+        return MultiAttributeSecondaryType.Baggage_defense_mechanism
+    elif field is baggage_trigger_field:
+        return MultiAttributeSecondaryType.Baggage_trigger
+
 
 def character_secondary_field(value: str) -> TemplateField:
     secondary = MultiAttributeSecondaryType(value)
@@ -161,6 +208,23 @@ def character_secondary_field(value: str) -> TemplateField:
         return internal_stakes_field
     elif secondary == MultiAttributeSecondaryType.Methods:
         return methods_field
+
+    elif secondary == MultiAttributeSecondaryType.Baggage_source:
+        return baggage_source_field
+    elif secondary == MultiAttributeSecondaryType.Baggage_manifestation:
+        return baggage_manifestation_field
+    elif secondary == MultiAttributeSecondaryType.Baggage_relation:
+        return baggage_relation_field
+    elif secondary == MultiAttributeSecondaryType.Baggage_coping:
+        return baggage_coping_field
+    elif secondary == MultiAttributeSecondaryType.Baggage_healing:
+        return baggage_healing_field
+    elif secondary == MultiAttributeSecondaryType.Baggage_deterioration:
+        return baggage_deterioration_field
+    elif secondary == MultiAttributeSecondaryType.Baggage_defense_mechanism:
+        return baggage_defense_mechanism_field
+    elif secondary == MultiAttributeSecondaryType.Baggage_trigger:
+        return baggage_trigger_field
 
 
 class ProfileSectionWidget(ProfileFieldWidget):
@@ -681,10 +745,7 @@ class MultiAttributesTemplateWidgetBase(ProfileFieldWidget):
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self._layout: QVBoxLayout = vbox(self, 0, 5)
 
-        if attribute.type == MultiAttributePrimaryType.External_goal:
-            field = goal_field
-        else:
-            field = internal_goal_field
+        field = character_primary_field(attribute.type)
         wdg = _PrimaryFieldWidget(self.attribute, field, self._secondaryFields(field))
         self.layout().addWidget(wdg)
 
@@ -803,14 +864,25 @@ class GmcSectionContext(MultiAttributeSectionContext):
     @overrides
     def primaryFieldType(self) -> CharacterProfileFieldType:
         return CharacterProfileFieldType.Field_Goals
-    # @overrides
-    # def secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
-    #     if primary.id == goal_field.id:
-    #         return [stakes_field, conflict_field, motivation_field, methods_field, internal_motivation_field,
-    #                 internal_conflict_field,
-    #                 internal_stakes_field]
-    #     else:
-    #         return [methods_field, internal_motivation_field, internal_conflict_field, internal_stakes_field]
+
+
+class BaggageSectionContext(MultiAttributeSectionContext):
+
+    @overrides
+    def primaryButtonText(self) -> str:
+        return 'Add new baggage'
+
+    @overrides
+    def primaryFields(self) -> List[TemplateField]:
+        return [ghost_field, wound_field, demon_field, fear_field, misbelief_field]
+
+    @overrides
+    def primaryAttributes(self, character: Character) -> List[CharacterMultiAttribute]:
+        return character.baggage
+
+    @overrides
+    def primaryFieldType(self) -> CharacterProfileFieldType:
+        return CharacterProfileFieldType.Field_Baggage
 
 
 class GmcFieldWidget(MultiAttributesTemplateWidgetBase):
@@ -828,6 +900,27 @@ class GmcFieldWidget(MultiAttributesTemplateWidgetBase):
                     internal_stakes_field]
         else:
             return [methods_field, internal_motivation_field, internal_conflict_field, internal_stakes_field]
+
+
+class BaggageFieldWidget(MultiAttributesTemplateWidgetBase):
+
+    def __init__(self, attribute: CharacterMultiAttribute, character: Character,
+                 ref: CharacterProfileFieldReference, parent=None):
+        super().__init__(attribute, character, parent=parent)
+        self.ref = ref
+
+    @overrides
+    def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
+        elements = [baggage_source_field, baggage_manifestation_field,
+                    baggage_relation_field, baggage_coping_field, baggage_healing_field, baggage_deterioration_field]
+
+        if primary.id != ghost_field.id:
+            elements.insert(3, baggage_defense_mechanism_field)
+
+        if primary.id in [wound_field.id, ghost_field.id, demon_field.id]:
+            elements.insert(1, baggage_trigger_field)
+
+        return elements
 
 
 def field_widget(ref: CharacterProfileFieldReference, character: Character) -> ProfileFieldWidget:
@@ -858,7 +951,13 @@ def field_widget(ref: CharacterProfileFieldReference, character: Character) -> P
                 attribute = gmc
                 break
         return GmcFieldWidget(attribute, character, ref)
-
+    elif ref.type == CharacterProfileFieldType.Field_Baggage:
+        attribute = None
+        for baggage in character.baggage:
+            if baggage.id == ref.ref:
+                attribute = baggage
+                break
+        return BaggageFieldWidget(attribute, character, ref)
     else:
         return NoteField(ref)
 
@@ -888,6 +987,8 @@ class CharacterProfileEditor(QWidget):
             sc = SectionContext()
             if section.type == CharacterProfileSectionType.Goals:
                 sc = GmcSectionContext()
+            elif section.type == CharacterProfileSectionType.Baggage:
+                sc = BaggageSectionContext()
             wdg = ProfileSectionWidget(section, sc, self._character)
             # wdg.fieldAddedc.oonnect(partial(self._primaryFieldAdded, ))
             self.layout().addWidget(wdg)
