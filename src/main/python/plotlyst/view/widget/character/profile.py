@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import copy
 from abc import abstractmethod
 from functools import partial
 from typing import Optional, List, Dict, Any, Tuple
@@ -28,16 +27,17 @@ from PyQt6.QtGui import QResizeEvent, QWheelEvent
 from PyQt6.QtWidgets import QWidget, QLabel, QSizePolicy, QSlider, QToolButton, QVBoxLayout
 from overrides import overrides
 from qthandy import vbox, clear_layout, hbox, bold, underline, spacer, vspacer, margins, pointy, retain_when_hidden, \
-    transparent, sp, gc, decr_font, line
+    transparent, sp, gc, decr_font
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from plotlyst.core.domain import Character, CharacterProfileSectionReference, CharacterProfileFieldReference, \
-    CharacterProfileFieldType
+    CharacterProfileFieldType, CharacterMultiAttribute, CharacterProfileSectionType, MultiAttributePrimaryType, \
+    MultiAttributeSecondaryType
 from plotlyst.core.template import TemplateField, iq_field, eq_field, rationalism_field, willpower_field, \
     creativity_field, traits_field, values_field, flaw_placeholder_field, goal_field, internal_goal_field, stakes_field, \
     conflict_field, motivation_field, methods_field, internal_motivation_field, internal_conflict_field, \
-    internal_stakes_field, gmc_field
+    internal_stakes_field
 from plotlyst.env import app_env
 from plotlyst.view.common import tool_btn, wrap, emoji_font, action, insert_before_the_end
 from plotlyst.view.icons import IconRegistry
@@ -100,12 +100,79 @@ class TemplateFieldWidgetBase(ProfileFieldWidget):
         self.lblName.setVisible(True)
 
 
+class SectionContext:
+
+    def has_addition(self) -> bool:
+        return False
+
+    def primaryFields(self) -> List[TemplateField]:
+        return []
+
+    def primaryButtonText(self) -> str:
+        return 'Add new item'
+
+    def primaryAttributes(self, character: Character) -> List[CharacterMultiAttribute]:
+        pass
+
+    def primaryFieldType(self) -> CharacterProfileFieldType:
+        pass
+
+    # def secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
+    #     return []
+
+
+def character_primary_attribute_type(field: TemplateField) -> MultiAttributePrimaryType:
+    if field is goal_field:
+        return MultiAttributePrimaryType.External_goal
+    elif field is internal_goal_field:
+        return MultiAttributePrimaryType.Internal_goal
+
+
+def character_secondary_attribute_type(field: TemplateField) -> MultiAttributeSecondaryType:
+    if field is motivation_field:
+        return MultiAttributeSecondaryType.External_motivation
+    elif field is internal_motivation_field:
+        return MultiAttributeSecondaryType.Internal_motivation
+    elif field is conflict_field:
+        return MultiAttributeSecondaryType.External_conflict
+    elif field is internal_conflict_field:
+        return MultiAttributeSecondaryType.Internal_conflict
+    elif field is stakes_field:
+        return MultiAttributeSecondaryType.External_stakes
+    elif field is internal_stakes_field:
+        return MultiAttributeSecondaryType.Internal_stakes
+    elif field is methods_field:
+        return MultiAttributeSecondaryType.Methods
+
+
+def character_secondary_field(value: str) -> TemplateField:
+    secondary = MultiAttributeSecondaryType(value)
+    if secondary == MultiAttributeSecondaryType.External_motivation:
+        return motivation_field
+    elif secondary == MultiAttributeSecondaryType.Internal_motivation:
+        return internal_motivation_field
+    elif secondary == MultiAttributeSecondaryType.External_conflict:
+        return conflict_field
+    elif secondary == MultiAttributeSecondaryType.Internal_conflict:
+        return internal_conflict_field
+    elif secondary == MultiAttributeSecondaryType.External_stakes:
+        return stakes_field
+    elif secondary == MultiAttributeSecondaryType.Internal_stakes:
+        return internal_stakes_field
+    elif secondary == MultiAttributeSecondaryType.Methods:
+        return methods_field
+
+
 class ProfileSectionWidget(ProfileFieldWidget):
     headerEnabledChanged = pyqtSignal(bool)
+    fieldAdded = pyqtSignal(CharacterProfileFieldReference)
 
-    def __init__(self, section: CharacterProfileSectionReference, parent=None):
+    def __init__(self, section: CharacterProfileSectionReference, context: SectionContext, character: Character,
+                 parent=None):
         super().__init__(parent)
+        self.character = character
         self.section = section
+        self.context = context
         vbox(self)
         self.btnHeader = CollapseButton(Qt.Edge.BottomEdge, Qt.Edge.RightEdge)
         self.btnHeader.setIconSize(QSize(16, 16))
@@ -125,8 +192,29 @@ class ProfileSectionWidget(ProfileFieldWidget):
         vbox(self.wdgContainer, 0)
         margins(self.wdgContainer, left=20)
 
+        self.wdgBottom = QWidget()
+        vbox(self.wdgBottom, 0, 0)
+        margins(self.wdgBottom, left=20)
+
         self.layout().addWidget(self.wdgHeader)
         self.layout().addWidget(self.wdgContainer)
+        self.layout().addWidget(self.wdgBottom)
+
+        if self.context.has_addition():
+            self._btnPrimary = SecondaryActionPushButton()
+            self._btnPrimary.setText(self.context.primaryButtonText())
+            self._btnPrimary.setIcon(IconRegistry.plus_icon('grey'))
+            decr_font(self._btnPrimary)
+            fields = self.context.primaryFields()
+            self._menu = MenuWidget(self._btnPrimary)
+            self._menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+            for field in fields:
+                self._menu.addAction(
+                    action(field.name, icon=IconRegistry.from_name(field.icon), tooltip=field.description,
+                           slot=partial(self._addPrimaryField, field),
+                           parent=self._menu))
+
+            self.wdgBottom.layout().addWidget(self._btnPrimary)
 
         self.children: List[ProfileFieldWidget] = []
         self.progressStatuses: Dict[ProfileFieldWidget, float] = {}
@@ -149,6 +237,7 @@ class ProfileSectionWidget(ProfileFieldWidget):
 
     def _toggleCollapse(self, checked: bool):
         self.wdgContainer.setHidden(checked)
+        self.wdgBottom.setHidden(checked)
 
     def _valueFilled(self, widget: ProfileFieldWidget, value: float):
         if self.progressStatuses[widget] == value:
@@ -163,6 +252,15 @@ class ProfileSectionWidget(ProfileFieldWidget):
 
         self.progressStatuses[widget] = 0
         self.progress.setValue(sum(self.progressStatuses.values()))
+
+    def _addPrimaryField(self, field: TemplateField):
+        attr = CharacterMultiAttribute(character_primary_attribute_type(field))
+        self.context.primaryAttributes(self.character).append(attr)
+        field = CharacterProfileFieldReference(self.context.primaryFieldType(), ref=attr.id)
+        self.section.fields.append(field)
+
+        fieldWdg = field_widget(field, self.character)
+        self.attachWidget(fieldWdg)
 
 
 class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
@@ -467,8 +565,10 @@ class _PrimaryFieldWidget(QWidget):
     renamed = pyqtSignal()
     valueChanged = pyqtSignal()
 
-    def __init__(self, field: TemplateField, secondaryFields: List[TemplateField], parent=None):
+    def __init__(self, attribute: CharacterMultiAttribute, field: TemplateField, secondaryFields: List[TemplateField],
+                 parent=None):
         super().__init__(parent)
+        self.attribute = attribute
         self._field = field
         self._secondaryFields = secondaryFields
         self._secondaryFieldWidgets: Dict[TemplateField, Optional[SmallTextTemplateFieldWidget]] = {}
@@ -502,6 +602,10 @@ class _PrimaryFieldWidget(QWidget):
         top.layout().addWidget(spacer_)
         self.layout().addWidget(top)
         self.layout().addWidget(self._secondaryWdgContainer)
+
+        for value, toggled in self.attribute.settings.items():
+            if toggled:
+                self._selector.toggle(character_secondary_field(value))
 
         self.installEventFilter(VisibilityToggleEventFilter(btnSecondary, self._primaryWdg))
 
@@ -549,108 +653,98 @@ class _PrimaryFieldWidget(QWidget):
             gc(self._secondaryFieldWidgets[secondary])
             self._secondaryFieldWidgets[secondary] = None
 
-    def _clickSecondaryField(self):
+    def _clickSecondaryField(self, secondary: TemplateField, toggled: bool):
+        self.attribute.settings[character_secondary_attribute_type(secondary).value] = toggled
         self.valueChanged.emit()
 
 
-class MultiLayerComplexTemplateWidgetBase(ProfileFieldWidget):
-    ID_KEY: str = 'id'
-    VALUE_KEY: str = 'value'
-    SECONDARY_KEY: str = 'secondary'
-    ALIAS_KEY = 'alias'
-
-    def __init__(self, field: TemplateField, character: Character, parent=None):
+class MultiAttributesTemplateWidgetBase(ProfileFieldWidget):
+    def __init__(self, attribute: CharacterMultiAttribute, character: Character, parent=None):
         super().__init__(parent)
-        self.field = field
+        self.attribute = attribute
+        # self.field = field
         self.character = character
         self._hasAlias = False
-        self._primaryWidgets: List[_PrimaryFieldWidget] = []
 
-        self._btnPrimary = SecondaryActionPushButton()
-        self._btnPrimary.setText(self._primaryButtonText())
-        self._btnPrimary.setIcon(IconRegistry.plus_icon('grey'))
-        decr_font(self._btnPrimary)
-        fields = self._primaryFields()
-        self._menu = MenuWidget(self._btnPrimary)
-        self._menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
-        for field in fields:
-            self._menu.addAction(
-                action(field.name, icon=IconRegistry.from_name(field.icon), tooltip=field.description,
-                       slot=partial(self._addPrimaryField, field),
-                       parent=self._menu))
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self._layout: QVBoxLayout = vbox(self, 0, 5)
 
-        self.layout().addWidget(wrap(self._btnPrimary, margin_left=5))
+        if attribute.type == MultiAttributePrimaryType.External_goal:
+            field = goal_field
+        else:
+            field = internal_goal_field
+        wdg = _PrimaryFieldWidget(self.attribute, field, self._secondaryFields(field))
+        self.layout().addWidget(wdg)
+
         self._layout.addWidget(vspacer())
 
-    def value(self) -> Any:
-        def secondaryValues(primaryWdg: _PrimaryFieldWidget):
-            values = []
-            for field in primaryWdg.secondaryFields():
-                s_id, value_ = field
-                values.append({self.ID_KEY: s_id, self.VALUE_KEY: value_})
-            return values
+    # def value(self) -> Any:
+    #     def secondaryValues(primaryWdg: _PrimaryFieldWidget):
+    #         values = []
+    #         for field in primaryWdg.secondaryFields():
+    #             s_id, value_ = field
+    #             values.append({self.ID_KEY: s_id, self.VALUE_KEY: value_})
+    #         return values
+    #
+    #     value = {}
+    #     for i, primary_wdg in enumerate(self._primaryWidgets):
+    #         sid = str(primary_wdg.field().id)
+    #         sid += f'&{i}'
+    #         if self._hasAlias:
+    #             sid += f'&{primary_wdg.field().name}'
+    #         value[sid] = {self.VALUE_KEY: primary_wdg.value(),
+    #                       self.SECONDARY_KEY: secondaryValues(primary_wdg)}
+    #         if self._hasAlias:
+    #             value[sid][self.ALIAS_KEY] = primary_wdg.field().name
+    #
+    #     return value
+    #
+    # def setValue(self, value: Any):
+    #     if value is None:
+    #         return
+    #     if isinstance(value, str):
+    #         return
+    #
+    #     primary_fields = self._primaryFields()
+    #     for k, v in value.items():
+    #         k = k.split('&')[0]
+    #         primary = next((x for x in primary_fields if str(x.id) == k), None)
+    #         if primary is None:
+    #             continue
+    #         if self._hasAlias and self.ALIAS_KEY in v.keys():
+    #             primary = copy.deepcopy(primary)
+    #             primary.name = v[self.ALIAS_KEY]
+    #         wdg = self._addPrimaryField(primary)
+    #         wdg.setValue(v[self.VALUE_KEY])
+    #
+    #         secondary_fields = self._secondaryFields(primary)
+    #         for secondary in v[self.SECONDARY_KEY]:
+    #             secondary_field = next((x for x in secondary_fields if str(x.id) == secondary[self.ID_KEY]), None)
+    #             if secondary_field:
+    #                 wdg.setSecondaryField(secondary_field, secondary[self.VALUE_KEY])
+    #
+    #     self._valueChanged()
 
-        value = {}
-        for i, primary_wdg in enumerate(self._primaryWidgets):
-            sid = str(primary_wdg.field().id)
-            sid += f'&{i}'
-            if self._hasAlias:
-                sid += f'&{primary_wdg.field().name}'
-            value[sid] = {self.VALUE_KEY: primary_wdg.value(),
-                          self.SECONDARY_KEY: secondaryValues(primary_wdg)}
-            if self._hasAlias:
-                value[sid][self.ALIAS_KEY] = primary_wdg.field().name
-
-        return value
-
-    def setValue(self, value: Any):
-        if value is None:
-            return
-        if isinstance(value, str):
-            return
-
-        primary_fields = self._primaryFields()
-        for k, v in value.items():
-            k = k.split('&')[0]
-            primary = next((x for x in primary_fields if str(x.id) == k), None)
-            if primary is None:
-                continue
-            if self._hasAlias and self.ALIAS_KEY in v.keys():
-                primary = copy.deepcopy(primary)
-                primary.name = v[self.ALIAS_KEY]
-            wdg = self._addPrimaryField(primary)
-            wdg.setValue(v[self.VALUE_KEY])
-
-            secondary_fields = self._secondaryFields(primary)
-            for secondary in v[self.SECONDARY_KEY]:
-                secondary_field = next((x for x in secondary_fields if str(x.id) == secondary[self.ID_KEY]), None)
-                if secondary_field:
-                    wdg.setSecondaryField(secondary_field, secondary[self.VALUE_KEY])
-
-        self._valueChanged()
-
-    def _primaryFields(self) -> List[TemplateField]:
-        return []
-
-    def _primaryButtonText(self) -> str:
-        return 'Add new item'
+    # def _primaryFields(self) -> List[TemplateField]:
+    #     return []
+    #
+    # def _primaryButtonText(self) -> str:
+    #     return 'Add new item'
 
     def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
         return []
 
-    def _addPrimaryField(self, field: TemplateField) -> _PrimaryFieldWidget:
-        wdg = _PrimaryFieldWidget(field, self._secondaryFields(field))
-        self._primaryWidgets.append(wdg)
-        wdg.removed.connect(partial(self._removePrimaryField, wdg))
-        wdg.renamed.connect(partial(self._renamePrimaryField, wdg))
-        wdg.valueChanged.connect(self._valueChanged)
-        if self._layout.count() > 2:
-            self._layout.insertWidget(self._layout.count() - 2, line())
-        self._layout.insertWidget(self._layout.count() - 2, wdg)
-
-        return wdg
+    # def _addPrimaryField(self, field: TemplateField) -> _PrimaryFieldWidget:
+    #     wdg = _PrimaryFieldWidget(field, self._secondaryFields(field))
+    #     self._primaryWidgets.append(wdg)
+    #     wdg.removed.connect(partial(self._removePrimaryField, wdg))
+    #     wdg.renamed.connect(partial(self._renamePrimaryField, wdg))
+    #     wdg.valueChanged.connect(self._valueChanged)
+    #     if self._layout.count() > 2:
+    #         self._layout.insertWidget(self._layout.count() - 2, line())
+    #     self._layout.insertWidget(self._layout.count() - 2, wdg)
+    #
+    #     return wdg
 
     def _removePrimaryField(self, wdg: _PrimaryFieldWidget):
         self._primaryWidgets.remove(wdg)
@@ -674,19 +768,45 @@ class MultiLayerComplexTemplateWidgetBase(ProfileFieldWidget):
         self.valueFilled.emit(value / count if count else 0)
 
 
-class GmcFieldWidget(MultiLayerComplexTemplateWidgetBase):
-
-    @property
-    def wdgEditor(self):
-        return self
+class MultiAttributeSectionContext(SectionContext):
 
     @overrides
-    def _primaryButtonText(self) -> str:
+    def has_addition(self) -> bool:
+        return True
+
+
+class GmcSectionContext(MultiAttributeSectionContext):
+    @overrides
+    def primaryButtonText(self) -> str:
         return 'Add new goal'
 
     @overrides
-    def _primaryFields(self) -> List[TemplateField]:
+    def primaryFields(self) -> List[TemplateField]:
         return [goal_field, internal_goal_field]
+
+    @overrides
+    def primaryAttributes(self, character: Character) -> List[CharacterMultiAttribute]:
+        return character.gmc
+
+    @overrides
+    def primaryFieldType(self) -> CharacterProfileFieldType:
+        return CharacterProfileFieldType.Field_Goals
+    # @overrides
+    # def secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
+    #     if primary.id == goal_field.id:
+    #         return [stakes_field, conflict_field, motivation_field, methods_field, internal_motivation_field,
+    #                 internal_conflict_field,
+    #                 internal_stakes_field]
+    #     else:
+    #         return [methods_field, internal_motivation_field, internal_conflict_field, internal_stakes_field]
+
+
+class GmcFieldWidget(MultiAttributesTemplateWidgetBase):
+
+    def __init__(self, attribute: CharacterMultiAttribute, character: Character,
+                 ref: CharacterProfileFieldReference, parent=None):
+        super().__init__(attribute, character, parent=parent)
+        self.ref = ref
 
     @overrides
     def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
@@ -720,7 +840,12 @@ def field_widget(ref: CharacterProfileFieldReference, character: Character) -> P
     elif ref.type == CharacterProfileFieldType.Field_Values:
         return ValuesFieldWidget(character)
     elif ref.type == CharacterProfileFieldType.Field_Goals:
-        return GmcFieldWidget(gmc_field, character)
+        attribute = None
+        for gmc in character.gmc:
+            if gmc.id == ref.ref:
+                attribute = gmc
+                break
+        return GmcFieldWidget(attribute, character, ref)
 
     else:
         return NoteField(ref)
@@ -748,7 +873,11 @@ class CharacterProfileEditor(QWidget):
         clear_layout(self)
 
         for section in self._character.profile:
-            wdg = ProfileSectionWidget(section)
+            sc = SectionContext()
+            if section.type == CharacterProfileSectionType.Goals:
+                sc = GmcSectionContext()
+            wdg = ProfileSectionWidget(section, sc, self._character)
+            # wdg.fieldAddedc.oonnect(partial(self._primaryFieldAdded, ))
             self.layout().addWidget(wdg)
             for field in section.fields:
                 fieldWdg = field_widget(field, self._character)
@@ -757,3 +886,5 @@ class CharacterProfileEditor(QWidget):
         self.layout().addWidget(vspacer())
 
         self.btnCustomize.raise_()
+
+    # def _primaryFieldAdded(self, field: CharacterProfileFieldReference):

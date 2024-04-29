@@ -461,9 +461,7 @@ def default_character_profile() -> List[CharacterProfileSectionReference]:
         CharacterProfileSectionReference(CharacterProfileSectionType.Baggage, fields=[
             CharacterProfileFieldReference(CharacterProfileFieldType.Field_Baggage)
         ]),
-        CharacterProfileSectionReference(CharacterProfileSectionType.Goals, fields=[
-            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Goals)
-        ])
+        CharacterProfileSectionReference(CharacterProfileSectionType.Goals)
     ]
 
 
