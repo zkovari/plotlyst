@@ -455,9 +455,7 @@ def default_character_profile() -> List[CharacterProfileSectionReference]:
             CharacterProfileFieldReference(CharacterProfileFieldType.Field_Faculties_Willpower),
             CharacterProfileFieldReference(CharacterProfileFieldType.Field_Faculties_Creativity)
         ]),
-        CharacterProfileSectionReference(CharacterProfileSectionType.Flaws, fields=[
-            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Flaws)
-        ]),
+        CharacterProfileSectionReference(CharacterProfileSectionType.Flaws),
         CharacterProfileSectionReference(CharacterProfileSectionType.Baggage),
         CharacterProfileSectionReference(CharacterProfileSectionType.Goals)
     ]
@@ -471,6 +469,7 @@ class MultiAttributePrimaryType(Enum):
     Demon = 'demon'
     Fear = 'fear'
     Misbelief = 'misbelief'
+    Flaw = 'flaw'
 
 
 class MultiAttributeSecondaryType(Enum):
@@ -490,6 +489,14 @@ class MultiAttributeSecondaryType(Enum):
     Baggage_deterioration = 'baggage_deterioration'
     Baggage_defense_mechanism = 'baggage_defense_mechanism'
     Baggage_trigger = 'baggage_trigger'
+
+    Flaw_triggers = 'flaw_triggers'
+    Flaw_coping = 'flaw_coping'
+    Flaw_manifestation = 'flaw_manifestation'
+    Flaw_relation = 'flaw_relation'
+    Flaw_goals = 'flaw_goals'
+    Flaw_growth = 'flaw_growth'
+    Flaw_deterioration = 'flaw_deterioration'
 
 
 @dataclass
@@ -539,6 +546,7 @@ class Character:
     values: List[str] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     gmc: List[CharacterMultiAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     baggage: List[CharacterMultiAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    flaws: List[CharacterMultiAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
 
     def enneagram(self) -> Optional[SelectionItem]:
         for value in self.template_values:
