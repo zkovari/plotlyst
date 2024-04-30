@@ -21,13 +21,13 @@ from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QComboBox
 
 from plotlyst.core.template import TemplateField, TemplateFieldType, enneagram_field, mbti_field, \
-    SelectionItemType, SelectionItem, love_style_field, disc_field, strengths_weaknesses_field
+    SelectionItemType, SelectionItem, love_style_field, disc_field
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.template.impl import SubtitleTemplateDisplayWidget, \
     LabelTemplateDisplayWidget, HeaderTemplateDisplayWidget, LineTemplateDisplayWidget, IconTemplateDisplayWidget, \
     EnneagramFieldWidget, MbtiFieldWidget, NumericTemplateFieldWidget, SmallTextTemplateFieldWidget, \
     LineTextTemplateFieldWidget, \
-    BarTemplateFieldWidget, LoveStyleFieldWidget, WorkStyleFieldWidget, StrengthsWeaknessesFieldWidget
+    BarTemplateFieldWidget, LoveStyleFieldWidget, WorkStyleFieldWidget
 
 
 def _icon(item: SelectionItem) -> QIcon:
@@ -62,8 +62,8 @@ class TemplateFieldWidgetFactory:
             return WorkStyleFieldWidget(field, parent)
         # elif field.id == flaws_field.id:
         #     return FlawsFieldWidget(field)
-        elif field.id == strengths_weaknesses_field.id:
-            return StrengthsWeaknessesFieldWidget(field)
+        # elif field.id == strengths_weaknesses_field.id:
+        #     return StrengthsWeaknessesFieldWidget(field)
         # elif field.id == traits_field.id:
         #     return TraitsFieldWidget(field)
         # elif field.id == gmc_field.id:

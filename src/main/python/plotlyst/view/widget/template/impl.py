@@ -701,203 +701,203 @@ class LabelsTemplateFieldWidget(TemplateFieldWidgetBase):
             self.valueReset.emit()
 
 
-class StrengthsWeaknessesHeader(QWidget):
-    edit = pyqtSignal()
-    remove = pyqtSignal()
+# class StrengthsWeaknessesHeader(QWidget):
+#     edit = pyqtSignal()
+#     remove = pyqtSignal()
+#
+#     def __init__(self, attribute: StrengthWeaknessAttribute, parent=None):
+#         super().__init__(parent)
+#         self.attribute = attribute
+#         hbox(self, 0)
+#
+#         self.btnKey = push_btn(text=self.attribute.name, transparent_=True)
+#         bold(self.btnKey)
+#         self.btnKey.clicked.connect(self.edit)
+#
+#         self.btnMenu = DotsMenuButton()
+#         self.btnMenu.installEventFilter(OpacityEventFilter(self.btnMenu))
+#         retain_when_hidden(self.btnMenu)
+#
+#         menu = MenuWidget(self.btnMenu)
+#         menu.addAction(action('Edit', IconRegistry.edit_icon(), slot=self.edit))
+#         menu.addSeparator()
+#         menu.addAction(action('Remove', IconRegistry.trash_can_icon(), slot=self.remove))
+#
+#         self.layout().addWidget(self.btnKey, alignment=Qt.AlignmentFlag.AlignLeft)
+#         self.layout().addWidget(self.btnMenu, alignment=Qt.AlignmentFlag.AlignRight)
+#
+#         self.installEventFilter(VisibilityToggleEventFilter(self.btnMenu, self))
+#
+#     def refreshAttribute(self, attribute: StrengthWeaknessAttribute):
+#         self.attribute = attribute
+#         self.btnKey.setText(self.attribute.name)
+#
+#
+# class StrengthsWeaknessesTableRow(QWidget):
+#     changed = pyqtSignal()
+#
+#     def __init__(self, attribute: StrengthWeaknessAttribute, parent=None):
+#         super().__init__(parent)
+#         self.attribute = attribute
+#         hbox(self, 0, spacing=10)
+#         self.textStrength = self._textEditor()
+#         self.textStrength.setPlaceholderText('Define the strength of this attribute')
+#         self.textStrength.setText(self.attribute.strength)
+#         self.textStrength.textChanged.connect(self._strengthChanged)
+#
+#         self.textWeakness = self._textEditor()
+#         self.textWeakness.setPlaceholderText('Define the weakness of this attribute')
+#         self.textWeakness.setText(self.attribute.weakness)
+#         self.textWeakness.textChanged.connect(self._weaknessChanged)
+#
+#         self.layout().addWidget(self.textStrength)
+#         self.layout().addWidget(self.textWeakness)
+#
+#         self.textStrength.setVisible(self.attribute.has_strength)
+#         self.textWeakness.setVisible(self.attribute.has_weakness)
+#
+#     def refreshAttribute(self, attribute: StrengthWeaknessAttribute):
+#         self.attribute = attribute
+#         self.attribute.strength = self.textStrength.toPlainText()
+#         self.attribute.weakness = self.textWeakness.toPlainText()
+#         self.textStrength.setVisible(self.attribute.has_strength)
+#         self.textWeakness.setVisible(self.attribute.has_weakness)
+#
+#     def _strengthChanged(self):
+#         self.attribute.strength = self.textStrength.toPlainText()
+#         self.changed.emit()
+#
+#     def _weaknessChanged(self):
+#         self.attribute.weakness = self.textWeakness.toPlainText()
+#         self.changed.emit()
+#
+#     def _textEditor(self) -> AutoAdjustableTextEdit:
+#         editor = AutoAdjustableTextEdit(height=75)
+#         editor.setMaximumWidth(500)
+#         editor.setProperty('white-bg', True)
+#         editor.setProperty('rounded', True)
+#         retain_when_hidden(editor)
+#         return editor
 
-    def __init__(self, attribute: StrengthWeaknessAttribute, parent=None):
-        super().__init__(parent)
-        self.attribute = attribute
-        hbox(self, 0)
 
-        self.btnKey = push_btn(text=self.attribute.name, transparent_=True)
-        bold(self.btnKey)
-        self.btnKey.clicked.connect(self.edit)
-
-        self.btnMenu = DotsMenuButton()
-        self.btnMenu.installEventFilter(OpacityEventFilter(self.btnMenu))
-        retain_when_hidden(self.btnMenu)
-
-        menu = MenuWidget(self.btnMenu)
-        menu.addAction(action('Edit', IconRegistry.edit_icon(), slot=self.edit))
-        menu.addSeparator()
-        menu.addAction(action('Remove', IconRegistry.trash_can_icon(), slot=self.remove))
-
-        self.layout().addWidget(self.btnKey, alignment=Qt.AlignmentFlag.AlignLeft)
-        self.layout().addWidget(self.btnMenu, alignment=Qt.AlignmentFlag.AlignRight)
-
-        self.installEventFilter(VisibilityToggleEventFilter(self.btnMenu, self))
-
-    def refreshAttribute(self, attribute: StrengthWeaknessAttribute):
-        self.attribute = attribute
-        self.btnKey.setText(self.attribute.name)
-
-
-class StrengthsWeaknessesTableRow(QWidget):
-    changed = pyqtSignal()
-
-    def __init__(self, attribute: StrengthWeaknessAttribute, parent=None):
-        super().__init__(parent)
-        self.attribute = attribute
-        hbox(self, 0, spacing=10)
-        self.textStrength = self._textEditor()
-        self.textStrength.setPlaceholderText('Define the strength of this attribute')
-        self.textStrength.setText(self.attribute.strength)
-        self.textStrength.textChanged.connect(self._strengthChanged)
-
-        self.textWeakness = self._textEditor()
-        self.textWeakness.setPlaceholderText('Define the weakness of this attribute')
-        self.textWeakness.setText(self.attribute.weakness)
-        self.textWeakness.textChanged.connect(self._weaknessChanged)
-
-        self.layout().addWidget(self.textStrength)
-        self.layout().addWidget(self.textWeakness)
-
-        self.textStrength.setVisible(self.attribute.has_strength)
-        self.textWeakness.setVisible(self.attribute.has_weakness)
-
-    def refreshAttribute(self, attribute: StrengthWeaknessAttribute):
-        self.attribute = attribute
-        self.attribute.strength = self.textStrength.toPlainText()
-        self.attribute.weakness = self.textWeakness.toPlainText()
-        self.textStrength.setVisible(self.attribute.has_strength)
-        self.textWeakness.setVisible(self.attribute.has_weakness)
-
-    def _strengthChanged(self):
-        self.attribute.strength = self.textStrength.toPlainText()
-        self.changed.emit()
-
-    def _weaknessChanged(self):
-        self.attribute.weakness = self.textWeakness.toPlainText()
-        self.changed.emit()
-
-    def _textEditor(self) -> AutoAdjustableTextEdit:
-        editor = AutoAdjustableTextEdit(height=75)
-        editor.setMaximumWidth(500)
-        editor.setProperty('white-bg', True)
-        editor.setProperty('rounded', True)
-        retain_when_hidden(editor)
-        return editor
-
-
-class StrengthsWeaknessesFieldWidget(EditableTemplateWidget):
-    def __init__(self, field: TemplateField, parent=None):
-        super().__init__(field, parent)
-        self._rows: List[StrengthsWeaknessesTableRow] = []
-
-        vbox(self, 0)
-        self._center = QWidget()
-        self._centerlayout: QGridLayout = grid(self._center, 0, 0, 5)
-        margins(self._centerlayout, left=5)
-        self._centerlayout.setColumnMinimumWidth(0, 70)
-        self._centerlayout.setColumnStretch(1, 1)
-        self._centerlayout.setColumnStretch(2, 1)
-
-        self.emojiStrength = label('')
-        self.emojiStrength.setFont(emoji_font())
-        self.emojiStrength.setText(emoji.emojize(':flexed_biceps:'))
-        self.emojiWeakness = label('')
-        self.emojiWeakness.setFont(emoji_font())
-        self.emojiWeakness.setText(emoji.emojize(':nauseated_face:'))
-        self.lblStrength = label('Strength', underline=True)
-        self.lblWeakness = label('Weakness', underline=True)
-        incr_font(self.lblStrength)
-        incr_font(self.lblWeakness)
-        self._centerlayout.addWidget(group(self.emojiStrength, self.lblStrength), 0, 1,
-                                     alignment=Qt.AlignmentFlag.AlignCenter)
-        self._centerlayout.addWidget(group(self.emojiWeakness, self.lblWeakness), 0, 2,
-                                     alignment=Qt.AlignmentFlag.AlignCenter)
-
-        self._btnPrimary = SecondaryActionPushButton()
-        self._btnPrimary.setText('Add new attribute')
-        self._btnPrimary.setIcon(IconRegistry.plus_icon('grey'))
-        self._btnPrimary.clicked.connect(self._addNewAttribute)
-        decr_font(self._btnPrimary)
-
-        self.layout().addWidget(self._center)
-        self.layout().addWidget(wrap(self._btnPrimary, margin_left=5), alignment=Qt.AlignmentFlag.AlignLeft)
-
-    @property
-    def wdgEditor(self):
-        return self
-
-    @overrides
-    def value(self) -> Any:
-        values = []
-        for row in self._rows:
-            values.append({
-                'key': row.attribute.name,
-                'has_strength': row.attribute.has_strength,
-                'has_weakness': row.attribute.has_weakness,
-                'strength': row.attribute.strength,
-                'weakness': row.attribute.weakness
-            })
-
-        return values
-
-    @overrides
-    def setValue(self, value: Any):
-        self._rows.clear()
-        if value is None:
-            return
-        if isinstance(value, str):
-            return
-
-        for item in value:
-            attribute = StrengthWeaknessAttribute(item.get('key', ''),
-                                                  has_strength=item.get('has_strength', True),
-                                                  has_weakness=item.get('has_weakness', True),
-                                                  strength=item.get('strength', ''),
-                                                  weakness=item.get('weakness', '')
-                                                  )
-            self._addAttribute(attribute)
-
-        self._valueChanged()
-
-    def _addNewAttribute(self):
-        attribute = StrengthWeaknessEditor.popup()
-        if attribute:
-            header, rowWdg = self._addAttribute(attribute)
-            qtanim.fade_in(header, teardown=lambda: header.setGraphicsEffect(None))
-            qtanim.fade_in(rowWdg, teardown=lambda: rowWdg.setGraphicsEffect(None))
-            self._valueChanged()
-
-    def _addAttribute(self, attribute: StrengthWeaknessAttribute):
-        rowWdg = StrengthsWeaknessesTableRow(attribute)
-        rowWdg.changed.connect(self._valueChanged)
-        self._rows.append(rowWdg)
-        header = StrengthsWeaknessesHeader(attribute)
-        header.edit.connect(partial(self._edit, header, rowWdg))
-        header.remove.connect(partial(self._remove, header, rowWdg))
-
-        row = self._centerlayout.rowCount()
-        self._centerlayout.addWidget(header, row, 0, alignment=Qt.AlignmentFlag.AlignTop)
-        self._centerlayout.addWidget(rowWdg, row, 1, 1, 2)
-
-        return header, rowWdg
-
-    def _edit(self, header: StrengthsWeaknessesHeader, row: StrengthsWeaknessesTableRow):
-        attribute = StrengthWeaknessEditor.popup(header.attribute)
-        if attribute:
-            header.refreshAttribute(attribute)
-            row.refreshAttribute(attribute)
-            self._valueChanged()
-
-    def _remove(self, header: StrengthsWeaknessesHeader, row: StrengthsWeaknessesTableRow):
-        self._rows.remove(row)
-        fade_out_and_gc(self._center, header)
-        fade_out_and_gc(self._center, row)
-
-    def _valueChanged(self):
-        count = 0
-        value = 0
-        for wdg in self._rows:
-            if wdg.attribute.has_strength:
-                count += 1
-                if wdg.attribute.strength:
-                    value += 1
-            if wdg.attribute.has_weakness:
-                count += 1
-                if wdg.attribute.weakness:
-                    value += 1
-        self.valueFilled.emit(value / count if count else 0)
+# class StrengthsWeaknessesFieldWidget(EditableTemplateWidget):
+#     def __init__(self, field: TemplateField, parent=None):
+#         super().__init__(field, parent)
+#         self._rows: List[StrengthsWeaknessesTableRow] = []
+#
+#         vbox(self, 0)
+#         self._center = QWidget()
+#         self._centerlayout: QGridLayout = grid(self._center, 0, 0, 5)
+#         margins(self._centerlayout, left=5)
+#         self._centerlayout.setColumnMinimumWidth(0, 70)
+#         self._centerlayout.setColumnStretch(1, 1)
+#         self._centerlayout.setColumnStretch(2, 1)
+#
+#         self.emojiStrength = label('')
+#         self.emojiStrength.setFont(emoji_font())
+#         self.emojiStrength.setText(emoji.emojize(':flexed_biceps:'))
+#         self.emojiWeakness = label('')
+#         self.emojiWeakness.setFont(emoji_font())
+#         self.emojiWeakness.setText(emoji.emojize(':nauseated_face:'))
+#         self.lblStrength = label('Strength', underline=True)
+#         self.lblWeakness = label('Weakness', underline=True)
+#         incr_font(self.lblStrength)
+#         incr_font(self.lblWeakness)
+#         self._centerlayout.addWidget(group(self.emojiStrength, self.lblStrength), 0, 1,
+#                                      alignment=Qt.AlignmentFlag.AlignCenter)
+#         self._centerlayout.addWidget(group(self.emojiWeakness, self.lblWeakness), 0, 2,
+#                                      alignment=Qt.AlignmentFlag.AlignCenter)
+#
+#         self._btnPrimary = SecondaryActionPushButton()
+#         self._btnPrimary.setText('Add new attribute')
+#         self._btnPrimary.setIcon(IconRegistry.plus_icon('grey'))
+#         self._btnPrimary.clicked.connect(self._addNewAttribute)
+#         decr_font(self._btnPrimary)
+#
+#         self.layout().addWidget(self._center)
+#         self.layout().addWidget(wrap(self._btnPrimary, margin_left=5), alignment=Qt.AlignmentFlag.AlignLeft)
+#
+#     @property
+#     def wdgEditor(self):
+#         return self
+#
+#     @overrides
+#     def value(self) -> Any:
+#         values = []
+#         for row in self._rows:
+#             values.append({
+#                 'key': row.attribute.name,
+#                 'has_strength': row.attribute.has_strength,
+#                 'has_weakness': row.attribute.has_weakness,
+#                 'strength': row.attribute.strength,
+#                 'weakness': row.attribute.weakness
+#             })
+#
+#         return values
+#
+#     @overrides
+#     def setValue(self, value: Any):
+#         self._rows.clear()
+#         if value is None:
+#             return
+#         if isinstance(value, str):
+#             return
+#
+#         for item in value:
+#             attribute = StrengthWeaknessAttribute(item.get('key', ''),
+#                                                   has_strength=item.get('has_strength', True),
+#                                                   has_weakness=item.get('has_weakness', True),
+#                                                   strength=item.get('strength', ''),
+#                                                   weakness=item.get('weakness', '')
+#                                                   )
+#             self._addAttribute(attribute)
+#
+#         self._valueChanged()
+#
+#     def _addNewAttribute(self):
+#         attribute = StrengthWeaknessEditor.popup()
+#         if attribute:
+#             header, rowWdg = self._addAttribute(attribute)
+#             qtanim.fade_in(header, teardown=lambda: header.setGraphicsEffect(None))
+#             qtanim.fade_in(rowWdg, teardown=lambda: rowWdg.setGraphicsEffect(None))
+#             self._valueChanged()
+#
+#     def _addAttribute(self, attribute: StrengthWeaknessAttribute):
+#         rowWdg = StrengthsWeaknessesTableRow(attribute)
+#         rowWdg.changed.connect(self._valueChanged)
+#         self._rows.append(rowWdg)
+#         header = StrengthsWeaknessesHeader(attribute)
+#         header.edit.connect(partial(self._edit, header, rowWdg))
+#         header.remove.connect(partial(self._remove, header, rowWdg))
+#
+#         row = self._centerlayout.rowCount()
+#         self._centerlayout.addWidget(header, row, 0, alignment=Qt.AlignmentFlag.AlignTop)
+#         self._centerlayout.addWidget(rowWdg, row, 1, 1, 2)
+#
+#         return header, rowWdg
+#
+#     def _edit(self, header: StrengthsWeaknessesHeader, row: StrengthsWeaknessesTableRow):
+#         attribute = StrengthWeaknessEditor.popup(header.attribute)
+#         if attribute:
+#             header.refreshAttribute(attribute)
+#             row.refreshAttribute(attribute)
+#             self._valueChanged()
+#
+#     def _remove(self, header: StrengthsWeaknessesHeader, row: StrengthsWeaknessesTableRow):
+#         self._rows.remove(row)
+#         fade_out_and_gc(self._center, header)
+#         fade_out_and_gc(self._center, row)
+#
+#     def _valueChanged(self):
+#         count = 0
+#         value = 0
+#         for wdg in self._rows:
+#             if wdg.attribute.has_strength:
+#                 count += 1
+#                 if wdg.attribute.strength:
+#                     value += 1
+#             if wdg.attribute.has_weakness:
+#                 count += 1
+#                 if wdg.attribute.weakness:
+#                     value += 1
+#         self.valueFilled.emit(value / count if count else 0)

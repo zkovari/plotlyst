@@ -20,7 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import copy
 import random
 from abc import abstractmethod
-from dataclasses import dataclass
 from enum import Enum, auto
 from functools import partial
 from typing import Tuple, Optional, Dict, List
@@ -40,7 +39,7 @@ from qtmenu import MenuWidget
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR, CHARACTER_MAJOR_COLOR, \
     CHARACTER_SECONDARY_COLOR, RELAXED_WHITE_COLOR
-from plotlyst.core.domain import BackstoryEvent, Character
+from plotlyst.core.domain import BackstoryEvent, Character, StrengthWeaknessAttribute
 from plotlyst.core.help import enneagram_help, mbti_help, character_roles_description, \
     character_role_examples
 from plotlyst.core.template import SelectionItem, enneagram_field, TemplateField, mbti_field, \
@@ -1092,15 +1091,6 @@ class CharacterRoleSelector(QWidget):
 
     def _select(self):
         self.roleSelected.emit(self._currentRole)
-
-
-@dataclass
-class StrengthWeaknessAttribute:
-    name: str
-    has_strength: bool = False
-    has_weakness: bool = False
-    strength: str = ''
-    weakness: str = ''
 
 
 class StrengthWeaknessEditor(PopupDialog):
