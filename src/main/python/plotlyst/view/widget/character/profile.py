@@ -1170,6 +1170,7 @@ class StrengthsWeaknessesFieldWidget(TemplateFieldWidgetBase):
             self._valueChanged()
 
     def _remove(self, header: StrengthsWeaknessesHeader, row: StrengthsWeaknessesTableRow):
+        self.character.strengths.remove(header.attribute)
         self._rows.remove(row)
         fade_out_and_gc(self._center, header)
         fade_out_and_gc(self._center, row)
