@@ -49,7 +49,7 @@ from plotlyst.view.layout import group
 from plotlyst.view.style.slider import apply_slider_color
 from plotlyst.view.widget.button import CollapseButton, SecondaryActionPushButton
 from plotlyst.view.widget.display import Icon
-from plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle
+from plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle, TextInputDialog
 from plotlyst.view.widget.progress import CircularProgressBar
 from plotlyst.view.widget.template.impl import TraitSelectionWidget, LabelsSelectionWidget
 
@@ -109,6 +109,9 @@ class SectionContext:
     def has_addition(self) -> bool:
         return False
 
+    def has_menu(self) -> bool:
+        return False
+
     def primaryFields(self) -> List[TemplateField]:
         return []
 
@@ -121,8 +124,11 @@ class SectionContext:
     def primaryFieldType(self) -> CharacterProfileFieldType:
         pass
 
-    # def secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
-    #     return []
+    def editorTitle(self) -> str:
+        return 'Define a new attribute'
+
+    def editorPlaceholder(self) -> str:
+        return 'Name of the attribute'
 
 
 def character_primary_attribute_type(field: TemplateField) -> MultiAttributePrimaryType:
@@ -307,13 +313,17 @@ class ProfileSectionWidget(ProfileFieldWidget):
             self._btnPrimary.setIcon(IconRegistry.plus_icon('grey'))
             decr_font(self._btnPrimary)
             fields = self.context.primaryFields()
-            self._menu = MenuWidget(self._btnPrimary)
-            self._menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
-            for field in fields:
-                self._menu.addAction(
-                    action(field.name, icon=IconRegistry.from_name(field.icon), tooltip=field.description,
-                           slot=partial(self._addPrimaryField, field),
-                           parent=self._menu))
+
+            if self.context.has_menu():
+                self._menu = MenuWidget(self._btnPrimary)
+                self._menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+                for field in fields:
+                    self._menu.addAction(
+                        action(field.name, icon=IconRegistry.from_name(field.icon), tooltip=field.description,
+                               slot=partial(self._addPrimaryField, field),
+                               parent=self._menu))
+            else:
+                self._btnPrimary.clicked.connect(self._initNewPrimaryField)
 
             self.wdgBottom.layout().addWidget(self._btnPrimary)
 
@@ -354,8 +364,15 @@ class ProfileSectionWidget(ProfileFieldWidget):
         self.progressStatuses[widget] = 0
         self.progress.setValue(sum(self.progressStatuses.values()))
 
-    def _addPrimaryField(self, field: TemplateField):
+    def _initNewPrimaryField(self):
+        flaw = TextInputDialog.edit(self.context.editorTitle(), self.context.editorPlaceholder())
+        if flaw:
+            self._addPrimaryField(flaw_placeholder_field, flaw)
+
+    def _addPrimaryField(self, field: TemplateField, label: Optional[str] = None):
         attr = CharacterMultiAttribute(character_primary_attribute_type(field))
+        if label:
+            attr.label = label
         self.context.primaryAttributes(self.character).append(attr)
         field = CharacterProfileFieldReference(self.context.primaryFieldType(), ref=attr.id)
         self.section.fields.append(field)
@@ -729,6 +746,9 @@ class _PrimaryFieldWidget(QWidget):
     def refresh(self):
         self._primaryWdg.refresh()
 
+    def setLabel(self, label: str):
+        self._primaryWdg.updateLabel(label)
+
     def secondaryFields(self) -> List[Tuple[str, str]]:
         fields = []
         for field, wdg in self._secondaryFieldWidgets.items():
@@ -783,8 +803,8 @@ class MultiAttributesTemplateWidgetBase(ProfileFieldWidget):
         self._layout: QVBoxLayout = vbox(self, 0, 5)
 
         field = character_primary_field(attribute.type)
-        wdg = _PrimaryFieldWidget(self.attribute, field, self._secondaryFields(field))
-        self.layout().addWidget(wdg)
+        self._wdgPrimary = _PrimaryFieldWidget(self.attribute, field, self._secondaryFields(field))
+        self.layout().addWidget(self._wdgPrimary)
 
         self._layout.addWidget(vspacer())
 
@@ -884,6 +904,10 @@ class MultiAttributeSectionContext(SectionContext):
     def has_addition(self) -> bool:
         return True
 
+    @overrides
+    def has_menu(self) -> bool:
+        return True
+
 
 class GmcSectionContext(MultiAttributeSectionContext):
     @overrides
@@ -925,6 +949,10 @@ class BaggageSectionContext(MultiAttributeSectionContext):
 class FlawsSectionContext(MultiAttributeSectionContext):
 
     @overrides
+    def has_menu(self) -> bool:
+        return False
+
+    @overrides
     def primaryButtonText(self) -> str:
         return 'Add new flaw'
 
@@ -939,6 +967,14 @@ class FlawsSectionContext(MultiAttributeSectionContext):
     @overrides
     def primaryFieldType(self) -> CharacterProfileFieldType:
         return CharacterProfileFieldType.Field_Flaws
+
+    @overrides
+    def editorTitle(self) -> str:
+        return 'Define a character flaw'
+
+    @overrides
+    def editorPlaceholder(self) -> str:
+        return 'Name of the flaw'
 
 
 class GmcFieldWidget(MultiAttributesTemplateWidgetBase):
@@ -985,6 +1021,7 @@ class FlawsFieldWidget(MultiAttributesTemplateWidgetBase):
                  ref: CharacterProfileFieldReference, parent=None):
         super().__init__(attribute, character, parent=parent)
         self.ref = ref
+        self._wdgPrimary.setLabel(attribute.label)
 
     @overrides
     def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:

@@ -514,6 +514,7 @@ class CharacterMultiAttribute:
     attributes: Dict[str, CharacterSecondaryAttribute] = field(default_factory=dict,
                                                                metadata=config(exclude=exclude_if_empty))
     settings: Dict[str, Any] = field(default_factory=dict)
+    label: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
     def attribute(self, type_: MultiAttributeSecondaryType) -> Optional[CharacterSecondaryAttribute]:
         if self.settings.get(type_.value, False):
