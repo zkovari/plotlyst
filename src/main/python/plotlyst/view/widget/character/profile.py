@@ -1008,7 +1008,9 @@ class StrengthsWeaknessesHeader(QWidget):
         self.installEventFilter(VisibilityToggleEventFilter(self.btnMenu, self))
 
     def refreshAttribute(self, attribute: StrengthWeaknessAttribute):
-        self.attribute = attribute
+        self.attribute.name = attribute.name
+        self.attribute.has_strength = attribute.has_strength
+        self.attribute.has_weakness = attribute.has_weakness
         self.btnKey.setText(self.attribute.name)
 
 
