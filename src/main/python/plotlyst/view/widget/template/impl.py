@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import copy
 from functools import partial
 from typing import Optional, List, Any, Dict, Set
 
@@ -36,13 +35,8 @@ from qtmenu import MenuWidget
 
 from plotlyst.core.help import enneagram_help, mbti_help, mbti_keywords
 from plotlyst.core.template import TemplateField, SelectionItem, \
-    enneagram_choices, goal_field, internal_goal_field, stakes_field, conflict_field, motivation_field, \
-    internal_motivation_field, internal_conflict_field, internal_stakes_field, wound_field, fear_field, \
-    baggage_healing_field, methods_field, misbelief_field, ghost_field, demon_field, mbti_choices, love_style_choices, \
-    work_style_choices, flaw_placeholder_field, flaw_relation_field, flaw_manifestation_field, flaw_coping_field, \
-    flaw_triggers_field, flaw_goals_field, flaw_growth_field, flaw_deterioration_field, baggage_coping_field, \
-    baggage_manifestation_field, baggage_deterioration_field, baggage_relation_field, baggage_trigger_field, \
-    baggage_source_field, baggage_defense_mechanism_field
+    enneagram_choices, mbti_choices, love_style_choices, \
+    work_style_choices
 from plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
 from plotlyst.view.common import wrap, emoji_font, action, label, push_btn, \
@@ -55,7 +49,7 @@ from plotlyst.view.widget.button import SecondaryActionPushButton, CollapseButto
 from plotlyst.view.widget.character.editor import EnneagramSelector, MbtiSelector, LoveStyleSelector, \
     DiscSelector, StrengthWeaknessAttribute, StrengthWeaknessEditor
 from plotlyst.view.widget.display import Subtitle, Emoji, Icon, dash_icon
-from plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle, TextInputDialog
+from plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle
 from plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
 from plotlyst.view.widget.progress import CircularProgressBar
 from plotlyst.view.widget.template.base import TemplateDisplayWidget, TemplateFieldWidgetBase, \
@@ -705,77 +699,6 @@ class LabelsTemplateFieldWidget(TemplateFieldWidgetBase):
             self.valueFilled.emit(1)
         else:
             self.valueReset.emit()
-
-
-# class FlawsFieldWidget(MultiLayerComplexTemplateWidgetBase):
-#
-#     def __init__(self, field: TemplateField, parent=None):
-#         super().__init__(field, parent)
-#         self._hasAlias = True
-#         self._menu.clear()
-#         self._menu.addAction(
-#             action('Add a new character flaw...', icon=IconRegistry.from_name('mdi.virus'),
-#                    tooltip='A flaw can deepen the character, provide complexity, and may even impact the plot',
-#                    slot=self._addNew))
-#
-#     @property
-#     def wdgEditor(self):
-#         return self
-#
-#     @overrides
-#     def _primaryButtonText(self) -> str:
-#         return 'Add new flaw'
-#
-#     @overrides
-#     def _primaryFields(self) -> List[TemplateField]:
-#         return [flaw_placeholder_field]
-#
-#     @overrides
-#     def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
-#         return [flaw_triggers_field, flaw_coping_field, flaw_manifestation_field, flaw_relation_field, flaw_goals_field,
-#                 flaw_growth_field, flaw_deterioration_field]
-#
-#     def _addNew(self):
-#         flaw = TextInputDialog.edit('Define a character flaw', 'Name of the flaw')
-#         if flaw:
-#             field = copy.deepcopy(flaw_placeholder_field)
-#             field.name = flaw
-#             self._addPrimaryField(field)
-#
-#     @overrides
-#     def _renamePrimaryField(self, wdg: _PrimaryFieldWidget):
-#         flaw = wdg.field()
-#         flaw_name = TextInputDialog.edit('Rename character flaw', 'Name of the flaw', flaw.name)
-#         if flaw_name:
-#             flaw.name = flaw_name
-#             wdg.refresh()
-
-
-# class BaggageFieldWidget(MultiLayerComplexTemplateWidgetBase):
-#     @property
-#     def wdgEditor(self):
-#         return self
-#
-#     @overrides
-#     def _primaryButtonText(self) -> str:
-#         return 'Add new baggage'
-#
-#     @overrides
-#     def _primaryFields(self) -> List[TemplateField]:
-#         return [ghost_field, wound_field, demon_field, fear_field, misbelief_field]
-#
-#     @overrides
-#     def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
-#         elements = [baggage_source_field, baggage_manifestation_field,
-#                     baggage_relation_field, baggage_coping_field, baggage_healing_field, baggage_deterioration_field]
-#
-#         if primary.id != ghost_field.id:
-#             elements.insert(3, baggage_defense_mechanism_field)
-#
-#         if primary.id in [wound_field.id, ghost_field.id, demon_field.id]:
-#             elements.insert(1, baggage_trigger_field)
-#
-#         return elements
 
 
 class StrengthsWeaknessesHeader(QWidget):
