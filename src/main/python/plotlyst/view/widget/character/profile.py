@@ -293,10 +293,10 @@ class ProfileSectionWidget(ProfileFieldWidget):
 
         self.wdgHeader = QWidget()
         hbox(self.wdgHeader, 1, 0)
-        self.wdgHeader.layout().addWidget(self.btnHeader)
-        self.progress = CircularProgressBar()
-        self.wdgHeader.layout().addWidget(self.progress, alignment=Qt.AlignmentFlag.AlignVCenter)
-        self.wdgHeader.layout().addWidget(spacer())
+        self.wdgHeader.layout().addWidget(self.btnHeader, alignment=Qt.AlignmentFlag.AlignLeft)
+        # self.progress = CircularProgressBar()
+        # self.wdgHeader.layout().addWidget(self.progress, alignment=Qt.AlignmentFlag.AlignVCenter)
+        # self.wdgHeader.layout().addWidget(spacer())
 
         self.wdgContainer = QWidget()
         vbox(self.wdgContainer, 0)
@@ -331,20 +331,20 @@ class ProfileSectionWidget(ProfileFieldWidget):
             self.wdgBottom.layout().addWidget(self._btnPrimary)
 
         self.children: List[ProfileFieldWidget] = []
-        self.progressStatuses: Dict[ProfileFieldWidget, float] = {}
+        # self.progressStatuses: Dict[ProfileFieldWidget, float] = {}
 
         self.btnHeader.toggled.connect(self._toggleCollapse)
 
     def attachWidget(self, widget: ProfileFieldWidget):
         self.children.append(widget)
         self.wdgContainer.layout().addWidget(widget)
-        self.progressStatuses[widget] = False
-        widget.valueFilled.connect(partial(self._valueFilled, widget))
-        widget.valueReset.connect(partial(self._valueReset, widget))
+        # self.progressStatuses[widget] = False
+        # widget.valueFilled.connect(partial(self._valueFilled, widget))
+        # widget.valueReset.connect(partial(self._valueReset, widget))
 
-    def updateProgress(self):
-        self.progress.setMaxValue(len(self.progressStatuses.keys()))
-        self.progress.update()
+    # def updateProgress(self):
+    #     self.progress.setMaxValue(len(self.progressStatuses.keys()))
+    #     self.progress.update()
 
     def collapse(self, collapsed: bool):
         self.btnHeader.setChecked(collapsed)
@@ -353,19 +353,19 @@ class ProfileSectionWidget(ProfileFieldWidget):
         self.wdgContainer.setHidden(checked)
         self.wdgBottom.setHidden(checked)
 
-    def _valueFilled(self, widget: ProfileFieldWidget, value: float):
-        if self.progressStatuses[widget] == value:
-            return
-
-        self.progressStatuses[widget] = value
-        self.progress.setValue(sum(self.progressStatuses.values()))
-
-    def _valueReset(self, widget: ProfileFieldWidget):
-        if not self.progressStatuses[widget]:
-            return
-
-        self.progressStatuses[widget] = 0
-        self.progress.setValue(sum(self.progressStatuses.values()))
+    # def _valueFilled(self, widget: ProfileFieldWidget, value: float):
+    #     if self.progressStatuses[widget] == value:
+    #         return
+    #
+    #     self.progressStatuses[widget] = value
+    #     self.progress.setValue(sum(self.progressStatuses.values()))
+    #
+    # def _valueReset(self, widget: ProfileFieldWidget):
+    #     if not self.progressStatuses[widget]:
+    #         return
+    #
+    #     self.progressStatuses[widget] = 0
+    #     self.progress.setValue(sum(self.progressStatuses.values()))
 
     def _initNewPrimaryField(self):
         label = TextInputDialog.edit(self.context.editorTitle(), self.context.editorPlaceholder())
