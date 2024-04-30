@@ -531,6 +531,19 @@ class StrengthWeaknessAttribute:
 
 
 @dataclass
+class CharacterPersonalityAttribute:
+    value: str = ''
+
+
+@dataclass
+class CharacterPersonality:
+    enneagram: Optional[CharacterPersonalityAttribute] = None
+    mbti: Optional[CharacterPersonalityAttribute] = None
+    love: Optional[CharacterPersonalityAttribute] = None
+    work: Optional[CharacterPersonalityAttribute] = None
+
+
+@dataclass
 class Character:
     name: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -558,6 +571,7 @@ class Character:
     baggage: List[CharacterMultiAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     flaws: List[CharacterMultiAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     strengths: List[StrengthWeaknessAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    personality: CharacterPersonality = field(default_factory=CharacterPersonality)
 
     def enneagram(self) -> Optional[SelectionItem]:
         for value in self.template_values:

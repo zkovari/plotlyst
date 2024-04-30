@@ -20,14 +20,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QComboBox
 
-from plotlyst.core.template import TemplateField, TemplateFieldType, enneagram_field, mbti_field, \
-    SelectionItemType, SelectionItem, love_style_field, disc_field
+from plotlyst.core.template import TemplateField, TemplateFieldType, SelectionItemType, SelectionItem
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.template.impl import SubtitleTemplateDisplayWidget, \
     LabelTemplateDisplayWidget, HeaderTemplateDisplayWidget, LineTemplateDisplayWidget, IconTemplateDisplayWidget, \
-    EnneagramFieldWidget, MbtiFieldWidget, NumericTemplateFieldWidget, SmallTextTemplateFieldWidget, \
+    NumericTemplateFieldWidget, SmallTextTemplateFieldWidget, \
     LineTextTemplateFieldWidget, \
-    BarTemplateFieldWidget, LoveStyleFieldWidget, WorkStyleFieldWidget
+    BarTemplateFieldWidget
 
 
 def _icon(item: SelectionItem) -> QIcon:
@@ -52,24 +51,6 @@ class TemplateFieldWidgetFactory:
         elif field.type == TemplateFieldType.DISPLAY_ICON:
             return IconTemplateDisplayWidget(field, parent)
 
-        if field.id == enneagram_field.id:
-            return EnneagramFieldWidget(field, parent)
-        elif field.id == mbti_field.id:
-            return MbtiFieldWidget(field, parent)
-        elif field.id == love_style_field.id:
-            return LoveStyleFieldWidget(field, parent)
-        elif field.id == disc_field.id:
-            return WorkStyleFieldWidget(field, parent)
-        # elif field.id == flaws_field.id:
-        #     return FlawsFieldWidget(field)
-        # elif field.id == strengths_weaknesses_field.id:
-        #     return StrengthsWeaknessesFieldWidget(field)
-        # elif field.id == traits_field.id:
-        #     return TraitsFieldWidget(field)
-        # elif field.id == gmc_field.id:
-        #     return GmcFieldWidget(field)
-        # elif field.id == baggage_field.id:
-        #     return BaggageFieldWidget(field)
         elif field.type == TemplateFieldType.NUMERIC:
             return NumericTemplateFieldWidget(field, parent)
         elif field.type == TemplateFieldType.TEXT_SELECTION:
@@ -82,14 +63,10 @@ class TemplateFieldWidgetFactory:
                 if item.type == SelectionItemType.SEPARATOR:
                     widget.insertSeparator(widget.count())
             return widget
-        # elif field.type == TemplateFieldType.BUTTON_SELECTION:
-        #     widget = ButtonSelectionWidget(field)
         elif field.type == TemplateFieldType.SMALL_TEXT:
             return SmallTextTemplateFieldWidget(field, parent)
         elif field.type == TemplateFieldType.TEXT:
             return LineTextTemplateFieldWidget(field, parent)
-        # elif field.type == TemplateFieldType.LABELS:
-        #     return LabelsTemplateFieldWidget(field, parent)
         elif field.type == TemplateFieldType.BAR:
             return BarTemplateFieldWidget(field, parent)
         else:

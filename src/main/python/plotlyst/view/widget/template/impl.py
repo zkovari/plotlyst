@@ -480,200 +480,200 @@ class BarTemplateFieldWidget(TemplateFieldWidgetBase):
             self.valueReset.emit()
 
 
-class EnneagramFieldWidget(TemplateFieldWidgetBase):
-    def __init__(self, field: TemplateField, parent=None):
-        super(EnneagramFieldWidget, self).__init__(field, parent)
-        self.wdgEditor = EnneagramSelector()
-        self._defaultTooltip: str = 'Select Enneagram personality'
-        _layout = vbox(self)
-        _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignTop)
-
-        emojiDesire = Emoji()
-        emojiDesire.setText(emoji.emojize(':smiling_face:'))
-        emojiDesire.setToolTip('Core desire')
-        emojiFear = Emoji()
-        emojiFear.setText(emoji.emojize(':face_screaming_in_fear:'))
-        emojiFear.setToolTip('Core fear')
-        self.lblDesire = QLabel('')
-        self.lblDesire.setToolTip('Core desire')
-        self.lblFear = QLabel('')
-        self.lblFear.setToolTip('Core fear')
-
-        decr_font(emojiDesire, 2)
-        decr_font(self.lblDesire)
-        decr_font(emojiFear, 2)
-        decr_font(self.lblFear)
-
-        self.wdgAttr = group(
-            group(dash_icon(), emojiDesire, self.lblDesire, spacer()),
-            group(dash_icon(), emojiFear, self.lblFear, spacer()),
-            vertical=False)
-        margins(self.wdgAttr, left=10)
-        _layout.addWidget(self.wdgAttr)
-        self.wdgAttr.setHidden(True)
-
-        if self.field.compact:
-            _layout.addWidget(spacer())
-
-        self.wdgEditor.selected.connect(self._selectionChanged)
-        self.wdgEditor.ignored.connect(self._ignored)
-
-    @overrides
-    def value(self) -> Any:
-        return self.wdgEditor.value()
-
-    @overrides
-    def setValue(self, value: Any):
-        self.wdgEditor.setValue(value)
-        enneagram = enneagram_choices.get(value)
-        if enneagram:
-            # self.wdgEditor.setToolTip(enneagram_help[value])
-            self._selectionChanged(enneagram)
-        elif value is None:
-            self._ignored()
-        else:
-            self.wdgEditor.setToolTip(self._defaultTooltip)
-
-    def _selectionChanged(self, item: SelectionItem):
-        self.lblDesire.setText(item.meta['desire'])
-        self.lblFear.setText(item.meta['fear'])
-        self.wdgEditor.setToolTip(enneagram_help[item.text])
-        if self.isVisible():
-            qtanim.fade_in(self.wdgAttr)
-        else:
-            self.wdgAttr.setVisible(True)
-
-        self.valueFilled.emit(1)
-
-    def _ignored(self):
-        self.wdgEditor.setToolTip('Enneagram field is ignored for this character')
-        self.lblDesire.setText('')
-        self.lblFear.setText('')
-        self.wdgAttr.setHidden(True)
-        self.valueFilled.emit(1)
-
-
-class MbtiFieldWidget(TemplateFieldWidgetBase):
-    def __init__(self, field: TemplateField, parent=None):
-        super(MbtiFieldWidget, self).__init__(field, parent)
-        self.wdgEditor = MbtiSelector()
-        self._defaultTooltip: str = 'Select MBTI personality type'
-        self.wdgEditor.setToolTip(self._defaultTooltip)
-
-        _layout = vbox(self)
-        _layout.addWidget(self.wdgEditor)
-
-        self.lblKeywords = label(wordWrap=True)
-        decr_font(self.lblKeywords)
-
-        self.wdgAttr = group(dash_icon(), self.lblKeywords, spacer())
-        margins(self.wdgAttr, left=10)
-        _layout.addWidget(self.wdgAttr)
-        self.wdgAttr.setHidden(True)
-
-        if self.field.compact:
-            _layout.addWidget(spacer())
-
-        self.wdgEditor.selected.connect(self._selectionChanged)
-        self.wdgEditor.ignored.connect(self._ignored)
-
-    @overrides
-    def value(self) -> Any:
-        return self.wdgEditor.value()
-
-    @overrides
-    def setValue(self, value: Any):
-        self.wdgEditor.setValue(value)
-        if value:
-            mbti = mbti_choices[value]
-            self._selectionChanged(mbti)
-        elif value is None:
-            self._ignored()
-        else:
-            self.wdgEditor.setToolTip(self._defaultTooltip)
-
-    def _selectionChanged(self, item: SelectionItem):
-        self.lblKeywords.setText(mbti_keywords.get(item.text, ''))
-        if self.isVisible():
-            qtanim.fade_in(self.wdgAttr)
-        else:
-            self.wdgAttr.setVisible(True)
-
-        self.wdgEditor.setToolTip(mbti_help[item.text])
-        self.valueFilled.emit(1)
-
-    def _ignored(self):
-        self.wdgEditor.setToolTip('MBTI field is ignored for this character')
-        self.wdgAttr.setHidden(True)
-        self.valueFilled.emit(1)
-
-
-class LoveStyleFieldWidget(TemplateFieldWidgetBase):
-    def __init__(self, field: TemplateField, parent=None):
-        super().__init__(field, parent)
-        self.wdgEditor = LoveStyleSelector()
-        self._defaultTooltip: str = 'Select love style'
-        _layout = vbox(self)
-        _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignLeft)
-
-        self.wdgEditor.selected.connect(self._selectionChanged)
-        self.wdgEditor.ignored.connect(self._ignored)
-
-    @overrides
-    def value(self) -> Any:
-        return self.wdgEditor.value()
-
-    @overrides
-    def setValue(self, value: Any):
-        self.wdgEditor.setValue(value)
-        if value:
-            mbti = love_style_choices[value]
-            self._selectionChanged(mbti)
-        elif value is None:
-            self._ignored()
-        else:
-            self.wdgEditor.setToolTip(self._defaultTooltip)
-
-    def _selectionChanged(self, item: SelectionItem):
-        pass
-
-    def _ignored(self):
-        self.wdgEditor.setToolTip('Love style field is ignored for this character')
-        self.valueFilled.emit(1)
-
-
-class WorkStyleFieldWidget(TemplateFieldWidgetBase):
-    def __init__(self, field: TemplateField, parent=None):
-        super().__init__(field, parent)
-        self.wdgEditor = DiscSelector()
-        self._defaultTooltip: str = 'Select work style'
-        _layout = vbox(self)
-        _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignLeft)
-
-        self.wdgEditor.selected.connect(self._selectionChanged)
-        self.wdgEditor.ignored.connect(self._ignored)
-
-    @overrides
-    def value(self) -> Any:
-        return self.wdgEditor.value()
-
-    @overrides
-    def setValue(self, value: Any):
-        self.wdgEditor.setValue(value)
-        if value:
-            mbti = work_style_choices[value]
-            self._selectionChanged(mbti)
-        elif value is None:
-            self._ignored()
-        else:
-            self.wdgEditor.setToolTip(self._defaultTooltip)
-
-    def _selectionChanged(self, item: SelectionItem):
-        pass
-
-    def _ignored(self):
-        self.wdgEditor.setToolTip('Work style field is ignored for this character')
-        self.valueFilled.emit(1)
+# class EnneagramFieldWidget(TemplateFieldWidgetBase):
+#     def __init__(self, field: TemplateField, parent=None):
+#         super(EnneagramFieldWidget, self).__init__(field, parent)
+#         self.wdgEditor = EnneagramSelector()
+#         self._defaultTooltip: str = 'Select Enneagram personality'
+#         _layout = vbox(self)
+#         _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignTop)
+#
+#         emojiDesire = Emoji()
+#         emojiDesire.setText(emoji.emojize(':smiling_face:'))
+#         emojiDesire.setToolTip('Core desire')
+#         emojiFear = Emoji()
+#         emojiFear.setText(emoji.emojize(':face_screaming_in_fear:'))
+#         emojiFear.setToolTip('Core fear')
+#         self.lblDesire = QLabel('')
+#         self.lblDesire.setToolTip('Core desire')
+#         self.lblFear = QLabel('')
+#         self.lblFear.setToolTip('Core fear')
+#
+#         decr_font(emojiDesire, 2)
+#         decr_font(self.lblDesire)
+#         decr_font(emojiFear, 2)
+#         decr_font(self.lblFear)
+#
+#         self.wdgAttr = group(
+#             group(dash_icon(), emojiDesire, self.lblDesire, spacer()),
+#             group(dash_icon(), emojiFear, self.lblFear, spacer()),
+#             vertical=False)
+#         margins(self.wdgAttr, left=10)
+#         _layout.addWidget(self.wdgAttr)
+#         self.wdgAttr.setHidden(True)
+#
+#         if self.field.compact:
+#             _layout.addWidget(spacer())
+#
+#         self.wdgEditor.selected.connect(self._selectionChanged)
+#         self.wdgEditor.ignored.connect(self._ignored)
+#
+#     @overrides
+#     def value(self) -> Any:
+#         return self.wdgEditor.value()
+#
+#     @overrides
+#     def setValue(self, value: Any):
+#         self.wdgEditor.setValue(value)
+#         enneagram = enneagram_choices.get(value)
+#         if enneagram:
+#             # self.wdgEditor.setToolTip(enneagram_help[value])
+#             self._selectionChanged(enneagram)
+#         elif value is None:
+#             self._ignored()
+#         else:
+#             self.wdgEditor.setToolTip(self._defaultTooltip)
+#
+#     def _selectionChanged(self, item: SelectionItem):
+#         self.lblDesire.setText(item.meta['desire'])
+#         self.lblFear.setText(item.meta['fear'])
+#         self.wdgEditor.setToolTip(enneagram_help[item.text])
+#         if self.isVisible():
+#             qtanim.fade_in(self.wdgAttr)
+#         else:
+#             self.wdgAttr.setVisible(True)
+#
+#         self.valueFilled.emit(1)
+#
+#     def _ignored(self):
+#         self.wdgEditor.setToolTip('Enneagram field is ignored for this character')
+#         self.lblDesire.setText('')
+#         self.lblFear.setText('')
+#         self.wdgAttr.setHidden(True)
+#         self.valueFilled.emit(1)
+#
+#
+# class MbtiFieldWidget(TemplateFieldWidgetBase):
+#     def __init__(self, field: TemplateField, parent=None):
+#         super(MbtiFieldWidget, self).__init__(field, parent)
+#         self.wdgEditor = MbtiSelector()
+#         self._defaultTooltip: str = 'Select MBTI personality type'
+#         self.wdgEditor.setToolTip(self._defaultTooltip)
+#
+#         _layout = vbox(self)
+#         _layout.addWidget(self.wdgEditor)
+#
+#         self.lblKeywords = label(wordWrap=True)
+#         decr_font(self.lblKeywords)
+#
+#         self.wdgAttr = group(dash_icon(), self.lblKeywords, spacer())
+#         margins(self.wdgAttr, left=10)
+#         _layout.addWidget(self.wdgAttr)
+#         self.wdgAttr.setHidden(True)
+#
+#         if self.field.compact:
+#             _layout.addWidget(spacer())
+#
+#         self.wdgEditor.selected.connect(self._selectionChanged)
+#         self.wdgEditor.ignored.connect(self._ignored)
+#
+#     @overrides
+#     def value(self) -> Any:
+#         return self.wdgEditor.value()
+#
+#     @overrides
+#     def setValue(self, value: Any):
+#         self.wdgEditor.setValue(value)
+#         if value:
+#             mbti = mbti_choices[value]
+#             self._selectionChanged(mbti)
+#         elif value is None:
+#             self._ignored()
+#         else:
+#             self.wdgEditor.setToolTip(self._defaultTooltip)
+#
+#     def _selectionChanged(self, item: SelectionItem):
+#         self.lblKeywords.setText(mbti_keywords.get(item.text, ''))
+#         if self.isVisible():
+#             qtanim.fade_in(self.wdgAttr)
+#         else:
+#             self.wdgAttr.setVisible(True)
+#
+#         self.wdgEditor.setToolTip(mbti_help[item.text])
+#         self.valueFilled.emit(1)
+#
+#     def _ignored(self):
+#         self.wdgEditor.setToolTip('MBTI field is ignored for this character')
+#         self.wdgAttr.setHidden(True)
+#         self.valueFilled.emit(1)
+#
+#
+# class LoveStyleFieldWidget(TemplateFieldWidgetBase):
+#     def __init__(self, field: TemplateField, parent=None):
+#         super().__init__(field, parent)
+#         self.wdgEditor = LoveStyleSelector()
+#         self._defaultTooltip: str = 'Select love style'
+#         _layout = vbox(self)
+#         _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignLeft)
+#
+#         self.wdgEditor.selected.connect(self._selectionChanged)
+#         self.wdgEditor.ignored.connect(self._ignored)
+#
+#     @overrides
+#     def value(self) -> Any:
+#         return self.wdgEditor.value()
+#
+#     @overrides
+#     def setValue(self, value: Any):
+#         self.wdgEditor.setValue(value)
+#         if value:
+#             mbti = love_style_choices[value]
+#             self._selectionChanged(mbti)
+#         elif value is None:
+#             self._ignored()
+#         else:
+#             self.wdgEditor.setToolTip(self._defaultTooltip)
+#
+#     def _selectionChanged(self, item: SelectionItem):
+#         pass
+#
+#     def _ignored(self):
+#         self.wdgEditor.setToolTip('Love style field is ignored for this character')
+#         self.valueFilled.emit(1)
+#
+#
+# class WorkStyleFieldWidget(TemplateFieldWidgetBase):
+#     def __init__(self, field: TemplateField, parent=None):
+#         super().__init__(field, parent)
+#         self.wdgEditor = DiscSelector()
+#         self._defaultTooltip: str = 'Select work style'
+#         _layout = vbox(self)
+#         _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignLeft)
+#
+#         self.wdgEditor.selected.connect(self._selectionChanged)
+#         self.wdgEditor.ignored.connect(self._ignored)
+#
+#     @overrides
+#     def value(self) -> Any:
+#         return self.wdgEditor.value()
+#
+#     @overrides
+#     def setValue(self, value: Any):
+#         self.wdgEditor.setValue(value)
+#         if value:
+#             mbti = work_style_choices[value]
+#             self._selectionChanged(mbti)
+#         elif value is None:
+#             self._ignored()
+#         else:
+#             self.wdgEditor.setToolTip(self._defaultTooltip)
+#
+#     def _selectionChanged(self, item: SelectionItem):
+#         pass
+#
+#     def _ignored(self):
+#         self.wdgEditor.setToolTip('Work style field is ignored for this character')
+#         self.valueFilled.emit(1)
 
 
 class LabelsTemplateFieldWidget(TemplateFieldWidgetBase):
