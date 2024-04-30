@@ -365,9 +365,9 @@ class ProfileSectionWidget(ProfileFieldWidget):
         self.progress.setValue(sum(self.progressStatuses.values()))
 
     def _initNewPrimaryField(self):
-        flaw = TextInputDialog.edit(self.context.editorTitle(), self.context.editorPlaceholder())
-        if flaw:
-            self._addPrimaryField(flaw_placeholder_field, flaw)
+        label = TextInputDialog.edit(self.context.editorTitle(), self.context.editorPlaceholder())
+        if label:
+            self._addPrimaryField(flaw_placeholder_field, label)
 
     def _addPrimaryField(self, field: TemplateField, label: Optional[str] = None):
         attr = CharacterMultiAttribute(character_primary_attribute_type(field))
@@ -378,7 +378,14 @@ class ProfileSectionWidget(ProfileFieldWidget):
         self.section.fields.append(field)
 
         fieldWdg = field_widget(field, self.character)
+        fieldWdg.renamed.connect(partial(self._renamePrimaryField, fieldWdg))
         self.attachWidget(fieldWdg)
+
+    def _renamePrimaryField(self, wdg: 'MultiAttributesTemplateWidgetBase'):
+        label = TextInputDialog.edit('Rename attribute', self.context.editorPlaceholder(), wdg.attribute.label)
+        if label:
+            wdg.attribute.label = label
+            wdg.setLabel(label)
 
 
 class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
@@ -792,6 +799,8 @@ class _PrimaryFieldWidget(QWidget):
 
 
 class MultiAttributesTemplateWidgetBase(ProfileFieldWidget):
+    renamed = pyqtSignal()
+
     def __init__(self, attribute: CharacterMultiAttribute, character: Character, parent=None):
         super().__init__(parent)
         self.attribute = attribute
@@ -804,77 +813,16 @@ class MultiAttributesTemplateWidgetBase(ProfileFieldWidget):
 
         field = character_primary_field(attribute.type)
         self._wdgPrimary = _PrimaryFieldWidget(self.attribute, field, self._secondaryFields(field))
+        self._wdgPrimary.renamed.connect(self.renamed)
         self.layout().addWidget(self._wdgPrimary)
 
         self._layout.addWidget(vspacer())
 
-    # def value(self) -> Any:
-    #     def secondaryValues(primaryWdg: _PrimaryFieldWidget):
-    #         values = []
-    #         for field in primaryWdg.secondaryFields():
-    #             s_id, value_ = field
-    #             values.append({self.ID_KEY: s_id, self.VALUE_KEY: value_})
-    #         return values
-    #
-    #     value = {}
-    #     for i, primary_wdg in enumerate(self._primaryWidgets):
-    #         sid = str(primary_wdg.field().id)
-    #         sid += f'&{i}'
-    #         if self._hasAlias:
-    #             sid += f'&{primary_wdg.field().name}'
-    #         value[sid] = {self.VALUE_KEY: primary_wdg.value(),
-    #                       self.SECONDARY_KEY: secondaryValues(primary_wdg)}
-    #         if self._hasAlias:
-    #             value[sid][self.ALIAS_KEY] = primary_wdg.field().name
-    #
-    #     return value
-    #
-    # def setValue(self, value: Any):
-    #     if value is None:
-    #         return
-    #     if isinstance(value, str):
-    #         return
-    #
-    #     primary_fields = self._primaryFields()
-    #     for k, v in value.items():
-    #         k = k.split('&')[0]
-    #         primary = next((x for x in primary_fields if str(x.id) == k), None)
-    #         if primary is None:
-    #             continue
-    #         if self._hasAlias and self.ALIAS_KEY in v.keys():
-    #             primary = copy.deepcopy(primary)
-    #             primary.name = v[self.ALIAS_KEY]
-    #         wdg = self._addPrimaryField(primary)
-    #         wdg.setValue(v[self.VALUE_KEY])
-    #
-    #         secondary_fields = self._secondaryFields(primary)
-    #         for secondary in v[self.SECONDARY_KEY]:
-    #             secondary_field = next((x for x in secondary_fields if str(x.id) == secondary[self.ID_KEY]), None)
-    #             if secondary_field:
-    #                 wdg.setSecondaryField(secondary_field, secondary[self.VALUE_KEY])
-    #
-    #     self._valueChanged()
-
-    # def _primaryFields(self) -> List[TemplateField]:
-    #     return []
-    #
-    # def _primaryButtonText(self) -> str:
-    #     return 'Add new item'
+    def setLabel(self, label: str):
+        self._wdgPrimary.setLabel(label)
 
     def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
         return []
-
-    # def _addPrimaryField(self, field: TemplateField) -> _PrimaryFieldWidget:
-    #     wdg = _PrimaryFieldWidget(field, self._secondaryFields(field))
-    #     self._primaryWidgets.append(wdg)
-    #     wdg.removed.connect(partial(self._removePrimaryField, wdg))
-    #     wdg.renamed.connect(partial(self._renamePrimaryField, wdg))
-    #     wdg.valueChanged.connect(self._valueChanged)
-    #     if self._layout.count() > 2:
-    #         self._layout.insertWidget(self._layout.count() - 2, line())
-    #     self._layout.insertWidget(self._layout.count() - 2, wdg)
-    #
-    #     return wdg
 
     def _removePrimaryField(self, wdg: _PrimaryFieldWidget):
         self._primaryWidgets.remove(wdg)
@@ -1021,7 +969,7 @@ class FlawsFieldWidget(MultiAttributesTemplateWidgetBase):
                  ref: CharacterProfileFieldReference, parent=None):
         super().__init__(attribute, character, parent=parent)
         self.ref = ref
-        self._wdgPrimary.setLabel(attribute.label)
+        self.setLabel(attribute.label)
 
     @overrides
     def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
