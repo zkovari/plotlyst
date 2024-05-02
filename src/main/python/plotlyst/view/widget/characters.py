@@ -34,7 +34,7 @@ from qtmenu import MenuWidget, ScrollableMenuWidget
 
 from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, Character, NovelSetting
-from plotlyst.core.template import SelectionItem, TemplateFieldType, TemplateField, RoleImportance, \
+from plotlyst.core.template import SelectionItem, TemplateField, RoleImportance, \
     strengths_weaknesses_field
 from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, Event
@@ -723,16 +723,16 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
         headers: Dict[CharactersProgressWidget.Header, int] = {}
         header: Optional[CharactersProgressWidget.Header] = None
         row = self.RowGender + 1
-        for el in self.novel.character_profiles[0].elements:
-            if el.field.type == TemplateFieldType.DISPLAY_HEADER:
-                row += 1
-                self._addLabel(row, el.field.name)
-                header = self.Header(el.field, row)
-                headers[header] = 0
-            elif not el.field.type.name.startswith('DISPLAY') and header:
-                fields[str(el.field.id)] = (header, el.field)
-                if el.field.enabled:
-                    header.max_value = header.max_value + 1
+        # for el in self.novel.character_profiles[0].elements:
+        #     if el.field.type == TemplateFieldType.DISPLAY_HEADER:
+        #         row += 1
+        #         self._addLabel(row, el.field.name)
+        #         header = self.Header(el.field, row)
+        #         headers[header] = 0
+        #     elif not el.field.type.name.startswith('DISPLAY') and header:
+        #         fields[str(el.field.id)] = (header, el.field)
+        #         if el.field.enabled:
+        #             header.max_value = header.max_value + 1
 
         row += 1
         self._addLine(row)

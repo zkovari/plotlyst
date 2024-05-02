@@ -871,7 +871,6 @@
     <property name="toolTipsVisible">
      <bool>true</bool>
     </property>
-    <addaction name="actionCharacterTemplateEditor"/>
     <addaction name="actionResourceManager"/>
    </widget>
    <addaction name="menuFile"/>

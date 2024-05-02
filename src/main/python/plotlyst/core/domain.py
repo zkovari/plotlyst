@@ -31,7 +31,7 @@ from dataclasses_json import dataclass_json, Undefined, config
 from overrides import overrides
 
 from plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_field, \
-    mbti_field, ProfileTemplate, default_character_profiles, enneagram_choices, \
+    mbti_field, enneagram_choices, \
     mbti_choices, Role, exclude_if_false, antagonist_role, exclude_if_true
 from plotlyst.env import app_env
 
@@ -3121,7 +3121,6 @@ class Novel(NovelDescriptor):
     chapters: List[Chapter] = field(default_factory=list)
     custom_chapters: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     stages: List[SceneStage] = field(default_factory=default_stages)
-    character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
     character_topics: List[Topic] = field(default_factory=list)
     conflicts: List[Conflict] = field(default_factory=list)
     goals: List[Goal] = field(default_factory=list)

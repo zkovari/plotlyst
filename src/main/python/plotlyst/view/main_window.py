@@ -62,7 +62,6 @@ from plotlyst.view.comments_view import CommentsView
 from plotlyst.view.common import TooltipPositionEventFilter
 from plotlyst.view.dialog.about import AboutDialog
 from plotlyst.view.dialog.manuscript import ManuscriptPreviewDialog
-from plotlyst.view.dialog.template import customize_character_profile
 from plotlyst.view.docs_view import DocumentsView
 from plotlyst.view.generated.main_window_ui import Ui_MainWindow
 from plotlyst.view.home_view import HomeView
@@ -469,8 +468,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionOpenProjectDir.triggered.connect(lambda: open_location(settings.workspace()))
         self.actionChangeDir.setIcon(IconRegistry.from_name('fa5s.folder-open'))
         self.actionChangeDir.triggered.connect(self._change_project_dir)
-
-        self.actionCharacterTemplateEditor.triggered.connect(lambda: customize_character_profile(self.novel, 0, self))
 
     def _init_toolbar(self):
         self.toolBar.setContextMenuPolicy(Qt.ContextMenuPolicy.PreventContextMenu)
