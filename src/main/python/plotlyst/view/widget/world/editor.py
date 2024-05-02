@@ -56,7 +56,7 @@ from plotlyst.view.widget.world._topics import ecological_topics, cultural_topic
 
 class WorldBuildingEntityElementWidget(QWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None, removalEnabled: bool = True,
-                 menuEnabled: bool = False):
+                 menuEnabled: bool = False, dragEnabled: bool = True):
         super().__init__(parent)
         self.novel = novel
         self.element = element
@@ -77,10 +77,10 @@ class WorldBuildingEntityElementWidget(QWidget):
 
         self.btnDrag = DragIcon(self)
         self.btnDrag.setHidden(True)
-        if self.element.type not in [WorldBuildingEntityElementType.Section,
-                                     WorldBuildingEntityElementType.Main_Section,
-                                     WorldBuildingEntityElementType.Variables,
-                                     WorldBuildingEntityElementType.Highlight]:
+        if dragEnabled and self.element.type not in [WorldBuildingEntityElementType.Section,
+                                                     WorldBuildingEntityElementType.Main_Section,
+                                                     WorldBuildingEntityElementType.Variables,
+                                                     WorldBuildingEntityElementType.Highlight]:
             self.installEventFilter(VisibilityToggleEventFilter(self.btnDrag, self))
 
         self.btnRemove = RemovalButton(self, colorOff='grey', colorOn='#510442', colorHover='darkgrey')
@@ -204,7 +204,8 @@ class TextElementEditor(WorldBuildingEntityElementWidget):
 class HeaderElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent,
-                         removalEnabled=False if isinstance(parent, MainSectionElementEditor) else True)
+                         removalEnabled=False if isinstance(parent, MainSectionElementEditor) else True,
+                         dragEnabled=False if isinstance(parent, MainSectionElementEditor) else True)
 
         if isinstance(parent, MainSectionElementEditor):
             self.layout().setSpacing(0)
