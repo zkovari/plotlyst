@@ -61,8 +61,8 @@ setting_titles: Dict[NovelSetting, str] = {
     NovelSetting.Documents: 'Documents',
     NovelSetting.Management: 'Task management',
     NovelSetting.Track_pov: 'Point of view',
-    NovelSetting.Character_enneagram: 'Enneagram personality type',
-    NovelSetting.Character_mbti: 'MBTI personality type',
+    NovelSetting.Character_enneagram: 'Enneagram',
+    NovelSetting.Character_mbti: 'MBTI',
     NovelSetting.Character_love_style: 'Love style',
     NovelSetting.Character_work_style: 'Work style',
 }
