@@ -615,9 +615,15 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>98</width>
-             <height>156</height>
+             <width>325</width>
+             <height>543</height>
             </rect>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
            </property>
            <property name="bg-image" stdset="0">
             <bool>true</bool>
@@ -645,12 +651,6 @@
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>150</height>
-               </size>
               </property>
               <property name="container" stdset="0">
                <bool>true</bool>
@@ -699,8 +699,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>100</width>
-             <height>30</height>
+             <width>325</width>
+             <height>594</height>
             </rect>
            </property>
            <property name="relaxed-white-bg" stdset="0">
