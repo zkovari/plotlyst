@@ -290,10 +290,10 @@ class CharacterEditor(QObject, EventListener):
         ''')
         self._btnRoleEventFilter.enterOpacity = 0.8
 
-        if self.character.is_minor():
-            self.profile.toggleRequiredHeaders(True)
-        else:
-            self.profile.toggleRequiredHeaders(False)
+        # if self.character.is_minor():
+        #     self.profile.toggleRequiredHeaders(True)
+        # else:
+        #     self.profile.toggleRequiredHeaders(False)
 
     def _gender_clicked(self, btn: QAbstractButton):
         self.ui.btnMoreGender.setHidden(True)
