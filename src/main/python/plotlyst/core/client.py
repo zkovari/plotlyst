@@ -45,7 +45,9 @@ from plotlyst.core.domain import Novel, Character, Scene, Chapter, SceneStage, \
     ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding, Board, \
     default_big_five_values, CharacterPlan, ManuscriptGoals, Diagram, DiagramData, default_events_map, \
     default_character_networks, ScenePurposeType, StoryElement, SceneOutcome, ChapterType, SceneStructureItem, \
-    DocumentProgress, ReaderQuestion, SceneReaderQuestion, ImageRef, SceneReaderInformation
+    DocumentProgress, ReaderQuestion, SceneReaderQuestion, ImageRef, SceneReaderInformation, \
+    CharacterProfileSectionReference, CharacterMultiAttribute, default_character_profile, CharacterPersonality, \
+    StrengthWeaknessAttribute
 from plotlyst.core.template import Role, exclude_if_empty, exclude_if_black, exclude_if_false
 from plotlyst.env import app_env
 
@@ -137,6 +139,16 @@ class CharacterInfo:
     prefs: CharacterPreferences = field(default_factory=CharacterPreferences)
     topics: List[TemplateValue] = field(default_factory=list)
     big_five: Dict[str, List[int]] = field(default_factory=default_big_five_values)
+    profile: List[CharacterProfileSectionReference] = field(default_factory=default_character_profile)
+    summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    faculties: Dict[str, int] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
+    traits: List[str] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    values: List[str] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    gmc: List[CharacterMultiAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    baggage: List[CharacterMultiAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    flaws: List[CharacterMultiAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    strengths: List[StrengthWeaknessAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    personality: CharacterPersonality = field(default_factory=CharacterPersonality)
 
 
 @dataclass
@@ -492,7 +504,18 @@ class JsonClient:
                                       backstory=info.backstory, plans=info.plans,
                                       document=info.document,
                                       journals=info.journals, prefs=info.prefs, topics=info.topics,
-                                      big_five=info.big_five)
+                                      big_five=info.big_five,
+                                      profile=info.profile,
+                                      summary=info.summary,
+                                      faculties=info.faculties,
+                                      traits=info.traits,
+                                      values=info.values,
+                                      gmc=info.gmc,
+                                      baggage=info.baggage,
+                                      flaws=info.flaws,
+                                      strengths=info.strengths,
+                                      personality=info.personality
+                                      )
                 if info.avatar_id:
                     bytes = self._load_image(self.__image_file(info.avatar_id))
                     if bytes:
@@ -662,7 +685,18 @@ class JsonClient:
                                   disabled_template_headers=char.disabled_template_headers,
                                   avatar_id=avatar_id,
                                   backstory=char.backstory, plans=char.plans, document=char.document,
-                                  journals=char.journals, prefs=char.prefs, topics=char.topics, big_five=char.big_five)
+                                  journals=char.journals, prefs=char.prefs, topics=char.topics, big_five=char.big_five,
+                                  profile=char.profile,
+                                  summary=char.summary,
+                                  faculties=char.faculties,
+                                  traits=char.traits,
+                                  values=char.values,
+                                  gmc=char.gmc,
+                                  baggage=char.baggage,
+                                  flaws=char.flaws,
+                                  strengths=char.strengths,
+                                  personality=char.personality
+                                  )
         self.__persist_info(self.characters_dir(novel), char_info)
 
     def _persist_scene(self, scene: Scene, novel: Optional[Novel] = None):
