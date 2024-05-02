@@ -24,7 +24,7 @@ from typing import Optional, List, Dict, Any, Tuple
 import emoji
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QSize
-from PyQt6.QtGui import QResizeEvent, QWheelEvent
+from PyQt6.QtGui import QResizeEvent, QWheelEvent, QColor
 from PyQt6.QtWidgets import QWidget, QLabel, QSizePolicy, QSlider, QToolButton, QVBoxLayout, QGridLayout
 from overrides import overrides
 from qthandy import vbox, clear_layout, hbox, bold, underline, spacer, vspacer, margins, pointy, retain_when_hidden, \
@@ -32,6 +32,7 @@ from qthandy import vbox, clear_layout, hbox, bold, underline, spacer, vspacer, 
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Character, CharacterProfileSectionReference, CharacterProfileFieldReference, \
     CharacterProfileFieldType, CharacterMultiAttribute, CharacterProfileSectionType, MultiAttributePrimaryType, \
     MultiAttributeSecondaryType, CharacterSecondaryAttribute, StrengthWeaknessAttribute, CharacterPersonalityAttribute, \
@@ -1248,7 +1249,6 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
         _layout.addWidget(spacer())
 
         self.wdgEditor.selected.connect(self._selectionChanged)
-        self.wdgEditor.ignored.connect(self._ignored)
 
         if self.character.personality.enneagram:
             self.setValue(self.character.personality.enneagram.value)
@@ -1285,14 +1285,6 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
             self.wdgAttr.setVisible(True)
 
 
-    def _ignored(self):
-        self.wdgEditor.setToolTip('Enneagram field is ignored for this character')
-        self.lblDesire.setText('')
-        self.lblFear.setText('')
-        self.wdgAttr.setHidden(True)
-        self.valueFilled.emit(1)
-
-
 class MbtiFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, character: Character, parent=None):
         super(MbtiFieldWidget, self).__init__(parent)
@@ -1315,7 +1307,6 @@ class MbtiFieldWidget(TemplateFieldWidgetBase):
         _layout.addWidget(spacer())
 
         self.wdgEditor.selected.connect(self._selectionChanged)
-        self.wdgEditor.ignored.connect(self._ignored)
 
         if self.character.personality.mbti:
             self.setValue(self.character.personality.mbti.value)
@@ -1349,11 +1340,6 @@ class MbtiFieldWidget(TemplateFieldWidgetBase):
         self.wdgEditor.setToolTip(mbti_help[item.text])
         self.valueFilled.emit(1)
 
-    def _ignored(self):
-        self.wdgEditor.setToolTip('MBTI field is ignored for this character')
-        self.wdgAttr.setHidden(True)
-        self.valueFilled.emit(1)
-
 
 class LoveStyleFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, character: Character, parent=None):
@@ -1365,7 +1351,6 @@ class LoveStyleFieldWidget(TemplateFieldWidgetBase):
         _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignLeft)
 
         self.wdgEditor.selected.connect(self._selectionChanged)
-        self.wdgEditor.ignored.connect(self._ignored)
 
         if self.character.personality.love:
             self.setValue(self.character.personality.love.value)
@@ -1380,8 +1365,6 @@ class LoveStyleFieldWidget(TemplateFieldWidgetBase):
         if value:
             mbti = love_style_choices[value]
             self._selectionChanged(mbti)
-        elif value is None:
-            self._ignored()
         else:
             self.wdgEditor.setToolTip(self._defaultTooltip)
 
@@ -1389,10 +1372,6 @@ class LoveStyleFieldWidget(TemplateFieldWidgetBase):
         if self.character.personality.love is None:
             self.character.personality.love = CharacterPersonalityAttribute()
         self.character.personality.love.value = item.text
-
-    def _ignored(self):
-        self.wdgEditor.setToolTip('Love style field is ignored for this character')
-        self.valueFilled.emit(1)
 
 
 class WorkStyleFieldWidget(TemplateFieldWidgetBase):
@@ -1405,7 +1384,6 @@ class WorkStyleFieldWidget(TemplateFieldWidgetBase):
         _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignLeft)
 
         self.wdgEditor.selected.connect(self._selectionChanged)
-        self.wdgEditor.ignored.connect(self._ignored)
 
         if self.character.personality.work:
             self.setValue(self.character.personality.work.value)
@@ -1420,8 +1398,6 @@ class WorkStyleFieldWidget(TemplateFieldWidgetBase):
         if value:
             mbti = work_style_choices[value]
             self._selectionChanged(mbti)
-        elif value is None:
-            self._ignored()
         else:
             self.wdgEditor.setToolTip(self._defaultTooltip)
 
@@ -1430,12 +1406,9 @@ class WorkStyleFieldWidget(TemplateFieldWidgetBase):
             self.character.personality.work = CharacterPersonalityAttribute()
         self.character.personality.work.value = item.text
 
-    def _ignored(self):
-        self.wdgEditor.setToolTip('Work style field is ignored for this character')
-        self.valueFilled.emit(1)
-
 
 class PersonalityFieldWidget(TemplateFieldWidgetBase):
+    ignored = pyqtSignal(NovelSetting)
     enneagramChanged = pyqtSignal(str)
 
     def __init__(self, character: Character, parent=None):
@@ -1460,6 +1433,7 @@ class PersonalityFieldWidget(TemplateFieldWidgetBase):
         self._widgets[setting] = wdg
         self._layout.addWidget(wdg, row, col)
         wdg.setVisible(self.character.prefs.toggled(setting))
+        wdg.wdgEditor.ignored.connect(partial(self.ignored.emit, setting))
 
 
 def field_widget(ref: CharacterProfileFieldReference, character: Character) -> ProfileFieldWidget:
@@ -1557,6 +1531,7 @@ class SectionSettings(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         vbox(self)
+        self._personalities: Dict[NovelSetting, PersonalitySettingToggle] = {}
 
     def refresh(self, character: Character):
         clear_layout(self)
@@ -1569,8 +1544,12 @@ class SectionSettings(QWidget):
                 for personality in [NovelSetting.Character_enneagram, NovelSetting.Character_mbti,
                                     NovelSetting.Character_love_style, NovelSetting.Character_work_style]:
                     child = PersonalitySettingToggle(character, personality)
+                    self._personalities[personality] = child
                     child.toggled.connect(partial(self.personalityToggled.emit, personality))
                     wdg.addChild(child)
+
+    def togglePersonality(self, personality: NovelSetting, toggled: bool):
+        self._personalities[personality].setChecked(toggled)
 
 
 class CharacterProfileEditor(QWidget):
@@ -1623,6 +1602,7 @@ class CharacterProfileEditor(QWidget):
                 if section.type == CharacterProfileSectionType.Personality and isinstance(fieldWdg,
                                                                                           PersonalityFieldWidget):
                     fieldWdg.enneagramChanged.connect(self._enneagramChanged)
+                    fieldWdg.ignored.connect(self._personalityIgnored)
 
         self.layout().addWidget(vspacer())
 
@@ -1636,6 +1616,13 @@ class CharacterProfileEditor(QWidget):
             PersonalityFieldWidget)
         if wdg:
             wdg.toggle(personality, toggled)
+
+    def _personalityIgnored(self, personality: NovelSetting):
+        self._personalityToggled(personality, False)
+        self._settings.togglePersonality(personality, False)
+        self._character.prefs.settings[personality.value] = False
+
+        qtanim.glow(self.btnCustomize, color=QColor(PLOTLYST_SECONDARY_COLOR), loop=3)
 
     def _enneagramChanged(self, enneagram: str):
         wdgTraits: Optional[TraitsFieldWidget] = self._sections[CharacterProfileSectionType.Personality].findWidget(
