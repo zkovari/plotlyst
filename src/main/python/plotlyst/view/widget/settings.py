@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from abc import abstractmethod
 from functools import partial
 from typing import Dict, Optional, List
 
@@ -158,27 +159,15 @@ def toggle_setting(source, novel: Novel, setting: NovelSetting, toggled: bool):
     emit_event(novel, event_clazz(source, setting, toggled))
 
 
-class NovelSettingBase(QWidget):
+class SettingBaseWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-
-
-class NovelSettingToggle(QWidget):
-    settingToggled = pyqtSignal(NovelSetting, bool)
-
-    def __init__(self, novel: Novel, setting: NovelSetting, parent=None):
-        super().__init__(parent)
-        self._novel = novel
-        self._setting = setting
-
         self._title = QPushButton()
-        self._title.setText(setting_titles[setting])
-        self._title.setIcon(setting_icon(setting))
         apply_button_palette_color(self._title, PLOTLYST_SECONDARY_COLOR)
         transparent(self._title)
         incr_font(self._title, 2)
 
-        self._description = label(setting_descriptions[setting], description=True)
+        self._description = label('', description=True)
         self._description.setWordWrap(True)
         sp(self._description).h_exp()
 
@@ -201,13 +190,11 @@ class NovelSettingToggle(QWidget):
         self._wdgHeader.setObjectName('wdgHeader')
         hbox(self._wdgHeader)
         self._wdgHeader.layout().addWidget(self._wdgTitle)
-        self._wdgHeader.layout().addWidget(self._toggle, alignment=Qt.AlignmentFlag.AlignTop)
+        self._wdgHeader.layout().addWidget(self._toggle, alignment=Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight)
 
         vbox(self, 0, 0)
         self.layout().addWidget(self._wdgHeader)
         self.layout().addWidget(self._wdgChildren)
-
-        self._toggle.setChecked(self._novel.prefs.toggled(self._setting))
 
     def setChecked(self, checked: bool):
         self._toggle.setChecked(checked)
@@ -220,6 +207,27 @@ class NovelSettingToggle(QWidget):
         self._wdgTitle.setEnabled(toggled)
         self._wdgChildren.setVisible(toggled)
 
+    @abstractmethod
+    def _clicked(self, toggled: bool):
+        pass
+
+
+class NovelSettingToggle(SettingBaseWidget):
+    settingToggled = pyqtSignal(NovelSetting, bool)
+
+    def __init__(self, novel: Novel, setting: NovelSetting, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+        self._setting = setting
+
+        self._title.setText(setting_titles[setting])
+        self._title.setIcon(setting_icon(setting))
+
+        self._description.setText(setting_descriptions[setting])
+
+        self._toggle.setChecked(self._novel.prefs.toggled(self._setting))
+
+    @overrides
     def _clicked(self, toggled: bool):
         self.settingToggled.emit(self._setting, toggled)
 
