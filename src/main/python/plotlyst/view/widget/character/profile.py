@@ -535,6 +535,9 @@ class TraitsFieldWidget(LabelsTemplateFieldWidget):
 
         self.setValue(self.character.traits)
 
+    def save(self):
+        self._saveValue(self.value())
+
     @overrides
     def _editor(self) -> LabelsSelectionWidget:
         return TraitSelectionWidget(traits_field)
@@ -1267,6 +1270,8 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
             self.wdgEditor.setToolTip(self._defaultTooltip)
 
     def _selectionChanged(self, item: SelectionItem):
+        self.valueFilled.emit(1)
+
         if self.character.personality.enneagram is None:
             self.character.personality.enneagram = CharacterPersonalityAttribute()
         self.character.personality.enneagram.value = item.text
@@ -1279,7 +1284,6 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
         else:
             self.wdgAttr.setVisible(True)
 
-        self.valueFilled.emit(1)
 
     def _ignored(self):
         self.wdgEditor.setToolTip('Enneagram field is ignored for this character')
@@ -1432,6 +1436,8 @@ class WorkStyleFieldWidget(TemplateFieldWidgetBase):
 
 
 class PersonalityFieldWidget(TemplateFieldWidgetBase):
+    enneagramChanged = pyqtSignal(str)
+
     def __init__(self, character: Character, parent=None):
         super().__init__(parent)
         self.character = character
@@ -1439,7 +1445,10 @@ class PersonalityFieldWidget(TemplateFieldWidgetBase):
         self._layout: QGridLayout = grid(self)
         self._widgets: Dict[NovelSetting, TemplateFieldWidgetBase] = {}
 
-        self._addWidget(NovelSetting.Character_enneagram, EnneagramFieldWidget(self.character), 0, 0)
+        enneagram = EnneagramFieldWidget(self.character)
+        enneagram.valueFilled.connect(lambda: self.enneagramChanged.emit(enneagram.value()))
+
+        self._addWidget(NovelSetting.Character_enneagram, enneagram, 0, 0)
         self._addWidget(NovelSetting.Character_mbti, MbtiFieldWidget(self.character), 0, 1)
         self._addWidget(NovelSetting.Character_love_style, LoveStyleFieldWidget(self.character), 1, 0)
         self._addWidget(NovelSetting.Character_work_style, WorkStyleFieldWidget(self.character), 1, 1)
@@ -1611,6 +1620,10 @@ class CharacterProfileEditor(QWidget):
                 fieldWdg = field_widget(field, self._character)
                 wdg.attachWidget(fieldWdg)
 
+                if section.type == CharacterProfileSectionType.Personality and isinstance(fieldWdg,
+                                                                                          PersonalityFieldWidget):
+                    fieldWdg.enneagramChanged.connect(self._enneagramChanged)
+
         self.layout().addWidget(vspacer())
 
         self.btnCustomize.raise_()
@@ -1619,6 +1632,36 @@ class CharacterProfileEditor(QWidget):
         self._sections[section.type].setVisible(section.enabled)
 
     def _personalityToggled(self, personality: NovelSetting, toggled: bool):
-        wdg:Optional[PersonalityFieldWidget]  = self._sections[CharacterProfileSectionType.Personality].findWidget(PersonalityFieldWidget)
+        wdg: Optional[PersonalityFieldWidget] = self._sections[CharacterProfileSectionType.Personality].findWidget(
+            PersonalityFieldWidget)
         if wdg:
             wdg.toggle(personality, toggled)
+
+    def _enneagramChanged(self, enneagram: str):
+        wdgTraits: Optional[TraitsFieldWidget] = self._sections[CharacterProfileSectionType.Personality].findWidget(
+            TraitsFieldWidget)
+        if wdgTraits:
+            if self._character.personality.enneagram:
+                previous = enneagram_choices[self._character.personality.enneagram.value]
+            else:
+                previous = None
+            current_enneagram = enneagram_choices[enneagram]
+
+            if wdgTraits:
+                traits: List[str] = wdgTraits.value()
+                if previous:
+                    for pos_trait in previous.meta['positive']:
+                        if pos_trait in traits:
+                            traits.remove(pos_trait)
+                    for neg_trait in previous.meta['negative']:
+                        if neg_trait in traits:
+                            traits.remove(neg_trait)
+                for pos_trait in current_enneagram.meta['positive']:
+                    if pos_trait not in traits:
+                        traits.append(pos_trait)
+                for neg_trait in current_enneagram.meta['negative']:
+                    if neg_trait not in traits:
+                        traits.append(neg_trait)
+
+                wdgTraits.setValue(traits)
+                wdgTraits.save()
