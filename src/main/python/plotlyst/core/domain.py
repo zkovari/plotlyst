@@ -431,6 +431,7 @@ class CharacterProfileSectionReference:
     type: Optional[CharacterProfileSectionType] = field(default=None, metadata=config(exclude=exclude_if_empty))
     ref: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
     fields: List[CharacterProfileFieldReference] = field(default_factory=list)
+    enabled: bool = field(default=True, metadata=config(exclude=exclude_if_true))
 
 
 def default_character_profile() -> List[CharacterProfileSectionReference]:
