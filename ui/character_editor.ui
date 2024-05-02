@@ -504,7 +504,7 @@
        <number>0</number>
       </property>
       <widget class="QWidget" name="tabTopics">
-       <property name="relaxed-white-bg" stdset="0">
+       <property name="bg" stdset="0">
         <bool>true</bool>
        </property>
        <attribute name="title">
