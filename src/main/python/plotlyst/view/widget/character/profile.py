@@ -383,8 +383,14 @@ class ProfileSectionWidget(ProfileFieldWidget):
         self.section.fields.append(field)
 
         fieldWdg = field_widget(field, self.character)
+        fieldWdg.removed.connect(partial(self._removePrimaryField, fieldWdg, field))
         fieldWdg.renamed.connect(partial(self._renamePrimaryField, fieldWdg))
         self.attachWidget(fieldWdg)
+
+    def _removePrimaryField(self, wdg: 'MultiAttributesTemplateWidgetBase', fieldRef: CharacterProfileFieldReference):
+        self.section.fields.remove(fieldRef)
+        self.context.primaryAttributes(self.character).append(wdg.attribute)
+        fade_out_and_gc(self.wdgContainer, wdg)
 
     def _renamePrimaryField(self, wdg: 'MultiAttributesTemplateWidgetBase'):
         label = TextInputDialog.edit('Rename attribute', self.context.editorPlaceholder(), wdg.attribute.label)
@@ -804,6 +810,7 @@ class _PrimaryFieldWidget(QWidget):
 
 
 class MultiAttributesTemplateWidgetBase(ProfileFieldWidget):
+    removed = pyqtSignal()
     renamed = pyqtSignal()
 
     def __init__(self, attribute: CharacterMultiAttribute, character: Character, parent=None):
@@ -818,6 +825,7 @@ class MultiAttributesTemplateWidgetBase(ProfileFieldWidget):
 
         field = character_primary_field(attribute.type)
         self._wdgPrimary = _PrimaryFieldWidget(self.attribute, field, self._secondaryFields(field))
+        self._wdgPrimary.removed.connect(self.removed)
         self._wdgPrimary.renamed.connect(self.renamed)
         self.layout().addWidget(self._wdgPrimary)
 
