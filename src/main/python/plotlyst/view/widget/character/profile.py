@@ -18,7 +18,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
-from enum import Enum
 from functools import partial
 from typing import Optional, List, Dict, Any, Tuple
 
@@ -35,7 +34,8 @@ from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from plotlyst.core.domain import Character, CharacterProfileSectionReference, CharacterProfileFieldReference, \
     CharacterProfileFieldType, CharacterMultiAttribute, CharacterProfileSectionType, MultiAttributePrimaryType, \
-    MultiAttributeSecondaryType, CharacterSecondaryAttribute, StrengthWeaknessAttribute, CharacterPersonalityAttribute
+    MultiAttributeSecondaryType, CharacterSecondaryAttribute, StrengthWeaknessAttribute, CharacterPersonalityAttribute, \
+    NovelSetting
 from plotlyst.core.help import enneagram_help, mbti_keywords, mbti_help
 from plotlyst.core.template import TemplateField, iq_field, eq_field, rationalism_field, willpower_field, \
     creativity_field, traits_field, values_field, flaw_placeholder_field, goal_field, internal_goal_field, stakes_field, \
@@ -58,7 +58,7 @@ from plotlyst.view.widget.character.editor import StrengthWeaknessEditor, DiscSe
     LoveStyleSelector
 from plotlyst.view.widget.display import Icon, Emoji, dash_icon
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle, TextInputDialog
-from plotlyst.view.widget.settings import SettingBaseWidget
+from plotlyst.view.widget.settings import SettingBaseWidget, setting_titles
 from plotlyst.view.widget.template.impl import TraitSelectionWidget, LabelsSelectionWidget
 
 
@@ -1431,12 +1431,20 @@ class PersonalityFieldWidget(TemplateFieldWidgetBase):
         self.character = character
 
         self._layout: QGridLayout = grid(self)
-        # margins(self, left=15)
+        self._widgets: Dict[NovelSetting, TemplateFieldWidgetBase] = {}
 
-        self._layout.addWidget(EnneagramFieldWidget(self.character), 0, 0)
-        self._layout.addWidget(MbtiFieldWidget(self.character), 0, 1)
-        self._layout.addWidget(LoveStyleFieldWidget(self.character), 1, 0)
-        self._layout.addWidget(WorkStyleFieldWidget(self.character), 1, 1)
+        self._addWidget(NovelSetting.Character_enneagram, EnneagramFieldWidget(self.character), 0, 0)
+        self._addWidget(NovelSetting.Character_mbti, MbtiFieldWidget(self.character), 0, 1)
+        self._addWidget(NovelSetting.Character_love_style, LoveStyleFieldWidget(self.character), 1, 0)
+        self._addWidget(NovelSetting.Character_work_style, WorkStyleFieldWidget(self.character), 1, 1)
+
+    def toggle(self, setting: NovelSetting, toggled: bool):
+        self._widgets[setting].setVisible(toggled)
+
+    def _addWidget(self, setting: NovelSetting, wdg: TemplateFieldWidgetBase, row: int, col: int):
+        self._widgets[setting] = wdg
+        self._layout.addWidget(wdg, row, col)
+        wdg.setVisible(self.character.prefs.toggled(setting))
 
 
 def field_widget(ref: CharacterProfileFieldReference, character: Character) -> ProfileFieldWidget:
@@ -1508,21 +1516,14 @@ class SectionSettingToggle(SettingBaseWidget):
         self.toggled.emit(toggled)
 
 
-class Personality(Enum):
-    Enneagram = 0
-    Mbti = 1
-    Work_style = 2
-    Love_style = 3
-
-
 class PersonalitySettingToggle(SettingBaseWidget):
     toggled = pyqtSignal(bool)
 
-    def __init__(self, personality: Personality, parent=None):
+    def __init__(self, personality: NovelSetting, parent=None):
         super().__init__(parent)
         self._personality = personality
 
-        self._title.setText(self._personality.name.replace('_', ' '))
+        self._title.setText(setting_titles[personality])
         self._description.setHidden(True)
 
 
@@ -1539,6 +1540,12 @@ class SectionSettings(QWidget):
             wdg = SectionSettingToggle(section)
             wdg.toggled.connect(partial(self.toggled.emit, section))
             self.layout().addWidget(wdg)
+
+            if section.type == CharacterProfileSectionType.Personality:
+                for personality in [NovelSetting.Character_enneagram, NovelSetting.Character_mbti,
+                                    NovelSetting.Character_love_style, NovelSetting.Character_work_style]:
+                    child = PersonalitySettingToggle(personality)
+                    wdg.addChild(child)
 
 
 class CharacterProfileEditor(QWidget):

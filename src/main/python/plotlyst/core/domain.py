@@ -386,6 +386,10 @@ def default_big_five_values() -> Dict[str, List[int]]:
 @dataclass
 class CharacterPreferences:
     avatar: AvatarPreferences = field(default_factory=AvatarPreferences)
+    settings: Dict[str, Any] = field(default_factory=dict)
+
+    def toggled(self, setting: 'NovelSetting', default: bool = True) -> bool:
+        return self.settings.get(setting.value, default)
 
 
 class CharacterProfileSectionType(Enum):
