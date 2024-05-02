@@ -50,12 +50,14 @@ from plotlyst.view.common import tool_btn, wrap, emoji_font, action, insert_befo
     fade_out_and_gc
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
+from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.style.slider import apply_slider_color
 from plotlyst.view.widget.button import CollapseButton, SecondaryActionPushButton, DotsMenuButton
 from plotlyst.view.widget.character.editor import StrengthWeaknessEditor, DiscSelector, EnneagramSelector, MbtiSelector, \
     LoveStyleSelector
 from plotlyst.view.widget.display import Icon, Emoji, dash_icon
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle, TextInputDialog
+from plotlyst.view.widget.settings import SettingBaseWidget
 from plotlyst.view.widget.template.impl import TraitSelectionWidget, LabelsSelectionWidget
 
 
@@ -1486,17 +1488,59 @@ def field_widget(ref: CharacterProfileFieldReference, character: Character) -> P
         return NoteField(ref)
 
 
+class SectionSettingToggle(SettingBaseWidget):
+    toggled = pyqtSignal(bool)
+
+    def __init__(self, section: CharacterProfileSectionReference, parent=None):
+        super().__init__(parent)
+        self.section = section
+
+        if self.section.type:
+            self._title.setText(self.section.type.name)
+        self._description.setHidden(True)
+
+        self._toggle.setChecked(self.section.enabled)
+
+    @overrides
+    def _clicked(self, toggled: bool):
+        self.section.enabled = toggled
+        self.toggled.emit(toggled)
+
+
+class SectionSettings(QWidget):
+    toggled = pyqtSignal(CharacterProfileSectionReference, bool)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        vbox(self)
+
+    def refresh(self, character: Character):
+        clear_layout(self)
+        for section in character.profile:
+            wdg = SectionSettingToggle(section)
+            wdg.toggled.connect(partial(self.toggled.emit, section))
+            self.layout().addWidget(wdg)
+
+
 class CharacterProfileEditor(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._character: Optional[Character] = None
         self.btnCustomize = tool_btn(IconRegistry.preferences_icon(), tooltip='Customize character profile', base=True,
                                      parent=self)
+        menu = MenuWidget(self.btnCustomize)
+        apply_white_menu(menu)
+        self._settings = SectionSettings()
+        menu.addWidget(self._settings)
+        self._settings.toggled.connect(self._sectionToggled)
+
+        self._sections: Dict[CharacterProfileSectionType, ProfileSectionWidget] = {}
 
         vbox(self)
 
     def setCharacter(self, character: Character):
         self._character = character
+        self._settings.refresh(character)
         self.refresh()
 
     @overrides
@@ -1516,8 +1560,10 @@ class CharacterProfileEditor(QWidget):
             elif section.type == CharacterProfileSectionType.Flaws:
                 sc = FlawsSectionContext()
             wdg = ProfileSectionWidget(section, sc, self._character)
-            # wdg.fieldAddedc.oonnect(partial(self._primaryFieldAdded, ))
+            self._sections[section.type] = wdg
+
             self.layout().addWidget(wdg)
+            wdg.setVisible(section.enabled)
             for field in section.fields:
                 fieldWdg = field_widget(field, self._character)
                 wdg.attachWidget(fieldWdg)
@@ -1526,4 +1572,5 @@ class CharacterProfileEditor(QWidget):
 
         self.btnCustomize.raise_()
 
-    # def _primaryFieldAdded(self, field: CharacterProfileFieldReference):
+    def _sectionToggled(self, section: CharacterProfileSectionReference):
+        self._sections[section.type].setVisible(section.enabled)

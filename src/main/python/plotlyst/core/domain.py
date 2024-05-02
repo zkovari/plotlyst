@@ -398,6 +398,24 @@ class CharacterProfileSectionType(Enum):
     Baggage = 'baggage'
     Goals = 'goals'
 
+    # def description(self) -> str:
+    #     if self == CharacterProfileSectionType.Summary:
+    #         return "Summary of the character's role or personality"
+    #     elif self == CharacterProfileSectionType.Personality:
+    #         return "Personality traits and common personality types"
+    #     elif self == CharacterProfileSectionType.Philosophy:
+    #         return "The character's values"
+    #     elif self == CharacterProfileSectionType.Strengths:
+    #         return "The character's strengths and weaknesses"
+    #     elif self == CharacterProfileSectionType.Faculties:
+    #         return "IQ, emotional intelligence, rationality, willpower, creativity"
+    #     elif self == CharacterProfileSectionType.Flaws:
+    #         return "Character's flaws"
+    #     elif self == CharacterProfileSectionType.Baggage:
+    #         return "Character's ghosts, wounds, misbeliefs, demons, or fears"
+    #     elif self == CharacterProfileSectionType.Goals:
+    #         return "Goal, conflict, motivation, stakes, and methods"
+
 
 class CharacterProfileFieldType(Enum):
     Text = 'text'
@@ -431,6 +449,7 @@ class CharacterProfileSectionReference:
     type: Optional[CharacterProfileSectionType] = field(default=None, metadata=config(exclude=exclude_if_empty))
     ref: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
     fields: List[CharacterProfileFieldReference] = field(default_factory=list)
+    enabled: bool = field(default=True, metadata=config(exclude=exclude_if_true))
 
 
 def default_character_profile() -> List[CharacterProfileSectionReference]:
