@@ -351,6 +351,11 @@ class ProfileSectionWidget(ProfileFieldWidget):
     #     self.progress.setMaxValue(len(self.progressStatuses.keys()))
     #     self.progress.update()
 
+    def findWidget(self, clazz) -> Optional[ProfileFieldWidget]:
+        for wdg in self.children:
+            if isinstance(wdg, clazz):
+                return wdg
+
     def collapse(self, collapsed: bool):
         self.btnHeader.setChecked(collapsed)
 
@@ -393,6 +398,7 @@ class ProfileSectionWidget(ProfileFieldWidget):
     def _removePrimaryField(self, wdg: 'MultiAttributesTemplateWidgetBase', fieldRef: CharacterProfileFieldReference):
         self.section.fields.remove(fieldRef)
         self.context.primaryAttributes(self.character).append(wdg.attribute)
+        self.children.remove(wdg)
         fade_out_and_gc(self.wdgContainer, wdg)
 
     def _renamePrimaryField(self, wdg: 'MultiAttributesTemplateWidgetBase'):
@@ -1519,16 +1525,25 @@ class SectionSettingToggle(SettingBaseWidget):
 class PersonalitySettingToggle(SettingBaseWidget):
     toggled = pyqtSignal(bool)
 
-    def __init__(self, personality: NovelSetting, parent=None):
+    def __init__(self, character: Character, personality: NovelSetting, parent=None):
         super().__init__(parent)
+        self.character = character
         self._personality = personality
 
         self._title.setText(setting_titles[personality])
         self._description.setHidden(True)
 
+        self._toggle.setChecked(self.character.prefs.toggled(personality))
+
+    @overrides
+    def _clicked(self, toggled: bool):
+        self.character.prefs.settings[self._personality.value] = toggled
+        self.toggled.emit(toggled)
+
 
 class SectionSettings(QWidget):
     toggled = pyqtSignal(CharacterProfileSectionReference, bool)
+    personalityToggled = pyqtSignal(NovelSetting, bool)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1544,7 +1559,8 @@ class SectionSettings(QWidget):
             if section.type == CharacterProfileSectionType.Personality:
                 for personality in [NovelSetting.Character_enneagram, NovelSetting.Character_mbti,
                                     NovelSetting.Character_love_style, NovelSetting.Character_work_style]:
-                    child = PersonalitySettingToggle(personality)
+                    child = PersonalitySettingToggle(character, personality)
+                    child.toggled.connect(partial(self.personalityToggled.emit, personality))
                     wdg.addChild(child)
 
 
@@ -1559,6 +1575,7 @@ class CharacterProfileEditor(QWidget):
         self._settings = SectionSettings()
         menu.addWidget(self._settings)
         self._settings.toggled.connect(self._sectionToggled)
+        self._settings.personalityToggled.connect(self._personalityToggled)
 
         self._sections: Dict[CharacterProfileSectionType, ProfileSectionWidget] = {}
 
@@ -1600,3 +1617,8 @@ class CharacterProfileEditor(QWidget):
 
     def _sectionToggled(self, section: CharacterProfileSectionReference):
         self._sections[section.type].setVisible(section.enabled)
+
+    def _personalityToggled(self, personality: NovelSetting, toggled: bool):
+        wdg:Optional[PersonalityFieldWidget]  = self._sections[CharacterProfileSectionType.Personality].findWidget(PersonalityFieldWidget)
+        if wdg:
+            wdg.toggle(personality, toggled)
