@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
+from enum import Enum
 from functools import partial
 from typing import Optional, List, Dict, Any, Tuple
 
@@ -1505,6 +1506,24 @@ class SectionSettingToggle(SettingBaseWidget):
     def _clicked(self, toggled: bool):
         self.section.enabled = toggled
         self.toggled.emit(toggled)
+
+
+class Personality(Enum):
+    Enneagram = 0
+    Mbti = 1
+    Work_style = 2
+    Love_style = 3
+
+
+class PersonalitySettingToggle(SettingBaseWidget):
+    toggled = pyqtSignal(bool)
+
+    def __init__(self, personality: Personality, parent=None):
+        super().__init__(parent)
+        self._personality = personality
+
+        self._title.setText(self._personality.name.replace('_', ' '))
+        self._description.setHidden(True)
 
 
 class SectionSettings(QWidget):
