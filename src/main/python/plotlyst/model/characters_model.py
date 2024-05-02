@@ -95,7 +95,7 @@ class CharactersTableModel(AbstractHorizontalHeaderBasedTableModel):
             return self._dataForSelectionItem(character.mbti(), role)
         if index.column() == self.ColSummary:
             if role == Qt.ItemDataRole.DisplayRole:
-                return character.summary()
+                return character.summary
 
     def _dataForSelectionItem(self, item: SelectionItem, role: int, displayText: bool = True, sortByText: bool = True):
         if item is None:

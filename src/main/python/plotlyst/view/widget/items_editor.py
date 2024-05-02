@@ -46,6 +46,7 @@ class ItemsEditorWidget(QWidget):
         self.removeAllEnabled: bool = True
         self.inlineEditionEnabled: bool = True
         self.inlineAdditionEnabled: bool = True
+        self.removalEnabled: bool = True
 
         vbox(self)
         self.toolbar = QWidget()
@@ -124,6 +125,10 @@ class ItemsEditorWidget(QWidget):
     def setInsertionEnabled(self, enabled: bool):
         self.insertionEnabled = enabled
 
+    def setRemoveEnabled(self, enabled: bool):
+        self.removalEnabled = enabled
+        self._item_selected()
+
     def setRemoveAllEnabled(self, enabled: bool):
         self.removeAllEnabled = enabled
         self._item_selected()
@@ -186,11 +191,13 @@ class ItemsEditorWidget(QWidget):
     def _item_selected(self):
         selection = len(self.tableView.selectedIndexes()) > 0
         self.btnEdit.setEnabled(selection)
-        if selection:
+        if selection and self.removalEnabled:
             if not self.removeAllEnabled and self.model.rowCount() == 1:
                 self.btnRemove.setDisabled(True)
             else:
                 self.btnRemove.setEnabled(selection)
+        else:
+            self.btnRemove.setEnabled(False)
 
     def _item_clicked(self, index: QModelIndex):
         if index.column() == SelectionItemsModel.ColIcon:

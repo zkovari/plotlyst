@@ -24,15 +24,16 @@ from PyQt6.QtCore import QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QIcon, QMouseEvent
 from PyQt6.QtWidgets import QWidget, QLabel, QFrame, QToolButton, QSizePolicy
 from overrides import overrides
-from qthandy import hbox, vline, vbox, clear_layout, transparent, btn_popup, flow, pointy
+from qthandy import hbox, vline, vbox, clear_layout, transparent, btn_popup, flow
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
+from qtmenu import MenuWidget
 
 from plotlyst.common import truncate_string, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Character, Conflict, SelectionItem, Novel, ScenePlotReference, \
     CharacterGoal, PlotValue, Scene, GoalReference
 from plotlyst.env import app_env
 from plotlyst.model.common import SelectionItemsModel
-from plotlyst.view.common import text_color_with_bg_color, ButtonPressResizeEventFilter
+from plotlyst.view.common import text_color_with_bg_color, tool_btn
 from plotlyst.view.icons import set_avatar, IconRegistry, avatars
 from plotlyst.view.widget.display import Icon
 from plotlyst.view.widget.input import RemovalButton
@@ -334,12 +335,8 @@ class LabelsEditorWidget(QFrame):
         self._labels_index = {}
         self.clear()
 
-        self.btnEdit = QToolButton(self)
-        transparent(self.btnEdit)
-        pointy(self.btnEdit)
-        self.btnEdit.setIcon(IconRegistry.plus_edit_icon())
+        self.btnEdit = tool_btn(IconRegistry.plus_edit_icon(), transparent_=True)
         self.btnEdit.installEventFilter(OpacityEventFilter(self.btnEdit, leaveOpacity=0.8))
-        self.btnEdit.installEventFilter(ButtonPressResizeEventFilter(self.btnEdit))
 
         self._model = self._initModel()
         self._model.item_edited.connect(self._selectionChanged)
@@ -348,7 +345,8 @@ class LabelsEditorWidget(QFrame):
         self._popup = self._initPopupWidget()
         self._model.selection_changed.connect(self._selectionChanged)
 
-        btn_popup(self.btnEdit, self._popup)
+        menu = MenuWidget(self.btnEdit)
+        menu.addWidget(self._popup)
         self.layout().addWidget(self.btnEdit, alignment=Qt.AlignmentFlag.AlignTop)
 
         self._wdgLabels = LabelsWidget()
@@ -389,6 +387,10 @@ class LabelsEditorWidget(QFrame):
     def _initPopupWidget(self) -> QWidget:
         wdg = ItemsEditorWidget()
         wdg.setModel(self._model)
+        wdg.setInlineEditionEnabled(False)
+        wdg.setAdditionEnabled(False)
+        wdg.setRemoveEnabled(False)
+        wdg.toolbar.setHidden(True)
         return wdg
 
     def _selectionChanged(self):

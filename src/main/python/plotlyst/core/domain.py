@@ -32,7 +32,7 @@ from overrides import overrides
 
 from plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_field, \
     mbti_field, ProfileTemplate, default_character_profiles, enneagram_choices, \
-    mbti_choices, Role, summary_field, exclude_if_false, antagonist_role, exclude_if_true
+    mbti_choices, Role, exclude_if_false, antagonist_role, exclude_if_true
 from plotlyst.env import app_env
 
 
@@ -388,11 +388,166 @@ class CharacterPreferences:
     avatar: AvatarPreferences = field(default_factory=AvatarPreferences)
 
 
+class CharacterProfileSectionType(Enum):
+    Summary = 'summary'
+    Personality = 'personality'
+    Philosophy = 'philosophy'
+    Strengths = 'strengths and weaknesses'
+    Faculties = 'faculties'
+    Flaws = 'flaws'
+    Baggage = 'baggage'
+    Goals = 'goals'
+
+
+class CharacterProfileFieldType(Enum):
+    Text = 'text'
+    Image = 'image'
+    Labels = 'labels'
+    Bar = 'bar'
+    Field_Summary = 'summary'
+    Field_Personality = 'personality'
+    Field_Traits = 'traits'
+    Field_Values = 'values'
+    Field_Strengths = 'strengths'
+    Field_Faculties_IQ = 'iq'
+    Field_Faculties_EQ = 'eq'
+    Field_Faculties_Rationalism = 'rationalism'
+    Field_Faculties_Creativity = 'creativity'
+    Field_Faculties_Willpower = 'willpower'
+    Field_Flaws = 'flaws'
+    Field_Baggage = 'baggage'
+    Field_Goals = 'goals'
+
+
+@dataclass
+class CharacterProfileFieldReference:
+    type: CharacterProfileFieldType
+    ref: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
+    value: Optional[Any] = field(default=None, metadata=config(exclude=exclude_if_empty))
+
+
+@dataclass
+class CharacterProfileSectionReference:
+    type: Optional[CharacterProfileSectionType] = field(default=None, metadata=config(exclude=exclude_if_empty))
+    ref: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
+    fields: List[CharacterProfileFieldReference] = field(default_factory=list)
+
+
+def default_character_profile() -> List[CharacterProfileSectionReference]:
+    return [
+        CharacterProfileSectionReference(CharacterProfileSectionType.Summary, fields=[
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Summary)
+        ]),
+        CharacterProfileSectionReference(CharacterProfileSectionType.Personality, fields=[
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Personality),
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Traits),
+        ]),
+        CharacterProfileSectionReference(CharacterProfileSectionType.Philosophy, fields=[
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Values)
+        ]),
+        CharacterProfileSectionReference(CharacterProfileSectionType.Strengths, fields=[
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Strengths)
+        ]),
+        CharacterProfileSectionReference(CharacterProfileSectionType.Faculties, fields=[
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Faculties_IQ),
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Faculties_EQ),
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Faculties_Rationalism),
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Faculties_Willpower),
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Faculties_Creativity)
+        ]),
+        CharacterProfileSectionReference(CharacterProfileSectionType.Flaws),
+        CharacterProfileSectionReference(CharacterProfileSectionType.Baggage),
+        CharacterProfileSectionReference(CharacterProfileSectionType.Goals)
+    ]
+
+
+class MultiAttributePrimaryType(Enum):
+    External_goal = 'external_goal'
+    Internal_goal = 'internal_goal'
+    Ghost = 'ghost'
+    Wound = 'wound'
+    Demon = 'demon'
+    Fear = 'fear'
+    Misbelief = 'misbelief'
+    Flaw = 'flaw'
+
+
+class MultiAttributeSecondaryType(Enum):
+    External_motivation = 'external_motivation'
+    Internal_motivation = 'internal_motivation'
+    External_conflict = 'external_conflict'
+    Internal_conflict = 'internal_conflict'
+    External_stakes = 'external_stakes'
+    Internal_stakes = 'internal_stakes'
+    Methods = 'methods'
+
+    Baggage_source = 'baggage_source'
+    Baggage_manifestation = 'baggage_manifestation'
+    Baggage_relation = 'baggage_relation'
+    Baggage_coping = 'baggage_coping'
+    Baggage_healing = 'baggage_healing'
+    Baggage_deterioration = 'baggage_deterioration'
+    Baggage_defense_mechanism = 'baggage_defense_mechanism'
+    Baggage_trigger = 'baggage_trigger'
+
+    Flaw_triggers = 'flaw_triggers'
+    Flaw_coping = 'flaw_coping'
+    Flaw_manifestation = 'flaw_manifestation'
+    Flaw_relation = 'flaw_relation'
+    Flaw_goals = 'flaw_goals'
+    Flaw_growth = 'flaw_growth'
+    Flaw_deterioration = 'flaw_deterioration'
+
+
+@dataclass
+class CharacterSecondaryAttribute:
+    type: MultiAttributeSecondaryType
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    value: str = field(default='', metadata=config(exclude=exclude_if_empty))
+
+
+@dataclass
+class CharacterMultiAttribute:
+    type: MultiAttributePrimaryType
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    value: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    attributes: Dict[str, CharacterSecondaryAttribute] = field(default_factory=dict,
+                                                               metadata=config(exclude=exclude_if_empty))
+    settings: Dict[str, Any] = field(default_factory=dict)
+    label: str = field(default='', metadata=config(exclude=exclude_if_empty))
+
+    def attribute(self, type_: MultiAttributeSecondaryType) -> Optional[CharacterSecondaryAttribute]:
+        if self.settings.get(type_.value, False):
+            return self.attributes.get(type_.value)
+
+
+@dataclass
+class StrengthWeaknessAttribute:
+    name: str
+    has_strength: bool = False
+    has_weakness: bool = False
+    strength: str = ''
+    weakness: str = ''
+
+
+@dataclass
+class CharacterPersonalityAttribute:
+    value: str = ''
+
+
+@dataclass
+class CharacterPersonality:
+    enneagram: Optional[CharacterPersonalityAttribute] = None
+    mbti: Optional[CharacterPersonalityAttribute] = None
+    love: Optional[CharacterPersonalityAttribute] = None
+    work: Optional[CharacterPersonalityAttribute] = None
+
+
 @dataclass
 class Character:
     name: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
-    gender: str = ''
+    gender: str = field(default='', metadata=config(exclude=exclude_if_empty))
     role: Optional[Role] = None
     age: Optional[int] = None
     age_infinite: bool = field(default=False, metadata=config(exclude=exclude_if_false))
@@ -407,6 +562,16 @@ class Character:
     prefs: CharacterPreferences = field(default_factory=CharacterPreferences)
     topics: List[TemplateValue] = field(default_factory=list)
     big_five: Dict[str, List[int]] = field(default_factory=default_big_five_values)
+    profile: List[CharacterProfileSectionReference] = field(default_factory=default_character_profile)
+    summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    faculties: Dict[str, int] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
+    traits: List[str] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    values: List[str] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    gmc: List[CharacterMultiAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    baggage: List[CharacterMultiAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    flaws: List[CharacterMultiAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    strengths: List[StrengthWeaknessAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    personality: CharacterPersonality = field(default_factory=CharacterPersonality)
 
     def enneagram(self) -> Optional[SelectionItem]:
         for value in self.template_values:
@@ -417,19 +582,6 @@ class Character:
         for value in self.template_values:
             if value.id == mbti_field.id:
                 return mbti_choices.get(value.value)
-
-    def summary(self) -> str:
-        for value in self.template_values:
-            if value.id == summary_field.id:
-                return value.value
-
-        return ""
-
-    def set_summary(self, summary: str):
-        for tmpl_value in self.template_values:
-            if tmpl_value.id == summary_field.id:
-                tmpl_value.value = summary
-                break
 
     def is_major(self):
         return self.role and self.role.is_major()

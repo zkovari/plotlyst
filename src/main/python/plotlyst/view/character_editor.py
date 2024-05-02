@@ -38,16 +38,14 @@ from plotlyst.resources import resource_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.service.tour import TourService
 from plotlyst.view.common import emoji_font, set_tab_icon, wrap, ButtonPressResizeEventFilter, set_tab_visible
-from plotlyst.view.dialog.template import customize_character_profile
 from plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_bg_image, apply_white_menu
-from plotlyst.view.widget.big_five import BigFivePersonalityWidget
 from plotlyst.view.widget.character.editor import CharacterAgeEditor
 from plotlyst.view.widget.character.editor import CharacterRoleSelector
 from plotlyst.view.widget.character.plan import CharacterPlansWidget
+from plotlyst.view.widget.character.profile import CharacterProfileEditor
 from plotlyst.view.widget.character.topic import CharacterTopicsEditor
-from plotlyst.view.widget.template import CharacterProfileTemplateView
 from plotlyst.view.widget.tour.core import CharacterEditorTourEvent, \
     CharacterEditorNameLineEditTourEvent, TourEvent, CharacterEditorNameFilledTourEvent, \
     CharacterEditorAvatarDisplayTourEvent, CharacterEditorAvatarMenuTourEvent, CharacterEditorBackButtonTourEvent, \
@@ -186,7 +184,8 @@ class CharacterEditor(QObject, EventListener):
         self.wdgTopicsEditor.setCharacter(self.character)
         self.ui.tabTopics.layout().addWidget(self.wdgTopicsEditor)
 
-        self.profile = CharacterProfileTemplateView(self.character, self.novel.character_profiles[0])
+        self.profile = CharacterProfileEditor()
+        self.profile.setCharacter(self.character)
         self.ui.wdgProfile.layout().addWidget(self.profile)
 
         self.ui.wdgBackstory.setCharacter(self.character)
@@ -218,13 +217,6 @@ class CharacterEditor(QObject, EventListener):
             self.__handle_tour_event(event)
         elif isinstance(event, NovelAboutToSyncEvent):
             self._save()
-
-    def _customize_profile(self):
-        profile_index = 0
-        updated = customize_character_profile(self.novel, profile_index, self.widget)
-        if not updated:
-            return
-        self.profile = CharacterProfileTemplateView(self.character, self.novel.character_profiles[profile_index])
 
     def _name_edited(self, text: str):
         self.character.name = text
@@ -298,10 +290,10 @@ class CharacterEditor(QObject, EventListener):
         ''')
         self._btnRoleEventFilter.enterOpacity = 0.8
 
-        if self.character.is_minor():
-            self.profile.toggleRequiredHeaders(True)
-        else:
-            self.profile.toggleRequiredHeaders(False)
+        # if self.character.is_minor():
+        #     self.profile.toggleRequiredHeaders(True)
+        # else:
+        #     self.profile.toggleRequiredHeaders(False)
 
     def _gender_clicked(self, btn: QAbstractButton):
         self.ui.btnMoreGender.setHidden(True)
@@ -341,7 +333,7 @@ class CharacterEditor(QObject, EventListener):
             else:
                 self.character.role.icon = 'fa5s.chess-king'
         self.character.name = self.ui.lineName.text()
-        self.character.template_values = self.profile.values()
+        # self.character.template_values = self.profile.values()
 
         self.repo.update_character(self.character, self.ui.wdgAvatar.imageUploaded())
         self.repo.update_novel(self.novel)  # TODO temporary to update custom labels

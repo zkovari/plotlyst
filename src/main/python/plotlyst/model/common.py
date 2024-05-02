@@ -103,7 +103,7 @@ class SelectionItemsModel(QAbstractTableModel):
     def checkItem(self, item: SelectionItem):
         if self._checkable:
             self._checked.add(item)
-            self.selection_changed.emit()
+            # self.selection_changed.emit()
 
     def uncheckItem(self, item: SelectionItem):
         if self._checkable and item in self._checked:
@@ -118,6 +118,7 @@ class SelectionItemsModel(QAbstractTableModel):
                 self.checkItem(item)
 
             self.modelReset.emit()
+            self.selection_changed.emit()
 
     def uncheckAll(self):
         self._checked.clear()

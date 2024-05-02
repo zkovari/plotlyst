@@ -17,9 +17,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import copy
 from functools import partial
-from typing import Optional, List, Any, Dict, Set, Tuple
+from typing import Optional, List, Any, Dict, Set
 
 import emoji
 import qtanim
@@ -27,25 +26,20 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QModelIndex, QSize
 from PyQt6.QtGui import QMouseEvent, QIcon, QWheelEvent
 from PyQt6.QtWidgets import QHBoxLayout, QWidget, QLineEdit, QToolButton, QLabel, \
-    QSpinBox, QButtonGroup, QSizePolicy, QListView, QVBoxLayout, QSlider, QGridLayout
+    QSpinBox, QButtonGroup, QListView, QSlider, QGridLayout
 from overrides import overrides
-from qthandy import spacer, hbox, vbox, bold, line, underline, transparent, margins, \
-    decr_font, retain_when_hidden, vspacer, gc, sp, pointy, grid, incr_font
+from qthandy import spacer, hbox, vbox, bold, line, underline, margins, \
+    decr_font, retain_when_hidden, pointy, grid, incr_font
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
-from qtmenu import MenuWidget, ActionTooltipDisplayMode
+from qtmenu import MenuWidget
 
 from plotlyst.core.help import enneagram_help, mbti_help, mbti_keywords
 from plotlyst.core.template import TemplateField, SelectionItem, \
-    enneagram_choices, goal_field, internal_goal_field, stakes_field, conflict_field, motivation_field, \
-    internal_motivation_field, internal_conflict_field, internal_stakes_field, wound_field, fear_field, \
-    baggage_healing_field, methods_field, misbelief_field, ghost_field, demon_field, mbti_choices, love_style_choices, \
-    work_style_choices, flaw_placeholder_field, flaw_relation_field, flaw_manifestation_field, flaw_coping_field, \
-    flaw_triggers_field, flaw_goals_field, flaw_growth_field, flaw_deterioration_field, baggage_coping_field, \
-    baggage_manifestation_field, baggage_deterioration_field, baggage_relation_field, baggage_trigger_field, \
-    baggage_source_field, baggage_defense_mechanism_field
+    enneagram_choices, mbti_choices, love_style_choices, \
+    work_style_choices
 from plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
-from plotlyst.view.common import wrap, emoji_font, insert_before_the_end, action, label, push_btn, \
+from plotlyst.view.common import wrap, emoji_font, action, label, push_btn, \
     fade_out_and_gc
 from plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from plotlyst.view.icons import IconRegistry
@@ -55,11 +49,11 @@ from plotlyst.view.widget.button import SecondaryActionPushButton, CollapseButto
 from plotlyst.view.widget.character.editor import EnneagramSelector, MbtiSelector, LoveStyleSelector, \
     DiscSelector, StrengthWeaknessAttribute, StrengthWeaknessEditor
 from plotlyst.view.widget.display import Subtitle, Emoji, Icon, dash_icon
-from plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle, TextInputDialog
+from plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle
 from plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
 from plotlyst.view.widget.progress import CircularProgressBar
 from plotlyst.view.widget.template.base import TemplateDisplayWidget, TemplateFieldWidgetBase, \
-    TemplateWidgetBase, ComplexTemplateWidgetBase, EditableTemplateWidget
+    TemplateWidgetBase, EditableTemplateWidget
 
 
 def _icon(item: SelectionItem) -> QIcon:
@@ -486,230 +480,205 @@ class BarTemplateFieldWidget(TemplateFieldWidgetBase):
             self.valueReset.emit()
 
 
-class EnneagramFieldWidget(TemplateFieldWidgetBase):
-    def __init__(self, field: TemplateField, parent=None):
-        super(EnneagramFieldWidget, self).__init__(field, parent)
-        self.wdgEditor = EnneagramSelector()
-        self._defaultTooltip: str = 'Select Enneagram personality'
-        _layout = vbox(self)
-        _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignTop)
-
-        emojiDesire = Emoji()
-        emojiDesire.setText(emoji.emojize(':smiling_face:'))
-        emojiDesire.setToolTip('Core desire')
-        emojiFear = Emoji()
-        emojiFear.setText(emoji.emojize(':face_screaming_in_fear:'))
-        emojiFear.setToolTip('Core fear')
-        self.lblDesire = QLabel('')
-        self.lblDesire.setToolTip('Core desire')
-        self.lblFear = QLabel('')
-        self.lblFear.setToolTip('Core fear')
-
-        decr_font(emojiDesire, 2)
-        decr_font(self.lblDesire)
-        decr_font(emojiFear, 2)
-        decr_font(self.lblFear)
-
-        self.wdgAttr = group(
-            group(dash_icon(), emojiDesire, self.lblDesire, spacer()),
-            group(dash_icon(), emojiFear, self.lblFear, spacer()),
-            vertical=False)
-        margins(self.wdgAttr, left=10)
-        _layout.addWidget(self.wdgAttr)
-        self.wdgAttr.setHidden(True)
-
-        if self.field.compact:
-            _layout.addWidget(spacer())
-
-        self.wdgEditor.selected.connect(self._selectionChanged)
-        self.wdgEditor.ignored.connect(self._ignored)
-
-    @overrides
-    def value(self) -> Any:
-        return self.wdgEditor.value()
-
-    @overrides
-    def setValue(self, value: Any):
-        self.wdgEditor.setValue(value)
-        enneagram = enneagram_choices.get(value)
-        if enneagram:
-            # self.wdgEditor.setToolTip(enneagram_help[value])
-            self._selectionChanged(enneagram)
-        elif value is None:
-            self._ignored()
-        else:
-            self.wdgEditor.setToolTip(self._defaultTooltip)
-
-    def _selectionChanged(self, item: SelectionItem):
-        self.lblDesire.setText(item.meta['desire'])
-        self.lblFear.setText(item.meta['fear'])
-        self.wdgEditor.setToolTip(enneagram_help[item.text])
-        if self.isVisible():
-            qtanim.fade_in(self.wdgAttr)
-        else:
-            self.wdgAttr.setVisible(True)
-
-        self.valueFilled.emit(1)
-
-    def _ignored(self):
-        self.wdgEditor.setToolTip('Enneagram field is ignored for this character')
-        self.lblDesire.setText('')
-        self.lblFear.setText('')
-        self.wdgAttr.setHidden(True)
-        self.valueFilled.emit(1)
-
-
-class MbtiFieldWidget(TemplateFieldWidgetBase):
-    def __init__(self, field: TemplateField, parent=None):
-        super(MbtiFieldWidget, self).__init__(field, parent)
-        self.wdgEditor = MbtiSelector()
-        self._defaultTooltip: str = 'Select MBTI personality type'
-        self.wdgEditor.setToolTip(self._defaultTooltip)
-
-        _layout = vbox(self)
-        _layout.addWidget(self.wdgEditor)
-
-        self.lblKeywords = label(wordWrap=True)
-        decr_font(self.lblKeywords)
-
-        self.wdgAttr = group(dash_icon(), self.lblKeywords, spacer())
-        margins(self.wdgAttr, left=10)
-        _layout.addWidget(self.wdgAttr)
-        self.wdgAttr.setHidden(True)
-
-        if self.field.compact:
-            _layout.addWidget(spacer())
-
-        self.wdgEditor.selected.connect(self._selectionChanged)
-        self.wdgEditor.ignored.connect(self._ignored)
-
-    @overrides
-    def value(self) -> Any:
-        return self.wdgEditor.value()
-
-    @overrides
-    def setValue(self, value: Any):
-        self.wdgEditor.setValue(value)
-        if value:
-            mbti = mbti_choices[value]
-            self._selectionChanged(mbti)
-        elif value is None:
-            self._ignored()
-        else:
-            self.wdgEditor.setToolTip(self._defaultTooltip)
-
-    def _selectionChanged(self, item: SelectionItem):
-        self.lblKeywords.setText(mbti_keywords.get(item.text, ''))
-        if self.isVisible():
-            qtanim.fade_in(self.wdgAttr)
-        else:
-            self.wdgAttr.setVisible(True)
-
-        self.wdgEditor.setToolTip(mbti_help[item.text])
-        self.valueFilled.emit(1)
-
-    def _ignored(self):
-        self.wdgEditor.setToolTip('MBTI field is ignored for this character')
-        self.wdgAttr.setHidden(True)
-        self.valueFilled.emit(1)
-
-
-class LoveStyleFieldWidget(TemplateFieldWidgetBase):
-    def __init__(self, field: TemplateField, parent=None):
-        super().__init__(field, parent)
-        self.wdgEditor = LoveStyleSelector()
-        self._defaultTooltip: str = 'Select love style'
-        _layout = vbox(self)
-        _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignLeft)
-
-        self.wdgEditor.selected.connect(self._selectionChanged)
-        self.wdgEditor.ignored.connect(self._ignored)
-
-    @overrides
-    def value(self) -> Any:
-        return self.wdgEditor.value()
-
-    @overrides
-    def setValue(self, value: Any):
-        self.wdgEditor.setValue(value)
-        if value:
-            mbti = love_style_choices[value]
-            self._selectionChanged(mbti)
-        elif value is None:
-            self._ignored()
-        else:
-            self.wdgEditor.setToolTip(self._defaultTooltip)
-
-    def _selectionChanged(self, item: SelectionItem):
-        pass
-
-    def _ignored(self):
-        self.wdgEditor.setToolTip('Love style field is ignored for this character')
-        self.valueFilled.emit(1)
-
-
-class WorkStyleFieldWidget(TemplateFieldWidgetBase):
-    def __init__(self, field: TemplateField, parent=None):
-        super().__init__(field, parent)
-        self.wdgEditor = DiscSelector()
-        self._defaultTooltip: str = 'Select work style'
-        _layout = vbox(self)
-        _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignLeft)
-
-        self.wdgEditor.selected.connect(self._selectionChanged)
-        self.wdgEditor.ignored.connect(self._ignored)
-
-    @overrides
-    def value(self) -> Any:
-        return self.wdgEditor.value()
-
-    @overrides
-    def setValue(self, value: Any):
-        self.wdgEditor.setValue(value)
-        if value:
-            mbti = work_style_choices[value]
-            self._selectionChanged(mbti)
-        elif value is None:
-            self._ignored()
-        else:
-            self.wdgEditor.setToolTip(self._defaultTooltip)
-
-    def _selectionChanged(self, item: SelectionItem):
-        pass
-
-    def _ignored(self):
-        self.wdgEditor.setToolTip('Work style field is ignored for this character')
-        self.valueFilled.emit(1)
-
-
-class TraitsFieldWidget(TemplateFieldWidgetBase):
-    def __init__(self, field: TemplateField, parent=None):
-        super(TraitsFieldWidget, self).__init__(field, parent)
-        self.wdgEditor = TraitSelectionWidget(field, parent)
-        _layout = vbox(self)
-        _layout.addWidget(group(self.lblEmoji, self.lblName, spacer()))
-        _layout.addWidget(self.wdgEditor)
-
-        self.wdgEditor.selectionChanged.connect(self._selectionChanged)
-
-    @overrides
-    def value(self) -> Any:
-        return self.wdgEditor.value()
-
-    @overrides
-    def setValue(self, value: Any):
-        self.wdgEditor.setValue(value)
-
-    def _selectionChanged(self):
-        if self.wdgEditor.selectedItems():
-            self.valueFilled.emit(1)
-        else:
-            self.valueReset.emit()
+# class EnneagramFieldWidget(TemplateFieldWidgetBase):
+#     def __init__(self, field: TemplateField, parent=None):
+#         super(EnneagramFieldWidget, self).__init__(field, parent)
+#         self.wdgEditor = EnneagramSelector()
+#         self._defaultTooltip: str = 'Select Enneagram personality'
+#         _layout = vbox(self)
+#         _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignTop)
+#
+#         emojiDesire = Emoji()
+#         emojiDesire.setText(emoji.emojize(':smiling_face:'))
+#         emojiDesire.setToolTip('Core desire')
+#         emojiFear = Emoji()
+#         emojiFear.setText(emoji.emojize(':face_screaming_in_fear:'))
+#         emojiFear.setToolTip('Core fear')
+#         self.lblDesire = QLabel('')
+#         self.lblDesire.setToolTip('Core desire')
+#         self.lblFear = QLabel('')
+#         self.lblFear.setToolTip('Core fear')
+#
+#         decr_font(emojiDesire, 2)
+#         decr_font(self.lblDesire)
+#         decr_font(emojiFear, 2)
+#         decr_font(self.lblFear)
+#
+#         self.wdgAttr = group(
+#             group(dash_icon(), emojiDesire, self.lblDesire, spacer()),
+#             group(dash_icon(), emojiFear, self.lblFear, spacer()),
+#             vertical=False)
+#         margins(self.wdgAttr, left=10)
+#         _layout.addWidget(self.wdgAttr)
+#         self.wdgAttr.setHidden(True)
+#
+#         if self.field.compact:
+#             _layout.addWidget(spacer())
+#
+#         self.wdgEditor.selected.connect(self._selectionChanged)
+#         self.wdgEditor.ignored.connect(self._ignored)
+#
+#     @overrides
+#     def value(self) -> Any:
+#         return self.wdgEditor.value()
+#
+#     @overrides
+#     def setValue(self, value: Any):
+#         self.wdgEditor.setValue(value)
+#         enneagram = enneagram_choices.get(value)
+#         if enneagram:
+#             # self.wdgEditor.setToolTip(enneagram_help[value])
+#             self._selectionChanged(enneagram)
+#         elif value is None:
+#             self._ignored()
+#         else:
+#             self.wdgEditor.setToolTip(self._defaultTooltip)
+#
+#     def _selectionChanged(self, item: SelectionItem):
+#         self.lblDesire.setText(item.meta['desire'])
+#         self.lblFear.setText(item.meta['fear'])
+#         self.wdgEditor.setToolTip(enneagram_help[item.text])
+#         if self.isVisible():
+#             qtanim.fade_in(self.wdgAttr)
+#         else:
+#             self.wdgAttr.setVisible(True)
+#
+#         self.valueFilled.emit(1)
+#
+#     def _ignored(self):
+#         self.wdgEditor.setToolTip('Enneagram field is ignored for this character')
+#         self.lblDesire.setText('')
+#         self.lblFear.setText('')
+#         self.wdgAttr.setHidden(True)
+#         self.valueFilled.emit(1)
+#
+#
+# class MbtiFieldWidget(TemplateFieldWidgetBase):
+#     def __init__(self, field: TemplateField, parent=None):
+#         super(MbtiFieldWidget, self).__init__(field, parent)
+#         self.wdgEditor = MbtiSelector()
+#         self._defaultTooltip: str = 'Select MBTI personality type'
+#         self.wdgEditor.setToolTip(self._defaultTooltip)
+#
+#         _layout = vbox(self)
+#         _layout.addWidget(self.wdgEditor)
+#
+#         self.lblKeywords = label(wordWrap=True)
+#         decr_font(self.lblKeywords)
+#
+#         self.wdgAttr = group(dash_icon(), self.lblKeywords, spacer())
+#         margins(self.wdgAttr, left=10)
+#         _layout.addWidget(self.wdgAttr)
+#         self.wdgAttr.setHidden(True)
+#
+#         if self.field.compact:
+#             _layout.addWidget(spacer())
+#
+#         self.wdgEditor.selected.connect(self._selectionChanged)
+#         self.wdgEditor.ignored.connect(self._ignored)
+#
+#     @overrides
+#     def value(self) -> Any:
+#         return self.wdgEditor.value()
+#
+#     @overrides
+#     def setValue(self, value: Any):
+#         self.wdgEditor.setValue(value)
+#         if value:
+#             mbti = mbti_choices[value]
+#             self._selectionChanged(mbti)
+#         elif value is None:
+#             self._ignored()
+#         else:
+#             self.wdgEditor.setToolTip(self._defaultTooltip)
+#
+#     def _selectionChanged(self, item: SelectionItem):
+#         self.lblKeywords.setText(mbti_keywords.get(item.text, ''))
+#         if self.isVisible():
+#             qtanim.fade_in(self.wdgAttr)
+#         else:
+#             self.wdgAttr.setVisible(True)
+#
+#         self.wdgEditor.setToolTip(mbti_help[item.text])
+#         self.valueFilled.emit(1)
+#
+#     def _ignored(self):
+#         self.wdgEditor.setToolTip('MBTI field is ignored for this character')
+#         self.wdgAttr.setHidden(True)
+#         self.valueFilled.emit(1)
+#
+#
+# class LoveStyleFieldWidget(TemplateFieldWidgetBase):
+#     def __init__(self, field: TemplateField, parent=None):
+#         super().__init__(field, parent)
+#         self.wdgEditor = LoveStyleSelector()
+#         self._defaultTooltip: str = 'Select love style'
+#         _layout = vbox(self)
+#         _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignLeft)
+#
+#         self.wdgEditor.selected.connect(self._selectionChanged)
+#         self.wdgEditor.ignored.connect(self._ignored)
+#
+#     @overrides
+#     def value(self) -> Any:
+#         return self.wdgEditor.value()
+#
+#     @overrides
+#     def setValue(self, value: Any):
+#         self.wdgEditor.setValue(value)
+#         if value:
+#             mbti = love_style_choices[value]
+#             self._selectionChanged(mbti)
+#         elif value is None:
+#             self._ignored()
+#         else:
+#             self.wdgEditor.setToolTip(self._defaultTooltip)
+#
+#     def _selectionChanged(self, item: SelectionItem):
+#         pass
+#
+#     def _ignored(self):
+#         self.wdgEditor.setToolTip('Love style field is ignored for this character')
+#         self.valueFilled.emit(1)
+#
+#
+# class WorkStyleFieldWidget(TemplateFieldWidgetBase):
+#     def __init__(self, field: TemplateField, parent=None):
+#         super().__init__(field, parent)
+#         self.wdgEditor = DiscSelector()
+#         self._defaultTooltip: str = 'Select work style'
+#         _layout = vbox(self)
+#         _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignLeft)
+#
+#         self.wdgEditor.selected.connect(self._selectionChanged)
+#         self.wdgEditor.ignored.connect(self._ignored)
+#
+#     @overrides
+#     def value(self) -> Any:
+#         return self.wdgEditor.value()
+#
+#     @overrides
+#     def setValue(self, value: Any):
+#         self.wdgEditor.setValue(value)
+#         if value:
+#             mbti = work_style_choices[value]
+#             self._selectionChanged(mbti)
+#         elif value is None:
+#             self._ignored()
+#         else:
+#             self.wdgEditor.setToolTip(self._defaultTooltip)
+#
+#     def _selectionChanged(self, item: SelectionItem):
+#         pass
+#
+#     def _ignored(self):
+#         self.wdgEditor.setToolTip('Work style field is ignored for this character')
+#         self.valueFilled.emit(1)
 
 
 class LabelsTemplateFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
-        super(LabelsTemplateFieldWidget, self).__init__(field, parent)
+        super().__init__(field, parent)
         self.wdgEditor = LabelsSelectionWidget(field)
         _layout = vbox(self)
         _layout.addWidget(group(self.lblEmoji, self.lblName, spacer()))
@@ -732,586 +701,203 @@ class LabelsTemplateFieldWidget(TemplateFieldWidgetBase):
             self.valueReset.emit()
 
 
-class FieldToggle(QWidget):
-    def __init__(self, field: TemplateField, parent=None):
-        super().__init__(parent)
-        self._field = field
-        hbox(self)
-
-        self._lblEmoji = QLabel(self)
-        self._lblEmoji.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-        self._lblEmoji.setToolTip(field.description if field.description else field.placeholder)
-        self._lblName = QLabel(self)
-        self._lblName.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-        self._lblName.setText(self._field.name)
-        self._lblName.setToolTip(field.description if field.description else field.placeholder)
-
-        if self._field.emoji:
-            self._lblEmoji.setFont(emoji_font())
-            self._lblEmoji.setText(emoji.emojize(self._field.emoji))
-        else:
-            self._lblEmoji.setHidden(True)
-
-        self.toggle = Toggle()
-
-        self.layout().addWidget(self._lblEmoji)
-        self.layout().addWidget(self._lblName)
-        self.layout().addWidget(spacer())
-        self.layout().addWidget(self.toggle)
-
-
-class FieldSelector(QWidget):
-    toggled = pyqtSignal(TemplateField, bool)
-    clicked = pyqtSignal(TemplateField, bool)
-
-    def __init__(self, fields: List[TemplateField], parent=None):
-        super().__init__(parent)
-        vbox(self)
-        self._fields: Dict[TemplateField, FieldToggle] = {}
-
-        for field in fields:
-            wdg = FieldToggle(field)
-            self._fields[field] = wdg
-            self.layout().addWidget(wdg)
-            wdg.toggle.toggled.connect(partial(self.toggled.emit, field))
-            wdg.toggle.clicked.connect(partial(self.clicked.emit, field))
-
-    def toggle(self, field: TemplateField):
-        self._fields[field].toggle.toggle()
-
-
-class _SecondaryFieldSelectorButton(QToolButton):
-    removalRequested = pyqtSignal()
-    renameRequested = pyqtSignal()
-
-    def __init__(self, field: TemplateField, selector: FieldSelector, enableRename: bool = False, parent=None):
-        super(_SecondaryFieldSelectorButton, self).__init__(parent)
-        self._field = field
-        self._selector = selector
-
-        retain_when_hidden(self)
-        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        transparent(self)
-        pointy(self)
-        self.setIconSize(QSize(22, 22))
-        self.setIcon(IconRegistry.plus_edit_icon())
-
-        menu = MenuWidget(self)
-        menu.addWidget(self._selector)
-        menu.addSeparator()
-
-        if enableRename:
-            menu.addAction(action('Rename', IconRegistry.edit_icon(), slot=self.renameRequested))
-            menu.addSeparator()
-
-        menu.addAction(action(f'Remove {self._field.name}', IconRegistry.trash_can_icon(), slot=self.removalRequested))
-        self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.7))
-
-
-class _PrimaryFieldWidget(QWidget):
-    removed = pyqtSignal()
-    renamed = pyqtSignal()
-    valueChanged = pyqtSignal()
-
-    def __init__(self, field: TemplateField, secondaryFields: List[TemplateField], parent=None):
-        super().__init__(parent)
-        self._field = field
-        self._secondaryFields = secondaryFields
-        self._secondaryFieldWidgets: Dict[TemplateField, Optional[SmallTextTemplateFieldWidget]] = {}
-        for sf in secondaryFields:
-            self._secondaryFieldWidgets[sf] = None
-        vbox(self, 0, 2)
-        self._primaryWdg = SmallTextTemplateFieldWidget(field)
-        self._primaryWdg.valueFilled.connect(self.valueChanged.emit)
-        self._primaryWdg.valueReset.connect(self.valueChanged.emit)
-
-        self._selector = FieldSelector(secondaryFields)
-        btnSecondary = _SecondaryFieldSelectorButton(self._field, self._selector,
-                                                     enableRename=field.id == flaw_placeholder_field.id)
-        btnSecondary.removalRequested.connect(self.removed)
-        btnSecondary.renameRequested.connect(self.renamed)
-        self._selector.toggled.connect(self._toggleSecondaryField)
-        self._selector.clicked.connect(self._clickSecondaryField)
-        insert_before_the_end(self._primaryWdg.wdgTop, btnSecondary)
-
-        self._secondaryWdgContainer = QWidget()
-        vbox(self._secondaryWdgContainer, 0, 2)
-        margins(self._secondaryWdgContainer, left=40)
-        for _ in self._secondaryFields:
-            self._secondaryWdgContainer.layout().addWidget(spacer())
-
-        top = QWidget()
-        hbox(top)
-        top.layout().addWidget(self._primaryWdg)
-        spacer_ = spacer()
-        sp(spacer_).h_preferred()
-        top.layout().addWidget(spacer_)
-        self.layout().addWidget(top)
-        self.layout().addWidget(self._secondaryWdgContainer)
-
-        self.installEventFilter(VisibilityToggleEventFilter(btnSecondary, self._primaryWdg))
-
-    def field(self) -> TemplateField:
-        return self._field
-
-    def value(self) -> str:
-        return self._primaryWdg.value()
-
-    def setValue(self, value: str):
-        self._primaryWdg.setValue(value)
-
-    def refresh(self):
-        self._primaryWdg.refresh()
-
-    def secondaryFields(self) -> List[Tuple[str, str]]:
-        fields = []
-        for field, wdg in self._secondaryFieldWidgets.items():
-            if wdg is None:
-                continue
-            fields.append((str(field.id), wdg.value()))
-
-        return fields
-
-    def setSecondaryField(self, secondary: TemplateField, value: str):
-        self._selector.toggle(secondary)
-        self._secondaryFieldWidgets[secondary].setValue(value)
-
-    def _toggleSecondaryField(self, secondary: TemplateField, toggled: bool):
-        i = self._secondaryFields.index(secondary)
-
-        if toggled:
-            wdg = SmallTextTemplateFieldWidget(secondary, minHeight=40)
-            wdg.valueFilled.connect(self.valueChanged.emit)
-            wdg.valueReset.connect(self.valueChanged.emit)
-            self._secondaryFieldWidgets[secondary] = wdg
-            item = self._secondaryWdgContainer.layout().itemAt(i)
-            icon = Icon()
-            icon.setIcon(IconRegistry.from_name('msc.dash', 'grey'))
-            spac = spacer()
-            sp(spac).h_preferred()
-            self._secondaryWdgContainer.layout().replaceWidget(item.widget(), group(icon, wdg, spac))
-        else:
-            self._secondaryWdgContainer.layout().replaceWidget(self._secondaryFieldWidgets[secondary], spacer())
-            gc(self._secondaryFieldWidgets[secondary])
-            self._secondaryFieldWidgets[secondary] = None
-
-    def _clickSecondaryField(self):
-        self.valueChanged.emit()
-
-
-class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
-    ID_KEY: str = 'id'
-    VALUE_KEY: str = 'value'
-    SECONDARY_KEY: str = 'secondary'
-    ALIAS_KEY = 'alias'
-
-    def __init__(self, field: TemplateField, parent=None):
-        super().__init__(field, parent)
-        self._hasAlias = False
-        self._primaryWidgets: List[_PrimaryFieldWidget] = []
-
-        self._btnPrimary = SecondaryActionPushButton()
-        self._btnPrimary.setText(self._primaryButtonText())
-        self._btnPrimary.setIcon(IconRegistry.plus_icon('grey'))
-        decr_font(self._btnPrimary)
-        fields = self._primaryFields()
-        self._menu = MenuWidget(self._btnPrimary)
-        self._menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
-        for field in fields:
-            self._menu.addAction(
-                action(field.name, icon=IconRegistry.from_name(field.icon), tooltip=field.description,
-                       slot=partial(self._addPrimaryField, field),
-                       parent=self._menu))
-        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-        self._layout: QVBoxLayout = vbox(self, 0, 5)
-
-        self.layout().addWidget(wrap(self._btnPrimary, margin_left=5))
-        self._layout.addWidget(vspacer())
-
-    @overrides
-    def value(self) -> Any:
-        def secondaryValues(primaryWdg: _PrimaryFieldWidget):
-            values = []
-            for field in primaryWdg.secondaryFields():
-                s_id, value_ = field
-                values.append({self.ID_KEY: s_id, self.VALUE_KEY: value_})
-            return values
-
-        value = {}
-        for i, primary_wdg in enumerate(self._primaryWidgets):
-            sid = str(primary_wdg.field().id)
-            sid += f'&{i}'
-            if self._hasAlias:
-                sid += f'&{primary_wdg.field().name}'
-            value[sid] = {self.VALUE_KEY: primary_wdg.value(),
-                          self.SECONDARY_KEY: secondaryValues(primary_wdg)}
-            if self._hasAlias:
-                value[sid][self.ALIAS_KEY] = primary_wdg.field().name
-
-        return value
-
-    @overrides
-    def setValue(self, value: Any):
-        if value is None:
-            return
-        if isinstance(value, str):
-            return
-
-        primary_fields = self._primaryFields()
-        for k, v in value.items():
-            k = k.split('&')[0]
-            primary = next((x for x in primary_fields if str(x.id) == k), None)
-            if primary is None:
-                continue
-            if self._hasAlias and self.ALIAS_KEY in v.keys():
-                primary = copy.deepcopy(primary)
-                primary.name = v[self.ALIAS_KEY]
-            wdg = self._addPrimaryField(primary)
-            wdg.setValue(v[self.VALUE_KEY])
-
-            secondary_fields = self._secondaryFields(primary)
-            for secondary in v[self.SECONDARY_KEY]:
-                secondary_field = next((x for x in secondary_fields if str(x.id) == secondary[self.ID_KEY]), None)
-                if secondary_field:
-                    wdg.setSecondaryField(secondary_field, secondary[self.VALUE_KEY])
-
-        self._valueChanged()
-
-    def _primaryFields(self) -> List[TemplateField]:
-        return []
-
-    def _primaryButtonText(self) -> str:
-        return 'Add new item'
-
-    def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
-        return []
-
-    def _addPrimaryField(self, field: TemplateField) -> _PrimaryFieldWidget:
-        wdg = _PrimaryFieldWidget(field, self._secondaryFields(field))
-        self._primaryWidgets.append(wdg)
-        wdg.removed.connect(partial(self._removePrimaryField, wdg))
-        wdg.renamed.connect(partial(self._renamePrimaryField, wdg))
-        wdg.valueChanged.connect(self._valueChanged)
-        if self._layout.count() > 2:
-            self._layout.insertWidget(self._layout.count() - 2, line())
-        self._layout.insertWidget(self._layout.count() - 2, wdg)
-
-        return wdg
-
-    def _removePrimaryField(self, wdg: _PrimaryFieldWidget):
-        self._primaryWidgets.remove(wdg)
-        self._layout.removeWidget(wdg)
-        gc(wdg)
-
-    def _renamePrimaryField(self, wdg: _PrimaryFieldWidget):
-        pass
-
-    def _valueChanged(self):
-        count = 0
-        value = 0
-        for wdg in self._primaryWidgets:
-            count += 1
-            if wdg.value():
-                value += 1
-            for _, v in wdg.secondaryFields():
-                count += 1
-                if v:
-                    value += 1
-        self.valueFilled.emit(value / count if count else 0)
-
-
-class FlawsFieldWidget(MultiLayerComplexTemplateWidgetBase):
-
-    def __init__(self, field: TemplateField, parent=None):
-        super().__init__(field, parent)
-        self._hasAlias = True
-        self._menu.clear()
-        self._menu.addAction(
-            action('Add a new character flaw...', icon=IconRegistry.from_name('mdi.virus'),
-                   tooltip='A flaw can deepen the character, provide complexity, and may even impact the plot',
-                   slot=self._addNew))
-
-    @property
-    def wdgEditor(self):
-        return self
-
-    @overrides
-    def _primaryButtonText(self) -> str:
-        return 'Add new flaw'
-
-    @overrides
-    def _primaryFields(self) -> List[TemplateField]:
-        return [flaw_placeholder_field]
-
-    @overrides
-    def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
-        return [flaw_triggers_field, flaw_coping_field, flaw_manifestation_field, flaw_relation_field, flaw_goals_field,
-                flaw_growth_field, flaw_deterioration_field]
-
-    def _addNew(self):
-        flaw = TextInputDialog.edit('Define a character flaw', 'Name of the flaw')
-        if flaw:
-            field = copy.deepcopy(flaw_placeholder_field)
-            field.name = flaw
-            self._addPrimaryField(field)
-
-    @overrides
-    def _renamePrimaryField(self, wdg: _PrimaryFieldWidget):
-        flaw = wdg.field()
-        flaw_name = TextInputDialog.edit('Rename character flaw', 'Name of the flaw', flaw.name)
-        if flaw_name:
-            flaw.name = flaw_name
-            wdg.refresh()
-
-
-class GmcFieldWidget(MultiLayerComplexTemplateWidgetBase):
-
-    @property
-    def wdgEditor(self):
-        return self
-
-    @overrides
-    def _primaryButtonText(self) -> str:
-        return 'Add new goal'
-
-    @overrides
-    def _primaryFields(self) -> List[TemplateField]:
-        return [goal_field, internal_goal_field]
-
-    @overrides
-    def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
-        if primary.id == goal_field.id:
-            return [stakes_field, conflict_field, motivation_field, methods_field, internal_motivation_field,
-                    internal_conflict_field,
-                    internal_stakes_field]
-        else:
-            return [methods_field, internal_motivation_field, internal_conflict_field, internal_stakes_field]
-
-
-class BaggageFieldWidget(MultiLayerComplexTemplateWidgetBase):
-    @property
-    def wdgEditor(self):
-        return self
-
-    @overrides
-    def _primaryButtonText(self) -> str:
-        return 'Add new baggage'
-
-    @overrides
-    def _primaryFields(self) -> List[TemplateField]:
-        return [ghost_field, wound_field, demon_field, fear_field, misbelief_field]
-
-    @overrides
-    def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
-        elements = [baggage_source_field, baggage_manifestation_field,
-                    baggage_relation_field, baggage_coping_field, baggage_healing_field, baggage_deterioration_field]
-
-        if primary.id != ghost_field.id:
-            elements.insert(3, baggage_defense_mechanism_field)
-
-        if primary.id in [wound_field.id, ghost_field.id, demon_field.id]:
-            elements.insert(1, baggage_trigger_field)
-
-        return elements
-
-
-class StrengthsWeaknessesHeader(QWidget):
-    edit = pyqtSignal()
-    remove = pyqtSignal()
-
-    def __init__(self, attribute: StrengthWeaknessAttribute, parent=None):
-        super().__init__(parent)
-        self.attribute = attribute
-        hbox(self, 0)
-
-        self.btnKey = push_btn(text=self.attribute.name, transparent_=True)
-        bold(self.btnKey)
-        self.btnKey.clicked.connect(self.edit)
-
-        self.btnMenu = DotsMenuButton()
-        self.btnMenu.installEventFilter(OpacityEventFilter(self.btnMenu))
-        retain_when_hidden(self.btnMenu)
-
-        menu = MenuWidget(self.btnMenu)
-        menu.addAction(action('Edit', IconRegistry.edit_icon(), slot=self.edit))
-        menu.addSeparator()
-        menu.addAction(action('Remove', IconRegistry.trash_can_icon(), slot=self.remove))
-
-        self.layout().addWidget(self.btnKey, alignment=Qt.AlignmentFlag.AlignLeft)
-        self.layout().addWidget(self.btnMenu, alignment=Qt.AlignmentFlag.AlignRight)
-
-        self.installEventFilter(VisibilityToggleEventFilter(self.btnMenu, self))
-
-    def refreshAttribute(self, attribute: StrengthWeaknessAttribute):
-        self.attribute = attribute
-        self.btnKey.setText(self.attribute.name)
-
-
-class StrengthsWeaknessesTableRow(QWidget):
-    changed = pyqtSignal()
-
-    def __init__(self, attribute: StrengthWeaknessAttribute, parent=None):
-        super().__init__(parent)
-        self.attribute = attribute
-        hbox(self, 0, spacing=10)
-        self.textStrength = self._textEditor()
-        self.textStrength.setPlaceholderText('Define the strength of this attribute')
-        self.textStrength.setText(self.attribute.strength)
-        self.textStrength.textChanged.connect(self._strengthChanged)
-
-        self.textWeakness = self._textEditor()
-        self.textWeakness.setPlaceholderText('Define the weakness of this attribute')
-        self.textWeakness.setText(self.attribute.weakness)
-        self.textWeakness.textChanged.connect(self._weaknessChanged)
-
-        self.layout().addWidget(self.textStrength)
-        self.layout().addWidget(self.textWeakness)
-
-        self.textStrength.setVisible(self.attribute.has_strength)
-        self.textWeakness.setVisible(self.attribute.has_weakness)
-
-    def refreshAttribute(self, attribute: StrengthWeaknessAttribute):
-        self.attribute = attribute
-        self.attribute.strength = self.textStrength.toPlainText()
-        self.attribute.weakness = self.textWeakness.toPlainText()
-        self.textStrength.setVisible(self.attribute.has_strength)
-        self.textWeakness.setVisible(self.attribute.has_weakness)
-
-    def _strengthChanged(self):
-        self.attribute.strength = self.textStrength.toPlainText()
-        self.changed.emit()
-
-    def _weaknessChanged(self):
-        self.attribute.weakness = self.textWeakness.toPlainText()
-        self.changed.emit()
-
-    def _textEditor(self) -> AutoAdjustableTextEdit:
-        editor = AutoAdjustableTextEdit(height=75)
-        editor.setMaximumWidth(500)
-        editor.setProperty('white-bg', True)
-        editor.setProperty('rounded', True)
-        retain_when_hidden(editor)
-        return editor
-
-
-class StrengthsWeaknessesFieldWidget(EditableTemplateWidget):
-    def __init__(self, field: TemplateField, parent=None):
-        super().__init__(field, parent)
-        self._rows: List[StrengthsWeaknessesTableRow] = []
-
-        vbox(self, 0)
-        self._center = QWidget()
-        self._centerlayout: QGridLayout = grid(self._center, 0, 0, 5)
-        margins(self._centerlayout, left=5)
-        self._centerlayout.setColumnMinimumWidth(0, 70)
-        self._centerlayout.setColumnStretch(1, 1)
-        self._centerlayout.setColumnStretch(2, 1)
-
-        self.emojiStrength = label('')
-        self.emojiStrength.setFont(emoji_font())
-        self.emojiStrength.setText(emoji.emojize(':flexed_biceps:'))
-        self.emojiWeakness = label('')
-        self.emojiWeakness.setFont(emoji_font())
-        self.emojiWeakness.setText(emoji.emojize(':nauseated_face:'))
-        self.lblStrength = label('Strength', underline=True)
-        self.lblWeakness = label('Weakness', underline=True)
-        incr_font(self.lblStrength)
-        incr_font(self.lblWeakness)
-        self._centerlayout.addWidget(group(self.emojiStrength, self.lblStrength), 0, 1,
-                                     alignment=Qt.AlignmentFlag.AlignCenter)
-        self._centerlayout.addWidget(group(self.emojiWeakness, self.lblWeakness), 0, 2,
-                                     alignment=Qt.AlignmentFlag.AlignCenter)
-
-        self._btnPrimary = SecondaryActionPushButton()
-        self._btnPrimary.setText('Add new attribute')
-        self._btnPrimary.setIcon(IconRegistry.plus_icon('grey'))
-        self._btnPrimary.clicked.connect(self._addNewAttribute)
-        decr_font(self._btnPrimary)
-
-        self.layout().addWidget(self._center)
-        self.layout().addWidget(wrap(self._btnPrimary, margin_left=5), alignment=Qt.AlignmentFlag.AlignLeft)
-
-    @property
-    def wdgEditor(self):
-        return self
-
-    @overrides
-    def value(self) -> Any:
-        values = []
-        for row in self._rows:
-            values.append({
-                'key': row.attribute.name,
-                'has_strength': row.attribute.has_strength,
-                'has_weakness': row.attribute.has_weakness,
-                'strength': row.attribute.strength,
-                'weakness': row.attribute.weakness
-            })
-
-        return values
-
-    @overrides
-    def setValue(self, value: Any):
-        self._rows.clear()
-        if value is None:
-            return
-        if isinstance(value, str):
-            return
-
-        for item in value:
-            attribute = StrengthWeaknessAttribute(item.get('key', ''),
-                                                  has_strength=item.get('has_strength', True),
-                                                  has_weakness=item.get('has_weakness', True),
-                                                  strength=item.get('strength', ''),
-                                                  weakness=item.get('weakness', '')
-                                                  )
-            self._addAttribute(attribute)
-
-        self._valueChanged()
-
-    def _addNewAttribute(self):
-        attribute = StrengthWeaknessEditor.popup()
-        if attribute:
-            header, rowWdg = self._addAttribute(attribute)
-            qtanim.fade_in(header, teardown=lambda: header.setGraphicsEffect(None))
-            qtanim.fade_in(rowWdg, teardown=lambda: rowWdg.setGraphicsEffect(None))
-            self._valueChanged()
-
-    def _addAttribute(self, attribute: StrengthWeaknessAttribute):
-        rowWdg = StrengthsWeaknessesTableRow(attribute)
-        rowWdg.changed.connect(self._valueChanged)
-        self._rows.append(rowWdg)
-        header = StrengthsWeaknessesHeader(attribute)
-        header.edit.connect(partial(self._edit, header, rowWdg))
-        header.remove.connect(partial(self._remove, header, rowWdg))
-
-        row = self._centerlayout.rowCount()
-        self._centerlayout.addWidget(header, row, 0, alignment=Qt.AlignmentFlag.AlignTop)
-        self._centerlayout.addWidget(rowWdg, row, 1, 1, 2)
-
-        return header, rowWdg
-
-    def _edit(self, header: StrengthsWeaknessesHeader, row: StrengthsWeaknessesTableRow):
-        attribute = StrengthWeaknessEditor.popup(header.attribute)
-        if attribute:
-            header.refreshAttribute(attribute)
-            row.refreshAttribute(attribute)
-            self._valueChanged()
-
-    def _remove(self, header: StrengthsWeaknessesHeader, row: StrengthsWeaknessesTableRow):
-        self._rows.remove(row)
-        fade_out_and_gc(self._center, header)
-        fade_out_and_gc(self._center, row)
-
-    def _valueChanged(self):
-        count = 0
-        value = 0
-        for wdg in self._rows:
-            if wdg.attribute.has_strength:
-                count += 1
-                if wdg.attribute.strength:
-                    value += 1
-            if wdg.attribute.has_weakness:
-                count += 1
-                if wdg.attribute.weakness:
-                    value += 1
-        self.valueFilled.emit(value / count if count else 0)
+# class StrengthsWeaknessesHeader(QWidget):
+#     edit = pyqtSignal()
+#     remove = pyqtSignal()
+#
+#     def __init__(self, attribute: StrengthWeaknessAttribute, parent=None):
+#         super().__init__(parent)
+#         self.attribute = attribute
+#         hbox(self, 0)
+#
+#         self.btnKey = push_btn(text=self.attribute.name, transparent_=True)
+#         bold(self.btnKey)
+#         self.btnKey.clicked.connect(self.edit)
+#
+#         self.btnMenu = DotsMenuButton()
+#         self.btnMenu.installEventFilter(OpacityEventFilter(self.btnMenu))
+#         retain_when_hidden(self.btnMenu)
+#
+#         menu = MenuWidget(self.btnMenu)
+#         menu.addAction(action('Edit', IconRegistry.edit_icon(), slot=self.edit))
+#         menu.addSeparator()
+#         menu.addAction(action('Remove', IconRegistry.trash_can_icon(), slot=self.remove))
+#
+#         self.layout().addWidget(self.btnKey, alignment=Qt.AlignmentFlag.AlignLeft)
+#         self.layout().addWidget(self.btnMenu, alignment=Qt.AlignmentFlag.AlignRight)
+#
+#         self.installEventFilter(VisibilityToggleEventFilter(self.btnMenu, self))
+#
+#     def refreshAttribute(self, attribute: StrengthWeaknessAttribute):
+#         self.attribute = attribute
+#         self.btnKey.setText(self.attribute.name)
+#
+#
+# class StrengthsWeaknessesTableRow(QWidget):
+#     changed = pyqtSignal()
+#
+#     def __init__(self, attribute: StrengthWeaknessAttribute, parent=None):
+#         super().__init__(parent)
+#         self.attribute = attribute
+#         hbox(self, 0, spacing=10)
+#         self.textStrength = self._textEditor()
+#         self.textStrength.setPlaceholderText('Define the strength of this attribute')
+#         self.textStrength.setText(self.attribute.strength)
+#         self.textStrength.textChanged.connect(self._strengthChanged)
+#
+#         self.textWeakness = self._textEditor()
+#         self.textWeakness.setPlaceholderText('Define the weakness of this attribute')
+#         self.textWeakness.setText(self.attribute.weakness)
+#         self.textWeakness.textChanged.connect(self._weaknessChanged)
+#
+#         self.layout().addWidget(self.textStrength)
+#         self.layout().addWidget(self.textWeakness)
+#
+#         self.textStrength.setVisible(self.attribute.has_strength)
+#         self.textWeakness.setVisible(self.attribute.has_weakness)
+#
+#     def refreshAttribute(self, attribute: StrengthWeaknessAttribute):
+#         self.attribute = attribute
+#         self.attribute.strength = self.textStrength.toPlainText()
+#         self.attribute.weakness = self.textWeakness.toPlainText()
+#         self.textStrength.setVisible(self.attribute.has_strength)
+#         self.textWeakness.setVisible(self.attribute.has_weakness)
+#
+#     def _strengthChanged(self):
+#         self.attribute.strength = self.textStrength.toPlainText()
+#         self.changed.emit()
+#
+#     def _weaknessChanged(self):
+#         self.attribute.weakness = self.textWeakness.toPlainText()
+#         self.changed.emit()
+#
+#     def _textEditor(self) -> AutoAdjustableTextEdit:
+#         editor = AutoAdjustableTextEdit(height=75)
+#         editor.setMaximumWidth(500)
+#         editor.setProperty('white-bg', True)
+#         editor.setProperty('rounded', True)
+#         retain_when_hidden(editor)
+#         return editor
+
+
+# class StrengthsWeaknessesFieldWidget(EditableTemplateWidget):
+#     def __init__(self, field: TemplateField, parent=None):
+#         super().__init__(field, parent)
+#         self._rows: List[StrengthsWeaknessesTableRow] = []
+#
+#         vbox(self, 0)
+#         self._center = QWidget()
+#         self._centerlayout: QGridLayout = grid(self._center, 0, 0, 5)
+#         margins(self._centerlayout, left=5)
+#         self._centerlayout.setColumnMinimumWidth(0, 70)
+#         self._centerlayout.setColumnStretch(1, 1)
+#         self._centerlayout.setColumnStretch(2, 1)
+#
+#         self.emojiStrength = label('')
+#         self.emojiStrength.setFont(emoji_font())
+#         self.emojiStrength.setText(emoji.emojize(':flexed_biceps:'))
+#         self.emojiWeakness = label('')
+#         self.emojiWeakness.setFont(emoji_font())
+#         self.emojiWeakness.setText(emoji.emojize(':nauseated_face:'))
+#         self.lblStrength = label('Strength', underline=True)
+#         self.lblWeakness = label('Weakness', underline=True)
+#         incr_font(self.lblStrength)
+#         incr_font(self.lblWeakness)
+#         self._centerlayout.addWidget(group(self.emojiStrength, self.lblStrength), 0, 1,
+#                                      alignment=Qt.AlignmentFlag.AlignCenter)
+#         self._centerlayout.addWidget(group(self.emojiWeakness, self.lblWeakness), 0, 2,
+#                                      alignment=Qt.AlignmentFlag.AlignCenter)
+#
+#         self._btnPrimary = SecondaryActionPushButton()
+#         self._btnPrimary.setText('Add new attribute')
+#         self._btnPrimary.setIcon(IconRegistry.plus_icon('grey'))
+#         self._btnPrimary.clicked.connect(self._addNewAttribute)
+#         decr_font(self._btnPrimary)
+#
+#         self.layout().addWidget(self._center)
+#         self.layout().addWidget(wrap(self._btnPrimary, margin_left=5), alignment=Qt.AlignmentFlag.AlignLeft)
+#
+#     @property
+#     def wdgEditor(self):
+#         return self
+#
+#     @overrides
+#     def value(self) -> Any:
+#         values = []
+#         for row in self._rows:
+#             values.append({
+#                 'key': row.attribute.name,
+#                 'has_strength': row.attribute.has_strength,
+#                 'has_weakness': row.attribute.has_weakness,
+#                 'strength': row.attribute.strength,
+#                 'weakness': row.attribute.weakness
+#             })
+#
+#         return values
+#
+#     @overrides
+#     def setValue(self, value: Any):
+#         self._rows.clear()
+#         if value is None:
+#             return
+#         if isinstance(value, str):
+#             return
+#
+#         for item in value:
+#             attribute = StrengthWeaknessAttribute(item.get('key', ''),
+#                                                   has_strength=item.get('has_strength', True),
+#                                                   has_weakness=item.get('has_weakness', True),
+#                                                   strength=item.get('strength', ''),
+#                                                   weakness=item.get('weakness', '')
+#                                                   )
+#             self._addAttribute(attribute)
+#
+#         self._valueChanged()
+#
+#     def _addNewAttribute(self):
+#         attribute = StrengthWeaknessEditor.popup()
+#         if attribute:
+#             header, rowWdg = self._addAttribute(attribute)
+#             qtanim.fade_in(header, teardown=lambda: header.setGraphicsEffect(None))
+#             qtanim.fade_in(rowWdg, teardown=lambda: rowWdg.setGraphicsEffect(None))
+#             self._valueChanged()
+#
+#     def _addAttribute(self, attribute: StrengthWeaknessAttribute):
+#         rowWdg = StrengthsWeaknessesTableRow(attribute)
+#         rowWdg.changed.connect(self._valueChanged)
+#         self._rows.append(rowWdg)
+#         header = StrengthsWeaknessesHeader(attribute)
+#         header.edit.connect(partial(self._edit, header, rowWdg))
+#         header.remove.connect(partial(self._remove, header, rowWdg))
+#
+#         row = self._centerlayout.rowCount()
+#         self._centerlayout.addWidget(header, row, 0, alignment=Qt.AlignmentFlag.AlignTop)
+#         self._centerlayout.addWidget(rowWdg, row, 1, 1, 2)
+#
+#         return header, rowWdg
+#
+#     def _edit(self, header: StrengthsWeaknessesHeader, row: StrengthsWeaknessesTableRow):
+#         attribute = StrengthWeaknessEditor.popup(header.attribute)
+#         if attribute:
+#             header.refreshAttribute(attribute)
+#             row.refreshAttribute(attribute)
+#             self._valueChanged()
+#
+#     def _remove(self, header: StrengthsWeaknessesHeader, row: StrengthsWeaknessesTableRow):
+#         self._rows.remove(row)
+#         fade_out_and_gc(self._center, header)
+#         fade_out_and_gc(self._center, row)
+#
+#     def _valueChanged(self):
+#         count = 0
+#         value = 0
+#         for wdg in self._rows:
+#             if wdg.attribute.has_strength:
+#                 count += 1
+#                 if wdg.attribute.strength:
+#                     value += 1
+#             if wdg.attribute.has_weakness:
+#                 count += 1
+#                 if wdg.attribute.weakness:
+#                     value += 1
+#         self.valueFilled.emit(value / count if count else 0)
