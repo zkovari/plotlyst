@@ -24,6 +24,7 @@ from PyQt6.QtWidgets import QDialog, QWidget
 from qthandy import line, hbox, sp, vspacer
 
 from plotlyst.view.common import label, push_btn
+from plotlyst.view.layout import group
 from plotlyst.view.widget.display import PopupDialog
 
 
@@ -32,10 +33,9 @@ class ConfirmationResult:
     confirmed: bool
 
 
-class ConfirmationDialog(PopupDialog):
+class BaseDialog(PopupDialog):
     def __init__(self, message: str, title: str = 'Confirm?', parent=None):
         super().__init__(parent)
-
         self.title = label(title, h4=True)
         sp(self.title).v_max()
         self.wdgTitle = QWidget()
@@ -43,16 +43,11 @@ class ConfirmationDialog(PopupDialog):
         self.wdgTitle.layout().addWidget(self.title, alignment=Qt.AlignmentFlag.AlignLeft)
         self.wdgTitle.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
         self.text = label(message, wordWrap=True)
-        self.btnConfirm = push_btn(text='Confirm', properties=['base', 'deconstructive'])
-        sp(self.btnConfirm).h_exp()
-        self.btnConfirm.clicked.connect(self.accept)
-        self.btnConfirm.setFocus()
 
         self.frame.layout().addWidget(self.wdgTitle)
         self.frame.layout().addWidget(line())
         self.frame.layout().addWidget(self.text)
         self.frame.layout().addWidget(vspacer())
-        self.frame.layout().addWidget(self.btnConfirm)
 
     def display(self) -> ConfirmationResult:
         result = self.exec()
@@ -62,10 +57,43 @@ class ConfirmationDialog(PopupDialog):
 
         return ConfirmationResult(False)
 
+
+class ConfirmationDialog(BaseDialog):
+    def __init__(self, message: str, title: str = 'Confirm?', parent=None):
+        super().__init__(message, title, parent)
+
+        self.btnConfirm = push_btn(text='Confirm', properties=['base', 'deconstructive'])
+        sp(self.btnConfirm).h_exp()
+        self.btnConfirm.clicked.connect(self.accept)
+        self.btnConfirm.setFocus()
+
+        self.frame.layout().addWidget(self.btnConfirm)
+
     @classmethod
     def confirm(cls, message: str, title: str = 'Confirm?') -> bool:
         return cls.popup(message, title).confirmed
 
 
+class QuestionDialog(BaseDialog):
+    def __init__(self, message: str, title: str, btnConfirmText: str, btnCancelText: str,
+                 parent=None):
+        super().__init__(message, title, parent)
+
+        self.btnConfirm = push_btn(text=btnConfirmText, properties=['base', 'positive'])
+        self.btnConfirm.clicked.connect(self.accept)
+        self.btnCancel = push_btn(text=btnCancelText, base=True)
+        self.btnCancel.clicked.connect(self.reject)
+
+        self.frame.layout().addWidget(group(self.btnCancel, self.btnConfirm))
+
+    @classmethod
+    def ask(cls, message: str, title: str, btnConfirmText: str, btnCancelText: str) -> bool:
+        return cls.popup(message, title, btnConfirmText, btnCancelText).confirmed
+
+
 def confirmed(message: str, title: str = 'Confirm?') -> bool:
     return ConfirmationDialog.confirm(message, title)
+
+
+def asked(message: str, title: str, btnConfirmText: str = 'Confirm', btnCancelText: str = 'Cancel') -> bool:
+    return QuestionDialog.ask(message, title, btnConfirmText, btnCancelText)
