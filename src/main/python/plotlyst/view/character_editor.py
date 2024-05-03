@@ -46,7 +46,7 @@ from plotlyst.view.widget.character.editor import CharacterRoleSelector
 from plotlyst.view.widget.character.plan import CharacterPlansWidget
 from plotlyst.view.widget.character.profile import CharacterProfileEditor
 from plotlyst.view.widget.character.topic import CharacterTopicsEditor
-from plotlyst.view.widget.confirm import confirmed
+from plotlyst.view.widget.confirm import asked
 from plotlyst.view.widget.tour.core import CharacterEditorTourEvent, \
     CharacterEditorNameLineEditTourEvent, TourEvent, CharacterEditorNameFilledTourEvent, \
     CharacterEditorAvatarDisplayTourEvent, CharacterEditorAvatarMenuTourEvent, CharacterEditorBackButtonTourEvent, \
@@ -238,8 +238,8 @@ class CharacterEditor(QObject, EventListener):
 
     def _role_changed(self, role: SelectionItem):
         def apply_profile():
-            if confirmed('For minor characters, a simplified character profile is recommended.',
-                         'Apply new character profile for minor character?'):
+            if asked('For minor characters, a simplified character profile is recommended.',
+                     'Apply a new character profile for this minor character?', 'Apply (recommended)', 'No'):
                 print('yes')
 
         self._roleMenu.close()
