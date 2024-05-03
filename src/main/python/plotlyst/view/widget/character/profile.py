@@ -305,6 +305,7 @@ class ProfileSectionWidget(ProfileFieldWidget):
         # self.wdgHeader.layout().addWidget(spacer())
 
         self.wdgContainer = QWidget()
+        sp(self.wdgContainer).v_max()
         vbox(self.wdgContainer, 0)
         margins(self.wdgContainer, left=20)
 
@@ -423,6 +424,7 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
         self._filledBefore: bool = False
 
         self.wdgTop = group(self.lblEmoji, self.lblName, spacer())
+        sp(self.wdgTop).v_max()
         _layout.addWidget(self.wdgTop)
         _layout.addWidget(self.wdgEditor)
 
@@ -485,6 +487,8 @@ class SummaryField(SmallTextTemplateFieldWidget):
         self.character = character
         self.wdgEditor.setPlaceholderText("Summarize your character's role in the story")
         self.setValue(self.character.summary)
+
+        self.wdgTop.setHidden(True)
 
     @overrides
     def _saveText(self, text: str):
@@ -1636,7 +1640,7 @@ class CharacterProfileEditor(QWidget):
             self._sections[sectionType].setVisible(False)
             self._settings.toggleSection(sectionType, False)
 
-        qtanim.glow(self.btnCustomize, color=QColor(PLOTLYST_SECONDARY_COLOR), loop=3)
+        qtanim.glow(self.btnCustomize, color=QColor(PLOTLYST_SECONDARY_COLOR), loop=4, duration=400)
 
     def _sectionToggled(self, section: CharacterProfileSectionReference):
         self._sections[section.type].setVisible(section.enabled)
@@ -1651,7 +1655,7 @@ class CharacterProfileEditor(QWidget):
         self._personalityToggled(personality, False)
         self._settings.togglePersonality(personality, False)
 
-        qtanim.glow(self.btnCustomize, color=QColor(PLOTLYST_SECONDARY_COLOR), loop=3)
+        qtanim.glow(self.btnCustomize, color=QColor(PLOTLYST_SECONDARY_COLOR), loop=4, duration=400)
 
     def _enneagramChanged(self, enneagram: str):
         wdgTraits: Optional[TraitsFieldWidget] = self._sections[CharacterProfileSectionType.Personality].findWidget(
