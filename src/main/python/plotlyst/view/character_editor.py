@@ -46,6 +46,7 @@ from plotlyst.view.widget.character.editor import CharacterRoleSelector
 from plotlyst.view.widget.character.plan import CharacterPlansWidget
 from plotlyst.view.widget.character.profile import CharacterProfileEditor
 from plotlyst.view.widget.character.topic import CharacterTopicsEditor
+from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.tour.core import CharacterEditorTourEvent, \
     CharacterEditorNameLineEditTourEvent, TourEvent, CharacterEditorNameFilledTourEvent, \
     CharacterEditorAvatarDisplayTourEvent, CharacterEditorAvatarMenuTourEvent, CharacterEditorBackButtonTourEvent, \
@@ -236,6 +237,11 @@ class CharacterEditor(QObject, EventListener):
                 self.ui.wdgAvatar.updateAvatar()
 
     def _role_changed(self, role: SelectionItem):
+        def apply_profile():
+            if confirmed('For minor characters, a simplified character profile is recommended.',
+                         'Apply new character profile for minor character?'):
+                print('yes')
+
         self._roleMenu.close()
         if role.text == protagonist_role.text and self.character.gender == FEMALE:
             role.icon = 'fa5s.chess-queen'
@@ -243,6 +249,9 @@ class CharacterEditor(QObject, EventListener):
         self._display_role()
         if self.character.prefs.avatar.use_role:
             self.ui.wdgAvatar.updateAvatar()
+
+        if self.character.is_minor():
+            QTimer.singleShot(250, apply_profile)
 
     def _age_changed(self, age: int):
         if self._ageEditor.minimum() == 0:
