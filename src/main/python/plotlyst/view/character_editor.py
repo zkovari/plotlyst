@@ -240,7 +240,7 @@ class CharacterEditor(QObject, EventListener):
         def apply_profile():
             if asked('For minor characters, a simplified character profile is recommended.',
                      'Apply a new character profile for this minor character?', 'Apply (recommended)', 'No'):
-                print('yes')
+                self.profile.applyMinorRoleSettings()
 
         self._roleMenu.close()
         if role.text == protagonist_role.text and self.character.gender == FEMALE:

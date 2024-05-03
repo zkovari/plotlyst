@@ -1531,12 +1531,17 @@ class SectionSettings(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         vbox(self)
+        self._sections: Dict[CharacterProfileSectionType, SectionSettingToggle] = {}
         self._personalities: Dict[NovelSetting, PersonalitySettingToggle] = {}
+        self._character: Optional[Character] = None
 
     def refresh(self, character: Character):
+        self._character = character
+
         clear_layout(self)
         for section in character.profile:
             wdg = SectionSettingToggle(section)
+            self._sections[section.type] = wdg
             wdg.toggled.connect(partial(self.toggled.emit, section))
             self.layout().addWidget(wdg)
 
@@ -1548,8 +1553,13 @@ class SectionSettings(QWidget):
                     child.toggled.connect(partial(self.personalityToggled.emit, personality))
                     wdg.addChild(child)
 
+    def toggleSection(self, sectionType: CharacterProfileSectionType, toggled: bool):
+        self._sections[sectionType].setChecked(toggled)
+        self._sections[sectionType].section.enabled = toggled
+
     def togglePersonality(self, personality: NovelSetting, toggled: bool):
         self._personalities[personality].setChecked(toggled)
+        self._character.prefs.settings[personality.value] = toggled
 
 
 class CharacterProfileEditor(QWidget):
@@ -1608,6 +1618,26 @@ class CharacterProfileEditor(QWidget):
 
         self.btnCustomize.raise_()
 
+    def applyMinorRoleSettings(self):
+        for personality in [NovelSetting.Character_enneagram, NovelSetting.Character_mbti,
+                            NovelSetting.Character_love_style, NovelSetting.Character_work_style]:
+            self._personalityToggled(personality, False)
+            self._settings.togglePersonality(personality, False)
+
+        for sectionType in [CharacterProfileSectionType.Summary, CharacterProfileSectionType.Personality]:
+            self._sections[sectionType].setVisible(True)
+            self._settings.toggleSection(sectionType, True)
+
+        for sectionType in [CharacterProfileSectionType.Philosophy, CharacterProfileSectionType.Strengths,
+                            CharacterProfileSectionType.Faculties, CharacterProfileSectionType.Flaws,
+                            CharacterProfileSectionType.Baggage,
+                            CharacterProfileSectionType.Goals
+                            ]:
+            self._sections[sectionType].setVisible(False)
+            self._settings.toggleSection(sectionType, False)
+
+        qtanim.glow(self.btnCustomize, color=QColor(PLOTLYST_SECONDARY_COLOR), loop=3)
+
     def _sectionToggled(self, section: CharacterProfileSectionReference):
         self._sections[section.type].setVisible(section.enabled)
 
@@ -1620,7 +1650,6 @@ class CharacterProfileEditor(QWidget):
     def _personalityIgnored(self, personality: NovelSetting):
         self._personalityToggled(personality, False)
         self._settings.togglePersonality(personality, False)
-        self._character.prefs.settings[personality.value] = False
 
         qtanim.glow(self.btnCustomize, color=QColor(PLOTLYST_SECONDARY_COLOR), loop=3)
 
