@@ -32,7 +32,7 @@ from qthandy import vbox, clear_layout, hbox, bold, underline, spacer, vspacer, 
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
-from plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from plotlyst.common import PLOTLYST_MAIN_COLOR
 from plotlyst.core.domain import Character, CharacterProfileSectionReference, CharacterProfileFieldReference, \
     CharacterProfileFieldType, CharacterMultiAttribute, CharacterProfileSectionType, MultiAttributePrimaryType, \
     MultiAttributeSecondaryType, CharacterSecondaryAttribute, StrengthWeaknessAttribute, CharacterPersonalityAttribute, \
@@ -1591,7 +1591,7 @@ class CharacterProfileEditor(QWidget):
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
-        self.btnCustomize.setGeometry(event.size().width() - 30, 2, 25, 25)
+        self._setBtnSettingsGeometry(event.size().width())
 
     def refresh(self):
         clear_layout(self)
@@ -1640,7 +1640,7 @@ class CharacterProfileEditor(QWidget):
             self._sections[sectionType].setVisible(False)
             self._settings.toggleSection(sectionType, False)
 
-        qtanim.glow(self.btnCustomize, color=QColor(PLOTLYST_SECONDARY_COLOR), loop=4, duration=400)
+        self._highlightSettingsButton(resize=True)
 
     def _sectionToggled(self, section: CharacterProfileSectionReference):
         self._sections[section.type].setVisible(section.enabled)
@@ -1655,7 +1655,20 @@ class CharacterProfileEditor(QWidget):
         self._personalityToggled(personality, False)
         self._settings.togglePersonality(personality, False)
 
-        qtanim.glow(self.btnCustomize, color=QColor(PLOTLYST_SECONDARY_COLOR), loop=4, duration=400)
+        self._highlightSettingsButton()
+
+    def _setBtnSettingsGeometry(self, width: int, baseSize: int = 25):
+        self.btnCustomize.setGeometry(width - baseSize - 5, 2, baseSize, baseSize)
+
+    def _highlightSettingsButton(self, resize: bool = False):
+        def finished():
+            if resize:
+                self._setBtnSettingsGeometry(self.width())
+
+        if resize:
+            self._setBtnSettingsGeometry(self.width(), baseSize=32)
+        qtanim.glow(self.btnCustomize, color=QColor(PLOTLYST_MAIN_COLOR), loop=3, duration=100, radius=14,
+                    teardown=finished)
 
     def _enneagramChanged(self, enneagram: str):
         wdgTraits: Optional[TraitsFieldWidget] = self._sections[CharacterProfileSectionType.Personality].findWidget(
