@@ -229,7 +229,10 @@ class NovelCustomizationWizard(QWidget):
         self.pagePanels.layout().addWidget(vspacer())
         self.pagePanels.layout().addWidget(label('You can always change these settings later', description=True),
                                            alignment=Qt.AlignmentFlag.AlignRight)
+        self.pagePersonality = QWidget()
+
         self.stack.addWidget(self.pagePanels)
+        self.stack.addWidget(self.pagePersonality)
 
     def _updateCounter(self):
         self.lblCounter.setText(f'<html><i>Selected features: <b>9/{len(self.wdgPanelSettings.toggledSettings())}')
