@@ -180,6 +180,8 @@ class WriterType(Enum):
 
 
 class NovelCustomizationWizard(QWidget):
+    finished = pyqtSignal()
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
@@ -256,7 +258,7 @@ class NovelCustomizationWizard(QWidget):
 
         if self.stack.currentWidget() is self.pagePersonality and not self._novel.prefs.toggled(
                 NovelSetting.Characters):
-            print('finish now')
+            self.finished.emit()
 
     def hasMore(self) -> bool:
         return self.stack.currentIndex() < self.stack.count() - 1

@@ -157,6 +157,7 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
             self._wizardNovel = self.__newNovel()
             self._wizard = NovelCustomizationWizard(self._wizardNovel)
             self._wizard.stack.currentChanged.connect(self._wizardPageChanged)
+            self._wizard.finished.connect(self.accept)
             self.pageWizard.layout().addWidget(self._wizard)
             self.wdgBanner.setHidden(True)
             self.wdgTypesContainer.setHidden(True)
