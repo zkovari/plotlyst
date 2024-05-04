@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QPixmap, QIcon
 from PyQt6.QtWidgets import QDialog, QFileDialog
 from qthandy import incr_font
 from qthandy.filter import OpacityEventFilter
@@ -52,6 +52,8 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         self._scrivenerNovel: Optional[Novel] = None
         self._wizardNovel: Optional[Novel] = None
 
+        self._wizard: Optional[NovelCustomizationWizard] = None
+
         link_buttons_to_pages(self.stackedWidget,
                               [(self.btnNewStory, self.pageNewStory), (self.btnScrivener, self.pageScrivener)])
         self.lineTitle.setFocus()
@@ -69,8 +71,8 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         self.btnCancel.setIcon(IconRegistry.close_icon())
         self.btnCancel.installEventFilter(ButtonPressResizeEventFilter(self.btnCancel))
         self.btnCancel.clicked.connect(self.reject)
-        self.btnCreate.clicked.connect(self._createClicked)
-        self.btnCreate.installEventFilter(ButtonPressResizeEventFilter(self.btnCreate))
+        self.btnNext.clicked.connect(self._nextClicked)
+        self.btnNext.installEventFilter(ButtonPressResizeEventFilter(self.btnNext))
         self.btnFinish.clicked.connect(self.accept)
         self.btnFinish.setVisible(False)
 
@@ -128,42 +130,51 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         elif isinstance(event, NewStoryDialogWizardCustomizationTourEvent):
             self._tour_service.addDialogWidget(self, self.toggleWizard, event)
         elif isinstance(event, NewStoryDialogOkayButtonTourEvent):
-            self._tour_service.addDialogWidget(self, self.btnCreate, event)
+            self._tour_service.addDialogWidget(self, self.btnNext, event)
 
     def _pageChanged(self):
         if self.stackedWidget.currentWidget() == self.pageNewStory:
             self.lineTitle.setFocus()
-            self.btnCreate.setVisible(True)
+            self.btnNext.setVisible(True)
             self.btnFinish.setVisible(False)
         elif self.stackedWidget.currentWidget() == self.pageScrivener:
-            self.btnCreate.setVisible(False)
+            self.btnNext.setVisible(False)
             self.btnFinish.setVisible(False)
         elif self.stackedWidget.currentWidget() == self.pageScrivenerPreview:
-            self.btnCreate.setVisible(False)
+            self.btnNext.setVisible(False)
             self.btnFinish.setVisible(True)
 
     def _wizardToggled(self, toggled: bool):
-        self.btnCreate.setText('Start wizard' if toggled else 'Create')
+        self.btnNext.setText('Start wizard' if toggled else 'Create')
         if toggled:
             icon = IconRegistry.from_name('ph.magic-wand', 'white', 'white')
         else:
             icon = IconRegistry.book_icon('white', 'white')
-        self.btnCreate.setIcon(icon)
+        self.btnNext.setIcon(icon)
 
-    def _createClicked(self):
-        if self.toggleWizard.isChecked():
+    def _nextClicked(self):
+        if self.stackedWidget.currentWidget() == self.pageNewStory and self.toggleWizard.isChecked():
             self._wizardNovel = self.__newNovel()
-            wizard = NovelCustomizationWizard(self._wizardNovel)
-            self.pageWizard.layout().addWidget(wizard)
+            self._wizard = NovelCustomizationWizard(self._wizardNovel)
+            self._wizard.stack.currentChanged.connect(self._wizardPageChanged)
+            self.pageWizard.layout().addWidget(self._wizard)
             self.wdgBanner.setHidden(True)
             self.wdgTypesContainer.setHidden(True)
-            self.btnCreate.setVisible(False)
-            self.btnFinish.setVisible(True)
+            self.btnNext.setVisible(True)
+            self.btnNext.setText('Next')
+            self.btnNext.setIcon(QIcon())
+            self.btnFinish.setVisible(False)
             self.stackedWidget.setCurrentWidget(self.pageWizard)
             self.resize(600, 450)
-
+        elif self.stackedWidget.currentWidget() == self.pageWizard:
+            self._wizard.next()
         else:
             self.accept()
+
+    def _wizardPageChanged(self):
+        if not self._wizard.hasMore():
+            self.btnNext.setVisible(False)
+            self.btnFinish.setVisible(True)
 
     def _loadFromScrivener(self):
         if not ask_for_resource(ResourceType.PANDOC):
