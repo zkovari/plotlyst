@@ -24,7 +24,7 @@ from typing import Optional, List
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import QWidget, QStackedWidget
 from overrides import overrides
-from qthandy import vspacer, spacer, transparent, bold, vbox, hbox, line
+from qthandy import vspacer, spacer, transparent, bold, vbox, hbox, line, margins
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from plotlyst.core.domain import StoryStructure, Novel, TagType, SelectionItem, Tag, NovelSetting
@@ -39,7 +39,7 @@ from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.display import Subtitle
 from plotlyst.view.widget.items_editor import ItemsEditorWidget
 from plotlyst.view.widget.labels import LabelsEditorWidget
-from plotlyst.view.widget.settings import NovelPanelSettingsWidget
+from plotlyst.view.widget.settings import NovelPanelSettingsWidget, NovelSettingToggle
 
 
 class TagLabelsEditor(LabelsEditorWidget):
@@ -180,6 +180,8 @@ class WriterType(Enum):
 
 
 class NovelCustomizationWizard(QWidget):
+    finished = pyqtSignal()
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
@@ -229,10 +231,48 @@ class NovelCustomizationWizard(QWidget):
         self.pagePanels.layout().addWidget(vspacer())
         self.pagePanels.layout().addWidget(label('You can always change these settings later', description=True),
                                            alignment=Qt.AlignmentFlag.AlignRight)
+        self.pagePersonality = QWidget()
+        self.pagePersonality.setProperty('relaxed-white-bg', True)
+        vbox(self.pagePersonality, spacing=5)
+
+        self.pagePersonality.layout().addWidget(label('Character personality types', h3=True),
+                                                alignment=Qt.AlignmentFlag.AlignCenter)
+        self.pagePersonality.layout().addWidget(line())
+        self.pagePersonality.layout().addWidget(label(
+            "Which common personality types and styles would you like to track for your characters? (can be changed later)",
+            description=True, wordWrap=True))
+        margins(self.pagePersonality, left=15, right=15)
+        self._addPersonalitySetting(NovelSetting.Character_enneagram)
+        self._addPersonalitySetting(NovelSetting.Character_mbti)
+        self._addPersonalitySetting(NovelSetting.Character_work_style)
+        self._addPersonalitySetting(NovelSetting.Character_love_style)
+        self.pagePersonality.layout().addWidget(vspacer())
+
         self.stack.addWidget(self.pagePanels)
+        self.stack.addWidget(self.pagePersonality)
+
+    def next(self):
+        i = self.stack.currentIndex()
+        if i < self.stack.count() - 1:
+            self.stack.setCurrentIndex(i + 1)
+
+        if self.stack.currentWidget() is self.pagePersonality and not self._novel.prefs.toggled(
+                NovelSetting.Characters):
+            self.finished.emit()
+
+    def hasMore(self) -> bool:
+        return self.stack.currentIndex() < self.stack.count() - 1
+
+    def _addPersonalitySetting(self, personality: NovelSetting):
+        toggle = NovelSettingToggle(self._novel, personality)
+        toggle.settingToggled.connect(self._personalityToggled)
+        self.pagePersonality.layout().addWidget(toggle)
+
+    def _personalityToggled(self, setting: NovelSetting, toggled: bool):
+        self._novel.prefs.settings[setting.value] = toggled
 
     def _updateCounter(self):
-        self.lblCounter.setText(f'<html><i>Selected features: <b>9/{len(self.wdgPanelSettings.toggledSettings())}')
+        self.lblCounter.setText(f'<html><i>Selected features: <b>{len(self.wdgPanelSettings.toggledSettings())}/9')
 
     def _recommend(self, writerType: WriterType):
         if writerType == WriterType.Architect:
