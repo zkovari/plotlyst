@@ -1,6 +1,6 @@
 from plotlyst.core.client import client
 from plotlyst.test.common import create_character, go_to_characters, click_on_item, patch_confirmed, \
-    go_to_scenes
+    go_to_scenes, type_text
 from plotlyst.view.characters_view import CharactersView
 from plotlyst.view.main_window import MainWindow
 
@@ -32,7 +32,8 @@ def test_edit_character(qtbot, filled_window: MainWindow):
     assert view.editor
 
     name = 'New name'
-    view.editor.ui.lineName.setText(name)
+    view.editor.ui.lineName.clear()
+    type_text(qtbot, view.editor.ui.lineName, name)
     view.editor.ui.btnClose.click()
 
     assert view.novel.characters[0].name == name
