@@ -24,7 +24,7 @@ import qtanim
 from PyQt6.QtCore import pyqtSignal, QObject, QTimer
 from PyQt6.QtWidgets import QWidget, QAbstractButton, QLineEdit, QCompleter
 from overrides import overrides
-from qthandy import translucent, btn_popup, bold, italic, margins
+from qthandy import translucent, btn_popup, bold, italic
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -44,7 +44,6 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_bg_image, apply_white_menu
 from plotlyst.view.widget.character.editor import CharacterAgeEditor
 from plotlyst.view.widget.character.editor import CharacterRoleSelector
-from plotlyst.view.widget.character.plan import CharacterPlansWidget
 from plotlyst.view.widget.character.profile import CharacterProfileEditor
 from plotlyst.view.widget.character.topic import CharacterTopicsEditor
 from plotlyst.view.widget.confirm import asked
@@ -100,8 +99,6 @@ class CharacterEditor(QObject, EventListener):
         self._roleSelector = CharacterRoleSelector()
         self._roleSelector.roleSelected.connect(self._role_changed)
         self._roleSelector.rolePromoted.connect(self._role_promoted)
-        # if self.character.role:
-        #     self._roleSelector.setActiveRole(self.character.role)
         self._roleMenu = MenuWidget(self.ui.btnRole)
         self._roleMenu.addWidget(self._roleSelector)
 
@@ -220,6 +217,9 @@ class CharacterEditor(QObject, EventListener):
         if self.character.role:
             self._roleSelector.setActiveRole(self.character.role)
             self._display_role()
+        else:
+            self._roleSelector.setActiveRole(protagonist_role)
+            self._reset_role()
 
         if self.character.age:
             self._ageEditor.setValue(self.character.age)
@@ -357,10 +357,21 @@ class CharacterEditor(QObject, EventListener):
         ''')
         self._btnRoleEventFilter.enterOpacity = 0.8
 
-        # if self.character.is_minor():
-        #     self.profile.toggleRequiredHeaders(True)
-        # else:
-        #     self.profile.toggleRequiredHeaders(False)
+    def _reset_role(self):
+        self.ui.btnRole.setIcon(IconRegistry.from_name('fa5s.chess-bishop'))
+        self.ui.btnRole.setText('Role')
+        self.ui.btnRole.setStyleSheet(".QPushButton {\n"
+                                      "    border: 2px dashed grey;\n"
+                                      "    border-radius: 6px;\n"
+                                      "    padding: 3px;\n"
+                                      "    font: italic;\n"
+                                      "}\n"
+                                      "\n"
+                                      ".QPushButton:pressed {\n"
+                                      "    border: 2px solid grey;\n"
+                                      "}\n"
+                                      "")
+        self._btnRoleEventFilter.enterOpacity = 1.0
 
     def _gender_clicked(self, btn: QAbstractButton):
         self.ui.btnMoreGender.setHidden(True)
