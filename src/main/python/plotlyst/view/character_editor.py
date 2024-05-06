@@ -24,13 +24,13 @@ import qtanim
 from PyQt6.QtCore import pyqtSignal, QObject, QTimer
 from PyQt6.QtWidgets import QWidget, QAbstractButton, QLineEdit, QCompleter
 from overrides import overrides
-from qthandy import translucent, btn_popup, bold, italic
+from qthandy import translucent, btn_popup, bold, italic, incr_font
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.client import json_client
-from plotlyst.core.domain import Novel, Character, Document, MALE, FEMALE, SelectionItem
+from plotlyst.core.domain import Novel, Character, Document, FEMALE, SelectionItem
 from plotlyst.core.template import protagonist_role
 from plotlyst.event.core import EventListener, Event
 from plotlyst.event.handler import event_dispatchers, global_event_dispatcher
@@ -42,6 +42,7 @@ from plotlyst.view.common import emoji_font, set_tab_icon, wrap, ButtonPressResi
 from plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_bg_image, apply_white_menu
+from plotlyst.view.widget.button import FadeOutButtonGroup
 from plotlyst.view.widget.character.editor import CharacterAgeEditor
 from plotlyst.view.widget.character.editor import CharacterRoleSelector
 from plotlyst.view.widget.character.profile import CharacterProfileEditor
@@ -88,7 +89,15 @@ class CharacterEditor(QObject, EventListener):
         self.ui.btnGenderless.installEventFilter(
             OpacityEventFilter(parent=self.ui.btnGenderless, ignoreCheckedButton=True))
         self.ui.btnGenderless.setHidden(True)
-        self.ui.btnGroupGender.buttonClicked.connect(self._gender_clicked)
+
+        self.btnGroupGender = FadeOutButtonGroup()
+        self.btnGroupGender.addButton(self.ui.btnMale)
+        self.btnGroupGender.addButton(self.ui.btnFemale)
+        self.btnGroupGender.addButton(self.ui.btnTransgender)
+        self.btnGroupGender.addButton(self.ui.btnNonBinary)
+        self.btnGroupGender.addButton(self.ui.btnGenderless)
+        self.btnGroupGender.setSecondaryButtons(self.ui.btnTransgender, self.ui.btnNonBinary, self.ui.btnGenderless)
+        self.btnGroupGender.buttonClicked.connect(self._gender_clicked)
         self.ui.btnMoreGender.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnMoreGender))
         self.ui.btnMoreGender.clicked.connect(self._display_more_gender_clicked)
 
@@ -120,31 +129,8 @@ class CharacterEditor(QObject, EventListener):
         menu.aboutToShow.connect(self._lineOccupation.setFocus)
         self._lineOccupation.editingFinished.connect(menu.hide)
 
-        # incr_font(self.ui.btnAge, 2)
-        # incr_font(self.ui.btnOccupation, 2)
-
-        # if self.character.age:
-        #     self._ageEditor.setValue(self.character.age)
-        # self._ageEditor.setInfinite(self.character.age_infinite)
-        # if self.character.occupation:
-        #     self._lineOccupation.setText(self.character.occupation)
-        #
-        # if self.character.gender:
-        #     self.ui.btnMoreGender.setHidden(True)
-        #     if self.character.gender == MALE:
-        #         self.ui.btnMale.setChecked(True)
-        #     elif self.character.gender == FEMALE:
-        #         self.ui.btnFemale.setChecked(True)
-        #     else:
-        #         for btn in [self.ui.btnTransgender, self.ui.btnNonBinary, self.ui.btnGenderless]:
-        #             self.ui.btnGroupGender.addButton(btn)
-        #             if self.character.gender == btn.text():
-        #                 btn.setChecked(True)
-        #                 btn.setVisible(True)
-        #
-        #     for btn in self.ui.btnGroupGender.buttons():
-        #         if not btn.isChecked():
-        #             btn.setHidden(True)
+        incr_font(self.ui.btnAge, 2)
+        incr_font(self.ui.btnOccupation, 2)
 
         set_tab_icon(self.ui.tabAttributes, self.ui.tabBackstory,
                      IconRegistry.backstory_icon('black', PLOTLYST_SECONDARY_COLOR))
@@ -154,9 +140,6 @@ class CharacterEditor(QObject, EventListener):
         set_tab_icon(self.ui.tabAttributes, self.ui.tabNotes, IconRegistry.document_edition_icon())
         set_tab_icon(self.ui.tabAttributes, self.ui.tabGoals, IconRegistry.goal_icon('black', PLOTLYST_SECONDARY_COLOR))
 
-        # self._bigFive = BigFivePersonalityWidget()
-        # self._bigFive.setCharacter(self.character)
-        # self.ui.tabBigFive.layout().addWidget(self._bigFive)
         set_tab_visible(self.ui.tabAttributes, self.ui.tabBigFive, False)
         set_tab_visible(self.ui.tabAttributes, self.ui.tabGoals, False)
 
@@ -209,7 +192,7 @@ class CharacterEditor(QObject, EventListener):
 
     def set_character(self, character: Character):
         self.character = character
-        # self.ui.tabAttributes.setCurrentWidget(self.ui.tabBackstory)
+
         occupations = set([x.occupation for x in self.novel.characters])
         if occupations:
             self._lineOccupation.setCompleter(QCompleter(occupations))
@@ -232,22 +215,20 @@ class CharacterEditor(QObject, EventListener):
         else:
             self._reset_occupation()
 
+        self.btnGroupGender.reset()
+        self.btnGroupGender.setSecondaryLocked(True)
         if self.character.gender:
+            for btn in self.btnGroupGender.buttons():
+                if self.character.gender == btn.text():
+                    self.btnGroupGender.toggle(btn)
             self.ui.btnMoreGender.setHidden(True)
-            if self.character.gender == MALE:
-                self.ui.btnMale.setChecked(True)
-            elif self.character.gender == FEMALE:
-                self.ui.btnFemale.setChecked(True)
-            else:
-                for btn in [self.ui.btnTransgender, self.ui.btnNonBinary, self.ui.btnGenderless]:
-                    self.ui.btnGroupGender.addButton(btn)
-                    if self.character.gender == btn.text():
-                        btn.setChecked(True)
-                        btn.setVisible(True)
-
-            for btn in self.ui.btnGroupGender.buttons():
-                if not btn.isChecked():
-                    btn.setHidden(True)
+        else:
+            self.ui.btnMoreGender.setVisible(True)
+            self.ui.btnMale.setVisible(True)
+            self.ui.btnFemale.setVisible(True)
+            self.ui.btnTransgender.setVisible(False)
+            self.ui.btnNonBinary.setVisible(False)
+            self.ui.btnGenderless.setVisible(False)
 
         self.ui.lineName.setText(self.character.name)
         self.ui.wdgAvatar.setCharacter(self.character)
@@ -377,44 +358,27 @@ class CharacterEditor(QObject, EventListener):
         self._btnRoleEventFilter.enterOpacity = 1.0
 
     def _gender_clicked(self, btn: QAbstractButton):
-        self.ui.btnMoreGender.setHidden(True)
-
-        for other_btn in self.ui.btnGroupGender.buttons():
-            if other_btn is btn:
-                continue
-
-            if btn.isChecked():
-                other_btn.setChecked(False)
-                qtanim.fade_out(other_btn)
-            else:
-                anim = qtanim.fade_in(other_btn)
-                anim.finished.connect(partial(translucent, other_btn, 0.4))
-
-        if len(self.ui.btnGroupGender.buttons()) == 2:
-            self.ui.btnMoreGender.setHidden(btn.isChecked())
+        if btn.isChecked():
+            self.character.gender = btn.text()
+            self.ui.btnMoreGender.setVisible(False)
+        else:
+            self.character.gender = ''
+            self.ui.btnMoreGender.setVisible(self.btnGroupGender.secondaryLocked())
 
     def _display_more_gender_clicked(self):
+        self.btnGroupGender.setSecondaryLocked(False)
         for btn in [self.ui.btnTransgender, self.ui.btnNonBinary, self.ui.btnGenderless]:
-            self.ui.btnGroupGender.addButton(btn)
             anim = qtanim.fade_in(btn)
             anim.finished.connect(partial(translucent, btn, 0.4))
 
         self.ui.btnMoreGender.setHidden(True)
 
     def _save(self):
-        gender = ''
-        for btn in self.ui.btnGroupGender.buttons():
-            if btn.isChecked():
-                gender = btn.text()
-                break
-        self.character.gender = gender
         if self.character.role and self.character.role.text == protagonist_role.text:
             if self.character.gender == FEMALE:
                 self.character.role.icon = 'fa5s.chess-queen'
             else:
                 self.character.role.icon = 'fa5s.chess-king'
-        self.character.name = self.ui.lineName.text()
-        # self.character.template_values = self.profile.values()
 
         self.repo.update_character(self.character, self.ui.wdgAvatar.imageUploaded())
         self.repo.update_novel(self.novel)  # TODO temporary to update custom labels
