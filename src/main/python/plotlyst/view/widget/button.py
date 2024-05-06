@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Optional
+from typing import Optional, Set
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, pyqtProperty, QTimer, QEvent
@@ -211,12 +211,25 @@ class FadeOutButtonGroup(QButtonGroup):
         self.setExclusive(False)
         self._opacity = 0.7
         self._fadeInDuration = 250
+        self._secondaryLocked: bool = True
+        self._secondaryButtons: Set[QAbstractButton] = set()
 
     def setButtonOpacity(self, opacity: float):
         self._opacity = opacity
 
     def setFadeInDuration(self, duration: int):
         self._fadeInDuration = duration
+
+    def secondaryLocked(self) -> bool:
+        return self._secondaryLocked
+
+    def setSecondaryLocked(self, locked: bool):
+        self._secondaryLocked = locked
+
+    def setSecondaryButtons(self, *buttons):
+        self._secondaryButtons.clear()
+        for btn in buttons:
+            self._secondaryButtons.add(btn)
 
     def toggle(self, btn: QAbstractButton):
         btn.setVisible(True)
@@ -254,6 +267,8 @@ class FadeOutButtonGroup(QButtonGroup):
                     other_btn.setHidden(True)
             else:
                 other_btn.setEnabled(True)
+                if self._secondaryLocked and other_btn in self._secondaryButtons:
+                    continue
                 if animated:
                     anim = qtanim.fade_in(other_btn, duration=self._fadeInDuration)
                     anim.finished.connect(partial(translucent, other_btn, self._opacity))

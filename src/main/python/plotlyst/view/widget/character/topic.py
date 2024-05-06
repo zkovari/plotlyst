@@ -78,6 +78,7 @@ class CharacterTopicsEditor(QWidget):
         self._menu = CharacterTopicGroupSelector(self._character, self.btnAdd)
         self._menu.topicGroupTriggered.connect(self._addTopicGroup)
 
+        self._wdgTopics.clear()
         for value in character.topics:
             topic = topic_ids.get(str(value.id))
             if topic:
