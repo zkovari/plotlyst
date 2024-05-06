@@ -226,6 +226,8 @@ class CharacterEditor(QObject, EventListener):
 
         if self.character.age:
             self._ageEditor.setValue(self.character.age)
+        else:
+            self._reset_age()
         self._ageEditor.setInfinite(self.character.age_infinite)
         if self.character.occupation:
             self._lineOccupation.setText(self.character.occupation)
@@ -304,6 +306,11 @@ class CharacterEditor(QObject, EventListener):
             self.ui.btnAge.iconColor = '#343a40'
         self.ui.btnAge.setText(str(age))
         self.character.age = age
+
+    def _reset_age(self):
+        italic(self.ui.btnAge)
+        bold(self.ui.btnAge, False)
+        self.ui.btnAge.setText('Age')
 
     def _age_infinite_toggled(self, toggled: bool):
         if toggled:
