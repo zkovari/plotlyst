@@ -118,10 +118,7 @@ class CharacterEditor(QObject, EventListener):
 
         self._lineOccupation = QLineEdit()
         self._lineOccupation.setPlaceholderText('Fill out occupation')
-        self._lineOccupation.textChanged.connect(self._occupation_changed)
-        # occupations = set([x.occupation for x in self.novel.characters])
-        # if occupations:
-        #     self._lineOccupation.setCompleter(QCompleter(occupations))
+        self._lineOccupation.textEdited.connect(self._occupation_changed)
         menu = btn_popup(self.ui.btnOccupation, wrap(self._lineOccupation, margin_bottom=2))
         menu.aboutToShow.connect(self._lineOccupation.setFocus)
         self._lineOccupation.editingFinished.connect(menu.hide)
@@ -231,6 +228,9 @@ class CharacterEditor(QObject, EventListener):
         self._ageEditor.setInfinite(self.character.age_infinite)
         if self.character.occupation:
             self._lineOccupation.setText(self.character.occupation)
+            self.ui.btnOccupation.setText(self.character.occupation)
+        else:
+            self._reset_occupation()
 
         if self.character.gender:
             self.ui.btnMoreGender.setHidden(True)
@@ -308,6 +308,7 @@ class CharacterEditor(QObject, EventListener):
         self.character.age = age
 
     def _reset_age(self):
+        self._ageEditor.reset()
         italic(self.ui.btnAge)
         bold(self.ui.btnAge, False)
         self.ui.btnAge.setText('Age')
@@ -330,6 +331,12 @@ class CharacterEditor(QObject, EventListener):
             self.ui.btnOccupation.iconColor = '#343a40'
         self.ui.btnOccupation.setText(occupation)
         self.character.occupation = occupation
+
+    def _reset_occupation(self):
+        italic(self.ui.btnOccupation)
+        bold(self.ui.btnOccupation, False)
+        self.ui.btnOccupation.setText('Occupation')
+        self._lineOccupation.clear()
 
     def _display_role(self):
         self.ui.btnRole.setText(self.character.role.text)

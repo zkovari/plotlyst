@@ -214,6 +214,14 @@ class CharacterAgeEditor(QWidget):
     def setFocus(self):
         self._spinbox.setFocus()
 
+    def reset(self):
+        self._spinbox.setValue(self._spinbox.minimum())
+        self._slider.setValue(self._slider.minimum())
+        self._btnInfinite.setChecked(False)
+        self._btnStage.setText('Life stage')
+        self._btnStage.setIcon(QIcon())
+        self._text.clear()
+
     def minimum(self) -> int:
         return self._spinbox.minimum()
 
