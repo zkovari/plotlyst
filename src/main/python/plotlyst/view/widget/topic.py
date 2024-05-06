@@ -26,7 +26,7 @@ from PyQt6.QtCore import Qt, QSize, pyqtSignal, QEvent
 from PyQt6.QtGui import QAction, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QTextEdit, QGridLayout
 from overrides import overrides
-from qthandy import vbox, bold, line, margins, spacer, grid, hbox, italic
+from qthandy import vbox, bold, line, margins, spacer, grid, hbox, italic, clear_layout
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
@@ -446,6 +446,10 @@ class TopicsEditor(QWidget):
             self.addTopicGroup(topicType)
 
         self._topicGroups[topicType].addTopic(topic, value)
+
+    def clear(self):
+        self._topicGroups.clear()
+        clear_layout(self)
 
     def removeTopicGroup(self, topicType: TopicType):
         wdg = self._topicGroups.pop(topicType)
