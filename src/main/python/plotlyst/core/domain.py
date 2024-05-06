@@ -30,8 +30,7 @@ from PyQt6.QtCore import Qt
 from dataclasses_json import dataclass_json, Undefined, config
 from overrides import overrides
 
-from plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_field, \
-    mbti_field, enneagram_choices, \
+from plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_choices, \
     mbti_choices, Role, exclude_if_false, antagonist_role, exclude_if_true
 from plotlyst.env import app_env
 
@@ -597,14 +596,20 @@ class Character:
     personality: CharacterPersonality = field(default_factory=CharacterPersonality)
 
     def enneagram(self) -> Optional[SelectionItem]:
-        for value in self.template_values:
-            if value.id == enneagram_field.id:
-                return enneagram_choices.get(value.value)
+        if self.prefs.toggled(NovelSetting.Character_enneagram):
+            if self.personality.enneagram:
+                return enneagram_choices.get(self.personality.enneagram.value)
+        # for value in self.template_values:
+        #     if value.id == enneagram_field.id:
+        #         return enneagram_choices.get(value.value)
 
     def mbti(self) -> Optional[SelectionItem]:
-        for value in self.template_values:
-            if value.id == mbti_field.id:
-                return mbti_choices.get(value.value)
+        if self.prefs.toggled(NovelSetting.Character_mbti):
+            if self.personality.mbti:
+                return mbti_choices.get(self.personality.mbti.value)
+        # for value in self.template_values:
+        #     if value.id == mbti_field.id:
+        #         return mbti_choices.get(value.value)
 
     def is_major(self):
         return self.role and self.role.is_major()

@@ -20,11 +20,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from dataclasses import dataclass
 from typing import Dict, List
 
-from plotlyst.core.domain import enneagram_field
 from plotlyst.core.template import Role, protagonist_role, antagonist_role, major_role, secondary_role, \
     tertiary_role, \
     love_interest_role, supporter_role, adversary_role, contagonist_role, guide_role, confidant_role, sidekick_role, \
-    foil_role, henchmen_role
+    foil_role, henchmen_role, enneagram_field
 
 # flake8: noqa
 enneagram_help = {

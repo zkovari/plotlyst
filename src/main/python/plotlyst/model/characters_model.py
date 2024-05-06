@@ -25,7 +25,8 @@ from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 
 from plotlyst.common import RELAXED_WHITE_COLOR
-from plotlyst.core.domain import Character, Novel, Scene, SelectionItem, enneagram_field
+from plotlyst.core.domain import Character, Novel, Scene, SelectionItem
+from plotlyst.core.template import enneagram_field
 from plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel
 from plotlyst.view.icons import avatars, IconRegistry
 
