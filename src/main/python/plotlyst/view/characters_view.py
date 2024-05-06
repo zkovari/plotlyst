@@ -25,7 +25,7 @@ from PyQt6.QtCore import QItemSelection, QPoint
 from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import busy, gc, incr_font, bold, retain_when_hidden
+from qthandy import busy, incr_font, bold, retain_when_hidden
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -92,7 +92,9 @@ class CharactersView(AbstractNovelView):
         super().__init__(novel)
         self.ui = Ui_CharactersView()
         self.ui.setupUi(self.widget)
-        self.editor: Optional[CharacterEditor] = None
+        self.editor = CharacterEditor(self.novel)
+        self.ui.pageEditor.layout().addWidget(self.editor.widget)
+        self.editor.close.connect(self._on_close_editor)
         self.title = CharactersTitle(self.novel)
         self.ui.wdgTitleParent.layout().addWidget(self.title)
 
@@ -293,28 +295,19 @@ class CharactersView(AbstractNovelView):
 
     @busy
     def _edit_character(self, character: Character):
-        self.editor = CharacterEditor(self.novel, character)
-        self._switch_to_editor()
-
-    def _switch_to_editor(self):
         self.title.setHidden(True)
-        self.ui.pageEditor.layout().addWidget(self.editor.widget)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
 
-        self.editor.close.connect(self._on_close_editor)
+        self.editor.set_character(character)
         self.editor.ui.lineName.setFocus()
 
     @busy
     def _on_close_editor(self):
         character = self.editor.character
-        self.ui.pageEditor.layout().removeWidget(self.editor.widget)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
         self.title.setVisible(True)
 
         emit_event(self.novel, CharacterChangedEvent(self, character))
-        gc(self.editor.widget)
-        gc(self.editor)
-        self.editor = None
         self.refresh()
 
     def _on_new(self):
@@ -324,8 +317,7 @@ class CharactersView(AbstractNovelView):
             character.prefs.settings[personality.value] = self.novel.prefs.toggled(personality)
         self.novel.characters.append(character)
         self.repo.insert_character(self.novel, character)
-        self.editor = CharacterEditor(self.novel, character)
-        self._switch_to_editor()
+        self._edit_character(character)
 
     @busy
     def _on_delete(self, checked: bool):

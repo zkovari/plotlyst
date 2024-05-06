@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
+from typing import Optional
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal, QObject, QTimer
@@ -56,13 +57,13 @@ from plotlyst.view.widget.tour.core import CharacterEditorTourEvent, \
 class CharacterEditor(QObject, EventListener):
     close = pyqtSignal()
 
-    def __init__(self, novel: Novel, character: Character = None):
+    def __init__(self, novel: Novel):
         super().__init__()
         self.widget = QWidget()
         self.ui = Ui_CharacterEditor()
         self.ui.setupUi(self.widget)
         self.novel = novel
-        self.character = character
+        self.character: Optional[Character] = None
 
         self._emoji_font = emoji_font()
         self.ui.btnNewBackstory.setIcon(IconRegistry.plus_icon('white'))
@@ -99,8 +100,8 @@ class CharacterEditor(QObject, EventListener):
         self._roleSelector = CharacterRoleSelector()
         self._roleSelector.roleSelected.connect(self._role_changed)
         self._roleSelector.rolePromoted.connect(self._role_promoted)
-        if self.character.role:
-            self._roleSelector.setActiveRole(self.character.role)
+        # if self.character.role:
+        #     self._roleSelector.setActiveRole(self.character.role)
         self._roleMenu = MenuWidget(self.ui.btnRole)
         self._roleMenu.addWidget(self._roleSelector)
 
@@ -118,15 +119,110 @@ class CharacterEditor(QObject, EventListener):
         self._lineOccupation = QLineEdit()
         self._lineOccupation.setPlaceholderText('Fill out occupation')
         self._lineOccupation.textChanged.connect(self._occupation_changed)
-        occupations = set([x.occupation for x in self.novel.characters])
-        if occupations:
-            self._lineOccupation.setCompleter(QCompleter(occupations))
+        # occupations = set([x.occupation for x in self.novel.characters])
+        # if occupations:
+        #     self._lineOccupation.setCompleter(QCompleter(occupations))
         menu = btn_popup(self.ui.btnOccupation, wrap(self._lineOccupation, margin_bottom=2))
         menu.aboutToShow.connect(self._lineOccupation.setFocus)
         self._lineOccupation.editingFinished.connect(menu.hide)
 
         # incr_font(self.ui.btnAge, 2)
         # incr_font(self.ui.btnOccupation, 2)
+
+        # if self.character.age:
+        #     self._ageEditor.setValue(self.character.age)
+        # self._ageEditor.setInfinite(self.character.age_infinite)
+        # if self.character.occupation:
+        #     self._lineOccupation.setText(self.character.occupation)
+        #
+        # if self.character.gender:
+        #     self.ui.btnMoreGender.setHidden(True)
+        #     if self.character.gender == MALE:
+        #         self.ui.btnMale.setChecked(True)
+        #     elif self.character.gender == FEMALE:
+        #         self.ui.btnFemale.setChecked(True)
+        #     else:
+        #         for btn in [self.ui.btnTransgender, self.ui.btnNonBinary, self.ui.btnGenderless]:
+        #             self.ui.btnGroupGender.addButton(btn)
+        #             if self.character.gender == btn.text():
+        #                 btn.setChecked(True)
+        #                 btn.setVisible(True)
+        #
+        #     for btn in self.ui.btnGroupGender.buttons():
+        #         if not btn.isChecked():
+        #             btn.setHidden(True)
+
+        set_tab_icon(self.ui.tabAttributes, self.ui.tabBackstory,
+                     IconRegistry.backstory_icon('black', PLOTLYST_SECONDARY_COLOR))
+        set_tab_icon(self.ui.tabAttributes, self.ui.tabTopics,
+                     IconRegistry.topics_icon(color_on=PLOTLYST_SECONDARY_COLOR))
+        set_tab_icon(self.ui.tabAttributes, self.ui.tabBigFive, IconRegistry.big_five_icon(PLOTLYST_SECONDARY_COLOR))
+        set_tab_icon(self.ui.tabAttributes, self.ui.tabNotes, IconRegistry.document_edition_icon())
+        set_tab_icon(self.ui.tabAttributes, self.ui.tabGoals, IconRegistry.goal_icon('black', PLOTLYST_SECONDARY_COLOR))
+
+        # self._bigFive = BigFivePersonalityWidget()
+        # self._bigFive.setCharacter(self.character)
+        # self.ui.tabBigFive.layout().addWidget(self._bigFive)
+        set_tab_visible(self.ui.tabAttributes, self.ui.tabBigFive, False)
+        set_tab_visible(self.ui.tabAttributes, self.ui.tabGoals, False)
+
+        self.ui.wdgAvatar.btnAvatar.setToolTip('Character avatar. Click to add an image')
+        # self.ui.wdgAvatar.setCharacter(self.character)
+        # self.ui.wdgAvatar.setUploadPopupMenu()
+        self.ui.wdgAvatar.avatarUpdated.connect(self.ui.wdgBackstory.refreshCharacter)
+        self.ui.wdgAvatar.setFixedSize(180, 180)
+
+        self.ui.splitter.setSizes([400, 400])
+
+        self.ui.lineName.setReadOnly(self.novel.is_readonly())
+        self.ui.lineName.textEdited.connect(self._name_edited)
+        # self.ui.lineName.setText(self.character.name)
+
+        # self._character_goals = CharacterPlansWidget(self.novel, self.character)
+        # self.ui.scrollAreaPlans.layout().addWidget(self._character_goals)
+        # margins(self.ui.tabGoals.layout(), left=5)
+
+        self.wdgTopicsEditor = CharacterTopicsEditor()
+        self.ui.tabTopics.layout().addWidget(self.wdgTopicsEditor)
+
+        self.profile = CharacterProfileEditor()
+        self.ui.wdgProfile.layout().addWidget(self.profile)
+        # self.wdgTopicsEditor.setCharacter(self.character)
+        # self.profile.setCharacter(self.character)
+
+        # self.ui.wdgBackstory.setCharacter(self.character)
+        apply_bg_image(self.ui.scrollAreaBackstoryContents, resource_registry.cover1)
+
+        # if self.character.document and self.character.document.loaded:
+        #     self.ui.textEdit.setText(self.character.document.content, self.character.name, title_read_only=True)
+
+        self.ui.btnClose.clicked.connect(self._save)
+
+        # if self.character.role:
+        #     self._display_role()
+
+        self.ui.tabAttributes.setCurrentWidget(self.ui.tabBackstory)
+
+        self.repo = RepositoryPersistenceManager.instance()
+        dispatcher = event_dispatchers.instance(self.novel)
+        dispatcher.register(self, NovelAboutToSyncEvent)
+
+        self._tour_service = TourService.instance()
+        global_event_dispatcher.register(self, CharacterEditorTourEvent, CharacterEditorNameLineEditTourEvent,
+                                         CharacterEditorNameFilledTourEvent, CharacterEditorAvatarDisplayTourEvent,
+                                         CharacterEditorAvatarMenuTourEvent, CharacterEditorAvatarMenuCloseTourEvent,
+                                         CharacterEditorBackButtonTourEvent)
+
+    def set_character(self, character: Character):
+        self.character = character
+
+        occupations = set([x.occupation for x in self.novel.characters])
+        if occupations:
+            self._lineOccupation.setCompleter(QCompleter(occupations))
+
+        if self.character.role:
+            self._roleSelector.setActiveRole(self.character.role)
+            self._display_role()
 
         if self.character.age:
             self._ageEditor.setValue(self.character.age)
@@ -151,66 +247,14 @@ class CharacterEditor(QObject, EventListener):
                 if not btn.isChecked():
                     btn.setHidden(True)
 
-        set_tab_icon(self.ui.tabAttributes, self.ui.tabBackstory,
-                     IconRegistry.backstory_icon('black', PLOTLYST_SECONDARY_COLOR))
-        set_tab_icon(self.ui.tabAttributes, self.ui.tabTopics,
-                     IconRegistry.topics_icon(color_on=PLOTLYST_SECONDARY_COLOR))
-        set_tab_icon(self.ui.tabAttributes, self.ui.tabBigFive, IconRegistry.big_five_icon(PLOTLYST_SECONDARY_COLOR))
-        set_tab_icon(self.ui.tabAttributes, self.ui.tabNotes, IconRegistry.document_edition_icon())
-        set_tab_icon(self.ui.tabAttributes, self.ui.tabGoals, IconRegistry.goal_icon('black', PLOTLYST_SECONDARY_COLOR))
-
-        # self._bigFive = BigFivePersonalityWidget()
-        # self._bigFive.setCharacter(self.character)
-        # self.ui.tabBigFive.layout().addWidget(self._bigFive)
-        set_tab_visible(self.ui.tabAttributes, self.ui.tabBigFive, False)
-        set_tab_visible(self.ui.tabAttributes, self.ui.tabGoals, False)
-
-        self.ui.wdgAvatar.btnAvatar.setToolTip('Character avatar. Click to add an image')
+        self.ui.lineName.setText(self.character.name)
         self.ui.wdgAvatar.setCharacter(self.character)
         self.ui.wdgAvatar.setUploadPopupMenu()
-        self.ui.wdgAvatar.avatarUpdated.connect(self.ui.wdgBackstory.refreshCharacter)
-        self.ui.wdgAvatar.setFixedSize(180, 180)
-
-        self.ui.splitter.setSizes([400, 400])
-
-        self.ui.lineName.setReadOnly(self.novel.is_readonly())
-        self.ui.lineName.textEdited.connect(self._name_edited)
-        self.ui.lineName.setText(self.character.name)
-
-        self._character_goals = CharacterPlansWidget(self.novel, self.character)
-        self.ui.scrollAreaPlans.layout().addWidget(self._character_goals)
-        margins(self.ui.tabGoals.layout(), left=5)
-
-        self.wdgTopicsEditor = CharacterTopicsEditor()
         self.wdgTopicsEditor.setCharacter(self.character)
-        self.ui.tabTopics.layout().addWidget(self.wdgTopicsEditor)
-
-        self.profile = CharacterProfileEditor()
         self.profile.setCharacter(self.character)
-        self.ui.wdgProfile.layout().addWidget(self.profile)
-
         self.ui.wdgBackstory.setCharacter(self.character)
-        apply_bg_image(self.ui.scrollAreaBackstoryContents, resource_registry.cover1)
-
         if self.character.document and self.character.document.loaded:
             self.ui.textEdit.setText(self.character.document.content, self.character.name, title_read_only=True)
-
-        self.ui.btnClose.clicked.connect(self._save)
-
-        if self.character.role:
-            self._display_role()
-
-        self.ui.tabAttributes.setCurrentWidget(self.ui.tabBackstory)
-
-        self.repo = RepositoryPersistenceManager.instance()
-        dispatcher = event_dispatchers.instance(self.novel)
-        dispatcher.register(self, NovelAboutToSyncEvent)
-
-        self._tour_service = TourService.instance()
-        global_event_dispatcher.register(self, CharacterEditorTourEvent, CharacterEditorNameLineEditTourEvent,
-                                         CharacterEditorNameFilledTourEvent, CharacterEditorAvatarDisplayTourEvent,
-                                         CharacterEditorAvatarMenuTourEvent, CharacterEditorAvatarMenuCloseTourEvent,
-                                         CharacterEditorBackButtonTourEvent)
 
     @overrides
     def event_received(self, event: Event):
