@@ -209,7 +209,7 @@ class CharacterEditor(QObject, EventListener):
 
     def set_character(self, character: Character):
         self.character = character
-
+        # self.ui.tabAttributes.setCurrentWidget(self.ui.tabBackstory)
         occupations = set([x.occupation for x in self.novel.characters])
         if occupations:
             self._lineOccupation.setCompleter(QCompleter(occupations))
@@ -257,6 +257,9 @@ class CharacterEditor(QObject, EventListener):
         self.ui.wdgBackstory.setCharacter(self.character)
         if self.character.document and self.character.document.loaded:
             self.ui.textEdit.setText(self.character.document.content, self.character.name, title_read_only=True)
+        else:
+            self.ui.textEdit.clear()
+            self._tab_changed()
 
     @overrides
     def event_received(self, event: Event):
@@ -270,8 +273,8 @@ class CharacterEditor(QObject, EventListener):
         if self.character.prefs.avatar.use_initial:
             self.ui.wdgAvatar.updateAvatar()
 
-    def _tab_changed(self, index: int):
-        if self.ui.tabAttributes.widget(index) is self.ui.tabNotes:
+    def _tab_changed(self):
+        if self.ui.tabAttributes.currentWidget() is self.ui.tabNotes:
             if self.character.document and not self.character.document.loaded:
                 json_client.load_document(self.novel, self.character.document)
                 self.ui.textEdit.setText(self.character.document.content, self.character.name, title_read_only=True)
