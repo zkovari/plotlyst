@@ -305,7 +305,7 @@ class ProfileSectionWidget(ProfileFieldWidget):
         # self.wdgHeader.layout().addWidget(spacer())
 
         self.wdgContainer = QWidget()
-        sp(self.wdgContainer).v_max()
+        # sp(self.wdgContainer).v_max()
         vbox(self.wdgContainer, 0)
         margins(self.wdgContainer, left=20)
 
@@ -344,7 +344,10 @@ class ProfileSectionWidget(ProfileFieldWidget):
 
     def attachWidget(self, widget: ProfileFieldWidget):
         self.children.append(widget)
-        self.wdgContainer.layout().addWidget(widget)
+        if self.section.type == CharacterProfileSectionType.Summary:
+            self.wdgContainer.layout().addWidget(widget, alignment=Qt.AlignmentFlag.AlignTop)
+        else:
+            self.wdgContainer.layout().addWidget(widget)
         # self.progressStatuses[widget] = False
         # widget.valueFilled.connect(partial(self._valueFilled, widget))
         # widget.valueReset.connect(partial(self._valueReset, widget))
