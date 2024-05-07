@@ -372,15 +372,19 @@ def set_tab_settings(tabs: QTabWidget, widget: QWidget, text: Optional[str] = No
 
 def fade_out_and_gc(parent: QWidget, widget: QWidget, duration: int = 200, teardown=None):
     def destroy():
-        widget.setHidden(True)
-        parent.layout().removeWidget(widget)
-        gc(widget)
+        remove_and_gc(parent, widget)
         if teardown:
             teardown()
 
     widget.setDisabled((True))
     anim = fade_out(widget, duration)
     anim.finished.connect(destroy)
+
+
+def remove_and_gc(parent: QWidget, widget: QWidget):
+    widget.setHidden(True)
+    parent.layout().removeWidget(widget)
+    gc(widget)
 
 
 def insert_before_the_end(parent: QWidget, widget: QWidget, leave: int = 1):

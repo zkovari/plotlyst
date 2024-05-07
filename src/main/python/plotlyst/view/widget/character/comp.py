@@ -35,7 +35,7 @@ from plotlyst.event.core import EventListener, Event, emit_event
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import CharacterSummaryChangedEvent, CharacterChangedEvent, CharacterDeletedEvent
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import fade_out_and_gc
+from plotlyst.view.common import fade_out_and_gc, remove_and_gc
 from plotlyst.view.icons import set_avatar, avatars
 from plotlyst.view.widget.big_five import BigFiveChart, dimension_from
 from plotlyst.view.widget.button import EyeToggle
@@ -236,8 +236,7 @@ class CharacterOverviewWidget(QWidget, EventListener):
 
     def display(self, attribute: CharacterComparisonAttribute):
         if self._display:
-            self._displayContainer.layout().removeWidget(self._display)
-            gc(self._display)
+            remove_and_gc(self._displayContainer, self._display)
             self._display = None
 
         self._wdgHeader.setVisible(True)
