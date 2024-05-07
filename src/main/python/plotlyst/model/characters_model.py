@@ -24,7 +24,7 @@ from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 
-from plotlyst.common import RELAXED_WHITE_COLOR
+from plotlyst.common import RELAXED_WHITE_COLOR, MAXIMUM_SIZE
 from plotlyst.core.domain import Character, Novel, Scene, SelectionItem
 from plotlyst.core.template import enneagram_field
 from plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel
@@ -98,8 +98,17 @@ class CharactersTableModel(AbstractHorizontalHeaderBasedTableModel):
                 return avatars.avatar(character)
         if index.column() == self.ColRole:
             return self._dataForSelectionItem(character.role, role, displayText=False)
+        if index.column() == self.ColAge:
+            if character.age and not character.age_infinite:
+                if role == Qt.ItemDataRole.DisplayRole or role == self.SortRole:
+                    return character.age
+            if character.age_infinite:
+                if role == Qt.ItemDataRole.DecorationRole:
+                    return IconRegistry.from_name('mdi.infinity')
+                if role == self.SortRole:
+                    return MAXIMUM_SIZE
         if index.column() == self.ColOccupation:
-            if role == Qt.ItemDataRole.DisplayRole:
+            if role == Qt.ItemDataRole.DisplayRole or role == self.SortRole:
                 return character.occupation
         if index.column() == self.ColEnneagram:
             enneagram = character.enneagram()
