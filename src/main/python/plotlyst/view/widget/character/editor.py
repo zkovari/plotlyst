@@ -26,9 +26,9 @@ from typing import Tuple, Optional, Dict, List
 
 import emoji
 import qtanim
-from PyQt6.QtCharts import QPieSeries, QChartView, QPieSlice
+from PyQt6.QtCharts import QPieSeries, QPieSlice
 from PyQt6.QtCore import pyqtSignal, Qt, QSize
-from PyQt6.QtGui import QIcon, QColor, QMouseEvent, QPainter
+from PyQt6.QtGui import QIcon, QColor, QMouseEvent
 from PyQt6.QtWidgets import QWidget, QSpinBox, QSlider, QTextBrowser, QButtonGroup, QToolButton, QLabel, QSizePolicy, \
     QLineEdit, QDialog
 from overrides import overrides
@@ -56,7 +56,7 @@ from plotlyst.view.widget.button import SecondaryActionPushButton, SelectionItem
 from plotlyst.view.widget.chart import BaseChart, SelectionItemPieSlice
 from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.display import Icon, MajorRoleIcon, SecondaryRoleIcon, MinorRoleIcon, \
-    IconText, RoleIcon, TruitySourceWidget, PopupDialog
+    IconText, RoleIcon, TruitySourceWidget, PopupDialog, ChartView
 from plotlyst.view.widget.input import Toggle
 from plotlyst.view.widget.labels import TraitLabel
 from plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
@@ -539,11 +539,11 @@ class LoveStyleSelectorWidget(PersonalitySelectorWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.pieView = QChartView()
-        self.pieView.setRenderHint(QPainter.RenderHint.Antialiasing)
+        self.pieView = ChartView()
         self.pie = LoveStylePie()
         self.pie.sliceClicked.connect(self._itemClicked)
         self.pieView.setChart(self.pie)
+        self.pieView.setMaximumSize(450, 450)
         self.layout().addWidget(self.pieView)
 
         self.btnSelect = push_btn(IconRegistry.ok_icon('white'), 'Select Love Style', properties=['positive', 'base'])
@@ -568,11 +568,11 @@ class LoveStyleSelectorWidget(PersonalitySelectorWidget):
 class WorkStyleSelectorWidget(PersonalitySelectorWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.pieView = QChartView()
-        self.pieView.setRenderHint(QPainter.RenderHint.Antialiasing)
+        self.pieView = ChartView()
         self.pie = WorkStylePie()
         self.pie.sliceClicked.connect(self._itemClicked)
         self.pieView.setChart(self.pie)
+        self.pieView.setMaximumSize(450, 450)
         self.layout().addWidget(self.pieView)
 
         self.btnSelect = push_btn(IconRegistry.ok_icon('white'), 'Select Work Style', properties=['positive', 'base'])
