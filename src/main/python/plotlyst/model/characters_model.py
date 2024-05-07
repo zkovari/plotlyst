@@ -98,6 +98,9 @@ class CharactersTableModel(AbstractHorizontalHeaderBasedTableModel):
                 return avatars.avatar(character)
         if index.column() == self.ColRole:
             return self._dataForSelectionItem(character.role, role, displayText=False)
+        if index.column() == self.ColOccupation:
+            if role == Qt.ItemDataRole.DisplayRole:
+                return character.occupation
         if index.column() == self.ColEnneagram:
             enneagram = character.enneagram()
             if role == self.SortRole:
