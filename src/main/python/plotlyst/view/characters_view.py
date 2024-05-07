@@ -46,12 +46,13 @@ from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFi
 from plotlyst.view.generated.characters_title_ui import Ui_CharactersTitle
 from plotlyst.view.generated.characters_view_ui import Ui_CharactersView
 from plotlyst.view.icons import IconRegistry
-from plotlyst.view.style.base import apply_bg_image
+from plotlyst.view.style.base import apply_bg_image, apply_white_menu
 from plotlyst.view.widget.cards import CharacterCard
 from plotlyst.view.widget.character.comp import CharacterComparisonWidget, \
     CharacterComparisonAttribute
 from plotlyst.view.widget.character.comp import CharactersTreeView
 from plotlyst.view.widget.character.network import CharacterNetworkView
+from plotlyst.view.widget.character.prefs import CharactersPreferencesWidget
 from plotlyst.view.widget.characters import CharactersProgressWidget
 from plotlyst.view.widget.tour.core import CharacterNewButtonTourEvent, TourEvent, \
     CharacterCardTourEvent, CharacterPerspectivesTourEvent, CharacterPerspectiveCardsTourEvent, \
@@ -109,6 +110,10 @@ class CharactersView(AbstractNovelView):
         self.ui.tblCharacters.setColumnWidth(CharactersTableModel.ColMbti, 90)
         self.ui.tblCharacters.horizontalHeader().setProperty('main-header', True)
 
+        for setting in [NovelSetting.CHARACTER_TABLE_ROLE, NovelSetting.CHARACTER_TABLE_ENNEAGRAM,
+                        NovelSetting.CHARACTER_TABLE_MBTI]:
+            self._toggle_column(setting)
+
         self.ui.tblCharacters.selectionModel().selectionChanged.connect(self._on_character_selected)
         self.ui.tblCharacters.doubleClicked.connect(self.ui.btnEdit.click)
         self.ui.btnCardsView.setIcon(IconRegistry.cards_icon())
@@ -129,7 +134,13 @@ class CharactersView(AbstractNovelView):
             self.ui.btnDelete.setShortcut(QKeySequence('Ctrl+Backspace'))
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
+
         self.ui.btnPreferences.setIcon(IconRegistry.preferences_icon())
+        self.prefs_widget = CharactersPreferencesWidget(self.novel)
+        self.prefs_widget.settingToggled.connect(self._character_prefs_toggled)
+        menu = MenuWidget(self.ui.btnPreferences)
+        apply_white_menu(menu)
+        menu.addWidget(self.prefs_widget)
 
         if self.novel.is_readonly():
             for btn in [self.ui.btnNew, self.ui.btnDelete]:
@@ -343,6 +354,26 @@ class CharactersView(AbstractNovelView):
         else:
             self.ui.scrollAreaComparisonContent.setStyleSheet('')
             self.ui.wdgComparisonLayout.setVisible(True)
+
+    def _character_prefs_toggled(self, setting: NovelSetting, toggled: bool):
+        self.novel.prefs.settings[setting.value] = toggled
+        self.repo.update_novel(self.novel)
+
+        self._toggle_column(setting)
+
+    def _toggle_column(self, setting: NovelSetting):
+        default = True
+
+        if setting == NovelSetting.CHARACTER_TABLE_ROLE:
+            col = CharactersTableModel.ColRole
+        elif setting == NovelSetting.CHARACTER_TABLE_ENNEAGRAM:
+            col = CharactersTableModel.ColEnneagram
+        elif setting == NovelSetting.CHARACTER_TABLE_MBTI:
+            col = CharactersTableModel.ColMbti
+        else:
+            return
+
+        self.ui.tblCharacters.setColumnHidden(col, not self.novel.prefs.toggled(setting, default))
 
     def __handle_tour_event(self, event: TourEvent):
         if isinstance(event, CharacterNewButtonTourEvent):
