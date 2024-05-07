@@ -305,7 +305,6 @@ class ProfileSectionWidget(ProfileFieldWidget):
         # self.wdgHeader.layout().addWidget(spacer())
 
         self.wdgContainer = QWidget()
-        # sp(self.wdgContainer).v_max()
         vbox(self.wdgContainer, 0)
         margins(self.wdgContainer, left=20)
 
