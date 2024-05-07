@@ -129,6 +129,7 @@ class CharactersView(AbstractNovelView):
             self.ui.btnDelete.setShortcut(QKeySequence('Ctrl+Backspace'))
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
+        self.ui.btnPreferences.setIcon(IconRegistry.preferences_icon())
 
         if self.novel.is_readonly():
             for btn in [self.ui.btnNew, self.ui.btnDelete]:

@@ -392,6 +392,32 @@
            </widget>
           </item>
           <item>
+           <widget class="Line" name="line_3">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btnPreferences">
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Customize view&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="popupMode">
+             <enum>QToolButton::InstantPopup</enum>
+            </property>
+            <property name="base" stdset="0">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
            <spacer name="horizontalSpacer_2">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
@@ -966,7 +992,7 @@
                     <x>0</x>
                     <y>0</y>
                     <width>873</width>
-                    <height>521</height>
+                    <height>520</height>
                    </rect>
                   </property>
                   <property name="relaxed-white-bg" stdset="0">
@@ -1117,8 +1143,8 @@
  <resources/>
  <connections/>
  <buttongroups>
+  <buttongroup name="btnGroupComparison"/>
   <buttongroup name="btnGroupViews"/>
   <buttongroup name="btnGroupComparisonView"/>
-  <buttongroup name="btnGroupComparison"/>
  </buttongroups>
 </ui>
