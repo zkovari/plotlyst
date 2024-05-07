@@ -37,15 +37,21 @@ class CharactersTableModel(AbstractHorizontalHeaderBasedTableModel):
 
     ColName = 0
     ColRole = 1
-    ColEnneagram = 2
-    ColMbti = 3
-    ColSummary = 4
+    ColAge = 2
+    ColGender = 3
+    ColOccupation = 4
+    ColEnneagram = 5
+    ColMbti = 6
+    ColSummary = 7
 
     def __init__(self, novel: Novel, parent=None):
         self._novel = novel
-        _headers = [''] * 5
+        _headers = [''] * 8
         _headers[self.ColName] = 'Name'
         _headers[self.ColRole] = ''
+        _headers[self.ColAge] = 'Age'
+        _headers[self.ColGender] = ''
+        _headers[self.ColOccupation] = 'Occupation'
         _headers[self.ColEnneagram] = ''
         _headers[self.ColMbti] = 'MBTI'
         _headers[self.ColSummary] = 'Summary'
@@ -68,6 +74,11 @@ class CharactersTableModel(AbstractHorizontalHeaderBasedTableModel):
                     return IconRegistry.from_name('mdi.numeric-9-circle', color=RELAXED_WHITE_COLOR)
                 elif role == Qt.ItemDataRole.ToolTipRole:
                     return 'Enneagram'
+            elif section == self.ColGender:
+                if role == Qt.ItemDataRole.DecorationRole:
+                    return IconRegistry.from_name('mdi.gender-female', color=RELAXED_WHITE_COLOR)
+                elif role == Qt.ItemDataRole.ToolTipRole:
+                    return 'Gender'
             else:
                 return super().headerData(section, orientation, role)
 

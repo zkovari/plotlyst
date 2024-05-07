@@ -106,11 +106,16 @@ class CharactersView(AbstractNovelView):
 
         self.ui.tblCharacters.setColumnWidth(CharactersTableModel.ColName, 200)
         self.ui.tblCharacters.setColumnWidth(CharactersTableModel.ColRole, 40)
+        self.ui.tblCharacters.setColumnWidth(CharactersTableModel.ColAge, 40)
+        self.ui.tblCharacters.setColumnWidth(CharactersTableModel.ColGender, 40)
         self.ui.tblCharacters.setColumnWidth(CharactersTableModel.ColEnneagram, 40)
         self.ui.tblCharacters.setColumnWidth(CharactersTableModel.ColMbti, 90)
         self.ui.tblCharacters.horizontalHeader().setProperty('main-header', True)
 
-        for setting in [NovelSetting.CHARACTER_TABLE_ROLE, NovelSetting.CHARACTER_TABLE_ENNEAGRAM,
+        for setting in [NovelSetting.CHARACTER_TABLE_ROLE, NovelSetting.CHARACTER_TABLE_AGE,
+                        NovelSetting.CHARACTER_TABLE_GENDER,
+                        NovelSetting.CHARACTER_TABLE_OCCUPATION,
+                        NovelSetting.CHARACTER_TABLE_ENNEAGRAM,
                         NovelSetting.CHARACTER_TABLE_MBTI]:
             self._toggle_column(setting)
 
@@ -366,6 +371,15 @@ class CharactersView(AbstractNovelView):
 
         if setting == NovelSetting.CHARACTER_TABLE_ROLE:
             col = CharactersTableModel.ColRole
+        elif setting == NovelSetting.CHARACTER_TABLE_AGE:
+            default = False
+            col = CharactersTableModel.ColAge
+        elif setting == NovelSetting.CHARACTER_TABLE_GENDER:
+            default = False
+            col = CharactersTableModel.ColGender
+        elif setting == NovelSetting.CHARACTER_TABLE_OCCUPATION:
+            default = False
+            col = CharactersTableModel.ColOccupation
         elif setting == NovelSetting.CHARACTER_TABLE_ENNEAGRAM:
             col = CharactersTableModel.ColEnneagram
         elif setting == NovelSetting.CHARACTER_TABLE_MBTI:
