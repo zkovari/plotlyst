@@ -3089,6 +3089,12 @@ class NovelSetting(Enum):
     Character_mbti = 'character_mbti'
     Character_love_style = 'character_love_style'
     Character_work_style = 'character_work_style'
+    CHARACTER_TABLE_ROLE = 'character_table_role'
+    CHARACTER_TABLE_AGE = 'character_table_age'
+    CHARACTER_TABLE_GENDER = 'character_table_gender'
+    CHARACTER_TABLE_OCCUPATION = 'character_table_occupation'
+    CHARACTER_TABLE_ENNEAGRAM = 'character_table_enneagram'
+    CHARACTER_TABLE_MBTI = 'character_table_mbti'
 
     def scene_card_setting(self) -> bool:
         return self.name.startswith('SCENE_CARD')

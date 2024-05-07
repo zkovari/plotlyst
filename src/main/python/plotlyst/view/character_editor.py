@@ -144,8 +144,6 @@ class CharacterEditor(QObject, EventListener):
         set_tab_visible(self.ui.tabAttributes, self.ui.tabGoals, False)
 
         self.ui.wdgAvatar.btnAvatar.setToolTip('Character avatar. Click to add an image')
-        # self.ui.wdgAvatar.setCharacter(self.character)
-        # self.ui.wdgAvatar.setUploadPopupMenu()
         self.ui.wdgAvatar.avatarUpdated.connect(self.ui.wdgBackstory.refreshCharacter)
         self.ui.wdgAvatar.setFixedSize(180, 180)
 
@@ -153,30 +151,16 @@ class CharacterEditor(QObject, EventListener):
 
         self.ui.lineName.setReadOnly(self.novel.is_readonly())
         self.ui.lineName.textEdited.connect(self._name_edited)
-        # self.ui.lineName.setText(self.character.name)
-
-        # self._character_goals = CharacterPlansWidget(self.novel, self.character)
-        # self.ui.scrollAreaPlans.layout().addWidget(self._character_goals)
-        # margins(self.ui.tabGoals.layout(), left=5)
 
         self.wdgTopicsEditor = CharacterTopicsEditor()
         self.ui.tabTopics.layout().addWidget(self.wdgTopicsEditor)
 
         self.profile = CharacterProfileEditor()
         self.ui.wdgProfile.layout().addWidget(self.profile)
-        # self.wdgTopicsEditor.setCharacter(self.character)
-        # self.profile.setCharacter(self.character)
 
-        # self.ui.wdgBackstory.setCharacter(self.character)
         apply_bg_image(self.ui.scrollAreaBackstoryContents, resource_registry.cover1)
 
-        # if self.character.document and self.character.document.loaded:
-        #     self.ui.textEdit.setText(self.character.document.content, self.character.name, title_read_only=True)
-
         self.ui.btnClose.clicked.connect(self._save)
-
-        # if self.character.role:
-        #     self._display_role()
 
         self.ui.tabAttributes.setCurrentWidget(self.ui.tabBackstory)
 

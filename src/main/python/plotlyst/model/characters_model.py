@@ -24,7 +24,7 @@ from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 
-from plotlyst.common import RELAXED_WHITE_COLOR
+from plotlyst.common import RELAXED_WHITE_COLOR, MAXIMUM_SIZE
 from plotlyst.core.domain import Character, Novel, Scene, SelectionItem
 from plotlyst.core.template import enneagram_field
 from plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel
@@ -37,15 +37,21 @@ class CharactersTableModel(AbstractHorizontalHeaderBasedTableModel):
 
     ColName = 0
     ColRole = 1
-    ColEnneagram = 2
-    ColMbti = 3
-    ColSummary = 4
+    ColAge = 2
+    ColGender = 3
+    ColOccupation = 4
+    ColEnneagram = 5
+    ColMbti = 6
+    ColSummary = 7
 
     def __init__(self, novel: Novel, parent=None):
         self._novel = novel
-        _headers = [''] * 5
+        _headers = [''] * 8
         _headers[self.ColName] = 'Name'
         _headers[self.ColRole] = ''
+        _headers[self.ColAge] = 'Age'
+        _headers[self.ColGender] = ''
+        _headers[self.ColOccupation] = 'Occupation'
         _headers[self.ColEnneagram] = ''
         _headers[self.ColMbti] = 'MBTI'
         _headers[self.ColSummary] = 'Summary'
@@ -68,6 +74,11 @@ class CharactersTableModel(AbstractHorizontalHeaderBasedTableModel):
                     return IconRegistry.from_name('mdi.numeric-9-circle', color=RELAXED_WHITE_COLOR)
                 elif role == Qt.ItemDataRole.ToolTipRole:
                     return 'Enneagram'
+            elif section == self.ColGender:
+                if role == Qt.ItemDataRole.DecorationRole:
+                    return IconRegistry.from_name('mdi.gender-female', color=RELAXED_WHITE_COLOR)
+                elif role == Qt.ItemDataRole.ToolTipRole:
+                    return 'Gender'
             else:
                 return super().headerData(section, orientation, role)
 
@@ -87,6 +98,23 @@ class CharactersTableModel(AbstractHorizontalHeaderBasedTableModel):
                 return avatars.avatar(character)
         if index.column() == self.ColRole:
             return self._dataForSelectionItem(character.role, role, displayText=False)
+        if index.column() == self.ColAge:
+            if character.age and not character.age_infinite:
+                if role == Qt.ItemDataRole.DisplayRole or role == self.SortRole:
+                    return character.age
+            if character.age_infinite:
+                if role == Qt.ItemDataRole.DecorationRole:
+                    return IconRegistry.from_name('mdi.infinity')
+                if role == self.SortRole:
+                    return MAXIMUM_SIZE
+        if index.column() == self.ColGender:
+            if character.gender and role == Qt.ItemDataRole.DecorationRole:
+                return IconRegistry.gender_icon(character.gender)
+            if role == self.SortRole:
+                return len(character.gender)
+        if index.column() == self.ColOccupation:
+            if role == Qt.ItemDataRole.DisplayRole or role == self.SortRole:
+                return character.occupation
         if index.column() == self.ColEnneagram:
             enneagram = character.enneagram()
             if role == self.SortRole:
