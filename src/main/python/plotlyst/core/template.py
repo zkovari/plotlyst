@@ -251,10 +251,22 @@ love_style_field = TemplateField('Love styles', TemplateFieldType.LABELS,
 disc_field = TemplateField('Work styles', TemplateFieldType.TEXT_SELECTION,
                            id=uuid.UUID('84adc497-aa43-47eb-aeac-148248cc1eca'),
                            selections=[
-                               SelectionItem('Influence', icon='fa5s.briefcase', icon_color='#588157'),
-                               SelectionItem('Support', icon='fa5s.briefcase', icon_color='#219ebc'),
-                               SelectionItem('Clarity', icon='fa5s.briefcase', icon_color='#e9c46a'),
-                               SelectionItem('Drive', icon='fa5s.briefcase', icon_color='#e63946')
+                               SelectionItem('Influence', icon='fa5s.briefcase', icon_color='#588157',
+                                             meta={
+                                                 'desc': ""
+                                             }),
+                               SelectionItem('Support', icon='fa5s.briefcase', icon_color='#219ebc',
+                                             meta={
+                                                 'desc': ""
+                                             }),
+                               SelectionItem('Clarity', icon='fa5s.briefcase', icon_color='#e9c46a',
+                                             meta={
+                                                 'desc': ""
+                                             }),
+                               SelectionItem('Drive', icon='fa5s.briefcase', icon_color='#e63946',
+                                             meta={
+                                                 'desc': ""
+                                             })
                            ], compact=True, show_label=False)
 positive_traits = sorted([
     'Accessible', 'Active', 'Adaptive', 'Admirable', 'Adventurous', 'Agreeable', 'Alert', 'Ambitious', 'Appreciative',
