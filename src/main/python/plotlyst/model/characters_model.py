@@ -107,6 +107,11 @@ class CharactersTableModel(AbstractHorizontalHeaderBasedTableModel):
                     return IconRegistry.from_name('mdi.infinity')
                 if role == self.SortRole:
                     return MAXIMUM_SIZE
+        if index.column() == self.ColGender:
+            if character.gender and role == Qt.ItemDataRole.DecorationRole:
+                return IconRegistry.gender_icon(character.gender)
+            if role == self.SortRole:
+                return len(character.gender)
         if index.column() == self.ColOccupation:
             if role == Qt.ItemDataRole.DisplayRole or role == self.SortRole:
                 return character.occupation
