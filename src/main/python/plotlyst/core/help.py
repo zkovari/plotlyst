@@ -141,6 +141,16 @@ work_style_help = {
     'Influence': "Sociable types who excel in building relationships, networking, and persuading others, thriving in social situations and teamwork.",
 }
 
+love_style_help = {
+    'Activity': "",
+    'Appreciation': "",
+    'Emotional': "",
+    'Financial': "",
+    'Intellectual': "",
+    'Physical': "",
+    'Practical': "",
+}
+
 plot_value_help = """<html>When a storyline is linked to a scene, these values can be <b style=color:#52b788;>positively</b> or 
 <b style=color:#9d0208;>negatively</b> charged, showcasing the storyline's advancement or setback.
 <br>The changes can be also visualized in the analysis panel, depicting the story's arc.

@@ -41,7 +41,7 @@ from plotlyst.common import PLOTLYST_MAIN_COLOR, CHARACTER_MAJOR_COLOR, \
     CHARACTER_SECONDARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import BackstoryEvent, Character, StrengthWeaknessAttribute
 from plotlyst.core.help import enneagram_help, mbti_help, character_roles_description, \
-    character_role_examples, work_style_help
+    character_role_examples, work_style_help, love_style_help
 from plotlyst.core.template import SelectionItem, enneagram_field, TemplateField, mbti_field, \
     promote_role, demote_role, Role, protagonist_role, antagonist_role, major_role, secondary_role, tertiary_role, \
     love_interest_role, supporter_role, adversary_role, contagonist_role, guide_role, confidant_role, sidekick_role, \
@@ -459,6 +459,7 @@ work_style_opaque_colors = {
 
 class LoveStylePie(BaseChart):
     sliceClicked = pyqtSignal(SelectionItem, bool)
+    sliceHovered = pyqtSignal(SelectionItem, bool)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -483,6 +484,8 @@ class LoveStylePie(BaseChart):
             slice.highlight()
         else:
             slice.reset()
+
+        self.sliceHovered.emit(slice.item, state)
 
     def _clicked(self, slice: SelectionItemPieSlice):
         if self._selectedSlice:
@@ -549,6 +552,7 @@ class LoveStyleSelectorWidget(PersonalitySelectorWidget):
         self.pieView = ChartView()
         self.pie = LoveStylePie()
         self.pie.sliceClicked.connect(self._itemClicked)
+        self.pie.sliceHovered.connect(self._itemHovered)
         self.pieView.setChart(self.pie)
         self.pieView.setMaximumSize(450, 450)
         self.layout().addWidget(self.pieView)
@@ -556,6 +560,10 @@ class LoveStyleSelectorWidget(PersonalitySelectorWidget):
         self.btnSelect = push_btn(IconRegistry.ok_icon('white'), 'Select Love Style', properties=['positive', 'base'])
         self.btnSelect.setDisabled(True)
         self.btnSelect.installEventFilter(DisabledClickEventFilter(self.btnSelect, lambda: qtanim.shake(self.pieView)))
+
+        self.lblHelp = label('', wordWrap=True)
+        self.lblHelp.setMinimumHeight(80)
+        self.layout().addWidget(wrap(self.lblHelp, margin_left=10, margin_right=10, margin_bottom=25))
 
         self.wdgBottom = QWidget()
         hbox(self.wdgBottom)
@@ -570,6 +578,15 @@ class LoveStyleSelectorWidget(PersonalitySelectorWidget):
             self._selected = item
         else:
             self._selected = None
+
+    def _itemHovered(self, item: SelectionItem, hovered: bool):
+        if hovered:
+            self.lblHelp.setText(love_style_help[item.text])
+        else:
+            if self._selected:
+                self.lblHelp.setText(love_style_help[self._selected.text])
+            else:
+                self.lblHelp.clear()
 
 
 class WorkStyleSelectorWidget(PersonalitySelectorWidget):

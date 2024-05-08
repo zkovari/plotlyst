@@ -242,15 +242,39 @@ love_style_field = TemplateField('Love styles', TemplateFieldType.LABELS,
                                  selections=[
                                      SelectionItem('Activity', icon='fa5s.heart', icon_color='#5e548e',
                                                    meta={
-                                                       'desc': "",
-                                                       'emoji': '::',
+                                                       'desc': "Togetherness, engagement, shared interests",
+                                                       'emoji': ':artist_palette:',
                                                    }),
-                                     SelectionItem('Appreciation', icon='fa5s.heart', icon_color='#ad2831'),
-                                     SelectionItem('Emotional', icon='fa5s.heart', icon_color='#ff0054'),
-                                     SelectionItem('Financial', icon='fa5s.heart', icon_color='#fb8500'),
-                                     SelectionItem('Intellectual', icon='fa5s.heart', icon_color='#0077b6'),
-                                     SelectionItem('Physical', icon='fa5s.heart', icon_color='#f4a261'),
-                                     SelectionItem('Practical', icon='fa5s.heart', icon_color='#2a9d8f')
+                                     SelectionItem('Appreciation', icon='fa5s.heart', icon_color='#ad2831',
+                                                   meta={
+                                                       'desc': "Praise, recognition, words of affirmation",
+                                                       'emoji': ':glowing_star:',
+                                                   }),
+                                     SelectionItem('Emotional', icon='fa5s.heart', icon_color='#ff0054',
+                                                   meta={
+                                                       'desc': "Empathy, support, emotional connection",
+                                                       'emoji': ':smiling_face_with_open_hands:',
+                                                   }),
+                                     SelectionItem('Financial', icon='fa5s.heart', icon_color='#fb8500',
+                                                   meta={
+                                                       'desc': "Generosity, financial gestures, thoughtful spending",
+                                                       'emoji': ':money_with_wings:',
+                                                   }),
+                                     SelectionItem('Intellectual', icon='fa5s.heart', icon_color='#0077b6',
+                                                   meta={
+                                                       'desc': "Mental connection, respect, thoughtful conversations",
+                                                       'emoji': ':brain:',
+                                                   }),
+                                     SelectionItem('Physical', icon='fa5s.heart', icon_color='#f4a261',
+                                                   meta={
+                                                       'desc': "Physical intimacy, sensual experience, touch",
+                                                       'emoji': ':kiss:',
+                                                   }),
+                                     SelectionItem('Practical', icon='fa5s.heart', icon_color='#2a9d8f',
+                                                   meta={
+                                                       'desc': "Everyday help, consideration, practical gestures",
+                                                       'emoji': ':hammer_and_wrench:',
+                                                   })
                                  ], compact=True, show_label=False)
 disc_field = TemplateField('Work styles', TemplateFieldType.TEXT_SELECTION,
                            id=uuid.UUID('84adc497-aa43-47eb-aeac-148248cc1eca'),
