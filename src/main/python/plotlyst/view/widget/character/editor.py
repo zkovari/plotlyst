@@ -27,7 +27,7 @@ from typing import Tuple, Optional, Dict, List
 import emoji
 import qtanim
 from PyQt6.QtCharts import QPieSeries, QPieSlice
-from PyQt6.QtCore import pyqtSignal, Qt, QSize
+from PyQt6.QtCore import pyqtSignal, Qt, QSize, QRectF
 from PyQt6.QtGui import QIcon, QColor, QMouseEvent
 from PyQt6.QtWidgets import QWidget, QSpinBox, QSlider, QTextBrowser, QButtonGroup, QToolButton, QLabel, QSizePolicy, \
     QLineEdit, QDialog
@@ -41,7 +41,7 @@ from plotlyst.common import PLOTLYST_MAIN_COLOR, CHARACTER_MAJOR_COLOR, \
     CHARACTER_SECONDARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import BackstoryEvent, Character, StrengthWeaknessAttribute
 from plotlyst.core.help import enneagram_help, mbti_help, character_roles_description, \
-    character_role_examples
+    character_role_examples, work_style_help
 from plotlyst.core.template import SelectionItem, enneagram_field, TemplateField, mbti_field, \
     promote_role, demote_role, Role, protagonist_role, antagonist_role, major_role, secondary_role, tertiary_role, \
     love_interest_role, supporter_role, adversary_role, contagonist_role, guide_role, confidant_role, sidekick_role, \
@@ -290,7 +290,6 @@ class CharacterAgeEditor(QWidget):
 class PersonalitySelectorWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-
         self._selected: Optional[SelectionItem] = None
 
         self.btnIgnore = push_btn(IconRegistry.from_name('ri.share-forward-fill'), 'Ignore', transparent_=True)
@@ -475,6 +474,8 @@ class LoveStylePie(BaseChart):
         self.series.clicked.connect(partial(self._clicked))
         self.addSeries(self.series)
 
+        self.setPlotArea(QRectF(0, 0, 450, 450))
+
     def _hovered(self, slice: SelectionItemPieSlice, state: bool):
         if slice is self._selectedSlice:
             return
@@ -498,10 +499,12 @@ class LoveStylePie(BaseChart):
 
 class WorkStylePie(BaseChart):
     sliceClicked = pyqtSignal(SelectionItem, bool)
+    sliceHovered = pyqtSignal(SelectionItem, bool)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self._selectedSlice: Optional[SelectionItemPieSlice] = None
+        self.setTitle("Select your character's dominant working style")
         self.series = QPieSeries()
 
         for i, item in enumerate(disc_field.selections):
@@ -514,6 +517,8 @@ class WorkStylePie(BaseChart):
         self.series.clicked.connect(partial(self._clicked))
         self.addSeries(self.series)
 
+        self.setPlotArea(QRectF(0, 0, 450, 450))
+
     def _hovered(self, slice: SelectionItemPieSlice, state: bool):
         if slice is self._selectedSlice:
             return
@@ -521,6 +526,8 @@ class WorkStylePie(BaseChart):
             slice.highlight()
         else:
             slice.reset()
+
+        self.sliceHovered.emit(slice.item, state)
 
     def _clicked(self, slice: SelectionItemPieSlice):
         if self._selectedSlice:
@@ -571,6 +578,7 @@ class WorkStyleSelectorWidget(PersonalitySelectorWidget):
         self.pieView = ChartView()
         self.pie = WorkStylePie()
         self.pie.sliceClicked.connect(self._itemClicked)
+        self.pie.sliceHovered.connect(self._itemHovered)
         self.pieView.setChart(self.pie)
         self.pieView.setMaximumSize(450, 450)
         self.layout().addWidget(self.pieView)
@@ -578,6 +586,10 @@ class WorkStyleSelectorWidget(PersonalitySelectorWidget):
         self.btnSelect = push_btn(IconRegistry.ok_icon('white'), 'Select Work Style', properties=['positive', 'base'])
         self.btnSelect.setDisabled(True)
         self.btnSelect.installEventFilter(DisabledClickEventFilter(self.btnSelect, lambda: qtanim.shake(self.pieView)))
+
+        self.lblHelp = label('', wordWrap=True)
+        self.lblHelp.setMinimumHeight(80)
+        self.layout().addWidget(wrap(self.lblHelp, margin_left=10, margin_right=10, margin_bottom=25))
 
         self.wdgBottom = QWidget()
         hbox(self.wdgBottom)
@@ -592,6 +604,15 @@ class WorkStyleSelectorWidget(PersonalitySelectorWidget):
             self._selected = item
         else:
             self._selected = None
+
+    def _itemHovered(self, item: SelectionItem, hovered: bool):
+        if hovered:
+            self.lblHelp.setText(work_style_help[item.text])
+        else:
+            if self._selected:
+                self.lblHelp.setText(work_style_help[self._selected.text])
+            else:
+                self.lblHelp.clear()
 
 
 class PersonalitySelector(SecondaryActionPushButton):

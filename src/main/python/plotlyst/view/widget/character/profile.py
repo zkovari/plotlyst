@@ -37,7 +37,7 @@ from plotlyst.core.domain import Character, CharacterProfileSectionReference, Ch
     CharacterProfileFieldType, CharacterMultiAttribute, CharacterProfileSectionType, MultiAttributePrimaryType, \
     MultiAttributeSecondaryType, CharacterSecondaryAttribute, StrengthWeaknessAttribute, CharacterPersonalityAttribute, \
     NovelSetting
-from plotlyst.core.help import enneagram_help, mbti_keywords, mbti_help
+from plotlyst.core.help import enneagram_help, mbti_keywords, mbti_help, work_style_help
 from plotlyst.core.template import TemplateField, iq_field, eq_field, rationalism_field, willpower_field, \
     creativity_field, traits_field, values_field, flaw_placeholder_field, goal_field, internal_goal_field, stakes_field, \
     conflict_field, motivation_field, methods_field, internal_motivation_field, internal_conflict_field, \
@@ -305,7 +305,6 @@ class ProfileSectionWidget(ProfileFieldWidget):
         # self.wdgHeader.layout().addWidget(spacer())
 
         self.wdgContainer = QWidget()
-        sp(self.wdgContainer).v_max()
         vbox(self.wdgContainer, 0)
         margins(self.wdgContainer, left=20)
 
@@ -344,7 +343,10 @@ class ProfileSectionWidget(ProfileFieldWidget):
 
     def attachWidget(self, widget: ProfileFieldWidget):
         self.children.append(widget)
-        self.wdgContainer.layout().addWidget(widget)
+        if self.section.type == CharacterProfileSectionType.Summary:
+            self.wdgContainer.layout().addWidget(widget, alignment=Qt.AlignmentFlag.AlignTop)
+        else:
+            self.wdgContainer.layout().addWidget(widget)
         # self.progressStatuses[widget] = False
         # widget.valueFilled.connect(partial(self._valueFilled, widget))
         # widget.valueReset.connect(partial(self._valueReset, widget))
@@ -1232,9 +1234,11 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
         emojiFear = Emoji()
         emojiFear.setText(emoji.emojize(':face_screaming_in_fear:'))
         emojiFear.setToolTip('Core fear')
-        self.lblDesire = QLabel('')
+        self.lblDesire = label(wordWrap=True)
+        sp(self.lblDesire).h_exp()
         self.lblDesire.setToolTip('Core desire')
-        self.lblFear = QLabel('')
+        self.lblFear = label(wordWrap=True)
+        sp(self.lblFear).h_exp()
         self.lblFear.setToolTip('Core fear')
 
         decr_font(emojiDesire, 2)
@@ -1266,7 +1270,6 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
         self.wdgEditor.setValue(value)
         enneagram = enneagram_choices.get(value)
         if enneagram:
-            # self.wdgEditor.setToolTip(enneagram_help[value])
             self._selectionChanged(enneagram)
         elif value is None:
             self._ignored()
@@ -1387,6 +1390,16 @@ class WorkStyleFieldWidget(TemplateFieldWidgetBase):
         _layout = vbox(self)
         _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignLeft)
 
+        self.emoji = Emoji()
+        self.lblKeywords = label(wordWrap=True)
+        decr_font(self.emoji, 2)
+        decr_font(self.lblKeywords)
+
+        self.wdgAttr = group(dash_icon(), self.emoji, self.lblKeywords, spacer())
+        margins(self.wdgAttr, left=10)
+        _layout.addWidget(self.wdgAttr)
+        self.wdgAttr.setHidden(True)
+
         self.wdgEditor.selected.connect(self._selectionChanged)
 
         if self.character.personality.work:
@@ -1400,8 +1413,8 @@ class WorkStyleFieldWidget(TemplateFieldWidgetBase):
     def setValue(self, value: Any):
         self.wdgEditor.setValue(value)
         if value:
-            mbti = work_style_choices[value]
-            self._selectionChanged(mbti)
+            style = work_style_choices[value]
+            self._selectionChanged(style)
         else:
             self.wdgEditor.setToolTip(self._defaultTooltip)
 
@@ -1409,6 +1422,14 @@ class WorkStyleFieldWidget(TemplateFieldWidgetBase):
         if self.character.personality.work is None:
             self.character.personality.work = CharacterPersonalityAttribute()
         self.character.personality.work.value = item.text
+
+        self.emoji.setText(emoji.emojize(item.meta['emoji']))
+        self.lblKeywords.setText(item.meta['desc'])
+        self.wdgEditor.setToolTip(work_style_help[item.text])
+        if self.isVisible():
+            qtanim.fade_in(self.wdgAttr)
+        else:
+            self.wdgAttr.setVisible(True)
 
 
 class PersonalityFieldWidget(TemplateFieldWidgetBase):
