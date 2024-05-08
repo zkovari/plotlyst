@@ -253,19 +253,19 @@ disc_field = TemplateField('Work styles', TemplateFieldType.TEXT_SELECTION,
                            selections=[
                                SelectionItem('Influence', icon='fa5s.briefcase', icon_color='#588157',
                                              meta={
-                                                 'desc': ""
+                                                 'desc': "People, networking, persuasion, communication"
                                              }),
                                SelectionItem('Support', icon='fa5s.briefcase', icon_color='#219ebc',
                                              meta={
-                                                 'desc': ""
+                                                 'desc': "Harmony, patience, team player, acceptance"
                                              }),
                                SelectionItem('Clarity', icon='fa5s.briefcase', icon_color='#e9c46a',
                                              meta={
-                                                 'desc': ""
+                                                 'desc': "Detail-oriented, precision, analytical, systematic"
                                              }),
                                SelectionItem('Drive', icon='fa5s.briefcase', icon_color='#e63946',
                                              meta={
-                                                 'desc': ""
+                                                 'desc': "Ambition, leadership, results-driven, competitive"
                                              })
                            ], compact=True, show_label=False)
 positive_traits = sorted([

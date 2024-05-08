@@ -134,6 +134,13 @@ mbti_keywords = {'ISTJ': "Dependable, systematic, traditional, task-oriented, de
                  'ENTJ': "Strategic thinker, goal-oriented, efficient, organized, strong leadership"
                  }
 
+work_style_help = {
+    'Drive': "Ambitious and results-oriented, enjoying challenges and taking charge. They're competitive and persuasive, driven by a desire for control and power.",
+    'Clarity': "Detail-oriented and quality-conscious. They prioritize structure, organization, and correctness in their work, approaching challenges with caution.",
+    'Support': "Harmony, structure, and organization. They are patient, accepting, and enjoy working behind the scenes as part of a team, contributing to the overall success in a supportive role.",
+    'Influence': "Sociable types who excel in building relationships, networking, and persuading others, thriving in social situations and teamwork.",
+}
+
 plot_value_help = """<html>When a storyline is linked to a scene, these values can be <b style=color:#52b788;>positively</b> or 
 <b style=color:#9d0208;>negatively</b> charged, showcasing the storyline's advancement or setback.
 <br>The changes can be also visualized in the analysis panel, depicting the story's arc.
