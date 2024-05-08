@@ -253,19 +253,23 @@ disc_field = TemplateField('Work styles', TemplateFieldType.TEXT_SELECTION,
                            selections=[
                                SelectionItem('Influence', icon='fa5s.briefcase', icon_color='#588157',
                                              meta={
-                                                 'desc': "People, networking, persuasion, communication"
+                                                 'desc': "People, networking, persuasion, communication",
+                                                 'emoji': ':party_popper:',
                                              }),
                                SelectionItem('Support', icon='fa5s.briefcase', icon_color='#219ebc',
                                              meta={
-                                                 'desc': "Harmony, patience, team player, acceptance"
+                                                 'desc': "Harmony, patience, team player, acceptance",
+                                                 'emoji': ':handshake:',
                                              }),
                                SelectionItem('Clarity', icon='fa5s.briefcase', icon_color='#e9c46a',
                                              meta={
-                                                 'desc': "Detail-oriented, precision, analytical, systematic"
+                                                 'desc': "Detail-oriented, precision, analytical, systematic",
+                                                 'emoji': ':face_with_monocle:',
                                              }),
                                SelectionItem('Drive', icon='fa5s.briefcase', icon_color='#e63946',
                                              meta={
-                                                 'desc': "Ambition, leadership, results-driven, competitive"
+                                                 'desc': "Ambition, leadership, results-driven, competitive",
+                                                 'emoji': ':fire:',
                                              })
                            ], compact=True, show_label=False)
 positive_traits = sorted([
