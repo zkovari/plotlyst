@@ -465,6 +465,7 @@ class LoveStylePie(BaseChart):
         super().__init__(parent)
         self._selectedSlice: Optional[SelectionItemPieSlice] = None
         self.series = QPieSeries()
+        self.setTitle("Select your character's preferred love style")
 
         for i, item in enumerate(love_style_field.selections):
             slice = SelectionItemPieSlice(item, love_style_opaque_colors[item.text])

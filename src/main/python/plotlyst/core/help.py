@@ -142,13 +142,13 @@ work_style_help = {
 }
 
 love_style_help = {
-    'Activity': "",
-    'Appreciation': "",
-    'Emotional': "",
-    'Financial': "",
-    'Intellectual': "",
-    'Physical': "",
-    'Practical': "",
+    'Activity': "Individuals thrive when their partner shows interest in their hobbies and activities, emphasizing genuine engagement and connection beyond mere presence.",
+    'Appreciation': "Individuals feel loved through words of praise and acknowledgment of their personal qualities and achievements, valuing verbal expressions of gratitude from their partner",
+    'Emotional': "Individuals feel loved through emotional connection and support, receiving care and understanding during vulnerable times.",
+    'Financial': "Individuals feel loved when their partner uses financial resources to bring them joy and delight, extending beyond material gifts to acts of generosity and thoughtfulness.",
+    'Intellectual': "Individuals value mental connection and intelligent discourse, where feeling loved involves respect for one's intellect and engaging in thoughtful discussions.",
+    'Physical': "Individuals feel loved through physical touch and intimacy, encompassing a range of tactile expressions beyond sexual acts.",
+    'Practical': "Individuals feel loved when their partners provide practical assistance and support in daily tasks, with gestures that go beyond routine chores to show care and consideration.",
 }
 
 plot_value_help = """<html>When a storyline is linked to a scene, these values can be <b style=color:#52b788;>positively</b> or 
