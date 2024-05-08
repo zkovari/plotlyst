@@ -240,7 +240,11 @@ mbti_field = TemplateField(name='MBTI', type=TemplateFieldType.TEXT_SELECTION,
 love_style_field = TemplateField('Love styles', TemplateFieldType.LABELS,
                                  id=uuid.UUID('dc707786-c35d-46bd-9517-6b6704cd4a88'),
                                  selections=[
-                                     SelectionItem('Activity', icon='fa5s.heart', icon_color='#5e548e'),
+                                     SelectionItem('Activity', icon='fa5s.heart', icon_color='#5e548e',
+                                                   meta={
+                                                       'desc': "",
+                                                       'emoji': '::',
+                                                   }),
                                      SelectionItem('Appreciation', icon='fa5s.heart', icon_color='#ad2831'),
                                      SelectionItem('Emotional', icon='fa5s.heart', icon_color='#ff0054'),
                                      SelectionItem('Financial', icon='fa5s.heart', icon_color='#fb8500'),
