@@ -37,7 +37,7 @@ from plotlyst.core.domain import Character, CharacterProfileSectionReference, Ch
     CharacterProfileFieldType, CharacterMultiAttribute, CharacterProfileSectionType, MultiAttributePrimaryType, \
     MultiAttributeSecondaryType, CharacterSecondaryAttribute, StrengthWeaknessAttribute, CharacterPersonalityAttribute, \
     NovelSetting
-from plotlyst.core.help import enneagram_help, mbti_keywords, mbti_help, work_style_help
+from plotlyst.core.help import enneagram_help, mbti_keywords, mbti_help, work_style_help, love_style_help
 from plotlyst.core.template import TemplateField, iq_field, eq_field, rationalism_field, willpower_field, \
     creativity_field, traits_field, values_field, flaw_placeholder_field, goal_field, internal_goal_field, stakes_field, \
     conflict_field, motivation_field, methods_field, internal_motivation_field, internal_conflict_field, \
@@ -1357,6 +1357,16 @@ class LoveStyleFieldWidget(TemplateFieldWidgetBase):
         _layout = vbox(self)
         _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignLeft)
 
+        self.emoji = Emoji()
+        self.lblKeywords = label(wordWrap=True)
+        decr_font(self.emoji, 2)
+        decr_font(self.lblKeywords)
+
+        self.wdgAttr = group(dash_icon(), self.emoji, self.lblKeywords, spacer())
+        margins(self.wdgAttr, left=10)
+        _layout.addWidget(self.wdgAttr)
+        self.wdgAttr.setHidden(True)
+
         self.wdgEditor.selected.connect(self._selectionChanged)
 
         if self.character.personality.love:
@@ -1379,6 +1389,14 @@ class LoveStyleFieldWidget(TemplateFieldWidgetBase):
         if self.character.personality.love is None:
             self.character.personality.love = CharacterPersonalityAttribute()
         self.character.personality.love.value = item.text
+
+        self.emoji.setText(emoji.emojize(item.meta['emoji']))
+        self.lblKeywords.setText(item.meta['desc'])
+        self.wdgEditor.setToolTip(love_style_help[item.text])
+        if self.isVisible():
+            qtanim.fade_in(self.wdgAttr)
+        else:
+            self.wdgAttr.setVisible(True)
 
 
 class WorkStyleFieldWidget(TemplateFieldWidgetBase):
