@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
+import qtanim
 from PyQt6.QtGui import QFont
 from overrides import overrides
 from qthandy import clear_layout, margins, bold
@@ -48,6 +49,12 @@ class DocumentsView(AbstractNovelView):
 
         self.ui.btnDocuments.setIcon(IconRegistry.document_edition_icon())
         bold(self.ui.lblTitle)
+
+        self.ui.btnTreeToggle.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
+        self.ui.btnTreeToggleSecondary.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
+        self.ui.btnTreeToggleSecondary.setHidden(True)
+        self.ui.btnTreeToggle.clicked.connect(self._hide_sidebar)
+        self.ui.btnTreeToggleSecondary.clicked.connect(self._show_sidebar)
 
         self.ui.splitter.setSizes([150, 500])
 
@@ -153,3 +160,12 @@ class DocumentsView(AbstractNovelView):
         fontSettings = self.novel.prefs.docs.font[app_env.platform()]
         fontSettings.family = family
         self.repo.update_novel(self.novel)
+
+    def _hide_sidebar(self):
+        qtanim.toggle_expansion(self.ui.wdgDocs, False, teardown=lambda: qtanim.fade_in(self.ui.btnTreeToggleSecondary))
+        self.ui.btnTreeToggleSecondary.setChecked(False)
+
+    def _show_sidebar(self):
+        qtanim.toggle_expansion(self.ui.wdgDocs, True)
+        self.ui.btnTreeToggle.setChecked(True)
+        self.ui.btnTreeToggleSecondary.setVisible(False)

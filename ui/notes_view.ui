@@ -66,11 +66,40 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <property name="leftMargin">
-          <number>15</number>
+          <number>8</number>
          </property>
          <property name="bottomMargin">
           <number>5</number>
          </property>
+         <item>
+          <widget class="QToolButton" name="btnTreeToggle">
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
+           <property name="toolTip">
+            <string>Toggle sidebar</string>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+           <property name="base" stdset="0">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="Line" name="line">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
          <item>
           <widget class="QPushButton" name="btnAdd">
            <property name="sizePolicy">
@@ -199,7 +228,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <layout class="QVBoxLayout" name="verticalLayout">
        <property name="spacing">
         <number>0</number>
@@ -213,6 +242,28 @@
           <property name="spacing">
            <number>3</number>
           </property>
+          <item>
+           <widget class="QToolButton" name="btnTreeToggleSecondary">
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="toolTip">
+             <string>Toggle sidebar</string>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="transparent-circle-bg-on-hover" stdset="0">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
           <item>
            <spacer name="horizontalSpacer_3">
             <property name="orientation">
