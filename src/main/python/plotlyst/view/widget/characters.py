@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from dataclasses import dataclass
 from functools import partial
-from typing import Iterable, List, Optional, Dict, Union, Tuple
+from typing import Iterable, List, Optional, Dict, Union
 
 from PyQt6.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QByteArray, QBuffer, QIODevice
 from PyQt6.QtGui import QIcon, QColor, QImageReader, QImage, QPixmap, \
@@ -34,8 +34,7 @@ from qtmenu import MenuWidget, ScrollableMenuWidget
 
 from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, Character, NovelSetting
-from plotlyst.core.template import SelectionItem, TemplateField, RoleImportance, \
-    strengths_weaknesses_field
+from plotlyst.core.template import SelectionItem, TemplateField, RoleImportance
 from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, Event
 from plotlyst.event.handler import event_dispatchers
@@ -701,16 +700,11 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
             chart_.setMaxValue(0)
 
         for i, char in enumerate(self.novel.characters):
-            btn = QToolButton(self)
+            btn = tool_btn(avatars.avatar(char), tooltip=char.name, transparent_=True, parent=self)
             btn.setIconSize(QSize(45, 45))
-            transparent(btn)
-            btn.setIcon(avatars.avatar(char))
-            btn.setToolTip(char.name)
-            self._layout.addWidget(btn, 0, i + 1)
-            pointy(btn)
-            btn.installEventFilter(ButtonPressResizeEventFilter(btn))
             btn.installEventFilter(OpacityEventFilter(btn, 0.8, 1.0))
             btn.clicked.connect(partial(self.characterClicked.emit, char))
+            self._layout.addWidget(btn, 0, i + 1)
         self._layout.addWidget(spacer(), 0, self._layout.columnCount())
 
         self._addLabel(self.RowOverall, 'Overall', IconRegistry.progress_check_icon(), Qt.AlignmentFlag.AlignCenter)
@@ -720,27 +714,13 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
         self._addLabel(self.RowGender, 'Gender', IconRegistry.male_gender_icon())
         self._addLine(self.RowGender + 1)
 
-        fields: Dict[str, Tuple[
-            CharactersProgressWidget.Header, TemplateField]] = {}  # field ids pointing to their fields and headers
-        headers: Dict[CharactersProgressWidget.Header, int] = {}
-        header: Optional[CharactersProgressWidget.Header] = None
         row = self.RowGender + 1
-        # for el in self.novel.character_profiles[0].elements:
-        #     if el.field.type == TemplateFieldType.DISPLAY_HEADER:
-        #         row += 1
-        #         self._addLabel(row, el.field.name)
-        #         header = self.Header(el.field, row)
-        #         headers[header] = 0
-        #     elif not el.field.type.name.startswith('DISPLAY') and header:
-        #         fields[str(el.field.id)] = (header, el.field)
-        #         if el.field.enabled:
-        #             header.max_value = header.max_value + 1
 
         row += 1
         self._addLine(row)
         row += 1
         for col, char in enumerate(self.novel.characters):
-            self._updateForCharacter(char, fields, headers, row, col)
+            self._updateForCharacter(char, row, col+1)
 
         self._addLabel(row, 'Backstory', IconRegistry.backstory_icon())
         self._addLabel(row + 1, 'Topics', IconRegistry.topics_icon())
@@ -750,89 +730,91 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
         self._chartSecondary.refresh()
         self._chartMinor.refresh()
 
-    def _updateForCharacter(self, char: Character, fields: Dict[str, Tuple[Header, TemplateField]], headers, row: int,
-                            col: int):
+    def _updateForCharacter(self, char: Character, row: int, col: int):
         name_progress = CircularProgressBar(parent=self)
         if char.name:
             name_progress.setValue(1)
-        self._addWidget(name_progress, self.RowName, col + 1)
+        self._addWidget(name_progress, self.RowName, col)
 
         role_value = 0
         if char.role:
             role_value = 1
-            self._addItem(char.role, self.RowRole, col + 1)
+            self._addItem(char.role, self.RowRole, col)
         else:
-            self._addWidget(CircularProgressBar(parent=self), self.RowRole, col + 1)
+            self._addWidget(CircularProgressBar(parent=self), self.RowRole, col)
 
         gender_value = 0
         if char.gender:
             gender_value = 1
-            self._addIcon(IconRegistry.gender_icon(char.gender), self.RowGender, col + 1)
+            self._addIcon(IconRegistry.gender_icon(char.gender), self.RowGender, col)
         else:
-            self._addWidget(CircularProgressBar(parent=self), self.RowGender, col + 1)
+            self._addWidget(CircularProgressBar(parent=self), self.RowGender, col)
 
-        for h in headers.keys():
-            headers[h] = 0  # reset char values
-        for value in char.template_values:
-            if str(value.id) not in fields.keys():
-                continue
-            if not fields[str(value.id)][1].enabled:
-                continue
+        for section in char.profile:
+            pass
 
-            header = fields[str(value.id)][0]
-            if not header.header.required and char.is_minor():
-                continue
-            if not char.disabled_template_headers.get(str(header.header.id), header.header.enabled):
-                continue
-            if value.value or value.ignored:
-                if isinstance(value.value, dict):
-                    count = 0
-                    values = 0
-                    for _, attrs in value.value.items():
-                        count += 1
-                        if attrs.get('value'):
-                            values += 1
-                        for secondary in attrs.get('secondary', []):
-                            count += 1
-                            if secondary.get('value'):
-                                values += 1
-                    headers[header] = headers[header] + values / count
-                elif value.id == strengths_weaknesses_field.id:
-                    count = 0
-                    values = 0
-                    for attrs in value.value:
-                        if attrs.get('has_strength', True):
-                            count += 1
-                        if attrs.get('strength', ''):
-                            values += 1
-                        if attrs.get('has_weakness', True):
-                            count += 1
-                        if attrs.get('weakness', ''):
-                            values += 1
-                    headers[header] = headers[header] + values / count
-                else:
-                    headers[header] = headers[header] + 1
-
+        # for h in headers.keys():
+        #     headers[h] = 0  # reset char values
+        # for value in char.template_values:
+        #     if str(value.id) not in fields.keys():
+        #         continue
+        #     if not fields[str(value.id)][1].enabled:
+        #         continue
+        #
+        #     header = fields[str(value.id)][0]
+        #     if not header.header.required and char.is_minor():
+        #         continue
+        #     if not char.disabled_template_headers.get(str(header.header.id), header.header.enabled):
+        #         continue
+        #     if value.value or value.ignored:
+        #         if isinstance(value.value, dict):
+        #             count = 0
+        #             values = 0
+        #             for _, attrs in value.value.items():
+        #                 count += 1
+        #                 if attrs.get('value'):
+        #                     values += 1
+        #                 for secondary in attrs.get('secondary', []):
+        #                     count += 1
+        #                     if secondary.get('value'):
+        #                         values += 1
+        #             headers[header] = headers[header] + values / count
+        #         elif value.id == strengths_weaknesses_field.id:
+        #             count = 0
+        #             values = 0
+        #             for attrs in value.value:
+        #                 if attrs.get('has_strength', True):
+        #                     count += 1
+        #                 if attrs.get('strength', ''):
+        #                     values += 1
+        #                 if attrs.get('has_weakness', True):
+        #                     count += 1
+        #                 if attrs.get('weakness', ''):
+        #                     values += 1
+        #             headers[header] = headers[header] + values / count
+        #         else:
+        #             headers[header] = headers[header] + 1
+        #
         overall_progress = CircularProgressBar(maxValue=2, parent=self)
         overall_progress.setTooltipMode(ProgressTooltipMode.PERCENTAGE)
         overall_progress.setValue((name_progress.value() + gender_value) // 2 + role_value)
-
-        for h, v in headers.items():
-            if not h.header.required and char.is_minor():
-                continue
-            if not char.disabled_template_headers.get(str(h.header.id), h.header.enabled):
-                continue
-            value_progress = CircularProgressBar(v, h.max_value, parent=self)
-            self._addWidget(value_progress, h.row, col + 1)
-            overall_progress.addMaxValue(h.max_value)
-            overall_progress.addValue(v)
+        #
+        # for h, v in headers.items():
+        #     if not h.header.required and char.is_minor():
+        #         continue
+        #     if not char.disabled_template_headers.get(str(h.header.id), h.header.enabled):
+        #         continue
+        #     value_progress = CircularProgressBar(v, h.max_value, parent=self)
+        #     self._addWidget(value_progress, h.row, col + 1)
+        #     overall_progress.addMaxValue(h.max_value)
+        #     overall_progress.addValue(v)
         if not char.is_minor():
             backstory_progress = CircularProgressBar(parent=self)
             backstory_progress.setMaxValue(5 if char.is_major() else 3)
             backstory_progress.setValue(len(char.backstory))
             overall_progress.addMaxValue(backstory_progress.maxValue())
             overall_progress.addValue(backstory_progress.value())
-            self._addWidget(backstory_progress, row, col + 1)
+            self._addWidget(backstory_progress, row, col)
 
         if char.topics:
             topics_progress = CircularProgressBar(parent=self)
@@ -840,9 +822,9 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
             topics_progress.setValue(len([x for x in char.topics if x.value]))
             overall_progress.addMaxValue(topics_progress.maxValue())
             overall_progress.addValue(topics_progress.value())
-            self._addWidget(topics_progress, row + 1, col + 1)
+            self._addWidget(topics_progress, row + 1, col)
 
-        self._addWidget(overall_progress, self.RowOverall, col + 1)
+        self._addWidget(overall_progress, self.RowOverall, col)
 
         if char.is_major():
             self._chartMajor.setMaxValue(self._chartMajor.maxValue() + overall_progress.maxValue())
