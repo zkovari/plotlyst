@@ -55,7 +55,7 @@ class DocumentAdditionMenu(MenuWidget):
         self._character_menu.close()
 
     def _documentSelected(self, docType=DocumentType.DOCUMENT, character: Optional[Character] = None):
-        doc = Document('New Document', type=docType)
+        doc = Document('', type=docType, icon='mdi.file-document', icon_color='grey')
         if character:
             doc.title = ''
             doc.character_id = character.id
@@ -68,7 +68,7 @@ class DocumentWidget(ContainerNode):
     added = pyqtSignal(Document)
 
     def __init__(self, novel: Novel, doc: Document, parent=None, settings: Optional[TreeSettings] = None):
-        super(DocumentWidget, self).__init__(doc.title, parent, settings=settings)
+        super(DocumentWidget, self).__init__(doc.display_name(), parent, settings=settings)
         self._novel = novel
         self._doc = doc
 
@@ -83,7 +83,7 @@ class DocumentWidget(ContainerNode):
         return self._doc
 
     def refresh(self):
-        self._lblTitle.setText(self._doc.title)
+        self._lblTitle.setText(self._doc.display_name())
 
         if self._doc.icon:
             self._icon.setIcon(IconRegistry.from_name(self._doc.icon, self._doc.icon_color))

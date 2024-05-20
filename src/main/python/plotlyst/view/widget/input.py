@@ -521,6 +521,10 @@ class DocumentTextEditor(RichTextEditor):
 
         self._textedit.verticalScrollBar().valueChanged.connect(self._scrolled)
 
+    @property
+    def textTitle(self):
+        return self._textTitle
+
     @overrides
     def _initTextEdit(self) -> EnhancedTextEdit:
         def grammarCheckToggled(toggled: bool):

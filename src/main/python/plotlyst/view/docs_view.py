@@ -86,6 +86,7 @@ class DocumentsView(AbstractNovelView):
             font_: QFont = self.textEditor.textEdit.font()
             font_.setFamily(self.novel.prefs.docs.font[app_env.platform()].family)
             self.textEditor.textEdit.setFont(font_)
+            self.textEditor.textTitle.setPlaceholderText('Untitled')
         self.textEditor.textEdit.textChanged.connect(self._save)
         self.textEditor.titleChanged.connect(self._title_changed)
         self.textEditor.settingsAttached.connect(settings_ready)

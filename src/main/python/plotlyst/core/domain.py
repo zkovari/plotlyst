@@ -2706,6 +2706,11 @@ class Document(CharacterBased, SceneBased):
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
     statistics: Optional[DocumentStatistics] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
+    def display_name(self) -> str:
+        if self.title:
+            return self.title
+        return 'Untitled'
+
     @overrides
     def __eq__(self, other: 'Document'):
         if isinstance(other, Document):
