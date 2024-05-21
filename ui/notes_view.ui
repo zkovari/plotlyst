@@ -325,7 +325,7 @@
           </sizepolicy>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>3</number>
          </property>
          <widget class="QWidget" name="docEditorPage">
           <property name="relaxed-white-bg" stdset="0">
@@ -346,6 +346,25 @@
            </property>
            <property name="bottomMargin">
             <number>1</number>
+           </property>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="pdfPage">
+          <layout class="QVBoxLayout" name="verticalLayout_6">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
            </property>
           </layout>
          </widget>
@@ -370,6 +389,11 @@
             <number>1</number>
            </property>
           </layout>
+         </widget>
+         <widget class="QWidget" name="emptyPage">
+          <property name="relaxed-white-bg" stdset="0">
+           <bool>true</bool>
+          </property>
          </widget>
         </widget>
        </item>

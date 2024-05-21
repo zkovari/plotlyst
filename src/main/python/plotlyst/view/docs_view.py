@@ -21,6 +21,8 @@ from typing import Optional
 
 import qtanim
 from PyQt6.QtGui import QFont
+from PyQt6.QtPdf import QPdfDocument
+from PyQt6.QtPdfWidgets import QPdfView
 from overrides import overrides
 from qthandy import clear_layout, margins, bold
 from qttextedit.ops import TextEditorSettingsSection, FontSectionSettingWidget
@@ -29,9 +31,9 @@ from plotlyst.core.client import json_client
 from plotlyst.core.domain import Novel, Document, DocumentType, FontSettings
 from plotlyst.env import app_env
 from plotlyst.events import SceneChangedEvent, SceneDeletedEvent
+from plotlyst.service.cache import characters_registry
 from plotlyst.view._view import AbstractNovelView
 from plotlyst.view.common import ButtonPressResizeEventFilter
-from plotlyst.view.doc.mice import MiceQuotientDoc
 from plotlyst.view.generated.notes_view_ui import Ui_NotesView
 from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.widget.doc.browser import DocumentAdditionMenu
@@ -65,6 +67,10 @@ class DocumentsView(AbstractNovelView):
         self.ui.treeDocuments.documentIconChanged.connect(self._icon_changed)
 
         self.textEditor: Optional[DocumentTextEditor] = None
+        self.pdfEditor = QPdfView(self.ui.pdfPage)
+        self.pdfDoc = QPdfDocument(self.pdfEditor)
+        self.pdfEditor.setDocument(self.pdfDoc)
+        self.ui.pdfPage.layout().addWidget(self.pdfEditor)
 
         self.ui.btnAdd.setIcon(IconRegistry.plus_icon('white'))
         self.ui.btnAdd.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnAdd))
@@ -99,41 +105,52 @@ class DocumentsView(AbstractNovelView):
         self.textEditor.settingsAttached.connect(settings_ready)
 
     def _clear_text_editor(self):
+        self.pdfDoc.close()
         clear_layout(self.ui.docEditorPage.layout())
+        self.ui.stackedEditor.setCurrentWidget(self.ui.emptyPage)
 
     def _edit(self, doc: Document):
-        self._init_text_editor()
         self._current_doc = doc
 
+        if self._current_doc.type in [DocumentType.DOCUMENT, DocumentType.STORY_STRUCTURE]:
+            self._edit_document()
+        else:
+            # self.ui.stackedEditor.setCurrentWidget(self.ui.customEditorPage)
+            # print('clear')
+            # clear_layout(self.ui.customEditorPage)
+            # if self._current_doc.type == DocumentType.MICE:
+            #     widget = MiceQuotientDoc(self._current_doc, self._current_doc.data)
+            #     widget.changed.connect(self._save)
+            if self._current_doc.type == DocumentType.PDF:
+                self._edit_pdf()
+
+    def _edit_document(self):
+        self._init_text_editor()
         if not self._current_doc.loaded:
             json_client.load_document(self.novel, self._current_doc)
+        self.ui.stackedEditor.setCurrentWidget(self.ui.docEditorPage)
+        self.textEditor.setGrammarCheckEnabled(False)
 
-        char = doc.character(self.novel)
-
-        if self._current_doc.type in [DocumentType.DOCUMENT, DocumentType.STORY_STRUCTURE]:
-            self.ui.stackedEditor.setCurrentWidget(self.ui.docEditorPage)
-            self.textEditor.setGrammarCheckEnabled(False)
-            if char:
-                self.textEditor.setText(self._current_doc.content, char.name, icon=avatars.avatar(char),
-                                        title_read_only=True)
-            else:
-                if self._current_doc.icon:
-                    icon = IconRegistry.from_name(self._current_doc.icon, self._current_doc.icon_color)
-                else:
-                    icon = None
-                self.textEditor.setText(self._current_doc.content, self._current_doc.title, icon)
-            if self.novel.prefs.docs.grammar_check:
-                self.textEditor.setGrammarCheckEnabled(True)
-                self.textEditor.asyncCheckGrammar()
+        char = characters_registry.character(str(self._current_doc.character_id))
+        if char:
+            self.textEditor.setText(self._current_doc.content, char.name, icon=avatars.avatar(char),
+                                    title_read_only=True)
         else:
-            self.ui.stackedEditor.setCurrentWidget(self.ui.customEditorPage)
-            clear_layout(self.ui.customEditorPage)
-            if self._current_doc.type == DocumentType.MICE:
-                widget = MiceQuotientDoc(self._current_doc, self._current_doc.data)
-                widget.changed.connect(self._save)
+            if self._current_doc.icon:
+                icon = IconRegistry.from_name(self._current_doc.icon, self._current_doc.icon_color)
             else:
-                return
-            self.ui.customEditorPage.layout().addWidget(widget)
+                icon = None
+            self.textEditor.setText(self._current_doc.content, self._current_doc.title, icon)
+
+        if self.novel.prefs.docs.grammar_check:
+            self.textEditor.setGrammarCheckEnabled(True)
+            self.textEditor.asyncCheckGrammar()
+
+    def _edit_pdf(self):
+        self.pdfDoc.close()
+        self.pdfDoc.load(self._current_doc.file)
+
+        self.ui.stackedEditor.setCurrentWidget(self.ui.pdfPage)
 
     def _icon_changed(self, doc: Document):
         if doc is self._current_doc:
