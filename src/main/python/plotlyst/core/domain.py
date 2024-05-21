@@ -1685,8 +1685,8 @@ character_story_scene_purpose = ScenePurpose(ScenePurposeType.Character, 'Charac
                                              keywords=['characterization', 'introspection', 'backstory',
                                                        'internal conflict', 'relations', 'character change'],
                                              include=[ScenePurposeType.Emotion])
-emotion_story_scene_purpose = ScenePurpose(ScenePurposeType.Emotion, 'Mood',
-                                           keywords=['mood', 'atmosphere', 'emotion', 'evocative tone',
+emotion_story_scene_purpose = ScenePurpose(ScenePurposeType.Emotion, 'Resonance',
+                                           keywords=['mood', 'atmosphere', 'resonance', 'emotion', 'evocative tone',
                                                      'evocative imagery', 'ambience',
                                                      'thematic resonance'])
 setup_story_scene_purpose = ScenePurpose(ScenePurposeType.Setup, 'Setup',
