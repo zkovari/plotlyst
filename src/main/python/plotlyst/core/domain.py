@@ -2674,6 +2674,7 @@ class DocumentType(Enum):
     CHARACTER_ARC = 5
     STORY_STRUCTURE = 6
     MICE = 7
+    PDF = 8
 
 
 @dataclass
@@ -2705,6 +2706,7 @@ class Document(CharacterBased, SceneBased):
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
     statistics: Optional[DocumentStatistics] = field(default=None, metadata=config(exclude=exclude_if_empty))
+    file: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
     def display_name(self) -> str:
         if self.title:
