@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import os
 from typing import Optional
 
 import qtanim
@@ -24,7 +25,7 @@ from PyQt6.QtGui import QFont
 from PyQt6.QtPdf import QPdfDocument
 from PyQt6.QtPdfWidgets import QPdfView
 from overrides import overrides
-from qthandy import clear_layout, margins, bold
+from qthandy import clear_layout, margins, bold, italic
 from qttextedit.ops import TextEditorSettingsSection, FontSectionSettingWidget
 
 from plotlyst.core.client import json_client
@@ -52,6 +53,11 @@ class DocumentsView(AbstractNovelView):
         self.ui.btnDocuments.setIcon(IconRegistry.document_edition_icon())
         bold(self.ui.lblTitle)
 
+        italic(self.ui.lblMissingFile)
+        self.ui.btnMissingFile.setIcon(IconRegistry.from_name('mdi6.file-alert-outline'))
+        bold(self.ui.lblMissingFileReference)
+        italic(self.ui.lblMissingFileReference)
+
         self.ui.btnTreeToggle.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
         self.ui.btnTreeToggleSecondary.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
         self.ui.btnTreeToggleSecondary.setHidden(True)
@@ -77,6 +83,8 @@ class DocumentsView(AbstractNovelView):
         self.ui.btnAdd.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnAdd))
         menu = DocumentAdditionMenu(self.novel, self.ui.btnAdd)
         menu.documentTriggered.connect(self._add_doc)
+
+        self.ui.stackedEditor.setCurrentWidget(self.ui.emptyPage)
 
     @overrides
     def refresh(self):
@@ -149,9 +157,12 @@ class DocumentsView(AbstractNovelView):
 
     def _edit_pdf(self):
         self.pdfDoc.close()
-        self.pdfDoc.load(self._current_doc.file)
-
-        self.ui.stackedEditor.setCurrentWidget(self.ui.pdfPage)
+        if os.path.exists(self._current_doc.file):
+            self.pdfDoc.load(self._current_doc.file)
+            self.ui.stackedEditor.setCurrentWidget(self.ui.pdfPage)
+        else:
+            self.ui.lblMissingFileReference.setText(self._current_doc.file)
+            self.ui.stackedEditor.setCurrentWidget(self.ui.missingFilePage)
 
     def _icon_changed(self, doc: Document):
         if doc is self._current_doc:
