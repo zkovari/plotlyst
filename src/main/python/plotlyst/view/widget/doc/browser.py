@@ -18,9 +18,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
+from pathlib import Path
 from typing import Set, Optional, Dict
 
-from PyQt6.QtCore import pyqtSignal, Qt, QMimeData, QPointF
+from PyQt6.QtCore import pyqtSignal, Qt, QMimeData, QPointF, QDir
+from PyQt6.QtWidgets import QFileDialog
 from overrides import overrides
 from qthandy import clear_layout, vspacer, translucent, gc, ask_confirmation, retain_when_hidden
 from qthandy.filter import DragEventFilter, DropEventFilter
@@ -43,6 +45,9 @@ class DocumentAdditionMenu(MenuWidget):
         self._novel = novel
 
         self.addAction(action('Document', IconRegistry.document_edition_icon(), lambda: self._documentSelected()))
+        self.addAction(action('Link PDF', IconRegistry.from_name('fa5.file-pdf'), self._openPdf))
+
+        self.addSeparator()
 
         self._character_menu = CharacterSelectorMenu(self._novel)
         self._character_menu.selected.connect(self._characterSelected)
@@ -63,18 +68,28 @@ class DocumentAdditionMenu(MenuWidget):
 
         self.documentTriggered.emit(doc)
 
+    def _openPdf(self):
+        filename, _ = QFileDialog.getOpenFileName(None, 'Open PDF', QDir.homePath(), 'PDF files (*.pdf)')
+        if filename:
+            title = Path(filename).stem
+            title = title.capitalize().replace('_', ' ')
+            doc = Document(title, type=DocumentType.PDF, icon='fa5.file-pdf', file=filename)
+            self.documentTriggered.emit(doc)
 
-class DocumentWidget(ContainerNode):
+
+class DocumentNode(ContainerNode):
     added = pyqtSignal(Document)
 
     def __init__(self, novel: Novel, doc: Document, parent=None, settings: Optional[TreeSettings] = None):
-        super(DocumentWidget, self).__init__(doc.display_name(), parent, settings=settings)
+        super().__init__(doc.display_name(), parent, settings=settings)
         self._novel = novel
         self._doc = doc
 
         retain_when_hidden(self._icon)
 
-        self._actionChangeIcon.setVisible(True)
+        if not self._doc.character_id:
+            self._actionChangeIcon.setVisible(True)
+            self._actionChangeTitle.setVisible(True)
         menu = DocumentAdditionMenu(self._novel, self._btnAdd)
         menu.documentTriggered.connect(self.added.emit)
         self.refresh()
@@ -98,6 +113,14 @@ class DocumentWidget(ContainerNode):
             self._icon.setHidden(True)
 
     @overrides
+    def _titleValue(self) -> str:
+        return self._doc.title
+
+    @overrides
+    def _titleChanged(self, title: str):
+        self._doc.title = title
+
+    @overrides
     def _iconChanged(self, iconName: str, iconColor: str):
         self._doc.icon = iconName
         self._doc.icon_color = iconColor
@@ -108,16 +131,17 @@ class DocumentsTreeView(TreeView):
     documentSelected = pyqtSignal(Document)
     documentDeleted = pyqtSignal(Document)
     documentIconChanged = pyqtSignal(Document)
+    documentTitleChanged = pyqtSignal(Document)
 
     def __init__(self, parent=None, settings: Optional[TreeSettings] = None):
         super(DocumentsTreeView, self).__init__(parent)
         self._novel: Optional[Novel] = None
         self._settings = settings
-        self._docs: Dict[Document, DocumentWidget] = {}
+        self._docs: Dict[Document, DocumentNode] = {}
         self._selectedDocuments: Set[Document] = set()
 
-        self._dummyWdg: Optional[DocumentWidget] = None
-        self._toBeRemoved: Optional[DocumentWidget] = None
+        self._dummyWdg: Optional[DocumentNode] = None
+        self._toBeRemoved: Optional[DocumentNode] = None
 
         self._centralWidget.setProperty('bg', True)
 
@@ -164,7 +188,7 @@ class DocumentsTreeView(TreeView):
             self._docs[doc].deselect()
         self._selectedDocuments.clear()
 
-    def _docSelectionChanged(self, wdg: DocumentWidget, selected: bool):
+    def _docSelectionChanged(self, wdg: DocumentNode, selected: bool):
         if selected:
             self.clearSelection()
             self._selectedDocuments.add(wdg.doc())
@@ -172,9 +196,9 @@ class DocumentsTreeView(TreeView):
         elif wdg.doc() in self._selectedDocuments:
             self._selectedDocuments.remove(wdg.doc())
 
-    def _dragStarted(self, wdg: DocumentWidget):
+    def _dragStarted(self, wdg: DocumentNode):
         wdg.setHidden(True)
-        self._dummyWdg = DocumentWidget(self._novel, wdg.doc(), settings=self._settings)
+        self._dummyWdg = DocumentNode(self._novel, wdg.doc(), settings=self._settings)
         self._dummyWdg.setPlusButtonEnabled(False)
         self._dummyWdg.setMenuEnabled(False)
         translucent(self._dummyWdg)
@@ -184,7 +208,7 @@ class DocumentsTreeView(TreeView):
         self._dummyWdg.installEventFilter(
             DropEventFilter(self._dummyWdg, [self.DOC_MIME_TYPE], droppedSlot=self._drop))
 
-    def _dragStopped(self, wdg: DocumentWidget):
+    def _dragStopped(self, wdg: DocumentNode):
         if self._dummyWdg:
             gc(self._dummyWdg)
             self._dummyWdg = None
@@ -195,7 +219,7 @@ class DocumentsTreeView(TreeView):
         else:
             wdg.setVisible(True)
 
-    def _dragMovedOnDoc(self, wdg: DocumentWidget, edge: Qt.Edge, point: QPointF):
+    def _dragMovedOnDoc(self, wdg: DocumentNode, edge: Qt.Edge, point: QPointF):
         i = wdg.parent().layout().indexOf(wdg)
         if edge == Qt.Edge.TopEdge:
             wdg.parent().layout().insertWidget(i, self._dummyWdg)
@@ -231,8 +255,8 @@ class DocumentsTreeView(TreeView):
                 self._novel.documents.insert(new_index, ref)
 
             self._centralWidget.layout().insertWidget(new_index, new_widget)
-        elif isinstance(self._dummyWdg.parent().parent(), DocumentWidget):
-            doc_parent_wdg: DocumentWidget = self._dummyWdg.parent().parent()
+        elif isinstance(self._dummyWdg.parent().parent(), DocumentNode):
+            doc_parent_wdg: DocumentNode = self._dummyWdg.parent().parent()
             new_index = doc_parent_wdg.containerWidget().layout().indexOf(self._dummyWdg)
             if self._toBeRemoved.parent() is not self._centralWidget and \
                     self._toBeRemoved.parent().parent() is self._dummyWdg.parent().parent():  # swap under same parent doc
@@ -251,13 +275,13 @@ class DocumentsTreeView(TreeView):
         self._dummyWdg.setHidden(True)
         self._save()
 
-    def _addDoc(self, wdg: DocumentWidget, newDoc: Document):
+    def _addDoc(self, wdg: DocumentNode, newDoc: Document):
         newWdg = self.__initDocWidget(newDoc)
         wdg.addChild(newWdg)
         wdg.doc().children.append(newDoc)
         self._save()
 
-    def _deleteDocWidget(self, wdg: DocumentWidget):
+    def _deleteDocWidget(self, wdg: DocumentNode):
         doc = wdg.doc()
         if not ask_confirmation(f"Delete document '{doc.title}'?", self._centralWidget):
             return
@@ -273,11 +297,11 @@ class DocumentsTreeView(TreeView):
         self._removeFromParentDoc(doc, wdg)
         self._save()
 
-    def _removeFromParentDoc(self, doc: Document, wdg: DocumentWidget):
+    def _removeFromParentDoc(self, doc: Document, wdg: DocumentNode):
         if wdg.parent() is self._centralWidget:
             self._novel.documents.remove(doc)
         else:
-            parent: DocumentWidget = wdg.parent().parent()
+            parent: DocumentNode = wdg.parent().parent()
             parent.doc().children.remove(doc)
 
     def _save(self):
@@ -287,12 +311,17 @@ class DocumentsTreeView(TreeView):
         self._save()
         self.documentIconChanged.emit(doc)
 
-    def __initDocWidget(self, doc: Document) -> DocumentWidget:
-        wdg = DocumentWidget(self._novel, doc, settings=self._settings)
+    def _titleChanged(self, doc: Document):
+        self._save()
+        self.documentTitleChanged.emit(doc)
+
+    def __initDocWidget(self, doc: Document) -> DocumentNode:
+        wdg = DocumentNode(self._novel, doc, settings=self._settings)
         wdg.selectionChanged.connect(partial(self._docSelectionChanged, wdg))
         wdg.deleted.connect(partial(self._deleteDocWidget, wdg))
         wdg.added.connect(partial(self._addDoc, wdg))
         wdg.iconChanged.connect(partial(self._iconChanged, doc))
+        wdg.titleChanged.connect(partial(self._titleChanged, doc))
         wdg.installEventFilter(
             DragEventFilter(wdg, self.DOC_MIME_TYPE, dataFunc=lambda wdg: wdg.doc(),
                             grabbed=wdg.titleLabel(),

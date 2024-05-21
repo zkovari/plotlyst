@@ -562,6 +562,9 @@ class DocumentTextEditor(RichTextEditor):
         if icon:
             self._btnIcon.setIcon(icon)
 
+    def setTitle(self, title: str):
+        self._textTitle.setText(title)
+
     def setPlaceholderText(self, text: str):
         self.textEdit.setPlaceholderText(text)
 
@@ -824,11 +827,13 @@ class TextInputDialog(PopupDialog):
         self.lineKey.textChanged.connect(self._textChanged)
 
         self.btnConfirm = push_btn(text='Confirm', properties=['base', 'positive'])
+        self.btnConfirm.setShortcut(Qt.Key.Key_Enter)
         sp(self.btnConfirm).h_exp()
         self.btnConfirm.clicked.connect(self.accept)
         self.btnConfirm.setDisabled(True)
         self.btnConfirm.installEventFilter(
             DisabledClickEventFilter(self.btnConfirm, lambda: qtanim.shake(self.lineKey)))
+        self.lineKey.editingFinished.connect(self.btnConfirm.click)
 
         self.frame.layout().addWidget(self.wdgTitle)
         self.frame.layout().addWidget(self.lineKey)
