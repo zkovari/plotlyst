@@ -2747,13 +2747,14 @@ class ReaderQuestionType(Enum):
     Character_motivation = 5
     Conflict_resolution = 6
     Plot = 7
+    Wonder = 8
 
     def display_name(self) -> str:
         return self.name.replace('_', ' ')
 
     def description(self) -> str:
         if self == ReaderQuestionType.General:
-            return "Any mystery, secret, or dramatic question about the story"
+            return "Any mystery, secret, or dramatic question raised in the story"
         if self == ReaderQuestionType.Character_growth:
             return "Questions related to a character's growth and development"
         if self == ReaderQuestionType.Backstory:
@@ -2761,13 +2762,15 @@ class ReaderQuestionType(Enum):
         if self == ReaderQuestionType.Internal_conflict:
             return "Questions related to a character's internal turmoil and their resolution"
         if self == ReaderQuestionType.Relationship:
-            return "Dynamics between characters"
+            return "Questions related to conflicting, dynamic or complex relationships"
         if self == ReaderQuestionType.Character_motivation:
             return "Questions related to a character's hidden motivation"
         if self == ReaderQuestionType.Conflict_resolution:
-            return "Questions related to unresolved conflict, especially between characters"
+            return "Questions related to unresolved conflict"
         if self == ReaderQuestionType.Plot:
             return "Dramatic questions related to plot"
+        if self == ReaderQuestionType.Wonder:
+            return "Reader's intrigue related to the setting's sense of wonder (especially in fantasy and sci-fi)"
 
     def icon(self) -> str:
         if self == ReaderQuestionType.General:
@@ -2786,6 +2789,8 @@ class ReaderQuestionType(Enum):
             return "mdi.sword-cross"
         if self == ReaderQuestionType.Plot:
             return "mdi.drama-masks"
+        if self == ReaderQuestionType.Wonder:
+            return "mdi.globe-model"
 
 
 @dataclass

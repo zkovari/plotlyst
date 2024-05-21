@@ -72,7 +72,8 @@ class ReaderQuestionTypeMenu(MenuWidget):
         self._addAction(ReaderQuestionType.Internal_conflict)
         self._addAction(ReaderQuestionType.Relationship)
         self._addAction(ReaderQuestionType.Character_motivation)
-        self._addAction(ReaderQuestionType.Conflict_resolution)
+        self._addAction(ReaderQuestionType.Wonder)
+        # self._addAction(ReaderQuestionType.Conflict_resolution)
 
         self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
 
@@ -120,6 +121,7 @@ class ReaderQuestionWidget(QWidget):
         self.textedit = QTextEdit(self)
         self.textedit.setProperty('white-bg', True)
         self.textedit.setProperty('rounded', True)
+        self.textedit.setPlaceholderText("Describe what piques the reader's interest")
         self.textedit.setTabChangesFocus(True)
         if app_env.is_mac():
             incr_font(self.textedit)
