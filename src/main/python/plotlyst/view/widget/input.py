@@ -502,18 +502,12 @@ class DocumentTextEditor(RichTextEditor):
 
         self.highlighter = self._initHighlighter()
 
-        if app_env.is_mac():
-            family = 'Helvetica Neue'
-        elif app_env.is_windows():
-            family = 'Calibri'
-        else:
-            family = 'Helvetica'
-        self.textEdit.setFont(QFont(family, 16))
+        self.textEdit.setFont(QFont('Sans-serif', 16))
         self.textEdit.setProperty('transparent', True)
         self.textEdit.zoomIn(int(self.textEdit.font().pointSize() * 0.25))
         self.textEdit.setBlockFormat(lineSpacing=110, margin_bottom=10, margin_top=10)
         self.textEdit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
-        self.textEdit.setPlaceholderText('Write your notes...')
+        self.textEdit.setPlaceholderText("Begin writing, or press '/' for commands...")
 
         self.setWidthPercentage(90)
 
