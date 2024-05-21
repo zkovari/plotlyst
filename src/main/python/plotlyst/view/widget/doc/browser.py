@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
+from pathlib import Path
 from typing import Set, Optional, Dict
 
 from PyQt6.QtCore import pyqtSignal, Qt, QMimeData, QPointF, QDir
@@ -70,7 +71,9 @@ class DocumentAdditionMenu(MenuWidget):
     def _openPdf(self):
         filename, _ = QFileDialog.getOpenFileName(None, 'Open PDF', QDir.homePath(), 'PDF files (*.pdf)')
         if filename:
-            doc = Document('', type=DocumentType.PDF, icon='fa5.file-pdf', file=filename)
+            title = Path(filename).stem
+            title = title.capitalize().replace('_', ' ')
+            doc = Document(title, type=DocumentType.PDF, icon='fa5.file-pdf', file=filename)
             self.documentTriggered.emit(doc)
 
 
