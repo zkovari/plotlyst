@@ -141,6 +141,12 @@
      </item>
      <item>
       <widget class="QWidget" name="wdgTop" native="true">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <layout class="QHBoxLayout" name="horizontalLayout_5">
         <property name="spacing">
          <number>2</number>
@@ -379,7 +385,7 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_12">
           <item alignment="Qt::AlignTop">
-           <widget class="QWidget" name="" native="true">
+           <widget class="QWidget" name="widget" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
               <horstretch>0</horstretch>
@@ -452,6 +458,9 @@
            <spacer name="verticalSpacer">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::MinimumExpanding</enum>
             </property>
             <property name="sizeHint" stdset="0">
              <size>
@@ -574,9 +583,15 @@
             <enum>QTabWidget::West</enum>
            </property>
            <property name="currentIndex">
-            <number>1</number>
+            <number>0</number>
            </property>
            <widget class="QWidget" name="tabStorylines">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="relaxed-white-bg" stdset="0">
              <bool>true</bool>
             </property>
@@ -602,6 +617,12 @@
             </layout>
            </widget>
            <widget class="QWidget" name="tabDrive">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="relaxed-white-bg" stdset="0">
              <bool>true</bool>
             </property>
@@ -627,12 +648,18 @@
              <item>
               <widget class="QTabWidget" name="tabWidgetDrive">
                <property name="currentIndex">
-                <number>0</number>
+                <number>2</number>
                </property>
                <property name="centered" stdset="0">
                 <bool>true</bool>
                </property>
                <widget class="QWidget" name="tabAgency">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="relaxed-white-bg" stdset="0">
                  <bool>true</bool>
                 </property>
@@ -658,6 +685,12 @@
                 </layout>
                </widget>
                <widget class="QWidget" name="tabCuriosity">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="relaxed-white-bg" stdset="0">
                  <bool>true</bool>
                 </property>
@@ -683,6 +716,12 @@
                 </layout>
                </widget>
                <widget class="QWidget" name="tabInformation">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="relaxed-white-bg" stdset="0">
                  <bool>true</bool>
                 </property>
@@ -712,6 +751,12 @@
             </layout>
            </widget>
            <widget class="QWidget" name="tabStructure">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="relaxed-white-bg" stdset="0">
              <bool>true</bool>
             </property>
