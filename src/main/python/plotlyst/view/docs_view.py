@@ -65,6 +65,7 @@ class DocumentsView(AbstractNovelView):
         self.ui.treeDocuments.documentSelected.connect(self._edit)
         self.ui.treeDocuments.documentDeleted.connect(self._clear_text_editor)
         self.ui.treeDocuments.documentIconChanged.connect(self._icon_changed)
+        self.ui.treeDocuments.documentTitleChanged.connect(self._title_changed)
 
         self.textEditor: Optional[DocumentTextEditor] = None
         self.pdfEditor = QPdfView(self.ui.pdfPage)
@@ -101,7 +102,7 @@ class DocumentsView(AbstractNovelView):
             self.textEditor.textEdit.setFont(font_)
             self.textEditor.textTitle.setPlaceholderText('Untitled')
         self.textEditor.textEdit.textChanged.connect(self._save)
-        self.textEditor.titleChanged.connect(self._title_changed)
+        self.textEditor.titleChanged.connect(self._title_changed_in_editor)
         self.textEditor.settingsAttached.connect(settings_ready)
 
     def _clear_text_editor(self):
@@ -163,7 +164,11 @@ class DocumentsView(AbstractNovelView):
             self._current_doc.content = self.textEditor.textEdit.toHtml()
         self.repo.update_doc(self.novel, self._current_doc)
 
-    def _title_changed(self, title: str):
+    def _title_changed(self, doc: Document):
+        if doc is self._current_doc:
+            self.textEditor.setTitle(doc.title)
+
+    def _title_changed_in_editor(self, title: str):
         if self._current_doc:
             if title and title != self._current_doc.title:
                 self._current_doc.title = title

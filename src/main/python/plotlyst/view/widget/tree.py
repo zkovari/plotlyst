@@ -33,6 +33,7 @@ from plotlyst.view.dialog.utility import IconSelectorDialog
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.button import EyeToggle
 from plotlyst.view.widget.display import Icon
+from plotlyst.view.widget.input import TextInputDialog
 
 
 @dataclass
@@ -49,6 +50,7 @@ class BaseTreeWidget(QWidget):
     selectionChanged = pyqtSignal(bool)
     deleted = pyqtSignal()
     iconChanged = pyqtSignal()
+    titleChanged = pyqtSignal()
 
     def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None, settings: Optional[TreeSettings] = None):
         super(BaseTreeWidget, self).__init__(parent)
@@ -89,6 +91,7 @@ class BaseTreeWidget(QWidget):
         self._btnAdd.setHidden(True)
 
         self._actionChangeIcon = action('Change icon', IconRegistry.icons_icon(), self._changeIcon)
+        self._actionChangeTitle = action('Rename', IconRegistry.edit_icon(), self._changeTitle)
         self._actionDelete = action('Delete', IconRegistry.trash_can_icon(), self.deleted.emit)
         self._initMenu()
 
@@ -103,10 +106,12 @@ class BaseTreeWidget(QWidget):
         menu.aboutToHide.connect(self._hideAll)
 
         self._actionChangeIcon.setVisible(False)
+        self._actionChangeTitle.setVisible(False)
 
         self._btnMenu.installEventFilter(ButtonPressResizeEventFilter(self._btnMenu))
 
     def _initMenuActions(self, menu: MenuWidget):
+        menu.addAction(self._actionChangeTitle)
         menu.addAction(self._actionChangeIcon)
         menu.addSeparator()
         menu.addAction(self._actionDelete)
@@ -160,6 +165,19 @@ class BaseTreeWidget(QWidget):
             self.iconChanged.emit()
 
     def _iconChanged(self, iconName: str, iconColor: str):
+        pass
+
+    def _changeTitle(self):
+        title = TextInputDialog.edit(placeholder='Untitled', value=self._titleValue())
+        if title:
+            self._lblTitle.setText(title)
+            self._titleChanged(title)
+            self.titleChanged.emit()
+
+    def _titleValue(self) -> str:
+        return self._lblTitle.text()
+
+    def _titleChanged(self, title: str):
         pass
 
     def _hideAll(self):

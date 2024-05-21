@@ -84,7 +84,9 @@ class DocumentNode(ContainerNode):
 
         retain_when_hidden(self._icon)
 
-        self._actionChangeIcon.setVisible(True)
+        if not self._doc.character_id:
+            self._actionChangeIcon.setVisible(True)
+            self._actionChangeTitle.setVisible(True)
         menu = DocumentAdditionMenu(self._novel, self._btnAdd)
         menu.documentTriggered.connect(self.added.emit)
         self.refresh()
@@ -108,6 +110,14 @@ class DocumentNode(ContainerNode):
             self._icon.setHidden(True)
 
     @overrides
+    def _titleValue(self) -> str:
+        return self._doc.title
+
+    @overrides
+    def _titleChanged(self, title: str):
+        self._doc.title = title
+
+    @overrides
     def _iconChanged(self, iconName: str, iconColor: str):
         self._doc.icon = iconName
         self._doc.icon_color = iconColor
@@ -118,6 +128,7 @@ class DocumentsTreeView(TreeView):
     documentSelected = pyqtSignal(Document)
     documentDeleted = pyqtSignal(Document)
     documentIconChanged = pyqtSignal(Document)
+    documentTitleChanged = pyqtSignal(Document)
 
     def __init__(self, parent=None, settings: Optional[TreeSettings] = None):
         super(DocumentsTreeView, self).__init__(parent)
@@ -297,12 +308,17 @@ class DocumentsTreeView(TreeView):
         self._save()
         self.documentIconChanged.emit(doc)
 
+    def _titleChanged(self, doc: Document):
+        self._save()
+        self.documentTitleChanged.emit(doc)
+
     def __initDocWidget(self, doc: Document) -> DocumentNode:
         wdg = DocumentNode(self._novel, doc, settings=self._settings)
         wdg.selectionChanged.connect(partial(self._docSelectionChanged, wdg))
         wdg.deleted.connect(partial(self._deleteDocWidget, wdg))
         wdg.added.connect(partial(self._addDoc, wdg))
         wdg.iconChanged.connect(partial(self._iconChanged, doc))
+        wdg.titleChanged.connect(partial(self._titleChanged, doc))
         wdg.installEventFilter(
             DragEventFilter(wdg, self.DOC_MIME_TYPE, dataFunc=lambda wdg: wdg.doc(),
                             grabbed=wdg.titleLabel(),
