@@ -378,57 +378,65 @@
         </item>
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_12">
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout">
-            <item alignment="Qt::AlignTop">
-             <widget class="QPushButton" name="btnStageCharacterLabel">
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="toolTip">
-               <string>Select which characters are active in this scene</string>
-              </property>
-              <property name="text">
-               <string>Present characters</string>
-              </property>
-              <property name="transparent" stdset="0">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item alignment="Qt::AlignLeft|Qt::AlignTop">
-             <widget class="QToolButton" name="btnEditCharacters">
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="popupMode">
-               <enum>QToolButton::InstantPopup</enum>
-              </property>
-              <property name="autoRaise">
-               <bool>false</bool>
-              </property>
-              <property name="transparent" stdset="0">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_6">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
+          <item alignment="Qt::AlignTop">
+           <widget class="QWidget" name="" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <item alignment="Qt::AlignTop">
+              <widget class="QPushButton" name="btnStageCharacterLabel">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>Select which characters are active in this scene</string>
+               </property>
+               <property name="text">
+                <string>Present characters</string>
+               </property>
+               <property name="transparent" stdset="0">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item alignment="Qt::AlignLeft|Qt::AlignTop">
+              <widget class="QToolButton" name="btnEditCharacters">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="popupMode">
+                <enum>QToolButton::InstantPopup</enum>
+               </property>
+               <property name="autoRaise">
+                <bool>false</bool>
+               </property>
+               <property name="transparent" stdset="0">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_6">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </widget>
           </item>
           <item>
            <widget class="LabelsWidget" name="wdgCharacters" native="true">
@@ -439,6 +447,19 @@
              </sizepolicy>
             </property>
            </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>10</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </item>
@@ -839,17 +860,6 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>ScenesTreeView</class>
-   <extends>QTreeView</extends>
-   <header>plotlyst.view.widget.scene</header>
-  </customwidget>
-  <customwidget>
-   <class>SceneStoryStructureWidget</class>
-   <extends>QWidget</extends>
-   <header>plotlyst.view.widget.scenes</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>DocumentTextEditor</class>
    <extends>QWidget</extends>
    <header>plotlyst.view.widget.input</header>
@@ -863,6 +873,17 @@
    <class>ReturnButton</class>
    <extends>QPushButton</extends>
    <header>plotlyst.view.widget.button</header>
+  </customwidget>
+  <customwidget>
+   <class>ScenesTreeView</class>
+   <extends>QTreeView</extends>
+   <header>plotlyst.view.widget.scene</header>
+  </customwidget>
+  <customwidget>
+   <class>SceneStoryStructureWidget</class>
+   <extends>QWidget</extends>
+   <header>plotlyst.view.widget.scenes</header>
+   <container>1</container>
   </customwidget>
   <customwidget>
    <class>LabelsWidget</class>
