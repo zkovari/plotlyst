@@ -105,8 +105,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if app_env.is_mac():
             DEFAULT_FONT_FAMILIES.insert(0, 'Palatino')
         elif app_env.is_linux():
-            DEFAULT_FONT_FAMILIES.insert(0, 'Noto Sans Mono')
-            DEFAULT_FONT_FAMILIES.insert(1, 'Palatino')
+            DEFAULT_FONT_FAMILIES.insert(0, 'Palatino')
             DEFAULT_FONT_FAMILIES.insert(3 if len(DEFAULT_FONT_FAMILIES) > 5 else -1, 'Calibri')
 
         self.novel = None
