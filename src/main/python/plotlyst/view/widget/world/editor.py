@@ -167,6 +167,7 @@ class TextElementEditor(WorldBuildingEntityElementWidget):
         font.setPointSize(16)
         if app_env.is_mac():
             family = 'Helvetica Neue'
+            font.setPointSize(18)
         elif app_env.is_windows():
             family = 'Calibri'
         else:
