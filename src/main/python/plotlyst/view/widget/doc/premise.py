@@ -19,7 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from PyQt6.QtWidgets import QWidget
 
+from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Document
+from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter
 from plotlyst.view.generated.premise_builder_widget_ui import Ui_PremiseBuilderWidget
 from plotlyst.view.icons import IconRegistry
 
@@ -33,3 +35,16 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.btnSeed.setIcon(IconRegistry.from_name('fa5s.seedling'))
         self.btnConcept.setIcon(IconRegistry.from_name('fa5s.question-circle'))
         self.btnPremise.setIcon(IconRegistry.from_name('fa5s.scroll'))
+
+        self.btnNewIdea.setIcon(IconRegistry.plus_icon(RELAXED_WHITE_COLOR))
+        self.btnNewIdea.installEventFilter(ButtonPressResizeEventFilter(self.btnNewIdea))
+        self.btnNewConcept.setIcon(IconRegistry.plus_icon(RELAXED_WHITE_COLOR))
+        self.btnNewConcept.installEventFilter(ButtonPressResizeEventFilter(self.btnNewConcept))
+
+        # underline(self.lblSeedTitle)
+        # underline(self.lblConceptTitle)
+        # underline(self.lblPremiseTitle)
+
+        link_buttons_to_pages(self.stackedWidget, [(self.btnSeed, self.pageSeed), (self.btnConcept, self.pageConcept),
+                                                   (self.btnPremise, self.pagePremise)])
+        self.btnSeed.setChecked(True)
