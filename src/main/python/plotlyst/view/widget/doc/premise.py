@@ -21,8 +21,9 @@ import random
 
 import qtanim
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont
+from PyQt6.QtGui import QFont, QMouseEvent
 from PyQt6.QtWidgets import QWidget
+from overrides import overrides
 from qthandy import incr_font, flow, margins, vbox, hbox, pointy
 from qthandy.filter import OpacityEventFilter
 
@@ -37,6 +38,7 @@ from plotlyst.view.widget.input import AutoAdjustableTextEdit, TextAreaInputDial
 class IdeaWidget(QWidget):
     def __init__(self, text: str, parent=None):
         super().__init__(parent)
+        self._toggled: bool = True
 
         self.frame = frame()
         self.frame.setObjectName('mainFrame')
@@ -63,21 +65,34 @@ class IdeaWidget(QWidget):
 
         hbox(self.frame, 5, 0).addWidget(self.textEdit)
 
-        self.setStyleSheet(f'''
-            #mainFrame {{
-                background: {PLOTLYST_SECONDARY_COLOR};
-                border: 1px solid {PLOTLYST_SECONDARY_COLOR};
-                border-radius: 18px;
-            }}
-            QTextEdit {{
-                color: {RELAXED_WHITE_COLOR};
-                border: 0px;
-                padding: 4px;
-                background-color: rgba(0, 0, 0, 0);
-            }}
-        ''')
+        self.refresh()
 
         self.installEventFilter(OpacityEventFilter(self, enterOpacity=0.7, leaveOpacity=1.0))
+
+    def toggle(self):
+        self._toggled = not self._toggled
+        self.refresh()
+
+    def refresh(self):
+        bg_color = PLOTLYST_SECONDARY_COLOR if self._toggled else '#ced4da'
+
+        self.setStyleSheet(f'''
+                #mainFrame {{
+                    background: {bg_color};
+                    border: 1px solid {bg_color};
+                    border-radius: 18px;
+                }}
+                QTextEdit {{
+                    color: {RELAXED_WHITE_COLOR};
+                    border: 0px;
+                    padding: 4px;
+                    background-color: rgba(0, 0, 0, 0);
+                }}
+                ''')
+
+    @overrides
+    def mouseReleaseEvent(self, a0: QMouseEvent) -> None:
+        self.toggle()
 
     def __randomMargin(self) -> int:
         return random.randint(3, 15)

@@ -245,7 +245,7 @@
            <item>
             <widget class="QLabel" name="label">
              <property name="text">
-              <string>Add, and toggle those ideas that you wish to keep for developing your concept</string>
+              <string>Add, and toggle the ideas you wish to keep for developing your concept</string>
              </property>
              <property name="description" stdset="0">
               <bool>true</bool>
