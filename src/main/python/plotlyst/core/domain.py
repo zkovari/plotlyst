@@ -32,7 +32,6 @@ from overrides import overrides
 
 from plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_choices, \
     mbti_choices, Role, exclude_if_false, antagonist_role, exclude_if_true
-from plotlyst.env import app_env
 
 
 @dataclass
@@ -2946,9 +2945,9 @@ class Node(CharacterBased):
 def to_node(x: float, y: float, type: GraphicsItemType, subtype: str = '', default_size: int = 12) -> Node:
     node = Node(x, y, type=type, subtype=subtype)
     if type == GraphicsItemType.EVENT:
-        node.size = max(20 if app_env.is_mac() else 16, default_size)
+        node.size = max(16, default_size)
         if subtype in [NODE_SUBTYPE_BACKSTORY, NODE_SUBTYPE_INTERNAL_CONFLICT]:
-            node.size = max(16 if app_env.is_mac() else 14, default_size - 1)
+            node.size = max(14, default_size - 1)
 
     if subtype == NODE_SUBTYPE_GOAL:
         node.icon = 'mdi.target'
