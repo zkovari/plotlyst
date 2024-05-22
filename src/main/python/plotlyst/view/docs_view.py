@@ -38,6 +38,7 @@ from plotlyst.view.common import ButtonPressResizeEventFilter
 from plotlyst.view.generated.notes_view_ui import Ui_NotesView
 from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.widget.doc.browser import DocumentAdditionMenu
+from plotlyst.view.widget.doc.premise import PremiseBuilderWidget
 from plotlyst.view.widget.input import DocumentTextEditor
 from plotlyst.view.widget.tree import TreeSettings
 
@@ -125,13 +126,14 @@ class DocumentsView(AbstractNovelView):
             self._edit_document()
         else:
             # self.ui.stackedEditor.setCurrentWidget(self.ui.customEditorPage)
-            # print('clear')
             # clear_layout(self.ui.customEditorPage)
             # if self._current_doc.type == DocumentType.MICE:
             #     widget = MiceQuotientDoc(self._current_doc, self._current_doc.data)
             #     widget.changed.connect(self._save)
             if self._current_doc.type == DocumentType.PDF:
                 self._edit_pdf()
+            elif self._current_doc.type == DocumentType.PREMISE:
+                self._edit_premise()
 
     def _edit_document(self):
         self._init_text_editor()
@@ -163,6 +165,14 @@ class DocumentsView(AbstractNovelView):
         else:
             self.ui.lblMissingFileReference.setText(self._current_doc.file)
             self.ui.stackedEditor.setCurrentWidget(self.ui.missingFilePage)
+
+    def _edit_premise(self):
+        clear_layout(self.ui.customEditorPage)
+
+        wdg = PremiseBuilderWidget(self._current_doc)
+        self.ui.customEditorPage.layout().addWidget(wdg)
+
+        self.ui.stackedEditor.setCurrentWidget(self.ui.customEditorPage)
 
     def _icon_changed(self, doc: Document):
         if doc is self._current_doc:

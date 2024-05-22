@@ -83,6 +83,7 @@ class DocumentAdditionMenu(MenuWidget):
 
     def _premiseSelected(self):
         doc = Document('Premise', type=DocumentType.PREMISE, icon='fa5s.scroll', icon_color='#0077b6')
+        self.documentTriggered.emit(doc)
 
     def _openPdf(self):
         filename, _ = QFileDialog.getOpenFileName(None, 'Open PDF', QDir.homePath(), 'PDF files (*.pdf)')
