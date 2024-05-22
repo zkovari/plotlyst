@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import random
+from functools import partial
 
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal
@@ -30,7 +31,7 @@ from qtmenu import MenuWidget
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Document
-from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, frame, action
+from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, frame, action, fade_out_and_gc
 from plotlyst.view.generated.premise_builder_widget_ui import Ui_PremiseBuilderWidget
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.button import DotsMenuButton
@@ -84,6 +85,12 @@ class IdeaWidget(QWidget):
         self.installEventFilter(VisibilityToggleEventFilter(self.btnMenu, self))
         self.btnMenu.raise_()
 
+    def text(self):
+        return self.textEdit.toPlainText()
+
+    def setText(self, text: str):
+        self.textEdit.setText(text)
+
     def toggle(self):
         self._toggled = not self._toggled
         self.refresh()
@@ -118,6 +125,9 @@ class IdeaWidget(QWidget):
 
 
 class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
+    IDEA_EDIT_DESC: str = "An idea about character, plot, event, situation, setting, theme, genre, etc."
+    IDEA_EDIT_PLACEHOLDER: str = "An idea..."
+
     def __init__(self, doc: Document, parent=None):
         super().__init__(parent)
         self.setupUi(self)
@@ -145,9 +155,18 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         margins(self.wdgIdeasEditor, left=20, right=20, top=20)
 
     def _addNewIdea(self):
-        text = TextAreaInputDialog.edit('Add a new idea', 'An idea...',
-                                        "An idea about character, plot, event, situation, setting, theme, genre, etc.")
+        text = TextAreaInputDialog.edit('Add a new idea', self.IDEA_EDIT_PLACEHOLDER, self.IDEA_EDIT_DESC)
         if text:
             wdg = IdeaWidget(text)
+            wdg.edit.connect(partial(self._editIdea, wdg))
+            wdg.remove.connect(partial(self._removeIdea, wdg))
             self.wdgIdeasEditor.layout().addWidget(wdg)
             qtanim.fade_in(wdg)
+
+    def _editIdea(self, wdg: IdeaWidget):
+        text = TextAreaInputDialog.edit('Edit idea', self.IDEA_EDIT_PLACEHOLDER, self.IDEA_EDIT_DESC, wdg.text())
+        if text:
+            wdg.setText(text)
+
+    def _removeIdea(self, wdg: IdeaWidget):
+        fade_out_and_gc(self.wdgIdeasEditor, wdg)
