@@ -32,7 +32,7 @@ from PyQt6.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyl
     QApplication, QToolButton, QLineEdit, QWidgetAction, QListView, QSpinBox, QWidget, QLabel, QDialog
 from language_tool_python import LanguageTool
 from overrides import overrides
-from qthandy import transparent, hbox, margins, pointy, sp
+from qthandy import transparent, hbox, margins, pointy, sp, line
 from qthandy.filter import DisabledClickEventFilter
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
 
@@ -847,3 +847,61 @@ class TextInputDialog(PopupDialog):
 
     def _textChanged(self, key: str):
         self.btnConfirm.setEnabled(len(key) > 0)
+
+
+class TextAreaInputDialog(PopupDialog):
+
+    def __init__(self, title: str, placeholder: str, description: str, value: str = '', parent=None):
+        super().__init__(parent)
+
+        self.title = label(title, h4=True)
+        sp(self.title).v_max()
+        self.wdgTitle = QWidget()
+        hbox(self.wdgTitle, spacing=5)
+        self.wdgTitle.layout().addWidget(self.title, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgTitle.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
+
+        self.lblDesc = label(description, description=True, wordWrap=True)
+        sp(self.lblDesc).v_max()
+
+        self.textEdit = QTextEdit()
+        self.textEdit.setProperty('white-bg', True)
+        self.textEdit.setProperty('rounded', True)
+        self.setMaximumWidth(300)
+        self.textEdit.setFixedSize(250, 60)
+        self.textEdit.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.textEdit.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.textEdit.setPlaceholderText(placeholder)
+        self.textEdit.setText(value)
+        self.textEdit.textChanged.connect(self._textChanged)
+
+        self.btnConfirm = push_btn(text='Confirm', properties=['base', 'positive'])
+        self.btnConfirm.setFixedWidth(250)
+        self.btnConfirm.setShortcut(Qt.Key.Key_Enter)
+        sp(self.btnConfirm).h_exp()
+        self.btnConfirm.clicked.connect(self.accept)
+        self.btnConfirm.setDisabled(True)
+        self.btnConfirm.installEventFilter(
+            DisabledClickEventFilter(self.btnConfirm, lambda: qtanim.shake(self.textEdit)))
+
+        self.frame.layout().addWidget(self.wdgTitle)
+        self.frame.layout().addWidget(line())
+        self.frame.layout().addWidget(self.lblDesc)
+        self.frame.layout().addWidget(self.textEdit, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.frame.layout().addWidget(self.btnConfirm, alignment=Qt.AlignmentFlag.AlignCenter)
+
+    def display(self) -> Optional[str]:
+        result = self.exec()
+
+        if result == QDialog.DialogCode.Accepted:
+            return self.textEdit.toPlainText()
+
+        return None
+
+    @classmethod
+    def edit(cls, title: str = 'Edit text', placeholder: str = 'Edit text', description: str = 'Edit text',
+             value: str = ''):
+        return cls.popup(title, placeholder, description, value)
+
+    def _textChanged(self):
+        self.btnConfirm.setEnabled(len(self.textEdit.toPlainText()) > 0)
