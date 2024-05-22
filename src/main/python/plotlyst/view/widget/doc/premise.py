@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import random
 
 import qtanim
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QWidget
 from qthandy import incr_font, flow, margins, vbox, hbox, pointy
@@ -49,6 +50,7 @@ class IdeaWidget(QWidget):
         font: QFont = self.textEdit.font()
         font.setPointSize(16)
         self.textEdit.setFont(font)
+        self.textEdit.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
 
         vbox(self, 0, 0)
         lm = self.__randomMargin()
@@ -76,9 +78,6 @@ class IdeaWidget(QWidget):
         ''')
 
         self.installEventFilter(OpacityEventFilter(self, enterOpacity=0.7, leaveOpacity=1.0))
-    # @overrides
-    # def paintEvent(self, event: QPaintEvent) -> None:
-    #     pass
 
     def __randomMargin(self) -> int:
         return random.randint(3, 15)
