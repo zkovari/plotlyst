@@ -49,7 +49,7 @@ from plotlyst.events import SceneStatusChangedEvent, \
     ActiveSceneStageChanged, AvailableSceneStagesChanged, NovelConflictTrackingToggleEvent
 from plotlyst.model.common import DistributionFilterProxyModel
 from plotlyst.model.distribution import CharactersScenesDistributionTableModel, TagScenesDistributionTableModel, \
-    ConflictScenesDistributionTableModel
+    ConflictScenesDistributionTableModel, InformationScenesDistributionTableModel
 from plotlyst.model.novel import NovelTagsTreeModel, TagNode
 from plotlyst.model.scenes_model import ScenesTableModel
 from plotlyst.service.cache import acts_registry
@@ -969,8 +969,10 @@ class ScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributionWidget, E
         self.average = 0
 
         self.btnCharacters.setIcon(IconRegistry.character_icon())
-        self.btnConflicts.setIcon(IconRegistry.conflict_icon())
+        self.btnConflicts.setIcon(IconRegistry.conflict_icon('black', color_on=PLOTLYST_SECONDARY_COLOR))
         self.btnTags.setIcon(IconRegistry.tags_icon())
+        self.btnInformation.setIcon(IconRegistry.from_name('fa5s.book-reader', color_on=PLOTLYST_SECONDARY_COLOR))
+        self.btnTags.setHidden(True)
 
         self._model = CharactersScenesDistributionTableModel(self.novel)
         self._scenes_proxy = DistributionFilterProxyModel()
@@ -993,6 +995,7 @@ class ScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributionWidget, E
 
         self.btnCharacters.toggled.connect(self._toggle_characters)
         self.btnConflicts.toggled.connect(self._toggle_conflicts)
+        self.btnInformation.toggled.connect(self._toggle_information)
         self.btnTags.toggled.connect(self._toggle_tags)
 
         transparent(self.spinAverage)
@@ -1055,6 +1058,16 @@ class ScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributionWidget, E
             self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexMeta, 34)
             self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexTags, 170)
             self.tblCharacters.setMaximumWidth(204)
+
+            self.spinAverage.setVisible(False)
+
+    def _toggle_information(self, toggled: bool):
+        if toggled:
+            self._model = InformationScenesDistributionTableModel(self.novel)
+            self._scenes_proxy.setSourceModel(self._model)
+            self.tblCharacters.hideColumn(0)
+            self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexTags, 170)
+            self.tblCharacters.setMaximumWidth(170)
 
             self.spinAverage.setVisible(False)
 
