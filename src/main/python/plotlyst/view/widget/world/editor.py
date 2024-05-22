@@ -876,10 +876,11 @@ class WorldBuildingEntityEditor(QWidget):
         self.wdgEditorMiddle.layout().addWidget(vspacer())
         self.wdgEditorSide.layout().addWidget(vspacer())
 
-        self.wdgEditorSide.setVisible(self._entity.side_visible)
+        self.layoutChangedEvent()
 
     def layoutChangedEvent(self):
         self.wdgEditorSide.setVisible(self._entity.side_visible)
+        margins(self.wdgEditorMiddle, right=2 if self._entity.side_visible else 20)
 
     def _addPlaceholder(self, middle: bool = True):
         wdg = push_btn(IconRegistry.plus_icon('grey'), 'Add section' if middle else 'Add block', transparent_=True)
