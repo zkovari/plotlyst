@@ -21,43 +21,35 @@ from dataclasses import dataclass
 from functools import partial
 from typing import Iterable, List, Optional, Dict, Union, Tuple
 
-from PyQt6.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QByteArray, QBuffer, QIODevice
+from PyQt6.QtCore import Qt, pyqtSignal, QSize, QByteArray, QBuffer, QIODevice
 from PyQt6.QtGui import QIcon, QColor, QImageReader, QImage, QPixmap, \
     QShowEvent
 from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QSizePolicy, QLabel, QPushButton, \
     QFileDialog, QMessageBox, QGridLayout
 from overrides import overrides
-from qthandy import vspacer, transparent, gc, line, spacer, clear_layout, hbox, flow, translucent, margins, pointy, \
-    retain_when_hidden
+from qthandy import vspacer, transparent, gc, line, spacer, clear_layout, hbox, flow, translucent, margins, pointy
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
 from plotlyst.common import RELAXED_WHITE_COLOR
-from plotlyst.core.domain import Novel, Character, NovelSetting
+from plotlyst.core.domain import Novel, Character
 from plotlyst.core.template import SelectionItem, TemplateField, RoleImportance, \
     strengths_weaknesses_field
 from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, Event
 from plotlyst.event.handler import event_dispatchers
-from plotlyst.events import CharacterSummaryChangedEvent, NovelConflictTrackingToggleEvent
-from plotlyst.model.common import DistributionFilterProxyModel
-from plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
-    ConflictScenesDistributionTableModel, TagScenesDistributionTableModel
+from plotlyst.events import CharacterSummaryChangedEvent
 from plotlyst.resources import resource_registry
 from plotlyst.view.common import action, ButtonPressResizeEventFilter, tool_btn
 from plotlyst.view.dialog.utility import IconSelectorDialog, ArtbreederDialog, ImageCropDialog
 from plotlyst.view.generated.avatar_selectors_ui import Ui_AvatarSelectors
 from plotlyst.view.generated.characters_progress_widget_ui import Ui_CharactersProgressWidget
-from plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from plotlyst.view.icons import avatars, IconRegistry
 from plotlyst.view.style.base import apply_border_image
 from plotlyst.view.widget.display import IconText, Icon
 from plotlyst.view.widget.labels import CharacterLabel
 from plotlyst.view.widget.progress import CircularProgressBar, ProgressTooltipMode, \
     CharacterRoleProgressChart
-
-
-
 
 
 class CharacterToolButton(QToolButton):
