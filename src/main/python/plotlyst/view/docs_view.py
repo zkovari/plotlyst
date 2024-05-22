@@ -112,6 +112,7 @@ class DocumentsView(AbstractNovelView):
             self.textEditor.textTitle.setPlaceholderText('Untitled')
         self.textEditor.textEdit.textChanged.connect(self._save)
         self.textEditor.titleChanged.connect(self._title_changed_in_editor)
+        self.textEditor.iconChanged.connect(self._icon_changed_in_editor)
         self.textEditor.settingsAttached.connect(settings_ready)
 
     def _clear_text_editor(self):
@@ -178,6 +179,13 @@ class DocumentsView(AbstractNovelView):
         if doc is self._current_doc:
             self.textEditor.setTitleIcon(IconRegistry.from_name(doc.icon, doc.icon_color))
 
+    def _icon_changed_in_editor(self, name: str, color: str):
+        if self._current_doc:
+            self._current_doc.icon = name
+            self._current_doc.icon_color = color
+            self.ui.treeDocuments.updateDocument(self._current_doc)
+            self.repo.update_novel(self.novel)
+
     def _save(self):
         if not self._current_doc:
             return
@@ -193,7 +201,6 @@ class DocumentsView(AbstractNovelView):
         if self._current_doc:
             if title and title != self._current_doc.title:
                 self._current_doc.title = title
-                # emit_column_changed_in_tree(self.model, 0, QModelIndex())
                 self.ui.treeDocuments.updateDocument(self._current_doc)
                 self.repo.update_novel(self.novel)
 

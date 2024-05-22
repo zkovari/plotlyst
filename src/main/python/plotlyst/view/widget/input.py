@@ -33,7 +33,7 @@ from PyQt6.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyl
 from language_tool_python import LanguageTool
 from overrides import overrides
 from qthandy import transparent, hbox, margins, pointy, sp, line
-from qthandy.filter import DisabledClickEventFilter
+from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
 
 from plotlyst.common import IGNORE_CAPITALIZATION_PROPERTY
@@ -47,7 +47,8 @@ from plotlyst.model.characters_model import CharactersTableModel
 from plotlyst.model.common import proxy
 from plotlyst.service.grammar import language_tool_proxy, dictionary
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import action, label, push_btn
+from plotlyst.view.common import action, label, push_btn, tool_btn
+from plotlyst.view.dialog.utility import IconSelectorDialog
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.text import apply_texteditor_toolbar_style
 from plotlyst.view.widget._toggle import AnimatedToggle
@@ -470,14 +471,16 @@ class CapitalizationEventFilter(QObject):
 
 class DocumentTextEditor(RichTextEditor):
     titleChanged = pyqtSignal(str)
+    iconChanged = pyqtSignal(str, str)
 
     def __init__(self, parent=None):
         super(DocumentTextEditor, self).__init__(parent)
         self._titleVisible: bool = True
 
-        self._btnIcon = QToolButton()
-        transparent(self._btnIcon)
+        self._btnIcon = tool_btn(QIcon(), transparent_=True)
         self._btnIcon.setIconSize(QSize(48, 48))
+        self._btnIcon.installEventFilter(OpacityEventFilter(self._btnIcon, leaveOpacity=1.0, enterOpacity=0.8))
+        self._btnIcon.clicked.connect(self._changeIcon)
         self._textTitle = QLineEdit()
         self._textTitle.setProperty('transparent', True)
         self._textTitle.setFrame(False)
@@ -486,7 +489,7 @@ class DocumentTextEditor(RichTextEditor):
         title_font.setPointSize(40)
         self._textTitle.setFont(title_font)
         self._textTitle.returnPressed.connect(self.textEdit.setFocus)
-        self._textTitle.textChanged.connect(self.titleChanged.emit)
+        self._textTitle.textChanged.connect(self.titleChanged)
 
         apply_texteditor_toolbar_style(self.toolbar())
 
@@ -593,6 +596,14 @@ class DocumentTextEditor(RichTextEditor):
             self._wdgTitle.setHidden(True)
         elif self._titleVisible:
             self._wdgTitle.setVisible(True)
+
+    def _changeIcon(self):
+        result = IconSelectorDialog().display()
+        if result:
+            name = result[0]
+            color = result[1].name()
+            self.iconChanged.emit(name, color)
+            self._btnIcon.setIcon(IconRegistry.from_name(name, color))
 
 
 class RotatedButtonOrientation(Enum):
