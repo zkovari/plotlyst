@@ -20,22 +20,27 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import random
 
 import qtanim
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QMouseEvent
+from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QFont, QMouseEvent, QResizeEvent
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 from qthandy import incr_font, flow, margins, vbox, hbox, pointy
-from qthandy.filter import OpacityEventFilter
+from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
+from qtmenu import MenuWidget
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Document
-from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, frame
+from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, frame, action
 from plotlyst.view.generated.premise_builder_widget_ui import Ui_PremiseBuilderWidget
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.button import DotsMenuButton
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, TextAreaInputDialog
 
 
 class IdeaWidget(QWidget):
+    edit = pyqtSignal()
+    remove = pyqtSignal()
+
     def __init__(self, text: str, parent=None):
         super().__init__(parent)
         self._toggled: bool = True
@@ -54,6 +59,14 @@ class IdeaWidget(QWidget):
         self.textEdit.setFont(font)
         self.textEdit.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
 
+        self.btnMenu = DotsMenuButton(self.frame)
+        self.btnMenu.setCursor(Qt.CursorShape.ArrowCursor)
+        self.btnMenu.setHidden(True)
+
+        self.menu = MenuWidget(self.btnMenu)
+        self.menu.addAction(action('Edit', IconRegistry.edit_icon(), slot=self.edit))
+        self.menu.addAction(action('Remove', IconRegistry.trash_can_icon(), slot=self.remove))
+
         vbox(self, 0, 0)
         lm = self.__randomMargin()
         tm = self.__randomMargin()
@@ -68,6 +81,8 @@ class IdeaWidget(QWidget):
         self.refresh()
 
         self.installEventFilter(OpacityEventFilter(self, enterOpacity=0.7, leaveOpacity=1.0))
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnMenu, self))
+        self.btnMenu.raise_()
 
     def toggle(self):
         self._toggled = not self._toggled
@@ -93,6 +108,10 @@ class IdeaWidget(QWidget):
     @overrides
     def mouseReleaseEvent(self, a0: QMouseEvent) -> None:
         self.toggle()
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        self.btnMenu.setGeometry(self.frame.width() - 25, 10, 20, 20)
 
     def __randomMargin(self) -> int:
         return random.randint(3, 15)
