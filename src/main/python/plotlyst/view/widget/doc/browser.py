@@ -26,13 +26,14 @@ from PyQt6.QtWidgets import QFileDialog
 from overrides import overrides
 from qthandy import clear_layout, vspacer, translucent, gc, ask_confirmation, retain_when_hidden
 from qthandy.filter import DragEventFilter, DropEventFilter
-from qtmenu import MenuWidget
+from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from plotlyst.common import recursive
 from plotlyst.core.domain import Document, Novel, DocumentType, Character
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import fade_out_and_gc, action
 from plotlyst.view.icons import IconRegistry, avatars
+from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
@@ -54,6 +55,18 @@ class DocumentAdditionMenu(MenuWidget):
         self._character_menu.setTitle('Link characters')
         self._character_menu.setIcon(IconRegistry.character_icon())
         self.addMenu(self._character_menu)
+        self.addSeparator()
+
+        self._otherMenu = MenuWidget()
+        self._otherMenu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+        self._otherMenu.setTitle('Other')
+        self._otherMenu.addAction(action('Premise builder', IconRegistry.from_name('fa5s.scroll', '#0077b6'),
+                                         lambda: self._premiseSelected(),
+                                         tooltip="Turn ideas into concepts, and develop a final premise"))
+
+        self.addMenu(self._otherMenu)
+
+        apply_white_menu(self)
 
     def _characterSelected(self, character: Character):
         self._documentSelected(character=character)
@@ -67,6 +80,9 @@ class DocumentAdditionMenu(MenuWidget):
         doc.loaded = True
 
         self.documentTriggered.emit(doc)
+
+    def _premiseSelected(self):
+        doc = Document('Premise', type=DocumentType.PREMISE, icon='fa5s.scroll', icon_color='#0077b6')
 
     def _openPdf(self):
         filename, _ = QFileDialog.getOpenFileName(None, 'Open PDF', QDir.homePath(), 'PDF files (*.pdf)')

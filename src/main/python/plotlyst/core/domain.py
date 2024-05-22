@@ -2676,6 +2676,7 @@ class DocumentType(Enum):
     STORY_STRUCTURE = 6
     MICE = 7
     PDF = 8
+    PREMISE = 9
 
 
 @dataclass
