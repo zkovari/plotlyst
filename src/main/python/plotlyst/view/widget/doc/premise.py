@@ -183,6 +183,10 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.btnNewIdea.clicked.connect(self._addNewIdea)
         self.btnNewConcept.setIcon(IconRegistry.plus_icon(RELAXED_WHITE_COLOR))
         self.btnNewConcept.installEventFilter(ButtonPressResizeEventFilter(self.btnNewConcept))
+        self.btnNextToConcept.setIcon(IconRegistry.from_name('fa5s.arrow-alt-circle-right', RELAXED_WHITE_COLOR))
+        self.btnNextToConcept.installEventFilter(ButtonPressResizeEventFilter(self.btnNextToConcept))
+        self.btnNextToPremise.setIcon(IconRegistry.from_name('fa5s.arrow-alt-circle-right', RELAXED_WHITE_COLOR))
+        self.btnNextToPremise.installEventFilter(ButtonPressResizeEventFilter(self.btnNextToPremise))
 
         self.ideasModel = SelectedIdeasListModel(self._premise)
         self._proxy = proxy(self.ideasModel)

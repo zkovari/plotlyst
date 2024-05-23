@@ -185,7 +185,7 @@
         <number>0</number>
        </property>
        <property name="bottomMargin">
-        <number>0</number>
+        <number>15</number>
        </property>
        <item>
         <widget class="QScrollArea" name="scrollArea">
@@ -201,7 +201,7 @@
             <x>0</x>
             <y>0</y>
             <width>538</width>
-            <height>392</height>
+            <height>377</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -271,6 +271,22 @@
              </property>
             </spacer>
            </item>
+           <item alignment="Qt::AlignRight">
+            <widget class="QPushButton" name="btnNextToConcept">
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
+             <property name="text">
+              <string>Next to concept</string>
+             </property>
+             <property name="base" stdset="0">
+              <bool>true</bool>
+             </property>
+             <property name="positive" stdset="0">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
           </layout>
          </widget>
         </widget>
@@ -292,7 +308,7 @@
         <number>0</number>
        </property>
        <property name="bottomMargin">
-        <number>0</number>
+        <number>15</number>
        </property>
        <item>
         <widget class="QScrollArea" name="scrollArea_2">
@@ -308,7 +324,7 @@
             <x>0</x>
             <y>0</y>
             <width>538</width>
-            <height>392</height>
+            <height>377</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -380,7 +396,7 @@
               <string>Concept</string>
              </property>
              <property name="description" stdset="0">
-              <string>Turn your ideas into 'What if' questions that elevate your ideas with dramam conflict, and mystery</string>
+              <string>Turn your ideas into 'What if' questions to elevate them with drama, conflict, or mystery</string>
              </property>
              <property name="icon" stdset="0">
               <string>fa5s.question-circle</string>
@@ -437,6 +453,22 @@
              </property>
             </spacer>
            </item>
+           <item alignment="Qt::AlignRight">
+            <widget class="QPushButton" name="btnNextToPremise">
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
+             <property name="text">
+              <string>Next to premise</string>
+             </property>
+             <property name="base" stdset="0">
+              <bool>true</bool>
+             </property>
+             <property name="positive" stdset="0">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
           </layout>
          </widget>
         </widget>
@@ -475,7 +507,40 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>btnNextToConcept</sender>
+   <signal>clicked()</signal>
+   <receiver>btnConcept</receiver>
+   <slot>animateClick()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>501</x>
+     <y>448</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>295</x>
+     <y>42</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btnNextToPremise</sender>
+   <signal>clicked()</signal>
+   <receiver>btnPremise</receiver>
+   <slot>animateClick()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>489</x>
+     <y>449</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>387</x>
+     <y>41</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
  <buttongroups>
   <buttongroup name="buttonGroup"/>
  </buttongroups>
