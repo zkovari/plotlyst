@@ -26,7 +26,7 @@ from PyQt6.QtCore import Qt, pyqtSignal, QAbstractListModel, QModelIndex
 from PyQt6.QtGui import QFont, QMouseEvent, QResizeEvent
 from PyQt6.QtWidgets import QWidget, QApplication, QLineEdit
 from overrides import overrides
-from qthandy import incr_font, flow, margins, vbox, hbox, pointy, sp, spacer
+from qthandy import incr_font, flow, margins, vbox, hbox, pointy, sp, spacer, retain_when_hidden
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
@@ -36,7 +36,8 @@ from plotlyst.model.common import proxy
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, frame, action, fade_out_and_gc
 from plotlyst.view.generated.premise_builder_widget_ui import Ui_PremiseBuilderWidget
 from plotlyst.view.icons import IconRegistry
-from plotlyst.view.widget.button import DotsMenuButton, CollapseButton
+from plotlyst.view.layout import group
+from plotlyst.view.widget.button import DotsMenuButton, CollapseButton, EyeToggle
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, TextAreaInputDialog
 from plotlyst.view.widget.list import ListView
 
@@ -171,6 +172,7 @@ class ConceptQuestionWidget(QWidget):
         self.container.layout().addWidget(self.children)
 
         self.btnCollapse = CollapseButton()
+        self.btnCollapse.toggled.connect(self.container.setHidden)
 
         self.lineedit = QLineEdit()
         sp(self.lineedit).h_exp()
@@ -179,16 +181,27 @@ class ConceptQuestionWidget(QWidget):
         self.top.setMaximumWidth(700)
 
         self.btnMenu = DotsMenuButton()
+        menu = MenuWidget(self.btnMenu)
+        menu.addAction(action('Remove', IconRegistry.trash_can_icon(), slot=self.remove))
+        self.btnEye = EyeToggle()
+        retain_when_hidden(self.btnMenu)
+        retain_when_hidden(self.btnEye)
 
         self.top.layout().addWidget(self.btnCollapse)
         self.top.layout().addWidget(self.lineedit)
-        self.top.layout().addWidget(self.btnMenu)
+        self.top.layout().addWidget(group(self.btnEye, self.btnMenu, vertical=False, margin=0, spacing=0))
         spacer_ = spacer()
         sp(spacer_).h_fixed()
         self.top.layout().addWidget(spacer_)
 
         self.layout().addWidget(self.top)
         self.layout().addWidget(self.container)
+
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnEye, self))
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnMenu, self))
+
+    def question(self) -> PremiseQuestion:
+        return self._question
 
 
 class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
@@ -288,7 +301,10 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.changed.emit()
 
     def _removeConceptQuestion(self, wdg: ConceptQuestionWidget):
-        pass
+        question = wdg.question()
+        fade_out_and_gc(self.wdgConceptEditor, wdg)
+        self._premise.questions.remove(question)
+        self.changed.emit()
 
     def __initIdeaWidget(self, idea: PremiseIdea) -> IdeaWidget:
         wdg = IdeaWidget(idea)
