@@ -2685,6 +2685,7 @@ class PremiseIdea:
 class PremiseQuestion:
     text: str
     selected: bool = True
+    visible: bool = True
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)

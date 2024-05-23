@@ -27,7 +27,7 @@ from PyQt6.QtGui import QFont, QMouseEvent, QResizeEvent
 from PyQt6.QtWidgets import QWidget, QApplication, QLineEdit
 from overrides import overrides
 from qthandy import incr_font, flow, margins, vbox, hbox, pointy, sp, spacer, retain_when_hidden, incr_icon
-from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
+from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR
@@ -195,8 +195,14 @@ class ConceptQuestionWidget(QWidget):
         menu = MenuWidget(self.btnMenu)
         menu.addAction(action('Remove', IconRegistry.trash_can_icon(), slot=self.remove))
         self.btnEye = EyeToggle()
+        self.btnEye.setToolTip('Hide this question')
+        self.btnEye.toggled.connect(self._visibilityToggled)
         retain_when_hidden(self.btnMenu)
         retain_when_hidden(self.btnEye)
+
+        self.btnSelect.installEventFilter(DisabledClickEventFilter(self.btnSelect, lambda: qtanim.shake(self.btnEye)))
+        self.btnCollapse.installEventFilter(DisabledClickEventFilter(self.btnSelect, lambda: qtanim.shake(self.btnEye)))
+        self.lineedit.installEventFilter(DisabledClickEventFilter(self.btnSelect, lambda: qtanim.shake(self.btnEye)))
 
         self.top.layout().addWidget(self.btnCollapse)
         self.top.layout().addWidget(self.btnSelect)
@@ -212,6 +218,8 @@ class ConceptQuestionWidget(QWidget):
         self.installEventFilter(VisibilityToggleEventFilter(self.btnEye, self))
         self.installEventFilter(VisibilityToggleEventFilter(self.btnMenu, self))
 
+        self._updateVisibility()
+
     def question(self) -> PremiseQuestion:
         return self._question
 
@@ -222,6 +230,17 @@ class ConceptQuestionWidget(QWidget):
     def _toggled(self, toggled: bool):
         self._question.selected = toggled
         self.changed.emit()
+
+    def _visibilityToggled(self, toggled: bool):
+        self._question.visible = not toggled
+        self._updateVisibility()
+        self.changed.emit()
+
+    def _updateVisibility(self):
+        self.btnSelect.setEnabled(self._question.visible)
+        self.btnCollapse.setEnabled(self._question.visible)
+        self.lineedit.setEnabled(self._question.visible)
+        self.container.setVisible(self._question.visible and not self.btnCollapse.isChecked())
 
 
 class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
@@ -314,10 +333,13 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.changed.emit()
 
     def _addNewConcept(self):
+        def finish():
+            wdg.setGraphicsEffect(None)
+
         question = PremiseQuestion('')
         self._premise.questions.append(question)
         wdg = self.__initConceptQuestionWidget(question)
-        qtanim.fade_in(wdg)
+        qtanim.fade_in(wdg, teardown=finish)
         self.changed.emit()
 
     def _removeConceptQuestion(self, wdg: ConceptQuestionWidget):
