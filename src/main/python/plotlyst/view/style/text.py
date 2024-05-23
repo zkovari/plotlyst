@@ -24,7 +24,7 @@ from plotlyst.common import RELAXED_WHITE_COLOR
 
 label_style_description = """
     QLabel[description=true] {
-        color: #8d99ae;
+        color: #5E6C84;
     }
 
     QLabel[description=true]:!enabled {
