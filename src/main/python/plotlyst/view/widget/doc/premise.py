@@ -32,6 +32,7 @@ from qtmenu import MenuWidget
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Document, PremiseBuilder, PremiseIdea, BoxParameters
+from plotlyst.model.common import proxy
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, frame, action, fade_out_and_gc
 from plotlyst.view.generated.premise_builder_widget_ui import Ui_PremiseBuilderWidget
 from plotlyst.view.icons import IconRegistry
@@ -126,6 +127,8 @@ class IdeaWidget(QWidget):
 
 
 class SelectedIdeasListModel(QAbstractListModel):
+    SelectionRole = Qt.ItemDataRole.UserRole + 1
+
     def __init__(self, premise: PremiseBuilder, parent=None):
         super().__init__(parent)
         self._premise = premise
@@ -137,10 +140,11 @@ class SelectedIdeasListModel(QAbstractListModel):
 
     @overrides
     def data(self, index: QModelIndex, role: int) -> Any:
-        if role == Qt.ItemDataRole.DisplayRole:
+        if role == self.SelectionRole:
+            return str(self._premise.ideas[index.row()].selected)
+        elif role == Qt.ItemDataRole.DisplayRole:
             idea = self._premise.ideas[index.row()]
-            if idea.selected:
-                return idea.text
+            return idea.text
         elif role == Qt.ItemDataRole.FontRole:
             font = QApplication.font()
             font.setPointSize(14)
@@ -179,9 +183,12 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.btnNewConcept.installEventFilter(ButtonPressResizeEventFilter(self.btnNewConcept))
 
         self.ideasModel = SelectedIdeasListModel(self._premise)
+        self._proxy = proxy(self.ideasModel)
+        self._proxy.setFilterRole(SelectedIdeasListModel.SelectionRole)
         self.listSelectedIdeas.setFont(QApplication.font())
-        self.listSelectedIdeas.setModel(self.ideasModel)
+        self.listSelectedIdeas.setModel(self._proxy)
         self.listSelectedIdeas.setSpacing(20)
+        self._proxy.setFilterFixedString('True')
 
         link_buttons_to_pages(self.stackedWidget, [(self.btnSeed, self.pageSeed), (self.btnConcept, self.pageConcept),
                                                    (self.btnPremise, self.pagePremise)])
@@ -221,11 +228,15 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         fade_out_and_gc(self.wdgIdeasEditor, wdg)
         self.changed.emit()
 
+    def _ideaToggled(self):
+        self._proxy.invalidate()
+        self.changed.emit()
+
     def __initIdeaWidget(self, idea: PremiseIdea) -> IdeaWidget:
         wdg = IdeaWidget(idea)
         wdg.edit.connect(partial(self._editIdea, wdg))
         wdg.remove.connect(partial(self._removeIdea, wdg))
-        wdg.toggled.connect(self.changed)
+        wdg.toggled.connect(self._ideaToggled)
         self.wdgIdeasEditor.layout().addWidget(wdg)
 
         return wdg
