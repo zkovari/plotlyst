@@ -156,6 +156,7 @@ class SelectedIdeasListModel(QAbstractListModel):
 
 
 class ConceptQuestionWidget(QWidget):
+    changed = pyqtSignal()
     remove = pyqtSignal()
 
     def __init__(self, question: PremiseQuestion, parent=None):
@@ -174,11 +175,12 @@ class ConceptQuestionWidget(QWidget):
         self.btnCollapse = CollapseButton()
         self.btnCollapse.toggled.connect(self.container.setHidden)
 
-        self.lineedit = QLineEdit()
+        self.lineedit = QLineEdit(self._question.text)
         sp(self.lineedit).h_exp()
         incr_font(self.lineedit, 2)
         self.lineedit.setProperty('rounded', True)
         self.top.setMaximumWidth(700)
+        self.lineedit.textEdited.connect(self._textEdited)
 
         self.btnMenu = DotsMenuButton()
         menu = MenuWidget(self.btnMenu)
@@ -203,6 +205,9 @@ class ConceptQuestionWidget(QWidget):
     def question(self) -> PremiseQuestion:
         return self._question
 
+    def _textEdited(self, text: str):
+        self._question.text = text
+        self.changed.emit()
 
 class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
     changed = pyqtSignal()
@@ -318,6 +323,7 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
     def __initConceptQuestionWidget(self, question: PremiseQuestion) -> ConceptQuestionWidget:
         wdg = ConceptQuestionWidget(question)
         wdg.remove.connect(partial(self._removeConceptQuestion, wdg))
+        wdg.remove.connect(self.changed)
         self.wdgConceptEditor.layout().addWidget(wdg)
 
         return wdg
