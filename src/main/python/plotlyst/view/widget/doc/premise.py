@@ -215,18 +215,21 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
             wdg = self.__initIdeaWidget(idea)
             qtanim.fade_in(wdg)
             self.changed.emit()
+            self._proxy.invalidate()
 
     def _editIdea(self, wdg: IdeaWidget):
         text = TextAreaInputDialog.edit('Edit idea', self.IDEA_EDIT_PLACEHOLDER, self.IDEA_EDIT_DESC, wdg.text())
         if text:
             wdg.setText(text)
             self.changed.emit()
+            self._proxy.invalidate()
 
     def _removeIdea(self, wdg: IdeaWidget):
         idea = wdg.idea()
         self._premise.ideas.remove(idea)
         fade_out_and_gc(self.wdgIdeasEditor, wdg)
         self.changed.emit()
+        self._proxy.invalidate()
 
     def _ideaToggled(self):
         self._proxy.invalidate()
