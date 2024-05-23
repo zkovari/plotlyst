@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QApplication, QLineEdit
 from overrides import overrides
 from qthandy import incr_font, flow, margins, vbox, hbox, pointy, sp, spacer
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
-from qtmenu import MenuWidget, group
+from qtmenu import MenuWidget
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Document, PremiseBuilder, PremiseIdea, BoxParameters, PremiseQuestion
@@ -36,7 +36,6 @@ from plotlyst.model.common import proxy
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, frame, action, fade_out_and_gc
 from plotlyst.view.generated.premise_builder_widget_ui import Ui_PremiseBuilderWidget
 from plotlyst.view.icons import IconRegistry
-from plotlyst.view.layout import group
 from plotlyst.view.widget.button import DotsMenuButton, CollapseButton
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, TextAreaInputDialog
 from plotlyst.view.widget.list import ListView
@@ -181,14 +180,9 @@ class ConceptQuestionWidget(QWidget):
 
         self.btnMenu = DotsMenuButton()
 
-        spacer_ = spacer()
-        sp(spacer_).h_fixed()
-        # self.top.layout().addWidget(spacer_)
-
-        # self.top.layout().addWidget(self.btnCollapse)
-        self.top.layout().addWidget(group(self.btnCollapse, self.lineedit, self.btnMenu))
-        # self.top.layout().addWidget(self.lineedit)
-        # self.top.layout().addWidget(self.btnMenu)
+        self.top.layout().addWidget(self.btnCollapse)
+        self.top.layout().addWidget(self.lineedit)
+        self.top.layout().addWidget(self.btnMenu)
         spacer_ = spacer()
         sp(spacer_).h_fixed()
         self.top.layout().addWidget(spacer_)
