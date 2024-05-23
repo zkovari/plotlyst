@@ -24,20 +24,22 @@ from typing import Any
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QAbstractListModel, QModelIndex
 from PyQt6.QtGui import QFont, QMouseEvent, QResizeEvent
-from PyQt6.QtWidgets import QWidget, QApplication
+from PyQt6.QtWidgets import QWidget, QApplication, QLineEdit
 from overrides import overrides
-from qthandy import incr_font, flow, margins, vbox, hbox, pointy
+from qthandy import incr_font, flow, margins, vbox, hbox, pointy, sp, spacer
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
-from qtmenu import MenuWidget
+from qtmenu import MenuWidget, group
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR
-from plotlyst.core.domain import Document, PremiseBuilder, PremiseIdea, BoxParameters
+from plotlyst.core.domain import Document, PremiseBuilder, PremiseIdea, BoxParameters, PremiseQuestion
 from plotlyst.model.common import proxy
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, frame, action, fade_out_and_gc
 from plotlyst.view.generated.premise_builder_widget_ui import Ui_PremiseBuilderWidget
 from plotlyst.view.icons import IconRegistry
-from plotlyst.view.widget.button import DotsMenuButton
+from plotlyst.view.layout import group
+from plotlyst.view.widget.button import DotsMenuButton, CollapseButton
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, TextAreaInputDialog
+from plotlyst.view.widget.list import ListView
 
 
 class IdeaWidget(QWidget):
@@ -153,9 +155,46 @@ class SelectedIdeasListModel(QAbstractListModel):
             return font
 
 
-class ConceptWidget(QWidget):
-    def __init__(self, parent=None):
+class ConceptQuestionWidget(QWidget):
+    remove = pyqtSignal()
+
+    def __init__(self, question: PremiseQuestion, parent=None):
         super().__init__(parent)
+        self._question = question
+        vbox(self)
+
+        self.top = QWidget()
+        hbox(self.top, 0, 3)
+        self.container = QWidget()
+        vbox(self.container, 0, 0)
+        margins(self.container, left=15)
+        self.children = ListView()
+        self.container.layout().addWidget(self.children)
+
+        self.btnCollapse = CollapseButton()
+
+        self.lineedit = QLineEdit()
+        sp(self.lineedit).h_exp()
+        incr_font(self.lineedit, 2)
+        self.lineedit.setProperty('rounded', True)
+        self.top.setMaximumWidth(700)
+
+        self.btnMenu = DotsMenuButton()
+
+        spacer_ = spacer()
+        sp(spacer_).h_fixed()
+        # self.top.layout().addWidget(spacer_)
+
+        # self.top.layout().addWidget(self.btnCollapse)
+        self.top.layout().addWidget(group(self.btnCollapse, self.lineedit, self.btnMenu))
+        # self.top.layout().addWidget(self.lineedit)
+        # self.top.layout().addWidget(self.btnMenu)
+        spacer_ = spacer()
+        sp(spacer_).h_fixed()
+        self.top.layout().addWidget(spacer_)
+
+        self.layout().addWidget(self.top)
+        self.layout().addWidget(self.container)
 
 
 class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
@@ -183,6 +222,7 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.btnNewIdea.clicked.connect(self._addNewIdea)
         self.btnNewConcept.setIcon(IconRegistry.plus_icon(RELAXED_WHITE_COLOR))
         self.btnNewConcept.installEventFilter(ButtonPressResizeEventFilter(self.btnNewConcept))
+        self.btnNewConcept.clicked.connect(self._addNewConcept)
         self.btnNextToConcept.setIcon(IconRegistry.from_name('fa5s.arrow-alt-circle-right', RELAXED_WHITE_COLOR))
         self.btnNextToConcept.installEventFilter(ButtonPressResizeEventFilter(self.btnNextToConcept))
         self.btnNextToPremise.setIcon(IconRegistry.from_name('fa5s.arrow-alt-circle-right', RELAXED_WHITE_COLOR))
@@ -203,8 +243,13 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         flow(self.wdgIdeasEditor)
         margins(self.wdgIdeasEditor, left=20, right=20, top=20)
 
+        vbox(self.wdgConceptEditor)
+        margins(self.wdgConceptEditor, left=20, right=20, top=20)
+
         for idea in self._premise.ideas:
             self.__initIdeaWidget(idea)
+        for question in self._premise.questions:
+            self.__initConceptQuestionWidget(question)
 
     def _addNewIdea(self):
         text = TextAreaInputDialog.edit('Add a new idea', self.IDEA_EDIT_PLACEHOLDER, self.IDEA_EDIT_DESC)
@@ -241,12 +286,29 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self._proxy.invalidate()
         self.changed.emit()
 
+    def _addNewConcept(self):
+        question = PremiseQuestion('')
+        self._premise.questions.append(question)
+        wdg = self.__initConceptQuestionWidget(question)
+        qtanim.fade_in(wdg)
+        self.changed.emit()
+
+    def _removeConceptQuestion(self, wdg: ConceptQuestionWidget):
+        pass
+
     def __initIdeaWidget(self, idea: PremiseIdea) -> IdeaWidget:
         wdg = IdeaWidget(idea)
         wdg.edit.connect(partial(self._editIdea, wdg))
         wdg.remove.connect(partial(self._removeIdea, wdg))
         wdg.toggled.connect(self._ideaToggled)
         self.wdgIdeasEditor.layout().addWidget(wdg)
+
+        return wdg
+
+    def __initConceptQuestionWidget(self, question: PremiseQuestion) -> ConceptQuestionWidget:
+        wdg = ConceptQuestionWidget(question)
+        wdg.remove.connect(partial(self._removeConceptQuestion, wdg))
+        self.wdgConceptEditor.layout().addWidget(wdg)
 
         return wdg
 

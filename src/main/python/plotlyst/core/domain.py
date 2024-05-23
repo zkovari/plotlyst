@@ -2681,11 +2681,18 @@ class PremiseIdea:
     params: Optional[BoxParameters] = None
 
 
+@dataclass
+class PremiseQuestion:
+    text: str
+    selected: bool = True
+
+
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class PremiseBuilder:
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     ideas: List[PremiseIdea] = field(default_factory=list)
+    questions: List[PremiseQuestion] = field(default_factory=list)
 
 
 class DocumentType(Enum):

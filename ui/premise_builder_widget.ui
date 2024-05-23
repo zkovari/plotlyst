@@ -201,7 +201,7 @@
             <x>0</x>
             <y>0</y>
             <width>538</width>
-            <height>377</height>
+            <height>349</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -271,24 +271,24 @@
              </property>
             </spacer>
            </item>
-           <item alignment="Qt::AlignRight">
-            <widget class="QPushButton" name="btnNextToConcept">
-             <property name="cursor">
-              <cursorShape>PointingHandCursor</cursorShape>
-             </property>
-             <property name="text">
-              <string>Next to concept</string>
-             </property>
-             <property name="base" stdset="0">
-              <bool>true</bool>
-             </property>
-             <property name="positive" stdset="0">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
           </layout>
          </widget>
+        </widget>
+       </item>
+       <item alignment="Qt::AlignRight">
+        <widget class="QPushButton" name="btnNextToConcept">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
+         <property name="text">
+          <string>Next to concept</string>
+         </property>
+         <property name="base" stdset="0">
+          <bool>true</bool>
+         </property>
+         <property name="positive" stdset="0">
+          <bool>true</bool>
+         </property>
         </widget>
        </item>
       </layout>
@@ -324,7 +324,7 @@
             <x>0</x>
             <y>0</y>
             <width>538</width>
-            <height>377</height>
+            <height>350</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -453,24 +453,24 @@
              </property>
             </spacer>
            </item>
-           <item alignment="Qt::AlignRight">
-            <widget class="QPushButton" name="btnNextToPremise">
-             <property name="cursor">
-              <cursorShape>PointingHandCursor</cursorShape>
-             </property>
-             <property name="text">
-              <string>Next to premise</string>
-             </property>
-             <property name="base" stdset="0">
-              <bool>true</bool>
-             </property>
-             <property name="positive" stdset="0">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
           </layout>
          </widget>
+        </widget>
+       </item>
+       <item alignment="Qt::AlignRight">
+        <widget class="QPushButton" name="btnNextToPremise">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
+         <property name="text">
+          <string>Next to premise</string>
+         </property>
+         <property name="base" stdset="0">
+          <bool>true</bool>
+         </property>
+         <property name="positive" stdset="0">
+          <bool>true</bool>
+         </property>
         </widget>
        </item>
       </layout>

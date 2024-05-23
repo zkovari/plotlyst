@@ -300,7 +300,7 @@ class ToolbarButton(QToolButton):
 
 
 class CollapseButton(QPushButton):
-    def __init__(self, idle: Qt.Edge, checked: Qt.Edge, parent=None):
+    def __init__(self, idle: Qt.Edge = Qt.Edge.BottomEdge, checked: Qt.Edge = Qt.Edge.RightEdge, parent=None):
         super(CollapseButton, self).__init__(parent)
         self._idleIcon = self._icon(idle)
         self._checkedIcon = self._icon(checked)
