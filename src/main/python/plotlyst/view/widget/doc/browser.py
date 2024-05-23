@@ -29,7 +29,7 @@ from qthandy.filter import DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from plotlyst.common import recursive
-from plotlyst.core.domain import Document, Novel, DocumentType, Character
+from plotlyst.core.domain import Document, Novel, DocumentType, Character, PremiseBuilder
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import fade_out_and_gc, action
 from plotlyst.view.icons import IconRegistry, avatars
@@ -83,6 +83,9 @@ class DocumentAdditionMenu(MenuWidget):
 
     def _premiseSelected(self):
         doc = Document('Premise', type=DocumentType.PREMISE, icon='fa5s.scroll', icon_color='#0077b6')
+        doc.data = PremiseBuilder()
+        doc.data_id = doc.data.id
+        doc.loaded = True
         self.documentTriggered.emit(doc)
 
     def _openPdf(self):

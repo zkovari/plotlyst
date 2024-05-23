@@ -2665,6 +2665,19 @@ class MiceQuotient:
     threads: List[MiceThread] = field(default_factory=list)
 
 
+@dataclass
+class PremiseIdea:
+    text: str
+    selected: bool = True
+
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class PremiseBuilder:
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    ideas: List[PremiseIdea] = field(default_factory=list)
+
+
 class DocumentType(Enum):
     DOCUMENT = 0
     CHARACTER_BACKSTORY = 1

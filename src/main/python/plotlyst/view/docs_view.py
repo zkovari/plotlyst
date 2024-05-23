@@ -94,6 +94,9 @@ class DocumentsView(AbstractNovelView):
     def _add_doc(self, doc: Document):
         self.ui.treeDocuments.addDocument(doc)
 
+        if doc.type == DocumentType.PREMISE:
+            self.repo.update_doc(self.novel, doc)
+
     def _init_text_editor(self):
         def settings_ready():
             section: FontSectionSettingWidget = self.textEditor.settingsWidget().section(TextEditorSettingsSection.FONT)
@@ -170,7 +173,11 @@ class DocumentsView(AbstractNovelView):
     def _edit_premise(self):
         clear_layout(self.ui.customEditorPage)
 
-        wdg = PremiseBuilderWidget(self._current_doc)
+        if not self._current_doc.loaded:
+            json_client.load_document(self.novel, self._current_doc)
+
+        wdg = PremiseBuilderWidget(self._current_doc, self._current_doc.data)
+        wdg.changed.connect(self._save)
         self.ui.customEditorPage.layout().addWidget(wdg)
 
         self.ui.stackedEditor.setCurrentWidget(self.ui.customEditorPage)

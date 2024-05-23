@@ -30,7 +30,7 @@ from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR
-from plotlyst.core.domain import Document
+from plotlyst.core.domain import Document, PremiseBuilder, PremiseIdea
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, frame, action, fade_out_and_gc
 from plotlyst.view.generated.premise_builder_widget_ui import Ui_PremiseBuilderWidget
 from plotlyst.view.icons import IconRegistry
@@ -39,12 +39,13 @@ from plotlyst.view.widget.input import AutoAdjustableTextEdit, TextAreaInputDial
 
 
 class IdeaWidget(QWidget):
+    toggled = pyqtSignal()
     edit = pyqtSignal()
     remove = pyqtSignal()
 
-    def __init__(self, text: str, parent=None):
+    def __init__(self, idea: PremiseIdea, parent=None):
         super().__init__(parent)
-        self._toggled: bool = True
+        self._idea = idea
 
         self.frame = frame()
         self.frame.setObjectName('mainFrame')
@@ -52,7 +53,7 @@ class IdeaWidget(QWidget):
 
         self.textEdit = AutoAdjustableTextEdit()
         self.textEdit.setProperty('transparent', True)
-        self.textEdit.setText(text)
+        self.textEdit.setText(self._idea.text)
         self.textEdit.setReadOnly(True)
         pointy(self.textEdit)
         font: QFont = self.textEdit.font()
@@ -85,18 +86,23 @@ class IdeaWidget(QWidget):
         self.installEventFilter(VisibilityToggleEventFilter(self.btnMenu, self))
         self.btnMenu.raise_()
 
+    def idea(self) -> PremiseIdea:
+        return self._idea
+
     def text(self):
         return self.textEdit.toPlainText()
 
     def setText(self, text: str):
+        self._idea.text = text
         self.textEdit.setText(text)
 
     def toggle(self):
-        self._toggled = not self._toggled
+        self._idea.selected = not self._idea.selected
+        self.toggled.emit()
         self.refresh()
 
     def refresh(self):
-        bg_color = PLOTLYST_SECONDARY_COLOR if self._toggled else '#ced4da'
+        bg_color = PLOTLYST_SECONDARY_COLOR if self._idea.selected else '#ced4da'
 
         self.setStyleSheet(f'''
                 #mainFrame {{
@@ -130,13 +136,17 @@ class ConceptWidget(QWidget):
 
 
 class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
+    changed = pyqtSignal()
+
     IDEA_EDIT_DESC: str = "An idea about character, plot, event, situation, setting, theme, genre, etc."
     IDEA_EDIT_PLACEHOLDER: str = "An idea..."
 
-    def __init__(self, doc: Document, parent=None):
+    def __init__(self, doc: Document, premise: PremiseBuilder, parent=None):
         super().__init__(parent)
         self.setupUi(self)
         self._doc = doc
+        self._premise = premise
+        print(premise)
 
         self.btnSeed.setIcon(IconRegistry.from_name('fa5s.seedling', color_on=PLOTLYST_MAIN_COLOR))
         self.btnConcept.setIcon(IconRegistry.from_name('fa5s.question-circle', color_on=PLOTLYST_MAIN_COLOR))
@@ -159,19 +169,35 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         flow(self.wdgIdeasEditor)
         margins(self.wdgIdeasEditor, left=20, right=20, top=20)
 
+        for idea in self._premise.ideas:
+            self.__initIdeaWidget(idea)
+
     def _addNewIdea(self):
         text = TextAreaInputDialog.edit('Add a new idea', self.IDEA_EDIT_PLACEHOLDER, self.IDEA_EDIT_DESC)
         if text:
-            wdg = IdeaWidget(text)
-            wdg.edit.connect(partial(self._editIdea, wdg))
-            wdg.remove.connect(partial(self._removeIdea, wdg))
-            self.wdgIdeasEditor.layout().addWidget(wdg)
+            idea = PremiseIdea(text)
+            self._premise.ideas.append(idea)
+            wdg = self.__initIdeaWidget(idea)
             qtanim.fade_in(wdg)
+            self.changed.emit()
 
     def _editIdea(self, wdg: IdeaWidget):
         text = TextAreaInputDialog.edit('Edit idea', self.IDEA_EDIT_PLACEHOLDER, self.IDEA_EDIT_DESC, wdg.text())
         if text:
             wdg.setText(text)
+            self.changed.emit()
 
     def _removeIdea(self, wdg: IdeaWidget):
+        idea = wdg.idea()
+        self._premise.ideas.remove(idea)
         fade_out_and_gc(self.wdgIdeasEditor, wdg)
+        self.changed.emit()
+
+    def __initIdeaWidget(self, idea: PremiseIdea) -> IdeaWidget:
+        wdg = IdeaWidget(idea)
+        wdg.edit.connect(partial(self._editIdea, wdg))
+        wdg.remove.connect(partial(self._removeIdea, wdg))
+        wdg.toggled.connect(self.changed)
+        self.wdgIdeasEditor.layout().addWidget(wdg)
+
+        return wdg
