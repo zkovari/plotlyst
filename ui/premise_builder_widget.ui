@@ -170,6 +170,9 @@
    </item>
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
+     <property name="currentIndex">
+      <number>1</number>
+     </property>
      <widget class="QWidget" name="pageSeed">
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <property name="leftMargin">
@@ -304,8 +307,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>180</width>
-            <height>117</height>
+            <width>538</width>
+            <height>392</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -334,7 +337,23 @@
             <number>0</number>
            </property>
            <item>
-            <widget class="QListView" name="listSelectedIdeas"/>
+            <widget class="QListView" name="listSelectedIdeas">
+             <property name="frameShape">
+              <enum>QFrame::NoFrame</enum>
+             </property>
+             <property name="selectionMode">
+              <enum>QAbstractItemView::NoSelection</enum>
+             </property>
+             <property name="isWrapping" stdset="0">
+              <bool>false</bool>
+             </property>
+             <property name="viewMode">
+              <enum>QListView::IconMode</enum>
+             </property>
+             <property name="selectionRectVisible">
+              <bool>false</bool>
+             </property>
+            </widget>
            </item>
            <item alignment="Qt::AlignLeft">
             <widget class="QPushButton" name="btnNewConcept">

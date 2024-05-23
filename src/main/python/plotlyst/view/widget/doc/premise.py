@@ -19,11 +19,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import random
 from functools import partial
+from typing import Any
 
 import qtanim
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal, QAbstractListModel, QModelIndex
 from PyQt6.QtGui import QFont, QMouseEvent, QResizeEvent
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QWidget, QApplication
 from overrides import overrides
 from qthandy import incr_font, flow, margins, vbox, hbox, pointy
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
@@ -124,6 +125,28 @@ class IdeaWidget(QWidget):
         self.btnMenu.setGeometry(self.frame.width() - 25, 10, 20, 20)
 
 
+class SelectedIdeasListModel(QAbstractListModel):
+    def __init__(self, premise: PremiseBuilder, parent=None):
+        super().__init__(parent)
+        self._premise = premise
+
+    @overrides
+    def rowCount(self, parent: QModelIndex = ...) -> int:
+        # return len([x for x in self._premise.ideas if x.selected])
+        return len(self._premise.ideas)
+
+    @overrides
+    def data(self, index: QModelIndex, role: int) -> Any:
+        if role == Qt.ItemDataRole.DisplayRole:
+            idea = self._premise.ideas[index.row()]
+            if idea.selected:
+                return idea.text
+        elif role == Qt.ItemDataRole.FontRole:
+            font = QApplication.font()
+            font.setPointSize(14)
+            return font
+
+
 class ConceptWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -154,6 +177,11 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.btnNewIdea.clicked.connect(self._addNewIdea)
         self.btnNewConcept.setIcon(IconRegistry.plus_icon(RELAXED_WHITE_COLOR))
         self.btnNewConcept.installEventFilter(ButtonPressResizeEventFilter(self.btnNewConcept))
+
+        self.ideasModel = SelectedIdeasListModel(self._premise)
+        self.listSelectedIdeas.setFont(QApplication.font())
+        self.listSelectedIdeas.setModel(self.ideasModel)
+        self.listSelectedIdeas.setSpacing(20)
 
         link_buttons_to_pages(self.stackedWidget, [(self.btnSeed, self.pageSeed), (self.btnConcept, self.pageConcept),
                                                    (self.btnPremise, self.pagePremise)])
