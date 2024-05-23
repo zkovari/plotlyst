@@ -284,7 +284,6 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
 
         link_buttons_to_pages(self.stackedWidget, [(self.btnSeed, self.pageSeed), (self.btnConcept, self.pageConcept),
                                                    (self.btnPremise, self.pagePremise)])
-        self.btnSeed.setChecked(True)
 
         flow(self.wdgIdeasEditor)
         margins(self.wdgIdeasEditor, left=20, right=20, top=20)
@@ -296,6 +295,12 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
             self.__initIdeaWidget(idea)
         for question in self._premise.questions:
             self.__initConceptQuestionWidget(question)
+
+        if self._premise.questions:
+            self.btnConcept.setChecked(True)
+        else:
+            self.btnSeed.setChecked(True)
+
 
     def _addNewIdea(self):
         text = TextAreaInputDialog.edit('Add a new idea', self.IDEA_EDIT_PLACEHOLDER, self.IDEA_EDIT_DESC)
@@ -336,7 +341,7 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         def finish():
             wdg.setGraphicsEffect(None)
 
-        question = PremiseQuestion('')
+        question = PremiseQuestion('What if ')
         self._premise.questions.append(question)
         wdg = self.__initConceptQuestionWidget(question)
         qtanim.fade_in(wdg, teardown=finish)
