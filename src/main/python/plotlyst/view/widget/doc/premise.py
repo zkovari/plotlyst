@@ -124,6 +124,11 @@ class IdeaWidget(QWidget):
         return random.randint(3, 15)
 
 
+class ConceptWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+
 class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
     IDEA_EDIT_DESC: str = "An idea about character, plot, event, situation, setting, theme, genre, etc."
     IDEA_EDIT_PLACEHOLDER: str = "An idea..."
