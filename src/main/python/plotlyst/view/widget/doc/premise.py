@@ -26,14 +26,15 @@ from PyQt6.QtCore import Qt, pyqtSignal, QAbstractListModel, QModelIndex
 from PyQt6.QtGui import QFont, QMouseEvent, QResizeEvent
 from PyQt6.QtWidgets import QWidget, QApplication, QLineEdit
 from overrides import overrides
-from qthandy import incr_font, flow, margins, vbox, hbox, pointy, sp, spacer, retain_when_hidden
+from qthandy import incr_font, flow, margins, vbox, hbox, pointy, sp, spacer, retain_when_hidden, incr_icon
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Document, PremiseBuilder, PremiseIdea, BoxParameters, PremiseQuestion
 from plotlyst.model.common import proxy
-from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, frame, action, fade_out_and_gc
+from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, frame, action, fade_out_and_gc, \
+    tool_btn
 from plotlyst.view.generated.premise_builder_widget_ui import Ui_PremiseBuilderWidget
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -175,6 +176,14 @@ class ConceptQuestionWidget(QWidget):
         self.btnCollapse = CollapseButton()
         self.btnCollapse.toggled.connect(self.container.setHidden)
 
+        self.btnSelect = tool_btn(IconRegistry.from_name('fa5.question-circle', 'lightgrey', PLOTLYST_SECONDARY_COLOR),
+                                  checkable=True, transparent_=True)
+        self.btnSelect.installEventFilter(
+            OpacityEventFilter(self.btnSelect, leaveOpacity=0.5, ignoreCheckedButton=True))
+        self.btnSelect.setChecked(self._question.selected)
+        incr_icon(self.btnSelect, 12)
+        self.btnSelect.toggled.connect(self._toggled)
+
         self.lineedit = QLineEdit(self._question.text)
         sp(self.lineedit).h_exp()
         incr_font(self.lineedit, 2)
@@ -190,6 +199,7 @@ class ConceptQuestionWidget(QWidget):
         retain_when_hidden(self.btnEye)
 
         self.top.layout().addWidget(self.btnCollapse)
+        self.top.layout().addWidget(self.btnSelect)
         self.top.layout().addWidget(self.lineedit)
         self.top.layout().addWidget(group(self.btnEye, self.btnMenu, vertical=False, margin=0, spacing=0))
         spacer_ = spacer()
@@ -208,6 +218,11 @@ class ConceptQuestionWidget(QWidget):
     def _textEdited(self, text: str):
         self._question.text = text
         self.changed.emit()
+
+    def _toggled(self, toggled: bool):
+        self._question.selected = toggled
+        self.changed.emit()
+
 
 class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
     changed = pyqtSignal()
@@ -323,7 +338,7 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
     def __initConceptQuestionWidget(self, question: PremiseQuestion) -> ConceptQuestionWidget:
         wdg = ConceptQuestionWidget(question)
         wdg.remove.connect(partial(self._removeConceptQuestion, wdg))
-        wdg.remove.connect(self.changed)
+        wdg.changed.connect(self.changed)
         self.wdgConceptEditor.layout().addWidget(wdg)
 
         return wdg
