@@ -145,9 +145,11 @@ class SelectedIdeasListModel(QAbstractListModel):
         elif role == Qt.ItemDataRole.DisplayRole:
             idea = self._premise.ideas[index.row()]
             return idea.text
+        elif role == Qt.ItemDataRole.DecorationRole:
+            return IconRegistry.from_name('mdi.seed', 'grey')
         elif role == Qt.ItemDataRole.FontRole:
             font = QApplication.font()
-            font.setPointSize(14)
+            font.setPointSize(15)
             return font
 
 

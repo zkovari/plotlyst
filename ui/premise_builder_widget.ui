@@ -337,6 +337,19 @@
             <number>0</number>
            </property>
            <item>
+            <widget class="Subtitle" name="subtitleSeed" native="true">
+             <property name="title" stdset="0">
+              <string>Seed</string>
+             </property>
+             <property name="description" stdset="0">
+              <string>Your selected ideas you wish to elevate into a concept:</string>
+             </property>
+             <property name="icon" stdset="0">
+              <string>fa5s.seedling</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QListView" name="listSelectedIdeas">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
@@ -361,20 +374,51 @@
              </property>
             </widget>
            </item>
-           <item alignment="Qt::AlignLeft">
-            <widget class="QPushButton" name="btnNewConcept">
-             <property name="cursor">
-              <cursorShape>PointingHandCursor</cursorShape>
+           <item>
+            <widget class="Subtitle" name="subtitleConcept" native="true">
+             <property name="title" stdset="0">
+              <string>Concept</string>
              </property>
-             <property name="text">
-              <string>Add a new 'What if' question</string>
+             <property name="description" stdset="0">
+              <string>Turn your ideas into 'What if' questions that elevate your ideas with dramam conflict, and mystery</string>
              </property>
-             <property name="base" stdset="0">
-              <bool>true</bool>
+             <property name="icon" stdset="0">
+              <string>fa5s.question-circle</string>
              </property>
-             <property name="positive" stdset="0">
-              <bool>true</bool>
-             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QWidget" name="widget" native="true">
+             <layout class="QHBoxLayout" name="horizontalLayout_2">
+              <property name="leftMargin">
+               <number>20</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item alignment="Qt::AlignLeft">
+               <widget class="QPushButton" name="btnNewConcept">
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
+                <property name="text">
+                 <string>Add a new 'What if' question</string>
+                </property>
+                <property name="base" stdset="0">
+                 <bool>true</bool>
+                </property>
+                <property name="positive" stdset="0">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </widget>
            </item>
            <item>
@@ -422,6 +466,14 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Subtitle</class>
+   <extends>QWidget</extends>
+   <header>plotlyst.view.widget.display</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
  <buttongroups>
