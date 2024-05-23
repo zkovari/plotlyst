@@ -30,7 +30,7 @@ from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR
-from plotlyst.core.domain import Document, PremiseBuilder, PremiseIdea
+from plotlyst.core.domain import Document, PremiseBuilder, PremiseIdea, BoxParameters
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, frame, action, fade_out_and_gc
 from plotlyst.view.generated.premise_builder_widget_ui import Ui_PremiseBuilderWidget
 from plotlyst.view.icons import IconRegistry
@@ -70,12 +70,9 @@ class IdeaWidget(QWidget):
         self.menu.addAction(action('Remove', IconRegistry.trash_can_icon(), slot=self.remove))
 
         vbox(self, 0, 0)
-        lm = self.__randomMargin()
-        tm = self.__randomMargin()
-        rm = self.__randomMargin()
-        bm = self.__randomMargin()
-        margins(self, left=lm, top=tm, right=rm, bottom=bm)
-        self.setMaximumWidth(random.randint(170, 210))
+        margins(self, left=self._idea.params.lm, top=self._idea.params.tm, right=self._idea.params.rm,
+                bottom=self._idea.params.bm)
+        self.setMaximumWidth(self._idea.params.width)
         self.layout().addWidget(self.frame)
 
         hbox(self.frame, 5, 0).addWidget(self.textEdit)
@@ -126,9 +123,6 @@ class IdeaWidget(QWidget):
     def resizeEvent(self, event: QResizeEvent) -> None:
         self.btnMenu.setGeometry(self.frame.width() - 25, 10, 20, 20)
 
-    def __randomMargin(self) -> int:
-        return random.randint(3, 15)
-
 
 class ConceptWidget(QWidget):
     def __init__(self, parent=None):
@@ -146,7 +140,6 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.setupUi(self)
         self._doc = doc
         self._premise = premise
-        print(premise)
 
         self.btnSeed.setIcon(IconRegistry.from_name('fa5s.seedling', color_on=PLOTLYST_MAIN_COLOR))
         self.btnConcept.setIcon(IconRegistry.from_name('fa5s.question-circle', color_on=PLOTLYST_MAIN_COLOR))
@@ -176,6 +169,13 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         text = TextAreaInputDialog.edit('Add a new idea', self.IDEA_EDIT_PLACEHOLDER, self.IDEA_EDIT_DESC)
         if text:
             idea = PremiseIdea(text)
+            idea.params = BoxParameters()
+            idea.params.lm = self.__randomMargin()
+            idea.params.tm = self.__randomMargin()
+            idea.params.rm = self.__randomMargin()
+            idea.params.bm = self.__randomMargin()
+            idea.params.width = random.randint(170, 210)
+
             self._premise.ideas.append(idea)
             wdg = self.__initIdeaWidget(idea)
             qtanim.fade_in(wdg)
@@ -201,3 +201,6 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.wdgIdeasEditor.layout().addWidget(wdg)
 
         return wdg
+
+    def __randomMargin(self) -> int:
+        return random.randint(3, 15)

@@ -2666,9 +2666,19 @@ class MiceQuotient:
 
 
 @dataclass
+class BoxParameters:
+    lm: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    tm: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    rm: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    bm: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    width: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+
+
+@dataclass
 class PremiseIdea:
     text: str
     selected: bool = True
+    params: Optional[BoxParameters] = None
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
