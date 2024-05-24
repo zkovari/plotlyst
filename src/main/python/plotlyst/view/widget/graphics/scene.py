@@ -136,7 +136,8 @@ class NetworkScene(QGraphicsScene):
         if connectorItem.icon():
             connector.icon = connectorItem.icon()
         connectorItem.setConnector(connector)
-        self._diagram.data.connectors.append(connector)
+        if self._diagram:
+            self._diagram.data.connectors.append(connector)
         self._save()
 
         self.addItem(connectorItem)
@@ -164,6 +165,10 @@ class NetworkScene(QGraphicsScene):
             self._copy(self.selectedItems()[0])
         elif event.matches(QKeySequence.StandardKey.Paste):
             self._paste()
+        elif not event.modifiers() and not event.key() == Qt.Key.Key_Escape and len(self.selectedItems()) == 1:
+            item = self.selectedItems()[0]
+            if isinstance(item, (EventItem, NoteItem)):
+                self.editItem.emit(item)
 
     @overrides
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
@@ -283,7 +288,8 @@ class NetworkScene(QGraphicsScene):
                 except ValueError:
                     pass  # connector might have been already removed if a node was deleted first
             item.clearConnectors()
-            self._diagram.data.nodes.remove(item.node())
+            if self._diagram:
+                self._diagram.data.nodes.remove(item.node())
         elif isinstance(item, ConnectorItem):
             self._clearUpConnectorItem(item)
 

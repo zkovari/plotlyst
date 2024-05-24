@@ -48,13 +48,13 @@ class EventsMindMapScene(NetworkScene):
 
         self.repo = RepositoryPersistenceManager.instance()
 
-    @overrides
-    def keyPressEvent(self, event: QKeyEvent) -> None:
-        super().keyPressEvent(event)
-        if not event.modifiers() and not event.key() == Qt.Key.Key_Escape and len(self.selectedItems()) == 1:
-            item = self.selectedItems()[0]
-            if isinstance(item, (EventItem, NoteItem)):
-                self.editItem.emit(item)
+    # @overrides
+    # def keyPressEvent(self, event: QKeyEvent) -> None:
+    #     super().keyPressEvent(event)
+    #     if not event.modifiers() and not event.key() == Qt.Key.Key_Escape and len(self.selectedItems()) == 1:
+    #         item = self.selectedItems()[0]
+    #         if isinstance(item, (EventItem, NoteItem)):
+    #             self.editItem.emit(item)
 
     @overrides
     def _character(self, node: Node) -> Optional[Character]:
@@ -163,19 +163,19 @@ class EventsMindMapView(NetworkGraphicsView):
         #                                               self._wdgSecondaryStickerSelector.sizeHint().width(),
         #                                               self._wdgSecondaryStickerSelector.sizeHint().height())
 
-    @overrides
-    def _editEventItem(self, item: EventItem):
-        def setText(text: str):
-            item.setText(text)
-
-        popup = TextLineEditorPopup(item.text(), item.textRect(), parent=self)
-        font = QApplication.font()
-        font.setPointSize(max(int(item.fontSize() * self._scaledFactor), font.pointSize()))
-        popup.setFont(font)
-        view_pos = self.mapFromScene(item.textSceneRect().topLeft())
-        popup.aboutToHide.connect(lambda: setText(popup.text()))
-
-        popup.exec(self.mapToGlobal(view_pos))
+    # @overrides
+    # def _editEventItem(self, item: EventItem):
+    #     def setText(text: str):
+    #         item.setText(text)
+    #
+    #     popup = TextLineEditorPopup(item.text(), item.textRect(), parent=self)
+    #     font = QApplication.font()
+    #     font.setPointSize(max(int(item.fontSize() * self._scaledFactor), font.pointSize()))
+    #     popup.setFont(font)
+    #     view_pos = self.mapFromScene(item.textSceneRect().topLeft())
+    #     popup.aboutToHide.connect(lambda: setText(popup.text()))
+    #
+    #     popup.exec(self.mapToGlobal(view_pos))
 
     @overrides
     def _editNoteItem(self, item: NoteItem):

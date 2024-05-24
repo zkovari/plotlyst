@@ -20,18 +20,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from PyQt6.QtCore import Qt, QRectF
-from PyQt6.QtGui import QFont, QTextDocument, QPainter
+from PyQt6.QtGui import QFont, QTextDocument, QPainter, QTransform, QColor
 from PyQt6.QtWidgets import QWidget, QStackedWidget, QTextEdit, QTabWidget, QAbstractGraphicsShapeItem, \
-    QStyleOptionGraphicsItem, QGraphicsScene
+    QStyleOptionGraphicsItem
 from overrides import overrides
 from qthandy import vbox
 from qttextedit import RichTextEditor
 
 from plotlyst.common import RELAXED_WHITE_COLOR
+from plotlyst.core.domain import Node
 from plotlyst.view.common import spawn, push_btn, link_editor_to_btn
 from plotlyst.view.icons import IconRegistry
-from plotlyst.view.widget.graphics import BaseGraphicsView
-from plotlyst.view.widget.graphics.items import draw_helpers
+from plotlyst.view.widget.graphics import NetworkScene, NetworkGraphicsView
+from plotlyst.view.widget.graphics.items import TextItem
 
 
 class ExcerptItem(QAbstractGraphicsShapeItem):
@@ -58,9 +59,48 @@ class ExcerptItem(QAbstractGraphicsShapeItem):
 
     @overrides
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
-        draw_helpers(painter, self)
         if self._document:
             self._document.drawContents(painter, self.boundingRect())
+
+
+class CritiqueItem(TextItem):
+    def __init__(self, node: Node, parent=None):
+        super().__init__(node, parent)
+        # self._font.setFamily('Serif')
+
+
+class CritiqueScene(NetworkScene):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.excerptItem = ExcerptItem()
+        self.addItem(self.excerptItem)
+
+    @overrides
+    def mouseDoubleClickEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        if (not self.isAdditionMode() and not self.linkMode() and
+                event.button() & Qt.MouseButton.LeftButton):
+            itemAt = self.itemAt(event.scenePos(), QTransform())
+            if itemAt is None or itemAt == self.excerptItem:
+                pos = self._cursorScenePos()
+                if pos:
+                    node = self.toNoteNode(pos)
+                    node.size = 14
+                    item = CritiqueItem(node)
+                    self.addItem(item)
+            else:
+                super().mouseDoubleClickEvent(event)
+        else:
+            super().mouseDoubleClickEvent(event)
+
+
+class CritiqueView(NetworkGraphicsView):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setBackgroundBrush(QColor(RELAXED_WHITE_COLOR))
+
+    @overrides
+    def _initScene(self) -> NetworkScene:
+        return CritiqueScene()
 
 
 @spawn
@@ -100,24 +140,24 @@ class CritiqueWidget(QWidget):
         self.richtextEditor = RichTextEditor()
         self.richtextEditor.setFixedWidth(900)
         font: QFont = self.richtextEditor.textEdit.font()
-        font.setPointSize(13)
-        font.setFamily('Sans-serif')
+        font.setPointSize(12)
+        font.setFamily('Cursive')
         self.richtextEditor.textEdit.setFont(font)
         self.richtextEditor.textEdit.setSidebarEnabled(False)
         self.richtextEditor.textEdit.setContentsMargins(0, 0, 0, 0)
         self.tabEditor.layout().addWidget(self.richtextEditor)
 
         vbox(self.tabVisual)
-        self.visual = BaseGraphicsView()
+        self.visual = CritiqueView()
         self.tabVisual.layout().addWidget(self.visual)
 
-        scene = QGraphicsScene()
-        self.visual.setScene(scene)
-        self.item = ExcerptItem()
-        self.item.setDocument(self.richtextEditor.textEdit.document())
-        self.richtextEditor.textEdit.textChanged.connect(self.item.refresh)
-        scene.addItem(self.item)
-        self.visual.centerOn(self.item.sceneBoundingRect().center())
+        # scene = CritiqueScene()
+        # self.visual.setScene(scene)
+        # self.item = ExcerptItem()
+        self.visual.scene().excerptItem.setDocument(self.richtextEditor.textEdit.document())
+        self.richtextEditor.textEdit.textChanged.connect(self.visual.scene().excerptItem.refresh)
+        # scene.addItem(self.item)
+        self.visual.centerOn(self.visual.scene().excerptItem.sceneBoundingRect().center())
         self.richtextEditor.textEdit.setText('''When twenty-four-year-old Nerissa Avon realizes her best friend Alicen Delaris has been abducted by an invading Fae warband, she knows immediately what she must do: infiltrate the war camp and rescue her.
         Far from home and stranded on the other side of the continent, Nerissa must fight to convince the Knights of the Human Kingdom to believe her story and send aid, despite their famed prejudice against Nerissa’s people.
         A common fisherfolk from the lowly island of Lasgair, Nerissa knows she won’t stand a chance against the ruthless, bloodthirsty Fae from the fables of her childhood. But Nerissa’s about had enough of being underestimated, abandoned, and discarded: though she may never recover, Nerissa is willing to sell her soul to save her best friend.

@@ -24,7 +24,7 @@ from enum import Enum
 from typing import Any, Optional, List
 
 from PyQt6.QtCore import Qt, QTimer, QRectF, QPointF, QPoint, QRect
-from PyQt6.QtGui import QPainter, QPen, QPainterPath, QColor, QIcon, QPolygonF, QBrush, QFontMetrics, QImage
+from PyQt6.QtGui import QPainter, QPen, QPainterPath, QColor, QIcon, QPolygonF, QBrush, QFontMetrics, QImage, QFont
 from PyQt6.QtWidgets import QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QGraphicsSceneMouseEvent, \
     QStyleOptionGraphicsItem, QWidget, \
     QGraphicsSceneHoverEvent, QGraphicsPolygonItem, QApplication, QGraphicsTextItem
@@ -903,6 +903,9 @@ class EventItem(NodeItem):
         self._refresh()
         self.networkScene().nodeChangedEvent(self._node)
 
+    def font(self) -> QFont:
+        return self._font
+
     def fontSize(self) -> int:
         return self._font.pointSize()
 
@@ -992,6 +995,28 @@ class EventItem(NodeItem):
         self._socketBottomRight.setPos(self._socketBottomCenter.pos().x() + centerDistance,
                                        self._height - self.Margin + socketPadding)
         self._socketLeft.setPos(socketPadding, self._height / 2 - socketRad)
+
+
+class TextItem(EventItem):
+    def __init__(self, node: Node, parent=None):
+        super().__init__(node, parent)
+
+    @overrides
+    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+        if self.isSelected():
+            painter.setPen(QPen(Qt.GlobalColor.gray, 2, Qt.PenStyle.DashLine))
+            painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 2, 2)
+
+        painter.setPen(QPen(QColor(self._node.color), 1))
+        # painter.setBrush(QColor(WHITE_COLOR))
+        # painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 24, 24)
+        painter.setFont(self._font)
+        painter.drawText(self._textRect, Qt.AlignmentFlag.AlignCenter,
+                         self._text if self._text else self._placeholderText)
+
+    @overrides
+    def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        self.networkScene().editItemEvent(self)
 
 
 class NoteItem(NodeItem):
