@@ -141,7 +141,7 @@ class CritiqueWidget(QWidget):
         self.richtextEditor.setFixedWidth(900)
         font: QFont = self.richtextEditor.textEdit.font()
         font.setPointSize(12)
-        font.setFamily('Cursive')
+        font.setFamily('Sans-serif')
         self.richtextEditor.textEdit.setFont(font)
         self.richtextEditor.textEdit.setSidebarEnabled(False)
         self.richtextEditor.textEdit.setContentsMargins(0, 0, 0, 0)
