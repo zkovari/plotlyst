@@ -22,7 +22,7 @@ from typing import Optional
 from PyQt6.QtCore import Qt, QRectF
 from PyQt6.QtGui import QFont, QTextDocument, QPainter, QTransform, QColor
 from PyQt6.QtWidgets import QWidget, QStackedWidget, QTextEdit, QTabWidget, QAbstractGraphicsShapeItem, \
-    QStyleOptionGraphicsItem
+    QStyleOptionGraphicsItem, QGraphicsSceneMouseEvent
 from overrides import overrides
 from qthandy import vbox
 from qttextedit import RichTextEditor
@@ -78,7 +78,7 @@ class CritiqueScene(NetworkScene):
         self.addItem(self.excerptItem)
 
     @overrides
-    def mouseDoubleClickEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+    def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         if (not self.isAdditionMode() and not self.linkMode() and
                 event.button() & Qt.MouseButton.LeftButton):
             itemAt = self.itemAt(event.scenePos(), QTransform())
@@ -89,6 +89,7 @@ class CritiqueScene(NetworkScene):
                     node.size = 14
                     item = CritiqueItem(node)
                     self.addItem(item)
+                    self.editItem.emit(item)
             else:
                 super().mouseDoubleClickEvent(event)
         else:
