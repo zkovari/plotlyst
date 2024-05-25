@@ -69,7 +69,6 @@ class CritiqueItem(TextItem):
 
     def __init__(self, node: Node, parent=None):
         super().__init__(node, parent)
-        # self._font.setFamily('Serif')
 
 
 class CritiqueScene(NetworkScene):
@@ -146,6 +145,7 @@ class CritiqueWidget(QWidget):
         font.setPointSize(11)
         font.setFamily('Sans-serif')
         self.richtextEditor.textEdit.setFont(font)
+        self.richtextEditor.textEdit.setTextColor(QColor('#4a4e69'))
         self.richtextEditor.textEdit.setSidebarEnabled(False)
         self.richtextEditor.textEdit.setContentsMargins(0, 0, 0, 0)
         self.tabEditor.layout().addWidget(self.richtextEditor)
