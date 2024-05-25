@@ -64,6 +64,9 @@ class ExcerptItem(QAbstractGraphicsShapeItem):
 
 
 class CritiqueItem(TextItem):
+    Margin: int = 20
+    Padding: int = 5
+
     def __init__(self, node: Node, parent=None):
         super().__init__(node, parent)
         # self._font.setFamily('Serif')
