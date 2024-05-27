@@ -138,7 +138,6 @@ class SelectedIdeasListModel(QAbstractListModel):
 
     @overrides
     def rowCount(self, parent: QModelIndex = ...) -> int:
-        # return len([x for x in self._premise.ideas if x.selected])
         return len(self._premise.ideas)
 
     @overrides
@@ -154,6 +153,10 @@ class SelectedIdeasListModel(QAbstractListModel):
             font = QApplication.font()
             font.setPointSize(15)
             return font
+
+
+class SelectedQuestionsListModel(QAbstractListModel):
+    SelectionRole = Qt.ItemDataRole.UserRole + 1
 
 
 class ConceptQuestionWidget(QWidget):
@@ -300,7 +303,6 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
             self.btnConcept.setChecked(True)
         else:
             self.btnSeed.setChecked(True)
-
 
     def _addNewIdea(self):
         text = TextAreaInputDialog.edit('Add a new idea', self.IDEA_EDIT_PLACEHOLDER, self.IDEA_EDIT_DESC)
