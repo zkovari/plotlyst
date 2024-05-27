@@ -49,7 +49,6 @@ class ExcerptItem(QAbstractGraphicsShapeItem):
     def refresh(self):
         self._width = self._document.size().width()
         self._height = self._document.size().height()
-        print(f'size {self._width} {self._height}')
         self.prepareGeometryChange()
         self.update()
 
@@ -155,18 +154,9 @@ class CritiqueWidget(QWidget):
         self.visual = CritiqueView()
         self.tabVisual.layout().addWidget(self.visual)
 
-        # scene = CritiqueScene()
-        # self.visual.setScene(scene)
-        # self.item = ExcerptItem()
         self.visual.scene().excerptItem.setDocument(self.richtextEditor.textEdit.document())
         self.richtextEditor.textEdit.textChanged.connect(self.visual.scene().excerptItem.refresh)
-        # scene.addItem(self.item)
         self.visual.centerOn(self.visual.scene().excerptItem.sceneBoundingRect().center())
-        self.richtextEditor.textEdit.setText('''When twenty-four-year-old Nerissa Avon realizes her best friend Alicen Delaris has been abducted by an invading Fae warband, she knows immediately what she must do: infiltrate the war camp and rescue her.
-        Far from home and stranded on the other side of the continent, Nerissa must fight to convince the Knights of the Human Kingdom to believe her story and send aid, despite their famed prejudice against Nerissa’s people.
-        A common fisherfolk from the lowly island of Lasgair, Nerissa knows she won’t stand a chance against the ruthless, bloodthirsty Fae from the fables of her childhood. But Nerissa’s about had enough of being underestimated, abandoned, and discarded: though she may never recover, Nerissa is willing to sell her soul to save her best friend.
-        As Nerissa continues to sacrifice everything she is for her goal, she finds herself alienating the very people who she will need to secure Alicen’s freedom, and uncover the truth: the Fae have no intentions of leaving the Human Kingdom alive – and Nerissa has just been caught in the middle of it.
-''')
         self.richtextEditor.textEdit.setBlockFormat(220)
 
         self.stack.setCurrentWidget(self.pageEditor)  # TODO change later
