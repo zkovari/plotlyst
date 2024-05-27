@@ -22,6 +22,7 @@ import sys
 from functools import partial
 from typing import Optional, Tuple, List, Union
 
+import qtanim
 import qtawesome
 from PyQt6.QtCharts import QChart, QChartView
 from PyQt6.QtCore import QRectF, QModelIndex, QRect, QPoint, QBuffer, QIODevice, QSize, QObject, QEvent, Qt, QTimer, \
@@ -31,11 +32,12 @@ from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemVie
     QMenu, QAbstractButton, \
     QStackedWidget, QAbstractScrollArea, QLineEdit, QHeaderView, QScrollArea, QFrame, QTabWidget, \
     QGraphicsDropShadowEffect, QTableView, QPushButton, QToolButton, QButtonGroup, QToolTip, QApplication, QMainWindow, \
-    QLabel, QGraphicsObject
+    QLabel, QGraphicsObject, QTextEdit
 from fbs_runtime import platform
 from overrides import overrides
 from qtanim import fade_out
 from qthandy import hbox, vbox, margins, gc, transparent, spacer, sp, pointy
+from qthandy.filter import DisabledClickEventFilter
 
 from plotlyst.env import app_env
 from plotlyst.view.stylesheet import APP_STYLESHEET
@@ -237,9 +239,15 @@ def link_buttons_to_pages(stack: QStackedWidget, buttons: List[Tuple[QAbstractBu
         btn.toggled.connect(partial(_open, wdg))
 
 
-def link_editor_to_btn(editor: QWidget, btn: QAbstractButton):
+def link_editor_to_btn(editor: QWidget, btn: QAbstractButton, disabledShake: bool = False):
     if isinstance(editor, QLineEdit):
         editor.textChanged.connect(lambda: btn.setEnabled((len(editor.text()) > 0)))
+    elif isinstance(editor, QTextEdit):
+        editor.textChanged.connect(lambda: btn.setEnabled((len(editor.toPlainText()) > 0)))
+
+    if disabledShake:
+        # btn.installEventFilter(DisabledClickEventFilter(btn, slot=lambda: qtanim.shake(editor)))
+        btn.installEventFilter(DisabledClickEventFilter(btn, lambda: qtanim.shake(editor)))
 
 
 def scroll_to_top(scroll_area: QAbstractScrollArea):
@@ -549,7 +557,6 @@ def spawn(cls):
     widget = cls()
     wdgDisplay = QWidget()
     hbox(wdgDisplay)
-    wdgDisplay.layout().addWidget(spacer())
     if isinstance(widget, QChart):
         view = QChartView()
         view.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -557,7 +564,6 @@ def spawn(cls):
         wdgDisplay.layout().addWidget(view)
     else:
         wdgDisplay.layout().addWidget(widget)
-    wdgDisplay.layout().addWidget(spacer())
 
     btnClose = QPushButton("Close")
     sp(btnClose).h_max()
