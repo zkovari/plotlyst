@@ -145,8 +145,7 @@ class SelectedIdeasListModel(QAbstractListModel):
         if role == self.SelectionRole:
             return str(self._premise.ideas[index.row()].selected)
         elif role == Qt.ItemDataRole.DisplayRole:
-            idea = self._premise.ideas[index.row()]
-            return idea.text
+            return self._premise.ideas[index.row()].text
         elif role == Qt.ItemDataRole.DecorationRole:
             return IconRegistry.from_name('mdi.seed', 'grey')
         elif role == Qt.ItemDataRole.FontRole:
@@ -157,6 +156,27 @@ class SelectedIdeasListModel(QAbstractListModel):
 
 class SelectedQuestionsListModel(QAbstractListModel):
     SelectionRole = Qt.ItemDataRole.UserRole + 1
+
+    def __init__(self, premise: PremiseBuilder, parent=None):
+        super().__init__(parent)
+        self._premise = premise
+
+    @overrides
+    def rowCount(self, parent: QModelIndex = ...) -> int:
+        return len(self._premise.questions)
+
+    @overrides
+    def data(self, index: QModelIndex, role: int) -> Any:
+        if role == self.SelectionRole:
+            return str(self._premise.questions[index.row()].selected)
+        elif role == Qt.ItemDataRole.DisplayRole:
+            return self._premise.questions[index.row()].text
+        elif role == Qt.ItemDataRole.DecorationRole:
+            return IconRegistry.from_name('fa5.question-circle', 'grey')
+        elif role == Qt.ItemDataRole.FontRole:
+            font = QApplication.font()
+            font.setPointSize(13)
+            return font
 
 
 class ConceptQuestionWidget(QWidget):
@@ -278,12 +298,20 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.btnNextToPremise.installEventFilter(ButtonPressResizeEventFilter(self.btnNextToPremise))
 
         self.ideasModel = SelectedIdeasListModel(self._premise)
-        self._proxy = proxy(self.ideasModel)
-        self._proxy.setFilterRole(SelectedIdeasListModel.SelectionRole)
-        self.listSelectedIdeas.setFont(QApplication.font())
-        self.listSelectedIdeas.setModel(self._proxy)
+        self._proxyIdeas = proxy(self.ideasModel)
+        self._proxyIdeas.setFilterRole(SelectedIdeasListModel.SelectionRole)
+        # self.listSelectedIdeas.setFont(QApplication.font())
+        self.listSelectedIdeas.setModel(self._proxyIdeas)
         self.listSelectedIdeas.setSpacing(20)
-        self._proxy.setFilterFixedString('True')
+        self._proxyIdeas.setFilterFixedString('True')
+
+        self.questionsModel = SelectedQuestionsListModel(self._premise)
+        self._proxyQuestions = proxy(self.questionsModel)
+        self._proxyQuestions.setFilterRole(SelectedQuestionsListModel.SelectionRole)
+        # self.listSelectedQuestions.setFont(QApplication.font())
+        self.listSelectedQuestions.setModel(self._proxyQuestions)
+        self.listSelectedQuestions.setViewportMargins(20, 3, 3, 3)
+        self._proxyQuestions.setFilterFixedString('True')
 
         link_buttons_to_pages(self.stackedWidget, [(self.btnSeed, self.pageSeed), (self.btnConcept, self.pageConcept),
                                                    (self.btnPremise, self.pagePremise)])
@@ -319,24 +347,24 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
             wdg = self.__initIdeaWidget(idea)
             qtanim.fade_in(wdg)
             self.changed.emit()
-            self._proxy.invalidate()
+            self._proxyIdeas.invalidate()
 
     def _editIdea(self, wdg: IdeaWidget):
         text = TextAreaInputDialog.edit('Edit idea', self.IDEA_EDIT_PLACEHOLDER, self.IDEA_EDIT_DESC, wdg.text())
         if text:
             wdg.setText(text)
             self.changed.emit()
-            self._proxy.invalidate()
+            self._proxyIdeas.invalidate()
 
     def _removeIdea(self, wdg: IdeaWidget):
         idea = wdg.idea()
         self._premise.ideas.remove(idea)
         fade_out_and_gc(self.wdgIdeasEditor, wdg)
         self.changed.emit()
-        self._proxy.invalidate()
+        self._proxyIdeas.invalidate()
 
     def _ideaToggled(self):
-        self._proxy.invalidate()
+        self._proxyIdeas.invalidate()
         self.changed.emit()
 
     def _addNewConcept(self):
@@ -348,12 +376,18 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         wdg = self.__initConceptQuestionWidget(question)
         qtanim.fade_in(wdg, teardown=finish)
         self.changed.emit()
+        self._proxyQuestions.invalidate()
 
     def _removeConceptQuestion(self, wdg: ConceptQuestionWidget):
         question = wdg.question()
         fade_out_and_gc(self.wdgConceptEditor, wdg)
         self._premise.questions.remove(question)
         self.changed.emit()
+        self._proxyQuestions.invalidate()
+
+    def _conceptQuestionChanged(self):
+        self.changed.emit()
+        self._proxyQuestions.invalidate()
 
     def __initIdeaWidget(self, idea: PremiseIdea) -> IdeaWidget:
         wdg = IdeaWidget(idea)
@@ -367,7 +401,8 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
     def __initConceptQuestionWidget(self, question: PremiseQuestion) -> ConceptQuestionWidget:
         wdg = ConceptQuestionWidget(question)
         wdg.remove.connect(partial(self._removeConceptQuestion, wdg))
-        wdg.changed.connect(self.changed)
+        wdg.changed.connect(self._conceptQuestionChanged)
+
         self.wdgConceptEditor.layout().addWidget(wdg)
 
         return wdg
