@@ -79,4 +79,9 @@ QTreeView::item:selected:!active {
     color: black;
 }
 
+QListView {
+    background-color: #f8f9fa;
+    alternate-background-color: #F0E6F4;
+}
+
 '''

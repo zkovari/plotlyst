@@ -31,7 +31,7 @@ from qthandy import hbox, translucent, bold, incr_font, transparent, retain_when
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget, GridMenuWidget
 
-from plotlyst.common import PLOTLYST_TERTIARY_COLOR
+from plotlyst.common import PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import SelectionItem, Novel, tag_characterization, tag_worldbuilding, \
     tag_brainstorming, tag_research, tag_writing, tag_plotting, tag_theme, tag_outlining, tag_revision, tag_drafting, \
     tag_editing, tag_collect_feedback, tag_publishing, tag_marketing, tag_book_cover_design, tag_formatting
@@ -300,7 +300,7 @@ class ToolbarButton(QToolButton):
 
 
 class CollapseButton(QPushButton):
-    def __init__(self, idle: Qt.Edge, checked: Qt.Edge, parent=None):
+    def __init__(self, idle: Qt.Edge = Qt.Edge.BottomEdge, checked: Qt.Edge = Qt.Edge.RightEdge, parent=None):
         super(CollapseButton, self).__init__(parent)
         self._idleIcon = self._icon(idle)
         self._checkedIcon = self._icon(checked)
@@ -512,7 +512,7 @@ class EyeToggle(QToolButton):
 
     def _toggled(self, toggled: bool):
         if toggled:
-            self.setIcon(IconRegistry.from_name('ei.eye-open'))
+            self.setIcon(IconRegistry.from_name('ei.eye-open', PLOTLYST_SECONDARY_COLOR))
             translucent(self, 1)
         else:
             self.setIcon(IconRegistry.from_name('ei.eye-close'))

@@ -28,7 +28,7 @@ from qthandy import flow, transparent, pointy, hbox, grid, vspacer, italic, unde
     spacer, line, decr_icon, ask_confirmation, vline
 from qthandy.filter import OpacityEventFilter
 
-from plotlyst.common import PLOTLYST_MAIN_COMPLEMENTARY_COLOR
+from plotlyst.common import PLOTLYST_MAIN_COMPLEMENTARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.event.core import EventListener, Event
 from plotlyst.event.handler import global_event_dispatcher
 from plotlyst.model.common import proxy
@@ -232,7 +232,7 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
                 if self.color == '#ffffff':
                     return QBrush(Qt.GlobalColor.lightGray)
                 else:
-                    return QBrush(Qt.GlobalColor.white)
+                    return QBrush(QColor(RELAXED_WHITE_COLOR))
 
             if role == Qt.ItemDataRole.ToolTipRole:
                 return self.icons[index.row()].name.split('.')[1].replace('-', ' ').capitalize()

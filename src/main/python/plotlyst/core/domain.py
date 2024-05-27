@@ -2665,6 +2665,37 @@ class MiceQuotient:
     threads: List[MiceThread] = field(default_factory=list)
 
 
+@dataclass
+class BoxParameters:
+    lm: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    tm: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    rm: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    bm: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    width: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+
+
+@dataclass
+class PremiseIdea:
+    text: str
+    selected: bool = True
+    params: Optional[BoxParameters] = None
+
+
+@dataclass
+class PremiseQuestion:
+    text: str
+    selected: bool = True
+    visible: bool = True
+
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class PremiseBuilder:
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    ideas: List[PremiseIdea] = field(default_factory=list)
+    questions: List[PremiseQuestion] = field(default_factory=list)
+
+
 class DocumentType(Enum):
     DOCUMENT = 0
     CHARACTER_BACKSTORY = 1
