@@ -34,7 +34,7 @@ from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_S
 from plotlyst.core.domain import Document, PremiseBuilder, PremiseIdea, BoxParameters, PremiseQuestion
 from plotlyst.model.common import proxy
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, frame, action, fade_out_and_gc, \
-    tool_btn, insert_after, label
+    tool_btn, insert_after, wrap
 from plotlyst.view.generated.premise_builder_widget_ui import Ui_PremiseBuilderWidget
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -313,15 +313,11 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.listSelectedQuestions.setViewportMargins(20, 3, 3, 3)
         self._proxyQuestions.setFilterFixedString('True')
 
-        self.keywordsEditor = LabelsEditor()
-        lblKeyword = label('Keywords', bold=True)
-        sp(lblKeyword).v_max()
-        wdgKeywordsContainer = QWidget()
-        hbox(wdgKeywordsContainer)
-        margins(wdgKeywordsContainer, left=20)
-        wdgKeywordsContainer.layout().addWidget(lblKeyword, alignment=Qt.AlignmentFlag.AlignTop)
-        wdgKeywordsContainer.layout().addWidget(self.keywordsEditor)
-        insert_after(self.scrollAreaWidgetContents_3, wdgKeywordsContainer,
+        self.listSelectedQuestions.setHidden(True)
+        self.subtitleConcept2.setHidden(True)
+
+        self.keywordsEditor = LabelsEditor('Keywords')
+        insert_after(self.scrollAreaWidgetContents_3, wrap(self.keywordsEditor, margin_left=20),
                      self.subtitlePremise)
 
         link_buttons_to_pages(self.stackedWidget, [(self.btnSeed, self.pageSeed), (self.btnConcept, self.pageConcept),

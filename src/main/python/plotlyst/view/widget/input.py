@@ -32,11 +32,12 @@ from PyQt6.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyl
     QApplication, QToolButton, QLineEdit, QWidgetAction, QListView, QSpinBox, QWidget, QLabel, QDialog
 from language_tool_python import LanguageTool
 from overrides import overrides
-from qthandy import transparent, hbox, margins, pointy, sp, line, flow
+from qthandy import transparent, hbox, margins, pointy, sp, line, flow, vbox
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
 
-from plotlyst.common import IGNORE_CAPITALIZATION_PROPERTY
+from plotlyst.common import IGNORE_CAPITALIZATION_PROPERTY, PLOTLYST_TERTIARY_COLOR, \
+    RELAXED_WHITE_COLOR
 from plotlyst.core.domain import TextStatistics, Character
 from plotlyst.core.text import wc
 from plotlyst.env import app_env
@@ -919,21 +920,56 @@ class TextAreaInputDialog(PopupDialog):
 
 
 class LabelsEditor(QFrame):
-    def __init__(self, parent=None):
+    def __init__(self, title: str = '', parent=None):
         super().__init__(parent)
-        flow(self)
+        self.setFrameShape(QFrame.Shape.StyledPanel)
+        self.setObjectName('parentFrame')
+        self.wdgHeader = QWidget()
+        self.wdgHeader.setObjectName('labelsHeader')
+        self.wdgContainer = QWidget()
+        vbox(self, 0)
+        self.layout().addWidget(self.wdgHeader)
+        self.layout().addWidget(line())
+        self.layout().addWidget(self.wdgContainer)
+
+        self.setStyleSheet(f'''
+            #parentFrame {{
+                border-radius: 12px;
+                border: 1px solid lightgrey;
+            }}
+            #labelsHeader {{
+                background: {PLOTLYST_TERTIARY_COLOR};
+                border-radius: 12px;
+                border: 1px hidden lightgrey;
+            }}
+            #labelsTitle {{
+                color: {RELAXED_WHITE_COLOR};
+            }}
+        ''')
+
+        hbox(self.wdgHeader, 0, 0)
+        flow(self.wdgContainer)
+
+        self.lblTitle = label(title, bold=True)
+        self.lblTitle.setObjectName('labelsTitle')
+        self.wdgHeader.layout().addWidget(self.lblTitle, alignment=Qt.AlignmentFlag.AlignCenter)
+        if not title:
+            self.lblTitle.setHidden(True)
 
         self.linePlaceholder = QLineEdit()
+        self.linePlaceholder.setObjectName('labelPlaceholder')
         self.linePlaceholder.setProperty('transparent', True)
         self.linePlaceholder.setPlaceholderText('Edit')
         self.linePlaceholder.installEventFilter(self)
         self.linePlaceholder.editingFinished.connect(self._editingFinished)
 
-        self.btnAdd = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True)
+        self.btnAdd = tool_btn(IconRegistry.plus_icon(PLOTLYST_TERTIARY_COLOR), transparent_=True)
         self.btnAdd.clicked.connect(self._startEditing)
-        self.layout().addWidget(self.linePlaceholder)
+        self.wdgContainer.layout().addWidget(self.linePlaceholder)
         self.linePlaceholder.setHidden(True)
-        self.layout().addWidget(self.btnAdd)
+        self.wdgContainer.layout().addWidget(self.btnAdd)
+
+        sp(self).v_max()
 
     @overrides
     def eventFilter(self, watched: 'QObject', event: 'QEvent') -> bool:
@@ -956,6 +992,10 @@ class LabelsEditor(QFrame):
     def _editingFinished(self):
         if self.linePlaceholder.text():
             lbl = label(self.linePlaceholder.text())
-            insert_before(self, lbl, self.linePlaceholder)
+            lbl.setStyleSheet(
+                f'''QLabel {{
+                            background-color: {PLOTLYST_TERTIARY_COLOR}; border-radius: 6px; color: {RELAXED_WHITE_COLOR};
+                        }}''')
+            insert_before(self.wdgContainer, lbl, self.linePlaceholder)
         self.linePlaceholder.setHidden(True)
         self.btnAdd.setVisible(True)
