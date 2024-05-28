@@ -26,7 +26,7 @@ from PyQt6.QtCore import Qt, pyqtSignal, QAbstractListModel, QModelIndex
 from PyQt6.QtGui import QFont, QMouseEvent, QResizeEvent
 from PyQt6.QtWidgets import QWidget, QApplication, QLineEdit
 from overrides import overrides
-from qthandy import incr_font, flow, margins, vbox, hbox, pointy, sp, spacer, retain_when_hidden, incr_icon
+from qthandy import incr_font, flow, margins, vbox, hbox, pointy, sp, spacer, retain_when_hidden, incr_icon, transparent
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
@@ -316,9 +316,20 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.listSelectedQuestions.setHidden(True)
         self.subtitleConcept2.setHidden(True)
 
+        self.btnPremiseIcon.setIcon(IconRegistry.from_name('mdi.label-variant'))
+
         self.keywordsEditor = LabelsEditor('Keywords')
         insert_after(self.scrollAreaWidgetContents_3, wrap(self.keywordsEditor, margin_left=20),
                      self.subtitlePremise)
+        self.textPremise = AutoAdjustableTextEdit()
+        transparent(self.textPremise)
+        font: QFont = self.textPremise.font()
+        font.setFamily('Cursive')
+        font.setPointSize(20)
+        self.textPremise.setFont(font)
+        self.textPremise.setPlaceholderText("Encapsulate your story's core idea in 1-2 sentences")
+        sp(self.textPremise).h_exp()
+        self.wdgPremiseParent.layout().addWidget(self.textPremise)
 
         link_buttons_to_pages(self.stackedWidget, [(self.btnSeed, self.pageSeed), (self.btnConcept, self.pageConcept),
                                                    (self.btnPremise, self.pagePremise)])

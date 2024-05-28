@@ -200,8 +200,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>433</width>
-            <height>61</height>
+            <width>538</width>
+            <height>349</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -592,41 +592,100 @@
             </widget>
            </item>
            <item>
-            <widget class="QWidget" name="widget_2" native="true">
-             <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <widget class="QWidget" name="wdgAttributesParent" native="true">
+             <layout class="QHBoxLayout" name="horizontalLayout_6">
+              <property name="spacing">
+               <number>3</number>
+              </property>
               <property name="leftMargin">
-               <number>20</number>
+               <number>2</number>
               </property>
               <property name="topMargin">
-               <number>0</number>
+               <number>15</number>
               </property>
               <property name="rightMargin">
-               <number>0</number>
+               <number>2</number>
               </property>
               <property name="bottomMargin">
-               <number>0</number>
+               <number>2</number>
               </property>
-              <item alignment="Qt::AlignLeft">
-               <widget class="QPushButton" name="btnNewConcept_2">
-                <property name="cursor">
-                 <cursorShape>PointingHandCursor</cursorShape>
+              <item>
+               <spacer name="horizontalSpacer_5">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
                 </property>
-                <property name="text">
-                 <string>Add a new 'What if' question</string>
+                <property name="sizeType">
+                 <enum>QSizePolicy::Fixed</enum>
                 </property>
-                <property name="base" stdset="0">
-                 <bool>true</bool>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
                 </property>
-                <property name="positive" stdset="0">
-                 <bool>true</bool>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QWidget" name="wdgPremiseParent" native="true">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
                 </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>1000</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <layout class="QHBoxLayout" name="horizontalLayout_7">
+                 <property name="spacing">
+                  <number>3</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>100</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>2</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>100</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>2</number>
+                 </property>
+                 <item alignment="Qt::AlignHCenter">
+                  <widget class="QToolButton" name="btnPremiseIcon">
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="transparent" stdset="0">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
                </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_7">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeType">
+                 <enum>QSizePolicy::Fixed</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
               </item>
              </layout>
             </widget>
-           </item>
-           <item>
-            <widget class="QWidget" name="wdgConceptEditor_2" native="true"/>
            </item>
            <item>
             <spacer name="verticalSpacer_4">
