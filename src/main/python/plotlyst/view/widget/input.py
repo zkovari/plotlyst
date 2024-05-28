@@ -32,7 +32,7 @@ from PyQt6.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyl
     QApplication, QToolButton, QLineEdit, QWidgetAction, QListView, QSpinBox, QWidget, QLabel, QDialog
 from language_tool_python import LanguageTool
 from overrides import overrides
-from qthandy import transparent, hbox, margins, pointy, sp, line
+from qthandy import transparent, hbox, margins, pointy, sp, line, flow
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
 
@@ -47,7 +47,7 @@ from plotlyst.model.characters_model import CharactersTableModel
 from plotlyst.model.common import proxy
 from plotlyst.service.grammar import language_tool_proxy, dictionary
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import action, label, push_btn, tool_btn
+from plotlyst.view.common import action, label, push_btn, tool_btn, insert_before
 from plotlyst.view.dialog.utility import IconSelectorDialog
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.text import apply_texteditor_toolbar_style
@@ -916,3 +916,46 @@ class TextAreaInputDialog(PopupDialog):
 
     def _textChanged(self):
         self.btnConfirm.setEnabled(len(self.textEdit.toPlainText()) > 0)
+
+
+class LabelsEditor(QFrame):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        flow(self)
+
+        self.linePlaceholder = QLineEdit()
+        self.linePlaceholder.setProperty('transparent', True)
+        self.linePlaceholder.setPlaceholderText('Edit')
+        self.linePlaceholder.installEventFilter(self)
+        self.linePlaceholder.editingFinished.connect(self._editingFinished)
+
+        self.btnAdd = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True)
+        self.btnAdd.clicked.connect(self._startEditing)
+        self.layout().addWidget(self.linePlaceholder)
+        self.linePlaceholder.setHidden(True)
+        self.layout().addWidget(self.btnAdd)
+
+    @overrides
+    def eventFilter(self, watched: 'QObject', event: 'QEvent') -> bool:
+        if event.type() == QEvent.Type.KeyPress:
+            if event.key() == Qt.Key.Key_Escape:
+                self._cancelEditing()
+
+        return super().eventFilter(watched, event)
+
+    def _startEditing(self):
+        self.linePlaceholder.clear()
+        self.btnAdd.setHidden(True)
+        self.linePlaceholder.setVisible(True)
+        self.linePlaceholder.setFocus()
+
+    def _cancelEditing(self):
+        self.linePlaceholder.clear()
+        self._editingFinished()
+
+    def _editingFinished(self):
+        if self.linePlaceholder.text():
+            lbl = label(self.linePlaceholder.text())
+            insert_before(self, lbl, self.linePlaceholder)
+        self.linePlaceholder.setHidden(True)
+        self.btnAdd.setVisible(True)

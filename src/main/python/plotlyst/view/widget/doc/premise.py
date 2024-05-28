@@ -34,12 +34,12 @@ from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_S
 from plotlyst.core.domain import Document, PremiseBuilder, PremiseIdea, BoxParameters, PremiseQuestion
 from plotlyst.model.common import proxy
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, frame, action, fade_out_and_gc, \
-    tool_btn
+    tool_btn, insert_after, label
 from plotlyst.view.generated.premise_builder_widget_ui import Ui_PremiseBuilderWidget
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.button import DotsMenuButton, CollapseButton, EyeToggle
-from plotlyst.view.widget.input import AutoAdjustableTextEdit, TextAreaInputDialog
+from plotlyst.view.widget.input import AutoAdjustableTextEdit, TextAreaInputDialog, LabelsEditor
 from plotlyst.view.widget.list import ListView
 
 
@@ -313,6 +313,17 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.listSelectedQuestions.setViewportMargins(20, 3, 3, 3)
         self._proxyQuestions.setFilterFixedString('True')
 
+        self.keywordsEditor = LabelsEditor()
+        lblKeyword = label('Keywords', bold=True)
+        sp(lblKeyword).v_max()
+        wdgKeywordsContainer = QWidget()
+        hbox(wdgKeywordsContainer)
+        margins(wdgKeywordsContainer, left=20)
+        wdgKeywordsContainer.layout().addWidget(lblKeyword, alignment=Qt.AlignmentFlag.AlignTop)
+        wdgKeywordsContainer.layout().addWidget(self.keywordsEditor)
+        insert_after(self.scrollAreaWidgetContents_3, wdgKeywordsContainer,
+                     self.subtitlePremise)
+
         link_buttons_to_pages(self.stackedWidget, [(self.btnSeed, self.pageSeed), (self.btnConcept, self.pageConcept),
                                                    (self.btnPremise, self.pagePremise)])
 
@@ -327,10 +338,11 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         for question in self._premise.questions:
             self.__initConceptQuestionWidget(question)
 
-        if self._premise.questions:
-            self.btnConcept.setChecked(True)
-        else:
-            self.btnSeed.setChecked(True)
+        self.btnPremise.setChecked(True)
+        # if self._premise.questions:
+        #     self.btnConcept.setChecked(True)
+        # else:
+        #     self.btnSeed.setChecked(True)
 
     def _addNewIdea(self):
         text = TextAreaInputDialog.edit('Add a new idea', self.IDEA_EDIT_PLACEHOLDER, self.IDEA_EDIT_DESC)

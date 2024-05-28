@@ -584,7 +584,7 @@
               <string>Premise</string>
              </property>
              <property name="description" stdset="0">
-              <string>Turn your ideas into 'What if' questions to elevate them with drama, conflict, or mystery</string>
+              <string>Based on the concept, write a 1-2 sentence-long summary that encapsulates the story's code idea, typically including the main character, their goal, conflict, and stakes</string>
              </property>
              <property name="icon" stdset="0">
               <string>fa5s.scroll</string>
