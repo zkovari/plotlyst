@@ -36,8 +36,7 @@ from qthandy import transparent, hbox, margins, pointy, sp, line, flow, vbox
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
 
-from plotlyst.common import IGNORE_CAPITALIZATION_PROPERTY, PLOTLYST_TERTIARY_COLOR, \
-    RELAXED_WHITE_COLOR
+from plotlyst.common import IGNORE_CAPITALIZATION_PROPERTY, RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import TextStatistics, Character
 from plotlyst.core.text import wc
 from plotlyst.env import app_env
@@ -53,6 +52,7 @@ from plotlyst.view.dialog.utility import IconSelectorDialog
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.text import apply_texteditor_toolbar_style
 from plotlyst.view.widget._toggle import AnimatedToggle
+from plotlyst.view.widget.button import DotsMenuButton
 from plotlyst.view.widget.display import PopupDialog
 from plotlyst.view.widget.lang import GrammarPopupMenu
 
@@ -919,6 +919,35 @@ class TextAreaInputDialog(PopupDialog):
         self.btnConfirm.setEnabled(len(self.textEdit.toPlainText()) > 0)
 
 
+class Label(QFrame):
+    def __init__(self, text: str, parent=None):
+        super().__init__(parent)
+        self.setFrameShape(QFrame.Shape.StyledPanel)
+        self.setObjectName('parentFrame')
+        self.label = label(text)
+        self.setStyleSheet(f'''
+            #parentFrame {{
+                background-color: {PLOTLYST_SECONDARY_COLOR}; border-radius: 12px;
+            }}
+            QLabel {{
+                color: {RELAXED_WHITE_COLOR};
+            }}''')
+
+        self.btnMenu = DotsMenuButton()
+        hbox(self, 5)
+        self.layout().addWidget(self.label)
+        self.layout().addWidget(self.btnMenu)
+        self.btnMenu.setHidden(True)
+
+    @overrides
+    def enterEvent(self, event: QtGui.QEnterEvent) -> None:
+        qtanim.fade_in(self.btnMenu)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self.btnMenu.setHidden(True)
+
+
 class LabelsEditor(QFrame):
     def __init__(self, title: str = '', parent=None):
         super().__init__(parent)
@@ -938,8 +967,9 @@ class LabelsEditor(QFrame):
                 border: 1px solid lightgrey;
             }}
             #labelsHeader {{
-                background: {PLOTLYST_TERTIARY_COLOR};
-                border-radius: 12px;
+                background: {PLOTLYST_SECONDARY_COLOR};
+                border-top-left-radius: 8px;
+                border-top-right-radius: 8px;
                 border: 1px hidden lightgrey;
             }}
             #labelsTitle {{
@@ -948,7 +978,7 @@ class LabelsEditor(QFrame):
         ''')
 
         hbox(self.wdgHeader, 0, 0)
-        flow(self.wdgContainer)
+        flow(self.wdgContainer, margin=10, spacing=6)
 
         self.lblTitle = label(title, bold=True)
         self.lblTitle.setObjectName('labelsTitle')
@@ -963,7 +993,8 @@ class LabelsEditor(QFrame):
         self.linePlaceholder.installEventFilter(self)
         self.linePlaceholder.editingFinished.connect(self._editingFinished)
 
-        self.btnAdd = tool_btn(IconRegistry.plus_icon(PLOTLYST_TERTIARY_COLOR), transparent_=True)
+        self.btnAdd = tool_btn(IconRegistry.plus_icon(PLOTLYST_SECONDARY_COLOR), transparent_=True)
+        self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd, leaveOpacity=0.7))
         self.btnAdd.clicked.connect(self._startEditing)
         self.wdgContainer.layout().addWidget(self.linePlaceholder)
         self.linePlaceholder.setHidden(True)
@@ -991,11 +1022,7 @@ class LabelsEditor(QFrame):
 
     def _editingFinished(self):
         if self.linePlaceholder.text():
-            lbl = label(self.linePlaceholder.text())
-            lbl.setStyleSheet(
-                f'''QLabel {{
-                            background-color: {PLOTLYST_TERTIARY_COLOR}; border-radius: 6px; color: {RELAXED_WHITE_COLOR};
-                        }}''')
+            lbl = Label(self.linePlaceholder.text())
             insert_before(self.wdgContainer, lbl, self.linePlaceholder)
         self.linePlaceholder.setHidden(True)
         self.btnAdd.setVisible(True)
