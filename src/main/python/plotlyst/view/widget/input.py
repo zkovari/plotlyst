@@ -38,7 +38,7 @@ from qtmenu import MenuWidget
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
 
 from plotlyst.common import IGNORE_CAPITALIZATION_PROPERTY, RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
-from plotlyst.core.domain import TextStatistics, Character
+from plotlyst.core.domain import TextStatistics, Character, Label
 from plotlyst.core.text import wc
 from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, Event
@@ -920,15 +920,17 @@ class TextAreaInputDialog(PopupDialog):
         self.btnConfirm.setEnabled(len(self.textEdit.toPlainText()) > 0)
 
 
-class Label(QFrame):
+class LabelWidget(QFrame):
+    edited = pyqtSignal()
     removed = pyqtSignal()
 
-    def __init__(self, text: str, parent=None):
+    def __init__(self, label_: Label, parent=None):
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setObjectName('parentFrame')
-        self.label = label(text)
-        self.label.setObjectName('labelText')
+        self._label = label_
+        self.lblWidget = label(label_.keyword)
+        self.lblWidget.setObjectName('labelText')
         self.setStyleSheet(f'''
             #parentFrame {{
                 background-color: {PLOTLYST_SECONDARY_COLOR};
@@ -942,24 +944,27 @@ class Label(QFrame):
         decr_icon(self.btnMenu, 2)
         hbox(self, 5)
         margins(self, left=7)
-        self.layout().addWidget(self.label)
+        self.layout().addWidget(self.lblWidget)
         self.layout().addWidget(self.btnMenu)
         self.btnMenu.setHidden(True)
         menu = MenuWidget(self.btnMenu)
+        menu.addAction(action('Edit', IconRegistry.edit_icon(), self._edit))
         menu.addAction(action('Remove', IconRegistry.trash_can_icon(), self.removed))
 
         pointy(self)
         self.btnMenu.setCursor(Qt.CursorShape.ArrowCursor)
 
+    def label(self) -> Label:
+        return self._label
+
     def text(self):
-        return self.label.text()
+        return self.lblWidget.text()
 
     @overrides
     def mousePressEvent(self, a0: QtGui.QMouseEvent) -> None:
         translucent(self, 0.7)
 
     def mouseReleaseEvent(self, a0: QtGui.QMouseEvent) -> None:
-        # translucent(self, 1.0)
         self.setGraphicsEffect(None)
 
     @overrides
@@ -970,10 +975,18 @@ class Label(QFrame):
     def leaveEvent(self, event: QEvent) -> None:
         self.btnMenu.setHidden(True)
 
+    def _edit(self):
+        new_text = TextInputDialog.edit('Edit label', value=self.lblWidget.text())
+        if new_text:
+            self._label.keyword = new_text
+            self.lblWidget.setText(new_text)
+            self.edited.emit()
+
 
 class LabelsEditor(QFrame):
-    labelAdded = pyqtSignal(str)
-    labelRemoved = pyqtSignal(str)
+    labelAdded = pyqtSignal(Label)
+    labelEdited = pyqtSignal(Label)
+    labelRemoved = pyqtSignal(Label)
 
     def __init__(self, title: str = '', parent=None):
         super().__init__(parent)
@@ -1004,6 +1017,7 @@ class LabelsEditor(QFrame):
         ''')
 
         hbox(self.wdgHeader, 0, 0)
+        margins(self.wdgHeader, top=3, bottom=3)
         flow(self.wdgContainer, margin=10, spacing=6)
 
         self.lblTitle = label(title, bold=True)
@@ -1039,10 +1053,11 @@ class LabelsEditor(QFrame):
 
         return super().eventFilter(watched, event)
 
-    def addLabel(self, label: str):
-        lbl = Label(label)
-        lbl.removed.connect(partial(self._remove, lbl))
-        insert_before(self.wdgContainer, lbl, self.linePlaceholder)
+    def addLabel(self, label: Label):
+        lblWidget = LabelWidget(label)
+        lblWidget.edited.connect(partial(self.labelEdited.emit, label))
+        lblWidget.removed.connect(partial(self._remove, lblWidget))
+        insert_before(self.wdgContainer, lblWidget, self.linePlaceholder)
 
     def _startEditing(self):
         self.linePlaceholder.clear()
@@ -1056,13 +1071,13 @@ class LabelsEditor(QFrame):
 
     def _editingFinished(self):
         if self.linePlaceholder.text():
-            text = self.linePlaceholder.text()
-            self.addLabel(text)
-            self.labelAdded.emit(text)
+            label = Label(self.linePlaceholder.text())
+            self.addLabel(label)
+            self.labelAdded.emit(label)
         self.linePlaceholder.setHidden(True)
         self.btnAdd.setVisible(True)
 
-    def _remove(self, lbl: Label):
-        text = lbl.text()
-        fade_out_and_gc(self.wdgContainer, lbl)
-        self.labelRemoved.emit(text)
+    def _remove(self, lblWdg: LabelWidget):
+        label = lblWdg.label()
+        fade_out_and_gc(self.wdgContainer, lblWdg)
+        self.labelRemoved.emit(label)

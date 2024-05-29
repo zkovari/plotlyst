@@ -2689,12 +2689,12 @@ class PremiseQuestion:
 
 
 @dataclass
-class PremiseKeyword:
+class Label:
     keyword: str
 
     @overrides
     def __eq__(self, other):
-        if isinstance(other, PremiseKeyword):
+        if isinstance(other, Label):
             return self.keyword == other.keyword
         if isinstance(other, str):
             return self.keyword == other
@@ -2708,7 +2708,7 @@ class PremiseBuilder:
     ideas: List[PremiseIdea] = field(default_factory=list)
     questions: List[PremiseQuestion] = field(default_factory=list)
     current: str = field(default='', metadata=config(exclude=exclude_if_empty))
-    keywords: List[PremiseKeyword] = field(default_factory=list)
+    keywords: List[Label] = field(default_factory=list)
     # saved_premises
 
 
