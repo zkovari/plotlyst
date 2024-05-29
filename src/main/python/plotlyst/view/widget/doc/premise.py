@@ -198,6 +198,7 @@ class ConceptQuestionWidget(QWidget):
 
         self.btnCollapse = CollapseButton()
         self.btnCollapse.toggled.connect(self.container.setHidden)
+        self.btnCollapse.setChecked(True)
 
         self.btnSelect = tool_btn(IconRegistry.from_name('fa5.question-circle', 'lightgrey', PLOTLYST_SECONDARY_COLOR),
                                   checkable=True, transparent_=True)
@@ -389,6 +390,7 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
     def _addNewConcept(self):
         def finish():
             wdg.setGraphicsEffect(None)
+            wdg.lineedit.setFocus()
 
         question = PremiseQuestion('What if ')
         self._premise.questions.append(question)

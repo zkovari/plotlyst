@@ -687,6 +687,22 @@
              </layout>
             </widget>
            </item>
+           <item alignment="Qt::AlignRight">
+            <widget class="QPushButton" name="btnSavePremise">
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
+             <property name="text">
+              <string>Save it for later</string>
+             </property>
+             <property name="base" stdset="0">
+              <bool>true</bool>
+             </property>
+             <property name="positive" stdset="0">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
            <item>
             <spacer name="verticalSpacer_4">
              <property name="orientation">
