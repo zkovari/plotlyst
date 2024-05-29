@@ -608,7 +608,7 @@ class DocumentTextEditor(RichTextEditor):
             self._btnIcon.setIcon(IconRegistry.from_name(name, color))
 
 
-class TextHighlighter:
+class TextHighlighterAnimation:
     def __init__(self, text_edit, color: QColor, duration=300, interval=10):
         self.text_edit = text_edit
         self.color = color
@@ -982,6 +982,7 @@ class LabelWidget(QFrame):
             }}
             #labelText {{
                 color: {RELAXED_WHITE_COLOR};
+                font-family: Serif;
             }}''')
 
         self.btnMenu = DotsMenuButton()
@@ -1060,6 +1061,9 @@ class LabelsEditor(QFrame):
             #labelsTitle {{
                 color: {RELAXED_WHITE_COLOR};
             }}
+            #labelPlaceholder {{
+                font-family: Serif;
+            }}
         ''')
 
         hbox(self.wdgHeader, 0, 0)
@@ -1075,6 +1079,7 @@ class LabelsEditor(QFrame):
         self.linePlaceholder = QLineEdit()
         self.linePlaceholder.setObjectName('labelPlaceholder')
         self.linePlaceholder.setProperty('transparent', True)
+        self.linePlaceholder.setProperty(IGNORE_CAPITALIZATION_PROPERTY, True)
         self.linePlaceholder.setPlaceholderText('Edit')
         self.linePlaceholder.installEventFilter(self)
         self.linePlaceholder.editingFinished.connect(self._editingFinished)

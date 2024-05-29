@@ -19,14 +19,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import random
 from functools import partial
-from typing import Any
+from typing import Any, Optional
 
 import qtanim
-from PyQt6.QtCore import Qt, pyqtSignal, QAbstractListModel, QModelIndex
-from PyQt6.QtGui import QFont, QMouseEvent, QResizeEvent, QTextCursor, QColor
+from PyQt6.QtCore import Qt, pyqtSignal, QAbstractListModel, QModelIndex, QRegularExpression
+from PyQt6.QtGui import QFont, QMouseEvent, QResizeEvent, QTextCursor, QColor, QSyntaxHighlighter, QTextCharFormat, \
+    QTextDocument
 from PyQt6.QtWidgets import QWidget, QApplication, QLineEdit
 from overrides import overrides
-from qthandy import incr_font, flow, margins, vbox, hbox, pointy, sp, spacer, retain_when_hidden, incr_icon, transparent
+from qthandy import incr_font, flow, margins, vbox, hbox, pointy, sp, spacer, retain_when_hidden, incr_icon, \
+    transparent, translucent, gc
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
@@ -39,7 +41,8 @@ from plotlyst.view.generated.premise_builder_widget_ui import Ui_PremiseBuilderW
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.button import DotsMenuButton, CollapseButton, EyeToggle
-from plotlyst.view.widget.input import AutoAdjustableTextEdit, TextAreaInputDialog, LabelsEditor, TextHighlighter
+from plotlyst.view.widget.input import AutoAdjustableTextEdit, TextAreaInputDialog, LabelsEditor, \
+    TextHighlighterAnimation
 from plotlyst.view.widget.list import ListView
 
 
@@ -267,6 +270,33 @@ class ConceptQuestionWidget(QWidget):
         self.container.setVisible(self._question.visible and not self.btnCollapse.isChecked())
 
 
+class PremiseKeywordHighlighter(QSyntaxHighlighter):
+    def __init__(self, document: QTextDocument, premise: PremiseBuilder):
+        super().__init__(document)
+        self.premise = premise
+        self.highlighting_rules = []
+
+        self.keyword_format = QTextCharFormat()
+        self.keyword_format.setForeground(QColor(PLOTLYST_MAIN_COLOR))
+        self.keyword_format.setFontWeight(QFont.Weight.Bold)
+        self.keyword_format.setFontCapitalization(QFont.Capitalization.SmallCaps)
+        self.keyword_format.setFontPointSize(24)
+
+        for keyword in self.premise.keywords:
+            pattern = QRegularExpression(f"\\b{keyword.keyword}\\b")
+            self.highlighting_rules.append(pattern)
+
+    @overrides
+    def highlightBlock(self, text):
+        for pattern in self.highlighting_rules:
+            iterator = pattern.globalMatch(text)
+            while iterator.hasNext():
+                match = iterator.next()
+                start = match.capturedStart()
+                length = match.capturedLength()
+                self.setFormat(start, length, self.keyword_format)
+
+
 class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
     changed = pyqtSignal()
 
@@ -336,12 +366,30 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.textPremise.setPlaceholderText("Encapsulate your story's core idea in 1-2 sentences")
         sp(self.textPremise).h_exp()
         self.wdgPremiseParent.layout().addWidget(self.textPremise)
+        self.highlighter = TextHighlighterAnimation(self.textPremise, color=QColor(PLOTLYST_TERTIARY_COLOR))
+        self.keywordHighlighter: Optional[PremiseKeywordHighlighter] = None
         self.textPremise.setText(self._premise.current)
         self.textPremise.textChanged.connect(self._premiseEdited)
-        self.highlighter = TextHighlighter(self.textPremise, color=QColor(PLOTLYST_TERTIARY_COLOR))
 
         link_buttons_to_pages(self.stackedWidget, [(self.btnSeed, self.pageSeed), (self.btnConcept, self.pageConcept),
                                                    (self.btnPremise, self.pagePremise)])
+
+        self.btnPremiseHighlight.setIcon(IconRegistry.from_name('fa5s.highlighter', 'grey', PLOTLYST_SECONDARY_COLOR))
+        self.btnPremiseHighlight.installEventFilter(ButtonPressResizeEventFilter(self.btnPremiseHighlight))
+        self.btnPremiseHighlight.installEventFilter(
+            OpacityEventFilter(self.btnPremiseHighlight, ignoreCheckedButton=True))
+        self.btnPremiseHighlight.toggled.connect(self._premiseHighlightToggled)
+        self.btnPremiseClear.setIcon(IconRegistry.from_name('msc.clear-all', 'grey'))
+        self.btnPremiseClear.installEventFilter(ButtonPressResizeEventFilter(self.btnPremiseHighlight))
+        self.btnPremiseClear.installEventFilter(OpacityEventFilter(self.btnPremiseHighlight))
+        self.btnCollapseArchive = CollapseButton()
+        translucent(self.btnCollapseArchive, 0.4)
+        self.wdgArchiveTop.layout().insertWidget(0, self.btnCollapseArchive)
+        self.btnCollapseArchive.toggled.connect(self._toggleArchives)
+        self.btnCollapseArchive.setChecked(True)
+        self.btnSavePremise.setIcon(IconRegistry.from_name('fa5s.arrow-down', 'grey'))
+        self.btnSavePremise.installEventFilter(ButtonPressResizeEventFilter(self.btnSavePremise))
+        self.btnSavePremise.installEventFilter(OpacityEventFilter(self.btnSavePremise))
 
         flow(self.wdgIdeasEditor)
         margins(self.wdgIdeasEditor, left=20, right=20, top=20)
@@ -442,6 +490,16 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
     def _premiseEdited(self):
         self._premise.current = self.textPremise.toPlainText()
         self.changed.emit()
+
+    def _toggleArchives(self, toggled: bool):
+        self.tblPremiseArchive.setHidden(toggled)
+
+    def _premiseHighlightToggled(self, toggled: bool):
+        if toggled:
+            self.keywordHighlighter = PremiseKeywordHighlighter(self.textPremise.document(), self._premise)
+        else:
+            gc(self.keywordHighlighter)
+            self.keywordHighlighter = None
 
     def __initIdeaWidget(self, idea: PremiseIdea) -> IdeaWidget:
         wdg = IdeaWidget(idea)
