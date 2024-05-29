@@ -608,6 +608,49 @@ class DocumentTextEditor(RichTextEditor):
             self._btnIcon.setIcon(IconRegistry.from_name(name, color))
 
 
+class TextHighlighter:
+    def __init__(self, text_edit, color: QColor, duration=300, interval=10):
+        self.text_edit = text_edit
+        self.color = color
+        self.duration = duration
+        self.interval = interval
+        self.total_steps = self.duration // self.interval
+        self.current_step = 0
+        self.start_pos = 0
+        self.end_pos = 0
+        self.direction = 1
+        self.step_alpha = 255 / self.total_steps
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_highlight_color)
+
+    def start_highlight(self, start_pos: int, end_pos: int):
+        self.current_step = 0
+        self.start_pos = start_pos
+        self.end_pos = end_pos
+        self.direction = 1
+        self.timer.start(self.interval)
+
+    def update_highlight_color(self):
+        if self.current_step > self.total_steps * 2:
+            self.timer.stop()
+            return
+
+        if self.current_step > self.total_steps:
+            alpha = int((2 * self.total_steps - self.current_step) * self.step_alpha)
+        else:
+            alpha = int(self.current_step * self.step_alpha)
+
+        cursor = self.text_edit.textCursor()
+        cursor.setPosition(self.start_pos)
+        cursor.setPosition(self.end_pos, QTextCursor.MoveMode.KeepAnchor)
+
+        format = QTextCharFormat()
+        format.setBackground(QColor(self.color.red(), self.color.green(), self.color.blue(), alpha))
+        cursor.setCharFormat(format)
+
+        self.current_step += 1
+
+
 class RotatedButtonOrientation(Enum):
     VerticalTopToBottom = 0
     VerticalBottomToTop = 1
@@ -923,6 +966,7 @@ class TextAreaInputDialog(PopupDialog):
 class LabelWidget(QFrame):
     edited = pyqtSignal()
     removed = pyqtSignal()
+    clicked = pyqtSignal()
 
     def __init__(self, label_: Label, parent=None):
         super().__init__(parent)
@@ -966,6 +1010,7 @@ class LabelWidget(QFrame):
 
     def mouseReleaseEvent(self, a0: QtGui.QMouseEvent) -> None:
         self.setGraphicsEffect(None)
+        self.clicked.emit()
 
     @overrides
     def enterEvent(self, event: QtGui.QEnterEvent) -> None:
@@ -986,6 +1031,7 @@ class LabelWidget(QFrame):
 class LabelsEditor(QFrame):
     labelAdded = pyqtSignal(Label)
     labelEdited = pyqtSignal(Label)
+    labelClicked = pyqtSignal(Label)
     labelRemoved = pyqtSignal(Label)
 
     def __init__(self, title: str = '', parent=None):
@@ -1056,6 +1102,7 @@ class LabelsEditor(QFrame):
     def addLabel(self, label: Label):
         lblWidget = LabelWidget(label)
         lblWidget.edited.connect(partial(self.labelEdited.emit, label))
+        lblWidget.clicked.connect(partial(self.labelClicked.emit, label))
         lblWidget.removed.connect(partial(self._remove, lblWidget))
         insert_before(self.wdgContainer, lblWidget, self.linePlaceholder)
 

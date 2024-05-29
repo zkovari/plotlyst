@@ -23,14 +23,14 @@ from typing import Any
 
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QAbstractListModel, QModelIndex
-from PyQt6.QtGui import QFont, QMouseEvent, QResizeEvent
+from PyQt6.QtGui import QFont, QMouseEvent, QResizeEvent, QTextCursor, QColor
 from PyQt6.QtWidgets import QWidget, QApplication, QLineEdit
 from overrides import overrides
 from qthandy import incr_font, flow, margins, vbox, hbox, pointy, sp, spacer, retain_when_hidden, incr_icon, transparent
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
-from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR
+from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.domain import Document, PremiseBuilder, PremiseIdea, BoxParameters, PremiseQuestion, Label
 from plotlyst.model.common import proxy
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, frame, action, fade_out_and_gc, \
@@ -39,7 +39,7 @@ from plotlyst.view.generated.premise_builder_widget_ui import Ui_PremiseBuilderW
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.button import DotsMenuButton, CollapseButton, EyeToggle
-from plotlyst.view.widget.input import AutoAdjustableTextEdit, TextAreaInputDialog, LabelsEditor
+from plotlyst.view.widget.input import AutoAdjustableTextEdit, TextAreaInputDialog, LabelsEditor, TextHighlighter
 from plotlyst.view.widget.list import ListView
 
 
@@ -324,6 +324,7 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
             self.keywordsEditor.addLabel(label)
         self.keywordsEditor.labelAdded.connect(self._keywordAdded)
         self.keywordsEditor.labelEdited.connect(self.changed)
+        self.keywordsEditor.labelClicked.connect(self._insertKeyword)
         self.keywordsEditor.labelRemoved.connect(self._keywordRemoved)
 
         self.textPremise = AutoAdjustableTextEdit()
@@ -337,6 +338,7 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.wdgPremiseParent.layout().addWidget(self.textPremise)
         self.textPremise.setText(self._premise.current)
         self.textPremise.textChanged.connect(self._premiseEdited)
+        self.highlighter = TextHighlighter(self.textPremise, color=QColor(PLOTLYST_TERTIARY_COLOR))
 
         link_buttons_to_pages(self.stackedWidget, [(self.btnSeed, self.pageSeed), (self.btnConcept, self.pageConcept),
                                                    (self.btnPremise, self.pagePremise)])
@@ -423,6 +425,19 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
     def _keywordRemoved(self, label: Label):
         self._premise.keywords.remove(label)
         self.changed.emit()
+
+    def _insertKeyword(self, label: Label):
+        cursor = QTextCursor(self.textPremise.document())
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+        if self.textPremise.toPlainText() and not self.textPremise.toPlainText().endswith(' '):
+            cursor.insertText(' ')
+
+        start_pos = cursor.position()
+        cursor.insertText(label.keyword)
+        end_pos = cursor.position()
+
+        self.textPremise.setTextCursor(cursor)
+        self.highlighter.start_highlight(start_pos, end_pos)
 
     def _premiseEdited(self):
         self._premise.current = self.textPremise.toPlainText()
