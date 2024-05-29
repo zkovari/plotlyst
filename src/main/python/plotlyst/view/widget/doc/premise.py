@@ -31,7 +31,7 @@ from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, Disa
 from qtmenu import MenuWidget
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR
-from plotlyst.core.domain import Document, PremiseBuilder, PremiseIdea, BoxParameters, PremiseQuestion
+from plotlyst.core.domain import Document, PremiseBuilder, PremiseIdea, BoxParameters, PremiseQuestion, PremiseKeyword
 from plotlyst.model.common import proxy
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, frame, action, fade_out_and_gc, \
     tool_btn, insert_after, wrap
@@ -320,8 +320,8 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.keywordsEditor = LabelsEditor('Keywords')
         insert_after(self.scrollAreaWidgetContents_3, wrap(self.keywordsEditor, margin_left=20),
                      self.subtitlePremise)
-        for keyword in self._premise.keywords:
-            self.keywordsEditor.addLabel(keyword)
+        for premise_keyword in self._premise.keywords:
+            self.keywordsEditor.addLabel(premise_keyword.keyword)
         self.keywordsEditor.labelAdded.connect(self._keywordAdded)
         self.keywordsEditor.labelRemoved.connect(self._keywordRemoved)
 
@@ -416,7 +416,7 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self._proxyQuestions.invalidate()
 
     def _keywordAdded(self, keyword: str):
-        self._premise.keywords.append(keyword)
+        self._premise.keywords.append(PremiseKeyword(keyword))
         self.changed.emit()
 
     def _keywordRemoved(self, keyword: str):
