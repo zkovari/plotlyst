@@ -22,7 +22,7 @@ from functools import partial
 from typing import Any, Optional
 
 import qtanim
-from PyQt6.QtCore import Qt, pyqtSignal, QAbstractListModel, QModelIndex, QRegularExpression
+from PyQt6.QtCore import Qt, pyqtSignal, QAbstractListModel, QModelIndex, QRegularExpression, QAbstractTableModel
 from PyQt6.QtGui import QFont, QMouseEvent, QResizeEvent, QTextCursor, QColor, QSyntaxHighlighter, QTextCharFormat, \
     QTextDocument
 from PyQt6.QtWidgets import QWidget, QApplication, QLineEdit
@@ -33,10 +33,11 @@ from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, Disa
 from qtmenu import MenuWidget
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
-from plotlyst.core.domain import Document, PremiseBuilder, PremiseIdea, BoxParameters, PremiseQuestion, Label
+from plotlyst.core.domain import Document, PremiseBuilder, PremiseIdea, BoxParameters, PremiseQuestion, Label, \
+    PremiseReview
 from plotlyst.model.common import proxy
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, frame, action, fade_out_and_gc, \
-    tool_btn, insert_after, wrap
+    tool_btn, insert_after, wrap, stretch_col
 from plotlyst.view.generated.premise_builder_widget_ui import Ui_PremiseBuilderWidget
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -297,6 +298,25 @@ class PremiseKeywordHighlighter(QSyntaxHighlighter):
                 self.setFormat(start, length, self.keyword_format)
 
 
+class PremiseArchiveTableModel(QAbstractTableModel):
+    def __init__(self, premise: PremiseBuilder, parent=None):
+        super().__init__(parent)
+        self.premise = premise
+
+    @overrides
+    def rowCount(self, parent: QModelIndex = ...) -> int:
+        return len(self.premise.saved_premises)
+
+    @overrides
+    def columnCount(self, parent: QModelIndex = ...) -> int:
+        return 1
+
+    @overrides
+    def data(self, index: QModelIndex, role: int = ...) -> Any:
+        if role == Qt.ItemDataRole.DisplayRole:
+            return self.premise.saved_premises[index.row()].premise
+
+
 class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
     changed = pyqtSignal()
 
@@ -390,6 +410,11 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.btnSavePremise.setIcon(IconRegistry.from_name('fa5s.arrow-down', 'grey'))
         self.btnSavePremise.installEventFilter(ButtonPressResizeEventFilter(self.btnSavePremise))
         self.btnSavePremise.installEventFilter(OpacityEventFilter(self.btnSavePremise))
+        self.btnSavePremise.clicked.connect(self._savePremise)
+
+        self.premiseArchiveModel = PremiseArchiveTableModel(self._premise)
+        self.tblPremiseArchive.setModel(self.premiseArchiveModel)
+        stretch_col(self.tblPremiseArchive, 0)
 
         flow(self.wdgIdeasEditor)
         margins(self.wdgIdeasEditor, left=20, right=20, top=20)
@@ -500,6 +525,17 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         else:
             gc(self.keywordHighlighter)
             self.keywordHighlighter = None
+
+    def _savePremise(self):
+        if not self.textPremise.toPlainText():
+            qtanim.shake(self.textPremise)
+            return
+
+        premise = PremiseReview(self._premise.current)
+        self._premise.saved_premises.append(premise)
+
+        self.textPremise.clear()
+        self.premiseArchiveModel.modelReset.emit()
 
     def __initIdeaWidget(self, idea: PremiseIdea) -> IdeaWidget:
         wdg = IdeaWidget(idea)

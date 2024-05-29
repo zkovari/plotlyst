@@ -2701,6 +2701,11 @@ class Label:
         return False
 
 
+@dataclass
+class PremiseReview:
+    premise: str
+
+
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class PremiseBuilder:
@@ -2709,7 +2714,7 @@ class PremiseBuilder:
     questions: List[PremiseQuestion] = field(default_factory=list)
     current: str = field(default='', metadata=config(exclude=exclude_if_empty))
     keywords: List[Label] = field(default_factory=list)
-    # saved_premises
+    saved_premises: List[PremiseReview] = field(default_factory=list)
 
 
 class DocumentType(Enum):

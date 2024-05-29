@@ -876,7 +876,14 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QTableView" name="tblPremiseArchive"/>
+                 <widget class="QTableView" name="tblPremiseArchive">
+                  <attribute name="horizontalHeaderVisible">
+                   <bool>false</bool>
+                  </attribute>
+                  <attribute name="verticalHeaderVisible">
+                   <bool>false</bool>
+                  </attribute>
+                 </widget>
                 </item>
                </layout>
               </item>
