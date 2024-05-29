@@ -2695,6 +2695,7 @@ class PremiseBuilder:
     ideas: List[PremiseIdea] = field(default_factory=list)
     questions: List[PremiseQuestion] = field(default_factory=list)
     current: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    keywords: List[str] = field(default_factory=list)
     # saved_premises
 
 

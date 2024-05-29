@@ -32,8 +32,9 @@ from PyQt6.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyl
     QApplication, QToolButton, QLineEdit, QWidgetAction, QListView, QSpinBox, QWidget, QLabel, QDialog
 from language_tool_python import LanguageTool
 from overrides import overrides
-from qthandy import transparent, hbox, margins, pointy, sp, line, flow, vbox
+from qthandy import transparent, hbox, margins, pointy, sp, line, flow, vbox, translucent, decr_icon
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
+from qtmenu import MenuWidget
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
 
 from plotlyst.common import IGNORE_CAPITALIZATION_PROPERTY, RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
@@ -47,7 +48,7 @@ from plotlyst.model.characters_model import CharactersTableModel
 from plotlyst.model.common import proxy
 from plotlyst.service.grammar import language_tool_proxy, dictionary
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import action, label, push_btn, tool_btn, insert_before
+from plotlyst.view.common import action, label, push_btn, tool_btn, insert_before, fade_out_and_gc
 from plotlyst.view.dialog.utility import IconSelectorDialog
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.text import apply_texteditor_toolbar_style
@@ -920,24 +921,46 @@ class TextAreaInputDialog(PopupDialog):
 
 
 class Label(QFrame):
+    removed = pyqtSignal()
+
     def __init__(self, text: str, parent=None):
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setObjectName('parentFrame')
         self.label = label(text)
+        self.label.setObjectName('labelText')
         self.setStyleSheet(f'''
             #parentFrame {{
-                background-color: {PLOTLYST_SECONDARY_COLOR}; border-radius: 12px;
+                background-color: {PLOTLYST_SECONDARY_COLOR};
+                border-radius: 16px;
             }}
-            QLabel {{
+            #labelText {{
                 color: {RELAXED_WHITE_COLOR};
             }}''')
 
         self.btnMenu = DotsMenuButton()
+        decr_icon(self.btnMenu, 2)
         hbox(self, 5)
+        margins(self, left=7)
         self.layout().addWidget(self.label)
         self.layout().addWidget(self.btnMenu)
         self.btnMenu.setHidden(True)
+        menu = MenuWidget(self.btnMenu)
+        menu.addAction(action('Remove', IconRegistry.trash_can_icon(), self.removed))
+
+        pointy(self)
+        self.btnMenu.setCursor(Qt.CursorShape.ArrowCursor)
+
+    def text(self):
+        return self.label.text()
+
+    @overrides
+    def mousePressEvent(self, a0: QtGui.QMouseEvent) -> None:
+        translucent(self, 0.7)
+
+    def mouseReleaseEvent(self, a0: QtGui.QMouseEvent) -> None:
+        # translucent(self, 1.0)
+        self.setGraphicsEffect(None)
 
     @overrides
     def enterEvent(self, event: QtGui.QEnterEvent) -> None:
@@ -949,6 +972,9 @@ class Label(QFrame):
 
 
 class LabelsEditor(QFrame):
+    labelAdded = pyqtSignal(str)
+    labelRemoved = pyqtSignal(str)
+
     def __init__(self, title: str = '', parent=None):
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.StyledPanel)
@@ -1007,8 +1033,16 @@ class LabelsEditor(QFrame):
         if event.type() == QEvent.Type.KeyPress:
             if event.key() == Qt.Key.Key_Escape:
                 self._cancelEditing()
+        elif event.type() == QEvent.Type.FocusOut:
+            if not watched.text():
+                self._cancelEditing()
 
         return super().eventFilter(watched, event)
+
+    def addLabel(self, label: str):
+        lbl = Label(label)
+        lbl.removed.connect(partial(self._remove, lbl))
+        insert_before(self.wdgContainer, lbl, self.linePlaceholder)
 
     def _startEditing(self):
         self.linePlaceholder.clear()
@@ -1022,7 +1056,13 @@ class LabelsEditor(QFrame):
 
     def _editingFinished(self):
         if self.linePlaceholder.text():
-            lbl = Label(self.linePlaceholder.text())
-            insert_before(self.wdgContainer, lbl, self.linePlaceholder)
+            text = self.linePlaceholder.text()
+            self.addLabel(text)
+            self.labelAdded.emit(text)
         self.linePlaceholder.setHidden(True)
         self.btnAdd.setVisible(True)
+
+    def _remove(self, lbl: Label):
+        text = lbl.text()
+        fade_out_and_gc(self.wdgContainer, lbl)
+        self.labelRemoved.emit(text)

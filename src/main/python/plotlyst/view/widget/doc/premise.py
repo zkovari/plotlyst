@@ -320,6 +320,11 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.keywordsEditor = LabelsEditor('Keywords')
         insert_after(self.scrollAreaWidgetContents_3, wrap(self.keywordsEditor, margin_left=20),
                      self.subtitlePremise)
+        for keyword in self._premise.keywords:
+            self.keywordsEditor.addLabel(keyword)
+        self.keywordsEditor.labelAdded.connect(self._keywordAdded)
+        self.keywordsEditor.labelRemoved.connect(self._keywordRemoved)
+
         self.textPremise = AutoAdjustableTextEdit()
         transparent(self.textPremise)
         font: QFont = self.textPremise.font()
@@ -409,6 +414,14 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
     def _conceptQuestionChanged(self):
         self.changed.emit()
         self._proxyQuestions.invalidate()
+
+    def _keywordAdded(self, keyword: str):
+        self._premise.keywords.append(keyword)
+        self.changed.emit()
+
+    def _keywordRemoved(self, keyword: str):
+        self._premise.keywords.remove(keyword)
+        self.changed.emit()
 
     def _premiseEdited(self):
         self._premise.current = self.textPremise.toPlainText()
