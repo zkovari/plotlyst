@@ -2694,6 +2694,8 @@ class PremiseBuilder:
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     ideas: List[PremiseIdea] = field(default_factory=list)
     questions: List[PremiseQuestion] = field(default_factory=list)
+    current: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    # saved_premises
 
 
 class DocumentType(Enum):

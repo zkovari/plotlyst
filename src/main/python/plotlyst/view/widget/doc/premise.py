@@ -301,7 +301,6 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.ideasModel = SelectedIdeasListModel(self._premise)
         self._proxyIdeas = proxy(self.ideasModel)
         self._proxyIdeas.setFilterRole(SelectedIdeasListModel.SelectionRole)
-        # self.listSelectedIdeas.setFont(QApplication.font())
         self.listSelectedIdeas.setModel(self._proxyIdeas)
         self.listSelectedIdeas.setSpacing(20)
         self._proxyIdeas.setFilterFixedString('True')
@@ -309,7 +308,6 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.questionsModel = SelectedQuestionsListModel(self._premise)
         self._proxyQuestions = proxy(self.questionsModel)
         self._proxyQuestions.setFilterRole(SelectedQuestionsListModel.SelectionRole)
-        # self.listSelectedQuestions.setFont(QApplication.font())
         self.listSelectedQuestions.setModel(self._proxyQuestions)
         self.listSelectedQuestions.setViewportMargins(20, 3, 3, 3)
         self._proxyQuestions.setFilterFixedString('True')
@@ -331,6 +329,8 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.textPremise.setPlaceholderText("Encapsulate your story's core idea in 1-2 sentences")
         sp(self.textPremise).h_exp()
         self.wdgPremiseParent.layout().addWidget(self.textPremise)
+        self.textPremise.setText(self._premise.current)
+        self.textPremise.textChanged.connect(self._premiseEdited)
 
         link_buttons_to_pages(self.stackedWidget, [(self.btnSeed, self.pageSeed), (self.btnConcept, self.pageConcept),
                                                    (self.btnPremise, self.pagePremise)])
@@ -409,6 +409,10 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
     def _conceptQuestionChanged(self):
         self.changed.emit()
         self._proxyQuestions.invalidate()
+
+    def _premiseEdited(self):
+        self._premise.current = self.textPremise.toPlainText()
+        self.changed.emit()
 
     def __initIdeaWidget(self, idea: PremiseIdea) -> IdeaWidget:
         wdg = IdeaWidget(idea)
