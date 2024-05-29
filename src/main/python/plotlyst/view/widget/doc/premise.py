@@ -411,6 +411,7 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.btnSavePremise.installEventFilter(ButtonPressResizeEventFilter(self.btnSavePremise))
         self.btnSavePremise.installEventFilter(OpacityEventFilter(self.btnSavePremise))
         self.btnSavePremise.clicked.connect(self._savePremise)
+        self.lblArchive.setText(f'Archive ({len(self._premise.saved_premises)})')
 
         self.premiseArchiveModel = PremiseArchiveTableModel(self._premise)
         self.tblPremiseArchive.setModel(self.premiseArchiveModel)
@@ -536,6 +537,7 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
 
         self.textPremise.clear()
         self.premiseArchiveModel.modelReset.emit()
+        self.lblArchive.setText(f'Archive ({len(self._premise.saved_premises)})')
 
     def __initIdeaWidget(self, idea: PremiseIdea) -> IdeaWidget:
         wdg = IdeaWidget(idea)
