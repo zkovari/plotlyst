@@ -24,7 +24,7 @@ from typing import Optional, Dict, List
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QMimeData, QPointF
 from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMouseEvent, QColor, QIcon, QImage, \
-    QShowEvent, QPixmap
+    QShowEvent, QPixmap, QCursor
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QDialog, QGridLayout, QSlider, QToolButton, QButtonGroup, \
     QLabel
 from overrides import overrides
@@ -45,7 +45,6 @@ from plotlyst.view.common import action, push_btn, frame, insert_before_the_end,
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.text import apply_text_color
-from plotlyst.view.widget.button import DotsMenuButton
 from plotlyst.view.widget.display import Icon, PopupDialog, DragIcon
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, RemovalButton
 from plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
@@ -76,6 +75,7 @@ class WorldBuildingEntityElementWidget(QWidget):
         retain_when_hidden(self.btnAdd)
 
         self.btnDrag = DragIcon(self)
+        self.btnDrag.setIcon(IconRegistry.from_name('ph.dots-six-vertical-bold', 'grey'))
         self.btnDrag.setHidden(True)
         if dragEnabled and self.element.type not in [WorldBuildingEntityElementType.Section,
                                                      WorldBuildingEntityElementType.Main_Section,
@@ -84,15 +84,17 @@ class WorldBuildingEntityElementWidget(QWidget):
             self.installEventFilter(VisibilityToggleEventFilter(self.btnDrag, self))
 
         self.btnRemove = RemovalButton(self, colorOff='grey', colorOn='#510442', colorHover='darkgrey')
-        if self._removalEnabled:
-            self.installEventFilter(VisibilityToggleEventFilter(self.btnRemove, self))
-        else:
-            self.btnRemove.setHidden(True)
+        # if self._removalEnabled:
+        #     self.installEventFilter(VisibilityToggleEventFilter(self.btnRemove, self))
+        # else:
+        self.btnRemove.setHidden(True)
 
-        if self._menuEnabled:
-            self.btnMenu = DotsMenuButton(self)
-            self.menu = MenuWidget(self.btnMenu)
-            self.installEventFilter(VisibilityToggleEventFilter(self.btnMenu, self))
+        # if self._menuEnabled:
+        #     self.btnMenu = DotsMenuButton(self)
+        self.menu = MenuWidget()
+        self.menu.addAction(action('Remove'))
+        self.btnDrag.clicked.connect(lambda: self.menu.exec(QCursor.pos()))
+        # self.installEventFilter(VisibilityToggleEventFilter(self.btnMenu, self))
 
         self._btnCornerButtonOffsetY = 1
         self._btnCornerButtonOffsetX = 20
@@ -104,14 +106,14 @@ class WorldBuildingEntityElementWidget(QWidget):
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
-        if self._removalEnabled:
-            self.btnRemove.setGeometry(event.size().width() - self._btnCornerButtonOffsetX,
-                                       self._btnCornerButtonOffsetY, 20, 20)
-        elif self._menuEnabled:
-            self.btnMenu.setGeometry(event.size().width() - self._btnCornerButtonOffsetX, self._btnCornerButtonOffsetY,
-                                     20, 20)
+        # if self._removalEnabled:
+        self.btnDrag.setGeometry(event.size().width() - self._btnCornerButtonOffsetX,
+                                 self._btnCornerButtonOffsetY, 20, 20)
+        # if self._menuEnabled:
+        #     self.btnMenu.setGeometry(event.size().width() - self._btnCornerButtonOffsetX, self._btnCornerButtonOffsetY,
+        #                              20, 20)
 
-        self.btnDrag.setGeometry(0, 0, 20, 20)
+        # self.btnDrag.setGeometry(0, 0, 20, 20)
 
         super().resizeEvent(event)
 
@@ -178,7 +180,7 @@ class TextElementEditor(WorldBuildingEntityElementWidget):
         self.layout().addWidget(self.textEdit)
         self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
         self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
-        self.btnRemove.raise_()
+        # self.btnRemove.raise_()
         self.btnDrag.raise_()
 
     def _textChanged(self):
@@ -248,7 +250,7 @@ class HeaderElementEditor(WorldBuildingEntityElementWidget):
         self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
 
         self._btnCornerButtonOffsetY = 7
-        self.btnRemove.raise_()
+        # self.btnRemove.raise_()
         self.btnDrag.raise_()
 
     def _titleEdited(self, title: str):
@@ -316,7 +318,7 @@ class QuoteElementEditor(WorldBuildingEntityElementWidget):
         self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
         self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
 
-        self.btnRemove.raise_()
+        # self.btnRemove.raise_()
         self.btnDrag.raise_()
 
     def _quoteChanged(self):
@@ -350,7 +352,7 @@ class ImageElementEditor(WorldBuildingEntityElementWidget):
         self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
         self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
 
-        self.btnRemove.raise_()
+        # self.btnRemove.raise_()
         self.btnDrag.raise_()
 
     @overrides
@@ -510,7 +512,7 @@ class VariablesElementEditor(WorldBuildingEntityElementWidget):
 
         self.layout().addWidget(self.frame)
 
-        self.btnMenu.raise_()
+        # self.btnMenu.raise_()
         self.menu.aboutToShow.connect(self._fillMenu)
         self.btnDrag.raise_()
 
@@ -619,7 +621,8 @@ class TimelineElementEditor(WorldBuildingEntityElementWidget):
         self.layout().addWidget(self.timeline)
         self.timeline.changed.connect(self.save)
 
-        self.btnRemove.raise_()
+        # self.btnRemove.raise_()
+        self.btnDrag.raise_()
 
 
 class SectionElementEditor(WorldBuildingEntityElementWidget):
@@ -675,7 +678,7 @@ class SectionElementEditor(WorldBuildingEntityElementWidget):
         wdg = WorldBuildingEntityElementWidget.newWidget(self.novel, element, self)
         menu = MainBlockAdditionMenu(wdg.btnAdd)
         menu.newBlockSelected.connect(partial(self._addBlock, wdg))
-        wdg.btnRemove.clicked.connect(partial(self._removeBlock, wdg))
+        # wdg.btnRemove.clicked.connect(partial(self._removeBlock, wdg))
 
         mimeType = self.WORLD_SECTION_MIMETYPE if element.type == WorldBuildingEntityElementType.Header else self.WORLD_BLOCK_MIMETYPE
 
