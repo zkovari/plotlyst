@@ -35,6 +35,7 @@ from qtmenu import MenuWidget
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.domain import Document, PremiseBuilder, PremiseIdea, BoxParameters, PremiseQuestion, Label, \
     PremiseReview
+from plotlyst.core.text import wc
 from plotlyst.model.common import proxy
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, frame, action, fade_out_and_gc, \
     tool_btn, insert_after, wrap, stretch_col
@@ -523,6 +524,7 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
 
     def _premiseEdited(self):
         self._premise.current = self.textPremise.toPlainText()
+        self.lblWordCount.setWordCount(wc(self._premise.current))
         self.changed.emit()
 
     def _toggleArchives(self, toggled: bool):

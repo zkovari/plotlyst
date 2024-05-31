@@ -591,6 +591,22 @@
              </property>
             </widget>
            </item>
+           <item alignment="Qt::AlignRight">
+            <widget class="WordsDisplay" name="lblWordCount">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="description" stdset="0">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
            <item>
             <widget class="QWidget" name="widget_2" native="true">
              <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -928,6 +944,11 @@
    <extends>QWidget</extends>
    <header>plotlyst.view.widget.display</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>WordsDisplay</class>
+   <extends>QLabel</extends>
+   <header>plotlyst.view.widget.display</header>
   </customwidget>
  </customwidgets>
  <resources/>
