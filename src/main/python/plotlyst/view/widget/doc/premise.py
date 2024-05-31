@@ -32,18 +32,19 @@ from qthandy import incr_font, flow, margins, vbox, hbox, pointy, sp, spacer, re
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
-from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
+from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR, \
+    RED_COLOR
 from plotlyst.core.domain import Document, PremiseBuilder, PremiseIdea, BoxParameters, PremiseQuestion, Label, \
     PremiseReview
 from plotlyst.core.text import wc
 from plotlyst.model.common import proxy
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, frame, action, fade_out_and_gc, \
-    tool_btn, insert_after, wrap, stretch_col
+    tool_btn, insert_after, wrap, stretch_col, TooltipPositionEventFilter
 from plotlyst.view.generated.premise_builder_widget_ui import Ui_PremiseBuilderWidget
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.button import DotsMenuButton, CollapseButton, EyeToggle
-from plotlyst.view.widget.confirm import asked
+from plotlyst.view.widget.confirm import asked, confirmed
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, TextAreaInputDialog, LabelsEditor, \
     TextHighlighterAnimation
 from plotlyst.view.widget.list import ListView
@@ -404,18 +405,23 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.btnPremiseHighlight.installEventFilter(ButtonPressResizeEventFilter(self.btnPremiseHighlight))
         self.btnPremiseHighlight.installEventFilter(
             OpacityEventFilter(self.btnPremiseHighlight, ignoreCheckedButton=True))
+        self.btnPremiseHighlight.installEventFilter(TooltipPositionEventFilter(self.btnPremiseHighlight))
         self.btnPremiseHighlight.toggled.connect(self._premiseHighlightToggled)
-        self.btnPremiseClear.setIcon(IconRegistry.from_name('msc.clear-all', 'grey'))
+        self.btnPremiseClear.setIcon(IconRegistry.from_name('msc.clear-all', RED_COLOR))
         self.btnPremiseClear.installEventFilter(ButtonPressResizeEventFilter(self.btnPremiseClear))
         self.btnPremiseClear.installEventFilter(OpacityEventFilter(self.btnPremiseClear))
+        self.btnPremiseClear.installEventFilter(TooltipPositionEventFilter(self.btnPremiseClear))
+        self.btnPremiseClear.clicked.connect(self._clearPremise)
 
         self.btnRestorePremiseArchive.setIcon(IconRegistry.from_name('mdi.archive-arrow-up-outline', 'grey'))
         self.btnRestorePremiseArchive.installEventFilter(ButtonPressResizeEventFilter(self.btnRestorePremiseArchive))
         self.btnRestorePremiseArchive.installEventFilter(OpacityEventFilter(self.btnRestorePremiseArchive))
+        self.btnRestorePremiseArchive.installEventFilter(TooltipPositionEventFilter(self.btnRestorePremiseArchive))
         self.btnRestorePremiseArchive.clicked.connect(self._restoreFromArchive)
-        self.btnDeletePremiseArchive.setIcon(IconRegistry.trash_can_icon('grey'))
+        self.btnDeletePremiseArchive.setIcon(IconRegistry.trash_can_icon())
         self.btnDeletePremiseArchive.installEventFilter(ButtonPressResizeEventFilter(self.btnDeletePremiseArchive))
         self.btnDeletePremiseArchive.installEventFilter(OpacityEventFilter(self.btnDeletePremiseArchive))
+        self.btnDeletePremiseArchive.installEventFilter(TooltipPositionEventFilter(self.btnDeletePremiseArchive))
         self.btnDeletePremiseArchive.clicked.connect(self._removeFromArchive)
 
         self.btnCollapseArchive = CollapseButton()
@@ -549,6 +555,10 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         else:
             gc(self.keywordHighlighter)
             self.keywordHighlighter = None
+
+    def _clearPremise(self):
+        if self.textPremise.toPlainText() and confirmed("The current premise will be lost.", "Reset current premise"):
+            self.textPremise.clear()
 
     def _savePremise(self):
         if not self.textPremise.toPlainText():
