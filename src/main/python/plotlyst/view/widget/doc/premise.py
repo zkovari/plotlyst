@@ -400,8 +400,16 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
             OpacityEventFilter(self.btnPremiseHighlight, ignoreCheckedButton=True))
         self.btnPremiseHighlight.toggled.connect(self._premiseHighlightToggled)
         self.btnPremiseClear.setIcon(IconRegistry.from_name('msc.clear-all', 'grey'))
-        self.btnPremiseClear.installEventFilter(ButtonPressResizeEventFilter(self.btnPremiseHighlight))
-        self.btnPremiseClear.installEventFilter(OpacityEventFilter(self.btnPremiseHighlight))
+        self.btnPremiseClear.installEventFilter(ButtonPressResizeEventFilter(self.btnPremiseClear))
+        self.btnPremiseClear.installEventFilter(OpacityEventFilter(self.btnPremiseClear))
+
+        self.btnEditPremiseArchive.setIcon(IconRegistry.from_name('mdi.archive-arrow-up', 'grey'))
+        self.btnEditPremiseArchive.installEventFilter(ButtonPressResizeEventFilter(self.btnEditPremiseArchive))
+        self.btnEditPremiseArchive.installEventFilter(OpacityEventFilter(self.btnEditPremiseArchive))
+        self.btnDeletePremiseArchive.setIcon(IconRegistry.trash_can_icon('grey'))
+        self.btnDeletePremiseArchive.installEventFilter(ButtonPressResizeEventFilter(self.btnDeletePremiseArchive))
+        self.btnDeletePremiseArchive.installEventFilter(OpacityEventFilter(self.btnDeletePremiseArchive))
+
         self.btnCollapseArchive = CollapseButton()
         translucent(self.btnCollapseArchive, 0.4)
         self.wdgArchiveTop.layout().insertWidget(0, self.btnCollapseArchive)
@@ -519,6 +527,8 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
 
     def _toggleArchives(self, toggled: bool):
         self.tblPremiseArchive.setHidden(toggled)
+        self.btnEditPremiseArchive.setHidden(toggled)
+        self.btnDeletePremiseArchive.setHidden(toggled)
 
     def _premiseHighlightToggled(self, toggled: bool):
         if toggled:
