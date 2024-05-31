@@ -21,7 +21,7 @@ from functools import partial
 from pathlib import Path
 from typing import Set, Optional, Dict
 
-from PyQt6.QtCore import pyqtSignal, Qt, QMimeData, QPointF, QDir
+from PyQt6.QtCore import pyqtSignal, Qt, QMimeData, QPointF, QDir, QTimer
 from PyQt6.QtWidgets import QFileDialog
 from overrides import overrides
 from qthandy import clear_layout, vspacer, translucent, gc, ask_confirmation, retain_when_hidden
@@ -212,7 +212,7 @@ class DocumentsTreeView(TreeView):
         if selected:
             self.clearSelection()
             self._selectedDocuments.add(wdg.doc())
-            self.documentSelected.emit(wdg.doc())
+            QTimer.singleShot(10, lambda: self.documentSelected.emit(wdg.doc()))
         elif wdg.doc() in self._selectedDocuments:
             self._selectedDocuments.remove(wdg.doc())
 

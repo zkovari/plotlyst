@@ -2688,12 +2688,33 @@ class PremiseQuestion:
     visible: bool = True
 
 
+@dataclass
+class Label:
+    keyword: str
+
+    @overrides
+    def __eq__(self, other):
+        if isinstance(other, Label):
+            return self.keyword == other.keyword
+        if isinstance(other, str):
+            return self.keyword == other
+        return False
+
+
+@dataclass
+class PremiseReview:
+    premise: str
+
+
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class PremiseBuilder:
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     ideas: List[PremiseIdea] = field(default_factory=list)
     questions: List[PremiseQuestion] = field(default_factory=list)
+    current: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    keywords: List[Label] = field(default_factory=list)
+    saved_premises: List[PremiseReview] = field(default_factory=list)
 
 
 class DocumentType(Enum):

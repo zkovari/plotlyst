@@ -19,27 +19,34 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import random
 from functools import partial
-from typing import Any
+from typing import Any, Optional
 
 import qtanim
-from PyQt6.QtCore import Qt, pyqtSignal, QAbstractListModel, QModelIndex
-from PyQt6.QtGui import QFont, QMouseEvent, QResizeEvent
+from PyQt6.QtCore import Qt, pyqtSignal, QAbstractListModel, QModelIndex, QRegularExpression, QAbstractTableModel
+from PyQt6.QtGui import QFont, QMouseEvent, QResizeEvent, QTextCursor, QColor, QSyntaxHighlighter, QTextCharFormat, \
+    QTextDocument
 from PyQt6.QtWidgets import QWidget, QApplication, QLineEdit
 from overrides import overrides
-from qthandy import incr_font, flow, margins, vbox, hbox, pointy, sp, spacer, retain_when_hidden, incr_icon
+from qthandy import incr_font, flow, margins, vbox, hbox, pointy, sp, spacer, retain_when_hidden, incr_icon, \
+    transparent, translucent, gc
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
-from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR
-from plotlyst.core.domain import Document, PremiseBuilder, PremiseIdea, BoxParameters, PremiseQuestion
+from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR, \
+    RED_COLOR
+from plotlyst.core.domain import Document, PremiseBuilder, PremiseIdea, BoxParameters, PremiseQuestion, Label, \
+    PremiseReview
+from plotlyst.core.text import wc
 from plotlyst.model.common import proxy
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, frame, action, fade_out_and_gc, \
-    tool_btn
+    tool_btn, insert_after, wrap, stretch_col, TooltipPositionEventFilter
 from plotlyst.view.generated.premise_builder_widget_ui import Ui_PremiseBuilderWidget
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.button import DotsMenuButton, CollapseButton, EyeToggle
-from plotlyst.view.widget.input import AutoAdjustableTextEdit, TextAreaInputDialog
+from plotlyst.view.widget.confirm import asked, confirmed
+from plotlyst.view.widget.input import AutoAdjustableTextEdit, TextAreaInputDialog, LabelsEditor, \
+    TextHighlighterAnimation
 from plotlyst.view.widget.list import ListView
 
 
@@ -138,7 +145,6 @@ class SelectedIdeasListModel(QAbstractListModel):
 
     @overrides
     def rowCount(self, parent: QModelIndex = ...) -> int:
-        # return len([x for x in self._premise.ideas if x.selected])
         return len(self._premise.ideas)
 
     @overrides
@@ -146,13 +152,37 @@ class SelectedIdeasListModel(QAbstractListModel):
         if role == self.SelectionRole:
             return str(self._premise.ideas[index.row()].selected)
         elif role == Qt.ItemDataRole.DisplayRole:
-            idea = self._premise.ideas[index.row()]
-            return idea.text
+            return self._premise.ideas[index.row()].text
         elif role == Qt.ItemDataRole.DecorationRole:
             return IconRegistry.from_name('mdi.seed', 'grey')
         elif role == Qt.ItemDataRole.FontRole:
             font = QApplication.font()
             font.setPointSize(15)
+            return font
+
+
+class SelectedQuestionsListModel(QAbstractListModel):
+    SelectionRole = Qt.ItemDataRole.UserRole + 1
+
+    def __init__(self, premise: PremiseBuilder, parent=None):
+        super().__init__(parent)
+        self._premise = premise
+
+    @overrides
+    def rowCount(self, parent: QModelIndex = ...) -> int:
+        return len(self._premise.questions)
+
+    @overrides
+    def data(self, index: QModelIndex, role: int) -> Any:
+        if role == self.SelectionRole:
+            return str(self._premise.questions[index.row()].selected)
+        elif role == Qt.ItemDataRole.DisplayRole:
+            return self._premise.questions[index.row()].text
+        elif role == Qt.ItemDataRole.DecorationRole:
+            return IconRegistry.from_name('fa5.question-circle', 'grey')
+        elif role == Qt.ItemDataRole.FontRole:
+            font = QApplication.font()
+            font.setPointSize(13)
             return font
 
 
@@ -175,6 +205,7 @@ class ConceptQuestionWidget(QWidget):
 
         self.btnCollapse = CollapseButton()
         self.btnCollapse.toggled.connect(self.container.setHidden)
+        self.btnCollapse.setChecked(True)
 
         self.btnSelect = tool_btn(IconRegistry.from_name('fa5.question-circle', 'lightgrey', PLOTLYST_SECONDARY_COLOR),
                                   checkable=True, transparent_=True)
@@ -243,6 +274,56 @@ class ConceptQuestionWidget(QWidget):
         self.container.setVisible(self._question.visible and not self.btnCollapse.isChecked())
 
 
+class PremiseKeywordHighlighter(QSyntaxHighlighter):
+    def __init__(self, document: QTextDocument, premise: PremiseBuilder):
+        super().__init__(document)
+        self.premise = premise
+        self.highlighting_rules = []
+
+        self.keyword_format = QTextCharFormat()
+        self.keyword_format.setForeground(QColor(PLOTLYST_MAIN_COLOR))
+        self.keyword_format.setFontWeight(QFont.Weight.Bold)
+        self.keyword_format.setFontCapitalization(QFont.Capitalization.SmallCaps)
+        self.keyword_format.setFontPointSize(24)
+
+        for keyword in self.premise.keywords:
+            pattern = QRegularExpression(f"\\b{keyword.keyword}\\b")
+            self.highlighting_rules.append(pattern)
+
+    @overrides
+    def highlightBlock(self, text):
+        for pattern in self.highlighting_rules:
+            iterator = pattern.globalMatch(text)
+            while iterator.hasNext():
+                match = iterator.next()
+                start = match.capturedStart()
+                length = match.capturedLength()
+                self.setFormat(start, length, self.keyword_format)
+
+
+class PremiseArchiveTableModel(QAbstractTableModel):
+    PremiseRole = Qt.ItemDataRole.UserRole + 1
+
+    def __init__(self, premise: PremiseBuilder, parent=None):
+        super().__init__(parent)
+        self.premise = premise
+
+    @overrides
+    def rowCount(self, parent: QModelIndex = ...) -> int:
+        return len(self.premise.saved_premises)
+
+    @overrides
+    def columnCount(self, parent: QModelIndex = ...) -> int:
+        return 1
+
+    @overrides
+    def data(self, index: QModelIndex, role: int = ...) -> Any:
+        if role == Qt.ItemDataRole.DisplayRole:
+            return self.premise.saved_premises[index.row()].premise
+        elif role == self.PremiseRole:
+            return self.premise.saved_premises[index.row()]
+
+
 class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
     changed = pyqtSignal()
 
@@ -275,15 +356,90 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.btnNextToPremise.installEventFilter(ButtonPressResizeEventFilter(self.btnNextToPremise))
 
         self.ideasModel = SelectedIdeasListModel(self._premise)
-        self._proxy = proxy(self.ideasModel)
-        self._proxy.setFilterRole(SelectedIdeasListModel.SelectionRole)
-        self.listSelectedIdeas.setFont(QApplication.font())
-        self.listSelectedIdeas.setModel(self._proxy)
+        self._proxyIdeas = proxy(self.ideasModel)
+        self._proxyIdeas.setFilterRole(SelectedIdeasListModel.SelectionRole)
+        self.listSelectedIdeas.setModel(self._proxyIdeas)
         self.listSelectedIdeas.setSpacing(20)
-        self._proxy.setFilterFixedString('True')
+        self._proxyIdeas.setFilterFixedString('True')
+
+        self.questionsModel = SelectedQuestionsListModel(self._premise)
+        self._proxyQuestions = proxy(self.questionsModel)
+        self._proxyQuestions.setFilterRole(SelectedQuestionsListModel.SelectionRole)
+        self.listSelectedQuestions.setModel(self._proxyQuestions)
+        self.listSelectedQuestions.setViewportMargins(20, 3, 3, 3)
+        self._proxyQuestions.setFilterFixedString('True')
+
+        self.listSelectedQuestions.setHidden(True)
+        self.subtitleConcept2.setHidden(True)
+
+        self.btnPremiseIcon.setIcon(IconRegistry.from_name('mdi.label-variant'))
+
+        self.keywordsEditor = LabelsEditor('Keywords')
+        insert_after(self.scrollAreaWidgetContents_3, wrap(self.keywordsEditor, margin_left=20),
+                     self.subtitlePremise)
+        for label in self._premise.keywords:
+            self.keywordsEditor.addLabel(label)
+        self.keywordsEditor.labelAdded.connect(self._keywordAdded)
+        self.keywordsEditor.labelEdited.connect(self.changed)
+        self.keywordsEditor.labelClicked.connect(self._insertKeyword)
+        self.keywordsEditor.labelRemoved.connect(self._keywordRemoved)
+
+        self.textPremise = AutoAdjustableTextEdit()
+        transparent(self.textPremise)
+        font: QFont = self.textPremise.font()
+        font.setFamily('Cursive')
+        font.setPointSize(20)
+        self.textPremise.setFont(font)
+        self.textPremise.setPlaceholderText("Encapsulate your story's core idea in 1-2 sentences")
+        sp(self.textPremise).h_exp()
+        self.wdgPremiseParent.layout().addWidget(self.textPremise)
+        self.highlighter = TextHighlighterAnimation(self.textPremise, color=QColor(PLOTLYST_TERTIARY_COLOR))
+        self.keywordHighlighter: Optional[PremiseKeywordHighlighter] = None
+        self.textPremise.setText(self._premise.current)
+        self.textPremise.textChanged.connect(self._premiseEdited)
 
         link_buttons_to_pages(self.stackedWidget, [(self.btnSeed, self.pageSeed), (self.btnConcept, self.pageConcept),
                                                    (self.btnPremise, self.pagePremise)])
+
+        self.btnPremiseHighlight.setIcon(IconRegistry.from_name('fa5s.highlighter', 'grey', PLOTLYST_SECONDARY_COLOR))
+        self.btnPremiseHighlight.installEventFilter(ButtonPressResizeEventFilter(self.btnPremiseHighlight))
+        self.btnPremiseHighlight.installEventFilter(
+            OpacityEventFilter(self.btnPremiseHighlight, ignoreCheckedButton=True))
+        self.btnPremiseHighlight.installEventFilter(TooltipPositionEventFilter(self.btnPremiseHighlight))
+        self.btnPremiseHighlight.toggled.connect(self._premiseHighlightToggled)
+        self.btnPremiseClear.setIcon(IconRegistry.from_name('msc.clear-all', RED_COLOR))
+        self.btnPremiseClear.installEventFilter(ButtonPressResizeEventFilter(self.btnPremiseClear))
+        self.btnPremiseClear.installEventFilter(OpacityEventFilter(self.btnPremiseClear))
+        self.btnPremiseClear.installEventFilter(TooltipPositionEventFilter(self.btnPremiseClear))
+        self.btnPremiseClear.clicked.connect(self._clearPremise)
+
+        self.btnRestorePremiseArchive.setIcon(IconRegistry.from_name('mdi.archive-arrow-up-outline', 'grey'))
+        self.btnRestorePremiseArchive.installEventFilter(ButtonPressResizeEventFilter(self.btnRestorePremiseArchive))
+        self.btnRestorePremiseArchive.installEventFilter(OpacityEventFilter(self.btnRestorePremiseArchive))
+        self.btnRestorePremiseArchive.installEventFilter(TooltipPositionEventFilter(self.btnRestorePremiseArchive))
+        self.btnRestorePremiseArchive.clicked.connect(self._restoreFromArchive)
+        self.btnDeletePremiseArchive.setIcon(IconRegistry.trash_can_icon())
+        self.btnDeletePremiseArchive.installEventFilter(ButtonPressResizeEventFilter(self.btnDeletePremiseArchive))
+        self.btnDeletePremiseArchive.installEventFilter(OpacityEventFilter(self.btnDeletePremiseArchive))
+        self.btnDeletePremiseArchive.installEventFilter(TooltipPositionEventFilter(self.btnDeletePremiseArchive))
+        self.btnDeletePremiseArchive.clicked.connect(self._removeFromArchive)
+
+        self.btnCollapseArchive = CollapseButton()
+        translucent(self.btnCollapseArchive, 0.4)
+        self.wdgArchiveTop.layout().insertWidget(0, self.btnCollapseArchive)
+        self.btnCollapseArchive.toggled.connect(self._toggleArchives)
+        self.btnCollapseArchive.setChecked(True)
+        self.btnSavePremise.setIcon(IconRegistry.from_name('fa5s.arrow-down', 'grey'))
+        self.btnSavePremise.installEventFilter(ButtonPressResizeEventFilter(self.btnSavePremise))
+        self.btnSavePremise.installEventFilter(OpacityEventFilter(self.btnSavePremise))
+        self.btnSavePremise.clicked.connect(self._savePremise)
+        self.lblArchive.setText(f'Archive ({len(self._premise.saved_premises)})')
+
+        self.premiseArchiveModel = PremiseArchiveTableModel(self._premise)
+        self.tblPremiseArchive.setModel(self.premiseArchiveModel)
+        stretch_col(self.tblPremiseArchive, 0)
+        self.tblPremiseArchive.selectionModel().selectionChanged.connect(self._archiveSelectionChanged)
+        self.tblPremiseArchive.doubleClicked.connect(self._restoreFromArchive)
 
         flow(self.wdgIdeasEditor)
         margins(self.wdgIdeasEditor, left=20, right=20, top=20)
@@ -296,11 +452,12 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         for question in self._premise.questions:
             self.__initConceptQuestionWidget(question)
 
-        if self._premise.questions:
+        if self._premise.current or self._premise.saved_premises:
+            self.btnPremise.setChecked(True)
+        elif self._premise.questions:
             self.btnConcept.setChecked(True)
         else:
             self.btnSeed.setChecked(True)
-
 
     def _addNewIdea(self):
         text = TextAreaInputDialog.edit('Add a new idea', self.IDEA_EDIT_PLACEHOLDER, self.IDEA_EDIT_DESC)
@@ -317,41 +474,140 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
             wdg = self.__initIdeaWidget(idea)
             qtanim.fade_in(wdg)
             self.changed.emit()
-            self._proxy.invalidate()
+            self._proxyIdeas.invalidate()
 
     def _editIdea(self, wdg: IdeaWidget):
         text = TextAreaInputDialog.edit('Edit idea', self.IDEA_EDIT_PLACEHOLDER, self.IDEA_EDIT_DESC, wdg.text())
         if text:
             wdg.setText(text)
             self.changed.emit()
-            self._proxy.invalidate()
+            self._proxyIdeas.invalidate()
 
     def _removeIdea(self, wdg: IdeaWidget):
         idea = wdg.idea()
         self._premise.ideas.remove(idea)
         fade_out_and_gc(self.wdgIdeasEditor, wdg)
         self.changed.emit()
-        self._proxy.invalidate()
+        self._proxyIdeas.invalidate()
 
     def _ideaToggled(self):
-        self._proxy.invalidate()
+        self._proxyIdeas.invalidate()
         self.changed.emit()
 
     def _addNewConcept(self):
         def finish():
             wdg.setGraphicsEffect(None)
+            wdg.lineedit.setFocus()
 
         question = PremiseQuestion('What if ')
         self._premise.questions.append(question)
         wdg = self.__initConceptQuestionWidget(question)
         qtanim.fade_in(wdg, teardown=finish)
         self.changed.emit()
+        self._proxyQuestions.invalidate()
 
     def _removeConceptQuestion(self, wdg: ConceptQuestionWidget):
         question = wdg.question()
         fade_out_and_gc(self.wdgConceptEditor, wdg)
         self._premise.questions.remove(question)
         self.changed.emit()
+        self._proxyQuestions.invalidate()
+
+    def _conceptQuestionChanged(self):
+        self.changed.emit()
+        self._proxyQuestions.invalidate()
+
+    def _keywordAdded(self, label: Label):
+        self._premise.keywords.append(label)
+        self.changed.emit()
+
+    def _keywordRemoved(self, label: Label):
+        self._premise.keywords.remove(label)
+        self.changed.emit()
+
+    def _insertKeyword(self, label: Label):
+        cursor = QTextCursor(self.textPremise.document())
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+        if self.textPremise.toPlainText() and not self.textPremise.toPlainText().endswith(' '):
+            cursor.insertText(' ')
+
+        start_pos = cursor.position()
+        cursor.insertText(label.keyword)
+        end_pos = cursor.position()
+
+        self.textPremise.setTextCursor(cursor)
+        self.highlighter.start_highlight(start_pos, end_pos)
+
+    def _premiseEdited(self):
+        self._premise.current = self.textPremise.toPlainText()
+        self.lblWordCount.setWordCount(wc(self._premise.current))
+        self.changed.emit()
+
+    def _toggleArchives(self, toggled: bool):
+        self.tblPremiseArchive.setHidden(toggled)
+        self.btnRestorePremiseArchive.setHidden(toggled)
+        self.btnDeletePremiseArchive.setHidden(toggled)
+        self.lineSide.setHidden(toggled)
+
+    def _premiseHighlightToggled(self, toggled: bool):
+        if toggled:
+            self.keywordHighlighter = PremiseKeywordHighlighter(self.textPremise.document(), self._premise)
+        else:
+            gc(self.keywordHighlighter)
+            self.keywordHighlighter = None
+
+    def _clearPremise(self):
+        if self.textPremise.toPlainText() and confirmed("The current premise will be lost.", "Reset current premise"):
+            self.textPremise.clear()
+
+    def _savePremise(self):
+        if not self.textPremise.toPlainText():
+            qtanim.shake(self.textPremise)
+            return
+
+        premise = PremiseReview(self._premise.current)
+        self._premise.saved_premises.append(premise)
+
+        self.textPremise.clear()
+        self.premiseArchiveModel.modelReset.emit()
+        self._archiveSelectionChanged()
+        self.lblArchive.setText(f'Archive ({len(self._premise.saved_premises)})')
+        self.changed.emit()
+
+    def _archiveSelectionChanged(self):
+        indexes = self.tblPremiseArchive.selectedIndexes()
+        if indexes:
+            self.btnRestorePremiseArchive.setEnabled(True)
+            self.btnDeletePremiseArchive.setEnabled(True)
+        else:
+            self.btnRestorePremiseArchive.setEnabled(False)
+            self.btnDeletePremiseArchive.setEnabled(False)
+
+    def _restoreFromArchive(self):
+        indexes = self.tblPremiseArchive.selectedIndexes()
+        if not indexes:
+            return
+
+        premise: PremiseReview = indexes[0].data(role=PremiseArchiveTableModel.PremiseRole)
+        if premise:
+            if self.textPremise.toPlainText() and not asked(
+                    "Do you restore a previous premise? The current one will be lost.",
+                    'Restore premise', btnConfirmText='Restore'):
+                return
+            self.textPremise.setText(premise.premise)
+
+    def _removeFromArchive(self):
+        indexes = self.tblPremiseArchive.selectedIndexes()
+        if not indexes:
+            return
+
+        premise: PremiseReview = indexes[0].data(role=PremiseArchiveTableModel.PremiseRole)
+        if premise:
+            self._premise.saved_premises.remove(premise)
+            self.premiseArchiveModel.modelReset.emit()
+            self._archiveSelectionChanged()
+            self.lblArchive.setText(f'Archive ({len(self._premise.saved_premises)})')
+            self.changed.emit()
 
     def __initIdeaWidget(self, idea: PremiseIdea) -> IdeaWidget:
         wdg = IdeaWidget(idea)
@@ -365,7 +621,8 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
     def __initConceptQuestionWidget(self, question: PremiseQuestion) -> ConceptQuestionWidget:
         wdg = ConceptQuestionWidget(question)
         wdg.remove.connect(partial(self._removeConceptQuestion, wdg))
-        wdg.changed.connect(self.changed)
+        wdg.changed.connect(self._conceptQuestionChanged)
+
         self.wdgConceptEditor.layout().addWidget(wdg)
 
         return wdg
