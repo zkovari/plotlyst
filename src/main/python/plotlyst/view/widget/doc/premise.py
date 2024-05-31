@@ -43,6 +43,7 @@ from plotlyst.view.generated.premise_builder_widget_ui import Ui_PremiseBuilderW
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.button import DotsMenuButton, CollapseButton, EyeToggle
+from plotlyst.view.widget.confirm import asked
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, TextAreaInputDialog, LabelsEditor, \
     TextHighlighterAnimation
 from plotlyst.view.widget.list import ListView
@@ -408,9 +409,10 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.btnPremiseClear.installEventFilter(ButtonPressResizeEventFilter(self.btnPremiseClear))
         self.btnPremiseClear.installEventFilter(OpacityEventFilter(self.btnPremiseClear))
 
-        self.btnEditPremiseArchive.setIcon(IconRegistry.from_name('mdi.archive-arrow-up', 'grey'))
-        self.btnEditPremiseArchive.installEventFilter(ButtonPressResizeEventFilter(self.btnEditPremiseArchive))
-        self.btnEditPremiseArchive.installEventFilter(OpacityEventFilter(self.btnEditPremiseArchive))
+        self.btnRestorePremiseArchive.setIcon(IconRegistry.from_name('mdi.archive-arrow-up-outline', 'grey'))
+        self.btnRestorePremiseArchive.installEventFilter(ButtonPressResizeEventFilter(self.btnRestorePremiseArchive))
+        self.btnRestorePremiseArchive.installEventFilter(OpacityEventFilter(self.btnRestorePremiseArchive))
+        self.btnRestorePremiseArchive.clicked.connect(self._restoreFromArchive)
         self.btnDeletePremiseArchive.setIcon(IconRegistry.trash_can_icon('grey'))
         self.btnDeletePremiseArchive.installEventFilter(ButtonPressResizeEventFilter(self.btnDeletePremiseArchive))
         self.btnDeletePremiseArchive.installEventFilter(OpacityEventFilter(self.btnDeletePremiseArchive))
@@ -431,6 +433,7 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.tblPremiseArchive.setModel(self.premiseArchiveModel)
         stretch_col(self.tblPremiseArchive, 0)
         self.tblPremiseArchive.selectionModel().selectionChanged.connect(self._archiveSelectionChanged)
+        self.tblPremiseArchive.doubleClicked.connect(self._restoreFromArchive)
 
         flow(self.wdgIdeasEditor)
         margins(self.wdgIdeasEditor, left=20, right=20, top=20)
@@ -443,11 +446,12 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         for question in self._premise.questions:
             self.__initConceptQuestionWidget(question)
 
-        self.btnPremise.setChecked(True)
-        # if self._premise.questions:
-        #     self.btnConcept.setChecked(True)
-        # else:
-        #     self.btnSeed.setChecked(True)
+        if self._premise.current or self._premise.saved_premises:
+            self.btnPremise.setChecked(True)
+        elif self._premise.questions:
+            self.btnConcept.setChecked(True)
+        else:
+            self.btnSeed.setChecked(True)
 
     def _addNewIdea(self):
         text = TextAreaInputDialog.edit('Add a new idea', self.IDEA_EDIT_PLACEHOLDER, self.IDEA_EDIT_DESC)
@@ -535,8 +539,9 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
 
     def _toggleArchives(self, toggled: bool):
         self.tblPremiseArchive.setHidden(toggled)
-        self.btnEditPremiseArchive.setHidden(toggled)
+        self.btnRestorePremiseArchive.setHidden(toggled)
         self.btnDeletePremiseArchive.setHidden(toggled)
+        self.lineSide.setHidden(toggled)
 
     def _premiseHighlightToggled(self, toggled: bool):
         if toggled:
@@ -562,11 +567,24 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
     def _archiveSelectionChanged(self):
         indexes = self.tblPremiseArchive.selectedIndexes()
         if indexes:
-            self.btnEditPremiseArchive.setEnabled(True)
+            self.btnRestorePremiseArchive.setEnabled(True)
             self.btnDeletePremiseArchive.setEnabled(True)
         else:
-            self.btnEditPremiseArchive.setEnabled(False)
+            self.btnRestorePremiseArchive.setEnabled(False)
             self.btnDeletePremiseArchive.setEnabled(False)
+
+    def _restoreFromArchive(self):
+        indexes = self.tblPremiseArchive.selectedIndexes()
+        if not indexes:
+            return
+
+        premise: PremiseReview = indexes[0].data(role=PremiseArchiveTableModel.PremiseRole)
+        if premise:
+            if self.textPremise.toPlainText() and not asked(
+                    "Do you restore a previous premise? The current one will be lost.",
+                    'Restore premise', btnConfirmText='Restore'):
+                return
+            self.textPremise.setText(premise.premise)
 
     def _removeFromArchive(self):
         indexes = self.tblPremiseArchive.selectedIndexes()

@@ -814,12 +814,15 @@
               <item>
                <layout class="QVBoxLayout" name="verticalLayout_9">
                 <item>
-                 <widget class="QToolButton" name="btnEditPremiseArchive">
+                 <widget class="QToolButton" name="btnRestorePremiseArchive">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
                   <property name="cursor">
                    <cursorShape>PointingHandCursor</cursorShape>
+                  </property>
+                  <property name="toolTip">
+                   <string>Restore selected premise from archive</string>
                   </property>
                   <property name="text">
                    <string/>
@@ -830,12 +833,22 @@
                  </widget>
                 </item>
                 <item>
+                 <widget class="Line" name="lineSide">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                 </widget>
+                </item>
+                <item>
                  <widget class="QToolButton" name="btnDeletePremiseArchive">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
                   <property name="cursor">
                    <cursorShape>PointingHandCursor</cursorShape>
+                  </property>
+                  <property name="toolTip">
+                   <string>Remove selected premise from archive</string>
                   </property>
                   <property name="text">
                    <string/>
