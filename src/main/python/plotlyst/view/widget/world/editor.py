@@ -75,6 +75,9 @@ class WorldBuildingEntityElementWidget(QWidget):
         retain_when_hidden(self.btnAdd)
 
         self.btnDrag = DotsDragIcon(self)
+        self.btnDrag.setToolTip('''<html><b>Drag</b> to move<p/>
+        <b>Click</b> to display menu
+        ''')
         self.btnDrag.setHidden(True)
         if self._cornerBtnEnabled and self.element.type not in [WorldBuildingEntityElementType.Section,
                                                                 WorldBuildingEntityElementType.Main_Section,
