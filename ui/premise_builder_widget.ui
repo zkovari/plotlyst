@@ -815,6 +815,9 @@
                <layout class="QVBoxLayout" name="verticalLayout_9">
                 <item>
                  <widget class="QToolButton" name="btnEditPremiseArchive">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
                   <property name="cursor">
                    <cursorShape>PointingHandCursor</cursorShape>
                   </property>
@@ -828,6 +831,9 @@
                 </item>
                 <item>
                  <widget class="QToolButton" name="btnDeletePremiseArchive">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
                   <property name="cursor">
                    <cursorShape>PointingHandCursor</cursorShape>
                   </property>

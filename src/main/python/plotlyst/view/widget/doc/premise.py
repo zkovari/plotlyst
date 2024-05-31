@@ -300,6 +300,8 @@ class PremiseKeywordHighlighter(QSyntaxHighlighter):
 
 
 class PremiseArchiveTableModel(QAbstractTableModel):
+    PremiseRole = Qt.ItemDataRole.UserRole + 1
+
     def __init__(self, premise: PremiseBuilder, parent=None):
         super().__init__(parent)
         self.premise = premise
@@ -316,6 +318,8 @@ class PremiseArchiveTableModel(QAbstractTableModel):
     def data(self, index: QModelIndex, role: int = ...) -> Any:
         if role == Qt.ItemDataRole.DisplayRole:
             return self.premise.saved_premises[index.row()].premise
+        elif role == self.PremiseRole:
+            return self.premise.saved_premises[index.row()]
 
 
 class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
@@ -410,6 +414,7 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.btnDeletePremiseArchive.setIcon(IconRegistry.trash_can_icon('grey'))
         self.btnDeletePremiseArchive.installEventFilter(ButtonPressResizeEventFilter(self.btnDeletePremiseArchive))
         self.btnDeletePremiseArchive.installEventFilter(OpacityEventFilter(self.btnDeletePremiseArchive))
+        self.btnDeletePremiseArchive.clicked.connect(self._removeFromArchive)
 
         self.btnCollapseArchive = CollapseButton()
         translucent(self.btnCollapseArchive, 0.4)
@@ -425,6 +430,7 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.premiseArchiveModel = PremiseArchiveTableModel(self._premise)
         self.tblPremiseArchive.setModel(self.premiseArchiveModel)
         stretch_col(self.tblPremiseArchive, 0)
+        self.tblPremiseArchive.selectionModel().selectionChanged.connect(self._archiveSelectionChanged)
 
         flow(self.wdgIdeasEditor)
         margins(self.wdgIdeasEditor, left=20, right=20, top=20)
@@ -549,7 +555,31 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
 
         self.textPremise.clear()
         self.premiseArchiveModel.modelReset.emit()
+        self._archiveSelectionChanged()
         self.lblArchive.setText(f'Archive ({len(self._premise.saved_premises)})')
+        self.changed.emit()
+
+    def _archiveSelectionChanged(self):
+        indexes = self.tblPremiseArchive.selectedIndexes()
+        if indexes:
+            self.btnEditPremiseArchive.setEnabled(True)
+            self.btnDeletePremiseArchive.setEnabled(True)
+        else:
+            self.btnEditPremiseArchive.setEnabled(False)
+            self.btnDeletePremiseArchive.setEnabled(False)
+
+    def _removeFromArchive(self):
+        indexes = self.tblPremiseArchive.selectedIndexes()
+        if not indexes:
+            return
+
+        premise: PremiseReview = indexes[0].data(role=PremiseArchiveTableModel.PremiseRole)
+        if premise:
+            self._premise.saved_premises.remove(premise)
+            self.premiseArchiveModel.modelReset.emit()
+            self._archiveSelectionChanged()
+            self.lblArchive.setText(f'Archive ({len(self._premise.saved_premises)})')
+            self.changed.emit()
 
     def __initIdeaWidget(self, idea: PremiseIdea) -> IdeaWidget:
         wdg = IdeaWidget(idea)
