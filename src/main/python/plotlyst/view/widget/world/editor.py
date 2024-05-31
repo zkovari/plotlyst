@@ -171,15 +171,11 @@ class TextElementEditor(WorldBuildingEntityElementWidget):
         self.textEdit.setMarkdown(element.text)
 
         font = self.textEdit.font()
-        font.setPointSize(16)
         if app_env.is_mac():
-            family = 'Helvetica Neue'
             font.setPointSize(18)
-        elif app_env.is_windows():
-            family = 'Calibri'
         else:
-            family = 'Sans Serif'
-        font.setFamily(family)
+            font.setPointSize(16)
+        font.setFamily('Sans Serif')
         self.textEdit.setFont(font)
 
         self.layout().addWidget(self.textEdit)
@@ -225,13 +221,7 @@ class HeaderElementEditor(WorldBuildingEntityElementWidget):
         self.lineTitle.setPlaceholderText('New section')
         font = self.lineTitle.font()
         font.setPointSize(24)
-        if app_env.is_mac():
-            family = 'Helvetica Neue'
-        elif app_env.is_windows():
-            family = 'Calibri'
-        else:
-            family = 'Sans Serif'
-        font.setFamily(family)
+        font.setFamily('Serif')
         self.lineTitle.setFont(font)
 
         apply_text_color(self.lineTitle, QColor('#510442'))
@@ -270,18 +260,12 @@ class QuoteElementEditor(WorldBuildingEntityElementWidget):
         self.textEdit.setStyleSheet(f'''
                 border: 0px;
                 background-color: rgba(0, 0, 0, 0);
-                color: grey;
+                color: #343a40;
         ''')
         self.textEdit.setPlaceholderText('Edit quote')
         font: QFont = self.textEdit.font()
-        font.setPointSize(14)
-        if app_env.is_mac():
-            family = 'Helvetica Neue'
-        elif app_env.is_windows():
-            family = 'Calibri'
-        else:
-            family = 'Sans Serif'
-        font.setFamily(family)
+        font.setPointSize(16)
+        font.setFamily('Cursive')
         font.setItalic(True)
         self.textEdit.setFont(font)
         self.textEdit.setMarkdown(self.element.text)
