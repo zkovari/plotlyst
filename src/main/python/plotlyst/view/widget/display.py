@@ -438,3 +438,11 @@ class DragIcon(Icon):
         self.setIcon(IconRegistry.hashtag_icon('grey'))
         self.setIconSize(QSize(14, 14))
         self.setCursor(Qt.CursorShape.OpenHandCursor)
+
+
+class DotsDragIcon(Icon):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setIcon(IconRegistry.from_name('ph.dots-six-vertical-bold', 'grey'))
+        self.setIconSize(QSize(18, 18))
+        self.setCursor(Qt.CursorShape.OpenHandCursor)
