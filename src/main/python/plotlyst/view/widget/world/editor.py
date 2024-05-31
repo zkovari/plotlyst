@@ -22,9 +22,9 @@ from functools import partial
 from typing import Optional, Dict, List
 
 import qtanim
-from PyQt6.QtCore import pyqtSignal, Qt, QSize, QMimeData, QPointF
+from PyQt6.QtCore import pyqtSignal, Qt, QSize, QMimeData, QPointF, QEvent
 from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMouseEvent, QColor, QIcon, QImage, \
-    QShowEvent, QPixmap, QCursor
+    QShowEvent, QPixmap, QCursor, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QDialog, QGridLayout, QSlider, QToolButton, QButtonGroup, \
     QLabel
 from overrides import overrides
@@ -62,7 +62,10 @@ class WorldBuildingEntityElementWidget(QWidget):
         super().__init__(parent)
         self.novel = novel
         self.element = element
-        self._cornerBtnEnabled = cornerBtnEnabled
+        self._cornerBtnEnabled = cornerBtnEnabled and self.element.type not in [WorldBuildingEntityElementType.Section,
+                                                                                WorldBuildingEntityElementType.Main_Section,
+                                                                                WorldBuildingEntityElementType.Variables,
+                                                                                WorldBuildingEntityElementType.Highlight]
 
         vbox(self, 0)
         if self._underSection():
@@ -79,11 +82,6 @@ class WorldBuildingEntityElementWidget(QWidget):
         <b>Click</b> to display menu
         ''')
         self.btnDrag.setHidden(True)
-        if self._cornerBtnEnabled and self.element.type not in [WorldBuildingEntityElementType.Section,
-                                                                WorldBuildingEntityElementType.Main_Section,
-                                                                WorldBuildingEntityElementType.Variables,
-                                                                WorldBuildingEntityElementType.Highlight]:
-            self.installEventFilter(VisibilityToggleEventFilter(self.btnDrag, self))
 
         self.btnMenu = DotsMenuButton(self)
         self.btnMenu.setHidden(True)
@@ -103,6 +101,15 @@ class WorldBuildingEntityElementWidget(QWidget):
 
     def save(self):
         RepositoryPersistenceManager.instance().update_world(self.novel)
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        if self._cornerBtnEnabled:
+            qtanim.fade_in(self.btnDrag)
+
+    @overrides
+    def leaveEvent(self, _: QEvent) -> None:
+        self.btnDrag.setHidden(True)
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
@@ -479,7 +486,6 @@ class VariablesElementEditor(WorldBuildingEntityElementWidget):
         super().__init__(novel, element, parent)
         margins(self, right=15)
 
-        self._btnCornerButtonOffsetX = 37
         self._btnCornerButtonOffsetY = 7
 
         self.frame = frame()
