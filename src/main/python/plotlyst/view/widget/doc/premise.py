@@ -509,6 +509,11 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         else:
             self.btnSeed.setChecked(True)
 
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        self.listSelectedIdeas.model().modelReset.emit()
+        self.listSelectedIdeas.update()
+
     def _addNewIdea(self):
         text = TextAreaInputDialog.edit('Add a new idea', self.IDEA_EDIT_PLACEHOLDER, self.IDEA_EDIT_DESC)
         if text:

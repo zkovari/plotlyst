@@ -171,7 +171,7 @@
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>2</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="pageSeed">
       <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -323,8 +323,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>200</width>
-            <height>145</height>
+            <width>559</width>
+            <height>435</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -378,9 +378,6 @@
              </property>
              <property name="selectionMode">
               <enum>QAbstractItemView::NoSelection</enum>
-             </property>
-             <property name="isWrapping" stdset="0">
-              <bool>false</bool>
              </property>
              <property name="viewMode">
               <enum>QListView::IconMode</enum>
