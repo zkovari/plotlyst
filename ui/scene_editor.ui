@@ -585,7 +585,7 @@
            <property name="currentIndex">
             <number>0</number>
            </property>
-           <widget class="QWidget" name="tabStorylines">
+           <widget class="QWidget" name="tabFunctions">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
               <horstretch>0</horstretch>
@@ -596,7 +596,7 @@
              <bool>true</bool>
             </property>
             <attribute name="title">
-             <string>Events</string>
+             <string>Functions</string>
             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_9">
              <property name="spacing">

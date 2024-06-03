@@ -70,7 +70,7 @@ class SceneEditor(QObject, EventListener):
 
         self._emoji_font = emoji_font()
 
-        set_tab_icon(self.ui.tabWidget, self.ui.tabStorylines,
+        set_tab_icon(self.ui.tabWidget, self.ui.tabFunctions,
                      IconRegistry.storylines_icon(color_on=PLOTLYST_SECONDARY_COLOR))
         set_tab_icon(self.ui.tabWidget, self.ui.tabDrive,
                      IconRegistry.from_name('mdi.chemical-weapon', color_on=PLOTLYST_SECONDARY_COLOR))
@@ -169,7 +169,7 @@ class SceneEditor(QObject, EventListener):
         self._storylineEditor.outcomeChanged.connect(self.ui.wdgSceneStructure.refreshOutcome)
         self._storylineEditor.storylineLinked.connect(self._storyline_linked)
         self._storylineEditor.storylineEditRequested.connect(self._storyline_edit)
-        self.ui.tabStorylines.layout().addWidget(self._storylineEditor)
+        self.ui.tabFunctions.layout().addWidget(self._storylineEditor)
 
         self._agencyEditor = SceneAgendaEditor(self.novel)
         self._agencyEditor.setUnsetCharacterSlot(self._character_not_selected_notification)
@@ -186,7 +186,7 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._btnPurposeType.refresh)
         self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._storylineEditor.refresh)
 
-        self.ui.tabWidget.setCurrentWidget(self.ui.tabStorylines)
+        self.ui.tabWidget.setCurrentWidget(self.ui.tabFunctions)
         self.ui.tabWidgetDrive.setCurrentWidget(self.ui.tabAgency)
         self.ui.tabWidget.currentChanged.connect(self._page_toggled)
 
