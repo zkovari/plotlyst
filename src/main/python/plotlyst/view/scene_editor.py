@@ -155,7 +155,6 @@ class SceneEditor(QObject, EventListener):
         self._btnPurposeType.reset.connect(self._reset_purpose_editor)
         self.ui.wdgMidbar.layout().insertWidget(0, self._btnPurposeType)
 
-        self.ui.btnInfo.setHidden(True)
 
         self._btnPlotSelector = push_btn(IconRegistry.storylines_icon(), 'Storylines',
                                          tooltip='Link storylines to this scene', transparent_=True)
@@ -171,7 +170,7 @@ class SceneEditor(QObject, EventListener):
         # self._storylineEditor.outcomeChanged.connect(self.ui.wdgSceneStructure.refreshOutcome)
         # self._storylineEditor.storylineLinked.connect(self._storyline_linked)
         # self._storylineEditor.storylineEditRequested.connect(self._storyline_edit)
-        self.ui.tabFunctions.layout().addWidget(self._functionsEditor)
+        self.ui.scrollAreaFunctions.layout().addWidget(self._functionsEditor)
 
         self._agencyEditor = SceneAgendaEditor(self.novel)
         self._agencyEditor.setUnsetCharacterSlot(self._character_not_selected_notification)
@@ -376,8 +375,6 @@ class SceneEditor(QObject, EventListener):
         self._btnPurposeType.refresh()
         if not self._btnPurposeType.isVisible():
             fade_in(self._btnPurposeType)
-        # if not self.ui.btnInfo.isVisible():
-        #     fade_in(self.ui.btnInfo)
         self.ui.wdgStorylines.setVisible(self.novel.prefs.toggled(NovelSetting.Storylines))
         self._btnPlotSelector.setVisible(self.novel.prefs.toggled(NovelSetting.Storylines))
         # to avoid segfault for some reason, we disable it first before changing the stack widget
@@ -388,7 +385,6 @@ class SceneEditor(QObject, EventListener):
     def _reset_purpose_editor(self):
         self.scene.purpose = None
         self._btnPurposeType.setHidden(True)
-        self.ui.btnInfo.setHidden(True)
         self.ui.wdgStorylines.setHidden(True)
         self._btnPlotSelector.setHidden(True)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pagePurpose)
