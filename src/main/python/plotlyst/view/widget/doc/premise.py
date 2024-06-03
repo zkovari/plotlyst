@@ -27,9 +27,10 @@ from PyQt6.QtGui import QFont, QMouseEvent, QResizeEvent, QTextCursor, QColor, Q
     QTextDocument
 from PyQt6.QtWidgets import QWidget, QApplication, QLineEdit
 from overrides import overrides
-from qthandy import incr_font, flow, margins, vbox, hbox, pointy, sp, spacer, retain_when_hidden, incr_icon, \
+from qthandy import incr_font, flow, margins, vbox, hbox, pointy, sp, retain_when_hidden, incr_icon, \
     transparent, translucent, gc
-from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter
+from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter, \
+    ObjectReferenceMimeData
 from qtmenu import MenuWidget
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR, \
@@ -47,7 +48,7 @@ from plotlyst.view.widget.button import DotsMenuButton, CollapseButton, EyeToggl
 from plotlyst.view.widget.confirm import asked, confirmed
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, TextAreaInputDialog, LabelsEditor, \
     TextHighlighterAnimation
-from plotlyst.view.widget.list import ListView
+from plotlyst.view.widget.list import ListView, ListItemWidget
 
 
 class IdeaWidget(QWidget):
@@ -186,6 +187,56 @@ class SelectedQuestionsListModel(QAbstractListModel):
             return font
 
 
+class QuestionListItemWidget(ListItemWidget):
+    def __init__(self, question: PremiseQuestion, parent=None):
+        super().__init__(question, parent)
+        self._question = question
+        self._lineEdit.setText(self._question.text)
+
+    @overrides
+    def _textChanged(self, text: str):
+        super(QuestionListItemWidget, self)._textChanged(text)
+        self._question.text = text
+
+
+class QuestionsListView(ListView):
+    changed = pyqtSignal()
+
+    def __init__(self, question: PremiseQuestion, parent=None):
+        super().__init__(parent)
+        self._question = question
+        margins(self, left=40)
+        self._btnAdd.setText('Add new question')
+
+        for child in self._question.children:
+            self.addItem(child)
+
+    @overrides
+    def _addNewItem(self):
+        question = PremiseQuestion('What if ')
+        self._question.children.append(question)
+        self.addItem(question)
+        self.changed.emit()
+
+    @overrides
+    def _listItemWidgetClass(self):
+        return QuestionListItemWidget
+
+    @overrides
+    def _deleteItemWidget(self, widget: ListItemWidget):
+        super(QuestionsListView, self)._deleteItemWidget(widget)
+        self._question.children.remove(widget.item())
+        self.changed.emit()
+
+    @overrides
+    def _dropped(self, mimeData: ObjectReferenceMimeData):
+        super(QuestionsListView, self)._dropped(mimeData)
+        items = []
+        for wdg in self.widgets():
+            items.append(wdg.item())
+        self._question.children[:] = items
+
+
 class ConceptQuestionWidget(QWidget):
     changed = pyqtSignal()
     remove = pyqtSignal()
@@ -200,8 +251,9 @@ class ConceptQuestionWidget(QWidget):
         self.container = QWidget()
         vbox(self.container, 0, 0)
         margins(self.container, left=15)
-        self.children = ListView()
+        self.children = QuestionsListView(question)
         self.container.layout().addWidget(self.children)
+        self.children.changed.connect(self.changed)
 
         self.btnCollapse = CollapseButton()
         self.btnCollapse.toggled.connect(self.container.setHidden)
@@ -219,6 +271,7 @@ class ConceptQuestionWidget(QWidget):
         sp(self.lineedit).h_exp()
         incr_font(self.lineedit, 2)
         self.lineedit.setProperty('rounded', True)
+        self.lineedit.setProperty('white-bg', True)
         self.top.setMaximumWidth(700)
         self.lineedit.textEdited.connect(self._textEdited)
 
@@ -239,9 +292,6 @@ class ConceptQuestionWidget(QWidget):
         self.top.layout().addWidget(self.btnSelect)
         self.top.layout().addWidget(self.lineedit)
         self.top.layout().addWidget(group(self.btnEye, self.btnMenu, vertical=False, margin=0, spacing=0))
-        spacer_ = spacer()
-        sp(spacer_).h_fixed()
-        self.top.layout().addWidget(spacer_)
 
         self.layout().addWidget(self.top)
         self.layout().addWidget(self.container)

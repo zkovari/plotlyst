@@ -22,11 +22,11 @@ from functools import partial
 from typing import Optional, Any, List
 
 from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QObject, QPoint
-from PyQt6.QtWidgets import QScrollArea, QFrame, QLineEdit
+from PyQt6.QtWidgets import QFrame, QLineEdit
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 from qtanim import fade_in
-from qthandy import vbox, vspacer, hbox, clear_layout, retain_when_hidden, margins, gc, translucent, decr_font
+from qthandy import vbox, vspacer, hbox, clear_layout, retain_when_hidden, margins, gc, translucent, decr_font, sp
 from qthandy.filter import DragEventFilter, DropEventFilter, ObjectReferenceMimeData
 
 from plotlyst.view.common import fade_out_and_gc, wrap
@@ -74,6 +74,9 @@ class ListItemWidget(QWidget):
 
         self.installEventFilter(self)
 
+        sp(self._lineEdit).h_exp()
+        self.setMaximumWidth(700)
+
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if event.type() == QEvent.Type.Enter:
@@ -94,23 +97,18 @@ class ListItemWidget(QWidget):
         self.changed.emit()
 
 
-class ListView(QScrollArea):
+class ListView(QFrame):
 
     def __init__(self, parent=None):
         super(ListView, self).__init__(parent)
-        self.setWidgetResizable(True)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setFrameShape(QFrame.Shape.NoFrame)
 
-        self._centralWidget = QWidget(self)
-        self.setWidget(self._centralWidget)
-        vbox(self._centralWidget, spacing=0)
+        vbox(self, spacing=0)
 
         self._btnAdd = SecondaryActionPushButton('Add new')
         self._wdgAdd = wrap(self._btnAdd, margin_left=10)
-        self._centralWidget.layout().addWidget(self._wdgAdd)
-        self._centralWidget.layout().addWidget(vspacer())
+        self.layout().addWidget(self._wdgAdd)
+        self.layout().addWidget(vspacer())
 
         self._btnAdd.clicked.connect(self._addNewItem)
         decr_font(self._btnAdd)
@@ -119,26 +117,23 @@ class ListView(QScrollArea):
         self._dragged: Optional[ListItemWidget] = None
         self._toBeRemoved = False
 
-    def centralWidget(self) -> QWidget:
-        return self._centralWidget
-
     def addItem(self, item: Any):
         wdg = self.__newItemWidget(item)
 
-        self._centralWidget.layout().insertWidget(self._centralWidget.layout().count() - 2, wdg)
+        self.layout().insertWidget(self.layout().count() - 2, wdg)
         if self.isVisible():
             anim = fade_in(wdg, 150)
             anim.finished.connect(wdg.activate)
 
     def clear(self):
-        clear_layout(self._centralWidget, auto_delete=False)
-        self._centralWidget.layout().addWidget(self._wdgAdd)
-        self._centralWidget.layout().addWidget(vspacer())
+        clear_layout(self, auto_delete=False)
+        self.layout().addWidget(self._wdgAdd)
+        self.layout().addWidget(vspacer())
 
     def widgets(self) -> List[ListItemWidget]:
         wdgs = []
-        for i in range(self._centralWidget.layout().count() - 2):
-            wdg = self._centralWidget.layout().itemAt(i).widget()
+        for i in range(self.layout().count() - 2):
+            wdg = self.layout().itemAt(i).widget()
             if wdg is self._dragPlaceholder or wdg is self._dragged:
                 continue
             wdgs.append(wdg)
@@ -154,7 +149,7 @@ class ListView(QScrollArea):
         pass
 
     def _deleteItemWidget(self, widget: ListItemWidget):
-        fade_out_and_gc(self._centralWidget, widget)
+        fade_out_and_gc(self, widget)
 
     def _dragStarted(self, widget: ListItemWidget):
         widget.setHidden(True)
@@ -168,16 +163,16 @@ class ListView(QScrollArea):
             DropEventFilter(self._dragPlaceholder, mimeTypes=[LIST_ITEM_MIME_TYPE], droppedSlot=self._dropped))
 
     def _dragMoved(self, widget: ListItemWidget, edge: Qt.Edge, _: QPoint):
-        i = self._centralWidget.layout().indexOf(widget)
+        i = self.layout().indexOf(widget)
         if edge == Qt.Edge.TopEdge:
-            self._centralWidget.layout().insertWidget(i, self._dragPlaceholder)
+            self.layout().insertWidget(i, self._dragPlaceholder)
         else:
-            self._centralWidget.layout().insertWidget(i + 1, self._dragPlaceholder)
+            self.layout().insertWidget(i + 1, self._dragPlaceholder)
         self._dragPlaceholder.setVisible(True)
 
     def _dropped(self, mimeData: ObjectReferenceMimeData):
         wdg = self.__newItemWidget(mimeData.reference())
-        self._centralWidget.layout().replaceWidget(self._dragPlaceholder, wdg)
+        self.layout().replaceWidget(self._dragPlaceholder, wdg)
         gc(self._dragPlaceholder)
         self._dragPlaceholder = None
 

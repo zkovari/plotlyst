@@ -2684,8 +2684,9 @@ class PremiseIdea:
 @dataclass
 class PremiseQuestion:
     text: str
-    selected: bool = True
-    visible: bool = True
+    selected: bool = field(default=True, metadata=config(exclude=exclude_if_true))
+    visible: bool = field(default=True, metadata=config(exclude=exclude_if_true))
+    children: List['PremiseQuestion'] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass
