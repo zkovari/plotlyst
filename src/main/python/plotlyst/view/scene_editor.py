@@ -50,7 +50,8 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.labels import CharacterLabel
 from plotlyst.view.widget.scene.editor import ScenePurposeSelectorWidget, ScenePurposeTypeButton, \
-    SceneStorylineEditor, SceneAgendaEditor, SceneElementWidget, SceneProgressEditor
+    SceneAgendaEditor, SceneElementWidget, SceneProgressEditor
+from plotlyst.view.widget.scene.functions import SceneFunctionsWidget
 from plotlyst.view.widget.scene.plot import ScenePlotLabels, \
     ScenePlotSelectorMenu
 from plotlyst.view.widget.scene.reader_drive import ReaderCuriosityEditor, ReaderInformationEditor
@@ -164,12 +165,13 @@ class SceneEditor(QObject, EventListener):
         hbox(self.ui.wdgStorylines)
         self.ui.wdgMidbar.layout().insertWidget(1, self._btnPlotSelector)
 
-        self._storylineEditor = SceneStorylineEditor(self.novel)
-        self._storylineEditor.outcomeChanged.connect(self._btnPurposeType.refresh)
-        self._storylineEditor.outcomeChanged.connect(self.ui.wdgSceneStructure.refreshOutcome)
-        self._storylineEditor.storylineLinked.connect(self._storyline_linked)
-        self._storylineEditor.storylineEditRequested.connect(self._storyline_edit)
-        self.ui.tabFunctions.layout().addWidget(self._storylineEditor)
+        # self._storylineEditor = SceneStorylineEditor(self.novel)
+        self._functionsEditor = SceneFunctionsWidget()
+        # self._storylineEditor.outcomeChanged.connect(self._btnPurposeType.refresh)
+        # self._storylineEditor.outcomeChanged.connect(self.ui.wdgSceneStructure.refreshOutcome)
+        # self._storylineEditor.storylineLinked.connect(self._storyline_linked)
+        # self._storylineEditor.storylineEditRequested.connect(self._storyline_edit)
+        self.ui.tabFunctions.layout().addWidget(self._functionsEditor)
 
         self._agencyEditor = SceneAgendaEditor(self.novel)
         self._agencyEditor.setUnsetCharacterSlot(self._character_not_selected_notification)
@@ -184,7 +186,7 @@ class SceneEditor(QObject, EventListener):
         self.ui.btnClose.clicked.connect(self._on_close)
 
         self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._btnPurposeType.refresh)
-        self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._storylineEditor.refresh)
+        # self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._storylineEditor.refresh)
 
         self.ui.tabWidget.setCurrentWidget(self.ui.tabFunctions)
         self.ui.tabWidgetDrive.setCurrentWidget(self.ui.tabAgency)
@@ -205,7 +207,7 @@ class SceneEditor(QObject, EventListener):
         elif isinstance(event, NovelStorylinesToggleEvent):
             self.ui.wdgStorylines.setVisible(event.toggled)
             self._btnPlotSelector.setVisible(event.toggled)
-            self._storylineEditor.storylinesSettingToggledEvent(event.toggled)
+            # self._storylineEditor.storylinesSettingToggledEvent(event.toggled)
         elif isinstance(event, NovelStructureToggleEvent):
             self.ui.wdgStructure.setVisible(event.toggled)
         elif isinstance(event, NovelPovTrackingToggleEvent):
@@ -223,7 +225,7 @@ class SceneEditor(QObject, EventListener):
 
         self.ui.wdgSceneStructure.setScene(self.novel, self.scene)
         # self.tag_selector.setScene(self.scene)
-        self._storylineEditor.setScene(self.scene)
+        self._functionsEditor.setScene(self.scene)
         self._agencyEditor.setScene(self.scene)
         self._curiosityEditor.setScene(self.scene)
         self._informationEditor.setScene(self.scene)
@@ -381,7 +383,7 @@ class SceneEditor(QObject, EventListener):
         # to avoid segfault for some reason, we disable it first before changing the stack widget
         self._purposeSelector.setDisabled(True)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
-        self._storylineEditor.purposeChangedEvent()
+        # self._storylineEditor.purposeChangedEvent()
 
     def _reset_purpose_editor(self):
         self.scene.purpose = None
