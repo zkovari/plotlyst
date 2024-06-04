@@ -50,7 +50,7 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.labels import CharacterLabel
 from plotlyst.view.widget.scene.editor import ScenePurposeSelectorWidget, ScenePurposeTypeButton, \
-    SceneAgendaEditor, SceneElementWidget, SceneProgressEditor
+    SceneAgendaEditor, SceneElementWidget, SceneProgressEditor, SceneStorylineEditor
 from plotlyst.view.widget.scene.functions import SceneFunctionsWidget
 from plotlyst.view.widget.scene.plot import ScenePlotLabels, \
     ScenePlotSelectorMenu
@@ -164,13 +164,14 @@ class SceneEditor(QObject, EventListener):
         hbox(self.ui.wdgStorylines)
         self.ui.wdgMidbar.layout().insertWidget(1, self._btnPlotSelector)
 
-        # self._storylineEditor = SceneStorylineEditor(self.novel)
+        self._storylineEditor = SceneStorylineEditor(self.novel)
         self._functionsEditor = SceneFunctionsWidget()
         # self._storylineEditor.outcomeChanged.connect(self._btnPurposeType.refresh)
         # self._storylineEditor.outcomeChanged.connect(self.ui.wdgSceneStructure.refreshOutcome)
         # self._storylineEditor.storylineLinked.connect(self._storyline_linked)
         # self._storylineEditor.storylineEditRequested.connect(self._storyline_edit)
         self.ui.scrollAreaFunctions.layout().addWidget(self._functionsEditor)
+        self.ui.scrollAreaFunctions.layout().addWidget(self._storylineEditor)
 
         self._agencyEditor = SceneAgendaEditor(self.novel)
         self._agencyEditor.setUnsetCharacterSlot(self._character_not_selected_notification)
@@ -225,6 +226,7 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgSceneStructure.setScene(self.novel, self.scene)
         # self.tag_selector.setScene(self.scene)
         self._functionsEditor.setScene(self.scene)
+        self._storylineEditor.setScene(self.scene)
         self._agencyEditor.setScene(self.scene)
         self._curiosityEditor.setScene(self.scene)
         self._informationEditor.setScene(self.scene)
