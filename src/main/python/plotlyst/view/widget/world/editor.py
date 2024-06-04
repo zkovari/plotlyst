@@ -33,6 +33,8 @@ from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp,
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter, DragEventFilter, \
     DropEventFilter
 from qtmenu import MenuWidget
+from qttextedit.ops import Heading2Operation, Heading3Operation, InsertListOperation, InsertNumberedListOperation, \
+    InsertDividerOperation
 
 from plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityElement, WorldBuildingEntityElementType, \
     BackstoryEvent, Variable, VariableType, \
@@ -165,8 +167,12 @@ class TextElementEditor(WorldBuildingEntityElementWidget):
 
         self.textEdit = AutoAdjustableTextEdit()
         self.textEdit.setProperty('transparent', True)
+        self.textEdit.setCommandsEnabled(True)
+        self.textEdit.setAcceptRichText(True)
+        self.textEdit.setCommandOperations([Heading2Operation, Heading3Operation, InsertListOperation,
+                                            InsertNumberedListOperation, InsertDividerOperation])
         if self._underSection():
-            self.textEdit.setPlaceholderText('Describe this section...')
+            self.textEdit.setPlaceholderText("Describe this section, or press '/' for commands...")
         else:
             self.textEdit.setPlaceholderText('Describe this entity...')
         self.textEdit.textChanged.connect(self._textChanged)
