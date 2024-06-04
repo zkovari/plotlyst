@@ -42,6 +42,7 @@ from plotlyst.service.image import upload_image, load_image
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import action, push_btn, frame, insert_before_the_end, fade_out_and_gc, \
     tool_btn, label, scrolled, wrap, calculate_resized_dimensions
+from plotlyst.view.dialog.utility import IconSelectorDialog
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.text import apply_text_color
@@ -86,7 +87,8 @@ class WorldBuildingEntityElementWidget(QWidget):
         self.btnMenu = DotsMenuButton(self)
         self.btnMenu.setHidden(True)
         self.menu = MenuWidget()
-        self.menu.addAction(action('Remove', IconRegistry.trash_can_icon(), slot=self.removed))
+        self.actionRemove = action('Remove', IconRegistry.trash_can_icon(), slot=self.removed)
+        self.menu.addAction(self.actionRemove)
         self.btnDrag.clicked.connect(lambda: self.menu.exec(QCursor.pos()))
         self.btnMenu.clicked.connect(lambda: self.menu.exec(QCursor.pos()))
         self._dotsMenuEnabled = self.element.type in [WorldBuildingEntityElementType.Variables,
@@ -243,11 +245,26 @@ class HeaderElementEditor(WorldBuildingEntityElementWidget):
         self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
 
         self._btnCornerButtonOffsetY = 7
+
+        self.menu.clear()
+        self.menu.addAction(action('Change icon', IconRegistry.icons_icon(), self._changeIcon))
+        self.menu.addSeparator()
+        self.menu.addAction(self.actionRemove)
+
         self.btnDrag.raise_()
 
     def _titleEdited(self, title: str):
         self.element.title = title
         self.save()
+
+    def _changeIcon(self):
+        dialog = IconSelectorDialog()
+        dialog.selector.colorPicker.setHidden(True)
+        result = dialog.display()
+        if result:
+            self.icon.setIcon(IconRegistry.from_name(result[0], '#510442'))
+            self.element.icon = result[0]
+            self.save()
 
 
 class QuoteElementEditor(WorldBuildingEntityElementWidget):
