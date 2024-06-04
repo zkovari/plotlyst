@@ -877,7 +877,7 @@ class TextInputDialog(PopupDialog):
         self.lineKey.textChanged.connect(self._textChanged)
 
         self.btnConfirm = push_btn(text='Confirm', properties=['base', 'positive'])
-        self.btnConfirm.setShortcut(Qt.Key.Key_Enter)
+        self.btnConfirm.setShortcut(Qt.Key.Key_Return)
         sp(self.btnConfirm).h_exp()
         self.btnConfirm.clicked.connect(self.accept)
         self.btnConfirm.setDisabled(True)
@@ -930,10 +930,11 @@ class TextAreaInputDialog(PopupDialog):
         self.textEdit.setPlaceholderText(placeholder)
         self.textEdit.setText(value)
         self.textEdit.textChanged.connect(self._textChanged)
+        self.textEdit.installEventFilter(self)
 
         self.btnConfirm = push_btn(text='Confirm', properties=['base', 'positive'])
         self.btnConfirm.setFixedWidth(250)
-        self.btnConfirm.setShortcut(Qt.Key.Key_Enter)
+        self.btnConfirm.setShortcut(Qt.Key.Key_Return)
         sp(self.btnConfirm).h_exp()
         self.btnConfirm.clicked.connect(self.accept)
         self.btnConfirm.setDisabled(True)
@@ -953,6 +954,13 @@ class TextAreaInputDialog(PopupDialog):
             return self.textEdit.toPlainText()
 
         return None
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.KeyPress and event.key() == Qt.Key.Key_Return:
+            QTimer.singleShot(10, self.btnConfirm.click)
+            return True
+        return super().eventFilter(watched, event)
 
     @classmethod
     def edit(cls, title: str = 'Edit text', placeholder: str = 'Edit text', description: str = 'Edit text',
