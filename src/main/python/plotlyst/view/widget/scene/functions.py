@@ -31,7 +31,7 @@ from plotlyst.view.common import push_btn, frame
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.display import IconText
-from plotlyst.view.widget.input import RemovalButton
+from plotlyst.view.widget.input import RemovalButton, TextEditBubbleWidget
 from plotlyst.view.widget.outline import OutlineTimelineWidget, OutlineItemWidget
 
 
@@ -194,7 +194,8 @@ class SceneFunctionsWidget(QWidget):
         self._scene = scene
 
     def _addPrimary(self):
-        wdg = EventCauseFunctionGroupWidget()
+        # wdg = EventCauseFunctionGroupWidget()
+        wdg = TextEditBubbleWidget()
         # wdg = EventCauseFunctionWidget()
         # wdg.setStructure([])
         self.wdgPrimary.layout().addWidget(wdg)

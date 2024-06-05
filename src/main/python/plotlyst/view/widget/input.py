@@ -32,7 +32,7 @@ from PyQt6.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyl
     QApplication, QToolButton, QLineEdit, QWidgetAction, QListView, QSpinBox, QWidget, QLabel, QDialog
 from language_tool_python import LanguageTool
 from overrides import overrides
-from qthandy import transparent, hbox, margins, pointy, sp, line, flow, vbox, translucent, decr_icon
+from qthandy import transparent, hbox, margins, pointy, sp, line, flow, vbox, translucent, decr_icon, bold, incr_font
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
@@ -1133,3 +1133,34 @@ class LabelsEditor(QFrame):
         label = lblWdg.label()
         fade_out_and_gc(self.wdgContainer, lblWdg)
         self.labelRemoved.emit(label)
+
+
+class TextEditBubbleWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        vbox(self)
+        self._title = QPushButton()
+        transparent(self._title)
+        bold(self._title)
+        self._title.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+
+        self._textedit = QTextEdit(self)
+        self._textedit.setProperty('white-bg', True)
+        self._textedit.setProperty('rounded', True)
+        self._textedit.setTabChangesFocus(True)
+        if app_env.is_mac():
+            incr_font(self._textedit)
+        self._textedit.setMinimumSize(175, 100)
+        self._textedit.setMaximumSize(190, 120)
+        self._textedit.verticalScrollBar().setVisible(False)
+
+        self._textedit.textChanged.connect(self._textChanged)
+
+        self.layout().addWidget(self._title, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self._textedit)
+
+        sp(self).v_max()
+
+    def _textChanged(self):
+        pass
