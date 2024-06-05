@@ -582,7 +582,7 @@
             <attribute name="title">
              <string>Functions</string>
             </attribute>
-            <layout class="QVBoxLayout" name="verticalLayout_9">
+            <layout class="QVBoxLayout" name="verticalLayout_17">
              <property name="spacing">
               <number>0</number>
              </property>
@@ -599,25 +599,82 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QScrollArea" name="scrollArea">
-               <property name="widgetResizable">
+              <widget class="QTabWidget" name="tabWidget_2">
+               <property name="currentIndex">
+                <number>0</number>
+               </property>
+               <property name="centered" stdset="0">
                 <bool>true</bool>
                </property>
-               <widget class="QWidget" name="scrollAreaFunctions">
-                <property name="geometry">
-                 <rect>
-                  <x>0</x>
-                  <y>0</y>
-                  <width>562</width>
-                  <height>344</height>
-                 </rect>
-                </property>
+               <widget class="QWidget" name="tabPrimaryFunctions">
                 <property name="relaxed-white-bg" stdset="0">
                  <bool>true</bool>
                 </property>
-                <layout class="QVBoxLayout" name="verticalLayout_16">
+                <attribute name="title">
+                 <string>Functions</string>
+                </attribute>
+                <layout class="QVBoxLayout" name="verticalLayout_9">
                  <property name="spacing">
-                  <number>3</number>
+                  <number>0</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="QScrollArea" name="scrollArea">
+                   <property name="widgetResizable">
+                    <bool>true</bool>
+                   </property>
+                   <widget class="QWidget" name="scrollAreaFunctions">
+                    <property name="geometry">
+                     <rect>
+                      <x>0</x>
+                      <y>0</y>
+                      <width>549</width>
+                      <height>316</height>
+                     </rect>
+                    </property>
+                    <property name="relaxed-white-bg" stdset="0">
+                     <bool>true</bool>
+                    </property>
+                    <layout class="QVBoxLayout" name="verticalLayout_16">
+                     <property name="spacing">
+                      <number>3</number>
+                     </property>
+                     <property name="leftMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="topMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="rightMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>0</number>
+                     </property>
+                    </layout>
+                   </widget>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+               <widget class="QWidget" name="tabEventsGrid">
+                <property name="relaxed-white-bg" stdset="0">
+                 <bool>true</bool>
+                </property>
+                <attribute name="title">
+                 <string>Events</string>
+                </attribute>
+                <layout class="QVBoxLayout" name="verticalLayout_18">
+                 <property name="spacing">
+                  <number>0</number>
                  </property>
                  <property name="leftMargin">
                   <number>0</number>
@@ -924,6 +981,8 @@
    </item>
   </layout>
  </widget>
+ <layoutdefault spacing="0" margin="0"/>
+ <layoutfunction spacing="0" margin="0"/>
  <customwidgets>
   <customwidget>
    <class>DocumentTextEditor</class>

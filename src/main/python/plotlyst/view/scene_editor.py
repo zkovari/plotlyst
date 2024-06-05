@@ -168,10 +168,10 @@ class SceneEditor(QObject, EventListener):
         self._functionsEditor = SceneFunctionsWidget()
         # self._storylineEditor.outcomeChanged.connect(self._btnPurposeType.refresh)
         # self._storylineEditor.outcomeChanged.connect(self.ui.wdgSceneStructure.refreshOutcome)
-        # self._storylineEditor.storylineLinked.connect(self._storyline_linked)
-        # self._storylineEditor.storylineEditRequested.connect(self._storyline_edit)
+        self._storylineEditor.storylineLinked.connect(self._storyline_linked)
+        self._storylineEditor.storylineEditRequested.connect(self._storyline_edit)
         self.ui.scrollAreaFunctions.layout().addWidget(self._functionsEditor)
-        self.ui.scrollAreaFunctions.layout().addWidget(self._storylineEditor)
+        self.ui.tabEventsGrid.layout().addWidget(self._storylineEditor)
 
         self._agencyEditor = SceneAgendaEditor(self.novel)
         self._agencyEditor.setUnsetCharacterSlot(self._character_not_selected_notification)
