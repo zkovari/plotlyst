@@ -120,33 +120,9 @@ class PrimarySceneFunctionWidget(TextEditBubbleWidget):
         super().__init__(parent)
         self.novel = novel
         self.scene = scene
-        # self.elementType = elementType
 
-        # if self.elementType == StoryElementType.Plot:
-        #     self._title.setIcon(IconRegistry.storylines_icon())
-        #     self._title.setText('Plot')
-        #     self._textedit.setPlaceholderText("How does the story move forward")
-        #     margins(self, top=16)
-        # elif self.elementType == StoryElementType.Character:
-        #     self._title.setIcon(IconRegistry.character_icon())
-        #     self._title.setText('Character insight')
-        #     self._textedit.setPlaceholderText("What do we learn about a character")
-        #
-        #     self._title.setHidden(True)
-        #     self._charSelector = CharacterSelectorButton(self.novel, iconSize=32)
-        #     self._charSelector.characterSelected.connect(self._characterSelected)
-        #     wdgHeader = QWidget()
-        #     hbox(wdgHeader, 0, 0)
-        #     wdgHeader.layout().addWidget(self._charSelector)
-        #     wdgHeader.layout().addWidget(label('Character insight', bold=True), alignment=Qt.AlignmentFlag.AlignBottom)
-        #     self.layout().insertWidget(0, wdgHeader, alignment=Qt.AlignmentFlag.AlignCenter)
-        #     margins(self, top=1)
-
-        # elif self.elementType == StoryElementType.Mystery:
-        #     self._title.setIcon(IconRegistry.from_name('ei.question-sign'))
-        #     self._title.setText('Mystery')
-        #     self._textedit.setPlaceholderText("What mystery is introduced or deepened")
-        #     margins(self, top=16)
+        self._textedit.setMinimumSize(165, 100)
+        self._textedit.setMaximumSize(180, 110)
 
         margins(self, top=16)
 
