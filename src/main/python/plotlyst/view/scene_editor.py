@@ -155,7 +155,6 @@ class SceneEditor(QObject, EventListener):
         self._btnPurposeType.reset.connect(self._reset_purpose_editor)
         self.ui.wdgMidbar.layout().insertWidget(0, self._btnPurposeType)
 
-
         self._btnPlotSelector = push_btn(IconRegistry.storylines_icon(), 'Storylines',
                                          tooltip='Link storylines to this scene', transparent_=True)
         self._btnPlotSelector.installEventFilter(OpacityEventFilter(self._btnPlotSelector, leaveOpacity=0.8))
@@ -165,7 +164,7 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgMidbar.layout().insertWidget(1, self._btnPlotSelector)
 
         self._storylineEditor = SceneStorylineEditor(self.novel)
-        self._functionsEditor = SceneFunctionsWidget()
+        self._functionsEditor = SceneFunctionsWidget(self.novel)
         # self._storylineEditor.outcomeChanged.connect(self._btnPurposeType.refresh)
         # self._storylineEditor.outcomeChanged.connect(self.ui.wdgSceneStructure.refreshOutcome)
         self._storylineEditor.storylineLinked.connect(self._storyline_linked)

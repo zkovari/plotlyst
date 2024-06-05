@@ -19,20 +19,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QWidget
-from overrides import overrides
-from qthandy import vbox, incr_icon, incr_font, bold, flow, margins, vspacer, retain_when_hidden, spacer
-from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
+from qthandy import vbox, incr_icon, incr_font, flow, margins, vspacer
+from qthandy.filter import OpacityEventFilter
 
-from plotlyst.common import PLOTLYST_SECONDARY_COLOR
-from plotlyst.core.domain import Scene, OutlineItem, LayoutType
-from plotlyst.view.common import push_btn, frame
+from plotlyst.core.domain import Scene, Novel
+from plotlyst.view.common import push_btn
 from plotlyst.view.icons import IconRegistry
-from plotlyst.view.layout import group
-from plotlyst.view.widget.display import IconText
-from plotlyst.view.widget.input import RemovalButton, TextEditBubbleWidget
-from plotlyst.view.widget.outline import OutlineTimelineWidget, OutlineItemWidget
+from plotlyst.view.widget.input import TextEditBubbleWidget
 
 
 # class ScenePrimaryFunctionWidget(OutlineItemWidget):
@@ -115,8 +110,9 @@ from plotlyst.view.widget.outline import OutlineTimelineWidget, OutlineItemWidge
 
 
 class SceneFunctionsWidget(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
+        self._novel = novel
         self._scene: Optional[Scene] = None
 
         vbox(self)
@@ -135,7 +131,6 @@ class SceneFunctionsWidget(QWidget):
 
         self.wdgPrimary = QWidget()
         flow(self.wdgPrimary)
-        # vbox(self.wdgPrimary)
         margins(self.wdgPrimary, left=20)
 
         self.layout().addWidget(self.btnPrimary, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -147,8 +142,5 @@ class SceneFunctionsWidget(QWidget):
         self._scene = scene
 
     def _addPrimary(self):
-        # wdg = EventCauseFunctionGroupWidget()
         wdg = TextEditBubbleWidget()
-        # wdg = EventCauseFunctionWidget()
-        # wdg.setStructure([])
         self.wdgPrimary.layout().addWidget(wdg)
