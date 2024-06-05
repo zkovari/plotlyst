@@ -22,15 +22,17 @@ from typing import Optional
 
 import qtanim
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget
-from qthandy import vbox, incr_icon, incr_font, flow, margins, vspacer
+from qthandy import vbox, incr_icon, incr_font, flow, margins, vspacer, hbox
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
-from plotlyst.core.domain import Scene, Novel, StoryElementType
-from plotlyst.view.common import push_btn, tool_btn, action, shadow
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from plotlyst.core.domain import Scene, Novel, StoryElementType, Character
+from plotlyst.view.common import push_btn, tool_btn, action, shadow, label
 from plotlyst.view.icons import IconRegistry
-from plotlyst.view.layout import group
+from plotlyst.view.widget.characters import CharacterSelectorButton
 from plotlyst.view.widget.input import TextEditBubbleWidget
 
 
@@ -114,26 +116,81 @@ from plotlyst.view.widget.input import TextEditBubbleWidget
 
 
 class PrimarySceneFunctionWidget(TextEditBubbleWidget):
-    def __init__(self, novel: Novel, scene: Scene, elementType: StoryElementType, parent=None):
+    def __init__(self, novel: Novel, scene: Scene, parent=None):
         super().__init__(parent)
         self.novel = novel
         self.scene = scene
-        self.elementType = elementType
+        # self.elementType = elementType
 
-        if self.elementType == StoryElementType.Plot:
-            self._title.setIcon(IconRegistry.storylines_icon())
-            self._title.setText('Plot')
-            self._textedit.setPlaceholderText("How does the story move forward")
-        elif self.elementType == StoryElementType.Character:
-            self._title.setIcon(IconRegistry.character_icon())
-            self._title.setText('Character insight')
-            self._textedit.setPlaceholderText("What do we learn about a character")
-        elif self.elementType == StoryElementType.Mystery:
-            self._title.setIcon(IconRegistry.from_name('ei.question-sign'))
-            self._title.setText('Mystery')
-            self._textedit.setPlaceholderText("What mystery is introduced or deepened")
+        # if self.elementType == StoryElementType.Plot:
+        #     self._title.setIcon(IconRegistry.storylines_icon())
+        #     self._title.setText('Plot')
+        #     self._textedit.setPlaceholderText("How does the story move forward")
+        #     margins(self, top=16)
+        # elif self.elementType == StoryElementType.Character:
+        #     self._title.setIcon(IconRegistry.character_icon())
+        #     self._title.setText('Character insight')
+        #     self._textedit.setPlaceholderText("What do we learn about a character")
+        #
+        #     self._title.setHidden(True)
+        #     self._charSelector = CharacterSelectorButton(self.novel, iconSize=32)
+        #     self._charSelector.characterSelected.connect(self._characterSelected)
+        #     wdgHeader = QWidget()
+        #     hbox(wdgHeader, 0, 0)
+        #     wdgHeader.layout().addWidget(self._charSelector)
+        #     wdgHeader.layout().addWidget(label('Character insight', bold=True), alignment=Qt.AlignmentFlag.AlignBottom)
+        #     self.layout().insertWidget(0, wdgHeader, alignment=Qt.AlignmentFlag.AlignCenter)
+        #     margins(self, top=1)
 
+        # elif self.elementType == StoryElementType.Mystery:
+        #     self._title.setIcon(IconRegistry.from_name('ei.question-sign'))
+        #     self._title.setText('Mystery')
+        #     self._textedit.setPlaceholderText("What mystery is introduced or deepened")
+        #     margins(self, top=16)
+
+        margins(self, top=16)
+
+
+class PlotPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
+    def __init__(self, novel: Novel, scene: Scene, parent=None):
+        super().__init__(novel, scene, parent)
+        self._title.setIcon(IconRegistry.storylines_icon())
+        self._title.setText('Plot')
+        self._textedit.setPlaceholderText("How does the story move forward")
         shadow(self._textedit)
+
+
+class MysteryPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
+    def __init__(self, novel: Novel, scene: Scene, parent=None):
+        super().__init__(novel, scene, parent)
+        self._title.setIcon(IconRegistry.from_name('ei.question-sign', PLOTLYST_SECONDARY_COLOR))
+        self._title.setText('Mystery')
+        self._textedit.setPlaceholderText("What mystery is introduced or deepened")
+
+        shadow(self._textedit, color=QColor(PLOTLYST_SECONDARY_COLOR))
+
+
+class CharacterPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
+    def __init__(self, novel: Novel, scene: Scene, parent=None):
+        super().__init__(novel, scene, parent)
+
+        self._title.setIcon(IconRegistry.character_icon())
+        self._title.setText('Character insight')
+        self._textedit.setPlaceholderText("What do we learn about a character")
+
+        self._title.setHidden(True)
+        self._charSelector = CharacterSelectorButton(self.novel, iconSize=32)
+        self._charSelector.characterSelected.connect(self._characterSelected)
+        wdgHeader = QWidget()
+        hbox(wdgHeader, 0, 0)
+        wdgHeader.layout().addWidget(self._charSelector)
+        wdgHeader.layout().addWidget(label('Character insight', bold=True), alignment=Qt.AlignmentFlag.AlignBottom)
+        self.layout().insertWidget(0, wdgHeader, alignment=Qt.AlignmentFlag.AlignCenter)
+        margins(self, top=1)
+        shadow(self._textedit, color=QColor('#219ebc'))
+
+    def _characterSelected(self, character: Character):
+        pass
 
 
 class SceneFunctionsWidget(QWidget):
@@ -173,10 +230,14 @@ class SceneFunctionsWidget(QWidget):
         incr_font(self.btnSecondary, 1)
 
         self.wdgPrimary = QWidget()
-        flow(self.wdgPrimary)
-        margins(self.wdgPrimary, left=20)
+        flow(self.wdgPrimary, spacing=10)
+        margins(self.wdgPrimary, left=20, top=0)
 
-        self.layout().addWidget(group(self.btnPrimary, self.btnPrimaryPlus), alignment=Qt.AlignmentFlag.AlignLeft)
+        wdgPrimaryHeader = QWidget()
+        hbox(wdgPrimaryHeader, 0, 0)
+        wdgPrimaryHeader.layout().addWidget(self.btnPrimary)
+        wdgPrimaryHeader.layout().addWidget(self.btnPrimaryPlus, alignment=Qt.AlignmentFlag.AlignBottom)
+        self.layout().addWidget(wdgPrimaryHeader, alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(self.wdgPrimary)
         self.layout().addWidget(self.btnSecondary, alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(vspacer())
@@ -185,6 +246,12 @@ class SceneFunctionsWidget(QWidget):
         self._scene = scene
 
     def _addPrimary(self, type_: StoryElementType):
-        wdg = PrimarySceneFunctionWidget(self._novel, self._scene, type_)
+        if type_ == StoryElementType.Character:
+            wdg = CharacterPrimarySceneFunctionWidget(self._novel, self._scene)
+        elif type_ == StoryElementType.Mystery:
+            wdg = MysteryPrimarySceneFunctionWidget(self._novel, self._scene)
+        else:
+            wdg = PlotPrimarySceneFunctionWidget(self._novel, self._scene)
+
         self.wdgPrimary.layout().addWidget(wdg)
-        qtanim.fade_in(wdg)
+        qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
