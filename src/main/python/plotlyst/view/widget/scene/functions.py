@@ -17,16 +17,20 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from functools import partial
 from typing import Optional
 
+import qtanim
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QWidget
 from qthandy import vbox, incr_icon, incr_font, flow, margins, vspacer
 from qthandy.filter import OpacityEventFilter
+from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
-from plotlyst.core.domain import Scene, Novel
-from plotlyst.view.common import push_btn
+from plotlyst.core.domain import Scene, Novel, StoryElementType
+from plotlyst.view.common import push_btn, tool_btn, action, shadow
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.layout import group
 from plotlyst.view.widget.input import TextEditBubbleWidget
 
 
@@ -109,6 +113,29 @@ from plotlyst.view.widget.input import TextEditBubbleWidget
 #         self.layout().addWidget(self.frame)
 
 
+class PrimarySceneFunctionWidget(TextEditBubbleWidget):
+    def __init__(self, novel: Novel, scene: Scene, elementType: StoryElementType, parent=None):
+        super().__init__(parent)
+        self.novel = novel
+        self.scene = scene
+        self.elementType = elementType
+
+        if self.elementType == StoryElementType.Plot:
+            self._title.setIcon(IconRegistry.storylines_icon())
+            self._title.setText('Plot')
+            self._textedit.setPlaceholderText("How does the story move forward")
+        elif self.elementType == StoryElementType.Character:
+            self._title.setIcon(IconRegistry.character_icon())
+            self._title.setText('Character insight')
+            self._textedit.setPlaceholderText("What do we learn about a character")
+        elif self.elementType == StoryElementType.Mystery:
+            self._title.setIcon(IconRegistry.from_name('ei.question-sign'))
+            self._title.setText('Mystery')
+            self._textedit.setPlaceholderText("What mystery is introduced or deepened")
+
+        shadow(self._textedit)
+
+
 class SceneFunctionsWidget(QWidget):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -121,7 +148,23 @@ class SceneFunctionsWidget(QWidget):
         incr_icon(self.btnPrimary, 2)
         incr_font(self.btnPrimary, 2)
         self.btnPrimary.installEventFilter(OpacityEventFilter(self.btnPrimary, leaveOpacity=0.7))
-        self.btnPrimary.clicked.connect(self._addPrimary)
+        self.btnPrimaryPlus = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True)
+        self.btnPrimaryPlus.installEventFilter(OpacityEventFilter(self.btnPrimaryPlus, leaveOpacity=0.7))
+        self.menuPrimary = MenuWidget(self.btnPrimaryPlus)
+        self.menuPrimary.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+        self.menuPrimary.addSection('Select a primary function that this scene fulfils')
+        self.menuPrimary.addSeparator()
+        self.menuPrimary.addAction(action('Advance plot', IconRegistry.storylines_icon(),
+                                          slot=partial(self._addPrimary, StoryElementType.Plot),
+                                          tooltip="This scene primarily advances the story, often through progression or setback"))
+        self.menuPrimary.addAction(
+            action('Character insight', IconRegistry.character_icon(),
+                   slot=partial(self._addPrimary, StoryElementType.Character),
+                   tooltip="This scene primarily provides new information, layer, or development about a character"))
+        self.menuPrimary.addAction(action('Mystery', IconRegistry.from_name('ei.question-sign'),
+                                          slot=partial(self._addPrimary, StoryElementType.Mystery),
+                                          tooltip="This scene primarily introduces or deepens a mystery that drives the narrative forward"))
+        self.btnPrimary.clicked.connect(self.btnPrimaryPlus.click)
 
         self.btnSecondary = push_btn(IconRegistry.from_name('fa5s.list', 'grey'), 'Secondary',
                                      transparent_=True)
@@ -133,7 +176,7 @@ class SceneFunctionsWidget(QWidget):
         flow(self.wdgPrimary)
         margins(self.wdgPrimary, left=20)
 
-        self.layout().addWidget(self.btnPrimary, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(group(self.btnPrimary, self.btnPrimaryPlus), alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(self.wdgPrimary)
         self.layout().addWidget(self.btnSecondary, alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(vspacer())
@@ -141,6 +184,7 @@ class SceneFunctionsWidget(QWidget):
     def setScene(self, scene: Scene):
         self._scene = scene
 
-    def _addPrimary(self):
-        wdg = TextEditBubbleWidget()
+    def _addPrimary(self, type_: StoryElementType):
+        wdg = PrimarySceneFunctionWidget(self._novel, self._scene, type_)
         self.wdgPrimary.layout().addWidget(wdg)
+        qtanim.fade_in(wdg)

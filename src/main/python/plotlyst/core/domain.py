@@ -1705,6 +1705,8 @@ scene_purposes: Dict[ScenePurposeType, ScenePurpose] = {
 
 class StoryElementType(Enum):
     Plot = 'plot'
+    Character = 'character'
+    Mystery = 'mystery'
     Arc = 'arc'
     Outcome = 'outcome'
     Consequences = 'consequences'
