@@ -585,9 +585,9 @@ class SceneElementWidget(QWidget):
                                           parent=self)
         self._btnStorylineLink.installEventFilter(OpacityEventFilter(self._btnStorylineLink, leaveOpacity=0.7))
         self._btnStorylineLink.setVisible(False)
-        retain_when_hidden(self._btnStorylineLink)
 
         if self._storylineLinkEnabled:
+            retain_when_hidden(self._btnStorylineLink)
             self._storylineMenu = StorylineSelectorMenu(self._novel, self._btnStorylineLink)
             self._storylineMenu.storylineSelected.connect(self._storylineSelected)
 
@@ -628,7 +628,7 @@ class SceneElementWidget(QWidget):
         vbox(self._pageEditor)
 
         self._wdgTitle = QWidget()
-        hbox(self._wdgTitle)
+        hbox(self._wdgTitle, 0, 0)
         self._wdgTitle.layout().addWidget(self._btnStorylineLink, alignment=Qt.AlignmentFlag.AlignLeft)
         self._wdgTitle.layout().addWidget(group(self._iconActive, self._titleActive, margin=0, spacing=1),
                                           alignment=Qt.AlignmentFlag.AlignCenter)
