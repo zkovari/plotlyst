@@ -28,7 +28,7 @@ from PyQt6.QtGui import QFont, QMouseEvent, QResizeEvent, QTextCursor, QColor, Q
 from PyQt6.QtWidgets import QWidget, QApplication, QLineEdit
 from overrides import overrides
 from qthandy import incr_font, flow, margins, vbox, hbox, pointy, sp, retain_when_hidden, incr_icon, \
-    transparent, translucent, gc
+    transparent, translucent, gc, decr_icon
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter, \
     ObjectReferenceMimeData
 from qtmenu import MenuWidget
@@ -244,7 +244,7 @@ class ConceptQuestionWidget(QWidget):
     def __init__(self, question: PremiseQuestion, parent=None):
         super().__init__(parent)
         self._question = question
-        vbox(self)
+        vbox(self, 0, 1)
 
         self.top = QWidget()
         hbox(self.top, 0, 3)
@@ -272,7 +272,7 @@ class ConceptQuestionWidget(QWidget):
         incr_font(self.lineedit, 2)
         self.lineedit.setProperty('rounded', True)
         self.lineedit.setProperty('white-bg', True)
-        self.top.setMaximumWidth(700)
+        self.top.setMaximumWidth(1000)
         self.lineedit.textEdited.connect(self._textEdited)
 
         self.btnMenu = DotsMenuButton()
@@ -281,6 +281,8 @@ class ConceptQuestionWidget(QWidget):
         self.btnEye = EyeToggle()
         self.btnEye.setToolTip('Hide this question')
         self.btnEye.toggled.connect(self._visibilityToggled)
+        decr_icon(self.btnMenu)
+        decr_icon(self.btnEye)
         retain_when_hidden(self.btnMenu)
         retain_when_hidden(self.btnEye)
 
