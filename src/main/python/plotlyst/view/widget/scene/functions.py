@@ -29,7 +29,7 @@ from qthandy import vbox, incr_icon, incr_font, flow, margins, vspacer, hbox, cl
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
-from plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RED_COLOR
 from plotlyst.core.domain import Scene, Novel, StoryElementType, Character, SceneFunction, Plot
 from plotlyst.service.cache import characters_registry
 from plotlyst.view.common import push_btn, tool_btn, action, shadow, label, fade_out_and_gc
@@ -158,7 +158,8 @@ class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
         self._menu.addAction(
             action('Edit', IconRegistry.edit_icon(), slot=partial(self.storylineEditRequested.emit, plot)))
         self._menu.addSeparator()
-        self._menu.addAction(action('Remove', IconRegistry.trash_can_icon(), slot=self._plotRemoved))
+        self._menu.addAction(
+            action('Unlink storyline', IconRegistry.from_name('fa5s.unlink', RED_COLOR), slot=self._plotRemoved))
 
     def _resetPlotStyle(self):
         pass
@@ -222,6 +223,7 @@ class MysteryPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
         self._btnStorylineLink.installEventFilter(OpacityEventFilter(self._btnStorylineLink, leaveOpacity=0.7))
         self._btnStorylineLink.setGeometry(0, 20, 20, 20)
         self._btnStorylineLink.setDisabled(True)
+        self._btnStorylineLink.click.connect(self._title.click)
 
         if self.function.ref:
             self._btnStorylineLink.setVisible(True)
