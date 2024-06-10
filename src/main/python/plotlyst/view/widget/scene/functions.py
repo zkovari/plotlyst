@@ -31,6 +31,7 @@ from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Scene, Novel, StoryElementType, Character, SceneFunction
+from plotlyst.service.cache import characters_registry
 from plotlyst.view.common import push_btn, tool_btn, action, shadow, label
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.characters import CharacterSelectorButton
@@ -172,8 +173,13 @@ class CharacterPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
         margins(self, top=1)
         shadow(self._textedit, color=QColor('#219ebc'))
 
+        if self.function.character_id:
+            character = characters_registry.character(str(self.function.character_id))
+            if character:
+                self._charSelector.setCharacter(character)
+
     def _characterSelected(self, character: Character):
-        pass
+        self.function.character_id = character.id
 
 
 class SceneFunctionsWidget(QWidget):
