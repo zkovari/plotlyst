@@ -154,7 +154,7 @@ class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
 
     def _setPlotStyle(self, plot: Plot):
         gc(self._menu)
-        self._menu = MenuWidget(self._menuParent())
+        self._menu = MenuWidget(self._title)
         self._menu.addAction(
             action('Edit', IconRegistry.edit_icon(), slot=partial(self.storylineEditRequested.emit, plot)))
         self._menu.addSeparator()
@@ -163,20 +163,18 @@ class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
     def _resetPlotStyle(self):
         pass
 
-    def _menuParent(self) -> QAbstractButton:
+    def _storylineParent(self) -> QAbstractButton:
         pass
 
     def _plotSelected(self, plot: Plot):
         self.function.ref = plot.id
         self._setPlotStyle(plot)
+        qtanim.glow(self._storylineParent(), color=QColor(plot.icon_color))
 
     def _plotRemoved(self):
         self.function.ref = None
-        # self._btnStorylineLink.setIcon(IconRegistry.storylines_icon(color='lightgrey'))
-
-        # self._btnStorylineLink.clicked.disconnect()
         gc(self._menu)
-        self._menu = SceneFunctionPlotSelectorMenu(self.novel, self._menuParent())
+        self._menu = SceneFunctionPlotSelectorMenu(self.novel, self._title)
         self._menu.plotSelected.connect(self._plotSelected)
         self._menu.setScene(self.scene)
         self._resetPlotStyle()
@@ -207,7 +205,7 @@ class PlotPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
         shadow(self._textedit)
 
     @overrides
-    def _menuParent(self):
+    def _storylineParent(self):
         return self._title
 
 
@@ -260,8 +258,8 @@ class MysteryPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
         self._btnStorylineLink.setVisible(False)
 
     @overrides
-    def _menuParent(self):
-        return self._title
+    def _storylineParent(self):
+        return self._btnStorylineLink
 
 
 class CharacterPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
