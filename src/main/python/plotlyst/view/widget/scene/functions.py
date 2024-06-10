@@ -193,18 +193,18 @@ class PlotPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
         else:
             self._resetPlotStyle()
 
+        shadow(self._textedit)
+
     @overrides
     def _setPlotStyle(self, plot: Plot):
         super()._setPlotStyle(plot)
         self._title.setIcon(IconRegistry.from_name(plot.icon, plot.icon_color))
         self._title.setText(plot.text)
-        shadow(self._textedit, color=QColor(plot.icon_color))
 
     @overrides
     def _resetPlotStyle(self):
         self._title.setText('Plot')
         self._title.setIcon(IconRegistry.storylines_icon())
-        shadow(self._textedit)
 
     @overrides
     def _storylineParent(self):
