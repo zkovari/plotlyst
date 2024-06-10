@@ -146,13 +146,11 @@ class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
         pointy(self._title)
         self._menu.setScene(scene)
 
-        if self.function.ref:
-            storyline = next((x for x in self.novel.plots if x.id == self.function.ref), None)
-            if storyline is not None:
-                self._setPlotStyle(storyline)
+    def _plot(self) -> Optional[Plot]:
+        return next((x for x in self.novel.plots if x.id == self.function.ref), None)
 
     def _setPlotStyle(self, plot: Plot):
-        shadow(self._textedit, color=QColor(plot.icon_color))
+        pass
 
     def _plotSelected(self, plot: Plot):
         self.function.ref = plot.id
@@ -163,16 +161,20 @@ class PlotPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
     def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
         super().__init__(novel, scene, function, parent)
         self._textedit.setPlaceholderText("How does the story move forward")
-        if not self.function.ref:
+        if self.function.ref:
+            storyline = self._plot()
+            if storyline is not None:
+                self._setPlotStyle(storyline)
+        else:
             self._title.setText('Plot')
             self._title.setIcon(IconRegistry.storylines_icon())
             shadow(self._textedit)
 
     @overrides
     def _setPlotStyle(self, plot: Plot):
-        super()._setPlotStyle(plot)
         self._title.setIcon(IconRegistry.from_name(plot.icon, plot.icon_color))
         self._title.setText(plot.text)
+        shadow(self._textedit, color=QColor(plot.icon_color))
 
 
 class MysteryPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
@@ -187,24 +189,34 @@ class MysteryPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
                                           parent=self)
         self._btnStorylineLink.installEventFilter(OpacityEventFilter(self._btnStorylineLink, leaveOpacity=0.7))
         self._btnStorylineLink.setGeometry(0, 20, 20, 20)
+        self._btnStorylineLink.setDisabled(True)
+
         if self.function.ref:
             self._btnStorylineLink.setVisible(True)
+            storyline = self._plot()
+            if storyline is not None:
+                self._setPlotStyle(storyline)
         else:
             self._btnStorylineLink.setVisible(False)
-            shadow(self._textedit, color=QColor(PLOTLYST_SECONDARY_COLOR))
+
+        shadow(self._textedit, color=QColor(PLOTLYST_SECONDARY_COLOR))
 
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
-        self._btnStorylineLink.setVisible(True)
+        super().enterEvent(event)
+        if self.function.ref:
+            self._btnStorylineLink.setEnabled(True)
+            self._btnStorylineLink.setVisible(True)
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
+        super().leaveEvent(event)
+        self._btnStorylineLink.setDisabled(True)
         if not self.function.ref:
             self._btnStorylineLink.setVisible(False)
 
     @overrides
     def _setPlotStyle(self, plot: Plot):
-        super()._setPlotStyle(plot)
         self._btnStorylineLink.setIcon(IconRegistry.from_name(plot.icon, plot.icon_color))
 
 
