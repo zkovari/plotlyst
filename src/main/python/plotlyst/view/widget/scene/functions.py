@@ -21,21 +21,23 @@ from functools import partial
 from typing import Optional
 
 import qtanim
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor
+from PyQt6.QtCore import Qt, QEvent
+from PyQt6.QtGui import QColor, QEnterEvent
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import vbox, incr_icon, incr_font, flow, margins, vspacer, hbox, clear_layout
+from qthandy import vbox, incr_icon, incr_font, flow, margins, vspacer, hbox, clear_layout, pointy
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
-from plotlyst.core.domain import Scene, Novel, StoryElementType, Character, SceneFunction
+from plotlyst.core.domain import Scene, Novel, StoryElementType, Character, SceneFunction, Plot
 from plotlyst.service.cache import characters_registry
 from plotlyst.view.common import push_btn, tool_btn, action, shadow, label, fade_out_and_gc
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.characters import CharacterSelectorButton
 from plotlyst.view.widget.input import TextEditBubbleWidget
+from plotlyst.view.widget.scene.plot import SceneFunctionPlotSelectorMenu
 
 
 # class ScenePrimaryFunctionWidget(OutlineItemWidget):
@@ -136,7 +138,47 @@ class PrimarySceneFunctionWidget(TextEditBubbleWidget):
         self.function.text = self._textedit.toPlainText()
 
 
-class PlotPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
+class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
+    def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
+        super().__init__(novel, scene, function, parent)
+        self._menu = SceneFunctionPlotSelectorMenu(novel, self._title)
+        self._menu.plotSelected.connect(self._plotSelected)
+        pointy(self._title)
+        self._menu.setScene(scene)
+
+        self._btnStorylineLink = tool_btn(IconRegistry.storylines_icon(color='lightgrey'), transparent_=True,
+                                          tooltip='Link storyline to this element',
+                                          parent=self)
+        self._btnStorylineLink.installEventFilter(OpacityEventFilter(self._btnStorylineLink, leaveOpacity=0.7))
+        self._btnStorylineLink.setGeometry(0, 20, 20, 20)
+        if self.function.ref:
+            self._btnStorylineLink.setVisible(True)
+            storyline = next((x for x in self.novel.plots if x.id == self.function.ref), None)
+            if storyline is not None:
+                self._btnStorylineLink.setIcon(IconRegistry.from_name(storyline.icon, storyline.icon_color))
+        else:
+            self._btnStorylineLink.setVisible(False)
+
+    # @overrides
+    # def resizeEvent(self, event: QResizeEvent) -> None:
+    #     super().resizeEvent(event)
+    #     self._btnStorylineLink.setGeometry(0, 0, 20, 20)
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        self._btnStorylineLink.setVisible(True)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        if not self.function.ref:
+            self._btnStorylineLink.setVisible(False)
+
+    def _plotSelected(self, plot: Plot):
+        self.function.ref = plot.id
+        self._btnStorylineLink.setIcon(IconRegistry.from_name(plot.icon, plot.icon_color))
+
+
+class PlotPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
     def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
         super().__init__(novel, scene, function, parent)
         self._title.setIcon(IconRegistry.storylines_icon())
@@ -145,7 +187,7 @@ class PlotPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
         shadow(self._textedit)
 
 
-class MysteryPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
+class MysteryPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
     def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
         super().__init__(novel, scene, function, parent)
         self._title.setIcon(IconRegistry.from_name('ei.question-sign', PLOTLYST_SECONDARY_COLOR))
@@ -212,6 +254,7 @@ class SceneFunctionsWidget(QWidget):
         self.menuPrimary.addAction(action('Mystery', IconRegistry.from_name('ei.question-sign'),
                                           slot=partial(self._addPrimary, StoryElementType.Mystery),
                                           tooltip="This scene primarily introduces or deepens a mystery that drives the narrative forward"))
+        apply_white_menu(self.menuPrimary)
         self.btnPrimary.clicked.connect(self.btnPrimaryPlus.click)
 
         self.btnSecondary = push_btn(IconRegistry.from_name('fa5s.list', 'grey'), 'Secondary',

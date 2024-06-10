@@ -1797,6 +1797,7 @@ class SceneFunction:
     type: StoryElementType
     text: str = ''
     character_id: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
+    ref: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass

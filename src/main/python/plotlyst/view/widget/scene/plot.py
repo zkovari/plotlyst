@@ -318,6 +318,7 @@ class ScenePlotSelectorMenu(MenuWidget):
         self._scene: Optional[Scene] = None
 
         self.aboutToShow.connect(self._beforeShow)
+        apply_white_menu(self)
 
     def setScene(self, scene: Scene):
         self._scene = scene
@@ -326,7 +327,7 @@ class ScenePlotSelectorMenu(MenuWidget):
         if self._scene is None:
             return
         self.clear()
-        occupied_plot_ids = [x.plot.id for x in self._scene.plot_values]
+        occupied_plot_ids = self._occupiedPlotIds()
         self.addSection('Link storylines to this scene')
         self.addSeparator()
         for plot in self._novel.plots:
@@ -338,6 +339,16 @@ class ScenePlotSelectorMenu(MenuWidget):
 
         if not self.actions():
             self.addSection('No corresponding storylines were found')
+
+    def _occupiedPlotIds(self):
+        return [x.plot.id for x in self._scene.plot_values]
+
+
+class SceneFunctionPlotSelectorMenu(ScenePlotSelectorMenu):
+
+    @overrides
+    def _occupiedPlotIds(self):
+        return [x.ref for x in self._scene.functions.primary]
 
 
 class ScenePlotLabels(QWidget):
