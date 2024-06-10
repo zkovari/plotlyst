@@ -1793,6 +1793,19 @@ class SceneReaderInformation:
 
 
 @dataclass
+class SceneFunction:
+    type: StoryElementType
+    text: str = ''
+    character_id: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
+
+
+@dataclass
+class SceneFunctions:
+    primary: List[SceneFunction] = field(default_factory=list)
+    secondary: List[SceneFunction] = field(default_factory=list)
+
+
+@dataclass
 class Scene:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -1819,6 +1832,7 @@ class Scene:
     questions: List[SceneReaderQuestion] = field(default_factory=list)
     info: List[SceneReaderInformation] = field(default_factory=list)
     progress: int = 0
+    functions: SceneFunctions = field(default_factory=SceneFunctions)
 
     def beat(self, novel: 'Novel') -> Optional[StoryBeat]:
         structure = novel.active_story_structure

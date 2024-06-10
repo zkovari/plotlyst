@@ -109,6 +109,7 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgStructure.setRemovalContextMenuEnabled(True)
         self.ui.wdgStructure.beatRemovalRequested.connect(self._beat_removed)
         self.ui.wdgStructure.setVisible(self.novel.prefs.toggled(NovelSetting.Structure))
+        self.ui.wdgStructure.setHidden(True)
 
         self._povMenu = CharacterSelectorMenu(self.novel, self.ui.wdgPov.btnAvatar)
         self._povMenu.selected.connect(self._pov_changed)
