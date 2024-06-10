@@ -155,14 +155,9 @@ class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
             self._btnStorylineLink.setVisible(True)
             storyline = next((x for x in self.novel.plots if x.id == self.function.ref), None)
             if storyline is not None:
-                self._btnStorylineLink.setIcon(IconRegistry.from_name(storyline.icon, storyline.icon_color))
+                self._setPlotStyle(storyline)
         else:
             self._btnStorylineLink.setVisible(False)
-
-    # @overrides
-    # def resizeEvent(self, event: QResizeEvent) -> None:
-    #     super().resizeEvent(event)
-    #     self._btnStorylineLink.setGeometry(0, 0, 20, 20)
 
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
@@ -173,9 +168,13 @@ class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
         if not self.function.ref:
             self._btnStorylineLink.setVisible(False)
 
+    def _setPlotStyle(self, plot: Plot):
+        self._btnStorylineLink.setIcon(IconRegistry.from_name(plot.icon, plot.icon_color))
+        shadow(self._textedit, color=QColor(plot.icon_color))
+
     def _plotSelected(self, plot: Plot):
         self.function.ref = plot.id
-        self._btnStorylineLink.setIcon(IconRegistry.from_name(plot.icon, plot.icon_color))
+        self._setPlotStyle(plot)
 
 
 class PlotPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
@@ -184,7 +183,8 @@ class PlotPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
         self._title.setIcon(IconRegistry.storylines_icon())
         self._title.setText('Plot')
         self._textedit.setPlaceholderText("How does the story move forward")
-        shadow(self._textedit)
+        if not self.function.ref:
+            shadow(self._textedit)
 
 
 class MysteryPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
@@ -194,7 +194,8 @@ class MysteryPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
         self._title.setText('Mystery')
         self._textedit.setPlaceholderText("What mystery is introduced or deepened")
 
-        shadow(self._textedit, color=QColor(PLOTLYST_SECONDARY_COLOR))
+        if not self.function.ref:
+            shadow(self._textedit, color=QColor(PLOTLYST_SECONDARY_COLOR))
 
 
 class CharacterPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
