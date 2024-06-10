@@ -171,6 +171,7 @@ class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
         self.function.ref = plot.id
         self._setPlotStyle(plot)
         qtanim.glow(self._storylineParent(), color=QColor(plot.icon_color))
+        self.storylineSelected.emit(plot)
 
     def _plotRemoved(self):
         self.function.ref = None
@@ -223,7 +224,7 @@ class MysteryPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
         self._btnStorylineLink.installEventFilter(OpacityEventFilter(self._btnStorylineLink, leaveOpacity=0.7))
         self._btnStorylineLink.setGeometry(0, 20, 20, 20)
         self._btnStorylineLink.setDisabled(True)
-        self._btnStorylineLink.click.connect(self._title.click)
+        self._btnStorylineLink.clicked.connect(self._title.click)
 
         if self.function.ref:
             self._btnStorylineLink.setVisible(True)
@@ -293,6 +294,9 @@ class CharacterPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
 
 
 class SceneFunctionsWidget(QWidget):
+    storylineLinked = pyqtSignal(Plot)
+    storylineEditRequested = pyqtSignal(Plot)
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
@@ -369,5 +373,8 @@ class SceneFunctionsWidget(QWidget):
             wdg = PlotPrimarySceneFunctionWidget(self._novel, self._scene, function)
 
         wdg.removed.connect(partial(self._removePrimary, wdg))
+        if isinstance(wdg, _StorylineAssociatedFunctionWidget):
+            wdg.storylineSelected.connect(self.storylineLinked)
+            wdg.storylineEditRequested.connect(self.storylineEditRequested)
         self.wdgPrimary.layout().addWidget(wdg)
         return wdg

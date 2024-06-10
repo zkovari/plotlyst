@@ -50,7 +50,7 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.labels import CharacterLabel
 from plotlyst.view.widget.scene.editor import ScenePurposeSelectorWidget, ScenePurposeTypeButton, \
-    SceneAgendaEditor, SceneElementWidget, SceneProgressEditor, SceneStorylineEditor
+    SceneAgendaEditor, SceneProgressEditor, SceneStorylineEditor
 from plotlyst.view.widget.scene.functions import SceneFunctionsWidget
 from plotlyst.view.widget.scene.plot import ScenePlotLabels, \
     ScenePlotSelectorMenu
@@ -166,6 +166,8 @@ class SceneEditor(QObject, EventListener):
 
         self._storylineEditor = SceneStorylineEditor(self.novel)
         self._functionsEditor = SceneFunctionsWidget(self.novel)
+        self._functionsEditor.storylineLinked.connect(self._storyline_linked)
+        self._functionsEditor.storylineEditRequested.connect(self._storyline_edit)
         # self._storylineEditor.outcomeChanged.connect(self._btnPurposeType.refresh)
         # self._storylineEditor.outcomeChanged.connect(self.ui.wdgSceneStructure.refreshOutcome)
         self._storylineEditor.storylineLinked.connect(self._storyline_linked)
@@ -332,12 +334,12 @@ class SceneEditor(QObject, EventListener):
         self.scene.plot_values.remove(plotRef)
         self._progressEditor.refresh()
 
-    def _storyline_linked(self, element: SceneElementWidget, storyline: Plot):
+    def _storyline_linked(self, storyline: Plot):
         if next((x for x in self.scene.plot_values if x.plot.id == storyline.id), None) is None:
             labels = self._storyline_selected(storyline)
             qtanim.glow(labels.icon(), loop=3, color=QColor(storyline.icon_color))
 
-    def _storyline_edit(self, element: SceneElementWidget, storyline: Plot):
+    def _storyline_edit(self, storyline: Plot):
         for i in range(self.ui.wdgStorylines.layout().count()):
             item = self.ui.wdgStorylines.layout().itemAt(i)
             if item and isinstance(item.widget(),

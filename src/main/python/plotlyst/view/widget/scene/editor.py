@@ -1230,8 +1230,8 @@ class AbstractSceneElementsEditor(QWidget):
 
 
 class SceneStorylineEditor(AbstractSceneElementsEditor):
-    storylineLinked = pyqtSignal(SceneElementWidget, Plot)
-    storylineEditRequested = pyqtSignal(SceneElementWidget, Plot)
+    storylineLinked = pyqtSignal(Plot)
+    storylineEditRequested = pyqtSignal(Plot)
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -1249,8 +1249,8 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
                     continue
                 else:
                     placeholder = EventElementEditor(self._novel, row, col, StoryElementType.Effect)
-                placeholder.storylineSelected.connect(partial(self.storylineLinked.emit, placeholder))
-                placeholder.storylineEditRequested.connect(partial(self.storylineEditRequested.emit, placeholder))
+                placeholder.storylineSelected.connect(self.storylineLinked)
+                placeholder.storylineEditRequested.connect(self.storylineEditRequested)
                 self._wdgElements.layout().addWidget(placeholder, row, col, 1, 1)
 
         self._addLine(0, 1, True)
