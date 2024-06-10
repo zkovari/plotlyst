@@ -1136,8 +1136,11 @@ class LabelsEditor(QFrame):
 
 
 class TextEditBubbleWidget(QWidget):
+    removed = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._removalEnabled: bool = False
 
         vbox(self)
         self._title = QPushButton()
@@ -1160,7 +1163,25 @@ class TextEditBubbleWidget(QWidget):
         self.layout().addWidget(self._title, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self._textedit)
 
+        self._btnRemove = RemovalButton(self)
+        self._btnRemove.setHidden(True)
+        self._btnRemove.clicked.connect(self.removed)
+
         sp(self).v_max()
+
+    @overrides
+    def enterEvent(self, event: QtGui.QEnterEvent) -> None:
+        if self._removalEnabled:
+            self._btnRemove.setVisible(True)
+            self._btnRemove.raise_()
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self._btnRemove.setHidden(True)
+
+    @overrides
+    def resizeEvent(self, a0: QtGui.QResizeEvent) -> None:
+        self._btnRemove.setGeometry(self.width() - 20, 5, 20, 20)
 
     def _textChanged(self):
         pass

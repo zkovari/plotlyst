@@ -32,7 +32,7 @@ from qtmenu import MenuWidget, ActionTooltipDisplayMode
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Scene, Novel, StoryElementType, Character, SceneFunction
 from plotlyst.service.cache import characters_registry
-from plotlyst.view.common import push_btn, tool_btn, action, shadow, label
+from plotlyst.view.common import push_btn, tool_btn, action, shadow, label, fade_out_and_gc
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.characters import CharacterSelectorButton
 from plotlyst.view.widget.input import TextEditBubbleWidget
@@ -123,6 +123,7 @@ class PrimarySceneFunctionWidget(TextEditBubbleWidget):
         self.novel = novel
         self.scene = scene
         self.function = function
+        self._removalEnabled = True
 
         self._textedit.setMinimumSize(165, 100)
         self._textedit.setMaximumSize(180, 110)
@@ -245,6 +246,10 @@ class SceneFunctionsWidget(QWidget):
         wdg = self.__initPrimaryWidget(function)
         qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
 
+    def _removePrimary(self, wdg: PrimarySceneFunctionWidget):
+        self._scene.functions.primary.remove(wdg.function)
+        fade_out_and_gc(self.wdgPrimary, wdg)
+
     def __initPrimaryWidget(self, function: SceneFunction):
         if function.type == StoryElementType.Character:
             wdg = CharacterPrimarySceneFunctionWidget(self._novel, self._scene, function)
@@ -253,5 +258,6 @@ class SceneFunctionsWidget(QWidget):
         else:
             wdg = PlotPrimarySceneFunctionWidget(self._novel, self._scene, function)
 
+        wdg.removed.connect(partial(self._removePrimary, wdg))
         self.wdgPrimary.layout().addWidget(wdg)
         return wdg
