@@ -21,11 +21,11 @@ from functools import partial
 from typing import Optional
 
 import qtanim
-from PyQt6.QtCore import Qt, QEvent
+from PyQt6.QtCore import Qt, QEvent, pyqtSignal
 from PyQt6.QtGui import QColor, QEnterEvent
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QWidget, QAbstractButton
 from overrides import overrides
-from qthandy import vbox, incr_icon, incr_font, flow, margins, vspacer, hbox, clear_layout, pointy
+from qthandy import vbox, incr_icon, incr_font, flow, margins, vspacer, hbox, clear_layout, pointy, gc
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
@@ -139,22 +139,47 @@ class PrimarySceneFunctionWidget(TextEditBubbleWidget):
 
 
 class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
+    storylineSelected = pyqtSignal(Plot)
+    storylineEditRequested = pyqtSignal(Plot)
+
     def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
         super().__init__(novel, scene, function, parent)
+        pointy(self._title)
         self._menu = SceneFunctionPlotSelectorMenu(novel, self._title)
         self._menu.plotSelected.connect(self._plotSelected)
-        pointy(self._title)
         self._menu.setScene(scene)
 
     def _plot(self) -> Optional[Plot]:
         return next((x for x in self.novel.plots if x.id == self.function.ref), None)
 
     def _setPlotStyle(self, plot: Plot):
+        gc(self._menu)
+        self._menu = MenuWidget(self._menuParent())
+        self._menu.addAction(
+            action('Edit', IconRegistry.edit_icon(), slot=partial(self.storylineEditRequested.emit, plot)))
+        self._menu.addSeparator()
+        self._menu.addAction(action('Remove', IconRegistry.trash_can_icon(), slot=self._plotRemoved))
+
+    def _resetPlotStyle(self):
+        pass
+
+    def _menuParent(self) -> QAbstractButton:
         pass
 
     def _plotSelected(self, plot: Plot):
         self.function.ref = plot.id
         self._setPlotStyle(plot)
+
+    def _plotRemoved(self):
+        self.function.ref = None
+        # self._btnStorylineLink.setIcon(IconRegistry.storylines_icon(color='lightgrey'))
+
+        # self._btnStorylineLink.clicked.disconnect()
+        gc(self._menu)
+        self._menu = SceneFunctionPlotSelectorMenu(self.novel, self._menuParent())
+        self._menu.plotSelected.connect(self._plotSelected)
+        self._menu.setScene(self.scene)
+        self._resetPlotStyle()
 
 
 class PlotPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
@@ -166,15 +191,24 @@ class PlotPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
             if storyline is not None:
                 self._setPlotStyle(storyline)
         else:
-            self._title.setText('Plot')
-            self._title.setIcon(IconRegistry.storylines_icon())
-            shadow(self._textedit)
+            self._resetPlotStyle()
 
     @overrides
     def _setPlotStyle(self, plot: Plot):
+        super()._setPlotStyle(plot)
         self._title.setIcon(IconRegistry.from_name(plot.icon, plot.icon_color))
         self._title.setText(plot.text)
         shadow(self._textedit, color=QColor(plot.icon_color))
+
+    @overrides
+    def _resetPlotStyle(self):
+        self._title.setText('Plot')
+        self._title.setIcon(IconRegistry.storylines_icon())
+        shadow(self._textedit)
+
+    @overrides
+    def _menuParent(self):
+        return self._title
 
 
 class MysteryPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
@@ -217,7 +251,17 @@ class MysteryPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
 
     @overrides
     def _setPlotStyle(self, plot: Plot):
+        super()._setPlotStyle(plot)
         self._btnStorylineLink.setIcon(IconRegistry.from_name(plot.icon, plot.icon_color))
+
+    @overrides
+    def _resetPlotStyle(self):
+        self._btnStorylineLink.setIcon(IconRegistry.storylines_icon(color='lightgrey'))
+        self._btnStorylineLink.setVisible(False)
+
+    @overrides
+    def _menuParent(self):
+        return self._title
 
 
 class CharacterPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
