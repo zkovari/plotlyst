@@ -128,7 +128,7 @@ class PrimarySceneFunctionWidget(TextEditBubbleWidget):
         self._removalEnabled = True
 
         self._textedit.setMinimumSize(165, 100)
-        self._textedit.setMaximumSize(180, 110)
+        self._textedit.setMaximumSize(190, 110)
         self._textedit.setText(self.function.text)
 
         margins(self, top=16)
@@ -306,8 +306,8 @@ class SceneFunctionsWidget(QWidget):
         margins(self, left=15)
         self.btnPrimary = push_btn(IconRegistry.from_name('mdi6.note-text-outline', 'grey'), 'Primary',
                                    transparent_=True)
-        incr_icon(self.btnPrimary, 2)
-        incr_font(self.btnPrimary, 2)
+        incr_icon(self.btnPrimary, 1)
+        incr_font(self.btnPrimary, 1)
         self.btnPrimary.installEventFilter(OpacityEventFilter(self.btnPrimary, leaveOpacity=0.7))
         self.btnPrimaryPlus = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True)
         self.btnPrimaryPlus.installEventFilter(OpacityEventFilter(self.btnPrimaryPlus, leaveOpacity=0.7))
@@ -335,7 +335,7 @@ class SceneFunctionsWidget(QWidget):
         incr_font(self.btnSecondary, 1)
 
         self.wdgPrimary = QWidget()
-        flow(self.wdgPrimary, spacing=10)
+        flow(self.wdgPrimary, spacing=13)
         margins(self.wdgPrimary, left=20, top=0)
 
         wdgPrimaryHeader = QWidget()
