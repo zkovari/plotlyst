@@ -36,7 +36,9 @@ from plotlyst.view.common import push_btn, tool_btn, action, shadow, label, fade
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.characters import CharacterSelectorButton
+from plotlyst.view.widget.display import Icon
 from plotlyst.view.widget.input import TextEditBubbleWidget
+from plotlyst.view.widget.list import ListView, ListItemWidget
 from plotlyst.view.widget.scene.plot import SceneFunctionPlotSelectorMenu
 
 
@@ -265,6 +267,40 @@ class MysteryPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
         return self._btnStorylineLink
 
 
+class SecondaryFunctionListItemWidget(ListItemWidget):
+    def __init__(self, function: SceneFunction, parent=None):
+        super().__init__(function, parent)
+        self._function = function
+        self._icon = Icon()
+        self._icon.setIcon(IconRegistry.from_name('ei.question-sign', PLOTLYST_SECONDARY_COLOR))
+        self.layout().insertWidget(1, self._icon)
+        self._lineEdit.setText(self._function.text)
+        incr_font(self._lineEdit, 2)
+        incr_icon(self._icon, 4)
+
+    @overrides
+    def _textChanged(self, text: str):
+        super()._textChanged(text)
+        self._function.text = text
+
+
+class SecondaryFunctionsList(ListView):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        margins(self, left=20)
+        self._btnAdd.setText('Add new function')
+
+    @overrides
+    def _addNewItem(self):
+        function = SceneFunction(StoryElementType.Mystery)
+        # self._question.children.append(question)
+        self.addItem(function)
+
+    @overrides
+    def _listItemWidgetClass(self):
+        return SecondaryFunctionListItemWidget
+
+
 class CharacterPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
     def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
         super().__init__(novel, scene, function, parent)
@@ -338,6 +374,8 @@ class SceneFunctionsWidget(QWidget):
         flow(self.wdgPrimary, spacing=13)
         margins(self.wdgPrimary, left=20, top=0)
 
+        self.listSecondary = SecondaryFunctionsList()
+
         wdgPrimaryHeader = QWidget()
         hbox(wdgPrimaryHeader, 0, 0)
         wdgPrimaryHeader.layout().addWidget(self.btnPrimary)
@@ -345,6 +383,7 @@ class SceneFunctionsWidget(QWidget):
         self.layout().addWidget(wdgPrimaryHeader, alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(self.wdgPrimary)
         self.layout().addWidget(self.btnSecondary, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self.listSecondary)
         self.layout().addWidget(vspacer())
 
     def setScene(self, scene: Scene):
