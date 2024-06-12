@@ -600,6 +600,9 @@
              </property>
              <item>
               <widget class="QTabWidget" name="tabWidget_2">
+               <property name="tabPosition">
+                <enum>QTabWidget::East</enum>
+               </property>
                <property name="currentIndex">
                 <number>0</number>
                </property>
@@ -636,8 +639,8 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>549</width>
-                      <height>316</height>
+                      <width>525</width>
+                      <height>340</height>
                      </rect>
                     </property>
                     <property name="relaxed-white-bg" stdset="0">
