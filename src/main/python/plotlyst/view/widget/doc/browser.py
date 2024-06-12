@@ -52,7 +52,7 @@ class DocumentAdditionMenu(MenuWidget):
 
         self._character_menu = CharacterSelectorMenu(self._novel)
         self._character_menu.selected.connect(self._characterSelected)
-        self._character_menu.setTitle('Link characters')
+        self._character_menu.setTitle('Characters')
         self._character_menu.setIcon(IconRegistry.character_icon())
         self.addMenu(self._character_menu)
         self.addSeparator()
@@ -120,14 +120,14 @@ class DocumentNode(ContainerNode):
     def refresh(self):
         self._lblTitle.setText(self._doc.display_name())
 
-        if self._doc.icon:
-            self._icon.setIcon(IconRegistry.from_name(self._doc.icon, self._doc.icon_color))
-            self._icon.setVisible(True)
-        elif self._doc.character_id:
+        if self._doc.character_id:
             char = self._doc.character(self._novel)
             if char is not None:
                 self._lblTitle.setText(char.name)
                 self._icon.setIcon(avatars.avatar(char))
+            self._icon.setVisible(True)
+        elif self._doc.icon:
+            self._icon.setIcon(IconRegistry.from_name(self._doc.icon, self._doc.icon_color))
             self._icon.setVisible(True)
         else:
             self._icon.setHidden(True)

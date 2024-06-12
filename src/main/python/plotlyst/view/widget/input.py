@@ -600,6 +600,8 @@ class DocumentTextEditor(RichTextEditor):
             self._wdgTitle.setVisible(True)
 
     def _changeIcon(self):
+        if self._textTitle.isReadOnly():
+            return
         result = IconSelectorDialog().display()
         if result:
             name = result[0]
