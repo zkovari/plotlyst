@@ -32,12 +32,12 @@ from PyQt6.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyl
     QApplication, QToolButton, QLineEdit, QWidgetAction, QListView, QSpinBox, QWidget, QLabel, QDialog
 from language_tool_python import LanguageTool
 from overrides import overrides
-from qthandy import transparent, hbox, margins, pointy, sp, line, flow, vbox, translucent, decr_icon
+from qthandy import transparent, hbox, margins, pointy, sp, line, flow, vbox, translucent, decr_icon, bold, incr_font
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
 
-from plotlyst.common import IGNORE_CAPITALIZATION_PROPERTY, RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
+from plotlyst.common import IGNORE_CAPITALIZATION_PROPERTY, RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, RED_COLOR
 from plotlyst.core.domain import TextStatistics, Character, Label
 from plotlyst.core.text import wc
 from plotlyst.env import app_env
@@ -791,7 +791,7 @@ class PowerBar(QFrame):
 
 
 class RemovalButton(QToolButton):
-    def __init__(self, parent=None, colorOff: str = 'grey', colorOn='red', colorHover='black'):
+    def __init__(self, parent=None, colorOff: str = 'grey', colorOn=RED_COLOR, colorHover='black'):
         super(RemovalButton, self).__init__(parent)
         self._colorOff = colorOff
         self._colorHover = colorHover
@@ -1141,3 +1141,55 @@ class LabelsEditor(QFrame):
         label = lblWdg.label()
         fade_out_and_gc(self.wdgContainer, lblWdg)
         self.labelRemoved.emit(label)
+
+
+class TextEditBubbleWidget(QWidget):
+    removed = pyqtSignal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._removalEnabled: bool = False
+
+        vbox(self)
+        self._title = QPushButton()
+        transparent(self._title)
+        bold(self._title)
+        self._title.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+
+        self._textedit = QTextEdit(self)
+        self._textedit.setProperty('white-bg', True)
+        self._textedit.setProperty('rounded', True)
+        self._textedit.setTabChangesFocus(True)
+        if app_env.is_mac():
+            incr_font(self._textedit)
+        self._textedit.setMinimumSize(175, 100)
+        self._textedit.setMaximumSize(190, 120)
+        self._textedit.verticalScrollBar().setVisible(False)
+
+        self._textedit.textChanged.connect(self._textChanged)
+
+        self.layout().addWidget(self._title, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self._textedit)
+
+        self._btnRemove = RemovalButton(self)
+        self._btnRemove.setHidden(True)
+        self._btnRemove.clicked.connect(self.removed)
+
+        sp(self).v_max()
+
+    @overrides
+    def enterEvent(self, event: QtGui.QEnterEvent) -> None:
+        if self._removalEnabled:
+            self._btnRemove.setVisible(True)
+            self._btnRemove.raise_()
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self._btnRemove.setHidden(True)
+
+    @overrides
+    def resizeEvent(self, a0: QtGui.QResizeEvent) -> None:
+        self._btnRemove.setGeometry(self.width() - 20, 5, 20, 20)
+
+    def _textChanged(self):
+        pass

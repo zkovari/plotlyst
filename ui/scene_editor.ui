@@ -532,22 +532,6 @@
           </property>
          </spacer>
         </item>
-        <item>
-         <widget class="QPushButton" name="btnInfo">
-          <property name="cursor">
-           <cursorShape>PointingHandCursor</cursorShape>
-          </property>
-          <property name="text">
-           <string>PushButton</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-          <property name="base" stdset="0">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
        </layout>
       </widget>
      </item>
@@ -585,7 +569,7 @@
            <property name="currentIndex">
             <number>0</number>
            </property>
-           <widget class="QWidget" name="tabStorylines">
+           <widget class="QWidget" name="tabFunctions">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
               <horstretch>0</horstretch>
@@ -596,9 +580,9 @@
              <bool>true</bool>
             </property>
             <attribute name="title">
-             <string>Events</string>
+             <string>Functions</string>
             </attribute>
-            <layout class="QVBoxLayout" name="verticalLayout_9">
+            <layout class="QVBoxLayout" name="verticalLayout_17">
              <property name="spacing">
               <number>0</number>
              </property>
@@ -614,6 +598,106 @@
              <property name="bottomMargin">
               <number>0</number>
              </property>
+             <item>
+              <widget class="QTabWidget" name="tabWidgetFunctions">
+               <property name="tabPosition">
+                <enum>QTabWidget::North</enum>
+               </property>
+               <property name="currentIndex">
+                <number>0</number>
+               </property>
+               <property name="centered" stdset="0">
+                <bool>true</bool>
+               </property>
+               <widget class="QWidget" name="tabPrimaryFunctions">
+                <property name="relaxed-white-bg" stdset="0">
+                 <bool>true</bool>
+                </property>
+                <attribute name="title">
+                 <string>Scene functions</string>
+                </attribute>
+                <layout class="QVBoxLayout" name="verticalLayout_9">
+                 <property name="spacing">
+                  <number>0</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="QScrollArea" name="scrollArea">
+                   <property name="frameShape">
+                    <enum>QFrame::NoFrame</enum>
+                   </property>
+                   <property name="widgetResizable">
+                    <bool>true</bool>
+                   </property>
+                   <widget class="QWidget" name="scrollAreaFunctions">
+                    <property name="geometry">
+                     <rect>
+                      <x>0</x>
+                      <y>0</y>
+                      <width>551</width>
+                      <height>318</height>
+                     </rect>
+                    </property>
+                    <property name="relaxed-white-bg" stdset="0">
+                     <bool>true</bool>
+                    </property>
+                    <layout class="QVBoxLayout" name="verticalLayout_16">
+                     <property name="spacing">
+                      <number>3</number>
+                     </property>
+                     <property name="leftMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="topMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="rightMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>0</number>
+                     </property>
+                    </layout>
+                   </widget>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+               <widget class="QWidget" name="tabEventsGrid">
+                <property name="relaxed-white-bg" stdset="0">
+                 <bool>true</bool>
+                </property>
+                <attribute name="title">
+                 <string>Cause and effect</string>
+                </attribute>
+                <layout class="QVBoxLayout" name="verticalLayout_18">
+                 <property name="spacing">
+                  <number>0</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                </layout>
+               </widget>
+              </widget>
+             </item>
             </layout>
            </widget>
            <widget class="QWidget" name="tabDrive">
@@ -648,7 +732,7 @@
              <item>
               <widget class="QTabWidget" name="tabWidgetDrive">
                <property name="currentIndex">
-                <number>2</number>
+                <number>0</number>
                </property>
                <property name="centered" stdset="0">
                 <bool>true</bool>
@@ -903,6 +987,8 @@
    </item>
   </layout>
  </widget>
+ <layoutdefault spacing="0" margin="0"/>
+ <layoutfunction spacing="0" margin="0"/>
  <customwidgets>
   <customwidget>
    <class>DocumentTextEditor</class>

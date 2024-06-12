@@ -568,7 +568,7 @@ class ReaderInformationWidget(QWidget):
             self.textedit.setMaximumSize(215, 135)
         else:
             icon = IconRegistry.general_info_icon('black')
-            title = 'Question'
+            title = 'Information'
             decr_icon(self._label, 4)
             decr_font(self._label, 2)
             self.btnRevelation.setText('Mark as revelation')

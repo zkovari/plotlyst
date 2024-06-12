@@ -231,8 +231,8 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.motion-outline', 'grey', 'black')
 
     @staticmethod
-    def setup_scene_icon() -> QIcon:
-        return IconRegistry.from_name('fa5s.seedling', 'grey')
+    def setup_scene_icon(color='grey') -> QIcon:
+        return IconRegistry.from_name('fa5s.seedling', color)
 
     @staticmethod
     def exposition_scene_icon() -> QIcon:
