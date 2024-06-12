@@ -1036,12 +1036,12 @@ class EventElementEditor(TextBasedSceneElementWidget):
             self.setStorylineVisible(True)
         elif type_ == StoryElementType.Delayed_effect:
             self.setTitle('Delayed effect')
-            self.setIcon('ri.timer-flash-line')
+            self.setIcon('ri.timer-flash-line', 'grey')
             self.setPlaceholderText("A delayed effect happening in a later scene")
             self.setStorylineVisible(False)
         elif type_ == StoryElementType.Thematic_effect:
             self.setTitle('Thematic effect')
-            self.setIcon('mdi.butterfly-outline')
+            self.setIcon('mdi.butterfly-outline', '#9d4edd')
             self.setPlaceholderText("Events that contribute to, symbolize, or align with the theme")
             self.setStorylineVisible(False)
 
