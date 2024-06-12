@@ -213,12 +213,9 @@ class PlotPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
         return self._title
 
 
-class MysteryPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
+class _AlternativeStorylineAssociatedFunctionWidget(_StorylineAssociatedFunctionWidget):
     def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
         super().__init__(novel, scene, function, parent)
-        self._title.setIcon(IconRegistry.from_name('ei.question-sign', PLOTLYST_SECONDARY_COLOR))
-        self._title.setText('Mystery')
-        self._textedit.setPlaceholderText("What mystery is introduced or deepened")
 
         self._btnStorylineLink = tool_btn(IconRegistry.storylines_icon(color='lightgrey'), transparent_=True,
                                           tooltip='Link storyline to this element',
@@ -235,22 +232,39 @@ class MysteryPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
         else:
             self._btnStorylineLink.setVisible(False)
 
-        # shadow(self._textedit, color=QColor(PLOTLYST_SECONDARY_COLOR))
         shadow(self._textedit)
 
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
         super().enterEvent(event)
         if self.function.ref:
-            # self._btnStorylineLink.setEnabled(True)
             self._btnStorylineLink.setVisible(True)
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
         super().leaveEvent(event)
-        # self._btnStorylineLink.setDisabled(True)
         if not self.function.ref:
             self._btnStorylineLink.setVisible(False)
+
+    @overrides
+    def _plotSelected(self, plot: Plot):
+        self._btnStorylineLink.setVisible(True)
+        super()._plotSelected(plot)
+
+    @overrides
+    def _storylineParent(self):
+        return self._btnStorylineLink
+
+    def _btnStorylineClicked(self):
+        self._menu.exec()
+
+
+class MysteryPrimarySceneFunctionWidget(_AlternativeStorylineAssociatedFunctionWidget):
+    def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
+        super().__init__(novel, scene, function, parent)
+        self._title.setIcon(IconRegistry.from_name('ei.question-sign', PLOTLYST_SECONDARY_COLOR))
+        self._title.setText('Mystery')
+        self._textedit.setPlaceholderText("What mystery is introduced or deepened")
 
     @overrides
     def _setPlotStyle(self, plot: Plot):
@@ -264,17 +278,25 @@ class MysteryPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
         self._btnStorylineLink.setIcon(IconRegistry.storylines_icon(color='lightgrey'))
         self._title.setIcon(IconRegistry.from_name('ei.question-sign', PLOTLYST_SECONDARY_COLOR))
 
-    @overrides
-    def _plotSelected(self, plot: Plot):
-        self._btnStorylineLink.setVisible(True)
-        super()._plotSelected(plot)
+
+class RevelationPrimarySceneFunctionWidget(_AlternativeStorylineAssociatedFunctionWidget):
+    def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
+        super().__init__(novel, scene, function, parent)
+        self._title.setIcon(IconRegistry.from_name('fa5s.binoculars', PLOTLYST_SECONDARY_COLOR))
+        self._title.setText('Revelation')
+        self._textedit.setPlaceholderText("What key information is revealed or discovered")
 
     @overrides
-    def _storylineParent(self):
-        return self._btnStorylineLink
+    def _setPlotStyle(self, plot: Plot):
+        super()._setPlotStyle(plot)
+        self._btnStorylineLink.setIcon(IconRegistry.from_name(plot.icon, plot.icon_color))
+        self._title.setIcon(IconRegistry.from_name('fa5s.binoculars', plot.icon_color))
 
-    def _btnStorylineClicked(self):
-        self._menu.exec()
+    @overrides
+    def _resetPlotStyle(self):
+        self._btnStorylineLink.setVisible(False)
+        self._btnStorylineLink.setIcon(IconRegistry.storylines_icon(color='lightgrey'))
+        self._title.setIcon(IconRegistry.from_name('fa5s.binoculars', PLOTLYST_SECONDARY_COLOR))
 
 
 class CharacterPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
@@ -410,6 +432,9 @@ class SceneFunctionsWidget(QWidget):
         self.menuPrimary.addAction(action('Mystery', IconRegistry.from_name('ei.question-sign'),
                                           slot=partial(self._addPrimary, StoryElementType.Mystery),
                                           tooltip="This scene primarily introduces or deepens a mystery that drives the narrative forward"))
+        self.menuPrimary.addAction(action('Revelation', IconRegistry.from_name('fa5s.binoculars'),
+                                          slot=partial(self._addPrimary, StoryElementType.Revelation),
+                                          tooltip="This scene primarily reveals a key information"))
         apply_white_menu(self.menuPrimary)
         self.btnPrimary.clicked.connect(self.btnPrimaryPlus.click)
 
@@ -491,6 +516,8 @@ class SceneFunctionsWidget(QWidget):
             wdg = CharacterPrimarySceneFunctionWidget(self._novel, self._scene, function)
         elif function.type == StoryElementType.Mystery:
             wdg = MysteryPrimarySceneFunctionWidget(self._novel, self._scene, function)
+        elif function.type == StoryElementType.Revelation:
+            wdg = RevelationPrimarySceneFunctionWidget(self._novel, self._scene, function)
         else:
             wdg = PlotPrimarySceneFunctionWidget(self._novel, self._scene, function)
 

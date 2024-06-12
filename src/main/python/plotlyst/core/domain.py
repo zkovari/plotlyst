@@ -1708,6 +1708,7 @@ class StoryElementType(Enum):
     Character = 'character'
     Mystery = 'mystery'
     Revelation = 'revelation'
+    Resonance = 'resonance'
     Setup = 'setup'
     Information = 'information'
     Arc = 'arc'
