@@ -275,6 +275,9 @@ class SecondaryFunctionListItemWidget(ListItemWidget):
         elif function.type == StoryElementType.Resonance:
             icon = IconRegistry.theme_icon()
             placeholder = "What emotional or thematic impact does this scene have"
+        elif function.type == StoryElementType.Character:
+            icon = IconRegistry.character_icon(color=PLOTLYST_SECONDARY_COLOR)
+            placeholder = 'What do we learn about a character'
         else:
             icon = QIcon()
             placeholder = 'Fill out this secondary function'
@@ -392,6 +395,10 @@ class SceneFunctionsWidget(QWidget):
             action('Information', IconRegistry.general_info_icon('black'),
                    slot=partial(self._addSecondary, StoryElementType.Information),
                    tooltip="New information to be conveyed"))
+        self.menuSecondary.addAction(
+            action('Character insight', IconRegistry.character_icon(),
+                   slot=partial(self._addSecondary, StoryElementType.Character),
+                   tooltip="New information about a character"))
         self.menuSecondary.addAction(
             action('Mystery', IconRegistry.from_name('ei.question-sign'),
                    slot=partial(self._addSecondary, StoryElementType.Mystery),
