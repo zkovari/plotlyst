@@ -78,6 +78,11 @@ class SceneEditor(QObject, EventListener):
         set_tab_icon(self.ui.tabWidget, self.ui.tabStructure,
                      IconRegistry.from_name('mdi6.timeline-outline', rotated=90, color_on=PLOTLYST_SECONDARY_COLOR))
         set_tab_icon(self.ui.tabWidget, self.ui.tabNotes, IconRegistry.document_edition_icon())
+        set_tab_icon(self.ui.tabWidgetFunctions, self.ui.tabPrimaryFunctions,
+                     IconRegistry.from_name('mdi6.note-text-outline', color_on=PLOTLYST_SECONDARY_COLOR))
+        set_tab_icon(self.ui.tabWidgetFunctions, self.ui.tabEventsGrid,
+                     IconRegistry.from_name('mdi.dots-grid', color_on=PLOTLYST_SECONDARY_COLOR))
+
         set_tab_icon(self.ui.tabWidgetDrive, self.ui.tabAgency, IconRegistry.character_icon())
         set_tab_icon(self.ui.tabWidgetDrive, self.ui.tabCuriosity,
                      IconRegistry.from_name('ei.question-sign', color_on=PLOTLYST_SECONDARY_COLOR))
