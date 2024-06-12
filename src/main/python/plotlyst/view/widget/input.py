@@ -37,7 +37,7 @@ from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
 
-from plotlyst.common import IGNORE_CAPITALIZATION_PROPERTY, RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
+from plotlyst.common import IGNORE_CAPITALIZATION_PROPERTY, RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, RED_COLOR
 from plotlyst.core.domain import TextStatistics, Character, Label
 from plotlyst.core.text import wc
 from plotlyst.env import app_env
@@ -791,7 +791,7 @@ class PowerBar(QFrame):
 
 
 class RemovalButton(QToolButton):
-    def __init__(self, parent=None, colorOff: str = 'grey', colorOn='red', colorHover='black'):
+    def __init__(self, parent=None, colorOff: str = 'grey', colorOn=RED_COLOR, colorHover='black'):
         super(RemovalButton, self).__init__(parent)
         self._colorOff = colorOff
         self._colorHover = colorHover

@@ -22,7 +22,7 @@ from typing import Optional
 
 import qtanim
 from PyQt6.QtCore import Qt, QEvent, pyqtSignal
-from PyQt6.QtGui import QColor, QEnterEvent
+from PyQt6.QtGui import QColor, QEnterEvent, QIcon
 from PyQt6.QtWidgets import QWidget, QAbstractButton
 from overrides import overrides
 from qthandy import vbox, incr_icon, incr_font, flow, margins, vspacer, hbox, clear_layout, pointy, gc
@@ -311,7 +311,27 @@ class SecondaryFunctionListItemWidget(ListItemWidget):
         super().__init__(function, parent)
         self._function = function
         self._icon = Icon()
-        self._icon.setIcon(IconRegistry.from_name('ei.question-sign', PLOTLYST_SECONDARY_COLOR))
+
+        if function.type == StoryElementType.Mystery:
+            icon = IconRegistry.from_name('ei.question-sign', PLOTLYST_SECONDARY_COLOR)
+            placeholder = "Introduce or deepen a mystery"
+        elif function.type == StoryElementType.Setup:
+            icon = IconRegistry.setup_scene_icon(color=PLOTLYST_SECONDARY_COLOR)
+            placeholder = "Sets up a story element for a later payoff"
+        elif function.type == StoryElementType.Information:
+            icon = IconRegistry.general_info_icon('lightgrey')
+            placeholder = "What new information is conveyed"
+        else:
+            icon = QIcon()
+            placeholder = 'Fill out this secondary function'
+
+        tip = f'{function.type.name}: {placeholder}'
+
+        self._icon.setIcon(icon)
+        self._icon.setToolTip(tip)
+        self._lineEdit.setPlaceholderText(placeholder)
+        self._lineEdit.setToolTip(tip)
+
         self.layout().insertWidget(1, self._icon)
         self._lineEdit.setText(self._function.text)
 
@@ -326,7 +346,7 @@ class SecondaryFunctionsList(ListView):
         super().__init__(parent)
         self._scene: Optional[Scene] = None
         margins(self, left=20)
-        self._btnAdd.setText('Add new function')
+        self._btnAdd.setHidden(True)
 
     def setScene(self, scene: Scene):
         self._scene = scene
@@ -382,11 +402,11 @@ class SceneFunctionsWidget(QWidget):
         self.menuPrimary.addSeparator()
         self.menuPrimary.addAction(action('Advance plot', IconRegistry.storylines_icon(),
                                           slot=partial(self._addPrimary, StoryElementType.Plot),
-                                          tooltip="This scene primarily advances the story, often through progression or setback"))
+                                          tooltip="This scene primarily advances or complicates the story by affecting the plot, character arc, or relationships"))
         self.menuPrimary.addAction(
             action('Character insight', IconRegistry.character_icon(),
                    slot=partial(self._addPrimary, StoryElementType.Character),
-                   tooltip="This scene primarily provides new information, layer, or development about a character"))
+                   tooltip="This scene primarily provides new information, layers, or development about a character"))
         self.menuPrimary.addAction(action('Mystery', IconRegistry.from_name('ei.question-sign'),
                                           slot=partial(self._addPrimary, StoryElementType.Mystery),
                                           tooltip="This scene primarily introduces or deepens a mystery that drives the narrative forward"))
@@ -398,6 +418,27 @@ class SceneFunctionsWidget(QWidget):
         self.btnSecondary.installEventFilter(OpacityEventFilter(self.btnSecondary, leaveOpacity=0.7))
         incr_icon(self.btnSecondary, 1)
         incr_font(self.btnSecondary, 1)
+        self.btnSecondaryPlus = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True)
+        self.btnSecondaryPlus.installEventFilter(OpacityEventFilter(self.btnPrimaryPlus, leaveOpacity=0.7))
+        self.menuSecondary = MenuWidget(self.btnSecondaryPlus)
+        self.menuSecondary.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+        self.menuSecondary.addSection('Select a secondary function that this scene also fulfils')
+        self.menuSecondary.addSeparator()
+        self.menuSecondary.addAction(
+            action('Setup', IconRegistry.setup_scene_icon('black'),
+                   slot=partial(self._addSecondary, StoryElementType.Setup),
+                   tooltip="Sets up a story element for a later payoff"))
+        self.menuSecondary.addAction(
+            action('Information', IconRegistry.general_info_icon('black'),
+                   slot=partial(self._addSecondary, StoryElementType.Information),
+                   tooltip="New information to be conveyed"))
+        self.menuSecondary.addAction(
+            action('Mystery', IconRegistry.from_name('ei.question-sign'),
+                   slot=partial(self._addSecondary, StoryElementType.Mystery),
+                   tooltip="A smaller mystery to be introduced or deepend"))
+
+        apply_white_menu(self.menuSecondary)
+        self.btnSecondary.clicked.connect(self.btnSecondaryPlus.click)
 
         self.wdgPrimary = QWidget()
         flow(self.wdgPrimary, spacing=13)
@@ -411,7 +452,12 @@ class SceneFunctionsWidget(QWidget):
         wdgPrimaryHeader.layout().addWidget(self.btnPrimaryPlus, alignment=Qt.AlignmentFlag.AlignBottom)
         self.layout().addWidget(wdgPrimaryHeader, alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(self.wdgPrimary)
-        self.layout().addWidget(self.btnSecondary, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        wdgSecondaryHeader = QWidget()
+        hbox(wdgSecondaryHeader, 0, 0)
+        wdgSecondaryHeader.layout().addWidget(self.btnSecondary)
+        wdgSecondaryHeader.layout().addWidget(self.btnSecondaryPlus, alignment=Qt.AlignmentFlag.AlignBottom)
+        self.layout().addWidget(wdgSecondaryHeader, alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(self.listSecondary)
         self.layout().addWidget(vspacer())
 
@@ -430,6 +476,11 @@ class SceneFunctionsWidget(QWidget):
 
         wdg = self.__initPrimaryWidget(function)
         qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
+
+    def _addSecondary(self, type_: StoryElementType):
+        function = SceneFunction(type_)
+        self._scene.functions.secondary.append(function)
+        self.listSecondary.addItem(function)
 
     def _removePrimary(self, wdg: PrimarySceneFunctionWidget):
         self._scene.functions.primary.remove(wdg.function)
