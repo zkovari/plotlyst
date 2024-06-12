@@ -224,9 +224,8 @@ class MysteryPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
                                           tooltip='Link storyline to this element',
                                           parent=self)
         self._btnStorylineLink.installEventFilter(OpacityEventFilter(self._btnStorylineLink, leaveOpacity=0.7))
-        self._btnStorylineLink.setGeometry(0, 20, 20, 20)
-        self._btnStorylineLink.setDisabled(True)
-        self._btnStorylineLink.clicked.connect(self._title.click)
+        self._btnStorylineLink.setGeometry(5, 18, 20, 20)
+        self._btnStorylineLink.clicked.connect(self._btnStorylineClicked)
 
         if self.function.ref:
             self._btnStorylineLink.setVisible(True)
@@ -243,13 +242,13 @@ class MysteryPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
     def enterEvent(self, event: QEnterEvent) -> None:
         super().enterEvent(event)
         if self.function.ref:
-            self._btnStorylineLink.setEnabled(True)
+            # self._btnStorylineLink.setEnabled(True)
             self._btnStorylineLink.setVisible(True)
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
         super().leaveEvent(event)
-        self._btnStorylineLink.setDisabled(True)
+        # self._btnStorylineLink.setDisabled(True)
         if not self.function.ref:
             self._btnStorylineLink.setVisible(False)
 
@@ -257,15 +256,54 @@ class MysteryPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
     def _setPlotStyle(self, plot: Plot):
         super()._setPlotStyle(plot)
         self._btnStorylineLink.setIcon(IconRegistry.from_name(plot.icon, plot.icon_color))
+        self._title.setIcon(IconRegistry.from_name('ei.question-sign', plot.icon_color))
 
     @overrides
     def _resetPlotStyle(self):
-        self._btnStorylineLink.setIcon(IconRegistry.storylines_icon(color='lightgrey'))
         self._btnStorylineLink.setVisible(False)
+        self._btnStorylineLink.setIcon(IconRegistry.storylines_icon(color='lightgrey'))
+        self._title.setIcon(IconRegistry.from_name('ei.question-sign', PLOTLYST_SECONDARY_COLOR))
+
+    @overrides
+    def _plotSelected(self, plot: Plot):
+        self._btnStorylineLink.setVisible(True)
+        super()._plotSelected(plot)
 
     @overrides
     def _storylineParent(self):
         return self._btnStorylineLink
+
+    def _btnStorylineClicked(self):
+        self._menu.exec()
+
+
+class CharacterPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
+    def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
+        super().__init__(novel, scene, function, parent)
+
+        self._title.setIcon(IconRegistry.character_icon())
+        self._title.setText('Character insight')
+        self._textedit.setPlaceholderText("What do we learn about a character")
+
+        self._title.setHidden(True)
+        self._charSelector = CharacterSelectorButton(self.novel, iconSize=32)
+        self._charSelector.characterSelected.connect(self._characterSelected)
+        wdgHeader = QWidget()
+        hbox(wdgHeader, 0, 0)
+        wdgHeader.layout().addWidget(self._charSelector)
+        wdgHeader.layout().addWidget(label('Character insight', bold=True), alignment=Qt.AlignmentFlag.AlignBottom)
+        self.layout().insertWidget(0, wdgHeader, alignment=Qt.AlignmentFlag.AlignCenter)
+        margins(self, top=1)
+        # shadow(self._textedit, color=QColor('#219ebc'))
+        shadow(self._textedit)
+
+        if self.function.character_id:
+            character = characters_registry.character(str(self.function.character_id))
+            if character:
+                self._charSelector.setCharacter(character)
+
+    def _characterSelected(self, character: Character):
+        self.function.character_id = character.id
 
 
 class SecondaryFunctionListItemWidget(ListItemWidget):
@@ -275,32 +313,7 @@ class SecondaryFunctionListItemWidget(ListItemWidget):
         self._icon = Icon()
         self._icon.setIcon(IconRegistry.from_name('ei.question-sign', PLOTLYST_SECONDARY_COLOR))
         self.layout().insertWidget(1, self._icon)
-        # number = random.randint(0, 2)
-        # btn = push_btn(IconRegistry.from_name('ei.question-sign', PLOTLYST_SECONDARY_COLOR), transparent_=True)
-        # bold(btn)
-        # btn.setStyleSheet('''
-        #     background-color: #FcFcFc;
-        #     border-radius: 6px;
-        #     border-top-right-radius: 0px;
-        #     border-bottom-right-radius: 0px;
-        #     padding: 4px;
-        #     border: 1px solid lightgrey;
-        #     border-right: 1px hidden lightgrey;
-        # ''')
-        # if number == 0:
-        #     btn.setText('Mystery')
-        # elif number == 1:
-        #     btn.setText('Setup')
-        # else:
-        #     btn.setText('Exposition')
-        # btn.setFixedWidth(110)
-        # self.layout().insertWidget(1, btn)
         self._lineEdit.setText(self._function.text)
-        # incr_font(self._lineEdit, 2)
-        # incr_icon(self._icon, 4)
-        # action = self._lineEdit.addAction(IconRegistry.from_name('ei.question-sign', PLOTLYST_SECONDARY_COLOR),
-        #                                   QLineEdit.ActionPosition.LeadingPosition)
-        # action.setText('Mystery')
 
     @overrides
     def _textChanged(self, text: str):
@@ -343,35 +356,6 @@ class SecondaryFunctionsList(ListView):
         for wdg in self.widgets():
             items.append(wdg.item())
         self._scene.functions.secondary[:] = items
-
-
-class CharacterPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
-    def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
-        super().__init__(novel, scene, function, parent)
-
-        self._title.setIcon(IconRegistry.character_icon())
-        self._title.setText('Character insight')
-        self._textedit.setPlaceholderText("What do we learn about a character")
-
-        self._title.setHidden(True)
-        self._charSelector = CharacterSelectorButton(self.novel, iconSize=32)
-        self._charSelector.characterSelected.connect(self._characterSelected)
-        wdgHeader = QWidget()
-        hbox(wdgHeader, 0, 0)
-        wdgHeader.layout().addWidget(self._charSelector)
-        wdgHeader.layout().addWidget(label('Character insight', bold=True), alignment=Qt.AlignmentFlag.AlignBottom)
-        self.layout().insertWidget(0, wdgHeader, alignment=Qt.AlignmentFlag.AlignCenter)
-        margins(self, top=1)
-        # shadow(self._textedit, color=QColor('#219ebc'))
-        shadow(self._textedit)
-
-        if self.function.character_id:
-            character = characters_registry.character(str(self.function.character_id))
-            if character:
-                self._charSelector.setCharacter(character)
-
-    def _characterSelected(self, character: Character):
-        self.function.character_id = character.id
 
 
 class SceneFunctionsWidget(QWidget):
