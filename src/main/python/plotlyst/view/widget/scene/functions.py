@@ -26,7 +26,7 @@ from PyQt6.QtGui import QColor, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QAbstractButton
 from overrides import overrides
 from qthandy import vbox, incr_icon, incr_font, flow, margins, vspacer, hbox, clear_layout, pointy, gc
-from qthandy.filter import OpacityEventFilter
+from qthandy.filter import OpacityEventFilter, ObjectReferenceMimeData
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RED_COLOR
@@ -236,7 +236,8 @@ class MysteryPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
         else:
             self._btnStorylineLink.setVisible(False)
 
-        shadow(self._textedit, color=QColor(PLOTLYST_SECONDARY_COLOR))
+        # shadow(self._textedit, color=QColor(PLOTLYST_SECONDARY_COLOR))
+        shadow(self._textedit)
 
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
@@ -274,9 +275,32 @@ class SecondaryFunctionListItemWidget(ListItemWidget):
         self._icon = Icon()
         self._icon.setIcon(IconRegistry.from_name('ei.question-sign', PLOTLYST_SECONDARY_COLOR))
         self.layout().insertWidget(1, self._icon)
+        # number = random.randint(0, 2)
+        # btn = push_btn(IconRegistry.from_name('ei.question-sign', PLOTLYST_SECONDARY_COLOR), transparent_=True)
+        # bold(btn)
+        # btn.setStyleSheet('''
+        #     background-color: #FcFcFc;
+        #     border-radius: 6px;
+        #     border-top-right-radius: 0px;
+        #     border-bottom-right-radius: 0px;
+        #     padding: 4px;
+        #     border: 1px solid lightgrey;
+        #     border-right: 1px hidden lightgrey;
+        # ''')
+        # if number == 0:
+        #     btn.setText('Mystery')
+        # elif number == 1:
+        #     btn.setText('Setup')
+        # else:
+        #     btn.setText('Exposition')
+        # btn.setFixedWidth(110)
+        # self.layout().insertWidget(1, btn)
         self._lineEdit.setText(self._function.text)
-        incr_font(self._lineEdit, 2)
-        incr_icon(self._icon, 4)
+        # incr_font(self._lineEdit, 2)
+        # incr_icon(self._icon, 4)
+        # action = self._lineEdit.addAction(IconRegistry.from_name('ei.question-sign', PLOTLYST_SECONDARY_COLOR),
+        #                                   QLineEdit.ActionPosition.LeadingPosition)
+        # action.setText('Mystery')
 
     @overrides
     def _textChanged(self, text: str):
@@ -287,18 +311,38 @@ class SecondaryFunctionListItemWidget(ListItemWidget):
 class SecondaryFunctionsList(ListView):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._scene: Optional[Scene] = None
         margins(self, left=20)
         self._btnAdd.setText('Add new function')
+
+    def setScene(self, scene: Scene):
+        self._scene = scene
+
+        for function in self._scene.functions.secondary:
+            self.addItem(function)
 
     @overrides
     def _addNewItem(self):
         function = SceneFunction(StoryElementType.Mystery)
-        # self._question.children.append(question)
+        self._scene.functions.secondary.append(function)
         self.addItem(function)
 
     @overrides
     def _listItemWidgetClass(self):
         return SecondaryFunctionListItemWidget
+
+    @overrides
+    def _deleteItemWidget(self, widget: ListItemWidget):
+        super()._deleteItemWidget(widget)
+        self._scene.functions.secondary.remove(widget.item())
+
+    @overrides
+    def _dropped(self, mimeData: ObjectReferenceMimeData):
+        super()._dropped(mimeData)
+        items = []
+        for wdg in self.widgets():
+            items.append(wdg.item())
+        self._scene.functions.secondary[:] = items
 
 
 class CharacterPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
@@ -318,7 +362,8 @@ class CharacterPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
         wdgHeader.layout().addWidget(label('Character insight', bold=True), alignment=Qt.AlignmentFlag.AlignBottom)
         self.layout().insertWidget(0, wdgHeader, alignment=Qt.AlignmentFlag.AlignCenter)
         margins(self, top=1)
-        shadow(self._textedit, color=QColor('#219ebc'))
+        # shadow(self._textedit, color=QColor('#219ebc'))
+        shadow(self._textedit)
 
         if self.function.character_id:
             character = characters_registry.character(str(self.function.character_id))
@@ -389,8 +434,11 @@ class SceneFunctionsWidget(QWidget):
     def setScene(self, scene: Scene):
         self._scene = scene
         clear_layout(self.wdgPrimary)
+        self.listSecondary.clear()
         for function in self._scene.functions.primary:
             self.__initPrimaryWidget(function)
+
+        self.listSecondary.setScene(self._scene)
 
     def _addPrimary(self, type_: StoryElementType):
         function = SceneFunction(type_)
