@@ -42,85 +42,6 @@ from plotlyst.view.widget.list import ListView, ListItemWidget
 from plotlyst.view.widget.scene.plot import SceneFunctionPlotSelectorMenu
 
 
-# class ScenePrimaryFunctionWidget(OutlineItemWidget):
-#     SceneFunctionMimeType: str = 'application/scene-function'
-#     functionEdited = pyqtSignal()
-#
-#     def __init__(self, item: OutlineItem, parent=None):
-#         super().__init__(item, parent)
-#
-#     @overrides
-#     def mimeType(self):
-#         return self.SceneFunctionMimeType
-#
-#     def _valueChanged(self):
-#         pass
-
-
-# class EventCauseFunctionWidget(OutlineTimelineWidget):
-#     def __init__(self, parent=None):
-#         super().__init__(parent, paintTimeline=True, framed=False, layout=LayoutType.HORIZONTAL)
-#         margins(self, 0, 0, 0, 0)
-#         self.layout().setSpacing(0)
-#
-#     @overrides
-#     def _newBeatWidget(self, item: OutlineItem) -> OutlineItemWidget:
-#         wdg = ScenePrimaryFunctionWidget(item)
-#         wdg.removed.connect(self._beatRemoved)
-#         return wdg
-#
-#     @overrides
-#     def _newPlaceholderWidget(self, displayText: bool = False) -> QWidget:
-#         wdg = super()._newPlaceholderWidget(displayText)
-#         margins(wdg, top=2)
-#         if displayText:
-#             wdg.btn.setText('Insert element')
-#         wdg.btn.setToolTip('Insert new element')
-#         return wdg
-#
-#     @overrides
-#     def _placeholderClicked(self, placeholder: QWidget):
-#         self._currentPlaceholder = placeholder
-#         item = OutlineItem()
-#         widget = self._newBeatWidget(item)
-#         self._insertWidget(item, widget)
-
-
-# class EventCauseFunctionGroupWidget(QWidget):
-#     remove = pyqtSignal()
-#
-#     def __init__(self, parent=None):
-#         super().__init__(parent)
-#         self.frame = frame()
-#         self.frame.setObjectName('frame')
-#         vbox(self.frame, 0, 0)
-#
-#         self.setStyleSheet(f'''
-#                                 #frame {{
-#                                     border: 0px;
-#                                     border-top: 2px solid {PLOTLYST_SECONDARY_COLOR};
-#                                     border-radius: 15px;
-#                                 }}''')
-#
-#         vbox(self)
-#         self._wdgPrinciples = EventCauseFunctionWidget()
-#         self._wdgPrinciples.setStructure([])
-#
-#         self._title = IconText()
-#         self._title.setText('Cause and effect')
-#         incr_icon(self._title, 4)
-#         bold(self._title)
-#
-#         self.btnRemove = RemovalButton()
-#         retain_when_hidden(self.btnRemove)
-#         self.installEventFilter(VisibilityToggleEventFilter(self.btnRemove, self))
-#         self.btnRemove.clicked.connect(self.remove)
-#
-#         self.frame.layout().addWidget(self._wdgPrinciples)
-#         self.layout().addWidget(group(spacer(), self._title, spacer(), self.btnRemove))
-#         self.layout().addWidget(self.frame)
-
-
 class PrimarySceneFunctionWidget(TextEditBubbleWidget):
     def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
         super().__init__(parent)
@@ -316,7 +237,6 @@ class CharacterPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
         wdgHeader.layout().addWidget(label('Character insight', bold=True), alignment=Qt.AlignmentFlag.AlignBottom)
         self.layout().insertWidget(0, wdgHeader, alignment=Qt.AlignmentFlag.AlignCenter)
         margins(self, top=1)
-        # shadow(self._textedit, color=QColor('#219ebc'))
         shadow(self._textedit)
 
         if self.function.character_id:
@@ -326,6 +246,15 @@ class CharacterPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
 
     def _characterSelected(self, character: Character):
         self.function.character_id = character.id
+
+
+class ResonancePrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
+    def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
+        super().__init__(novel, scene, function, parent)
+
+        self._title.setIcon(IconRegistry.theme_icon())
+        self._title.setText('Resonance')
+        self._textedit.setPlaceholderText("What emotional or thematic impact does this scene have")
 
 
 class SecondaryFunctionListItemWidget(ListItemWidget):
@@ -435,6 +364,9 @@ class SceneFunctionsWidget(QWidget):
         self.menuPrimary.addAction(action('Revelation', IconRegistry.from_name('fa5s.binoculars'),
                                           slot=partial(self._addPrimary, StoryElementType.Revelation),
                                           tooltip="This scene primarily reveals a key information"))
+        self.menuPrimary.addAction(action('Resonance', IconRegistry.theme_icon('black'),
+                                          slot=partial(self._addPrimary, StoryElementType.Resonance),
+                                          tooltip="This scene primarily establishes an emotional or thematic impact"))
         apply_white_menu(self.menuPrimary)
         self.btnPrimary.clicked.connect(self.btnPrimaryPlus.click)
 
@@ -460,7 +392,7 @@ class SceneFunctionsWidget(QWidget):
         self.menuSecondary.addAction(
             action('Mystery', IconRegistry.from_name('ei.question-sign'),
                    slot=partial(self._addSecondary, StoryElementType.Mystery),
-                   tooltip="A smaller mystery to be introduced or deepend"))
+                   tooltip="A smaller mystery to be introduced or deepened"))
 
         apply_white_menu(self.menuSecondary)
         self.btnSecondary.clicked.connect(self.btnSecondaryPlus.click)
@@ -518,6 +450,8 @@ class SceneFunctionsWidget(QWidget):
             wdg = MysteryPrimarySceneFunctionWidget(self._novel, self._scene, function)
         elif function.type == StoryElementType.Revelation:
             wdg = RevelationPrimarySceneFunctionWidget(self._novel, self._scene, function)
+        elif function.type == StoryElementType.Resonance:
+            wdg = ResonancePrimarySceneFunctionWidget(self._novel, self._scene, function)
         else:
             wdg = PlotPrimarySceneFunctionWidget(self._novel, self._scene, function)
 
