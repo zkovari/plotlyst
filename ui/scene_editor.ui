@@ -508,13 +508,13 @@
          <number>15</number>
         </property>
         <property name="topMargin">
-         <number>0</number>
+         <number>1</number>
         </property>
         <property name="rightMargin">
          <number>0</number>
         </property>
         <property name="bottomMargin">
-         <number>0</number>
+         <number>5</number>
         </property>
         <item>
          <widget class="QWidget" name="wdgStorylines" native="true"/>
@@ -533,13 +533,6 @@
          </spacer>
         </item>
        </layout>
-      </widget>
-     </item>
-     <item>
-      <widget class="Line" name="line_2">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
       </widget>
      </item>
      <item>
@@ -599,88 +592,28 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QTabWidget" name="tabWidgetFunctions">
-               <property name="tabPosition">
-                <enum>QTabWidget::North</enum>
+              <widget class="QScrollArea" name="scrollArea">
+               <property name="frameShape">
+                <enum>QFrame::NoFrame</enum>
                </property>
-               <property name="currentIndex">
-                <number>0</number>
-               </property>
-               <property name="centered" stdset="0">
+               <property name="widgetResizable">
                 <bool>true</bool>
                </property>
-               <widget class="QWidget" name="tabPrimaryFunctions">
+               <widget class="QWidget" name="scrollAreaFunctions">
+                <property name="geometry">
+                 <rect>
+                  <x>0</x>
+                  <y>0</y>
+                  <width>564</width>
+                  <height>343</height>
+                 </rect>
+                </property>
                 <property name="relaxed-white-bg" stdset="0">
                  <bool>true</bool>
                 </property>
-                <attribute name="title">
-                 <string>Scene functions</string>
-                </attribute>
-                <layout class="QVBoxLayout" name="verticalLayout_9">
+                <layout class="QVBoxLayout" name="verticalLayout_16">
                  <property name="spacing">
-                  <number>0</number>
-                 </property>
-                 <property name="leftMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="topMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="bottomMargin">
-                  <number>0</number>
-                 </property>
-                 <item>
-                  <widget class="QScrollArea" name="scrollArea">
-                   <property name="frameShape">
-                    <enum>QFrame::NoFrame</enum>
-                   </property>
-                   <property name="widgetResizable">
-                    <bool>true</bool>
-                   </property>
-                   <widget class="QWidget" name="scrollAreaFunctions">
-                    <property name="geometry">
-                     <rect>
-                      <x>0</x>
-                      <y>0</y>
-                      <width>551</width>
-                      <height>318</height>
-                     </rect>
-                    </property>
-                    <property name="relaxed-white-bg" stdset="0">
-                     <bool>true</bool>
-                    </property>
-                    <layout class="QVBoxLayout" name="verticalLayout_16">
-                     <property name="spacing">
-                      <number>3</number>
-                     </property>
-                     <property name="leftMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="topMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="rightMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="bottomMargin">
-                      <number>0</number>
-                     </property>
-                    </layout>
-                   </widget>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-               <widget class="QWidget" name="tabEventsGrid">
-                <property name="relaxed-white-bg" stdset="0">
-                 <bool>true</bool>
-                </property>
-                <attribute name="title">
-                 <string>Cause and effect</string>
-                </attribute>
-                <layout class="QVBoxLayout" name="verticalLayout_18">
-                 <property name="spacing">
-                  <number>0</number>
+                  <number>3</number>
                  </property>
                  <property name="leftMargin">
                   <number>0</number>

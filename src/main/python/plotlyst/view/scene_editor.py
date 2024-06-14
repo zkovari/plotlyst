@@ -78,10 +78,6 @@ class SceneEditor(QObject, EventListener):
         set_tab_icon(self.ui.tabWidget, self.ui.tabStructure,
                      IconRegistry.from_name('mdi6.timeline-outline', rotated=90, color_on=PLOTLYST_SECONDARY_COLOR))
         set_tab_icon(self.ui.tabWidget, self.ui.tabNotes, IconRegistry.document_edition_icon())
-        set_tab_icon(self.ui.tabWidgetFunctions, self.ui.tabPrimaryFunctions,
-                     IconRegistry.from_name('mdi6.note-text-outline', color_on=PLOTLYST_SECONDARY_COLOR))
-        set_tab_icon(self.ui.tabWidgetFunctions, self.ui.tabEventsGrid,
-                     IconRegistry.from_name('mdi.dots-grid', color_on=PLOTLYST_SECONDARY_COLOR))
 
         set_tab_icon(self.ui.tabWidgetDrive, self.ui.tabAgency, IconRegistry.character_icon())
         set_tab_icon(self.ui.tabWidgetDrive, self.ui.tabCuriosity,
@@ -169,16 +165,10 @@ class SceneEditor(QObject, EventListener):
         hbox(self.ui.wdgStorylines)
         self.ui.wdgMidbar.layout().insertWidget(1, self._btnPlotSelector)
 
-        self._storylineEditor = SceneStorylineEditor(self.novel)
         self._functionsEditor = SceneFunctionsWidget(self.novel)
         self._functionsEditor.storylineLinked.connect(self._storyline_linked)
         self._functionsEditor.storylineEditRequested.connect(self._storyline_edit)
-        # self._storylineEditor.outcomeChanged.connect(self._btnPurposeType.refresh)
-        # self._storylineEditor.outcomeChanged.connect(self.ui.wdgSceneStructure.refreshOutcome)
-        self._storylineEditor.storylineLinked.connect(self._storyline_linked)
-        self._storylineEditor.storylineEditRequested.connect(self._storyline_edit)
         self.ui.scrollAreaFunctions.layout().addWidget(self._functionsEditor)
-        self.ui.tabEventsGrid.layout().addWidget(self._storylineEditor)
 
         self._agencyEditor = SceneAgendaEditor(self.novel)
         self._agencyEditor.setUnsetCharacterSlot(self._character_not_selected_notification)
@@ -193,7 +183,6 @@ class SceneEditor(QObject, EventListener):
         self.ui.btnClose.clicked.connect(self._on_close)
 
         self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._btnPurposeType.refresh)
-        # self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._storylineEditor.refresh)
 
         self.ui.tabWidget.setCurrentWidget(self.ui.tabFunctions)
         self.ui.tabWidgetDrive.setCurrentWidget(self.ui.tabAgency)
@@ -214,7 +203,6 @@ class SceneEditor(QObject, EventListener):
         elif isinstance(event, NovelStorylinesToggleEvent):
             self.ui.wdgStorylines.setVisible(event.toggled)
             self._btnPlotSelector.setVisible(event.toggled)
-            # self._storylineEditor.storylinesSettingToggledEvent(event.toggled)
         elif isinstance(event, NovelStructureToggleEvent):
             self.ui.wdgStructure.setVisible(event.toggled)
         elif isinstance(event, NovelPovTrackingToggleEvent):
@@ -233,7 +221,6 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgSceneStructure.setScene(self.novel, self.scene)
         # self.tag_selector.setScene(self.scene)
         self._functionsEditor.setScene(self.scene)
-        self._storylineEditor.setScene(self.scene)
         self._agencyEditor.setScene(self.scene)
         self._curiosityEditor.setScene(self.scene)
         self._informationEditor.setScene(self.scene)
@@ -389,7 +376,6 @@ class SceneEditor(QObject, EventListener):
         # to avoid segfault for some reason, we disable it first before changing the stack widget
         self._purposeSelector.setDisabled(True)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
-        # self._storylineEditor.purposeChangedEvent()
 
     def _reset_purpose_editor(self):
         self.scene.purpose = None
