@@ -59,7 +59,7 @@ from plotlyst.view._view import AbstractView
 from plotlyst.view.board_view import BoardView
 from plotlyst.view.characters_view import CharactersView
 from plotlyst.view.comments_view import CommentsView
-from plotlyst.view.common import TooltipPositionEventFilter
+from plotlyst.view.common import TooltipPositionEventFilter, ButtonPressResizeEventFilter
 from plotlyst.view.dialog.about import AboutDialog
 from plotlyst.view.dialog.manuscript import ManuscriptPreviewDialog
 from plotlyst.view.docs_view import DocumentsView
@@ -143,6 +143,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.btnManuscript.setIcon(
             IconRegistry.manuscript_icon(NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
         self.btnReports.setIcon(IconRegistry.reports_icon(NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
+        self.btnSettingsLink.setIcon(IconRegistry.cog_icon(color=NAV_BAR_BUTTON_DEFAULT_COLOR))
+        self.btnSettingsLink.installEventFilter(ButtonPressResizeEventFilter(self.btnSettingsLink))
+        self.btnSettingsLink.installEventFilter(OpacityEventFilter(self.btnSettingsLink))
+        self.btnSettingsLink.clicked.connect(self._settings_link_clicked)
 
         for btn in self.buttonGroup.buttons():
             btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.7, ignoreCheckedButton=True))
@@ -716,3 +720,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             func(self.btnManuscript, teardown=teardown)
         elif isinstance(event, NovelManagementToggleEvent):
             func(self.btnBoard, teardown=teardown)
+
+    def _settings_link_clicked(self):
+        self.btnNovel.setChecked(True)
+        self.novel_view.show_settings()

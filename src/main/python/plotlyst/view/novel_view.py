@@ -142,6 +142,9 @@ class NovelView(AbstractNovelView):
     def refresh(self):
         self.ui.lblTitle.setText(self.novel.title)
 
+    def show_settings(self):
+        self.ui.tabWidget.setCurrentWidget(self.ui.tabSettings)
+
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if event.type() == QEvent.Type.Enter:
