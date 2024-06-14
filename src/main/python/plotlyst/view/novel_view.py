@@ -65,6 +65,7 @@ class NovelView(AbstractNovelView):
         set_tab_visible(self.ui.tabWidget, self.ui.tabEvents, self.novel.prefs.toggled(NovelSetting.Mindmap))
         set_tab_visible(self.ui.tabWidget, self.ui.tabPlot, self.novel.prefs.toggled(NovelSetting.Storylines))
         set_tab_visible(self.ui.tabWidget, self.ui.tabStructure, self.novel.prefs.toggled(NovelSetting.Structure))
+        set_tab_visible(self.ui.tabWidget, self.ui.tabTags, False)
 
         self.ui.btnEditNovel.setIcon(IconRegistry.edit_icon(color_on='darkBlue'))
         self.ui.btnEditNovel.installEventFilter(OpacityEventFilter(parent=self.ui.btnEditNovel))
