@@ -30,7 +30,7 @@ from qthandy import hbox, spacer, sp, retain_when_hidden, bold, vbox, translucen
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
-from plotlyst.core.domain import Motivation, Novel, Scene, SceneStructureAgenda
+from plotlyst.core.domain import Motivation, Novel, Scene, SceneStructureAgenda, Character
 from plotlyst.view.common import push_btn, label, fade_out_and_gc, tool_btn
 from plotlyst.view.generated.scene_goal_stakes_ui import Ui_GoalReferenceStakesEditor
 from plotlyst.view.icons import IconRegistry
@@ -482,3 +482,28 @@ class SceneAgendaConflictEditor(AbstractAgencyEditor):
         conflictSelector = CharacterConflictSelector(self._novel, self._scene)
         conflictSelector.conflictSelected.connect(self._conflictSelected)
         self._wdgConflicts.layout().addWidget(conflictSelector)
+
+
+class CharacterChangesEditor(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+
+class SceneAgendaEditor(QWidget):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+        self._scene: Optional[Scene] = None
+        self._unsetCharacterSlot = None
+
+    def setScene(self, scene: Scene):
+        self._scene = scene
+
+    def setUnsetCharacterSlot(self, func):
+        self._unsetCharacterSlot = func
+
+    def updateAvailableCharacters(self):
+        pass
+
+    def povChangedEvent(self, pov: Character):
+        pass

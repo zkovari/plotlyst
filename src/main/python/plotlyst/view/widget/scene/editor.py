@@ -1553,7 +1553,7 @@ class SceneAgendasTabBar(CharacterTabBar):
         self.resetAgenda.emit(agenda)
 
 
-class SceneAgendaEditor(AbstractSceneElementsEditor, EventListener):
+class _SceneAgendaEditor(AbstractSceneElementsEditor, EventListener):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
