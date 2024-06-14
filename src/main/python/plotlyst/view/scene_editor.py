@@ -44,13 +44,13 @@ from plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, set_tab_icon, \
-    push_btn, fade_out_and_gc
+    push_btn, fade_out_and_gc, set_tab_visible
 from plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.labels import CharacterLabel
 from plotlyst.view.widget.scene.editor import ScenePurposeSelectorWidget, ScenePurposeTypeButton, \
-    SceneAgendaEditor, SceneProgressEditor, SceneStorylineEditor
+    SceneAgendaEditor, SceneProgressEditor
 from plotlyst.view.widget.scene.functions import SceneFunctionsWidget
 from plotlyst.view.widget.scene.plot import ScenePlotLabels, \
     ScenePlotSelectorMenu
@@ -84,6 +84,7 @@ class SceneEditor(QObject, EventListener):
                      IconRegistry.from_name('ei.question-sign', color_on=PLOTLYST_SECONDARY_COLOR))
         set_tab_icon(self.ui.tabWidgetDrive, self.ui.tabInformation,
                      IconRegistry.from_name('fa5s.book-reader', color_on=PLOTLYST_SECONDARY_COLOR))
+        set_tab_visible(self.ui.tabWidget, self.ui.tabStructure, False)
 
         self.ui.btnStageCharacterLabel.setIcon(IconRegistry.character_icon(color_on='black'))
         underline(self.ui.btnStageCharacterLabel)
