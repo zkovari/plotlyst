@@ -395,7 +395,7 @@ class SceneAgendaConflictEditor(AbstractAgencyEditor):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        hbox(self)
+        vbox(self)
         sp(self).h_exp()
 
         self._novel: Optional[Novel] = None
@@ -417,10 +417,15 @@ class SceneAgendaConflictEditor(AbstractAgencyEditor):
         hbox(self._wdgConflicts)
         sp(self._wdgConflicts).h_exp()
 
+        self._wdgSliders = QWidget()
+        hbox(self._wdgSliders).addWidget(self._sliderIntensity)
+        self._wdgSliders.layout().addWidget(spacer())
+        self._wdgSliders.layout().addWidget(self._btnReset)
+
         self.layout().addWidget(self._icon, alignment=Qt.AlignmentFlag.AlignLeft)
-        self.layout().addWidget(self._sliderIntensity, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self._wdgSliders)
         self.layout().addWidget(self._wdgConflicts)
-        self.layout().addWidget(self._btnReset, alignment=Qt.AlignmentFlag.AlignLeft)
+        # self.layout().addWidget(self._btnReset, alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(spacer())
 
         self.reset()
@@ -485,7 +490,7 @@ class SceneAgendaConflictEditor(AbstractAgencyEditor):
         # shadow(self._textEditor, offset=0, radius=value * 2, color=QColor('#f3a712'))
 
     def _conflictSelected(self):
-        conflictSelector = CharacterConflictSelector(self._novel, self._scene)
+        conflictSelector = CharacterConflictSelector(self._novel, self._scene, self._agenda)
         conflictSelector.conflictSelected.connect(self._conflictSelected)
         self._wdgConflicts.layout().addWidget(conflictSelector)
 
@@ -502,14 +507,19 @@ class CharacterAgencyEditor(QWidget):
         self._emotionEditor.layout().addWidget(vline())
         self._emotionEditor.emotionChanged.connect(self._emotionChanged)
         self._emotionEditor.deactivated.connect(self._emotionReset)
-        self._motivationEditor = SceneAgendaMotivationEditor()
-        self._motivationEditor.layout().addWidget(vline())
-        self._motivationEditor.setNovel(novel)
-        self._motivationEditor.motivationChanged.connect(self._motivationChanged)
-        self._motivationEditor.deactivated.connect(self._motivationReset)
+        # self._motivationEditor = SceneAgendaMotivationEditor()
+        # self._motivationEditor.setNovel(novel)
+        # self._motivationEditor.motivationChanged.connect(self._motivationChanged)
+        # self._motivationEditor.deactivated.connect(self._motivationReset)
 
         self._conflictEditor = SceneAgendaConflictEditor()
         self._conflictEditor.setNovel(self.novel)
+
+        if agenda.emotion:
+            self._emotionEditor.setValue(agenda.emotion)
+
+        # self._motivationEditor.setAgenda(agenda)
+        self._conflictEditor.setAgenda(agenda)
 
         self._wdgHeader = QWidget()
         hbox(self._wdgHeader)
@@ -518,8 +528,8 @@ class CharacterAgencyEditor(QWidget):
         self._wdgHeader.layout().addWidget(self._charSelector)
         self._wdgHeader.layout().addWidget(self._emotionEditor)
         self._wdgHeader.layout().addWidget(self._conflictEditor)
-        self._wdgHeader.layout().addWidget(self._motivationEditor)
         self._wdgHeader.layout().addWidget(spacer())
+        # self._wdgHeader.layout().addWidget(self._motivationEditor)
         self.layout().addWidget(self._wdgHeader)
 
         if self.agenda.character_id:
@@ -537,7 +547,7 @@ class CharacterAgencyEditor(QWidget):
         # self._wdgElements.setVisible(elements_visible)
 
         self._emotionEditor.setVisible(self.novel.prefs.toggled(NovelSetting.Track_emotion))
-        self._motivationEditor.setVisible(self.novel.prefs.toggled(NovelSetting.Track_motivation))
+        # self._motivationEditor.setVisible(self.novel.prefs.toggled(NovelSetting.Track_motivation))
         self._conflictEditor.setVisible(self.novel.prefs.toggled(NovelSetting.Track_conflict))
 
     def _emotionChanged(self, emotion: int):
@@ -562,7 +572,7 @@ class SceneAgencyEditor(QWidget, EventListener):
 
         vbox(self)
         margins(self, left=15)
-        self.btnAdd = push_btn(IconRegistry.plus_icon('grey'), 'Add new character agenda', transparent_=True)
+        self.btnAdd = push_btn(IconRegistry.plus_icon('grey'), 'Add new character agency', transparent_=True)
         self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd, leaveOpacity=0.7))
         self.wdgAgendas = QWidget()
         vbox(self.wdgAgendas)
