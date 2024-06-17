@@ -26,17 +26,23 @@ from PyQt6.QtGui import QEnterEvent, QMouseEvent, QIcon
 from PyQt6.QtWidgets import QWidget, QSlider
 from overrides import overrides
 from qtanim import fade_in
-from qthandy import hbox, spacer, sp, retain_when_hidden, bold, vbox, translucent, clear_layout
+from qthandy import hbox, spacer, sp, retain_when_hidden, bold, vbox, translucent, clear_layout, margins, vspacer, vline
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
-from plotlyst.core.domain import Motivation, Novel, Scene, SceneStructureAgenda, Character
+from plotlyst.core.domain import Motivation, Novel, Scene, SceneStructureAgenda, Character, NovelSetting
+from plotlyst.event.core import Event, EventListener
+from plotlyst.event.handler import event_dispatchers
+from plotlyst.events import NovelPanelCustomizationEvent, NovelEmotionTrackingToggleEvent, \
+    NovelMotivationTrackingToggleEvent, NovelConflictTrackingToggleEvent
+from plotlyst.service.cache import characters_registry
 from plotlyst.view.common import push_btn, label, fade_out_and_gc, tool_btn
 from plotlyst.view.generated.scene_goal_stakes_ui import Ui_GoalReferenceStakesEditor
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.button import ChargeButton
 from plotlyst.view.widget.character.editor import EmotionEditorSlider
+from plotlyst.view.widget.characters import CharacterSelectorMenu, CharacterSelectorButton
 from plotlyst.view.widget.input import RemovalButton
 from plotlyst.view.widget.scene.conflict import ConflictIntensityEditor, CharacterConflictSelector
 
@@ -484,20 +490,107 @@ class SceneAgendaConflictEditor(AbstractAgencyEditor):
         self._wdgConflicts.layout().addWidget(conflictSelector)
 
 
-class CharacterChangesEditor(QWidget):
-    def __init__(self, parent=None):
+class CharacterAgencyEditor(QWidget):
+    def __init__(self, novel: Novel, agenda: SceneStructureAgenda, parent=None):
         super().__init__(parent)
+        self.novel = novel
+        self.agenda = agenda
+        hbox(self)
+        self._charSelector = CharacterSelectorButton(self.novel, iconSize=32)
+
+        self._emotionEditor = SceneAgendaEmotionEditor()
+        self._emotionEditor.layout().addWidget(vline())
+        self._emotionEditor.emotionChanged.connect(self._emotionChanged)
+        self._emotionEditor.deactivated.connect(self._emotionReset)
+        self._motivationEditor = SceneAgendaMotivationEditor()
+        self._motivationEditor.layout().addWidget(vline())
+        self._motivationEditor.setNovel(novel)
+        self._motivationEditor.motivationChanged.connect(self._motivationChanged)
+        self._motivationEditor.deactivated.connect(self._motivationReset)
+
+        self._conflictEditor = SceneAgendaConflictEditor()
+        self._conflictEditor.setNovel(self.novel)
+
+        self._wdgHeader = QWidget()
+        hbox(self._wdgHeader)
+        margins(self._wdgHeader, left=25)
+        self._wdgHeader.layout().setSpacing(5)
+        self._wdgHeader.layout().addWidget(self._charSelector)
+        self._wdgHeader.layout().addWidget(self._emotionEditor)
+        self._wdgHeader.layout().addWidget(self._conflictEditor)
+        self._wdgHeader.layout().addWidget(self._motivationEditor)
+        self._wdgHeader.layout().addWidget(spacer())
+        self.layout().addWidget(self._wdgHeader)
+
+        if self.agenda.character_id:
+            character = characters_registry.character(str(self.agenda.character_id))
+            if character:
+                self._charSelector.setCharacter(character)
+
+        self.updateElementsVisibility()
+
+    def updateElementsVisibility(self):
+        if not self.agenda:
+            return
+        # elements_visible = self.agenda.character_id is not None
+        # self._btnCharacterDelegate.setVisible(not elements_visible)
+        # self._wdgElements.setVisible(elements_visible)
+
+        self._emotionEditor.setVisible(self.novel.prefs.toggled(NovelSetting.Track_emotion))
+        self._motivationEditor.setVisible(self.novel.prefs.toggled(NovelSetting.Track_motivation))
+        self._conflictEditor.setVisible(self.novel.prefs.toggled(NovelSetting.Track_conflict))
+
+    def _emotionChanged(self, emotion: int):
+        self.agenda.emotion = emotion
+
+    def _emotionReset(self):
+        self.agenda.emotion = None
+
+    def _motivationChanged(self, motivation: Motivation, value: int):
+        self.agenda.motivations[motivation.value] = value
+
+    def _motivationReset(self):
+        self.agenda.motivations.clear()
 
 
-class SceneAgendaEditor(QWidget):
+class SceneAgencyEditor(QWidget, EventListener):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
         self._scene: Optional[Scene] = None
         self._unsetCharacterSlot = None
 
+        vbox(self)
+        margins(self, left=15)
+        self.btnAdd = push_btn(IconRegistry.plus_icon('grey'), 'Add new character agenda', transparent_=True)
+        self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd, leaveOpacity=0.7))
+        self.wdgAgendas = QWidget()
+        vbox(self.wdgAgendas)
+        self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        self.layout().addWidget(self.wdgAgendas)
+        self.layout().addWidget(vspacer())
+
+        self._menu = CharacterSelectorMenu(self._novel, self.btnAdd)
+        self._menu.selected.connect(self._characterSelected)
+
+        event_dispatchers.instance(self._novel).register(self, NovelEmotionTrackingToggleEvent,
+                                                         NovelMotivationTrackingToggleEvent,
+                                                         NovelConflictTrackingToggleEvent)
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, NovelPanelCustomizationEvent):
+            for i in range(self.wdgAgendas.layout().count()):
+                item = self.wdgAgendas.layout().itemAt(i)
+                wdg = item.widget()
+                if wdg and isinstance(wdg, CharacterAgencyEditor):
+                    wdg.updateElementsVisibility()
+
     def setScene(self, scene: Scene):
         self._scene = scene
+        clear_layout(self.wdgAgendas)
+        for agenda in self._scene.agendas:
+            self.__initAgencyWidget(agenda)
 
     def setUnsetCharacterSlot(self, func):
         self._unsetCharacterSlot = func
@@ -507,3 +600,10 @@ class SceneAgendaEditor(QWidget):
 
     def povChangedEvent(self, pov: Character):
         pass
+
+    def _characterSelected(self, character: Character):
+        pass
+
+    def __initAgencyWidget(self, agenda: SceneStructureAgenda):
+        wdg = CharacterAgencyEditor(self._novel, agenda)
+        self.wdgAgendas.layout().addWidget(wdg)
