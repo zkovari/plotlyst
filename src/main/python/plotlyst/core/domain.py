@@ -1581,6 +1581,13 @@ class TagReference:
 
 
 @dataclass
+class AgencyCharacterChanges:
+    initial: Optional['StoryElement'] = None
+    transition: Optional['StoryElement'] = None
+    final: Optional['StoryElement'] = None
+
+
+@dataclass
 class SceneStructureAgenda(CharacterBased):
     character_id: Optional[uuid.UUID] = None
     conflict_references: List[ConflictReference] = field(default_factory=list)
@@ -1589,6 +1596,7 @@ class SceneStructureAgenda(CharacterBased):
     emotion: Optional[int] = None
     motivations: Dict[int, int] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
     story_elements: List['StoryElement'] = field(default_factory=list)
+    changes: List[AgencyCharacterChanges] = field(default_factory=list)
 
     def __post_init__(self):
         self._character: Optional[Character] = None

@@ -33,7 +33,7 @@ from qtmenu import MenuWidget
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Motivation, Novel, Scene, SceneStructureAgenda, Character, NovelSetting, \
-    StoryElementType
+    StoryElementType, AgencyCharacterChanges, StoryElement
 from plotlyst.event.core import Event, EventListener
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import NovelPanelCustomizationEvent, NovelEmotionTrackingToggleEvent, \
@@ -500,8 +500,9 @@ class SceneAgendaConflictEditor(AbstractAgencyEditor):
 
 
 class CharacterChangeBubble(TextEditBubbleWidget):
-    def __init__(self, type: StoryElementType, parent=None):
+    def __init__(self, element: StoryElement, parent=None):
         super().__init__(parent)
+        self.element = element
         self._textedit.setMinimumSize(165, 100)
         self._textedit.setMaximumSize(190, 110)
         self.setProperty('rounded', True)
@@ -509,18 +510,22 @@ class CharacterChangeBubble(TextEditBubbleWidget):
         self._textedit.setProperty('transparent', True)
         self.setMaximumWidth(200)
 
-        self._title.setIcon(IconRegistry.from_name(type.icon(), PLOTLYST_SECONDARY_COLOR))
-        self._title.setText(type.displayed_name())
-        self._textedit.setPlaceholderText(type.placeholder())
+        self._title.setIcon(IconRegistry.from_name(self.element.type.icon(), PLOTLYST_SECONDARY_COLOR))
+        self._title.setText(self.element.type.displayed_name())
+        self._textedit.setPlaceholderText(self.element.type.placeholder())
 
 
 class CharacterChangesEditor(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, agenda: SceneStructureAgenda, parent=None):
         super().__init__(parent)
+        self.agenda = agenda
         self.btnAdd = push_btn(IconRegistry.plus_icon('grey'), 'Track character changes', transparent_=True)
         self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd, leaveOpacity=0.7))
         self.btnAdd.clicked.connect(
-            lambda: self.addElements([StoryElementType.Goal], [StoryElementType.Conflict], [StoryElementType.Outcome]))
+            lambda: self.addNewElements([AgencyCharacterChanges(StoryElement(StoryElementType.Goal),
+                                                                StoryElement(StoryElementType.Conflict),
+                                                                StoryElement(StoryElementType.Outcome))
+                                         ]))
 
         header1 = HeaderColumn('Initial')
         header1.setFixedWidth(200)
@@ -536,18 +541,27 @@ class CharacterChangesEditor(QWidget):
         self._layout.addWidget(self.btnAdd, 1, 1, alignment=Qt.AlignmentFlag.AlignCenter)
         self._layout.addWidget(spacer(), 1, 3)
 
-    def addElements(self, initial: List[StoryElementType], transition: List[StoryElementType],
-                    final: List[StoryElementType]):
-        def _iterate(elements: List[StoryElementType], row: int, col: int):
-            for element_type in elements:
-                wdg = CharacterChangeBubble(element_type)
-                self._layout.addWidget(wdg, row, col, alignment=Qt.AlignmentFlag.AlignCenter)
-                row += 1
+        if self.agenda.changes:
+            self._addElements(self.agenda.changes)
 
-        original_row = self._layout.rowCount()
-        _iterate(initial, original_row, 0)
-        _iterate(transition, original_row, 1)
-        _iterate(final, original_row, 2)
+    def addNewElements(self, changes: List[AgencyCharacterChanges]):
+        self.agenda.changes.extend(changes)
+        self._addElements(changes)
+
+    def _addElements(self, changes: List[AgencyCharacterChanges]):
+        def _addElement(element: StoryElement, row: int, col: int):
+            wdg = CharacterChangeBubble(element)
+            self._layout.addWidget(wdg, row, col, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        row = self._layout.rowCount()
+        for change in changes:
+            if change.initial:
+                _addElement(change.initial, row, 0)
+            if change.transition:
+                _addElement(change.transition, row, 1)
+            if change.final:
+                _addElement(change.final, row, 2)
+            row += 1
 
 
 class CharacterAgencyEditor(QWidget):
@@ -576,7 +590,7 @@ class CharacterAgencyEditor(QWidget):
         self._conflictEditor = SceneAgendaConflictEditor()
         self._conflictEditor.setNovel(self.novel)
 
-        self._changesEditor = CharacterChangesEditor()
+        self._changesEditor = CharacterChangesEditor(self.agenda)
         margins(self._changesEditor, left=65)
 
         if agenda.emotion:
