@@ -174,7 +174,7 @@ class SceneEditor(QObject, EventListener):
 
         self._agencyEditor = SceneAgencyEditor(self.novel)
         self._agencyEditor.setUnsetCharacterSlot(self._character_not_selected_notification)
-        self.ui.tabAgency.layout().addWidget(self._agencyEditor)
+        self.ui.scrollAgency.layout().addWidget(self._agencyEditor)
 
         self._curiosityEditor = ReaderCuriosityEditor(self.novel)
         self.ui.tabCuriosity.layout().addWidget(self._curiosityEditor)

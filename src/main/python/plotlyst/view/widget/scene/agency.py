@@ -26,7 +26,8 @@ from PyQt6.QtGui import QEnterEvent, QMouseEvent, QIcon, QCursor
 from PyQt6.QtWidgets import QWidget, QSlider
 from overrides import overrides
 from qtanim import fade_in
-from qthandy import hbox, spacer, sp, retain_when_hidden, bold, vbox, translucent, clear_layout, margins, vspacer, vline
+from qthandy import hbox, spacer, sp, retain_when_hidden, bold, vbox, translucent, clear_layout, margins, vspacer, \
+    vline, line
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
@@ -43,6 +44,7 @@ from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.button import ChargeButton, DotsMenuButton
 from plotlyst.view.widget.character.editor import EmotionEditorSlider
 from plotlyst.view.widget.characters import CharacterSelectorMenu
+from plotlyst.view.widget.display import HeaderColumn
 from plotlyst.view.widget.input import RemovalButton
 from plotlyst.view.widget.scene.conflict import ConflictIntensityEditor, CharacterConflictSelector
 
@@ -495,6 +497,31 @@ class SceneAgendaConflictEditor(AbstractAgencyEditor):
         self._wdgConflicts.layout().addWidget(conflictSelector)
 
 
+class CharacterChangesEditor(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.btnAdd = push_btn(IconRegistry.plus_icon('grey'), 'Add character changes', transparent_=True)
+        self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd, leaveOpacity=0.7))
+
+        self.wdgHeader = QWidget()
+        hbox(self.wdgHeader, spacing=0)
+        header1 = HeaderColumn('Initial')
+        header1.setFixedWidth(200)
+        header2 = HeaderColumn('Transition')
+        header2.setFixedWidth(200)
+        header3 = HeaderColumn('Final')
+        header3.setFixedWidth(200)
+        self.wdgHeader.layout().addWidget(header1)
+        self.wdgHeader.layout().addWidget(header2)
+        self.wdgHeader.layout().addWidget(header3)
+        self.wdgHeader.layout().addWidget(spacer())
+
+        vbox(self)
+        margins(self, left=25)
+        self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self.wdgHeader)
+
+
 class CharacterAgencyEditor(QWidget):
     removed = pyqtSignal()
 
@@ -502,7 +529,7 @@ class CharacterAgencyEditor(QWidget):
         super().__init__(parent)
         self.novel = novel
         self.agenda = agenda
-        hbox(self)
+        vbox(self, spacing=10)
         self._charDisplay = tool_btn(IconRegistry.character_icon(), transparent_=True)
         self._charDisplay.setIconSize(QSize(54, 54))
         self._menu = MenuWidget()
@@ -520,6 +547,9 @@ class CharacterAgencyEditor(QWidget):
 
         self._conflictEditor = SceneAgendaConflictEditor()
         self._conflictEditor.setNovel(self.novel)
+
+        self._changesEditor = CharacterChangesEditor()
+        margins(self._changesEditor, left=40)
 
         if agenda.emotion:
             self._emotionEditor.setValue(agenda.emotion)
@@ -541,6 +571,8 @@ class CharacterAgencyEditor(QWidget):
         self._wdgHeader.layout().addWidget(self._btnDots, alignment=Qt.AlignmentFlag.AlignTop)
         # self._wdgHeader.layout().addWidget(self._motivationEditor)
         self.layout().addWidget(self._wdgHeader)
+        self.layout().addWidget(self._changesEditor)
+        self.layout().addWidget(line())
         self.installEventFilter(VisibilityToggleEventFilter(self._btnDots, self))
 
         if self.agenda.character_id:
@@ -586,7 +618,7 @@ class SceneAgencyEditor(QWidget, EventListener):
         self.btnAdd = push_btn(IconRegistry.plus_icon('grey'), 'Add new character agency', transparent_=True)
         self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd, leaveOpacity=0.7))
         self.wdgAgendas = QWidget()
-        vbox(self.wdgAgendas)
+        vbox(self.wdgAgendas, spacing=25)
         self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         self.layout().addWidget(self.wdgAgendas)
         self.layout().addWidget(vspacer())

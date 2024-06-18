@@ -560,7 +560,7 @@
             <enum>QTabWidget::West</enum>
            </property>
            <property name="currentIndex">
-            <number>0</number>
+            <number>1</number>
            </property>
            <widget class="QWidget" name="tabFunctions">
             <property name="sizePolicy">
@@ -699,6 +699,36 @@
                  <property name="bottomMargin">
                   <number>0</number>
                  </property>
+                 <item>
+                  <widget class="QScrollArea" name="scrollArea_2">
+                   <property name="frameShape">
+                    <enum>QFrame::NoFrame</enum>
+                   </property>
+                   <property name="widgetResizable">
+                    <bool>true</bool>
+                   </property>
+                   <property name="relaxed-white-bg" stdset="0">
+                    <bool>false</bool>
+                   </property>
+                   <widget class="QWidget" name="scrollAgency">
+                    <property name="geometry">
+                     <rect>
+                      <x>0</x>
+                      <y>0</y>
+                      <width>560</width>
+                      <height>315</height>
+                     </rect>
+                    </property>
+                    <property name="relaxed-white" stdset="0">
+                     <bool>true</bool>
+                    </property>
+                    <property name="relaxed-white-bg" stdset="0">
+                     <bool>true</bool>
+                    </property>
+                    <layout class="QVBoxLayout" name="verticalLayout_9"/>
+                   </widget>
+                  </widget>
+                 </item>
                 </layout>
                </widget>
                <widget class="QWidget" name="tabCuriosity">

@@ -446,3 +446,22 @@ class DotsDragIcon(Icon):
         self.setIcon(IconRegistry.from_name('ph.dots-six-vertical-bold', 'grey'))
         self.setIconSize(QSize(18, 18))
         self.setCursor(Qt.CursorShape.OpenHandCursor)
+
+
+class HeaderColumn(QFrame):
+    def __init__(self, header: str, parent=None):
+        super().__init__(parent)
+        self.setObjectName('frame')
+        self.setStyleSheet(f'''
+            #frame {{
+                background: #622675;
+                padding: 4px;
+                border-right: 1px solid #f8f0fa;
+            }}
+            QLabel {{
+                font-size: 16px;
+                color: #f8f0fa;
+            }}
+        ''')
+        self.header = label(header)
+        vbox(self).addWidget(self.header)
