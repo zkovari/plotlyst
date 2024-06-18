@@ -38,11 +38,11 @@ from plotlyst.events import NovelPanelCustomizationEvent, NovelEmotionTrackingTo
 from plotlyst.service.cache import characters_registry
 from plotlyst.view.common import push_btn, label, fade_out_and_gc, tool_btn
 from plotlyst.view.generated.scene_goal_stakes_ui import Ui_GoalReferenceStakesEditor
-from plotlyst.view.icons import IconRegistry
+from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.button import ChargeButton
 from plotlyst.view.widget.character.editor import EmotionEditorSlider
-from plotlyst.view.widget.characters import CharacterSelectorMenu, CharacterSelectorButton
+from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.input import RemovalButton
 from plotlyst.view.widget.scene.conflict import ConflictIntensityEditor, CharacterConflictSelector
 
@@ -501,7 +501,8 @@ class CharacterAgencyEditor(QWidget):
         self.novel = novel
         self.agenda = agenda
         hbox(self)
-        self._charSelector = CharacterSelectorButton(self.novel, iconSize=32)
+        self._charDisplay = tool_btn(IconRegistry.character_icon(), transparent_=True, pointy_=False, icon_resize=False)
+        self._charDisplay.setIconSize(QSize(54, 54))
 
         self._emotionEditor = SceneAgendaEmotionEditor()
         self._emotionEditor.layout().addWidget(vline())
@@ -525,7 +526,7 @@ class CharacterAgencyEditor(QWidget):
         hbox(self._wdgHeader)
         margins(self._wdgHeader, left=25)
         self._wdgHeader.layout().setSpacing(5)
-        self._wdgHeader.layout().addWidget(self._charSelector)
+        self._wdgHeader.layout().addWidget(self._charDisplay)
         self._wdgHeader.layout().addWidget(self._emotionEditor)
         self._wdgHeader.layout().addWidget(self._conflictEditor)
         self._wdgHeader.layout().addWidget(spacer())
@@ -535,7 +536,7 @@ class CharacterAgencyEditor(QWidget):
         if self.agenda.character_id:
             character = characters_registry.character(str(self.agenda.character_id))
             if character:
-                self._charSelector.setCharacter(character)
+                self._charDisplay.setIcon(avatars.avatar(character))
 
         self.updateElementsVisibility()
 
