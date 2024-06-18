@@ -23,11 +23,11 @@ from typing import Dict, Optional
 import qtanim
 from PyQt6.QtCore import Qt, QEvent, pyqtSignal, QSize
 from PyQt6.QtGui import QEnterEvent, QMouseEvent, QIcon, QCursor
-from PyQt6.QtWidgets import QWidget, QSlider
+from PyQt6.QtWidgets import QWidget, QSlider, QGridLayout
 from overrides import overrides
 from qtanim import fade_in
 from qthandy import hbox, spacer, sp, retain_when_hidden, bold, vbox, translucent, clear_layout, margins, vspacer, \
-    vline, line
+    vline, line, grid
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
@@ -503,23 +503,19 @@ class CharacterChangesEditor(QWidget):
         self.btnAdd = push_btn(IconRegistry.plus_icon('grey'), 'Add character changes', transparent_=True)
         self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd, leaveOpacity=0.7))
 
-        self.wdgHeader = QWidget()
-        hbox(self.wdgHeader, spacing=0)
         header1 = HeaderColumn('Initial')
         header1.setFixedWidth(200)
         header2 = HeaderColumn('Transition')
         header2.setFixedWidth(200)
         header3 = HeaderColumn('Final')
         header3.setFixedWidth(200)
-        self.wdgHeader.layout().addWidget(header1)
-        self.wdgHeader.layout().addWidget(header2)
-        self.wdgHeader.layout().addWidget(header3)
-        self.wdgHeader.layout().addWidget(spacer())
 
-        vbox(self)
-        margins(self, left=25)
-        self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.layout().addWidget(self.wdgHeader)
+        self._layout: QGridLayout = grid(self, h_spacing=0)
+        self._layout.addWidget(self.btnAdd, 0, 1, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._layout.addWidget(header1, 1, 0)
+        self._layout.addWidget(header2, 1, 1)
+        self._layout.addWidget(header3, 1, 2)
+        self._layout.addWidget(spacer(), 0, 3)
 
 
 class CharacterAgencyEditor(QWidget):
@@ -549,7 +545,7 @@ class CharacterAgencyEditor(QWidget):
         self._conflictEditor.setNovel(self.novel)
 
         self._changesEditor = CharacterChangesEditor()
-        margins(self._changesEditor, left=40)
+        margins(self._changesEditor, left=65)
 
         if agenda.emotion:
             self._emotionEditor.setValue(agenda.emotion)

@@ -459,9 +459,9 @@ class HeaderColumn(QFrame):
                 border-right: 1px solid #f8f0fa;
             }}
             QLabel {{
-                font-size: 16px;
                 color: #f8f0fa;
             }}
         ''')
         self.header = label(header)
-        vbox(self).addWidget(self.header)
+        incr_font(self.header, 2)
+        vbox(self).addWidget(self.header, alignment=Qt.AlignmentFlag.AlignCenter)
