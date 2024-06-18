@@ -448,20 +448,15 @@ class DotsDragIcon(Icon):
         self.setCursor(Qt.CursorShape.OpenHandCursor)
 
 
-class HeaderColumn(QFrame):
+class HeaderColumn(QPushButton):
     def __init__(self, header: str, parent=None):
         super().__init__(parent)
-        self.setObjectName('frame')
         self.setStyleSheet(f'''
-            #frame {{
+            QPushButton {{
                 background: #622675;
                 padding: 4px;
                 border-right: 1px solid #f8f0fa;
-            }}
-            QLabel {{
                 color: #f8f0fa;
             }}
         ''')
-        self.header = label(header)
-        incr_font(self.header, 2)
-        vbox(self).addWidget(self.header, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.setText(header)
