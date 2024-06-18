@@ -504,6 +504,9 @@ class CharacterChangeBubble(TextEditBubbleWidget):
         super().__init__(parent)
         self._textedit.setMinimumSize(165, 100)
         self._textedit.setMaximumSize(190, 110)
+        self.setProperty('rounded', True)
+        self._textedit.setProperty('rounded', False)
+        self._textedit.setProperty('transparent', True)
         self.setMaximumWidth(200)
 
         self._title.setIcon(IconRegistry.from_name(type.icon(), PLOTLYST_SECONDARY_COLOR))
