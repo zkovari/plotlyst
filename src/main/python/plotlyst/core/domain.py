@@ -1739,6 +1739,22 @@ class StoryElementType(Enum):
     def displayed_name(self) -> str:
         return self.value.capitalize().replace('_', ' ')
 
+    def icon(self) -> str:
+        if self == StoryElementType.Goal:
+            return 'mdi.target'
+        elif self == StoryElementType.Conflict:
+            return 'mdi.sword-cross'
+        elif self == StoryElementType.Outcome:
+            return 'fa5s.bomb'
+
+    def placeholder(self) -> str:
+        if self == StoryElementType.Goal:
+            return "What's the character's goal in this scene?"
+        elif self == StoryElementType.Conflict:
+            return "What kind of conflict does the character have to face?"
+        elif self == StoryElementType.Outcome:
+            return "What's the scene's outcome for the character?"
+
 
 @dataclass
 class StoryElement:

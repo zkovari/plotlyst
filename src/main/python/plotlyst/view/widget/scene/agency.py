@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 import qtanim
 from PyQt6.QtCore import Qt, QEvent, pyqtSignal, QSize
@@ -31,7 +31,9 @@ from qthandy import hbox, spacer, sp, retain_when_hidden, bold, vbox, translucen
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
-from plotlyst.core.domain import Motivation, Novel, Scene, SceneStructureAgenda, Character, NovelSetting
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from plotlyst.core.domain import Motivation, Novel, Scene, SceneStructureAgenda, Character, NovelSetting, \
+    StoryElementType
 from plotlyst.event.core import Event, EventListener
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import NovelPanelCustomizationEvent, NovelEmotionTrackingToggleEvent, \
@@ -45,7 +47,7 @@ from plotlyst.view.widget.button import ChargeButton, DotsMenuButton
 from plotlyst.view.widget.character.editor import EmotionEditorSlider
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.display import HeaderColumn
-from plotlyst.view.widget.input import RemovalButton
+from plotlyst.view.widget.input import RemovalButton, TextEditBubbleWidget
 from plotlyst.view.widget.scene.conflict import ConflictIntensityEditor, CharacterConflictSelector
 
 
@@ -497,11 +499,25 @@ class SceneAgendaConflictEditor(AbstractAgencyEditor):
         self._wdgConflicts.layout().addWidget(conflictSelector)
 
 
+class CharacterChangeBubble(TextEditBubbleWidget):
+    def __init__(self, type: StoryElementType, parent=None):
+        super().__init__(parent)
+        self._textedit.setMinimumSize(165, 100)
+        self._textedit.setMaximumSize(190, 110)
+        self.setMaximumWidth(200)
+
+        self._title.setIcon(IconRegistry.from_name(type.icon(), PLOTLYST_SECONDARY_COLOR))
+        self._title.setText(type.displayed_name())
+        self._textedit.setPlaceholderText(type.placeholder())
+
+
 class CharacterChangesEditor(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.btnAdd = push_btn(IconRegistry.plus_icon('grey'), 'Add character changes', transparent_=True)
+        self.btnAdd = push_btn(IconRegistry.plus_icon('grey'), 'Track character changes', transparent_=True)
         self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd, leaveOpacity=0.7))
+        self.btnAdd.clicked.connect(
+            lambda: self.addElements([StoryElementType.Goal], [StoryElementType.Conflict], [StoryElementType.Outcome]))
 
         header1 = HeaderColumn('Initial')
         header1.setFixedWidth(200)
@@ -511,11 +527,24 @@ class CharacterChangesEditor(QWidget):
         header3.setFixedWidth(200)
 
         self._layout: QGridLayout = grid(self, h_spacing=0)
-        self._layout.addWidget(self.btnAdd, 0, 1, alignment=Qt.AlignmentFlag.AlignCenter)
-        self._layout.addWidget(header1, 1, 0)
-        self._layout.addWidget(header2, 1, 1)
-        self._layout.addWidget(header3, 1, 2)
-        self._layout.addWidget(spacer(), 0, 3)
+        self._layout.addWidget(header1, 0, 0)
+        self._layout.addWidget(header2, 0, 1)
+        self._layout.addWidget(header3, 0, 2)
+        self._layout.addWidget(self.btnAdd, 1, 1, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._layout.addWidget(spacer(), 1, 3)
+
+    def addElements(self, initial: List[StoryElementType], transition: List[StoryElementType],
+                    final: List[StoryElementType]):
+        def _iterate(elements: List[StoryElementType], row: int, col: int):
+            for element_type in elements:
+                wdg = CharacterChangeBubble(element_type)
+                self._layout.addWidget(wdg, row, col, alignment=Qt.AlignmentFlag.AlignCenter)
+                row += 1
+
+        original_row = self._layout.rowCount()
+        _iterate(initial, original_row, 0)
+        _iterate(transition, original_row, 1)
+        _iterate(final, original_row, 2)
 
 
 class CharacterAgencyEditor(QWidget):

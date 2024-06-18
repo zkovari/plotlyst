@@ -1145,7 +1145,7 @@ class LabelsEditor(QFrame):
         self.labelRemoved.emit(label)
 
 
-class TextEditBubbleWidget(QWidget):
+class TextEditBubbleWidget(QFrame):
     removed = pyqtSignal()
 
     def __init__(self, parent=None):
