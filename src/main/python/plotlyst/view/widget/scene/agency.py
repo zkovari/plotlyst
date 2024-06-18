@@ -22,12 +22,12 @@ from typing import Dict, Optional
 
 import qtanim
 from PyQt6.QtCore import Qt, QEvent, pyqtSignal, QSize
-from PyQt6.QtGui import QEnterEvent, QMouseEvent, QIcon
+from PyQt6.QtGui import QEnterEvent, QMouseEvent, QIcon, QCursor
 from PyQt6.QtWidgets import QWidget, QSlider
 from overrides import overrides
 from qtanim import fade_in
 from qthandy import hbox, spacer, sp, retain_when_hidden, bold, vbox, translucent, clear_layout, margins, vspacer, vline
-from qthandy.filter import OpacityEventFilter
+from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.core.domain import Motivation, Novel, Scene, SceneStructureAgenda, Character, NovelSetting
@@ -36,11 +36,11 @@ from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import NovelPanelCustomizationEvent, NovelEmotionTrackingToggleEvent, \
     NovelMotivationTrackingToggleEvent, NovelConflictTrackingToggleEvent
 from plotlyst.service.cache import characters_registry
-from plotlyst.view.common import push_btn, label, fade_out_and_gc, tool_btn
+from plotlyst.view.common import push_btn, label, fade_out_and_gc, tool_btn, action
 from plotlyst.view.generated.scene_goal_stakes_ui import Ui_GoalReferenceStakesEditor
 from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.style.base import apply_white_menu
-from plotlyst.view.widget.button import ChargeButton
+from plotlyst.view.widget.button import ChargeButton, DotsMenuButton
 from plotlyst.view.widget.character.editor import EmotionEditorSlider
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.input import RemovalButton
@@ -496,13 +496,18 @@ class SceneAgendaConflictEditor(AbstractAgencyEditor):
 
 
 class CharacterAgencyEditor(QWidget):
+    removed = pyqtSignal()
+
     def __init__(self, novel: Novel, agenda: SceneStructureAgenda, parent=None):
         super().__init__(parent)
         self.novel = novel
         self.agenda = agenda
         hbox(self)
-        self._charDisplay = tool_btn(IconRegistry.character_icon(), transparent_=True, pointy_=False, icon_resize=False)
+        self._charDisplay = tool_btn(IconRegistry.character_icon(), transparent_=True)
         self._charDisplay.setIconSize(QSize(54, 54))
+        self._menu = MenuWidget()
+        self._menu.addAction(action('Remove agency', IconRegistry.trash_can_icon(), slot=self.removed))
+        self._charDisplay.clicked.connect(lambda: self._menu.exec(QCursor.pos()))
 
         self._emotionEditor = SceneAgendaEmotionEditor()
         self._emotionEditor.layout().addWidget(vline())
@@ -522,6 +527,9 @@ class CharacterAgencyEditor(QWidget):
         # self._motivationEditor.setAgenda(agenda)
         self._conflictEditor.setAgenda(agenda)
 
+        self._btnDots = DotsMenuButton()
+        self._btnDots.clicked.connect(lambda: self._menu.exec(QCursor.pos()))
+
         self._wdgHeader = QWidget()
         hbox(self._wdgHeader)
         margins(self._wdgHeader, left=25)
@@ -530,8 +538,10 @@ class CharacterAgencyEditor(QWidget):
         self._wdgHeader.layout().addWidget(self._emotionEditor)
         self._wdgHeader.layout().addWidget(self._conflictEditor)
         self._wdgHeader.layout().addWidget(spacer())
+        self._wdgHeader.layout().addWidget(self._btnDots, alignment=Qt.AlignmentFlag.AlignTop)
         # self._wdgHeader.layout().addWidget(self._motivationEditor)
         self.layout().addWidget(self._wdgHeader)
+        self.installEventFilter(VisibilityToggleEventFilter(self._btnDots, self))
 
         if self.agenda.character_id:
             character = characters_registry.character(str(self.agenda.character_id))
@@ -613,8 +623,19 @@ class SceneAgencyEditor(QWidget, EventListener):
         pass
 
     def _characterSelected(self, character: Character):
-        pass
+        agency = SceneStructureAgenda(character.id)
+        self._scene.agendas.append(agency)
+        wdg = self.__initAgencyWidget(agency)
+        qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
 
-    def __initAgencyWidget(self, agenda: SceneStructureAgenda):
+    def _agencyRemoved(self, wdg: CharacterAgencyEditor):
+        agency = wdg.agenda
+        self._scene.agendas.remove(agency)
+        fade_out_and_gc(self.wdgAgendas, wdg)
+
+    def __initAgencyWidget(self, agenda: SceneStructureAgenda) -> CharacterAgencyEditor:
         wdg = CharacterAgencyEditor(self._novel, agenda)
+        wdg.removed.connect(partial(self._agencyRemoved, wdg))
         self.wdgAgendas.layout().addWidget(wdg)
+
+        return wdg
