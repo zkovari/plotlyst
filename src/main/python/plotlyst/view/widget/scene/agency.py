@@ -33,7 +33,7 @@ from qtmenu import MenuWidget
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Motivation, Novel, Scene, SceneStructureAgenda, Character, NovelSetting, \
-    StoryElementType, AgencyCharacterChanges, StoryElement
+    StoryElementType, CharacterAgencyChanges, StoryElement
 from plotlyst.event.core import Event, EventListener
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import NovelPanelCustomizationEvent, NovelEmotionTrackingToggleEvent, \
@@ -527,7 +527,7 @@ class CharacterChangesEditor(QWidget):
         self.btnAdd = push_btn(IconRegistry.plus_icon('grey'), 'Track character changes', transparent_=True)
         self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd, leaveOpacity=0.7))
         self.btnAdd.clicked.connect(
-            lambda: self.addNewElements([AgencyCharacterChanges(StoryElement(StoryElementType.Goal),
+            lambda: self.addNewElements([CharacterAgencyChanges(StoryElement(StoryElementType.Goal),
                                                                 StoryElement(StoryElementType.Conflict),
                                                                 StoryElement(StoryElementType.Outcome))
                                          ]))
@@ -549,11 +549,11 @@ class CharacterChangesEditor(QWidget):
         if self.agenda.changes:
             self._addElements(self.agenda.changes)
 
-    def addNewElements(self, changes: List[AgencyCharacterChanges]):
+    def addNewElements(self, changes: List[CharacterAgencyChanges]):
         self.agenda.changes.extend(changes)
         self._addElements(changes)
 
-    def _addElements(self, changes: List[AgencyCharacterChanges]):
+    def _addElements(self, changes: List[CharacterAgencyChanges]):
         def _addElement(element: StoryElement, row: int, col: int):
             wdg = CharacterChangeBubble(element)
             self._layout.addWidget(wdg, row, col, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -566,7 +566,27 @@ class CharacterChangesEditor(QWidget):
                 _addElement(change.transition, row, 1)
             if change.final:
                 _addElement(change.final, row, 2)
+
+            dotsBtn = DotsMenuButton()
+            dotsBtn.installEventFilter(OpacityEventFilter(dotsBtn))
+            self._layout.addWidget(dotsBtn, row, 3,
+                                   alignment=Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+            menu = MenuWidget(dotsBtn)
+            menu.addAction(action('Remove character changes', IconRegistry.trash_can_icon(),
+                                  slot=partial(self._removeChange, change, row)))
             row += 1
+
+    def _removeChange(self, change: CharacterAgencyChanges, row: int):
+        def removeItem(col: int):
+            item = self._layout.itemAtPosition(row, col)
+            if item:
+                fade_out_and_gc(self, item.widget())
+
+        removeItem(0)
+        removeItem(1)
+        removeItem(2)
+        removeItem(3)
+        self.agenda.changes.remove(change)
 
 
 class CharacterAgencyEditor(QWidget):
