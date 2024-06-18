@@ -513,6 +513,11 @@ class CharacterChangeBubble(TextEditBubbleWidget):
         self._title.setIcon(IconRegistry.from_name(self.element.type.icon(), PLOTLYST_SECONDARY_COLOR))
         self._title.setText(self.element.type.displayed_name())
         self._textedit.setPlaceholderText(self.element.type.placeholder())
+        self._textedit.setText(self.element.text)
+
+    @overrides
+    def _textChanged(self):
+        self.element.text = self._textedit.toPlainText()
 
 
 class CharacterChangesEditor(QWidget):
