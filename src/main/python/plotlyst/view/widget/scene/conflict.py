@@ -33,7 +33,7 @@ from plotlyst.core.domain import Conflict, ConflictReference, Novel, Scene, Conf
 from plotlyst.event.core import emit_critical
 from plotlyst.model.scenes_model import SceneConflictsModel
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import tool_btn
+from plotlyst.view.common import tool_btn, push_btn
 from plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
 from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.widget.labels import ConflictLabel
@@ -207,7 +207,7 @@ class CharacterConflictSelector(QWidget):
 
         self.label: Optional[ConflictLabel] = None
 
-        self.btnLinkConflict = tool_btn(IconRegistry.conflict_icon())
+        self.btnLinkConflict = push_btn(IconRegistry.conflict_icon(), 'Track conflict')
         self.layout().addWidget(self.btnLinkConflict)
         self.btnLinkConflict.setIcon(IconRegistry.conflict_icon())
         self.btnLinkConflict.setStyleSheet('''
