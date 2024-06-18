@@ -58,6 +58,9 @@ class ConflictIntensityEditor(QWidget):
 
         self._iconColor = '#f3a712'
         self._icon = tool_btn(IconRegistry.from_name('mdi.battery-charging-10', self._iconColor), transparent_=True)
+        tip = 'Conflict intensity'
+        self._slider.setToolTip(tip)
+        self._icon.setToolTip(tip)
 
         self.layout().addWidget(self._icon)
         self.layout().addWidget(self._slider)
