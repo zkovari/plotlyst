@@ -49,7 +49,7 @@ from plotlyst.view.common import DelayedSignalSlotConnector, action, wrap, label
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.characters import CharacterSelectorButton
-from plotlyst.view.widget.display import Icon
+from plotlyst.view.widget.display import Icon, ArrowButton
 from plotlyst.view.widget.input import RemovalButton
 from plotlyst.view.widget.plot.selector import StorylineSelectorMenu
 from plotlyst.view.widget.scene.agency import SceneAgendaEmotionEditor, SceneAgendaMotivationEditor, \
@@ -418,56 +418,6 @@ class ScenePurposeSelectorWidget(QWidget):
             self._wdgPurposes.layout().addWidget(wdg)
         self._wdgPurposes.layout().insertWidget(3, vline())
         self._wdgPurposes.layout().addWidget(spacer())
-
-
-class ArrowButton(QToolButton):
-    stateChanged = pyqtSignal(int)
-    stateReset = pyqtSignal()
-
-    STATE_MAX: int = 3
-
-    def __init__(self, edge: Qt.Edge, parent=None):
-        super().__init__(parent)
-        self._state: int = 0
-        self._edge = edge
-        if edge == Qt.Edge.RightEdge:
-            self._icons = ['fa5s.arrow-right', 'fa5s.arrow-right', 'fa5s.arrow-left', 'fa5s.arrows-alt-h']
-        elif edge == Qt.Edge.BottomEdge:
-            self._icons = ['fa5s.arrow-down', 'fa5s.arrow-down', 'fa5s.arrow-up', 'fa5s.arrows-alt-v']
-        pointy(self)
-        transparent(self)
-        self.setToolTip('Click to change direction')
-        self.setCheckable(True)
-
-        self.clicked.connect(self._clicked)
-        self.reset()
-
-    def setState(self, state: int):
-        self._state = state
-        self._handleNewState()
-
-    def reset(self):
-        self._state = 0
-        self.setIconSize(QSize(15, 15))
-        self.setIcon(IconRegistry.from_name(self._icons[self._state], 'lightgrey'))
-        self.setChecked(False)
-
-    def _increaseState(self):
-        self._state += 1
-        self._handleNewState()
-        self.stateChanged.emit(self._state)
-
-    def _handleNewState(self):
-        self.setIconSize(QSize(22, 22))
-        self.setIcon(IconRegistry.from_name(self._icons[self._state], '#6c757d'))
-        self.setChecked(True)
-
-    def _clicked(self):
-        if self._state == self.STATE_MAX:
-            self.reset()
-            self.stateReset.emit()
-        else:
-            self._increaseState()
 
 
 class LineElementWidget(QWidget):

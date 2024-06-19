@@ -23,7 +23,7 @@ from typing import Optional, Any
 import emoji
 import qtanim
 from PyQt6.QtCharts import QChartView
-from PyQt6.QtCore import pyqtProperty, QSize, Qt, QPoint
+from PyQt6.QtCore import pyqtProperty, QSize, Qt, QPoint, pyqtSignal
 from PyQt6.QtGui import QPainter, QShowEvent, QColor, QPaintEvent, QBrush, QKeyEvent
 from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy, QTextBrowser, QFrame, QDialog, \
     QApplication
@@ -460,3 +460,55 @@ class HeaderColumn(QPushButton):
             }}
         ''')
         self.setText(header)
+
+
+class ArrowButton(QToolButton):
+    stateChanged = pyqtSignal(int)
+    stateReset = pyqtSignal()
+
+    STATE_MAX: int = 3
+
+    def __init__(self, edge: Qt.Edge, readOnly: bool = False, parent=None):
+        super().__init__(parent)
+        self._state: int = 0
+        self._edge = edge
+        if edge == Qt.Edge.RightEdge:
+            self._icons = ['fa5s.arrow-right', 'fa5s.arrow-right', 'fa5s.arrow-left', 'fa5s.arrows-alt-h']
+        elif edge == Qt.Edge.BottomEdge:
+            self._icons = ['fa5s.arrow-down', 'fa5s.arrow-down', 'fa5s.arrow-up', 'fa5s.arrows-alt-v']
+        if not readOnly:
+            pointy(self)
+        transparent(self)
+        self.setToolTip('Click to change direction')
+        self.setCheckable(True)
+
+        if not readOnly:
+            self.clicked.connect(self._clicked)
+        self.reset()
+
+    def setState(self, state: int):
+        self._state = state
+        self._handleNewState()
+
+    def reset(self):
+        self._state = 0
+        self.setIconSize(QSize(15, 15))
+        self.setIcon(IconRegistry.from_name(self._icons[self._state], 'lightgrey'))
+        self.setChecked(False)
+
+    def _increaseState(self):
+        self._state += 1
+        self._handleNewState()
+        self.stateChanged.emit(self._state)
+
+    def _handleNewState(self):
+        self.setIconSize(QSize(22, 22))
+        self.setIcon(IconRegistry.from_name(self._icons[self._state], '#6c757d'))
+        self.setChecked(True)
+
+    def _clicked(self):
+        if self._state == self.STATE_MAX:
+            self.reset()
+            self.stateReset.emit()
+        else:
+            self._increaseState()

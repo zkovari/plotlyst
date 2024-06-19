@@ -46,7 +46,7 @@ from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.button import ChargeButton, DotsMenuButton
 from plotlyst.view.widget.character.editor import EmotionEditorSlider
 from plotlyst.view.widget.characters import CharacterSelectorMenu
-from plotlyst.view.widget.display import HeaderColumn
+from plotlyst.view.widget.display import HeaderColumn, ArrowButton
 from plotlyst.view.widget.input import RemovalButton, TextEditBubbleWidget
 from plotlyst.view.widget.scene.conflict import ConflictIntensityEditor, CharacterConflictSelector
 
@@ -502,6 +502,7 @@ class SceneAgendaConflictEditor(AbstractAgencyEditor):
 class CharacterChangeBubble(TextEditBubbleWidget):
     def __init__(self, element: StoryElement, parent=None):
         super().__init__(parent)
+        margins(self, left=1, right=1)
         self.element = element
         self._textedit.setMinimumSize(165, 100)
         self._textedit.setMaximumSize(190, 110)
@@ -521,6 +522,10 @@ class CharacterChangeBubble(TextEditBubbleWidget):
 
 
 class CharacterChangesEditor(QWidget):
+    Header1Col: int = 0
+    Header2Col: int = 2
+    Header3Col: int = 4
+
     def __init__(self, agenda: SceneStructureAgenda, parent=None):
         super().__init__(parent)
         self.agenda = agenda
@@ -535,16 +540,15 @@ class CharacterChangesEditor(QWidget):
         header1 = HeaderColumn('Initial')
         header1.setFixedWidth(200)
         header2 = HeaderColumn('Transition')
-        header2.setFixedWidth(200)
         header3 = HeaderColumn('Final')
         header3.setFixedWidth(200)
 
         self._layout: QGridLayout = grid(self, h_spacing=0)
         self._layout.addWidget(header1, 0, 0)
-        self._layout.addWidget(header2, 0, 1)
-        self._layout.addWidget(header3, 0, 2)
-        self._layout.addWidget(self.btnAdd, 1, 1, alignment=Qt.AlignmentFlag.AlignCenter)
-        self._layout.addWidget(spacer(), 1, 3)
+        self._layout.addWidget(header2, 0, 1, 1, 3)
+        self._layout.addWidget(header3, 0, 4)
+        self._layout.addWidget(self.btnAdd, 1, self.Header2Col, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._layout.addWidget(spacer(), 1, 5)
 
         if self.agenda.changes:
             self._addElements(self.agenda.changes)
@@ -561,15 +565,21 @@ class CharacterChangesEditor(QWidget):
         row = self._layout.rowCount()
         for change in changes:
             if change.initial:
-                _addElement(change.initial, row, 0)
+                _addElement(change.initial, row, self.Header1Col)
+                arrow = ArrowButton(Qt.Edge.RightEdge, readOnly=True)
+                arrow.setState(arrow.STATE_MAX)
+                self._layout.addWidget(arrow, row, self.Header2Col - 1)
             if change.transition:
-                _addElement(change.transition, row, 1)
+                _addElement(change.transition, row, self.Header2Col)
             if change.final:
-                _addElement(change.final, row, 2)
+                _addElement(change.final, row, self.Header3Col)
+                arrow = ArrowButton(Qt.Edge.RightEdge, readOnly=True)
+                arrow.setState(1)
+                self._layout.addWidget(arrow, row, self.Header3Col - 1)
 
             dotsBtn = DotsMenuButton()
             dotsBtn.installEventFilter(OpacityEventFilter(dotsBtn))
-            self._layout.addWidget(dotsBtn, row, 3,
+            self._layout.addWidget(dotsBtn, row, self.Header3Col + 1,
                                    alignment=Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
             menu = MenuWidget(dotsBtn)
             menu.addAction(action('Remove character changes', IconRegistry.trash_can_icon(),
@@ -582,10 +592,8 @@ class CharacterChangesEditor(QWidget):
             if item:
                 fade_out_and_gc(self, item.widget())
 
-        removeItem(0)
-        removeItem(1)
-        removeItem(2)
-        removeItem(3)
+        for i in range(self.Header3Col + 2):
+            removeItem(i)
         self.agenda.changes.remove(change)
 
 
