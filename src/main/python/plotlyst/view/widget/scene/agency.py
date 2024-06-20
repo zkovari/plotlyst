@@ -23,12 +23,12 @@ from typing import Dict, Optional, List
 import qtanim
 from PyQt6.QtCore import Qt, QEvent, pyqtSignal, QSize
 from PyQt6.QtGui import QEnterEvent, QMouseEvent, QIcon, QCursor
-from PyQt6.QtWidgets import QWidget, QSlider, QGridLayout
+from PyQt6.QtWidgets import QWidget, QSlider, QGridLayout, QButtonGroup
 from overrides import overrides
 from qtanim import fade_in
 from qthandy import hbox, spacer, sp, retain_when_hidden, bold, vbox, translucent, clear_layout, margins, vspacer, \
     vline, line, grid
-from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
+from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
@@ -46,8 +46,8 @@ from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.button import ChargeButton, DotsMenuButton
 from plotlyst.view.widget.character.editor import EmotionEditorSlider
 from plotlyst.view.widget.characters import CharacterSelectorMenu
-from plotlyst.view.widget.display import HeaderColumn, ArrowButton
-from plotlyst.view.widget.input import RemovalButton, TextEditBubbleWidget
+from plotlyst.view.widget.display import HeaderColumn, ArrowButton, PopupDialog
+from plotlyst.view.widget.input import RemovalButton, TextEditBubbleWidget, Toggle
 from plotlyst.view.widget.scene.conflict import ConflictIntensityEditor, CharacterConflictSelector
 
 
@@ -499,6 +499,92 @@ class SceneAgendaConflictEditor(AbstractAgencyEditor):
         self._wdgConflicts.layout().addWidget(conflictSelector)
 
 
+class _CharacterStateToggle(Toggle):
+    def __init__(self, type_: StoryElementType, parent=None):
+        super().__init__(parent)
+        self.type = type_
+
+
+class _CharacterChangeSelectorToggle(QWidget):
+    def __init__(self, type_: StoryElementType, parent=None):
+        super().__init__(parent)
+        hbox(self, 0, 0)
+        self.toggle = _CharacterStateToggle(type_)
+        self.label = push_btn(IconRegistry.from_name(type_.icon()), text=type_.displayed_name(), transparent_=True)
+
+        self.layout().addWidget(self.toggle, alignment=Qt.AlignmentFlag.AlignVCenter)
+        self.layout().addWidget(self.label)
+
+
+class CharacterChangesSelectorPopup(PopupDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.wdgInitial = QWidget()
+        vbox(self.wdgInitial)
+        self.goal = _CharacterChangeSelectorToggle(StoryElementType.Goal)
+        self.wdgInitial.layout().addWidget(label('Initial', bold=True), alignment=Qt.AlignmentFlag.AlignCenter)
+        self.wdgInitial.layout().addWidget(self.goal)
+
+        self.initialBtnGroup = QButtonGroup()
+        self.initialBtnGroup.setExclusive(False)
+        self.initialBtnGroup.addButton(self.goal.toggle)
+        self.initialBtnGroup.buttonToggled.connect(self._selectionChanged)
+
+        self.wdgTransition = QWidget()
+        vbox(self.wdgTransition)
+        self.conflict = _CharacterChangeSelectorToggle(StoryElementType.Conflict)
+        self.wdgTransition.layout().addWidget(label('Transition', bold=True), alignment=Qt.AlignmentFlag.AlignCenter)
+        self.wdgTransition.layout().addWidget(self.conflict)
+        self.transitionBtnGroup = QButtonGroup()
+        self.transitionBtnGroup.setExclusive(False)
+        self.transitionBtnGroup.addButton(self.conflict.toggle)
+        self.transitionBtnGroup.buttonToggled.connect(self._selectionChanged)
+
+        self.wdgFinal = QWidget()
+        vbox(self.wdgFinal)
+        self.outcome = _CharacterChangeSelectorToggle(StoryElementType.Outcome)
+        self.wdgFinal.layout().addWidget(label('Final', bold=True), alignment=Qt.AlignmentFlag.AlignCenter)
+        self.wdgFinal.layout().addWidget(self.outcome)
+        self.finalBtnGroup = QButtonGroup()
+        self.finalBtnGroup.setExclusive(False)
+        self.finalBtnGroup.addButton(self.outcome.toggle)
+        self.finalBtnGroup.buttonToggled.connect(self._selectionChanged)
+
+        self.wdgSelectors = QWidget()
+        hbox(self.wdgSelectors, spacing=15)
+        self.wdgSelectors.layout().addWidget(self.wdgInitial)
+        self.wdgSelectors.layout().addWidget(self.wdgTransition)
+        self.wdgSelectors.layout().addWidget(self.wdgFinal)
+
+        self.btnConfirm = push_btn(text='Confirm', properties=['base', 'positive'])
+        self.btnConfirm.setFixedWidth(250)
+        self.btnConfirm.setShortcut(Qt.Key.Key_Return)
+        sp(self.btnConfirm).h_exp()
+        self.btnConfirm.clicked.connect(self.accept)
+        self.btnConfirm.installEventFilter(DisabledClickEventFilter(self.btnConfirm, lambda: qtanim.shake(self.wdgSelectors)))
+
+        self.frame.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
+        self.frame.layout().addWidget(
+            label('Select initial, transition, and final states to reflect character agency', description=True))
+        self.frame.layout().addWidget(line())
+        self.frame.layout().addWidget(self.wdgSelectors)
+        self.frame.layout().addWidget(self.btnConfirm, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self.btnConfirm.setEnabled(False)
+
+    def display(self) -> Optional[str]:
+        result = self.exec()
+
+        return None
+
+    def _selectionChanged(self):
+        if self.initialBtnGroup.checkedButton() or self.transitionBtnGroup.checkedButton() or self.finalBtnGroup.checkedButton():
+            self.btnConfirm.setEnabled(True)
+        else:
+            self.btnConfirm.setEnabled(False)
+
+
 class CharacterChangeBubble(TextEditBubbleWidget):
     def __init__(self, element: StoryElement, parent=None):
         super().__init__(parent)
@@ -531,11 +617,12 @@ class CharacterChangesEditor(QWidget):
         self.agenda = agenda
         self.btnAdd = push_btn(IconRegistry.plus_icon('grey'), 'Track character changes', transparent_=True)
         self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd, leaveOpacity=0.7))
-        self.btnAdd.clicked.connect(
-            lambda: self.addNewElements([CharacterAgencyChanges(StoryElement(StoryElementType.Goal),
-                                                                StoryElement(StoryElementType.Conflict),
-                                                                StoryElement(StoryElementType.Outcome))
-                                         ]))
+        self.btnAdd.clicked.connect(self._openSelector)
+        # self.btnAdd.clicked.connect(
+        #     lambda: self.addNewElements([CharacterAgencyChanges(StoryElement(StoryElementType.Goal),
+        #                                                         StoryElement(StoryElementType.Conflict),
+        #                                                         StoryElement(StoryElementType.Outcome))
+        #                                  ]))
 
         header1 = HeaderColumn('Initial')
         header1.setFixedWidth(200)
@@ -556,6 +643,9 @@ class CharacterChangesEditor(QWidget):
     def addNewElements(self, changes: List[CharacterAgencyChanges]):
         self.agenda.changes.extend(changes)
         self._addElements(changes)
+
+    def _openSelector(self):
+        CharacterChangesSelectorPopup.popup()
 
     def _addElements(self, changes: List[CharacterAgencyChanges]):
         def _addElement(element: StoryElement, row: int, col: int):
