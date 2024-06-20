@@ -23,7 +23,7 @@ from typing import Dict, Optional, List
 import qtanim
 from PyQt6.QtCore import Qt, QEvent, pyqtSignal, QSize
 from PyQt6.QtGui import QEnterEvent, QMouseEvent, QIcon, QCursor
-from PyQt6.QtWidgets import QWidget, QSlider, QGridLayout, QButtonGroup
+from PyQt6.QtWidgets import QWidget, QSlider, QGridLayout, QButtonGroup, QDialog
 from overrides import overrides
 from qtanim import fade_in
 from qthandy import hbox, spacer, sp, retain_when_hidden, bold, vbox, translucent, clear_layout, margins, vspacer, \
@@ -556,13 +556,16 @@ class CharacterChangesSelectorPopup(PopupDialog):
         self.wdgSelectors.layout().addWidget(self.wdgInitial)
         self.wdgSelectors.layout().addWidget(self.wdgTransition)
         self.wdgSelectors.layout().addWidget(self.wdgFinal)
+        self.wdgSelectors.layout().addWidget(spacer())
+        self.wdgSelectors.layout().addWidget(spacer())
 
         self.btnConfirm = push_btn(text='Confirm', properties=['base', 'positive'])
         self.btnConfirm.setFixedWidth(250)
         self.btnConfirm.setShortcut(Qt.Key.Key_Return)
         sp(self.btnConfirm).h_exp()
         self.btnConfirm.clicked.connect(self.accept)
-        self.btnConfirm.installEventFilter(DisabledClickEventFilter(self.btnConfirm, lambda: qtanim.shake(self.wdgSelectors)))
+        self.btnConfirm.installEventFilter(
+            DisabledClickEventFilter(self.btnConfirm, lambda: qtanim.shake(self.wdgSelectors)))
 
         self.frame.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
         self.frame.layout().addWidget(
@@ -573,10 +576,18 @@ class CharacterChangesSelectorPopup(PopupDialog):
 
         self.btnConfirm.setEnabled(False)
 
-    def display(self) -> Optional[str]:
+    def display(self) -> Optional[CharacterAgencyChanges]:
         result = self.exec()
+        if result == QDialog.DialogCode.Accepted:
+            agency = CharacterAgencyChanges()
+            if self.initialBtnGroup.checkedButton():
+                agency.initial = StoryElement(self.initialBtnGroup.checkedButton().type)
+            if self.transitionBtnGroup.checkedButton():
+                agency.transition = StoryElement(self.transitionBtnGroup.checkedButton().type)
+            if self.finalBtnGroup.checkedButton():
+                agency.final = StoryElement(self.finalBtnGroup.checkedButton().type)
 
-        return None
+            return agency
 
     def _selectionChanged(self):
         if self.initialBtnGroup.checkedButton() or self.transitionBtnGroup.checkedButton() or self.finalBtnGroup.checkedButton():
@@ -645,7 +656,9 @@ class CharacterChangesEditor(QWidget):
         self._addElements(changes)
 
     def _openSelector(self):
-        CharacterChangesSelectorPopup.popup()
+        agency = CharacterChangesSelectorPopup.popup()
+        if agency:
+            self.addNewElements([agency])
 
     def _addElements(self, changes: List[CharacterAgencyChanges]):
         def _addElement(element: StoryElement, row: int, col: int):
