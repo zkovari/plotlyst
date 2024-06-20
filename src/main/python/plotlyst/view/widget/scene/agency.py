@@ -511,6 +511,9 @@ class _CharacterChangeSelectorToggle(QWidget):
         hbox(self, 0, 0)
         self.toggle = _CharacterStateToggle(type_)
         self.label = push_btn(IconRegistry.from_name(type_.icon()), text=type_.displayed_name(), transparent_=True)
+        tip = type_.placeholder()
+        self.label.setToolTip(tip)
+        self.toggle.setToolTip(tip)
         self.label.clicked.connect(self.toggle.click)
         self.toggle.toggled.connect(lambda x: bold(self.label, x))
 
@@ -569,7 +572,7 @@ class CharacterChangesSelectorPopup(PopupDialog):
         self.finalBtnGroup.buttonToggled.connect(self._selectionChanged)
 
         self.wdgSelectors = QWidget()
-        hbox(self.wdgSelectors, spacing=30)
+        hbox(self.wdgSelectors, spacing=40)
         self.wdgSelectors.layout().addWidget(spacer())
         self.wdgSelectors.layout().addWidget(self.wdgInitial)
         self.wdgSelectors.layout().addWidget(self.wdgTransition)
@@ -586,7 +589,9 @@ class CharacterChangesSelectorPopup(PopupDialog):
 
         self.frame.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
         self.frame.layout().addWidget(
-            label('Select initial, transition, and final states to reflect character agency', description=True))
+            label(
+                'Select initial, transition, and final states to reflect character agency. Not all states need to be selected at once.',
+                description=True))
         self.frame.layout().addWidget(self.wdgSelectors)
         self.frame.layout().addWidget(self.btnConfirm, alignment=Qt.AlignmentFlag.AlignCenter)
 
@@ -627,7 +632,9 @@ class CharacterChangeBubble(TextEditBubbleWidget):
 
         self._title.setIcon(IconRegistry.from_name(self.element.type.icon(), PLOTLYST_SECONDARY_COLOR))
         self._title.setText(self.element.type.displayed_name())
-        self._textedit.setPlaceholderText(self.element.type.placeholder())
+        tip = self.element.type.placeholder()
+        self._textedit.setPlaceholderText(tip)
+        self._textedit.setToolTip(tip)
         self._textedit.setText(self.element.text)
 
     @overrides
