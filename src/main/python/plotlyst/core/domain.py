@@ -1722,6 +1722,10 @@ class StoryElementType(Enum):
     Arc = 'arc'
     Outcome = 'outcome'
     Consequences = 'consequences'
+    Character_state = 'character_state'
+    Character_internal_state = 'character_internal_state'
+    Expectation = 'expectation'
+    Realization = 'realization'
     Goal = 'goal'
     Motivation = 'motivation'
     Conflict = 'conflict'
@@ -1745,6 +1749,10 @@ class StoryElementType(Enum):
     Thematic_effect = 'thematic_effect'
 
     def displayed_name(self) -> str:
+        if self == StoryElementType.Character_state:
+            return 'External state'
+        if self == StoryElementType.Character_internal_state:
+            return 'Internal state'
         return self.value.capitalize().replace('_', ' ')
 
     def icon(self) -> str:
@@ -1754,6 +1762,14 @@ class StoryElementType(Enum):
             return 'mdi.sword-cross'
         elif self == StoryElementType.Outcome:
             return 'fa5s.bomb'
+        elif self == StoryElementType.Character_state:
+            return 'fa5s.user-circle'
+        elif self == StoryElementType.Character_internal_state:
+            return 'mdi6.head-dots-horizontal-outline'
+        elif self == StoryElementType.Expectation:
+            return 'mdi.sign-direction'
+        elif self == StoryElementType.Realization:
+            return 'mdi.routes'
 
     def placeholder(self) -> str:
         if self == StoryElementType.Goal:
@@ -1762,6 +1778,14 @@ class StoryElementType(Enum):
             return "What kind of conflict does the character have to face?"
         elif self == StoryElementType.Outcome:
             return "What's the scene's outcome for the character?"
+        elif self == StoryElementType.Character_state:
+            return "What's the character's external circumstances or situation?"
+        elif self == StoryElementType.Character_internal_state:
+            return "What's the character's internal state, mentally or psychologically?"
+        elif self == StoryElementType.Expectation:
+            return "What does the character anticipate to happen?"
+        elif self == StoryElementType.Realization:
+            return "What did actually happen in the scene that upended expectations?"
 
 
 @dataclass
