@@ -400,7 +400,6 @@ class SceneAgendaConflictEditor(AbstractAgencyEditor):
     def __init__(self, parent=None):
         super().__init__(parent)
         vbox(self)
-        sp(self).h_exp()
 
         self._novel: Optional[Novel] = None
         self._scene: Optional[Scene] = None
@@ -419,18 +418,14 @@ class SceneAgendaConflictEditor(AbstractAgencyEditor):
 
         self._wdgConflicts = QWidget()
         hbox(self._wdgConflicts)
-        sp(self._wdgConflicts).h_exp()
 
         self._wdgSliders = QWidget()
-        hbox(self._wdgSliders).addWidget(self._sliderIntensity)
-        self._wdgSliders.layout().addWidget(spacer())
-        self._wdgSliders.layout().addWidget(self._btnReset)
+        hbox(self._wdgSliders).addWidget(self._sliderIntensity, alignment=Qt.AlignmentFlag.AlignLeft)
+        self._wdgSliders.layout().addWidget(self._btnReset, alignment=Qt.AlignmentFlag.AlignRight)
 
         self.layout().addWidget(self._icon, alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(self._wdgSliders)
         self.layout().addWidget(self._wdgConflicts)
-        # self.layout().addWidget(self._btnReset, alignment=Qt.AlignmentFlag.AlignLeft)
-        self.layout().addWidget(spacer())
 
         self.reset()
 
