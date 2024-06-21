@@ -688,16 +688,18 @@ class CharacterChangesEditor(QWidget):
         for change in changes:
             if change.initial:
                 _addElement(change.initial, row, self.Header1Col)
-                arrow = ArrowButton(Qt.Edge.RightEdge, readOnly=True)
-                arrow.setState(arrow.STATE_MAX)
-                self._layout.addWidget(arrow, row, self.Header2Col - 1)
+                if change.transition:
+                    arrow = ArrowButton(Qt.Edge.RightEdge, readOnly=True)
+                    arrow.setState(arrow.STATE_MAX)
+                    self._layout.addWidget(arrow, row, self.Header2Col - 1)
             if change.transition:
                 _addElement(change.transition, row, self.Header2Col)
             if change.final:
                 _addElement(change.final, row, self.Header3Col)
-                arrow = ArrowButton(Qt.Edge.RightEdge, readOnly=True)
-                arrow.setState(1)
-                self._layout.addWidget(arrow, row, self.Header3Col - 1)
+                if change.transition:
+                    arrow = ArrowButton(Qt.Edge.RightEdge, readOnly=True)
+                    arrow.setState(1)
+                    self._layout.addWidget(arrow, row, self.Header3Col - 1)
 
             dotsBtn = DotsMenuButton()
             dotsBtn.installEventFilter(OpacityEventFilter(dotsBtn))
