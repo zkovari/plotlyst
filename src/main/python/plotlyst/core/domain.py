@@ -1738,6 +1738,7 @@ class StoryElementType(Enum):
     Agency = 'agency'
     Initiative = 'initiative'
     Catalyst = 'catalyst'
+    Action = 'action'
     Plan_change = 'plan_change'
     Collaboration = 'collaboration'
     Subtext = 'subtext'
@@ -1760,6 +1761,14 @@ class StoryElementType(Enum):
             return 'mdi.target'
         elif self == StoryElementType.Conflict:
             return 'mdi.sword-cross'
+        elif self == StoryElementType.Internal_conflict:
+            return 'mdi.mirror'
+        elif self == StoryElementType.Dilemma:
+            return 'fa5s.map-signs'
+        elif self == StoryElementType.Catalyst:
+            return 'fa5s.vial'
+        elif self == StoryElementType.Action:
+            return 'mdi.run-fast'
         elif self == StoryElementType.Outcome:
             return 'fa5s.bomb'
         elif self == StoryElementType.Character_state:
@@ -1776,6 +1785,8 @@ class StoryElementType(Enum):
             return "What's the character's goal in this scene?"
         elif self == StoryElementType.Conflict:
             return "What kind of conflict does the character have to face?"
+        elif self == StoryElementType.Internal_conflict:
+            return "What internal struggles, dilemmas, doubts does the character have to face?"
         elif self == StoryElementType.Outcome:
             return "What's the scene's outcome for the character?"
         elif self == StoryElementType.Character_state:
@@ -1786,6 +1797,12 @@ class StoryElementType(Enum):
             return "What does the character anticipate to happen?"
         elif self == StoryElementType.Realization:
             return "What did actually happen in the scene that upended expectations?"
+        elif self == StoryElementType.Catalyst:
+            return "What disrupts the character's life and forces them to act?"
+        elif self == StoryElementType.Dilemma:
+            return "What difficult choice does the character have to face?"
+        elif self == StoryElementType.Action:
+            return "What steps or decisions does the character make?"
 
 
 @dataclass

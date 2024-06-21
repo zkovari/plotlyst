@@ -23,7 +23,7 @@ from typing import Dict, Optional, List
 import qtanim
 from PyQt6.QtCore import Qt, QEvent, pyqtSignal, QSize
 from PyQt6.QtGui import QEnterEvent, QMouseEvent, QIcon, QCursor
-from PyQt6.QtWidgets import QWidget, QSlider, QGridLayout, QDialog
+from PyQt6.QtWidgets import QWidget, QSlider, QGridLayout, QDialog, QButtonGroup
 from overrides import overrides
 from qtanim import fade_in
 from qthandy import hbox, spacer, sp, retain_when_hidden, bold, vbox, translucent, clear_layout, margins, vspacer, \
@@ -525,37 +525,30 @@ class CharacterChangesSelectorPopup(PopupDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        self.initialBtnGroup = ExclusiveOptionalButtonGroup()
+        self.initialBtnGroup.buttonToggled.connect(self._selectionChanged)
         self.wdgInitial = QWidget()
         vbox(self.wdgInitial)
         self.wdgInitial.layout().addWidget(label('Initial', bold=True), alignment=Qt.AlignmentFlag.AlignCenter)
         self.wdgInitial.layout().addWidget(line())
-        self.goal = _CharacterChangeSelectorToggle(StoryElementType.Goal)
-        self.state = _CharacterChangeSelectorToggle(StoryElementType.Character_state)
-        self.internalState = _CharacterChangeSelectorToggle(StoryElementType.Character_internal_state)
-        self.expectation = _CharacterChangeSelectorToggle(StoryElementType.Expectation)
-        self.wdgInitial.layout().addWidget(self.goal, alignment=Qt.AlignmentFlag.AlignLeft)
-        self.wdgInitial.layout().addWidget(self.state, alignment=Qt.AlignmentFlag.AlignLeft)
-        self.wdgInitial.layout().addWidget(self.internalState, alignment=Qt.AlignmentFlag.AlignLeft)
-        self.wdgInitial.layout().addWidget(self.expectation, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.__initSelector(StoryElementType.Goal, self.wdgInitial, self.initialBtnGroup)
+        self.__initSelector(StoryElementType.Character_state, self.wdgInitial, self.initialBtnGroup)
+        self.__initSelector(StoryElementType.Character_internal_state, self.wdgInitial, self.initialBtnGroup)
+        self.__initSelector(StoryElementType.Expectation, self.wdgInitial, self.initialBtnGroup)
         self.wdgInitial.layout().addWidget(vspacer())
 
-        self.initialBtnGroup = ExclusiveOptionalButtonGroup()
-        self.initialBtnGroup.addButton(self.goal.toggle)
-        self.initialBtnGroup.addButton(self.state.toggle)
-        self.initialBtnGroup.addButton(self.internalState.toggle)
-        self.initialBtnGroup.addButton(self.expectation.toggle)
-        self.initialBtnGroup.buttonToggled.connect(self._selectionChanged)
-
+        self.transitionBtnGroup = ExclusiveOptionalButtonGroup()
+        self.transitionBtnGroup.buttonToggled.connect(self._selectionChanged)
         self.wdgTransition = QWidget()
         vbox(self.wdgTransition)
-        self.conflict = _CharacterChangeSelectorToggle(StoryElementType.Conflict)
         self.wdgTransition.layout().addWidget(label('Transition', bold=True), alignment=Qt.AlignmentFlag.AlignCenter)
         self.wdgTransition.layout().addWidget(line())
-        self.wdgTransition.layout().addWidget(self.conflict, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.__initSelector(StoryElementType.Conflict, self.wdgTransition, self.transitionBtnGroup)
+        self.__initSelector(StoryElementType.Internal_conflict, self.wdgTransition, self.transitionBtnGroup)
+        self.__initSelector(StoryElementType.Dilemma, self.wdgTransition, self.transitionBtnGroup)
+        self.__initSelector(StoryElementType.Catalyst, self.wdgTransition, self.transitionBtnGroup)
+        self.__initSelector(StoryElementType.Action, self.wdgTransition, self.transitionBtnGroup)
         self.wdgTransition.layout().addWidget(vspacer())
-        self.transitionBtnGroup = ExclusiveOptionalButtonGroup()
-        self.transitionBtnGroup.addButton(self.conflict.toggle)
-        self.transitionBtnGroup.buttonToggled.connect(self._selectionChanged)
 
         self.wdgFinal = QWidget()
         vbox(self.wdgFinal)
@@ -615,6 +608,11 @@ class CharacterChangesSelectorPopup(PopupDialog):
             self.btnConfirm.setEnabled(True)
         else:
             self.btnConfirm.setEnabled(False)
+
+    def __initSelector(self, type_: StoryElementType, widget: QWidget, group: QButtonGroup):
+        selector = _CharacterChangeSelectorToggle(type_)
+        widget.layout().addWidget(selector, alignment=Qt.AlignmentFlag.AlignLeft)
+        group.addButton(selector.toggle)
 
 
 class CharacterChangeBubble(TextEditBubbleWidget):
