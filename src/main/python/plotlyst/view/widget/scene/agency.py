@@ -651,11 +651,6 @@ class CharacterChangesEditor(QWidget):
         self.btnAdd = push_btn(IconRegistry.plus_icon('grey'), 'Track character changes', transparent_=True)
         self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd, leaveOpacity=0.7))
         self.btnAdd.clicked.connect(self._openSelector)
-        # self.btnAdd.clicked.connect(
-        #     lambda: self.addNewElements([CharacterAgencyChanges(StoryElement(StoryElementType.Goal),
-        #                                                         StoryElement(StoryElementType.Conflict),
-        #                                                         StoryElement(StoryElementType.Outcome))
-        #                                  ]))
 
         header1 = HeaderColumn('Initial')
         header1.setFixedWidth(200)
@@ -663,7 +658,7 @@ class CharacterChangesEditor(QWidget):
         header3 = HeaderColumn('Final')
         header3.setFixedWidth(200)
 
-        self._layout: QGridLayout = grid(self, h_spacing=0)
+        self._layout: QGridLayout = grid(self, h_spacing=0, v_spacing=8)
         self._layout.addWidget(header1, 0, 0)
         self._layout.addWidget(header2, 0, 1, 1, 3)
         self._layout.addWidget(header3, 0, 4)
