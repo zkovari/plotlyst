@@ -510,15 +510,21 @@ class _CharacterChangeSelectorToggle(QWidget):
         super().__init__(parent)
         hbox(self, 0, 0)
         self.toggle = _CharacterStateToggle(type_)
-        self.label = push_btn(IconRegistry.from_name(type_.icon()), text=type_.displayed_name(), transparent_=True)
+        self.label = push_btn(IconRegistry.from_name(type_.icon(), color='grey', color_on=PLOTLYST_SECONDARY_COLOR),
+                              text=type_.displayed_name(), transparent_=True, checkable=True)
         tip = type_.placeholder()
         self.label.setToolTip(tip)
         self.toggle.setToolTip(tip)
         self.label.clicked.connect(self.toggle.click)
-        self.toggle.toggled.connect(lambda x: bold(self.label, x))
+        self.toggle.toggled.connect(self._toggled)
 
         self.layout().addWidget(self.toggle, alignment=Qt.AlignmentFlag.AlignVCenter)
         self.layout().addWidget(self.label)
+
+    def _toggled(self, toggled: bool):
+        bold(self.label, toggled)
+        self.label.setChecked(toggled)
+        self.label.clearFocus()
 
 
 class CharacterChangesSelectorPopup(PopupDialog):
