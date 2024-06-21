@@ -210,6 +210,7 @@ class AbstractAgencyEditor(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._activated: bool = False
+        self._removalEnabled: bool = True
 
         self._icon = push_btn(QIcon(), transparent_=True)
         self._icon.setIconSize(QSize(28, 28))
@@ -222,7 +223,7 @@ class AbstractAgencyEditor(QWidget):
 
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
-        if self._activated:
+        if self._activated and self._removalEnabled:
             self._btnReset.setVisible(True)
 
     @overrides
@@ -304,6 +305,7 @@ class SceneAgendaMotivationEditor(AbstractAgencyEditor):
         super().__init__(parent)
         hbox(self)
         sp(self).h_max()
+        self._removalEnabled = False
 
         self._motivationDisplay = MotivationDisplay()
         self._motivationEditor = MotivationEditor()
@@ -348,7 +350,8 @@ class SceneAgendaMotivationEditor(AbstractAgencyEditor):
 
     def activate(self):
         self._activated = True
-        self._btnReset.setVisible(True)
+        if self._removalEnabled:
+            self._btnReset.setVisible(True)
         self._icon.setText('')
         self._icon.removeEventFilter(self._opacityFilter)
 
@@ -523,8 +526,9 @@ class _CharacterChangeSelectorToggle(QWidget):
 
 
 class CharacterChangesSelectorPopup(PopupDialog):
-    def __init__(self, parent=None):
+    def __init__(self, agenda: SceneStructureAgenda, parent=None):
         super().__init__(parent)
+        self.agenda = agenda
 
         self.initialBtnGroup = ExclusiveOptionalButtonGroup()
         self.initialBtnGroup.buttonToggled.connect(self._selectionChanged)
@@ -563,7 +567,12 @@ class CharacterChangesSelectorPopup(PopupDialog):
         self.__initSelector(StoryElementType.Decision, self.wdgFinal, self.finalBtnGroup)
         self.__initSelector(StoryElementType.Character_state_change, self.wdgFinal, self.finalBtnGroup)
         self.__initSelector(StoryElementType.Character_internal_state_change, self.wdgFinal, self.finalBtnGroup)
-        self.__initSelector(StoryElementType.Motivation, self.wdgFinal, self.finalBtnGroup)
+        wdgMotivation = self.__initSelector(StoryElementType.Motivation, self.wdgFinal, self.finalBtnGroup)
+        for change in self.agenda.changes:
+            if change.final and change.final.type == StoryElementType.Motivation:
+                wdgMotivation.setDisabled(True)
+                wdgMotivation.setToolTip('Motivation was already selected for this character')
+                break
         self.wdgFinal.layout().addWidget(vspacer())
 
         self.wdgSelectors = QWidget()
@@ -611,10 +620,13 @@ class CharacterChangesSelectorPopup(PopupDialog):
         else:
             self.btnConfirm.setEnabled(False)
 
-    def __initSelector(self, type_: StoryElementType, widget: QWidget, group: QButtonGroup):
+    def __initSelector(self, type_: StoryElementType, widget: QWidget,
+                       group: QButtonGroup) -> _CharacterChangeSelectorToggle:
         selector = _CharacterChangeSelectorToggle(type_)
         widget.layout().addWidget(selector, alignment=Qt.AlignmentFlag.AlignLeft)
         group.addButton(selector.toggle)
+
+        return selector
 
 
 class CharacterChangeBubble(TextEditBubbleWidget):
@@ -637,6 +649,9 @@ class CharacterChangeBubble(TextEditBubbleWidget):
         self._textedit.setToolTip(tip)
         self._textedit.setText(self.element.text)
 
+    def addBottomWidget(self, wdg: QWidget):
+        self.layout().addWidget(wdg)
+
     @overrides
     def _textChanged(self):
         self.element.text = self._textedit.toPlainText()
@@ -647,8 +662,10 @@ class CharacterChangesEditor(QWidget):
     Header2Col: int = 2
     Header3Col: int = 4
 
-    def __init__(self, agenda: SceneStructureAgenda, parent=None):
+    def __init__(self, novel: Novel, scene: Scene, agenda: SceneStructureAgenda, parent=None):
         super().__init__(parent)
+        self.novel = novel
+        self.scene = scene
         self.agenda = agenda
         self.btnAdd = push_btn(IconRegistry.plus_icon('grey'), 'Track character changes', transparent_=True)
         self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd, leaveOpacity=0.7))
@@ -675,13 +692,19 @@ class CharacterChangesEditor(QWidget):
         self._addElements(changes)
 
     def _openSelector(self):
-        agency = CharacterChangesSelectorPopup.popup()
+        agency = CharacterChangesSelectorPopup.popup(self.agenda)
         if agency:
             self.addNewElements([agency])
 
     def _addElements(self, changes: List[CharacterAgencyChanges]):
         def _addElement(element: StoryElement, row: int, col: int):
             wdg = CharacterChangeBubble(element)
+            if element.type == StoryElementType.Motivation:
+                motivationEditor = SceneAgendaMotivationEditor()
+                motivationEditor.setNovel(self.novel)
+                motivationEditor.setScene(self.scene)
+                motivationEditor.setAgenda(self.agenda)
+                wdg.addBottomWidget(motivationEditor)
             self._layout.addWidget(wdg, row, col, alignment=Qt.AlignmentFlag.AlignCenter)
 
         row = self._layout.rowCount()
@@ -724,9 +747,10 @@ class CharacterChangesEditor(QWidget):
 class CharacterAgencyEditor(QWidget):
     removed = pyqtSignal()
 
-    def __init__(self, novel: Novel, agenda: SceneStructureAgenda, parent=None):
+    def __init__(self, novel: Novel, scene: Scene, agenda: SceneStructureAgenda, parent=None):
         super().__init__(parent)
         self.novel = novel
+        self.scene = scene
         self.agenda = agenda
         vbox(self, spacing=10)
         self._charDisplay = tool_btn(IconRegistry.character_icon(), transparent_=True)
@@ -747,7 +771,7 @@ class CharacterAgencyEditor(QWidget):
         self._conflictEditor = SceneAgendaConflictEditor()
         self._conflictEditor.setNovel(self.novel)
 
-        self._changesEditor = CharacterChangesEditor(self.agenda)
+        self._changesEditor = CharacterChangesEditor(self.novel, self.scene, self.agenda)
         margins(self._changesEditor, left=65)
 
         if agenda.emotion:
@@ -865,7 +889,7 @@ class SceneAgencyEditor(QWidget, EventListener):
         fade_out_and_gc(self.wdgAgendas, wdg)
 
     def __initAgencyWidget(self, agenda: SceneStructureAgenda) -> CharacterAgencyEditor:
-        wdg = CharacterAgencyEditor(self._novel, agenda)
+        wdg = CharacterAgencyEditor(self._novel, self._scene, agenda)
         wdg.removed.connect(partial(self._agencyRemoved, wdg))
         self.wdgAgendas.layout().addWidget(wdg)
 
