@@ -37,7 +37,7 @@ from plotlyst.core.domain import Motivation, Novel, Scene, SceneStructureAgenda,
 from plotlyst.event.core import Event, EventListener
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import NovelPanelCustomizationEvent, NovelEmotionTrackingToggleEvent, \
-    NovelMotivationTrackingToggleEvent, NovelConflictTrackingToggleEvent
+    NovelMotivationTrackingToggleEvent, NovelConflictTrackingToggleEvent, CharacterDeletedEvent
 from plotlyst.service.cache import characters_registry
 from plotlyst.view.common import push_btn, label, fade_out_and_gc, tool_btn, action, ExclusiveOptionalButtonGroup
 from plotlyst.view.generated.scene_goal_stakes_ui import Ui_GoalReferenceStakesEditor
@@ -847,7 +847,7 @@ class SceneAgencyEditor(QWidget, EventListener):
 
         event_dispatchers.instance(self._novel).register(self, NovelEmotionTrackingToggleEvent,
                                                          NovelMotivationTrackingToggleEvent,
-                                                         NovelConflictTrackingToggleEvent)
+                                                         NovelConflictTrackingToggleEvent, CharacterDeletedEvent)
 
     @overrides
     def event_received(self, event: Event):
@@ -857,6 +857,11 @@ class SceneAgencyEditor(QWidget, EventListener):
                 wdg = item.widget()
                 if wdg and isinstance(wdg, CharacterAgencyEditor):
                     wdg.updateElementsVisibility()
+        elif isinstance(event, CharacterDeletedEvent):
+            for i in range(self.wdgAgendas.layout().count()):
+                wdg = self.wdgAgendas.layout().itemAt(i).widget()
+                if isinstance(wdg, CharacterAgencyEditor) and event.character.id == wdg.agenda.character_id:
+                    self._agencyRemoved(wdg)
 
     def setScene(self, scene: Scene):
         self._scene = scene

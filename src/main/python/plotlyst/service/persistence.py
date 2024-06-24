@@ -318,9 +318,9 @@ def delete_character(novel: Novel, character: Character, forced: bool = False) -
                     break
             for agenda in scene.agendas:
                 if agenda.character_id == char_id:
-                    agenda.reset_character()
                     agenda.conflict_references.clear()
                     agenda.goal_references.clear()
+                    agenda.motivations.clear()
                     update_scene = True
                     continue
                 if removed_conflicts:
