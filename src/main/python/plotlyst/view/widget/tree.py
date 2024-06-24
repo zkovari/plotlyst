@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from typing import Optional, List
 
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent, QSize
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QIcon, QResizeEvent
 from PyQt6.QtWidgets import QScrollArea, QFrame, QSizePolicy, QToolButton
 from PyQt6.QtWidgets import QWidget, QLabel
 from overrides import overrides
@@ -33,6 +33,7 @@ from plotlyst.view.dialog.utility import IconSelectorDialog
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.button import EyeToggle
 from plotlyst.view.widget.display import Icon
+from plotlyst.view.widget.input import TextInputDialog
 
 
 @dataclass
@@ -49,6 +50,7 @@ class BaseTreeWidget(QWidget):
     selectionChanged = pyqtSignal(bool)
     deleted = pyqtSignal()
     iconChanged = pyqtSignal()
+    titleChanged = pyqtSignal()
 
     def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None, settings: Optional[TreeSettings] = None):
         super(BaseTreeWidget, self).__init__(parent)
@@ -74,14 +76,14 @@ class BaseTreeWidget(QWidget):
         else:
             self._icon.setHidden(True)
 
-        self._btnMenu = QToolButton()
+        self._btnMenu = QToolButton(self._wdgTitle)
         transparent(self._btnMenu)
         self._btnMenu.setIcon(IconRegistry.dots_icon(self._settings.action_buttons_color, vertical=True))
         self._btnMenu.setIconSize(QSize(18, 18))
         self._btnMenu.setHidden(True)
         retain_when_hidden(self._btnMenu)
 
-        self._btnAdd = QToolButton()
+        self._btnAdd = QToolButton(self._wdgTitle)
         transparent(self._btnAdd)
         self._btnAdd.setIcon(IconRegistry.plus_icon(self._settings.action_buttons_color))
         self._btnAddPressFilter = ButtonPressResizeEventFilter(self._btnAdd)
@@ -89,13 +91,14 @@ class BaseTreeWidget(QWidget):
         self._btnAdd.setHidden(True)
 
         self._actionChangeIcon = action('Change icon', IconRegistry.icons_icon(), self._changeIcon)
+        self._actionChangeTitle = action('Rename', IconRegistry.edit_icon(), self._changeTitle)
         self._actionDelete = action('Delete', IconRegistry.trash_can_icon(), self.deleted.emit)
         self._initMenu()
 
         self._wdgTitle.layout().addWidget(self._icon)
         self._wdgTitle.layout().addWidget(self._lblTitle)
-        self._wdgTitle.layout().addWidget(self._btnMenu)
-        self._wdgTitle.layout().addWidget(self._btnAdd)
+        # self._wdgTitle.layout().addWidget(self._btnMenu)
+        # self._wdgTitle.layout().addWidget(self._btnAdd)
 
     def _initMenu(self):
         menu = MenuWidget(self._btnMenu)
@@ -103,10 +106,12 @@ class BaseTreeWidget(QWidget):
         menu.aboutToHide.connect(self._hideAll)
 
         self._actionChangeIcon.setVisible(False)
+        self._actionChangeTitle.setVisible(False)
 
         self._btnMenu.installEventFilter(ButtonPressResizeEventFilter(self._btnMenu))
 
     def _initMenuActions(self, menu: MenuWidget):
+        menu.addAction(self._actionChangeTitle)
         menu.addAction(self._actionChangeIcon)
         menu.addSeparator()
         menu.addAction(self._actionDelete)
@@ -162,6 +167,19 @@ class BaseTreeWidget(QWidget):
     def _iconChanged(self, iconName: str, iconColor: str):
         pass
 
+    def _changeTitle(self):
+        title = TextInputDialog.edit(placeholder='Untitled', value=self._titleValue())
+        if title:
+            self._lblTitle.setText(title)
+            self._titleChanged(title)
+            self.titleChanged.emit()
+
+    def _titleValue(self) -> str:
+        return self._lblTitle.text()
+
+    def _titleChanged(self, title: str):
+        pass
+
     def _hideAll(self):
         self._btnMenu.setHidden(True)
         self._btnAdd.setHidden(True)
@@ -201,13 +219,23 @@ class ContainerNode(BaseTreeWidget):
             self._wdgTitle.installEventFilter(self)
 
     @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        if self._plusEnabled:
+            self._btnAdd.setGeometry(self._wdgTitle.width() - 20, 5, 20, 20)
+            self._btnMenu.setGeometry(self._wdgTitle.width() - 40, 5, 20, 20)
+        elif self._menuEnabled:
+            self._btnMenu.setGeometry(self._wdgTitle.width() - 20, 5, 20, 20)
+
+    @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if watched is self._wdgTitle:
             if event.type() == QEvent.Type.Enter:
                 if self._menuEnabled and self.isEnabled():
                     self._btnMenu.setVisible(True)
+                    self._btnMenu.raise_()
                 if self._plusEnabled and self.isEnabled():
                     self._btnAdd.setVisible(True)
+                    self._btnAdd.raise_()
                 if not self._selected and self.isEnabled():
                     self._wdgTitle.setStyleSheet(f'#wdgTitle {{background-color: {self._settings.hover_bg_color};}}')
             elif event.type() == QEvent.Type.Leave:

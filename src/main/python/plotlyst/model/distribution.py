@@ -21,7 +21,8 @@ from PyQt6.QtCore import QModelIndex, Qt
 from PyQt6.QtGui import QBrush, QColor
 from overrides import overrides
 
-from plotlyst.core.domain import Conflict, ConflictType, Tag, Goal, Novel
+from plotlyst.common import PLOTLYST_MAIN_COLOR
+from plotlyst.core.domain import Conflict, ConflictType, Tag, Goal, Novel, ReaderInformationType
 from plotlyst.model.common import DistributionModel
 from plotlyst.view.common import text_color_with_bg_color
 from plotlyst.view.icons import avatars, IconRegistry
@@ -122,10 +123,48 @@ class ConflictScenesDistributionTableModel(DistributionModel):
             return avatars.avatar(conflict.character(self.novel))
 
     @overrides
-    def _match_by_row_col(self, row: int, column: int):
+    def _match_by_row_col(self, row: int, column: int) -> bool:
         for agenda in self.novel.scenes[column - 2].agendas:
             if self.novel.conflicts[row] in agenda.conflicts(self.novel):
                 return True
+        return False
+
+
+class InformationScenesDistributionTableModel(DistributionModel):
+
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(novel, parent)
+        self._rowNames = ['Revelations', 'Plot', 'Character', 'World']
+        self._rowIcons = [IconRegistry.from_name('mdi.puzzle-star', PLOTLYST_MAIN_COLOR),
+                          IconRegistry.storylines_icon(color=ReaderInformationType.Story.color()),
+                          IconRegistry.character_icon(color=ReaderInformationType.Character.color()),
+                          IconRegistry.world_building_icon(color=ReaderInformationType.World.color())
+                          ]
+
+    @overrides
+    def rowCount(self, parent: QModelIndex = None) -> int:
+        return 4
+
+    @overrides
+    def _dataForTag(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole):
+        if role == Qt.ItemDataRole.DecorationRole:
+            return self._rowIcons[index.row()]
+        elif role == Qt.ItemDataRole.DisplayRole:
+            count = super().data(index, role=self.SortRole)
+            return f'{self._rowNames[index.row()]} ({count})'
+
+    @overrides
+    def _match_by_row_col(self, row: int, column: int) -> bool:
+        for info in self.novel.scenes[column - 2].info:
+            if row == 0 and info.revelation:
+                return True
+            elif row == 1 and info.type == ReaderInformationType.Story:
+                return True
+            elif row == 2 and info.type == ReaderInformationType.Character:
+                return True
+            elif row == 3 and info.type == ReaderInformationType.World:
+                return True
+
         return False
 
 

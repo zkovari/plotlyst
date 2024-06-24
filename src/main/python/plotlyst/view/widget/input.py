@@ -32,12 +32,13 @@ from PyQt6.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyl
     QApplication, QToolButton, QLineEdit, QWidgetAction, QListView, QSpinBox, QWidget, QLabel, QDialog
 from language_tool_python import LanguageTool
 from overrides import overrides
-from qthandy import transparent, hbox, margins, pointy, sp
-from qthandy.filter import DisabledClickEventFilter
+from qthandy import transparent, hbox, margins, pointy, sp, line, flow, vbox, translucent, decr_icon, bold, incr_font
+from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
+from qtmenu import MenuWidget
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
 
-from plotlyst.common import IGNORE_CAPITALIZATION_PROPERTY
-from plotlyst.core.domain import TextStatistics, Character
+from plotlyst.common import IGNORE_CAPITALIZATION_PROPERTY, RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, RED_COLOR
+from plotlyst.core.domain import TextStatistics, Character, Label
 from plotlyst.core.text import wc
 from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, Event
@@ -47,10 +48,12 @@ from plotlyst.model.characters_model import CharactersTableModel
 from plotlyst.model.common import proxy
 from plotlyst.service.grammar import language_tool_proxy, dictionary
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import action, label, push_btn
+from plotlyst.view.common import action, label, push_btn, tool_btn, insert_before, fade_out_and_gc
+from plotlyst.view.dialog.utility import IconSelectorDialog
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.text import apply_texteditor_toolbar_style
 from plotlyst.view.widget._toggle import AnimatedToggle
+from plotlyst.view.widget.button import DotsMenuButton
 from plotlyst.view.widget.display import PopupDialog
 from plotlyst.view.widget.lang import GrammarPopupMenu
 
@@ -470,14 +473,16 @@ class CapitalizationEventFilter(QObject):
 
 class DocumentTextEditor(RichTextEditor):
     titleChanged = pyqtSignal(str)
+    iconChanged = pyqtSignal(str, str)
 
     def __init__(self, parent=None):
         super(DocumentTextEditor, self).__init__(parent)
         self._titleVisible: bool = True
 
-        self._btnIcon = QToolButton()
-        transparent(self._btnIcon)
+        self._btnIcon = tool_btn(QIcon(), transparent_=True)
         self._btnIcon.setIconSize(QSize(48, 48))
+        self._btnIcon.installEventFilter(OpacityEventFilter(self._btnIcon, leaveOpacity=1.0, enterOpacity=0.8))
+        self._btnIcon.clicked.connect(self._changeIcon)
         self._textTitle = QLineEdit()
         self._textTitle.setProperty('transparent', True)
         self._textTitle.setFrame(False)
@@ -486,7 +491,7 @@ class DocumentTextEditor(RichTextEditor):
         title_font.setPointSize(40)
         self._textTitle.setFont(title_font)
         self._textTitle.returnPressed.connect(self.textEdit.setFocus)
-        self._textTitle.textChanged.connect(self.titleChanged.emit)
+        self._textTitle.textChanged.connect(self.titleChanged)
 
         apply_texteditor_toolbar_style(self.toolbar())
 
@@ -502,24 +507,22 @@ class DocumentTextEditor(RichTextEditor):
 
         self.highlighter = self._initHighlighter()
 
-        if app_env.is_mac():
-            family = 'Helvetica Neue'
-        elif app_env.is_windows():
-            family = 'Calibri'
-        else:
-            family = 'Helvetica'
-        self.textEdit.setFont(QFont(family, 16))
+        self.textEdit.setFont(QFont('Sans-serif', 16))
         self.textEdit.setProperty('transparent', True)
         self.textEdit.zoomIn(int(self.textEdit.font().pointSize() * 0.25))
-        self.textEdit.setBlockFormat(lineSpacing=120)
+        self.textEdit.setBlockFormat(lineSpacing=110, margin_bottom=10, margin_top=10)
         self.textEdit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
-        self.textEdit.setPlaceholderText('Write your notes...')
+        self.textEdit.setPlaceholderText("Begin writing, or press '/' for commands...")
 
         self.setWidthPercentage(90)
 
         self.layout().insertWidget(1, self._wdgTitle)
 
         self._textedit.verticalScrollBar().valueChanged.connect(self._scrolled)
+
+    @property
+    def textTitle(self):
+        return self._textTitle
 
     @overrides
     def _initTextEdit(self) -> EnhancedTextEdit:
@@ -558,6 +561,9 @@ class DocumentTextEditor(RichTextEditor):
         if icon:
             self._btnIcon.setIcon(icon)
 
+    def setTitle(self, title: str):
+        self._textTitle.setText(title)
+
     def setPlaceholderText(self, text: str):
         self.textEdit.setPlaceholderText(text)
 
@@ -592,6 +598,59 @@ class DocumentTextEditor(RichTextEditor):
             self._wdgTitle.setHidden(True)
         elif self._titleVisible:
             self._wdgTitle.setVisible(True)
+
+    def _changeIcon(self):
+        if self._textTitle.isReadOnly():
+            return
+        result = IconSelectorDialog().display()
+        if result:
+            name = result[0]
+            color = result[1].name()
+            self.iconChanged.emit(name, color)
+            self._btnIcon.setIcon(IconRegistry.from_name(name, color))
+
+
+class TextHighlighterAnimation:
+    def __init__(self, text_edit, color: QColor, duration=300, interval=10):
+        self.text_edit = text_edit
+        self.color = color
+        self.duration = duration
+        self.interval = interval
+        self.total_steps = self.duration // self.interval
+        self.current_step = 0
+        self.start_pos = 0
+        self.end_pos = 0
+        self.direction = 1
+        self.step_alpha = 255 / self.total_steps
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_highlight_color)
+
+    def start_highlight(self, start_pos: int, end_pos: int):
+        self.current_step = 0
+        self.start_pos = start_pos
+        self.end_pos = end_pos
+        self.direction = 1
+        self.timer.start(self.interval)
+
+    def update_highlight_color(self):
+        if self.current_step > self.total_steps * 2:
+            self.timer.stop()
+            return
+
+        if self.current_step > self.total_steps:
+            alpha = int((2 * self.total_steps - self.current_step) * self.step_alpha)
+        else:
+            alpha = int(self.current_step * self.step_alpha)
+
+        cursor = self.text_edit.textCursor()
+        cursor.setPosition(self.start_pos)
+        cursor.setPosition(self.end_pos, QTextCursor.MoveMode.KeepAnchor)
+
+        format = QTextCharFormat()
+        format.setBackground(QColor(self.color.red(), self.color.green(), self.color.blue(), alpha))
+        cursor.setCharFormat(format)
+
+        self.current_step += 1
 
 
 class RotatedButtonOrientation(Enum):
@@ -734,7 +793,7 @@ class PowerBar(QFrame):
 
 
 class RemovalButton(QToolButton):
-    def __init__(self, parent=None, colorOff: str = 'grey', colorOn='red', colorHover='black'):
+    def __init__(self, parent=None, colorOff: str = 'grey', colorOn=RED_COLOR, colorHover='black'):
         super(RemovalButton, self).__init__(parent)
         self._colorOff = colorOff
         self._colorHover = colorHover
@@ -820,11 +879,13 @@ class TextInputDialog(PopupDialog):
         self.lineKey.textChanged.connect(self._textChanged)
 
         self.btnConfirm = push_btn(text='Confirm', properties=['base', 'positive'])
+        self.btnConfirm.setShortcut(Qt.Key.Key_Return)
         sp(self.btnConfirm).h_exp()
         self.btnConfirm.clicked.connect(self.accept)
         self.btnConfirm.setDisabled(True)
         self.btnConfirm.installEventFilter(
             DisabledClickEventFilter(self.btnConfirm, lambda: qtanim.shake(self.lineKey)))
+        self.lineKey.editingFinished.connect(self.btnConfirm.click)
 
         self.frame.layout().addWidget(self.wdgTitle)
         self.frame.layout().addWidget(self.lineKey)
@@ -844,3 +905,293 @@ class TextInputDialog(PopupDialog):
 
     def _textChanged(self, key: str):
         self.btnConfirm.setEnabled(len(key) > 0)
+
+
+class TextAreaInputDialog(PopupDialog):
+
+    def __init__(self, title: str, placeholder: str, description: str, value: str = '', parent=None):
+        super().__init__(parent)
+
+        self.title = label(title, h4=True)
+        sp(self.title).v_max()
+        self.wdgTitle = QWidget()
+        hbox(self.wdgTitle, spacing=5)
+        self.wdgTitle.layout().addWidget(self.title, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgTitle.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
+
+        self.lblDesc = label(description, description=True, wordWrap=True)
+        sp(self.lblDesc).v_max()
+
+        self.textEdit = QTextEdit()
+        self.textEdit.setProperty('white-bg', True)
+        self.textEdit.setProperty('rounded', True)
+        self.setMaximumWidth(300)
+        self.textEdit.setFixedSize(250, 60)
+        self.textEdit.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.textEdit.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.textEdit.setPlaceholderText(placeholder)
+        self.textEdit.setText(value)
+        self.textEdit.textChanged.connect(self._textChanged)
+        self.textEdit.installEventFilter(self)
+
+        self.btnConfirm = push_btn(text='Confirm', properties=['base', 'positive'])
+        self.btnConfirm.setFixedWidth(250)
+        self.btnConfirm.setShortcut(Qt.Key.Key_Return)
+        sp(self.btnConfirm).h_exp()
+        self.btnConfirm.clicked.connect(self.accept)
+        self.btnConfirm.setDisabled(True)
+        self.btnConfirm.installEventFilter(
+            DisabledClickEventFilter(self.btnConfirm, lambda: qtanim.shake(self.textEdit)))
+
+        self.frame.layout().addWidget(self.wdgTitle)
+        self.frame.layout().addWidget(line())
+        self.frame.layout().addWidget(self.lblDesc)
+        self.frame.layout().addWidget(self.textEdit, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.frame.layout().addWidget(self.btnConfirm, alignment=Qt.AlignmentFlag.AlignCenter)
+
+    def display(self) -> Optional[str]:
+        result = self.exec()
+
+        if result == QDialog.DialogCode.Accepted:
+            return self.textEdit.toPlainText()
+
+        return None
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.KeyPress and event.key() == Qt.Key.Key_Return:
+            QTimer.singleShot(10, self.btnConfirm.click)
+            return True
+        return super().eventFilter(watched, event)
+
+    @classmethod
+    def edit(cls, title: str = 'Edit text', placeholder: str = 'Edit text', description: str = 'Edit text',
+             value: str = ''):
+        return cls.popup(title, placeholder, description, value)
+
+    def _textChanged(self):
+        self.btnConfirm.setEnabled(len(self.textEdit.toPlainText()) > 0)
+
+
+class LabelWidget(QFrame):
+    edited = pyqtSignal()
+    removed = pyqtSignal()
+    clicked = pyqtSignal()
+
+    def __init__(self, label_: Label, parent=None):
+        super().__init__(parent)
+        self.setFrameShape(QFrame.Shape.StyledPanel)
+        self.setObjectName('parentFrame')
+        self._label = label_
+        self.lblWidget = label(label_.keyword)
+        self.lblWidget.setObjectName('labelText')
+        self.setStyleSheet(f'''
+            #parentFrame {{
+                background-color: {PLOTLYST_SECONDARY_COLOR};
+                border-radius: 16px;
+            }}
+            #labelText {{
+                color: {RELAXED_WHITE_COLOR};
+                font-family: Serif;
+            }}''')
+
+        self.btnMenu = DotsMenuButton()
+        decr_icon(self.btnMenu, 2)
+        hbox(self, 5)
+        margins(self, left=7)
+        self.layout().addWidget(self.lblWidget)
+        self.layout().addWidget(self.btnMenu)
+        self.btnMenu.setHidden(True)
+        menu = MenuWidget(self.btnMenu)
+        menu.addAction(action('Edit', IconRegistry.edit_icon(), self._edit))
+        menu.addAction(action('Remove', IconRegistry.trash_can_icon(), self.removed))
+
+        pointy(self)
+        self.btnMenu.setCursor(Qt.CursorShape.ArrowCursor)
+
+    def label(self) -> Label:
+        return self._label
+
+    def text(self):
+        return self.lblWidget.text()
+
+    @overrides
+    def mousePressEvent(self, a0: QtGui.QMouseEvent) -> None:
+        translucent(self, 0.7)
+
+    def mouseReleaseEvent(self, a0: QtGui.QMouseEvent) -> None:
+        self.setGraphicsEffect(None)
+        self.clicked.emit()
+
+    @overrides
+    def enterEvent(self, event: QtGui.QEnterEvent) -> None:
+        qtanim.fade_in(self.btnMenu)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self.btnMenu.setHidden(True)
+
+    def _edit(self):
+        new_text = TextInputDialog.edit('Edit label', value=self.lblWidget.text())
+        if new_text:
+            self._label.keyword = new_text
+            self.lblWidget.setText(new_text)
+            self.edited.emit()
+
+
+class LabelsEditor(QFrame):
+    labelAdded = pyqtSignal(Label)
+    labelEdited = pyqtSignal(Label)
+    labelClicked = pyqtSignal(Label)
+    labelRemoved = pyqtSignal(Label)
+
+    def __init__(self, title: str = '', parent=None):
+        super().__init__(parent)
+        self.setFrameShape(QFrame.Shape.StyledPanel)
+        self.setObjectName('parentFrame')
+        self.wdgHeader = QWidget()
+        self.wdgHeader.setObjectName('labelsHeader')
+        self.wdgContainer = QWidget()
+        vbox(self, 0)
+        self.layout().addWidget(self.wdgHeader)
+        self.layout().addWidget(line())
+        self.layout().addWidget(self.wdgContainer)
+
+        self.setStyleSheet(f'''
+            #parentFrame {{
+                border-radius: 12px;
+                border: 1px solid lightgrey;
+            }}
+            #labelsHeader {{
+                background: {PLOTLYST_SECONDARY_COLOR};
+                border-top-left-radius: 8px;
+                border-top-right-radius: 8px;
+                border: 1px hidden lightgrey;
+            }}
+            #labelsTitle {{
+                color: {RELAXED_WHITE_COLOR};
+            }}
+            #labelPlaceholder {{
+                font-family: Serif;
+            }}
+        ''')
+
+        hbox(self.wdgHeader, 0, 0)
+        margins(self.wdgHeader, top=3, bottom=3)
+        flow(self.wdgContainer, margin=10, spacing=6)
+
+        self.lblTitle = label(title, bold=True)
+        self.lblTitle.setObjectName('labelsTitle')
+        self.wdgHeader.layout().addWidget(self.lblTitle, alignment=Qt.AlignmentFlag.AlignCenter)
+        if not title:
+            self.lblTitle.setHidden(True)
+
+        self.linePlaceholder = QLineEdit()
+        self.linePlaceholder.setObjectName('labelPlaceholder')
+        self.linePlaceholder.setProperty('transparent', True)
+        self.linePlaceholder.setProperty(IGNORE_CAPITALIZATION_PROPERTY, True)
+        self.linePlaceholder.setPlaceholderText('Edit')
+        self.linePlaceholder.installEventFilter(self)
+        self.linePlaceholder.editingFinished.connect(self._editingFinished)
+
+        self.btnAdd = tool_btn(IconRegistry.plus_icon(PLOTLYST_SECONDARY_COLOR), transparent_=True)
+        self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd, leaveOpacity=0.7))
+        self.btnAdd.clicked.connect(self._startEditing)
+        self.wdgContainer.layout().addWidget(self.linePlaceholder)
+        self.linePlaceholder.setHidden(True)
+        self.wdgContainer.layout().addWidget(self.btnAdd)
+
+        sp(self).v_max()
+
+    @overrides
+    def eventFilter(self, watched: 'QObject', event: 'QEvent') -> bool:
+        if event.type() == QEvent.Type.KeyPress:
+            if event.key() == Qt.Key.Key_Escape:
+                self._cancelEditing()
+        elif event.type() == QEvent.Type.FocusOut:
+            if not watched.text():
+                self._cancelEditing()
+
+        return super().eventFilter(watched, event)
+
+    def addLabel(self, label: Label):
+        lblWidget = LabelWidget(label)
+        lblWidget.edited.connect(partial(self.labelEdited.emit, label))
+        lblWidget.clicked.connect(partial(self.labelClicked.emit, label))
+        lblWidget.removed.connect(partial(self._remove, lblWidget))
+        insert_before(self.wdgContainer, lblWidget, self.linePlaceholder)
+
+    def _startEditing(self):
+        self.linePlaceholder.clear()
+        self.btnAdd.setHidden(True)
+        self.linePlaceholder.setVisible(True)
+        self.linePlaceholder.setFocus()
+
+    def _cancelEditing(self):
+        self.linePlaceholder.clear()
+        self._editingFinished()
+
+    def _editingFinished(self):
+        if self.linePlaceholder.text():
+            label = Label(self.linePlaceholder.text())
+            self.addLabel(label)
+            self.labelAdded.emit(label)
+        self.linePlaceholder.setHidden(True)
+        self.btnAdd.setVisible(True)
+
+    def _remove(self, lblWdg: LabelWidget):
+        label = lblWdg.label()
+        fade_out_and_gc(self.wdgContainer, lblWdg)
+        self.labelRemoved.emit(label)
+
+
+class TextEditBubbleWidget(QFrame):
+    removed = pyqtSignal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._removalEnabled: bool = False
+
+        vbox(self)
+        self._title = QPushButton()
+        transparent(self._title)
+        bold(self._title)
+        self._title.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+
+        self._textedit = QTextEdit(self)
+        self._textedit.setProperty('white-bg', True)
+        self._textedit.setProperty('rounded', True)
+        self._textedit.setTabChangesFocus(True)
+        if app_env.is_mac():
+            incr_font(self._textedit)
+        self._textedit.setMinimumSize(175, 100)
+        self._textedit.setMaximumSize(190, 120)
+        self._textedit.verticalScrollBar().setVisible(False)
+
+        self._textedit.textChanged.connect(self._textChanged)
+
+        self.layout().addWidget(self._title, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self._textedit)
+
+        self._btnRemove = RemovalButton(self)
+        self._btnRemove.setHidden(True)
+        self._btnRemove.clicked.connect(self.removed)
+
+        sp(self).v_max()
+
+    @overrides
+    def enterEvent(self, event: QtGui.QEnterEvent) -> None:
+        if self._removalEnabled:
+            self._btnRemove.setVisible(True)
+            self._btnRemove.raise_()
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self._btnRemove.setHidden(True)
+
+    @overrides
+    def resizeEvent(self, a0: QtGui.QResizeEvent) -> None:
+        self._btnRemove.setGeometry(self.width() - 20, 5, 20, 20)
+
+    def _textChanged(self):
+        pass

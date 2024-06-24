@@ -27,13 +27,14 @@ from PyQt6.QtGui import QColor, QMouseEvent, QEnterEvent, QResizeEvent
 from PyQt6.QtWidgets import QWidget, QToolButton, QGraphicsDropShadowEffect, QTextEdit
 from overrides import overrides
 from qthandy import vbox, hbox, transparent, retain_when_hidden, spacer, sp, decr_icon, line, vline, \
-    margins, italic
-from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, InstantTooltipEventFilter
+    margins, italic, decr_font
+from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, InstantTooltipEventFilter, \
+    DisabledClickEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.core.domain import Novel, Scene, ScenePlotReference, PlotValue, ScenePlotValueCharge, \
-    Plot
-from plotlyst.view.common import action, tool_btn, wrap
+    Plot, SceneFunction
+from plotlyst.view.common import action, tool_btn, wrap, label
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.style.button import apply_button_palette_color
@@ -270,9 +271,11 @@ class ScenePlotValueEditor(QWidget):
     charged = pyqtSignal(PlotValue, ScenePlotValueCharge)
     generalProgressCharged = pyqtSignal()
 
-    def __init__(self, plotReference: ScenePlotReference, parent=None):
+    def __init__(self, scene: Scene, plotReference: ScenePlotReference, parent=None):
         super().__init__(parent)
+        self.scene = scene
         self.plotReference = plotReference
+        self._locked: bool = False
 
         self.setProperty('relaxed-white-bg', True)
         vbox(self)
@@ -284,6 +287,12 @@ class ScenePlotValueEditor(QWidget):
         self._text.setMaximumSize(180, 150)
         self._text.setText(self.plotReference.data.comment)
         self._text.textChanged.connect(self._textChanged)
+        self._lblFunctionHint = label('Referenced by primary function', description=True, wordWrap=True)
+        decr_font(self._lblFunctionHint)
+        self._lblFunctionHint.setHidden(True)
+        self._text.installEventFilter(DisabledClickEventFilter(self._text, lambda: qtanim.shake(self._lblFunctionHint)))
+
+        self.layout().addWidget(self._lblFunctionHint, alignment=Qt.AlignmentFlag.AlignRight)
         self.layout().addWidget(self._text)
         self.layout().addWidget(line(color='lightgrey'))
 
@@ -305,8 +314,23 @@ class ScenePlotValueEditor(QWidget):
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         pass
 
+    def checkFunction(self):
+        function: Optional[SceneFunction] = next(
+            (x for x in self.scene.functions.primary if x.ref == self.plotReference.plot.id), None)
+        if function:
+            self._locked = True
+            self._text.setPlainText(function.text)
+        else:
+            if self._locked:
+                self._text.setPlainText(self.plotReference.data.comment)
+            self._locked = False
+
+        self._lblFunctionHint.setVisible(self._locked)
+        self._text.setDisabled(self._locked)
+
     def _textChanged(self):
-        self.plotReference.data.comment = self._text.toPlainText()
+        if not self._locked:
+            self.plotReference.data.comment = self._text.toPlainText()
 
 
 class ScenePlotSelectorMenu(MenuWidget):
@@ -318,6 +342,7 @@ class ScenePlotSelectorMenu(MenuWidget):
         self._scene: Optional[Scene] = None
 
         self.aboutToShow.connect(self._beforeShow)
+        apply_white_menu(self)
 
     def setScene(self, scene: Scene):
         self._scene = scene
@@ -326,7 +351,7 @@ class ScenePlotSelectorMenu(MenuWidget):
         if self._scene is None:
             return
         self.clear()
-        occupied_plot_ids = [x.plot.id for x in self._scene.plot_values]
+        occupied_plot_ids = self._occupiedPlotIds()
         self.addSection('Link storylines to this scene')
         self.addSeparator()
         for plot in self._novel.plots:
@@ -339,13 +364,24 @@ class ScenePlotSelectorMenu(MenuWidget):
         if not self.actions():
             self.addSection('No corresponding storylines were found')
 
+    def _occupiedPlotIds(self):
+        return [x.plot.id for x in self._scene.plot_values]
+
+
+class SceneFunctionPlotSelectorMenu(ScenePlotSelectorMenu):
+
+    @overrides
+    def _occupiedPlotIds(self):
+        return [x.ref for x in self._scene.functions.primary]
+
 
 class ScenePlotLabels(QWidget):
     reset = pyqtSignal()
     generalProgressCharged = pyqtSignal()
 
-    def __init__(self, plotref: ScenePlotReference, parent=None):
+    def __init__(self, scene: Scene, plotref: ScenePlotReference, parent=None):
         super().__init__(parent)
+        self._scene = scene
         self._plotref = plotref
         hbox(self)
 
@@ -359,8 +395,9 @@ class ScenePlotLabels(QWidget):
         self._plotValueMenu = MenuWidget(self._icon)
         apply_white_menu(self._plotValueMenu)
 
-        self._plotValueEditor = ScenePlotValueEditor(self._plotref)
+        self._plotValueEditor = ScenePlotValueEditor(self._scene, self._plotref)
         self._plotValueMenu.addWidget(self._plotValueEditor)
+        self._plotValueMenu.aboutToShow.connect(self._plotValueEditor.checkFunction)
 
         self._plotValueDisplay = PlotValuesDisplay(self._plotref)
         self._plotValueEditor.charged.connect(self._plotValueDisplay.updateValue)

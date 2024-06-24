@@ -23,11 +23,11 @@ from typing import Optional, Dict
 
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QResizeEvent, QAction
+from PyQt6.QtGui import QColor, QResizeEvent, QAction, QIcon
 from PyQt6.QtWidgets import QWidget, QButtonGroup, QStackedWidget, QTextEdit
 from overrides import overrides
 from qthandy import vbox, hbox, spacer, sp, flow, vline, clear_layout, bold, incr_font, italic, translucent, line, \
-    vspacer, incr_icon, margins
+    vspacer, incr_icon, margins, retain_when_hidden, decr_icon, decr_font
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
@@ -72,7 +72,8 @@ class ReaderQuestionTypeMenu(MenuWidget):
         self._addAction(ReaderQuestionType.Internal_conflict)
         self._addAction(ReaderQuestionType.Relationship)
         self._addAction(ReaderQuestionType.Character_motivation)
-        self._addAction(ReaderQuestionType.Conflict_resolution)
+        self._addAction(ReaderQuestionType.Wonder)
+        # self._addAction(ReaderQuestionType.Conflict_resolution)
 
         self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
 
@@ -120,6 +121,7 @@ class ReaderQuestionWidget(QWidget):
         self.textedit = QTextEdit(self)
         self.textedit.setProperty('white-bg', True)
         self.textedit.setProperty('rounded', True)
+        self.textedit.setPlaceholderText("Describe what piques the reader's interest")
         self.textedit.setTabChangesFocus(True)
         if app_env.is_mac():
             incr_font(self.textedit)
@@ -511,13 +513,24 @@ class ReaderInformationWidget(QWidget):
         self.textedit.setMinimumSize(170, 100)
         self.textedit.setMaximumSize(190, 120)
         self.textedit.verticalScrollBar().setVisible(False)
-        shadow(self.textedit, color=QColor(self.info.type.color()))
+        shadow(self.textedit, offset=4 if self.info.revelation else 2, color=QColor(self.info.type.color()))
         self.textedit.setPlaceholderText('What new information is conveyed to the reader?')
         self.textedit.setText(self.info.text)
         self.textedit.textChanged.connect(self._infoChanged)
 
+        self.btnRevelation = push_btn(IconRegistry.from_name('mdi.puzzle-star'), 'Mark as revelation',
+                                      transparent_=True)
+        self.btnRevelation.installEventFilter(OpacityEventFilter(self.btnRevelation))
+        retain_when_hidden(self.btnRevelation)
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnRevelation, self))
+        self.btnRevelation.clicked.connect(self._toggleRelevation)
+
         self.layout().addWidget(self._label, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self.textedit)
+        self.layout().addWidget(self.btnRevelation, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        if self.info.revelation:
+            self._refreshRevelation()
 
         sp(self).v_max()
 
@@ -527,6 +540,45 @@ class ReaderInformationWidget(QWidget):
 
     def _infoChanged(self):
         self.info.text = self.textedit.toPlainText()
+
+    def _toggleRelevation(self):
+        def finished():
+            shadow(self.textedit, offset=4 if self.info.revelation else 2, color=QColor(self.info.type.color()))
+
+        self.info.revelation = not self.info.revelation
+        if self.info.revelation:
+            qtanim.glow(self.textedit, 500, radius=15, color=QColor(self.info.type.color()), teardown=finished)
+        else:
+            qtanim.glow(self.textedit, duration=100, color=QColor('lightgrey'), teardown=finished)
+
+        self._refreshRevelation()
+
+    def _refreshRevelation(self):
+        bold(self._label, self.info.revelation)
+        italic(self.btnRevelation, self.info.revelation)
+        if self.info.revelation:
+            icon = IconRegistry.from_name('mdi.puzzle-star')
+            title = 'Revelation'
+            incr_icon(self._label, 4)
+            incr_font(self._label, 2)
+            self.btnRevelation.setText('Demote revelation')
+            self.btnRevelation.setIcon(QIcon())
+
+            self.textedit.setMinimumSize(195, 125)
+            self.textedit.setMaximumSize(215, 135)
+        else:
+            icon = IconRegistry.general_info_icon('black')
+            title = 'Information'
+            decr_icon(self._label, 4)
+            decr_font(self._label, 2)
+            self.btnRevelation.setText('Mark as revelation')
+            self.btnRevelation.setIcon(IconRegistry.from_name('mdi.puzzle-star'))
+
+            self.textedit.setMinimumSize(170, 100)
+            self.textedit.setMaximumSize(190, 120)
+
+        self._label.setIcon(icon)
+        self._label.setText(title)
 
 
 class ReaderInformationColumn(QWidget):
@@ -540,11 +592,11 @@ class ReaderInformationColumn(QWidget):
 
         self.title = IconText()
         if self.infoType == ReaderInformationType.Story:
-            self.title.setText('Story')
+            self.title.setText('Plot')
             self.title.setIcon(
                 IconRegistry.storylines_icon(color=self.infoType.color(), color_on=self.infoType.color()))
         elif self.infoType == ReaderInformationType.Character:
-            self.title.setText('Characters')
+            self.title.setText('Character')
             self.title.setIcon(IconRegistry.character_icon(color=self.infoType.color(), color_on=self.infoType.color()))
         elif self.infoType == ReaderInformationType.World:
             self.title.setText('World')
@@ -597,8 +649,11 @@ class ReaderInformationEditor(LazyWidget):
         self._novel = novel
         self._scene: Optional[Scene] = None
 
-        hbox(self, 10, 0)
-        margins(self, top=25)
+        vbox(self, 10, 10)
+        margins(self, top=15)
+        self.layout().addWidget(label(
+            "Track what essential information is conveyed to the reader, and in which category: plot, character, or world\nMark the most important ones as revelations.",
+            description=True, wordWrap=True))
         self._scrollarea, self._wdgCenter = scrolled(self, frameless=True)
         self._wdgCenter.setProperty('relaxed-white-bg', True)
         hbox(self._wdgCenter)

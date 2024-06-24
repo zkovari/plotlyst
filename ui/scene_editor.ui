@@ -141,6 +141,12 @@
      </item>
      <item>
       <widget class="QWidget" name="wdgTop" native="true">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <layout class="QHBoxLayout" name="horizontalLayout_5">
         <property name="spacing">
          <number>2</number>
@@ -378,57 +384,65 @@
         </item>
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_12">
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout">
-            <item alignment="Qt::AlignTop">
-             <widget class="QPushButton" name="btnStageCharacterLabel">
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="toolTip">
-               <string>Select which characters are active in this scene</string>
-              </property>
-              <property name="text">
-               <string>Present characters</string>
-              </property>
-              <property name="transparent" stdset="0">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item alignment="Qt::AlignLeft|Qt::AlignTop">
-             <widget class="QToolButton" name="btnEditCharacters">
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="popupMode">
-               <enum>QToolButton::InstantPopup</enum>
-              </property>
-              <property name="autoRaise">
-               <bool>false</bool>
-              </property>
-              <property name="transparent" stdset="0">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_6">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
+          <item alignment="Qt::AlignTop">
+           <widget class="QWidget" name="widget" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <item alignment="Qt::AlignTop">
+              <widget class="QPushButton" name="btnStageCharacterLabel">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>Select which characters are active in this scene</string>
+               </property>
+               <property name="text">
+                <string>Present characters</string>
+               </property>
+               <property name="transparent" stdset="0">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item alignment="Qt::AlignLeft|Qt::AlignTop">
+              <widget class="QToolButton" name="btnEditCharacters">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="popupMode">
+                <enum>QToolButton::InstantPopup</enum>
+               </property>
+               <property name="autoRaise">
+                <bool>false</bool>
+               </property>
+               <property name="transparent" stdset="0">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_6">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </widget>
           </item>
           <item>
            <widget class="LabelsWidget" name="wdgCharacters" native="true">
@@ -439,6 +453,22 @@
              </sizepolicy>
             </property>
            </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::MinimumExpanding</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>10</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </item>
@@ -478,13 +508,13 @@
          <number>15</number>
         </property>
         <property name="topMargin">
-         <number>0</number>
+         <number>1</number>
         </property>
         <property name="rightMargin">
          <number>0</number>
         </property>
         <property name="bottomMargin">
-         <number>0</number>
+         <number>5</number>
         </property>
         <item>
          <widget class="QWidget" name="wdgStorylines" native="true"/>
@@ -502,30 +532,7 @@
           </property>
          </spacer>
         </item>
-        <item>
-         <widget class="QPushButton" name="btnInfo">
-          <property name="cursor">
-           <cursorShape>PointingHandCursor</cursorShape>
-          </property>
-          <property name="text">
-           <string>PushButton</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-          <property name="base" stdset="0">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
        </layout>
-      </widget>
-     </item>
-     <item>
-      <widget class="Line" name="line_2">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
       </widget>
      </item>
      <item>
@@ -555,14 +562,20 @@
            <property name="currentIndex">
             <number>1</number>
            </property>
-           <widget class="QWidget" name="tabStorylines">
+           <widget class="QWidget" name="tabFunctions">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="relaxed-white-bg" stdset="0">
              <bool>true</bool>
             </property>
             <attribute name="title">
-             <string>Events</string>
+             <string>Functions</string>
             </attribute>
-            <layout class="QVBoxLayout" name="verticalLayout_9">
+            <layout class="QVBoxLayout" name="verticalLayout_17">
              <property name="spacing">
               <number>0</number>
              </property>
@@ -578,9 +591,55 @@
              <property name="bottomMargin">
               <number>0</number>
              </property>
+             <item>
+              <widget class="QScrollArea" name="scrollArea">
+               <property name="frameShape">
+                <enum>QFrame::NoFrame</enum>
+               </property>
+               <property name="widgetResizable">
+                <bool>true</bool>
+               </property>
+               <widget class="QWidget" name="scrollAreaFunctions">
+                <property name="geometry">
+                 <rect>
+                  <x>0</x>
+                  <y>0</y>
+                  <width>564</width>
+                  <height>343</height>
+                 </rect>
+                </property>
+                <property name="relaxed-white-bg" stdset="0">
+                 <bool>true</bool>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_16">
+                 <property name="spacing">
+                  <number>3</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                </layout>
+               </widget>
+              </widget>
+             </item>
             </layout>
            </widget>
            <widget class="QWidget" name="tabDrive">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="relaxed-white-bg" stdset="0">
              <bool>true</bool>
             </property>
@@ -612,6 +671,12 @@
                 <bool>true</bool>
                </property>
                <widget class="QWidget" name="tabAgency">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="relaxed-white-bg" stdset="0">
                  <bool>true</bool>
                 </property>
@@ -634,9 +699,45 @@
                  <property name="bottomMargin">
                   <number>0</number>
                  </property>
+                 <item>
+                  <widget class="QScrollArea" name="scrollArea_2">
+                   <property name="frameShape">
+                    <enum>QFrame::NoFrame</enum>
+                   </property>
+                   <property name="widgetResizable">
+                    <bool>true</bool>
+                   </property>
+                   <property name="relaxed-white-bg" stdset="0">
+                    <bool>false</bool>
+                   </property>
+                   <widget class="QWidget" name="scrollAgency">
+                    <property name="geometry">
+                     <rect>
+                      <x>0</x>
+                      <y>0</y>
+                      <width>560</width>
+                      <height>315</height>
+                     </rect>
+                    </property>
+                    <property name="relaxed-white" stdset="0">
+                     <bool>true</bool>
+                    </property>
+                    <property name="relaxed-white-bg" stdset="0">
+                     <bool>true</bool>
+                    </property>
+                    <layout class="QVBoxLayout" name="verticalLayout_9"/>
+                   </widget>
+                  </widget>
+                 </item>
                 </layout>
                </widget>
                <widget class="QWidget" name="tabCuriosity">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="relaxed-white-bg" stdset="0">
                  <bool>true</bool>
                 </property>
@@ -662,6 +763,12 @@
                 </layout>
                </widget>
                <widget class="QWidget" name="tabInformation">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="relaxed-white-bg" stdset="0">
                  <bool>true</bool>
                 </property>
@@ -691,6 +798,12 @@
             </layout>
            </widget>
            <widget class="QWidget" name="tabStructure">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="relaxed-white-bg" stdset="0">
              <bool>true</bool>
             </property>
@@ -837,18 +950,9 @@
    </item>
   </layout>
  </widget>
+ <layoutdefault spacing="0" margin="0"/>
+ <layoutfunction spacing="0" margin="0"/>
  <customwidgets>
-  <customwidget>
-   <class>ScenesTreeView</class>
-   <extends>QTreeView</extends>
-   <header>plotlyst.view.widget.scene</header>
-  </customwidget>
-  <customwidget>
-   <class>SceneStoryStructureWidget</class>
-   <extends>QWidget</extends>
-   <header>plotlyst.view.widget.scenes</header>
-   <container>1</container>
-  </customwidget>
   <customwidget>
    <class>DocumentTextEditor</class>
    <extends>QWidget</extends>
@@ -863,6 +967,17 @@
    <class>ReturnButton</class>
    <extends>QPushButton</extends>
    <header>plotlyst.view.widget.button</header>
+  </customwidget>
+  <customwidget>
+   <class>ScenesTreeView</class>
+   <extends>QTreeView</extends>
+   <header>plotlyst.view.widget.scene</header>
+  </customwidget>
+  <customwidget>
+   <class>SceneStoryStructureWidget</class>
+   <extends>QWidget</extends>
+   <header>plotlyst.view.widget.scenes</header>
+   <container>1</container>
   </customwidget>
   <customwidget>
    <class>LabelsWidget</class>

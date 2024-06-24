@@ -22,7 +22,7 @@ from functools import partial
 from typing import Optional
 
 from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QColor, QIcon, QResizeEvent, QNativeGestureEvent
+from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QColor, QIcon, QResizeEvent, QNativeGestureEvent, QFont
 from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QFrame, \
     QToolButton, QApplication, QWidget
 from overrides import overrides
@@ -34,7 +34,7 @@ from plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButto
     TooltipPositionEventFilter, label
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.graphics import CharacterItem, ConnectorItem
-from plotlyst.view.widget.graphics.editor import ZoomBar, ConnectorToolbar
+from plotlyst.view.widget.graphics.editor import ZoomBar, ConnectorToolbar, TextLineEditorPopup
 from plotlyst.view.widget.graphics.items import NodeItem, EventItem, NoteItem
 from plotlyst.view.widget.graphics.scene import NetworkScene
 
@@ -273,7 +273,17 @@ class NetworkGraphicsView(BaseGraphicsView):
         popup.exec(self.mapToGlobal(view_pos))
 
     def _editEventItem(self, item: EventItem):
-        pass
+        def setText(text: str):
+            item.setText(text)
+
+        popup = TextLineEditorPopup(item.text(), item.textRect(), parent=self)
+        font = QFont(item.font())
+        font.setPointSize(max(int(item.fontSize() * self._scaledFactor), font.pointSize()))
+        popup.setFont(font)
+        view_pos = self.mapFromScene(item.textSceneRect().topLeft())
+        popup.aboutToHide.connect(lambda: setText(popup.text()))
+
+        popup.exec(self.mapToGlobal(view_pos))
 
     def _editNoteItem(self, item: NoteItem):
         pass

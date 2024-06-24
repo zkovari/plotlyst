@@ -83,6 +83,8 @@ class QuestionDialog(BaseDialog):
         self.btnConfirm.clicked.connect(self.accept)
         self.btnCancel = push_btn(text=btnCancelText, base=True)
         self.btnCancel.clicked.connect(self.reject)
+        self.btnCancel.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+        self.btnConfirm.setFocus()
 
         self.frame.layout().addWidget(group(self.btnCancel, self.btnConfirm))
 

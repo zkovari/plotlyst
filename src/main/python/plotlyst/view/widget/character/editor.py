@@ -795,8 +795,8 @@ class EmotionEditorSlider(QSlider):
         super().__init__(parent)
 
         pointy(self)
-        self.setMinimum(0)
-        self.setMaximum(10)
+        self.setMinimum(1)
+        self.setMaximum(9)
         self.setPageStep(1)
         self.setMaximumWidth(100)
         self.setValue(5)

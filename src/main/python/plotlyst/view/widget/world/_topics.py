@@ -32,6 +32,7 @@ cultural_topics = [
           icon='mdi.popcorn')
 ]
 historical_topics = [
+    Topic('History', TopicType.Worldbuilding, uuid.UUID('5420df8b-d988-429f-8ff1-689cd72d5bf7'), icon='mdi.bank'),
     Topic('Legends', TopicType.Worldbuilding, uuid.UUID('6f8c672e-bc61-4a43-8737-090151fed2b5'), icon='mdi6.bow-arrow'),
     Topic('Fossils', TopicType.Worldbuilding, uuid.UUID('abe594a9-33e9-46bc-b229-bfb3305415fc'), icon='mdi.bone'),
     Topic('Artifacts', TopicType.Worldbuilding, uuid.UUID('a5700efd-bdac-4961-8cb3-c70bb0907383'),

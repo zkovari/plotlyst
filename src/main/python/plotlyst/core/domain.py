@@ -32,7 +32,6 @@ from overrides import overrides
 
 from plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_choices, \
     mbti_choices, Role, exclude_if_false, antagonist_role, exclude_if_true
-from plotlyst.env import app_env
 
 
 @dataclass
@@ -1582,6 +1581,13 @@ class TagReference:
 
 
 @dataclass
+class CharacterAgencyChanges:
+    initial: Optional['StoryElement'] = None
+    transition: Optional['StoryElement'] = None
+    final: Optional['StoryElement'] = None
+
+
+@dataclass
 class SceneStructureAgenda(CharacterBased):
     character_id: Optional[uuid.UUID] = None
     conflict_references: List[ConflictReference] = field(default_factory=list)
@@ -1590,6 +1596,7 @@ class SceneStructureAgenda(CharacterBased):
     emotion: Optional[int] = None
     motivations: Dict[int, int] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
     story_elements: List['StoryElement'] = field(default_factory=list)
+    changes: List[CharacterAgencyChanges] = field(default_factory=list)
 
     def __post_init__(self):
         self._character: Optional[Character] = None
@@ -1685,8 +1692,8 @@ character_story_scene_purpose = ScenePurpose(ScenePurposeType.Character, 'Charac
                                              keywords=['characterization', 'introspection', 'backstory',
                                                        'internal conflict', 'relations', 'character change'],
                                              include=[ScenePurposeType.Emotion])
-emotion_story_scene_purpose = ScenePurpose(ScenePurposeType.Emotion, 'Mood',
-                                           keywords=['mood', 'atmosphere', 'emotion', 'evocative tone',
+emotion_story_scene_purpose = ScenePurpose(ScenePurposeType.Emotion, 'Resonance',
+                                           keywords=['mood', 'atmosphere', 'resonance', 'emotion', 'evocative tone',
                                                      'evocative imagery', 'ambience',
                                                      'thematic resonance'])
 setup_story_scene_purpose = ScenePurpose(ScenePurposeType.Setup, 'Setup',
@@ -1706,14 +1713,28 @@ scene_purposes: Dict[ScenePurposeType, ScenePurpose] = {
 
 class StoryElementType(Enum):
     Plot = 'plot'
+    Character = 'character'
+    Mystery = 'mystery'
+    Revelation = 'revelation'
+    Resonance = 'resonance'
+    Setup = 'setup'
+    Information = 'information'
     Arc = 'arc'
     Outcome = 'outcome'
     Consequences = 'consequences'
+    Character_state = 'character_state'
+    Character_internal_state = 'character_internal_state'
+    Character_state_change = 'character_state_change'
+    Character_internal_state_change = 'character_internal_state_change'
+
+    Expectation = 'expectation'
+    Realization = 'realization'
     Goal = 'goal'
     Motivation = 'motivation'
     Conflict = 'conflict'
     Internal_conflict = 'internal_conflict'
     Dilemma = 'dilemma'
+    Choice = 'choice'
     Impact = 'impact'
     Responsibility = 'responsibility'
     Decision = 'decision'
@@ -1721,6 +1742,7 @@ class StoryElementType(Enum):
     Agency = 'agency'
     Initiative = 'initiative'
     Catalyst = 'catalyst'
+    Action = 'action'
     Plan_change = 'plan_change'
     Collaboration = 'collaboration'
     Subtext = 'subtext'
@@ -1732,7 +1754,85 @@ class StoryElementType(Enum):
     Thematic_effect = 'thematic_effect'
 
     def displayed_name(self) -> str:
+        if self == StoryElementType.Character_state:
+            return 'External state'
+        if self == StoryElementType.Character_internal_state:
+            return 'Internal state'
+        if self == StoryElementType.Character_state_change:
+            return 'External change'
+        if self == StoryElementType.Character_internal_state_change:
+            return 'Internal change'
         return self.value.capitalize().replace('_', ' ')
+
+    def icon(self) -> str:
+        if self == StoryElementType.Goal:
+            return 'mdi.target'
+        elif self == StoryElementType.Conflict:
+            return 'mdi.sword-cross'
+        elif self == StoryElementType.Internal_conflict:
+            return 'mdi.mirror'
+        elif self == StoryElementType.Dilemma:
+            return 'fa5s.map-signs'
+        elif self == StoryElementType.Choice:
+            return 'mdi.arrow-decision-outline'
+        elif self == StoryElementType.Catalyst:
+            return 'fa5s.vial'
+        elif self == StoryElementType.Action:
+            return 'mdi.run-fast'
+        elif self == StoryElementType.Outcome:
+            return 'fa5s.bomb'
+        elif self == StoryElementType.Character_state:
+            return 'fa5s.user-circle'
+        elif self == StoryElementType.Character_internal_state:
+            return 'mdi6.head-dots-horizontal-outline'
+        elif self == StoryElementType.Character_state_change:
+            return 'ph.user-circle-gear-fill'
+        elif self == StoryElementType.Character_internal_state_change:
+            return 'mdi.head-flash-outline'
+        elif self == StoryElementType.Expectation:
+            return 'mdi.sign-direction'
+        elif self == StoryElementType.Realization:
+            return 'mdi.routes'
+        elif self == StoryElementType.Decision:
+            return 'fa5.lightbulb'
+        elif self == StoryElementType.Motivation:
+            return 'fa5s.fist-raised'
+
+    def placeholder(self) -> str:
+        if self == StoryElementType.Goal:
+            return "What's the character's goal in this scene?"
+        elif self == StoryElementType.Conflict:
+            return "What kind of conflict does the character have to face?"
+        elif self == StoryElementType.Internal_conflict:
+            return "What internal struggles, dilemmas, doubts does the character have to face?"
+        elif self == StoryElementType.Outcome:
+            return "What's the scene's outcome for the character?"
+        elif self == StoryElementType.Character_state:
+            return "What's the character's external circumstances or situation?"
+        elif self == StoryElementType.Character_internal_state:
+            return "What's the character's internal state, mentally or psychologically?"
+        elif self == StoryElementType.Character_state_change:
+            return "How does the character's external circumstances change?"
+        elif self == StoryElementType.Character_internal_state_change:
+            return "How does the character's internal state change, mentally or psychologically?"
+        elif self == StoryElementType.Expectation:
+            return "What does the character anticipate to happen?"
+        elif self == StoryElementType.Realization:
+            return "What did actually happen in the scene that upended expectations?"
+        elif self == StoryElementType.Catalyst:
+            return "What disrupts the character's life and forces them to act?"
+        elif self == StoryElementType.Dilemma:
+            return "What difficult choice does the character have to face?"
+        elif self == StoryElementType.Choice:
+            return "An impossible choice between two equally good or bad outcomes"
+        elif self == StoryElementType.Action:
+            return "What steps or decisions does the character make?"
+        elif self == StoryElementType.Decision:
+            return "What decision does the character have to make?"
+        elif self == StoryElementType.Motivation:
+            return "How does the character's motivation change?"
+
+        return ''
 
 
 @dataclass
@@ -1775,6 +1875,7 @@ class SceneReaderInformation:
     type: ReaderInformationType
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     text: str = ''
+    revelation: bool = field(default=False, metadata=config(exclude=exclude_if_false))
 
     def sid(self) -> str:
         return str(self.id)
@@ -1788,6 +1889,20 @@ class SceneReaderInformation:
     @overrides
     def __hash__(self):
         return hash(str(self.id))
+
+
+@dataclass
+class SceneFunction:
+    type: StoryElementType
+    text: str = ''
+    character_id: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
+    ref: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
+
+
+@dataclass
+class SceneFunctions:
+    primary: List[SceneFunction] = field(default_factory=list)
+    secondary: List[SceneFunction] = field(default_factory=list)
 
 
 @dataclass
@@ -1817,6 +1932,7 @@ class Scene:
     questions: List[SceneReaderQuestion] = field(default_factory=list)
     info: List[SceneReaderInformation] = field(default_factory=list)
     progress: int = 0
+    functions: SceneFunctions = field(default_factory=SceneFunctions)
 
     def beat(self, novel: 'Novel') -> Optional[StoryBeat]:
         structure = novel.active_story_structure
@@ -2665,6 +2781,59 @@ class MiceQuotient:
     threads: List[MiceThread] = field(default_factory=list)
 
 
+@dataclass
+class BoxParameters:
+    lm: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    tm: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    rm: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    bm: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    width: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+
+
+@dataclass
+class PremiseIdea:
+    text: str
+    selected: bool = True
+    params: Optional[BoxParameters] = None
+
+
+@dataclass
+class PremiseQuestion:
+    text: str
+    selected: bool = field(default=True, metadata=config(exclude=exclude_if_true))
+    visible: bool = field(default=True, metadata=config(exclude=exclude_if_true))
+    children: List['PremiseQuestion'] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+
+
+@dataclass
+class Label:
+    keyword: str
+
+    @overrides
+    def __eq__(self, other):
+        if isinstance(other, Label):
+            return self.keyword == other.keyword
+        if isinstance(other, str):
+            return self.keyword == other
+        return False
+
+
+@dataclass
+class PremiseReview:
+    premise: str
+
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class PremiseBuilder:
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    ideas: List[PremiseIdea] = field(default_factory=list)
+    questions: List[PremiseQuestion] = field(default_factory=list)
+    current: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    keywords: List[Label] = field(default_factory=list)
+    saved_premises: List[PremiseReview] = field(default_factory=list)
+
+
 class DocumentType(Enum):
     DOCUMENT = 0
     CHARACTER_BACKSTORY = 1
@@ -2674,6 +2843,8 @@ class DocumentType(Enum):
     CHARACTER_ARC = 5
     STORY_STRUCTURE = 6
     MICE = 7
+    PDF = 8
+    PREMISE = 9
 
 
 @dataclass
@@ -2705,6 +2876,12 @@ class Document(CharacterBased, SceneBased):
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
     statistics: Optional[DocumentStatistics] = field(default=None, metadata=config(exclude=exclude_if_empty))
+    file: str = field(default='', metadata=config(exclude=exclude_if_empty))
+
+    def display_name(self) -> str:
+        if self.title:
+            return self.title
+        return 'Untitled'
 
     @overrides
     def __eq__(self, other: 'Document'):
@@ -2740,13 +2917,14 @@ class ReaderQuestionType(Enum):
     Character_motivation = 5
     Conflict_resolution = 6
     Plot = 7
+    Wonder = 8
 
     def display_name(self) -> str:
         return self.name.replace('_', ' ')
 
     def description(self) -> str:
         if self == ReaderQuestionType.General:
-            return "Any mystery, secret, or dramatic question about the story"
+            return "Any mystery, secret, or dramatic question raised in the story"
         if self == ReaderQuestionType.Character_growth:
             return "Questions related to a character's growth and development"
         if self == ReaderQuestionType.Backstory:
@@ -2754,13 +2932,15 @@ class ReaderQuestionType(Enum):
         if self == ReaderQuestionType.Internal_conflict:
             return "Questions related to a character's internal turmoil and their resolution"
         if self == ReaderQuestionType.Relationship:
-            return "Dynamics between characters"
+            return "Questions related to conflicting, dynamic or complex relationships"
         if self == ReaderQuestionType.Character_motivation:
             return "Questions related to a character's hidden motivation"
         if self == ReaderQuestionType.Conflict_resolution:
-            return "Questions related to unresolved conflict, especially between characters"
+            return "Questions related to unresolved conflict"
         if self == ReaderQuestionType.Plot:
             return "Dramatic questions related to plot"
+        if self == ReaderQuestionType.Wonder:
+            return "Reader's intrigue related to the setting's sense of wonder (especially in fantasy and sci-fi)"
 
     def icon(self) -> str:
         if self == ReaderQuestionType.General:
@@ -2779,6 +2959,8 @@ class ReaderQuestionType(Enum):
             return "mdi.sword-cross"
         if self == ReaderQuestionType.Plot:
             return "mdi.drama-masks"
+        if self == ReaderQuestionType.Wonder:
+            return "mdi.globe-model"
 
 
 @dataclass
@@ -2932,9 +3114,9 @@ class Node(CharacterBased):
 def to_node(x: float, y: float, type: GraphicsItemType, subtype: str = '', default_size: int = 12) -> Node:
     node = Node(x, y, type=type, subtype=subtype)
     if type == GraphicsItemType.EVENT:
-        node.size = max(20 if app_env.is_mac() else 16, default_size)
+        node.size = max(16, default_size)
         if subtype in [NODE_SUBTYPE_BACKSTORY, NODE_SUBTYPE_INTERNAL_CONFLICT]:
-            node.size = max(16 if app_env.is_mac() else 14, default_size - 1)
+            node.size = max(14, default_size - 1)
 
     if subtype == NODE_SUBTYPE_GOAL:
         node.icon = 'mdi.target'

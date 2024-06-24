@@ -27,7 +27,7 @@ from PyQt6.QtWidgets import QLabel
 from plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, CONFLICT_CHARACTER_COLOR, \
     CONFLICT_SOCIETY_COLOR, CONFLICT_NATURE_COLOR, CONFLICT_TECHNOLOGY_COLOR, CONFLICT_SUPERNATURAL_COLOR, \
     CONFLICT_SELF_COLOR, CHARACTER_MAJOR_COLOR, CHARACTER_MINOR_COLOR, CHARACTER_SECONDARY_COLOR, \
-    PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR, NEUTRAL_EMOTION_COLOR, EMOTION_COLORS
+    PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR, NEUTRAL_EMOTION_COLOR, EMOTION_COLORS, RED_COLOR
 from plotlyst.core.domain import Character, ConflictType, \
     Scene, PlotType, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS, ScenePurposeType
 from plotlyst.core.template import SelectionItem
@@ -231,8 +231,8 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.motion-outline', 'grey', 'black')
 
     @staticmethod
-    def setup_scene_icon() -> QIcon:
-        return IconRegistry.from_name('fa5s.seedling', 'grey')
+    def setup_scene_icon(color='grey') -> QIcon:
+        return IconRegistry.from_name('fa5s.seedling', color)
 
     @staticmethod
     def exposition_scene_icon() -> QIcon:
@@ -347,7 +347,7 @@ class IconRegistry:
         return IconRegistry.from_name('fa5s.home', color_on=color_on)
 
     @staticmethod
-    def trash_can_icon(color: str = '#ED6868') -> QIcon:
+    def trash_can_icon(color: str = RED_COLOR) -> QIcon:
         return qtawesome.icon('fa5s.trash-alt', color=color)
 
     @staticmethod

@@ -24,6 +24,7 @@ from typing import List, Optional
 from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QObject
 from PyQt6.QtGui import QColor, QIcon
 from PyQt6.QtWidgets import QWidget, QPushButton, QTextEdit
+from overrides import overrides
 from qthandy import bold, incr_font, \
     margins, italic, vbox, transparent, \
     hbox, spacer, sp, pointy, line, underline
@@ -40,7 +41,7 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.display import Icon, PopupDialog
-from plotlyst.view.widget.input import Toggle
+from plotlyst.view.widget.input import Toggle, TextEditBubbleWidget
 
 
 def principle_icon(type: PlotPrincipleType) -> QIcon:
@@ -507,44 +508,26 @@ class PlotDynamicPrincipleSelectorMenu(MenuWidget):
                               slot=partial(self.triggered.emit, group)))
 
 
-class PlotPrincipleEditor(QWidget):
+class PlotPrincipleEditor(TextEditBubbleWidget):
     principleEdited = pyqtSignal()
 
     def __init__(self, principle: PlotPrinciple, plotType: PlotType, parent=None):
         super().__init__(parent)
         self._principle = principle
 
-        vbox(self)
-        self._label = QPushButton()
-        transparent(self._label)
-        bold(self._label)
-        self._label.setText(principle.type.display_name())
-        self._label.setIcon(principle_icon(principle.type))
-        self._label.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self._label.setCheckable(True)
-        self._label.setChecked(True)
+        self._title.setText(principle.type.display_name())
+        self._title.setIcon(principle_icon(principle.type))
+        self._title.setCheckable(True)
+        self._title.setChecked(True)
 
-        self._textedit = QTextEdit(self)
-        self._textedit.setProperty('white-bg', True)
-        self._textedit.setProperty('rounded', True)
         hint = principle_placeholder(principle.type, plotType)
         self._textedit.setPlaceholderText(hint)
         self._textedit.setToolTip(hint)
-        self._textedit.setTabChangesFocus(True)
-        if app_env.is_mac():
-            incr_font(self._textedit)
         self._textedit.setText(principle.value)
-        self._textedit.setMinimumSize(175, 100)
-        self._textedit.setMaximumSize(190, 120)
-        self._textedit.verticalScrollBar().setVisible(False)
         if plotType != PlotType.Internal and principle.type in internal_principles:
             shadow(self._textedit, color=QColor(CONFLICT_SELF_COLOR))
         else:
             shadow(self._textedit)
-        self._textedit.textChanged.connect(self._valueChanged)
-
-        self.layout().addWidget(self._label, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.layout().addWidget(self._textedit)
 
     def activate(self):
         self._textedit.setFocus()
@@ -552,6 +535,7 @@ class PlotPrincipleEditor(QWidget):
     def principle(self) -> PlotPrinciple:
         return self._principle
 
-    def _valueChanged(self):
+    @overrides
+    def _textChanged(self):
         self._principle.value = self._textedit.toPlainText()
         self.principleEdited.emit()

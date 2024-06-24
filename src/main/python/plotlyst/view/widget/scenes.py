@@ -23,13 +23,13 @@ from typing import Dict, Optional, Union, Set
 from typing import List
 
 import qtanim
-from PyQt6.QtCore import Qt, QObject, QEvent, QSize, pyqtSignal, QModelIndex
+from PyQt6.QtCore import Qt, QObject, QEvent, QSize, pyqtSignal, QModelIndex, QItemSelection
 from PyQt6.QtGui import QDragEnterEvent, QResizeEvent, QCursor, QColor, QDropEvent
 from PyQt6.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter, \
     QPushButton, QTreeView, QLabel, QTableView, \
     QAbstractItemView, QButtonGroup, QAbstractButton
 from overrides import overrides
-from qthandy import busy, margins, gc, pointy, vline, grid, line
+from qthandy import busy, margins, gc, pointy, vline, grid, line, retain_when_hidden
 from qthandy import transparent, translucent, flow, \
     clear_layout, hbox, btn_popup, italic
 from qthandy.filter import InstantTooltipEventFilter, DragEventFilter
@@ -46,7 +46,10 @@ from plotlyst.env import app_env
 from plotlyst.event.core import emit_critical, Event, EventListener, emit_event
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import SceneStatusChangedEvent, \
-    ActiveSceneStageChanged, AvailableSceneStagesChanged
+    ActiveSceneStageChanged, AvailableSceneStagesChanged, NovelConflictTrackingToggleEvent
+from plotlyst.model.common import DistributionFilterProxyModel
+from plotlyst.model.distribution import CharactersScenesDistributionTableModel, TagScenesDistributionTableModel, \
+    ConflictScenesDistributionTableModel, InformationScenesDistributionTableModel
 from plotlyst.model.novel import NovelTagsTreeModel, TagNode
 from plotlyst.model.scenes_model import ScenesTableModel
 from plotlyst.service.cache import acts_registry
@@ -54,6 +57,7 @@ from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import PopupMenuBuilder, action, stretch_col, \
     tool_btn, label, ExclusiveOptionalButtonGroup, set_tab_icon
 from plotlyst.view.generated.scene_drive_editor_ui import Ui_SceneDriveTrackingEditor
+from plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from plotlyst.view.generated.scenes_view_preferences_widget_ui import Ui_ScenesViewPreferences
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -952,3 +956,148 @@ class SceneDriveTrackingEditor(QWidget, Ui_SceneDriveTrackingEditor):
 
     def _deusExClicked(self, checked: bool):
         self.scene.drive.deus_ex_machina = checked
+
+
+class ScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributionWidget, EventListener):
+    avg_text: str = 'Characters per scene: '
+    common_text: str = 'Common scenes: '
+
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self.setupUi(self)
+        self.novel = novel
+        self.average = 0
+
+        self.btnCharacters.setIcon(IconRegistry.character_icon())
+        self.btnConflicts.setIcon(IconRegistry.conflict_icon('black', color_on=PLOTLYST_SECONDARY_COLOR))
+        self.btnTags.setIcon(IconRegistry.tags_icon())
+        self.btnInformation.setIcon(IconRegistry.from_name('fa5s.book-reader', color_on=PLOTLYST_SECONDARY_COLOR))
+        self.btnTags.setHidden(True)
+
+        self._model = CharactersScenesDistributionTableModel(self.novel)
+        self._scenes_proxy = DistributionFilterProxyModel()
+        self._scenes_proxy.setSourceModel(self._model)
+        self._scenes_proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._scenes_proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._scenes_proxy.setSortRole(CharactersScenesDistributionTableModel.SortRole)
+        self._scenes_proxy.sort(CharactersScenesDistributionTableModel.IndexTags, Qt.SortOrder.DescendingOrder)
+        self.tblSceneDistribution.horizontalHeader().setDefaultSectionSize(26)
+        self.tblSceneDistribution.setModel(self._scenes_proxy)
+        self.tblSceneDistribution.hideColumn(0)
+        self.tblSceneDistribution.hideColumn(1)
+        self.tblCharacters.setModel(self._scenes_proxy)
+        self.tblCharacters.hideColumn(0)
+        self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexTags, 70)
+        self.tblCharacters.setMaximumWidth(70)
+
+        self.tblCharacters.selectionModel().selectionChanged.connect(self._on_character_selected)
+        self.tblSceneDistribution.selectionModel().selectionChanged.connect(self._on_scene_selected)
+
+        self.btnCharacters.toggled.connect(self._toggle_characters)
+        self.btnConflicts.toggled.connect(self._toggle_conflicts)
+        self.btnInformation.toggled.connect(self._toggle_information)
+        self.btnTags.toggled.connect(self._toggle_tags)
+
+        transparent(self.spinAverage)
+        retain_when_hidden(self.spinAverage)
+
+        self.btnCharacters.setChecked(True)
+        self.btnConflicts.setVisible(self.novel.prefs.toggled(NovelSetting.Track_conflict))
+        event_dispatchers.instance(self.novel).register(self, NovelConflictTrackingToggleEvent)
+
+        self.refresh()
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, NovelConflictTrackingToggleEvent):
+            self.btnConflicts.setVisible(event.toggled)
+            if self.btnConflicts.isChecked():
+                self.btnCharacters.setChecked(True)
+
+    def refresh(self):
+        if self.novel.scenes:
+            self.average = sum([len(x.characters) + 1 for x in self.novel.scenes]) / len(self.novel.scenes)
+        else:
+            self.average = 0
+        for col in range(self._model.columnCount()):
+            if col == CharactersScenesDistributionTableModel.IndexTags:
+                continue
+            self.tblCharacters.hideColumn(col)
+        self.spinAverage.setValue(self.average)
+        self.tblSceneDistribution.horizontalHeader().setMaximumSectionSize(15)
+        self._model.modelReset.emit()
+
+    def setActsFilter(self, act: int, filter: bool):
+        self._scenes_proxy.setActsFilter(act, filter)
+
+    def _toggle_characters(self, toggled: bool):
+        if toggled:
+            self._model = CharactersScenesDistributionTableModel(self.novel)
+            self._scenes_proxy.setSourceModel(self._model)
+            self.tblCharacters.hideColumn(0)
+            self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexTags, 70)
+            self.tblCharacters.setMaximumWidth(70)
+
+            self.spinAverage.setVisible(True)
+
+    # def _toggle_goals(self, toggled: bool):
+    #     if toggled:
+    #         self._model = GoalScenesDistributionTableModel(self.novel)
+    #         self._scenes_proxy.setSourceModel(self._model)
+    #         self.tblCharacters.hideColumn(0)
+    #         self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexTags, 170)
+    #         self.tblCharacters.setMaximumWidth(170)
+    #
+    #         self.spinAverage.setVisible(False)
+
+    def _toggle_conflicts(self, toggled: bool):
+        if toggled:
+            self._model = ConflictScenesDistributionTableModel(self.novel)
+            self._scenes_proxy.setSourceModel(self._model)
+            self.tblCharacters.showColumn(0)
+            self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexMeta, 34)
+            self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexTags, 170)
+            self.tblCharacters.setMaximumWidth(204)
+
+            self.spinAverage.setVisible(False)
+
+    def _toggle_information(self, toggled: bool):
+        if toggled:
+            self._model = InformationScenesDistributionTableModel(self.novel)
+            self._scenes_proxy.setSourceModel(self._model)
+            self.tblCharacters.hideColumn(0)
+            self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexTags, 170)
+            self.tblCharacters.setMaximumWidth(170)
+
+            self.spinAverage.setVisible(False)
+
+    def _toggle_tags(self, toggled: bool):
+        if toggled:
+            self._model = TagScenesDistributionTableModel(self.novel)
+            self._scenes_proxy.setSourceModel(self._model)
+            self.tblCharacters.hideColumn(0)
+            self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexTags, 170)
+            self.tblCharacters.setMaximumWidth(170)
+
+            self.spinAverage.setVisible(False)
+
+    def _on_character_selected(self):
+        selected = self.tblCharacters.selectionModel().selectedIndexes()
+        self._model.highlightTags(
+            [self._scenes_proxy.mapToSource(x) for x in selected])
+
+        if selected and len(selected) > 1:
+            self.spinAverage.setPrefix(self.common_text)
+            self.spinAverage.setValue(self._model.commonScenes())
+        else:
+            self.spinAverage.setPrefix(self.avg_text)
+            self.spinAverage.setValue(self.average)
+
+        self.tblSceneDistribution.clearSelection()
+
+    def _on_scene_selected(self, selection: QItemSelection):
+        indexes = selection.indexes()
+        if not indexes:
+            return
+        self._model.highlightScene(self._scenes_proxy.mapToSource(indexes[0]))
+        self.tblCharacters.clearSelection()

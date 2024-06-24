@@ -626,8 +626,6 @@ class BeatListItemWidget(ListItemWidget):
     def __init__(self, beat: SceneStructureItem, parent=None):
         super(BeatListItemWidget, self).__init__(beat, parent)
         self._beat = beat
-        self._lineEdit.setMaximumWidth(600)
-        self.layout().addWidget(spacer())
         self.refresh()
 
     def refresh(self):
@@ -643,7 +641,7 @@ class SceneStructureList(ListView):
     def __init__(self, parent=None):
         super(SceneStructureList, self).__init__(parent)
         self._items: List[SceneStructureItem] = []
-        self._centralWidget.setProperty('relaxed-white-bg', True)
+        self.setProperty('relaxed-white-bg', True)
 
     def setStructure(self, items: List[SceneStructureItem], purpose: Optional[ScenePurposeType] = None):
         self._items = items

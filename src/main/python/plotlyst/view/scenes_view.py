@@ -57,7 +57,6 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.scene_editor import SceneEditor
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.cards import SceneCard, SceneCardFilter
-from plotlyst.view.widget.characters import CharactersScenesDistributionWidget
 from plotlyst.view.widget.chart import ActDistributionChart
 from plotlyst.view.widget.display import ChartView
 from plotlyst.view.widget.input import RotatedButtonOrientation
@@ -65,7 +64,7 @@ from plotlyst.view.widget.novel import StoryStructureSelectorMenu
 from plotlyst.view.widget.progress import SceneStageProgressCharts
 from plotlyst.view.widget.scene.story_map import StoryMap, StoryMapDisplayMode
 from plotlyst.view.widget.scenes import SceneFilterWidget, SceneStoryStructureWidget, \
-    ScenesPreferencesWidget
+    ScenesPreferencesWidget, ScenesDistributionWidget
 from plotlyst.view.widget.tree import TreeSettings
 
 
@@ -133,7 +132,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.storymap_view: Optional[StoryMap] = None
         self.stagesModel: Optional[ScenesStageTableModel] = None
         self.stagesProgress: Optional[SceneStageProgressCharts] = None
-        self.characters_distribution: Optional[CharactersScenesDistributionWidget] = None
+        self.characters_distribution: Optional[ScenesDistributionWidget] = None
 
         self.tblModel = ScenesTableModel(novel)
         self.tblModel.setDragEnabled(not self.novel.is_readonly())
@@ -394,7 +393,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.tblScenes.clearSelection()
             self.ui.tblSceneStages.clearSelection()
             if not self.characters_distribution:
-                self.characters_distribution = CharactersScenesDistributionWidget(self.novel)
+                self.characters_distribution = ScenesDistributionWidget(self.novel)
                 self.ui.pageCharactersDistribution.layout().addWidget(self.characters_distribution)
                 self.ui.btnAct1.toggled.connect(partial(self.characters_distribution.setActsFilter, 1))
                 self.ui.btnAct2.toggled.connect(partial(self.characters_distribution.setActsFilter, 2))

@@ -59,7 +59,7 @@ from plotlyst.view._view import AbstractView
 from plotlyst.view.board_view import BoardView
 from plotlyst.view.characters_view import CharactersView
 from plotlyst.view.comments_view import CommentsView
-from plotlyst.view.common import TooltipPositionEventFilter
+from plotlyst.view.common import TooltipPositionEventFilter, ButtonPressResizeEventFilter
 from plotlyst.view.dialog.about import AboutDialog
 from plotlyst.view.dialog.manuscript import ManuscriptPreviewDialog
 from plotlyst.view.docs_view import DocumentsView
@@ -98,16 +98,14 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         palette.setColor(QPalette.ColorGroup.Active, QPalette.ColorRole.ButtonText, QColor('#040406'))
         palette.setColor(QPalette.ColorGroup.Active, QPalette.ColorRole.Text, QColor('#040406'))
         palette.setColor(QPalette.ColorRole.ToolTipText, QColor(PLOTLYST_MAIN_COLOR))
-        palette.setColor(QPalette.ColorRole.PlaceholderText, QColor('#8E9AAF'))
+        palette.setColor(QPalette.ColorRole.PlaceholderText, QColor('#5E6C84'))
         palette.setColor(QPalette.ColorRole.Window, QColor('#EFEFF4'))
         QApplication.setPalette(palette)
 
         if app_env.is_mac():
             DEFAULT_FONT_FAMILIES.insert(0, 'Palatino')
         elif app_env.is_linux():
-            DEFAULT_FONT_FAMILIES.insert(0, 'Noto Sans Mono')
-            DEFAULT_FONT_FAMILIES.insert(1, 'Palatino')
-            DEFAULT_FONT_FAMILIES.insert(3 if len(DEFAULT_FONT_FAMILIES) > 5 else -1, 'Calibri')
+            DEFAULT_FONT_FAMILIES.insert(0, 'Palatino')
 
         self.novel = None
         self._current_text_widget = None
@@ -145,6 +143,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.btnManuscript.setIcon(
             IconRegistry.manuscript_icon(NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
         self.btnReports.setIcon(IconRegistry.reports_icon(NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
+        self.btnSettingsLink.setIcon(IconRegistry.cog_icon(color=NAV_BAR_BUTTON_DEFAULT_COLOR))
+        self.btnSettingsLink.installEventFilter(ButtonPressResizeEventFilter(self.btnSettingsLink))
+        self.btnSettingsLink.installEventFilter(OpacityEventFilter(self.btnSettingsLink))
+        self.btnSettingsLink.clicked.connect(self._settings_link_clicked)
 
         for btn in self.buttonGroup.buttons():
             btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.7, ignoreCheckedButton=True))
@@ -718,3 +720,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             func(self.btnManuscript, teardown=teardown)
         elif isinstance(event, NovelManagementToggleEvent):
             func(self.btnBoard, teardown=teardown)
+
+    def _settings_link_clicked(self):
+        self.btnNovel.setChecked(True)
+        self.novel_view.show_settings()

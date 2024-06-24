@@ -47,7 +47,7 @@ from plotlyst.core.domain import Novel, Character, Scene, Chapter, SceneStage, \
     default_character_networks, ScenePurposeType, StoryElement, SceneOutcome, ChapterType, SceneStructureItem, \
     DocumentProgress, ReaderQuestion, SceneReaderQuestion, ImageRef, SceneReaderInformation, \
     CharacterProfileSectionReference, CharacterMultiAttribute, default_character_profile, CharacterPersonality, \
-    StrengthWeaknessAttribute
+    StrengthWeaknessAttribute, PremiseBuilder, SceneFunctions
 from plotlyst.core.template import Role, exclude_if_empty, exclude_if_black, exclude_if_false
 from plotlyst.env import app_env
 
@@ -190,6 +190,7 @@ class SceneInfo:
     questions: List[SceneReaderQuestion] = field(default_factory=list)
     info: List[SceneReaderInformation] = field(default_factory=list)
     progress: int = 0
+    functions: SceneFunctions = field(default_factory=SceneFunctions)
 
 
 @dataclass
@@ -429,6 +430,8 @@ class JsonClient:
                 document.data = Causality.from_json(data_str)
             elif document.type == DocumentType.MICE:
                 document.data = MiceQuotient.from_json(data_str)
+            elif document.type == DocumentType.PREMISE:
+                document.data = PremiseBuilder.from_json(data_str)
         document.loaded = True
 
     @busy
@@ -584,7 +587,7 @@ class JsonClient:
                               document=info.document, manuscript=info.manuscript, drive=info.drive,
                               purpose=info.purpose, outcome=info.outcome, story_elements=info.story_elements,
                               structure=info.structure, questions=info.questions, info=info.info,
-                              progress=info.progress)
+                              progress=info.progress, functions=info.functions)
                 scenes.append(scene)
 
         tag_types = novel_info.tag_types
@@ -712,7 +715,8 @@ class JsonClient:
                          tag_references=scene.tag_references, document=scene.document, manuscript=scene.manuscript,
                          drive=scene.drive, purpose=scene.purpose, outcome=scene.outcome,
                          story_elements=scene.story_elements,
-                         structure=scene.structure, questions=scene.questions, info=scene.info, progress=scene.progress)
+                         structure=scene.structure, questions=scene.questions, info=scene.info, progress=scene.progress,
+                         functions=scene.functions)
         self.__persist_info(self.scenes_dir(novel), info)
 
     def _persist_diagram(self, novel: Novel, diagram: Diagram):
@@ -780,7 +784,8 @@ class JsonClient:
             doc_file_path = novel_doc_dir.joinpath(self.__doc_file(doc.id))
             with atomic_write(doc_file_path, encoding='utf-8', overwrite=True) as f:
                 f.write(doc.content)
-        elif doc.type in [DocumentType.REVERSED_CAUSE_AND_EFFECT, DocumentType.CAUSE_AND_EFFECT, DocumentType.MICE]:
+        elif doc.type in [DocumentType.REVERSED_CAUSE_AND_EFFECT, DocumentType.CAUSE_AND_EFFECT, DocumentType.MICE,
+                          DocumentType.PREMISE]:
             self.__persist_json_by_id(novel_doc_dir, doc.data.to_json(), doc.data_id)
 
     def __persist_info(self, dir, info: Any):

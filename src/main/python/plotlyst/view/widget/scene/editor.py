@@ -49,7 +49,7 @@ from plotlyst.view.common import DelayedSignalSlotConnector, action, wrap, label
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.characters import CharacterSelectorButton
-from plotlyst.view.widget.display import Icon
+from plotlyst.view.widget.display import Icon, ArrowButton
 from plotlyst.view.widget.input import RemovalButton
 from plotlyst.view.widget.plot.selector import StorylineSelectorMenu
 from plotlyst.view.widget.scene.agency import SceneAgendaEmotionEditor, SceneAgendaMotivationEditor, \
@@ -420,56 +420,6 @@ class ScenePurposeSelectorWidget(QWidget):
         self._wdgPurposes.layout().addWidget(spacer())
 
 
-class ArrowButton(QToolButton):
-    stateChanged = pyqtSignal(int)
-    stateReset = pyqtSignal()
-
-    STATE_MAX: int = 3
-
-    def __init__(self, edge: Qt.Edge, parent=None):
-        super().__init__(parent)
-        self._state: int = 0
-        self._edge = edge
-        if edge == Qt.Edge.RightEdge:
-            self._icons = ['fa5s.arrow-right', 'fa5s.arrow-right', 'fa5s.arrow-left', 'fa5s.arrows-alt-h']
-        elif edge == Qt.Edge.BottomEdge:
-            self._icons = ['fa5s.arrow-down', 'fa5s.arrow-down', 'fa5s.arrow-up', 'fa5s.arrows-alt-v']
-        pointy(self)
-        transparent(self)
-        self.setToolTip('Click to change direction')
-        self.setCheckable(True)
-
-        self.clicked.connect(self._clicked)
-        self.reset()
-
-    def setState(self, state: int):
-        self._state = state
-        self._handleNewState()
-
-    def reset(self):
-        self._state = 0
-        self.setIconSize(QSize(15, 15))
-        self.setIcon(IconRegistry.from_name(self._icons[self._state], 'lightgrey'))
-        self.setChecked(False)
-
-    def _increaseState(self):
-        self._state += 1
-        self._handleNewState()
-        self.stateChanged.emit(self._state)
-
-    def _handleNewState(self):
-        self.setIconSize(QSize(22, 22))
-        self.setIcon(IconRegistry.from_name(self._icons[self._state], '#6c757d'))
-        self.setChecked(True)
-
-    def _clicked(self):
-        if self._state == self.STATE_MAX:
-            self.reset()
-            self.stateReset.emit()
-        else:
-            self._increaseState()
-
-
 class LineElementWidget(QWidget):
     def __init__(self, novel: Novel, type: StoryElementType, row: int, col: int, parent=None):
         super().__init__(parent)
@@ -585,9 +535,9 @@ class SceneElementWidget(QWidget):
                                           parent=self)
         self._btnStorylineLink.installEventFilter(OpacityEventFilter(self._btnStorylineLink, leaveOpacity=0.7))
         self._btnStorylineLink.setVisible(False)
-        retain_when_hidden(self._btnStorylineLink)
 
         if self._storylineLinkEnabled:
+            retain_when_hidden(self._btnStorylineLink)
             self._storylineMenu = StorylineSelectorMenu(self._novel, self._btnStorylineLink)
             self._storylineMenu.storylineSelected.connect(self._storylineSelected)
 
@@ -628,7 +578,7 @@ class SceneElementWidget(QWidget):
         vbox(self._pageEditor)
 
         self._wdgTitle = QWidget()
-        hbox(self._wdgTitle)
+        hbox(self._wdgTitle, 0, 0)
         self._wdgTitle.layout().addWidget(self._btnStorylineLink, alignment=Qt.AlignmentFlag.AlignLeft)
         self._wdgTitle.layout().addWidget(group(self._iconActive, self._titleActive, margin=0, spacing=1),
                                           alignment=Qt.AlignmentFlag.AlignCenter)
@@ -1036,12 +986,12 @@ class EventElementEditor(TextBasedSceneElementWidget):
             self.setStorylineVisible(True)
         elif type_ == StoryElementType.Delayed_effect:
             self.setTitle('Delayed effect')
-            self.setIcon('ri.timer-flash-line')
+            self.setIcon('ri.timer-flash-line', 'grey')
             self.setPlaceholderText("A delayed effect happening in a later scene")
             self.setStorylineVisible(False)
         elif type_ == StoryElementType.Thematic_effect:
             self.setTitle('Thematic effect')
-            self.setIcon('mdi.butterfly-outline')
+            self.setIcon('mdi.butterfly-outline', '#9d4edd')
             self.setPlaceholderText("Events that contribute to, symbolize, or align with the theme")
             self.setStorylineVisible(False)
 
@@ -1230,22 +1180,12 @@ class AbstractSceneElementsEditor(QWidget):
 
 
 class SceneStorylineEditor(AbstractSceneElementsEditor):
-    outcomeChanged = pyqtSignal()
-    storylineLinked = pyqtSignal(SceneElementWidget, Plot)
-    storylineEditRequested = pyqtSignal(SceneElementWidget, Plot)
+    storylineLinked = pyqtSignal(Plot)
+    storylineEditRequested = pyqtSignal(Plot)
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
-
-        self._outcomeEditor = SceneOutcomeEditor()
-        self._outcomeEditor.outcomeChanged.connect(self.outcomeChanged)
-        margins(self._wdgHeader, left=25)
-        self._wdgHeader.layout().setSpacing(5)
-        self._wdgHeader.layout().addWidget(self._outcomeEditor)
-        self._wdgHeader.layout().addWidget(spacer())
-        self._headerLine = line()
-        self._wdgElementsParent.layout().insertWidget(1, self._headerLine)
 
         self._row = 5
         self._col = 7
@@ -1259,8 +1199,8 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
                     continue
                 else:
                     placeholder = EventElementEditor(self._novel, row, col, StoryElementType.Effect)
-                placeholder.storylineSelected.connect(partial(self.storylineLinked.emit, placeholder))
-                placeholder.storylineEditRequested.connect(partial(self.storylineEditRequested.emit, placeholder))
+                placeholder.storylineSelected.connect(self.storylineLinked)
+                placeholder.storylineEditRequested.connect(self.storylineEditRequested)
                 self._wdgElements.layout().addWidget(placeholder, row, col, 1, 1)
 
         self._addLine(0, 1, True)
@@ -1270,44 +1210,10 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
         self._addLine(3, 0, False)
         self._wdgElements.layout().addWidget(spacer(), 0, self._col, 1, 1)
         self._wdgElements.layout().addWidget(vspacer(), self._row, 0, 1, 1)
-        # self.__newPlotElementEditor()
-        #
-        # self._btnAddNewPlot = tool_btn(IconRegistry.plus_circle_icon('grey'), 'Add new storyline', transparent_=True,
-        #                                parent=self._wdgElements)
-        # self._btnAddNewPlot.installEventFilter(OpacityEventFilter(self._btnAddNewPlot))
-        # self._btnAddNewPlot.clicked.connect(self._addNewPlot)
-
-        # self._wdgAddNewPlotParent = QWidget()
-        # vbox(self._wdgAddNewPlotParent)
-        # margins(self._wdgAddNewPlotParent, top=self._storylineElements[0].sizeHint().height() // 2, left=5, right=5)
-        # icon = Icon()
-        # icon.setIcon(IconRegistry.from_name('fa5s.theater-masks', 'lightgrey'))
-        # self._wdgAddNewPlotParent.layout().addWidget(icon)
-        # self._wdgAddNewPlotParent.layout().addWidget(self._btnAddNewPlot)
-        # self._wdgAddNewPlotParent.setHidden(True)
-
-        # self._themeElement = TextBasedSceneElementWidget()
-        # self._themeElement.setText('Theme')
-        # self._themeElement.setIcon('mdi.butterfly-outline', '#9d4edd')
-
-        # self._outcomeElement = OutcomeSceneElementEditor()
-        # self._outcomeElement.outcomeChanged.connect(self.outcomeChanged.emit)
-
-        # self._consequencesElement = TextBasedSceneElementWidget(StoryElementType.Consequences)
-        # self._consequencesElement.setTitle('Consequences')
-        # self._consequencesElement.setIcon('mdi.ray-start-arrow')
-        # self._consequencesElement.setPlaceholderText("Are there any imminent or later consequences of this scene?")
-
-        # self._wdgElements.layout().addWidget(self._outcomeElement)
-        # self._wdgElements.layout().addWidget(self._newLine())
-        # self._wdgElements.layout().addWidget(self._storylineElements[0])
-        #
 
     @overrides
     def setScene(self, scene: Scene):
         super().setScene(scene)
-        self.purposeChangedEvent()
-        self._outcomeEditor.setScene(scene)
 
         for row in range(self._row):
             for col in range(self._col):
@@ -1321,32 +1227,13 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
 
         for element in scene.story_elements:
             pass
-            # if element.type in [StoryElementType.Effect, StoryElementType.Event]:
-            #     if element.row == 1:
-            #         element.row = 2
-            #     elif element.row == 2:
-            #         element.row = 4
-            #     if element.col == 1:
-            #         element.col = 2
-            #     elif element.col == 2:
-            #         element.col = 4
-            #     elif element.col == 3:
-            #         element.col = 6
 
             item = self._wdgElements.layout().itemAtPosition(element.row, element.col)
             if item and item.widget():
                 item.widget().setElement(element)
 
     def refresh(self):
-        self._outcomeEditor.refresh()
-
-    def purposeChangedEvent(self):
-        if self._scene.purpose and self._scene.purpose == ScenePurposeType.Story:
-            self._wdgHeader.setVisible(True)
-            self._headerLine.setVisible(True)
-        else:
-            self._wdgHeader.setHidden(True)
-            self._headerLine.setHidden(True)
+        pass
 
     def storylinesSettingToggledEvent(self, toggled: bool):
         for row in range(self._row):
@@ -1360,28 +1247,6 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
                                         row, col)
         self._wdgElements.layout().addWidget(lineElement, row, col, self._row if vertical else 1,
                                              1 if vertical else self._col)
-    # def _plotSelected(self, plotElement: PlotSceneElementEditor):
-    #     insert_after(self._wdgElements, self._wdgAddNewPlotParent, reference=plotElement)
-    #     self._wdgAddNewPlotParent.setVisible(True)
-    #
-    # def _addNewPlot(self):
-    #     elementEditor = self.__newPlotElementEditor()
-    #     insert_after(self._wdgElements, elementEditor, reference=self._wdgAddNewPlotParent)
-    #     self._wdgAddNewPlotParent.setHidden(True)
-    #     self._wdgElements.layout().removeWidget(self._wdgAddNewPlotParent)
-    #
-    #     elementEditor.activate()
-    #
-    # def __newPlotElementEditor(self) -> PlotSceneElementEditor:
-    #     elementEditor = PlotSceneElementEditor(self._novel)
-    #     elementEditor.plotSelected.connect(partial(self._plotSelected, elementEditor))
-    #
-    #     if self._scene:
-    #         elementEditor.setScene(self._scene)
-    #
-    #     self._storylineElements.append(elementEditor)
-    #
-    #     return elementEditor
 
 
 class CharacterTab(QAbstractButton):
@@ -1638,7 +1503,7 @@ class SceneAgendasTabBar(CharacterTabBar):
         self.resetAgenda.emit(agenda)
 
 
-class SceneAgendaEditor(AbstractSceneElementsEditor, EventListener):
+class _SceneAgendaEditor(AbstractSceneElementsEditor, EventListener):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
