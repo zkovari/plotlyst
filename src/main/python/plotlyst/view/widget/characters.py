@@ -32,7 +32,7 @@ from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
 from plotlyst.common import RELAXED_WHITE_COLOR
-from plotlyst.core.domain import Novel, Character, CharacterProfileSectionType, NovelSetting
+from plotlyst.core.domain import Novel, Character, CharacterProfileSectionType, NovelSetting, CharacterMultiAttribute
 from plotlyst.core.template import SelectionItem, TemplateField, RoleImportance
 from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, Event
@@ -609,6 +609,16 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
         self._chartMinor.refresh()
 
     def _updateForCharacter(self, character: Character, col: int):
+        def handleMultiAttribute(attributes: List[CharacterMultiAttribute]):
+            for attrs in attributes:
+                progress.addMaxValue(1)
+                if attrs.value:
+                    progress.addValue(1)
+                for attr in attrs.attributes.values():
+                    progress.addMaxValue(1)
+                    if attr.value:
+                        progress.addValue(1)
+
         name_progress = CircularProgressBar(parent=self)
         if character.name:
             name_progress.setValue(1)
@@ -656,8 +666,15 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
                         progress.addValue(1)
                     if attr.has_weakness and attr.weakness:
                         progress.addValue(1)
-                if progress.maxValue() == 0:
-                    progress.setMaxValue(1)
+            elif section.type == CharacterProfileSectionType.Goals:
+                progress.setMaxValue(0)
+                handleMultiAttribute(character.gmc)
+            elif section.type == CharacterProfileSectionType.Flaws:
+                progress.setMaxValue(0)
+                handleMultiAttribute(character.flaws)
+            elif section.type == CharacterProfileSectionType.Baggage:
+                progress.setMaxValue(0)
+                handleMultiAttribute(character.baggage)
             elif section.type == CharacterProfileSectionType.Personality:
                 if character.prefs.toggled(NovelSetting.Character_enneagram):
                     progress.addMaxValue(1)
@@ -678,6 +695,8 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
                 if character.traits:
                     progress.addValue(1)
 
+            if progress.maxValue() == 0:
+                progress.setMaxValue(1)
             overall_progress.addMaxValue(progress.maxValue())
             overall_progress.addValue(progress.value())
             self._addWidget(progress, row, col)
