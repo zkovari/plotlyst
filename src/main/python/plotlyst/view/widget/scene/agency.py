@@ -706,6 +706,7 @@ class CharacterChangesEditor(QWidget):
                 motivationEditor.setScene(self.scene)
                 motivationEditor.setAgenda(self.agenda)
                 wdg.addBottomWidget(motivationEditor)
+                motivationEditor.setVisible(self.novel.prefs.toggled(NovelSetting.Track_motivation))
             self._layout.addWidget(wdg, row, col, alignment=Qt.AlignmentFlag.AlignCenter)
 
         row = self._layout.rowCount()
