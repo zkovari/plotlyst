@@ -648,6 +648,12 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
                 if character.values:
                     progress.setValue(1)
                     overall_progress.addValue(1)
+            elif section.type == CharacterProfileSectionType.Faculties:
+                overall_progress.addMaxValue(5)
+                progress.setMaxValue(5)
+                value = len(character.faculties.values())
+                progress.setValue(value)
+                overall_progress.setValue(value)
 
             self._addWidget(progress, row, col)
 
