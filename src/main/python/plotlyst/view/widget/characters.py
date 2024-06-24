@@ -32,9 +32,8 @@ from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
 from plotlyst.common import RELAXED_WHITE_COLOR
-from plotlyst.core.domain import Novel, Character, NovelSetting
-from plotlyst.core.template import SelectionItem, TemplateField, RoleImportance, \
-    strengths_weaknesses_field
+from plotlyst.core.domain import Novel, Character, CharacterProfileSectionType
+from plotlyst.core.template import SelectionItem, TemplateField, RoleImportance
 from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, Event
 from plotlyst.event.handler import event_dispatchers
@@ -520,6 +519,9 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
         margins(self, 2, 2, 2, 2)
         self._layout.setSpacing(5)
         self._refreshNext: bool = False
+        self._sectionRows: Dict[CharacterProfileSectionType, int] = {}
+        self._backstoryRow: int = -1
+        self._topicRow: int = -1
 
         self.novel: Optional[Novel] = None
 
@@ -576,25 +578,37 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
         self._addLabel(self.RowName, 'Name', IconRegistry.character_icon())
         self._addLabel(self.RowRole, 'Role', IconRegistry.major_character_icon())
         self._addLabel(self.RowGender, 'Gender', IconRegistry.male_gender_icon())
-        self._addLine(self.RowGender + 1)
 
         row = self.RowGender + 1
-
-        row += 1
         self._addLine(row)
-        row += 1
-        for col, char in enumerate(self.novel.characters):
-            self._updateForCharacter(char, row, col+1)
 
+        row += 1
+
+        for sectionType in CharacterProfileSectionType:
+            self._sectionRows[sectionType] = row
+            self._addLabel(row, sectionType.name)
+            row += 1
+        self._addLine(row)
+
+        row += 1
+        self._backstoryRow = row
         self._addLabel(row, 'Backstory', IconRegistry.backstory_icon())
-        self._addLabel(row + 1, 'Topics', IconRegistry.topics_icon())
-        self._layout.addWidget(vspacer(), row + 2, 0)
+
+        row += 1
+        self._topicRow = row
+        self._addLabel(row, 'Topics', IconRegistry.topics_icon())
+
+        row += 1
+        self._layout.addWidget(vspacer(), row, 0)
+
+        for col, char in enumerate(self.novel.characters):
+            self._updateForCharacter(char, col + 1)
 
         self._chartMajor.refresh()
         self._chartSecondary.refresh()
         self._chartMinor.refresh()
 
-    def _updateForCharacter(self, char: Character, row: int, col: int):
+    def _updateForCharacter(self, char: Character, col: int):
         name_progress = CircularProgressBar(parent=self)
         if char.name:
             name_progress.setValue(1)
@@ -678,7 +692,7 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
             backstory_progress.setValue(len(char.backstory))
             overall_progress.addMaxValue(backstory_progress.maxValue())
             overall_progress.addValue(backstory_progress.value())
-            self._addWidget(backstory_progress, row, col)
+            self._addWidget(backstory_progress, self._backstoryRow, col)
 
         if char.topics:
             topics_progress = CircularProgressBar(parent=self)
@@ -686,7 +700,7 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
             topics_progress.setValue(len([x for x in char.topics if x.value]))
             overall_progress.addMaxValue(topics_progress.maxValue())
             overall_progress.addValue(topics_progress.value())
-            self._addWidget(topics_progress, row + 1, col)
+            self._addWidget(topics_progress, self._topicRow, col)
 
         self._addWidget(overall_progress, self.RowOverall, col)
 
