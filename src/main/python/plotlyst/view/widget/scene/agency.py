@@ -27,7 +27,7 @@ from PyQt6.QtWidgets import QWidget, QSlider, QGridLayout, QDialog, QButtonGroup
 from overrides import overrides
 from qtanim import fade_in
 from qthandy import hbox, spacer, sp, retain_when_hidden, bold, vbox, translucent, clear_layout, margins, vspacer, \
-    vline, line, grid
+    vline, line, grid, flow
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
@@ -770,10 +770,6 @@ class CharacterAgencyEditor(QWidget):
         self._emotionEditor.layout().addWidget(vline())
         self._emotionEditor.emotionChanged.connect(self._emotionChanged)
         self._emotionEditor.deactivated.connect(self._emotionReset)
-        # self._motivationEditor = SceneAgendaMotivationEditor()
-        # self._motivationEditor.setNovel(novel)
-        # self._motivationEditor.motivationChanged.connect(self._motivationChanged)
-        # self._motivationEditor.deactivated.connect(self._motivationReset)
 
         self._conflictEditor = SceneAgendaConflictEditor()
         self._conflictEditor.setNovel(self.novel)
@@ -784,7 +780,6 @@ class CharacterAgencyEditor(QWidget):
         if agenda.emotion:
             self._emotionEditor.setValue(agenda.emotion)
 
-        # self._motivationEditor.setAgenda(agenda)
         self._conflictEditor.setAgenda(agenda)
 
         self._btnDots = DotsMenuButton()
@@ -799,10 +794,8 @@ class CharacterAgencyEditor(QWidget):
         self._wdgHeader.layout().addWidget(self._conflictEditor)
         self._wdgHeader.layout().addWidget(spacer())
         self._wdgHeader.layout().addWidget(self._btnDots, alignment=Qt.AlignmentFlag.AlignTop)
-        # self._wdgHeader.layout().addWidget(self._motivationEditor)
         self.layout().addWidget(self._wdgHeader)
         self.layout().addWidget(self._changesEditor)
-        self.layout().addWidget(line())
         self.installEventFilter(VisibilityToggleEventFilter(self._btnDots, self))
 
         if self.agenda.character_id:
@@ -845,7 +838,7 @@ class SceneAgencyEditor(QWidget, EventListener):
         self.btnAdd = push_btn(IconRegistry.plus_icon('grey'), 'Add new character agency', transparent_=True)
         self.btnAdd.installEventFilter(OpacityEventFilter(self.btnAdd, leaveOpacity=0.7))
         self.wdgAgendas = QWidget()
-        vbox(self.wdgAgendas, spacing=25)
+        flow(self.wdgAgendas, spacing=25)
         self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         self.layout().addWidget(self.wdgAgendas)
         self.layout().addWidget(vspacer())
