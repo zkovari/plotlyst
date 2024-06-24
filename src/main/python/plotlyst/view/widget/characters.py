@@ -647,6 +647,17 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
             elif section.type == CharacterProfileSectionType.Faculties:
                 progress.setMaxValue(5)
                 progress.setValue(len(character.faculties.values()))
+            elif section.type == CharacterProfileSectionType.Strengths:
+                progress.setMaxValue(0)
+                for attr in character.strengths:
+                    if attr.has_strength and attr.has_weakness:
+                        progress.addMaxValue(2)
+                    if attr.has_strength and attr.strength:
+                        progress.addValue(1)
+                    if attr.has_weakness and attr.weakness:
+                        progress.addValue(1)
+                if progress.maxValue() == 0:
+                    progress.setMaxValue(1)
             elif section.type == CharacterProfileSectionType.Personality:
                 if character.prefs.toggled(NovelSetting.Character_enneagram):
                     progress.addMaxValue(1)
