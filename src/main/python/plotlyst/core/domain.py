@@ -1581,6 +1581,13 @@ class TagReference:
 
 
 @dataclass
+class CharacterAgencyChanges:
+    initial: Optional['StoryElement'] = None
+    transition: Optional['StoryElement'] = None
+    final: Optional['StoryElement'] = None
+
+
+@dataclass
 class SceneStructureAgenda(CharacterBased):
     character_id: Optional[uuid.UUID] = None
     conflict_references: List[ConflictReference] = field(default_factory=list)
@@ -1589,6 +1596,7 @@ class SceneStructureAgenda(CharacterBased):
     emotion: Optional[int] = None
     motivations: Dict[int, int] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
     story_elements: List['StoryElement'] = field(default_factory=list)
+    changes: List[CharacterAgencyChanges] = field(default_factory=list)
 
     def __post_init__(self):
         self._character: Optional[Character] = None
@@ -1714,11 +1722,19 @@ class StoryElementType(Enum):
     Arc = 'arc'
     Outcome = 'outcome'
     Consequences = 'consequences'
+    Character_state = 'character_state'
+    Character_internal_state = 'character_internal_state'
+    Character_state_change = 'character_state_change'
+    Character_internal_state_change = 'character_internal_state_change'
+
+    Expectation = 'expectation'
+    Realization = 'realization'
     Goal = 'goal'
     Motivation = 'motivation'
     Conflict = 'conflict'
     Internal_conflict = 'internal_conflict'
     Dilemma = 'dilemma'
+    Choice = 'choice'
     Impact = 'impact'
     Responsibility = 'responsibility'
     Decision = 'decision'
@@ -1726,6 +1742,7 @@ class StoryElementType(Enum):
     Agency = 'agency'
     Initiative = 'initiative'
     Catalyst = 'catalyst'
+    Action = 'action'
     Plan_change = 'plan_change'
     Collaboration = 'collaboration'
     Subtext = 'subtext'
@@ -1737,7 +1754,85 @@ class StoryElementType(Enum):
     Thematic_effect = 'thematic_effect'
 
     def displayed_name(self) -> str:
+        if self == StoryElementType.Character_state:
+            return 'External state'
+        if self == StoryElementType.Character_internal_state:
+            return 'Internal state'
+        if self == StoryElementType.Character_state_change:
+            return 'External change'
+        if self == StoryElementType.Character_internal_state_change:
+            return 'Internal change'
         return self.value.capitalize().replace('_', ' ')
+
+    def icon(self) -> str:
+        if self == StoryElementType.Goal:
+            return 'mdi.target'
+        elif self == StoryElementType.Conflict:
+            return 'mdi.sword-cross'
+        elif self == StoryElementType.Internal_conflict:
+            return 'mdi.mirror'
+        elif self == StoryElementType.Dilemma:
+            return 'fa5s.map-signs'
+        elif self == StoryElementType.Choice:
+            return 'mdi.arrow-decision-outline'
+        elif self == StoryElementType.Catalyst:
+            return 'fa5s.vial'
+        elif self == StoryElementType.Action:
+            return 'mdi.run-fast'
+        elif self == StoryElementType.Outcome:
+            return 'fa5s.bomb'
+        elif self == StoryElementType.Character_state:
+            return 'fa5s.user-circle'
+        elif self == StoryElementType.Character_internal_state:
+            return 'mdi6.head-dots-horizontal-outline'
+        elif self == StoryElementType.Character_state_change:
+            return 'ph.user-circle-gear-fill'
+        elif self == StoryElementType.Character_internal_state_change:
+            return 'mdi.head-flash-outline'
+        elif self == StoryElementType.Expectation:
+            return 'mdi.sign-direction'
+        elif self == StoryElementType.Realization:
+            return 'mdi.routes'
+        elif self == StoryElementType.Decision:
+            return 'fa5.lightbulb'
+        elif self == StoryElementType.Motivation:
+            return 'fa5s.fist-raised'
+
+    def placeholder(self) -> str:
+        if self == StoryElementType.Goal:
+            return "What's the character's goal in this scene?"
+        elif self == StoryElementType.Conflict:
+            return "What kind of conflict does the character have to face?"
+        elif self == StoryElementType.Internal_conflict:
+            return "What internal struggles, dilemmas, doubts does the character have to face?"
+        elif self == StoryElementType.Outcome:
+            return "What's the scene's outcome for the character?"
+        elif self == StoryElementType.Character_state:
+            return "What's the character's external circumstances or situation?"
+        elif self == StoryElementType.Character_internal_state:
+            return "What's the character's internal state, mentally or psychologically?"
+        elif self == StoryElementType.Character_state_change:
+            return "How does the character's external circumstances change?"
+        elif self == StoryElementType.Character_internal_state_change:
+            return "How does the character's internal state change, mentally or psychologically?"
+        elif self == StoryElementType.Expectation:
+            return "What does the character anticipate to happen?"
+        elif self == StoryElementType.Realization:
+            return "What did actually happen in the scene that upended expectations?"
+        elif self == StoryElementType.Catalyst:
+            return "What disrupts the character's life and forces them to act?"
+        elif self == StoryElementType.Dilemma:
+            return "What difficult choice does the character have to face?"
+        elif self == StoryElementType.Choice:
+            return "An impossible choice between two equally good or bad outcomes"
+        elif self == StoryElementType.Action:
+            return "What steps or decisions does the character make?"
+        elif self == StoryElementType.Decision:
+            return "What decision does the character have to make?"
+        elif self == StoryElementType.Motivation:
+            return "How does the character's motivation change?"
+
+        return ''
 
 
 @dataclass

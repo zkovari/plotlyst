@@ -44,13 +44,14 @@ from plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, set_tab_icon, \
-    push_btn, fade_out_and_gc, set_tab_visible
+    push_btn, fade_out_and_gc, set_tab_visible, scroll_to_bottom
 from plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.labels import CharacterLabel
+from plotlyst.view.widget.scene.agency import SceneAgencyEditor
 from plotlyst.view.widget.scene.editor import ScenePurposeSelectorWidget, ScenePurposeTypeButton, \
-    SceneAgendaEditor, SceneProgressEditor
+    SceneProgressEditor
 from plotlyst.view.widget.scene.functions import SceneFunctionsWidget
 from plotlyst.view.widget.scene.plot import ScenePlotLabels, \
     ScenePlotSelectorMenu
@@ -171,9 +172,10 @@ class SceneEditor(QObject, EventListener):
         self._functionsEditor.storylineEditRequested.connect(self._storyline_edit)
         self.ui.scrollAreaFunctions.layout().addWidget(self._functionsEditor)
 
-        self._agencyEditor = SceneAgendaEditor(self.novel)
+        self._agencyEditor = SceneAgencyEditor(self.novel)
         self._agencyEditor.setUnsetCharacterSlot(self._character_not_selected_notification)
-        self.ui.tabAgency.layout().addWidget(self._agencyEditor)
+        self._agencyEditor.agencyAdded.connect(lambda: scroll_to_bottom(self.ui.scrollArea_2))
+        self.ui.scrollAgency.layout().addWidget(self._agencyEditor)
 
         self._curiosityEditor = ReaderCuriosityEditor(self.novel)
         self.ui.tabCuriosity.layout().addWidget(self._curiosityEditor)
