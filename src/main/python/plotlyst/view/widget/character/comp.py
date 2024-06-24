@@ -123,11 +123,16 @@ class FacultiesDisplay(QWidget, BaseDisplay):
         vbox(self)
         margins(self, left=10, right=10)
 
-        self._iqEditor = self.FacultyEditor(self, self._character, iq_field)
-        self._eqEditor = self.FacultyEditor(self, self._character, eq_field)
-        self._ratEditor = self.FacultyEditor(self, self._character, rationalism_field)
-        self._creaEditor = self.FacultyEditor(self, self._character, creativity_field)
-        self._willEditor = self.FacultyEditor(self, self._character, willpower_field)
+        self._iqEditor = self.FacultyEditor(self, self._character, iq_field,
+                                            CharacterProfileFieldType.Field_Faculties_IQ)
+        self._eqEditor = self.FacultyEditor(self, self._character, eq_field,
+                                            CharacterProfileFieldType.Field_Faculties_EQ)
+        self._ratEditor = self.FacultyEditor(self, self._character, rationalism_field,
+                                             CharacterProfileFieldType.Field_Faculties_Rationalism)
+        self._creaEditor = self.FacultyEditor(self, self._character, creativity_field,
+                                              CharacterProfileFieldType.Field_Faculties_Creativity)
+        self._willEditor = self.FacultyEditor(self, self._character, willpower_field,
+                                              CharacterProfileFieldType.Field_Faculties_Willpower)
 
         self.layout().addWidget(self._iqEditor)
         self.layout().addWidget(self._eqEditor)
@@ -164,9 +169,11 @@ class FacultiesDisplay(QWidget, BaseDisplay):
 
     class FacultyEditor(BarTemplateFieldWidget):
 
-        def __init__(self, display: 'FacultiesDisplay', character: Character, field: TemplateField, parent=None):
+        def __init__(self, display: 'FacultiesDisplay', character: Character, field: TemplateField,
+                     type_: CharacterProfileFieldType, parent=None):
             super().__init__(field, parent)
             self._character = character
+            self._type = type_
             self._display = display
             self._value: Optional[TemplateValue] = None
 
@@ -180,9 +187,9 @@ class FacultiesDisplay(QWidget, BaseDisplay):
 
         @overrides
         def _valueChanged(self, value: int):
-            pass
+            self._character.faculties[self._type.value] = value
             # self._value.value = value
-            # self._display.save()
+            self._display.save()
 
 
 class BackstoryDisplay(CharacterTimelineWidget, BaseDisplay):
