@@ -701,6 +701,7 @@ class CharacterChangesEditor(QWidget):
             wdg = CharacterChangeBubble(element)
             if element.type == StoryElementType.Motivation:
                 motivationEditor = SceneAgendaMotivationEditor()
+                motivationEditor.motivationChanged.connect(self._motivationChanged)
                 motivationEditor.setNovel(self.novel)
                 motivationEditor.setScene(self.scene)
                 motivationEditor.setAgenda(self.agenda)
@@ -739,9 +740,15 @@ class CharacterChangesEditor(QWidget):
             if item:
                 fade_out_and_gc(self, item.widget())
 
+        if change.final and change.final.type == StoryElementType.Motivation:
+            self.agenda.motivations.clear()
+
         for i in range(self.Header3Col + 2):
             removeItem(i)
         self.agenda.changes.remove(change)
+
+    def _motivationChanged(self, motivation: Motivation, value: int):
+        self.agenda.motivations[motivation.value] = value
 
 
 class CharacterAgencyEditor(QWidget):
@@ -821,9 +828,6 @@ class CharacterAgencyEditor(QWidget):
 
     def _emotionReset(self):
         self.agenda.emotion = None
-
-    def _motivationChanged(self, motivation: Motivation, value: int):
-        self.agenda.motivations[motivation.value] = value
 
     def _motivationReset(self):
         self.agenda.motivations.clear()
