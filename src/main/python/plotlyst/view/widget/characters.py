@@ -32,7 +32,7 @@ from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
 from plotlyst.common import RELAXED_WHITE_COLOR
-from plotlyst.core.domain import Novel, Character, CharacterProfileSectionType
+from plotlyst.core.domain import Novel, Character, CharacterProfileSectionType, NovelSetting
 from plotlyst.core.template import SelectionItem, TemplateField, RoleImportance
 from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, Event
@@ -639,22 +639,36 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
             row = self._sectionRows[section.type]
             progress = CircularProgressBar(parent=self)
             if section.type == CharacterProfileSectionType.Summary:
-                overall_progress.addMaxValue(1)
                 if character.summary:
                     progress.setValue(1)
-                    overall_progress.addValue(1)
             elif section.type == CharacterProfileSectionType.Philosophy:
-                overall_progress.addMaxValue(1)
                 if character.values:
                     progress.setValue(1)
-                    overall_progress.addValue(1)
             elif section.type == CharacterProfileSectionType.Faculties:
-                overall_progress.addMaxValue(5)
                 progress.setMaxValue(5)
-                value = len(character.faculties.values())
-                progress.setValue(value)
-                overall_progress.setValue(value)
+                progress.setValue(len(character.faculties.values()))
+            elif section.type == CharacterProfileSectionType.Personality:
+                if character.prefs.toggled(NovelSetting.Character_enneagram):
+                    progress.addMaxValue(1)
+                    if character.personality.enneagram:
+                        progress.addValue(1)
+                if character.prefs.toggled(NovelSetting.Character_mbti):
+                    progress.addMaxValue(1)
+                    if character.personality.mbti:
+                        progress.addValue(1)
+                if character.prefs.toggled(NovelSetting.Character_love_style):
+                    progress.addMaxValue(1)
+                    if character.personality.love:
+                        progress.addValue(1)
+                if character.prefs.toggled(NovelSetting.Character_work_style):
+                    progress.addMaxValue(1)
+                    if character.personality.work:
+                        progress.addValue(1)
+                if character.traits:
+                    progress.addValue(1)
 
+            overall_progress.addMaxValue(progress.maxValue())
+            overall_progress.addValue(progress.value())
             self._addWidget(progress, row, col)
 
         # for h, v in headers.items():
