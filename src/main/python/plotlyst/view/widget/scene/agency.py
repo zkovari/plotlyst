@@ -21,7 +21,7 @@ from functools import partial
 from typing import Dict, Optional, List
 
 import qtanim
-from PyQt6.QtCore import Qt, QEvent, pyqtSignal, QSize
+from PyQt6.QtCore import Qt, QEvent, pyqtSignal, QSize, QTimer
 from PyQt6.QtGui import QEnterEvent, QMouseEvent, QIcon, QCursor
 from PyQt6.QtWidgets import QWidget, QSlider, QGridLayout, QDialog, QButtonGroup
 from overrides import overrides
@@ -876,12 +876,12 @@ class SceneAgencyEditor(QWidget, EventListener):
     def _characterSelected(self, character: Character):
         def finish():
             wdg.setGraphicsEffect(None)
-            self.agencyAdded.emit()
 
         agency = SceneStructureAgenda(character.id)
         self._scene.agendas.append(agency)
         wdg = self.__initAgencyWidget(agency)
         qtanim.fade_in(wdg, teardown=finish)
+        QTimer.singleShot(20, self.agencyAdded)
 
     def _agencyRemoved(self, wdg: CharacterAgencyEditor):
         agency = wdg.agenda
