@@ -643,53 +643,14 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
                 if character.summary:
                     progress.setValue(1)
                     overall_progress.addValue(1)
+            elif section.type == CharacterProfileSectionType.Philosophy:
+                overall_progress.addMaxValue(1)
+                if character.values:
+                    progress.setValue(1)
+                    overall_progress.addValue(1)
 
             self._addWidget(progress, row, col)
 
-        # for h in headers.keys():
-        #     headers[h] = 0  # reset char values
-        # for value in char.template_values:
-        #     if str(value.id) not in fields.keys():
-        #         continue
-        #     if not fields[str(value.id)][1].enabled:
-        #         continue
-        #
-        #     header = fields[str(value.id)][0]
-        #     if not header.header.required and char.is_minor():
-        #         continue
-        #     if not char.disabled_template_headers.get(str(header.header.id), header.header.enabled):
-        #         continue
-        #     if value.value or value.ignored:
-        #         if isinstance(value.value, dict):
-        #             count = 0
-        #             values = 0
-        #             for _, attrs in value.value.items():
-        #                 count += 1
-        #                 if attrs.get('value'):
-        #                     values += 1
-        #                 for secondary in attrs.get('secondary', []):
-        #                     count += 1
-        #                     if secondary.get('value'):
-        #                         values += 1
-        #             headers[header] = headers[header] + values / count
-        #         elif value.id == strengths_weaknesses_field.id:
-        #             count = 0
-        #             values = 0
-        #             for attrs in value.value:
-        #                 if attrs.get('has_strength', True):
-        #                     count += 1
-        #                 if attrs.get('strength', ''):
-        #                     values += 1
-        #                 if attrs.get('has_weakness', True):
-        #                     count += 1
-        #                 if attrs.get('weakness', ''):
-        #                     values += 1
-        #             headers[header] = headers[header] + values / count
-        #         else:
-        #             headers[header] = headers[header] + 1
-        #
-
-        #
         # for h, v in headers.items():
         #     if not h.header.required and char.is_minor():
         #         continue
