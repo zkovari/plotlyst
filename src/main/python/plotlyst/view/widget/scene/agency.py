@@ -26,8 +26,8 @@ from PyQt6.QtGui import QEnterEvent, QMouseEvent, QIcon, QCursor
 from PyQt6.QtWidgets import QWidget, QSlider, QGridLayout, QDialog, QButtonGroup
 from overrides import overrides
 from qtanim import fade_in
-from qthandy import hbox, spacer, sp, retain_when_hidden, bold, vbox, translucent, clear_layout, margins, vspacer, \
-    vline, line, grid, flow
+from qthandy import hbox, spacer, sp, bold, vbox, translucent, clear_layout, margins, vspacer, \
+    vline, line, grid, flow, retain_when_hidden
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
@@ -415,10 +415,6 @@ class SceneAgendaConflictEditor(AbstractAgencyEditor):
         self._sliderIntensity = ConflictIntensityEditor()
         self._sliderIntensity.intensityChanged.connect(self._intensityChanged)
 
-        self._btnReset = RemovalButton()
-        self._btnReset.clicked.connect(self._resetClicked)
-        retain_when_hidden(self._btnReset)
-
         self._wdgConflicts = QWidget()
         hbox(self._wdgConflicts)
 
@@ -426,7 +422,7 @@ class SceneAgendaConflictEditor(AbstractAgencyEditor):
         hbox(self._wdgSliders).addWidget(self._sliderIntensity, alignment=Qt.AlignmentFlag.AlignLeft)
         self._wdgSliders.layout().addWidget(self._btnReset, alignment=Qt.AlignmentFlag.AlignRight)
 
-        self.layout().addWidget(self._icon, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self._icon)
         self.layout().addWidget(self._wdgSliders)
         self.layout().addWidget(self._wdgConflicts)
 
@@ -458,14 +454,14 @@ class SceneAgendaConflictEditor(AbstractAgencyEditor):
 
     def activate(self):
         self._activated = True
-        self._sliderIntensity.setVisible(True)
+        self._wdgSliders.setVisible(True)
         self._wdgConflicts.setVisible(True)
         self._icon.setHidden(True)
 
     @overrides
     def reset(self):
         super().reset()
-        self._sliderIntensity.setVisible(False)
+        self._wdgSliders.setVisible(False)
         self._wdgConflicts.setVisible(False)
         self._icon.setVisible(True)
         if self._agenda:
@@ -828,6 +824,8 @@ class CharacterAgencyEditor(QWidget):
 
 
 class SceneAgencyEditor(QWidget, EventListener):
+    agencyAdded = pyqtSignal()
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
@@ -876,10 +874,14 @@ class SceneAgencyEditor(QWidget, EventListener):
         pass
 
     def _characterSelected(self, character: Character):
+        def finish():
+            wdg.setGraphicsEffect(None)
+            self.agencyAdded.emit()
+
         agency = SceneStructureAgenda(character.id)
         self._scene.agendas.append(agency)
         wdg = self.__initAgencyWidget(agency)
-        qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
+        qtanim.fade_in(wdg, teardown=finish)
 
     def _agencyRemoved(self, wdg: CharacterAgencyEditor):
         agency = wdg.agenda
