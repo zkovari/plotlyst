@@ -113,6 +113,7 @@ class SceneEditor(QObject, EventListener):
 
         self._progressEditor = SceneProgressEditor()
         self._structureSelector = StructureBeatSelectorButton(self.novel)
+        self._structureSelector.setVisible(self.novel.prefs.toggled(NovelSetting.Structure))
         self._structureSelector.selected.connect(self._beat_selected)
         self._structureSelector.removed.connect(self._beat_removed)
         self.wdgProgression = QWidget()
@@ -207,8 +208,7 @@ class SceneEditor(QObject, EventListener):
             self.ui.wdgStorylines.setVisible(event.toggled)
             self._btnPlotSelector.setVisible(event.toggled)
         elif isinstance(event, NovelStructureToggleEvent):
-            # TODO
-            pass
+            self._structureSelector.setVisible(event.toggled)
         elif isinstance(event, NovelPovTrackingToggleEvent):
             self.ui.wdgPov.setVisible(event.toggled)
 
