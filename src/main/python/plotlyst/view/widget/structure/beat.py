@@ -294,9 +294,11 @@ class StructureBeatSelectorMenu(MenuWidget):
         self.addSeparator()
         for beat in self.novel.active_story_structure.beats:
             if beat.type == StoryBeatType.BEAT and beat.enabled:
-                self.addAction(action(beat.text, IconRegistry.from_name(beat.icon, beat.icon_color),
-                                      slot=partial(self.selected.emit, beat),
-                                      tooltip=beat.placeholder if beat.placeholder else beat.description))
+                beat_action = action(beat.text, IconRegistry.from_name(beat.icon, beat.icon_color),
+                                     slot=partial(self.selected.emit, beat),
+                                     tooltip=beat.placeholder if beat.placeholder else beat.description)
+                beat_action.setDisabled(acts_registry.occupied(beat))
+                self.addAction(beat_action)
             if beat.ends_act:
                 act += 1
                 self.addSection(f'Act {act}', IconRegistry.act_icon(act))
