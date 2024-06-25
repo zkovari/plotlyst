@@ -287,6 +287,15 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.file-document-outline', color=color, color_on=color_on)
 
     @staticmethod
+    def act_icon(act: int) -> QIcon:
+        if act == 1:
+            return IconRegistry.act_one_icon()
+        elif act == 2:
+            return IconRegistry.act_two_icon()
+        elif act == 3:
+            return IconRegistry.act_three_icon()
+
+    @staticmethod
     def act_one_icon(color=ACT_ONE_COLOR, color_on=ACT_ONE_COLOR) -> QIcon:
         return IconRegistry.from_name('mdi.numeric-1-circle', color=color, color_on=color_on)
 

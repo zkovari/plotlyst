@@ -90,6 +90,9 @@ class NovelActsRegistry(EventListener):
     def scene(self, beat: StoryBeat) -> Optional[Scene]:
         return self._scenes_per_beats.get(beat)
 
+    def occupied(self, beat: StoryBeat) -> bool:
+        return beat in self._scenes_per_beats.keys()
+
 
 acts_registry = NovelActsRegistry()
 

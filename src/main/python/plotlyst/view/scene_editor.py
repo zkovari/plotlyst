@@ -22,12 +22,12 @@ from typing import Optional
 
 import emoji
 import qtanim
-from PyQt6.QtCore import QObject, pyqtSignal, QTimer
+from PyQt6.QtCore import QObject, pyqtSignal, QTimer, Qt
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QTableView
 from overrides import overrides
 from qtanim import fade_in
-from qthandy import underline, incr_font, margins, pointy, hbox, clear_layout, busy
+from qthandy import underline, incr_font, margins, pointy, hbox, clear_layout, busy, vbox
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -56,6 +56,7 @@ from plotlyst.view.widget.scene.functions import SceneFunctionsWidget
 from plotlyst.view.widget.scene.plot import ScenePlotLabels, \
     ScenePlotSelectorMenu
 from plotlyst.view.widget.scene.reader_drive import ReaderCuriosityEditor, ReaderInformationEditor
+from plotlyst.view.widget.structure.beat import StructureBeatSelectorButton
 
 
 class SceneEditor(QObject, EventListener):
@@ -105,22 +106,22 @@ class SceneEditor(QObject, EventListener):
         self.ui.lblSynopsisEmoji.setFont(self._emoji_font)
         self.ui.lblSynopsisEmoji.setText(emoji.emojize(':scroll:'))
 
-        self.ui.wdgStructure.setBeatsCheckable(True)
-        self.ui.wdgStructure.setStructure(self.novel)
-        self.ui.wdgStructure.setActsClickable(False)
-        self.ui.wdgStructure.beatSelected.connect(self._beat_selected)
-        self.ui.wdgStructure.setRemovalContextMenuEnabled(True)
-        self.ui.wdgStructure.beatRemovalRequested.connect(self._beat_removed)
-        self.ui.wdgStructure.setVisible(self.novel.prefs.toggled(NovelSetting.Structure))
-        self.ui.wdgStructure.setHidden(True)
-
         self._povMenu = CharacterSelectorMenu(self.novel, self.ui.wdgPov.btnAvatar)
         self._povMenu.selected.connect(self._pov_changed)
         self.ui.wdgPov.btnAvatar.setText('POV')
         self.ui.wdgPov.setFixedSize(170, 170)
 
         self._progressEditor = SceneProgressEditor()
-        self.ui.wdgTop.layout().addWidget(self._progressEditor)
+        self._structureSelector = StructureBeatSelectorButton(self.novel)
+        self._structureSelector.setVisible(self.novel.prefs.toggled(NovelSetting.Structure))
+        self._structureSelector.selected.connect(self._beat_selected)
+        self._structureSelector.removed.connect(self._beat_removed)
+        self.wdgProgression = QWidget()
+        vbox(self.wdgProgression, 0)
+        self.wdgProgression.layout().addWidget(self._structureSelector)
+        self.wdgProgression.layout().addWidget(self._progressEditor, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self.ui.wdgTop.layout().addWidget(self.wdgProgression)
 
         self.ui.textNotes.setTitleVisible(False)
         self.ui.textNotes.setPlaceholderText("Scene notes")
@@ -207,7 +208,7 @@ class SceneEditor(QObject, EventListener):
             self.ui.wdgStorylines.setVisible(event.toggled)
             self._btnPlotSelector.setVisible(event.toggled)
         elif isinstance(event, NovelStructureToggleEvent):
-            self.ui.wdgStructure.setVisible(event.toggled)
+            self._structureSelector.setVisible(event.toggled)
         elif isinstance(event, NovelPovTrackingToggleEvent):
             self.ui.wdgPov.setVisible(event.toggled)
 
@@ -228,14 +229,10 @@ class SceneEditor(QObject, EventListener):
         self._curiosityEditor.setScene(self.scene)
         self._informationEditor.setScene(self.scene)
         self._progressEditor.setScene(self.scene)
+        self._structureSelector.setScene(self.scene)
 
         self.ui.lineTitle.setText(self.scene.title)
         self.ui.textSynopsis.setText(self.scene.synopsis)
-
-        self.ui.wdgStructure.unhighlightBeats()
-        self.ui.wdgStructure.highlightScene(self.scene)
-        self.ui.wdgStructure.uncheckActs()
-        self.ui.wdgStructure.setActChecked(acts_registry.act(self.scene))
 
         self.notes_updated = False
         if self.ui.tabWidget.currentWidget() is self.ui.tabNotes or (
@@ -264,26 +261,16 @@ class SceneEditor(QObject, EventListener):
 
     def _beat_selected(self, beat: StoryBeat):
         if self.scene.beat(self.novel) and self.scene.beat(self.novel) != beat:
-            self.ui.wdgStructure.toggleBeat(self.scene.beat(self.novel), False)
             self.scene.remove_beat(self.novel)
-
         self.scene.link_beat(self.novel.active_story_structure, beat)
-        self.ui.wdgStructure.highlightScene(self.scene)
-
+        self._structureSelector.setBeat(beat)
         emit_event(self.novel, SceneStoryBeatChangedEvent(self, self.scene))
 
-    def _beat_removed(self, beat: StoryBeat):
+    def _beat_removed(self):
+        beat = self.scene.beat(self.novel)
         scene = acts_registry.scene(beat)
-        if scene is None:
-            return
-
         scene.remove_beat(self.novel)
-        self.ui.wdgStructure.unhighlightBeats()
-        self.ui.wdgStructure.toggleBeat(beat, False)
-        if self.scene == scene:
-            self.ui.wdgStructure.highlightScene(self.scene)
-        else:
-            self.repo.update_scene(scene)
+        self._structureSelector.reset()
 
         emit_event(self.novel, SceneStoryBeatChangedEvent(self, scene))
 

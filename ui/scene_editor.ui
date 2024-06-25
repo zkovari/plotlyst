@@ -137,9 +137,6 @@
       <number>5</number>
      </property>
      <item>
-      <widget class="SceneStoryStructureWidget" name="wdgStructure" native="true"/>
-     </item>
-     <item>
       <widget class="QWidget" name="wdgTop" native="true">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
@@ -393,6 +390,21 @@
              </sizepolicy>
             </property>
             <layout class="QHBoxLayout" name="horizontalLayout">
+             <property name="spacing">
+              <number>3</number>
+             </property>
+             <property name="leftMargin">
+              <number>2</number>
+             </property>
+             <property name="topMargin">
+              <number>2</number>
+             </property>
+             <property name="rightMargin">
+              <number>2</number>
+             </property>
+             <property name="bottomMargin">
+              <number>2</number>
+             </property>
              <item alignment="Qt::AlignTop">
               <widget class="QPushButton" name="btnStageCharacterLabel">
                <property name="cursor">
@@ -604,7 +616,7 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>564</width>
+                  <width>544</width>
                   <height>343</height>
                  </rect>
                 </property>
@@ -715,7 +727,7 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>560</width>
+                      <width>540</width>
                       <height>315</height>
                      </rect>
                     </property>
@@ -972,12 +984,6 @@
    <class>ScenesTreeView</class>
    <extends>QTreeView</extends>
    <header>plotlyst.view.widget.scene</header>
-  </customwidget>
-  <customwidget>
-   <class>SceneStoryStructureWidget</class>
-   <extends>QWidget</extends>
-   <header>plotlyst.view.widget.scenes</header>
-   <container>1</container>
   </customwidget>
   <customwidget>
    <class>LabelsWidget</class>
