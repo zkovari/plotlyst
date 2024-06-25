@@ -347,6 +347,7 @@ class StructureBeatSelectorButton(QPushButton):
         self._beat = None
         self.setText('Beat')
         self.setIcon(IconRegistry.story_structure_icon())
+        self.setToolTip('Select a beat from story structure')
         self.setStyleSheet('''
             QPushButton::menu-indicator {
                 width: 0px;
@@ -371,6 +372,7 @@ class StructureBeatSelectorButton(QPushButton):
     def _activate(self):
         self.setText(self._beat.text)
         self.setIcon(IconRegistry.from_name(self._beat.icon, self._beat.icon_color))
+        self.setToolTip(self._beat.description)
         self.setStyleSheet(f'''
             QPushButton::menu-indicator {{
                 width: 0px;
