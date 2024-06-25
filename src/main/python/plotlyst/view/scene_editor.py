@@ -22,7 +22,7 @@ from typing import Optional
 
 import emoji
 import qtanim
-from PyQt6.QtCore import QObject, pyqtSignal, QTimer
+from PyQt6.QtCore import QObject, pyqtSignal, QTimer, Qt
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QTableView
 from overrides import overrides
@@ -113,10 +113,12 @@ class SceneEditor(QObject, EventListener):
 
         self._progressEditor = SceneProgressEditor()
         self._structureSelector = StructureBeatSelectorButton(self.novel)
+        self._structureSelector.selected.connect(self._beat_selected)
+        self._structureSelector.removed.connect(self._beat_removed)
         self.wdgProgression = QWidget()
         vbox(self.wdgProgression, 0)
         self.wdgProgression.layout().addWidget(self._structureSelector)
-        self.wdgProgression.layout().addWidget(self._progressEditor)
+        self.wdgProgression.layout().addWidget(self._progressEditor, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self.ui.wdgTop.layout().addWidget(self.wdgProgression)
 
@@ -258,27 +260,17 @@ class SceneEditor(QObject, EventListener):
             self._update_notes()
 
     def _beat_selected(self, beat: StoryBeat):
-        # TODO
-        pass
-        # if self.scene.beat(self.novel) and self.scene.beat(self.novel) != beat:
-        #     self.ui.wdgStructure.toggleBeat(self.scene.beat(self.novel), False)
-        #     self.scene.remove_beat(self.novel)
-        #
-        # self.scene.link_beat(self.novel.active_story_structure, beat)
-        # self.ui.wdgStructure.highlightScene(self.scene)
-        #
-        # emit_event(self.novel, SceneStoryBeatChangedEvent(self, self.scene))
+        if self.scene.beat(self.novel) and self.scene.beat(self.novel) != beat:
+            self.scene.remove_beat(self.novel)
+        self.scene.link_beat(self.novel.active_story_structure, beat)
+        self._structureSelector.setBeat(beat)
+        emit_event(self.novel, SceneStoryBeatChangedEvent(self, self.scene))
 
-    def _beat_removed(self, beat: StoryBeat):
+    def _beat_removed(self):
+        beat = self.scene.beat(self.novel)
         scene = acts_registry.scene(beat)
-        if scene is None:
-            return
-
         scene.remove_beat(self.novel)
-        # if self.scene == scene:
-        #     self.ui.wdgStructure.highlightScene(self.scene)
-        # else:
-        #     self.repo.update_scene(scene)
+        self._structureSelector.reset()
 
         emit_event(self.novel, SceneStoryBeatChangedEvent(self, scene))
 

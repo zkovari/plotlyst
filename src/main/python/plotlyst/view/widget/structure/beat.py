@@ -277,6 +277,8 @@ class BeatsPreview(QFrame):
 
 
 class StructureBeatSelectorMenu(MenuWidget):
+    selected = pyqtSignal(StoryBeat)
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self.novel = novel
@@ -284,10 +286,18 @@ class StructureBeatSelectorMenu(MenuWidget):
         self.aboutToShow.connect(self._fillUp)
 
     def _fillUp(self):
-        pass
+        self.clear()
+
+        for beat in self.novel.active_story_structure.beats:
+            if beat.type == StoryBeatType.BEAT and beat.enabled:
+                self.addAction(action(beat.text, IconRegistry.from_name(beat.icon, beat.icon_color),
+                                      slot=partial(self.selected.emit, beat)))
 
 
 class StructureBeatSelectorButton(QPushButton):
+    selected = pyqtSignal(StoryBeat)
+    removed = pyqtSignal()
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self.novel = novel
@@ -303,19 +313,27 @@ class StructureBeatSelectorButton(QPushButton):
         self.reset()
 
         self._selectorMenu = StructureBeatSelectorMenu(self.novel)
+        self._selectorMenu.selected.connect(self.selected)
         self._contextMenu = MenuWidget()
-        self._contextMenu.addAction(action('Unlink beat', IconRegistry.from_name('fa5s.unlink', RED_COLOR)))
+        self._contextMenu.addAction(
+            action('Unlink beat', IconRegistry.from_name('fa5s.unlink', RED_COLOR), slot=self.removed))
 
         self.clicked.connect(self._showMenu)
 
     def setScene(self, scene: Scene):
-        self._beat = scene.beat(self.novel)
-        if self._beat:
+        beat = scene.beat(self.novel)
+        if beat:
+            self.setBeat(beat)
             self._activate()
         else:
             self.reset()
 
+    def setBeat(self, beat: StoryBeat):
+        self._beat = beat
+        self._activate()
+
     def reset(self):
+        self._beat = None
         self.setText('Beat')
         self.setIcon(IconRegistry.story_structure_icon())
         self.setStyleSheet('''
