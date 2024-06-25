@@ -24,7 +24,7 @@ import emoji
 import qtanim
 from PyQt6.QtCore import QObject, pyqtSignal, QTimer
 from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QWidget, QTableView, QComboBox
+from PyQt6.QtWidgets import QWidget, QTableView
 from overrides import overrides
 from qtanim import fade_in
 from qthandy import underline, incr_font, margins, pointy, hbox, clear_layout, busy, vbox
@@ -56,6 +56,7 @@ from plotlyst.view.widget.scene.functions import SceneFunctionsWidget
 from plotlyst.view.widget.scene.plot import ScenePlotLabels, \
     ScenePlotSelectorMenu
 from plotlyst.view.widget.scene.reader_drive import ReaderCuriosityEditor, ReaderInformationEditor
+from plotlyst.view.widget.structure.beat import StructureBeatSelectorButton
 
 
 class SceneEditor(QObject, EventListener):
@@ -111,7 +112,7 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgPov.setFixedSize(170, 170)
 
         self._progressEditor = SceneProgressEditor()
-        self._structureSelector = QComboBox()
+        self._structureSelector = StructureBeatSelectorButton(self.novel)
         self.wdgProgression = QWidget()
         vbox(self.wdgProgression, 0)
         self.wdgProgression.layout().addWidget(self._structureSelector)
@@ -226,6 +227,7 @@ class SceneEditor(QObject, EventListener):
         self._curiosityEditor.setScene(self.scene)
         self._informationEditor.setScene(self.scene)
         self._progressEditor.setScene(self.scene)
+        self._structureSelector.setScene(self.scene)
 
         self.ui.lineTitle.setText(self.scene.title)
         self.ui.textSynopsis.setText(self.scene.synopsis)
