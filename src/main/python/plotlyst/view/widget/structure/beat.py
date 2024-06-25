@@ -29,7 +29,7 @@ from overrides import overrides
 from qthandy import vspacer, translucent, transparent, gc, bold, clear_layout, retain_when_hidden, grid, decr_icon, \
     italic, pointy, incr_icon, incr_font
 from qthandy.filter import OpacityEventFilter
-from qtmenu import MenuWidget
+from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from plotlyst.common import act_color, RELAXED_WHITE_COLOR, RED_COLOR
 from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
@@ -282,16 +282,25 @@ class StructureBeatSelectorMenu(MenuWidget):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self.novel = novel
+        self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         apply_white_menu(self)
         self.aboutToShow.connect(self._fillUp)
 
     def _fillUp(self):
         self.clear()
 
+        act = 1
+        self.addSection(f'Act {act}', IconRegistry.act_icon(act))
+        self.addSeparator()
         for beat in self.novel.active_story_structure.beats:
             if beat.type == StoryBeatType.BEAT and beat.enabled:
                 self.addAction(action(beat.text, IconRegistry.from_name(beat.icon, beat.icon_color),
-                                      slot=partial(self.selected.emit, beat)))
+                                      slot=partial(self.selected.emit, beat),
+                                      tooltip=beat.placeholder if beat.placeholder else beat.description))
+            if beat.ends_act:
+                act += 1
+                self.addSection(f'Act {act}', IconRegistry.act_icon(act))
+                self.addSeparator()
 
 
 class StructureBeatSelectorButton(QPushButton):
