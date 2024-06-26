@@ -24,7 +24,7 @@ from typing import Set, Optional, Dict
 from PyQt6.QtCore import pyqtSignal, Qt, QMimeData, QPointF, QDir, QTimer
 from PyQt6.QtWidgets import QFileDialog
 from overrides import overrides
-from qthandy import clear_layout, vspacer, translucent, gc, ask_confirmation, retain_when_hidden
+from qthandy import clear_layout, vspacer, translucent, gc, retain_when_hidden
 from qthandy.filter import DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
@@ -35,6 +35,7 @@ from plotlyst.view.common import fade_out_and_gc, action
 from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.characters import CharacterSelectorMenu
+from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
 
@@ -303,7 +304,7 @@ class DocumentsTreeView(TreeView):
 
     def _deleteDocWidget(self, wdg: DocumentNode):
         doc = wdg.doc()
-        if not ask_confirmation(f"Delete document '{doc.title}'?", self._centralWidget):
+        if not confirmed("The document and all its content will be lost.", f"Delete document '{doc.title}'?"):
             return
         if doc in self._selectedDocuments:
             self._selectedDocuments.remove(doc)
