@@ -221,8 +221,10 @@ class DocumentsView(AbstractNovelView):
     def _hide_sidebar(self):
         qtanim.toggle_expansion(self.ui.wdgDocs, False, teardown=lambda: qtanim.fade_in(self.ui.btnTreeToggleSecondary))
         self.ui.btnTreeToggleSecondary.setChecked(False)
+        margins(self.ui.docEditorPage, left=40)
 
     def _show_sidebar(self):
         qtanim.toggle_expansion(self.ui.wdgDocs, True)
         self.ui.btnTreeToggle.setChecked(True)
         self.ui.btnTreeToggleSecondary.setVisible(False)
+        margins(self.ui.docEditorPage, left=0)

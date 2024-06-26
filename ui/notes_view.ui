@@ -229,7 +229,7 @@
       </layout>
      </widget>
      <widget class="QWidget" name="layoutWidget">
-      <layout class="QVBoxLayout" name="verticalLayout">
+      <layout class="QVBoxLayout" name="layoutEditor">
        <property name="spacing">
         <number>0</number>
        </property>
