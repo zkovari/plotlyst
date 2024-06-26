@@ -22,7 +22,7 @@ from functools import partial
 from typing import Dict, Optional
 
 import qtanim
-from PyQt6.QtCore import pyqtSignal, Qt, QSize, QTimer
+from PyQt6.QtCore import pyqtSignal, Qt, QSize
 from PyQt6.QtGui import QShowEvent
 from PyQt6.QtWidgets import QWidget, QTextEdit, QGridLayout, QStackedWidget
 from overrides import overrides
@@ -83,7 +83,7 @@ class StorylinesConnectionWidget(QWidget):
         self._wdgDefault.layout().addWidget(self._btnLink, alignment=Qt.AlignmentFlag.AlignCenter)
         self._wdgDefault.installEventFilter(VisibilityToggleEventFilter(self._btnLink, self._wdgDefault))
 
-        self._icon = push_btn(properties=['transparent', 'no-menu'])
+        self._icon = push_btn(properties=['transparent'])
         self._text = QTextEdit()
         self._text.setProperty('rounded', True)
         self._text.setProperty('white-bg', True)
@@ -132,7 +132,7 @@ class StorylinesConnectionWidget(QWidget):
         sp(self).h_max().v_max()
 
     def activate(self):
-        QTimer.singleShot(10, self._menu.exec)
+        self._text.setFocus()
 
     def setLink(self, link: StorylineLink):
         self._link = None
@@ -239,6 +239,3 @@ class StorylinesImpactMatrix(QWidget):
 
     def _save(self):
         self.repo.update_novel(self._novel)
-
-
-
