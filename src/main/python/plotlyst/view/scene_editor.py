@@ -124,7 +124,7 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgTop.layout().addWidget(self.wdgProgression)
 
         self.ui.textNotes.setTitleVisible(False)
-        self.ui.textNotes.setPlaceholderText("Scene notes")
+        self.ui.textNotes.setPlaceholderText("Begin writing, or press '/' for commands...")
 
         self.tblCharacters = QTableView()
         self.tblCharacters.setShowGrid(False)
