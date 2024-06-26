@@ -196,30 +196,32 @@ class ReportsView(AbstractNovelView):
         self.ui.btnArc.setIcon(IconRegistry.rising_action_icon('black', color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnManuscript.setIcon(IconRegistry.manuscript_icon())
 
+        self.ui.btnCharacters.setHidden(True)
+        self.ui.btnConflict.setHidden(True)
+
         for btn in self.ui.buttonGroup.buttons():
             btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.7, ignoreCheckedButton=True))
             btn.setProperty('transparent-circle-bg-on-hover', True)
             btn.setProperty('large', True)
             btn.setProperty('top-selector', True)
 
-        self._page_characters = CharactersReportPage(self.novel)
-        self.ui.stackedWidget.addWidget(self._page_characters)
+        # self._page_characters = CharactersReportPage(self.novel)
+        # self.ui.stackedWidget.addWidget(self._page_characters)
         self._page_scenes = ScenesReportPage(self.novel)
         self.ui.stackedWidget.addWidget(self._page_scenes)
-        self._page_conflicts = ConflictsReportPage(self.novel)
-        self.ui.stackedWidget.addWidget(self._page_conflicts)
+        # self._page_conflicts = ConflictsReportPage(self.novel)
+        # self.ui.stackedWidget.addWidget(self._page_conflicts)
         self._page_arc = ArcReportPage(self.novel)
         self.ui.stackedWidget.addWidget(self._page_arc)
         self._page_manuscript = ManuscriptReportPage(self.novel)
         self.ui.stackedWidget.addWidget(self._page_manuscript)
 
-        link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnCharacters, self._page_characters),
-                                                      (self.ui.btnScenes, self._page_scenes),
-                                                      (self.ui.btnConflict, self._page_conflicts),
-                                                      (self.ui.btnArc, self._page_arc),
-                                                      (self.ui.btnManuscript, self._page_manuscript)])
+        link_buttons_to_pages(self.ui.stackedWidget, [
+            (self.ui.btnScenes, self._page_scenes),
+            (self.ui.btnArc, self._page_arc),
+            (self.ui.btnManuscript, self._page_manuscript)])
 
-        self.ui.btnCharacters.setChecked(True)
+        self.ui.btnScenes.setChecked(True)
 
     @overrides
     def refresh(self):
