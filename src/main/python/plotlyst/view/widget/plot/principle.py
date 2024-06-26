@@ -23,10 +23,9 @@ from typing import List, Optional
 
 from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QObject
 from PyQt6.QtGui import QColor, QIcon
-from PyQt6.QtWidgets import QWidget, QPushButton, QTextEdit
+from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import bold, incr_font, \
-    margins, italic, vbox, transparent, \
+from qthandy import bold, margins, italic, vbox, transparent, \
     hbox, spacer, sp, pointy, line, underline
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, group, ActionTooltipDisplayMode
@@ -35,7 +34,6 @@ from plotlyst.common import RELAXED_WHITE_COLOR, CONFLICT_SELF_COLOR
 from plotlyst.core.domain import Plot, PlotType, PlotPrinciple, \
     PlotPrincipleType, PlotEventType, DynamicPlotPrincipleGroupType
 from plotlyst.core.template import antagonist_role
-from plotlyst.env import app_env
 from plotlyst.view.common import shadow, label, tool_btn, push_btn, scrolled, action
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -458,10 +456,10 @@ class PlotPrincipleSelectorMenu(MenuWidget):
         margins(wdg, left=15)
         self.addWidget(wdg)
 
-        wdg = _PlotPrincipleToggle(PlotPrincipleType.THEME, self._plot.plot_type)
-        margins(wdg, left=15)
-        wdg.setDisabled(True)
-        self.addWidget(wdg)
+        # wdg = _PlotPrincipleToggle(PlotPrincipleType.THEME, self._plot.plot_type)
+        # margins(wdg, left=15)
+        # wdg.setDisabled(True)
+        # self.addWidget(wdg)
 
         wdg = _PlotPrincipleToggle(PlotPrincipleType.LINEAR_PROGRESSION, self._plot.plot_type)
         wdg.toggle.setChecked(self._plot.has_progression)
