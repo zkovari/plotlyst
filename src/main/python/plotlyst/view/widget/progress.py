@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QSizePolicy
 from overrides import overrides
 
 from plotlyst.common import CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR, CHARACTER_MINOR_COLOR, \
-    RELAXED_WHITE_COLOR, ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, PLOTLYST_MAIN_COLOR
+    RELAXED_WHITE_COLOR, ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Novel, SceneStage
 from plotlyst.core.template import RoleImportance
 from plotlyst.event.core import EventListener, Event
@@ -42,7 +42,7 @@ from plotlyst.view.widget.display import ChartView
 
 
 class ProgressChartView(ChartView):
-    def __init__(self, value: int, maxValue: int, title_prefix: str = 'Progress', color=Qt.GlobalColor.darkBlue,
+    def __init__(self, value: int, maxValue: int, title_prefix: str = 'Progress', color=PLOTLYST_SECONDARY_COLOR,
                  parent=None):
         super(ProgressChartView, self).__init__(parent)
         self.chart = ProgressChart(title_prefix=title_prefix, color=color)
@@ -126,7 +126,7 @@ class SceneStageProgressCharts(EventListener):
 
 class ProgressChart(BaseChart):
 
-    def __init__(self, value: int = 0, maxValue: int = 1, title_prefix: str = 'Progress', color=Qt.GlobalColor.darkBlue,
+    def __init__(self, value: int = 0, maxValue: int = 1, title_prefix: str = 'Progress', color=PLOTLYST_SECONDARY_COLOR,
                  titleColor=Qt.GlobalColor.black, emptySliceColor=RELAXED_WHITE_COLOR,
                  emptySliceBorder=Qt.GlobalColor.lightGray, parent=None):
         super(ProgressChart, self).__init__(parent)
