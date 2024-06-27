@@ -351,7 +351,7 @@ class SceneStoryStructureWidget(QWidget):
         self._actsSplitter: Optional[QSplitter] = None
         self.btnCurrentScene = QToolButton(self)
         self._currentScenePercentage = 1
-        self.btnCurrentScene.setIcon(IconRegistry.circle_icon(color='red'))
+        self.btnCurrentScene.setIcon(IconRegistry.circle_icon(color=PLOTLYST_SECONDARY_COLOR))
         self.btnCurrentScene.setHidden(True)
         transparent(self.btnCurrentScene)
         self._wdgLine = QWidget(self)
@@ -552,7 +552,7 @@ class SceneStoryStructureWidget(QWidget):
         if btn is None:
             return
         btn.setStyleSheet(
-            'QToolButton {border: 3px dotted #9b2226; border-radius: 5;} QToolTip {border: 0px;}')
+            f'QToolButton {{border: 3px dotted {PLOTLYST_SECONDARY_COLOR}; border-radius: 5;}} QToolTip {{border: 0px;}}')
         btn.setFixedSize(self._beatHeight + 6, self._beatHeight + 6)
         qtanim.glow(btn, color=QColor(beat.icon_color))
 
