@@ -22,8 +22,6 @@ from typing import Any, NoReturn, Dict
 
 from plotlyst.core.domain import VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY
 
-EXIT_CODE_RESTART = 10
-
 WIP_COLOR: str = '#f6cd61'
 
 ACT_ONE_COLOR: str = '#02bcd4'

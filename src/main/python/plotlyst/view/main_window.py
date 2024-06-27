@@ -20,7 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 import qtanim
-import qtawesome
 from PyQt6.QtCore import Qt, QThreadPool, QEvent, QMimeData, QTimer
 from PyQt6.QtGui import QCloseEvent, QPalette, QColor, QKeyEvent, QResizeEvent, QDrag, QWindowStateChangeEvent, QAction
 from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup, \
@@ -32,7 +31,7 @@ from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qttextedit.ops import DEFAULT_FONT_FAMILIES
 from textstat import textstat
 
-from plotlyst.common import EXIT_CODE_RESTART, NAV_BAR_BUTTON_DEFAULT_COLOR, \
+from plotlyst.common import NAV_BAR_BUTTON_DEFAULT_COLOR, \
     NAV_BAR_BUTTON_CHECKED_COLOR, PLOTLYST_MAIN_COLOR
 from plotlyst.core.client import client, json_client
 from plotlyst.core.domain import Novel, NovelPanel, ScenesView, NovelSetting
@@ -51,7 +50,7 @@ from plotlyst.service.cache import acts_registry, characters_registry
 from plotlyst.service.dir import select_new_project_directory
 from plotlyst.service.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
 from plotlyst.service.importer import ScrivenerSyncImporter
-from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.service.persistence import RepositoryPersistenceManager, flush_or_fail
 from plotlyst.service.resource import download_resource, download_nltk_resources
 from plotlyst.service.tour import TourService
 from plotlyst.settings import settings
@@ -213,6 +212,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
             if language_tool_proxy.is_set():
                 language_tool_proxy.tool.close()
+
+        flush_or_fail()
 
     @overrides
     def keyPressEvent(self, event: QKeyEvent) -> None:
@@ -445,11 +446,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.menubar.setContextMenuPolicy(Qt.ContextMenuPolicy.PreventContextMenu)
         if app_env.is_windows():
             self.menubar.setFont(QApplication.font())
-        if app_env.is_prod():
-            self.menuFile.removeAction(self.actionRestart)
-        else:
-            self.actionRestart.setIcon(qtawesome.icon('mdi.restart'))
-            self.actionRestart.triggered.connect(self._restart)
 
         self.actionAbout.triggered.connect(lambda: AboutDialog().exec())
         self.actionPreview.triggered.connect(lambda: ManuscriptPreviewDialog().display(app_env.novel))
@@ -666,13 +662,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
     def _paste_text(self):
         if self._current_text_widget:
             self._current_text_widget.paste()
-
-    def _restart(self):
-        if self.novel:
-            self._persist_last_novel_state()
-        if language_tool_proxy.is_set():
-            language_tool_proxy.tool.close()
-        QApplication.instance().exit(EXIT_CODE_RESTART)
 
     def _persist_last_novel_state(self):
         if not self.novel:

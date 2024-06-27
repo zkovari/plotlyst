@@ -40,7 +40,6 @@ try:
     from fbs_runtime import platform
     from fbs_runtime.application_context import cached_property, is_frozen
 
-    from plotlyst.common import EXIT_CODE_RESTART
     from plotlyst.core.client import json_client
     from plotlyst.event.handler import DialogExceptionHandler
     from plotlyst.view.dialog.about import AboutDialog
@@ -89,61 +88,43 @@ if __name__ == '__main__':
     parser.add_argument('--clear', action='store_true')
     args = parser.parse_args()
     app_env.mode = args.mode
+
+    if platform.is_linux() and QApplication.font().pointSize() < 12:
+        font = QFont('Helvetica', 12)
+        QApplication.setFont(font)
+    elif platform.is_windows() and QApplication.font().pointSize() < 12:
+        font = QFont('Segoe UI', 12)
+        QApplication.setFont(font)
+    app.setStyleSheet(APP_STYLESHEET)
+    settings.init_org()
+    if args.clear:
+        settings.clear()
+    resource_registry.set_up()
+    resource_manager.init()
+    workspace: Optional[str] = settings.workspace()
+    if not workspace or not os.path.exists(workspace):
+        workspace = default_directory()
+    changed_dir = False
     while True:
-        if platform.is_linux() and QApplication.font().pointSize() < 12:
-            font = QFont('Helvetica', 12)
-            QApplication.setFont(font)
-        elif platform.is_windows() and QApplication.font().pointSize() < 12:
-            font = QFont('Segoe UI', 12)
-            QApplication.setFont(font)
-
-        app.setStyleSheet(APP_STYLESHEET)
-        settings.init_org()
-        if args.clear:
-            settings.clear()
-        resource_registry.set_up()
-        resource_manager.init()
-
-        workspace: Optional[str] = settings.workspace()
-        if not workspace or not os.path.exists(workspace):
-            workspace = default_directory()
-
-        changed_dir = False
-        while True:
-            if not workspace:
-                workspace = select_new_project_directory()
-
-            if workspace:
-                settings.set_workspace(workspace)
-                break
-
-        try:
-            json_client.init(workspace)
-        except Exception as ex:
-            QMessageBox.critical(None, 'Could not initialize database', traceback.format_exc())
-            raise ex
-
-        try:
-            window = MainWindow()
-        except Exception as ex:
-            QMessageBox.critical(None, 'Could not create main window', traceback.format_exc())
-            raise ex
-
-        window.show()
-        window.activateWindow()
-
-        first_launch = settings.first_launch()
-        if first_launch:
-            AboutDialog().exec()
-            settings.set_launched_before()
-
-        exit_code = app.exec_()
-        flush_or_fail()
-
-        if exit_code < EXIT_CODE_RESTART:
-            sys.exit(exit_code)
-
-        # restart process
-        subprocess.call('./gen.sh')
-        python = sys.executable
-        os.execl(python, python, *sys.argv)
+        if not workspace:
+            workspace = select_new_project_directory()
+        if workspace:
+            settings.set_workspace(workspace)
+            break
+    try:
+        json_client.init(workspace)
+    except Exception as ex:
+        QMessageBox.critical(None, 'Could not initialize database', traceback.format_exc())
+        raise ex
+    try:
+        window = MainWindow()
+    except Exception as ex:
+        QMessageBox.critical(None, 'Could not create main window', traceback.format_exc())
+        raise ex
+    window.show()
+    window.activateWindow()
+    first_launch = settings.first_launch()
+    if first_launch:
+        AboutDialog().exec()
+        settings.set_launched_before()
+    sys.exit(app.exec_())

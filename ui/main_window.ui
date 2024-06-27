@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>754</width>
-    <height>605</height>
+    <height>617</height>
    </rect>
   </property>
   <property name="mouseTracking">
@@ -866,7 +866,6 @@
      <addaction name="actionChangeDir"/>
     </widget>
     <addaction name="menuProject"/>
-    <addaction name="actionRestart"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -937,14 +936,6 @@
    </attribute>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionRestart">
-   <property name="text">
-    <string>Restart</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+R</string>
-   </property>
-  </action>
   <action name="actionAbout">
    <property name="text">
     <string>About</string>
