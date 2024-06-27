@@ -40,8 +40,7 @@ from plotlyst.events import SceneDeletedEvent, \
 from plotlyst.events import SceneOrderChangedEvent, ChapterChangedEvent
 from plotlyst.service.persistence import RepositoryPersistenceManager, delete_scene
 from plotlyst.view.common import action, insert_before_the_end
-from plotlyst.view.icons import IconRegistry, avatars
-from plotlyst.view.widget.display import Icon
+from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
 
@@ -54,12 +53,13 @@ class SceneWidget(ContainerNode):
         self._novel = novel
         self._readOnly = readOnly
 
-        self._scenePovIcon = Icon(self)
         self.setPlusButtonEnabled(False)
         self.setMenuEnabled(not self._readOnly)
-        self._scenePovIcon.installEventFilter(self)
-
-        self._wdgTitle.layout().insertWidget(0, self._scenePovIcon)
+        IconRegistry.scene_icon()
+        self._icon.setIcon(IconRegistry.from_name('msc.debug-stackframe-dot', 'lightgrey'))
+        self._icon.setVisible(True)
+        self._wdgTitle.layout().setSpacing(0)
+        margins(self._wdgTitle, left=0, top=0, bottom=0)
 
         self.refresh()
 
@@ -70,17 +70,17 @@ class SceneWidget(ContainerNode):
         return self._novel
 
     def refresh(self):
-        if self._scene.purpose:
-            self._icon.setIcon(IconRegistry.scene_type_icon(self._scene))
-        self._icon.setVisible(self._scene.purpose is not None)
+        # if self._scene.purpose:
+        #     self._icon.setIcon(IconRegistry.scene_type_icon(self._scene))
+        # self._icon.setVisible(self._scene.purpose is not None)
 
-        if self._scene.pov:
-            avatar = avatars.avatar(self._scene.pov, fallback=False)
-            if avatar:
-                self._scenePovIcon.setIcon(avatar)
-        else:
-            avatar = None
-        self._scenePovIcon.setVisible(avatar is not None)
+        # if self._scene.pov:
+        #     avatar = avatars.avatar(self._scene.pov, fallback=False)
+        #     if avatar:
+        #         self._scenePovIcon.setIcon(avatar)
+        # else:
+        #     avatar = None
+        # self._scenePovIcon.setVisible(avatar is not None)
 
         self.refreshTitle()
 
