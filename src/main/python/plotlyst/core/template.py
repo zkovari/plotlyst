@@ -575,7 +575,7 @@ iq_field = TemplateField(name='IQ', type=TemplateFieldType.BAR,
                          id=uuid.UUID('a27f2534-9933-4fc9-a70b-0f4f4480d619'), emoji=':brain:',
                          min_value=0, max_value=100, placeholder='IQ', color='#0077b6')
 
-eq_field = TemplateField(name='Emotion intelligence', type=TemplateFieldType.BAR,
+eq_field = TemplateField(name='Emotional intelligence', type=TemplateFieldType.BAR,
                          id=uuid.UUID('b2452206-05af-44c9-8908-4d4ff1f669ba'), emoji=':handshake:',
                          min_value=0, max_value=100, placeholder='EQ', color='#2a9d8f')
 

@@ -23,12 +23,12 @@ from typing import Optional, List, Dict, Any, Tuple
 
 import emoji
 import qtanim
-from PyQt6.QtCore import pyqtSignal, Qt, QSize
+from PyQt6.QtCore import pyqtSignal, Qt, QSize, QObject, QEvent, QPoint
 from PyQt6.QtGui import QResizeEvent, QWheelEvent, QColor
 from PyQt6.QtWidgets import QWidget, QLabel, QSizePolicy, QSlider, QToolButton, QVBoxLayout, QGridLayout
 from overrides import overrides
 from qthandy import vbox, clear_layout, hbox, bold, underline, spacer, vspacer, margins, pointy, retain_when_hidden, \
-    transparent, sp, gc, decr_font, grid, incr_font
+    transparent, sp, gc, decr_font, grid, incr_font, line
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
@@ -36,7 +36,7 @@ from plotlyst.common import PLOTLYST_MAIN_COLOR
 from plotlyst.core.domain import Character, CharacterProfileSectionReference, CharacterProfileFieldReference, \
     CharacterProfileFieldType, CharacterMultiAttribute, CharacterProfileSectionType, MultiAttributePrimaryType, \
     MultiAttributeSecondaryType, CharacterSecondaryAttribute, StrengthWeaknessAttribute, CharacterPersonalityAttribute, \
-    NovelSetting
+    NovelSetting, Novel
 from plotlyst.core.help import enneagram_help, mbti_keywords, mbti_help, work_style_help, love_style_help
 from plotlyst.core.template import TemplateField, iq_field, eq_field, rationalism_field, willpower_field, \
     creativity_field, traits_field, values_field, flaw_placeholder_field, goal_field, internal_goal_field, stakes_field, \
@@ -50,7 +50,7 @@ from plotlyst.core.template import TemplateField, iq_field, eq_field, rationalis
 from plotlyst.env import app_env
 from plotlyst.view.common import tool_btn, wrap, emoji_font, action, insert_before_the_end, push_btn, label, \
     fade_out_and_gc
-from plotlyst.view.icons import IconRegistry
+from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.style.slider import apply_slider_color
@@ -573,17 +573,24 @@ class ValuesFieldWidget(LabelsTemplateFieldWidget):
         self.character.values[:] = value
 
 
-class BarSlider(QSlider):
+class TemplateFieldBarSlider(QSlider):
+    def __init__(self, field: TemplateField, orientation=Qt.Orientation.Horizontal, parent=None):
+        super().__init__(orientation, parent)
+        self.setMinimum(field.min_value)
+        self.setMaximum(field.max_value)
+        if field.color:
+            apply_slider_color(self, field.color)
+
     @overrides
     def wheelEvent(self, event: QWheelEvent) -> None:
         event.ignore()
 
 
 class BarTemplateFieldWidget(TemplateFieldWidgetBase):
-    def __init__(self, parent=None):
+    def __init__(self, field: TemplateField, parent=None):
         super().__init__(parent)
         _layout = vbox(self)
-        self.wdgEditor = BarSlider(Qt.Orientation.Horizontal)
+        self.wdgEditor = TemplateFieldBarSlider(field)
         pointy(self.wdgEditor)
         self.wdgEditor.setPageStep(5)
         self.setMaximumWidth(600)
@@ -617,10 +624,59 @@ class BarTemplateFieldWidget(TemplateFieldWidgetBase):
         pass
 
 
-class FacultyField(BarTemplateFieldWidget):
-    def __init__(self, ref: CharacterProfileFieldReference, field: TemplateField, character: Character, parent=None):
+class FacultyComparisonPopup(QWidget):
+    def __init__(self, facultyType: CharacterProfileFieldType, field: TemplateField, character: Character, parent=None):
         super().__init__(parent)
-        self.ref = ref
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+        self.setProperty('relaxed-white-bg', True)
+
+        self.facultyType = facultyType
+        self.field = field
+        self.character = character
+        self._ref: Optional[TemplateFieldBarSlider] = None
+        self.novel: Optional[Novel] = None
+
+        vbox(self, 10)
+
+    def setNovel(self, novel: Novel):
+        self.novel = novel
+
+    def refresh(self):
+        clear_layout(self)
+        self.layout().addWidget(label(self.field.name, bold=True), alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(line(color=self.field.color))
+
+        faculty_values = [x.faculties.get(self.facultyType.value, 0) for x in self.novel.characters]
+        character_faculty_pairs = list(zip(self.novel.characters, faculty_values))
+        sorted_characters = sorted(character_faculty_pairs, key=lambda pair: pair[1], reverse=True)
+        top3_characters = [pair[0] for pair in sorted_characters[:min(3, len(sorted_characters))]]
+        for character in top3_characters:
+            slider = self.__initSliderDisplay(character)
+            if character is self.character:
+                self._ref = slider
+
+        if self.character not in top3_characters:
+            self.layout().addWidget(line(color='lightgrey'))
+            self._ref = self.__initSliderDisplay(self.character)
+
+    def valueChanged(self, value: int):
+        if self._ref:
+            self._ref.setValue(value)
+
+    def __initSliderDisplay(self, character: Character) -> TemplateFieldBarSlider:
+        avatar = tool_btn(avatars.avatar(character), transparent_=True)
+        slider = TemplateFieldBarSlider(self.field)
+        slider.setValue(character.faculties.get(self.facultyType.value, 0))
+
+        self.layout().addWidget(group(avatar, slider))
+
+        return slider
+
+
+class FacultyField(BarTemplateFieldWidget):
+    def __init__(self, facultyType: CharacterProfileFieldType, field: TemplateField, character: Character, parent=None):
+        super().__init__(field, parent)
+        self.facultyType = facultyType
         self.field = field
         self.character = character
 
@@ -629,21 +685,41 @@ class FacultyField(BarTemplateFieldWidget):
         self.lblName.setVisible(True)
         self.lblName.setToolTip(field.description if field.description else field.placeholder)
 
+        self.popupDisplay = FacultyComparisonPopup(self.facultyType, self.field, self.character)
+        self.popupDisplay.setHidden(True)
+        self.wdgEditor.valueChanged.connect(self.popupDisplay.valueChanged)
+
         if self.field.emoji:
             self.updateEmoji(emoji.emojize(self.field.emoji))
         else:
             self.lblEmoji.setHidden(True)
 
-        self.wdgEditor.setMinimum(field.min_value)
-        self.wdgEditor.setMaximum(field.max_value)
-        if field.color:
-            apply_slider_color(self.wdgEditor, field.color)
+        # self.wdgEditor.setMinimum(field.min_value)
+        # self.wdgEditor.setMaximum(field.max_value)
+        # if field.color:
+        #     apply_slider_color(self.wdgEditor, field.color)
 
-        self.setValue(self.character.faculties.get(self.ref.type.value, 0))
+        self.setValue(self.character.faculties.get(self.facultyType.value, 0))
+
+        self.wdgEditor.installEventFilter(self)
+
+    def setNovel(self, novel: Novel):
+        self.popupDisplay.setNovel(novel)
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.MouseButtonPress:
+            self.popupDisplay.refresh()
+            self.popupDisplay.move(
+                self.mapToGlobal(self.lblEmoji.pos()) - QPoint(0, self.popupDisplay.sizeHint().height()))
+            self.popupDisplay.show()
+        elif event.type() == QEvent.Type.MouseButtonRelease:
+            self.popupDisplay.hide()
+        return super().eventFilter(watched, event)
 
     @overrides
     def _saveValue(self, value: int):
-        self.character.faculties[self.ref.type.value] = value
+        self.character.faculties[self.facultyType.value] = value
 
 
 class FieldToggle(QWidget):
@@ -1495,7 +1571,7 @@ def field_widget(ref: CharacterProfileFieldReference, character: Character) -> P
             field = creativity_field
         else:
             raise ValueError(f'Unrecognized field type {ref.type}')
-        return FacultyField(ref, field, character)
+        return FacultyField(ref.type, field, character)
     elif ref.type == CharacterProfileFieldType.Field_Personality:
         return PersonalityFieldWidget(character)
     elif ref.type == CharacterProfileFieldType.Field_Traits:
@@ -1606,8 +1682,9 @@ class SectionSettings(QWidget):
 
 
 class CharacterProfileEditor(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
+        self._novel = novel
         self._character: Optional[Character] = None
         self.btnCustomize = tool_btn(IconRegistry.preferences_icon(), tooltip='Customize character profile', base=True,
                                      parent=self)
@@ -1656,6 +1733,8 @@ class CharacterProfileEditor(QWidget):
                                                                                           PersonalityFieldWidget):
                     fieldWdg.enneagramChanged.connect(self._enneagramChanged)
                     fieldWdg.ignored.connect(self._personalityIgnored)
+                elif section.type == CharacterProfileSectionType.Faculties and isinstance(fieldWdg, FacultyField):
+                    fieldWdg.setNovel(self._novel)
 
         self.layout().addWidget(vspacer())
 

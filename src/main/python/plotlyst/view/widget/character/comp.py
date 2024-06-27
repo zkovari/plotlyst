@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QLabel, QTextEdit
 from overrides import overrides
 from qthandy import vbox, hbox, line, flow, gc, vspacer, clear_layout, bold, margins
 
-from plotlyst.core.domain import Character, Novel, TemplateValue, LayoutType, CharacterProfileFieldType
+from plotlyst.core.domain import Character, Novel, LayoutType, CharacterProfileFieldType
 from plotlyst.core.template import iq_field, eq_field, rationalism_field, creativity_field, \
     willpower_field, TemplateField
 from plotlyst.event.core import EventListener, Event, emit_event
@@ -40,8 +40,8 @@ from plotlyst.view.icons import set_avatar, avatars
 from plotlyst.view.widget.big_five import BigFiveChart, dimension_from
 from plotlyst.view.widget.button import EyeToggle
 from plotlyst.view.widget.character.editor import CharacterTimelineWidget
+from plotlyst.view.widget.character.profile import FacultyField
 from plotlyst.view.widget.display import RoleIcon, ChartView
-from plotlyst.view.widget.template.impl import BarTemplateFieldWidget
 from plotlyst.view.widget.tree import TreeView, ContainerNode
 
 
@@ -115,8 +115,9 @@ class SummaryDisplay(QTextEdit, BaseDisplay):
 
 
 class FacultiesDisplay(QWidget, BaseDisplay):
-    def __init__(self, character: Character, parent=None):
+    def __init__(self, novel: Novel, character: Character, parent=None):
         super().__init__(parent)
+        self._novel = novel
         self._character = character
         self._blockSave = False
 
@@ -125,14 +126,19 @@ class FacultiesDisplay(QWidget, BaseDisplay):
 
         self._iqEditor = self.FacultyEditor(self, self._character, iq_field,
                                             CharacterProfileFieldType.Field_Faculties_IQ)
+        self._iqEditor.setNovel(self._novel)
         self._eqEditor = self.FacultyEditor(self, self._character, eq_field,
                                             CharacterProfileFieldType.Field_Faculties_EQ)
+        self._eqEditor.setNovel(self._novel)
         self._ratEditor = self.FacultyEditor(self, self._character, rationalism_field,
                                              CharacterProfileFieldType.Field_Faculties_Rationalism)
+        self._ratEditor.setNovel(self._novel)
         self._creaEditor = self.FacultyEditor(self, self._character, creativity_field,
                                               CharacterProfileFieldType.Field_Faculties_Creativity)
+        self._creaEditor.setNovel(self._novel)
         self._willEditor = self.FacultyEditor(self, self._character, willpower_field,
                                               CharacterProfileFieldType.Field_Faculties_Willpower)
+        self._willEditor.setNovel(self._novel)
 
         self.layout().addWidget(self._iqEditor)
         self.layout().addWidget(self._eqEditor)
@@ -167,28 +173,19 @@ class FacultiesDisplay(QWidget, BaseDisplay):
             return
         self.repo.update_character(self._character)
 
-    class FacultyEditor(BarTemplateFieldWidget):
+    class FacultyEditor(FacultyField):
 
         def __init__(self, display: 'FacultiesDisplay', character: Character, field: TemplateField,
                      type_: CharacterProfileFieldType, parent=None):
-            super().__init__(field, parent)
-            self._character = character
-            self._type = type_
             self._display = display
-            self._value: Optional[TemplateValue] = None
+            super().__init__(type_, field, character, parent)
 
             self.lblName.setProperty('description', True)
             self.lblEmoji.setVisible(False)
 
         @overrides
-        def setValue(self, value: int):
-            self._value = value
-            super().setValue(value)
-
-        @overrides
-        def _valueChanged(self, value: int):
-            self._character.faculties[self._type.value] = value
-            # self._value.value = value
+        def _saveValue(self, value: int):
+            super()._saveValue(value)
             self._display.save()
 
 
@@ -255,7 +252,7 @@ class CharacterOverviewWidget(QWidget, EventListener):
             self._display = SummaryDisplay(self._novel, self._character)
             self._displayContainer.layout().addWidget(self._display, alignment=Qt.AlignmentFlag.AlignCenter)
         elif attribute == CharacterComparisonAttribute.FACULTIES:
-            self._display = FacultiesDisplay(self._character)
+            self._display = FacultiesDisplay(self._novel, self._character)
             self._displayContainer.layout().addWidget(self._display)
         elif attribute == CharacterComparisonAttribute.BACKSTORY:
             self._wdgHeader.setHidden(True)

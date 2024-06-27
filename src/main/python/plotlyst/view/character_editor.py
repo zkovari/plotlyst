@@ -155,7 +155,7 @@ class CharacterEditor(QObject, EventListener):
         self.wdgTopicsEditor = CharacterTopicsEditor()
         self.ui.tabTopics.layout().addWidget(self.wdgTopicsEditor)
 
-        self.profile = CharacterProfileEditor()
+        self.profile = CharacterProfileEditor(self.novel)
         self.ui.wdgProfile.layout().addWidget(self.profile)
 
         apply_bg_image(self.ui.scrollAreaBackstoryContents, resource_registry.cover1)

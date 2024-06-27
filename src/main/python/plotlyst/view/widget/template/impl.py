@@ -20,40 +20,27 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Optional, List, Any, Dict, Set
 
-import emoji
-import qtanim
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QModelIndex, QSize
 from PyQt6.QtGui import QMouseEvent, QIcon, QWheelEvent
 from PyQt6.QtWidgets import QHBoxLayout, QWidget, QLineEdit, QToolButton, QLabel, \
-    QSpinBox, QButtonGroup, QListView, QSlider, QGridLayout
+    QSpinBox, QButtonGroup, QListView, QSlider
 from overrides import overrides
-from qthandy import spacer, hbox, vbox, bold, line, underline, margins, \
-    decr_font, retain_when_hidden, pointy, grid, incr_font
-from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
-from qtmenu import MenuWidget
+from qthandy import spacer, hbox, vbox, bold, line, underline, retain_when_hidden
 
-from plotlyst.core.help import enneagram_help, mbti_help, mbti_keywords
-from plotlyst.core.template import TemplateField, SelectionItem, \
-    enneagram_choices, mbti_choices, love_style_choices, \
-    work_style_choices
+from plotlyst.core.template import TemplateField, SelectionItem
 from plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
-from plotlyst.view.common import wrap, emoji_font, action, label, push_btn, \
-    fade_out_and_gc
 from plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
-from plotlyst.view.style.slider import apply_slider_color
-from plotlyst.view.widget.button import SecondaryActionPushButton, CollapseButton, DotsMenuButton
-from plotlyst.view.widget.character.editor import EnneagramSelector, MbtiSelector, LoveStyleSelector, \
-    DiscSelector, StrengthWeaknessAttribute, StrengthWeaknessEditor
-from plotlyst.view.widget.display import Subtitle, Emoji, Icon, dash_icon
+from plotlyst.view.widget.button import CollapseButton
+from plotlyst.view.widget.display import Subtitle, Icon
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle
 from plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
 from plotlyst.view.widget.progress import CircularProgressBar
 from plotlyst.view.widget.template.base import TemplateDisplayWidget, TemplateFieldWidgetBase, \
-    TemplateWidgetBase, EditableTemplateWidget
+    TemplateWidgetBase
 
 
 def _icon(item: SelectionItem) -> QIcon:
@@ -441,45 +428,6 @@ class BarSlider(QSlider):
         event.ignore()
 
 
-class BarTemplateFieldWidget(TemplateFieldWidgetBase):
-    def __init__(self, field: TemplateField, parent=None):
-        super(BarTemplateFieldWidget, self).__init__(field, parent)
-        _layout = vbox(self)
-        self.wdgEditor = BarSlider(Qt.Orientation.Horizontal)
-        pointy(self.wdgEditor)
-        self.wdgEditor.setPageStep(5)
-        self.setMaximumWidth(600)
-
-        self.wdgEditor.setMinimum(field.min_value)
-        self.wdgEditor.setMaximum(field.max_value)
-        if field.color:
-            apply_slider_color(self.wdgEditor, field.color)
-
-        _layout.addWidget(group(self.lblEmoji, self.lblName, spacer()))
-        if self.field.compact:
-            editor = group(self.wdgEditor, spacer())
-            margins(editor, left=5)
-            _layout.addWidget(editor)
-        else:
-            _layout.addWidget(wrap(self.wdgEditor, margin_left=5))
-
-        self.wdgEditor.valueChanged.connect(self._valueChanged)
-
-    @overrides
-    def value(self) -> Any:
-        return self.wdgEditor.value()
-
-    @overrides
-    def setValue(self, value: Any):
-        self.wdgEditor.setValue(value)
-
-    def _valueChanged(self, value: int):
-        if value:
-            self.valueFilled.emit(1)
-        else:
-            self.valueReset.emit()
-
-
 # class EnneagramFieldWidget(TemplateFieldWidgetBase):
 #     def __init__(self, field: TemplateField, parent=None):
 #         super(EnneagramFieldWidget, self).__init__(field, parent)
@@ -699,7 +647,6 @@ class LabelsTemplateFieldWidget(TemplateFieldWidgetBase):
             self.valueFilled.emit(1)
         else:
             self.valueReset.emit()
-
 
 # class StrengthsWeaknessesHeader(QWidget):
 #     edit = pyqtSignal()

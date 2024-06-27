@@ -25,8 +25,7 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.template.impl import SubtitleTemplateDisplayWidget, \
     LabelTemplateDisplayWidget, HeaderTemplateDisplayWidget, LineTemplateDisplayWidget, IconTemplateDisplayWidget, \
     NumericTemplateFieldWidget, SmallTextTemplateFieldWidget, \
-    LineTextTemplateFieldWidget, \
-    BarTemplateFieldWidget
+    LineTextTemplateFieldWidget
 
 
 def _icon(item: SelectionItem) -> QIcon:
@@ -67,7 +66,5 @@ class TemplateFieldWidgetFactory:
             return SmallTextTemplateFieldWidget(field, parent)
         elif field.type == TemplateFieldType.TEXT:
             return LineTextTemplateFieldWidget(field, parent)
-        elif field.type == TemplateFieldType.BAR:
-            return BarTemplateFieldWidget(field, parent)
         else:
             return SmallTextTemplateFieldWidget(field, parent)
