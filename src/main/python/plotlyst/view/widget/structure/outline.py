@@ -128,7 +128,7 @@ class StoryBeatSelectorPopup(PopupDialog):
         self.wdgTitle.layout().addWidget(self.btnReset)
 
         self._wdgCenter.layout().addWidget(self.wdgTitle)
-        margins(self._wdgCenter, right=20)
+        margins(self._wdgCenter, right=20, top=15)
 
         self._addBeat(general_beat)
         self._addHeader('Beginning', IconRegistry.cause_icon())
