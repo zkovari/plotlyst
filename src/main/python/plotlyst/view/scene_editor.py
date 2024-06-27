@@ -57,6 +57,7 @@ from plotlyst.view.widget.scene.plot import ScenePlotLabels, \
     ScenePlotSelectorMenu
 from plotlyst.view.widget.scene.reader_drive import ReaderCuriosityEditor, ReaderInformationEditor
 from plotlyst.view.widget.structure.beat import StructureBeatSelectorButton
+from plotlyst.view.widget.tree import TreeSettings
 
 
 class SceneEditor(QObject, EventListener):
@@ -146,6 +147,7 @@ class SceneEditor(QObject, EventListener):
         # self.tag_selector = SceneTagSelector(self.novel, self.scene)
         # self.ui.wdgTags.layout().addWidget(self.tag_selector)
 
+        self.ui.treeScenes.setSettings(TreeSettings(font_incr=1))
         self.ui.treeScenes.setNovel(self.novel, readOnly=True)
         self.ui.treeScenes.sceneSelected.connect(self._scene_selected)
 
@@ -194,6 +196,8 @@ class SceneEditor(QObject, EventListener):
         self.repo = RepositoryPersistenceManager.instance()
 
         self.ui.wdgPov.setVisible(self.novel.prefs.toggled(NovelSetting.Track_pov))
+
+        self.ui.splitter.setSizes([140, 500])
 
         dispatcher = event_dispatchers.instance(self.novel)
         dispatcher.register(self, NovelAboutToSyncEvent, NovelStorylinesToggleEvent, NovelStructureToggleEvent,

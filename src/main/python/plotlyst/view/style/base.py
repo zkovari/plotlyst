@@ -141,6 +141,10 @@ QSplitter::handle:horizontal {
     background-color: rgba(0, 0, 0, 0);
 }
 
+QSplitter[framed=true]::handle:horizontal {
+    border-left: 1px solid grey;
+}
+
 QSplitter::handle:horizontal:hover {
     border-left: 2px dashed #4B0763;
 }
