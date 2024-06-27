@@ -27,7 +27,7 @@ from PyQt6.QtWidgets import QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem, 
     QGraphicsSceneMouseEvent, QGraphicsOpacityEffect, QGraphicsDropShadowEffect, QFrame, QTextEdit, QLineEdit, \
     QApplication, QGraphicsSceneDragDropEvent
 from overrides import overrides
-from qthandy import busy, vbox, vspacer, sp, line, decr_icon, incr_font, flow, incr_icon
+from qthandy import busy, vbox, vspacer, sp, line, decr_icon, incr_font, flow, incr_icon, bold, decr_font
 from qthandy.filter import OpacityEventFilter, DragEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
@@ -117,99 +117,6 @@ class MarkerIconSelectorWidget(QWidget):
             btn.setIconSize(QSize(24, 24))
             btn.clicked.connect(partial(self.iconSelected.emit, icon))
             self.layout().addWidget(btn)
-
-
-class EntityEditorWidget(QFrame):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._marker: Optional[WorldBuildingMarker] = None
-        self._item: Optional[MarkerItem] = None
-        self.setFrameShape(QFrame.Shape.StyledPanel)
-        self.setStyleSheet('''QFrame {
-            background: #ede0d4;
-            border-radius: 12px;
-        }''')
-
-        vbox(self, 5, 0)
-        self._scrollarea, self.wdgCenter = scrolled(self)
-        self._scrollarea.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self._scrollarea.setProperty('transparent', True)
-        self.wdgCenter.setProperty('transparent', True)
-
-        shadow(self)
-        vbox(self.wdgCenter, 2, spacing=6)
-
-        self.lineTitle = QLineEdit()
-        self.lineTitle.setProperty('transparent', True)
-        self.lineTitle.setPlaceholderText('Name')
-        incr_font(self.lineTitle)
-        self.lineTitle.textEdited.connect(self._nameChanged)
-
-        self.textEdit = QTextEdit()
-        self.textEdit.setProperty('transparent', True)
-        self.textEdit.setProperty('rounded', True)
-        self.textEdit.setPlaceholderText('Edit synopsis')
-        self.textEdit.setMaximumHeight(150)
-        self.textEdit.textChanged.connect(self._synopsisChanged)
-
-        self.wdgColorSelector = MarkerColorSelectorWidget()
-        self.wdgColorSelector.colorSelected.connect(self._colorChanged)
-        self.wdgIconSelector = MarkerIconSelectorWidget()
-        self.wdgIconSelector.iconReset.connect(self._iconReset)
-        self.wdgIconSelector.iconSelected.connect(self._iconChanged)
-
-        self.wdgCenter.layout().addWidget(self.lineTitle)
-        self.wdgCenter.layout().addWidget(line(color='lightgrey'))
-        self._addHeader('Synopsis', self.textEdit)
-        self._addHeader('Color', self.wdgColorSelector)
-        self._addHeader('Icon', self.wdgIconSelector)
-        self.wdgCenter.layout().addWidget(vspacer())
-
-        self.setFixedWidth(200)
-
-        sp(self).v_max()
-
-    def setMarker(self, item: 'MarkerItem'):
-        self._marker = None
-        self._item = None
-        self.textEdit.setText(item.marker().description)
-        self._marker = item.marker()
-        self._item = item
-
-    def _nameChanged(self, text: str):
-        if self._marker:
-            self._marker.name = text
-
-    def _synopsisChanged(self):
-        if self._marker:
-            self._marker.description = self.textEdit.toPlainText()
-
-    def _colorChanged(self, color: str):
-        if self._marker:
-            self._marker.color = color
-            self._marker.color_selected = marker_selected_colors[color]
-            self._item.refresh()
-
-    def _iconChanged(self, icon: str):
-        if self._marker:
-            self._marker.icon = icon
-            self._item.refresh()
-
-    def _iconReset(self):
-        if self._marker:
-            self._marker.icon = ''
-            self._item.refresh()
-
-    def _addHeader(self, text: str, wdg: QWidget) -> CollapseButton:
-        btn = CollapseButton(Qt.Edge.RightEdge, Qt.Edge.BottomEdge)
-        decr_icon(btn, 2)
-        btn.setChecked(True)
-        btn.setText(text)
-        wrapped = wrap(wdg, margin_left=5)
-        btn.toggled.connect(wrapped.setVisible)
-
-        self.wdgCenter.layout().addWidget(btn, alignment=Qt.AlignmentFlag.AlignLeft)
-        self.wdgCenter.layout().addWidget(wrapped)
 
 
 class MarkerItem(QAbstractGraphicsShapeItem):
@@ -330,6 +237,109 @@ class MarkerItem(QAbstractGraphicsShapeItem):
 
         if self._marker.description:
             self.scene().hidePopupEvent()
+
+
+class EntityEditorWidget(QFrame):
+    changed = pyqtSignal(MarkerItem)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._marker: Optional[WorldBuildingMarker] = None
+        self._item: Optional[MarkerItem] = None
+        self.setFrameShape(QFrame.Shape.StyledPanel)
+        self.setStyleSheet('''QFrame {
+            background: #ede0d4;
+            border-radius: 12px;
+        }''')
+
+        vbox(self, 5, 0)
+        self._scrollarea, self.wdgCenter = scrolled(self)
+        self._scrollarea.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._scrollarea.setProperty('transparent', True)
+        self.wdgCenter.setProperty('transparent', True)
+
+        shadow(self)
+        vbox(self.wdgCenter, 2, spacing=6)
+
+        self.lineTitle = QLineEdit()
+        self.lineTitle.setProperty('transparent', True)
+        self.lineTitle.setPlaceholderText('Name')
+        self.lineTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        incr_font(self.lineTitle)
+        bold(self.lineTitle)
+        self.lineTitle.textEdited.connect(self._nameChanged)
+
+        self.textEdit = AutoAdjustableTextEdit(height=100)
+        self.textEdit.setProperty('transparent', True)
+        self.textEdit.setProperty('rounded', True)
+        self.textEdit.setPlaceholderText('Edit synopsis')
+        self.textEdit.setMaximumHeight(150)
+        self.textEdit.textChanged.connect(self._synopsisChanged)
+
+        self.wdgColorSelector = MarkerColorSelectorWidget()
+        self.wdgColorSelector.colorSelected.connect(self._colorChanged)
+        self.wdgIconSelector = MarkerIconSelectorWidget()
+        self.wdgIconSelector.iconReset.connect(self._iconReset)
+        self.wdgIconSelector.iconSelected.connect(self._iconChanged)
+
+        self.wdgCenter.layout().addWidget(self.lineTitle)
+        self.wdgCenter.layout().addWidget(line(color='lightgrey'))
+        self._addHeader('Synopsis', self.textEdit)
+        self._addHeader('Color', self.wdgColorSelector)
+        self._addHeader('Icon', self.wdgIconSelector)
+        self.wdgCenter.layout().addWidget(vspacer())
+
+        self.setFixedWidth(200)
+
+        sp(self).v_max()
+
+    def setMarker(self, item: MarkerItem):
+        self._marker = None
+        self._item = None
+        self.textEdit.setText(item.marker().description)
+        self.lineTitle.setText(item.marker().name)
+        self._marker = item.marker()
+        self._item = item
+
+    def _nameChanged(self, text: str):
+        if self._marker:
+            self._marker.name = text
+            self.changed.emit(self._item)
+
+    def _synopsisChanged(self):
+        if self._marker:
+            self._marker.description = self.textEdit.toPlainText()
+            self.changed.emit(self._item)
+
+    def _colorChanged(self, color: str):
+        if self._marker:
+            self._marker.color = color
+            self._marker.color_selected = marker_selected_colors[color]
+            self._item.refresh()
+
+    def _iconChanged(self, icon: str):
+        if self._marker:
+            self._marker.icon = icon
+            self._item.refresh()
+
+    def _iconReset(self):
+        if self._marker:
+            self._marker.icon = ''
+            self._item.refresh()
+
+    def _addHeader(self, text: str, wdg: QWidget) -> CollapseButton:
+        btn = CollapseButton(Qt.Edge.RightEdge, Qt.Edge.BottomEdge)
+        decr_icon(btn, 4)
+        decr_font(btn)
+        btn.setChecked(True)
+        btn.setText(text)
+        wrapped = wrap(wdg, margin_left=5)
+        btn.toggled.connect(wrapped.setVisible)
+
+        self.wdgCenter.layout().addWidget(btn, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgCenter.layout().addWidget(wrapped)
+
+        return btn
 
 
 class WorldBuildingMapScene(QGraphicsScene):
@@ -504,6 +514,7 @@ class WorldBuildingMapView(BaseGraphicsView):
         self._scene.hidePopup.connect(self._hidePopup)
         self._scene.itemAdded.connect(self._endAddition)
         self._scene.cancelItemAddition.connect(self._endAddition)
+        self._wdgEditor.changed.connect(self._scene.markerChangedEvent)
 
         self.repo = RepositoryPersistenceManager.instance()
 
