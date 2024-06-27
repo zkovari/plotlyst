@@ -625,14 +625,14 @@ class BarTemplateFieldWidget(TemplateFieldWidgetBase):
 
 
 class FacultyComparisonPopup(QWidget):
-    def __init__(self, facultyType: CharacterProfileFieldType, field: TemplateField, parent=None):
+    def __init__(self, facultyType: CharacterProfileFieldType, field: TemplateField, character: Character, parent=None):
         super().__init__(parent)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.setProperty('relaxed-white-bg', True)
-        # self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
         self.facultyType = facultyType
         self.field = field
+        self.character = character
         self.novel: Optional[Novel] = None
 
         vbox(self, 10)
@@ -651,6 +651,11 @@ class FacultyComparisonPopup(QWidget):
         top3_characters = [pair[0] for pair in sorted_characters[:min(3, len(sorted_characters))]]
         for character in top3_characters:
             self.__initSliderDisplay(character)
+
+        if self.character not in top3_characters:
+            self.layout().addWidget(line(color='lightgrey'))
+            self.__initSliderDisplay(self.character)
+
 
     def __initSliderDisplay(self, character: Character):
         avatar = tool_btn(avatars.avatar(character), transparent_=True)
@@ -672,7 +677,7 @@ class FacultyField(BarTemplateFieldWidget):
         self.lblName.setVisible(True)
         self.lblName.setToolTip(field.description if field.description else field.placeholder)
 
-        self.popupDisplay = FacultyComparisonPopup(self.facultyType, self.field)
+        self.popupDisplay = FacultyComparisonPopup(self.facultyType, self.field, self.character)
         self.popupDisplay.setHidden(True)
 
         if self.field.emoji:
