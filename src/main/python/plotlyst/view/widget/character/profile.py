@@ -633,6 +633,7 @@ class FacultyComparisonPopup(QWidget):
         self.facultyType = facultyType
         self.field = field
         self.character = character
+        self._ref: Optional[TemplateFieldBarSlider] = None
         self.novel: Optional[Novel] = None
 
         vbox(self, 10)
@@ -650,19 +651,26 @@ class FacultyComparisonPopup(QWidget):
         sorted_characters = sorted(character_faculty_pairs, key=lambda pair: pair[1], reverse=True)
         top3_characters = [pair[0] for pair in sorted_characters[:min(3, len(sorted_characters))]]
         for character in top3_characters:
-            self.__initSliderDisplay(character)
+            slider = self.__initSliderDisplay(character)
+            if character is self.character:
+                self._ref = slider
 
         if self.character not in top3_characters:
             self.layout().addWidget(line(color='lightgrey'))
-            self.__initSliderDisplay(self.character)
+            self._ref = self.__initSliderDisplay(self.character)
 
+    def valueChanged(self, value: int):
+        if self._ref:
+            self._ref.setValue(value)
 
-    def __initSliderDisplay(self, character: Character):
+    def __initSliderDisplay(self, character: Character) -> TemplateFieldBarSlider:
         avatar = tool_btn(avatars.avatar(character), transparent_=True)
         slider = TemplateFieldBarSlider(self.field)
         slider.setValue(character.faculties.get(self.facultyType.value, 0))
 
         self.layout().addWidget(group(avatar, slider))
+
+        return slider
 
 
 class FacultyField(BarTemplateFieldWidget):
@@ -679,6 +687,7 @@ class FacultyField(BarTemplateFieldWidget):
 
         self.popupDisplay = FacultyComparisonPopup(self.facultyType, self.field, self.character)
         self.popupDisplay.setHidden(True)
+        self.wdgEditor.valueChanged.connect(self.popupDisplay.valueChanged)
 
         if self.field.emoji:
             self.updateEmoji(emoji.emojize(self.field.emoji))
