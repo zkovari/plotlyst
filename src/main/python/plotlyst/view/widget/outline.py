@@ -326,7 +326,14 @@ class OutlineTimelineWidget(QFrame):
         widget.activate()
         self.timelineChanged.emit()
 
-    def _insertWidget(self, item: OutlineItem, widget: OutlineItemWidget):
+    def _insertWidget(self, item: OutlineItem, widget: OutlineItemWidget, teardownFunction=None):
+        def teardown():
+            self.update()
+            widget.activate()
+            self.timelineChanged.emit()
+            if teardownFunction:
+                teardownFunction()
+
         i = self.layout().indexOf(self._currentPlaceholder)
         self.layout().removeWidget(self._currentPlaceholder)
         gc(self._currentPlaceholder)
@@ -338,23 +345,24 @@ class OutlineTimelineWidget(QFrame):
         self.layout().insertWidget(i, widget)
         self.layout().insertWidget(i + 1, self._newPlaceholderWidget())
         self.layout().insertWidget(i, self._newPlaceholderWidget())
-        fade_in(widget, teardown=widget.activate)
-        self.update()
-        self.timelineChanged.emit()
+        fade_in(widget, teardown=teardown)
 
-    def _beatRemoved(self, wdg: OutlineItemWidget):
+    def _beatRemoved(self, wdg: OutlineItemWidget, teardownFunction=None):
         self._structure.remove(wdg.item)
-        self._beatWidgetRemoved(wdg)
+        self._beatWidgetRemoved(wdg, teardownFunction)
 
-    def _beatWidgetRemoved(self, wdg: OutlineItemWidget):
+    def _beatWidgetRemoved(self, wdg: OutlineItemWidget, teardownFunction=None):
+        def teardown():
+            self.update()
+            self.timelineChanged.emit()
+            if teardownFunction:
+                teardownFunction()
+
         i = self.layout().indexOf(wdg)
         self._beatWidgets.remove(wdg)
         placeholder_prev = self.layout().takeAt(i - 1).widget()
         gc(placeholder_prev)
-        fade_out_and_gc(self, wdg)
-        self.update()
-
-        self.timelineChanged.emit()
+        fade_out_and_gc(self, wdg, teardown=teardown)
 
     @abstractmethod
     def _newBeatWidget(self, item: OutlineItem) -> OutlineItemWidget:
@@ -443,35 +451,3 @@ class OutlineTimelineWidget(QFrame):
         self._dragged = None
         self._wasDropped = False
         self.update()
-    # def _newBeatWidget(self, item: SceneStructureItem) -> SceneStructureBeatWidget:
-    #     if item.type == OutlineItemType.EMOTION:
-    #         clazz = SceneStructureEmotionWidget
-    #     else:
-    #         clazz = SceneStructureBeatWidget
-    #     widget = clazz(self._novel, item, parent=self, readOnly=self._readOnly)
-    #     widget.removed.connect(self._beatRemoved)
-    #     if item.type == OutlineItemType.CLIMAX:
-    #         self._selectorMenu.setOutcomeEnabled(False)
-    #         widget.setOutcome(self._scene.outcome)
-    #         widget.outcomeChanged.connect(self._outcomeChanged)
-    #     widget.dragStarted.connect(partial(self._dragStarted, widget))
-    #     widget.dragStopped.connect(self._dragFinished)
-    #
-    #     if not self._readOnly:
-    #         widget.installEventFilter(DropEventFilter(widget, [SceneStructureItemWidget.SceneBeatMimeType],
-    #                                                   motionDetection=Qt.Orientation.Horizontal,
-    #                                                   motionSlot=partial(self._dragMoved, widget),
-    #                                                   droppedSlot=self._dropped))
-    #
-    #     return widget
-
-    # def _newPlaceholderWidget(self, displayText: bool = False) -> QWidget:
-    #     parent = _PlaceholderWidget()
-    #     if displayText:
-    #         parent.btn.setText('Insert beat')
-    #     parent.btn.clicked.connect(partial(self._showBeatMenu, parent))
-    #
-    #     if self._readOnly:
-    #         parent.setHidden(True)
-    #
-    #     return parent

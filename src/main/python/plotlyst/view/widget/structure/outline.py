@@ -214,16 +214,17 @@ class StoryStructureOutline(OutlineTimelineWidget):
         return widget
 
     def _beatRemovedClicked(self, wdg: StoryStructureBeatWidget):
+        def teardown():
+            if self._beatsPreview:
+                QTimer.singleShot(150, self._beatsPreview.refresh)
+
         if wdg.beat.custom:
             self._structurePreview.removeBeat(wdg.beat)
-            self._beatRemoved(wdg)
+            self._beatRemoved(wdg, teardownFunction=teardown)
         else:
             wdg.beat.enabled = False
             self._structurePreview.toggleBeatVisibility(wdg.beat)
-            self._beatWidgetRemoved(wdg)
-
-        if self._beatsPreview:
-            self._beatsPreview.refresh()
+            self._beatWidgetRemoved(wdg, teardownFunction=teardown)
 
     @overrides
     def _placeholderClicked(self, placeholder: QWidget):
@@ -233,6 +234,11 @@ class StoryStructureOutline(OutlineTimelineWidget):
             self._insertBeat(beat)
 
     def _insertBeat(self, beat: StoryBeat):
+        def teardown():
+            if self._beatsPreview:
+                self._structurePreview.insertBeat(beat)
+                QTimer.singleShot(150, self._beatsPreview.refresh)
+
         wdg = self._newBeatWidget(beat)
         i = self.layout().indexOf(self._currentPlaceholder)
         if i > 0:
@@ -242,8 +248,4 @@ class StoryStructureOutline(OutlineTimelineWidget):
             else:
                 percentAfter = 99
             beat.percentage = percentBefore + (percentAfter - percentBefore) / 2
-        self._insertWidget(beat, wdg)
-
-        if self._beatsPreview:
-            QTimer.singleShot(150, self._beatsPreview.refresh)
-            QTimer.singleShot(150, lambda: self._structurePreview.insertBeat(beat))
+        self._insertWidget(beat, wdg, teardownFunction=teardown)
