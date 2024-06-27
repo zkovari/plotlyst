@@ -628,6 +628,7 @@ class FacultyComparisonPopup(QWidget):
     def __init__(self, facultyType: CharacterProfileFieldType, field: TemplateField, parent=None):
         super().__init__(parent)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+        self.setProperty('relaxed-white-bg', True)
         # self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
         self.facultyType = facultyType
@@ -641,8 +642,8 @@ class FacultyComparisonPopup(QWidget):
 
     def refresh(self):
         clear_layout(self)
-        self.layout().addWidget(label(self.field.name), alignment=Qt.AlignmentFlag.AlignCenter)
-        self.layout().addWidget(line())
+        self.layout().addWidget(label(self.field.name, bold=True), alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(line(color=self.field.color))
 
         faculty_values = [x.faculties.get(self.facultyType.value, 0) for x in self.novel.characters]
         character_faculty_pairs = list(zip(self.novel.characters, faculty_values))
