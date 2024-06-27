@@ -24,7 +24,7 @@ import qtanim
 from PyQt6.QtCore import Qt, QPoint, QSize, QPointF, QRectF, pyqtSignal, QTimer, QObject
 from PyQt6.QtGui import QColor, QPixmap, QShowEvent, QResizeEvent, QImage, QPainter, QKeyEvent, QIcon
 from PyQt6.QtWidgets import QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem, QAbstractGraphicsShapeItem, QWidget, \
-    QGraphicsSceneMouseEvent, QGraphicsOpacityEffect, QGraphicsDropShadowEffect, QFrame, QTextEdit, QLineEdit, \
+    QGraphicsSceneMouseEvent, QGraphicsOpacityEffect, QGraphicsDropShadowEffect, QFrame, QLineEdit, \
     QApplication, QGraphicsSceneDragDropEvent
 from overrides import overrides
 from qthandy import busy, vbox, vspacer, sp, line, decr_icon, incr_font, flow, incr_icon, bold, decr_font
@@ -54,19 +54,31 @@ class PopupText(QFrame):
         shadow(self)
         vbox(self, 10, spacing=6)
 
+        self.lineTitle = QLineEdit()
+        self.lineTitle.setProperty('transparent', True)
+        self.lineTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lineTitle.setPlaceholderText('Marker')
+        incr_font(self.lineTitle)
+        bold(self.lineTitle)
+        self.lineTitle.setReadOnly(True)
+
         self.textEdit = AutoAdjustableTextEdit()
         self.textEdit.setProperty('transparent', True)
         self.textEdit.setProperty('rounded', True)
         self.textEdit.setReadOnly(True)
 
+        self.layout().addWidget(self.lineTitle)
+        self.layout().addWidget(line(color='lightgrey'))
         self.layout().addWidget(self.textEdit)
 
         self.setFixedWidth(200)
 
         sp(self).v_max()
 
-    def setText(self, text: str):
+    def setText(self, name: str, text: str):
+        self.lineTitle.setText(name)
         self.textEdit.setText(text)
+        self.textEdit.setVisible(len(text) > 0)
 
 
 marker_colors = ['#ef233c', '#0077b6', '#fb8500', '#B28DC8', '#CE9861']
@@ -197,7 +209,7 @@ class MarkerItem(QAbstractGraphicsShapeItem):
             self._typeSize = self.__default_type_size + 1
             self.update()
 
-            if self._marker.description:
+            if self._marker.description or self._marker.name:
                 QTimer.singleShot(250, self._triggerPopup)
 
     @overrides
@@ -207,7 +219,7 @@ class MarkerItem(QAbstractGraphicsShapeItem):
             self._typeSize = self.__default_type_size
             self.update()
 
-            if self._marker.description:
+            if self._marker.description or self._marker.name:
                 self.scene().hidePopupEvent()
 
     def _posChangedOnTimeout(self):
@@ -235,7 +247,7 @@ class MarkerItem(QAbstractGraphicsShapeItem):
             self._typeSize = self.__default_type_size
             self.setGraphicsEffect(None)
 
-        if self._marker.description:
+        if self._marker.description or self._marker.name:
             self.scene().hidePopupEvent()
 
 
@@ -627,7 +639,7 @@ class WorldBuildingMapView(BaseGraphicsView):
             qtanim.fade_out(self._wdgEditor)
 
     def _showPopup(self, item: MarkerItem):
-        self._popup.setText(item.marker().description)
+        self._popup.setText(item.marker().name, item.marker().description)
         self._popupAbove(self._popup, item)
 
     def _hidePopup(self):
