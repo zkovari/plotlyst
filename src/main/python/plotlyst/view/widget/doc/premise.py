@@ -281,8 +281,8 @@ class ConceptQuestionWidget(QWidget):
         self.btnEye = EyeToggle()
         self.btnEye.setToolTip('Hide this question')
         self.btnEye.toggled.connect(self._visibilityToggled)
-        decr_icon(self.btnMenu)
-        decr_icon(self.btnEye)
+        decr_icon(self.btnMenu, 4)
+        decr_icon(self.btnEye, 4)
         retain_when_hidden(self.btnMenu)
         retain_when_hidden(self.btnEye)
 
