@@ -359,6 +359,9 @@ class LabelsEditorWidget(QFrame):
         for item in self.items():
             self._labels_index[item.text] = item
 
+    def popupEditor(self) -> QWidget:
+        return self._popup
+
     @abstractmethod
     def _initModel(self) -> SelectionItemsModel:
         pass

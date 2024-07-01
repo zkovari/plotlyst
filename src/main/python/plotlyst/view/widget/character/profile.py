@@ -567,7 +567,9 @@ class ValuesFieldWidget(LabelsTemplateFieldWidget):
 
     @overrides
     def _editor(self) -> LabelsSelectionWidget:
-        return LabelsSelectionWidget(values_field)
+        editor = LabelsSelectionWidget(values_field)
+        editor.popupEditor().setMinimumHeight(300)
+        return editor
 
     @overrides
     def _saveValue(self, value: Any):
