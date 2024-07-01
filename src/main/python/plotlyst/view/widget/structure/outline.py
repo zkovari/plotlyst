@@ -102,8 +102,10 @@ class _StoryBeatSection(QWidget):
         italic(self.btnAdd)
         self.btnAdd.setStyleSheet(f'border: 0px; color: {PLOTLYST_SECONDARY_COLOR};')
         self.layout().addWidget(group(self._label, spacer(), self.btnAdd, margin=0))
-        desc = label(beat.description, description=True)
+        desc = label(beat.description, description=True, wordWrap=True)
         self.layout().addWidget(desc)
+
+        self.setMinimumWidth(450)
 
 
 class StoryBeatSelectorPopup(PopupDialog):
