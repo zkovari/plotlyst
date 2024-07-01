@@ -24,7 +24,7 @@ from PyQt6.QtCore import QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QIcon, QMouseEvent
 from PyQt6.QtWidgets import QWidget, QLabel, QFrame, QToolButton, QSizePolicy
 from overrides import overrides
-from qthandy import hbox, vline, vbox, clear_layout, transparent, btn_popup, flow
+from qthandy import hbox, vline, vbox, clear_layout, transparent, flow
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -203,7 +203,7 @@ class SelectionItemLabel(Label):
             bg_color = self.item.color_hexa
             text_color = text_color_with_bg_color(bg_color)
         else:
-            bg_color = 'white'
+            bg_color = RELAXED_WHITE_COLOR
             text_color = 'black'
         self.setStyleSheet(f'''
                                 SelectionItemLabel {{
