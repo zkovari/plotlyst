@@ -56,7 +56,8 @@ class SceneWidget(ContainerNode):
         self.setPlusButtonEnabled(False)
         self.setMenuEnabled(not self._readOnly)
         IconRegistry.scene_icon()
-        self._icon.setIcon(IconRegistry.from_name('msc.debug-stackframe-dot', 'lightgrey'))
+        self._dotIcon = 'msc.debug-stackframe-dot'
+        self._icon.setIcon(IconRegistry.from_name(self._dotIcon, 'lightgrey'))
         self._icon.setVisible(True)
         self._wdgTitle.layout().setSpacing(0)
         margins(self._wdgTitle, left=0, top=0, bottom=0)
@@ -86,6 +87,14 @@ class SceneWidget(ContainerNode):
 
     def refreshTitle(self):
         self._lblTitle.setText(self._scene.title_or_index(self._novel))
+
+    @overrides
+    def _reStyle(self):
+        super()._reStyle()
+        if self._selected:
+            self._icon.setIcon(IconRegistry.from_name(self._dotIcon, 'black'))
+        else:
+            self._icon.setIcon(IconRegistry.from_name(self._dotIcon, 'lightgrey'))
 
 
 class ChapterWidget(ContainerNode):
