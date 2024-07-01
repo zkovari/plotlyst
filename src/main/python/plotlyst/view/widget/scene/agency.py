@@ -266,7 +266,6 @@ class SceneAgendaEmotionEditor(AbstractAgencyEditor):
     def activate(self):
         self._activated = True
         self._slider.setVisible(True)
-        self._btnReset.setVisible(True)
         self._icon.setText('')
         self._icon.removeEventFilter(self._opacityFilter)
 
@@ -277,6 +276,7 @@ class SceneAgendaEmotionEditor(AbstractAgencyEditor):
         self._icon.setIcon(IconRegistry.from_name('mdi.emoticon-neutral', 'lightgrey'))
         self._icon.setText('Emotion')
         self._icon.installEventFilter(self._opacityFilter)
+        translucent(self._icon, 0.4)
 
     def setValue(self, value: int):
         self.activate()
@@ -292,6 +292,7 @@ class SceneAgendaEmotionEditor(AbstractAgencyEditor):
         if not self._activated:
             self.setValue(5)
             qtanim.fade_in(self._slider, 150)
+            self._btnReset.setVisible(True)
 
     def _valueChanged(self, value: int):
         self._icon.setIcon(IconRegistry.emotion_icon_from_feeling(value))
