@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Any, Optional
 
 from PyQt6.QtCore import QModelIndex, Qt, QVariant, pyqtSignal
-from PyQt6.QtGui import QFont
+from PyQt6.QtGui import QFont, QColor
 from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 
@@ -89,13 +89,19 @@ class CharactersTableModel(AbstractHorizontalHeaderBasedTableModel):
             return character
 
         if role == Qt.ItemDataRole.FontRole:
-            return QApplication.font()
+            font = QApplication.font()
+            if not character.name:
+                font.setItalic(True)
+            return font
 
         if index.column() == self.ColName:
             if role == Qt.ItemDataRole.DisplayRole or role == self.SortRole:
-                return character.name
+                return character.name or 'Character'
             if role == Qt.ItemDataRole.DecorationRole:
                 return avatars.avatar(character)
+            if role == Qt.ItemDataRole.ForegroundRole and not character.name:
+                return QColor('grey')
+
         if index.column() == self.ColRole:
             return self._dataForSelectionItem(character.role, role, displayText=False)
         if index.column() == self.ColAge:

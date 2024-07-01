@@ -191,8 +191,13 @@ class CharacterSelectorMenu(MenuWidget):
         self.clear()
 
         for char in self.characters():
-            self.addAction(
-                action(char.name, avatars.avatar(char), slot=partial(self.selected.emit, char), parent=self))
+            charAction = action(char.name, avatars.avatar(char), slot=partial(self.selected.emit, char), parent=self)
+            font = charAction.font()
+            if not char.name:
+                charAction.setText('Character')
+                font.setItalic(True)
+            charAction.setFont(font)
+            self.addAction(charAction)
 
         if not self.actions():
             self.addSection('No characters were found')
