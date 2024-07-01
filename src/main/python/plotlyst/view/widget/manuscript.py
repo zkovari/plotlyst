@@ -466,15 +466,20 @@ class ManuscriptTextEdit(TextEditBase):
             self._wordTagHighlighter = None
 
     def setNightModeEnabled(self, enabled: bool):
-        self.clearHighlights()
         if enabled:
             self._transparent()
             self._nightModeHighlighter = NightModeHighlighter(self)
+        elif self._nightModeHighlighter is not None:
+            gc(self._nightModeHighlighter)
+            self._nightModeHighlighter = None
+            self._setDefaultStyleSheet()
 
     def setSentenceHighlighterEnabled(self, enabled: bool):
-        self.clearHighlights()
         if enabled:
             self._sentenceHighlighter = SentenceHighlighter(self)
+        elif self._sentenceHighlighter is not None:
+            gc(self._sentenceHighlighter)
+            self._sentenceHighlighter = None
 
     def setWordTagHighlighterEnabled(self, enabled: bool):
         self.clearHighlights()
@@ -873,6 +878,7 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         self.setupUi(self)
         self.editor: Optional[ManuscriptTextEditor] = None
         self.lblWords: Optional[WordsDisplay] = None
+        self._firstInit: bool = True
 
         self.sliderDocWidth.valueChanged.connect(
             lambda x: self.wdgDistractionFreeEditor.layout().setContentsMargins(int(self.width() / 3) - x, 0,
@@ -920,9 +926,15 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         if self.sliderDocWidth.value() <= 2:
             self.sliderDocWidth.setValue(self.sliderDocWidth.maximum() // 2)
 
-        self._toggle_manuscript_focus(self.btnFocus.isChecked())
-        self._toggle_manuscript_night_mode(self.btnNightMode.isChecked())
-        self._toggle_typewriter_mode(self.btnTypewriterMode.isChecked())
+        if self._firstInit:
+            self.btnNightMode.setChecked(True)
+            self.btnTypewriterMode.setChecked(True)
+            self._firstInit = False
+        else:
+            self._toggle_manuscript_focus(self.btnFocus.isChecked())
+            self._toggle_manuscript_night_mode(self.btnNightMode.isChecked())
+            self._toggle_typewriter_mode(self.btnTypewriterMode.isChecked())
+
         self._wordCountClicked(self.btnWordCount.isChecked())
         self.setMouseTracking(True)
         self.wdgDistractionFreeEditor.setMouseTracking(True)
