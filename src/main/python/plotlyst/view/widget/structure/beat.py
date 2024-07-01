@@ -31,7 +31,7 @@ from qthandy import vspacer, translucent, transparent, gc, bold, clear_layout, r
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
-from plotlyst.common import act_color, RELAXED_WHITE_COLOR, RED_COLOR
+from plotlyst.common import act_color, RELAXED_WHITE_COLOR, RED_COLOR, truncate_string
 from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     Scene, StoryBeatType, midpoints
 from plotlyst.env import app_env
@@ -295,7 +295,9 @@ class StructureBeatSelectorMenu(MenuWidget):
         for beat in self.novel.active_story_structure.beats:
             if beat.type == StoryBeatType.BEAT and beat.enabled:
                 tip = beat.notes if beat.notes else ''
-                if not tip:
+                if tip:
+                    tip = truncate_string(tip, 125)
+                else:
                     tip = beat.placeholder if beat.placeholder else beat.description
                 beat_action = action(beat.text, IconRegistry.from_name(beat.icon, beat.icon_color),
                                      slot=partial(self.selected.emit, beat),
