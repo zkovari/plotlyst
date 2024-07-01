@@ -302,6 +302,8 @@ class ScenesStageTableModel(QAbstractTableModel, BaseScenesTableModel):
         if role == Qt.ItemDataRole.FontRole:
             if index.column() > self.ColNoneStage:
                 return emoji_font()
+            else:
+                return QApplication.font()
         if role == Qt.ItemDataRole.TextAlignmentRole:
             if index.column() > self.ColNoneStage:
                 return Qt.AlignmentFlag.AlignCenter
