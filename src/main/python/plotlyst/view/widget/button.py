@@ -22,7 +22,7 @@ from typing import Optional, Set
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, pyqtProperty, QTimer, QEvent
-from PyQt6.QtGui import QColor, QIcon, QMouseEvent, QEnterEvent, QAction
+from PyQt6.QtGui import QIcon, QMouseEvent, QEnterEvent, QAction
 from PyQt6.QtWidgets import QPushButton, QSizePolicy, QToolButton, QAbstractButton, QLabel, QButtonGroup, QMenu, QWidget
 from overrides import overrides
 from qtanim import fade_in
@@ -31,7 +31,7 @@ from qthandy import hbox, translucent, bold, incr_font, transparent, retain_when
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget, GridMenuWidget
 
-from plotlyst.common import PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.domain import SelectionItem, Novel, tag_characterization, tag_worldbuilding, \
     tag_brainstorming, tag_research, tag_writing, tag_plotting, tag_theme, tag_outlining, tag_revision, tag_drafting, \
     tag_editing, tag_collect_feedback, tag_publishing, tag_marketing, tag_book_cover_design, tag_formatting
@@ -286,17 +286,17 @@ class ToolbarButton(QToolButton):
         self.toggled.connect(lambda x: bold(self, x))
 
         self.setStyleSheet(f'''
+            QToolButton {{
+                border: 1px hidden lightgrey;
+                padding: 3px;
+            }}
             QToolButton:checked {{
                 color: #240046;
-                background-color: {PLOTLYST_TERTIARY_COLOR};
+                background: {PLOTLYST_TERTIARY_COLOR};
             }}
         ''')
 
         incr_font(self, 1)
-
-    @overrides
-    def enterEvent(self, event: QEvent) -> None:
-        qtanim.colorize(self, color=QColor('#7B2CBF'))
 
 
 class CollapseButton(QPushButton):
