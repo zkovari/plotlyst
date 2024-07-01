@@ -501,6 +501,7 @@ class LabelsTemplateFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.wdgEditor = self._editor()
+        self.wdgEditor.setMaximumWidth(800)
         _layout = vbox(self)
         _layout.addWidget(group(self.lblEmoji, self.lblName, spacer()))
         _layout.addWidget(self.wdgEditor)
