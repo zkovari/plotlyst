@@ -58,7 +58,7 @@ QTabBar::tab:selected {
 }
 
 QTabBar::tab:!selected {
-    background: lightGrey;
+    background: #DBDBE7;
 }
 
 QTabBar::tab:!selected:hover {
