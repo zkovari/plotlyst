@@ -24,7 +24,7 @@ import qtanim
 from PyQt6.QtCore import pyqtSignal, QObject, QTimer
 from PyQt6.QtWidgets import QWidget, QAbstractButton, QLineEdit, QCompleter
 from overrides import overrides
-from qthandy import translucent, btn_popup, bold, italic, incr_font
+from qthandy import translucent, btn_popup, bold, italic, incr_font, margins
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -32,6 +32,7 @@ from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.client import json_client
 from plotlyst.core.domain import Novel, Character, Document, FEMALE, SelectionItem
 from plotlyst.core.template import protagonist_role
+from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, Event
 from plotlyst.event.handler import event_dispatchers, global_event_dispatcher
 from plotlyst.events import NovelAboutToSyncEvent
@@ -156,6 +157,9 @@ class CharacterEditor(QObject, EventListener):
         self.ui.tabTopics.layout().addWidget(self.wdgTopicsEditor)
 
         self.profile = CharacterProfileEditor(self.novel)
+        if app_env.is_windows():
+            self.ui.wdgProfile.setProperty('relaxed-white-bg', True)
+            margins(self.ui.wdgTop, bottom=15)
         self.ui.wdgProfile.layout().addWidget(self.profile)
 
         apply_bg_image(self.ui.scrollAreaBackstoryContents, resource_registry.cover1)
