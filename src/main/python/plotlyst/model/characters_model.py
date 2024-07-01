@@ -158,6 +158,9 @@ class CharactersSceneAssociationTableModel(CharactersTableModel):
         if not self.scene:
             return QVariant()
 
+        if role == Qt.ItemDataRole.FontRole:
+            return QApplication.font()
+
         character: Character = self._novel.characters[index.row()]
         if character is self.scene.pov:
             if role == Qt.ItemDataRole.ToolTipRole:
