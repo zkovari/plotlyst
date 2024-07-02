@@ -267,7 +267,8 @@ class SceneEditor(QObject, EventListener):
             self.scene.remove_beat(self.novel)
         self.scene.link_beat(self.novel.active_story_structure, beat)
         self._structureSelector.setBeat(beat)
-        emit_event(self.novel, SceneStoryBeatChangedEvent(self, self.scene))
+        qtanim.colorize(self._structureSelector, duration=350, strength=0.8, color=QColor(beat.icon_color))
+        emit_event(self.novel, SceneStoryBeatChangedEvent(self, self.scene, beat, toggled=True))
 
     def _beat_removed(self):
         beat = self.scene.beat(self.novel)
@@ -275,7 +276,7 @@ class SceneEditor(QObject, EventListener):
         scene.remove_beat(self.novel)
         self._structureSelector.reset()
 
-        emit_event(self.novel, SceneStoryBeatChangedEvent(self, scene))
+        emit_event(self.novel, SceneStoryBeatChangedEvent(self, scene, beat, toggled=False))
 
     def _update_notes(self):
         if self.scene.document:

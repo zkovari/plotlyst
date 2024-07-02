@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from language_tool_python import LanguageTool
 
 from plotlyst.core.domain import Character, NovelDescriptor, Scene, SceneStage, Task, NovelSetting, \
-    StoryStructure, Novel, Plot
+    StoryStructure, Novel, Plot, StoryBeat
 from plotlyst.event.core import Event
 
 
@@ -54,6 +54,8 @@ class SceneChangedEvent(Event):
 @dataclass
 class SceneStoryBeatChangedEvent(Event):
     scene: Scene
+    beat: StoryBeat
+    toggled: bool
 
 
 @dataclass

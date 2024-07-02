@@ -41,7 +41,8 @@ from plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStru
     SceneSelectedEvent, SceneSelectionClearedEvent, ActiveSceneStageChanged, \
     ChapterChangedEvent, AvailableSceneStagesChanged, CharacterChangedEvent, CharacterDeletedEvent, \
     NovelAboutToSyncEvent, NovelSyncEvent, NovelStoryStructureActivationRequest, NovelPanelCustomizationEvent, \
-    NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelPovTrackingToggleEvent, SceneAddedEvent
+    NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelPovTrackingToggleEvent, SceneAddedEvent, \
+    SceneStoryBeatChangedEvent
 from plotlyst.events import SceneOrderChangedEvent
 from plotlyst.model.common import SelectionItemsModel
 from plotlyst.model.novel import NovelStagesModel
@@ -115,7 +116,7 @@ class ScenesOutlineView(AbstractNovelView):
                           ChapterChangedEvent,
                           SceneDeletedEvent,
                           SceneOrderChangedEvent, NovelAboutToSyncEvent, NovelStorylinesToggleEvent,
-                          NovelStructureToggleEvent, NovelPovTrackingToggleEvent])
+                          NovelStructureToggleEvent, NovelPovTrackingToggleEvent, SceneStoryBeatChangedEvent])
         self.ui = Ui_ScenesView()
         self.ui.setupUi(self.widget)
 
@@ -311,6 +312,9 @@ class ScenesOutlineView(AbstractNovelView):
             return
         elif isinstance(event, SceneOrderChangedEvent):
             self.ui.cards.reorderCards(self.novel.scenes)
+            return
+        elif isinstance(event, SceneStoryBeatChangedEvent):
+            self.ui.wdgStoryStructure.toggleBeat(event.beat, event.toggled)
             return
         elif isinstance(event, NovelStoryStructureUpdated):
             if self.ui.btnStoryStructure.isChecked():
