@@ -377,6 +377,8 @@ class CharactersTreeView(TreeView, EventListener):
                 node = CharacterNode(character)
                 node.characterToggled.connect(self.characterToggled.emit)
                 self._nodes[character] = node
+            else:
+                self._nodes[character].refresh()
             self._centralWidget.layout().addWidget(self._nodes[character])
 
         self._centralWidget.layout().addWidget(vspacer())
