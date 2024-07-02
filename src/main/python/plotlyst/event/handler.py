@@ -87,7 +87,7 @@ class DialogExceptionHandler:
         pass
 
     def handle(self, exception_type, exception_value: Exception, exception_traceback):
-        msg = ''.join(exception_value.args)
+        msg = ''.join(str(exception_value.args))
         details: List[str] = traceback.format_exception(exception_type, exception_value, exception_traceback)
         emit_critical(msg, ''.join(details))
 
