@@ -49,13 +49,13 @@ from plotlyst.model.common import proxy
 from plotlyst.service.grammar import language_tool_proxy, dictionary
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import action, label, push_btn, tool_btn, insert_before, fade_out_and_gc
-from plotlyst.view.dialog.utility import IconSelectorDialog
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.text import apply_texteditor_toolbar_style
 from plotlyst.view.widget._toggle import AnimatedToggle
 from plotlyst.view.widget.button import DotsMenuButton
 from plotlyst.view.widget.display import PopupDialog
 from plotlyst.view.widget.lang import GrammarPopupMenu
+from plotlyst.view.widget.utility import IconSelectorDialog
 
 
 class AutoAdjustableTextEdit(EnhancedTextEdit):
@@ -602,7 +602,7 @@ class DocumentTextEditor(RichTextEditor):
     def _changeIcon(self):
         if self._textTitle.isReadOnly():
             return
-        result = IconSelectorDialog().display()
+        result = IconSelectorDialog.popup()
         if result:
             name = result[0]
             color = result[1].name()

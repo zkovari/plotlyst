@@ -48,7 +48,6 @@ from plotlyst.core.template import SelectionItem, enneagram_field, TemplateField
     foil_role, henchmen_role, love_style_field, disc_field
 from plotlyst.view.common import push_btn, action, tool_btn, label, wrap, restyle, \
     scroll_area, emoji_font
-from plotlyst.view.dialog.utility import IconSelectorDialog
 from plotlyst.view.icons import IconRegistry, set_avatar
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
@@ -60,6 +59,7 @@ from plotlyst.view.widget.display import Icon, MajorRoleIcon, SecondaryRoleIcon,
 from plotlyst.view.widget.input import Toggle
 from plotlyst.view.widget.labels import TraitLabel
 from plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
+from plotlyst.view.widget.utility import IconSelectorDialog
 
 
 class LifeStage(Enum):
@@ -880,9 +880,7 @@ class BackstoryEditorMenu(MenuWidget):
             self.emotionChanged.emit(value)
 
     def _customIconTriggered(self):
-        dialog = IconSelectorDialog()
-        dialog.selector.colorPicker.setHidden(True)
-        result = dialog.display()
+        result = IconSelectorDialog.popup(pickColor=False)
         if result:
             self.iconSelected.emit(result[0])
 

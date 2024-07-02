@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QFrame, \
     QToolButton, QWidget, \
     QAbstractButton, QSlider, QButtonGroup, QPushButton, QLabel, QLineEdit
 from overrides import overrides
-from qthandy import hbox, margins, sp, vbox, grid, pointy, vline, decr_icon, transparent, retain_when_hidden
+from qthandy import hbox, margins, sp, vbox, grid, pointy, vline, decr_icon, transparent
 from qtmenu import MenuWidget
 
 from plotlyst.common import PLOTLYST_TERTIARY_COLOR
@@ -36,12 +36,11 @@ from plotlyst.core.domain import GraphicsItemType, NODE_SUBTYPE_DISTURBANCE, NOD
     NODE_SUBTYPE_GOAL, NODE_SUBTYPE_BACKSTORY, \
     NODE_SUBTYPE_INTERNAL_CONFLICT
 from plotlyst.view.common import shadow, tool_btn, ExclusiveOptionalButtonGroup
-from plotlyst.view.dialog.utility import IconSelectorDialog
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.graphics.items import EventItem, ConnectorItem, NoteItem
 from plotlyst.view.widget.input import FontSizeSpinBox, AutoAdjustableLineEdit, AutoAdjustableTextEdit
-from plotlyst.view.widget.utility import ColorPicker
+from plotlyst.view.widget.utility import ColorPicker, IconSelectorDialog
 
 
 class ZoomBar(QFrame):
@@ -297,10 +296,7 @@ class PaintedItemBasedToolbar(BaseItemToolbar):
         self._item = item
 
     def _showIconSelector(self):
-        dialog = IconSelectorDialog()
-        retain_when_hidden(dialog.selector.colorPicker)
-        dialog.selector.colorPicker.setVisible(False)
-        result = dialog.display()
+        result = IconSelectorDialog.popup(pickColor=False)
         if result and self._item:
             self._item.setIcon(result[0])
             self._updateIcon(result[0])

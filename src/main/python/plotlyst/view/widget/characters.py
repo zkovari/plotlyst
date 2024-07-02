@@ -40,7 +40,7 @@ from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import CharacterSummaryChangedEvent
 from plotlyst.resources import resource_registry
 from plotlyst.view.common import action, ButtonPressResizeEventFilter, tool_btn
-from plotlyst.view.dialog.utility import IconSelectorDialog, ArtbreederDialog, ImageCropDialog
+from plotlyst.view.dialog.utility import ArtbreederDialog, ImageCropDialog
 from plotlyst.view.generated.avatar_selectors_ui import Ui_AvatarSelectors
 from plotlyst.view.generated.characters_progress_widget_ui import Ui_CharactersProgressWidget
 from plotlyst.view.icons import avatars, IconRegistry
@@ -49,6 +49,7 @@ from plotlyst.view.widget.display import IconText, Icon
 from plotlyst.view.widget.labels import CharacterLabel
 from plotlyst.view.widget.progress import CircularProgressBar, ProgressTooltipMode, \
     CharacterRoleProgressChart
+from plotlyst.view.widget.utility import IconSelectorDialog
 
 
 class CharacterToolButton(QToolButton):
@@ -379,7 +380,7 @@ class AvatarSelectors(QWidget, Ui_AvatarSelectors):
             self.character.prefs.avatar.allow_role()
         elif self.btnCustomIcon.isChecked():
             self.character.prefs.avatar.allow_custom_icon()
-            result = IconSelectorDialog().display()
+            result = IconSelectorDialog.popup()
             if result:
                 self.character.prefs.avatar.icon = result[0]
                 self.character.prefs.avatar.icon_color = result[1].name()

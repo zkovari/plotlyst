@@ -24,11 +24,11 @@ from PyQt6.QtGui import QColor, QBrush, QResizeEvent
 from PyQt6.QtWidgets import QWidget, QListView, QSizePolicy, QToolButton, QButtonGroup, QDialog, QLabel, QPushButton, \
     QGridLayout, QColorDialog
 from overrides import overrides
-from qthandy import flow, transparent, pointy, hbox, grid, vspacer, italic, underline, decr_font, incr_font, bold, \
+from qthandy import flow, transparent, pointy, grid, vspacer, italic, underline, decr_font, incr_font, bold, \
     spacer, line, decr_icon, ask_confirmation, vline
 from qthandy.filter import OpacityEventFilter
 
-from plotlyst.common import PLOTLYST_MAIN_COMPLEMENTARY_COLOR, RELAXED_WHITE_COLOR
+from plotlyst.common import PLOTLYST_MAIN_COMPLEMENTARY_COLOR, RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.event.core import EventListener, Event
 from plotlyst.event.handler import global_event_dispatcher
 from plotlyst.model.common import proxy
@@ -42,6 +42,7 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget._icons import icons_registry
 from plotlyst.view.widget.button import SecondaryActionToolButton
+from plotlyst.view.widget.display import PopupDialog
 
 
 class ColorButton(QToolButton):
@@ -124,27 +125,28 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
 
         self.btnFilterIcon.setIcon(IconRegistry.from_name('mdi.magnify'))
 
-        self.btnPeople.setIcon(IconRegistry.from_name('mdi.account', color_on='darkGreen'))
+        self.btnPeople.setIcon(IconRegistry.from_name('mdi.account', color_on=PLOTLYST_SECONDARY_COLOR))
         self.btnPeople.setToolTip('People and emotions')
-        self.btnFood.setIcon(IconRegistry.from_name('fa5s.ice-cream', color_on='darkGreen'))
+        self.btnFood.setIcon(IconRegistry.from_name('fa5s.ice-cream', color_on=PLOTLYST_SECONDARY_COLOR))
         self.btnFood.setToolTip('Food and beverage')
-        self.btnNature.setIcon(IconRegistry.from_name('mdi.nature', color_on='darkGreen'))
+        self.btnNature.setIcon(IconRegistry.from_name('mdi.nature', color_on=PLOTLYST_SECONDARY_COLOR))
         self.btnNature.setToolTip('Nature')
-        self.btnSports.setIcon(IconRegistry.from_name('fa5s.football-ball', color_on='darkGreen'))
+        self.btnSports.setIcon(IconRegistry.from_name('fa5s.football-ball', color_on=PLOTLYST_SECONDARY_COLOR))
         self.btnSports.setToolTip('Sports')
-        self.btnObjects.setIcon(IconRegistry.from_name('fa5.lightbulb', color_on='darkGreen'))
+        self.btnObjects.setIcon(IconRegistry.from_name('fa5.lightbulb', color_on=PLOTLYST_SECONDARY_COLOR))
         self.btnObjects.setToolTip('Objects')
-        self.btnPlaces.setIcon(IconRegistry.from_name('ei.globe', color_on='darkGreen'))
+        self.btnPlaces.setIcon(IconRegistry.from_name('ei.globe', color_on=PLOTLYST_SECONDARY_COLOR))
         self.btnPlaces.setToolTip('Places and travel')
-        self.btnCharacters.setIcon(IconRegistry.from_name('mdi6.alphabetical-variant', color_on='darkGreen'))
+        self.btnCharacters.setIcon(
+            IconRegistry.from_name('mdi6.alphabetical-variant', color_on=PLOTLYST_SECONDARY_COLOR))
         self.btnCharacters.setToolTip('Numbers and characters')
-        self.btnSymbols.setIcon(IconRegistry.from_name('mdi.symbol', color_on='darkGreen'))
+        self.btnSymbols.setIcon(IconRegistry.from_name('mdi.symbol', color_on=PLOTLYST_SECONDARY_COLOR))
         self.btnSymbols.setToolTip('Symbols')
         self.btnAll.setChecked(True)
 
         self.colorPicker = ColorPicker(self)
         self.colorPicker.colorPicked.connect(self._colorPicked)
-        self.hLayoutTop.insertWidget(0, self.colorPicker)
+        self.wdgTop.layout().insertWidget(0, self.colorPicker)
 
         if IconSelectorWidget.model is None:
             filtered_icons = []
@@ -242,25 +244,23 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
             self.modelReset.emit()
 
 
-class _IconSelectorDialog(QDialog):
+class IconSelectorDialog(PopupDialog):
 
-    def __init__(self, parent=None):
-        super(_IconSelectorDialog, self).__init__(parent)
-        self.setWindowTitle('Select icon')
-
+    def __init__(self, pickColor: bool = True, color: QColor = QColor(Qt.GlobalColor.black), parent=None):
+        super().__init__(parent)
         self.resize(500, 500)
-        hbox(self, 1, 0)
 
         self._icon = ''
         self._color: Optional[QColor] = None
         self.selector = IconSelectorWidget(self)
+        self.selector.colorPicker.setVisible(pickColor)
+        self.selector.setColor(color)
         self.selector.iconSelected.connect(self._icon_selected)
 
-        self.layout().addWidget(self.selector)
+        self.frame.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
+        self.frame.layout().addWidget(self.selector)
 
-    def display(self, color: Optional[QColor] = None) -> Optional[Tuple[str, QColor]]:
-        if color:
-            self.selector.setColor(color)
+    def display(self) -> Optional[Tuple[str, QColor]]:
         result = self.exec()
         if result == QDialog.DialogCode.Accepted and self._icon:
             return self._icon, self._color
@@ -286,7 +286,7 @@ class IconSelectorButton(SecondaryActionToolButton):
         self._defaultIconSize = QSize(24, 24)
 
         self._selected: bool = False
-
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
         self.reset()
         self.clicked.connect(self._displayIcons)
 
@@ -311,7 +311,7 @@ class IconSelectorButton(SecondaryActionToolButton):
         self._selected = False
 
     def _displayIcons(self):
-        result = _IconSelectorDialog().display()
+        result = IconSelectorDialog.popup()
         if result:
             self.selectIcon(result[0], result[1].name())
             self.iconSelected.emit(result[0], result[1])

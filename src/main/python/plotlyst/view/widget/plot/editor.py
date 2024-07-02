@@ -46,7 +46,6 @@ from plotlyst.settings import STORY_LINE_COLOR_CODES
 from plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter, \
     insert_before_the_end, label
 from plotlyst.view.dialog.novel import PlotValueEditorDialog
-from plotlyst.view.dialog.utility import IconSelectorDialog
 from plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
 from plotlyst.view.generated.plot_widget_ui import Ui_PlotWidget
 from plotlyst.view.icons import IconRegistry, avatars
@@ -58,7 +57,7 @@ from plotlyst.view.widget.plot.principle import PlotPrincipleSelectorMenu, PlotP
     PrincipleSelectorObject, GenrePrincipleSelectorDialog, PlotDynamicPrincipleSelectorMenu
 from plotlyst.view.widget.plot.progression import PlotEventsTimeline, DynamicPlotPrinciplesEditor
 from plotlyst.view.widget.tree import TreeView, ContainerNode
-from plotlyst.view.widget.utility import ColorPicker
+from plotlyst.view.widget.utility import ColorPicker, IconSelectorDialog
 
 
 class PlotNode(ContainerNode):
@@ -404,7 +403,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self._save()
 
     def _changeIcon(self):
-        result = IconSelectorDialog(self).display(QColor(self.plot.icon_color))
+        result = IconSelectorDialog.popup(color=QColor(self.plot.icon_color))
         if result:
             self.plot.icon = result[0]
             self._colorChanged(result[1])

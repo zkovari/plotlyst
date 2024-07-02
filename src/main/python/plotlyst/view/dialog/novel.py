@@ -32,11 +32,11 @@ from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import NovelDescriptor, PlotValue, Novel
 from plotlyst.core.help import plot_value_help, synopsis_editor_placeholder
 from plotlyst.view.common import link_editor_to_btn, ButtonPressResizeEventFilter, set_tab_icon
-from plotlyst.view.dialog.utility import IconSelectorDialog
 from plotlyst.view.generated.novel_creation_dialog_ui import Ui_NovelCreationDialog
 from plotlyst.view.generated.plot_value_editor_dialog_ui import Ui_PlotValueEditorDialog
 from plotlyst.view.generated.synopsis_editor_dialog_ui import Ui_SynopsisEditorDialog
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.utility import IconSelectorDialog
 
 
 class NovelEditionDialog(QDialog, Ui_NovelCreationDialog):
@@ -303,7 +303,7 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
             qtanim.glow(self.btnIcon, color=glow_color)
 
     def _changeIcon(self):
-        result = IconSelectorDialog().display()
+        result = IconSelectorDialog.popup()
         if result:
             self._value.icon = result[0]
             self._value.icon_color = result[1].name()

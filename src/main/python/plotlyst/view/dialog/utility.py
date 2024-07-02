@@ -20,15 +20,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import random
 from enum import Enum
 from functools import partial
-from typing import Optional, Tuple, List
+from typing import Optional, List
 
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, QSize, QObject, QEvent, QPoint, QRect, pyqtSignal, QThreadPool
-from PyQt6.QtGui import QColor, QPixmap, QIcon, QPainter, QImage
+from PyQt6.QtGui import QPixmap, QIcon, QPainter, QImage
 from PyQt6.QtNetwork import QNetworkAccessManager
 from PyQt6.QtWidgets import QDialog, QToolButton, QPushButton, QApplication
 from overrides import overrides
-from qthandy import hbox, FlowLayout, bold, underline
+from qthandy import FlowLayout, bold, underline
 from qthandy.filter import InstantTooltipEventFilter
 
 from plotlyst.env import app_env
@@ -38,42 +38,6 @@ from plotlyst.view.common import rounded_pixmap, open_url, calculate_resized_dim
 from plotlyst.view.generated.artbreeder_picker_dialog_ui import Ui_ArtbreederPickerDialog
 from plotlyst.view.generated.image_crop_dialog_ui import Ui_ImageCropDialog
 from plotlyst.view.icons import IconRegistry
-from plotlyst.view.widget.utility import IconSelectorWidget
-
-
-class IconSelectorDialog(QDialog):
-
-    def __init__(self, parent=None):
-        super(IconSelectorDialog, self).__init__(parent)
-        self.setWindowTitle('Select icon')
-
-        self.resize(500, 500)
-        hbox(self, 1, 0)
-
-        self._icon = ''
-        self._color: Optional[QColor] = None
-        self.selector = IconSelectorWidget(self)
-        self.selector.iconSelected.connect(self._icon_selected)
-
-        self.layout().addWidget(self.selector)
-
-    def display(self, color: Optional[QColor] = None) -> Optional[Tuple[str, QColor]]:
-        if color:
-            self.selector.setColor(color)
-        result = self.exec()
-        if result == QDialog.DialogCode.Accepted and self._icon:
-            return self._icon, self._color
-
-    @overrides
-    def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
-        self.selector.lstIcons.model().modelReset.emit()
-        self.selector.lstIcons.update()
-
-    def _icon_selected(self, icon_alias: str, color: QColor):
-        self._icon = icon_alias
-        self._color = color
-
-        self.accept()
 
 
 class _AvatarButton(QToolButton):

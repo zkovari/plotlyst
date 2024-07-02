@@ -29,8 +29,8 @@ from plotlyst.core.domain import SelectionItem
 from plotlyst.model.common import SelectionItemsModel
 from plotlyst.view.common import show_color_picker, PopupMenuBuilder, tool_btn
 from plotlyst.view.delegates import TextItemDelegate
-from plotlyst.view.dialog.utility import IconSelectorDialog
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.utility import IconSelectorDialog
 
 
 class ItemsEditorWidget(QWidget):
@@ -201,7 +201,7 @@ class ItemsEditorWidget(QWidget):
 
     def _item_clicked(self, index: QModelIndex):
         if index.column() == SelectionItemsModel.ColIcon:
-            result = IconSelectorDialog(self).display()
+            result = IconSelectorDialog.popup()
             if result:
                 self.model.setData(index, (result[0], result[1].name()), role=Qt.ItemDataRole.DecorationRole)
         if index.column() == SelectionItemsModel.ColBgColor:

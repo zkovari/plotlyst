@@ -29,11 +29,11 @@ from qthandy import vbox, hbox, bold, margins, clear_layout, transparent, retain
 from qtmenu import MenuWidget
 
 from plotlyst.view.common import ButtonPressResizeEventFilter, action
-from plotlyst.view.dialog.utility import IconSelectorDialog
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.button import EyeToggle
 from plotlyst.view.widget.display import Icon
 from plotlyst.view.widget.input import TextInputDialog
+from plotlyst.view.widget.utility import IconSelectorDialog
 
 
 @dataclass
@@ -157,7 +157,7 @@ class BaseTreeWidget(QWidget):
         self._reStyle()
 
     def _changeIcon(self):
-        result = IconSelectorDialog().display()
+        result = IconSelectorDialog.popup()
         if result:
             self._icon.setIcon(IconRegistry.from_name(result[0], result[1].name()))
             self._icon.setVisible(True)

@@ -44,7 +44,6 @@ from plotlyst.service.image import upload_image, load_image
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import action, push_btn, frame, insert_before_the_end, fade_out_and_gc, \
     tool_btn, label, scrolled, wrap, calculate_resized_dimensions
-from plotlyst.view.dialog.utility import IconSelectorDialog
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.text import apply_text_color
@@ -52,6 +51,7 @@ from plotlyst.view.widget.button import DotsMenuButton
 from plotlyst.view.widget.display import Icon, PopupDialog, DotsDragIcon
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit
 from plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
+from plotlyst.view.widget.utility import IconSelectorDialog
 from plotlyst.view.widget.world._topics import ecological_topics, cultural_topics, historical_topics, \
     linguistic_topics, technological_topics, economic_topics, infrastructural_topics, religious_topics, \
     fantastic_topics, nefarious_topics, environmental_topics
@@ -264,9 +264,7 @@ class HeaderElementEditor(WorldBuildingEntityElementWidget):
         self.save()
 
     def _changeIcon(self):
-        dialog = IconSelectorDialog()
-        dialog.selector.colorPicker.setHidden(True)
-        result = dialog.display()
+        result = IconSelectorDialog.popup(pickColor=False)
         if result:
             self.icon.setIcon(IconRegistry.from_name(result[0], '#510442'))
             self.element.icon = result[0]
