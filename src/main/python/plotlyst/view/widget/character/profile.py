@@ -25,7 +25,8 @@ import emoji
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QObject, QEvent, QPoint
 from PyQt6.QtGui import QResizeEvent, QWheelEvent, QColor
-from PyQt6.QtWidgets import QWidget, QLabel, QSizePolicy, QSlider, QToolButton, QVBoxLayout, QGridLayout
+from PyQt6.QtWidgets import QWidget, QLabel, QSizePolicy, QSlider, QToolButton, QVBoxLayout, QGridLayout, QApplication, \
+    QFrame
 from overrides import overrides
 from qthandy import vbox, clear_layout, hbox, bold, underline, spacer, vspacer, margins, pointy, retain_when_hidden, \
     transparent, sp, gc, decr_font, grid, incr_font, line
@@ -627,11 +628,13 @@ class BarTemplateFieldWidget(TemplateFieldWidgetBase):
         pass
 
 
-class FacultyComparisonPopup(QWidget):
+class FacultyComparisonPopup(QFrame):
     def __init__(self, facultyType: CharacterProfileFieldType, field: TemplateField, character: Character, parent=None):
         super().__init__(parent)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.setProperty('relaxed-white-bg', True)
+        self.setProperty('rounded', True)
+        self.setMinimumWidth(200)
 
         self.facultyType = facultyType
         self.field = field
@@ -712,10 +715,13 @@ class FacultyField(BarTemplateFieldWidget):
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if event.type() == QEvent.Type.MouseButtonPress:
+            self.popupDisplay.setParent(QApplication.activeWindow())
             self.popupDisplay.refresh()
-            self.popupDisplay.move(
-                self.mapToGlobal(self.lblEmoji.pos()) - QPoint(0, self.popupDisplay.sizeHint().height()))
-            self.popupDisplay.show()
+            pos: QPoint = self.mapToGlobal(self.lblEmoji.pos()) - QPoint(0,
+                                                                         self.popupDisplay.sizeHint().height() + 10) - QApplication.activeWindow().pos()
+            self.popupDisplay.setGeometry(pos.x(), pos.y(), self.popupDisplay.sizeHint().width(),
+                                          self.popupDisplay.sizeHint().height())
+            qtanim.fade_in(self.popupDisplay)
         elif event.type() == QEvent.Type.MouseButtonRelease:
             self.popupDisplay.hide()
         return super().eventFilter(watched, event)
