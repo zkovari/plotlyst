@@ -433,7 +433,12 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnEdit.setEnabled(False)
 
     def _hide_chapters_clicked(self, toggled: bool):
-        qtanim.toggle_expansion(self.ui.wgtChapters, toggled)
+        def select_scene():
+            if toggled and self.selected_card:
+                self.ui.treeChapters.selectScene(self.selected_card.scene)
+
+        qtanim.toggle_expansion(self.ui.wgtChapters, toggled, teardown=select_scene)
+
         if self.novel.prefs.panels.scene_chapters_sidebar_toggled != toggled:
             self.novel.prefs.panels.scene_chapters_sidebar_toggled = toggled
             self.repo.update_novel(self.novel)
@@ -551,7 +556,8 @@ class ScenesOutlineView(AbstractNovelView):
             self.selected_card.clearSelection()
         self.selected_card = card
         self._enable_action_buttons(True)
-        self.ui.treeChapters.selectScene(card.scene)
+        if self.ui.treeChapters.isVisible():
+            self.ui.treeChapters.selectScene(card.scene)
         emit_event(self.novel, SceneSelectedEvent(self, card.scene))
 
     def _selection_cleared(self):
