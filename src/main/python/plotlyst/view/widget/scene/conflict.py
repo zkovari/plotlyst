@@ -25,17 +25,19 @@ from PyQt6.QtGui import QMouseEvent
 from PyQt6.QtWidgets import QWidget, QSlider, QHeaderView, QFrame
 from overrides import overrides
 from qthandy import hbox, gc
-from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter, InstantTooltipEventFilter
+from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
+from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Conflict, ConflictReference, Novel, Scene, ConflictType, \
-    SceneStructureAgenda
+    SceneStructureAgenda, Character
 from plotlyst.event.core import emit_critical
 from plotlyst.model.scenes_model import SceneConflictsModel
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import tool_btn, push_btn
 from plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
-from plotlyst.view.icons import IconRegistry, avatars
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.characters import CharacterSelectorButton
 from plotlyst.view.widget.labels import ConflictLabel
 
 
@@ -90,28 +92,23 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
         self.novel = novel
         self.scene = scene
         self.agenda = agenda
+        self._character: Optional[Character] = None
         self.setupUi(self)
 
         self.repo = RepositoryPersistenceManager.instance()
 
         self.btnCharacter.setIcon(IconRegistry.conflict_character_icon())
         self.btnCharacter.setToolTip('<b style="color:#c1666b">Character</b>')
-        self.btnCharacter.installEventFilter(InstantTooltipEventFilter(parent=self.btnCharacter))
         self.btnSociety.setIcon(IconRegistry.conflict_society_icon())
         self.btnSociety.setToolTip('<b style="color:#69306d">Society</b>')
-        self.btnSociety.installEventFilter(InstantTooltipEventFilter(parent=self.btnSociety))
         self.btnNature.setIcon(IconRegistry.conflict_nature_icon())
         self.btnNature.setToolTip('<b style="color:#157a6e">Nature</b>')
-        self.btnNature.installEventFilter(InstantTooltipEventFilter(parent=self.btnNature))
         self.btnTechnology.setIcon(IconRegistry.conflict_technology_icon())
         self.btnTechnology.setToolTip('<b style="color:#4a5859">Technology</b>')
-        self.btnTechnology.installEventFilter(InstantTooltipEventFilter(parent=self.btnTechnology))
         self.btnSupernatural.setIcon(IconRegistry.conflict_supernatural_icon())
         self.btnSupernatural.setToolTip('<b style="color:#ac7b84">Supernatural</b>')
-        self.btnSupernatural.installEventFilter(InstantTooltipEventFilter(parent=self.btnSupernatural))
         self.btnSelf.setIcon(IconRegistry.conflict_self_icon())
         self.btnSelf.setToolTip('<b style="color:#94b0da">Self</b>')
-        self.btnSelf.installEventFilter(InstantTooltipEventFilter(parent=self.btnSelf))
 
         self._model = SceneConflictsModel(self.novel, self.scene, self.agenda)
         self._model.setCheckable(True, SceneConflictsModel.ColName)
@@ -122,22 +119,27 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
                                                                   QHeaderView.ResizeMode.ResizeToContents)
         self.tblConflicts.horizontalHeader().setSectionResizeMode(SceneConflictsModel.ColName,
                                                                   QHeaderView.ResizeMode.Stretch)
-        self._update_characters()
-        self.btnAddNew.setIcon(IconRegistry.ok_icon())
-        self.btnAddNew.installEventFilter(DisabledClickEventFilter(self, lambda: qtanim.shake(self.lineKey)))
+
+        self.btnCharacterSelector = CharacterSelectorButton(self.novel)
+        self.btnCharacterSelector.characterSelected.connect(self._characterSelected)
+        self.wdgEditor.layout().insertWidget(0, self.btnCharacterSelector)
+        self.btnAddNew.setIcon(IconRegistry.ok_icon(RELAXED_WHITE_COLOR))
+        self.btnAddNew.installEventFilter(DisabledClickEventFilter(self, lambda: qtanim.shake(self.wdgEditor)))
         self.btnAddNew.setDisabled(True)
 
-        self.lineKey.textChanged.connect(self._keyphrase_edited)
+        self.lineKey.textChanged.connect(self._changed)
 
-        self.btnGroupConflicts.buttonToggled.connect(self._type_toggled)
+        self.btnGroupConflicts.buttonToggled.connect(self._typeToggled)
         self._type = ConflictType.CHARACTER
         self.btnCharacter.setChecked(True)
 
-        self.btnAddNew.clicked.connect(self._add_new)
+        self.btnAddNew.clicked.connect(self._addNew)
+
+        self.toolBox.setCurrentWidget(self.pageNew)
 
     def refresh(self):
-        self.cbCharacter.clear()
-        self._update_characters()
+        self.btnCharacterSelector.clear()
+        self._character = None
         self.tblConflicts.model().update()
         self.tblConflicts.model().modelReset.emit()
 
@@ -145,14 +147,9 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
     def mousePressEvent(self, event: QMouseEvent) -> None:
         pass
 
-    def _update_characters(self):
-        for char in self.novel.characters:
-            if self.agenda.character_id and char.id != self.agenda.character_id:
-                self.cbCharacter.addItem(avatars.avatar(char), char.name, char)
-
-    def _type_toggled(self):
+    def _typeToggled(self):
         lbl_prefix = 'Character vs.'
-        self.cbCharacter.setVisible(self.btnCharacter.isChecked())
+        self.btnCharacterSelector.setVisible(self.btnCharacter.isChecked())
         if self.btnCharacter.isChecked():
             self.lblConflictType.setText(f'{lbl_prefix} <b style="color:#c1666b">Character</b>')
             self._type = ConflictType.CHARACTER
@@ -172,15 +169,27 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
             self.lblConflictType.setText(f'{lbl_prefix} <b style="color:#94b0da">Self</b>')
             self._type = ConflictType.SELF
 
-    def _keyphrase_edited(self, text: str):
-        self.btnAddNew.setEnabled(len(text) > 0)
+        self._changed()
 
-    def _add_new(self):
+    def _characterSelected(self, character: Character):
+        self._character = character
+        self._changed()
+
+    def _changed(self):
+        if len(self.lineKey.text()) > 0:
+            if self.btnCharacter.isChecked() and not self._character:
+                self.btnAddNew.setEnabled(False)
+            else:
+                self.btnAddNew.setEnabled(True)
+        else:
+            self.btnAddNew.setEnabled(False)
+
+    def _addNew(self):
         if not self.agenda.character_id:
             return emit_critical('Select agenda or POV character first')
         conflict = Conflict(self.lineKey.text(), self._type, character_id=self.agenda.character_id)
-        if self._type == ConflictType.CHARACTER:
-            conflict.conflicting_character_id = self.cbCharacter.currentData().id
+        if self._type == ConflictType.CHARACTER and self._character:
+            conflict.conflicting_character_id = self._character.id
 
         self.novel.conflicts.append(conflict)
         self.agenda.conflict_references.append(ConflictReference(conflict.id))
@@ -213,21 +222,22 @@ class CharacterConflictSelector(QWidget):
         self.btnLinkConflict = push_btn(IconRegistry.conflict_icon(), 'Track conflict')
         self.layout().addWidget(self.btnLinkConflict)
         self.btnLinkConflict.setIcon(IconRegistry.conflict_icon())
+        self.btnLinkConflict.setObjectName('btnSelector')
         self.btnLinkConflict.setStyleSheet('''
-                        QPushButton::menu-indicator {
+                        #btnSelector::menu-indicator {
                             width: 0px;
                         }
-                        QPushButton {
+                        #btnSelector {
                             border: 2px dotted grey;
                             border-radius: 6px;
                             font: italic;
                         }
-                        QPushButton:hover {
+                        #btnSelector:hover {
                             border: 2px dotted orange;
                             color: orange;
                             font: normal;
                         }
-                        QPushButton:pressed {
+                        #btnSelector:pressed {
                             border: 2px solid white;
                         }
                     ''')
