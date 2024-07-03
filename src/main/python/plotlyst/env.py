@@ -90,7 +90,7 @@ class AppEnvironment:
         if self.is_linux():
             return 'Sans Serif'
         elif self.is_mac():
-            return 'San Francisco'
+            return 'Helvetica'
         elif self.is_windows():
             return 'Segoe UI'
 
