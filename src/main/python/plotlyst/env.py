@@ -86,6 +86,30 @@ class AppEnvironment:
     def is_windows(self) -> bool:
         return platform.is_windows()
 
+    def sans_serif_font(self) -> str:
+        if self.is_linux():
+            return 'Sans Serif'
+        elif self.is_mac():
+            return 'San Francisco'
+        elif self.is_windows():
+            return 'Segoe UI'
+
+    def serif_font(self) -> str:
+        if self.is_linux():
+            return 'Serif'
+        elif self.is_mac():
+            return 'Times New Roman'
+        elif self.is_windows():
+            return 'Times New Roman'
+
+    def cursive_font(self) -> str:
+        if self.is_linux():
+            return 'Cursive'
+        elif self.is_mac():
+            return 'Apple Chancery'
+        elif self.is_windows():
+            return 'Segoe Print'
+
 
 app_env = AppEnvironment()
 

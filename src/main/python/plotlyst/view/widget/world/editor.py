@@ -183,7 +183,7 @@ class TextElementEditor(WorldBuildingEntityElementWidget):
             font.setPointSize(18)
         else:
             font.setPointSize(16)
-        font.setFamily('Sans Serif')
+        font.setFamily(app_env.sans_serif_font())
         self.textEdit.setFont(font)
 
         self.layout().addWidget(self.textEdit)
@@ -229,7 +229,7 @@ class HeaderElementEditor(WorldBuildingEntityElementWidget):
         self.lineTitle.setPlaceholderText('New section')
         font = self.lineTitle.font()
         font.setPointSize(24)
-        font.setFamily('Serif')
+        font.setFamily(app_env.serif_font())
         self.lineTitle.setFont(font)
 
         apply_text_color(self.lineTitle, QColor('#510442'))
@@ -286,7 +286,7 @@ class QuoteElementEditor(WorldBuildingEntityElementWidget):
         self.textEdit.setPlaceholderText('Edit quote')
         font: QFont = self.textEdit.font()
         font.setPointSize(16)
-        font.setFamily('Cursive')
+        font.setFamily(app_env.cursive_font())
         font.setItalic(True)
         self.textEdit.setFont(font)
         self.textEdit.setMarkdown(self.element.text)

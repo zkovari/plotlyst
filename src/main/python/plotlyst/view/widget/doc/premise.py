@@ -38,6 +38,7 @@ from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_S
 from plotlyst.core.domain import Document, PremiseBuilder, PremiseIdea, BoxParameters, PremiseQuestion, Label, \
     PremiseReview
 from plotlyst.core.text import wc
+from plotlyst.env import app_env
 from plotlyst.model.common import proxy
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, frame, action, fade_out_and_gc, \
     tool_btn, insert_after, wrap, stretch_col, TooltipPositionEventFilter
@@ -439,7 +440,7 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.textPremise = AutoAdjustableTextEdit()
         transparent(self.textPremise)
         font: QFont = self.textPremise.font()
-        font.setFamily('Cursive')
+        font.setFamily(app_env.cursive_font())
         font.setPointSize(20)
         self.textPremise.setFont(font)
         self.textPremise.setPlaceholderText("Encapsulate your story's core idea in 1-2 sentences")

@@ -29,6 +29,7 @@ from qttextedit import RichTextEditor
 
 from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Node
+from plotlyst.env import app_env
 from plotlyst.view.common import spawn, push_btn, link_editor_to_btn
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.graphics import NetworkScene, NetworkGraphicsView
@@ -143,7 +144,7 @@ class CritiqueWidget(QWidget):
         self.richtextEditor.setFixedWidth(900)
         font: QFont = self.richtextEditor.textEdit.font()
         font.setPointSize(11)
-        font.setFamily('Sans-serif')
+        font.setFamily(app_env.sans_serif_font())
         self.richtextEditor.textEdit.setFont(font)
         self.richtextEditor.textEdit.setTextColor(QColor('#4a4e69'))
         self.richtextEditor.textEdit.setSidebarEnabled(False)

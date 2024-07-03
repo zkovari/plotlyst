@@ -111,13 +111,7 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.splitterNav.setSizes([150, 500])
         font = self.ui.lineName.font()
         font.setPointSize(32)
-        if app_env.is_mac():
-            family = 'Helvetica Neue'
-        elif app_env.is_windows():
-            family = 'Calibri'
-        else:
-            family = 'Sans Serif'
-        font.setFamily(family)
+        font.setFamily(app_env.sans_serif_font())
         self.ui.lineName.setFont(font)
         self.ui.lineName.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.ui.lineName.setStyleSheet(f'''
