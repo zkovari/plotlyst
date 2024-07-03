@@ -507,7 +507,7 @@ class DocumentTextEditor(RichTextEditor):
 
         self.highlighter = self._initHighlighter()
 
-        self.textEdit.setFont(QFont('Sans-serif', 16))
+        self.textEdit.setFont(QFont(app_env.sans_serif_font(), 16))
         self.textEdit.setProperty('transparent', True)
         self.textEdit.zoomIn(int(self.textEdit.font().pointSize() * 0.25))
         self.textEdit.setBlockFormat(lineSpacing=110, margin_bottom=10, margin_top=10)

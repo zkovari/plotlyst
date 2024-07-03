@@ -89,11 +89,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
     app_env.mode = args.mode
 
-    if platform.is_linux() and QApplication.font().pointSize() < 12:
-        font = QFont('Helvetica', 12)
+    if platform.is_linux():
+        font = QFont('Helvetica', max(QApplication.font().pointSize(), 12))
         QApplication.setFont(font)
-    elif platform.is_windows() and QApplication.font().pointSize() < 12:
-        font = QFont('Segoe UI', 12)
+    elif QApplication.font().pointSize() < 12:
+        font = QApplication.font()
+        font.setPointSize(12)
         QApplication.setFont(font)
     app.setStyleSheet(APP_STYLESHEET)
     settings.init_org()

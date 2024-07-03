@@ -70,7 +70,7 @@ class TaskWidget(QFrame):
         self._lineTitle.setPlaceholderText('New task')
         self._lineTitle.setText(task.title)
         self._lineTitle.setFrame(False)
-        font = QFont('Helvetica')
+        font = QFont(app_env.sans_serif_font())
         font.setWeight(QFont.Weight.Medium)
         self._lineTitle.setFont(font)
         incr_font(self._lineTitle)
