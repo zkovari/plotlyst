@@ -28,7 +28,7 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize, pyqtSignal, QModelIndex, QItemSelectionModel
 from PyQt6.QtGui import QFont, QTextCursor, QTextCharFormat, QKeyEvent, QPaintEvent, QPainter, QBrush, QLinearGradient, \
     QColor, QSyntaxHighlighter, \
-    QTextDocument, QTextBlockUserData, QIcon, QResizeEvent
+    QTextDocument, QTextBlockUserData, QIcon, QResizeEvent, QFocusEvent
 from PyQt6.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QMenu, \
     QApplication, QToolButton, QLineEdit, QWidgetAction, QListView, QSpinBox, QWidget, QLabel, QDialog
 from language_tool_python import LanguageTool
@@ -386,6 +386,7 @@ class TextEditBase(EnhancedTextEdit):
         self._wdgGrammarPopup: Optional[GrammarPopup] = None
         self._replacementInfo: Optional[ReplacementInfo] = None
 
+
     def statistics(self) -> TextStatistics:
         wc = 0
         for i in range(self.document().blockCount()):
@@ -444,9 +445,15 @@ class TextEditBase(EnhancedTextEdit):
                 self._wdgGrammarPopup.init(replacements, msg, style)
                 self._popupWidget(self._wdgGrammarPopup, event.pos())
 
+    @overrides
+    def focusOutEvent(self, event: QFocusEvent):
+        self._hidePopup(self._wdgGrammarPopup)
+
     def _popupWidget(self, wdg: GrammarPopup, pos: QPoint):
-        global_pos: QPoint = self.mapToGlobal(pos) - QPoint(0,
-                                                            wdg.sizeHint().height() + 10) - QApplication.activeWindow().pos()
+        ml = self.viewportMargins().left()
+        tl = self.viewportMargins().top()
+        global_pos: QPoint = self.mapToGlobal(pos) - QPoint(-ml,
+                                                            wdg.sizeHint().height() + 40 - tl) - QApplication.activeWindow().pos()
         wdg.setGeometry(global_pos.x(), global_pos.y(), wdg.sizeHint().width(),
                         wdg.sizeHint().height())
 
@@ -455,9 +462,12 @@ class TextEditBase(EnhancedTextEdit):
 
     @overrides
     def _cursorPositionChanged(self):
-        if self._wdgGrammarPopup and self._wdgGrammarPopup.isVisible() and not self._wdgGrammarPopup.locked():
-            self._wdgGrammarPopup.hide()
+        self._hidePopup(self._wdgGrammarPopup)
         super()._cursorPositionChanged()
+
+    def _hidePopup(self, wdg: GrammarPopup):
+        if wdg and wdg.isVisible() and not wdg.locked():
+            wdg.hide()
 
     def _errors(self, cursor: QTextCursor):
         data = cursor.block().userData()
