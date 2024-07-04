@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import math
 from enum import Enum
 from functools import partial
-from typing import Optional
+from typing import Optional, List
 
 import qtanim
 from PyQt6 import QtGui
@@ -32,7 +32,8 @@ from PyQt6.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyl
     QApplication, QToolButton, QLineEdit, QWidgetAction, QListView, QSpinBox, QWidget, QLabel, QDialog
 from language_tool_python import LanguageTool
 from overrides import overrides
-from qthandy import transparent, hbox, margins, pointy, sp, line, flow, vbox, translucent, decr_icon, bold, incr_font
+from qthandy import transparent, hbox, margins, pointy, sp, line, flow, vbox, translucent, decr_icon, bold, incr_font, \
+    decr_font
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
@@ -50,11 +51,11 @@ from plotlyst.service.grammar import language_tool_proxy, dictionary
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import action, label, push_btn, tool_btn, insert_before, fade_out_and_gc
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.style.base import apply_color
 from plotlyst.view.style.text import apply_texteditor_toolbar_style
 from plotlyst.view.widget._toggle import AnimatedToggle
 from plotlyst.view.widget.button import DotsMenuButton
 from plotlyst.view.widget.display import PopupDialog
-from plotlyst.view.widget.lang import GrammarPopupMenu
 from plotlyst.view.widget.utility import IconSelectorDialog
 
 
@@ -301,6 +302,72 @@ class CharacterContentAssistMenu(QMenu):
     def _clicked(self, index: QModelIndex):
         char = index.data(CharactersTableModel.CharacterRole)
         self.characterSelected.emit(char)
+
+
+class GrammarPopup(QWidget):
+    replacementRequested = pyqtSignal(str)
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.lblType = label(bold=True)
+        self.wdgReplacements = QWidget()
+        flow(self.wdgReplacements)
+        self.btnClose = RemovalButton()
+        self.lblMessage = label(description=True)
+        decr_font(self.lblMessage)
+
+        self.wdgTop = QWidget()
+        hbox(self.wdgTop)
+        self.wdgTop.layout().addWidget(self.lblType, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgTop.layout().addWidget(self.btnClose, alignment=Qt.AlignmentFlag.AlignRight)
+
+        vbox(self)
+        self.layout().addWidget(self.wdgTop)
+        self.layout().addWidget(line())
+        self.layout().addWidget(self.lblMessage)
+        self.layout().addWidget(self.wdgReplacements)
+        # self.btnClose.installEventFilter(OpacityEventFilter(parent=self.btnClose))
+
+    def init(self, replacements: List[str], msg: str, style: str):
+        if style in ['misspelling']:
+            apply_color(self.lblType, '#d90429')
+        elif style == 'style':
+            apply_color(self.lblType, '#5a189a')
+        else:
+            apply_color(self.lblType, '#ffc300')
+        self.lblType.setText(style.capitalize())
+        self.lblMessage.setText(msg)
+        for i, replacement in enumerate(replacements):
+            if i > 4:
+                break
+            self.wdgReplacements.layout().addWidget(self._button(replacement))
+
+    def _button(self, replacement: str) -> QPushButton:
+        btn = QPushButton(replacement, self)
+        btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn.setProperty('lang-spellcheck-suggestion', True)
+        btn.clicked.connect(lambda: self.replacementRequested.emit(replacement))
+
+        return btn
+
+
+class GrammarPopupMenu(QMenu):
+    def __init__(self, parent=None):
+        super(GrammarPopupMenu, self).__init__(parent)
+        self._popupWidget = GrammarPopup(self)
+        bold(self._popupWidget.lblType)
+        self._popupWidget.btnClose.clicked.connect(self.hide)
+        self._popupWidget.replacementRequested.connect(self.hide)
+
+    def popupWidget(self) -> GrammarPopup:
+        return self._popupWidget
+
+    def init(self, replacements: List[str], msg: str, style: str):
+        action = QWidgetAction(self)
+
+        self._popupWidget.init(replacements, msg, style)
+        action.setDefaultWidget(self._popupWidget)
+        self.addAction(action)
 
 
 class TextEditBase(EnhancedTextEdit):
