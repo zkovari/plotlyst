@@ -18,21 +18,23 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import math
+from dataclasses import dataclass
 from enum import Enum
 from functools import partial
-from typing import Optional
+from typing import Optional, List
 
 import qtanim
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize, pyqtSignal, QModelIndex, QItemSelectionModel
 from PyQt6.QtGui import QFont, QTextCursor, QTextCharFormat, QKeyEvent, QPaintEvent, QPainter, QBrush, QLinearGradient, \
     QColor, QSyntaxHighlighter, \
-    QTextDocument, QTextBlockUserData, QIcon, QResizeEvent
+    QTextDocument, QTextBlockUserData, QIcon, QResizeEvent, QFocusEvent
 from PyQt6.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QMenu, \
     QApplication, QToolButton, QLineEdit, QWidgetAction, QListView, QSpinBox, QWidget, QLabel, QDialog
 from language_tool_python import LanguageTool
 from overrides import overrides
-from qthandy import transparent, hbox, margins, pointy, sp, line, flow, vbox, translucent, decr_icon, bold, incr_font
+from qthandy import transparent, hbox, margins, pointy, sp, line, flow, vbox, translucent, decr_icon, bold, incr_font, \
+    decr_font, clear_layout
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
@@ -50,11 +52,11 @@ from plotlyst.service.grammar import language_tool_proxy, dictionary
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import action, label, push_btn, tool_btn, insert_before, fade_out_and_gc
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.style.base import apply_color
 from plotlyst.view.style.text import apply_texteditor_toolbar_style
 from plotlyst.view.widget._toggle import AnimatedToggle
 from plotlyst.view.widget.button import DotsMenuButton
 from plotlyst.view.widget.display import PopupDialog
-from plotlyst.view.widget.lang import GrammarPopupMenu
 from plotlyst.view.widget.utility import IconSelectorDialog
 
 
@@ -303,6 +305,75 @@ class CharacterContentAssistMenu(QMenu):
         self.characterSelected.emit(char)
 
 
+class GrammarPopup(QFrame):
+    replacementRequested = pyqtSignal(str)
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self._locked = False
+        self.setProperty('rounded', True)
+        self.setProperty('relaxed-white-bg', True)
+        self.lblType = label(bold=True)
+        self.wdgReplacements = QWidget()
+        flow(self.wdgReplacements)
+        self.btnClose = RemovalButton()
+        self.lblMessage = label(description=True, wordWrap=True)
+        self.lblMessage.setMinimumWidth(200)
+        self.lblMessage.setMaximumWidth(300)
+        decr_font(self.lblMessage)
+
+        self.wdgTop = QWidget()
+        hbox(self.wdgTop)
+        self.wdgTop.layout().addWidget(self.lblType, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgTop.layout().addWidget(self.btnClose, alignment=Qt.AlignmentFlag.AlignRight)
+
+        vbox(self, 8)
+        self.layout().addWidget(self.wdgTop)
+        self.layout().addWidget(line())
+        self.layout().addWidget(self.lblMessage)
+        self.layout().addWidget(self.wdgReplacements)
+
+    def init(self, replacements: List[str], msg: str, style: str):
+        if style in ['misspelling']:
+            apply_color(self.lblType, '#d90429')
+        elif style == 'style':
+            apply_color(self.lblType, '#5a189a')
+        else:
+            apply_color(self.lblType, '#ffc300')
+        self.lblType.setText(style.capitalize())
+        self.lblMessage.setText(msg)
+
+        clear_layout(self.wdgReplacements)
+        for i, replacement in enumerate(replacements):
+            if i > 10:
+                break
+            self.wdgReplacements.layout().addWidget(self._button(replacement))
+
+    def locked(self):
+        return self._locked
+
+    def lock(self):
+        self._locked = True
+
+    def unlock(self):
+        self._locked = False
+
+    def _button(self, replacement: str) -> QPushButton:
+        btn = QPushButton(replacement, self)
+        btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn.setProperty('lang-spellcheck-suggestion', True)
+        btn.clicked.connect(lambda: self.replacementRequested.emit(replacement))
+
+        return btn
+
+
+@dataclass
+class ReplacementInfo:
+    cursor: QTextCursor
+    start: int
+    length: int
+
+
 class TextEditBase(EnhancedTextEdit):
 
     def __init__(self, parent=None):
@@ -311,6 +382,10 @@ class TextEditBase(EnhancedTextEdit):
         self.setDashInsertionMode(DashInsertionMode.INSERT_EM_DASH)
         # self.setAutoCapitalizationEnabled(True)
         self.setBlockAutoCapitalizationEnabled(True)
+
+        self._wdgGrammarPopup: Optional[GrammarPopup] = None
+        self._replacementInfo: Optional[ReplacementInfo] = None
+
 
     def statistics(self) -> TextStatistics:
         wc = 0
@@ -322,18 +397,18 @@ class TextEditBase(EnhancedTextEdit):
 
         return TextStatistics(wc)
 
-    @overrides
-    def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
-        super(TextEditBase, self).keyPressEvent(event)
-        if event.key() == Qt.Key.Key_Space and event.modifiers() & Qt.KeyboardModifier.ControlModifier:
-            menu = CharacterContentAssistMenu(self)
-            cursor = self.textCursor()
-            cursor.select(QTextCursor.SelectionType.WordUnderCursor)
-            menu.init(cursor.selectedText())
-            menu.characterSelected.connect(self._insertCharacterName)
-            menu.characterSelected.connect(menu.hide)
-            rect = self.cursorRect(self.textCursor())
-            self._popupMenu(menu, QPoint(rect.x(), rect.y()))
+    # @overrides
+    # def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
+    #     super(TextEditBase, self).keyPressEvent(event)
+    #     if event.key() == Qt.Key.Key_Space and event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+    #         menu = CharacterContentAssistMenu(self)
+    #         cursor = self.textCursor()
+    #         cursor.select(QTextCursor.SelectionType.WordUnderCursor)
+    #         menu.init(cursor.selectedText())
+    #         menu.characterSelected.connect(self._insertCharacterName)
+    #         menu.characterSelected.connect(menu.hide)
+    #         rect = self.cursorRect(self.textCursor())
+    #         self._popupMenu(menu, QPoint(rect.x(), rect.y()))
 
     @overrides
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
@@ -361,16 +436,38 @@ class TextEditBase(EnhancedTextEdit):
 
         for start, length, replacements, msg, style in self._errors(cursor):
             if start <= cursor.positionInBlock() <= start + length:
-                menu = GrammarPopupMenu(self)
-                menu.init(replacements, msg, style)
-                menu.popupWidget().replacementRequested.connect(partial(self._replaceWord, cursor, start, length))
-                self._popupMenu(menu, event.pos())
+                if self._wdgGrammarPopup is None:
+                    self._wdgGrammarPopup = GrammarPopup(QApplication.activeWindow())
+                    self._wdgGrammarPopup.replacementRequested.connect(self._replaceWord)
+                    self._wdgGrammarPopup.btnClose.clicked.connect(self._wdgGrammarPopup.hide)
 
-    def _popupMenu(self, menu: QMenu, pos: QPoint):
-        global_pos = self.mapToGlobal(pos)
-        global_pos.setY(global_pos.y() + self.viewportMargins().top())
-        global_pos.setX(global_pos.x() + self.viewportMargins().left())
-        menu.popup(global_pos)
+                self._replacementInfo = ReplacementInfo(cursor, start, length)
+                self._wdgGrammarPopup.init(replacements, msg, style)
+                self._popupWidget(self._wdgGrammarPopup, event.pos())
+
+    @overrides
+    def focusOutEvent(self, event: QFocusEvent):
+        self._hidePopup(self._wdgGrammarPopup)
+
+    def _popupWidget(self, wdg: GrammarPopup, pos: QPoint):
+        ml = self.viewportMargins().left()
+        tl = self.viewportMargins().top()
+        global_pos: QPoint = self.mapToGlobal(pos) - QPoint(-ml,
+                                                            wdg.sizeHint().height() + 40 - tl) - QApplication.activeWindow().pos()
+        wdg.setGeometry(global_pos.x(), global_pos.y(), wdg.sizeHint().width(),
+                        wdg.sizeHint().height())
+
+        wdg.lock()
+        qtanim.fade_in(wdg, teardown=wdg.unlock)
+
+    @overrides
+    def _cursorPositionChanged(self):
+        self._hidePopup(self._wdgGrammarPopup)
+        super()._cursorPositionChanged()
+
+    def _hidePopup(self, wdg: GrammarPopup):
+        if wdg and wdg.isVisible() and not wdg.locked():
+            wdg.hide()
 
     def _errors(self, cursor: QTextCursor):
         data = cursor.block().userData()
@@ -392,7 +489,11 @@ class TextEditBase(EnhancedTextEdit):
     #     painter.drawText(rect.x(), rect.y(), 'Painted text')
     #     # painter.drawLine(0, 0, self.width(), self.height())
 
-    def _replaceWord(self, cursor: QTextCursor, start: int, length: int, replacement: str):
+    def _replaceWord(self, replacement: str):
+        cursor = self._replacementInfo.cursor
+        start = self._replacementInfo.start
+        length = self._replacementInfo.length
+
         block_pos = cursor.block().position()
         cursor.setPosition(block_pos + start, QTextCursor.MoveMode.MoveAnchor)
         cursor.setPosition(block_pos + start + length, QTextCursor.MoveMode.KeepAnchor)
