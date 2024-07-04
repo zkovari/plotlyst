@@ -313,7 +313,9 @@ class GrammarPopup(QWidget):
         self.wdgReplacements = QWidget()
         flow(self.wdgReplacements)
         self.btnClose = RemovalButton()
-        self.lblMessage = label(description=True)
+        self.lblMessage = label(description=True, wordWrap=True)
+        self.lblMessage.setMinimumWidth(200)
+        self.lblMessage.setMaximumWidth(300)
         decr_font(self.lblMessage)
 
         self.wdgTop = QWidget()
