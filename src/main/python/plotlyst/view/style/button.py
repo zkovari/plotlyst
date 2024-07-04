@@ -167,11 +167,11 @@ btn_style_main_side_nav = """
 
 btn_style_lang_spellcheck_suggestion = """
     QPushButton[lang-spellcheck-suggestion=true] {
-        background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #4361ee, stop: 1 #4361ee);
-        border: 1px solid #4361ee;
+        background: #4B0763;
+        border: 1px solid #4B0763;
         border-radius: 5px;
         padding: 3px;
-        color: white;
+        color: #f8f9fa;
     }
 """
 
