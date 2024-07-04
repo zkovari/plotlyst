@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import math
+from dataclasses import dataclass
 from enum import Enum
 from functools import partial
 from typing import Optional, List
@@ -366,6 +367,13 @@ class GrammarPopup(QFrame):
         return btn
 
 
+@dataclass
+class ReplacementInfo:
+    cursor: QTextCursor
+    start: int
+    length: int
+
+
 class TextEditBase(EnhancedTextEdit):
 
     def __init__(self, parent=None):
@@ -376,6 +384,7 @@ class TextEditBase(EnhancedTextEdit):
         self.setBlockAutoCapitalizationEnabled(True)
 
         self._wdgGrammarPopup: Optional[GrammarPopup] = None
+        self._replacementInfo: Optional[ReplacementInfo] = None
 
     def statistics(self) -> TextStatistics:
         wc = 0
@@ -428,10 +437,10 @@ class TextEditBase(EnhancedTextEdit):
             if start <= cursor.positionInBlock() <= start + length:
                 if self._wdgGrammarPopup is None:
                     self._wdgGrammarPopup = GrammarPopup(QApplication.activeWindow())
-                    self._wdgGrammarPopup.replacementRequested.connect(
-                        partial(self._replaceWord, cursor, start, length))
+                    self._wdgGrammarPopup.replacementRequested.connect(self._replaceWord)
                     self._wdgGrammarPopup.btnClose.clicked.connect(self._wdgGrammarPopup.hide)
 
+                self._replacementInfo = ReplacementInfo(cursor, start, length)
                 self._wdgGrammarPopup.init(replacements, msg, style)
                 self._popupWidget(self._wdgGrammarPopup, event.pos())
 
@@ -470,7 +479,11 @@ class TextEditBase(EnhancedTextEdit):
     #     painter.drawText(rect.x(), rect.y(), 'Painted text')
     #     # painter.drawLine(0, 0, self.width(), self.height())
 
-    def _replaceWord(self, cursor: QTextCursor, start: int, length: int, replacement: str):
+    def _replaceWord(self, replacement: str):
+        cursor = self._replacementInfo.cursor
+        start = self._replacementInfo.start
+        length = self._replacementInfo.length
+
         block_pos = cursor.block().position()
         cursor.setPosition(block_pos + start, QTextCursor.MoveMode.MoveAnchor)
         cursor.setPosition(block_pos + start + length, QTextCursor.MoveMode.KeepAnchor)
