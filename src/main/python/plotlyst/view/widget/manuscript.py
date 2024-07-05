@@ -35,10 +35,11 @@ from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit, QButton
 from nltk import WhitespaceTokenizer
 from overrides import overrides
 from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins, vbox, line, bold, vline, decr_font, \
-    underline, transparent, italic, decr_icon, pointy
+    underline, transparent, italic, decr_icon, pointy, vspacer
 from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget, group
 from qttextedit import RichTextEditor, TextBlockState, remove_font, OBJECT_REPLACEMENT_CHARACTER
+from qttextedit.util import EN_DASH, EM_DASH
 from textstat import textstat
 
 from plotlyst.common import RELAXED_WHITE_COLOR, DEFAULT_MANUSCRIPT_LINE_SPACE, \
@@ -52,7 +53,8 @@ from plotlyst.resources import resource_registry
 from plotlyst.service.manuscript import export_manuscript_to_docx, daily_progress, \
     daily_overall_progress, find_daily_overall_progress
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import scroll_to_top, spin, ButtonPressResizeEventFilter, label, push_btn
+from plotlyst.view.common import scroll_to_top, spin, ButtonPressResizeEventFilter, label, push_btn, \
+    ExclusiveOptionalButtonGroup
 from plotlyst.view.generated.distraction_free_manuscript_editor_ui import \
     Ui_DistractionFreeManuscriptEditor
 from plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget
@@ -62,7 +64,7 @@ from plotlyst.view.generated.timer_setup_widget_ui import Ui_TimerSetupWidget
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.display import WordsDisplay, IconText
-from plotlyst.view.widget.input import TextEditBase, GrammarHighlighter, GrammarHighlightStyle
+from plotlyst.view.widget.input import TextEditBase, GrammarHighlighter, GrammarHighlightStyle, Toggle
 
 
 class TimerSetupWidget(QWidget, Ui_TimerSetupWidget):
@@ -163,11 +165,62 @@ class SprintWidget(QWidget, Ui_SprintWidget):
         self._effect.play()
 
 
+class ManuscriptFormattingWidget(QWidget):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self.novel = novel
+
+        vbox(self)
+        self.layout().addWidget(label('Dash', bold=True), alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgDashSettings = QWidget()
+        vbox(self.wdgDashSettings, 0)
+        margins(self.wdgDashSettings, left=10)
+        self.wdgDashSettings.layout().addWidget(
+            label("Insert an en dash or em dash automatically when typing double hyphens (--)", description=True,
+                  wordWrap=True),
+            alignment=Qt.AlignmentFlag.AlignLeft)
+        self.toggleEn = Toggle()
+        self.toggleEm = Toggle()
+        self.btnGroupDash = ExclusiveOptionalButtonGroup()
+        self.btnGroupDash.addButton(self.toggleEn)
+        self.btnGroupDash.addButton(self.toggleEm)
+        self.toggleEm.setChecked(True)
+        self.wdgDashSettings.layout().addWidget(group(label(f'En dash ({EN_DASH})'), self.toggleEn, spacing=0),
+                                                alignment=Qt.AlignmentFlag.AlignRight)
+        self.wdgDashSettings.layout().addWidget(group(label(f'Em dash ({EM_DASH})'), self.toggleEm, spacing=0),
+                                                alignment=Qt.AlignmentFlag.AlignRight)
+
+        self.layout().addWidget(self.wdgDashSettings)
+        self.layout().addWidget(label('Auto-capitalization', bold=True), alignment=Qt.AlignmentFlag.AlignLeft)
+
+        self.wdgCapitalizationSettings = QWidget()
+        vbox(self.wdgCapitalizationSettings, 0)
+        margins(self.wdgCapitalizationSettings, left=10)
+        self.wdgCapitalizationSettings.layout().addWidget(
+            label("Auto-capitalize the first letter at paragraph or sentence level", description=True,
+                  wordWrap=True), alignment=Qt.AlignmentFlag.AlignLeft)
+        self.toggleParagraphCapital = Toggle()
+        self.toggleSentenceCapital = Toggle()
+        self.btnGroupCapital = ExclusiveOptionalButtonGroup()
+        self.btnGroupCapital.addButton(self.toggleParagraphCapital)
+        self.btnGroupCapital.addButton(self.toggleSentenceCapital)
+        self.toggleParagraphCapital.setChecked(True)
+        self.wdgCapitalizationSettings.layout().addWidget(
+            group(label('Paragraph'), self.toggleParagraphCapital, spacing=0),
+            alignment=Qt.AlignmentFlag.AlignRight)
+        self.wdgCapitalizationSettings.layout().addWidget(
+            group(label('Sentence (experimental)'), self.toggleSentenceCapital, spacing=0),
+            alignment=Qt.AlignmentFlag.AlignRight)
+
+        self.layout().addWidget(self.wdgCapitalizationSettings)
+        self.layout().addWidget(vspacer())
+
+
 class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
     languageChanged = pyqtSignal(str)
 
     def __init__(self, novel: Novel, parent=None):
-        super(ManuscriptContextMenuWidget, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
         self.novel = novel
 
