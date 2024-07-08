@@ -29,6 +29,8 @@ from typing import List, Optional, Any, Dict
 from PyQt6.QtCore import Qt
 from dataclasses_json import dataclass_json, Undefined, config
 from overrides import overrides
+from qttextedit import DashInsertionMode
+from qttextedit.api import AutoCapitalizationMode
 
 from plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_choices, \
     mbti_choices, Role, exclude_if_false, antagonist_role, exclude_if_true
@@ -3213,6 +3215,8 @@ class DocsPreferences:
 @dataclass
 class ManuscriptPreferences:
     font: Dict[str, FontSettings] = field(default_factory=dict)
+    dash: DashInsertionMode = DashInsertionMode.INSERT_EM_DASH
+    capitalization: AutoCapitalizationMode = AutoCapitalizationMode.PARAGRAPH
 
 
 class NovelPanel(Enum):

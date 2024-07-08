@@ -25,6 +25,8 @@ from overrides import overrides
 from qthandy import translucent, bold, margins, spacer, vline, transparent, vspacer, decr_icon
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
+from qttextedit import DashInsertionMode
+from qttextedit.api import AutoCapitalizationMode
 from qttextedit.ops import TextEditorSettingsWidget, TextEditorSettingsSection, FontSectionSettingWidget
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR, RELAXED_WHITE_COLOR
@@ -33,7 +35,7 @@ from plotlyst.core.domain import Scene
 from plotlyst.env import app_env
 from plotlyst.event.core import emit_global_event, emit_critical, emit_info, Event, emit_event
 from plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode, \
-    ChapterChangedEvent, SceneDeletedEvent, ExitDistractionFreeMode, NovelSyncEvent, CloseNovelEvent
+    SceneDeletedEvent, ExitDistractionFreeMode, NovelSyncEvent, CloseNovelEvent
 from plotlyst.resources import ResourceType
 from plotlyst.service.grammar import language_tool_proxy
 from plotlyst.service.persistence import flush_or_fail
@@ -48,7 +50,7 @@ from plotlyst.view.widget.display import Icon, ChartView
 from plotlyst.view.widget.input import Toggle
 from plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
     DistractionFreeManuscriptEditor, SprintWidget, ReadabilityWidget, ManuscriptExportWidget, \
-    ManuscriptProgressCalendar, ManuscriptDailyProgress, ManuscriptProgressCalendarLegend
+    ManuscriptProgressCalendar, ManuscriptDailyProgress, ManuscriptProgressCalendarLegend, ManuscriptFormattingWidget
 from plotlyst.view.widget.progress import ProgressChart
 from plotlyst.view.widget.scene.editor import SceneMiniEditor
 from plotlyst.view.widget.scenes import SceneNotesEditor
@@ -169,7 +171,11 @@ class ManuscriptView(AbstractNovelView):
             action('Add chapter', IconRegistry.chapter_icon(), self.ui.treeChapters.addChapter))
 
         self._langSelectionWidget = ManuscriptContextMenuWidget(novel, self.widget)
+        self._formattingSettings = ManuscriptFormattingWidget(novel)
+        self._formattingSettings.dashChanged.connect(self._dashInsertionChanged)
+        self._formattingSettings.capitalizationChanged.connect(self._capitalizationChanged)
         self._contextMenuWidget = TextEditorSettingsWidget()
+        self._contextMenuWidget.addTab(self._formattingSettings, IconRegistry.from_name('ri.double-quotes-r'), '')
         self._contextMenuWidget.addTab(self._langSelectionWidget, IconRegistry.from_name('fa5s.spell-check'), '')
         menu = MenuWidget(self._btnContext)
         apply_white_menu(menu)
@@ -179,6 +185,8 @@ class ManuscriptView(AbstractNovelView):
             font_: QFont = self.ui.textEdit.textEdit.font()
             font_.setFamily(self.novel.prefs.manuscript.font[app_env.platform()].family)
             self.ui.textEdit.textEdit.setFont(font_)
+        self.ui.textEdit.textEdit.setDashInsertionMode(self.novel.prefs.manuscript.dash)
+        self.ui.textEdit.textEdit.setAutoCapitalizationMode(self.novel.prefs.manuscript.capitalization)
         self.ui.textEdit.attachSettingsWidget(self._contextMenuWidget)
 
         self._langSelectionWidget.languageChanged.connect(self._language_changed)
@@ -444,4 +452,14 @@ class ManuscriptView(AbstractNovelView):
             self.novel.prefs.manuscript.font[app_env.platform()] = FontSettings()
         fontSettings = self.novel.prefs.manuscript.font[app_env.platform()]
         fontSettings.family = family
+        self.repo.update_novel(self.novel)
+
+    def _dashInsertionChanged(self, mode: DashInsertionMode):
+        self.ui.textEdit.textEdit.setDashInsertionMode(mode)
+        self.novel.prefs.manuscript.dash = mode
+        self.repo.update_novel(self.novel)
+
+    def _capitalizationChanged(self, mode: AutoCapitalizationMode):
+        self.ui.textEdit.textEdit.setAutoCapitalizationMode(mode)
+        self.novel.prefs.manuscript.capitalization = mode
         self.repo.update_novel(self.novel)

@@ -38,6 +38,7 @@ from qthandy import transparent, hbox, margins, pointy, sp, line, flow, vbox, tr
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
+from qttextedit.api import AutoCapitalizationMode
 
 from plotlyst.common import IGNORE_CAPITALIZATION_PROPERTY, RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, RED_COLOR
 from plotlyst.core.domain import TextStatistics, Character, Label
@@ -380,8 +381,7 @@ class TextEditBase(EnhancedTextEdit):
         super(TextEditBase, self).__init__(parent)
         self._blockStatistics = BlockStatistics(self.document())
         self.setDashInsertionMode(DashInsertionMode.INSERT_EM_DASH)
-        # self.setAutoCapitalizationEnabled(True)
-        self.setBlockAutoCapitalizationEnabled(True)
+        self.setAutoCapitalizationMode(AutoCapitalizationMode.PARAGRAPH)
 
         self._wdgGrammarPopup: Optional[GrammarPopup] = None
         self._replacementInfo: Optional[ReplacementInfo] = None
