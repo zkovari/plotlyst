@@ -39,6 +39,7 @@ from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins, 
 from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget, group
 from qttextedit import RichTextEditor, TextBlockState, remove_font, OBJECT_REPLACEMENT_CHARACTER, DashInsertionMode
+from qttextedit.api import AutoCapitalizationMode
 from qttextedit.util import EN_DASH, EM_DASH
 from textstat import textstat
 
@@ -167,6 +168,7 @@ class SprintWidget(QWidget, Ui_SprintWidget):
 
 class ManuscriptFormattingWidget(QWidget):
     dashChanged = pyqtSignal(DashInsertionMode)
+    capitalizationChanged = pyqtSignal(AutoCapitalizationMode)
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -212,7 +214,13 @@ class ManuscriptFormattingWidget(QWidget):
         self.btnGroupCapital = ExclusiveOptionalButtonGroup()
         self.btnGroupCapital.addButton(self.toggleParagraphCapital)
         self.btnGroupCapital.addButton(self.toggleSentenceCapital)
-        self.toggleParagraphCapital.setChecked(True)
+
+        if self.novel.prefs.manuscript.capitalization == AutoCapitalizationMode.PARAGRAPH:
+            self.toggleParagraphCapital.setChecked(True)
+        elif self.novel.prefs.manuscript.capitalization == AutoCapitalizationMode.SENTENCE:
+            self.toggleSentenceCapital.setChecked(True)
+        self.btnGroupCapital.buttonToggled.connect(self._capitalizationToggled)
+
         self.wdgCapitalizationSettings.layout().addWidget(
             group(label('Paragraph'), self.toggleParagraphCapital, spacing=0),
             alignment=Qt.AlignmentFlag.AlignRight)
@@ -231,6 +239,15 @@ class ManuscriptFormattingWidget(QWidget):
             self.dashChanged.emit(DashInsertionMode.INSERT_EN_DASH)
         elif btn is self.toggleEm:
             self.dashChanged.emit(DashInsertionMode.INSERT_EM_DASH)
+
+    def _capitalizationToggled(self):
+        btn = self.btnGroupCapital.checkedButton()
+        if btn is None:
+            self.capitalizationChanged.emit(AutoCapitalizationMode.NONE)
+        elif btn is self.toggleParagraphCapital:
+            self.capitalizationChanged.emit(AutoCapitalizationMode.PARAGRAPH)
+        elif btn is self.toggleSentenceCapital:
+            self.capitalizationChanged.emit(AutoCapitalizationMode.SENTENCE)
 
 
 class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
