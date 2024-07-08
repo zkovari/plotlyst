@@ -25,6 +25,7 @@ from overrides import overrides
 from qthandy import translucent, bold, margins, spacer, vline, transparent, vspacer, decr_icon
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
+from qttextedit import DashInsertionMode
 from qttextedit.ops import TextEditorSettingsWidget, TextEditorSettingsSection, FontSectionSettingWidget
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR, RELAXED_WHITE_COLOR
@@ -170,6 +171,7 @@ class ManuscriptView(AbstractNovelView):
 
         self._langSelectionWidget = ManuscriptContextMenuWidget(novel, self.widget)
         self._formattingSettings = ManuscriptFormattingWidget(novel)
+        self._formattingSettings.dashChanged.connect(self._dashInsertionChanged)
         self._contextMenuWidget = TextEditorSettingsWidget()
         self._contextMenuWidget.addTab(self._formattingSettings, IconRegistry.from_name('ri.double-quotes-r'), '')
         self._contextMenuWidget.addTab(self._langSelectionWidget, IconRegistry.from_name('fa5s.spell-check'), '')
@@ -181,6 +183,7 @@ class ManuscriptView(AbstractNovelView):
             font_: QFont = self.ui.textEdit.textEdit.font()
             font_.setFamily(self.novel.prefs.manuscript.font[app_env.platform()].family)
             self.ui.textEdit.textEdit.setFont(font_)
+        self.ui.textEdit.textEdit.setDashInsertionMode(self.novel.prefs.manuscript.dash)
         self.ui.textEdit.attachSettingsWidget(self._contextMenuWidget)
 
         self._langSelectionWidget.languageChanged.connect(self._language_changed)
@@ -446,4 +449,9 @@ class ManuscriptView(AbstractNovelView):
             self.novel.prefs.manuscript.font[app_env.platform()] = FontSettings()
         fontSettings = self.novel.prefs.manuscript.font[app_env.platform()]
         fontSettings.family = family
+        self.repo.update_novel(self.novel)
+
+    def _dashInsertionChanged(self, mode: DashInsertionMode):
+        self.ui.textEdit.textEdit.setDashInsertionMode(mode)
+        self.novel.prefs.manuscript.dash = mode
         self.repo.update_novel(self.novel)

@@ -38,7 +38,7 @@ from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins, 
     underline, transparent, italic, decr_icon, pointy, vspacer
 from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget, group
-from qttextedit import RichTextEditor, TextBlockState, remove_font, OBJECT_REPLACEMENT_CHARACTER
+from qttextedit import RichTextEditor, TextBlockState, remove_font, OBJECT_REPLACEMENT_CHARACTER, DashInsertionMode
 from qttextedit.util import EN_DASH, EM_DASH
 from textstat import textstat
 
@@ -166,6 +166,8 @@ class SprintWidget(QWidget, Ui_SprintWidget):
 
 
 class ManuscriptFormattingWidget(QWidget):
+    dashChanged = pyqtSignal(DashInsertionMode)
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self.novel = novel
@@ -184,7 +186,13 @@ class ManuscriptFormattingWidget(QWidget):
         self.btnGroupDash = ExclusiveOptionalButtonGroup()
         self.btnGroupDash.addButton(self.toggleEn)
         self.btnGroupDash.addButton(self.toggleEm)
-        self.toggleEm.setChecked(True)
+
+        if self.novel.prefs.manuscript.dash == DashInsertionMode.INSERT_EN_DASH:
+            self.toggleEn.setChecked(True)
+        elif self.novel.prefs.manuscript.dash == DashInsertionMode.INSERT_EM_DASH:
+            self.toggleEm.setChecked(True)
+
+        self.btnGroupDash.buttonToggled.connect(self._dashToggled)
         self.wdgDashSettings.layout().addWidget(group(label(f'En dash ({EN_DASH})'), self.toggleEn, spacing=0),
                                                 alignment=Qt.AlignmentFlag.AlignRight)
         self.wdgDashSettings.layout().addWidget(group(label(f'Em dash ({EM_DASH})'), self.toggleEm, spacing=0),
@@ -214,6 +222,15 @@ class ManuscriptFormattingWidget(QWidget):
 
         self.layout().addWidget(self.wdgCapitalizationSettings)
         self.layout().addWidget(vspacer())
+
+    def _dashToggled(self):
+        btn = self.btnGroupDash.checkedButton()
+        if btn is None:
+            self.dashChanged.emit(DashInsertionMode.NONE)
+        elif btn is self.toggleEn:
+            self.dashChanged.emit(DashInsertionMode.INSERT_EN_DASH)
+        elif btn is self.toggleEm:
+            self.dashChanged.emit(DashInsertionMode.INSERT_EM_DASH)
 
 
 class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
