@@ -327,6 +327,8 @@ class ScenesOutlineView(AbstractNovelView):
             elif isinstance(event, NovelStructureToggleEvent):
                 self.ui.btnStoryStructure.setVisible(event.toggled)
                 self.ui.wdgStoryStructure.setVisible(event.toggled)
+                self.ui.btnStoryStructureSelector.setVisible(
+                    event.toggled and self.ui.btnStoryStructure.isChecked() and len(self.novel.story_structures) > 1)
             elif isinstance(event, NovelPovTrackingToggleEvent):
                 self.ui.tblScenes.setColumnHidden(self.tblModel.ColPov, not event.toggled)
             return
