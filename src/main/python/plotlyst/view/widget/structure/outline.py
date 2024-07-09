@@ -31,7 +31,7 @@ from qthandy import line, vbox, margins, hbox, spacer, sp, incr_icon, transparen
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat, motion_beat, \
     disturbance_beat, characteristic_moment_beat, normal_world_beat, general_beat, turn_beat, twist_beat
-from plotlyst.view.common import label, scrolled, push_btn
+from plotlyst.view.common import label, scrolled, push_btn, wrap
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.display import PopupDialog, Icon
@@ -103,7 +103,7 @@ class _StoryBeatSection(QWidget):
         self.btnAdd.setStyleSheet(f'border: 0px; color: {PLOTLYST_SECONDARY_COLOR};')
         self.layout().addWidget(group(self._label, spacer(), self.btnAdd, margin=0))
         desc = label(beat.description, description=True, wordWrap=True)
-        self.layout().addWidget(desc)
+        self.layout().addWidget(wrap(desc, margin_left=20))
 
         self.setMinimumWidth(450)
 
