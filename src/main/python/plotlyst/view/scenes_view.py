@@ -64,8 +64,9 @@ from plotlyst.view.widget.input import RotatedButtonOrientation
 from plotlyst.view.widget.novel import StoryStructureSelectorMenu
 from plotlyst.view.widget.progress import SceneStageProgressCharts
 from plotlyst.view.widget.scene.story_map import StoryMap, StoryMapDisplayMode
-from plotlyst.view.widget.scenes import SceneFilterWidget, SceneStoryStructureWidget, \
+from plotlyst.view.widget.scenes import SceneFilterWidget, \
     ScenesPreferencesWidget, ScenesDistributionWidget
+from plotlyst.view.widget.structure.timeline import StoryStructureTimelineWidget
 from plotlyst.view.widget.tree import TreeSettings
 
 
@@ -345,7 +346,7 @@ class ScenesOutlineView(AbstractNovelView):
 
         if self.ui.wdgStoryStructure.novel is not None:
             clear_layout(self.ui.wdgStoryStructureParent)
-            self.ui.wdgStoryStructure = SceneStoryStructureWidget(self.ui.wdgStoryStructureParent)
+            self.ui.wdgStoryStructure = StoryStructureTimelineWidget(self.ui.wdgStoryStructureParent)
             self.ui.wdgStoryStructure.setBeatCursor(Qt.CursorShape.ArrowCursor)
             self.ui.wdgStoryStructureParent.layout().addWidget(self.ui.wdgStoryStructure)
         self.ui.wdgStoryStructure.setStructure(self.novel)

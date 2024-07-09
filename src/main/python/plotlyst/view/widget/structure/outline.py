@@ -36,15 +36,15 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.display import PopupDialog, Icon
 from plotlyst.view.widget.outline import OutlineTimelineWidget, OutlineItemWidget
-from plotlyst.view.widget.scenes import SceneStoryStructureWidget
 from plotlyst.view.widget.structure.beat import BeatsPreview
+from plotlyst.view.widget.structure.timeline import StoryStructureTimelineWidget
 
 
 class StoryStructureBeatWidget(OutlineItemWidget):
     def __init__(self, beat: StoryBeat, parent=None):
         self.beat = beat
         super().__init__(beat, parent)
-        self._structurePreview: Optional[SceneStoryStructureWidget] = None
+        self._structurePreview: Optional[StoryStructureTimelineWidget] = None
         self._text.setText(self.beat.notes)
         self._text.setMaximumSize(220, 110)
         self._btnIcon.removeEventFilter(self._dragEventFilter)
@@ -54,7 +54,7 @@ class StoryStructureBeatWidget(OutlineItemWidget):
                         desc=self.beat.placeholder if self.beat.placeholder else self.beat.description,
                         tooltip=self.beat.description)
 
-    def attachStructurePreview(self, structurePreview: SceneStoryStructureWidget):
+    def attachStructurePreview(self, structurePreview: 'StoryStructureTimelineWidget'):
         self._structurePreview = structurePreview
 
     @overrides
@@ -183,10 +183,10 @@ class StoryBeatSelectorPopup(PopupDialog):
 class StoryStructureOutline(OutlineTimelineWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._structurePreview: Optional[SceneStoryStructureWidget] = None
+        self._structurePreview: Optional[StoryStructureTimelineWidget] = None
         self._beatsPreview: Optional[BeatsPreview] = None
 
-    def attachStructurePreview(self, structurePreview: SceneStoryStructureWidget):
+    def attachStructurePreview(self, structurePreview: 'StoryStructureTimelineWidget'):
         self._structurePreview = structurePreview
         for wdg in self._beatWidgets:
             wdg.attachStructurePreview(self._structurePreview)

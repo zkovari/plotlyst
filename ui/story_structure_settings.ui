@@ -230,7 +230,7 @@
           <number>5</number>
          </property>
          <item>
-          <widget class="SceneStoryStructureWidget" name="wdgPreview" native="true"/>
+          <widget class="StoryStructureTimelineWidget" name="wdgPreview" native="true"/>
          </item>
         </layout>
        </item>
@@ -416,9 +416,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>SceneStoryStructureWidget</class>
+   <class>StoryStructureTimelineWidget</class>
    <extends>QWidget</extends>
-   <header>plotlyst.view.widget.scenes</header>
+   <header>plotlyst.view.widget.structure.timeline</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

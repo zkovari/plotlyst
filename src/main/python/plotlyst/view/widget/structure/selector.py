@@ -34,15 +34,15 @@ from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     save_the_cat, three_act_structure, heros_journey, hook_beat, motion_beat, \
     disturbance_beat, normal_world_beat, characteristic_moment_beat, midpoint, midpoint_ponr, midpoint_mirror, \
     midpoint_proactive, crisis, first_plot_point, first_plot_point_ponr, first_plot_points, midpoints
-from plotlyst.view.common import ExclusiveOptionalButtonGroup
+from plotlyst.view.common import ExclusiveOptionalButtonGroup, label
 from plotlyst.view.generated.story_structure_selector_dialog_ui import Ui_StoryStructureSelectorDialog
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.display import IconText
 from plotlyst.view.widget.input import Toggle
-from plotlyst.view.widget.scenes import SceneStoryStructureWidget
 from plotlyst.view.widget.structure.beat import BeatsPreview
+from plotlyst.view.widget.structure.outline import StoryStructureTimelineWidget
 
 
 class _AbstractStructureEditorWidget(QWidget):
@@ -58,7 +58,7 @@ class _AbstractStructureEditorWidget(QWidget):
         incr_font(self.wdgTitle, 2)
         self.wdgCustom = QWidget()
 
-        self.wdgPreview = SceneStoryStructureWidget(self)
+        self.wdgPreview = StoryStructureTimelineWidget(self)
         self.wdgPreview.setCheckOccupiedBeats(False)
         self.wdgPreview.setBeatCursor(Qt.CursorShape.ArrowCursor)
         self.wdgPreview.setBeatsMoveable(True)
@@ -348,9 +348,12 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
         menu.options.optionSelected.connect(self._endingChanged)
         menu.options.optionsReset.connect(self._endingReset)
 
+        self.toggle4act = Toggle()
+
         wdg = group(spacer(), self.btnBeginning, self.btnFirstPlotPoint, self.btnMidpoint,
                     self.btnEnding, spacer(), spacing=15)
         wdg.layout().insertWidget(1, self.lblCustomization, alignment=Qt.AlignmentFlag.AlignTop)
+        wdg.layout().addWidget(group(label('Split 2nd act into 2 parts'), self.toggle4act, spacing=0, margin=0))
         self.wdgCustom.layout().addWidget(wdg)
 
     def _beginningChanged(self, beginning: _ThreeActBeginning):

@@ -44,7 +44,8 @@ from plotlyst.view.common import DelayedSignalSlotConnector, action, restyle, Bu
 from plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
 from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.style.base import apply_white_menu
-from plotlyst.view.widget.scenes import SceneStoryStructureWidget, SceneSelector
+from plotlyst.view.widget.scenes import SceneSelector
+from plotlyst.view.widget.structure.timeline import StoryStructureTimelineWidget
 
 
 class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
@@ -199,12 +200,12 @@ class BeatsPreview(QFrame):
         self._toggleBeats = toggleBeats
         self._layout: QGridLayout = grid(self)
         self._beats: Dict[StoryBeat, BeatWidget] = {}
-        self._structurePreview: Optional[SceneStoryStructureWidget] = None
+        self._structurePreview: Optional[StoryStructureTimelineWidget] = None
         self._structure: Optional[StoryStructure] = None
 
         self.setProperty('relaxed-white-bg', True)
 
-    def attachStructurePreview(self, structurePreview: SceneStoryStructureWidget):
+    def attachStructurePreview(self, structurePreview: StoryStructureTimelineWidget):
         self._structurePreview = structurePreview
 
     def setStructure(self, structure: StoryStructure):
