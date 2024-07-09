@@ -79,6 +79,7 @@ class OutlineItemWidget(QWidget):
         self._text.setMinimumSize(170, 100)
         self._text.setMaximumSize(210, 100)
         self._text.setTabChangesFocus(True)
+        self._text.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._text.setText(self.item.text)
         self._text.textChanged.connect(self._textChanged)
 
