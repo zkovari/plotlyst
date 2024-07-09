@@ -161,16 +161,6 @@
               </property>
              </widget>
             </item>
-            <item>
-             <widget class="QToolButton" name="btnSceneType">
-              <property name="text">
-               <string/>
-              </property>
-              <property name="transparent" stdset="0">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
             <item alignment="Qt::AlignLeft">
              <widget class="QLabel" name="lblSceneTitle">
               <property name="sizePolicy">
@@ -236,7 +226,7 @@
         <property name="bottomMargin">
          <number>0</number>
         </property>
-        <item>
+        <item alignment="Qt::AlignTop">
          <widget class="Toggle" name="cbToggle">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Maximum">

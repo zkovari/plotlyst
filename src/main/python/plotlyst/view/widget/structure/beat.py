@@ -126,8 +126,6 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
             self.textSynopsis.setText(self.scene.synopsis)
             if self.scene.pov:
                 self.btnPov.setIcon(avatars.avatar(self.scene.pov))
-            if self.scene.purpose:
-                self.btnSceneType.setIcon(IconRegistry.scene_type_icon(self.scene))
         else:
             self.lblTitle.setDisabled(True)
             self.btnIcon.setDisabled(True)
