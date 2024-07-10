@@ -107,7 +107,7 @@ def act_color(act: int, translucent: bool = False) -> str:
     elif act == 3:
         return TRANS_ACT_THREE_COLOR if translucent else ACT_THREE_COLOR
     else:
-        return '#DBF5FA'
+        return PLOTLYST_SECONDARY_COLOR
 
 
 def recursive(parent, children_func, action, action_first: bool = True):
