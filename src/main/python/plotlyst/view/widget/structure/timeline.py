@@ -81,11 +81,9 @@ class _ActButton(QPushButton):
                     border-top-right-radius: {8 if right else 0}px;
                     border-bottom-right-radius: {8 if right else 0}px;
                     color:white;
-                    padding: 0px;
+                    padding: 2px;
                 }}
                 ''')
-
-        self.setChecked(True)
 
 
 def is_midpoint(beat: StoryBeat) -> bool:
@@ -125,7 +123,7 @@ class StoryStructureTimelineWidget(QWidget):
         transparent(self.btnCurrentScene)
         self._wdgLine = QWidget(self)
         hbox(self._wdgLine, 0, 0)
-        self._lineHeight: int = 22
+        self._lineHeight: int = 25
         self._beatHeight: int = 20
         self._margin: int = 5
         self._containerTopMargin: int = 6
