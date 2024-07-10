@@ -30,6 +30,7 @@ from overrides import overrides
 from qthandy import translucent, gc, flow, ask_confirmation, hbox, clear_layout, vbox, sp, margins, vspacer, \
     incr_font, bold, busy
 from qthandy.filter import OpacityEventFilter
+from qtmenu import MenuWidget
 
 from plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
@@ -40,9 +41,10 @@ from plotlyst.events import NovelStoryStructureUpdated, CharacterChangedEvent, C
     NovelSyncEvent, NovelStoryStructureActivationRequest
 from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon, label, frame, shadow
+from plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon, label, frame, shadow, action
 from plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
 from plotlyst.view.icons import IconRegistry, avatars
+from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.display import IconText
 from plotlyst.view.widget.input import AutoAdjustableTextEdit
@@ -225,7 +227,13 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
 
         self.btnNew.setIcon(IconRegistry.plus_icon('white'))
         self.btnNew.installEventFilter(ButtonPressResizeEventFilter(self.btnNew))
-        self.btnNew.clicked.connect(self._selectTemplateStructure)
+        menu = MenuWidget(self.btnNew)
+        apply_white_menu(menu)
+        menu.addAction(action('Select a structure template (recommended)',
+                              icon=IconRegistry.template_icon(color=PLOTLYST_SECONDARY_COLOR),
+                              slot=self._selectTemplateStructure))
+        menu.addSeparator()
+        menu.addAction(action('Start a new empty structure...', slot=self._addNewEmptyStructure))
 
         self.btnDelete.setIcon(IconRegistry.trash_can_icon())
         self.btnDelete.installEventFilter(ButtonPressResizeEventFilter(self.btnDelete))
@@ -328,6 +336,10 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         btn.clicked.connect(partial(self._activeStructureClicked, structure))
 
         self._toggleDeleteButton()
+
+    def _addNewEmptyStructure(self):
+        structure = StoryStructure('Story structure', icon='mdi6.bridge', custom=True)
+        self._addNewStructure(structure)
 
     def _addNewStructure(self, structure: StoryStructure):
         self.novel.story_structures.append(structure)

@@ -528,8 +528,8 @@ class IconRegistry:
         return IconRegistry.from_name('fa5s.icons', color)
 
     @staticmethod
-    def template_icon() -> QIcon:
-        return IconRegistry.from_name('ei.magic', color='#35a7ff')
+    def template_icon(**kwargs) -> QIcon:
+        return IconRegistry.from_name('ei.magic', **kwargs)
 
     @staticmethod
     def circle_icon(**kwargs) -> QIcon:
