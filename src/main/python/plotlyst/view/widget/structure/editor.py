@@ -418,7 +418,6 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
 
     def __initWdgPreview(self):
         self.wdgPreview.setCheckOccupiedBeats(False)
-        self.wdgPreview.setBeatCursor(Qt.CursorShape.ArrowCursor)
         self.wdgPreview.setBeatsMoveable(True)
         self.wdgPreview.setActsClickable(False)
         self.wdgPreview.setActsResizeable(True)

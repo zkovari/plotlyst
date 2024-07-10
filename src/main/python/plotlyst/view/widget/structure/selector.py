@@ -60,7 +60,6 @@ class _AbstractStructureEditorWidget(QWidget):
 
         self.wdgPreview = StoryStructureTimelineWidget(self)
         self.wdgPreview.setCheckOccupiedBeats(False)
-        self.wdgPreview.setBeatCursor(Qt.CursorShape.ArrowCursor)
         self.wdgPreview.setBeatsMoveable(True)
         self.wdgPreview.setActsClickable(False)
         self.wdgPreview.setActsResizeable(True)
@@ -300,7 +299,7 @@ class StructureOptionsMenu(MenuWidget):
 
 class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
-        super(_ThreeActStructureEditorWidget, self).__init__(novel, structure, parent)
+        super().__init__(novel, structure, parent)
 
         hbox(self.wdgCustom)
         margins(self.wdgCustom, top=20)

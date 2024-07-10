@@ -72,9 +72,10 @@ class StoryStructureTimelineWidget(QWidget):
         self._removalContextMenuEnabled: bool = False
         self._actsClickable: bool = False
         self._actsResizeable: bool = False
-        self._beatCursor = Qt.CursorShape.PointingHandCursor
+
         self.novel: Optional[Novel] = None
         self.structure: Optional[StoryStructure] = None
+
         self._acts: List[QPushButton] = []
         self._beats: Dict[StoryBeat, QToolButton] = {}
         self._containers: Dict[StoryBeat, QPushButton] = {}
@@ -106,15 +107,6 @@ class StoryStructureTimelineWidget(QWidget):
     def setBeatsMoveable(self, enabled: bool):
         self._beatsMoveable = enabled
         self.setAcceptDrops(enabled)
-
-    def setRemovalContextMenuEnabled(self, value: bool):
-        self._removalContextMenuEnabled = value
-
-    def beatCursor(self) -> int:
-        return self._beatCursor
-
-    def setBeatCursor(self, value: int):
-        self._beatCursor = value
 
     def setStructure(self, novel: Novel, structure: Optional[StoryStructure] = None):
         self.novel = novel
@@ -183,8 +175,6 @@ class StoryStructureTimelineWidget(QWidget):
                 btn.installEventFilter(
                     DragEventFilter(btn, self.BeatMimeType, btn.dataFunc, hideTarget=True))
                 btn.setCursor(Qt.CursorShape.OpenHandCursor)
-            else:
-                btn.setCursor(self._beatCursor)
             if self._checkOccupiedBeats and beat not in occupied_beats:
                 if self._beatsCheckable:
                     btn.setCheckable(True)
@@ -392,7 +382,6 @@ class StoryStructureTimelineWidget(QWidget):
         act.setText(text)
         act.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         act.setFixedHeight(self._lineHeight)
-        act.setCursor(Qt.CursorShape.PointingHandCursor)
         act.setCheckable(True)
         act.setStyleSheet(f'''
         QPushButton {{
