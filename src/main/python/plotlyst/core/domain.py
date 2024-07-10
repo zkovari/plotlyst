@@ -2269,6 +2269,10 @@ class StoryStructure(CharacterBased):
     def act_beats(self) -> List[StoryBeat]:
         return [x for x in self.beats if x.ends_act]
 
+    def acts(self) -> int:
+        act_beats = len(self.act_beats())
+        return act_beats + 1 if act_beats else 0
+
 
 general_beat = StoryBeat(text='Beat',
                          id=uuid.UUID('3dc905df-1a9b-4e04-90f5-199ea908f2d5'),

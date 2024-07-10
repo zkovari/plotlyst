@@ -30,10 +30,9 @@ from overrides import overrides
 from qthandy import hbox, transparent, italic, translucent, gc, pointy
 from qthandy.filter import InstantTooltipEventFilter, DragEventFilter
 
-from plotlyst.common import PLOTLYST_SECONDARY_COLOR, ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR, act_color
 from plotlyst.core.domain import StoryBeat, StoryBeatType, Novel, \
     StoryStructure, Scene
-from plotlyst.event.core import emit_critical
 from plotlyst.service.cache import acts_registry
 from plotlyst.view.common import PopupMenuBuilder
 from plotlyst.view.icons import IconRegistry
@@ -48,6 +47,30 @@ class _BeatButton(QToolButton):
 
     def dataFunc(self, _):
         return self.beat
+
+
+class _ActButton(QPushButton):
+    def __init__(self, act: int, parent=None, left: bool = False, right: bool = False):
+        super().__init__(parent)
+        self.act = act
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setText(f'Act {self.act}')
+        color = act_color(self.act)
+        self.setStyleSheet(f'''
+                QPushButton {{
+                    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                              stop: 0 {color}, stop: 1 {color});
+                    border: 1px solid #8f8f91;
+                    border-top-left-radius: {8 if left else 0}px;
+                    border-bottom-left-radius: {8 if left else 0}px;
+                    border-top-right-radius: {8 if right else 0}px;
+                    border-bottom-right-radius: {8 if right else 0}px;
+                    color:white;
+                    padding: 0px;
+                }}
+                ''')
+
+        self.setChecked(True)
 
 
 def is_midpoint(beat: StoryBeat) -> bool:
@@ -138,27 +161,35 @@ class StoryStructureTimelineWidget(QWidget):
         self._actsSplitter.setHandleWidth(1)
         self._wdgLine.layout().addWidget(self._actsSplitter)
 
-        act = self._actButton('Act 1', ACT_ONE_COLOR, left=True)
-        self._acts.append(act)
-        self._wdgLine.layout().addWidget(act)
-        self._actsSplitter.addWidget(act)
-        act = self._actButton('Act 2', ACT_TWO_COLOR)
-        self._acts.append(act)
-        self._actsSplitter.addWidget(act)
+        act_beats = self.structure.act_beats()
+        acts = len(act_beats) + 1 if act_beats else 0
+        if acts:
+            for act in range(1, acts + 1):
+                left = False
+                right = False
+                if act == 1:
+                    left = True
+                elif act == acts:
+                    right = True
 
-        act = self._actButton('Act 3', ACT_THREE_COLOR, right=True)
-        self._acts.append(act)
-        self._actsSplitter.addWidget(act)
-        for btn in self._acts:
-            btn.setEnabled(self._actsClickable)
+                actBtn = self._actButton(act, left=left, right=right)
+                self._acts.append(actBtn)
+                self._wdgLine.layout().addWidget(actBtn)
+                self._actsSplitter.addWidget(actBtn)
+        else:
+            pass
 
-        beats = self.structure.act_beats()
-        if not len(beats) == 2:
-            return emit_critical('Only 3 acts are supported at the moment for story structure widget')
+        splitter_sizes = []
+        for i in range(len(act_beats) + 1):
+            if i == 0:
+                size = int(10 * act_beats[i].percentage)
+            elif i > 0 and i == len(act_beats):
+                size = int(10 * (100 - act_beats[-1].percentage))
+            else:
+                size = int(10 * (act_beats[i].percentage - act_beats[i - 1].percentage))
+            splitter_sizes.append(size)
 
-        self._actsSplitter.setSizes([int(10 * beats[0].percentage),
-                                     int(10 * (beats[1].percentage - beats[0].percentage)),
-                                     int(10 * (100 - beats[1].percentage))])
+        self._actsSplitter.setSizes(splitter_sizes)
         self._actsSplitter.setEnabled(self._actsResizeable)
         self._actsSplitter.splitterMoved.connect(self._actResized)
         self.update()
@@ -218,11 +249,11 @@ class StoryStructureTimelineWidget(QWidget):
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
         self._rearrangeBeats()
-        if self._actsResizeable and self._acts:
+        if self._actsResizeable and len(self._acts) > 2:
             self._acts[0].setMinimumWidth(max(self._xForPercentage(15), 1))
             self._acts[0].setMaximumWidth(self._xForPercentage(30))
-            self._acts[2].setMinimumWidth(max(self._xForPercentage(10), 1))
-            self._acts[2].setMaximumWidth(self._xForPercentage(30))
+            self._acts[-1].setMinimumWidth(max(self._xForPercentage(10), 1))
+            self._acts[-1].setMaximumWidth(self._xForPercentage(30))
 
     def _rearrangeBeats(self):
         for beat, btn in self._beats.items():
@@ -377,32 +408,15 @@ class StoryStructureTimelineWidget(QWidget):
         else:
             qtanim.fade_out(btn)
 
-    def _actButton(self, text: str, color: str, left: bool = False, right: bool = False) -> QPushButton:
-        act = QPushButton(self)
-        act.setText(text)
-        act.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        act.setFixedHeight(self._lineHeight)
-        act.setCheckable(True)
-        act.setStyleSheet(f'''
-        QPushButton {{
-            background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                      stop: 0 {color}, stop: 1 {color});
-            border: 1px solid #8f8f91;
-            border-top-left-radius: {8 if left else 0}px;
-            border-bottom-left-radius: {8 if left else 0}px;
-            border-top-right-radius: {8 if right else 0}px;
-            border-bottom-right-radius: {8 if right else 0}px;
-            color:white;
-            padding: 0px;
-        }}
-        ''')
+    def _actButton(self, act: int, left: bool = False, right: bool = False) -> QPushButton:
+        actBtn = _ActButton(act, self, left, right)
+        actBtn.setFixedHeight(self._lineHeight)
+        actBtn.setEnabled(self._actsClickable)
+        actBtn.toggled.connect(partial(self._actToggled, actBtn))
 
-        act.setChecked(True)
-        act.toggled.connect(partial(self._actToggled, act))
+        return actBtn
 
-        return act
-
-    def _actToggled(self, btn: QToolButton, toggled: bool):
+    def _actToggled(self, btn: _ActButton, toggled: bool):
         translucent(btn, 1.0 if toggled else 0.2)
 
     def _beatToggled(self, btn: QToolButton, toggled: bool):
