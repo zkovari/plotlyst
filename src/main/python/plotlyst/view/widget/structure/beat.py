@@ -24,10 +24,10 @@ from typing import Optional, Dict
 import qtanim
 from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt6.QtGui import QColor, QCursor
-from PyQt6.QtWidgets import QFrame, QGridLayout, QPushButton
+from PyQt6.QtWidgets import QFrame, QPushButton
 from overrides import overrides
-from qthandy import vspacer, translucent, transparent, gc, bold, clear_layout, retain_when_hidden, grid, decr_icon, \
-    italic, pointy, incr_icon, incr_font
+from qthandy import translucent, transparent, gc, bold, clear_layout, retain_when_hidden, decr_icon, \
+    italic, pointy, incr_icon, incr_font, flow
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
@@ -63,9 +63,8 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
 
         bold(self.lblTitle)
         bold(self.lblSceneTitle)
-        italic(self.lblDescription)
+        italic(self.textDescription)
         transparent(self.lblTitle)
-        transparent(self.lblDescription)
         transparent(self.btnIcon)
 
         self.btnSceneSelector = SceneSelector(app_env.novel)
@@ -101,7 +100,7 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
 
     def updateInfo(self):
         self.lblTitle.setText(self.beat.text)
-        self.lblDescription.setText(self.beat.description)
+        self.textDescription.setText(self.beat.description)
         if self.beat.icon:
             self.btnIcon.setIcon(IconRegistry.from_name(self.beat.icon, self.beat.icon_color))
 
@@ -167,10 +166,10 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         return True
 
     def _beatToggled(self, toggled: bool):
-        translucent(self.lblDescription, 1 if toggled else 0.5)
+        translucent(self.textDescription, 1 if toggled else 0.5)
         self.lblTitle.setEnabled(toggled)
         self.btnIcon.setEnabled(toggled)
-        self.lblDescription.setEnabled(toggled)
+        self.textDescription.setEnabled(toggled)
         bold(self.lblTitle, toggled)
 
     def _beatClicked(self, checked: bool):
@@ -198,7 +197,7 @@ class BeatsPreview(QFrame):
         self._novel = novel
         self._checkOccupiedBeats = checkOccupiedBeats
         self._toggleBeats = toggleBeats
-        self._layout: QGridLayout = grid(self)
+        self._layout = flow(self)
         self._beats: Dict[StoryBeat, BeatWidget] = {}
         self._structurePreview: Optional[StoryStructureTimelineWidget] = None
         self._structure: Optional[StoryStructure] = None
@@ -213,23 +212,15 @@ class BeatsPreview(QFrame):
         self.refresh()
 
     def refresh(self):
-        clear_layout(self._layout)
         self._beats.clear()
-        row = 0
-        col = 0
+        clear_layout(self._layout)
         for beat in self._structure.beats:
             if beat.type != StoryBeatType.BEAT:
                 continue
             if not self._toggleBeats and not beat.enabled:
                 continue
             wdg = self.__initBeatWidget(beat)
-            self._beats[beat] = wdg
-            if beat.act - 1 > col:  # new act
-                self._layout.addWidget(vspacer(), row + 1, col)
-                col = beat.act - 1
-                row = 0
-            self._layout.addWidget(wdg, row, col)
-            row += 1
+            self._layout.addWidget(wdg)
 
     def refreshBeat(self, beat: StoryBeat):
         wdg = self._beats[beat]
@@ -243,8 +234,8 @@ class BeatsPreview(QFrame):
                 break
         oldWdg = self._beats.pop(oldBeat)
         newWdg = self.__initBeatWidget(newBeat)
-        self._beats[newBeat] = newWdg
-        self._layout.replaceWidget(oldWdg, newWdg)
+        i = self._layout.indexOf(oldWdg)
+        self._layout.insertWidget(i, newWdg)
         gc(oldWdg)
         self._structurePreview.replaceBeat(oldBeat, newBeat)
 
@@ -253,7 +244,6 @@ class BeatsPreview(QFrame):
         wdg = self._beats.pop(beat)
         self._layout.removeWidget(wdg)
         gc(wdg)
-        self.refresh()
         self._structurePreview.removeBeat(beat)
 
     def insertBeat(self, newBeat: StoryBeat):
@@ -263,12 +253,15 @@ class BeatsPreview(QFrame):
                 insert_to = i
                 break
         self._structure.beats.insert(insert_to, newBeat)
-        self.refresh()
+        newWdg = self.__initBeatWidget(newBeat)
+        self._layout.insertWidget(insert_to, newWdg)
         self._structurePreview.insertBeat(newBeat)
 
     def __initBeatWidget(self, beat: StoryBeat) -> BeatWidget:
         wdg = BeatWidget(self._novel, beat, self._checkOccupiedBeats, toggleEnabled=self._toggleBeats)
-        wdg.setMinimumSize(200, 50)
+        self._beats[beat] = wdg
+        wdg.setMinimumWidth(200)
+        wdg.setMaximumWidth(300)
         wdg.beatHighlighted.connect(self._structurePreview.highlightBeat)
         wdg.beatToggled.connect(partial(self._structurePreview.toggleBeatVisibility, beat))
 
