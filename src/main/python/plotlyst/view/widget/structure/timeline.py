@@ -49,6 +49,18 @@ class _BeatButton(QToolButton):
         return self.beat
 
 
+class _ContainerButton(QPushButton):
+    def __init__(self, beat: StoryBeat, parent=None):
+        super().__init__(parent)
+        if beat.percentage_end - beat.percentage > 7:
+            self.setText(beat.text)
+        self.setStyleSheet(f'''
+                            QPushButton {{border-top:2px dashed {beat.icon_color}; color: {beat.icon_color};}}
+                        ''')
+        italic(self)
+        translucent(self)
+
+
 class _ActButton(QPushButton):
     def __init__(self, act: int, parent=None, left: bool = False, right: bool = False):
         super().__init__(parent)
@@ -140,15 +152,8 @@ class StoryStructureTimelineWidget(QWidget):
         occupied_beats = acts_registry.occupied_beats()
         for beat in self.structure.beats:
             if beat.type == StoryBeatType.CONTAINER:
-                btn = QPushButton(self)
-                if beat.percentage_end - beat.percentage > 7:
-                    btn.setText(beat.text)
+                btn = _ContainerButton(beat, self)
                 self._containers[beat] = btn
-                btn.setStyleSheet(f'''
-                    QPushButton {{border-top:2px dashed {beat.icon_color}; color: {beat.icon_color};}}
-                ''')
-                italic(btn)
-                translucent(btn)
             else:
                 btn = _BeatButton(beat, self)
                 self._beats[beat] = btn
