@@ -398,7 +398,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
 
     @busy
     def _refreshStructure(self, structure: StoryStructure):
-        self.wdgStructureOutline.setStructure(structure.beats)
+        self.wdgStructureOutline.setStructure(structure)
         self._structureNotes.setStructure(structure)
 
         if self.wdgPreview.novel is not None:

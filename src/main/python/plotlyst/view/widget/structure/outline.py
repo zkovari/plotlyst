@@ -196,7 +196,7 @@ class StoryStructureOutline(OutlineTimelineWidget):
         self._beatsPreview = beats
 
     @overrides
-    def setStructure(self, items: List[StoryBeat]):
+    def setStructure(self, structure: StoryStructure):
         self.clear()
         self._structure = structure
         self._items = structure.beats
