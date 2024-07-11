@@ -30,7 +30,7 @@ from qthandy import line, vbox, margins, hbox, spacer, sp, incr_icon, transparen
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat, motion_beat, \
-    disturbance_beat, characteristic_moment_beat, normal_world_beat, general_beat, turn_beat, twist_beat
+    disturbance_beat, characteristic_moment_beat, normal_world_beat, general_beat, turn_beat, twist_beat, StoryStructure
 from plotlyst.view.common import label, scrolled, push_btn, wrap
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -185,6 +185,7 @@ class StoryStructureOutline(OutlineTimelineWidget):
         super().__init__(parent)
         self._structurePreview: Optional[StoryStructureTimelineWidget] = None
         self._beatsPreview: Optional[BeatsPreview] = None
+        self._structure: Optional[StoryStructure] = None
 
     def attachStructurePreview(self, structurePreview: 'StoryStructureTimelineWidget'):
         self._structurePreview = structurePreview
@@ -197,12 +198,13 @@ class StoryStructureOutline(OutlineTimelineWidget):
     @overrides
     def setStructure(self, items: List[StoryBeat]):
         self.clear()
-        self._structure = items
+        self._structure = structure
+        self._items = structure.beats
 
-        for item in sorted(items, key=lambda x: x.percentage):
+        for item in sorted(self._items, key=lambda x: x.percentage):
             if item.type == StoryBeatType.BEAT and item.enabled:
                 self._addBeatWidget(item)
-        if not items:
+        if not self._items:
             self.layout().addWidget(self._newPlaceholderWidget(displayText=True))
 
         self.update()

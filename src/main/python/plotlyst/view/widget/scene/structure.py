@@ -548,7 +548,7 @@ class SceneStructureTimeline(OutlineTimelineWidget):
         item = SceneStructureItem(type=beatType)
         if beatType == SceneStructureItemType.CLIMAX:
             item.outcome = SceneOutcome.DISASTER
-        self._structure.append(item)
+        self._items.append(item)
         self._addBeatWidget(item)
 
     def _insertBeat(self, beatType: SceneStructureItemType):

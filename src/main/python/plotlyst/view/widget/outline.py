@@ -234,7 +234,7 @@ class OutlineTimelineWidget(QFrame):
         elif layout == LayoutType.VERTICAL:
             vbox(self, 10, 10)
 
-        self._structure: List[OutlineItem] = []
+        self._items: List[OutlineItem] = []
         self._beatWidgets: List[OutlineItemWidget] = []
 
         self._dragPlaceholder: Optional[OutlineItemWidget] = None
@@ -257,7 +257,7 @@ class OutlineTimelineWidget(QFrame):
     def setStructure(self, items: List[OutlineItem]):
         self.clear()
 
-        self._structure = items
+        self._items = items
 
         for item in items:
             self._addBeatWidget(item)
@@ -342,14 +342,14 @@ class OutlineTimelineWidget(QFrame):
 
         beat_index = i // 2
         self._beatWidgets.insert(beat_index, widget)
-        self._structure.insert(beat_index, item)
+        self._items.insert(beat_index, item)
         self.layout().insertWidget(i, widget)
         self.layout().insertWidget(i + 1, self._newPlaceholderWidget())
         self.layout().insertWidget(i, self._newPlaceholderWidget())
         fade_in(widget, teardown=teardown)
 
     def _beatRemoved(self, wdg: OutlineItemWidget, teardownFunction=None):
-        self._structure.remove(wdg.item)
+        self._items.remove(wdg.item)
         self._beatWidgetRemoved(wdg, teardownFunction)
 
     def _beatWidgetRemoved(self, wdg: OutlineItemWidget, teardownFunction=None):
@@ -432,7 +432,7 @@ class OutlineTimelineWidget(QFrame):
             i += 1
 
         self._beatWidgets[:] = beats
-        self._structure[:] = [x.item for x in self._beatWidgets]
+        self._items[:] = [x.item for x in self._beatWidgets]
         self._wasDropped = True
 
     def _dragFinished(self):
