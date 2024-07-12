@@ -22,12 +22,11 @@ from functools import partial
 from typing import Optional, Dict
 
 import qtanim
-from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal
+from PyQt6.QtCore import QEvent, QObject, pyqtSignal
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QFrame
 from overrides import overrides
-from qthandy import translucent, transparent, gc, bold, clear_layout, retain_when_hidden, decr_icon, \
-    italic, flow
+from qthandy import translucent, transparent, gc, bold, clear_layout, retain_when_hidden, italic, flow
 
 from plotlyst.common import act_color, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
@@ -41,7 +40,6 @@ from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import DelayedSignalSlotConnector
 from plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
 from plotlyst.view.icons import IconRegistry, avatars
-from plotlyst.view.widget.scenes import SceneSelector
 from plotlyst.view.widget.structure.timeline import StoryStructureTimelineWidget
 
 
@@ -64,12 +62,12 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         transparent(self.lblTitle)
         transparent(self.btnIcon)
 
-        self.btnSceneSelector = SceneSelector(app_env.novel)
-        decr_icon(self.btnSceneSelector, 2)
-        retain_when_hidden(self.btnSceneSelector)
-        self.layoutRight.insertWidget(0, self.btnSceneSelector,
-                                      alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
-        self.btnSceneSelector.setHidden(True)
+        # self.btnSceneSelector = SceneSelector(app_env.novel)
+        # decr_icon(self.btnSceneSelector, 2)
+        # retain_when_hidden(self.btnSceneSelector)
+        # self.layoutRight.insertWidget(0, self.btnSceneSelector,
+        #                               alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+        # self.btnSceneSelector.setHidden(True)
         # self.btnSceneSelector.sceneSelected.connect(self._sceneLinked)
         transparent(self.wdgToggleParent)
 
@@ -144,7 +142,7 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
             self.beatHighlighted.emit(self.beat)
         elif event.type() == QEvent.Type.Leave:
             self.cbToggle.setHidden(True)
-            self.btnSceneSelector.setHidden(True)
+            # self.btnSceneSelector.setHidden(True)
             self.setStyleSheet(f'.BeatWidget {{background-color: {RELAXED_WHITE_COLOR};}}')
 
         return super().eventFilter(watched, event)

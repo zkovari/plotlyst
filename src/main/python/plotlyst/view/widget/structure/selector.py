@@ -18,18 +18,22 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Optional
+from typing import Optional, Dict
 
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QCursor
-from PyQt6.QtWidgets import QPushButton
-from qthandy import translucent, pointy, incr_icon, incr_font
+from PyQt6.QtWidgets import QPushButton, QWidget, QToolButton
+from overrides import overrides
+from qthandy import translucent, pointy, incr_icon, incr_font, clear_layout, hbox
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
-from plotlyst.common import RELAXED_WHITE_COLOR, RED_COLOR, truncate_string
+from plotlyst.common import RELAXED_WHITE_COLOR, RED_COLOR, truncate_string, act_color
 from plotlyst.core.domain import Novel, StoryBeat, \
     Scene, StoryBeatType
+from plotlyst.event.core import EventListener, Event
+from plotlyst.event.handler import event_dispatchers
+from plotlyst.events import NovelStoryStructureUpdated
 from plotlyst.service.cache import acts_registry
 from plotlyst.view.common import action, restyle, ButtonPressResizeEventFilter
 from plotlyst.view.icons import IconRegistry
@@ -165,3 +169,59 @@ class StructureBeatSelectorButton(QPushButton):
             self._contextMenu.exec(QCursor.pos())
         else:
             self._selectorMenu.exec(QCursor.pos())
+
+
+class ActToolButton(QToolButton):
+    def __init__(self, act: int, parent=None):
+        super().__init__(parent)
+        self.act = act
+        self.setProperty('base', True)
+        pointy(self)
+        self.setIcon(IconRegistry.from_name(f'mdi.numeric-{act}-circle', color='grey', color_on=act_color(act)))
+        self.setCheckable(True)
+
+
+class ActSelectorButtons(QWidget, EventListener):
+    actToggled = pyqtSignal(int, bool)
+    actClicked = pyqtSignal(int, bool)
+
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel: Novel = novel
+        self._buttons: Dict[int, ActToolButton] = {}
+        hbox(self)
+        event_dispatchers.instance(self._novel).register(self, NovelStoryStructureUpdated)
+        self.refresh()
+
+    @overrides
+    def event_received(self, event: Event):
+        self.refresh()
+
+    def setActChecked(self, act: int, checked: bool):
+        if act in self._buttons.keys():
+            self._buttons[act].setChecked(checked)
+
+    def refresh(self):
+        clear_layout(self)
+        self._buttons.clear()
+        if self._novel is None:
+            return
+
+        acts: int = self._novel.active_story_structure.acts()
+        if not acts:
+            return
+
+        for act in range(1, acts + 1):
+            btn = ActToolButton(act)
+            self._buttons[act] = btn
+            btn.setChecked(True)
+            btn.toggled.connect(partial(self.actToggled.emit, act))
+            btn.clicked.connect(partial(self.actClicked.emit, act))
+            self.layout().addWidget(btn)
+
+    def actFilters(self) -> Dict[int, bool]:
+        filters = {}
+        for act, btn in self._buttons.items():
+            filters[act] = btn.isChecked()
+
+        return filters

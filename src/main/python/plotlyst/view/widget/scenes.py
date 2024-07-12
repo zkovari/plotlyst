@@ -62,6 +62,7 @@ from plotlyst.view.widget.button import SecondaryActionPushButton, \
 from plotlyst.view.widget.characters import CharacterSelectorButtons
 from plotlyst.view.widget.input import DocumentTextEditor
 from plotlyst.view.widget.labels import SelectionItemLabel, SceneLabel
+from plotlyst.view.widget.structure.selector import ActSelectorButtons
 
 
 class SceneOutcomeSelector(QWidget):
@@ -285,18 +286,8 @@ class SceneFilterWidget(QWidget):
         self.povFilter.setExclusive(False)
         self.povFilter.setCharacters(self.novel.pov_characters())
 
-        self.btnAct1 = tool_btn(IconRegistry.act_one_icon(), base=True, checkable=True)
-        self.btnAct2 = tool_btn(IconRegistry.act_two_icon(), base=True, checkable=True)
-        self.btnAct3 = tool_btn(IconRegistry.act_three_icon(), base=True, checkable=True)
-        self.btnAct1.setChecked(True)
-        self.btnAct2.setChecked(True)
-        self.btnAct3.setChecked(True)
-        self.wdgActs = QWidget()
-        hbox(self.wdgActs)
+        self.wdgActs = ActSelectorButtons(self.novel)
         margins(self.wdgActs, left=15)
-        self.wdgActs.layout().addWidget(self.btnAct1)
-        self.wdgActs.layout().addWidget(self.btnAct2)
-        self.wdgActs.layout().addWidget(self.btnAct3)
 
         grid(self)
         self.layout().addWidget(label('Point of view:'), 0, 0, alignment=Qt.AlignmentFlag.AlignLeft)

@@ -317,7 +317,7 @@ class SceneCardFilter(CardFilter):
 
     @overrides
     def filter(self, card: SceneCard) -> bool:
-        if not self._actsFilter[acts_registry.act(card.scene)]:
+        if not self._actsFilter.get(acts_registry.act(card.scene), True):
             return False
 
         if card.scene.pov and card.scene.pov not in self._povs:
