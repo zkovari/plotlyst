@@ -41,7 +41,8 @@ from plotlyst.events import NovelStoryStructureUpdated, CharacterChangedEvent, C
     NovelSyncEvent, NovelStoryStructureActivationRequest
 from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon, label, frame, shadow, action
+from plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon, label, frame, shadow, action, \
+    set_tab_visible
 from plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
 from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.style.base import apply_white_menu
@@ -258,6 +259,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         set_tab_icon(self.tabWidget, self.tabOverview,
                      IconRegistry.from_name('mdi6.grid', color_on=PLOTLYST_SECONDARY_COLOR))
         set_tab_icon(self.tabWidget, self.tabNotes, IconRegistry.document_edition_icon())
+        set_tab_visible(self.tabWidget, self.tabNotes, False)
 
         self._characterMenu: Optional[CharacterSelectorMenu] = None
 
