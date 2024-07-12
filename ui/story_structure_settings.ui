@@ -182,13 +182,6 @@
          </widget>
         </item>
         <item>
-         <widget class="Line" name="line_3">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QToolButton" name="btnDelete">
           <property name="cursor">
            <cursorShape>PointingHandCursor</cursorShape>
@@ -275,7 +268,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>524</width>
+                <width>516</width>
                 <height>255</height>
                </rect>
               </property>
@@ -340,8 +333,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>524</width>
-                <height>255</height>
+                <width>100</width>
+                <height>30</height>
                </rect>
               </property>
               <property name="sizePolicy">
@@ -394,8 +387,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>524</width>
-                <height>235</height>
+                <width>100</width>
+                <height>30</height>
                </rect>
               </property>
               <property name="relaxed-white-bg" stdset="0">

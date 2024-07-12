@@ -243,6 +243,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.btnCopy.installEventFilter(ButtonPressResizeEventFilter(self.btnCopy))
         self.btnCopy.installEventFilter(OpacityEventFilter(self.btnCopy, leaveOpacity=0.8))
         self.btnCopy.clicked.connect(self._duplicateStructure)
+        self.btnCopy.setHidden(True)
         self.btnEdit.setIcon(IconRegistry.edit_icon())
         self.btnEdit.installEventFilter(ButtonPressResizeEventFilter(self.btnEdit))
         self.btnEdit.installEventFilter(OpacityEventFilter(self.btnEdit, leaveOpacity=0.8))
