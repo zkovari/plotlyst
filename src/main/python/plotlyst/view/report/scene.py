@@ -44,7 +44,7 @@ class PovDistributionChart(BaseChart):
         self._novel: Optional[Novel] = None
 
         self.pov_number: Dict[Character, int] = {}
-        self._acts_filter = {1: True, 2: True, 3: True}
+        self._acts_filter: Dict[int, bool] = {}
 
     def toggleAct(self, act: int, toggled: bool):
         self._acts_filter[act] = toggled
@@ -56,7 +56,7 @@ class PovDistributionChart(BaseChart):
             self.pov_number[k] = 0
 
         for scene in novel.scenes:
-            if not self._acts_filter[acts_registry.act(scene)]:
+            if not self._acts_filter.get(acts_registry.act(scene), True):
                 continue
             if scene.pov and scene.pov not in self.pov_number.keys():
                 self.pov_number[scene.pov] = 0

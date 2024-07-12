@@ -96,7 +96,7 @@ class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
         self.refresh()
 
         dispatcher = event_dispatchers.instance(self.novel)
-        dispatcher.register(self, SceneChangedEvent, SceneDeletedEvent, NovelSyncEvent)
+        dispatcher.register(self, SceneChangedEvent, SceneDeletedEvent, NovelSyncEvent, NovelStoryStructureUpdated)
 
     @overrides
     def event_received(self, event: Event):

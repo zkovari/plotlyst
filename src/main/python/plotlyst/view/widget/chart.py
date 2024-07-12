@@ -27,7 +27,8 @@ from PyQt6.QtWidgets import QToolTip, QApplication
 from overrides import overrides
 
 from plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, CHARACTER_MAJOR_COLOR, \
-    CHARACTER_SECONDARY_COLOR, CHARACTER_MINOR_COLOR, RELAXED_WHITE_COLOR
+    CHARACTER_SECONDARY_COLOR, CHARACTER_MINOR_COLOR, RELAXED_WHITE_COLOR, PLOTLYST_TERTIARY_COLOR, \
+    PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Character, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS, Novel
 from plotlyst.core.template import enneagram_choices, supporter_role, guide_role, sidekick_role, \
     antagonist_role, contagonist_role, adversary_role, henchmen_role, confidant_role, tertiary_role, SelectionItem, \
@@ -359,7 +360,6 @@ class ActDistributionChart(BaseChart):
 
     def __init__(self, parent=None):
         super(ActDistributionChart, self).__init__(parent)
-        self.setTitle('<b>Act distribution</b>')
         self.legend().setVisible(True)
         self.legend().setAlignment(Qt.AlignmentFlag.AlignBottom)
 
@@ -388,6 +388,47 @@ class ActDistributionChart(BaseChart):
             slice_.setColor(QColor(color))
 
         self.addSeries(series)
+
+    def _visualizeActs(self, novel: Novel, series: QPieSeries):
+        self.setTitle('<b>Act distribution</b>')
+
+        acts: Dict[int, int] = {}
+        for scene in novel.scenes:
+            act = acts_registry.act(scene)
+            if act not in acts.keys():
+                acts[act] = 0
+            acts[act] = acts[act] + 1
+        for k, v in acts.items():
+            slice_ = series.append(f'Act {k}', v)
+
+            if k == 1:
+                color = ACT_ONE_COLOR
+            elif k == 2:
+                color = ACT_TWO_COLOR
+            else:
+                color = ACT_THREE_COLOR
+            slice_.setColor(QColor(color))
+
+    def _visualizeHalves(self, novel: Novel, series: QPieSeries):
+        self.setTitle('<b>Scenes distribution</b>')
+        first_half: int = 0
+        second_half: int = 0
+        in_second_half = False
+        for scene in novel.scenes:
+            if in_second_half:
+                second_half += 1
+            else:
+                beat = scene.beat(novel)
+                if beat and beat.percentage > 50:
+                    in_second_half = True
+                    second_half += 1
+                else:
+                    first_half += 1
+
+        slice_ = series.append('First half', first_half)
+        slice_.setColor(QColor(PLOTLYST_TERTIARY_COLOR))
+        slice_ = series.append('Second half', second_half)
+        slice_.setColor(QColor(PLOTLYST_SECONDARY_COLOR))
 
 
 class SelectionItemPieSlice(QPieSlice):
