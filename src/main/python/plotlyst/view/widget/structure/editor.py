@@ -333,6 +333,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.wdgTemplates.layout().addWidget(btn)
         if structure.active:
             btn.setChecked(True)
+            self.btnEdit.setHidden(structure.custom)
             self._refreshStructure(structure)
         btn.toggled.connect(partial(self._activeStructureToggled, structure))
         btn.clicked.connect(partial(self._activeStructureClicked, structure))
@@ -425,6 +426,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         for struct in self.novel.story_structures:
             struct.active = False
         structure.active = True
+        self.btnEdit.setHidden(structure.custom)
         acts_registry.refresh()
         QTimer.singleShot(20, lambda: self._refreshStructure(structure))
 
