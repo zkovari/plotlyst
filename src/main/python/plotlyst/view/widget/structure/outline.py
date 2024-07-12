@@ -243,6 +243,9 @@ class StoryStructureOutline(OutlineTimelineWidget):
                 self._structurePreview.insertBeat(beat)
                 QTimer.singleShot(150, self._beatsPreview.refresh)
 
+        if self._structure.custom:
+            beat.act = 0
+
         wdg = self._newBeatWidget(beat)
         i = self.layout().indexOf(self._currentPlaceholder)
         if i > 0:

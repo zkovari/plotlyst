@@ -68,6 +68,7 @@ PLOTLYST_MAIN_COLOR: str = '#3C0764'  # Persian indigo, #4B0763: Indigo, #37065D
 PLOTLYST_MAIN_COMPLEMENTARY_COLOR: str = '#2C5D06'  # Dark moss green
 PLOTLYST_SECONDARY_COLOR: str = '#4B0763'  # indigo
 PLOTLYST_TERTIARY_COLOR: str = '#D4B8E0'  # Thistle
+TRANS_PLOTLYST_SECONDARY_COLOR = 'rgba(75, 7, 99, 45)'
 
 RELAXED_WHITE_COLOR: str = '#f8f9fa'
 WHITE_COLOR: str = '#FcFcFc'
@@ -107,7 +108,7 @@ def act_color(act: int, translucent: bool = False) -> str:
     elif act == 3:
         return TRANS_ACT_THREE_COLOR if translucent else ACT_THREE_COLOR
     else:
-        return PLOTLYST_SECONDARY_COLOR
+        return TRANS_PLOTLYST_SECONDARY_COLOR if translucent else PLOTLYST_SECONDARY_COLOR
 
 
 def recursive(parent, children_func, action, action_first: bool = True):
