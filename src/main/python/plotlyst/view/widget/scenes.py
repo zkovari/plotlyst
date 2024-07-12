@@ -288,11 +288,12 @@ class SceneFilterWidget(QWidget):
 
         self.wdgActs = ActSelectorButtons(self.novel)
         margins(self.wdgActs, left=15)
+        self.lblActs = label('Acts:')
 
         grid(self)
         self.layout().addWidget(label('Point of view:'), 0, 0, alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(self.povFilter, 0, 1)
-        self.layout().addWidget(label('Acts:', ), 1, 0, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self.lblActs, 1, 0, alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(self.wdgActs, 1, 1, alignment=Qt.AlignmentFlag.AlignLeft)
 
 

@@ -251,6 +251,7 @@ class ScenesOutlineView(AbstractNovelView):
         self._scene_filter = SceneFilterWidget(self.novel)
         filterMenu = MenuWidget(self.ui.btnFilter)
         filterMenu.addWidget(self._scene_filter)
+        self._toggle_act_filters()
         self._scene_filter.povFilter.characterToggled.connect(self._proxy.setCharacterFilter)
         self._scene_filter.povFilter.characterToggled.connect(self._filter_cards)
 
@@ -310,9 +311,7 @@ class ScenesOutlineView(AbstractNovelView):
         elif isinstance(event, NovelStoryStructureUpdated):
             if self.ui.btnStoryStructure.isChecked():
                 self.ui.btnStoryStructureSelector.setVisible(len(self.novel.story_structures) > 1)
-            acts = self.novel.active_story_structure.acts()
-            self._actFilter.setVisible(acts > 0)
-            self.ui.lineBeforeActFilter.setVisible(acts > 0)
+            self._toggle_act_filters()
         elif isinstance(event, NovelPanelCustomizationEvent):
             if isinstance(event, NovelStorylinesToggleEvent):
                 self.ui.btnStorymap.setVisible(event.toggled)
@@ -785,3 +784,9 @@ class ScenesOutlineView(AbstractNovelView):
                     self.ui.tblScenes.showColumn(col)
                 continue
             self.ui.tblScenes.hideColumn(col)
+
+    def _toggle_act_filters(self):
+        acts = self.novel.active_story_structure.acts()
+        self._actFilter.setVisible(acts > 0)
+        self._scene_filter.lblActs.setVisible(acts > 0)
+        self.ui.lineBeforeActFilter.setVisible(acts > 0)
