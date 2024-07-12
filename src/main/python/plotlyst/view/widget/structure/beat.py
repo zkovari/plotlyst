@@ -281,8 +281,12 @@ class StructureBeatSelectorMenu(MenuWidget):
     def _fillUp(self):
         self.clear()
 
+        self.addSection('Associate this scene to a story structure beat')
+        self.addSeparator()
+
         act = 1
-        self.addSection(f'Act {act}', IconRegistry.act_icon(act))
+        if self.novel.active_story_structure.acts():
+            self.addSection(f'Act {act}', IconRegistry.act_icon(act))
         self.addSeparator()
         for beat in self.novel.active_story_structure.beats:
             if beat.type == StoryBeatType.BEAT and beat.enabled:
@@ -300,6 +304,8 @@ class StructureBeatSelectorMenu(MenuWidget):
                 act += 1
                 self.addSection(f'Act {act}', IconRegistry.act_icon(act))
                 self.addSeparator()
+
+        self._frame.updateGeometry()
 
 
 class StructureBeatSelectorButton(QPushButton):
