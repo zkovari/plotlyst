@@ -27,14 +27,14 @@ from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal, QTimer
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QButtonGroup
 from overrides import overrides
-from qthandy import translucent, gc, flow, ask_confirmation, hbox, clear_layout, vbox, sp, margins, vspacer, \
+from qthandy import translucent, gc, flow, hbox, clear_layout, vbox, sp, margins, vspacer, \
     incr_font, bold, busy
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
-    Character
+    Character, StoryBeatType
 from plotlyst.event.core import EventListener, Event, emit_event
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import NovelStoryStructureUpdated, CharacterChangedEvent, CharacterDeletedEvent, \
@@ -46,6 +46,7 @@ from plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructur
 from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.characters import CharacterSelectorMenu
+from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.display import IconText
 from plotlyst.view.widget.input import AutoAdjustableTextEdit
 from plotlyst.view.widget.structure.beat import BeatsPreview
@@ -353,7 +354,12 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
             return
 
         structure = self.novel.active_story_structure
-        if not ask_confirmation(f'Remove structure "{structure.title}"?'):
+        number_of_beats = len([x for x in structure.beats if x.enabled and x.type == StoryBeatType.BEAT])
+        occupied = len(acts_registry.occupied_beats())
+        msg = '<html><ul><li>This operation cannot be undone.<li>All scene associations to this structure will be unlinked.'
+        if occupied:
+            msg += f'<li>Linked structure beats to scenes: <b>{occupied}/{number_of_beats}</b>'
+        if not confirmed(msg, f'Remove story structure "{structure.title}"?'):
             return
 
         to_be_removed_button: Optional[QPushButton] = None
