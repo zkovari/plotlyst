@@ -52,7 +52,7 @@ from plotlyst.view.widget.display import IconText
 from plotlyst.view.widget.input import AutoAdjustableTextEdit
 from plotlyst.view.widget.structure.beat import BeatsPreview
 from plotlyst.view.widget.structure.outline import StoryStructureOutline, StoryStructureTimelineWidget
-from plotlyst.view.widget.structure.selector import StoryStructureSelectorDialog
+from plotlyst.view.widget.structure.template import StoryStructureSelectorDialog
 
 
 class _StoryStructureButton(QPushButton):
