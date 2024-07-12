@@ -32,7 +32,7 @@ from plotlyst.core.domain import Novel
 from plotlyst.event.core import EventListener, Event
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent, \
-    CharacterDeletedEvent, NovelSyncEvent, StorylineCreatedEvent, StorylineRemovedEvent
+    CharacterDeletedEvent, NovelSyncEvent, StorylineCreatedEvent, StorylineRemovedEvent, NovelStoryStructureUpdated
 from plotlyst.view._view import AbstractNovelView
 from plotlyst.view.common import link_buttons_to_pages, scrolled
 from plotlyst.view.generated.reports_view_ui import Ui_ReportsView
@@ -111,7 +111,7 @@ class ScenesReportPage(ReportPage):
     def __init__(self, novel: Novel, parent=None):
         super(ScenesReportPage, self).__init__(novel, parent)
         self._dispatcher.register(self, SceneChangedEvent, SceneDeletedEvent, CharacterChangedEvent,
-                                  CharacterDeletedEvent)
+                                  CharacterDeletedEvent, NovelStoryStructureUpdated)
 
     @overrides
     def _initReport(self):
