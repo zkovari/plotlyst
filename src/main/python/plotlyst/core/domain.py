@@ -2270,10 +2270,6 @@ class StoryStructure(CharacterBased):
     def act_beats(self) -> List[StoryBeat]:
         return [x for x in self.beats if x.ends_act]
 
-    # def acts(self) -> int:
-    #     act_beats = len(self.act_beats())
-    #     return act_beats + 1 if act_beats else 0
-
     def sorted_beats(self) -> List[StoryBeat]:
         return sorted(self.beats, key=lambda x: x.percentage)
 
