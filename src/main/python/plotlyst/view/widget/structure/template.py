@@ -448,7 +448,7 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
         self._structure: Optional[StoryStructure] = None
         if structure:
             self.setWindowTitle('Story structure editor')
-            self.buttonBox.setStandardButtons(QDialogButtonBox.StandardButton.Ok)
+            self.btnCancel.setHidden(True)
             self.wdgTypesContainer.setHidden(True)
             page, clazz = self._pageAndClass(structure)
             self.__initEditor(structure, page, clazz, copyStructure=False)
