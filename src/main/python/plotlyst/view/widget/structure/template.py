@@ -45,9 +45,9 @@ from plotlyst.view.widget.structure.beat import BeatsPreview
 from plotlyst.view.widget.structure.outline import StoryStructureTimelineWidget
 
 
-class _AbstractStructureEditorWidget(QWidget):
+class _AbstractStructureEditor(QWidget):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
-        super(_AbstractStructureEditorWidget, self).__init__(parent)
+        super(_AbstractStructureEditor, self).__init__(parent)
         self._structure = structure
         vbox(self)
         self.wdgTitle = IconText(self)
@@ -297,7 +297,7 @@ class StructureOptionsMenu(MenuWidget):
         self.addWidget(self.options)
 
 
-class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
+class _ThreeActStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
         super().__init__(novel, structure, parent)
 
@@ -424,14 +424,14 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
         self.beatsPreview.removeBeat(crisis)
 
 
-class _SaveTheCatActStructureEditorWidget(_AbstractStructureEditorWidget):
+class _SaveTheCatActStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
-        super(_SaveTheCatActStructureEditorWidget, self).__init__(novel, structure, parent)
+        super(_SaveTheCatActStructureEditor, self).__init__(novel, structure, parent)
 
 
-class _HerosJourneyStructureEditorWidget(_AbstractStructureEditorWidget):
+class _HerosJourneyStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
-        super(_HerosJourneyStructureEditorWidget, self).__init__(novel, structure, parent)
+        super(_HerosJourneyStructureEditor, self).__init__(novel, structure, parent)
 
 
 class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
@@ -476,11 +476,11 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
 
     def _structureChanged(self):
         if self.btnThreeAct.isChecked():
-            self.__initEditor(three_act_structure, self.pageThreeAct, _ThreeActStructureEditorWidget)
+            self.__initEditor(three_act_structure, self.pageThreeAct, _ThreeActStructureEditor)
         elif self.btnSaveTheCat.isChecked():
-            self.__initEditor(save_the_cat, self.pageSaveTheCat, _SaveTheCatActStructureEditorWidget)
+            self.__initEditor(save_the_cat, self.pageSaveTheCat, _SaveTheCatActStructureEditor)
         elif self.btnHerosJourney.isChecked():
-            self.__initEditor(heros_journey, self.pageHerosJourney, _HerosJourneyStructureEditorWidget)
+            self.__initEditor(heros_journey, self.pageHerosJourney, _HerosJourneyStructureEditor)
 
     def __initEditor(self, structure: StoryStructure, page: QWidget, clazz, copyStructure: bool = True):
         self.stackedWidget.setCurrentWidget(page)
@@ -495,8 +495,8 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
 
     def _pageAndClass(self, structure: StoryStructure):
         if structure.title == three_act_structure.title:
-            return self.pageThreeAct, _ThreeActStructureEditorWidget
+            return self.pageThreeAct, _ThreeActStructureEditor
         elif structure.title == save_the_cat.title:
-            return self.pageSaveTheCat, _SaveTheCatActStructureEditorWidget
+            return self.pageSaveTheCat, _SaveTheCatActStructureEditor
         elif structure.title == heros_journey.title:
-            return self.pageHerosJourney, _HerosJourneyStructureEditorWidget
+            return self.pageHerosJourney, _HerosJourneyStructureEditor
