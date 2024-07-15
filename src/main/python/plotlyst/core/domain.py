@@ -2261,7 +2261,8 @@ class StoryStructure(CharacterBased):
     custom: bool = False
     active: bool = False
     character_id: Optional[uuid.UUID] = None
-    acts_text: Dict[int, str] = field(default_factory=dict)
+    acts_text: Dict[int, str] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
+    acts_icon: Dict[int, str] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
     acts: int = 3
 
     def __post_init__(self):

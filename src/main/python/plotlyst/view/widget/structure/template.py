@@ -419,8 +419,15 @@ class _ThreeActStructureEditor(_AbstractStructureEditor):
             current_midpoint.ends_act = split
             if current_midpoint.ends_act:
                 self._structure.acts += 1
+                self._structure.acts_text[2] = 'Act 2/A'
+                self._structure.acts_text[3] = 'Act 2/B'
+                self._structure.acts_text[4] = 'Act 3'
+                self._structure.acts_icon[3] = 'mdi.numeric-2-circle'
+                self._structure.acts_icon[4] = 'mdi.numeric-3-circle'
             else:
                 self._structure.acts -= 1
+                self._structure.acts_text.clear()
+                self._structure.acts_icon.clear()
             self._structure.update_acts()
             self.wdgPreview.refreshActs()
 

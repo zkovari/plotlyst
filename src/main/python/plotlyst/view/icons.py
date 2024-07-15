@@ -24,12 +24,12 @@ from PyQt6.QtCore import QSize
 from PyQt6.QtGui import QIcon, QPixmap
 from PyQt6.QtWidgets import QLabel
 
-from plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, CONFLICT_CHARACTER_COLOR, \
+from plotlyst.common import CONFLICT_CHARACTER_COLOR, \
     CONFLICT_SOCIETY_COLOR, CONFLICT_NATURE_COLOR, CONFLICT_TECHNOLOGY_COLOR, CONFLICT_SUPERNATURAL_COLOR, \
     CONFLICT_SELF_COLOR, CHARACTER_MAJOR_COLOR, CHARACTER_MINOR_COLOR, CHARACTER_SECONDARY_COLOR, \
-    PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR, NEUTRAL_EMOTION_COLOR, EMOTION_COLORS, RED_COLOR
+    PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR, NEUTRAL_EMOTION_COLOR, EMOTION_COLORS, RED_COLOR, act_color
 from plotlyst.core.domain import Character, ConflictType, \
-    Scene, PlotType, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS, ScenePurposeType
+    Scene, PlotType, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS, ScenePurposeType, StoryStructure
 from plotlyst.core.template import SelectionItem
 from plotlyst.settings import CHARACTER_INITIAL_AVATAR_COLOR_CODES
 from plotlyst.view.common import rounded_pixmap
@@ -287,25 +287,10 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.file-document-outline', color=color, color_on=color_on)
 
     @staticmethod
-    def act_icon(act: int) -> QIcon:
-        if act == 1:
-            return IconRegistry.act_one_icon()
-        elif act == 2:
-            return IconRegistry.act_two_icon()
-        elif act == 3:
-            return IconRegistry.act_three_icon()
-
-    @staticmethod
-    def act_one_icon(color=ACT_ONE_COLOR, color_on=ACT_ONE_COLOR) -> QIcon:
-        return IconRegistry.from_name('mdi.numeric-1-circle', color=color, color_on=color_on)
-
-    @staticmethod
-    def act_two_icon(color=ACT_TWO_COLOR, color_on=ACT_TWO_COLOR) -> QIcon:
-        return IconRegistry.from_name('mdi.numeric-2-circle', color=color, color_on=color_on)
-
-    @staticmethod
-    def act_three_icon(color=ACT_THREE_COLOR, color_on=ACT_THREE_COLOR) -> QIcon:
-        return IconRegistry.from_name('mdi.numeric-3-circle', color=color, color_on=color_on)
+    def act_icon(act: int, structure: StoryStructure) -> QIcon:
+        icon = structure.acts_icon.get(act, f'mdi.numeric-{act}-circle')
+        color = act_color(act, structure.acts)
+        return IconRegistry.from_name(icon, color)
 
     @staticmethod
     def table_icon() -> QIcon:

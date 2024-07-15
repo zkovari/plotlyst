@@ -62,15 +62,16 @@ class _ContainerButton(QPushButton):
 
 
 class _ActButton(QPushButton):
-    def __init__(self, act: int, allActs: int, parent=None, left: bool = False, right: bool = False):
+    def __init__(self, structure: StoryStructure, act: int, parent=None, left: bool = False, right: bool = False):
         super().__init__(parent)
+        self.structure = structure
         self.act = act
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         if act == 0:
             self.setText('Structure')
         else:
-            self.setText(f'Act {self.act}')
-        color = act_color(self.act, allActs)
+            self.setText(self.structure.acts_text.get(self.act, f'Act {self.act}'))
+        color = act_color(self.act, self.structure.acts)
         self.setStyleSheet(f'''
                 QPushButton {{
                     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
@@ -420,7 +421,7 @@ class StoryStructureTimelineWidget(QWidget):
             qtanim.fade_out(btn)
 
     def _actButton(self, act: int, left: bool = False, right: bool = False) -> QPushButton:
-        actBtn = _ActButton(act, self.structure.acts, self, left, right)
+        actBtn = _ActButton(self.structure, act, self, left, right)
         actBtn.setFixedHeight(self._lineHeight)
         actBtn.setEnabled(self._actsClickable)
         actBtn.toggled.connect(partial(self._actToggled, actBtn))

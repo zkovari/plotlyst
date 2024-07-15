@@ -30,7 +30,7 @@ from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from plotlyst.common import RELAXED_WHITE_COLOR, RED_COLOR, truncate_string, act_color
 from plotlyst.core.domain import Novel, StoryBeat, \
-    Scene, StoryBeatType
+    Scene, StoryBeatType, StoryStructure
 from plotlyst.event.core import EventListener, Event
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import NovelStoryStructureUpdated
@@ -57,8 +57,9 @@ class StructureBeatSelectorMenu(MenuWidget):
         self.addSeparator()
 
         act = 1
-        if self.novel.active_story_structure.acts:
-            self.addSection(f'Act {act}', IconRegistry.act_icon(act))
+        structure = self.novel.active_story_structure
+        if structure.acts:
+            self._addSection(act, structure)
         self.addSeparator()
         for beat in self.novel.active_story_structure.beats:
             if beat.type == StoryBeatType.BEAT and beat.enabled:
@@ -74,10 +75,13 @@ class StructureBeatSelectorMenu(MenuWidget):
                 self.addAction(beat_action)
             if beat.ends_act:
                 act += 1
-                self.addSection(f'Act {act}', IconRegistry.act_icon(act))
+                self._addSection(act, structure)
                 self.addSeparator()
 
         self._frame.updateGeometry()
+
+    def _addSection(self, act: int, structure: StoryStructure):
+        self.addSection(structure.acts_text.get(act, f'Act {act}'), IconRegistry.act_icon(act, structure))
 
 
 class StructureBeatSelectorButton(QPushButton):
@@ -172,12 +176,13 @@ class StructureBeatSelectorButton(QPushButton):
 
 
 class ActToolButton(QToolButton):
-    def __init__(self, act: int, allActs: int, parent=None):
+    def __init__(self, act: int, structure: StoryStructure, parent=None):
         super().__init__(parent)
         self.act = act
         self.setProperty('base', True)
         pointy(self)
-        self.setIcon(IconRegistry.from_name(f'mdi.numeric-{act}-circle', color='grey', color_on=act_color(act, allActs)))
+        icon_name = structure.acts_icon.get(act, f'mdi.numeric-{act}-circle')
+        self.setIcon(IconRegistry.from_name(icon_name, color='grey', color_on=act_color(act, structure.acts)))
         self.setCheckable(True)
 
 
@@ -207,12 +212,13 @@ class ActSelectorButtons(QWidget, EventListener):
         if self._novel is None:
             return
 
-        acts: int = self._novel.active_story_structure.acts
+        structure = self._novel.active_story_structure
+        acts: int = structure.acts
         if not acts:
             return
 
         for act in range(1, acts + 1):
-            btn = ActToolButton(act, acts)
+            btn = ActToolButton(act, structure)
             self._buttons[act] = btn
             btn.setChecked(True)
             btn.toggled.connect(partial(self.actToggled.emit, act))
