@@ -369,23 +369,11 @@ class ActDistributionChart(BaseChart):
         series = QPieSeries()
         series.setHoleSize(0.45)
 
-        acts: Dict[int, int] = {}
-        for scene in novel.scenes:
-            act = acts_registry.act(scene)
-            if act not in acts.keys():
-                acts[act] = 0
-            acts[act] = acts[act] + 1
-
-        for k, v in acts.items():
-            slice_ = series.append(f'Act {k}', v)
-
-            if k == 1:
-                color = ACT_ONE_COLOR
-            elif k == 2:
-                color = ACT_TWO_COLOR
-            else:
-                color = ACT_THREE_COLOR
-            slice_.setColor(QColor(color))
+        act_number = novel.active_story_structure.acts()
+        if act_number > 0:
+            self._visualizeActs(novel, series)
+        else:
+            self._visualizeHalves(novel, series)
 
         self.addSeries(series)
 
