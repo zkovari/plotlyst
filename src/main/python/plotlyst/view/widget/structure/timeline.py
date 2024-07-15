@@ -27,7 +27,7 @@ from PyQt6.QtCore import Qt, QEvent, pyqtSignal, QObject, QSize
 from PyQt6.QtGui import QColor, QDragEnterEvent, QDropEvent, QResizeEvent, QCursor
 from PyQt6.QtWidgets import QWidget, QToolButton, QSizePolicy, QPushButton, QSplitter, QAbstractButton
 from overrides import overrides
-from qthandy import hbox, transparent, italic, translucent, gc, pointy
+from qthandy import hbox, transparent, italic, translucent, gc, pointy, clear_layout
 from qthandy.filter import InstantTooltipEventFilter, DragEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, act_color
@@ -147,7 +147,6 @@ class StoryStructureTimelineWidget(QWidget):
     def setStructure(self, novel: Novel, structure: Optional[StoryStructure] = None):
         self.novel = novel
         self.structure = structure if structure else novel.active_story_structure
-        self._acts.clear()
         self._beats.clear()
 
         occupied_beats = acts_registry.occupied_beats()
@@ -161,43 +160,7 @@ class StoryStructureTimelineWidget(QWidget):
 
             self.__initButton(beat, btn, occupied_beats)
 
-        act_beats = self.structure.act_beats()
-        acts = len(act_beats) + 1 if act_beats else 0
-        if acts:
-            self._actsSplitter = QSplitter(self._wdgLine)
-            self._actsSplitter.setContentsMargins(0, 0, 0, 0)
-            self._actsSplitter.setChildrenCollapsible(False)
-            self._actsSplitter.setHandleWidth(1)
-            self._wdgLine.layout().addWidget(self._actsSplitter)
-            for act in range(1, acts + 1):
-                left = False
-                right = False
-                if act == 1:
-                    left = True
-                elif act == acts:
-                    right = True
-
-                actBtn = self._actButton(act, left=left, right=right)
-                self._acts.append(actBtn)
-                self._wdgLine.layout().addWidget(actBtn)
-                self._actsSplitter.addWidget(actBtn)
-
-            splitter_sizes = []
-            for i in range(len(act_beats) + 1):
-                if i == 0:
-                    size = int(10 * act_beats[i].percentage)
-                elif i > 0 and i == len(act_beats):
-                    size = int(10 * (100 - act_beats[-1].percentage))
-                else:
-                    size = int(10 * (act_beats[i].percentage - act_beats[i - 1].percentage))
-                splitter_sizes.append(size)
-
-            self._actsSplitter.setSizes(splitter_sizes)
-            self._actsSplitter.setEnabled(self._actsResizeable)
-            self._actsSplitter.splitterMoved.connect(self._actResized)
-        else:  # no acts
-            actBtn = self._actButton(0, left=True, right=True)
-            self._wdgLine.layout().addWidget(actBtn)
+        self.refreshActs()
 
     def __initButton(self, beat: StoryBeat, btn: Union[QAbstractButton, _BeatButton], occupied_beats: Set[StoryBeat]):
         color = act_color(beat.act)
@@ -319,6 +282,49 @@ class StoryStructureTimelineWidget(QWidget):
             if beat.icon:
                 btn.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
             btn.setToolTip(f'<b style="color: {beat.icon_color}">{beat.text}')
+
+    def refreshActs(self):
+        self._acts.clear()
+        self._actsSplitter = None
+        clear_layout(self._wdgLine)
+
+        act_beats = self.structure.act_beats()
+        acts = len(act_beats) + 1 if act_beats else 0
+        if acts:
+            self._actsSplitter = QSplitter(self._wdgLine)
+            self._actsSplitter.setContentsMargins(0, 0, 0, 0)
+            self._actsSplitter.setChildrenCollapsible(False)
+            self._actsSplitter.setHandleWidth(1)
+            self._wdgLine.layout().addWidget(self._actsSplitter)
+            for act in range(1, acts + 1):
+                left = False
+                right = False
+                if act == 1:
+                    left = True
+                elif act == acts:
+                    right = True
+
+                actBtn = self._actButton(act, left=left, right=right)
+                self._acts.append(actBtn)
+                self._wdgLine.layout().addWidget(actBtn)
+                self._actsSplitter.addWidget(actBtn)
+
+            splitter_sizes = []
+            for i in range(len(act_beats) + 1):
+                if i == 0:
+                    size = int(10 * act_beats[i].percentage)
+                elif i > 0 and i == len(act_beats):
+                    size = int(10 * (100 - act_beats[-1].percentage))
+                else:
+                    size = int(10 * (act_beats[i].percentage - act_beats[i - 1].percentage))
+                splitter_sizes.append(size)
+
+            self._actsSplitter.setSizes(splitter_sizes)
+            self._actsSplitter.setEnabled(self._actsResizeable)
+            self._actsSplitter.splitterMoved.connect(self._actResized)
+        else:  # no acts
+            actBtn = self._actButton(0, left=True, right=True)
+            self._wdgLine.layout().addWidget(actBtn)
 
     def replaceBeat(self, old: StoryBeat, new: StoryBeat):
         if old.type == StoryBeatType.BEAT and new.type == StoryBeatType.BEAT:

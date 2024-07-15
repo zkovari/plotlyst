@@ -348,6 +348,7 @@ class _ThreeActStructureEditor(_AbstractStructureEditor):
         menu.options.optionsReset.connect(self._endingReset)
 
         self.toggle4act = Toggle()
+        self.toggle4act.setChecked(midpoint_beat.ends_act)
 
         wdg = group(spacer(), self.btnBeginning, self.btnFirstPlotPoint, self.btnMidpoint,
                     self.btnEnding, spacer(), spacing=15)
@@ -412,10 +413,11 @@ class _ThreeActStructureEditor(_AbstractStructureEditor):
         if current_midpoint:
             self.beatsPreview.replaceBeat(current_midpoint, copy.deepcopy(midpoint))
 
-    def _mindpointSplit(self):
+    def _mindpointSplit(self, split: bool):
         current_midpoint = find_midpoint(self._structure)
         if current_midpoint:
-            current_midpoint.ends_act = True
+            current_midpoint.ends_act = split
+            self.wdgPreview.refreshActs()
 
     def _endingChanged(self, ending_option: _ThreeActEnding):
         self.beatsPreview.insertBeat(copy.deepcopy(crisis))
