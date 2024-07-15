@@ -786,7 +786,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.tblScenes.hideColumn(col)
 
     def _toggle_act_filters(self):
-        acts = self.novel.active_story_structure.acts()
+        acts = self.novel.active_story_structure.acts
         self._actFilter.setVisible(acts > 0)
         self._scene_filter.lblActs.setVisible(acts > 0)
         self.ui.lineBeforeActFilter.setVisible(acts > 0)

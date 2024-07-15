@@ -369,7 +369,7 @@ class ActDistributionChart(BaseChart):
         series = QPieSeries()
         series.setHoleSize(0.45)
 
-        act_number = novel.active_story_structure.acts()
+        act_number = novel.active_story_structure.acts
         if act_number > 0:
             self._visualizeActs(novel, series)
         else:

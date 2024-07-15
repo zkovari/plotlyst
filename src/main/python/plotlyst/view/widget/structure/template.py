@@ -24,7 +24,7 @@ from functools import partial
 from typing import Optional, List, Tuple
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QWidget, QPushButton, QDialog, QScrollArea, QApplication, QDialogButtonBox, QLabel
+from PyQt6.QtWidgets import QWidget, QPushButton, QDialog, QScrollArea, QApplication, QLabel
 from qthandy import vspacer, spacer, transparent, bold, vbox, incr_font, \
     hbox, margins, underline, line, pointy
 from qtmenu import MenuWidget
@@ -417,6 +417,11 @@ class _ThreeActStructureEditor(_AbstractStructureEditor):
         current_midpoint = find_midpoint(self._structure)
         if current_midpoint:
             current_midpoint.ends_act = split
+            if current_midpoint.ends_act:
+                self._structure.acts += 1
+            else:
+                self._structure.acts -= 1
+            self._structure.update_acts()
             self.wdgPreview.refreshActs()
 
     def _endingChanged(self, ending_option: _ThreeActEnding):

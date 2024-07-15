@@ -201,7 +201,7 @@ class StoryStructureOutline(OutlineTimelineWidget):
         self._structure = structure
         self._items = structure.beats
 
-        for item in sorted(self._items, key=lambda x: x.percentage):
+        for item in self._structure.sorted_beats():
             if item.type == StoryBeatType.BEAT and item.enabled:
                 self._addBeatWidget(item)
         if not self._items:
@@ -243,7 +243,7 @@ class StoryStructureOutline(OutlineTimelineWidget):
                 self._structurePreview.insertBeat(beat)
                 QTimer.singleShot(150, self._beatsPreview.refresh)
 
-        if self._structure.custom:
+        if self._structure.acts == 0:
             beat.act = 0
 
         wdg = self._newBeatWidget(beat)

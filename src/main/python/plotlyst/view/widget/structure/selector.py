@@ -57,7 +57,7 @@ class StructureBeatSelectorMenu(MenuWidget):
         self.addSeparator()
 
         act = 1
-        if self.novel.active_story_structure.acts():
+        if self.novel.active_story_structure.acts:
             self.addSection(f'Act {act}', IconRegistry.act_icon(act))
         self.addSeparator()
         for beat in self.novel.active_story_structure.beats:
@@ -207,7 +207,7 @@ class ActSelectorButtons(QWidget, EventListener):
         if self._novel is None:
             return
 
-        acts: int = self._novel.active_story_structure.acts()
+        acts: int = self._novel.active_story_structure.acts
         if not acts:
             return
 

@@ -2262,6 +2262,7 @@ class StoryStructure(CharacterBased):
     active: bool = False
     character_id: Optional[uuid.UUID] = None
     acts_text: Dict[int, str] = field(default_factory=dict)
+    acts: int = 3
 
     def __post_init__(self):
         self._character: Optional[Character] = None
@@ -2269,9 +2270,23 @@ class StoryStructure(CharacterBased):
     def act_beats(self) -> List[StoryBeat]:
         return [x for x in self.beats if x.ends_act]
 
-    def acts(self) -> int:
-        act_beats = len(self.act_beats())
-        return act_beats + 1 if act_beats else 0
+    # def acts(self) -> int:
+    #     act_beats = len(self.act_beats())
+    #     return act_beats + 1 if act_beats else 0
+
+    def sorted_beats(self) -> List[StoryBeat]:
+        return sorted(self.beats, key=lambda x: x.percentage)
+
+    def update_acts(self):
+        if self.acts == 0:
+            for beat in self.beats:
+                beat.act = 0
+        else:
+            act = 1
+            for beat in self.sorted_beats():
+                beat.act = act
+                if beat.ends_act:
+                    act += 1
 
 
 general_beat = StoryBeat(text='Beat',

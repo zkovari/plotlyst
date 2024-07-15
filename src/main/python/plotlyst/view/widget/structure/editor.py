@@ -343,7 +343,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self._toggleDeleteButton()
 
     def _addNewEmptyStructure(self):
-        structure = StoryStructure('Story structure', icon='mdi6.bridge', custom=True)
+        structure = StoryStructure('Story structure', icon='mdi6.bridge', custom=True, acts=0)
         self._addNewStructure(structure)
 
     def _addNewStructure(self, structure: StoryStructure):

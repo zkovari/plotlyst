@@ -209,7 +209,7 @@ class BeatsPreview(QFrame):
     def refresh(self):
         self._beats.clear()
         clear_layout(self._layout)
-        for beat in self._structure.beats:
+        for beat in self._structure.sorted_beats():
             if beat.type != StoryBeatType.BEAT:
                 continue
             if not self._toggleBeats and not beat.enabled:
