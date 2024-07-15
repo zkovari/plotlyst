@@ -172,12 +172,12 @@ class StructureBeatSelectorButton(QPushButton):
 
 
 class ActToolButton(QToolButton):
-    def __init__(self, act: int, parent=None):
+    def __init__(self, act: int, allActs: int, parent=None):
         super().__init__(parent)
         self.act = act
         self.setProperty('base', True)
         pointy(self)
-        self.setIcon(IconRegistry.from_name(f'mdi.numeric-{act}-circle', color='grey', color_on=act_color(act)))
+        self.setIcon(IconRegistry.from_name(f'mdi.numeric-{act}-circle', color='grey', color_on=act_color(act, allActs)))
         self.setCheckable(True)
 
 
@@ -212,7 +212,7 @@ class ActSelectorButtons(QWidget, EventListener):
             return
 
         for act in range(1, acts + 1):
-            btn = ActToolButton(act)
+            btn = ActToolButton(act, acts)
             self._buttons[act] = btn
             btn.setChecked(True)
             btn.toggled.connect(partial(self.actToggled.emit, act))

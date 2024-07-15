@@ -158,7 +158,7 @@ class ActNotesWidget(QWidget):
         self._text.setProperty('transparent', True)
         self._text.setMarkdown(structure.acts_text.get(act, ''))
         self._text.textChanged.connect(self._textChanged)
-        color = act_color(act)
+        color = act_color(act, self._structure.acts)
 
         self._wdgBar = QWidget()
         self._wdgBar.setStyleSheet(f'background: {color}')

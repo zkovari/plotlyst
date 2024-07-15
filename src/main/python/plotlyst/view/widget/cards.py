@@ -222,7 +222,8 @@ class SceneCard(Ui_SceneCard, Card):
 
         beat = self.scene.beat(self.novel)
         if beat and beat.icon:
-            self.btnBeat.setIcon(IconRegistry.scene_beat_badge_icon(beat.icon, beat.icon_color, act_color(beat.act)))
+            self.btnBeat.setIcon(IconRegistry.scene_beat_badge_icon(beat.icon, beat.icon_color, act_color(beat.act,
+                                                                                                          self.novel.active_story_structure.acts)))
             self.btnBeat.setToolTip(beat.text)
             self.btnBeat.setVisible(True)
         else:

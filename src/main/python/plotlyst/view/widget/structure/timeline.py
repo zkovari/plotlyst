@@ -62,7 +62,7 @@ class _ContainerButton(QPushButton):
 
 
 class _ActButton(QPushButton):
-    def __init__(self, act: int, parent=None, left: bool = False, right: bool = False):
+    def __init__(self, act: int, allActs: int, parent=None, left: bool = False, right: bool = False):
         super().__init__(parent)
         self.act = act
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -70,7 +70,7 @@ class _ActButton(QPushButton):
             self.setText('Structure')
         else:
             self.setText(f'Act {self.act}')
-        color = act_color(self.act)
+        color = act_color(self.act, allActs)
         self.setStyleSheet(f'''
                 QPushButton {{
                     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
@@ -163,7 +163,6 @@ class StoryStructureTimelineWidget(QWidget):
         self.refreshActs()
 
     def __initButton(self, beat: StoryBeat, btn: Union[QAbstractButton, _BeatButton], occupied_beats: Set[StoryBeat]):
-        color = act_color(beat.act)
         if beat.icon:
             btn.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
         btn.setToolTip(f'<b style="color: {beat.icon_color}">{beat.text}')
@@ -421,7 +420,7 @@ class StoryStructureTimelineWidget(QWidget):
             qtanim.fade_out(btn)
 
     def _actButton(self, act: int, left: bool = False, right: bool = False) -> QPushButton:
-        actBtn = _ActButton(act, self, left, right)
+        actBtn = _ActButton(act, self.structure.acts, self, left, right)
         actBtn.setFixedHeight(self._lineHeight)
         actBtn.setEnabled(self._actsClickable)
         actBtn.toggled.connect(partial(self._actToggled, actBtn))
