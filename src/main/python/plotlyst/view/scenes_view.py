@@ -381,7 +381,7 @@ class ScenesOutlineView(AbstractNovelView):
                 self._actFilter.actToggled.connect(self.storymap_view.setActsFilter)
                 filters = self._actFilter.actFilters()
                 if filters:
-                    for k, v in filters:
+                    for k, v in filters.items():
                         self.storymap_view.setActsFilter(k, v)
                 self.storymap_view.sceneSelected.connect(self.ui.wdgStoryStructure.highlightScene)
                 self.storymap_view.setNovel(self.novel)
@@ -395,7 +395,7 @@ class ScenesOutlineView(AbstractNovelView):
                 self._actFilter.actToggled.connect(self.characters_distribution.setActsFilter)
                 filters = self._actFilter.actFilters()
                 if filters:
-                    for k, v in filters:
+                    for k, v in filters.items():
                         self.characters_distribution.setActsFilter(k, v)
         elif self.ui.btnTableView.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageDefault)
