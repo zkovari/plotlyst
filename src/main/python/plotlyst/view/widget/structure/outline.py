@@ -60,13 +60,14 @@ class StoryStructureBeatWidget(OutlineItemWidget):
                         tooltip=self.beat.description)
 
         if self._allowActs:
-            self._btnEndsAct = tool_btn(IconRegistry.act_icon(self.beat.act + 1, self._structure, 'grey'),
+            self._btnEndsAct = tool_btn(QIcon(),
                                         transparent_=True, checkable=True,
                                         parent=self)
+            self.refreshActButton()
             self._btnEndsAct.installEventFilter(
-                OpacityEventFilter(self._btnEndsAct, enterOpacity=0.7, ignoreCheckedButton=True))
+                OpacityEventFilter(self._btnEndsAct, leaveOpacity=0.3, enterOpacity=0.7, ignoreCheckedButton=True))
             self._btnEndsAct.setChecked(self.beat.ends_act)
-            self._btnEndsAct.setHidden(True)
+            self._btnEndsAct.setVisible(self._btnEndsAct.isChecked())
             self._btnEndsAct.toggled.connect(self._actEndChanged)
 
     def attachStructurePreview(self, structurePreview: 'StoryStructureTimelineWidget'):
@@ -79,7 +80,7 @@ class StoryStructureBeatWidget(OutlineItemWidget):
         if self._structurePreview:
             self._structurePreview.highlightBeat(self.beat)
         if self._allowActs and (self._structure.acts < MAX_NUMBER_OF_ACTS or self._btnEndsAct.isChecked()):
-            self._btnEndsAct.setIcon(IconRegistry.act_icon(self.beat.act + 1, self._structure, 'grey'))
+            self.refreshActButton()
             self._btnEndsAct.setVisible(True)
 
     @overrides
@@ -88,7 +89,7 @@ class StoryStructureBeatWidget(OutlineItemWidget):
         if self._structurePreview:
             self._structurePreview.unhighlightBeats()
         if self._allowActs:
-            self._btnEndsAct.setVisible(False)
+            self._btnEndsAct.setVisible(self._btnEndsAct.isChecked())
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
@@ -99,6 +100,9 @@ class StoryStructureBeatWidget(OutlineItemWidget):
     @overrides
     def mimeType(self) -> str:
         return ''
+
+    def refreshActButton(self):
+        self._btnEndsAct.setIcon(IconRegistry.act_icon(max(self.beat.act, 1), self._structure, 'grey'))
 
     @overrides
     def _color(self) -> str:
@@ -126,8 +130,6 @@ class StoryStructureBeatWidget(OutlineItemWidget):
             if self._structure.acts == 1:
                 self._structure.acts = 0
         self._structure.update_acts()
-        print(self._structure.acts)
-        print(self.beat.act)
 
         self.changed.emit()
         self.actChanged.emit()
@@ -307,4 +309,6 @@ class StoryStructureOutline(OutlineTimelineWidget):
 
     def _actChanged(self):
         self._structureTimeline.refreshActs()
+        for item in self._beatWidgets:
+            item.refreshActButton()
         self.timelineChanged.emit()
