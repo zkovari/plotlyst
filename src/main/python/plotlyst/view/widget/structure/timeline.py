@@ -218,7 +218,7 @@ class StoryStructureTimelineWidget(QWidget):
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
         self._rearrangeBeats()
-        if self._actsResizeable and len(self._acts) > 2:
+        if self._actsResizeable and not self.structure.custom and len(self._acts) > 2:
             self._acts[0].setMinimumWidth(max(self._xForPercentage(15), 1))
             self._acts[0].setMaximumWidth(self._xForPercentage(30))
             self._acts[-1].setMinimumWidth(max(self._xForPercentage(10), 1))

@@ -63,7 +63,8 @@ class StoryStructureBeatWidget(OutlineItemWidget):
             self._btnEndsAct = tool_btn(IconRegistry.act_icon(self.beat.act + 1, self._structure, 'grey'),
                                         transparent_=True, checkable=True,
                                         parent=self)
-            self._btnEndsAct.installEventFilter(OpacityEventFilter(self._btnEndsAct, ignoreCheckedButton=True))
+            self._btnEndsAct.installEventFilter(
+                OpacityEventFilter(self._btnEndsAct, enterOpacity=0.7, ignoreCheckedButton=True))
             self._btnEndsAct.setChecked(self.beat.ends_act)
             self._btnEndsAct.setHidden(True)
             self._btnEndsAct.toggled.connect(self._actEndChanged)
@@ -116,6 +117,18 @@ class StoryStructureBeatWidget(OutlineItemWidget):
 
     def _actEndChanged(self, toggled: bool):
         self.beat.ends_act = toggled
+        if toggled:
+            self._structure.acts += 1
+            if self._structure.acts == 1:
+                self._structure.acts = 2
+        else:
+            self._structure.acts -= 1
+            if self._structure.acts == 1:
+                self._structure.acts = 0
+        self._structure.update_acts()
+        print(self._structure.acts)
+        print(self.beat.act)
+
         self.changed.emit()
         self.actChanged.emit()
 
