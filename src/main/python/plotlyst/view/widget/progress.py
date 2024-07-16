@@ -26,7 +26,7 @@ from PyQt6.QtCore import Qt, QSize, QPoint
 from PyQt6.QtGui import QPainter, QColor, QPaintEvent, QPen, QPainterPath, QFont, QBrush
 from PyQt6.QtWidgets import QWidget, QSizePolicy
 from overrides import overrides
-from qthandy import flow, clear_layout, hbox
+from qthandy import clear_layout, hbox
 
 from plotlyst.common import CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR, CHARACTER_MINOR_COLOR, \
     RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, act_color
@@ -131,7 +131,8 @@ class SceneStageProgressCharts(QWidget, EventListener):
             self.layout().addWidget(overall)
             self._chartviews.append(overall)
             for i in range(1, structure.acts + 1):
-                actChartView = ProgressChartView(values[i][0], values[i][1], f'Act {i}:',
+                title = structure.acts_text.get(i, f'Act {i}:')
+                actChartView = ProgressChartView(values[i][0], values[i][1], title,
                                                  color=act_color(i, structure.acts))
                 self.layout().addWidget(actChartView)
                 self._chartviews.append(actChartView)
