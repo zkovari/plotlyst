@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QSizePolicy
 from overrides import overrides
 
 from plotlyst.common import CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR, CHARACTER_MINOR_COLOR, \
-    RELAXED_WHITE_COLOR, ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR
+    RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, act_color
 from plotlyst.core.domain import Novel, SceneStage
 from plotlyst.core.template import RoleImportance
 from plotlyst.event.core import EventListener, Event
@@ -73,8 +73,6 @@ class SceneStageProgressCharts(EventListener):
         else:
             self._stage = None
 
-        self._act_colors = {1: ACT_ONE_COLOR, 2: ACT_TWO_COLOR, 3: ACT_THREE_COLOR}
-
         dispatcher = event_dispatchers.instance(self.novel)
         dispatcher.register(self, SceneStatusChangedEvent)
 
@@ -93,7 +91,10 @@ class SceneStageProgressCharts(EventListener):
         self.refresh()
 
     def refresh(self):
-        acts: Dict[int, List[bool]] = {1: [], 2: [], 3: []}
+        structure = self.novel.active_story_structure
+        acts: Dict[int, List[bool]] = {}
+        for act in range(1, structure.acts + 1):
+            acts[act] = []
         active_stage_index = self.novel.stages.index(self._stage)
 
         for scene in self.novel.scenes:
@@ -104,7 +105,7 @@ class SceneStageProgressCharts(EventListener):
 
         values = []
         all_matches = 0
-        for act in [1, 2, 3]:
+        for act in range(1, structure.acts + 1):
             matches = len([x for x in acts[act] if x])
             all_matches += matches
             values.append((matches, len(acts[act])))
@@ -115,9 +116,9 @@ class SceneStageProgressCharts(EventListener):
             overall = ProgressChartView(values[0][0], values[0][1], 'Overall:')
             self._chartviews.append(overall)
 
-            for i in range(1, 4):
+            for i in range(1, structure.acts + 1):
                 act = ProgressChartView(values[i][0], values[i][1], f'Act {i}:',
-                                        color=self._act_colors.get(i, Qt.GlobalColor.darkBlue))
+                                        color=act_color(i, structure.acts))
                 self._chartviews.append(act)
         else:
             for i, v in enumerate(values):
@@ -126,7 +127,8 @@ class SceneStageProgressCharts(EventListener):
 
 class ProgressChart(BaseChart):
 
-    def __init__(self, value: int = 0, maxValue: int = 1, title_prefix: str = 'Progress', color=PLOTLYST_SECONDARY_COLOR,
+    def __init__(self, value: int = 0, maxValue: int = 1, title_prefix: str = 'Progress',
+                 color=PLOTLYST_SECONDARY_COLOR,
                  titleColor=Qt.GlobalColor.black, emptySliceColor=RELAXED_WHITE_COLOR,
                  emptySliceBorder=Qt.GlobalColor.lightGray, parent=None):
         super(ProgressChart, self).__init__(parent)
