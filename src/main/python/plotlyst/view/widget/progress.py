@@ -26,6 +26,7 @@ from PyQt6.QtCore import Qt, QSize, QPoint
 from PyQt6.QtGui import QPainter, QColor, QPaintEvent, QPen, QPainterPath, QFont, QBrush
 from PyQt6.QtWidgets import QWidget, QSizePolicy
 from overrides import overrides
+from qthandy import flow, clear_layout, hbox
 
 from plotlyst.common import CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR, CHARACTER_MINOR_COLOR, \
     RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, act_color
@@ -60,9 +61,11 @@ class ProgressChartView(ChartView):
         self.chart.refresh()
 
 
-class SceneStageProgressCharts(EventListener):
+class SceneStageProgressCharts(QWidget, EventListener):
 
-    def __init__(self, novel: Novel):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        hbox(self)
         self.novel = novel
         self._chartviews: List[ProgressChartView] = []
         active_stage = self.novel.active_stage
@@ -78,9 +81,16 @@ class SceneStageProgressCharts(EventListener):
 
     @overrides
     def event_received(self, event: Event):
-        self.refresh()
+        self.refresh(reset=False)
 
     def charts(self) -> List[ProgressChartView]:
+        # views = []
+        # for i in range(self.layout().count()):
+        #     item = self.layout().itemAt(i)
+        #     if item and item.widget() and isinstance(item.widget(), ProgressChartView):
+        #         views.append(item.widget())
+        #
+        # return views
         return self._chartviews
 
     def stage(self) -> SceneStage:
@@ -90,10 +100,14 @@ class SceneStageProgressCharts(EventListener):
         self._stage = stage
         self.refresh()
 
-    def refresh(self):
+    def refresh(self, reset: bool = True):
+        if reset:
+            self._chartviews.clear()
+            clear_layout(self)
+
         structure = self.novel.active_story_structure
         acts: Dict[int, List[bool]] = {}
-        for act in range(1, structure.acts + 1):
+        for act in range(1, max(structure.acts + 1, 2)):
             acts[act] = []
         active_stage_index = self.novel.stages.index(self._stage)
 
@@ -105,24 +119,28 @@ class SceneStageProgressCharts(EventListener):
 
         values = []
         all_matches = 0
-        for act in range(1, structure.acts + 1):
+        for act in range(1, max(structure.acts + 1, 2)):
             matches = len([x for x in acts[act] if x])
             all_matches += matches
             values.append((matches, len(acts[act])))
 
         values.insert(0, (all_matches, len(self.novel.scenes)))
 
-        if not self._chartviews:
+        if not self._chartviews or reset:
             overall = ProgressChartView(values[0][0], values[0][1], 'Overall:')
+            self.layout().addWidget(overall)
             self._chartviews.append(overall)
-
             for i in range(1, structure.acts + 1):
-                act = ProgressChartView(values[i][0], values[i][1], f'Act {i}:',
-                                        color=act_color(i, structure.acts))
-                self._chartviews.append(act)
+                actChartView = ProgressChartView(values[i][0], values[i][1], f'Act {i}:',
+                                                 color=act_color(i, structure.acts))
+                self.layout().addWidget(actChartView)
+                self._chartviews.append(actChartView)
         else:
-            for i, v in enumerate(values):
-                self._chartviews[i].refresh(v[0], v[1])
+            if structure.acts:
+                for i, v in enumerate(values):
+                    self._chartviews[i].refresh(v[0], v[1])
+            else:
+                self._chartviews[0].refresh(values[0][0], values[0][1])
 
 
 class ProgressChart(BaseChart):

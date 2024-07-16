@@ -109,7 +109,7 @@ def act_color(act: int, all_acts: int, translucent: bool = False) -> str:
         return TRANS_ACT_TWO_COLOR if translucent else ACT_TWO_COLOR
     elif act == 3 and act < all_acts:
         return TRANS_ACT_TWO_COLOR_B if translucent else ACT_TWO_COLOR_B
-    elif act == all_acts:
+    elif act == all_acts and all_acts > 2:
         return TRANS_ACT_THREE_COLOR if translucent else ACT_THREE_COLOR
     else:
         return TRANS_PLOTLYST_SECONDARY_COLOR if translucent else PLOTLYST_SECONDARY_COLOR
