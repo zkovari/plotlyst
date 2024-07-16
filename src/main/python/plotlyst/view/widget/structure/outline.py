@@ -29,7 +29,7 @@ from overrides import overrides
 from qthandy import line, vbox, margins, hbox, spacer, sp, incr_icon, transparent, italic
 from qthandy.filter import OpacityEventFilter
 
-from plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR, MAX_NUMBER_OF_ACTS
 from plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat, motion_beat, \
     disturbance_beat, characteristic_moment_beat, normal_world_beat, general_beat, turn_beat, twist_beat, StoryStructure
 from plotlyst.view.common import label, scrolled, push_btn, wrap, tool_btn
@@ -78,7 +78,7 @@ class StoryStructureBeatWidget(OutlineItemWidget):
             super().enterEvent(event)
         if self._structurePreview:
             self._structurePreview.highlightBeat(self.beat)
-        if self._allowActs:
+        if self._allowActs and (self._structure.acts < MAX_NUMBER_OF_ACTS or self._btnEndsAct.isChecked()):
             self._btnEndsAct.setIcon(IconRegistry.act_icon(self.beat.act + 1, self._structure, 'grey'))
             self._btnEndsAct.setVisible(True)
 
