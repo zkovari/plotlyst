@@ -20,9 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import copy
 import uuid
 from functools import partial
-from typing import List, Optional
+from typing import Optional
 
-from PyQt6.QtCore import Qt, QEvent, QTimer
+from PyQt6.QtCore import Qt, QEvent, QTimer, pyqtSignal
 from PyQt6.QtGui import QIcon, QColor, QEnterEvent, QResizeEvent
 from PyQt6.QtWidgets import QWidget, QDialog
 from overrides import overrides
@@ -42,9 +42,13 @@ from plotlyst.view.widget.structure.timeline import StoryStructureTimelineWidget
 
 
 class StoryStructureBeatWidget(OutlineItemWidget):
-    def __init__(self, beat: StoryBeat, parent=None):
+    actChanged = pyqtSignal()
+
+    def __init__(self, beat: StoryBeat, structure: StoryStructure, parent=None):
         self.beat = beat
         super().__init__(beat, parent)
+        self._structure = structure
+        self._allowActs = structure.custom
         self._structurePreview: Optional[StoryStructureTimelineWidget] = None
         self._text.setText(self.beat.notes)
         self._text.setMaximumSize(220, 110)
@@ -55,9 +59,14 @@ class StoryStructureBeatWidget(OutlineItemWidget):
                         desc=self.beat.placeholder if self.beat.placeholder else self.beat.description,
                         tooltip=self.beat.description)
 
-        self.btnEndsAct = tool_btn(IconRegistry.from_name('mdi.chevron-double-right', 'grey'), transparent_=True, parent=self)
-        self.btnEndsAct.installEventFilter(OpacityEventFilter(self.btnEndsAct))
-        self.btnEndsAct.setHidden(True)
+        if self._allowActs:
+            self._btnEndsAct = tool_btn(IconRegistry.act_icon(self.beat.act + 1, self._structure, 'grey'),
+                                        transparent_=True, checkable=True,
+                                        parent=self)
+            self._btnEndsAct.installEventFilter(OpacityEventFilter(self._btnEndsAct, ignoreCheckedButton=True))
+            self._btnEndsAct.setChecked(self.beat.ends_act)
+            self._btnEndsAct.setHidden(True)
+            self._btnEndsAct.toggled.connect(self._actEndChanged)
 
     def attachStructurePreview(self, structurePreview: 'StoryStructureTimelineWidget'):
         self._structurePreview = structurePreview
@@ -68,19 +77,23 @@ class StoryStructureBeatWidget(OutlineItemWidget):
             super().enterEvent(event)
         if self._structurePreview:
             self._structurePreview.highlightBeat(self.beat)
-        self.btnEndsAct.setVisible(True)
+        if self._allowActs:
+            self._btnEndsAct.setIcon(IconRegistry.act_icon(self.beat.act + 1, self._structure, 'grey'))
+            self._btnEndsAct.setVisible(True)
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
         super().leaveEvent(event)
         if self._structurePreview:
             self._structurePreview.unhighlightBeats()
-        self.btnEndsAct.setVisible(False)
+        if self._allowActs:
+            self._btnEndsAct.setVisible(False)
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
-        self.btnEndsAct.setGeometry(5, self.iconFixedSize, 18, 18)
+        if self._allowActs:
+            self._btnEndsAct.setGeometry(5, self.iconFixedSize, 25, 25)
 
     @overrides
     def mimeType(self) -> str:
@@ -99,6 +112,12 @@ class StoryStructureBeatWidget(OutlineItemWidget):
     @overrides
     def _textChanged(self):
         self.beat.notes = self._text.toPlainText()
+        self.changed.emit()
+
+    def _actEndChanged(self, toggled: bool):
+        self.beat.ends_act = toggled
+        self.changed.emit()
+        self.actChanged.emit()
 
 
 class _StoryBeatSection(QWidget):
@@ -193,16 +212,18 @@ class StoryBeatSelectorPopup(PopupDialog):
 
 
 class StoryStructureOutline(OutlineTimelineWidget):
+    beatChanged = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._structurePreview: Optional[StoryStructureTimelineWidget] = None
+        self._structureTimeline: Optional[StoryStructureTimelineWidget] = None
         self._beatsPreview: Optional[BeatsPreview] = None
         self._structure: Optional[StoryStructure] = None
 
-    def attachStructurePreview(self, structurePreview: 'StoryStructureTimelineWidget'):
-        self._structurePreview = structurePreview
+    def attachStructurePreview(self, structureTimeline: StoryStructureTimelineWidget):
+        self._structureTimeline = structureTimeline
         for wdg in self._beatWidgets:
-            wdg.attachStructurePreview(self._structurePreview)
+            wdg.attachStructurePreview(self._structureTimeline)
 
     def attachBeatsPreview(self, beats: BeatsPreview):
         self._beatsPreview = beats
@@ -223,8 +244,10 @@ class StoryStructureOutline(OutlineTimelineWidget):
 
     @overrides
     def _newBeatWidget(self, item: StoryBeat) -> StoryStructureBeatWidget:
-        widget = StoryStructureBeatWidget(item, parent=self)
-        widget.attachStructurePreview(self._structurePreview)
+        widget = StoryStructureBeatWidget(item, self._structure, parent=self)
+        widget.attachStructurePreview(self._structureTimeline)
+        widget.changed.connect(self.beatChanged)
+        widget.actChanged.connect(self._actChanged)
         widget.removed.connect(self._beatRemovedClicked)
 
         return widget
@@ -235,11 +258,11 @@ class StoryStructureOutline(OutlineTimelineWidget):
                 QTimer.singleShot(150, self._beatsPreview.refresh)
 
         if wdg.beat.custom:
-            self._structurePreview.removeBeat(wdg.beat)
+            self._structureTimeline.removeBeat(wdg.beat)
             self._beatRemoved(wdg, teardownFunction=teardown)
         else:
             wdg.beat.enabled = False
-            self._structurePreview.toggleBeatVisibility(wdg.beat)
+            self._structureTimeline.toggleBeatVisibility(wdg.beat)
             self._beatWidgetRemoved(wdg, teardownFunction=teardown)
 
     @overrides
@@ -252,7 +275,7 @@ class StoryStructureOutline(OutlineTimelineWidget):
     def _insertBeat(self, beat: StoryBeat):
         def teardown():
             if self._beatsPreview:
-                self._structurePreview.insertBeat(beat)
+                self._structureTimeline.insertBeat(beat)
                 QTimer.singleShot(150, self._beatsPreview.refresh)
 
         if self._structure.acts == 0:
@@ -268,3 +291,7 @@ class StoryStructureOutline(OutlineTimelineWidget):
                 percentAfter = 99
             beat.percentage = percentBefore + (percentAfter - percentBefore) / 2
         self._insertWidget(beat, wdg, teardownFunction=teardown)
+
+    def _actChanged(self):
+        self._structureTimeline.refreshActs()
+        self.timelineChanged.emit()

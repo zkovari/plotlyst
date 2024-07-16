@@ -40,6 +40,7 @@ from plotlyst.view.widget.input import RemovalButton
 
 
 class OutlineItemWidget(QWidget):
+    changed = pyqtSignal()
     dragStarted = pyqtSignal()
     dragStopped = pyqtSignal()
     removed = pyqtSignal(object)

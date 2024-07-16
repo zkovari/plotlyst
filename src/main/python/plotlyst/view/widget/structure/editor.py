@@ -269,6 +269,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.wdgStructureOutline = StoryStructureOutline()
         self.wdgStructureOutline.attachStructurePreview(self.wdgPreview)
         self.wdgStructureOutline.timelineChanged.connect(self._timelineChanged)
+        self.wdgStructureOutline.beatChanged.connect(self._save)
         self.wdgOutline.layout().addWidget(self.wdgStructureOutline)
 
         self._structureNotes = StoryStructureNotes()
@@ -291,12 +292,12 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
                 if structure.character_id == event.character.id:
                     structure.reset_character()
                     btn.refresh()
-                    self.repo.update_novel(self.novel)
+                    self._save()
         elif isinstance(event, NovelStoryStructureActivationRequest):
             for btn in self.btnGroupStructure.buttons():
                 if btn.structure() is event.structure:
                     btn.setChecked(True)
-            self.repo.update_novel(self.novel)
+            self._save()
             emit_event(self.novel, NovelStoryStructureUpdated(self))
             return
 
@@ -380,7 +381,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         if self.btnGroupStructure.buttons():
             self.btnGroupStructure.buttons()[-1].setChecked(True)
             emit_event(self.novel, NovelStoryStructureUpdated(self))
-        self.repo.update_novel(self.novel)
+        self._save()
 
         self._toggleDeleteButton()
 
@@ -397,7 +398,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
     def _characterLinked(self, character: Character):
         self.novel.active_story_structure.set_character(character)
         self.btnGroupStructure.checkedButton().refresh(True)
-        self.repo.update_novel(self.novel)
+        self._save()
         self._activeStructureToggled(self.novel.active_story_structure, True)
         emit_event(self.novel, NovelStoryStructureUpdated(self))
 
@@ -436,7 +437,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         if not toggled:
             return
 
-        self.repo.update_novel(self.novel)
+        self._save()
         emit_event(self.novel, NovelStoryStructureUpdated(self))
 
     def __initWdgPreview(self):
@@ -448,7 +449,8 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.wdgPreview.beatMoved.connect(self._beatMoved)
 
     def _timelineChanged(self):
-        self.repo.update_novel(self.novel)
+        self._save()
+        emit_event(self.novel, NovelStoryStructureUpdated(self))
 
     def _beatMoved(self):
         QTimer.singleShot(20, lambda: self._refreshStructure(self.novel.active_story_structure))
@@ -456,3 +458,6 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
 
     def _toggleDeleteButton(self):
         self.btnDelete.setEnabled(len(self.novel.story_structures) > 1)
+
+    def _save(self):
+        self.repo.update_novel(self.novel)
