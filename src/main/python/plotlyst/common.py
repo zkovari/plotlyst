@@ -28,6 +28,8 @@ ACT_ONE_COLOR: str = '#02bcd4'
 TRANS_ACT_ONE_COLOR: str = 'rgba(2, 188, 212, 45)'
 ACT_TWO_COLOR: str = '#1bbc9c'
 TRANS_ACT_TWO_COLOR: str = 'rgba(27, 188, 156, 45)'
+ACT_TWO_COLOR_B: str = '#1B99A3'
+TRANS_ACT_TWO_COLOR_B: str = 'rgba(27, 153, 163, 45)'
 ACT_THREE_COLOR: str = '#ff7800'
 TRANS_ACT_THREE_COLOR: str = 'rgba(255, 120, 0, 45)'
 
@@ -100,12 +102,14 @@ def truncate_string(text: str, length: int = 25):
     return (text[:length] + '...') if len(text) > length else text
 
 
-def act_color(act: int, translucent: bool = False) -> str:
+def act_color(act: int, all_acts: int, translucent: bool = False) -> str:
     if act == 1:
         return TRANS_ACT_ONE_COLOR if translucent else ACT_ONE_COLOR
     elif act == 2:
         return TRANS_ACT_TWO_COLOR if translucent else ACT_TWO_COLOR
-    elif act == 3:
+    elif act == 3 and act < all_acts:
+        return TRANS_ACT_TWO_COLOR_B if translucent else ACT_TWO_COLOR_B
+    elif act == all_acts and all_acts > 2:
         return TRANS_ACT_THREE_COLOR if translucent else ACT_THREE_COLOR
     else:
         return TRANS_PLOTLYST_SECONDARY_COLOR if translucent else PLOTLYST_SECONDARY_COLOR

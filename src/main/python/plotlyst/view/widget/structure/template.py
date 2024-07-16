@@ -24,7 +24,7 @@ from functools import partial
 from typing import Optional, List, Tuple
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QWidget, QPushButton, QDialog, QScrollArea, QApplication, QDialogButtonBox, QLabel
+from PyQt6.QtWidgets import QWidget, QPushButton, QDialog, QScrollArea, QApplication, QLabel
 from qthandy import vspacer, spacer, transparent, bold, vbox, incr_font, \
     hbox, margins, underline, line, pointy
 from qtmenu import MenuWidget
@@ -34,7 +34,7 @@ from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     save_the_cat, three_act_structure, heros_journey, hook_beat, motion_beat, \
     disturbance_beat, normal_world_beat, characteristic_moment_beat, midpoint, midpoint_ponr, midpoint_mirror, \
     midpoint_proactive, crisis, first_plot_point, first_plot_point_ponr, first_plot_points, midpoints
-from plotlyst.view.common import ExclusiveOptionalButtonGroup, label
+from plotlyst.view.common import ExclusiveOptionalButtonGroup, push_btn
 from plotlyst.view.generated.story_structure_selector_dialog_ui import Ui_StoryStructureSelectorDialog
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -45,9 +45,9 @@ from plotlyst.view.widget.structure.beat import BeatsPreview
 from plotlyst.view.widget.structure.outline import StoryStructureTimelineWidget
 
 
-class _AbstractStructureEditorWidget(QWidget):
+class _AbstractStructureEditor(QWidget):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
-        super(_AbstractStructureEditorWidget, self).__init__(parent)
+        super(_AbstractStructureEditor, self).__init__(parent)
         self._structure = structure
         vbox(self)
         self.wdgTitle = IconText(self)
@@ -297,7 +297,7 @@ class StructureOptionsMenu(MenuWidget):
         self.addWidget(self.options)
 
 
-class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
+class _ThreeActStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
         super().__init__(novel, structure, parent)
 
@@ -348,11 +348,15 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
         menu.options.optionsReset.connect(self._endingReset)
 
         self.toggle4act = Toggle()
+        self.toggle4act.setChecked(midpoint_beat.ends_act)
 
         wdg = group(spacer(), self.btnBeginning, self.btnFirstPlotPoint, self.btnMidpoint,
                     self.btnEnding, spacer(), spacing=15)
         wdg.layout().insertWidget(1, self.lblCustomization, alignment=Qt.AlignmentFlag.AlignTop)
-        wdg.layout().addWidget(group(label('Split 2nd act into 2 parts'), self.toggle4act, spacing=0, margin=0))
+        lbl = push_btn(text='Split 2nd act into two parts', transparent_=True)
+        lbl.clicked.connect(self.toggle4act.animateClick)
+        wdg.layout().addWidget(group(lbl, self.toggle4act, spacing=0, margin=0))
+        self.toggle4act.toggled.connect(self._mindpointSplit)
         self.wdgCustom.layout().addWidget(wdg)
 
     def _beginningChanged(self, beginning: _ThreeActBeginning):
@@ -409,6 +413,24 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
         if current_midpoint:
             self.beatsPreview.replaceBeat(current_midpoint, copy.deepcopy(midpoint))
 
+    def _mindpointSplit(self, split: bool):
+        current_midpoint = find_midpoint(self._structure)
+        if current_midpoint:
+            current_midpoint.ends_act = split
+            if current_midpoint.ends_act:
+                self._structure.acts += 1
+                self._structure.acts_text[2] = 'Act 2/A'
+                self._structure.acts_text[3] = 'Act 2/B'
+                self._structure.acts_text[4] = 'Act 3'
+                self._structure.acts_icon[3] = 'mdi.numeric-2-circle'
+                self._structure.acts_icon[4] = 'mdi.numeric-3-circle'
+            else:
+                self._structure.acts -= 1
+                self._structure.acts_text.clear()
+                self._structure.acts_icon.clear()
+            self._structure.update_acts()
+            self.wdgPreview.refreshActs()
+
     def _endingChanged(self, ending_option: _ThreeActEnding):
         self.beatsPreview.insertBeat(copy.deepcopy(crisis))
 
@@ -416,14 +438,14 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
         self.beatsPreview.removeBeat(crisis)
 
 
-class _SaveTheCatActStructureEditorWidget(_AbstractStructureEditorWidget):
+class _SaveTheCatActStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
-        super(_SaveTheCatActStructureEditorWidget, self).__init__(novel, structure, parent)
+        super(_SaveTheCatActStructureEditor, self).__init__(novel, structure, parent)
 
 
-class _HerosJourneyStructureEditorWidget(_AbstractStructureEditorWidget):
+class _HerosJourneyStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
-        super(_HerosJourneyStructureEditorWidget, self).__init__(novel, structure, parent)
+        super(_HerosJourneyStructureEditor, self).__init__(novel, structure, parent)
 
 
 class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
@@ -440,7 +462,7 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
         self._structure: Optional[StoryStructure] = None
         if structure:
             self.setWindowTitle('Story structure editor')
-            self.buttonBox.setStandardButtons(QDialogButtonBox.StandardButton.Ok)
+            self.btnCancel.setHidden(True)
             self.wdgTypesContainer.setHidden(True)
             page, clazz = self._pageAndClass(structure)
             self.__initEditor(structure, page, clazz, copyStructure=False)
@@ -468,11 +490,11 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
 
     def _structureChanged(self):
         if self.btnThreeAct.isChecked():
-            self.__initEditor(three_act_structure, self.pageThreeAct, _ThreeActStructureEditorWidget)
+            self.__initEditor(three_act_structure, self.pageThreeAct, _ThreeActStructureEditor)
         elif self.btnSaveTheCat.isChecked():
-            self.__initEditor(save_the_cat, self.pageSaveTheCat, _SaveTheCatActStructureEditorWidget)
+            self.__initEditor(save_the_cat, self.pageSaveTheCat, _SaveTheCatActStructureEditor)
         elif self.btnHerosJourney.isChecked():
-            self.__initEditor(heros_journey, self.pageHerosJourney, _HerosJourneyStructureEditorWidget)
+            self.__initEditor(heros_journey, self.pageHerosJourney, _HerosJourneyStructureEditor)
 
     def __initEditor(self, structure: StoryStructure, page: QWidget, clazz, copyStructure: bool = True):
         self.stackedWidget.setCurrentWidget(page)
@@ -487,8 +509,8 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
 
     def _pageAndClass(self, structure: StoryStructure):
         if structure.title == three_act_structure.title:
-            return self.pageThreeAct, _ThreeActStructureEditorWidget
+            return self.pageThreeAct, _ThreeActStructureEditor
         elif structure.title == save_the_cat.title:
-            return self.pageSaveTheCat, _SaveTheCatActStructureEditorWidget
+            return self.pageSaveTheCat, _SaveTheCatActStructureEditor
         elif structure.title == heros_journey.title:
-            return self.pageHerosJourney, _HerosJourneyStructureEditorWidget
+            return self.pageHerosJourney, _HerosJourneyStructureEditor

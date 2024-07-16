@@ -138,7 +138,7 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
             if self._canBeToggled() and self._infoPage():
                 self.cbToggle.setVisible(True)
             # self.btnSceneSelector.setVisible(self._infoPage() and self._checkOccupiedBeats and self.beat.enabled)
-            self.setStyleSheet(f'.BeatWidget {{background-color: {act_color(self.beat.act, translucent=True)};}}')
+            self.setStyleSheet(f'.BeatWidget {{background-color: {act_color(self.beat.act, self._novel.active_story_structure.acts, translucent=True)};}}')
             self.beatHighlighted.emit(self.beat)
         elif event.type() == QEvent.Type.Leave:
             self.cbToggle.setHidden(True)
@@ -209,7 +209,7 @@ class BeatsPreview(QFrame):
     def refresh(self):
         self._beats.clear()
         clear_layout(self._layout)
-        for beat in self._structure.beats:
+        for beat in self._structure.sorted_beats():
             if beat.type != StoryBeatType.BEAT:
                 continue
             if not self._toggleBeats and not beat.enabled:

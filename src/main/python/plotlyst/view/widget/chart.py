@@ -26,9 +26,9 @@ from PyQt6.QtGui import QColor, QCursor, QIcon, QFont
 from PyQt6.QtWidgets import QToolTip, QApplication
 from overrides import overrides
 
-from plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, CHARACTER_MAJOR_COLOR, \
+from plotlyst.common import CHARACTER_MAJOR_COLOR, \
     CHARACTER_SECONDARY_COLOR, CHARACTER_MINOR_COLOR, RELAXED_WHITE_COLOR, PLOTLYST_TERTIARY_COLOR, \
-    PLOTLYST_SECONDARY_COLOR
+    PLOTLYST_SECONDARY_COLOR, act_color
 from plotlyst.core.domain import Character, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS, Novel
 from plotlyst.core.template import enneagram_choices, supporter_role, guide_role, sidekick_role, \
     antagonist_role, contagonist_role, adversary_role, henchmen_role, confidant_role, tertiary_role, SelectionItem, \
@@ -369,7 +369,7 @@ class ActDistributionChart(BaseChart):
         series = QPieSeries()
         series.setHoleSize(0.45)
 
-        act_number = novel.active_story_structure.acts()
+        act_number = novel.active_story_structure.acts
         if act_number > 0:
             self._visualizeActs(novel, series)
         else:
@@ -380,6 +380,7 @@ class ActDistributionChart(BaseChart):
     def _visualizeActs(self, novel: Novel, series: QPieSeries):
         self.setTitle('<b>Act distribution</b>')
 
+        structure = novel.active_story_structure
         acts: Dict[int, int] = {}
         for scene in novel.scenes:
             act = acts_registry.act(scene)
@@ -387,14 +388,8 @@ class ActDistributionChart(BaseChart):
                 acts[act] = 0
             acts[act] = acts[act] + 1
         for k, v in acts.items():
-            slice_ = series.append(f'Act {k}', v)
-
-            if k == 1:
-                color = ACT_ONE_COLOR
-            elif k == 2:
-                color = ACT_TWO_COLOR
-            else:
-                color = ACT_THREE_COLOR
+            slice_ = series.append(structure.acts_text.get(k, f'Act {k}'), v)
+            color = act_color(k, structure.acts)
             slice_.setColor(QColor(color))
 
     def _visualizeHalves(self, novel: Novel, series: QPieSeries):

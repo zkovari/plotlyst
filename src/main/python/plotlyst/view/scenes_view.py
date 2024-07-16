@@ -626,6 +626,7 @@ class ScenesOutlineView(AbstractNovelView):
 
         if not self.stagesProgress:
             self.stagesProgress = SceneStageProgressCharts(self.novel)
+            self.ui.wdgProgressCharts.layout().addWidget(self.stagesProgress)
 
             self.ui.tblSceneStages.clicked.connect(
                 lambda x: self.stagesModel.changeStage(self._stages_proxy.mapToSource(x)))
@@ -647,9 +648,9 @@ class ScenesOutlineView(AbstractNovelView):
 
         if self.novel.scenes:
             self.stagesProgress.refresh()
-            if not self.ui.wdgProgressCharts.layout().count():
-                for i, chartview in enumerate(self.stagesProgress.charts()):
-                    self.ui.wdgProgressCharts.layout().insertWidget(i, chartview)
+            # if not self.ui.wdgProgressCharts.layout().count():
+            #     for i, chartview in enumerate(self.stagesProgress.charts()):
+            #         self.ui.wdgProgressCharts.layout().insertWidget(i, chartview)
 
     def _on_custom_menu_requested(self, pos: QPoint):
         def toggle_wip(scene: Scene):
@@ -786,7 +787,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.tblScenes.hideColumn(col)
 
     def _toggle_act_filters(self):
-        acts = self.novel.active_story_structure.acts()
+        acts = self.novel.active_story_structure.acts
         self._actFilter.setVisible(acts > 0)
         self._scene_filter.lblActs.setVisible(acts > 0)
         self.ui.lineBeforeActFilter.setVisible(acts > 0)
