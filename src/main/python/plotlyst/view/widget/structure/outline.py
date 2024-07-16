@@ -23,15 +23,16 @@ from functools import partial
 from typing import List, Optional
 
 from PyQt6.QtCore import Qt, QEvent, QTimer
-from PyQt6.QtGui import QIcon, QColor, QEnterEvent
+from PyQt6.QtGui import QIcon, QColor, QEnterEvent, QResizeEvent
 from PyQt6.QtWidgets import QWidget, QDialog
 from overrides import overrides
 from qthandy import line, vbox, margins, hbox, spacer, sp, incr_icon, transparent, italic
+from qthandy.filter import OpacityEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat, motion_beat, \
     disturbance_beat, characteristic_moment_beat, normal_world_beat, general_beat, turn_beat, twist_beat, StoryStructure
-from plotlyst.view.common import label, scrolled, push_btn, wrap
+from plotlyst.view.common import label, scrolled, push_btn, wrap, tool_btn
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.display import PopupDialog, Icon
@@ -54,6 +55,10 @@ class StoryStructureBeatWidget(OutlineItemWidget):
                         desc=self.beat.placeholder if self.beat.placeholder else self.beat.description,
                         tooltip=self.beat.description)
 
+        self.btnEndsAct = tool_btn(IconRegistry.from_name('mdi.chevron-double-right', 'grey'), transparent_=True, parent=self)
+        self.btnEndsAct.installEventFilter(OpacityEventFilter(self.btnEndsAct))
+        self.btnEndsAct.setHidden(True)
+
     def attachStructurePreview(self, structurePreview: 'StoryStructureTimelineWidget'):
         self._structurePreview = structurePreview
 
@@ -63,12 +68,19 @@ class StoryStructureBeatWidget(OutlineItemWidget):
             super().enterEvent(event)
         if self._structurePreview:
             self._structurePreview.highlightBeat(self.beat)
+        self.btnEndsAct.setVisible(True)
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
         super().leaveEvent(event)
         if self._structurePreview:
             self._structurePreview.unhighlightBeats()
+        self.btnEndsAct.setVisible(False)
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        self.btnEndsAct.setGeometry(5, self.iconFixedSize, 18, 18)
 
     @overrides
     def mimeType(self) -> str:
