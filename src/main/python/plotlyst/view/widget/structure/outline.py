@@ -22,6 +22,7 @@ import uuid
 from functools import partial
 from typing import Optional
 
+import qtanim
 from PyQt6.QtCore import Qt, QEvent, QTimer, pyqtSignal
 from PyQt6.QtGui import QIcon, QColor, QEnterEvent, QResizeEvent
 from PyQt6.QtWidgets import QWidget, QDialog
@@ -29,7 +30,7 @@ from overrides import overrides
 from qthandy import line, vbox, margins, hbox, spacer, sp, incr_icon, transparent, italic
 from qthandy.filter import OpacityEventFilter
 
-from plotlyst.common import PLOTLYST_SECONDARY_COLOR, MAX_NUMBER_OF_ACTS
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR, MAX_NUMBER_OF_ACTS, act_color
 from plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat, motion_beat, \
     disturbance_beat, characteristic_moment_beat, normal_world_beat, general_beat, turn_beat, twist_beat, StoryStructure
 from plotlyst.view.common import label, scrolled, push_btn, wrap, tool_btn
@@ -102,6 +103,7 @@ class StoryStructureBeatWidget(OutlineItemWidget):
         return ''
 
     def refreshActButton(self):
+        self._btnEndsAct.setToolTip('Remove act' if self._btnEndsAct.isChecked() else 'Toggle new act')
         self._btnEndsAct.setIcon(IconRegistry.act_icon(max(self.beat.act, 1), self._structure, 'grey'))
 
     @overrides
@@ -125,6 +127,7 @@ class StoryStructureBeatWidget(OutlineItemWidget):
             self._structure.acts += 1
             if self._structure.acts == 1:
                 self._structure.acts = 2
+            qtanim.glow(self._btnEndsAct, color=QColor(act_color(max(self.beat.act, 1), self._structure.acts)))
         else:
             self._structure.acts -= 1
             if self._structure.acts == 1:
