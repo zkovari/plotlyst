@@ -326,7 +326,6 @@ class OutlineTimelineWidget(QFrame):
         self.layout().addWidget(widget)
         self.layout().addWidget(self._newPlaceholderWidget())
         widget.activate()
-        self.timelineChanged.emit()
 
     def _insertWidget(self, item: OutlineItem, widget: OutlineItemWidget, teardownFunction=None):
         def teardown():
