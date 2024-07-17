@@ -32,6 +32,14 @@ ACT_TWO_COLOR_B: str = '#1B99A3'
 TRANS_ACT_TWO_COLOR_B: str = 'rgba(27, 153, 163, 45)'
 ACT_THREE_COLOR: str = '#ff7800'
 TRANS_ACT_THREE_COLOR: str = 'rgba(255, 120, 0, 45)'
+ACT_FOUR_COLOR: str = '#5A716A'
+TRANS_ACT_FOUR_COLOR: str = 'rgba(90, 113, 106, 45)'
+ACT_FIVE_COLOR: str = '#8B95C9'
+TRANS_ACT_FIVE_COLOR: str = 'rgba(139, 149, 201, 45)'
+ACT_SIX_COLOR: str = '#AD7A99'
+TRANS_ACT_SIX_COLOR: str = 'rgba(173, 122, 153, 45)'
+
+MAX_NUMBER_OF_ACTS: int = 7
 
 CONFLICT_CHARACTER_COLOR: str = '#c1666b'
 CONFLICT_SOCIETY_COLOR: str = '#69306d'
@@ -109,6 +117,12 @@ def act_color(act: int, all_acts: int, translucent: bool = False) -> str:
         return TRANS_ACT_TWO_COLOR if translucent else ACT_TWO_COLOR
     elif act == 3 and act < all_acts:
         return TRANS_ACT_TWO_COLOR_B if translucent else ACT_TWO_COLOR_B
+    elif act == 4 and act < all_acts:
+        return TRANS_ACT_FOUR_COLOR if translucent else ACT_FOUR_COLOR
+    elif act == 5 and act < all_acts:
+        return TRANS_ACT_FIVE_COLOR if translucent else ACT_FIVE_COLOR
+    elif act == 6 and act < all_acts:
+        return TRANS_ACT_SIX_COLOR if translucent else ACT_SIX_COLOR
     elif act == all_acts and all_acts > 2:
         return TRANS_ACT_THREE_COLOR if translucent else ACT_THREE_COLOR
     else:

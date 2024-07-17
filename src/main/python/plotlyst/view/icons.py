@@ -287,10 +287,14 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.file-document-outline', color=color, color_on=color_on)
 
     @staticmethod
-    def act_icon(act: int, structure: StoryStructure) -> QIcon:
+    def act_icon(act: int, structure: StoryStructure, color=None) -> QIcon:
         icon = structure.acts_icon.get(act, f'mdi.numeric-{act}-circle')
-        color = act_color(act, structure.acts)
-        return IconRegistry.from_name(icon, color)
+        if color is None:
+            color = act_color(act, structure.acts)
+            color_on = color
+        else:
+            color_on = act_color(act, structure.acts)
+        return IconRegistry.from_name(icon, color, color_on)
 
     @staticmethod
     def table_icon() -> QIcon:
