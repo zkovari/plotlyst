@@ -32,7 +32,8 @@ from qthandy.filter import OpacityEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, MAX_NUMBER_OF_ACTS, act_color
 from plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat, motion_beat, \
-    disturbance_beat, characteristic_moment_beat, normal_world_beat, general_beat, turn_beat, twist_beat, StoryStructure
+    disturbance_beat, characteristic_moment_beat, normal_world_beat, general_beat, turn_beat, twist_beat, \
+    StoryStructure
 from plotlyst.view.common import label, scrolled, push_btn, wrap, tool_btn
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -192,8 +193,7 @@ class StoryBeatSelectorPopup(PopupDialog):
         self._addBeat(turn_beat)
         self._addBeat(twist_beat)
 
-        # self._addHeader('Midpoint', IconRegistry.from_name('mdi.middleware-outline'))
-        # self._addBeat(midpoint_ponr)
+        self._addHeader('Midpoint', IconRegistry.from_name('mdi.middleware-outline'))
         # self._addBeat(midpoint_mirror)
         # self._addBeat(midpoint_proactive)
 
