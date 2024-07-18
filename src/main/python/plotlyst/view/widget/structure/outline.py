@@ -33,7 +33,8 @@ from qthandy.filter import OpacityEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, MAX_NUMBER_OF_ACTS, act_color
 from plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat, motion_beat, \
-    disturbance_beat, characteristic_moment_beat, normal_world_beat, general_beat, StoryStructure, turn_beat, twist_beat
+    disturbance_beat, characteristic_moment_beat, normal_world_beat, general_beat, StoryStructure, turn_beat, \
+    twist_beat, inciting_incident_beat, refusal_beat
 from plotlyst.view.common import label, push_btn, wrap, tool_btn, scrolled
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -148,7 +149,7 @@ class _StoryBeatSection(QWidget):
                                text=beat.text, transparent_=True,
                                tooltip=beat.description, checkable=True, icon_resize=False,
                                pointy_=False)
-        self.btnAdd = push_btn(IconRegistry.plus_icon(PLOTLYST_SECONDARY_COLOR), 'Add')
+        self.btnAdd = push_btn(IconRegistry.plus_icon(PLOTLYST_SECONDARY_COLOR), 'Add', tooltip=f'Add {beat.text}')
         italic(self.btnAdd)
         self.btnAdd.setStyleSheet(f'border: 0px; color: {PLOTLYST_SECONDARY_COLOR};')
         self.layout().addWidget(group(self._label, spacer(), self.btnAdd, margin=0))
@@ -160,7 +161,7 @@ class _StoryBeatSection(QWidget):
 
 class StoryStructureElements(Enum):
     Beginning = auto()
-    Launch = auto()
+    Catalyst = auto()
     Escalation = auto()
     Midpoint = auto()
     Climax = auto()
@@ -170,7 +171,7 @@ class StoryStructureElements(Enum):
 
 story_structure_element_icons = {
     StoryStructureElements.Beginning: 'mdi.ray-start',
-    StoryStructureElements.Launch: 'mdi.bell-alert-outline',
+    StoryStructureElements.Catalyst: 'fa5s.vial',
     StoryStructureElements.Escalation: 'mdi.slope-uphill',
     StoryStructureElements.Midpoint: 'mdi.middleware-outline',
     StoryStructureElements.Climax: 'fa5s.chevron-up',
@@ -224,7 +225,7 @@ class StoryBeatSelectorPopup(PopupDialog):
         margins(self.wdgCenter, right=20, top=15)
 
         self.btnGroup.buttons()[0].setChecked(True)
-        self._addHeader('Beginning', IconRegistry.cause_icon())
+        # self._addHeader('Beginning', IconRegistry.cause_icon())
         # self._addBeat(hook_beat)
         # self._addBeat(motion_beat)
         # self._addBeat(disturbance_beat)
@@ -232,7 +233,7 @@ class StoryBeatSelectorPopup(PopupDialog):
         # self._addBeat(normal_world_beat)
         # self._addHeader('Escalation', IconRegistry.rising_action_icon('black'))
 
-        self._addHeader('Midpoint', IconRegistry.from_name('mdi.middleware-outline'))
+        # self._addHeader('Midpoint', IconRegistry.from_name('mdi.middleware-outline'))
         # self._addBeat(midpoint_mirror)
         # self._addBeat(midpoint_proactive)
 
@@ -275,6 +276,9 @@ class StoryBeatSelectorPopup(PopupDialog):
             self._addBeat(disturbance_beat)
             self._addBeat(characteristic_moment_beat)
             self._addBeat(normal_world_beat)
+        elif element == StoryStructureElements.Catalyst:
+            self._addBeat(inciting_incident_beat)
+            self._addBeat(refusal_beat)
         elif element == StoryStructureElements.Escalation:
             self._addBeat(turn_beat)
             self._addBeat(twist_beat)
