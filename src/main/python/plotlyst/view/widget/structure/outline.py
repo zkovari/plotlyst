@@ -31,10 +31,10 @@ from overrides import overrides
 from qthandy import line, vbox, margins, hbox, spacer, sp, incr_icon, transparent, italic, clear_layout, vspacer
 from qthandy.filter import OpacityEventFilter
 
-from plotlyst.common import PLOTLYST_SECONDARY_COLOR, MAX_NUMBER_OF_ACTS, act_color
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR, MAX_NUMBER_OF_ACTS, act_color, ALT_BACKGROUND_COLOR
 from plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat, motion_beat, \
     disturbance_beat, characteristic_moment_beat, normal_world_beat, general_beat, StoryStructure, turn_beat, \
-    twist_beat, inciting_incident_beat, refusal_beat
+    twist_beat, inciting_incident_beat, refusal_beat, synchronicity_beat, establish_beat, trigger_beat
 from plotlyst.view.common import label, push_btn, wrap, tool_btn, scrolled
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -152,11 +152,23 @@ class _StoryBeatSection(QWidget):
         self.btnAdd = push_btn(IconRegistry.plus_icon(PLOTLYST_SECONDARY_COLOR), 'Add', tooltip=f'Add {beat.text}')
         italic(self.btnAdd)
         self.btnAdd.setStyleSheet(f'border: 0px; color: {PLOTLYST_SECONDARY_COLOR};')
-        self.layout().addWidget(group(self._label, spacer(), self.btnAdd, margin=0))
-        desc = label(beat.description, description=True, wordWrap=True)
-        self.layout().addWidget(wrap(desc, margin_left=20))
+        self.wdgHeader = group(self._label, spacer(), self.btnAdd, margin=0)
+        self.layout().addWidget(self.wdgHeader)
+        self.desc = label(beat.description, description=True, wordWrap=True)
+        self.layout().addWidget(wrap(self.desc, margin_left=20))
 
         self.setMinimumWidth(450)
+
+        self.wdgHeader.installEventFilter(self)
+        self.desc.installEventFilter(self)
+
+    @overrides
+    def eventFilter(self, watched: 'QObject', event: 'QEvent') -> bool:
+        if event.type() == QEvent.Type.Enter:
+            self.setStyleSheet(f'background: {ALT_BACKGROUND_COLOR};')
+        elif event.type() == QEvent.Type.Leave:
+            self.setStyleSheet('')
+        return super().eventFilter(watched, event)
 
 
 class StoryStructureElements(Enum):
@@ -181,6 +193,8 @@ story_structure_element_icons = {
 
 
 class StoryBeatSelectorPopup(PopupDialog):
+    LAST_ELEMENT = StoryStructureElements.Beginning
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._beat: Optional[StoryBeat] = None
@@ -201,16 +215,6 @@ class StoryBeatSelectorPopup(PopupDialog):
         self.wdgSelector = QWidget()
         hbox(self.wdgSelector)
         self.frame.layout().addWidget(self.wdgSelector)
-        self.btnGroup = QButtonGroup()
-        for element in StoryStructureElements:
-            btn = push_btn(
-                IconRegistry.from_name(story_structure_element_icons[element], 'grey',
-                                       color_on=PLOTLYST_SECONDARY_COLOR),
-                text=element.name.replace('_', ' '), checkable=True,
-                properties=['secondary-selector', 'transparent-rounded-bg-on-hover'])
-            self.wdgSelector.layout().addWidget(btn)
-            btn.toggled.connect(partial(self._elementsToggled, element))
-            self.btnGroup.addButton(btn)
         self.frame.layout().addWidget(line())
 
         self.wdgEditor = QWidget()
@@ -224,24 +228,24 @@ class StoryBeatSelectorPopup(PopupDialog):
 
         margins(self.wdgCenter, right=20, top=15)
 
-        self.btnGroup.buttons()[0].setChecked(True)
-        # self._addHeader('Beginning', IconRegistry.cause_icon())
-        # self._addBeat(hook_beat)
-        # self._addBeat(motion_beat)
-        # self._addBeat(disturbance_beat)
-        # self._addBeat(characteristic_moment_beat)
-        # self._addBeat(normal_world_beat)
-        # self._addHeader('Escalation', IconRegistry.rising_action_icon('black'))
-
-        # self._addHeader('Midpoint', IconRegistry.from_name('mdi.middleware-outline'))
-        # self._addBeat(midpoint_mirror)
-        # self._addBeat(midpoint_proactive)
-
         self.btnConfirm = push_btn(text='Close', properties=['base', 'positive'])
         sp(self.btnConfirm).h_exp()
         self.btnConfirm.clicked.connect(self.reject)
 
         self.frame.layout().addWidget(self.btnConfirm)
+
+        self.btnGroup = QButtonGroup()
+        for element in StoryStructureElements:
+            btn = push_btn(
+                IconRegistry.from_name(story_structure_element_icons[element], 'grey',
+                                       color_on=PLOTLYST_SECONDARY_COLOR),
+                text=element.name.replace('_', ' '), checkable=True,
+                properties=['secondary-selector', 'transparent-rounded-bg-on-hover'])
+            self.wdgSelector.layout().addWidget(btn)
+            btn.toggled.connect(partial(self._elementsToggled, element))
+            self.btnGroup.addButton(btn)
+            if element == StoryBeatSelectorPopup.LAST_ELEMENT:
+                btn.setChecked(True)
 
     def display(self) -> Optional[StoryBeat]:
         result = self.exec()
@@ -269,6 +273,7 @@ class StoryBeatSelectorPopup(PopupDialog):
     def _elementsToggled(self, element: StoryStructureElements, toggled: bool):
         if not toggled:
             return
+        StoryBeatSelectorPopup.LAST_ELEMENT = element
         clear_layout(self.wdgCenter)
         if element == StoryStructureElements.Beginning:
             self._addBeat(hook_beat)
@@ -278,7 +283,11 @@ class StoryBeatSelectorPopup(PopupDialog):
             self._addBeat(normal_world_beat)
         elif element == StoryStructureElements.Catalyst:
             self._addBeat(inciting_incident_beat)
+            self._addBeat(synchronicity_beat)
             self._addBeat(refusal_beat)
+            self._addHeader('2-step inciting incident', IconRegistry.inciting_incident_icon('black'))
+            self._addBeat(trigger_beat)
+            self._addBeat(establish_beat)
         elif element == StoryStructureElements.Escalation:
             self._addBeat(turn_beat)
             self._addBeat(twist_beat)

@@ -2332,6 +2332,29 @@ inciting_incident_beat = StoryBeat(text='Inciting Incident',
                                    id=uuid.UUID('a0c2d94a-b53c-485e-a279-f2548bdb38ec'),
                                    act=1, percentage=10)
 
+synchronicity_beat = StoryBeat(text='Synchronicity',
+                               icon='msc.sync',
+                               icon_color='#0077b6',
+                               description='A series of accidents or coincidences take on meaning, calling the protagonist to action as if guided by fate.',
+                               placeholder="Unrelated, but meaningful coincidences call the protagonist to action as if guided by fate.",
+                               id=uuid.UUID('e4351ee3-ed30-42c4-9c3a-2f6b690c8417'),
+                               act=1, percentage=10)
+trigger_beat = StoryBeat('Trigger',
+                         icon='mdi.lightning-bolt-outline',
+                         icon_color='#AD9C58',
+                         description="An event that sets the story in motion and introduces a new situation or problem. Often followed by the 'Establish' beat to establish the story later.",
+                         placeholder="An event that sets the story in motion and introduces a new situation or problem.",
+                         id=uuid.UUID('f127f7db-5715-4d3b-90aa-c074181c765c'),
+                         act=1, percentage=10
+                         )
+establish_beat = StoryBeat('Establish',
+                           icon='fa5s.stamp',
+                           icon_color='#AD7E58',
+                           description='An event or character decision that establishes the story. Often preceded by the Trigger beat to set the story in motion first.',
+                           placeholder='An event or character decision that establishes the story.',
+                           id=uuid.UUID('c23a3e47-1161-4869-8104-c4874ab6f98b'),
+                           act=1, percentage=17)
+
 refusal_beat = StoryBeat(text='Refusal',
                          icon='mdi6.hand-back-left',
                          icon_color='#e5989b',
