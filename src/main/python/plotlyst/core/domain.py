@@ -2381,6 +2381,13 @@ revelation_beat = StoryBeat(text='Revelation',
                             description="A moment where a key information is revealed or discovered",
                             id=uuid.UUID('36d8a7e9-db8d-4d87-a2d0-9170c86aa6c3'))
 
+dark_moment = StoryBeat(text='Dark Moment',
+                        icon='mdi.weather-night',
+                        icon_color='#494368',
+                        description="All-time low moment for the protagonist. They must feel worse than at the beginning of the story.",
+                        id=uuid.UUID('4ded5006-c90a-4825-9de7-e16bf62017a3'), act=2,
+                        percentage=75, enabled=False)
+
 first_pinch_point_beat = StoryBeat(text='First Pinch Point',
                                    id=uuid.UUID('af024374-12e6-44dc-80e6-28f2bc0e59ed'),
                                    icon='fa5s.thermometer-three-quarters',
@@ -2501,7 +2508,8 @@ retrospection_beat = StoryBeat('Retrospection',
                                act=3, percentage=99)
 
 first_plot_points = (first_plot_point, first_plot_point_ponr)
-midpoints = (midpoint, midpoint_ponr, midpoint_mirror, midpoint_proactive, midpoint_false_victory, midpoint_re_dedication)
+midpoints = (
+midpoint, midpoint_ponr, midpoint_mirror, midpoint_proactive, midpoint_false_victory, midpoint_re_dedication)
 
 three_act_structure = StoryStructure(title='Three Act Structure',
                                      id=uuid.UUID('58013be5-1efb-4de4-9dd2-1433ce6edf90'),
@@ -2513,12 +2521,7 @@ three_act_structure = StoryStructure(title='Three Act Structure',
                                             first_pinch_point_beat,
                                             midpoint,
                                             second_pinch_point_beat,
-                                            StoryBeat(text='Dark Moment',
-                                                      icon='mdi.weather-night',
-                                                      icon_color='#494368',
-                                                      description="All-time low moment for the protagonist. They must feel worse than at the beginning of the story.",
-                                                      id=uuid.UUID('4ded5006-c90a-4825-9de7-e16bf62017a3'), act=2,
-                                                      percentage=75, enabled=False),
+                                            dark_moment,
                                             second_plot_point,
                                             crisis,
                                             climax_beat,
