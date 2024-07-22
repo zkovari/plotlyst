@@ -34,7 +34,9 @@ from qthandy.filter import OpacityEventFilter
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, MAX_NUMBER_OF_ACTS, act_color, ALT_BACKGROUND_COLOR
 from plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat, motion_beat, \
     disturbance_beat, characteristic_moment_beat, normal_world_beat, general_beat, StoryStructure, turn_beat, \
-    twist_beat, inciting_incident_beat, refusal_beat, synchronicity_beat, establish_beat, trigger_beat
+    twist_beat, inciting_incident_beat, refusal_beat, synchronicity_beat, establish_beat, trigger_beat, \
+    first_pinch_point_beat, second_pinch_point_beat, crisis, climax_beat, resolution_beat, contrast_beat, \
+    retrospection_beat
 from plotlyst.view.common import label, push_btn, wrap, tool_btn, scrolled
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -177,7 +179,7 @@ class StoryStructureElements(Enum):
     Escalation = auto()
     Midpoint = auto()
     Climax = auto()
-    Falling_action = auto()
+    # Falling_action = auto()
     Ending = auto()
 
 
@@ -187,7 +189,7 @@ story_structure_element_icons = {
     StoryStructureElements.Escalation: 'mdi.slope-uphill',
     StoryStructureElements.Midpoint: 'mdi.middleware-outline',
     StoryStructureElements.Climax: 'fa5s.chevron-up',
-    StoryStructureElements.Falling_action: 'mdi.slope-downhill',
+    # StoryStructureElements.Falling_action: 'mdi.slope-downhill',
     StoryStructureElements.Ending: 'fa5s.water',
 }
 
@@ -222,6 +224,7 @@ class StoryBeatSelectorPopup(PopupDialog):
         self.frame.layout().addWidget(self.wdgEditor)
         self._scrollarea, self.wdgCenter = scrolled(self.wdgEditor, frameless=True, h_on=False)
         self._scrollarea.setProperty('transparent', True)
+        self._scrollarea.setMinimumHeight(400)
         transparent(self.wdgCenter)
         vbox(self.wdgCenter, 10, spacing=8)
         margins(self.wdgCenter, bottom=20)
@@ -291,6 +294,18 @@ class StoryBeatSelectorPopup(PopupDialog):
         elif element == StoryStructureElements.Escalation:
             self._addBeat(turn_beat)
             self._addBeat(twist_beat)
+            self._addBeat(first_pinch_point_beat)
+            self._addBeat(second_pinch_point_beat)
+        elif element == StoryStructureElements.Midpoint:
+            for midpoint in midpoints:
+                self._addBeat(midpoint)
+        elif element == StoryStructureElements.Climax:
+            self._addBeat(climax_beat)
+            self._addBeat(crisis)
+        elif element == StoryStructureElements.Ending:
+            self._addBeat(resolution_beat)
+            self._addBeat(contrast_beat)
+            self._addBeat(retrospection_beat)
 
         self.wdgCenter.layout().addWidget(vspacer())
 
