@@ -2375,6 +2375,12 @@ twist_beat = StoryBeat(text='Twist',
                        icon_color='#f20089',
                        description="Brings an unexpected development to the story by defying readers' expectations")
 
+revelation_beat = StoryBeat(text='Revelation',
+                            icon='fa5s.binoculars',
+                            icon_color='#588157',
+                            description="A moment where a key information is revealed or discovered",
+                            id=uuid.UUID('36d8a7e9-db8d-4d87-a2d0-9170c86aa6c3'))
+
 first_pinch_point_beat = StoryBeat(text='First Pinch Point',
                                    id=uuid.UUID('af024374-12e6-44dc-80e6-28f2bc0e59ed'),
                                    icon='fa5s.thermometer-three-quarters',
@@ -2445,6 +2451,19 @@ midpoint_proactive = StoryBeat('Reactive to Proactive Shift',
                                id=uuid.UUID('d7d1b457-353f-4259-92c2-0cc7da0e4b88'),
                                act=2, percentage=50
                                )
+midpoint_false_victory = StoryBeat(text='False victory',
+                                   icon='mdi.trophy-broken',
+                                   icon_color='#b5838d',
+                                   description="A moment when the protagonist appears to achieve their goal, only to face immediate significant setbacks",
+                                   id=uuid.UUID('404883e9-d110-4e83-9c52-e37bb888632c'),
+                                   act=2, percentage=50)
+midpoint_re_dedication = StoryBeat(text='Re-dedication',
+                                   icon='fa5s.heartbeat',
+                                   icon_color='',
+                                   description="A moment when the protagonist renews their commitment to their goal or mission, often after facing significant setbacks or doubts.",
+                                   placeholder="A moment when the protagonist renews their commitment to their goal or mission.",
+                                   id=uuid.UUID('7b63be66-1c96-4332-af78-ffa62b79bbd4'),
+                                   act=2, percentage=50)
 crisis = StoryBeat(text='Crisis',
                    icon='mdi.arrow-decision-outline',
                    icon_color='#ce2d4f',
@@ -2482,7 +2501,7 @@ retrospection_beat = StoryBeat('Retrospection',
                                act=3, percentage=99)
 
 first_plot_points = (first_plot_point, first_plot_point_ponr)
-midpoints = (midpoint, midpoint_ponr, midpoint_mirror, midpoint_proactive)
+midpoints = (midpoint, midpoint_ponr, midpoint_mirror, midpoint_proactive, midpoint_false_victory, midpoint_re_dedication)
 
 three_act_structure = StoryStructure(title='Three Act Structure',
                                      id=uuid.UUID('58013be5-1efb-4de4-9dd2-1433ce6edf90'),
