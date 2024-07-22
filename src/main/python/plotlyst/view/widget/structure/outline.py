@@ -36,7 +36,7 @@ from plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat,
     disturbance_beat, characteristic_moment_beat, normal_world_beat, general_beat, StoryStructure, turn_beat, \
     twist_beat, inciting_incident_beat, refusal_beat, synchronicity_beat, establish_beat, trigger_beat, \
     first_pinch_point_beat, second_pinch_point_beat, crisis, climax_beat, resolution_beat, contrast_beat, \
-    retrospection_beat, revelation_beat
+    retrospection_beat, revelation_beat, first_plot_point, second_plot_point, first_plot_point_ponr
 from plotlyst.view.common import label, push_btn, wrap, tool_btn, scrolled
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -178,6 +178,7 @@ class StoryStructureElements(Enum):
     Catalyst = auto()
     Escalation = auto()
     Midpoint = auto()
+    # Plot_points = auto()
     Climax = auto()
     # Falling_action = auto()
     Ending = auto()
@@ -188,6 +189,7 @@ story_structure_element_icons = {
     StoryStructureElements.Catalyst: 'fa5s.vial',
     StoryStructureElements.Escalation: 'mdi.slope-uphill',
     StoryStructureElements.Midpoint: 'mdi.middleware-outline',
+    # StoryStructureElements.Plot_points: 'mdi.pillar',
     StoryStructureElements.Climax: 'fa5s.chevron-up',
     # StoryStructureElements.Falling_action: 'mdi.slope-downhill',
     StoryStructureElements.Ending: 'fa5s.water',
@@ -300,6 +302,10 @@ class StoryBeatSelectorPopup(PopupDialog):
         elif element == StoryStructureElements.Midpoint:
             for midpoint in midpoints:
                 self._addBeat(midpoint)
+        # elif element == StoryStructureElements.Plot_points:
+        #     self._addBeat(first_plot_point)
+        #     self._addBeat(first_plot_point_ponr)
+        #     self._addBeat(second_plot_point)
         elif element == StoryStructureElements.Climax:
             self._addBeat(climax_beat)
             self._addBeat(crisis)
