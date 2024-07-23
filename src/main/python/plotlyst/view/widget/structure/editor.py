@@ -272,8 +272,8 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.wdgStructureOutline.beatChanged.connect(self._save)
         self.wdgOutline.layout().addWidget(self.wdgStructureOutline)
 
-        self._structureNotes = StoryStructureNotes()
-        hbox(self.notes).addWidget(self._structureNotes)
+        # self._structureNotes = StoryStructureNotes()
+        # hbox(self.notes).addWidget(self._structureNotes)
         hbox(self.beats, 5, 0)
 
         self._beatsPreview: Optional[BeatsPreview] = None
@@ -326,7 +326,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self._beatsPreview.attachStructurePreview(self.wdgPreview)
         self.wdgStructureOutline.attachBeatsPreview(self._beatsPreview)
 
-        self._structureNotes.setNovel(self.novel)
+        # self._structureNotes.setNovel(self.novel)
         for structure in self.novel.story_structures:
             self._addStructureWidget(structure)
 
@@ -410,7 +410,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
     @busy
     def _refreshStructure(self, structure: StoryStructure):
         self.wdgStructureOutline.setStructure(structure)
-        self._structureNotes.setStructure(structure)
+        # self._structureNotes.setStructure(structure)
 
         if self.wdgPreview.novel is not None:
             clear_layout(self.layoutPreview)
