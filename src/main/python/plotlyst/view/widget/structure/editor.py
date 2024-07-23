@@ -34,7 +34,7 @@ from qtmenu import MenuWidget
 
 from plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
-    Character, StoryBeatType
+    Character, StoryBeatType, StoryStructureDisplayType
 from plotlyst.event.core import EventListener, Event, emit_event
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import NovelStoryStructureUpdated, CharacterChangedEvent, CharacterDeletedEvent, \
@@ -223,10 +223,25 @@ class StoryStructureNotes(QWidget):
 
 
 class TimelineSettingToggle(SettingBaseWidget):
-    def __init__(self, parent=None):
+    changed = pyqtSignal()
+
+    def __init__(self, structure: StoryStructure, parent=None):
         super().__init__(parent)
-        self._title.setText('Timeline')
-        self._description.setText("Consider pacing and beats' locations in the story structure")
+        self.structure = structure
+        self._title.setText('Proportional Timeline')
+        self._description.setText(
+            "Consider pacing and story beats' locations according to their proportional occurrence within the story")
+
+        self._toggle.setChecked(self.structure.display_type == StoryStructureDisplayType.Proportional_timeline)
+
+    @overrides
+    def _clicked(self, toggled: bool):
+        if toggled:
+            self.structure.display_type = StoryStructureDisplayType.Proportional_timeline
+        else:
+            self.structure.display_type = StoryStructureDisplayType.Sequential_timeline
+
+        self.changed.emit()
 
 
 class StoryStructureSettingsPopup(PopupDialog):
@@ -247,7 +262,7 @@ class StoryStructureSettingsPopup(PopupDialog):
         self.wdgTitle.layout().addWidget(self.btnReset)
         self.frame.layout().addWidget(self.wdgTitle)
 
-        self.timelineToggle = TimelineSettingToggle()
+        self.timelineToggle = TimelineSettingToggle(self.structure)
         self.frame.layout().addWidget(self.timelineToggle)
 
         self.btnConfirm = push_btn(text='Close', properties=['base', 'positive'])
@@ -452,6 +467,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
 
     def _configureStructure(self):
         StoryStructureSettingsPopup.popup(self.novel.active_story_structure)
+        self.wdgPreview.setStructure(self.novel)
 
     @busy
     def _refreshStructure(self, structure: StoryStructure):
