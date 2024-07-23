@@ -148,6 +148,11 @@ class StoryStructureTimelineWidget(QWidget):
     def setStructure(self, novel: Novel, structure: Optional[StoryStructure] = None):
         self.novel = novel
         self.structure = structure if structure else novel.active_story_structure
+        for wdg in self._containers.values():
+            gc(wdg)
+        self._containers.clear()
+        for wdg in self._beats.values():
+            gc(wdg)
         self._beats.clear()
 
         occupied_beats = acts_registry.occupied_beats()
@@ -162,6 +167,7 @@ class StoryStructureTimelineWidget(QWidget):
             self.__initButton(beat, btn, occupied_beats)
 
         self.refreshActs()
+        self._rearrangeBeats()
 
     def __initButton(self, beat: StoryBeat, btn: Union[QAbstractButton, _BeatButton], occupied_beats: Set[StoryBeat]):
         if beat.icon:
@@ -179,8 +185,7 @@ class StoryStructureTimelineWidget(QWidget):
                 if self._beatsCheckable:
                     btn.setCheckable(True)
                 self._beatToggled(btn, False)
-        if not beat.enabled:
-            btn.setHidden(True)
+        btn.setVisible(beat.enabled)
 
     @overrides
     def minimumSizeHint(self) -> QSize:

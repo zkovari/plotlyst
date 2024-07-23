@@ -51,7 +51,7 @@ from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.display import IconText
 from plotlyst.view.widget.input import AutoAdjustableTextEdit
 from plotlyst.view.widget.structure.beat import BeatsPreview
-from plotlyst.view.widget.structure.outline import StoryStructureOutline, StoryStructureTimelineWidget
+from plotlyst.view.widget.structure.outline import StoryStructureOutline
 from plotlyst.view.widget.structure.template import StoryStructureSelectorDialog
 
 
@@ -412,11 +412,6 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.wdgStructureOutline.setStructure(structure)
         # self._structureNotes.setStructure(structure)
 
-        if self.wdgPreview.novel is not None:
-            clear_layout(self.layoutPreview)
-            self.wdgPreview = StoryStructureTimelineWidget(self)
-            self.__initWdgPreview()
-            self.layoutPreview.addWidget(self.wdgPreview)
         self.wdgPreview.setStructure(self.novel)
         self._beatsPreview.attachStructurePreview(self.wdgPreview)
         self.wdgStructureOutline.attachStructurePreview(self.wdgPreview)
