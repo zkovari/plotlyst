@@ -236,7 +236,6 @@ class StoryBeatSelectorPopup(PopupDialog):
         self.btnConfirm = push_btn(text='Close', properties=['base', 'positive'])
         sp(self.btnConfirm).h_exp()
         self.btnConfirm.clicked.connect(self.reject)
-
         self.frame.layout().addWidget(self.btnConfirm)
 
         self.btnGroup = QButtonGroup()

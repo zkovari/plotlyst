@@ -28,7 +28,7 @@ from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QButtonGroup
 from overrides import overrides
 from qthandy import translucent, gc, flow, hbox, clear_layout, vbox, sp, margins, vspacer, \
-    incr_font, bold, busy
+    incr_font, bold, busy, italic, incr_icon, spacer
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -42,14 +42,15 @@ from plotlyst.events import NovelStoryStructureUpdated, CharacterChangedEvent, C
 from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon, label, frame, shadow, action, \
-    set_tab_visible
+    set_tab_visible, push_btn
 from plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
 from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.confirm import confirmed
-from plotlyst.view.widget.display import IconText
+from plotlyst.view.widget.display import IconText, PopupDialog, Icon
 from plotlyst.view.widget.input import AutoAdjustableTextEdit
+from plotlyst.view.widget.settings import SettingBaseWidget
 from plotlyst.view.widget.structure.beat import BeatsPreview
 from plotlyst.view.widget.structure.outline import StoryStructureOutline
 from plotlyst.view.widget.structure.template import StoryStructureSelectorDialog
@@ -221,6 +222,40 @@ class StoryStructureNotes(QWidget):
         self.repo.update_novel(self._novel)
 
 
+class TimelineSettingToggle(SettingBaseWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+
+class StoryStructureSettingsPopup(PopupDialog):
+    def __init__(self, structure: StoryStructure, parent=None):
+        super().__init__(parent)
+        self.structure = structure
+
+        self.wdgTitle = QWidget()
+        hbox(self.wdgTitle)
+        self.wdgTitle.layout().addWidget(spacer())
+        icon = Icon()
+        icon.setIcon(IconRegistry.cog_icon())
+        incr_icon(icon, 4)
+        self.wdgTitle.layout().addWidget(icon)
+        self.wdgTitle.layout().addWidget(label('Story structure settings', bold=True, h4=True))
+        self.wdgTitle.layout().addWidget(spacer())
+        self.wdgTitle.layout().addWidget(self.btnReset)
+        self.frame.layout().addWidget(self.wdgTitle)
+
+        self.timelineToggle = TimelineSettingToggle()
+        self.frame.layout().addWidget(self.timelineToggle)
+
+        self.btnConfirm = push_btn(text='Close', properties=['base', 'positive'])
+        sp(self.btnConfirm).h_exp()
+        self.btnConfirm.clicked.connect(self.reject)
+        self.frame.layout().addWidget(self.btnConfirm)
+
+    def display(self):
+        self.exec()
+
+
 class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
     def __init__(self, parent=None):
         super(StoryStructureEditor, self).__init__(parent)
@@ -253,6 +288,11 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.btnLinkCharacter.setIcon(IconRegistry.character_icon())
         self.btnLinkCharacter.installEventFilter(ButtonPressResizeEventFilter(self.btnLinkCharacter))
         self.btnLinkCharacter.installEventFilter(OpacityEventFilter(self.btnLinkCharacter, leaveOpacity=0.8))
+        self.btnConfigure.setIcon(IconRegistry.cog_icon(color='grey'))
+        italic(self.btnConfigure)
+        self.btnConfigure.installEventFilter(ButtonPressResizeEventFilter(self.btnConfigure))
+        self.btnConfigure.installEventFilter(OpacityEventFilter(self.btnConfigure))
+        self.btnConfigure.clicked.connect(self._configureStructure)
 
         set_tab_icon(self.tabWidget, self.tabOutline,
                      IconRegistry.from_name('mdi6.timeline-outline', rotated=90, color_on=PLOTLYST_SECONDARY_COLOR))
@@ -406,6 +446,9 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         structure: Optional[StoryStructure] = StoryStructureSelectorDialog.display(self.novel)
         if structure:
             self._addNewStructure(structure)
+
+    def _configureStructure(self):
+        StoryStructureSettingsPopup.popup(self.novel.active_story_structure)
 
     @busy
     def _refreshStructure(self, structure: StoryStructure):
