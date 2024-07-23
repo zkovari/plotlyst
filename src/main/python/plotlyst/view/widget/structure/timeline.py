@@ -23,14 +23,14 @@ from functools import partial
 from typing import List, Optional, Dict, Union, Set
 
 import qtanim
-from PyQt6.QtCore import Qt, QEvent, pyqtSignal, QObject
+from PyQt6.QtCore import Qt, QEvent, pyqtSignal, QObject, QSize
 from PyQt6.QtGui import QColor, QDragEnterEvent, QDropEvent, QResizeEvent, QCursor
 from PyQt6.QtWidgets import QWidget, QToolButton, QSizePolicy, QPushButton, QSplitter, QAbstractButton
 from overrides import overrides
 from qthandy import hbox, transparent, italic, translucent, gc, pointy, clear_layout, vbox, margins
 from qthandy.filter import InstantTooltipEventFilter, DragEventFilter
 
-from plotlyst.common import PLOTLYST_SECONDARY_COLOR, act_color
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR, act_color, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import StoryBeat, StoryBeatType, Novel, \
     StoryStructure, Scene, StoryStructureDisplayType
 from plotlyst.service.cache import acts_registry
@@ -42,11 +42,55 @@ class _BeatButton(QToolButton):
     def __init__(self, beat: StoryBeat, parent=None):
         super(_BeatButton, self).__init__(parent)
         self.beat = beat
-        self.setStyleSheet('QToolButton {background-color: rgba(0,0,0,0); border:0px;} QToolTip {border: 0px;}')
+        self._borderStyle: bool = False
+
+        # self.setStyleSheet('QToolButton {background-color: rgba(0,0,0,0); border:0px;} QToolTip {border: 0px;}')
         self.installEventFilter(InstantTooltipEventFilter(self))
+        transparent(self)
 
     def dataFunc(self, _):
         return self.beat
+
+    def setBorderStyleEnabled(self, enabled: bool):
+        self._borderStyle = enabled
+        if self._borderStyle:
+            self._initBorderStyle()
+        else:
+            transparent(self)
+
+    def _initBorderStyle(self):
+        self.setStyleSheet(f'''
+                            QToolButton {{
+                                            background-color: {RELAXED_WHITE_COLOR};
+                                            border: 2px solid {self.beat.icon_color};
+                                            border-radius: 17px;
+                                            padding: 4px;
+                                        }}
+                            QToolButton:menu-indicator {{
+                                width: 0;
+                            }}
+                            ''')
+        translucent(self, 0.6)
+
+    def highlight(self):
+        # def teardown():
+        #     if self._borderStyle:
+        #         translucent(self, 0.6)
+        # else:
+        #     transparent(self)
+
+        if not self._borderStyle:
+            self.setStyleSheet(
+                f'QToolButton {{border: 3px dotted {PLOTLYST_SECONDARY_COLOR}; border-radius: 5;}} QToolTip {{border: 0px;}}')
+            self.setIconSize(QSize(24, 24))
+        qtanim.glow(self, color=QColor(self.beat.icon_color))
+
+    def unhighlight(self):
+        if self._borderStyle:
+            translucent(self, 0.6)
+        else:
+            transparent(self)
+            self.setIconSize(QSize(20, 20))
 
 
 class _ContainerButton(QPushButton):
@@ -114,7 +158,7 @@ class StoryStructureTimelineWidget(QWidget):
         self.structure: Optional[StoryStructure] = None
 
         self._acts: List[QPushButton] = []
-        self._beats: Dict[StoryBeat, QToolButton] = {}
+        self._beats: Dict[StoryBeat, _BeatButton] = {}
         self._containers: Dict[StoryBeat, QPushButton] = {}
         self._actsSplitter: Optional[QSplitter] = None
         self.btnCurrentScene = QToolButton(self)
@@ -176,7 +220,7 @@ class StoryStructureTimelineWidget(QWidget):
         else:
             margins(self, bottom=self._beatHeight + self._containerTopMargin)
 
-        if self.structure.display_type == StoryStructureDisplayType.Proportional_timeline:
+        if self.isProportionalDisplay():
             self.refreshActs()
             self._rearrangeBeats()
         else:
@@ -196,13 +240,12 @@ class StoryStructureTimelineWidget(QWidget):
                 btn.installEventFilter(
                     DragEventFilter(btn, self.BeatMimeType, btn.dataFunc, hideTarget=True))
                 btn.setCursor(Qt.CursorShape.OpenHandCursor)
+            if not self.isProportionalDisplay():
+                btn.setBorderStyleEnabled(True)
             if self._checkOccupiedBeats and beat not in occupied_beats:
                 if self._beatsCheckable:
                     btn.setCheckable(True)
                 self._beatToggled(btn, False)
-            if self.structure.display_type == StoryStructureDisplayType.Sequential_timeline:
-                btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
-                btn.setText(beat.text)
         btn.setVisible(beat.enabled)
 
     @overrides
@@ -292,10 +335,10 @@ class StoryStructureTimelineWidget(QWidget):
         btn = self._beats.get(beat)
         if btn is None:
             return
-        btn.setStyleSheet(
-            f'QToolButton {{border: 3px dotted {PLOTLYST_SECONDARY_COLOR}; border-radius: 5;}} QToolTip {{border: 0px;}}')
-        # btn.setFixedSize(self._beatHeight + 6, self._beatHeight + 6)
-        qtanim.glow(btn, color=QColor(beat.icon_color))
+
+        if self.isProportionalDisplay():
+            btn.setFixedSize(self._beatHeight + 6, self._beatHeight + 6)
+        btn.highlight()
 
     def refreshBeat(self, beat: StoryBeat):
         if beat.type == StoryBeatType.BEAT:
@@ -374,6 +417,9 @@ class StoryStructureTimelineWidget(QWidget):
     def highlightScene(self, scene: Scene):
         if not self.isVisible():
             return
+        if not self.isProportionalDisplay():
+            return
+
         beat = scene.beat(self.novel)
         if beat:
             self.highlightBeat(beat)
@@ -415,8 +461,9 @@ class StoryStructureTimelineWidget(QWidget):
 
     def unhighlightBeats(self):
         for btn in self._beats.values():
-            transparent(btn)
-            # btn.setFixedSize(self._beatHeight, self._beatHeight)
+            btn.unhighlight()
+            if self.isProportionalDisplay():
+                btn.setFixedSize(self._beatHeight, self._beatHeight)
 
     def clearHighlights(self):
         self.unhighlightBeats()
