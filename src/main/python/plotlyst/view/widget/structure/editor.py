@@ -225,12 +225,15 @@ class StoryStructureNotes(QWidget):
 class TimelineSettingToggle(SettingBaseWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._title.setText('Timeline')
+        self._description.setText("Consider pacing and beats' locations in the story structure")
 
 
 class StoryStructureSettingsPopup(PopupDialog):
     def __init__(self, structure: StoryStructure, parent=None):
         super().__init__(parent)
         self.structure = structure
+        self.setMinimumSize(350, 250)
 
         self.wdgTitle = QWidget()
         hbox(self.wdgTitle)
