@@ -226,6 +226,8 @@ class StoryStructureTimelineWidget(QWidget):
     def __initButton(self, beat: StoryBeat, btn: Union[QAbstractButton, _BeatButton], occupied_beats: Set[StoryBeat]):
         if beat.icon:
             btn.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
+        elif beat.seq:
+            btn.setIcon(IconRegistry.from_name(f'mdi.numeric-{beat.seq}', beat.icon_color, scale=1.5))
         btn.setToolTip(f'<b style="color: {beat.icon_color}">{beat.text}')
         if beat.type == StoryBeatType.BEAT:
             btn.toggled.connect(partial(self._beatToggled, btn))
