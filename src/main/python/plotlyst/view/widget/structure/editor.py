@@ -28,13 +28,13 @@ from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QButtonGroup
 from overrides import overrides
 from qthandy import translucent, gc, flow, hbox, clear_layout, vbox, sp, margins, vspacer, \
-    incr_font, bold, busy
+    incr_font, bold, busy, italic, incr_icon, spacer, transparent
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
-from plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR
+from plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR, MAX_NUMBER_OF_ACTS
 from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
-    Character, StoryBeatType
+    Character, StoryBeatType, StoryStructureDisplayType
 from plotlyst.event.core import EventListener, Event, emit_event
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import NovelStoryStructureUpdated, CharacterChangedEvent, CharacterDeletedEvent, \
@@ -42,16 +42,19 @@ from plotlyst.events import NovelStoryStructureUpdated, CharacterChangedEvent, C
 from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon, label, frame, shadow, action, \
-    set_tab_visible
+    set_tab_visible, push_btn
 from plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
 from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.style.base import apply_white_menu
+from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.confirm import confirmed
-from plotlyst.view.widget.display import IconText
+from plotlyst.view.widget.display import IconText, PopupDialog, Icon
 from plotlyst.view.widget.input import AutoAdjustableTextEdit
+from plotlyst.view.widget.settings import SettingBaseWidget
 from plotlyst.view.widget.structure.beat import BeatsPreview
 from plotlyst.view.widget.structure.outline import StoryStructureOutline
+from plotlyst.view.widget.structure.selector import ActToolButton
 from plotlyst.view.widget.structure.template import StoryStructureSelectorDialog
 
 
@@ -221,6 +224,98 @@ class StoryStructureNotes(QWidget):
         self.repo.update_novel(self._novel)
 
 
+class TimelineSettingToggle(SettingBaseWidget):
+    changed = pyqtSignal()
+
+    def __init__(self, structure: StoryStructure, parent=None):
+        super().__init__(parent)
+        self.structure = structure
+        self._title.setText('Proportional Timeline')
+        self._description.setText(
+            "Consider pacing and story beats' locations according to their proportional occurrence within the story")
+
+        self._toggle.setChecked(self.structure.display_type == StoryStructureDisplayType.Proportional_timeline)
+
+    @overrides
+    def _clicked(self, toggled: bool):
+        if toggled:
+            self.structure.display_type = StoryStructureDisplayType.Proportional_timeline
+        else:
+            self.structure.display_type = StoryStructureDisplayType.Sequential_timeline
+
+        self.changed.emit()
+
+
+class ActSetting(QWidget):
+    changed = pyqtSignal()
+
+    def __init__(self, structure: StoryStructure, parent=None):
+        super().__init__(parent)
+        self.structure = structure
+
+        self._title = QPushButton('Expected number of acts')
+        apply_button_palette_color(self._title, PLOTLYST_SECONDARY_COLOR)
+        transparent(self._title)
+        incr_font(self._title, 2)
+
+        self._btnGroup = QButtonGroup()
+        self._wdgButtons = QWidget()
+        hbox(self._wdgButtons)
+
+        self._wdgButtons.layout().addWidget(spacer())
+        expected_act = self.structure.expected_acts if self.structure.expected_acts is not None else MAX_NUMBER_OF_ACTS
+        for act in range(0, MAX_NUMBER_OF_ACTS + 1):
+            btn = ActToolButton(act, self.structure, colorOn=PLOTLYST_SECONDARY_COLOR)
+            if expected_act == act:
+                btn.setChecked(True)
+            self._btnGroup.addButton(btn)
+            self._wdgButtons.layout().addWidget(btn)
+        self._wdgButtons.layout().addWidget(spacer())
+        self._btnGroup.buttonClicked.connect(self._clicked)
+
+        vbox(self)
+        self.layout().addWidget(self._title, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self._wdgButtons)
+
+    def _clicked(self):
+        self.structure.expected_acts = self._btnGroup.checkedButton().act
+        self.changed.emit()
+
+
+class StoryStructureSettingsPopup(PopupDialog):
+    def __init__(self, structure: StoryStructure, parent=None):
+        super().__init__(parent)
+        self.structure = structure
+        self.setMinimumSize(450, 250)
+
+        self.wdgTitle = QWidget()
+        hbox(self.wdgTitle)
+        self.wdgTitle.layout().addWidget(spacer())
+        icon = Icon()
+        icon.setIcon(IconRegistry.cog_icon())
+        incr_icon(icon, 4)
+        self.wdgTitle.layout().addWidget(icon)
+        self.wdgTitle.layout().addWidget(label('Story structure settings', bold=True, h4=True))
+        self.wdgTitle.layout().addWidget(spacer())
+        self.wdgTitle.layout().addWidget(self.btnReset)
+        self.frame.layout().addWidget(self.wdgTitle)
+
+        self.timelineToggle = TimelineSettingToggle(self.structure)
+        self.frame.layout().addWidget(self.timelineToggle)
+
+        if self.structure.custom:
+            self.actSetting = ActSetting(self.structure)
+            self.frame.layout().addWidget(self.actSetting)
+
+        self.btnConfirm = push_btn(text='Close', properties=['base', 'positive'])
+        sp(self.btnConfirm).h_exp()
+        self.btnConfirm.clicked.connect(self.reject)
+        self.frame.layout().addWidget(self.btnConfirm)
+
+    def display(self):
+        self.exec()
+
+
 class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
     def __init__(self, parent=None):
         super(StoryStructureEditor, self).__init__(parent)
@@ -253,6 +348,11 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.btnLinkCharacter.setIcon(IconRegistry.character_icon())
         self.btnLinkCharacter.installEventFilter(ButtonPressResizeEventFilter(self.btnLinkCharacter))
         self.btnLinkCharacter.installEventFilter(OpacityEventFilter(self.btnLinkCharacter, leaveOpacity=0.8))
+        self.btnConfigure.setIcon(IconRegistry.cog_icon(color='grey'))
+        italic(self.btnConfigure)
+        self.btnConfigure.installEventFilter(ButtonPressResizeEventFilter(self.btnConfigure))
+        self.btnConfigure.installEventFilter(OpacityEventFilter(self.btnConfigure))
+        self.btnConfigure.clicked.connect(self._configureStructure)
 
         set_tab_icon(self.tabWidget, self.tabOutline,
                      IconRegistry.from_name('mdi6.timeline-outline', rotated=90, color_on=PLOTLYST_SECONDARY_COLOR))
@@ -298,7 +398,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
                 if btn.structure() is event.structure:
                     btn.setChecked(True)
             self._save()
-            emit_event(self.novel, NovelStoryStructureUpdated(self))
+            self._emit()
             return
 
         self._activeStructureToggled(self.novel.active_story_structure, True)
@@ -351,7 +451,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.novel.story_structures.append(structure)
         self._addStructureWidget(structure)
         self.btnGroupStructure.buttons()[-1].setChecked(True)
-        emit_event(self.novel, NovelStoryStructureUpdated(self))
+        self._emit()
 
     def _removeStructure(self):
         if len(self.novel.story_structures) < 2:
@@ -380,7 +480,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.novel.story_structures.remove(structure)
         if self.btnGroupStructure.buttons():
             self.btnGroupStructure.buttons()[-1].setChecked(True)
-            emit_event(self.novel, NovelStoryStructureUpdated(self))
+            self._emit()
         self._save()
 
         self._toggleDeleteButton()
@@ -393,26 +493,35 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
     def _editStructure(self):
         StoryStructureSelectorDialog.display(self.novel, self.novel.active_story_structure)
         self._activeStructureToggled(self.novel.active_story_structure, True)
-        emit_event(self.novel, NovelStoryStructureUpdated(self))
+        self._emit()
 
     def _characterLinked(self, character: Character):
         self.novel.active_story_structure.set_character(character)
         self.btnGroupStructure.checkedButton().refresh(True)
         self._save()
         self._activeStructureToggled(self.novel.active_story_structure, True)
-        emit_event(self.novel, NovelStoryStructureUpdated(self))
+        self._emit()
 
     def _selectTemplateStructure(self):
         structure: Optional[StoryStructure] = StoryStructureSelectorDialog.display(self.novel)
         if structure:
             self._addNewStructure(structure)
 
+    def _configureStructure(self):
+        structure = self.novel.active_story_structure
+        StoryStructureSettingsPopup.popup(self.novel.active_story_structure)
+        self.wdgPreview.setStructure(self.novel, structure)
+        self.wdgPreview.setHidden(structure.display_type == StoryStructureDisplayType.Sequential_timeline)
+        self._save()
+        self._emit()
+
     @busy
     def _refreshStructure(self, structure: StoryStructure):
         self.wdgStructureOutline.setStructure(structure)
         # self._structureNotes.setStructure(structure)
 
-        self.wdgPreview.setStructure(self.novel)
+        self.wdgPreview.setStructure(self.novel, structure)
+        self.wdgPreview.setHidden(structure.display_type == StoryStructureDisplayType.Sequential_timeline)
         self._beatsPreview.attachStructurePreview(self.wdgPreview)
         self.wdgStructureOutline.attachStructurePreview(self.wdgPreview)
         self._beatsPreview.setStructure(structure)
@@ -433,7 +542,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
             return
 
         self._save()
-        emit_event(self.novel, NovelStoryStructureUpdated(self))
+        self._emit()
 
     def __initWdgPreview(self):
         self.wdgPreview.setCheckOccupiedBeats(False)
@@ -445,14 +554,17 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
 
     def _timelineChanged(self):
         self._save()
-        emit_event(self.novel, NovelStoryStructureUpdated(self))
+        self._emit()
 
     def _beatMoved(self):
         QTimer.singleShot(20, lambda: self._refreshStructure(self.novel.active_story_structure))
-        emit_event(self.novel, NovelStoryStructureUpdated(self))
+        self._emit()
 
     def _toggleDeleteButton(self):
         self.btnDelete.setEnabled(len(self.novel.story_structures) > 1)
 
     def _save(self):
         self.repo.update_novel(self.novel)
+
+    def _emit(self):
+        emit_event(self.novel, NovelStoryStructureUpdated(self))

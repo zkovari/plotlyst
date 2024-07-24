@@ -2251,6 +2251,11 @@ class Board:
     statuses: List[TaskStatus] = field(default_factory=default_task_statues)
 
 
+class StoryStructureDisplayType(Enum):
+    Proportional_timeline = 'proportional_timeline'
+    Sequential_timeline = 'sequential_timeline'
+
+
 @dataclass
 class StoryStructure(CharacterBased):
     title: str
@@ -2264,6 +2269,8 @@ class StoryStructure(CharacterBased):
     acts_text: Dict[int, str] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
     acts_icon: Dict[int, str] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
     acts: int = 3
+    display_type: StoryStructureDisplayType = StoryStructureDisplayType.Proportional_timeline
+    expected_acts: Optional[int] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
     def __post_init__(self):
         self._character: Optional[Character] = None
@@ -2509,7 +2516,7 @@ retrospection_beat = StoryBeat('Retrospection',
 
 first_plot_points = (first_plot_point, first_plot_point_ponr)
 midpoints = (
-midpoint, midpoint_ponr, midpoint_mirror, midpoint_proactive, midpoint_false_victory, midpoint_re_dedication)
+    midpoint, midpoint_ponr, midpoint_mirror, midpoint_proactive, midpoint_false_victory, midpoint_re_dedication)
 
 three_act_structure = StoryStructure(title='Three Act Structure',
                                      id=uuid.UUID('58013be5-1efb-4de4-9dd2-1433ce6edf90'),

@@ -176,13 +176,15 @@ class StructureBeatSelectorButton(QPushButton):
 
 
 class ActToolButton(QToolButton):
-    def __init__(self, act: int, structure: StoryStructure, parent=None):
+    def __init__(self, act: int, structure: StoryStructure, parent=None, colorOn=None):
         super().__init__(parent)
         self.act = act
         self.setProperty('base', True)
         pointy(self)
         icon_name = structure.acts_icon.get(act, f'mdi.numeric-{act}-circle')
-        self.setIcon(IconRegistry.from_name(icon_name, color='grey', color_on=act_color(act, structure.acts)))
+        if colorOn is None:
+            colorOn = act_color(act, structure.acts)
+        self.setIcon(IconRegistry.from_name(icon_name, color='grey', color_on=colorOn))
         self.setCheckable(True)
 
 

@@ -84,7 +84,7 @@ class StoryStructureBeatWidget(OutlineItemWidget):
             super().enterEvent(event)
         if self._structurePreview:
             self._structurePreview.highlightBeat(self.beat)
-        if self._allowActs and (self._structure.acts < MAX_NUMBER_OF_ACTS or self._btnEndsAct.isChecked()):
+        if self._allowActs and (self._structure.acts < self._maxNumberOfActs() or self._btnEndsAct.isChecked()):
             self.refreshActButton()
             self._btnEndsAct.setVisible(True)
 
@@ -140,6 +140,11 @@ class StoryStructureBeatWidget(OutlineItemWidget):
 
         self.changed.emit()
         self.actChanged.emit()
+
+    def _maxNumberOfActs(self) -> int:
+        if self._structure.expected_acts is not None:
+            return self._structure.expected_acts
+        return MAX_NUMBER_OF_ACTS
 
 
 class _StoryBeatSection(QWidget):
@@ -236,7 +241,6 @@ class StoryBeatSelectorPopup(PopupDialog):
         self.btnConfirm = push_btn(text='Close', properties=['base', 'positive'])
         sp(self.btnConfirm).h_exp()
         self.btnConfirm.clicked.connect(self.reject)
-
         self.frame.layout().addWidget(self.btnConfirm)
 
         self.btnGroup = QButtonGroup()
