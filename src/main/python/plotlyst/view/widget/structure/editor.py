@@ -398,7 +398,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
                 if btn.structure() is event.structure:
                     btn.setChecked(True)
             self._save()
-            emit_event(self.novel, NovelStoryStructureUpdated(self))
+            self._emit()
             return
 
         self._activeStructureToggled(self.novel.active_story_structure, True)
@@ -451,7 +451,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.novel.story_structures.append(structure)
         self._addStructureWidget(structure)
         self.btnGroupStructure.buttons()[-1].setChecked(True)
-        emit_event(self.novel, NovelStoryStructureUpdated(self))
+        self._emit()
 
     def _removeStructure(self):
         if len(self.novel.story_structures) < 2:
@@ -480,7 +480,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.novel.story_structures.remove(structure)
         if self.btnGroupStructure.buttons():
             self.btnGroupStructure.buttons()[-1].setChecked(True)
-            emit_event(self.novel, NovelStoryStructureUpdated(self))
+            self._emit()
         self._save()
 
         self._toggleDeleteButton()
@@ -493,14 +493,14 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
     def _editStructure(self):
         StoryStructureSelectorDialog.display(self.novel, self.novel.active_story_structure)
         self._activeStructureToggled(self.novel.active_story_structure, True)
-        emit_event(self.novel, NovelStoryStructureUpdated(self))
+        self._emit()
 
     def _characterLinked(self, character: Character):
         self.novel.active_story_structure.set_character(character)
         self.btnGroupStructure.checkedButton().refresh(True)
         self._save()
         self._activeStructureToggled(self.novel.active_story_structure, True)
-        emit_event(self.novel, NovelStoryStructureUpdated(self))
+        self._emit()
 
     def _selectTemplateStructure(self):
         structure: Optional[StoryStructure] = StoryStructureSelectorDialog.display(self.novel)
@@ -510,6 +510,8 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
     def _configureStructure(self):
         StoryStructureSettingsPopup.popup(self.novel.active_story_structure)
         self.wdgPreview.setStructure(self.novel)
+        self._save()
+        self._emit()
 
     @busy
     def _refreshStructure(self, structure: StoryStructure):
@@ -537,7 +539,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
             return
 
         self._save()
-        emit_event(self.novel, NovelStoryStructureUpdated(self))
+        self._emit()
 
     def __initWdgPreview(self):
         self.wdgPreview.setCheckOccupiedBeats(False)
@@ -549,14 +551,17 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
 
     def _timelineChanged(self):
         self._save()
-        emit_event(self.novel, NovelStoryStructureUpdated(self))
+        self._emit()
 
     def _beatMoved(self):
         QTimer.singleShot(20, lambda: self._refreshStructure(self.novel.active_story_structure))
-        emit_event(self.novel, NovelStoryStructureUpdated(self))
+        self._emit()
 
     def _toggleDeleteButton(self):
         self.btnDelete.setEnabled(len(self.novel.story_structures) > 1)
 
     def _save(self):
         self.repo.update_novel(self.novel)
+
+    def _emit(self):
+        emit_event(self.novel, NovelStoryStructureUpdated(self))
