@@ -28,11 +28,11 @@ from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QButtonGroup
 from overrides import overrides
 from qthandy import translucent, gc, flow, hbox, clear_layout, vbox, sp, margins, vspacer, \
-    incr_font, bold, busy, italic, incr_icon, spacer
+    incr_font, bold, busy, italic, incr_icon, spacer, transparent
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
-from plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR
+from plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR, MAX_NUMBER_OF_ACTS
 from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     Character, StoryBeatType, StoryStructureDisplayType
 from plotlyst.event.core import EventListener, Event, emit_event
@@ -46,6 +46,7 @@ from plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon, lab
 from plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
 from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.style.base import apply_white_menu
+from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.display import IconText, PopupDialog, Icon
@@ -53,6 +54,7 @@ from plotlyst.view.widget.input import AutoAdjustableTextEdit
 from plotlyst.view.widget.settings import SettingBaseWidget
 from plotlyst.view.widget.structure.beat import BeatsPreview
 from plotlyst.view.widget.structure.outline import StoryStructureOutline
+from plotlyst.view.widget.structure.selector import ActToolButton
 from plotlyst.view.widget.structure.template import StoryStructureSelectorDialog
 
 
@@ -244,11 +246,47 @@ class TimelineSettingToggle(SettingBaseWidget):
         self.changed.emit()
 
 
+class ActSetting(QWidget):
+    changed = pyqtSignal()
+
+    def __init__(self, structure: StoryStructure, parent=None):
+        super().__init__(parent)
+        self.structure = structure
+
+        self._title = QPushButton('Expected number of acts')
+        apply_button_palette_color(self._title, PLOTLYST_SECONDARY_COLOR)
+        transparent(self._title)
+        incr_font(self._title, 2)
+
+        self._btnGroup = QButtonGroup()
+        self._wdgButtons = QWidget()
+        hbox(self._wdgButtons)
+
+        self._wdgButtons.layout().addWidget(spacer())
+        expected_act = self.structure.expected_acts if self.structure.expected_acts is not None else MAX_NUMBER_OF_ACTS
+        for act in range(0, MAX_NUMBER_OF_ACTS + 1):
+            btn = ActToolButton(act, self.structure, colorOn=PLOTLYST_SECONDARY_COLOR)
+            if expected_act == act:
+                btn.setChecked(True)
+            self._btnGroup.addButton(btn)
+            self._wdgButtons.layout().addWidget(btn)
+        self._wdgButtons.layout().addWidget(spacer())
+        self._btnGroup.buttonClicked.connect(self._clicked)
+
+        vbox(self)
+        self.layout().addWidget(self._title, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self._wdgButtons)
+
+    def _clicked(self):
+        self.structure.expected_acts = self._btnGroup.checkedButton().act
+        self.changed.emit()
+
+
 class StoryStructureSettingsPopup(PopupDialog):
     def __init__(self, structure: StoryStructure, parent=None):
         super().__init__(parent)
         self.structure = structure
-        self.setMinimumSize(350, 250)
+        self.setMinimumSize(450, 250)
 
         self.wdgTitle = QWidget()
         hbox(self.wdgTitle)
@@ -264,6 +302,10 @@ class StoryStructureSettingsPopup(PopupDialog):
 
         self.timelineToggle = TimelineSettingToggle(self.structure)
         self.frame.layout().addWidget(self.timelineToggle)
+
+        if self.structure.custom:
+            self.actSetting = ActSetting(self.structure)
+            self.frame.layout().addWidget(self.actSetting)
 
         self.btnConfirm = push_btn(text='Close', properties=['base', 'positive'])
         sp(self.btnConfirm).h_exp()

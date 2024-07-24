@@ -2270,6 +2270,7 @@ class StoryStructure(CharacterBased):
     acts_icon: Dict[int, str] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
     acts: int = 3
     display_type: StoryStructureDisplayType = StoryStructureDisplayType.Proportional_timeline
+    expected_acts: Optional[int] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
     def __post_init__(self):
         self._character: Optional[Character] = None
