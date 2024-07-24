@@ -118,7 +118,10 @@ class StoryStructureBeatWidget(OutlineItemWidget):
     def _icon(self) -> QIcon:
         qcolor = QColor(self.beat.icon_color)
         qcolor.setAlpha(self._colorAlpha)
-        return IconRegistry.from_name(self.beat.icon, qcolor)
+        if self.beat.icon:
+            return IconRegistry.from_name(self.beat.icon, qcolor)
+        elif self.beat.seq:
+            return IconRegistry.from_name(f'mdi.numeric-{self.beat.seq}', qcolor, scale=1.5)
 
     @overrides
     def _textChanged(self):

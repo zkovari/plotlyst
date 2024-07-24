@@ -741,7 +741,7 @@ class PlotProgressionItem(OutlineItem):
 
 @dataclass
 class StoryBeat(OutlineItem):
-    act: int = 1
+    act: int = 0
     percentage: float = 0.0
     description: str = ''
     type: StoryBeatType = field(default=StoryBeatType.BEAT, metadata=config(exclude=exclude_if_beat))
@@ -754,6 +754,7 @@ class StoryBeat(OutlineItem):
     notes: str = field(default='', metadata=config(exclude=exclude_if_empty))
     custom: bool = False
     placeholder: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    seq: int = field(default=0, metadata=config(exclude=exclude_if_empty))
 
     @overrides
     def __eq__(self, other: 'StoryBeat'):
@@ -2251,6 +2252,12 @@ class Board:
     statuses: List[TaskStatus] = field(default_factory=default_task_statues)
 
 
+class TemplateStoryStructureType(Enum):
+    NONE = 0
+    THREE_ACT = 1
+    SPINE = 2
+
+
 class StoryStructureDisplayType(Enum):
     Proportional_timeline = 'proportional_timeline'
     Sequential_timeline = 'sequential_timeline'
@@ -2269,7 +2276,8 @@ class StoryStructure(CharacterBased):
     acts_text: Dict[int, str] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
     acts_icon: Dict[int, str] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
     acts: int = 3
-    display_type: StoryStructureDisplayType = StoryStructureDisplayType.Proportional_timeline
+    display_type: StoryStructureDisplayType = field(default=StoryStructureDisplayType.Proportional_timeline)
+    template_type: TemplateStoryStructureType = field(default=TemplateStoryStructureType.NONE)
     expected_acts: Optional[int] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
     def __post_init__(self):
@@ -2522,6 +2530,7 @@ three_act_structure = StoryStructure(title='Three Act Structure',
                                      id=uuid.UUID('58013be5-1efb-4de4-9dd2-1433ce6edf90'),
                                      icon='mdi.numeric-3-circle-outline',
                                      icon_color='#ff7800',
+                                     template_type=TemplateStoryStructureType.THREE_ACT,
                                      beats=[hook_beat,
                                             inciting_incident_beat,
                                             first_plot_point,
@@ -2765,6 +2774,65 @@ heros_journey = StoryStructure(title="Hero's Journey",
                                              percentage=98)
                                ]
                                )
+
+story_spine = StoryStructure(title="Story Spine",
+                             id=uuid.UUID('38c22213-3f9b-4a51-ac87-b7a60a535e41'),
+                             icon='mdi.alpha-s-circle-outline',
+                             display_type=StoryStructureDisplayType.Sequential_timeline,
+                             template_type=TemplateStoryStructureType.SPINE,
+                             acts=0,
+                             beats=[
+                                 StoryBeat(text='Once upon a time...',
+                                           id=uuid.UUID('3c09104c-414a-4042-bf30-887c686473cd'),
+                                           seq=1,
+                                           icon_color='#457b9d',
+                                           description="Introduces the world and key characters",
+                                           percentage=1),
+                                 StoryBeat(text='Every day...',
+                                           id=uuid.UUID('23de963d-7655-4685-a9b7-bfccdad46404'),
+                                           seq=2,
+                                           icon_color='#457b9d',
+                                           description="Depicts the characters' routine life and the status quo",
+                                           percentage=5),
+                                 StoryBeat(text='But, one day...',
+                                           id=uuid.UUID('a8fdc9bc-72fc-425f-8a97-2c501724d6e3'),
+                                           seq=3,
+                                           icon_color='#a2ad59',
+                                           description="An event disrupts the character's life",
+                                           percentage=10),
+                                 StoryBeat(text='Because of that...',
+                                           id=uuid.UUID('18412ba6-2411-4e57-9997-fc63a9a6ab60'),
+                                           seq=4,
+                                           icon_color='#cd533b',
+                                           description="The characters react to the disruption, leading to new events",
+                                           percentage=25),
+                                 StoryBeat(text='Because of that...',
+                                           id=uuid.UUID('678c5f83-8fe6-4166-bb5e-df9715f24e74'),
+                                           seq=5,
+                                           icon_color='#cd533b',
+                                           description="These events create further challenges and complications",
+                                           percentage=50),
+                                 StoryBeat(text='Because of that...',
+                                           id=uuid.UUID('c3d3450e-9819-4f47-a683-1314358206fc'),
+                                           seq=6,
+                                           icon_color='#cd533b',
+                                           description="The characters face increasing obstacles leading to a climax",
+                                           percentage=75),
+                                 StoryBeat(text='Until finally...',
+                                           id=uuid.UUID('8c87b59f-e229-47ca-9734-c656d8e8e973'),
+                                           seq=7,
+                                           icon_color='#ce2d4f',
+                                           description="Reaches the climax where the main conflict is addressed",
+                                           percentage=90),
+                                 StoryBeat(text='And ever since that day...',
+                                           id=uuid.UUID('be8740a3-caec-4045-bc48-169f8a588ed3'),
+                                           seq=8,
+                                           icon_color='#7192be',
+                                           description="Concludes with the resolution and the new status quo for the characters",
+                                           percentage=99),
+                             ]
+
+                             )
 
 default_story_structures = [three_act_structure, save_the_cat, heros_journey]
 

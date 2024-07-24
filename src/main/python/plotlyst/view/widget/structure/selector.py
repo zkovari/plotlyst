@@ -68,9 +68,13 @@ class StructureBeatSelectorMenu(MenuWidget):
                     tip = truncate_string(tip, 125)
                 else:
                     tip = beat.placeholder if beat.placeholder else beat.description
-                beat_action = action(beat.text, IconRegistry.from_name(beat.icon, beat.icon_color),
+                beat_action = action(beat.text,
                                      slot=partial(self.selected.emit, beat),
                                      tooltip=tip)
+                if beat.icon:
+                    beat_action.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
+                elif beat.seq:
+                    beat_action.setIcon(IconRegistry.from_name(f'mdi.numeric-{beat.seq}', beat.icon_color, scale=1.5))
                 beat_action.setDisabled(acts_registry.occupied(beat))
                 self.addAction(beat_action)
             if beat.ends_act:
@@ -150,7 +154,11 @@ class StructureBeatSelectorButton(QPushButton):
 
     def _activate(self):
         self.setText(self._beat.text)
-        self.setIcon(IconRegistry.from_name(self._beat.icon, self._beat.icon_color))
+        if self._beat.icon:
+            self.setIcon(IconRegistry.from_name(self._beat.icon, self._beat.icon_color))
+        elif self._beat.seq:
+            self.setIcon(IconRegistry.from_name(f'mdi.numeric-{self._beat.seq}', self._beat.icon_color, scale=1.5))
+
         self.setToolTip(self._beat.description)
         self.setStyleSheet(f'''
             QPushButton::menu-indicator {{
