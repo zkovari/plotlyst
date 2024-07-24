@@ -216,11 +216,9 @@ class StoryStructureTimelineWidget(QWidget):
             margins(self, bottom=self._beatHeight + self._containerTopMargin)
 
         if self.isProportionalDisplay():
-            print('proportional')
             self.refreshActs()
             self._rearrangeBeats()
         else:
-            print('sequential')
             self._clearActs()
             for wdg in self._beats.values():
                 self._wdgLine.layout().addWidget(wdg)
@@ -363,7 +361,6 @@ class StoryStructureTimelineWidget(QWidget):
 
     def refreshActs(self):
         self._clearActs()
-        print('refresh acts')
 
         act_beats = self.structure.act_beats()
         acts = len(act_beats) + 1 if act_beats else 0

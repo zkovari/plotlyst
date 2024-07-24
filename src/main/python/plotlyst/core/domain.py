@@ -741,7 +741,7 @@ class PlotProgressionItem(OutlineItem):
 
 @dataclass
 class StoryBeat(OutlineItem):
-    act: int = 1
+    act: int = 0
     percentage: float = 0.0
     description: str = ''
     type: StoryBeatType = field(default=StoryBeatType.BEAT, metadata=config(exclude=exclude_if_beat))
@@ -2774,28 +2774,44 @@ story_spine = StoryStructure(title="Story Spine",
                              beats=[
                                  StoryBeat(text='Once upon a time...',
                                            id=uuid.UUID('3c09104c-414a-4042-bf30-887c686473cd'),
-                                           icon='mdi.numeric-1'),
+                                           icon='mdi.numeric-1',
+                                           icon_color='#457b9d',
+                                           description="Introduces the world and key characters"),
                                  StoryBeat(text='Every day...',
                                            id=uuid.UUID('23de963d-7655-4685-a9b7-bfccdad46404'),
-                                           icon='mdi.numeric-2'),
+                                           icon='mdi.numeric-2',
+                                           icon_color='#457b9d',
+                                           description="Depicts the characters' routine life and the status quo"),
                                  StoryBeat(text='But, one day...',
                                            id=uuid.UUID('a8fdc9bc-72fc-425f-8a97-2c501724d6e3'),
-                                           icon='mdi.numeric-3'),
+                                           icon='mdi.numeric-3',
+                                           icon_color='#a2ad59',
+                                           description="An event disrupts the character's life"),
                                  StoryBeat(text='Because of that...',
                                            id=uuid.UUID('18412ba6-2411-4e57-9997-fc63a9a6ab60'),
-                                           icon='mdi.numeric-4'),
+                                           icon='mdi.numeric-4',
+                                           icon_color='#cd533b',
+                                           description="The characters react to the disruption, leading to new events"),
                                  StoryBeat(text='Because of that...',
                                            id=uuid.UUID('678c5f83-8fe6-4166-bb5e-df9715f24e74'),
-                                           icon='mdi.numeric-5'),
+                                           icon='mdi.numeric-5',
+                                           icon_color='#cd533b',
+                                           description="These events create further challenges and complications"),
                                  StoryBeat(text='Because of that...',
                                            id=uuid.UUID('c3d3450e-9819-4f47-a683-1314358206fc'),
-                                           icon='mdi.numeric-6'),
+                                           icon='mdi.numeric-6',
+                                           icon_color='#cd533b',
+                                           description="The characters face increasing obstacles leading to a climax"),
                                  StoryBeat(text='Until finally...',
                                            id=uuid.UUID('8c87b59f-e229-47ca-9734-c656d8e8e973'),
-                                           icon='mdi.numeric-7'),
+                                           icon='mdi.numeric-7',
+                                           icon_color='#ce2d4f',
+                                           description="Reaches the climax where the main conflict is addressed"),
                                  StoryBeat(text='And ever since that day...',
                                            id=uuid.UUID('be8740a3-caec-4045-bc48-169f8a588ed3'),
-                                           icon='mdi.numeric-8'),
+                                           icon='mdi.numeric-8',
+                                           icon_color='#7192be',
+                                           description="Concludes with the resolution and the new status quo for the characters"),
                              ]
 
                              )
