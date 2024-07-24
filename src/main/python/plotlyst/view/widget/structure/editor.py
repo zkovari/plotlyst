@@ -508,8 +508,10 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
             self._addNewStructure(structure)
 
     def _configureStructure(self):
+        structure = self.novel.active_story_structure
         StoryStructureSettingsPopup.popup(self.novel.active_story_structure)
-        self.wdgPreview.setStructure(self.novel)
+        self.wdgPreview.setStructure(self.novel, structure)
+        self.wdgPreview.setHidden(structure.display_type == StoryStructureDisplayType.Sequential_timeline)
         self._save()
         self._emit()
 
@@ -518,7 +520,8 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.wdgStructureOutline.setStructure(structure)
         # self._structureNotes.setStructure(structure)
 
-        self.wdgPreview.setStructure(self.novel)
+        self.wdgPreview.setStructure(self.novel, structure)
+        self.wdgPreview.setHidden(structure.display_type == StoryStructureDisplayType.Sequential_timeline)
         self._beatsPreview.attachStructurePreview(self.wdgPreview)
         self.wdgStructureOutline.attachStructurePreview(self.wdgPreview)
         self._beatsPreview.setStructure(structure)
