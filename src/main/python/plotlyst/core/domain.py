@@ -2252,6 +2252,12 @@ class Board:
     statuses: List[TaskStatus] = field(default_factory=default_task_statues)
 
 
+class TemplateStoryStructureType(Enum):
+    NONE = 0
+    THREE_ACT = 1
+    SPINE = 2
+
+
 class StoryStructureDisplayType(Enum):
     Proportional_timeline = 'proportional_timeline'
     Sequential_timeline = 'sequential_timeline'
@@ -2271,6 +2277,7 @@ class StoryStructure(CharacterBased):
     acts_icon: Dict[int, str] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
     acts: int = 3
     display_type: StoryStructureDisplayType = field(default=StoryStructureDisplayType.Proportional_timeline)
+    template_type: TemplateStoryStructureType = field(default=TemplateStoryStructureType.NONE)
     expected_acts: Optional[int] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
     def __post_init__(self):
@@ -2523,6 +2530,7 @@ three_act_structure = StoryStructure(title='Three Act Structure',
                                      id=uuid.UUID('58013be5-1efb-4de4-9dd2-1433ce6edf90'),
                                      icon='mdi.numeric-3-circle-outline',
                                      icon_color='#ff7800',
+                                     template_type=TemplateStoryStructureType.THREE_ACT,
                                      beats=[hook_beat,
                                             inciting_incident_beat,
                                             first_plot_point,
@@ -2771,6 +2779,7 @@ story_spine = StoryStructure(title="Story Spine",
                              id=uuid.UUID('38c22213-3f9b-4a51-ac87-b7a60a535e41'),
                              icon='mdi.alpha-s-circle-outline',
                              display_type=StoryStructureDisplayType.Sequential_timeline,
+                             template_type=TemplateStoryStructureType.SPINE,
                              acts=0,
                              beats=[
                                  StoryBeat(text='Once upon a time...',

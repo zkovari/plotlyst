@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import pickle
+from enum import Enum
 from functools import partial
 from typing import List, Optional, Dict, Union, Set
 
@@ -27,22 +28,29 @@ from PyQt6.QtCore import Qt, QEvent, pyqtSignal, QObject, QSize
 from PyQt6.QtGui import QColor, QDragEnterEvent, QDropEvent, QResizeEvent, QCursor, QPainter, QPaintEvent, QPen
 from PyQt6.QtWidgets import QWidget, QToolButton, QSizePolicy, QPushButton, QSplitter, QAbstractButton
 from overrides import overrides
-from qthandy import hbox, transparent, italic, translucent, gc, pointy, clear_layout, vbox, margins
+from qthandy import hbox, transparent, italic, translucent, gc, pointy, clear_layout, vbox, margins, decr_font
 from qthandy.filter import InstantTooltipEventFilter, DragEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, act_color, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import StoryBeat, StoryBeatType, Novel, \
-    StoryStructure, Scene, StoryStructureDisplayType
+    StoryStructure, Scene, StoryStructureDisplayType, TemplateStoryStructureType
 from plotlyst.service.cache import acts_registry
 from plotlyst.view.common import PopupMenuBuilder, to_rgba_str
 from plotlyst.view.icons import IconRegistry
+
+
+class _BeatButtonStyle(Enum):
+    Icon = 0
+    Circe = 1
+    Text = 2
 
 
 class _BeatButton(QToolButton):
     def __init__(self, beat: StoryBeat, parent=None):
         super(_BeatButton, self).__init__(parent)
         self.beat = beat
-        self._borderStyle: bool = False
+        # self._borderStyle: bool = False
+        self.style = _BeatButtonStyle.Icon
 
         self.installEventFilter(InstantTooltipEventFilter(self))
         transparent(self)
@@ -50,12 +58,18 @@ class _BeatButton(QToolButton):
     def dataFunc(self, _):
         return self.beat
 
-    def setBorderStyleEnabled(self, enabled: bool):
-        self._borderStyle = enabled
-        if self._borderStyle:
-            self._initBorderStyle(125)
-        else:
-            transparent(self)
+    def setBorderStyle(self):
+        self.style = _BeatButtonStyle.Circe
+        # if self._borderStyle:
+        self._initBorderStyle(125)
+        # else:
+        #     transparent(self)
+
+    def setTextStyle(self):
+        self.style = _BeatButtonStyle.Text
+        self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        decr_font(self, 2)
+        self.setText(self.beat.text)
 
     def _initBorderStyle(self, opacity: int):
         color_translucent = to_rgba_str(QColor(self.beat.icon_color), opacity)
@@ -72,7 +86,7 @@ class _BeatButton(QToolButton):
                             ''')
 
     def highlight(self):
-        if self._borderStyle:
+        if self.style == _BeatButtonStyle.Circe:
             self._initBorderStyle(255)
         else:
             self.setStyleSheet(
@@ -81,7 +95,7 @@ class _BeatButton(QToolButton):
         qtanim.glow(self, color=QColor(self.beat.icon_color))
 
     def unhighlight(self):
-        if self._borderStyle:
+        if self.style == _BeatButtonStyle.Circe:
             self._initBorderStyle(125)
         else:
             transparent(self)
@@ -227,7 +241,11 @@ class StoryStructureTimelineWidget(QWidget):
         if beat.icon:
             btn.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
         elif beat.seq:
-            btn.setIcon(IconRegistry.from_name(f'mdi.numeric-{beat.seq}', beat.icon_color, scale=1.5))
+            if self.structure.template_type == TemplateStoryStructureType.SPINE:
+                icon = f'mdi.numeric-{beat.seq}-box'
+            else:
+                icon = f'mdi.numeric-{beat.seq}'
+            btn.setIcon(IconRegistry.from_name(icon, beat.icon_color, scale=1.5))
         btn.setToolTip(f'<b style="color: {beat.icon_color}">{beat.text}')
         if beat.type == StoryBeatType.BEAT:
             btn.toggled.connect(partial(self._beatToggled, btn))
@@ -238,7 +256,10 @@ class StoryStructureTimelineWidget(QWidget):
                     DragEventFilter(btn, self.BeatMimeType, btn.dataFunc, hideTarget=True))
                 btn.setCursor(Qt.CursorShape.OpenHandCursor)
             if not self.isProportionalDisplay():
-                btn.setBorderStyleEnabled(True)
+                if self.structure.template_type == TemplateStoryStructureType.SPINE:
+                    btn.setTextStyle()
+                else:
+                    btn.setBorderStyle()
             if self._checkOccupiedBeats and beat not in occupied_beats:
                 if self._beatsCheckable:
                     btn.setCheckable(True)
