@@ -192,7 +192,7 @@ class BeatsPreview(QFrame):
         self._novel = novel
         self._checkOccupiedBeats = checkOccupiedBeats
         self._toggleBeats = toggleBeats
-        self._layout = flow(self)
+        self._layout = flow(self, spacing=10)
         self._beats: Dict[StoryBeat, BeatWidget] = {}
         self._structurePreview: Optional[StoryStructureTimelineWidget] = None
         self._structure: Optional[StoryStructure] = None
