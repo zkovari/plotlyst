@@ -2269,7 +2269,7 @@ class StoryStructure(CharacterBased):
     acts_text: Dict[int, str] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
     acts_icon: Dict[int, str] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
     acts: int = 3
-    display_type: StoryStructureDisplayType = StoryStructureDisplayType.Proportional_timeline
+    display_type: StoryStructureDisplayType = field(default=StoryStructureDisplayType.Proportional_timeline)
     expected_acts: Optional[int] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
     def __post_init__(self):
@@ -2765,6 +2765,40 @@ heros_journey = StoryStructure(title="Hero's Journey",
                                              percentage=98)
                                ]
                                )
+
+story_spine = StoryStructure(title="Story Spine",
+                             id=uuid.UUID('38c22213-3f9b-4a51-ac87-b7a60a535e41'),
+                             icon='mdi.alpha-s-circle-outline',
+                             display_type=StoryStructureDisplayType.Sequential_timeline,
+                             acts=0,
+                             beats=[
+                                 StoryBeat(text='Once upon a time...',
+                                           id=uuid.UUID('3c09104c-414a-4042-bf30-887c686473cd'),
+                                           icon='mdi.numeric-1'),
+                                 StoryBeat(text='Every day...',
+                                           id=uuid.UUID('23de963d-7655-4685-a9b7-bfccdad46404'),
+                                           icon='mdi.numeric-2'),
+                                 StoryBeat(text='But, one day...',
+                                           id=uuid.UUID('a8fdc9bc-72fc-425f-8a97-2c501724d6e3'),
+                                           icon='mdi.numeric-3'),
+                                 StoryBeat(text='Because of that...',
+                                           id=uuid.UUID('18412ba6-2411-4e57-9997-fc63a9a6ab60'),
+                                           icon='mdi.numeric-4'),
+                                 StoryBeat(text='Because of that...',
+                                           id=uuid.UUID('678c5f83-8fe6-4166-bb5e-df9715f24e74'),
+                                           icon='mdi.numeric-5'),
+                                 StoryBeat(text='Because of that...',
+                                           id=uuid.UUID('c3d3450e-9819-4f47-a683-1314358206fc'),
+                                           icon='mdi.numeric-6'),
+                                 StoryBeat(text='Until finally...',
+                                           id=uuid.UUID('8c87b59f-e229-47ca-9734-c656d8e8e973'),
+                                           icon='mdi.numeric-7'),
+                                 StoryBeat(text='And ever since that day...',
+                                           id=uuid.UUID('be8740a3-caec-4045-bc48-169f8a588ed3'),
+                                           icon='mdi.numeric-8'),
+                             ]
+
+                             )
 
 default_story_structures = [three_act_structure, save_the_cat, heros_journey]
 
