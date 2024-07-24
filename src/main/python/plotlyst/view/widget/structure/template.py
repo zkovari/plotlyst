@@ -448,6 +448,11 @@ class _HerosJourneyStructureEditor(_AbstractStructureEditor):
         super(_HerosJourneyStructureEditor, self).__init__(novel, structure, parent)
 
 
+class _StorySpineStructureEditor(_AbstractStructureEditor):
+    def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
+        super(_StorySpineStructureEditor, self).__init__(novel, structure, parent)
+
+
 class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
     def __init__(self, novel: Novel, structure: Optional[StoryStructure] = None, parent=None):
         super(StoryStructureSelectorDialog, self).__init__(parent)
