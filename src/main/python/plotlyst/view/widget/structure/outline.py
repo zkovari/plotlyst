@@ -438,6 +438,8 @@ class StoryStructureOutline(OutlineTimelineWidget):
         i = self.layout().indexOf(wdg)
         self._recalculatePercentage(wdg)
         self._structureTimeline.setStructure(self._novel, self._structure)
+        QTimer.singleShot(150, self._beatsPreview.refresh)
+        self.timelineChanged.emit()
 
     def _actChanged(self):
         self._structureTimeline.refreshActs()
