@@ -402,7 +402,13 @@ class StoryStructureOutline(OutlineTimelineWidget):
         self._currentPlaceholder = placeholder
         beat: Optional[StoryBeat] = StoryBeatSelectorPopup.popup()
         if beat:
+            if beat.ends_act:
+                exp = self._structure.expected_acts if self._structure.expected_acts is not None else MAX_NUMBER_OF_ACTS
+                if self._structure.acts == exp:
+                    beat.ends_act = False
+
             self._insertBeat(beat)
+
             if beat.ends_act:
                 self._structure.increaseAct()
                 self._structure.update_acts()
