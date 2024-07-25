@@ -188,7 +188,7 @@ class StoryStructureElements(Enum):
     Catalyst = auto()
     Escalation = auto()
     Midpoint = auto()
-    # Plot_points = auto()
+    Plot_points = auto()
     Climax = auto()
     # Falling_action = auto()
     Ending = auto()
@@ -199,7 +199,7 @@ story_structure_element_icons = {
     StoryStructureElements.Catalyst: 'fa5s.vial',
     StoryStructureElements.Escalation: 'mdi.slope-uphill',
     StoryStructureElements.Midpoint: 'mdi.middleware-outline',
-    # StoryStructureElements.Plot_points: 'mdi.pillar',
+    StoryStructureElements.Plot_points: 'mdi.pillar',
     StoryStructureElements.Climax: 'fa5s.chevron-up',
     # StoryStructureElements.Falling_action: 'mdi.slope-downhill',
     StoryStructureElements.Ending: 'fa5s.water',
