@@ -213,6 +213,9 @@ class StoryStructureTimelineWidget(QWidget):
             gc(wdg)
         self._beats.clear()
 
+        if not self.isProportionalDisplay():
+            self.setBeatsMoveable(False)
+
         occupied_beats = acts_registry.occupied_beats()
         for beat in self.structure.sorted_beats():
             if beat.type == StoryBeatType.CONTAINER:
