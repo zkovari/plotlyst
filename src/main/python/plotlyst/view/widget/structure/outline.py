@@ -207,8 +207,9 @@ story_structure_element_icons = {
 class StoryBeatSelectorPopup(PopupDialog):
     LAST_ELEMENT = StoryStructureElements.Beginning
 
-    def __init__(self, parent=None):
+    def __init__(self, structure: StoryStructure, parent=None):
         super().__init__(parent)
+        self._structure = structure
         self._beat: Optional[StoryBeat] = None
 
         self.wdgTitle = QWidget()
@@ -248,6 +249,8 @@ class StoryBeatSelectorPopup(PopupDialog):
 
         self.btnGroup = QButtonGroup()
         for element in StoryStructureElements:
+            if element == StoryStructureElements.Plot_points and not self._structure.custom:
+                continue
             btn = push_btn(
                 IconRegistry.from_name(story_structure_element_icons[element], 'grey',
                                        color_on=PLOTLYST_SECONDARY_COLOR),
@@ -400,7 +403,7 @@ class StoryStructureOutline(OutlineTimelineWidget):
     @overrides
     def _placeholderClicked(self, placeholder: QWidget):
         self._currentPlaceholder = placeholder
-        beat: Optional[StoryBeat] = StoryBeatSelectorPopup.popup()
+        beat: Optional[StoryBeat] = StoryBeatSelectorPopup.popup(self._structure)
         if beat:
             if beat.ends_act:
                 exp = self._structure.expected_acts if self._structure.expected_acts is not None else MAX_NUMBER_OF_ACTS
