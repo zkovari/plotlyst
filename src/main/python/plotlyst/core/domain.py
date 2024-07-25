@@ -2289,6 +2289,16 @@ class StoryStructure(CharacterBased):
     def sorted_beats(self) -> List[StoryBeat]:
         return sorted(self.beats, key=lambda x: x.percentage)
 
+    def increaseAct(self):
+        self.acts += 1
+        if self.acts == 1:
+            self.acts = 2
+
+    def decreaseAct(self):
+        self.acts -= 1
+        if self.acts == 1:
+            self.acts = 0
+
     def update_acts(self):
         if self.acts == 0:
             for beat in self.beats:

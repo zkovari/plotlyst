@@ -36,7 +36,7 @@ from plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat,
     disturbance_beat, characteristic_moment_beat, normal_world_beat, general_beat, StoryStructure, turn_beat, \
     twist_beat, inciting_incident_beat, refusal_beat, synchronicity_beat, establish_beat, trigger_beat, \
     first_pinch_point_beat, second_pinch_point_beat, crisis, climax_beat, resolution_beat, contrast_beat, \
-    retrospection_beat, revelation_beat, dark_moment
+    retrospection_beat, revelation_beat, dark_moment, first_plot_point, first_plot_point_ponr, second_plot_point
 from plotlyst.view.common import label, push_btn, wrap, tool_btn, scrolled
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -133,14 +133,12 @@ class StoryStructureBeatWidget(OutlineItemWidget):
     def _actEndChanged(self, toggled: bool):
         self.beat.ends_act = toggled
         if toggled:
-            self._structure.acts += 1
-            if self._structure.acts == 1:
-                self._structure.acts = 2
+            self._structure.increaseAct()
             qtanim.glow(self._btnEndsAct, color=QColor(act_color(max(self.beat.act, 1), self._structure.acts)))
+            self._btnRemove.setHidden(True)
         else:
-            self._structure.acts -= 1
-            if self._structure.acts == 1:
-                self._structure.acts = 0
+            self._structure.decreaseAct()
+            self._btnRemove.setVisible(True)
         self._structure.update_acts()
 
         self.changed.emit()
@@ -312,10 +310,10 @@ class StoryBeatSelectorPopup(PopupDialog):
         elif element == StoryStructureElements.Midpoint:
             for midpoint in midpoints:
                 self._addBeat(midpoint)
-        # elif element == StoryStructureElements.Plot_points:
-        #     self._addBeat(first_plot_point)
-        #     self._addBeat(first_plot_point_ponr)
-        #     self._addBeat(second_plot_point)
+        elif element == StoryStructureElements.Plot_points:
+            self._addBeat(first_plot_point)
+            self._addBeat(first_plot_point_ponr)
+            self._addBeat(second_plot_point)
         elif element == StoryStructureElements.Climax:
             self._addBeat(climax_beat)
             self._addBeat(crisis)
@@ -402,20 +400,24 @@ class StoryStructureOutline(OutlineTimelineWidget):
     @overrides
     def _placeholderClicked(self, placeholder: QWidget):
         self._currentPlaceholder = placeholder
-        beat = StoryBeatSelectorPopup.popup()
+        beat: Optional[StoryBeat] = StoryBeatSelectorPopup.popup()
         if beat:
             self._insertBeat(beat)
+            if beat.ends_act:
+                self._structure.increaseAct()
+                self._structure.update_acts()
+                self._actChanged()
 
     def _insertBeat(self, beat: StoryBeat):
         def teardown():
             self._recalculatePercentage(wdg)
             if self._beatsPreview:
                 self._structureTimeline.insertBeat(beat)
+                if beat.ends_act:
+                    self._structureTimeline.refreshActs()
                 QTimer.singleShot(150, self._beatsPreview.refresh)
 
         wdg = self._newBeatWidget(beat)
-        i = self.layout().indexOf(self._currentPlaceholder)
-        # self._recalculatePercentage(beat, i)
         self._insertWidget(beat, wdg, teardownFunction=teardown)
 
     def _recalculatePercentage(self, wdg: StoryStructureBeatWidget):
