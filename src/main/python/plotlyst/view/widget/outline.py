@@ -29,7 +29,7 @@ from overrides import overrides
 from qtanim import fade_in
 from qthandy import sp, curved_flow, clear_layout, vbox, bold, decr_font, gc, pointy, margins, translucent, transparent, \
     hbox
-from qthandy.filter import DragEventFilter
+from qthandy.filter import DragEventFilter, DropEventFilter
 
 from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, OutlineItem, LayoutType
@@ -102,6 +102,9 @@ class OutlineItemWidget(QWidget):
 
     def mimeType(self) -> str:
         raise ValueError('Mimetype is not provided')
+
+    def copy(self) -> 'OutlineItem':
+        pass
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
@@ -384,6 +387,17 @@ class OutlineTimelineWidget(QFrame):
 
         return parent
 
+    def _dragStarted(self, widget: OutlineItemWidget):
+        self._dragPlaceholder = widget.copy()
+        self._dragged = widget
+        self._dragged.setHidden(True)
+        translucent(self._dragPlaceholder)
+        self._dragPlaceholder.setHidden(True)
+        self._dragPlaceholder.setAcceptDrops(True)
+        self._dragPlaceholder.installEventFilter(
+            DropEventFilter(self._dragPlaceholder, mimeTypes=[widget.mimeType()],
+                            droppedSlot=self._dropped))
+
     def _dragMoved(self, widget: QWidget, edge: Qt.Edge, _: QPoint):
         i = self.layout().indexOf(widget)
         if edge == Qt.Edge.LeftEdge:
@@ -411,29 +425,36 @@ class OutlineTimelineWidget(QFrame):
         is_placeholder = False
         is_beat = True
         i = 0
-        while i < self.layout().count():
+        while i < self.layout().count():  # Clear up extra placeholders and collect beats. Also add a new placeholder if needed
             item = self.layout().itemAt(i)
-            if item.widget() and isinstance(item.widget(), _PlaceholderWidget):
-                if is_placeholder:
-                    gc(item.widget())
+            widget = item.widget()
+
+            if widget and isinstance(widget, _PlaceholderWidget):
+                if is_placeholder:  # Remove duplicated placeholders
+                    gc(widget)
                     continue
-                is_placeholder = True
-                is_beat = False
-            elif item.widget() is not self._dragged:
-                beats.append(item.widget())
+                else:
+                    is_placeholder = True
+                    is_beat = False
+            elif widget is not self._dragged:
+                beats.append(widget)
                 is_placeholder = False
+
                 if is_beat:
                     self.layout().insertWidget(i, self._newPlaceholderWidget())
                     is_beat = False
-                    i += 1
+                    i += 1  # Skip the newly inserted placeholder
                 else:
                     is_beat = True
 
             i += 1
 
         self._beatWidgets[:] = beats
-        self._items[:] = [x.item for x in self._beatWidgets]
         self._wasDropped = True
+        self._insertDroppedItem(wdg)
+
+    def _insertDroppedItem(self, wdg: OutlineItemWidget):
+        self._items[:] = [x.item for x in self._beatWidgets]
 
     def _dragFinished(self):
         if self._dragPlaceholder is not None:
