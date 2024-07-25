@@ -413,9 +413,6 @@ class StoryStructureOutline(OutlineTimelineWidget):
                 self._structureTimeline.insertBeat(beat)
                 QTimer.singleShot(150, self._beatsPreview.refresh)
 
-        if self._structure.acts == 0:
-            beat.act = 0
-
         wdg = self._newBeatWidget(beat)
         i = self.layout().indexOf(self._currentPlaceholder)
         # self._recalculatePercentage(beat, i)
@@ -433,6 +430,8 @@ class StoryStructureOutline(OutlineTimelineWidget):
             beat.percentage = percentBefore + (percentAfter - percentBefore) / 2
         else:
             beat.percentage = 1
+
+        self._structure.update_acts()
 
     @overrides
     def _insertDroppedItem(self, wdg: OutlineItemWidget):
