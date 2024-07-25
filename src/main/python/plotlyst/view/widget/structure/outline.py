@@ -25,11 +25,11 @@ from typing import Optional
 
 import qtanim
 from PyQt6.QtCore import Qt, QEvent, QTimer, pyqtSignal
-from PyQt6.QtGui import QIcon, QColor, QEnterEvent, QResizeEvent
+from PyQt6.QtGui import QIcon, QColor, QEnterEvent, QResizeEvent, QDragEnterEvent
 from PyQt6.QtWidgets import QWidget, QDialog, QButtonGroup
 from overrides import overrides
 from qthandy import line, vbox, margins, hbox, spacer, sp, incr_icon, transparent, italic, clear_layout, vspacer
-from qthandy.filter import OpacityEventFilter
+from qthandy.filter import OpacityEventFilter, DropEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, MAX_NUMBER_OF_ACTS, act_color, ALT_BACKGROUND_COLOR
 from plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat, motion_beat, \
@@ -47,6 +47,7 @@ from plotlyst.view.widget.structure.timeline import StoryStructureTimelineWidget
 
 
 class StoryStructureBeatWidget(OutlineItemWidget):
+    StoryStructureBeatBeatMimeType: str = 'application/story-structure-beat'
     actChanged = pyqtSignal()
 
     def __init__(self, beat: StoryBeat, structure: StoryStructure, parent=None):
@@ -57,9 +58,6 @@ class StoryStructureBeatWidget(OutlineItemWidget):
         self._structurePreview: Optional[StoryStructureTimelineWidget] = None
         self._text.setText(self.beat.notes)
         self._text.setMaximumSize(220, 110)
-        self._btnIcon.removeEventFilter(self._dragEventFilter)
-        self._btnIcon.setCursor(Qt.CursorShape.ArrowCursor)
-        self.setAcceptDrops(False)
         self._initStyle(name=self.beat.text,
                         desc=self.beat.placeholder if self.beat.placeholder else self.beat.description,
                         tooltip=self.beat.description)
@@ -104,7 +102,11 @@ class StoryStructureBeatWidget(OutlineItemWidget):
 
     @overrides
     def mimeType(self) -> str:
-        return ''
+        return self.StoryStructureBeatBeatMimeType
+
+    @overrides
+    def copy(self) -> 'StoryStructureBeatWidget':
+        return StoryStructureBeatWidget(self.beat, self._structure)
 
     def refreshActButton(self):
         self._btnEndsAct.setToolTip('Remove act' if self._btnEndsAct.isChecked() else 'Toggle new act')
@@ -361,12 +363,26 @@ class StoryStructureOutline(OutlineTimelineWidget):
         self.update()
 
     @overrides
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
+        if event.mimeData().hasFormat(StoryStructureBeatWidget.StoryStructureBeatBeatMimeType):
+            event.accept()
+        else:
+            event.ignore()
+
+    @overrides
     def _newBeatWidget(self, item: StoryBeat) -> StoryStructureBeatWidget:
         widget = StoryStructureBeatWidget(item, self._structure, parent=self)
         widget.attachStructurePreview(self._structureTimeline)
         widget.changed.connect(self.beatChanged)
         widget.actChanged.connect(self._actChanged)
         widget.removed.connect(self._beatRemovedClicked)
+        widget.dragStarted.connect(partial(self._dragStarted, widget))
+        widget.dragStopped.connect(self._dragFinished)
+
+        widget.installEventFilter(DropEventFilter(widget, [StoryStructureBeatWidget.StoryStructureBeatBeatMimeType],
+                                                  motionDetection=Qt.Orientation.Horizontal,
+                                                  motionSlot=partial(self._dragMoved, widget),
+                                                  droppedSlot=self._dropped))
 
         return widget
 
@@ -392,23 +408,38 @@ class StoryStructureOutline(OutlineTimelineWidget):
 
     def _insertBeat(self, beat: StoryBeat):
         def teardown():
+            self._recalculatePercentage(wdg)
             if self._beatsPreview:
                 self._structureTimeline.insertBeat(beat)
                 QTimer.singleShot(150, self._beatsPreview.refresh)
 
-        if self._structure.acts == 0:
-            beat.act = 0
-
         wdg = self._newBeatWidget(beat)
         i = self.layout().indexOf(self._currentPlaceholder)
+        # self._recalculatePercentage(beat, i)
+        self._insertWidget(beat, wdg, teardownFunction=teardown)
+
+    def _recalculatePercentage(self, wdg: StoryStructureBeatWidget):
+        beat = wdg.item
+        i = self._beatWidgets.index(wdg)
         if i > 0:
-            percentBefore = self.layout().itemAt(i - 1).widget().beat.percentage
-            if i < self.layout().count() - 1:
-                percentAfter = self.layout().itemAt(i + 1).widget().beat.percentage
+            percentBefore = self._beatWidgets[i - 1].item.percentage
+            if i < len(self._beatWidgets) - 1:
+                percentAfter = self._beatWidgets[i + 1].item.percentage
             else:
                 percentAfter = 99
             beat.percentage = percentBefore + (percentAfter - percentBefore) / 2
-        self._insertWidget(beat, wdg, teardownFunction=teardown)
+        else:
+            beat.percentage = 1
+
+        self._structure.update_acts()
+
+    @overrides
+    def _insertDroppedItem(self, wdg: OutlineItemWidget):
+        i = self.layout().indexOf(wdg)
+        self._recalculatePercentage(wdg)
+        self._structureTimeline.setStructure(self._novel, self._structure)
+        QTimer.singleShot(150, self._beatsPreview.refresh)
+        self.timelineChanged.emit()
 
     def _actChanged(self):
         self._structureTimeline.refreshActs()

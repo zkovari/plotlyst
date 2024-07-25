@@ -214,7 +214,7 @@ class StoryStructureTimelineWidget(QWidget):
         self._beats.clear()
 
         occupied_beats = acts_registry.occupied_beats()
-        for beat in self.structure.beats:
+        for beat in self.structure.sorted_beats():
             if beat.type == StoryBeatType.CONTAINER:
                 btn = _ContainerButton(beat, self)
                 self._containers[beat] = btn

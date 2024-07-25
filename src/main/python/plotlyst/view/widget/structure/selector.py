@@ -61,7 +61,7 @@ class StructureBeatSelectorMenu(MenuWidget):
         if structure.acts:
             self._addSection(act, structure)
         self.addSeparator()
-        for beat in self.novel.active_story_structure.beats:
+        for beat in self.novel.active_story_structure.sorted_beats():
             if beat.type == StoryBeatType.BEAT and beat.enabled:
                 tip = beat.notes if beat.notes else ''
                 if tip:
