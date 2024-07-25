@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QPushButton, QToolButton, QTextEdit, QFrame
 from overrides import overrides
 from qtanim import fade_in
 from qthandy import sp, curved_flow, clear_layout, vbox, bold, decr_font, gc, pointy, margins, translucent, transparent, \
-    hbox
+    hbox, flow
 from qthandy.filter import DragEventFilter, DropEventFilter
 
 from plotlyst.common import RELAXED_WHITE_COLOR
@@ -233,6 +233,8 @@ class OutlineTimelineWidget(QFrame):
         sp(self).h_exp().v_exp()
         if layout == LayoutType.CURVED_FLOW:
             curved_flow(self, margin=10, spacing=10)
+        elif layout == LayoutType.FLOW:
+            flow(self, 10, 10)
         elif layout == LayoutType.HORIZONTAL:
             hbox(self, 10, 10)
         elif layout == LayoutType.VERTICAL:
