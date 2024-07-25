@@ -228,6 +228,10 @@ class StoryBeatSelectorPopup(PopupDialog):
         self.wdgSelector = QWidget()
         hbox(self.wdgSelector)
         self.frame.layout().addWidget(self.wdgSelector)
+        self.wdgSecondarySelector = QWidget()
+        hbox(self.wdgSecondarySelector).addWidget(spacer())
+        self.frame.layout().addWidget(self.wdgSecondarySelector)
+
         self.frame.layout().addWidget(line())
 
         self.wdgEditor = QWidget()
@@ -235,7 +239,7 @@ class StoryBeatSelectorPopup(PopupDialog):
         self.frame.layout().addWidget(self.wdgEditor)
         self._scrollarea, self.wdgCenter = scrolled(self.wdgEditor, frameless=True, h_on=False)
         self._scrollarea.setProperty('transparent', True)
-        self._scrollarea.setMinimumHeight(400)
+        self._scrollarea.setMinimumHeight(425)
         transparent(self.wdgCenter)
         vbox(self.wdgCenter, 10, spacing=8)
         margins(self.wdgCenter, bottom=20)
@@ -256,11 +260,19 @@ class StoryBeatSelectorPopup(PopupDialog):
                                        color_on=PLOTLYST_SECONDARY_COLOR),
                 text=element.name.replace('_', ' '), checkable=True,
                 properties=['secondary-selector', 'transparent-rounded-bg-on-hover'])
-            self.wdgSelector.layout().addWidget(btn)
+
+            if element in [StoryStructureElements.Midpoint, StoryStructureElements.Plot_points]:
+                self.wdgSecondarySelector.layout().addWidget(btn)
+            else:
+                self.wdgSelector.layout().addWidget(btn)
             btn.toggled.connect(partial(self._elementsToggled, element))
             self.btnGroup.addButton(btn)
             if element == StoryBeatSelectorPopup.LAST_ELEMENT:
                 btn.setChecked(True)
+
+        self.wdgSecondarySelector.layout().addWidget(spacer())
+        if not self.btnGroup.checkedButton():
+            self.btnGroup.buttons()[0].setChecked(True)
 
     def display(self) -> Optional[StoryBeat]:
         result = self.exec()
