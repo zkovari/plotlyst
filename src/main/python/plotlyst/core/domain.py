@@ -32,6 +32,7 @@ from overrides import overrides
 from qttextedit import DashInsertionMode
 from qttextedit.api import AutoCapitalizationMode
 
+from plotlyst.common import act_color, RED_COLOR
 from plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_choices, \
     mbti_choices, Role, exclude_if_false, antagonist_role, exclude_if_true
 
@@ -753,6 +754,7 @@ class StoryBeat(OutlineItem):
     enabled: bool = True
     notes: str = field(default='', metadata=config(exclude=exclude_if_empty))
     custom: bool = False
+    act_colorized: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     placeholder: str = field(default='', metadata=config(exclude=exclude_if_empty))
     seq: int = field(default=0, metadata=config(exclude=exclude_if_empty))
 
@@ -2289,6 +2291,16 @@ class StoryStructure(CharacterBased):
     def sorted_beats(self) -> List[StoryBeat]:
         return sorted(self.beats, key=lambda x: x.percentage)
 
+    def increaseAct(self):
+        self.acts += 1
+        if self.acts == 1:
+            self.acts = 2
+
+    def decreaseAct(self):
+        self.acts -= 1
+        if self.acts == 1:
+            self.acts = 0
+
     def update_acts(self):
         if self.acts == 0:
             for beat in self.beats:
@@ -2297,6 +2309,8 @@ class StoryStructure(CharacterBased):
             act = 1
             for beat in self.sorted_beats():
                 beat.act = act
+                if beat.act_colorized:
+                    beat.icon_color = act_color(act, self.acts)
                 if beat.ends_act:
                     act += 1
 
@@ -2415,6 +2429,28 @@ second_pinch_point_beat = StoryBeat(text='Second Pinch Point',
                                     description="A showcase of the full strength of antagonistic forces and a reminder of what's at stake.",
                                     icon_color='#cd533b',
                                     act=2, percentage=62)
+plot_point = StoryBeat('Plot Point',
+                       icon='mdi6.chevron-double-right',
+                       description="It propels the story into a new stage, possibly into a new act.",
+                       id=uuid.UUID('2adeeb15-ad30-4830-909b-1d8d41f3e9d6'),
+                       ends_act=True, act_colorized=True)
+plot_point_ponr = StoryBeat(text='Point of No Return',
+                            icon='fa5s.door-closed',
+                            description="It propels the story into a new stage through the character's irreversible decision. There's no going back now.",
+                            placeholder="It propels the story into a new stage through the character's irreversible decision.",
+                            id=uuid.UUID('6c1c36b8-c04a-41b9-9d2e-4f9d8f095355'),
+                            ends_act=True, act_colorized=True)
+plot_point_aha = StoryBeat(text='A-ha moment',
+                           icon='fa5.lightbulb',
+                           description="It propels the story into a new stage through the character's epiphany. They often have a realization about themselves or the plot.",
+                           placeholder="It propels the story into a new stage through the character's epiphany.",
+                           id=uuid.UUID('77e05b3c-27c3-42b2-bcbc-1f46dfc85d73'),
+                           ends_act=True, act_colorized=True)
+plot_point_rededication = StoryBeat(text='Re-dedication',
+                                    icon='fa5s.heartbeat',
+                                    description="It propels the story into a new stage when the character recommits to their goal or mission.",
+                                    id=uuid.UUID('4468e497-77f7-4758-90f2-4601f16c7685'),
+                                    ends_act=True, act_colorized=True)
 
 first_plot_point = StoryBeat(text='First Plot Point',
                              icon='mdi6.chevron-double-right',
@@ -2438,13 +2474,6 @@ second_plot_point = StoryBeat(text='Second Plot Point',
                               placeholder="It propels the protagonist towards the climax to face the main conflict",
                               icon_color='#6a0136',
                               act=2, ends_act=True, percentage=80)
-
-second_plot_point_aha = StoryBeat(text='Aha moment',
-                                  id=uuid.UUID('77e05b3c-27c3-42b2-bcbc-1f46dfc85d73'),
-                                  icon='fa5.lightbulb',
-                                  description="A-ha moment.",
-                                  icon_color='#6a0136',
-                                  act=2, ends_act=True, percentage=80)
 
 midpoint = StoryBeat(text='Midpoint',
                      icon='mdi.middleware-outline',
@@ -2481,7 +2510,7 @@ midpoint_false_victory = StoryBeat(text='False victory',
                                    act=2, percentage=50)
 midpoint_re_dedication = StoryBeat(text='Re-dedication',
                                    icon='fa5s.heartbeat',
-                                   icon_color='',
+                                   icon_color=RED_COLOR,
                                    description="A moment when the protagonist renews their commitment to their goal or mission, often after facing significant setbacks or doubts.",
                                    placeholder="A moment when the protagonist renews their commitment to their goal or mission.",
                                    id=uuid.UUID('7b63be66-1c96-4332-af78-ffa62b79bbd4'),

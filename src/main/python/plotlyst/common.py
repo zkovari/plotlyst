@@ -20,8 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from timeit import default_timer as timer
 from typing import Any, NoReturn, Dict
 
-from plotlyst.core.domain import VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY
-
 WIP_COLOR: str = '#f6cd61'
 
 ACT_ONE_COLOR: str = '#02bcd4'
@@ -80,7 +78,7 @@ PLOTLYST_SECONDARY_COLOR: str = '#4B0763'  # indigo
 PLOTLYST_TERTIARY_COLOR: str = '#D4B8E0'  # Thistle
 TRANS_PLOTLYST_SECONDARY_COLOR = 'rgba(75, 7, 99, 45)'
 
-ALT_BACKGROUND_COLOR :str = '#F0E6F4'
+ALT_BACKGROUND_COLOR: str = '#F0E6F4'
 
 RELAXED_WHITE_COLOR: str = '#f8f9fa'
 WHITE_COLOR: str = '#FcFcFc'
@@ -95,17 +93,17 @@ DEFAULT_MANUSCRIPT_INDENT: int = 20
 MAXIMUM_SIZE: int = 16777215
 
 
-def emotion_color(emotion_value: int) -> str:
-    if emotion_value == VERY_UNHAPPY:
-        return VERY_UNHAPPY_EMOTION_COLOR
-    elif emotion_value == UNHAPPY:
-        return UNHAPPY_EMOTION_COLOR
-    elif emotion_value == HAPPY:
-        return HAPPY_EMOTION_COLOR
-    elif emotion_value == VERY_HAPPY:
-        return VERY_HAPPY_EMOTION_COLOR
-    else:
-        return NEUTRAL_EMOTION_COLOR
+# def emotion_color(emotion_value: int) -> str:
+#     if emotion_value == VERY_UNHAPPY:
+#         return VERY_UNHAPPY_EMOTION_COLOR
+#     elif emotion_value == UNHAPPY:
+#         return UNHAPPY_EMOTION_COLOR
+#     elif emotion_value == HAPPY:
+#         return HAPPY_EMOTION_COLOR
+#     elif emotion_value == VERY_HAPPY:
+#         return VERY_HAPPY_EMOTION_COLOR
+#     else:
+#         return NEUTRAL_EMOTION_COLOR
 
 
 def truncate_string(text: str, length: int = 25):

@@ -326,7 +326,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.btnNew.installEventFilter(ButtonPressResizeEventFilter(self.btnNew))
         menu = MenuWidget(self.btnNew)
         apply_white_menu(menu)
-        menu.addAction(action('Select a structure template (recommended)',
+        menu.addAction(action('Select a template structure (recommended)',
                               icon=IconRegistry.template_icon(color=PLOTLYST_SECONDARY_COLOR),
                               slot=self._selectTemplateStructure))
         menu.addSeparator()
