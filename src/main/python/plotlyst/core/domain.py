@@ -743,7 +743,7 @@ class PlotProgressionItem(OutlineItem):
 @dataclass
 class StoryBeat(OutlineItem):
     act: int = 0
-    percentage: float = 0.0
+    percentage: float = 1.0
     description: str = ''
     type: StoryBeatType = field(default=StoryBeatType.BEAT, metadata=config(exclude=exclude_if_beat))
     ends_act: bool = field(default=False, metadata=config(exclude=exclude_if_empty))
@@ -2258,6 +2258,7 @@ class TemplateStoryStructureType(Enum):
     NONE = 0
     THREE_ACT = 1
     SPINE = 2
+    TWISTS = 3
 
 
 class StoryStructureDisplayType(Enum):
@@ -2394,7 +2395,7 @@ refusal_beat = StoryBeat(text='Refusal',
 
 turn_beat = StoryBeat(text='Turn',
                       id=uuid.UUID('31000162-4bed-49f2-9def-a70ba15ff378'),
-                      icon='mdi.boom-gate-up-outline',
+                      icon='mdi.sign-direction',
                       icon_color='#8338ec',
                       description="Shifts the story's direction")
 
@@ -2404,6 +2405,11 @@ twist_beat = StoryBeat(text='Twist',
                        icon_color='#f20089',
                        description="Brings an unexpected development to the story by defying readers' expectations")
 
+danger_beat = StoryBeat(text='Danger',
+                        id=uuid.UUID('d87d76e1-b0b2-412d-b39b-84c622127915'),
+                        icon='ei.fire',
+                        icon_color='#f4a261',
+                        description="Moments of heightened danger, either physical or emotional")
 revelation_beat = StoryBeat(text='Revelation',
                             icon='fa5s.binoculars',
                             icon_color='#588157',
@@ -2554,6 +2560,14 @@ retrospection_beat = StoryBeat('Retrospection',
 first_plot_points = (first_plot_point, first_plot_point_ponr)
 midpoints = (
     midpoint, midpoint_ponr, midpoint_mirror, midpoint_proactive, midpoint_false_victory, midpoint_re_dedication)
+
+
+def copy_beat(beat: StoryBeat) -> StoryBeat:
+    cloned_beat = copy.deepcopy(beat)
+    cloned_beat.id = uuid.uuid4()
+    cloned_beat.custom = True
+    return cloned_beat
+
 
 three_act_structure = StoryStructure(title='Three Act Structure',
                                      id=uuid.UUID('58013be5-1efb-4de4-9dd2-1433ce6edf90'),
@@ -2862,6 +2876,12 @@ story_spine = StoryStructure(title="Story Spine",
                              ]
 
                              )
+twists_and_turns = StoryStructure(title='Twists and Turns',
+                                  id=uuid.UUID('f905ba6b-0195-4ed7-932e-0b02e49cb1ae'),
+                                  icon='ph.shuffle-bold',
+                                  display_type=StoryStructureDisplayType.Sequential_timeline,
+                                  template_type=TemplateStoryStructureType.TWISTS,
+                                  acts=0)
 
 default_story_structures = [three_act_structure, save_the_cat, heros_journey]
 
