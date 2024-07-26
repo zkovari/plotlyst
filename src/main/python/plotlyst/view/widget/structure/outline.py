@@ -17,8 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import copy
-import uuid
 from enum import Enum, auto
 from functools import partial
 from typing import Optional
@@ -37,7 +35,7 @@ from plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat,
     twist_beat, inciting_incident_beat, refusal_beat, synchronicity_beat, establish_beat, trigger_beat, \
     first_pinch_point_beat, second_pinch_point_beat, crisis, climax_beat, resolution_beat, contrast_beat, \
     retrospection_beat, revelation_beat, dark_moment, plot_point, plot_point_ponr, plot_point_aha, \
-    plot_point_rededication, danger_beat
+    plot_point_rededication, danger_beat, copy_beat
 from plotlyst.view.common import label, push_btn, wrap, tool_btn, scrolled
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -283,10 +281,7 @@ class StoryBeatSelectorPopup(PopupDialog):
     def display(self) -> Optional[StoryBeat]:
         result = self.exec()
         if result == QDialog.DialogCode.Accepted:
-            cloned_beat = copy.deepcopy(self._beat)
-            cloned_beat.id = uuid.uuid4()
-            cloned_beat.custom = True
-            return cloned_beat
+            return copy_beat(self._beat)
 
     def _addHeader(self, name: str, icon: QIcon):
         icon_ = Icon()

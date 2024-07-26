@@ -35,7 +35,7 @@ from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     save_the_cat, three_act_structure, heros_journey, hook_beat, motion_beat, \
     disturbance_beat, normal_world_beat, characteristic_moment_beat, midpoint, midpoint_ponr, midpoint_mirror, \
     midpoint_proactive, crisis, first_plot_point, first_plot_point_ponr, first_plot_points, midpoints, story_spine, \
-    twists_and_turns, twist_beat, turn_beat, danger_beat
+    twists_and_turns, twist_beat, turn_beat, danger_beat, copy_beat
 from plotlyst.view.common import ExclusiveOptionalButtonGroup, push_btn, label
 from plotlyst.view.generated.story_structure_selector_dialog_ui import Ui_StoryStructureSelectorDialog
 from plotlyst.view.icons import IconRegistry
@@ -50,6 +50,7 @@ from plotlyst.view.widget.structure.outline import StoryStructureTimelineWidget
 class _AbstractStructureEditor(QWidget):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
         super(_AbstractStructureEditor, self).__init__(parent)
+        self._novel = novel
         self._structure = structure
         vbox(self)
         self.wdgTitle = IconText(self)
@@ -456,6 +457,10 @@ class _StorySpineStructureEditor(_AbstractStructureEditor):
 
 class _TwistsAndTurnsStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
+        if not structure.beats:
+            structure.beats.append(copy_beat(turn_beat))
+            structure.beats.append(copy_beat(danger_beat))
+            structure.beats.append(copy_beat(twist_beat))
         super(_TwistsAndTurnsStructureEditor, self).__init__(novel, structure, parent)
         vbox(self.wdgCustom, spacing=15)
         margins(self.wdgCustom, top=20)
@@ -479,6 +484,12 @@ class _TwistsAndTurnsStructureEditor(_AbstractStructureEditor):
         self.wdgButtons.layout().addWidget(self.btnDanger)
         self.wdgCustom.layout().addWidget(self.wdgButtons, alignment=Qt.AlignmentFlag.AlignCenter)
 
+    def _clicked(self, beat: StoryBeat):
+        copied_beat = copy_beat(beat)
+        self._structure.beats.append(copied_beat)
+        self.wdgPreview.setStructure(self._novel, self._structure)
+        self.beatsPreview.setStructure(self._structure)
+
     def __initButton(self, beat: StoryBeat, text: str) -> QPushButton:
         btn = push_btn(IconRegistry.from_name(beat.icon, beat.icon_color), text,
                        transparent_=True)
@@ -486,6 +497,7 @@ class _TwistsAndTurnsStructureEditor(_AbstractStructureEditor):
         bold(btn)
         incr_icon(btn, 6)
         incr_font(btn, 2)
+        btn.clicked.connect(partial(self._clicked, beat))
 
         return btn
 

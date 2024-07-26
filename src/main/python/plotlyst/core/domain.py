@@ -743,7 +743,7 @@ class PlotProgressionItem(OutlineItem):
 @dataclass
 class StoryBeat(OutlineItem):
     act: int = 0
-    percentage: float = 0.0
+    percentage: float = 1.0
     description: str = ''
     type: StoryBeatType = field(default=StoryBeatType.BEAT, metadata=config(exclude=exclude_if_beat))
     ends_act: bool = field(default=False, metadata=config(exclude=exclude_if_empty))
@@ -2560,6 +2560,14 @@ retrospection_beat = StoryBeat('Retrospection',
 first_plot_points = (first_plot_point, first_plot_point_ponr)
 midpoints = (
     midpoint, midpoint_ponr, midpoint_mirror, midpoint_proactive, midpoint_false_victory, midpoint_re_dedication)
+
+
+def copy_beat(beat: StoryBeat) -> StoryBeat:
+    cloned_beat = copy.deepcopy(beat)
+    cloned_beat.id = uuid.uuid4()
+    cloned_beat.custom = True
+    return cloned_beat
+
 
 three_act_structure = StoryStructure(title='Three Act Structure',
                                      id=uuid.UUID('58013be5-1efb-4de4-9dd2-1433ce6edf90'),
