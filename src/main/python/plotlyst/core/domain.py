@@ -32,6 +32,7 @@ from overrides import overrides
 from qttextedit import DashInsertionMode
 from qttextedit.api import AutoCapitalizationMode
 
+from plotlyst.common import act_color
 from plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_choices, \
     mbti_choices, Role, exclude_if_false, antagonist_role, exclude_if_true
 
@@ -753,6 +754,7 @@ class StoryBeat(OutlineItem):
     enabled: bool = True
     notes: str = field(default='', metadata=config(exclude=exclude_if_empty))
     custom: bool = False
+    act_colorized: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     placeholder: str = field(default='', metadata=config(exclude=exclude_if_empty))
     seq: int = field(default=0, metadata=config(exclude=exclude_if_empty))
 
@@ -2307,6 +2309,8 @@ class StoryStructure(CharacterBased):
             act = 1
             for beat in self.sorted_beats():
                 beat.act = act
+                if beat.act_colorized:
+                    beat.icon_color = act_color(act, self.acts)
                 if beat.ends_act:
                     act += 1
 
@@ -2425,6 +2429,17 @@ second_pinch_point_beat = StoryBeat(text='Second Pinch Point',
                                     description="A showcase of the full strength of antagonistic forces and a reminder of what's at stake.",
                                     icon_color='#cd533b',
                                     act=2, percentage=62)
+plot_point = StoryBeat('Plot Point',
+                       icon='mdi6.chevron-double-right',
+                       description="It propels the story into a new stage, possibly into a new act.",
+                       id=uuid.UUID('2adeeb15-ad30-4830-909b-1d8d41f3e9d6'),
+                       ends_act=True, act_colorized=True)
+plot_point_ponr = StoryBeat(text='Point of No Return',
+                            icon='fa5s.door-closed',
+                            description="It propels the story into a new stage through the character's irreversible decision. There's no going back now.",
+                            placeholder="It propels the story into a new stage through the character's irreversible decision.",
+                            id=uuid.UUID('6c1c36b8-c04a-41b9-9d2e-4f9d8f095355'),
+                            ends_act=True, act_colorized=True)
 
 first_plot_point = StoryBeat(text='First Plot Point',
                              icon='mdi6.chevron-double-right',
@@ -2532,6 +2547,7 @@ retrospection_beat = StoryBeat('Retrospection',
                                id=uuid.UUID('7a8581bc-ef27-402a-8e57-539d79145d37'),
                                act=3, percentage=99)
 
+plot_points = (plot_point, plot_point_ponr)
 first_plot_points = (first_plot_point, first_plot_point_ponr)
 midpoints = (
     midpoint, midpoint_ponr, midpoint_mirror, midpoint_proactive, midpoint_false_victory, midpoint_re_dedication)

@@ -36,7 +36,7 @@ from plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat,
     disturbance_beat, characteristic_moment_beat, normal_world_beat, general_beat, StoryStructure, turn_beat, \
     twist_beat, inciting_incident_beat, refusal_beat, synchronicity_beat, establish_beat, trigger_beat, \
     first_pinch_point_beat, second_pinch_point_beat, crisis, climax_beat, resolution_beat, contrast_beat, \
-    retrospection_beat, revelation_beat, dark_moment, first_plot_point, first_plot_point_ponr, second_plot_point
+    retrospection_beat, revelation_beat, dark_moment, plot_point, plot_point_ponr
 from plotlyst.view.common import label, push_btn, wrap, tool_btn, scrolled
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -111,6 +111,11 @@ class StoryStructureBeatWidget(OutlineItemWidget):
     def refreshActButton(self):
         self._btnEndsAct.setToolTip('Remove act' if self._btnEndsAct.isChecked() else 'Toggle new act')
         self._btnEndsAct.setIcon(IconRegistry.act_icon(max(self.beat.act, 1), self._structure, 'grey'))
+
+        if self.beat.act_colorized:
+            self._initStyle(name=self.beat.text,
+                            desc=self.beat.placeholder if self.beat.placeholder else self.beat.description,
+                            tooltip=self.beat.description)
 
     @overrides
     def _color(self) -> str:
@@ -326,9 +331,10 @@ class StoryBeatSelectorPopup(PopupDialog):
             for midpoint in midpoints:
                 self._addBeat(midpoint)
         elif element == StoryStructureElements.Plot_points:
-            self._addBeat(first_plot_point)
-            self._addBeat(first_plot_point_ponr)
-            self._addBeat(second_plot_point)
+            self._addBeat(plot_point)
+            self._addBeat(plot_point_ponr)
+            # self._addBeat(first_plot_point_ponr)
+            # self._addBeat(second_plot_point)
         elif element == StoryStructureElements.Climax:
             self._addBeat(climax_beat)
             self._addBeat(crisis)
@@ -431,15 +437,15 @@ class StoryStructureOutline(OutlineTimelineWidget):
 
     def _insertBeat(self, beat: StoryBeat):
         def teardown():
-            self._recalculatePercentage(wdg)
             if self._beatsPreview:
-                self._structureTimeline.insertBeat(beat)
-                if beat.ends_act:
-                    self._structureTimeline.refreshActs()
                 QTimer.singleShot(150, self._beatsPreview.refresh)
 
         wdg = self._newBeatWidget(beat)
         self._insertWidget(beat, wdg, teardownFunction=teardown)
+        self._recalculatePercentage(wdg)
+        self._structureTimeline.insertBeat(beat)
+        if beat.ends_act:
+            self._structureTimeline.refreshActs()
 
     def _recalculatePercentage(self, wdg: StoryStructureBeatWidget):
         beat = wdg.item
@@ -458,7 +464,6 @@ class StoryStructureOutline(OutlineTimelineWidget):
 
     @overrides
     def _insertDroppedItem(self, wdg: OutlineItemWidget):
-        i = self.layout().indexOf(wdg)
         self._recalculatePercentage(wdg)
         self._structureTimeline.setStructure(self._novel, self._structure)
         QTimer.singleShot(150, self._beatsPreview.refresh)
@@ -466,6 +471,12 @@ class StoryStructureOutline(OutlineTimelineWidget):
 
     def _actChanged(self):
         self._structureTimeline.refreshActs()
-        for item in self._beatWidgets:
-            item.refreshActButton()
+        for wdg in self._beatWidgets:
+            beat: StoryBeat = wdg.item
+            if beat.ends_act:
+                wdg.refreshActButton()
+                self._structureTimeline.refreshBeat(beat)
+            elif beat.act_colorized:
+                self._structureTimeline.refreshBeat(beat)
+
         self.timelineChanged.emit()
