@@ -36,7 +36,8 @@ from plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat,
     disturbance_beat, characteristic_moment_beat, normal_world_beat, general_beat, StoryStructure, turn_beat, \
     twist_beat, inciting_incident_beat, refusal_beat, synchronicity_beat, establish_beat, trigger_beat, \
     first_pinch_point_beat, second_pinch_point_beat, crisis, climax_beat, resolution_beat, contrast_beat, \
-    retrospection_beat, revelation_beat, dark_moment, plot_point, plot_point_ponr
+    retrospection_beat, revelation_beat, dark_moment, plot_point, plot_point_ponr, plot_point_aha, \
+    midpoint_re_dedication, plot_point_rededication
 from plotlyst.view.common import label, push_btn, wrap, tool_btn, scrolled
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -333,8 +334,8 @@ class StoryBeatSelectorPopup(PopupDialog):
         elif element == StoryStructureElements.Plot_points:
             self._addBeat(plot_point)
             self._addBeat(plot_point_ponr)
-            # self._addBeat(first_plot_point_ponr)
-            # self._addBeat(second_plot_point)
+            self._addBeat(plot_point_aha)
+            self._addBeat(plot_point_rededication)
         elif element == StoryStructureElements.Climax:
             self._addBeat(climax_beat)
             self._addBeat(crisis)
