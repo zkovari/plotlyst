@@ -35,7 +35,7 @@ from plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat,
     twist_beat, inciting_incident_beat, refusal_beat, synchronicity_beat, establish_beat, trigger_beat, \
     first_pinch_point_beat, second_pinch_point_beat, crisis, climax_beat, resolution_beat, contrast_beat, \
     retrospection_beat, revelation_beat, dark_moment, plot_point, plot_point_ponr, plot_point_aha, \
-    plot_point_rededication, danger_beat, copy_beat
+    plot_point_rededication, danger_beat, copy_beat, TemplateStoryStructureType
 from plotlyst.view.common import label, push_btn, wrap, tool_btn, scrolled
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -223,12 +223,17 @@ class StoryBeatSelectorPopup(PopupDialog):
         icon.setIcon(IconRegistry.story_structure_icon())
         incr_icon(icon, 4)
         self.wdgTitle.layout().addWidget(icon)
-        self.wdgTitle.layout().addWidget(label('Common story structure beats', bold=True, h4=True))
+        if self._structure.template_type == TemplateStoryStructureType.TWISTS:
+            title = 'Twists and turns beats'
+        else:
+            title = 'Common story structure beats'
+        self.wdgTitle.layout().addWidget(label(title, bold=True, h4=True))
         self.wdgTitle.layout().addWidget(spacer())
         self.wdgTitle.layout().addWidget(self.btnReset)
         self.frame.layout().addWidget(self.wdgTitle)
 
-        self._addBeat(general_beat, self.frame)
+        if self._structure.template_type != TemplateStoryStructureType.TWISTS:
+            self._addBeat(general_beat, self.frame)
         self.wdgSelector = QWidget()
         hbox(self.wdgSelector)
         self.frame.layout().addWidget(self.wdgSelector)
@@ -255,28 +260,34 @@ class StoryBeatSelectorPopup(PopupDialog):
         self.btnConfirm.clicked.connect(self.reject)
         self.frame.layout().addWidget(self.btnConfirm)
 
-        self.btnGroup = QButtonGroup()
-        for element in StoryStructureElements:
-            if element == StoryStructureElements.Plot_points and not self._structure.custom:
-                continue
-            btn = push_btn(
-                IconRegistry.from_name(story_structure_element_icons[element], 'grey',
-                                       color_on=PLOTLYST_SECONDARY_COLOR),
-                text=element.name.replace('_', ' '), checkable=True,
-                properties=['secondary-selector', 'transparent-rounded-bg-on-hover'])
+        if self._structure.template_type == TemplateStoryStructureType.TWISTS:
+            self._addBeat(twist_beat)
+            self._addBeat(turn_beat)
+            self._addBeat(danger_beat)
+            self.wdgCenter.layout().addWidget(vspacer())
+        else:
+            self.btnGroup = QButtonGroup()
+            for element in StoryStructureElements:
+                if element == StoryStructureElements.Plot_points and not self._structure.custom:
+                    continue
+                btn = push_btn(
+                    IconRegistry.from_name(story_structure_element_icons[element], 'grey',
+                                           color_on=PLOTLYST_SECONDARY_COLOR),
+                    text=element.name.replace('_', ' '), checkable=True,
+                    properties=['secondary-selector', 'transparent-rounded-bg-on-hover'])
 
-            if element in [StoryStructureElements.Midpoint, StoryStructureElements.Plot_points]:
-                self.wdgSecondarySelector.layout().addWidget(btn)
-            else:
-                self.wdgSelector.layout().addWidget(btn)
-            btn.toggled.connect(partial(self._elementsToggled, element))
-            self.btnGroup.addButton(btn)
-            if element == StoryBeatSelectorPopup.LAST_ELEMENT:
-                btn.setChecked(True)
+                if element in [StoryStructureElements.Midpoint, StoryStructureElements.Plot_points]:
+                    self.wdgSecondarySelector.layout().addWidget(btn)
+                else:
+                    self.wdgSelector.layout().addWidget(btn)
+                btn.toggled.connect(partial(self._elementsToggled, element))
+                self.btnGroup.addButton(btn)
+                if element == StoryBeatSelectorPopup.LAST_ELEMENT:
+                    btn.setChecked(True)
 
-        self.wdgSecondarySelector.layout().addWidget(spacer())
-        if not self.btnGroup.checkedButton():
-            self.btnGroup.buttons()[0].setChecked(True)
+            self.wdgSecondarySelector.layout().addWidget(spacer())
+            if not self.btnGroup.checkedButton():
+                self.btnGroup.buttons()[0].setChecked(True)
 
     def display(self) -> Optional[StoryBeat]:
         result = self.exec()
