@@ -2394,7 +2394,7 @@ refusal_beat = StoryBeat(text='Refusal',
 
 turn_beat = StoryBeat(text='Turn',
                       id=uuid.UUID('31000162-4bed-49f2-9def-a70ba15ff378'),
-                      icon='mdi.boom-gate-up-outline',
+                      icon='mdi.sign-direction',
                       icon_color='#8338ec',
                       description="Shifts the story's direction")
 
@@ -2404,6 +2404,11 @@ twist_beat = StoryBeat(text='Twist',
                        icon_color='#f20089',
                        description="Brings an unexpected development to the story by defying readers' expectations")
 
+danger_beat = StoryBeat(text='Danger',
+                        id=uuid.UUID('d87d76e1-b0b2-412d-b39b-84c622127915'),
+                        icon='ei.fire',
+                        icon_color='#f4a261',
+                        description="Moments of heightened danger, either physical or emotional")
 revelation_beat = StoryBeat(text='Revelation',
                             icon='fa5s.binoculars',
                             icon_color='#588157',
