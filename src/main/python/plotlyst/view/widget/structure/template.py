@@ -26,15 +26,17 @@ from typing import Optional, List, Tuple
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QWidget, QPushButton, QDialog, QScrollArea, QApplication, QLabel
 from qthandy import vspacer, spacer, transparent, bold, vbox, incr_font, \
-    hbox, margins, underline, line, pointy
+    hbox, margins, underline, line, pointy, incr_icon
+from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.common import WHITE_COLOR
 from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     save_the_cat, three_act_structure, heros_journey, hook_beat, motion_beat, \
     disturbance_beat, normal_world_beat, characteristic_moment_beat, midpoint, midpoint_ponr, midpoint_mirror, \
-    midpoint_proactive, crisis, first_plot_point, first_plot_point_ponr, first_plot_points, midpoints, story_spine
-from plotlyst.view.common import ExclusiveOptionalButtonGroup, push_btn
+    midpoint_proactive, crisis, first_plot_point, first_plot_point_ponr, first_plot_points, midpoints, story_spine, \
+    twists_and_turns, twist_beat, turn_beat, danger_beat
+from plotlyst.view.common import ExclusiveOptionalButtonGroup, push_btn, label
 from plotlyst.view.generated.story_structure_selector_dialog_ui import Ui_StoryStructureSelectorDialog
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -300,7 +302,6 @@ class StructureOptionsMenu(MenuWidget):
 class _ThreeActStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
         super().__init__(novel, structure, parent)
-
         hbox(self.wdgCustom)
         margins(self.wdgCustom, top=20)
 
@@ -453,6 +454,42 @@ class _StorySpineStructureEditor(_AbstractStructureEditor):
         super(_StorySpineStructureEditor, self).__init__(novel, structure, parent)
 
 
+class _TwistsAndTurnsStructureEditor(_AbstractStructureEditor):
+    def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
+        super(_TwistsAndTurnsStructureEditor, self).__init__(novel, structure, parent)
+        vbox(self.wdgCustom, spacing=15)
+        margins(self.wdgCustom, top=20)
+        self.wdgCustom.layout().addWidget(label(
+            "A simplified story structure where you can track your story's biggest plot twists, turns, and danger moments.",
+            description=True), alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self.wdgButtons = QWidget()
+        hbox(self.wdgButtons, spacing=10)
+        self.btnTwist = self.__initButton(twist_beat, 'Add a new Twist')
+        self.btnTurn = self.__initButton(turn_beat, 'Add a new Turn')
+        self.btnDanger = self.__initButton(danger_beat, 'Add a new Danger moment')
+        # self.btnTurn = push_btn(IconRegistry.from_name('mdi.sign-direction', '#8338ec'), 'Add a new Turn',
+        #                         transparent_=True)
+        # self.btnTurn.installEventFilter(OpacityEventFilter(self.btnTurn, leaveOpacity=0.7))
+        # self.btnDanger = push_btn(IconRegistry.from_name('ei.fire', '#f4a261'), 'Add a new Danger moment',
+        #                           transparent_=True)
+        # self.btnDanger.installEventFilter(OpacityEventFilter(self.btnDanger, leaveOpacity=0.7))
+        self.wdgButtons.layout().addWidget(self.btnTwist)
+        self.wdgButtons.layout().addWidget(self.btnTurn)
+        self.wdgButtons.layout().addWidget(self.btnDanger)
+        self.wdgCustom.layout().addWidget(self.wdgButtons, alignment=Qt.AlignmentFlag.AlignCenter)
+
+    def __initButton(self, beat: StoryBeat, text: str) -> QPushButton:
+        btn = push_btn(IconRegistry.from_name(beat.icon, beat.icon_color), text,
+                       transparent_=True)
+        btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.7))
+        bold(btn)
+        incr_icon(btn, 6)
+        incr_font(btn, 2)
+
+        return btn
+
+
 class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
     def __init__(self, novel: Novel, structure: Optional[StoryStructure] = None, parent=None):
         super(StoryStructureSelectorDialog, self).__init__(parent)
@@ -463,6 +500,7 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
         self.btnSaveTheCat.setIcon(IconRegistry.from_name('fa5s.cat', color_on=WHITE_COLOR))
         self.btnHerosJourney.setIcon(IconRegistry.from_name('fa5s.mask', color_on=WHITE_COLOR))
         self.btnStorySpine.setIcon(IconRegistry.from_name('mdi.alpha-s-circle-outline', color_on=WHITE_COLOR))
+        self.btnTwists.setIcon(IconRegistry.from_name('ph.shuffle-bold', color_on=WHITE_COLOR))
         self.buttonGroup.buttonClicked.connect(self._structureChanged)
 
         self._structure: Optional[StoryStructure] = None
@@ -503,6 +541,8 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
             self.__initEditor(heros_journey, self.pageHerosJourney, _HerosJourneyStructureEditor)
         elif self.btnStorySpine.isChecked():
             self.__initEditor(story_spine, self.pageStorySpine, _StorySpineStructureEditor)
+        elif self.btnTwists.isChecked():
+            self.__initEditor(twists_and_turns, self.pageTwists, _TwistsAndTurnsStructureEditor)
 
     def __initEditor(self, structure: StoryStructure, page: QWidget, clazz, copyStructure: bool = True):
         self.stackedWidget.setCurrentWidget(page)
@@ -524,3 +564,5 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
             return self.pageHerosJourney, _HerosJourneyStructureEditor
         elif structure.title == story_spine.title:
             return self.pageStorySpine, _StorySpineStructureEditor
+        elif structure.title == twists_and_turns.title:
+            return self.pageTwists, _TwistsAndTurnsStructureEditor

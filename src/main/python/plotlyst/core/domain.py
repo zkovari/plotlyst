@@ -2258,6 +2258,7 @@ class TemplateStoryStructureType(Enum):
     NONE = 0
     THREE_ACT = 1
     SPINE = 2
+    TWISTS = 3
 
 
 class StoryStructureDisplayType(Enum):
@@ -2867,6 +2868,12 @@ story_spine = StoryStructure(title="Story Spine",
                              ]
 
                              )
+twists_and_turns = StoryStructure(title='Twists and Turns',
+                                  id=uuid.UUID('f905ba6b-0195-4ed7-932e-0b02e49cb1ae'),
+                                  icon='ph.shuffle-bold',
+                                  display_type=StoryStructureDisplayType.Sequential_timeline,
+                                  template_type=TemplateStoryStructureType.TWISTS,
+                                  acts=0)
 
 default_story_structures = [three_act_structure, save_the_cat, heros_journey]
 
