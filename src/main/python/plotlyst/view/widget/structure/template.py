@@ -457,10 +457,6 @@ class _StorySpineStructureEditor(_AbstractStructureEditor):
 
 class _TwistsAndTurnsStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
-        if not structure.beats:
-            structure.beats.append(copy_beat(turn_beat))
-            structure.beats.append(copy_beat(danger_beat))
-            structure.beats.append(copy_beat(twist_beat))
         super(_TwistsAndTurnsStructureEditor, self).__init__(novel, structure, parent)
         vbox(self.wdgCustom, spacing=15)
         margins(self.wdgCustom, top=20)
