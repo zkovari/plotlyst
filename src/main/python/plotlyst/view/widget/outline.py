@@ -233,13 +233,13 @@ class OutlineTimelineWidget(QFrame):
         sp(self).h_exp().v_exp()
         self._layoutType = layout
         if layout == LayoutType.CURVED_FLOW:
-            curved_flow(self, margin=10, spacing=10)
+            curved_flow(self, margin=10, spacing=4)
         elif layout == LayoutType.FLOW:
-            flow(self, 10, 10)
+            flow(self, 10, 4)
         elif layout == LayoutType.HORIZONTAL:
-            hbox(self, 10, 10)
+            hbox(self, 10, 4)
         elif layout == LayoutType.VERTICAL:
-            vbox(self, 10, 10)
+            vbox(self, 10, 4)
 
         self._items: List[OutlineItem] = []
         self._beatWidgets: List[OutlineItemWidget] = []
