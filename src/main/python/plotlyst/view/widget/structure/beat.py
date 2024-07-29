@@ -21,46 +21,48 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Optional, Dict
 
-import qtanim
-from PyQt6.QtCore import QEvent, QObject, pyqtSignal
-from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QFrame
+from PyQt6.QtCore import QEvent, QObject, pyqtSignal, Qt
+from PyQt6.QtWidgets import QFrame, QWidget, QTextEdit
 from overrides import overrides
-from qthandy import translucent, transparent, gc, bold, clear_layout, retain_when_hidden, italic, flow
+from qthandy import transparent, gc, clear_layout, italic, flow, vbox, hbox, translucent, bold, retain_when_hidden
 
 from plotlyst.common import act_color, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
-    Scene, StoryBeatType, midpoints
-from plotlyst.env import app_env
-from plotlyst.event.core import EventListener, Event, emit_event
-from plotlyst.event.handler import event_dispatchers
-from plotlyst.events import SceneChangedEvent, SceneDeletedEvent
-from plotlyst.service.cache import acts_registry
-from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import DelayedSignalSlotConnector
-from plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
-from plotlyst.view.icons import IconRegistry, avatars
+    StoryBeatType, midpoints
+from plotlyst.view.common import label
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.display import Icon
+from plotlyst.view.widget.input import Toggle
 from plotlyst.view.widget.structure.timeline import StoryStructureTimelineWidget
 
 
-class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
+class BeatWidget(QFrame):
     beatHighlighted = pyqtSignal(StoryBeat)
     beatToggled = pyqtSignal(StoryBeat)
 
     def __init__(self, novel: Novel, beat: StoryBeat, checkOccupiedBeats: bool = True, parent=None,
                  toggleEnabled: bool = True):
         super().__init__(parent)
-        self.setupUi(self)
+        self.setObjectName('BeatWidget')
         self._novel = novel
         self.beat = beat
         self._checkOccupiedBeats = checkOccupiedBeats
         self._toggleEnabled = toggleEnabled
 
-        bold(self.lblTitle)
-        bold(self.lblSceneTitle)
-        italic(self.textDescription)
+        self.lblTitle = label(bold=True)
         transparent(self.lblTitle)
-        transparent(self.btnIcon)
+        self.textDescription = QTextEdit()
+        self.textDescription.setMaximumHeight(130)
+        self.textDescription.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.textDescription.setReadOnly(True)
+        italic(self.textDescription)
+        self.textDescription.setProperty('transparent', True)
+        self.textDescription.setProperty('description', True)
+        self.btnIcon = Icon()
+        self.cbToggle = Toggle()
+        # transparent(self.btnIcon)
+        # bold(self.lblTitle)
+        # bold(self.lblSceneTitle)
 
         # self.btnSceneSelector = SceneSelector(app_env.novel)
         # decr_icon(self.btnSceneSelector, 2)
@@ -69,29 +71,40 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         #                               alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
         # self.btnSceneSelector.setHidden(True)
         # self.btnSceneSelector.sceneSelected.connect(self._sceneLinked)
-        transparent(self.wdgToggleParent)
+        # transparent(self.wdgToggleParent)
+        #
+        # retain_when_hidden(self.cbToggle)
 
-        retain_when_hidden(self.cbToggle)
-
-        self.cbToggle.setHidden(True)
-        if not self._canBeToggled():
+        if self._canBeToggled():
+            retain_when_hidden(self.cbToggle)
+        else:
             self.cbToggle.setDisabled(True)
+        self.cbToggle.setHidden(True)
+        self.cbToggle.setChecked(self.beat.enabled)
         self.cbToggle.toggled.connect(self._beatToggled)
         self.cbToggle.clicked.connect(self._beatClicked)
-        self.cbToggle.setChecked(self.beat.enabled)
 
-        self.scene: Optional[Scene] = None
-        self.repo = RepositoryPersistenceManager.instance()
+        # self.scene: Optional[Scene] = None
+        # self.repo = RepositoryPersistenceManager.instance()
 
+        vbox(self, 4, 2)
+        self.wdgTop = QWidget()
+        hbox(self.wdgTop)
+        self.wdgTop.layout().addWidget(self.btnIcon)
+        self.wdgTop.layout().addWidget(self.lblTitle)
+        self.wdgTop.layout().addWidget(self.cbToggle, alignment=Qt.AlignmentFlag.AlignRight)
+        self.layout().addWidget(self.wdgTop)
+        self.layout().addWidget(self.textDescription)
         self.updateInfo()
-        self.refresh()
+        self._beatToggled(self.cbToggle.isChecked())
+        # self.refresh()
 
         self.installEventFilter(self)
 
-        self._synopsisConnector = DelayedSignalSlotConnector(self.textSynopsis.textChanged, self._synopsisEdited,
-                                                             parent=self)
-        dispatcher = event_dispatchers.instance(self._novel)
-        dispatcher.register(self, SceneChangedEvent, SceneDeletedEvent)
+        # self._synopsisConnector = DelayedSignalSlotConnector(self.textSynopsis.textChanged, self._synopsisEdited,
+        #                                                      parent=self)
+        # dispatcher = event_dispatchers.instance(self._novel)
+        # dispatcher.register(self, SceneChangedEvent, SceneDeletedEvent)
 
     def updateInfo(self):
         self.lblTitle.setText(self.beat.text)
@@ -107,38 +120,39 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
             QLabel:disabled {{color:grey;}}
         ''')
 
-    def refresh(self):
-        self.stackedWidget.setCurrentWidget(self.pageInfo)
-        if not self._checkOccupiedBeats:
-            return
+    # def refresh(self):
+    #     self.stackedWidget.setCurrentWidget(self.pageInfo)
+    #     if not self._checkOccupiedBeats:
+    #         return
+    #
+    #     self.scene = acts_registry.scene(self.beat)
+    #     if self.scene:
+    #         self.lblTitle.setEnabled(True)
+    #         self.btnIcon.setEnabled(True)
+    #         self.stackedWidget.setCurrentWidget(self.pageScene)
+    #         self.lblSceneTitle.setText(self.scene.title)
+    #         self.textSynopsis.setText(self.scene.synopsis)
+    #         if self.scene.pov:
+    #             self.btnPov.setIcon(avatars.avatar(self.scene.pov))
+    #     else:
+    #         self.lblTitle.setDisabled(True)
+    #         self.btnIcon.setDisabled(True)
+    #         self.textSynopsis.clear()
 
-        self.scene = acts_registry.scene(self.beat)
-        if self.scene:
-            self.lblTitle.setEnabled(True)
-            self.btnIcon.setEnabled(True)
-            self.stackedWidget.setCurrentWidget(self.pageScene)
-            self.lblSceneTitle.setText(self.scene.title)
-            self.textSynopsis.setText(self.scene.synopsis)
-            if self.scene.pov:
-                self.btnPov.setIcon(avatars.avatar(self.scene.pov))
-        else:
-            self.lblTitle.setDisabled(True)
-            self.btnIcon.setDisabled(True)
-            self.textSynopsis.clear()
-
-    @overrides
-    def event_received(self, event: Event):
-        self._synopsisConnector.freeze()
-        self.refresh()
-        self._synopsisConnector.freeze(False)
+    # @overrides
+    # def event_received(self, event: Event):
+    #     self._synopsisConnector.freeze()
+    #     self.refresh()
+    #     self._synopsisConnector.freeze(False)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if event.type() == QEvent.Type.Enter:
-            if self._canBeToggled() and self._infoPage():
+            if self._canBeToggled():
                 self.cbToggle.setVisible(True)
             # self.btnSceneSelector.setVisible(self._infoPage() and self._checkOccupiedBeats and self.beat.enabled)
-            self.setStyleSheet(f'.BeatWidget {{background-color: {act_color(self.beat.act, self._novel.active_story_structure.acts, translucent=True)};}}')
+            self.setStyleSheet(
+                f'.BeatWidget {{background-color: {act_color(self.beat.act, self._novel.active_story_structure.acts, translucent=True)};}}')
             self.beatHighlighted.emit(self.beat)
         elif event.type() == QEvent.Type.Leave:
             self.cbToggle.setHidden(True)
@@ -147,11 +161,11 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
 
         return super().eventFilter(watched, event)
 
-    def _infoPage(self) -> bool:
-        return self.stackedWidget.currentWidget() == self.pageInfo
-
-    def _scenePage(self) -> bool:
-        return self.stackedWidget.currentWidget() == self.pageScene
+    # def _infoPage(self) -> bool:
+    #     return self.stackedWidget.currentWidget() == self.pageInfo
+    #
+    # def _scenePage(self) -> bool:
+    #     return self.stackedWidget.currentWidget() == self.pageScene
 
     def _canBeToggled(self):
         if not self._toggleEnabled:
@@ -170,20 +184,20 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
     def _beatClicked(self, checked: bool):
         self.beat.enabled = checked
         self.beatToggled.emit(self.beat)
-        # self.btnSceneSelector.setVisible(self._infoPage() and self._checkOccupiedBeats and self.beat.enabled)
+    # self.btnSceneSelector.setVisible(self._infoPage() and self._checkOccupiedBeats and self.beat.enabled)
 
-    def _sceneLinked(self, scene: Scene):
-        scene.link_beat(app_env.novel.active_story_structure, self.beat)
-        self.repo.update_scene(self.scene)
-        emit_event(self._novel, SceneChangedEvent(self, scene))
-        self.refresh()
-        qtanim.glow(self.lblTitle, color=QColor(self.beat.icon_color))
+    # def _sceneLinked(self, scene: Scene):
+    #     scene.link_beat(app_env.novel.active_story_structure, self.beat)
+    #     self.repo.update_scene(self.scene)
+    #     emit_event(self._novel, SceneChangedEvent(self, scene))
+    #     self.refresh()
+    #     qtanim.glow(self.lblTitle, color=QColor(self.beat.icon_color))
 
-    def _synopsisEdited(self):
-        if self.scene:
-            self.scene.synopsis = self.textSynopsis.toPlainText()
-            self.repo.update_scene(self.scene)
-            emit_event(self._novel, SceneChangedEvent(self, self.scene))
+    # def _synopsisEdited(self):
+    #     if self.scene:
+    #         self.scene.synopsis = self.textSynopsis.toPlainText()
+    #         self.repo.update_scene(self.scene)
+    #         emit_event(self._novel, SceneChangedEvent(self, self.scene))
 
 
 class BeatsPreview(QFrame):

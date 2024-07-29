@@ -23,10 +23,10 @@ from enum import Enum, auto
 from functools import partial
 from typing import Optional, List, Tuple
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from PyQt6.QtWidgets import QWidget, QPushButton, QDialog, QScrollArea, QApplication, QLabel
 from qthandy import vspacer, spacer, transparent, bold, vbox, incr_font, \
-    hbox, margins, underline, line, pointy, incr_icon
+    hbox, margins, underline, line, pointy, incr_icon, busy
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -567,9 +567,15 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
                 self._structure = copy.deepcopy(structure)
             else:
                 self._structure = structure
-            page.layout().addWidget(clazz(self._novel, self._structure, self))
+            QTimer.singleShot(150, lambda: self.__initNewWidget(clazz, page))
         else:
             self._structure = page.layout().itemAt(0).widget().structure()
+
+    @busy
+    def __initNewWidget(self, clazz, page: QWidget):
+        page.setEnabled(False)
+        page.layout().addWidget(clazz(self._novel, self._structure, self))
+        page.setEnabled(True)
 
     def _pageAndClass(self, structure: StoryStructure):
         if structure.title == three_act_structure.title:
