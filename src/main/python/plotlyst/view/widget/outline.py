@@ -231,6 +231,7 @@ class OutlineTimelineWidget(QFrame):
             shadow(self, color=QColor(frameColor))
 
         sp(self).h_exp().v_exp()
+        self._layoutType = layout
         if layout == LayoutType.CURVED_FLOW:
             curved_flow(self, margin=10, spacing=10)
         elif layout == LayoutType.FLOW:
@@ -288,40 +289,67 @@ class OutlineTimelineWidget(QFrame):
 
         path = QPainterPath()
 
-        forward = True
-        y = 0
-        for i, wdg in enumerate(self._beatWidgets):
-            pos: QPoint = wdg.pos()
-            pos.setY(pos.y() + wdg.layout().contentsMargins().top())
-            if isinstance(wdg, OutlineItemWidget):
-                pos.setY(pos.y() + wdg.iconFixedSize // 2)
-            pos.setX(pos.x() + wdg.layout().contentsMargins().left())
-            if i == 0:
-                y = pos.y()
-                path.moveTo(pos.toPointF())
-                painter.drawLine(pos.x(), y - 10, pos.x(), y + 10)
-            else:
-                if pos.y() > y:
-                    if forward:
-                        path.arcTo(QRectF(pos.x() + wdg.width(), y, 60, pos.y() - y),
-                                   90, -180)
-                    else:
-                        path.arcTo(QRectF(pos.x(), y, 60, pos.y() - y), -270, 180)
-                    forward = not forward
+        if self._layoutType == LayoutType.CURVED_FLOW:
+            forward = True
+            y = 0
+            for i, wdg in enumerate(self._beatWidgets):
+                pos: QPoint = wdg.pos()
+                pos.setY(pos.y() + wdg.layout().contentsMargins().top())
+                if isinstance(wdg, OutlineItemWidget):
+                    pos.setY(pos.y() + wdg.iconFixedSize // 2)
+                pos.setX(pos.x() + wdg.layout().contentsMargins().left())
+                if i == 0:
                     y = pos.y()
+                    path.moveTo(pos.toPointF())
+                    painter.drawLine(pos.x(), y - 10, pos.x(), y + 10)
+                else:
+                    if pos.y() > y:
+                        if forward:
+                            path.arcTo(QRectF(pos.x() + wdg.width(), y, 60, pos.y() - y),
+                                       90, -180)
+                        else:
+                            path.arcTo(QRectF(pos.x(), y, 60, pos.y() - y), -270, 180)
+                        forward = not forward
+                        y = pos.y()
 
-            if forward:
-                pos.setX(pos.x() + wdg.width())
-            path.lineTo(pos.toPointF())
+                if forward:
+                    pos.setX(pos.x() + wdg.width())
+                path.lineTo(pos.toPointF())
 
-        painter.drawPath(path)
-        if self._beatWidgets:
-            if forward:
-                x_arrow_diff = -10
-            else:
-                x_arrow_diff = 10
-            painter.drawLine(pos.x(), y, pos.x() + x_arrow_diff, y + 10)
-            painter.drawLine(pos.x(), y, pos.x() + x_arrow_diff, y - 10)
+            painter.drawPath(path)
+            if self._beatWidgets:
+                if forward:
+                    x_arrow_diff = -10
+                else:
+                    x_arrow_diff = 10
+                painter.drawLine(pos.x(), y, pos.x() + x_arrow_diff, y + 10)
+                painter.drawLine(pos.x(), y, pos.x() + x_arrow_diff, y - 10)
+        elif self._layoutType == LayoutType.FLOW:
+            x = 0
+            y = 0
+            for i, wdg in enumerate(self._beatWidgets):
+                pos: QPoint = wdg.pos()
+                pos.setY(pos.y() + wdg.layout().contentsMargins().top())
+                if isinstance(wdg, OutlineItemWidget):
+                    pos.setY(pos.y() + wdg.iconFixedSize // 2)
+                pos.setX(pos.x() + wdg.layout().contentsMargins().left())
+                x = pos.x() + wdg.width()
+                if i == 0:
+                    y = pos.y()
+                    path.moveTo(pos.toPointF())
+                elif pos.y() > y:
+                    path.lineTo(x, y)
+                    y = pos.y()
+                    # x = pos.x()
+                    path.moveTo(pos.toPointF())
+                # else:
+                #     x = pos.x() + wdg.width()
+
+                path.lineTo(x, y)
+            painter.drawPath(path)
+            x_arrow_diff = -10
+            painter.drawLine(x, y, x + x_arrow_diff, y + 10)
+            painter.drawLine(x, y, x + x_arrow_diff, y - 10)
 
     def _addBeatWidget(self, item: OutlineItem):
         widget = self._newBeatWidget(item)
