@@ -35,7 +35,7 @@ from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     save_the_cat, three_act_structure, heros_journey, hook_beat, motion_beat, \
     disturbance_beat, normal_world_beat, characteristic_moment_beat, midpoint, midpoint_ponr, midpoint_mirror, \
     midpoint_proactive, crisis, first_plot_point, first_plot_point_ponr, first_plot_points, midpoints, story_spine, \
-    twists_and_turns, twist_beat, turn_beat, danger_beat, copy_beat
+    twists_and_turns, twist_beat, turn_beat, danger_beat, copy_beat, five_act_structure
 from plotlyst.view.common import ExclusiveOptionalButtonGroup, push_btn, label
 from plotlyst.view.generated.story_structure_selector_dialog_ui import Ui_StoryStructureSelectorDialog
 from plotlyst.view.icons import IconRegistry
@@ -440,24 +440,29 @@ class _ThreeActStructureEditor(_AbstractStructureEditor):
         self.beatsPreview.removeBeat(crisis)
 
 
+class _FiveActStructureEditor(_AbstractStructureEditor):
+    def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
+        super().__init__(novel, structure, parent)
+
+
 class _SaveTheCatActStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
-        super(_SaveTheCatActStructureEditor, self).__init__(novel, structure, parent)
+        super().__init__(novel, structure, parent)
 
 
 class _HerosJourneyStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
-        super(_HerosJourneyStructureEditor, self).__init__(novel, structure, parent)
+        super().__init__(novel, structure, parent)
 
 
 class _StorySpineStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
-        super(_StorySpineStructureEditor, self).__init__(novel, structure, parent)
+        super().__init__(novel, structure, parent)
 
 
 class _TwistsAndTurnsStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
-        super(_TwistsAndTurnsStructureEditor, self).__init__(novel, structure, parent)
+        super().__init__(novel, structure, parent)
         vbox(self.wdgCustom, spacing=15)
         margins(self.wdgCustom, top=20)
         self.wdgCustom.layout().addWidget(label(
@@ -505,6 +510,7 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
         self._novel = novel
         self.setWindowIcon(IconRegistry.story_structure_icon())
         self.btnThreeAct.setIcon(IconRegistry.from_name('mdi.numeric-3-circle-outline', color_on=WHITE_COLOR))
+        self.btnFiveAct.setIcon(IconRegistry.from_name('mdi.numeric-5-box-outline', color_on=WHITE_COLOR))
         self.btnSaveTheCat.setIcon(IconRegistry.from_name('fa5s.cat', color_on=WHITE_COLOR))
         self.btnHerosJourney.setIcon(IconRegistry.from_name('fa5s.mask', color_on=WHITE_COLOR))
         self.btnStorySpine.setIcon(IconRegistry.from_name('mdi.alpha-s-circle-outline', color_on=WHITE_COLOR))
@@ -543,6 +549,8 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
     def _structureChanged(self):
         if self.btnThreeAct.isChecked():
             self.__initEditor(three_act_structure, self.pageThreeAct, _ThreeActStructureEditor)
+        elif self.btnFiveAct.isChecked():
+            self.__initEditor(five_act_structure, self.pageFiveAct, _FiveActStructureEditor)
         elif self.btnSaveTheCat.isChecked():
             self.__initEditor(save_the_cat, self.pageSaveTheCat, _SaveTheCatActStructureEditor)
         elif self.btnHerosJourney.isChecked():
@@ -566,6 +574,8 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
     def _pageAndClass(self, structure: StoryStructure):
         if structure.title == three_act_structure.title:
             return self.pageThreeAct, _ThreeActStructureEditor
+        if structure.title == five_act_structure.title:
+            return self.pageFiveAct, _FiveActStructureEditor
         elif structure.title == save_the_cat.title:
             return self.pageSaveTheCat, _SaveTheCatActStructureEditor
         elif structure.title == heros_journey.title:

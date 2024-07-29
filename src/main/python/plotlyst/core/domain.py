@@ -2259,6 +2259,7 @@ class TemplateStoryStructureType(Enum):
     THREE_ACT = 1
     SPINE = 2
     TWISTS = 3
+    FIVE_ACT = 4
 
 
 class StoryStructureDisplayType(Enum):
@@ -2586,6 +2587,13 @@ three_act_structure = StoryStructure(title='Three Act Structure',
                                             climax_beat,
                                             resolution_beat,
                                             ])
+
+five_act_structure = StoryStructure(title='Five Act Structure',
+                                    id=uuid.UUID('9b5dcfca-e140-452f-ac42-67ebb9a3b301'),
+                                    icon='mdi.numeric-5-box-outline',
+                                    icon_color='#',
+                                    template_type=TemplateStoryStructureType.FIVE_ACT,
+                                    )
 
 save_the_cat = StoryStructure(title='Save the Cat',
                               id=uuid.UUID('1f1c4433-6afa-48e1-a8dc-f8fcb94bfede'),
