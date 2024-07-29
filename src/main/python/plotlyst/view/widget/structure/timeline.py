@@ -505,12 +505,12 @@ class StoryStructureTimelineWidget(QWidget):
         if btn is None:
             return
 
-        if toggled:
-            btn.setCheckable(False)
-        else:
-            pointy(btn)
-            btn.setCheckable(True)
-            self._beatToggled(btn, False)
+        # if toggled:
+        #     btn.setCheckable(False)
+        # else:
+            # pointy(btn)
+            # btn.setCheckable(True)
+        self._beatToggled(btn, toggled)
 
     def toggleBeatVisibility(self, beat: StoryBeat):
         btn = self._beats.get(beat)
