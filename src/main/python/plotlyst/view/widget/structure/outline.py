@@ -35,7 +35,7 @@ from plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat,
     twist_beat, inciting_incident_beat, refusal_beat, synchronicity_beat, establish_beat, trigger_beat, \
     first_pinch_point_beat, second_pinch_point_beat, crisis, climax_beat, resolution_beat, contrast_beat, \
     retrospection_beat, revelation_beat, dark_moment, plot_point, plot_point_ponr, plot_point_aha, \
-    plot_point_rededication, danger_beat, copy_beat, TemplateStoryStructureType
+    plot_point_rededication, danger_beat, copy_beat, TemplateStoryStructureType, LayoutType
 from plotlyst.view.common import label, push_btn, wrap, tool_btn, scrolled
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -362,7 +362,7 @@ class StoryStructureOutline(OutlineTimelineWidget):
     beatChanged = pyqtSignal()
 
     def __init__(self, parent=None):
-        super().__init__(parent)
+        super().__init__(parent, layout=LayoutType.FLOW)
         self._structureTimeline: Optional[StoryStructureTimelineWidget] = None
         self._beatsPreview: Optional[BeatsPreview] = None
         self._structure: Optional[StoryStructure] = None
