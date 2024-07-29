@@ -135,11 +135,11 @@ class OutlineItemWidget(QWidget):
 
     def _initStyle(self, name: Optional[str] = None, desc: Optional[str] = None, tooltip: Optional[str] = None):
         color = self._color()
-        color_translucent = to_rgba_str(QColor(color), self._colorAlpha)
+        # color_translucent = to_rgba_str(QColor(color), self._colorAlpha)
         self._btnIcon.setStyleSheet(f'''
                     QToolButton {{
                                     background-color: {RELAXED_WHITE_COLOR};
-                                    border: 2px solid {color_translucent};
+                                    border: 2px solid {color};
                                     border-radius: 18px; padding: 4px;
                                 }}
                     QToolButton:menu-indicator {{
