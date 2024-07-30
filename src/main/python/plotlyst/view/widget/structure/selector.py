@@ -199,6 +199,7 @@ class ActToolButton(QToolButton):
 class ActSelectorButtons(QWidget, EventListener):
     actToggled = pyqtSignal(int, bool)
     actClicked = pyqtSignal(int, bool)
+    reset = pyqtSignal()
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -211,6 +212,7 @@ class ActSelectorButtons(QWidget, EventListener):
     @overrides
     def event_received(self, event: Event):
         self.refresh()
+        self.reset.emit()
 
     def setActChecked(self, act: int, checked: bool):
         if act in self._buttons.keys():

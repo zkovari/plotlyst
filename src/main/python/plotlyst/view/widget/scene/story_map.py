@@ -590,3 +590,8 @@ class StoryMap(QWidget, EventListener):
         self._acts_filter[act] = filtered
         if self.novel:
             self.refresh(animated=False)
+
+    def resetActsFilter(self):
+        self._acts_filter.clear()
+        if self.novel:
+            self.refresh(animated=False)

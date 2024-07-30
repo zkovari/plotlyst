@@ -607,6 +607,9 @@ class ScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributionWidget, E
     def setActsFilter(self, act: int, filter: bool):
         self._scenes_proxy.setActsFilter(act, filter)
 
+    def resetActsFilter(self):
+        self._scenes_proxy.resetActsFilter()
+
     def _toggle_characters(self, toggled: bool):
         if toggled:
             self._model = CharactersScenesDistributionTableModel(self.novel)

@@ -181,6 +181,7 @@ class ScenesOutlineView(AbstractNovelView):
         self._actFilter = ActSelectorButtons(self.novel)
         insert_after(self.ui.widget, self._actFilter, self.ui.lineBeforeActFilter)
         self._actFilter.actToggled.connect(self._proxy.setActsFilter)
+        self._actFilter.reset.connect(self._proxy.resetActsFilter)
 
         self.ui.btnCardsView.setIcon(IconRegistry.cards_icon())
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
@@ -221,6 +222,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.selected_card: Optional[SceneCard] = None
         self._card_filter = SceneCardFilter()
         self._actFilter.actToggled.connect(self._filter_cards)
+        self._actFilter.reset.connect(self._filter_cards)
         self.ui.btnStoryStructure.toggled.connect(self._story_structure_toggled)
         self.ui.cards.selectionCleared.connect(self._selection_cleared)
         self.ui.cards.cardSelected.connect(self._card_selected)
@@ -379,6 +381,7 @@ class ScenesOutlineView(AbstractNovelView):
                     lambda: self.storymap_view.setOrientation(Qt.Orientation.Horizontal))
                 self.ui.rbVertical.clicked.connect(lambda: self.storymap_view.setOrientation(Qt.Orientation.Vertical))
                 self._actFilter.actToggled.connect(self.storymap_view.setActsFilter)
+                self._actFilter.reset.connect(self.storymap_view.resetActsFilter)
                 filters = self._actFilter.actFilters()
                 if filters:
                     for k, v in filters.items():
@@ -393,6 +396,7 @@ class ScenesOutlineView(AbstractNovelView):
                 self.characters_distribution = ScenesDistributionWidget(self.novel)
                 self.ui.pageCharactersDistribution.layout().addWidget(self.characters_distribution)
                 self._actFilter.actToggled.connect(self.characters_distribution.setActsFilter)
+                self._actFilter.reset.connect(self.characters_distribution.resetActsFilter)
                 filters = self._actFilter.actFilters()
                 if filters:
                     for k, v in filters.items():
@@ -608,6 +612,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.tblSceneStages.setModel(self._stages_proxy)
 
             self._actFilter.actToggled.connect(self._stages_proxy.setActsFilter)
+            self._actFilter.reset.connect(self._stages_proxy.resetActsFilter)
             filters = self._actFilter.actFilters()
             if filters:
                 for k, v in filters.items():

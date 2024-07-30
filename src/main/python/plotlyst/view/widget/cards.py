@@ -335,6 +335,9 @@ class SceneCardFilter(CardFilter):
         self._povs.clear()
         self._povs.update(set(characters))
 
+    def resetActsFilter(self):
+        self._actsFilter.clear()
+
 
 class CardsView(QFrame):
     cardSelected = pyqtSignal(Card)
