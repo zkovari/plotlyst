@@ -212,6 +212,7 @@ class ScenesOutlineView(AbstractNovelView):
         incr_font(self.ui.btnStoryGridDisplay, 2)
         incr_icon(self.ui.btnStoryGridDisplay, 2)
         retain_when_hidden(self.ui.wdgStorymapToolbar)
+        self.ui.wdgStorymapSelectors.setHidden(True)
 
         self.ui.btnStageCustomize.setIcon(IconRegistry.cog_icon())
         transparent(self.ui.btnStageCustomize)
