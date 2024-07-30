@@ -34,6 +34,7 @@ from qthandy import pointy
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR, \
     WHITE_COLOR
 from plotlyst.core.domain import Node, Relation, Connector, Character, GraphicsItemType, to_node
+from plotlyst.env import app_env
 from plotlyst.service.image import LoadedImage
 from plotlyst.view.common import shadow, calculate_resized_dimensions
 from plotlyst.view.icons import IconRegistry, avatars
@@ -770,6 +771,7 @@ class EventItem(NodeItem):
             self._icon = IconRegistry.from_name(self._node.icon, self._node.color)
 
         self._font = QApplication.font()
+        self._font.setFamily(app_env.sans_serif_font())
         self._metrics = QFontMetrics(self._font)
         self._textRect: QRect = QRect(0, 0, 1, 1)
         self._width = 1
