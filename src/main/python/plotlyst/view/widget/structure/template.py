@@ -511,6 +511,7 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
         self.setWindowIcon(IconRegistry.story_structure_icon())
         self.btnThreeAct.setIcon(IconRegistry.from_name('mdi.numeric-3-circle-outline', color_on=WHITE_COLOR))
         self.btnFiveAct.setIcon(IconRegistry.from_name('mdi.numeric-5-box-outline', color_on=WHITE_COLOR))
+        self.btnFiveAct.setHidden(True)
         self.btnSaveTheCat.setIcon(IconRegistry.from_name('fa5s.cat', color_on=WHITE_COLOR))
         self.btnHerosJourney.setIcon(IconRegistry.from_name('fa5s.mask', color_on=WHITE_COLOR))
         self.btnStorySpine.setIcon(IconRegistry.from_name('mdi.alpha-s-circle-outline', color_on=WHITE_COLOR))
