@@ -38,7 +38,7 @@ from plotlyst.core.domain import GraphicsItemType, NODE_SUBTYPE_DISTURBANCE, NOD
 from plotlyst.view.common import shadow, tool_btn, ExclusiveOptionalButtonGroup
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
-from plotlyst.view.widget.graphics.items import EventItem, ConnectorItem, NoteItem
+from plotlyst.view.widget.graphics.items import EventItem, ConnectorItem, NoteItem, CharacterItem
 from plotlyst.view.widget.input import FontSizeSpinBox, AutoAdjustableLineEdit, AutoAdjustableTextEdit
 from plotlyst.view.widget.utility import ColorPicker, IconSelectorDialog
 
@@ -265,6 +265,28 @@ class EventSelectorWidget(SecondarySelectorWidget):
     @overrides
     def showEvent(self, event: QShowEvent) -> None:
         self._btnGeneral.setChecked(True)
+
+
+class CharacterToolbar(BaseItemToolbar):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._item: Optional[CharacterItem] = None
+
+        self._sbSize = AvatarSizeEditor()
+        self._sbSize.valueChanged.connect(self._sizeChanged)
+
+        self._toolbar.layout().addWidget(self._sbSize)
+
+    def setItem(self, item: CharacterItem):
+        self._item = None
+        self._hideSecondarySelectors()
+
+        self._sbSize.setValue(68)
+        self._item = item
+
+    def _sizeChanged(self, value: int):
+        if self._item:
+            self._item.setSize(value)
 
 
 class PaintedItemBasedToolbar(BaseItemToolbar):
@@ -502,6 +524,14 @@ class PenWidthEditor(QSlider):
         super().__init__(parent)
         self.setMinimum(1)
         self.setMaximum(10)
+        self.setOrientation(Qt.Orientation.Horizontal)
+
+
+class AvatarSizeEditor(QSlider):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setMinimum(48)
+        self.setMaximum(125)
         self.setOrientation(Qt.Orientation.Horizontal)
 
 
