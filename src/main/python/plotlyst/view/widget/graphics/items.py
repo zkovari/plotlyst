@@ -501,8 +501,6 @@ class ConnectorItem(QGraphicsPathItem):
             self._rearrangeLinearConnector(path, width, height)
 
         self._arrowheadItem.setPos(width, height)
-        if not self._connector or self._connector.cp_x is None:
-            self._rearrangeCPSocket(path)
         self._rearrangeIcon(path)
         self._rearrangeText(path)
 
