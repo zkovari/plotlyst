@@ -27,7 +27,7 @@ from PyQt6.QtCore import Qt, QTimer, QRectF, QPointF, QPoint, QRect
 from PyQt6.QtGui import QPainter, QPen, QPainterPath, QColor, QIcon, QPolygonF, QBrush, QFontMetrics, QImage, QFont
 from PyQt6.QtWidgets import QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QGraphicsSceneMouseEvent, \
     QStyleOptionGraphicsItem, QWidget, \
-    QGraphicsSceneHoverEvent, QGraphicsPolygonItem, QApplication, QGraphicsTextItem
+    QGraphicsSceneHoverEvent, QGraphicsPolygonItem, QApplication
 from overrides import overrides
 from qthandy import pointy
 
@@ -120,6 +120,55 @@ class ResizeIconItem(QAbstractGraphicsShapeItem):
 
     def deactivate(self):
         self._activated = False
+
+
+class LabelItem(QAbstractGraphicsShapeItem):
+    Margin: int = 0
+    Padding: int = 5
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._text: str = ''
+        self._font = QApplication.font()
+        self._font.setPointSize(self._font.pointSize() - 1)
+        self._font.setFamily(app_env.serif_font())
+        self._metrics = QFontMetrics(self._font)
+        self._textRect: QRect = QRect(0, 0, 1, 1)
+        self._width = 1
+        self._height = 1
+        self._nestedRectWidth = 1
+        self._nestedRectHeight = 1
+        self._recalculateRect()
+
+    def setText(self, text: str):
+        self._text = text
+        self._refresh()
+
+    @overrides
+    def boundingRect(self) -> QRectF:
+        return QRectF(0, 0, self._width, self._height)
+
+    @overrides
+    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+        painter.setPen(QPen(QColor('black'), 1))
+        painter.setBrush(QColor(WHITE_COLOR))
+        painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 6, 6)
+        painter.setFont(self._font)
+        painter.drawText(self._textRect, Qt.AlignmentFlag.AlignCenter, self._text)
+
+    def _refresh(self):
+        self._recalculateRect()
+        self.prepareGeometryChange()
+        self.update()
+
+    def _recalculateRect(self):
+        self._textRect = self._metrics.boundingRect(self._text)
+        self._textRect.moveTopLeft(QPoint(self.Margin + self.Padding, self.Margin + self.Padding))
+        self._textRect.moveTopLeft(QPoint(self._textRect.x(), self._textRect.y()))
+        self._width = self._textRect.width() + self.Margin * 2 + self.Padding * 2
+        self._height = self._textRect.height() + self.Margin * 2 + self.Padding * 2
+        self._nestedRectWidth = self._textRect.width() + self.Padding * 2
+        self._nestedRectHeight = self._textRect.height() + self.Padding * 2
 
 
 class IconBadge(QAbstractGraphicsShapeItem):
@@ -345,7 +394,7 @@ class ConnectorItem(QGraphicsPathItem):
         self._iconBadge = IconBadge(self)
         self._iconBadge.setVisible(False)
 
-        self._text = QGraphicsTextItem('', self)
+        self._text = LabelItem(self)
         self._text.setVisible(False)
 
         self.rearrange()
@@ -373,7 +422,7 @@ class ConnectorItem(QGraphicsPathItem):
             color = node.color
         else:
             color = 'black'
-        self._text.setPlainText(connector.text)
+        self._text.setText(connector.text)
 
         self.setColor(QColor(color))
         if connector.icon:
@@ -403,7 +452,7 @@ class ConnectorItem(QGraphicsPathItem):
 
     def setText(self, text: str):
         self._connector.text = text
-        self._text.setPlainText(text)
+        self._text.setText(text)
         self.rearrange()
         self.networkScene().connectorChangedEvent(self)
 
@@ -462,7 +511,7 @@ class ConnectorItem(QGraphicsPathItem):
 
     def setColor(self, color: QColor):
         self._setColor(color)
-        self._text.setDefaultTextColor(color)
+        # self._text.setDefaultTextColor(color)
 
         self.update()
 
