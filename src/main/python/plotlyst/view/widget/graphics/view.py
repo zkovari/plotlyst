@@ -124,7 +124,6 @@ class BaseGraphicsView(QGraphicsView):
         view_pos.setX(view_pos.x() - diff_w)
         view_pos.setY(view_pos.y() - widget.sizeHint().height() - 20)
         widget.move(view_pos)
-        # widget.setVisible(True)
         qtanim.fade_in(widget, duration=150, teardown=lambda: widget.setGraphicsEffect(None))
 
 

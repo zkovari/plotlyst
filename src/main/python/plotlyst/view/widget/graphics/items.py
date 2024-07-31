@@ -784,8 +784,8 @@ class CharacterItem(NodeItem):
 
 
 class EventItem(NodeItem):
-    Margin: int = 30
-    Padding: int = 20
+    Margin: int = 15
+    Padding: int = 12
 
     def __init__(self, node: Node, parent=None):
         super().__init__(node, parent)
@@ -802,7 +802,6 @@ class EventItem(NodeItem):
 
         self._font = QApplication.font()
         self._font.setFamily(app_env.sans_serif_font())
-        self._metrics = QFontMetrics(self._font)
         self._textRect: QRect = QRect(0, 0, 1, 1)
         self._width = 1
         self._height = 1
