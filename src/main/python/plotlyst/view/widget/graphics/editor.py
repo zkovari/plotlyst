@@ -281,7 +281,7 @@ class CharacterToolbar(BaseItemToolbar):
         self._item = None
         self._hideSecondarySelectors()
 
-        self._sbSize.setValue(68)
+        self._sbSize.setValue(item.node().size)
         self._item = item
 
     def _sizeChanged(self, value: int):

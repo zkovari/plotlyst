@@ -663,7 +663,7 @@ class CharacterItem(NodeItem):
     def __init__(self, character: Character, node: Node, parent=None):
         super(CharacterItem, self).__init__(node, parent)
         self._character = character
-        self._size: int = 68
+        self._size: int = node.size
         self._center = QPointF()
         self._outerRadius = 0
 
@@ -684,6 +684,7 @@ class CharacterItem(NodeItem):
         self.networkScene().nodeChangedEvent(self._node)
 
     def setSize(self, value: int):
+        self._node.size = value
         self._size = value
         self._socket.setVisible(False)
         self._recalculate()
@@ -693,6 +694,8 @@ class CharacterItem(NodeItem):
             socket.setPos(x, y)
         self.update()
         self.rearrangeConnectors()
+
+        self.networkScene().nodeChangedEvent(self._node)
 
     @overrides
     def socket(self, angle: float) -> AbstractSocketItem:
