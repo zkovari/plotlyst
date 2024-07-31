@@ -112,6 +112,7 @@ class EventsMindMapView(NetworkGraphicsView):
         self._connectorEditor = ConnectorToolbar(self)
         self._connectorEditor.setVisible(False)
         self._characterEditor = CharacterToolbar(self)
+        self._characterEditor.changeCharacter.connect(self._editCharacterItem)
         self._characterEditor.setVisible(False)
 
         self._arrangeSideBars()

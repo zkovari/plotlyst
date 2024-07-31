@@ -268,13 +268,19 @@ class EventSelectorWidget(SecondarySelectorWidget):
 
 
 class CharacterToolbar(BaseItemToolbar):
+    changeCharacter = pyqtSignal(CharacterItem)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._item: Optional[CharacterItem] = None
 
+        self._btnCharacter = tool_btn(IconRegistry.character_icon(), 'Change character', transparent_=True)
+        self._btnCharacter.clicked.connect(self._characterClicked)
         self._sbSize = AvatarSizeEditor()
         self._sbSize.valueChanged.connect(self._sizeChanged)
 
+        self._toolbar.layout().addWidget(self._btnCharacter)
+        self._toolbar.layout().addWidget(vline())
         self._toolbar.layout().addWidget(self._sbSize)
 
     def setItem(self, item: CharacterItem):
@@ -288,6 +294,9 @@ class CharacterToolbar(BaseItemToolbar):
         if self._item:
             self._item.setSize(value)
 
+    def _characterClicked(self):
+        if self._item:
+            self.changeCharacter.emit(self._item)
 
 class PaintedItemBasedToolbar(BaseItemToolbar):
     def __init__(self, parent=None):
