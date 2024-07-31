@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Optional
 
+import qtanim
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QColor, QIcon, QResizeEvent, QNativeGestureEvent, QFont
 from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QFrame, \
@@ -34,7 +35,7 @@ from plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButto
     TooltipPositionEventFilter, label
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.graphics import CharacterItem, ConnectorItem
-from plotlyst.view.widget.graphics.editor import ZoomBar, ConnectorToolbar, TextLineEditorPopup
+from plotlyst.view.widget.graphics.editor import ZoomBar, ConnectorToolbar, TextLineEditorPopup, CharacterToolbar
 from plotlyst.view.widget.graphics.items import NodeItem, EventItem, NoteItem
 from plotlyst.view.widget.graphics.scene import NetworkScene
 
@@ -123,7 +124,8 @@ class BaseGraphicsView(QGraphicsView):
         view_pos.setX(view_pos.x() - diff_w)
         view_pos.setY(view_pos.y() - widget.sizeHint().height() - 20)
         widget.move(view_pos)
-        widget.setVisible(True)
+        # widget.setVisible(True)
+        qtanim.fade_in(widget, duration=150, teardown=lambda: widget.setGraphicsEffect(None))
 
 
 class NetworkGraphicsView(BaseGraphicsView):
@@ -149,6 +151,7 @@ class NetworkGraphicsView(BaseGraphicsView):
         vbox(self._controlsNavBar, 5, 6)
 
         self._connectorEditor: Optional[ConnectorToolbar] = None
+        self._characterEditor: Optional[CharacterToolbar] = None
 
         self._btnGroup = ExclusiveOptionalButtonGroup()
 
@@ -294,7 +297,9 @@ class NetworkGraphicsView(BaseGraphicsView):
             self._popupAbove(self._connectorEditor, item)
 
     def _showCharacterItemToolbar(self, item: CharacterItem):
-        pass
+        if self._characterEditor:
+            self._characterEditor.setItem(item)
+            self._popupAbove(self._characterEditor, item)
 
     def _showEventItemToolbar(self, item: EventItem):
         pass
@@ -302,6 +307,8 @@ class NetworkGraphicsView(BaseGraphicsView):
     def _hideItemToolbar(self):
         if self._connectorEditor:
             self._connectorEditor.setVisible(False)
+        if self._characterEditor:
+            self._characterEditor.setVisible(False)
 
     def _characterSelectorMenu(self) -> CharacterSelectorMenu:
         pass

@@ -663,14 +663,16 @@ class CharacterItem(NodeItem):
     def __init__(self, character: Character, node: Node, parent=None):
         super(CharacterItem, self).__init__(node, parent)
         self._character = character
-        self._size: int = 68
-        self._center = QPointF(self.Margin + self._size / 2, self.Margin + self._size / 2)
-        self._outerRadius = self._size // 2 + self.Margin // 2
+        self._size: int = node.size
+        self._center = QPointF()
+        self._outerRadius = 0
 
         self._linkDisplayedMode: bool = False
 
         self._socket = FilledSocketItem(0, self)
         self._socket.setVisible(False)
+
+        self._recalculate()
 
     def character(self) -> Character:
         return self._character
@@ -681,16 +683,34 @@ class CharacterItem(NodeItem):
         self.update()
         self.networkScene().nodeChangedEvent(self._node)
 
+    def setSize(self, value: int):
+        self._node.size = value
+        self._size = value
+        self._socket.setVisible(False)
+        self._recalculate()
+        self.prepareGeometryChange()
+        for socket in self._sockets:
+            x, y = self.socketPosFromAngle(socket.angle())
+            socket.setPos(x, y)
+        self.update()
+        self.rearrangeConnectors()
+
+        self.networkScene().nodeChangedEvent(self._node)
+
     @overrides
     def socket(self, angle: float) -> AbstractSocketItem:
-        angle_radians = math.radians(-angle)
-        x = self._center.x() + self._outerRadius * math.cos(angle_radians) - FilledSocketItem.Size // 2
-        y = self._center.y() + self._outerRadius * math.sin(angle_radians) - FilledSocketItem.Size // 2
-
+        x, y = self.socketPosFromAngle(angle)
         self._socket.setAngle(angle)
         self._socket.setPos(x, y)
 
         return self._socket
+
+    def socketPosFromAngle(self, angle: float):
+        angle_radians = math.radians(angle)
+        x = self._center.x() + self._outerRadius * math.cos(angle_radians) - FilledSocketItem.Size // 2
+        y = self._center.y() + self._outerRadius * math.sin(angle_radians) - FilledSocketItem.Size // 2
+
+        return x, y
 
     def addSocket(self, socket: AbstractSocketItem):
         self._sockets.append(socket)
@@ -740,14 +760,17 @@ class CharacterItem(NodeItem):
             angle = math.degrees(math.atan2(
                 event.pos().y() - self._center.y(), event.pos().x() - self._center.x()
             ))
-            angle_radians = math.radians(angle)
-            x = self._center.x() + self._outerRadius * math.cos(angle_radians) - FilledSocketItem.Size // 2
-            y = self._center.y() + self._outerRadius * math.sin(angle_radians) - FilledSocketItem.Size // 2
-            self.prepareGeometryChange()
-            self._socket.setAngle(-angle)
+            x, y = self.socketPosFromAngle(angle)
+            self._socket.setAngle(angle)
             self._socket.setPos(x, y)
+            self.prepareGeometryChange()
 
             self.update()
+
+    def _recalculate(self):
+        self._center.setX(self.Margin + self._size / 2)
+        self._center.setY(self.Margin + self._size / 2)
+        self._outerRadius = self._size // 2 + self.Margin // 2
 
     @overrides
     def _onSelection(self, selected: bool):
@@ -805,7 +828,6 @@ class EventItem(NodeItem):
         self._font.setItalic(self._node.italic)
         self._font.setUnderline(self._node.underline)
         self._metrics = QFontMetrics(self._font)
-        self._refresh()
 
         self._recalculateRect()
 

@@ -252,7 +252,7 @@ class NetworkScene(QGraphicsScene):
 
     @staticmethod
     def toCharacterNode(scenePos: QPointF) -> Node:
-        node = Node(scenePos.x(), scenePos.y(), type=GraphicsItemType.CHARACTER)
+        node = Node(scenePos.x(), scenePos.y(), type=GraphicsItemType.CHARACTER, size=60)
         node.x = node.x - CharacterItem.Margin
         node.y = node.y - CharacterItem.Margin
         return node
