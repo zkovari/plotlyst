@@ -77,6 +77,7 @@ class ResizeIconItem(QAbstractGraphicsShapeItem):
         self._keepAspectRatio = False
         self._icon = IconRegistry.from_name('mdi.resize-bottom-right', 'grey')
         self._activated = False
+        self.setAcceptHoverEvents(True)
 
         self.setCursor(Qt.CursorShape.SizeFDiagCursor)
         self.setFlag(
@@ -96,6 +97,14 @@ class ResizeIconItem(QAbstractGraphicsShapeItem):
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
         self._icon.paint(painter, 3, 3, self._size - 5, self._size - 5)
+
+    @overrides
+    def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        self.parentItem().setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
+
+    @overrides
+    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        self.parentItem().setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable)
 
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
@@ -1075,9 +1084,8 @@ class NoteItem(NodeItem):
 
     @overrides
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        self._resizeItem.setVisible(False)
-
         if not self.isSelected():
+            self._resizeItem.setVisible(False)
             self._setSocketsVisible(False)
 
     @overrides
@@ -1144,7 +1152,7 @@ class NoteItem(NodeItem):
     def _onSelection(self, selected: bool):
         super()._onSelection(selected)
         self._setSocketsVisible(selected)
-        self._resizeItem.setVisible(not selected)
+        self._resizeItem.setVisible(selected)
 
     def _refresh(self):
         self._recalculateRect()
@@ -1280,8 +1288,8 @@ class ImageItem(NodeItem):
     @overrides
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         if self.hasImage():
-            self._resizeItem.setVisible(False)
             if not self.isSelected():
+                self._resizeItem.setVisible(False)
                 self._setSocketsVisible(False)
         else:
             self._placeholderColor = 'lightgrey'
@@ -1354,7 +1362,7 @@ class ImageItem(NodeItem):
     def _onSelection(self, selected: bool):
         super()._onSelection(selected)
         self._setSocketsVisible(selected)
-        self._resizeItem.setVisible(not selected)
+        self._resizeItem.setVisible(selected)
 
     def _setSocketsVisible(self, visible: bool = True):
         for socket in self._sockets:
