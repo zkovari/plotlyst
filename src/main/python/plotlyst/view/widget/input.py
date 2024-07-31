@@ -930,7 +930,7 @@ class FontSizeSpinBox(QWidget):
 
     def __init__(self, font_size_prefix: str = "Font Size:"):
         super().__init__()
-        self._font_sizes = [8, 10, 12, 13, 14, 16, 18, 20, 24, 28, 32, 48, 64]
+        self._font_sizes = [8, 10, 11, 12, 13, 14, 16, 18, 20, 24, 28, 32, 48, 64]
 
         self._label = QLabel(font_size_prefix, self)
         self._font_size_spinner = ButtonsOnlySpinBox(self)
