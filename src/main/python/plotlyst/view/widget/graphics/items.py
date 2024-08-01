@@ -36,7 +36,7 @@ from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTL
 from plotlyst.core.domain import Node, Relation, Connector, Character, GraphicsItemType, to_node
 from plotlyst.env import app_env
 from plotlyst.service.image import LoadedImage
-from plotlyst.view.common import shadow, calculate_resized_dimensions
+from plotlyst.view.common import shadow, calculate_resized_dimensions, text_color_with_bg_qcolor
 from plotlyst.view.icons import IconRegistry, avatars
 
 
@@ -129,6 +129,7 @@ class LabelItem(QAbstractGraphicsShapeItem):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._text: str = ''
+        self._color: QColor = QColor('black')
         self._font = QApplication.font()
         self._font.setPointSize(self._font.pointSize() - 1)
         self._font.setFamily(app_env.serif_font())
@@ -147,16 +148,22 @@ class LabelItem(QAbstractGraphicsShapeItem):
         self._text = text
         self._refresh()
 
+    def setColor(self, color: QColor):
+        self._color = color
+        self.update()
+
     @overrides
     def boundingRect(self) -> QRectF:
         return QRectF(0, 0, self._width, self._height)
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
-        painter.setPen(QPen(QColor('black'), 1))
-        painter.setBrush(QColor(WHITE_COLOR))
+        painter.setPen(QPen(self._color, 1))
+        painter.setBrush(self._color)
         painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 6, 6)
         painter.setFont(self._font)
+        text_color = text_color_with_bg_qcolor(self._color)
+        painter.setPen(QPen(QColor(text_color), 1))
         painter.drawText(self._textRect, Qt.AlignmentFlag.AlignCenter, self._text)
 
     def _refresh(self):
@@ -514,7 +521,6 @@ class ConnectorItem(QGraphicsPathItem):
 
     def setColor(self, color: QColor):
         self._setColor(color)
-        # self._text.setDefaultTextColor(color)
 
         self.update()
 
@@ -644,6 +650,7 @@ class ConnectorItem(QGraphicsPathItem):
             self._iconBadge.setIcon(IconRegistry.from_name(self._icon, self._color.name()), self._color)
 
         self._cp.setColor(color)
+        self._label.setColor(color)
 
     def _inProximity(self, width: float, height: float) -> bool:
         return abs(height) < 5 or abs(width) < 100

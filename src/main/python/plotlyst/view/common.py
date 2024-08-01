@@ -39,6 +39,7 @@ from qtanim import fade_out
 from qthandy import hbox, vbox, margins, gc, transparent, spacer, sp, pointy
 from qthandy.filter import DisabledClickEventFilter
 
+from plotlyst.common import WHITE_COLOR
 from plotlyst.env import app_env
 from plotlyst.view.stylesheet import APP_STYLESHEET
 
@@ -80,13 +81,18 @@ def show_color_picker(default_color: QColor = QColor('white')) -> QColor:
     return color
 
 
+def text_color_with_bg_qcolor(color: QColor) -> str:
+    return _text_color_with_rgb(color.red(), color.green(), color.blue())
+
+
 def text_color_with_bg_color(bg_color: str) -> str:
     rgb = QColor(bg_color).getRgb()
-    r = rgb[0]
-    g = rgb[1]
-    b = rgb[2]
+    return _text_color_with_rgb(rgb[0], rgb[1], rgb[2])
+
+
+def _text_color_with_rgb(r: int, g: int, b: int) -> str:
     hsp = math.sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b))
-    return 'black' if hsp > 127.5 else 'white'
+    return 'black' if hsp > 171.5 else WHITE_COLOR
 
 
 def action(text: str, icon: Optional[QIcon] = None, slot=None, parent=None, checkable: bool = False,
