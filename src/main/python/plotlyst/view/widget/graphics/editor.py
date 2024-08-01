@@ -30,6 +30,7 @@ from PyQt6.QtWidgets import QFrame, \
 from overrides import overrides
 from qthandy import hbox, margins, sp, vbox, grid, pointy, vline, decr_icon, transparent
 from qtmenu import MenuWidget
+from qttextedit.ops import Heading2Operation, Heading3Operation, Heading1Operation
 
 from plotlyst.common import PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.domain import GraphicsItemType, NODE_SUBTYPE_DISTURBANCE, NODE_SUBTYPE_CONFLICT, \
@@ -194,9 +195,12 @@ class TextNoteEditorPopup(MenuWidget):
         self._textEdit = AutoAdjustableTextEdit()
         self._textEdit.setProperty('white-bg', True)
         self._textEdit.setProperty('rounded', True)
+        self._textEdit.setAcceptRichText(True)
+        self._textEdit.setCommandsEnabled(True)
+        self._textEdit.setCommandOperations([Heading1Operation, Heading2Operation, Heading3Operation])
         self._textEdit.setFixedWidth(item.textRect().width())
         self._textEdit.setPlaceholderText(placeholder)
-        self._textEdit.setText(item.text())
+        self._textEdit.setMarkdown(item.text())
         self._textEdit.textChanged.connect(self._textChanged)
         self._textEdit.resizedOnShow.connect(self._resized)
 
@@ -211,7 +215,7 @@ class TextNoteEditorPopup(MenuWidget):
         self._textEdit.setFocus()
 
     def text(self) -> str:
-        return self._textEdit.toPlainText()
+        return self._textEdit.toMarkdown()
 
     def _textChanged(self):
         self._resized()
@@ -297,6 +301,7 @@ class CharacterToolbar(BaseItemToolbar):
     def _characterClicked(self):
         if self._item:
             self.changeCharacter.emit(self._item)
+
 
 class PaintedItemBasedToolbar(BaseItemToolbar):
     def __init__(self, parent=None):

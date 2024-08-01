@@ -24,7 +24,8 @@ from enum import Enum
 from typing import Any, Optional, List
 
 from PyQt6.QtCore import Qt, QTimer, QRectF, QPointF, QPoint, QRect
-from PyQt6.QtGui import QPainter, QPen, QPainterPath, QColor, QIcon, QPolygonF, QBrush, QFontMetrics, QImage, QFont
+from PyQt6.QtGui import QPainter, QPen, QPainterPath, QColor, QIcon, QPolygonF, QBrush, QFontMetrics, QImage, QFont, \
+    QTextDocument
 from PyQt6.QtWidgets import QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QGraphicsSceneMouseEvent, \
     QStyleOptionGraphicsItem, QWidget, \
     QGraphicsSceneHoverEvent, QGraphicsPolygonItem, QApplication
@@ -174,7 +175,7 @@ class LabelItem(QAbstractGraphicsShapeItem):
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
         super().mouseReleaseEvent(event)
         self.parentItem().setSelected(True)
-    
+
     def _refresh(self):
         self._recalculateRect()
         self.prepareGeometryChange()
@@ -224,6 +225,7 @@ class IconBadge(QAbstractGraphicsShapeItem):
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
         super().mouseReleaseEvent(event)
         self.parentItem().setSelected(True)
+
 
 class AbstractSocketItem(QAbstractGraphicsShapeItem):
     def __init__(self, angle: float, size: int = 16, parent=None):
@@ -1235,8 +1237,13 @@ class NoteItem(NodeItem):
         else:
             painter.setPen(QPen(QColor('grey'), 1))
         painter.setFont(self._font)
-        painter.drawText(self._textRect, Qt.AlignmentFlag.AlignLeft | Qt.TextFlag.TextWordWrap,
-                         self._node.text if self._node.text else self._placeholderText)
+        if self._node.text:
+            doc = QTextDocument()
+            doc.setMarkdown(self._node.text)
+            painter.translate(self._textRect.x(), self._textRect.y())
+            doc.drawContents(painter)
+        else:
+            painter.drawText(self._textRect, Qt.AlignmentFlag.AlignLeft, self._placeholderText)
 
     @overrides
     def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
