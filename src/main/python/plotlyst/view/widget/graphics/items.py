@@ -27,7 +27,7 @@ from PyQt6.QtCore import Qt, QTimer, QRectF, QPointF, QPoint, QRect
 from PyQt6.QtGui import QPainter, QPen, QPainterPath, QColor, QIcon, QPolygonF, QBrush, QFontMetrics, QImage, QFont
 from PyQt6.QtWidgets import QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QGraphicsSceneMouseEvent, \
     QStyleOptionGraphicsItem, QWidget, \
-    QGraphicsSceneHoverEvent, QGraphicsPolygonItem, QApplication, QGraphicsTextItem
+    QGraphicsSceneHoverEvent, QGraphicsPolygonItem, QApplication
 from overrides import overrides
 from qthandy import pointy
 
@@ -36,7 +36,7 @@ from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTL
 from plotlyst.core.domain import Node, Relation, Connector, Character, GraphicsItemType, to_node
 from plotlyst.env import app_env
 from plotlyst.service.image import LoadedImage
-from plotlyst.view.common import shadow, calculate_resized_dimensions
+from plotlyst.view.common import shadow, calculate_resized_dimensions, text_color_with_bg_qcolor
 from plotlyst.view.icons import IconRegistry, avatars
 
 
@@ -122,6 +122,74 @@ class ResizeIconItem(QAbstractGraphicsShapeItem):
         self._activated = False
 
 
+class LabelItem(QAbstractGraphicsShapeItem):
+    Margin: int = 0
+    Padding: int = 5
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._text: str = ''
+        self._color: QColor = QColor('black')
+        self._font = QApplication.font()
+        self._font.setPointSize(self._font.pointSize() - 1)
+        self._font.setFamily(app_env.serif_font())
+        self._metrics = QFontMetrics(self._font)
+        self._textRect: QRect = QRect(0, 0, 1, 1)
+        self._width = 1
+        self._height = 1
+        self._nestedRectWidth = 1
+        self._nestedRectHeight = 1
+        self._recalculateRect()
+
+    def text(self) -> str:
+        return self._text
+
+    def setText(self, text: str):
+        self._text = text
+        self._refresh()
+
+    def setColor(self, color: QColor):
+        self._color = color
+        self.update()
+
+    @overrides
+    def boundingRect(self) -> QRectF:
+        return QRectF(0, 0, self._width, self._height)
+
+    @overrides
+    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+        painter.setPen(QPen(self._color, 1))
+        painter.setBrush(self._color)
+        painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 6, 6)
+        painter.setFont(self._font)
+        text_color = text_color_with_bg_qcolor(self._color)
+        painter.setPen(QPen(QColor(text_color), 1))
+        painter.drawText(self._textRect, Qt.AlignmentFlag.AlignCenter, self._text)
+
+    @overrides
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        event.accept()
+
+    @overrides
+    def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        super().mouseReleaseEvent(event)
+        self.parentItem().setSelected(True)
+    
+    def _refresh(self):
+        self._recalculateRect()
+        self.prepareGeometryChange()
+        self.update()
+
+    def _recalculateRect(self):
+        self._textRect = self._metrics.boundingRect(self._text)
+        self._textRect.moveTopLeft(QPoint(self.Margin + self.Padding, self.Margin + self.Padding))
+        self._textRect.moveTopLeft(QPoint(self._textRect.x(), self._textRect.y()))
+        self._width = self._textRect.width() + self.Margin * 2 + self.Padding * 2
+        self._height = self._textRect.height() + self.Margin * 2 + self.Padding * 2
+        self._nestedRectWidth = self._textRect.width() + self.Padding * 2
+        self._nestedRectHeight = self._textRect.height() + self.Padding * 2
+
+
 class IconBadge(QAbstractGraphicsShapeItem):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -148,6 +216,14 @@ class IconBadge(QAbstractGraphicsShapeItem):
         if self._icon:
             self._icon.paint(painter, 3, 3, self._size - 5, self._size - 5)
 
+    @overrides
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        event.accept()
+
+    @overrides
+    def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        super().mouseReleaseEvent(event)
+        self.parentItem().setSelected(True)
 
 class AbstractSocketItem(QAbstractGraphicsShapeItem):
     def __init__(self, angle: float, size: int = 16, parent=None):
@@ -325,7 +401,6 @@ class ConnectorItem(QGraphicsPathItem):
         self._relation: Optional[Relation] = None
         self._icon: Optional[str] = None
         self._defaultLineType: ConnectorType = ConnectorType.Curved
-        self._line: bool = True if self._defaultLineType == ConnectorType.Linear else False
         self._cp = ConnectorCPSocket(parent=self)
         self._cp.setVisible(False)
         if pen:
@@ -345,8 +420,8 @@ class ConnectorItem(QGraphicsPathItem):
         self._iconBadge = IconBadge(self)
         self._iconBadge.setVisible(False)
 
-        self._text = QGraphicsTextItem('', self)
-        self._text.setVisible(False)
+        self._label = LabelItem(self)
+        self._label.setVisible(False)
 
         self.rearrange()
 
@@ -373,7 +448,7 @@ class ConnectorItem(QGraphicsPathItem):
             color = node.color
         else:
             color = 'black'
-        self._text.setPlainText(connector.text)
+        self._label.setText(connector.text)
 
         self.setColor(QColor(color))
         if connector.icon:
@@ -403,7 +478,7 @@ class ConnectorItem(QGraphicsPathItem):
 
     def setText(self, text: str):
         self._connector.text = text
-        self._text.setPlainText(text)
+        self._label.setText(text)
         self.rearrange()
         self.networkScene().connectorChangedEvent(self)
 
@@ -462,7 +537,6 @@ class ConnectorItem(QGraphicsPathItem):
 
     def setColor(self, color: QColor):
         self._setColor(color)
-        self._text.setDefaultTextColor(color)
 
         self.update()
 
@@ -472,21 +546,18 @@ class ConnectorItem(QGraphicsPathItem):
 
     @overrides
     def shape(self) -> QPainterPath:
-        if self._line:
-            rect = self.path().boundingRect()
-            if rect.width() < 10:
-                rect.moveTopLeft(QPointF(rect.x() - 15, rect.y()))
-                rect.setWidth(30)
-            elif rect.height() < 10:
-                rect.moveTopLeft(QPointF(rect.x(), rect.y() - 15))
-                rect.setHeight(30)
-            else:
-                return super().shape()
-
-            path = QPainterPath()
-            path.addRect(rect)
-            return path
-        return super().shape()
+        rect = self.path().boundingRect()
+        if rect.width() < 10:
+            rect.moveTopLeft(QPointF(rect.x() - 15, rect.y()))
+            rect.setWidth(30)
+        elif rect.height() < 10:
+            rect.moveTopLeft(QPointF(rect.x(), rect.y() - 15))
+            rect.setHeight(30)
+        else:
+            return super().shape()
+        path = QPainterPath()
+        path.addRect(rect)
+        return path
 
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
@@ -548,10 +619,7 @@ class ConnectorItem(QGraphicsPathItem):
 
     def _rearrangeIcon(self, path: QPainterPath):
         if self._icon:
-            if self._line:
-                point = path.pointAtPercent(0.4)
-            else:
-                point = path.pointAtPercent(0.6)
+            point = path.pointAtPercent(0.5)
             self._iconBadge.setPos(point.x() - self._iconBadge.boundingRect().width() / 2,
                                    point.y() - self._iconBadge.boundingRect().height() / 2)
 
@@ -561,13 +629,21 @@ class ConnectorItem(QGraphicsPathItem):
                         point.y() - self._cp.boundingRect().height() / 2)
 
     def _rearrangeText(self, path: QPainterPath):
+        if not self._label.text():
+            self._label.setVisible(False)
+            return
+
         if self._icon:
-            point = path.pointAtPercent(0.7)
+            point = self._iconBadge.pos()
+
+            x_diff = self._label.boundingRect().width() - self._iconBadge.boundingRect().width()
+            point.setX(point.x() - x_diff / 2)
+            point.setY(point.y() + self._iconBadge.boundingRect().height() + 2)
         else:
             point = path.pointAtPercent(0.5)
-        self._text.setPos(point.x() - self._text.boundingRect().width() / 2,
-                          point.y() - self._text.boundingRect().height())
-        self._text.setVisible(True)
+            point -= QPointF(self._label.boundingRect().width() / 2, self._label.boundingRect().height() / 2)
+        self._label.setPos(point)
+        self._label.setVisible(True)
 
     def _setColor(self, color: QColor):
         self._color = color
@@ -584,6 +660,7 @@ class ConnectorItem(QGraphicsPathItem):
             self._iconBadge.setIcon(IconRegistry.from_name(self._icon, self._color.name()), self._color)
 
         self._cp.setColor(color)
+        self._label.setColor(color)
 
     def _inProximity(self, width: float, height: float) -> bool:
         return abs(height) < 5 or abs(width) < 100
