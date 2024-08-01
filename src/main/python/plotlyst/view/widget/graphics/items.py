@@ -140,6 +140,9 @@ class LabelItem(QAbstractGraphicsShapeItem):
         self._nestedRectHeight = 1
         self._recalculateRect()
 
+    def text(self) -> str:
+        return self._text
+
     def setText(self, text: str):
         self._text = text
         self._refresh()
@@ -394,8 +397,8 @@ class ConnectorItem(QGraphicsPathItem):
         self._iconBadge = IconBadge(self)
         self._iconBadge.setVisible(False)
 
-        self._text = LabelItem(self)
-        self._text.setVisible(False)
+        self._label = LabelItem(self)
+        self._label.setVisible(False)
 
         self.rearrange()
 
@@ -422,7 +425,7 @@ class ConnectorItem(QGraphicsPathItem):
             color = node.color
         else:
             color = 'black'
-        self._text.setText(connector.text)
+        self._label.setText(connector.text)
 
         self.setColor(QColor(color))
         if connector.icon:
@@ -452,7 +455,7 @@ class ConnectorItem(QGraphicsPathItem):
 
     def setText(self, text: str):
         self._connector.text = text
-        self._text.setText(text)
+        self._label.setText(text)
         self.rearrange()
         self.networkScene().connectorChangedEvent(self)
 
@@ -610,13 +613,21 @@ class ConnectorItem(QGraphicsPathItem):
                         point.y() - self._cp.boundingRect().height() / 2)
 
     def _rearrangeText(self, path: QPainterPath):
+        if not self._label.text():
+            self._label.setVisible(False)
+            return
+
         if self._icon:
-            point = path.pointAtPercent(0.7)
+            point = self._iconBadge.pos()
+
+            x_diff = self._label.boundingRect().width() - self._iconBadge.boundingRect().width()
+            point.setX(point.x() - x_diff / 2)
+            point.setY(point.y() + self._iconBadge.boundingRect().height() + 2)
         else:
             point = path.pointAtPercent(0.5)
-        self._text.setPos(point.x() - self._text.boundingRect().width() / 2,
-                          point.y() - self._text.boundingRect().height())
-        self._text.setVisible(True)
+            point -= QPointF(self._label.boundingRect().width() / 2, self._label.boundingRect().height() / 2)
+        self._label.setPos(point)
+        self._label.setVisible(True)
 
     def _setColor(self, color: QColor):
         self._color = color
