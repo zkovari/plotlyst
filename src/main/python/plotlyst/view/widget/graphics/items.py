@@ -401,7 +401,6 @@ class ConnectorItem(QGraphicsPathItem):
         self._relation: Optional[Relation] = None
         self._icon: Optional[str] = None
         self._defaultLineType: ConnectorType = ConnectorType.Curved
-        self._line: bool = True if self._defaultLineType == ConnectorType.Linear else False
         self._cp = ConnectorCPSocket(parent=self)
         self._cp.setVisible(False)
         if pen:
@@ -547,21 +546,18 @@ class ConnectorItem(QGraphicsPathItem):
 
     @overrides
     def shape(self) -> QPainterPath:
-        if self._line:
-            rect = self.path().boundingRect()
-            if rect.width() < 10:
-                rect.moveTopLeft(QPointF(rect.x() - 15, rect.y()))
-                rect.setWidth(30)
-            elif rect.height() < 10:
-                rect.moveTopLeft(QPointF(rect.x(), rect.y() - 15))
-                rect.setHeight(30)
-            else:
-                return super().shape()
-
-            path = QPainterPath()
-            path.addRect(rect)
-            return path
-        return super().shape()
+        rect = self.path().boundingRect()
+        if rect.width() < 10:
+            rect.moveTopLeft(QPointF(rect.x() - 15, rect.y()))
+            rect.setWidth(30)
+        elif rect.height() < 10:
+            rect.moveTopLeft(QPointF(rect.x(), rect.y() - 15))
+            rect.setHeight(30)
+        else:
+            return super().shape()
+        path = QPainterPath()
+        path.addRect(rect)
+        return path
 
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
@@ -623,10 +619,7 @@ class ConnectorItem(QGraphicsPathItem):
 
     def _rearrangeIcon(self, path: QPainterPath):
         if self._icon:
-            if self._line:
-                point = path.pointAtPercent(0.4)
-            else:
-                point = path.pointAtPercent(0.6)
+            point = path.pointAtPercent(0.5)
             self._iconBadge.setPos(point.x() - self._iconBadge.boundingRect().width() / 2,
                                    point.y() - self._iconBadge.boundingRect().height() / 2)
 
