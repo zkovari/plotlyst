@@ -166,6 +166,15 @@ class LabelItem(QAbstractGraphicsShapeItem):
         painter.setPen(QPen(QColor(text_color), 1))
         painter.drawText(self._textRect, Qt.AlignmentFlag.AlignCenter, self._text)
 
+    @overrides
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        event.accept()
+
+    @overrides
+    def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        super().mouseReleaseEvent(event)
+        self.parentItem().setSelected(True)
+    
     def _refresh(self):
         self._recalculateRect()
         self.prepareGeometryChange()
@@ -207,6 +216,14 @@ class IconBadge(QAbstractGraphicsShapeItem):
         if self._icon:
             self._icon.paint(painter, 3, 3, self._size - 5, self._size - 5)
 
+    @overrides
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        event.accept()
+
+    @overrides
+    def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        super().mouseReleaseEvent(event)
+        self.parentItem().setSelected(True)
 
 class AbstractSocketItem(QAbstractGraphicsShapeItem):
     def __init__(self, angle: float, size: int = 16, parent=None):
