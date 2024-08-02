@@ -39,7 +39,7 @@ from plotlyst.core.domain import GraphicsItemType, NODE_SUBTYPE_DISTURBANCE, NOD
 from plotlyst.view.common import shadow, tool_btn, ExclusiveOptionalButtonGroup
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
-from plotlyst.view.widget.graphics.items import EventItem, ConnectorItem, NoteItem, CharacterItem
+from plotlyst.view.widget.graphics.items import EventItem, ConnectorItem, NoteItem, CharacterItem, IconItem
 from plotlyst.view.widget.input import FontSizeSpinBox, AutoAdjustableLineEdit, AutoAdjustableTextEdit
 from plotlyst.view.widget.utility import ColorPicker, IconSelectorDialog
 
@@ -490,6 +490,31 @@ class NoteToolbar(PaintedItemBasedToolbar):
             self._item.setTransparent(toggled)
 
 
+class IconItemToolbar(PaintedItemBasedToolbar):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self._sbSize = AvatarSizeEditor()
+        self._sbSize.valueChanged.connect(self._sizeChanged)
+
+        self._toolbar.layout().addWidget(self._btnColor)
+        self._toolbar.layout().addWidget(self._btnIcon)
+        self._toolbar.layout().addWidget(vline())
+        self._toolbar.layout().addWidget(self._sbSize)
+
+    @overrides
+    def setItem(self, item: IconItem):
+        super().setItem(item)
+        self._item = None
+
+        self._sbSize.setValue(item.node().size)
+        self._item = item
+
+    def _sizeChanged(self, value: int):
+        if self._item:
+            self._item.setSize(value)
+
+
 class EventItemToolbar(PaintedItemBasedToolbar):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -618,7 +643,7 @@ class AvatarSizeEditor(QSlider):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setMinimum(48)
-        self.setMaximum(125)
+        self.setMaximum(255)
         self.setOrientation(Qt.Orientation.Horizontal)
 
 

@@ -723,6 +723,12 @@ class NodeItem(QAbstractGraphicsShapeItem):
     def node(self) -> Node:
         return self._node
 
+    def icon(self) -> Optional[str]:
+        return self._node.icon
+
+    def color(self) -> QColor:
+        return QColor(self._node.color)
+
     def networkScene(self) -> 'NetworkScene':
         return self.scene()
 
@@ -953,6 +959,20 @@ class IconItem(CircleShapedNodeItem):
 
         self._recalculate()
 
+    def setIcon(self, icon: str):
+        self._node.icon = icon
+        self._icon = IconRegistry.from_name(self._node.icon, self._node.color)
+        self.update()
+        self.networkScene().nodeChangedEvent(self._node)
+
+    def setColor(self, color: QColor):
+        self._node.color = color.name()
+        self._icon = IconRegistry.from_name(self._node.icon if self._node.icon else 'fa5s.icons', self._node.color)
+        self.update()
+        self.networkScene().nodeChangedEvent(self._node)
+        for socket in self._sockets:
+            socket.parentColorChangedEvent(self)
+
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
         super().paint(painter, option, widget)
@@ -1069,17 +1089,11 @@ class EventItem(NodeItem):
         if not self.isSelected():
             self._setSocketsVisible(False)
 
-    def icon(self) -> Optional[str]:
-        return self._node.icon
-
     def setIcon(self, icon: str):
         self._node.icon = icon
         self._icon = IconRegistry.from_name(self._node.icon, self._node.color)
         self._refresh()
         self.networkScene().nodeChangedEvent(self._node)
-
-    def color(self) -> QColor:
-        return QColor(self._node.color)
 
     def setColor(self, color: QColor):
         self._node.color = color.name()
@@ -1267,12 +1281,6 @@ class NoteItem(NodeItem):
 
         self.networkScene().nodeChangedEvent(self._node)
         self._refresh()
-
-    def icon(self) -> Optional[str]:
-        return ''
-
-    def color(self) -> QColor:
-        return QColor(self._node.color)
 
     def setTransparent(self, transparent: bool):
         self._node.transparent = transparent
