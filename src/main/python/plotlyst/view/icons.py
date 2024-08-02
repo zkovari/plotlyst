@@ -27,7 +27,8 @@ from PyQt6.QtWidgets import QLabel
 from plotlyst.common import CONFLICT_CHARACTER_COLOR, \
     CONFLICT_SOCIETY_COLOR, CONFLICT_NATURE_COLOR, CONFLICT_TECHNOLOGY_COLOR, CONFLICT_SUPERNATURAL_COLOR, \
     CONFLICT_SELF_COLOR, CHARACTER_MAJOR_COLOR, CHARACTER_MINOR_COLOR, CHARACTER_SECONDARY_COLOR, \
-    PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR, NEUTRAL_EMOTION_COLOR, EMOTION_COLORS, RED_COLOR, act_color
+    PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR, NEUTRAL_EMOTION_COLOR, EMOTION_COLORS, RED_COLOR, act_color, \
+    BLACK_COLOR
 from plotlyst.core.domain import Character, ConflictType, \
     Scene, PlotType, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS, ScenePurposeType, StoryStructure
 from plotlyst.core.template import SelectionItem
@@ -714,7 +715,7 @@ class IconRegistry:
         return IconRegistry.from_name(item.icon, item.icon_color)
 
     @staticmethod
-    def from_name(name: str, color: str = 'black', color_on: str = '', scale: Optional[float] = None,
+    def from_name(name: str, color: str = BLACK_COLOR, color_on: str = '', scale: Optional[float] = None,
                   hflip: bool = False,
                   vflip: bool = False, rotated: int = 0) -> QIcon:
         _color_on = color_on if color_on else color

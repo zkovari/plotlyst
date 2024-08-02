@@ -35,7 +35,7 @@ from plotlyst.core.domain import Node, Diagram, GraphicsItemType, Connector, Pla
 from plotlyst.service.image import LoadedImage
 from plotlyst.view.widget.graphics import NodeItem, CharacterItem, PlaceholderSocketItem, ConnectorItem, \
     AbstractSocketItem, EventItem
-from plotlyst.view.widget.graphics.items import NoteItem, ImageItem
+from plotlyst.view.widget.graphics.items import NoteItem, ImageItem, IconItem, CircleShapedNodeItem
 
 
 @dataclass
@@ -258,6 +258,13 @@ class NetworkScene(QGraphicsScene):
         return node
 
     @staticmethod
+    def toIconNode(scenePos: QPointF) -> Node:
+        node = Node(scenePos.x(), scenePos.y(), type=GraphicsItemType.ICON, size=60)
+        node.x = node.x - IconItem.Margin
+        node.y = node.y - IconItem.Margin
+        return node
+
+    @staticmethod
     def toEventNode(scenePos: QPointF, itemType: GraphicsItemType, subType: str = '') -> Node:
         node: Node = to_node(scenePos.x(), scenePos.y(), itemType, subType,
                              default_size=QApplication.font().pointSize())
@@ -340,6 +347,8 @@ class NetworkScene(QGraphicsScene):
         #     item = StickerItem(Node(scenePos.x(), scenePos.y(), itemType, subType))
         elif itemType == GraphicsItemType.NOTE:
             item = NoteItem(self.toNoteNode(scenePos))
+        elif itemType == GraphicsItemType.ICON:
+            item = IconItem(self.toIconNode(scenePos))
         elif itemType == GraphicsItemType.IMAGE:
             item = ImageItem(self.toImageNode(scenePos))
         else:
@@ -364,6 +373,8 @@ class NetworkScene(QGraphicsScene):
             item = CharacterItem(character, node)
         elif node.type == GraphicsItemType.NOTE:
             item = NoteItem(node)
+        elif node.type == GraphicsItemType.ICON:
+            item = IconItem(node)
         elif node.type == GraphicsItemType.IMAGE:
             item = ImageItem(node)
         else:
@@ -392,9 +403,9 @@ class NetworkScene(QGraphicsScene):
 
     def _onLink(self, sourceNode: NodeItem, sourceSocket: AbstractSocketItem, targetNode: NodeItem,
                 targetSocket: AbstractSocketItem):
-        if isinstance(sourceNode, CharacterItem):
+        if isinstance(sourceNode, CircleShapedNodeItem):
             sourceNode.addSocket(sourceSocket)
-        if isinstance(targetNode, CharacterItem):
+        if isinstance(targetNode, CircleShapedNodeItem):
             targetNode.addSocket(targetSocket)
 
     def _updateSelection(self):

@@ -36,8 +36,8 @@ from plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButto
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.graphics import CharacterItem, ConnectorItem
 from plotlyst.view.widget.graphics.editor import ZoomBar, ConnectorToolbar, TextLineEditorPopup, CharacterToolbar, \
-    NoteToolbar
-from plotlyst.view.widget.graphics.items import NodeItem, EventItem, NoteItem
+    NoteToolbar, IconItemToolbar
+from plotlyst.view.widget.graphics.items import NodeItem, EventItem, NoteItem, IconItem
 from plotlyst.view.widget.graphics.scene import NetworkScene
 
 
@@ -153,6 +153,7 @@ class NetworkGraphicsView(BaseGraphicsView):
         self._connectorEditor: Optional[ConnectorToolbar] = None
         self._characterEditor: Optional[CharacterToolbar] = None
         self._noteEditor: Optional[NoteToolbar] = None
+        self._iconEditor: Optional[IconItemToolbar] = None
 
         self._btnGroup = ExclusiveOptionalButtonGroup()
 
@@ -268,6 +269,8 @@ class NetworkGraphicsView(BaseGraphicsView):
             self._showEventItemToolbar(item)
         elif isinstance(item, NoteItem):
             self._showNoteItemToolbar(item)
+        elif isinstance(item, IconItem):
+            self._showIconItemToolbar(item)
 
     def _editCharacterItem(self, item: CharacterItem):
         def select(character: Character):
@@ -304,6 +307,11 @@ class NetworkGraphicsView(BaseGraphicsView):
             self._characterEditor.setItem(item)
             self._popupAbove(self._characterEditor, item)
 
+    def _showIconItemToolbar(self, item: IconItem):
+        if self._iconEditor:
+            self._iconEditor.setItem(item)
+            self._popupAbove(self._iconEditor, item)
+
     def _showEventItemToolbar(self, item: EventItem):
         pass
 
@@ -319,6 +327,8 @@ class NetworkGraphicsView(BaseGraphicsView):
             self._characterEditor.setVisible(False)
         if self._noteEditor:
             self._noteEditor.setVisible(False)
+        if self._iconEditor:
+            self._iconEditor.setVisible(False)
 
     def _characterSelectorMenu(self) -> CharacterSelectorMenu:
         pass
