@@ -417,6 +417,40 @@ class ConnectorToolbar(PaintedItemBasedToolbar):
             self._item.setPenWidth(value)
 
 
+class NoteToolbar(PaintedItemBasedToolbar):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        # self._btnColor.setToolTip('Background color')
+        # self._btnTopFrame = tool_btn(IconRegistry.from_name('ri.layout-top-line'), tooltip='Top frame color',
+        #                              transparent_=True)
+        # self._btnSticker = tool_btn(IconRegistry.from_name('mdi6.sticker-emoji'), tooltip='Add sticker',
+        #                             transparent_=True)
+        self._btnTransparent = tool_btn(IconRegistry.transparent_background(), 'Toggle transparent background',
+                                        transparent_=True, checkable=True)
+        self._btnTransparent.clicked.connect(self._transparentClicked)
+
+        # self._toolbar.layout().addWidget(self._btnColor)
+        # self._toolbar.layout().addWidget(self._btnIcon)
+        # self._toolbar.layout().addWidget(self._btnTopFrame)
+        # self._toolbar.layout().addWidget(vline())
+        # self._toolbar.layout().addWidget(self._btnSticker)
+        # self._toolbar.layout().addWidget(vline())
+        self._toolbar.layout().addWidget(self._btnTransparent)
+
+    @overrides
+    def setItem(self, item: NoteItem):
+        super().setItem(item)
+        self._item = None
+
+        self._btnTransparent.setChecked(item.node().transparent)
+
+        self._item = item
+
+    def _transparentClicked(self, toggled: bool):
+        if self._item:
+            self._item.setTransparent(toggled)
+
 class EventItemToolbar(PaintedItemBasedToolbar):
     def __init__(self, parent=None):
         super().__init__(parent)

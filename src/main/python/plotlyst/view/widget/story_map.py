@@ -37,7 +37,7 @@ from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, EventItem, \
     NodeItem
 from plotlyst.view.widget.graphics.editor import EventSelectorWidget, TextLineEditorPopup, \
-    EventItemToolbar, ConnectorToolbar, SecondarySelectorWidget, TextNoteEditorPopup, CharacterToolbar
+    EventItemToolbar, ConnectorToolbar, SecondarySelectorWidget, TextNoteEditorPopup, CharacterToolbar, NoteToolbar
 from plotlyst.view.widget.graphics.items import NoteItem
 
 
@@ -114,6 +114,8 @@ class EventsMindMapView(NetworkGraphicsView):
         self._characterEditor = CharacterToolbar(self)
         self._characterEditor.changeCharacter.connect(self._editCharacterItem)
         self._characterEditor.setVisible(False)
+        self._noteEditor = NoteToolbar(self)
+        self._noteEditor.setVisible(False)
 
         self._arrangeSideBars()
 

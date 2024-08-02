@@ -35,7 +35,8 @@ from plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButto
     TooltipPositionEventFilter, label
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.graphics import CharacterItem, ConnectorItem
-from plotlyst.view.widget.graphics.editor import ZoomBar, ConnectorToolbar, TextLineEditorPopup, CharacterToolbar
+from plotlyst.view.widget.graphics.editor import ZoomBar, ConnectorToolbar, TextLineEditorPopup, CharacterToolbar, \
+    NoteToolbar
 from plotlyst.view.widget.graphics.items import NodeItem, EventItem, NoteItem
 from plotlyst.view.widget.graphics.scene import NetworkScene
 
@@ -122,7 +123,7 @@ class BaseGraphicsView(QGraphicsView):
 
         view_pos = self.mapFromScene(refItem.sceneBoundingRect().topLeft())
         view_pos.setX(view_pos.x() - diff_w)
-        view_pos.setY(view_pos.y() - widget.sizeHint().height() - 20)
+        view_pos.setY(view_pos.y() - widget.sizeHint().height() - 10)
         widget.move(view_pos)
         qtanim.fade_in(widget, duration=150, teardown=lambda: widget.setGraphicsEffect(None))
 
@@ -151,6 +152,7 @@ class NetworkGraphicsView(BaseGraphicsView):
 
         self._connectorEditor: Optional[ConnectorToolbar] = None
         self._characterEditor: Optional[CharacterToolbar] = None
+        self._noteEditor: Optional[NoteToolbar] = None
 
         self._btnGroup = ExclusiveOptionalButtonGroup()
 
@@ -264,6 +266,8 @@ class NetworkGraphicsView(BaseGraphicsView):
             self._showCharacterItemToolbar(item)
         elif isinstance(item, EventItem):
             self._showEventItemToolbar(item)
+        elif isinstance(item, NoteItem):
+            self._showNoteItemToolbar(item)
 
     def _editCharacterItem(self, item: CharacterItem):
         def select(character: Character):
@@ -303,11 +307,18 @@ class NetworkGraphicsView(BaseGraphicsView):
     def _showEventItemToolbar(self, item: EventItem):
         pass
 
+    def _showNoteItemToolbar(self, item: NoteItem):
+        if self._noteEditor:
+            self._noteEditor.setItem(item)
+            self._popupAbove(self._noteEditor, item)
+
     def _hideItemToolbar(self):
         if self._connectorEditor:
             self._connectorEditor.setVisible(False)
         if self._characterEditor:
             self._characterEditor.setVisible(False)
+        if self._noteEditor:
+            self._noteEditor.setVisible(False)
 
     def _characterSelectorMenu(self) -> CharacterSelectorMenu:
         pass

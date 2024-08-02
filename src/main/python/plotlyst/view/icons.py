@@ -696,6 +696,10 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.file-word-outline')
 
     @staticmethod
+    def transparent_background(color: str = 'grey', color_on=PLOTLYST_SECONDARY_COLOR) -> QIcon:
+        return IconRegistry.from_name('mdi6.circle-opacity', color, color_on)
+
+    @staticmethod
     def scene_beat_badge_icon(name: str, color: str, act_color: str) -> QIcon:
         return qtawesome.icon('mdi6.checkbox-blank-badge-outline', name,
                               options=[{'color': act_color, 'scale_factor': 1.5},

@@ -1157,7 +1157,8 @@ class NoteItem(NodeItem):
 
         self._recalculateRect()
         self._resizeItem.setVisible(False)
-        shadow(self)
+        if not self._node.transparent:
+            shadow(self)
 
     def text(self) -> str:
         return self._node.text
@@ -1169,6 +1170,21 @@ class NoteItem(NodeItem):
 
         self.networkScene().nodeChangedEvent(self._node)
         self._refresh()
+
+    def icon(self) -> Optional[str]:
+        return ''
+
+    def color(self) -> QColor:
+        return QColor(self._node.color)
+
+    def setTransparent(self, transparent: bool):
+        self._node.transparent = transparent
+        self.networkScene().nodeChangedEvent(self._node)
+        self.update()
+        if transparent:
+            self.setGraphicsEffect(None)
+        else:
+            shadow(self)
 
     @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
@@ -1227,10 +1243,11 @@ class NoteItem(NodeItem):
             painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth + 2 * self.Padding,
                                     self._nestedRectHeight + 2 * self.Padding, 2, 2)
 
-        painter.setPen(QPen(QColor('lightgrey'), 1))
-        painter.setBrush(QColor(WHITE_COLOR))
-        painter.drawRoundedRect(self.Margin + self.Padding, self.Margin + self.Padding, self._nestedRectWidth,
-                                self._nestedRectHeight, 6, 6)
+        if not self._node.transparent:
+            painter.setPen(QPen(QColor('lightgrey'), 1))
+            painter.setBrush(QColor(WHITE_COLOR))
+            painter.drawRoundedRect(self.Margin + self.Padding, self.Margin + self.Padding, self._nestedRectWidth,
+                                    self._nestedRectHeight, 6, 6)
 
         if self._node.text:
             painter.setPen(QPen(QColor(self._node.color), 1))
