@@ -28,7 +28,7 @@ from PyQt6.QtGui import QPainter, QPen, QPainterPath, QColor, QIcon, QPolygonF, 
     QTextDocument
 from PyQt6.QtWidgets import QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QGraphicsSceneMouseEvent, \
     QStyleOptionGraphicsItem, QWidget, \
-    QGraphicsSceneHoverEvent, QGraphicsPolygonItem, QApplication
+    QGraphicsSceneHoverEvent, QGraphicsPolygonItem, QApplication, QGraphicsOpacityEffect, QGraphicsTextItem
 from overrides import overrides
 from qthandy import pointy
 
@@ -751,6 +751,12 @@ class CharacterItem(NodeItem):
         self._socket = FilledSocketItem(0, self)
         self._socket.setVisible(False)
 
+        self._label = QGraphicsTextItem(self._character.name, self)
+        font = self._label.font()
+        font.setFamily(app_env.sans_serif_font())
+        font.setPointSize(font.pointSize() + 1)
+        self._label.setFont(font)
+
         self._recalculate()
 
     def character(self) -> Character:
@@ -759,6 +765,7 @@ class CharacterItem(NodeItem):
     def setCharacter(self, character: Character):
         self._character = character
         self._node.set_character(self._character)
+        self._refreshLabel()
         self.update()
         self.networkScene().nodeChangedEvent(self._node)
 
@@ -815,6 +822,9 @@ class CharacterItem(NodeItem):
         avatar = avatars.avatar(self._character)
         avatar.paint(painter, self.Margin, self.Margin, self._size, self._size)
 
+        if self._character.name != self._label.toPlainText():
+            self._refreshLabel()
+
     @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         if self.networkScene().linkMode() or alt_modifier(event):
@@ -851,10 +861,23 @@ class CharacterItem(NodeItem):
         self._center.setY(self.Margin + self._size / 2)
         self._outerRadius = self._size // 2 + self.Margin // 2
 
+        self._refreshLabel()
+
+    def _refreshLabel(self):
+        self._label.setPlainText(self._character.name)
+        x_diff = self._label.boundingRect().width() - self.boundingRect().width()
+        self._label.setPos(- x_diff / 2, self.boundingRect().height() - self.Margin)
+
     @overrides
     def _onSelection(self, selected: bool):
         super()._onSelection(selected)
         self._setConnectionEnabled(selected)
+        if selected:
+            effect = QGraphicsOpacityEffect()
+            effect.setOpacity(0.1)
+            self._label.setGraphicsEffect(effect)
+        else:
+            self._label.setGraphicsEffect(None)
 
     def _setConnectionEnabled(self, enabled: bool):
         self._linkDisplayedMode = enabled
