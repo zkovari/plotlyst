@@ -943,6 +943,18 @@ class CharacterItem(CircleShapedNodeItem):
             self._label.setGraphicsEffect(None)
 
 
+class IconItem(CircleShapedNodeItem):
+    def __init__(self, node: Node, parent=None):
+        super().__init__(node, parent)
+        self._icon = IconRegistry.from_name(node.icon if node.icon else 'fa5s.icons')
+        self._color: QColor = QColor(node.color if node.icon else 'grey')
+
+    @overrides
+    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+        super().paint(painter, option, widget)
+        self._icon.paint(painter, self.Margin, self.Margin, self._size, self._size)
+
+
 class EventItem(NodeItem):
     Margin: int = 15
     Padding: int = 12
