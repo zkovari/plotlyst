@@ -421,6 +421,7 @@ class ConnectorItem(QGraphicsPathItem):
         self._startArrowheadItem = QGraphicsPolygonItem(self._arrowhead, self)
         self._startArrowheadItem.setPen(QPen(self._color, 1))
         self._startArrowheadItem.setBrush(self._color)
+        self._startArrowheadItem.setVisible(False)
 
         self._iconBadge = IconBadge(self)
         self._iconBadge.setVisible(False)
@@ -946,8 +947,11 @@ class CharacterItem(CircleShapedNodeItem):
 class IconItem(CircleShapedNodeItem):
     def __init__(self, node: Node, parent=None):
         super().__init__(node, parent)
-        self._icon = IconRegistry.from_name(node.icon if node.icon else 'fa5s.icons')
-        self._color: QColor = QColor(node.color if node.icon else 'grey')
+        color_str = node.color if node.icon else 'grey'
+        self._icon = IconRegistry.from_name(node.icon if node.icon else 'fa5s.icons', color_str)
+        self._color: QColor = QColor(color_str)
+
+        self._recalculate()
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
