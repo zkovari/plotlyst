@@ -3383,6 +3383,8 @@ class Connector:
     text: str = field(default='', metadata=config(exclude=exclude_if_empty))
     cp_x: Optional[float] = None
     cp_y: Optional[float] = None
+    start_arrow_enabled: bool = field(default=False, metadata=config(exclude=exclude_if_false))
+    end_arrow_enabled: bool = field(default=True, metadata=config(exclude=exclude_if_true))
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)

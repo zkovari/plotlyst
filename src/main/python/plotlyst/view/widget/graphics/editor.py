@@ -32,7 +32,7 @@ from qthandy import hbox, margins, sp, vbox, grid, pointy, vline, decr_icon, tra
 from qtmenu import MenuWidget
 from qttextedit.ops import Heading2Operation, Heading3Operation, Heading1Operation
 
-from plotlyst.common import PLOTLYST_TERTIARY_COLOR
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import GraphicsItemType, NODE_SUBTYPE_DISTURBANCE, NODE_SUBTYPE_CONFLICT, \
     NODE_SUBTYPE_GOAL, NODE_SUBTYPE_BACKSTORY, \
     NODE_SUBTYPE_INTERNAL_CONFLICT
@@ -382,6 +382,15 @@ class ConnectorToolbar(PaintedItemBasedToolbar):
         self._menuText.addWidget(self._textLineEdit)
         self._menuText.aboutToShow.connect(self._textLineEdit.setFocus)
 
+        self._arrowStart = tool_btn(
+            IconRegistry.from_name('mdi.arrow-left-thick', 'lightgrey', color_on=PLOTLYST_SECONDARY_COLOR),
+            tooltip='Arrow at the start', checkable=True, transparent_=True)
+        self._arrowEnd = tool_btn(
+            IconRegistry.from_name('mdi.arrow-right-thick', 'lightgrey', color_on=PLOTLYST_SECONDARY_COLOR),
+            tooltip='Arrow at the start', checkable=True, transparent_=True)
+        self._arrowStart.clicked.connect(self._arrowStartClicked)
+        self._arrowEnd.clicked.connect(self._arrowEndClicked)
+
         self._solidLine = SolidPenStyleSelector()
         self._dashLine = DashPenStyleSelector()
         self._dotLine = DotPenStyleSelector()
@@ -398,6 +407,9 @@ class ConnectorToolbar(PaintedItemBasedToolbar):
         self._toolbar.layout().addWidget(self._btnIcon)
         self._toolbar.layout().addWidget(self._btnText)
         self._toolbar.layout().addWidget(vline())
+        self._toolbar.layout().addWidget(self._arrowStart)
+        self._toolbar.layout().addWidget(self._arrowEnd)
+        self._toolbar.layout().addWidget(vline())
         self._toolbar.layout().addWidget(self._solidLine)
         self._toolbar.layout().addWidget(self._dashLine)
         self._toolbar.layout().addWidget(self._dotLine)
@@ -411,6 +423,8 @@ class ConnectorToolbar(PaintedItemBasedToolbar):
 
         self._sbWidth.setValue(connector.penWidth())
         self._textLineEdit.setText(connector.text())
+        self._arrowStart.setChecked(connector.startArrowEnabled())
+        self._arrowEnd.setChecked(connector.endArrowEnabled())
 
         penStyle = connector.penStyle()
         for line in [self._solidLine, self._dashLine, self._dotLine]:
@@ -431,6 +445,14 @@ class ConnectorToolbar(PaintedItemBasedToolbar):
     def _widthChanged(self, value: int):
         if self._item:
             self._item.setPenWidth(value)
+
+    def _arrowStartClicked(self, toggled: bool):
+        if self._item:
+            self._item.setStartArrowEnabled(toggled)
+
+    def _arrowEndClicked(self, toggled: bool):
+        if self._item:
+            self._item.setEndArrowEnabled(toggled)
 
 
 class NoteToolbar(PaintedItemBasedToolbar):
@@ -533,7 +555,7 @@ class EventItemToolbar(PaintedItemBasedToolbar):
 class PenStyleSelector(QAbstractButton):
     penStyleToggled = pyqtSignal(Qt.PenStyle, bool)
 
-    def __init__(self, penWidth: int = 2, color=Qt.GlobalColor.black, colorOn=PLOTLYST_TERTIARY_COLOR,
+    def __init__(self, penWidth: int = 2, color=Qt.GlobalColor.lightGray, colorOn=PLOTLYST_SECONDARY_COLOR,
                  parent=None):
         super().__init__(parent)
         self._penWidth = penWidth

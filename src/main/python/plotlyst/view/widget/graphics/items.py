@@ -415,9 +415,12 @@ class ConnectorItem(QGraphicsPathItem):
             QPointF(10, 0),
             QPointF(0, 5),
         ])
-        self._arrowheadItem = QGraphicsPolygonItem(self._arrowhead, self)
-        self._arrowheadItem.setPen(QPen(self._color, 1))
-        self._arrowheadItem.setBrush(self._color)
+        self._endArrowheadItem = QGraphicsPolygonItem(self._arrowhead, self)
+        self._endArrowheadItem.setPen(QPen(self._color, 1))
+        self._endArrowheadItem.setBrush(self._color)
+        self._startArrowheadItem = QGraphicsPolygonItem(self._arrowhead, self)
+        self._startArrowheadItem.setPen(QPen(self._color, 1))
+        self._startArrowheadItem.setBrush(self._color)
 
         self._iconBadge = IconBadge(self)
         self._iconBadge.setVisible(False)
@@ -443,6 +446,8 @@ class ConnectorItem(QGraphicsPathItem):
         self._connector = None
         self.setPenStyle(connector.pen)
         self.setPenWidth(connector.width)
+        self.setStartArrowEnabled(connector.start_arrow_enabled)
+        self.setEndArrowEnabled(connector.end_arrow_enabled)
         if connector.color:
             color = connector.color
         elif isinstance(self._target.parentItem(), NodeItem):
@@ -492,13 +497,36 @@ class ConnectorItem(QGraphicsPathItem):
         pen.setWidth(width)
         self.setPen(pen)
 
-        arrowPen = self._arrowheadItem.pen()
+        arrowPen = self._endArrowheadItem.pen()
         prevWidth = arrowPen.width()
-        self._arrowheadItem.setScale(1.0 + (width - prevWidth) / 10)
+        self._endArrowheadItem.setScale(1.0 + (width - prevWidth) / 10)
+        self._startArrowheadItem.setScale(1.0 + (width - prevWidth) / 10)
 
         self.rearrange()
         if self._connector:
             self._connector.width = width
+            self.networkScene().connectorChangedEvent(self)
+
+    def startArrowEnabled(self) -> bool:
+        if self._connector:
+            return self._connector.start_arrow_enabled
+        return False
+
+    def setStartArrowEnabled(self, enabled: bool):
+        self._startArrowheadItem.setVisible(enabled)
+        if self._connector:
+            self._connector.start_arrow_enabled = enabled
+            self.networkScene().connectorChangedEvent(self)
+
+    def endArrowEnabled(self) -> bool:
+        if self._connector:
+            return self._connector.end_arrow_enabled
+        return False
+
+    def setEndArrowEnabled(self, enabled: bool):
+        self._endArrowheadItem.setVisible(enabled)
+        if self._connector:
+            self._connector.end_arrow_enabled = enabled
             self.networkScene().connectorChangedEvent(self)
 
     def relation(self) -> Optional[Relation]:
@@ -582,7 +610,8 @@ class ConnectorItem(QGraphicsPathItem):
         else:
             self._rearrangeLinearConnector(path, width, height)
 
-        self._arrowheadItem.setPos(width, height)
+        self._endArrowheadItem.setPos(width, height)
+        self._startArrowheadItem.setPos(0, 0)
         self._rearrangeIcon(path)
         self._rearrangeText(path)
 
@@ -608,7 +637,8 @@ class ConnectorItem(QGraphicsPathItem):
     def _rearrangeLinearConnector(self, path: QPainterPath, width: float, height: float):
         path.lineTo(width, height)
         endArrowAngle = math.degrees(math.atan2(height, width))
-        self._arrowheadItem.setRotation(endArrowAngle)
+        self._endArrowheadItem.setRotation(endArrowAngle)
+        self._startArrowheadItem.setRotation(endArrowAngle + 180)
 
     def _rearrangeCurvedConnector(self, path: QPainterPath, endPoint: QPointF):
         path.quadTo(QPointF(self._connector.cp_x, self._connector.cp_y), endPoint)
@@ -616,8 +646,12 @@ class ConnectorItem(QGraphicsPathItem):
         end = path.pointAtPercent(1)
         close_to_end = path.pointAtPercent(0.98)
         endArrowAngle = math.degrees(math.atan2(end.y() - close_to_end.y(), end.x() - close_to_end.x()))
+        self._endArrowheadItem.setRotation(endArrowAngle)
 
-        self._arrowheadItem.setRotation(endArrowAngle)
+        start = path.pointAtPercent(0)
+        close_to_start = path.pointAtPercent(0.2)
+        startArrowAngle = math.degrees(math.atan2(start.y() - close_to_start.y(), start.x() - close_to_start.x()))
+        self._startArrowheadItem.setRotation(startArrowAngle)
 
     def _rearrangeIcon(self, path: QPainterPath):
         if self._icon:
@@ -653,10 +687,10 @@ class ConnectorItem(QGraphicsPathItem):
         pen.setColor(self._color)
         self.setPen(pen)
 
-        arrowPen = self._arrowheadItem.pen()
+        arrowPen = self._endArrowheadItem.pen()
         arrowPen.setColor(self._color)
-        self._arrowheadItem.setPen(arrowPen)
-        self._arrowheadItem.setBrush(self._color)
+        self._endArrowheadItem.setPen(arrowPen)
+        self._endArrowheadItem.setBrush(self._color)
 
         if self._icon:
             self._iconBadge.setIcon(IconRegistry.from_name(self._icon, self._color.name()), self._color)
