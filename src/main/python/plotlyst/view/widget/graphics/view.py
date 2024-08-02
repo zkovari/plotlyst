@@ -23,7 +23,8 @@ from typing import Optional
 
 import qtanim
 from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QColor, QIcon, QResizeEvent, QNativeGestureEvent, QFont
+from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QColor, QIcon, QResizeEvent, QNativeGestureEvent, QFont, \
+    QUndoStack
 from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QFrame, \
     QToolButton, QApplication, QWidget
 from overrides import overrides
@@ -53,6 +54,7 @@ class BaseGraphicsView(QGraphicsView):
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
         self.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
         self.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
+        self.undoStack = QUndoStack()
 
     @overrides
     def mousePressEvent(self, event: QMouseEvent) -> None:
