@@ -769,13 +769,12 @@ class NodeItem(QAbstractGraphicsShapeItem):
             scene.nodeChangedEvent(self._node)
 
 
-class CharacterItem(NodeItem):
+class CircleShapedNodeItem(NodeItem):
     Margin: int = 20
     PenWidth: int = 2
 
-    def __init__(self, character: Character, node: Node, parent=None):
-        super(CharacterItem, self).__init__(node, parent)
-        self._character = character
+    def __init__(self, node: Node, parent=None):
+        super().__init__(node, parent)
         self._size: int = node.size
         self._center = QPointF()
         self._outerRadius = 0
@@ -784,24 +783,6 @@ class CharacterItem(NodeItem):
 
         self._socket = FilledSocketItem(0, self)
         self._socket.setVisible(False)
-
-        self._label = QGraphicsTextItem(self._character.name, self)
-        font = self._label.font()
-        font.setFamily(app_env.sans_serif_font())
-        font.setPointSize(font.pointSize() + 1)
-        self._label.setFont(font)
-
-        self._recalculate()
-
-    def character(self) -> Character:
-        return self._character
-
-    def setCharacter(self, character: Character):
-        self._character = character
-        self._node.set_character(self._character)
-        self._refreshLabel()
-        self.update()
-        self.networkScene().nodeChangedEvent(self._node)
 
     def setSize(self, value: int):
         self._node.size = value
@@ -815,11 +796,6 @@ class CharacterItem(NodeItem):
         self.update()
         self.rearrangeConnectors()
 
-        self.networkScene().nodeChangedEvent(self._node)
-
-    def setText(self, text: str):
-        self._node.text = text
-        self._refreshLabel()
         self.networkScene().nodeChangedEvent(self._node)
 
     @overrides
@@ -858,12 +834,6 @@ class CharacterItem(NodeItem):
             painter.setPen(QPen(Qt.GlobalColor.gray, self.PenWidth, Qt.PenStyle.DashLine))
             painter.drawRoundedRect(self.Margin, self.Margin, self._size, self._size, 2, 2)
 
-        avatar = avatars.avatar(self._character)
-        avatar.paint(painter, self.Margin, self.Margin, self._size, self._size)
-
-        if not self._node.text and self._character.name != self._label.toPlainText():
-            self._refreshLabel()
-
     @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         if self.networkScene().linkMode() or alt_modifier(event):
@@ -875,10 +845,6 @@ class CharacterItem(NodeItem):
         if self._linkDisplayedMode and not self.isSelected():
             self._setConnectionEnabled(False)
             self.update()
-
-    @overrides
-    def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
-        self.networkScene().editItemEvent(self)
 
     @overrides
     def hoverMoveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
@@ -895,11 +861,67 @@ class CharacterItem(NodeItem):
 
             self.update()
 
+    @overrides
+    def _onSelection(self, selected: bool):
+        super()._onSelection(selected)
+        self._setConnectionEnabled(selected)
+
     def _recalculate(self):
         self._center.setX(self.Margin + self._size / 2)
         self._center.setY(self.Margin + self._size / 2)
         self._outerRadius = self._size // 2 + self.Margin // 2
 
+    def _setConnectionEnabled(self, enabled: bool):
+        self._linkDisplayedMode = enabled
+        self._socket.setVisible(enabled)
+        self.update()
+
+
+class CharacterItem(CircleShapedNodeItem):
+    def __init__(self, character: Character, node: Node, parent=None):
+        super(CharacterItem, self).__init__(node, parent)
+        self._character = character
+
+        self._label = QGraphicsTextItem(self._character.name, self)
+        font = self._label.font()
+        font.setFamily(app_env.sans_serif_font())
+        font.setPointSize(font.pointSize() + 1)
+        self._label.setFont(font)
+
+        self._recalculate()
+
+    def character(self) -> Character:
+        return self._character
+
+    def setCharacter(self, character: Character):
+        self._character = character
+        self._node.set_character(self._character)
+        self._refreshLabel()
+        self.update()
+        self.networkScene().nodeChangedEvent(self._node)
+
+    def setText(self, text: str):
+        self._node.text = text
+        self._refreshLabel()
+        self.networkScene().nodeChangedEvent(self._node)
+
+    @overrides
+    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+        super().paint(painter, option, widget)
+
+        avatar = avatars.avatar(self._character)
+        avatar.paint(painter, self.Margin, self.Margin, self._size, self._size)
+
+        if not self._node.text and self._character.name != self._label.toPlainText():
+            self._refreshLabel()
+
+    @overrides
+    def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        self.networkScene().editItemEvent(self)
+
+    @overrides
+    def _recalculate(self):
+        super()._recalculate()
         self._refreshLabel()
 
     def _refreshLabel(self):
@@ -913,18 +935,12 @@ class CharacterItem(NodeItem):
     @overrides
     def _onSelection(self, selected: bool):
         super()._onSelection(selected)
-        self._setConnectionEnabled(selected)
         if selected:
             effect = QGraphicsOpacityEffect()
             effect.setOpacity(0.3)
             self._label.setGraphicsEffect(effect)
         else:
             self._label.setGraphicsEffect(None)
-
-    def _setConnectionEnabled(self, enabled: bool):
-        self._linkDisplayedMode = enabled
-        self._socket.setVisible(enabled)
-        self.update()
 
 
 class EventItem(NodeItem):
