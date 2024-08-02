@@ -280,10 +280,20 @@ class CharacterToolbar(BaseItemToolbar):
 
         self._btnCharacter = tool_btn(IconRegistry.character_icon(), 'Change character', transparent_=True)
         self._btnCharacter.clicked.connect(self._characterClicked)
+        self._btnText = tool_btn(IconRegistry.from_name('mdi.format-text'), 'Change displayed text', transparent_=True)
+        self._menuText = MenuWidget(self._btnText)
+        self._textLineEdit = QLineEdit()
+        self._textLineEdit.setPlaceholderText('Character')
+        self._textLineEdit.setClearButtonEnabled(True)
+        self._textLineEdit.textEdited.connect(self._textEdited)
+        self._menuText.addWidget(self._textLineEdit)
+        self._menuText.aboutToShow.connect(self._textLineEdit.setFocus)
+
         self._sbSize = AvatarSizeEditor()
         self._sbSize.valueChanged.connect(self._sizeChanged)
 
         self._toolbar.layout().addWidget(self._btnCharacter)
+        self._toolbar.layout().addWidget(self._btnText)
         self._toolbar.layout().addWidget(vline())
         self._toolbar.layout().addWidget(self._sbSize)
 
@@ -292,6 +302,8 @@ class CharacterToolbar(BaseItemToolbar):
         self._hideSecondarySelectors()
 
         self._sbSize.setValue(item.node().size)
+        self._textLineEdit.setPlaceholderText(item.character().name)
+        self._textLineEdit.setText(item.node().text)
         self._item = item
 
     def _sizeChanged(self, value: int):
@@ -301,6 +313,10 @@ class CharacterToolbar(BaseItemToolbar):
     def _characterClicked(self):
         if self._item:
             self.changeCharacter.emit(self._item)
+
+    def _textEdited(self):
+        if self._item:
+            self._item.setText(self._textLineEdit.text())
 
 
 class PaintedItemBasedToolbar(BaseItemToolbar):
@@ -450,6 +466,7 @@ class NoteToolbar(PaintedItemBasedToolbar):
     def _transparentClicked(self, toggled: bool):
         if self._item:
             self._item.setTransparent(toggled)
+
 
 class EventItemToolbar(PaintedItemBasedToolbar):
     def __init__(self, parent=None):

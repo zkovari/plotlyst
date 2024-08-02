@@ -783,6 +783,11 @@ class CharacterItem(NodeItem):
 
         self.networkScene().nodeChangedEvent(self._node)
 
+    def setText(self, text: str):
+        self._node.text = text
+        self._refreshLabel()
+        self.networkScene().nodeChangedEvent(self._node)
+
     @overrides
     def socket(self, angle: float) -> AbstractSocketItem:
         x, y = self.socketPosFromAngle(angle)
@@ -822,7 +827,7 @@ class CharacterItem(NodeItem):
         avatar = avatars.avatar(self._character)
         avatar.paint(painter, self.Margin, self.Margin, self._size, self._size)
 
-        if self._character.name != self._label.toPlainText():
+        if not self._node.text and self._character.name != self._label.toPlainText():
             self._refreshLabel()
 
     @overrides
@@ -864,7 +869,10 @@ class CharacterItem(NodeItem):
         self._refreshLabel()
 
     def _refreshLabel(self):
-        self._label.setPlainText(self._character.name)
+        if self._node.text:
+            self._label.setPlainText(self._node.text)
+        else:
+            self._label.setPlainText(self._character.name)
         x_diff = self._label.boundingRect().width() - self.boundingRect().width()
         self._label.setPos(- x_diff / 2, self.boundingRect().height() - self.Margin)
 
@@ -874,7 +882,7 @@ class CharacterItem(NodeItem):
         self._setConnectionEnabled(selected)
         if selected:
             effect = QGraphicsOpacityEffect()
-            effect.setOpacity(0.1)
+            effect.setOpacity(0.3)
             self._label.setGraphicsEffect(effect)
         else:
             self._label.setGraphicsEffect(None)
