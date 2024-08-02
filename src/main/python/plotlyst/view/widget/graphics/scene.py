@@ -35,7 +35,7 @@ from plotlyst.core.domain import Node, Diagram, GraphicsItemType, Connector, Pla
 from plotlyst.service.image import LoadedImage
 from plotlyst.view.widget.graphics import NodeItem, CharacterItem, PlaceholderSocketItem, ConnectorItem, \
     AbstractSocketItem, EventItem
-from plotlyst.view.widget.graphics.items import NoteItem, ImageItem, IconItem
+from plotlyst.view.widget.graphics.items import NoteItem, ImageItem, IconItem, CircleShapedNodeItem
 
 
 @dataclass
@@ -403,9 +403,9 @@ class NetworkScene(QGraphicsScene):
 
     def _onLink(self, sourceNode: NodeItem, sourceSocket: AbstractSocketItem, targetNode: NodeItem,
                 targetSocket: AbstractSocketItem):
-        if isinstance(sourceNode, CharacterItem):
+        if isinstance(sourceNode, CircleShapedNodeItem):
             sourceNode.addSocket(sourceSocket)
-        if isinstance(targetNode, CharacterItem):
+        if isinstance(targetNode, CircleShapedNodeItem):
             targetNode.addSocket(targetSocket)
 
     def _updateSelection(self):
