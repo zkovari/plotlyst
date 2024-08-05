@@ -38,6 +38,7 @@ from plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButto
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.graphics import CharacterItem, ConnectorItem
+from plotlyst.view.widget.graphics.commands import GraphicsItemCommand
 from plotlyst.view.widget.graphics.editor import ZoomBar, ConnectorToolbar, TextLineEditorPopup, CharacterToolbar, \
     NoteToolbar, IconItemToolbar
 from plotlyst.view.widget.graphics.items import NodeItem, EventItem, NoteItem, IconItem
@@ -290,7 +291,8 @@ class NetworkGraphicsView(BaseGraphicsView):
 
     def _editCharacterItem(self, item: CharacterItem):
         def select(character: Character):
-            item.setCharacter(character)
+            command = GraphicsItemCommand(item, item.setCharacter, item.character(), character)
+            self.undoStack.push(command)
 
         popup = self._characterSelectorMenu()
         popup.selected.connect(select)
