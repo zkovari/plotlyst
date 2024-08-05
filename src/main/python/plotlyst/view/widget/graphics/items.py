@@ -1297,6 +1297,9 @@ class NoteItem(NodeItem):
         self.networkScene().nodeChangedEvent(self._node)
         self._refresh()
 
+    def transparent(self) -> bool:
+        return self._node.transparent
+
     def setTransparent(self, transparent: bool):
         self._node.transparent = transparent
         self.networkScene().nodeChangedEvent(self._node)

@@ -355,7 +355,6 @@ class PaintedItemBasedToolbar(BaseItemToolbar):
             command = GraphicsItemCommand(self._item, self._item.setIcon,
                                           self._item.icon(), result[0])
             self.undoStack.push(command)
-            # self._item.setIcon(result[0])
             self._updateIcon(result[0])
 
     def _colorChanged(self, color: QColor):
@@ -363,7 +362,6 @@ class PaintedItemBasedToolbar(BaseItemToolbar):
             command = GraphicsItemCommand(self._item, self._item.setColor,
                                           self._item.color(), color)
             self.undoStack.push(command)
-            # self._item.setColor(color)
             self._updateColor(color.name())
             pass
 
@@ -501,7 +499,9 @@ class NoteToolbar(PaintedItemBasedToolbar):
 
     def _transparentClicked(self, toggled: bool):
         if self._item:
-            self._item.setTransparent(toggled)
+            command = GraphicsItemCommand(self._item, self._item.setTransparent,
+                                          self._item.transparent(), toggled)
+            self.undoStack.push(command)
 
 
 class IconItemToolbar(PaintedItemBasedToolbar):
