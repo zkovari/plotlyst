@@ -25,7 +25,7 @@ from typing import Any, Optional, List
 
 from PyQt6.QtCore import Qt, QTimer, QRectF, QPointF, QPoint, QRect
 from PyQt6.QtGui import QPainter, QPen, QPainterPath, QColor, QIcon, QPolygonF, QBrush, QFontMetrics, QImage, QFont, \
-    QTextDocument
+    QTextDocument, QUndoStack
 from PyQt6.QtWidgets import QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QGraphicsSceneMouseEvent, \
     QStyleOptionGraphicsItem, QWidget, \
     QGraphicsSceneHoverEvent, QGraphicsPolygonItem, QApplication, QGraphicsOpacityEffect, QGraphicsTextItem
@@ -39,6 +39,7 @@ from plotlyst.env import app_env
 from plotlyst.service.image import LoadedImage
 from plotlyst.view.common import shadow, calculate_resized_dimensions, text_color_with_bg_qcolor
 from plotlyst.view.icons import IconRegistry, avatars
+from plotlyst.view.widget.graphics.commands import PosChangedCommand
 
 
 def v_center(ref_height: int, item_height: int) -> int:
@@ -722,9 +723,11 @@ class NodeItem(QAbstractGraphicsShapeItem):
             QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
         self.setAcceptHoverEvents(True)
 
+        self._posCommandEnabled = True
         self._posChangedTimer = QTimer()
-        self._posChangedTimer.setInterval(1000)
+        self._posChangedTimer.setInterval(200)
         self._posChangedTimer.timeout.connect(self._posChangedOnTimeout)
+        self._firstPost: QPointF = self.pos()
 
     def node(self) -> Node:
         return self._node
@@ -748,6 +751,9 @@ class NodeItem(QAbstractGraphicsShapeItem):
     def clearConnectors(self):
         for socket in self._sockets:
             socket.removeConnectors()
+
+    def setPosCommandEnabled(self, enabled: bool):
+        self._posCommandEnabled = enabled
 
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
@@ -775,11 +781,18 @@ class NodeItem(QAbstractGraphicsShapeItem):
 
     def _posChangedOnTimeout(self):
         self._posChangedTimer.stop()
+        if self._posCommandEnabled:
+            stack: QUndoStack = self.networkScene().undoStack()
+            stack.push(PosChangedCommand(self, self._firstPost, self.pos()))
+        else:
+            self._posCommandEnabled = True
         self._node.x = self.scenePos().x()
         self._node.y = self.scenePos().y()
         scene = self.networkScene()
         if scene:
             scene.nodeChangedEvent(self._node)
+
+        self._firstPost = self.pos()
 
 
 class CircleShapedNodeItem(NodeItem):

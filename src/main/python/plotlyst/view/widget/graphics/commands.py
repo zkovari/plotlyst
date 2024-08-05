@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from enum import Enum, auto
 from typing import Any
 
+from PyQt6.QtCore import QPointF
 from PyQt6.QtGui import QUndoCommand
 from PyQt6.QtWidgets import QGraphicsItem
 from overrides import overrides
@@ -115,3 +116,25 @@ class NoteEditorCommand(QUndoCommand):
     @overrides
     def undo(self) -> None:
         self.item.setText(self.oldText, self.oldHeight)
+
+
+class PosChangedCommand(QUndoCommand):
+    def __init__(self, item: QGraphicsItem, old: QPointF, new: QPointF, parent=None):
+        super().__init__(parent)
+        self.item = item
+        self.old = old
+        self.new = new
+        self._first = True
+
+    @overrides
+    def redo(self) -> None:
+        if self._first:
+            self._first = False
+            return
+        self.item.setPosCommandEnabled(False)
+        self.item.setPos(self.new)
+
+    @overrides
+    def undo(self) -> None:
+        self.item.setPosCommandEnabled(False)
+        self.item.setPos(self.old)
