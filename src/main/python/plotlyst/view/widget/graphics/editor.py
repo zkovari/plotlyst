@@ -39,7 +39,8 @@ from plotlyst.core.domain import GraphicsItemType, NODE_SUBTYPE_DISTURBANCE, NOD
 from plotlyst.view.common import shadow, tool_btn, ExclusiveOptionalButtonGroup
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
-from plotlyst.view.widget.graphics.commands import GraphicsItemCommand, TextEditingCommand, SizeEditingCommand
+from plotlyst.view.widget.graphics.commands import GraphicsItemCommand, TextEditingCommand, SizeEditingCommand, \
+    NoteEditorCommand
 from plotlyst.view.widget.graphics.items import EventItem, ConnectorItem, NoteItem, CharacterItem, IconItem
 from plotlyst.view.widget.input import FontSizeSpinBox, AutoAdjustableLineEdit, AutoAdjustableTextEdit
 from plotlyst.view.widget.utility import ColorPicker, IconSelectorDialog
@@ -188,11 +189,12 @@ class TextLineEditorPopup(MenuWidget):
 
 class TextNoteEditorPopup(MenuWidget):
 
-    def __init__(self, item: NoteItem, parent=None, placeholder: str = 'Begin typing'):
+    def __init__(self, undoStack: QUndoStack, item: NoteItem, parent=None, placeholder: str = 'Begin typing'):
         super().__init__(parent)
+        self.undoStack = undoStack
+        self._item = item
         transparent(self)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self._item = item
 
         self._textEdit = AutoAdjustableTextEdit()
         self._textEdit.setProperty('white-bg', True)
@@ -221,7 +223,9 @@ class TextNoteEditorPopup(MenuWidget):
 
     def _textChanged(self):
         self._resized()
-        self._item.setText(self.text(), self._textEdit.height())
+        self.undoStack.push(
+            NoteEditorCommand(self._item, self._item.text(), self._item.height(), self.text(), self._textEdit.height()))
+        # self._item.setText(self.text(), self._textEdit.height())
 
     def _resized(self):
         self.setFixedHeight(self._textEdit.height() + 5)

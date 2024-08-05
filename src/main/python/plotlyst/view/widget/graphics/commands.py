@@ -24,6 +24,8 @@ from PyQt6.QtGui import QUndoCommand
 from PyQt6.QtWidgets import QGraphicsItem
 from overrides import overrides
 
+from plotlyst.view.widget.graphics.items import NoteItem
+
 
 class MergeableCommandType(Enum):
     TEXT = auto()
@@ -84,3 +86,34 @@ class GraphicsItemCommand(QUndoCommand):
     @overrides
     def undo(self) -> None:
         self.func(self.old)
+
+
+class NoteEditorCommand(QUndoCommand):
+    def __init__(self, item: NoteItem, oldText: str, oldHeight: int, newText: str, newHeight: int, parent=None):
+        super().__init__(parent)
+        self.type = MergeableCommandType.TEXT
+        self.item = item
+        self.oldText = oldText
+        self.oldHeight = oldHeight
+        self.newText = newText
+        self.newHeight = newHeight
+
+    @overrides
+    def id(self) -> int:
+        return self.type.value
+
+    @overrides
+    def mergeWith(self, other: QUndoCommand) -> bool:
+        if isinstance(other, NoteEditorCommand) and self.item is other.item:
+            self.newText = other.newText
+            self.newHeight = other.newHeight
+            return True
+        return False
+
+    @overrides
+    def redo(self) -> None:
+        self.item.setText(self.newText, self.newHeight)
+
+    @overrides
+    def undo(self) -> None:
+        self.item.setText(self.oldText, self.oldHeight)

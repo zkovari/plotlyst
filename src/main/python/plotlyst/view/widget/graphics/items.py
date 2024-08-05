@@ -1289,6 +1289,9 @@ class NoteItem(NodeItem):
     def text(self) -> str:
         return self._node.text
 
+    def height(self) -> int:
+        return self._node.height
+
     def setText(self, text: str, height: int):
         self._node.text = text
         self._textRect.setHeight(height)

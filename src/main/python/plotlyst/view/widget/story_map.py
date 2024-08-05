@@ -196,7 +196,7 @@ class EventsMindMapView(NetworkGraphicsView):
 
     @overrides
     def _editNoteItem(self, item: NoteItem):
-        popup = TextNoteEditorPopup(item, parent=self)
+        popup = TextNoteEditorPopup(self.undoStack, item, parent=self)
         font = QApplication.font()
         popup.setFont(font)
 
