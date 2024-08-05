@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Optional, Dict
+from typing import Optional, Dict, Set
 
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QPointF, QPoint, QObject
@@ -55,6 +55,8 @@ class NetworkScene(QGraphicsScene):
         super().__init__(parent)
         self._diagram: Optional[Diagram] = None
         self._undoStack: Optional[QUndoStack] = None
+        self._macroUndo: bool = False
+        self._movedItems: Set[QGraphicsItem] = set()
         self._linkMode: bool = False
         self._additionDescriptor: Optional[ItemDescriptor] = None
         self._copyDescriptor: Optional[ItemDescriptor] = None
@@ -201,6 +203,14 @@ class NetworkScene(QGraphicsScene):
 
     @overrides
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        if self._movedItems:
+            for item in self._movedItems:
+                item.updatePos()
+            if self._macroUndo:
+                self._undoStack.endMacro()
+                self._macroUndo = False
+            self._movedItems.clear()
+
         if self.linkMode():
             if event.button() & Qt.MouseButton.RightButton:
                 self.endLink()
@@ -238,7 +248,13 @@ class NetworkScene(QGraphicsScene):
         self._addNewItem(event.scenePos(), event.mimeData().reference())
         event.accept()
 
-    def itemChangedEvent(self, item: NodeItem):
+    def itemMovedEvent(self, item: NodeItem):
+        if item.posCommandEnabled():
+            self._movedItems.add(item)
+            if len(self.selectedItems()) > 1 and not self._macroUndo:
+                self._undoStack.beginMacro('Move items')
+                self._macroUndo = True
+
         self.itemMoved.emit(item)
 
     def nodeChangedEvent(self, node: Node):

@@ -133,8 +133,12 @@ class PosChangedCommand(QUndoCommand):
             return
         self.item.setPosCommandEnabled(False)
         self.item.setPos(self.new)
+        self.item.updatePos()
+        self.item.setPosCommandEnabled(True)
 
     @overrides
     def undo(self) -> None:
         self.item.setPosCommandEnabled(False)
         self.item.setPos(self.old)
+        self.item.updatePos()
+        self.item.setPosCommandEnabled(True)
