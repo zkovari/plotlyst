@@ -311,7 +311,9 @@ class CharacterToolbar(BaseItemToolbar):
 
     def _sizeChanged(self, value: int):
         if self._item:
-            self._item.setSize(value)
+            command = MergeableGraphicsItemCommand(MergeableCommandType.SIZE, self._item, self._item.setSize,
+                                                   self._item.size(), value)
+            self.undoStack.push(command)
 
     def _characterClicked(self):
         if self._item:
@@ -531,7 +533,9 @@ class IconItemToolbar(PaintedItemBasedToolbar):
 
     def _sizeChanged(self, value: int):
         if self._item:
-            self._item.setSize(value)
+            command = MergeableGraphicsItemCommand(MergeableCommandType.SIZE, self._item, self._item.setSize,
+                                                   self._item.size(), value)
+            self.undoStack.push(command)
 
 
 class EventItemToolbar(PaintedItemBasedToolbar):

@@ -794,6 +794,9 @@ class CircleShapedNodeItem(NodeItem):
         self._socket = FilledSocketItem(0, self)
         self._socket.setVisible(False)
 
+    def size(self) -> int:
+        return self._node.size
+
     def setSize(self, value: int):
         self._node.size = value
         self._size = value

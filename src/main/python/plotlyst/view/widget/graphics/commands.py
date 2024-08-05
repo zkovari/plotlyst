@@ -28,6 +28,7 @@ from overrides import overrides
 class MergeableCommandType(Enum):
     PEN_WIDTH = auto()
     TEXT = auto()
+    SIZE = auto()
 
 
 class MergeableGraphicsItemCommand(QUndoCommand):
