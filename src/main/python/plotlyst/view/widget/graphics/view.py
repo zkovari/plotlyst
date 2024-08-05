@@ -166,6 +166,7 @@ class NetworkGraphicsView(BaseGraphicsView):
         self.undoStack.canRedoChanged.connect(self._btnRedo.setEnabled)
         self._btnUndo.clicked.connect(self.undoStack.undo)
         self._btnRedo.clicked.connect(self.undoStack.redo)
+        self._scene.setUndoStack(self.undoStack)
 
         self._connectorEditor: Optional[ConnectorToolbar] = None
         self._characterEditor: Optional[CharacterToolbar] = None

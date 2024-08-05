@@ -24,8 +24,6 @@ from PyQt6.QtGui import QUndoCommand
 from PyQt6.QtWidgets import QGraphicsItem
 from overrides import overrides
 
-from plotlyst.view.widget.graphics.items import NoteItem
-
 
 class MergeableCommandType(Enum):
     TEXT = auto()
@@ -89,7 +87,7 @@ class GraphicsItemCommand(QUndoCommand):
 
 
 class NoteEditorCommand(QUndoCommand):
-    def __init__(self, item: NoteItem, oldText: str, oldHeight: int, newText: str, newHeight: int, parent=None):
+    def __init__(self, item: QGraphicsItem, oldText: str, oldHeight: int, newText: str, newHeight: int, parent=None):
         super().__init__(parent)
         self.type = MergeableCommandType.TEXT
         self.item = item

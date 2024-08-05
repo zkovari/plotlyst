@@ -112,7 +112,10 @@ class ResizeIconItem(QAbstractGraphicsShapeItem):
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged and self._activated:
             if self._keepAspectRatio:
                 value.setY(value.x() / self._ratio)
+                # stack: QUndoStack = self.scene().undoStack()
+                # stack.push(GraphicsItemCommand(self, self.setPos, self.pos(), value))
                 self.setPos(value)
+
             self.parentItem().rearrangeSize(value)
         return super().itemChange(change, value)
 

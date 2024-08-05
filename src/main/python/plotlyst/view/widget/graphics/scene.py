@@ -25,7 +25,7 @@ from typing import Optional, Dict
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QPointF, QPoint, QObject
 from PyQt6.QtGui import QTransform, \
-    QKeyEvent, QKeySequence, QCursor, QImage
+    QKeyEvent, QKeySequence, QCursor, QImage, QUndoStack
 from PyQt6.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QApplication, \
     QGraphicsSceneDragDropEvent
 from overrides import overrides
@@ -54,6 +54,7 @@ class NetworkScene(QGraphicsScene):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._diagram: Optional[Diagram] = None
+        self._undoStack: Optional[QUndoStack] = None
         self._linkMode: bool = False
         self._additionDescriptor: Optional[ItemDescriptor] = None
         self._copyDescriptor: Optional[ItemDescriptor] = None
@@ -61,6 +62,12 @@ class NetworkScene(QGraphicsScene):
 
         self._placeholder: Optional[PlaceholderSocketItem] = None
         self._connectorPlaceholder: Optional[ConnectorItem] = None
+
+    def undoStack(self) -> QUndoStack:
+        return self._undoStack
+
+    def setUndoStack(self, stack: QUndoStack):
+        self._undoStack = stack
 
     def setDiagram(self, diagram: Diagram):
         self._diagram = diagram
