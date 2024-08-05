@@ -24,7 +24,7 @@ from typing import Optional
 import qtanim
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QColor, QIcon, QResizeEvent, QNativeGestureEvent, QFont, \
-    QUndoStack
+    QUndoStack, QKeySequence
 from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QFrame, \
     QToolButton, QApplication, QWidget
 from overrides import overrides
@@ -154,10 +154,13 @@ class NetworkGraphicsView(BaseGraphicsView):
         vbox(self._controlsNavBar, 5, 6)
 
         self._btnUndo = tool_btn(IconRegistry.from_name('mdi.undo', BLACK_COLOR), transparent_=True, tooltip='Undo')
+        self._btnUndo.setShortcut(QKeySequence.StandardKey.Undo)
         self._btnUndo.setDisabled(True)
         self._btnRedo = tool_btn(IconRegistry.from_name('mdi.redo', BLACK_COLOR), transparent_=True, tooltip='Redo')
+        self._btnRedo.setShortcut(QKeySequence.StandardKey.Redo)
         self._btnRedo.setDisabled(True)
         self.undoStack = QUndoStack()
+        self.undoStack.setUndoLimit(100)
         self.undoStack.canUndoChanged.connect(self._btnUndo.setEnabled)
         self.undoStack.canRedoChanged.connect(self._btnRedo.setEnabled)
         self._btnUndo.clicked.connect(self.undoStack.undo)

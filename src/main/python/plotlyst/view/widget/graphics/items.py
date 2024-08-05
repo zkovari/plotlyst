@@ -964,7 +964,10 @@ class IconItem(CircleShapedNodeItem):
 
     def setIcon(self, icon: str):
         self._node.icon = icon
-        self._icon = IconRegistry.from_name(self._node.icon, self._node.color)
+        if icon:
+            self._icon = IconRegistry.from_name(self._node.icon, self._node.color)
+        else:
+            self._icon = IconRegistry.from_name('fa5s.icons', 'grey')
         self.update()
         self.networkScene().nodeChangedEvent(self._node)
 
@@ -1094,7 +1097,10 @@ class EventItem(NodeItem):
 
     def setIcon(self, icon: str):
         self._node.icon = icon
-        self._icon = IconRegistry.from_name(self._node.icon, self._node.color)
+        if icon:
+            self._icon = IconRegistry.from_name(self._node.icon, self._node.color)
+        else:
+            self._icon = None
         self._refresh()
         self.networkScene().nodeChangedEvent(self._node)
 
