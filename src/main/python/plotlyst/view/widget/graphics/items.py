@@ -913,6 +913,9 @@ class CharacterItem(CircleShapedNodeItem):
         self.update()
         self.networkScene().nodeChangedEvent(self._node)
 
+    def text(self) -> str:
+        return self._node.text
+
     def setText(self, text: str):
         self._node.text = text
         self._refreshLabel()
