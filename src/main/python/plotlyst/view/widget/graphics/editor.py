@@ -353,12 +353,18 @@ class PaintedItemBasedToolbar(BaseItemToolbar):
     def _showIconSelector(self):
         result = IconSelectorDialog.popup(pickColor=False)
         if result and self._item:
-            self._item.setIcon(result[0])
+            command = GraphicsItemCommand(self._item, self._item.setIcon,
+                                          self._item.icon(), result[0])
+            self.undoStack.push(command)
+            # self._item.setIcon(result[0])
             self._updateIcon(result[0])
 
     def _colorChanged(self, color: QColor):
         if self._item:
-            self._item.setColor(color)
+            command = GraphicsItemCommand(self._item, self._item.setColor,
+                                          self._item.color(), color)
+            self.undoStack.push(command)
+            # self._item.setColor(color)
             self._updateColor(color.name())
             pass
 
@@ -438,7 +444,9 @@ class ConnectorToolbar(PaintedItemBasedToolbar):
 
     def _textEdited(self):
         if self._item:
-            self._item.setText(self._textLineEdit.text())
+            command = MergeableGraphicsItemCommand(MergeableCommandType.TEXT, self._item, self._item.setText,
+                                                   self._item.text(), self._textLineEdit.text())
+            self.undoStack.push(command)
 
     def _penStyleChanged(self):
         btn = self._lineBtnGroup.checkedButton()

@@ -553,10 +553,13 @@ class ConnectorItem(QGraphicsPathItem):
     def icon(self) -> Optional[str]:
         return self._icon
 
-    def setIcon(self, icon: str):
+    def setIcon(self, icon: Optional[str]):
         self._icon = icon
-        self._iconBadge.setIcon(IconRegistry.from_name(self._icon, self._color.name()), self._color)
-        self._iconBadge.setVisible(True)
+        if self._icon:
+            self._iconBadge.setIcon(IconRegistry.from_name(self._icon, self._color.name()), self._color)
+            self._iconBadge.setVisible(True)
+        else:
+            self._iconBadge.setVisible(False)
         self.rearrange()
 
         if self._connector:
