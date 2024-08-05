@@ -39,7 +39,8 @@ from plotlyst.core.domain import GraphicsItemType, NODE_SUBTYPE_DISTURBANCE, NOD
 from plotlyst.view.common import shadow, tool_btn, ExclusiveOptionalButtonGroup
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
-from plotlyst.view.widget.graphics.commands import GraphicsItemCommand, CommandType
+from plotlyst.view.widget.graphics.commands import GraphicsItemCommand, MergeableCommandType, \
+    MergeableGraphicsItemCommand
 from plotlyst.view.widget.graphics.items import EventItem, ConnectorItem, NoteItem, CharacterItem, IconItem
 from plotlyst.view.widget.input import FontSizeSpinBox, AutoAdjustableLineEdit, AutoAdjustableTextEdit
 from plotlyst.view.widget.utility import ColorPicker, IconSelectorDialog
@@ -442,21 +443,27 @@ class ConnectorToolbar(PaintedItemBasedToolbar):
     def _penStyleChanged(self):
         btn = self._lineBtnGroup.checkedButton()
         if btn and self._item:
-            self._item.setPenStyle(btn.penStyle())
+            command = GraphicsItemCommand(self._item, self._item.setPenStyle,
+                                          self._item.penStyle(), btn.penStyle())
+            self.undoStack.push(command)
 
     def _widthChanged(self, value: int):
         if self._item:
-            command = GraphicsItemCommand(CommandType.PEN_WIDTH, self._item, self._item.setPenWidth,
-                                          self._item.penWidth(), value)
+            command = MergeableGraphicsItemCommand(MergeableCommandType.PEN_WIDTH, self._item, self._item.setPenWidth,
+                                                   self._item.penWidth(), value)
             self.undoStack.push(command)
 
     def _arrowStartClicked(self, toggled: bool):
         if self._item:
-            self._item.setStartArrowEnabled(toggled)
+            command = GraphicsItemCommand(self._item, self._item.setStartArrowEnabled,
+                                          self._item.startArrowEnabled(), toggled)
+            self.undoStack.push(command)
 
     def _arrowEndClicked(self, toggled: bool):
         if self._item:
-            self._item.setEndArrowEnabled(toggled)
+            command = GraphicsItemCommand(self._item, self._item.setEndArrowEnabled,
+                                          self._item.endArrowEnabled(), toggled)
+            self.undoStack.push(command)
 
 
 class NoteToolbar(PaintedItemBasedToolbar):

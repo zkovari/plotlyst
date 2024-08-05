@@ -25,34 +25,46 @@ from PyQt6.QtWidgets import QGraphicsItem
 from overrides import overrides
 
 
-class CommandType(Enum):
+class MergeableCommandType(Enum):
     PEN_WIDTH = auto()
 
 
-class BaseGraphicsItemCommand(QUndoCommand):
-    def __init__(self, type: CommandType, item: QGraphicsItem, parent=None):
+class MergeableGraphicsItemCommand(QUndoCommand):
+    def __init__(self, type: MergeableCommandType, item: QGraphicsItem, func, old: Any, new: Any, parent=None):
         super().__init__(parent)
         self.type = type
         self.item = item
-
-    @overrides
-    def id(self) -> int:
-        return self.type.value
-
-
-class GraphicsItemCommand(BaseGraphicsItemCommand):
-    def __init__(self, type: CommandType, item: QGraphicsItem, func, old: Any, new: Any, parent=None):
-        super().__init__(type, item, parent)
         self.func = func
         self.old = old
         self.new = new
 
     @overrides
-    def mergeWith(self, other: 'GraphicsItemCommand') -> bool:
+    def id(self) -> int:
+        return self.type.value
+
+    @overrides
+    def mergeWith(self, other: 'MergeableGraphicsItemCommand') -> bool:
         if self.type == other.type and self.item is other.item:
             self.new = other.new
             return True
         return False
+
+    @overrides
+    def redo(self) -> None:
+        self.func(self.new)
+
+    @overrides
+    def undo(self) -> None:
+        self.func(self.old)
+
+
+class GraphicsItemCommand(QUndoCommand):
+    def __init__(self, item: QGraphicsItem, func, old: Any, new: Any, parent=None):
+        super().__init__(parent)
+        self.item = item
+        self.func = func
+        self.old = old
+        self.new = new
 
     @overrides
     def redo(self) -> None:
