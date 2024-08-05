@@ -26,7 +26,6 @@ from overrides import overrides
 
 
 class MergeableCommandType(Enum):
-    PEN_WIDTH = auto()
     TEXT = auto()
     SIZE = auto()
 
@@ -58,6 +57,16 @@ class MergeableGraphicsItemCommand(QUndoCommand):
     @overrides
     def undo(self) -> None:
         self.func(self.old)
+
+
+class TextEditingCommand(MergeableGraphicsItemCommand):
+    def __init__(self, item: QGraphicsItem, new: Any, parent=None):
+        super().__init__(MergeableCommandType.TEXT, item, item.setText, item.text(), new, parent)
+
+
+class SizeEditingCommand(MergeableGraphicsItemCommand):
+    def __init__(self, item: QGraphicsItem, new: Any, parent=None):
+        super().__init__(MergeableCommandType.SIZE, item, item.setSize, item.size(), new, parent)
 
 
 class GraphicsItemCommand(QUndoCommand):

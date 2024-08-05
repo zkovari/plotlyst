@@ -446,7 +446,7 @@ class ConnectorItem(QGraphicsPathItem):
     def setConnector(self, connector: Connector):
         self._connector = None
         self.setPenStyle(connector.pen)
-        self.setPenWidth(connector.width)
+        self.setSize(connector.width)
         self.setStartArrowEnabled(connector.start_arrow_enabled)
         self.setEndArrowEnabled(connector.end_arrow_enabled)
         if connector.color:
@@ -490,10 +490,10 @@ class ConnectorItem(QGraphicsPathItem):
         self.rearrange()
         self.networkScene().connectorChangedEvent(self)
 
-    def penWidth(self) -> int:
+    def size(self) -> int:
         return self.pen().width()
 
-    def setPenWidth(self, width: int):
+    def setSize(self, width: int):
         pen = self.pen()
         pen.setWidth(width)
         self.setPen(pen)

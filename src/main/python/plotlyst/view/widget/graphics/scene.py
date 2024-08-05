@@ -131,7 +131,7 @@ class NetworkScene(QGraphicsScene):
             sourceNode.node().id,
             targetNode.node().id,
             self._connectorPlaceholder.source().angle(), target.angle(),
-            pen=connectorItem.penStyle(), width=connectorItem.penWidth()
+            pen=connectorItem.penStyle(), width=connectorItem.size()
         )
         if connectorItem.icon():
             connector.icon = connectorItem.icon()

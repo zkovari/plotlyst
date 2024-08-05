@@ -39,8 +39,7 @@ from plotlyst.core.domain import GraphicsItemType, NODE_SUBTYPE_DISTURBANCE, NOD
 from plotlyst.view.common import shadow, tool_btn, ExclusiveOptionalButtonGroup
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
-from plotlyst.view.widget.graphics.commands import GraphicsItemCommand, MergeableCommandType, \
-    MergeableGraphicsItemCommand
+from plotlyst.view.widget.graphics.commands import GraphicsItemCommand, TextEditingCommand, SizeEditingCommand
 from plotlyst.view.widget.graphics.items import EventItem, ConnectorItem, NoteItem, CharacterItem, IconItem
 from plotlyst.view.widget.input import FontSizeSpinBox, AutoAdjustableLineEdit, AutoAdjustableTextEdit
 from plotlyst.view.widget.utility import ColorPicker, IconSelectorDialog
@@ -311,9 +310,7 @@ class CharacterToolbar(BaseItemToolbar):
 
     def _sizeChanged(self, value: int):
         if self._item:
-            command = MergeableGraphicsItemCommand(MergeableCommandType.SIZE, self._item, self._item.setSize,
-                                                   self._item.size(), value)
-            self.undoStack.push(command)
+            self.undoStack.push(SizeEditingCommand(self._item, value))
 
     def _characterClicked(self):
         if self._item:
@@ -321,7 +318,7 @@ class CharacterToolbar(BaseItemToolbar):
 
     def _textEdited(self):
         if self._item:
-            self._item.setText(self._textLineEdit.text())
+            self.undoStack.push(TextEditingCommand(self._item, self._textLineEdit.text()))
 
 
 class PaintedItemBasedToolbar(BaseItemToolbar):
@@ -432,7 +429,7 @@ class ConnectorToolbar(PaintedItemBasedToolbar):
         super().setItem(connector)
         self._item = None
 
-        self._sbWidth.setValue(connector.penWidth())
+        self._sbWidth.setValue(connector.size())
         self._textLineEdit.setText(connector.text())
         self._arrowStart.setChecked(connector.startArrowEnabled())
         self._arrowEnd.setChecked(connector.endArrowEnabled())
@@ -446,9 +443,7 @@ class ConnectorToolbar(PaintedItemBasedToolbar):
 
     def _textEdited(self):
         if self._item:
-            command = MergeableGraphicsItemCommand(MergeableCommandType.TEXT, self._item, self._item.setText,
-                                                   self._item.text(), self._textLineEdit.text())
-            self.undoStack.push(command)
+            self.undoStack.push(TextEditingCommand(self._item, self._textLineEdit.text()))
 
     def _penStyleChanged(self):
         btn = self._lineBtnGroup.checkedButton()
@@ -459,9 +454,7 @@ class ConnectorToolbar(PaintedItemBasedToolbar):
 
     def _widthChanged(self, value: int):
         if self._item:
-            command = MergeableGraphicsItemCommand(MergeableCommandType.PEN_WIDTH, self._item, self._item.setPenWidth,
-                                                   self._item.penWidth(), value)
-            self.undoStack.push(command)
+            self.undoStack.push(SizeEditingCommand(self._item, value))
 
     def _arrowStartClicked(self, toggled: bool):
         if self._item:
@@ -533,9 +526,7 @@ class IconItemToolbar(PaintedItemBasedToolbar):
 
     def _sizeChanged(self, value: int):
         if self._item:
-            command = MergeableGraphicsItemCommand(MergeableCommandType.SIZE, self._item, self._item.setSize,
-                                                   self._item.size(), value)
-            self.undoStack.push(command)
+            self.undoStack.push(SizeEditingCommand(self._item, value))
 
 
 class EventItemToolbar(PaintedItemBasedToolbar):
