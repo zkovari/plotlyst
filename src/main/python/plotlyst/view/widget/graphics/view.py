@@ -31,9 +31,11 @@ from overrides import overrides
 from qthandy import sp, incr_icon, vbox
 from qthandy.filter import DragEventFilter
 
+from plotlyst.common import BLACK_COLOR
 from plotlyst.core.domain import Diagram, GraphicsItemType, Character
 from plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButtonGroup, \
     TooltipPositionEventFilter, label
+from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.graphics import CharacterItem, ConnectorItem
 from plotlyst.view.widget.graphics.editor import ZoomBar, ConnectorToolbar, TextLineEditorPopup, CharacterToolbar, \
@@ -54,7 +56,6 @@ class BaseGraphicsView(QGraphicsView):
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
         self.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
         self.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
-        self.undoStack = QUndoStack()
 
     @overrides
     def mousePressEvent(self, event: QMouseEvent) -> None:
@@ -151,6 +152,16 @@ class NetworkGraphicsView(BaseGraphicsView):
         sp(self._controlsNavBar).h_max()
         shadow(self._controlsNavBar)
         vbox(self._controlsNavBar, 5, 6)
+
+        self._btnUndo = tool_btn(IconRegistry.from_name('mdi.undo', BLACK_COLOR), transparent_=True, tooltip='Undo')
+        self._btnUndo.setDisabled(True)
+        self._btnRedo = tool_btn(IconRegistry.from_name('mdi.redo', BLACK_COLOR), transparent_=True, tooltip='Redo')
+        self._btnRedo.setDisabled(True)
+        self.undoStack = QUndoStack()
+        self.undoStack.canUndoChanged.connect(self._btnUndo.setEnabled)
+        self.undoStack.canRedoChanged.connect(self._btnRedo.setEnabled)
+        self._btnUndo.clicked.connect(self.undoStack.undo)
+        self._btnRedo.clicked.connect(self.undoStack.redo)
 
         self._connectorEditor: Optional[ConnectorToolbar] = None
         self._characterEditor: Optional[CharacterToolbar] = None

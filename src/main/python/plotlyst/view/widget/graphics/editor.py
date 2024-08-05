@@ -23,7 +23,7 @@ from functools import partial
 from typing import Optional, Any
 
 from PyQt6.QtCore import Qt, pyqtSignal, QRect
-from PyQt6.QtGui import QPainter, QPen, QColor, QIcon, QPaintEvent, QKeySequence, QShowEvent, QFont
+from PyQt6.QtGui import QPainter, QPen, QColor, QIcon, QPaintEvent, QKeySequence, QShowEvent, QFont, QUndoStack
 from PyQt6.QtWidgets import QFrame, \
     QToolButton, QWidget, \
     QAbstractButton, QSlider, QButtonGroup, QPushButton, QLabel, QLineEdit
@@ -39,6 +39,7 @@ from plotlyst.core.domain import GraphicsItemType, NODE_SUBTYPE_DISTURBANCE, NOD
 from plotlyst.view.common import shadow, tool_btn, ExclusiveOptionalButtonGroup
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
+from plotlyst.view.widget.graphics.commands import GraphicsItemCommand, CommandType
 from plotlyst.view.widget.graphics.items import EventItem, ConnectorItem, NoteItem, CharacterItem, IconItem
 from plotlyst.view.widget.input import FontSizeSpinBox, AutoAdjustableLineEdit, AutoAdjustableTextEdit
 from plotlyst.view.widget.utility import ColorPicker, IconSelectorDialog
@@ -126,8 +127,9 @@ class SecondarySelectorWidget(QFrame):
 
 
 class BaseItemToolbar(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, undoStack: QUndoStack, parent=None):
         super().__init__(parent)
+        self.undoStack = undoStack
         vbox(self, spacing=5)
         self._toolbar = QFrame(self)
         self._toolbar.setProperty('relaxed-white-bg', True)
@@ -274,8 +276,8 @@ class EventSelectorWidget(SecondarySelectorWidget):
 class CharacterToolbar(BaseItemToolbar):
     changeCharacter = pyqtSignal(CharacterItem)
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, undoStack: QUndoStack, parent=None):
+        super().__init__(undoStack, parent)
         self._item: Optional[CharacterItem] = None
 
         self._btnCharacter = tool_btn(IconRegistry.character_icon(), 'Change character', transparent_=True)
@@ -320,8 +322,8 @@ class CharacterToolbar(BaseItemToolbar):
 
 
 class PaintedItemBasedToolbar(BaseItemToolbar):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, undoStack: QUndoStack, parent=None):
+        super().__init__(undoStack, parent)
         self._item: Optional[Any] = None
 
         self._btnColor = tool_btn(IconRegistry.from_name('fa5s.circle', color='darkBlue'), 'Change style',
@@ -370,8 +372,8 @@ class PaintedItemBasedToolbar(BaseItemToolbar):
 
 
 class ConnectorToolbar(PaintedItemBasedToolbar):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, undoStack: QUndoStack, parent=None):
+        super().__init__(undoStack, parent)
 
         self._btnText = tool_btn(IconRegistry.from_name('mdi.format-text'), 'Change displayed text', transparent_=True)
         self._menuText = MenuWidget(self._btnText)
@@ -444,7 +446,9 @@ class ConnectorToolbar(PaintedItemBasedToolbar):
 
     def _widthChanged(self, value: int):
         if self._item:
-            self._item.setPenWidth(value)
+            command = GraphicsItemCommand(CommandType.PEN_WIDTH, self._item, self._item.setPenWidth,
+                                          self._item.penWidth(), value)
+            self.undoStack.push(command)
 
     def _arrowStartClicked(self, toggled: bool):
         if self._item:
@@ -456,8 +460,8 @@ class ConnectorToolbar(PaintedItemBasedToolbar):
 
 
 class NoteToolbar(PaintedItemBasedToolbar):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, undoStack: QUndoStack, parent=None):
+        super().__init__(undoStack, parent)
 
         # self._btnColor.setToolTip('Background color')
         # self._btnTopFrame = tool_btn(IconRegistry.from_name('ri.layout-top-line'), tooltip='Top frame color',
@@ -491,8 +495,8 @@ class NoteToolbar(PaintedItemBasedToolbar):
 
 
 class IconItemToolbar(PaintedItemBasedToolbar):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, undoStack: QUndoStack, parent=None):
+        super().__init__(undoStack, parent)
 
         self._sbSize = AvatarSizeEditor()
         self._sbSize.valueChanged.connect(self._sizeChanged)
@@ -516,8 +520,8 @@ class IconItemToolbar(PaintedItemBasedToolbar):
 
 
 class EventItemToolbar(PaintedItemBasedToolbar):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, undoStack: QUndoStack, parent=None):
+        super().__init__(undoStack, parent)
         self._btnType = tool_btn(IconRegistry.from_name('mdi.square-rounded-outline'), 'Change type', transparent_=True)
         self._sbFont = FontSizeSpinBox()
         self._sbFont.fontChanged.connect(self._fontChanged)
