@@ -145,26 +145,6 @@ class PosChangedCommand(QUndoCommand):
 
 
 class ItemAdditionCommand(QUndoCommand):
-    def __init__(self, scene: QGraphicsScene, item: QGraphicsItem, pos: QPointF, parent=None):
-        super().__init__(parent)
-        self.scene = scene
-        self.item = item
-        self.pos = pos
-        self._first = True
-
-    @overrides
-    def redo(self) -> None:
-        if self._first:
-            self._first = False
-            return
-        self.scene.addNodeItem(self.item)
-
-    @overrides
-    def undo(self) -> None:
-        self.scene.removeNodeItem(self.item)
-
-
-class ConnectorAdditionCommand(QUndoCommand):
     def __init__(self, scene: QGraphicsScene, item: QGraphicsItem, parent=None):
         super().__init__(parent)
         self.scene = scene
@@ -176,8 +156,26 @@ class ConnectorAdditionCommand(QUndoCommand):
         if self._first:
             self._first = False
             return
-        self.scene.addConnectorItem(self.item)
+        self.scene.addNetworkItem(self.item)
 
     @overrides
     def undo(self) -> None:
-        self.scene.removeConnectorItem(self.item)
+        self.scene.removeNetworkItem(self.item)
+
+# class ConnectorAdditionCommand(QUndoCommand):
+#     def __init__(self, scene: QGraphicsScene, item: QGraphicsItem, parent=None):
+#         super().__init__(parent)
+#         self.scene = scene
+#         self.item = item
+#         self._first = True
+#
+#     @overrides
+#     def redo(self) -> None:
+#         if self._first:
+#             self._first = False
+#             return
+#         self.scene.addConnectorItem(self.item)
+#
+#     @overrides
+#     def undo(self) -> None:
+#         self.scene.removeConnectorItem(self.item)

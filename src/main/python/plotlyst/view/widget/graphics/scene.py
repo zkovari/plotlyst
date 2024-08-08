@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Optional, Dict, Set
+from typing import Optional, Dict, Set, Union
 
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QPointF, QPoint, QObject
@@ -35,7 +35,7 @@ from plotlyst.core.domain import Node, Diagram, GraphicsItemType, Connector, Pla
 from plotlyst.service.image import LoadedImage
 from plotlyst.view.widget.graphics import NodeItem, CharacterItem, PlaceholderSocketItem, ConnectorItem, \
     AbstractSocketItem, EventItem
-from plotlyst.view.widget.graphics.commands import ItemAdditionCommand, ConnectorAdditionCommand
+from plotlyst.view.widget.graphics.commands import ItemAdditionCommand
 from plotlyst.view.widget.graphics.items import NoteItem, ImageItem, IconItem, CircleShapedNodeItem
 
 
@@ -153,7 +153,7 @@ class NetworkScene(QGraphicsScene):
         self.addItem(connectorItem)
         self.endLink()
 
-        self._undoStack.push(ConnectorAdditionCommand(self, connectorItem))
+        self._undoStack.push(ItemAdditionCommand(self, connectorItem))
 
         sourceNode.setSelected(False)
         connectorItem.setSelected(True)
@@ -277,20 +277,25 @@ class NetworkScene(QGraphicsScene):
     def connectorChangedEvent(self, connector: ConnectorItem):
         self._save()
 
-    def addNodeItem(self, item: NodeItem):
+    def addNetworkItem(self, item: Union[NodeItem, ConnectorItem]):
         self.addItem(item)
-        self._diagram.data.nodes.append(item.node())
+        if isinstance(item, NodeItem):
+            self._diagram.data.nodes.append(item.node())
+        elif isinstance(item, ConnectorItem):
+            item.source().addConnector(item)
+            item.target().addConnector(item)
+            self._diagram.data.connectors.append(item.connector())
         self._save()
 
-    def removeNodeItem(self, item: NodeItem):
+    def removeNetworkItem(self, item: Union[NodeItem, ConnectorItem]):
         self._removeItem(item)
 
-    def addConnectorItem(self, connectorItem: ConnectorItem):
-        self.addItem(connectorItem)
-        connectorItem.source().addConnector(connectorItem)
-        connectorItem.target().addConnector(connectorItem)
-        self._diagram.data.connectors.append(connectorItem.connector())
-        self._save()
+    # def addConnectorItem(self, connectorItem: ConnectorItem):
+    #     self.addItem(connectorItem)
+    #     connectorItem.source().addConnector(connectorItem)
+    #     connectorItem.target().addConnector(connectorItem)
+    #     self._diagram.data.connectors.append(connectorItem.connector())
+    #     self._save()
 
     def removeConnectorItem(self, connector: ConnectorItem):
         self._removeItem(connector)
@@ -408,7 +413,7 @@ class NetworkScene(QGraphicsScene):
         self._diagram.data.nodes.append(item.node())
         self._save()
 
-        self._undoStack.push(ItemAdditionCommand(self, item, scenePos))
+        self._undoStack.push(ItemAdditionCommand(self, item))
 
         return item
 
