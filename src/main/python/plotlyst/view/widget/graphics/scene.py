@@ -35,7 +35,7 @@ from plotlyst.core.domain import Node, Diagram, GraphicsItemType, Connector, Pla
 from plotlyst.service.image import LoadedImage
 from plotlyst.view.widget.graphics import NodeItem, CharacterItem, PlaceholderSocketItem, ConnectorItem, \
     AbstractSocketItem, EventItem
-from plotlyst.view.widget.graphics.commands import ItemAdditionCommand
+from plotlyst.view.widget.graphics.commands import ItemAdditionCommand, ItemRemovalCommand
 from plotlyst.view.widget.graphics.items import NoteItem, ImageItem, IconItem, CircleShapedNodeItem
 
 
@@ -172,8 +172,14 @@ class NetworkScene(QGraphicsScene):
             else:
                 self.clearSelection()
         elif event.key() == Qt.Key.Key_Delete or event.key() == Qt.Key.Key_Backspace:
+            macro = len(self.selectedItems()) > 1
+            if macro:
+                self._undoStack.beginMacro('Remove items')
             for item in self.selectedItems():
                 self._removeItem(item)
+                self._undoStack.push(ItemRemovalCommand(self, item))
+            if macro:
+                self._undoStack.endMacro()
         elif event.matches(QKeySequence.StandardKey.Copy) and len(self.selectedItems()) == 1:
             self._copy(self.selectedItems()[0])
         elif event.matches(QKeySequence.StandardKey.Paste):
@@ -350,7 +356,8 @@ class NetworkScene(QGraphicsScene):
         elif isinstance(item, ConnectorItem):
             self._clearUpConnectorItem(item)
 
-        self.removeItem(item)
+        if item.scene():
+            self.removeItem(item)
         self._save()
 
     def _clearUpConnectorItem(self, item: ConnectorItem):
