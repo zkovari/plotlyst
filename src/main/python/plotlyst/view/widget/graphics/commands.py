@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from enum import Enum, auto
-from typing import Any
+from typing import Any, Optional, List
 
 from PyQt6.QtCore import QPointF
 from PyQt6.QtGui import QUndoCommand
@@ -164,10 +164,12 @@ class ItemAdditionCommand(QUndoCommand):
 
 
 class ItemRemovalCommand(QUndoCommand):
-    def __init__(self, scene: QGraphicsScene, item: QGraphicsItem, parent=None):
+    def __init__(self, scene: QGraphicsScene, item: QGraphicsItem, connectors: Optional[List[QGraphicsItem]] = None,
+                 parent=None):
         super().__init__(parent)
         self.scene = scene
         self.item = item
+        self.connectors = connectors
         self._first = True
 
     @overrides
@@ -179,7 +181,7 @@ class ItemRemovalCommand(QUndoCommand):
 
     @overrides
     def undo(self) -> None:
-        self.scene.addNetworkItem(self.item)
+        self.scene.addNetworkItem(self.item, self.connectors)
 
 # class ConnectorAdditionCommand(QUndoCommand):
 #     def __init__(self, scene: QGraphicsScene, item: QGraphicsItem, parent=None):

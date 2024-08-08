@@ -30,6 +30,7 @@ from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QFrame, \
 from overrides import overrides
 from qthandy import sp, incr_icon, vbox
 from qthandy.filter import DragEventFilter
+from qtpy import sip
 
 from plotlyst.common import BLACK_COLOR
 from plotlyst.core.domain import Diagram, GraphicsItemType, Character
@@ -260,6 +261,8 @@ class NetworkGraphicsView(BaseGraphicsView):
         return NetworkScene()
 
     def _selectionChanged(self):
+        if sip.isdeleted(self._scene):
+            return
         if len(self._scene.selectedItems()) == 1:
             self._hideItemToolbar()
             self._showItemToolbar(self._scene.selectedItems()[0])

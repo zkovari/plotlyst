@@ -172,14 +172,7 @@ class NetworkScene(QGraphicsScene):
             else:
                 self.clearSelection()
         elif event.key() == Qt.Key.Key_Delete or event.key() == Qt.Key.Key_Backspace:
-            macro = len(self.selectedItems()) > 1
-            if macro:
-                self._undoStack.beginMacro('Remove items')
-            for item in self.selectedItems():
-                self._removeItem(item)
-                self._undoStack.push(ItemRemovalCommand(self, item))
-            if macro:
-                self._undoStack.endMacro()
+            self._removeItems()
         elif event.matches(QKeySequence.StandardKey.Copy) and len(self.selectedItems()) == 1:
             self._copy(self.selectedItems()[0])
         elif event.matches(QKeySequence.StandardKey.Paste):
@@ -283,25 +276,27 @@ class NetworkScene(QGraphicsScene):
     def connectorChangedEvent(self, connector: ConnectorItem):
         self._save()
 
-    def addNetworkItem(self, item: Union[NodeItem, ConnectorItem]):
-        self.addItem(item)
+    def addNetworkItem(self, item: Union[NodeItem, ConnectorItem], connectors=None):
+        def addConnectorItem(connectorItem: ConnectorItem):
+            if connectorItem.scene():
+                return
+            connectorItem.source().addConnector(connectorItem)
+            connectorItem.target().addConnector(connectorItem)
+            self._diagram.data.connectors.append(connectorItem.connector())
+            self.addItem(connectorItem)
+
         if isinstance(item, NodeItem):
             self._diagram.data.nodes.append(item.node())
+            self.addItem(item)
+            if connectors:
+                for connector in connectors:
+                    addConnectorItem(connector)
         elif isinstance(item, ConnectorItem):
-            item.source().addConnector(item)
-            item.target().addConnector(item)
-            self._diagram.data.connectors.append(item.connector())
+            addConnectorItem(item)
         self._save()
 
     def removeNetworkItem(self, item: Union[NodeItem, ConnectorItem]):
         self._removeItem(item)
-
-    # def addConnectorItem(self, connectorItem: ConnectorItem):
-    #     self.addItem(connectorItem)
-    #     connectorItem.source().addConnector(connectorItem)
-    #     connectorItem.target().addConnector(connectorItem)
-    #     self._diagram.data.connectors.append(connectorItem.connector())
-    #     self._save()
 
     def removeConnectorItem(self, connector: ConnectorItem):
         self._removeItem(connector)
@@ -342,6 +337,20 @@ class NetworkScene(QGraphicsScene):
         node.y = node.y - ImageItem.Margin
         return node
 
+    def _removeItems(self):
+        macro = len(self.selectedItems()) > 1
+        if macro:
+            self._undoStack.beginMacro('Remove items')
+        for item in self.selectedItems():
+            connectors = None
+            if isinstance(item, NodeItem):
+                connectors = item.connectors()
+
+            self._removeItem(item)
+            self._undoStack.push(ItemRemovalCommand(self, item, connectors))
+        if macro:
+            self._undoStack.endMacro()
+
     def _removeItem(self, item: QGraphicsItem):
         if isinstance(item, NodeItem):
             for connectorItem in item.connectors():
@@ -350,7 +359,7 @@ class NetworkScene(QGraphicsScene):
                     self.removeItem(connectorItem)
                 except ValueError:
                     pass  # connector might have been already removed if a node was deleted first
-            item.clearConnectors()
+            # item.clearConnectors()
             if self._diagram:
                 self._diagram.data.nodes.remove(item.node())
         elif isinstance(item, ConnectorItem):
