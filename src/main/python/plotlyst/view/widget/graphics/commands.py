@@ -22,7 +22,7 @@ from typing import Any
 
 from PyQt6.QtCore import QPointF
 from PyQt6.QtGui import QUndoCommand
-from PyQt6.QtWidgets import QGraphicsItem
+from PyQt6.QtWidgets import QGraphicsItem, QGraphicsScene
 from overrides import overrides
 
 
@@ -142,3 +142,23 @@ class PosChangedCommand(QUndoCommand):
         self.item.setPos(self.old)
         self.item.updatePos()
         self.item.setPosCommandEnabled(True)
+
+
+class ItemAdditionCommand(QUndoCommand):
+    def __init__(self, scene: QGraphicsScene, item: QGraphicsItem, pos: QPointF, parent=None):
+        super().__init__(parent)
+        self.scene = scene
+        self.item = item
+        self.pos = pos
+        self._first = True
+
+    @overrides
+    def redo(self) -> None:
+        if self._first:
+            self._first = False
+            return
+        self.scene.addNodeItem(self.item)
+
+    @overrides
+    def undo(self) -> None:
+        self.scene.removeNodeItem(self.item)
