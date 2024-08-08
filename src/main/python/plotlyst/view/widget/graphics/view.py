@@ -165,8 +165,8 @@ class NetworkGraphicsView(BaseGraphicsView):
         self.undoStack.setUndoLimit(100)
         self.undoStack.canUndoChanged.connect(self._btnUndo.setEnabled)
         self.undoStack.canRedoChanged.connect(self._btnRedo.setEnabled)
-        self._btnUndo.clicked.connect(self.undoStack.undo)
-        self._btnRedo.clicked.connect(self.undoStack.redo)
+        self._btnUndo.clicked.connect(self._undo)
+        self._btnRedo.clicked.connect(self._redo)
         self._scene.setUndoStack(self.undoStack)
 
         self._connectorEditor: Optional[ConnectorToolbar] = None
@@ -354,3 +354,11 @@ class NetworkGraphicsView(BaseGraphicsView):
 
     def _characterSelectorMenu(self) -> CharacterSelectorMenu:
         pass
+
+    def _undo(self):
+        self._hideItemToolbar()
+        self.undoStack.undo()
+
+    def _redo(self):
+        self._hideItemToolbar()
+        self.undoStack.redo()
