@@ -35,7 +35,7 @@ from plotlyst.core.domain import Node, Diagram, GraphicsItemType, Connector, Pla
 from plotlyst.service.image import LoadedImage
 from plotlyst.view.widget.graphics import NodeItem, CharacterItem, PlaceholderSocketItem, ConnectorItem, \
     AbstractSocketItem, EventItem
-from plotlyst.view.widget.graphics.commands import ItemAdditionCommand
+from plotlyst.view.widget.graphics.commands import ItemAdditionCommand, ConnectorAdditionCommand
 from plotlyst.view.widget.graphics.items import NoteItem, ImageItem, IconItem, CircleShapedNodeItem
 
 
@@ -152,6 +152,9 @@ class NetworkScene(QGraphicsScene):
 
         self.addItem(connectorItem)
         self.endLink()
+
+        self._undoStack.push(ConnectorAdditionCommand(self, connectorItem))
+
         sourceNode.setSelected(False)
         connectorItem.setSelected(True)
 
@@ -280,9 +283,17 @@ class NetworkScene(QGraphicsScene):
         self._save()
 
     def removeNodeItem(self, item: NodeItem):
-        self.removeItem(item)
-        self._diagram.data.nodes.remove(item.node())
+        self._removeItem(item)
+
+    def addConnectorItem(self, connectorItem: ConnectorItem):
+        self.addItem(connectorItem)
+        connectorItem.source().addConnector(connectorItem)
+        connectorItem.target().addConnector(connectorItem)
+        self._diagram.data.connectors.append(connectorItem.connector())
         self._save()
+
+    def removeConnectorItem(self, connector: ConnectorItem):
+        self._removeItem(connector)
 
     @staticmethod
     def toCharacterNode(scenePos: QPointF) -> Node:
