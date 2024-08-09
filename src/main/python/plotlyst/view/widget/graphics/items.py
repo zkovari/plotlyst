@@ -39,7 +39,7 @@ from plotlyst.env import app_env
 from plotlyst.service.image import LoadedImage
 from plotlyst.view.common import shadow, calculate_resized_dimensions, text_color_with_bg_qcolor
 from plotlyst.view.icons import IconRegistry, avatars
-from plotlyst.view.widget.graphics.commands import PosChangedCommand
+from plotlyst.view.widget.graphics.commands import PosChangedCommand, ResizeItemCommand
 
 
 def v_center(ref_height: int, item_height: int) -> int:
@@ -79,12 +79,17 @@ class ResizeIconItem(QAbstractGraphicsShapeItem):
         self._keepAspectRatio = False
         self._icon = IconRegistry.from_name('mdi.resize-bottom-right', 'grey')
         self._activated = False
+        self._posCommandEnabled = True
+        self._previousPos: Optional[QPointF] = None
         self.setAcceptHoverEvents(True)
 
         self.setCursor(Qt.CursorShape.SizeFDiagCursor)
         self.setFlag(
             QGraphicsItem.GraphicsItemFlag.ItemIsMovable |
             QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
+
+    def networkScene(self) -> 'NetworkScene':
+        return self.scene()
 
     def setRatio(self, ratio: float):
         self._ratio = ratio
@@ -108,20 +113,34 @@ class ResizeIconItem(QAbstractGraphicsShapeItem):
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         self.parentItem().setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable)
 
+    def posCommandEnabled(self) -> bool:
+        return self._posCommandEnabled
+
+    def setPosCommandEnabled(self, enabled: bool):
+        self._posCommandEnabled = enabled
+
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged and self._activated:
             if self._keepAspectRatio:
                 value.setY(value.x() / self._ratio)
-                # stack: QUndoStack = self.scene().undoStack()
-                # stack.push(GraphicsItemCommand(self, self.setPos, self.pos(), value))
                 self.setPos(value)
 
+            self.networkScene().itemResizedEvent(self)
             self.parentItem().rearrangeSize(value)
         return super().itemChange(change, value)
 
+    def updatePos(self):
+        if self._posCommandEnabled:
+            stack: QUndoStack = self.networkScene().undoStack()
+            stack.push(ResizeItemCommand(self, self._previousPos, self.pos()))
+
+        self._previousPos = self.pos()
+
     def activate(self):
         self._activated = True
+        if self._previousPos is None:
+            self._previousPos = self.pos()
 
     def deactivate(self):
         self._activated = False

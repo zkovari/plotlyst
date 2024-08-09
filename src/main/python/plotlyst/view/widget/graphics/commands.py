@@ -144,6 +144,31 @@ class PosChangedCommand(QUndoCommand):
         self.item.setPosCommandEnabled(True)
 
 
+class ResizeItemCommand(QUndoCommand):
+    def __init__(self, item: QGraphicsItem, old: QPointF, new: QPointF, parent=None):
+        super().__init__(parent)
+        self.item = item
+        self.old = old
+        self.new = new
+        self._first = True
+
+    @overrides
+    def redo(self) -> None:
+        if self._first:
+            self._first = False
+            return
+        self.item.setPosCommandEnabled(False)
+        self.item.updatePos()
+        self.item.parentItem().rearrangeSize(self.new)
+        self.item.setPosCommandEnabled(True)
+
+    @overrides
+    def undo(self) -> None:
+        self.item.setPosCommandEnabled(False)
+        self.item.updatePos()
+        self.item.parentItem().rearrangeSize(self.old)
+        self.item.setPosCommandEnabled(True)
+
 class ItemAdditionCommand(QUndoCommand):
     def __init__(self, scene: QGraphicsScene, item: QGraphicsItem, parent=None):
         super().__init__(parent)

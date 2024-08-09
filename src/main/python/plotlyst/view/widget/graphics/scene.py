@@ -36,7 +36,7 @@ from plotlyst.service.image import LoadedImage
 from plotlyst.view.widget.graphics import NodeItem, CharacterItem, PlaceholderSocketItem, ConnectorItem, \
     AbstractSocketItem, EventItem
 from plotlyst.view.widget.graphics.commands import ItemAdditionCommand, ItemRemovalCommand
-from plotlyst.view.widget.graphics.items import NoteItem, ImageItem, IconItem, CircleShapedNodeItem
+from plotlyst.view.widget.graphics.items import NoteItem, ImageItem, IconItem, CircleShapedNodeItem, ResizeIconItem
 
 
 @dataclass
@@ -259,6 +259,10 @@ class NetworkScene(QGraphicsScene):
                 self._macroUndo = True
 
         self.itemMoved.emit(item)
+
+    def itemResizedEvent(self, item: ResizeIconItem):
+        if item.posCommandEnabled():
+            self._movedItems.add(item)
 
     def nodeChangedEvent(self, node: Node):
         self._save()
