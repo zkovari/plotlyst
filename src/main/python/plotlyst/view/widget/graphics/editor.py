@@ -35,12 +35,12 @@ from qttextedit.ops import Heading2Operation, Heading3Operation, Heading1Operati
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import GraphicsItemType, NODE_SUBTYPE_DISTURBANCE, NODE_SUBTYPE_CONFLICT, \
     NODE_SUBTYPE_GOAL, NODE_SUBTYPE_BACKSTORY, \
-    NODE_SUBTYPE_INTERNAL_CONFLICT
+    NODE_SUBTYPE_INTERNAL_CONFLICT, Node
 from plotlyst.view.common import shadow, tool_btn, ExclusiveOptionalButtonGroup
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.graphics.commands import GraphicsItemCommand, TextEditingCommand, SizeEditingCommand, \
-    NoteEditorCommand
+    NoteEditorCommand, EventTypeCommand, FontChangedCommand
 from plotlyst.view.widget.graphics.items import EventItem, ConnectorItem, NoteItem, CharacterItem, IconItem
 from plotlyst.view.widget.input import FontSizeSpinBox, AutoAdjustableLineEdit, AutoAdjustableTextEdit
 from plotlyst.view.widget.utility import ColorPicker, IconSelectorDialog
@@ -550,9 +550,9 @@ class EventItemToolbar(PaintedItemBasedToolbar):
                                       checkable=True, icon_resize=False,
                                       properties=['transparent-rounded-bg-on-hover', 'top-selector'])
         decr_icon(self._btnUnderline)
-        self._btnBold.clicked.connect(self._textStyleChanged)
-        self._btnItalic.clicked.connect(self._textStyleChanged)
-        self._btnUnderline.clicked.connect(self._textStyleChanged)
+        self._btnBold.clicked.connect(self._boldChanged)
+        self._btnItalic.clicked.connect(self._italicChanged)
+        self._btnUnderline.clicked.connect(self._underlineChanged)
 
         self._eventSelector = EventSelectorWidget(self)
         self.addSecondaryWidget(self._btnType, self._eventSelector)
@@ -582,17 +582,29 @@ class EventItemToolbar(PaintedItemBasedToolbar):
     def _fontChanged(self, size: int):
         self._hideSecondarySelectors()
         if self._item:
-            self._item.setFontSettings(size=size)
+            self.undoStack.push(FontChangedCommand(self._item, oldSize=self._item.fontSize(), size=size))
 
-    def _textStyleChanged(self):
+    def _boldChanged(self):
         self._hideSecondarySelectors()
         if self._item:
-            self._item.setFontSettings(bold=self._btnBold.isChecked(), italic=self._btnItalic.isChecked(),
-                                       underline=self._btnUnderline.isChecked())
+            self.undoStack.push(FontChangedCommand(self._item, bold=self._btnBold.isChecked()))
+
+    def _italicChanged(self):
+        self._hideSecondarySelectors()
+        if self._item:
+            self.undoStack.push(FontChangedCommand(self._item, italic=self._btnItalic.isChecked()))
+
+    def _underlineChanged(self):
+        self._hideSecondarySelectors()
+        if self._item:
+            self.undoStack.push(FontChangedCommand(self._item, underline=self._btnUnderline.isChecked()))
 
     def _typeChanged(self, itemType: GraphicsItemType, subtype: str):
         if self._item:
-            self._item.setItemType(itemType, subtype)
+            node: Node = self._item.node()
+            oldType = node.type
+            oldSubtype = node.subtype
+            self.undoStack.push(EventTypeCommand(self._item, oldType, oldSubtype, itemType, subtype))
 
 
 class PenStyleSelector(QAbstractButton):

@@ -25,6 +25,8 @@ from PyQt6.QtGui import QUndoCommand
 from PyQt6.QtWidgets import QGraphicsItem, QGraphicsScene
 from overrides import overrides
 
+from plotlyst.core.domain import GraphicsItemType
+
 
 class MergeableCommandType(Enum):
     TEXT = auto()
@@ -118,6 +120,49 @@ class NoteEditorCommand(QUndoCommand):
         self.item.setText(self.oldText, self.oldHeight)
 
 
+class EventTypeCommand(QUndoCommand):
+    def __init__(self, item: QGraphicsItem, oldType: GraphicsItemType, oldSubtype: str, newType: GraphicsItemType,
+                 newSubtype: str, parent=None):
+        super().__init__(parent)
+        self.item = item
+        self.type = newType
+        self.subtype = newSubtype
+        self.oldType = oldType
+        self.oldSubtype = oldSubtype
+
+    @overrides
+    def redo(self) -> None:
+        self.item.setItemType(self.type, self.subtype)
+
+    @overrides
+    def undo(self) -> None:
+        self.item.setItemType(self.oldType, self.oldSubtype)
+
+
+class FontChangedCommand(QUndoCommand):
+    def __init__(self, item: QGraphicsItem, oldSize=None, size=None, bold=None, italic=None, underline=None,
+                 parent=None):
+        super().__init__(parent)
+        self.item = item
+        self.oldSize = oldSize
+        self.size = size
+        self.bold = bold
+        self.oldBold = not bold if bold is not None else None
+        self.italic = italic
+        self.oldItalic = not italic if italic is not None else None
+        self.underline = underline
+        self.oldUnderline = not underline if underline is not None else None
+
+    @overrides
+    def redo(self) -> None:
+        self.item.setFontSettings(size=self.size, bold=self.bold, italic=self.italic, underline=self.underline)
+
+    @overrides
+    def undo(self) -> None:
+        self.item.setFontSettings(size=self.oldSize, bold=self.oldBold, italic=self.oldItalic,
+                                  underline=self.oldUnderline)
+
+
 class PosChangedCommand(QUndoCommand):
     def __init__(self, item: QGraphicsItem, old: QPointF, new: QPointF, parent=None):
         super().__init__(parent)
@@ -168,6 +213,7 @@ class ResizeItemCommand(QUndoCommand):
         self.item.updatePos()
         self.item.parentItem().rearrangeSize(self.old)
         self.item.setPosCommandEnabled(True)
+
 
 class ItemAdditionCommand(QUndoCommand):
     def __init__(self, scene: QGraphicsScene, item: QGraphicsItem, parent=None):
