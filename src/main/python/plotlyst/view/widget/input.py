@@ -516,8 +516,10 @@ class TextEditorBase(RichTextEditor):
         super().__init__(parent)
         self._wdgFind.lineEditSearch().setProperty('rounded', True)
         self._wdgFind.lineEditSearch().setProperty('white-bg', True)
+        self._wdgFind.lineEditSearch().setProperty(IGNORE_CAPITALIZATION_PROPERTY, True)
         self._wdgFind.lineEditReplace().setProperty('rounded', True)
         self._wdgFind.lineEditReplace().setProperty('white-bg', True)
+        self._wdgFind.lineEditReplace().setProperty(IGNORE_CAPITALIZATION_PROPERTY, True)
 
         self._wdgFind.setProperty('relaxed-white-bg', True)
 
