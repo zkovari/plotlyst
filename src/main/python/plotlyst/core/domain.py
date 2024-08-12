@@ -2512,7 +2512,7 @@ midpoint_proactive = StoryBeat('Reactive to Proactive Shift',
 midpoint_false_victory = StoryBeat(text='False victory',
                                    icon='mdi.trophy-broken',
                                    icon_color='#b5838d',
-                                   description="A moment when the protagonist appears to achieve their goal, only to face immediate significant setbacks",
+                                   description="A moment when the protagonist appears to achieve their goal, only to face immediate setbacks",
                                    id=uuid.UUID('404883e9-d110-4e83-9c52-e37bb888632c'),
                                    act=2, percentage=50)
 midpoint_re_dedication = StoryBeat(text='Re-dedication',

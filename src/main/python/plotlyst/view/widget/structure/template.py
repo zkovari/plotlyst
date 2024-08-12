@@ -35,7 +35,8 @@ from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     save_the_cat, three_act_structure, heros_journey, hook_beat, motion_beat, \
     disturbance_beat, normal_world_beat, characteristic_moment_beat, midpoint, midpoint_ponr, midpoint_mirror, \
     midpoint_proactive, crisis, first_plot_point, first_plot_point_ponr, first_plot_points, midpoints, story_spine, \
-    twists_and_turns, twist_beat, turn_beat, danger_beat, copy_beat, five_act_structure
+    twists_and_turns, twist_beat, turn_beat, danger_beat, copy_beat, five_act_structure, midpoint_false_victory, \
+    midpoint_re_dedication
 from plotlyst.view.common import ExclusiveOptionalButtonGroup, push_btn, label
 from plotlyst.view.generated.story_structure_selector_dialog_ui import Ui_StoryStructureSelectorDialog
 from plotlyst.view.icons import IconRegistry
@@ -112,6 +113,8 @@ class _ThreeActMidpoint(BeatCustomization):
     Point_of_no_return = auto()
     Mirror_moment = auto()
     Proactive = auto()
+    False_victory = auto()
+    Re_dedication = auto()
 
 
 class _ThreeActEnding(BeatCustomization):
@@ -119,6 +122,8 @@ class _ThreeActEnding(BeatCustomization):
 
 
 def beat_option_title(option: BeatCustomization) -> str:
+    if option == _ThreeActMidpoint.Re_dedication:
+        return 'Re-dedication'
     return option.name.replace('_', ' ')
 
 
@@ -147,6 +152,10 @@ def beat_option_description(option: BeatCustomization) -> str:
         return midpoint_mirror.description
     elif option == _ThreeActMidpoint.Proactive:
         return midpoint_proactive.description
+    elif option == _ThreeActMidpoint.False_victory:
+        return midpoint_false_victory.description
+    elif option == _ThreeActMidpoint.Re_dedication:
+        return midpoint_re_dedication.description
 
     elif option == _ThreeActEnding.Crisis:
         return crisis.description
@@ -177,6 +186,10 @@ def beat_option_icon(option: BeatCustomization) -> Tuple[str, str]:
         return midpoint_mirror.icon, midpoint_mirror.icon_color
     elif option == _ThreeActMidpoint.Proactive:
         return midpoint_proactive.icon, midpoint_proactive.icon_color
+    elif option == _ThreeActMidpoint.False_victory:
+        return midpoint_false_victory.icon, midpoint_false_victory.icon_color
+    elif option == _ThreeActMidpoint.Re_dedication:
+        return midpoint_re_dedication.icon, midpoint_re_dedication.icon_color
 
     elif option == _ThreeActEnding.Crisis:
         return crisis.icon, crisis.icon_color
@@ -207,6 +220,10 @@ def option_from_beat(beat: StoryBeat) -> Optional[BeatCustomization]:
         return _ThreeActMidpoint.Mirror_moment
     elif beat == midpoint_proactive:
         return _ThreeActMidpoint.Proactive
+    elif beat == midpoint_false_victory:
+        return _ThreeActMidpoint.False_victory
+    elif beat == midpoint_re_dedication:
+        return _ThreeActMidpoint.Re_dedication
 
     elif beat == crisis:
         return _ThreeActEnding.Crisis
@@ -336,7 +353,9 @@ class _ThreeActStructureEditor(_AbstractStructureEditor):
         checked = option_from_beat(midpoint_beat) if midpoint_beat else None
         menu = StructureOptionsMenu(self.btnMidpoint, 'Select the midpoint',
                                     [_ThreeActMidpoint.Turning_point, _ThreeActMidpoint.Point_of_no_return,
-                                     _ThreeActMidpoint.Mirror_moment, _ThreeActMidpoint.Proactive], checked=checked)
+                                     _ThreeActMidpoint.Mirror_moment, _ThreeActMidpoint.Proactive,
+                                     _ThreeActMidpoint.Re_dedication,
+                                     _ThreeActMidpoint.False_victory], checked=checked)
         menu.options.optionSelected.connect(self._midpointChanged)
         menu.options.optionsReset.connect(self._midpointReset)
 
@@ -403,6 +422,10 @@ class _ThreeActStructureEditor(_AbstractStructureEditor):
             beat = midpoint_mirror
         elif midpoint_option == _ThreeActMidpoint.Proactive:
             beat = midpoint_proactive
+        elif midpoint_option == _ThreeActMidpoint.False_victory:
+            beat = midpoint_false_victory
+        elif midpoint_option == _ThreeActMidpoint.Re_dedication:
+            beat = midpoint_re_dedication
         else:
             return
 
