@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from functools import partial
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from PyQt6.QtCore import pyqtSignal, Qt, QTimer, QObject
 from PyQt6.QtGui import QColor, QIcon
@@ -120,7 +120,7 @@ _principle_hints = {
     PlotPrincipleType.ANTAGONIST: "Is there an antagonistic force (human or otherwise) that confronts the plot?",
     PlotPrincipleType.CONFLICT: "Is there conflict that hinders the character's goal?",
     PlotPrincipleType.STAKES: "Is there anything at stake if the storyline is not resolved?",
-    PlotPrincipleType.QUESTION: "Is there a major dramatic question associated to this storyline?",
+    PlotPrincipleType.QUESTION: "Is there a leading question associated to this storyline that is answered in the end?",
 
     PlotPrincipleType.POSITIVE_CHANGE: "Does the character change positively?",
     PlotPrincipleType.NEGATIVE_CHANGE: "Does the character change negatively?",
@@ -173,7 +173,7 @@ _principle_placeholders = {
     PlotPrincipleType.ANTAGONIST: "Who or what stands in opposition to resolve the storyline?",
     PlotPrincipleType.CONFLICT: "How does conflict hinder the goal?",
     PlotPrincipleType.STAKES: "What's at stake if the storyline is not resolved?",
-    PlotPrincipleType.QUESTION: "What is the major dramatic question of this storyline?",
+    PlotPrincipleType.QUESTION: "What is the leading question in this storyline?",
     PlotPrincipleType.THEME: "How does the storyline express the theme?",
 
     PlotPrincipleType.POSITIVE_CHANGE: "How does the character change positively?",
@@ -218,25 +218,12 @@ def principle_placeholder(principle_type: PlotPrincipleType, plot_type: PlotType
     return _principle_placeholders[principle_type]
 
 
-# principle_type_index: Dict[PlotPrincipleType, int] = {
-#     PlotPrincipleType.QUESTION: 0,
-#     PlotPrincipleType.GOAL: 1,
-#     PlotPrincipleType.ANTAGONIST: 2,
-#     PlotPrincipleType.CONFLICT: 3,
-#     PlotPrincipleType.STAKES: 4,
-#
-#     PlotPrincipleType.POSITIVE_CHANGE: 6,
-#     PlotPrincipleType.NEGATIVE_CHANGE: 7,
-#     PlotPrincipleType.DESIRE: 8,
-#     PlotPrincipleType.NEED: 9,
-#     PlotPrincipleType.EXTERNAL_CONFLICT: 10,
-#     PlotPrincipleType.INTERNAL_CONFLICT: 11,
-#     PlotPrincipleType.FLAW: 12,
-#
-#     PlotPrincipleType.SKILL_SET: 13,
-#     PlotPrincipleType.TICKING_CLOCK: 14,
-#     PlotPrincipleType.WAR: 15,
-# }
+principle_type_index: Dict[PlotPrincipleType, int] = {
+    PlotPrincipleType.QUESTION: 0,
+    PlotPrincipleType.GOAL: 1,
+    PlotPrincipleType.ANTAGONIST: 2,
+    PlotPrincipleType.CONFLICT: 3
+}
 
 
 def plot_event_icon(type: PlotEventType) -> QIcon:

@@ -55,7 +55,7 @@ from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.labels import PlotValueLabel
 from plotlyst.view.widget.plot.matrix import StorylinesImpactMatrix
 from plotlyst.view.widget.plot.principle import PlotPrincipleSelectorMenu, PlotPrincipleEditor, \
-    PrincipleSelectorObject, GenrePrincipleSelectorDialog, PlotDynamicPrincipleSelectorMenu
+    PrincipleSelectorObject, GenrePrincipleSelectorDialog, PlotDynamicPrincipleSelectorMenu, principle_type_index
 from plotlyst.view.widget.plot.progression import PlotEventsTimeline, DynamicPlotPrinciplesEditor
 from plotlyst.view.widget.tree import TreeView, ContainerNode
 from plotlyst.view.widget.utility import ColorPicker, IconSelectorDialog
@@ -449,7 +449,8 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         editor = PlotPrincipleEditor(principle, self.plot.plot_type)
         editor.principleEdited.connect(self._save)
         # self.wdgPrinciples.layout().insertWidget(principle_type_index[principle.type], editor)
-        self.wdgPrinciples.layout().insertWidget(principle.type.value, editor)
+        index = principle_type_index.get(principle.type, principle.type.value)
+        self.wdgPrinciples.layout().insertWidget(index, editor)
         self._principles[principle.type] = editor
 
         return editor
