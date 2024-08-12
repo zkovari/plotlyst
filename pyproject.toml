@@ -5,8 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "plotlyst"
 version = "0.1.0"
-url = "https://www.plotlyst.com"
-license = "GNU General Public License v3 (GPLv3)"
+license = { text = "GNU General Public License v3 (GPLv3)" }
 authors = [
     { name = "Zsolt Kovari" }
 ]
