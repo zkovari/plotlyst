@@ -184,6 +184,23 @@ btn_style_return = """
     }
 """
 
+btn_style_find = """
+    QPushButton[find=true] {
+        margin: 2px;
+        padding: 2px;
+        border-radius: 2px;
+        border: 1px solid lightgrey;
+        background: #f8f9fa;
+    }
+    QPushButton[find=true]:pressed {
+        padding: 2px;
+        margin: 1px;
+    }
+    QPushButton[find=true]:disabled {
+        opacity: 0.65;
+    }
+"""
+
 btn_style_importer_sync = """
     QPushButton[importer-sync=true] {
         padding: 2px;
@@ -506,6 +523,7 @@ style = "\n".join([
     btn_style_main_side_nav,
     btn_style_lang_spellcheck_suggestion,
     btn_style_return,
+    btn_style_find,
     btn_style_importer_sync,
     btn_style_structure_customization,
     btn_style_tool_button_base,
