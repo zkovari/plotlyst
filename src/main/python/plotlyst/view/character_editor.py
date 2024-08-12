@@ -157,7 +157,7 @@ class CharacterEditor(QObject, EventListener):
         self.ui.tabTopics.layout().addWidget(self.wdgTopicsEditor)
 
         self.profile = CharacterProfileEditor(self.novel)
-        if app_env.is_windows():
+        if app_env.is_windows() or app_env.is_linux():
             self.ui.wdgProfile.setProperty('relaxed-white-bg', True)
             margins(self.ui.wdgTop, bottom=15)
         self.ui.wdgProfile.layout().addWidget(self.profile)
