@@ -246,6 +246,10 @@ class ScenesFilterProxyModel(QSortFilterProxyModel):
         self.acts_filter[act] = filter
         self.invalidateFilter()
 
+    def resetActsFilter(self):
+        self.acts_filter.clear()
+        self.invalidateFilter()
+
     def setEmptyPovFilter(self, filter: bool):
         self.empty_pov_filter = filter
         self.invalidateFilter()

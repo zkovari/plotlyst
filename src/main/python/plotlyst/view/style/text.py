@@ -123,7 +123,11 @@ text_edit_styles = """
         border: 0px;
         background-color: rgba(0, 0, 0, 0);
     }
-
+    
+    QTextEdit[description=true] {
+        color: #5E6C84;
+    }
+    
     QTextEdit[borderless=true] {
         border: 0px;
         background-color: #f8f9fa;

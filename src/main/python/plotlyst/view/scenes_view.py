@@ -49,7 +49,7 @@ from plotlyst.model.novel import NovelStagesModel
 from plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
 from plotlyst.service.persistence import delete_scene
 from plotlyst.view._view import AbstractNovelView
-from plotlyst.view.common import ButtonPressResizeEventFilter, action, restyle
+from plotlyst.view.common import ButtonPressResizeEventFilter, action, restyle, insert_after
 from plotlyst.view.delegates import ScenesViewDelegate
 from plotlyst.view.dialog.items import ItemsEditorDialog
 from plotlyst.view.generated.scenes_title_ui import Ui_ScenesTitle
@@ -64,8 +64,10 @@ from plotlyst.view.widget.input import RotatedButtonOrientation
 from plotlyst.view.widget.novel import StoryStructureSelectorMenu
 from plotlyst.view.widget.progress import SceneStageProgressCharts
 from plotlyst.view.widget.scene.story_map import StoryMap, StoryMapDisplayMode
-from plotlyst.view.widget.scenes import SceneFilterWidget, SceneStoryStructureWidget, \
+from plotlyst.view.widget.scenes import SceneFilterWidget, \
     ScenesPreferencesWidget, ScenesDistributionWidget
+from plotlyst.view.widget.structure.selector import ActSelectorButtons
+from plotlyst.view.widget.structure.timeline import StoryStructureTimelineWidget
 from plotlyst.view.widget.tree import TreeSettings
 
 
@@ -94,7 +96,7 @@ class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
         self.refresh()
 
         dispatcher = event_dispatchers.instance(self.novel)
-        dispatcher.register(self, SceneChangedEvent, SceneDeletedEvent, NovelSyncEvent)
+        dispatcher.register(self, SceneChangedEvent, SceneDeletedEvent, NovelSyncEvent, NovelStoryStructureUpdated)
 
     @overrides
     def event_received(self, event: Event):
@@ -176,12 +178,10 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnChaptersToggle.clicked.connect(self._hide_chapters_clicked)
         self.ui.wgtChapters.setVisible(self.ui.btnChaptersToggle.isChecked())
 
-        self.ui.btnAct1.setIcon(IconRegistry.act_one_icon(color='grey'))
-        self.ui.btnAct2.setIcon(IconRegistry.act_two_icon(color='grey'))
-        self.ui.btnAct3.setIcon(IconRegistry.act_three_icon(color='grey'))
-        self.ui.btnAct1.toggled.connect(partial(self._proxy.setActsFilter, 1))
-        self.ui.btnAct2.toggled.connect(partial(self._proxy.setActsFilter, 2))
-        self.ui.btnAct3.toggled.connect(partial(self._proxy.setActsFilter, 3))
+        self._actFilter = ActSelectorButtons(self.novel)
+        insert_after(self.ui.widget, self._actFilter, self.ui.lineBeforeActFilter)
+        self._actFilter.actToggled.connect(self._proxy.setActsFilter)
+        self._actFilter.reset.connect(self._proxy.resetActsFilter)
 
         self.ui.btnCardsView.setIcon(IconRegistry.cards_icon())
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
@@ -212,6 +212,7 @@ class ScenesOutlineView(AbstractNovelView):
         incr_font(self.ui.btnStoryGridDisplay, 2)
         incr_icon(self.ui.btnStoryGridDisplay, 2)
         retain_when_hidden(self.ui.wdgStorymapToolbar)
+        self.ui.wdgStorymapSelectors.setHidden(True)
 
         self.ui.btnStageCustomize.setIcon(IconRegistry.cog_icon())
         transparent(self.ui.btnStageCustomize)
@@ -221,9 +222,8 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.selected_card: Optional[SceneCard] = None
         self._card_filter = SceneCardFilter()
-        self.ui.btnAct1.toggled.connect(self._filter_cards)
-        self.ui.btnAct2.toggled.connect(self._filter_cards)
-        self.ui.btnAct3.toggled.connect(self._filter_cards)
+        self._actFilter.actToggled.connect(self._filter_cards)
+        self._actFilter.reset.connect(self._filter_cards)
         self.ui.btnStoryStructure.toggled.connect(self._story_structure_toggled)
         self.ui.cards.selectionCleared.connect(self._selection_cleared)
         self.ui.cards.cardSelected.connect(self._card_selected)
@@ -246,7 +246,6 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnCardsView.setChecked(True)
 
         self.ui.wdgStoryStructureParent.setHidden(True)
-        self.ui.wdgStoryStructure.setBeatCursor(Qt.CursorShape.ArrowCursor)
         self.ui.wdgStoryStructure.setStructure(self.novel)
         self.ui.wdgStoryStructure.setActsClickable(False)
 
@@ -255,16 +254,12 @@ class ScenesOutlineView(AbstractNovelView):
         self._scene_filter = SceneFilterWidget(self.novel)
         filterMenu = MenuWidget(self.ui.btnFilter)
         filterMenu.addWidget(self._scene_filter)
+        self._toggle_act_filters()
         self._scene_filter.povFilter.characterToggled.connect(self._proxy.setCharacterFilter)
         self._scene_filter.povFilter.characterToggled.connect(self._filter_cards)
 
-        self.ui.btnAct1.clicked.connect(self._scene_filter.btnAct1.setChecked)
-        self.ui.btnAct2.clicked.connect(self._scene_filter.btnAct2.setChecked)
-        self.ui.btnAct3.clicked.connect(self._scene_filter.btnAct3.setChecked)
-
-        self._scene_filter.btnAct1.clicked.connect(self.ui.btnAct1.setChecked)
-        self._scene_filter.btnAct2.clicked.connect(self.ui.btnAct2.setChecked)
-        self._scene_filter.btnAct3.clicked.connect(self.ui.btnAct3.setChecked)
+        self._actFilter.actClicked.connect(self._scene_filter.wdgActs.setActChecked)
+        self._scene_filter.wdgActs.actClicked.connect(self._actFilter.setActChecked)
 
         self._init_cards()
 
@@ -319,6 +314,7 @@ class ScenesOutlineView(AbstractNovelView):
         elif isinstance(event, NovelStoryStructureUpdated):
             if self.ui.btnStoryStructure.isChecked():
                 self.ui.btnStoryStructureSelector.setVisible(len(self.novel.story_structures) > 1)
+            self._toggle_act_filters()
         elif isinstance(event, NovelPanelCustomizationEvent):
             if isinstance(event, NovelStorylinesToggleEvent):
                 self.ui.btnStorymap.setVisible(event.toggled)
@@ -327,6 +323,8 @@ class ScenesOutlineView(AbstractNovelView):
             elif isinstance(event, NovelStructureToggleEvent):
                 self.ui.btnStoryStructure.setVisible(event.toggled)
                 self.ui.wdgStoryStructure.setVisible(event.toggled)
+                self.ui.btnStoryStructureSelector.setVisible(
+                    event.toggled and self.ui.btnStoryStructure.isChecked() and len(self.novel.story_structures) > 1)
             elif isinstance(event, NovelPovTrackingToggleEvent):
                 self.ui.tblScenes.setColumnHidden(self.tblModel.ColPov, not event.toggled)
             return
@@ -343,8 +341,7 @@ class ScenesOutlineView(AbstractNovelView):
 
         if self.ui.wdgStoryStructure.novel is not None:
             clear_layout(self.ui.wdgStoryStructureParent)
-            self.ui.wdgStoryStructure = SceneStoryStructureWidget(self.ui.wdgStoryStructureParent)
-            self.ui.wdgStoryStructure.setBeatCursor(Qt.CursorShape.ArrowCursor)
+            self.ui.wdgStoryStructure = StoryStructureTimelineWidget(self.ui.wdgStoryStructureParent)
             self.ui.wdgStoryStructureParent.layout().addWidget(self.ui.wdgStoryStructure)
         self.ui.wdgStoryStructure.setStructure(self.novel)
         self.ui.wdgStoryStructure.setActsClickable(False)
@@ -384,12 +381,12 @@ class ScenesOutlineView(AbstractNovelView):
                 self.ui.rbHorizontal.clicked.connect(
                     lambda: self.storymap_view.setOrientation(Qt.Orientation.Horizontal))
                 self.ui.rbVertical.clicked.connect(lambda: self.storymap_view.setOrientation(Qt.Orientation.Vertical))
-                self.ui.btnAct1.toggled.connect(partial(self.storymap_view.setActsFilter, 1))
-                self.ui.btnAct2.toggled.connect(partial(self.storymap_view.setActsFilter, 2))
-                self.ui.btnAct3.toggled.connect(partial(self.storymap_view.setActsFilter, 3))
-                self.storymap_view.setActsFilter(1, self.ui.btnAct1.isChecked())
-                self.storymap_view.setActsFilter(2, self.ui.btnAct2.isChecked())
-                self.storymap_view.setActsFilter(3, self.ui.btnAct3.isChecked())
+                self._actFilter.actToggled.connect(self.storymap_view.setActsFilter)
+                self._actFilter.reset.connect(self.storymap_view.resetActsFilter)
+                filters = self._actFilter.actFilters()
+                if filters:
+                    for k, v in filters.items():
+                        self.storymap_view.setActsFilter(k, v)
                 self.storymap_view.sceneSelected.connect(self.ui.wdgStoryStructure.highlightScene)
                 self.storymap_view.setNovel(self.novel)
         elif self.ui.btnCharactersDistributionView.isChecked():
@@ -399,12 +396,12 @@ class ScenesOutlineView(AbstractNovelView):
             if not self.characters_distribution:
                 self.characters_distribution = ScenesDistributionWidget(self.novel)
                 self.ui.pageCharactersDistribution.layout().addWidget(self.characters_distribution)
-                self.ui.btnAct1.toggled.connect(partial(self.characters_distribution.setActsFilter, 1))
-                self.ui.btnAct2.toggled.connect(partial(self.characters_distribution.setActsFilter, 2))
-                self.ui.btnAct3.toggled.connect(partial(self.characters_distribution.setActsFilter, 3))
-                self.characters_distribution.setActsFilter(1, self.ui.btnAct1.isChecked())
-                self.characters_distribution.setActsFilter(2, self.ui.btnAct2.isChecked())
-                self.characters_distribution.setActsFilter(3, self.ui.btnAct3.isChecked())
+                self._actFilter.actToggled.connect(self.characters_distribution.setActsFilter)
+                self._actFilter.reset.connect(self.characters_distribution.resetActsFilter)
+                filters = self._actFilter.actFilters()
+                if filters:
+                    for k, v in filters.items():
+                        self.characters_distribution.setActsFilter(k, v)
         elif self.ui.btnTableView.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageDefault)
             self.ui.tblSceneStages.clearSelection()
@@ -534,8 +531,7 @@ class ScenesOutlineView(AbstractNovelView):
         return card
 
     def _filter_cards(self):
-        self._card_filter.setActsFilter(
-            {1: self.ui.btnAct1.isChecked(), 2: self.ui.btnAct2.isChecked(), 3: self.ui.btnAct3.isChecked()})
+        self._card_filter.setActsFilter(self._actFilter.actFilters())
         self._card_filter.setActivePovs(self._scene_filter.povFilter.characters(all=False))
         self.ui.cards.applyFilter(self._card_filter)
 
@@ -615,12 +611,13 @@ class ScenesOutlineView(AbstractNovelView):
             self._stages_proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
             self._stages_proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
             self.ui.tblSceneStages.setModel(self._stages_proxy)
-            self.ui.btnAct1.toggled.connect(partial(self._stages_proxy.setActsFilter, 1))
-            self.ui.btnAct2.toggled.connect(partial(self._stages_proxy.setActsFilter, 2))
-            self.ui.btnAct3.toggled.connect(partial(self._stages_proxy.setActsFilter, 3))
-            self._stages_proxy.setActsFilter(1, self.ui.btnAct1.isChecked())
-            self._stages_proxy.setActsFilter(2, self.ui.btnAct2.isChecked())
-            self._stages_proxy.setActsFilter(3, self.ui.btnAct3.isChecked())
+
+            self._actFilter.actToggled.connect(self._stages_proxy.setActsFilter)
+            self._actFilter.reset.connect(self._stages_proxy.resetActsFilter)
+            filters = self._actFilter.actFilters()
+            if filters:
+                for k, v in filters.items():
+                    self._stages_proxy.setActsFilter(k, v)
             self.ui.tblSceneStages.horizontalHeader().setProperty('main-header', True)
             restyle(self.ui.tblSceneStages.horizontalHeader())
             self.ui.tblSceneStages.horizontalHeader().sectionClicked.connect(header_clicked)
@@ -635,6 +632,7 @@ class ScenesOutlineView(AbstractNovelView):
 
         if not self.stagesProgress:
             self.stagesProgress = SceneStageProgressCharts(self.novel)
+            self.ui.wdgProgressCharts.layout().addWidget(self.stagesProgress)
 
             self.ui.tblSceneStages.clicked.connect(
                 lambda x: self.stagesModel.changeStage(self._stages_proxy.mapToSource(x)))
@@ -656,9 +654,9 @@ class ScenesOutlineView(AbstractNovelView):
 
         if self.novel.scenes:
             self.stagesProgress.refresh()
-            if not self.ui.wdgProgressCharts.layout().count():
-                for i, chartview in enumerate(self.stagesProgress.charts()):
-                    self.ui.wdgProgressCharts.layout().insertWidget(i, chartview)
+            # if not self.ui.wdgProgressCharts.layout().count():
+            #     for i, chartview in enumerate(self.stagesProgress.charts()):
+            #         self.ui.wdgProgressCharts.layout().insertWidget(i, chartview)
 
     def _on_custom_menu_requested(self, pos: QPoint):
         def toggle_wip(scene: Scene):
@@ -793,3 +791,9 @@ class ScenesOutlineView(AbstractNovelView):
                     self.ui.tblScenes.showColumn(col)
                 continue
             self.ui.tblScenes.hideColumn(col)
+
+    def _toggle_act_filters(self):
+        acts = self.novel.active_story_structure.acts
+        self._actFilter.setVisible(acts > 0)
+        self._scene_filter.lblActs.setVisible(acts > 0)
+        self.ui.lineBeforeActFilter.setVisible(acts > 0)

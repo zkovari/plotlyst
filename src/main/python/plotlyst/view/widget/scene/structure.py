@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from abc import abstractmethod
 from dataclasses import dataclass
 from functools import partial
 from typing import Optional, List, Dict
@@ -26,7 +25,7 @@ from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QTimer
 from PyQt6.QtGui import QIcon, QAction, QResizeEvent, QEnterEvent, QDragEnterEvent
 from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QDialog, QApplication, QMessageBox
 from overrides import overrides
-from qthandy import pointy, translucent, margins, spacer, sp, incr_icon, vspacer, transparent, underline
+from qthandy import pointy, margins, spacer, sp, incr_icon, vspacer, transparent, underline
 from qthandy.filter import OpacityEventFilter, ObjectReferenceMimeData, DropEventFilter
 from qtmenu import ScrollableMenuWidget, ActionTooltipDisplayMode, MenuWidget, TabularGridMenuWidget
 
@@ -320,10 +319,6 @@ class SceneStructureItemWidget(OutlineItemWidget):
     def sceneStructureItem(self) -> SceneStructureItem:
         return self.beat
 
-    @abstractmethod
-    def copy(self) -> 'SceneStructureItemWidget':
-        pass
-
     @overrides
     def _color(self) -> str:
         if self.beat.type == SceneStructureItemType.ACTION:
@@ -538,6 +533,13 @@ class SceneStructureTimeline(OutlineTimelineWidget):
         super().clear()
         self._selectorMenu.setOutcomeEnabled(True)
 
+    @overrides
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
+        if event.mimeData().hasFormat(SceneStructureItemWidget.SceneBeatMimeType):
+            event.accept()
+        else:
+            event.ignore()
+
     def refreshOutcome(self):
         for wdg in self._beatWidgets:
             if isinstance(wdg, SceneStructureBeatWidget):
@@ -548,7 +550,7 @@ class SceneStructureTimeline(OutlineTimelineWidget):
         item = SceneStructureItem(type=beatType)
         if beatType == SceneStructureItemType.CLIMAX:
             item.outcome = SceneOutcome.DISASTER
-        self._structure.append(item)
+        self._items.append(item)
         self._addBeatWidget(item)
 
     def _insertBeat(self, beatType: SceneStructureItemType):
@@ -602,24 +604,6 @@ class SceneStructureTimeline(OutlineTimelineWidget):
     def _outcomeChanged(self, outcome: SceneOutcome):
         self._scene.outcome = outcome
         self.outcomeChanged.emit()
-
-    @overrides
-    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
-        if event.mimeData().hasFormat(SceneStructureItemWidget.SceneBeatMimeType):
-            event.accept()
-        else:
-            event.ignore()
-
-    def _dragStarted(self, widget: SceneStructureBeatWidget):
-        self._dragPlaceholder = widget.copy()
-        self._dragged = widget
-        self._dragged.setHidden(True)
-        translucent(self._dragPlaceholder)
-        self._dragPlaceholder.setHidden(True)
-        self._dragPlaceholder.setAcceptDrops(True)
-        self._dragPlaceholder.installEventFilter(
-            DropEventFilter(self._dragPlaceholder, mimeTypes=[SceneStructureItemWidget.SceneBeatMimeType],
-                            droppedSlot=self._dropped))
 
 
 class BeatListItemWidget(ListItemWidget):

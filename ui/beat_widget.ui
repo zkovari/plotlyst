@@ -10,6 +10,12 @@
     <height>137</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
@@ -76,7 +82,7 @@
         <string notr="true">background-color: rgba(0, 0, 0, 0);</string>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="pageInfo">
         <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -95,12 +101,12 @@
          <property name="bottomMargin">
           <number>0</number>
          </property>
-         <item alignment="Qt::AlignTop">
-          <widget class="QLabel" name="lblDescription">
-           <property name="text">
-            <string>TextLabel</string>
+         <item>
+          <widget class="AutoAdjustableTextEdit" name="textDescription">
+           <property name="readOnly">
+            <bool>true</bool>
            </property>
-           <property name="wordWrap">
+           <property name="transparent" stdset="0">
             <bool>true</bool>
            </property>
            <property name="description" stdset="0">
@@ -111,6 +117,12 @@
         </layout>
        </widget>
        <widget class="QWidget" name="pageScene">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <layout class="QVBoxLayout" name="verticalLayout_2">
          <property name="spacing">
           <number>0</number>
@@ -153,16 +165,6 @@
             </property>
             <item>
              <widget class="QToolButton" name="btnPov">
-              <property name="text">
-               <string/>
-              </property>
-              <property name="transparent" stdset="0">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QToolButton" name="btnSceneType">
               <property name="text">
                <string/>
               </property>
@@ -236,7 +238,7 @@
         <property name="bottomMargin">
          <number>0</number>
         </property>
-        <item>
+        <item alignment="Qt::AlignTop">
          <widget class="Toggle" name="cbToggle">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Maximum">

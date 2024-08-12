@@ -221,8 +221,10 @@ class SceneCard(Ui_SceneCard, Card):
             self.wdgCharacters.addLabel(CharacterAvatarLabel(char, 20))
 
         beat = self.scene.beat(self.novel)
-        if beat and beat.icon:
-            self.btnBeat.setIcon(IconRegistry.scene_beat_badge_icon(beat.icon, beat.icon_color, act_color(beat.act)))
+        if beat:
+            icon = beat.icon if beat.icon else f'ri.number-{beat.seq}'
+            self.btnBeat.setIcon(IconRegistry.scene_beat_badge_icon(icon, beat.icon_color, act_color(beat.act,
+                                                                                                     self.novel.active_story_structure.acts)))
             self.btnBeat.setToolTip(beat.text)
             self.btnBeat.setVisible(True)
         else:
@@ -317,7 +319,7 @@ class SceneCardFilter(CardFilter):
 
     @overrides
     def filter(self, card: SceneCard) -> bool:
-        if not self._actsFilter[acts_registry.act(card.scene)]:
+        if not self._actsFilter.get(acts_registry.act(card.scene), True):
             return False
 
         if card.scene.pov and card.scene.pov not in self._povs:
@@ -332,6 +334,9 @@ class SceneCardFilter(CardFilter):
     def setActivePovs(self, characters: Iterable[Character]):
         self._povs.clear()
         self._povs.update(set(characters))
+
+    def resetActsFilter(self):
+        self._actsFilter.clear()
 
 
 class CardsView(QFrame):

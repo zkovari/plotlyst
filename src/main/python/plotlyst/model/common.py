@@ -395,6 +395,10 @@ class DistributionFilterProxyModel(QSortFilterProxyModel):
         self.acts_filter[act] = filter
         self.invalidateFilter()
 
+    def resetActsFilter(self):
+        self.acts_filter.clear()
+        self.invalidateFilter()
+
     @overrides
     def filterAcceptsColumn(self, source_column: int, source_parent: QModelIndex) -> bool:
         filtered = super().filterAcceptsColumn(source_column, source_parent)

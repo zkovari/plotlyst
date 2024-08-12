@@ -17,476 +17,229 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
-import copy
-from enum import Enum, auto
 from functools import partial
-from typing import Optional, List, Tuple
+from typing import Optional, Dict
 
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QWidget, QPushButton, QDialog, QScrollArea, QApplication, QDialogButtonBox, QLabel
-from qthandy import vspacer, spacer, transparent, bold, vbox, incr_font, \
-    hbox, margins, underline, line, pointy
-from qtmenu import MenuWidget
+from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtGui import QCursor
+from PyQt6.QtWidgets import QPushButton, QWidget, QToolButton
+from overrides import overrides
+from qthandy import translucent, pointy, incr_icon, incr_font, clear_layout, hbox
+from qthandy.filter import OpacityEventFilter
+from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
-from plotlyst.common import ACT_THREE_COLOR
-from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
-    save_the_cat, three_act_structure, heros_journey, hook_beat, motion_beat, \
-    disturbance_beat, normal_world_beat, characteristic_moment_beat, midpoint, midpoint_ponr, midpoint_mirror, \
-    midpoint_proactive, crisis, first_plot_point, first_plot_point_ponr, first_plot_points, midpoints
-from plotlyst.view.common import ExclusiveOptionalButtonGroup
-from plotlyst.view.generated.story_structure_selector_dialog_ui import Ui_StoryStructureSelectorDialog
+from plotlyst.common import RELAXED_WHITE_COLOR, RED_COLOR, truncate_string, act_color
+from plotlyst.core.domain import Novel, StoryBeat, \
+    Scene, StoryBeatType, StoryStructure
+from plotlyst.event.core import EventListener, Event
+from plotlyst.event.handler import event_dispatchers
+from plotlyst.events import NovelStoryStructureUpdated
+from plotlyst.service.cache import acts_registry
+from plotlyst.view.common import action, restyle, ButtonPressResizeEventFilter
 from plotlyst.view.icons import IconRegistry
-from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
-from plotlyst.view.widget.display import IconText
-from plotlyst.view.widget.input import Toggle
-from plotlyst.view.widget.scenes import SceneStoryStructureWidget
-from plotlyst.view.widget.structure.beat import BeatsPreview
 
 
-class _AbstractStructureEditorWidget(QWidget):
-    def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
-        super(_AbstractStructureEditorWidget, self).__init__(parent)
-        self._structure = structure
-        vbox(self)
-        self.wdgTitle = IconText(self)
-        self.wdgTitle.setText(structure.title)
-        if structure.icon:
-            self.wdgTitle.setIcon(IconRegistry.from_name(structure.icon, structure.icon_color))
-        bold(self.wdgTitle)
-        incr_font(self.wdgTitle, 2)
-        self.wdgCustom = QWidget()
+class StructureBeatSelectorMenu(MenuWidget):
+    selected = pyqtSignal(StoryBeat)
 
-        self.wdgPreview = SceneStoryStructureWidget(self)
-        self.wdgPreview.setCheckOccupiedBeats(False)
-        self.wdgPreview.setBeatCursor(Qt.CursorShape.ArrowCursor)
-        self.wdgPreview.setBeatsMoveable(True)
-        self.wdgPreview.setActsClickable(False)
-        self.wdgPreview.setActsResizeable(True)
-
-        self._scroll = QScrollArea(self)
-        self._scroll.setWidgetResizable(True)
-        vbox(self._scroll)
-
-        self.beatsPreview = BeatsPreview(novel, checkOccupiedBeats=False)
-        self._scroll.setWidget(self.beatsPreview)
-        self.beatsPreview.attachStructurePreview(self.wdgPreview)
-        self.wdgPreview.setStructure(novel, self._structure)
-        self.beatsPreview.setStructure(self._structure)
-        self.layout().addWidget(self.wdgTitle)
-        self.layout().addWidget(line())
-        self.layout().addWidget(self.wdgCustom)
-        self.layout().addWidget(vspacer(20))
-        self.layout().addWidget(self.wdgPreview)
-        self.layout().addWidget(self._scroll)
-
-        # self.wdgPreview.actsResized.connect(lambda: emit_event(NovelStoryStructureUpdated(self)))
-        # self.wdgPreview.beatMoved.connect(lambda: emit_event(NovelStoryStructureUpdated(self)))
-
-    def structure(self) -> StoryStructure:
-        return self._structure
-
-
-class BeatCustomization(Enum):
-    pass
-
-
-class _ThreeActBeginning(BeatCustomization):
-    Hook = auto()
-    Disturbance = auto()
-    Motion = auto()
-    Characteristic_moment = auto()
-    Normal_world = auto()
-
-
-class _ThreeActFirstPlotPoint(BeatCustomization):
-    First_plot_point = auto()
-    Point_of_no_return = auto()
-
-
-class _ThreeActMidpoint(BeatCustomization):
-    Turning_point = auto()
-    Point_of_no_return = auto()
-    Mirror_moment = auto()
-    Proactive = auto()
-
-
-class _ThreeActEnding(BeatCustomization):
-    Crisis = auto()
-
-
-def beat_option_title(option: BeatCustomization) -> str:
-    return option.name.replace('_', ' ')
-
-
-def beat_option_description(option: BeatCustomization) -> str:
-    if option == _ThreeActBeginning.Hook:
-        return hook_beat.description
-    elif option == _ThreeActBeginning.Motion:
-        return motion_beat.description
-    elif option == _ThreeActBeginning.Disturbance:
-        return disturbance_beat.description
-    elif option == _ThreeActBeginning.Normal_world:
-        return normal_world_beat.description
-    elif option == _ThreeActBeginning.Characteristic_moment:
-        return characteristic_moment_beat.description
-
-    elif option == _ThreeActFirstPlotPoint.First_plot_point:
-        return first_plot_point.description
-    elif option == _ThreeActFirstPlotPoint.Point_of_no_return:
-        return first_plot_point_ponr.description
-
-    elif option == _ThreeActMidpoint.Turning_point:
-        return midpoint.description
-    elif option == _ThreeActMidpoint.Point_of_no_return:
-        return midpoint_ponr.description
-    elif option == _ThreeActMidpoint.Mirror_moment:
-        return midpoint_mirror.description
-    elif option == _ThreeActMidpoint.Proactive:
-        return midpoint_proactive.description
-
-    elif option == _ThreeActEnding.Crisis:
-        return crisis.description
-
-
-def beat_option_icon(option: BeatCustomization) -> Tuple[str, str]:
-    if option == _ThreeActBeginning.Hook:
-        return hook_beat.icon, hook_beat.icon_color
-    elif option == _ThreeActBeginning.Motion:
-        return motion_beat.icon, motion_beat.icon_color
-    elif option == _ThreeActBeginning.Disturbance:
-        return disturbance_beat.icon, disturbance_beat.icon_color
-    elif option == _ThreeActBeginning.Normal_world:
-        return normal_world_beat.icon, normal_world_beat.icon_color
-    elif option == _ThreeActBeginning.Characteristic_moment:
-        return characteristic_moment_beat.icon, characteristic_moment_beat.icon_color
-
-    elif option == _ThreeActFirstPlotPoint.First_plot_point:
-        return first_plot_point.icon, first_plot_point.icon_color
-    elif option == _ThreeActFirstPlotPoint.Point_of_no_return:
-        return first_plot_point_ponr.icon, first_plot_point_ponr.icon_color
-
-    elif option == _ThreeActMidpoint.Turning_point:
-        return midpoint.icon, midpoint.icon_color
-    elif option == _ThreeActMidpoint.Point_of_no_return:
-        return midpoint_ponr.icon, midpoint_ponr.icon_color
-    elif option == _ThreeActMidpoint.Mirror_moment:
-        return midpoint_mirror.icon, midpoint_mirror.icon_color
-    elif option == _ThreeActMidpoint.Proactive:
-        return midpoint_proactive.icon, midpoint_proactive.icon_color
-
-    elif option == _ThreeActEnding.Crisis:
-        return crisis.icon, crisis.icon_color
-
-
-def option_from_beat(beat: StoryBeat) -> Optional[BeatCustomization]:
-    if beat == hook_beat:
-        return _ThreeActBeginning.Hook
-    elif beat == motion_beat:
-        return _ThreeActBeginning.Motion
-    elif beat == disturbance_beat:
-        return _ThreeActBeginning.Disturbance
-    elif beat == normal_world_beat:
-        return _ThreeActBeginning.Normal_world
-    elif beat == characteristic_moment_beat:
-        return _ThreeActBeginning.Characteristic_moment
-
-    elif beat == first_plot_point:
-        return _ThreeActFirstPlotPoint.First_plot_point
-    elif beat == first_plot_point_ponr:
-        return _ThreeActFirstPlotPoint.Point_of_no_return
-
-    elif beat == midpoint:
-        return _ThreeActMidpoint.Turning_point
-    elif beat == midpoint_ponr:
-        return _ThreeActMidpoint.Point_of_no_return
-    elif beat == midpoint_mirror:
-        return _ThreeActMidpoint.Mirror_moment
-    elif beat == midpoint_proactive:
-        return _ThreeActMidpoint.Proactive
-
-    elif beat == crisis:
-        return _ThreeActEnding.Crisis
-
-    return None
-
-
-def find_first_plot_point(structure: StoryStructure) -> Optional[StoryBeat]:
-    return next((x for x in structure.beats if x in first_plot_points), None)
-
-
-def find_midpoint(structure: StoryStructure) -> Optional[StoryBeat]:
-    return next((x for x in structure.beats if x in midpoints), None)
-
-
-def find_crisis(structure: StoryStructure) -> Optional[StoryBeat]:
-    return next((x for x in structure.beats if x == crisis), None)
-
-
-class BeatOptionToggle(QWidget):
-    def __init__(self, option: BeatCustomization, parent=None):
-        super(BeatOptionToggle, self).__init__(parent)
-        hbox(self, spacing=0)
-        self.option = option
-        self.toggle = Toggle()
-        self.layout().addWidget(self.toggle, alignment=Qt.AlignmentFlag.AlignTop)
-        desc = QLabel(beat_option_description(option))
-        desc.setProperty('description', True)
-        btnTitle = QPushButton(beat_option_title(option))
-        btnTitle.setIcon(IconRegistry.from_name(*beat_option_icon(option)))
-        pointy(btnTitle)
-        transparent(btnTitle)
-        btnTitle.clicked.connect(self.toggle.click)
-        wdgTop = QWidget()
-        vbox(wdgTop, 0)
-        wdgTop.layout().addWidget(btnTitle, alignment=Qt.AlignmentFlag.AlignLeft)
-        wdgTop.layout().addWidget(desc)
-        self.layout().addWidget(wdgTop)
-        self.layout().addWidget(spacer())
-
-
-class ActOptionsButton(QPushButton):
-    def __init__(self, text: str, act: int, parent=None):
-        super(ActOptionsButton, self).__init__(text, parent)
-        pointy(self)
-
-        self.setProperty('structure-customization', True)
-        if act == 1:
-            self.setProperty('act-one', True)
-        elif act == 2:
-            self.setProperty('act-two', True)
-        else:
-            self.setProperty('act-three', True)
-
-
-class StructureOptionsWidget(QWidget):
-    optionSelected = pyqtSignal(BeatCustomization)
-    optionsReset = pyqtSignal()
-
-    def __init__(self, options: List[BeatCustomization], parent=None, checked: Optional[BeatCustomization] = None):
-        super(StructureOptionsWidget, self).__init__(parent)
-        vbox(self)
-        self.btnGroup = ExclusiveOptionalButtonGroup()
-        for opt in options:
-            wdg = BeatOptionToggle(opt)
-            self.layout().addWidget(wdg)
-            self.btnGroup.addButton(wdg.toggle)
-            if opt == checked:
-                wdg.toggle.setChecked(True)
-
-            wdg.toggle.clicked.connect(partial(self._clicked, opt))
-
-    def _clicked(self, option: BeatCustomization, checked: bool):
-        if not checked:
-            if not self.btnGroup.checkedButton():
-                self.optionsReset.emit()
-            return
-
-        self.optionSelected.emit(option)
-
-
-class StructureOptionsMenu(MenuWidget):
-    def __init__(self, parent: QWidget, title: str, options: List[BeatCustomization],
-                 checked: Optional[BeatCustomization] = None):
-        super(StructureOptionsMenu, self).__init__(parent)
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self.novel = novel
+        self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         apply_white_menu(self)
-        self.addSection(title)
+        self.aboutToShow.connect(self._fillUp)
+
+    def _fillUp(self):
+        self.clear()
+
+        self.addSection('Associate this scene to a story structure beat')
         self.addSeparator()
 
-        self.options = StructureOptionsWidget(options, self, checked=checked)
-        self.addWidget(self.options)
+        act = 1
+        structure = self.novel.active_story_structure
+        if structure.acts:
+            self._addSection(act, structure)
+        self.addSeparator()
+        for beat in self.novel.active_story_structure.sorted_beats():
+            if beat.type == StoryBeatType.BEAT and beat.enabled:
+                tip = beat.notes if beat.notes else ''
+                if tip:
+                    tip = truncate_string(tip, 125)
+                else:
+                    tip = beat.placeholder if beat.placeholder else beat.description
+                beat_action = action(beat.text,
+                                     slot=partial(self.selected.emit, beat),
+                                     tooltip=tip)
+                if beat.icon:
+                    beat_action.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
+                elif beat.seq:
+                    beat_action.setIcon(IconRegistry.from_name(f'mdi.numeric-{beat.seq}', beat.icon_color, scale=1.5))
+                beat_action.setDisabled(acts_registry.occupied(beat))
+                self.addAction(beat_action)
+            if beat.ends_act:
+                act += 1
+                self._addSection(act, structure)
+                self.addSeparator()
+
+        self._frame.updateGeometry()
+
+    def _addSection(self, act: int, structure: StoryStructure):
+        self.addSection(structure.acts_text.get(act, f'Act {act}'), IconRegistry.act_icon(act, structure))
 
 
-class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
-    def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
-        super(_ThreeActStructureEditorWidget, self).__init__(novel, structure, parent)
+class StructureBeatSelectorButton(QPushButton):
+    selected = pyqtSignal(StoryBeat)
+    removed = pyqtSignal()
 
-        hbox(self.wdgCustom)
-        margins(self.wdgCustom, top=20)
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self.novel = novel
+        self._scene: Optional[Scene] = None
+        self._beat: Optional[StoryBeat] = None
 
-        self.lblCustomization = QLabel('Customization:')
-        underline(self.lblCustomization)
-        bold(self.lblCustomization)
+        pointy(self)
+        self._offFilter = OpacityEventFilter(self)
+        self._onFilter = OpacityEventFilter(self, leaveOpacity=1.0, enterOpacity=0.7)
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
+        incr_icon(self, 4)
+        incr_font(self)
+        self.reset()
 
-        self.btnBeginning = ActOptionsButton('Beginning', 1)
-        self.btnBeginning.setIcon(IconRegistry.cause_icon())
-        checked = option_from_beat(structure.beats[0])
-        menu = StructureOptionsMenu(self.btnBeginning, 'Select the beginning',
-                                    [_ThreeActBeginning.Hook, _ThreeActBeginning.Disturbance,
-                                     _ThreeActBeginning.Motion, _ThreeActBeginning.Characteristic_moment,
-                                     _ThreeActBeginning.Normal_world], checked=checked)
-        menu.options.optionSelected.connect(self._beginningChanged)
-        menu.options.optionsReset.connect(self._beginningReset)
+        self._selectorMenu = StructureBeatSelectorMenu(self.novel)
+        self._selectorMenu.selected.connect(self.selected)
+        self._contextMenu = MenuWidget()
+        self._contextMenu.addAction(
+            action('Unlink beat', IconRegistry.from_name('fa5s.unlink', RED_COLOR), slot=self.removed))
 
-        self.btnFirstPlotPoint = ActOptionsButton('First Plot Point', 1)
-        self.btnFirstPlotPoint.setIcon(IconRegistry.from_name('mdi6.chevron-double-right'))
-        fpp_beat = find_first_plot_point(self._structure)
-        checked = _ThreeActFirstPlotPoint.Point_of_no_return if fpp_beat == first_plot_point_ponr else None
-        menu = StructureOptionsMenu(self.btnFirstPlotPoint, 'Customize',
-                                    [_ThreeActFirstPlotPoint.Point_of_no_return], checked=checked)
-        menu.options.optionSelected.connect(self._firstPlotPointChanged)
-        menu.options.optionsReset.connect(self._firstPlotPointReset)
+        self.clicked.connect(self._showMenu)
 
-        self.btnMidpoint = ActOptionsButton('Midpoint', 2)
-        self.btnMidpoint.setIcon(IconRegistry.from_name('mdi.middleware-outline', '#2e86ab'))
-
-        midpoint_beat = find_midpoint(self._structure)
-        checked = option_from_beat(midpoint_beat) if midpoint_beat else None
-        menu = StructureOptionsMenu(self.btnMidpoint, 'Select the midpoint',
-                                    [_ThreeActMidpoint.Turning_point, _ThreeActMidpoint.Point_of_no_return,
-                                     _ThreeActMidpoint.Mirror_moment, _ThreeActMidpoint.Proactive], checked=checked)
-        menu.options.optionSelected.connect(self._midpointChanged)
-        menu.options.optionsReset.connect(self._midpointReset)
-
-        crisis_beat = find_crisis(self._structure)
-        checked = option_from_beat(crisis_beat) if crisis_beat else None
-        self.btnEnding = ActOptionsButton('Ending', 3)
-        self.btnEnding.setIcon(IconRegistry.reversed_cause_and_effect_icon())
-        menu = StructureOptionsMenu(self.btnEnding, 'Extend the ending',
-                                    [_ThreeActEnding.Crisis], checked=checked)
-        menu.options.optionSelected.connect(self._endingChanged)
-        menu.options.optionsReset.connect(self._endingReset)
-
-        wdg = group(spacer(), self.btnBeginning, self.btnFirstPlotPoint, self.btnMidpoint,
-                    self.btnEnding, spacer(), spacing=15)
-        wdg.layout().insertWidget(1, self.lblCustomization, alignment=Qt.AlignmentFlag.AlignTop)
-        self.wdgCustom.layout().addWidget(wdg)
-
-    def _beginningChanged(self, beginning: _ThreeActBeginning):
-        if beginning == _ThreeActBeginning.Hook:
-            beat = hook_beat
-        elif beginning == _ThreeActBeginning.Motion:
-            beat = motion_beat
-        elif beginning == _ThreeActBeginning.Disturbance:
-            beat = disturbance_beat
-        elif beginning == _ThreeActBeginning.Normal_world:
-            beat = normal_world_beat
-        elif beginning == _ThreeActBeginning.Characteristic_moment:
-            beat = characteristic_moment_beat
+    def setScene(self, scene: Scene):
+        beat = scene.beat(self.novel)
+        if beat:
+            self.setBeat(beat)
+            self._activate()
         else:
+            self.reset()
+
+    def setBeat(self, beat: StoryBeat):
+        self._beat = beat
+        self._activate()
+
+    def reset(self):
+        self._beat = None
+        self.setText('Beat')
+        self.setIcon(IconRegistry.story_structure_icon())
+        self.setToolTip('Select a beat from story structure')
+        self.setStyleSheet('''
+            QPushButton::menu-indicator {
+                width: 0px;
+            }
+            QPushButton {
+                border: 2px dotted grey;
+                border-radius: 6px;
+                padding: 4px;
+                font: italic;
+            }
+            QPushButton:hover {
+                border: 2px dotted #4B0763;
+                color: #4B0763;
+                font: normal;
+            }
+        ''')
+        restyle(self)
+        self.removeEventFilter(self._onFilter)
+        self.installEventFilter(self._offFilter)
+        translucent(self, 0.4)
+
+    def _activate(self):
+        self.setText(self._beat.text)
+        if self._beat.icon:
+            self.setIcon(IconRegistry.from_name(self._beat.icon, self._beat.icon_color))
+        elif self._beat.seq:
+            self.setIcon(IconRegistry.from_name(f'mdi.numeric-{self._beat.seq}', self._beat.icon_color, scale=1.5))
+
+        self.setToolTip(self._beat.description)
+        self.setStyleSheet(f'''
+            QPushButton::menu-indicator {{
+                width: 0px;
+            }}
+            QPushButton {{
+                border: 2px solid {self._beat.icon_color};
+                border-radius: 10px;
+                padding: 6px;
+                background: {RELAXED_WHITE_COLOR};
+            }}
+        ''')
+        restyle(self)
+        self.removeEventFilter(self._offFilter)
+        self.installEventFilter(self._onFilter)
+        translucent(self, 1.0)
+
+    def _showMenu(self):
+        if self._beat:
+            self._contextMenu.exec(QCursor.pos())
+        else:
+            self._selectorMenu.exec(QCursor.pos())
+
+
+class ActToolButton(QToolButton):
+    def __init__(self, act: int, structure: StoryStructure, parent=None, colorOn=None):
+        super().__init__(parent)
+        self.act = act
+        self.setProperty('base', True)
+        pointy(self)
+        icon_name = structure.acts_icon.get(act, f'mdi.numeric-{act}-circle')
+        if colorOn is None:
+            colorOn = act_color(act, structure.acts)
+        self.setIcon(IconRegistry.from_name(icon_name, color='grey', color_on=colorOn))
+        self.setCheckable(True)
+
+
+class ActSelectorButtons(QWidget, EventListener):
+    actToggled = pyqtSignal(int, bool)
+    actClicked = pyqtSignal(int, bool)
+    reset = pyqtSignal()
+
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel: Novel = novel
+        self._buttons: Dict[int, ActToolButton] = {}
+        hbox(self)
+        event_dispatchers.instance(self._novel).register(self, NovelStoryStructureUpdated)
+        self.refresh()
+
+    @overrides
+    def event_received(self, event: Event):
+        self.refresh()
+        self.reset.emit()
+
+    def setActChecked(self, act: int, checked: bool):
+        if act in self._buttons.keys():
+            self._buttons[act].setChecked(checked)
+
+    def refresh(self):
+        clear_layout(self)
+        self._buttons.clear()
+        if self._novel is None:
             return
-        self.beatsPreview.replaceBeat(self._structure.beats[0], copy.deepcopy(beat))
 
-    def _beginningReset(self):
-        self.beatsPreview.replaceBeat(self._structure.beats[0], copy.deepcopy(three_act_structure.beats[0]))
-
-    def _firstPlotPointChanged(self, option: _ThreeActFirstPlotPoint):
-        if option == _ThreeActFirstPlotPoint.Point_of_no_return:
-            beat = first_plot_point_ponr
-        else:
-            beat = first_plot_point
-
-        current_pp = find_first_plot_point(self._structure)
-        if current_pp:
-            self.beatsPreview.replaceBeat(current_pp, copy.deepcopy(beat))
-
-    def _firstPlotPointReset(self):
-        current_pp = find_first_plot_point(self._structure)
-        if current_pp:
-            self.beatsPreview.replaceBeat(current_pp, copy.deepcopy(first_plot_point))
-
-    def _midpointChanged(self, midpoint_option: _ThreeActMidpoint):
-        if midpoint_option == _ThreeActMidpoint.Turning_point:
-            beat = midpoint
-        elif midpoint_option == _ThreeActMidpoint.Point_of_no_return:
-            beat = midpoint_ponr
-        elif midpoint_option == _ThreeActMidpoint.Mirror_moment:
-            beat = midpoint_mirror
-        elif midpoint_option == _ThreeActMidpoint.Proactive:
-            beat = midpoint_proactive
-        else:
+        structure = self._novel.active_story_structure
+        acts: int = structure.acts
+        if not acts:
             return
 
-        current_midpoint = find_midpoint(self._structure)
-        if current_midpoint:
-            self.beatsPreview.replaceBeat(current_midpoint, copy.deepcopy(beat))
+        for act in range(1, acts + 1):
+            btn = ActToolButton(act, structure)
+            self._buttons[act] = btn
+            btn.setChecked(True)
+            btn.toggled.connect(partial(self.actToggled.emit, act))
+            btn.clicked.connect(partial(self.actClicked.emit, act))
+            self.layout().addWidget(btn)
 
-    def _midpointReset(self):
-        current_midpoint = find_midpoint(self._structure)
-        if current_midpoint:
-            self.beatsPreview.replaceBeat(current_midpoint, copy.deepcopy(midpoint))
+    def actFilters(self) -> Dict[int, bool]:
+        filters = {}
+        for act, btn in self._buttons.items():
+            filters[act] = btn.isChecked()
 
-    def _endingChanged(self, ending_option: _ThreeActEnding):
-        self.beatsPreview.insertBeat(copy.deepcopy(crisis))
-
-    def _endingReset(self):
-        self.beatsPreview.removeBeat(crisis)
-
-
-class _SaveTheCatActStructureEditorWidget(_AbstractStructureEditorWidget):
-    def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
-        super(_SaveTheCatActStructureEditorWidget, self).__init__(novel, structure, parent)
-
-
-class _HerosJourneyStructureEditorWidget(_AbstractStructureEditorWidget):
-    def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
-        super(_HerosJourneyStructureEditorWidget, self).__init__(novel, structure, parent)
-
-
-class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
-    def __init__(self, novel: Novel, structure: Optional[StoryStructure] = None, parent=None):
-        super(StoryStructureSelectorDialog, self).__init__(parent)
-        self.setupUi(self)
-        self._novel = novel
-        self.setWindowIcon(IconRegistry.story_structure_icon())
-        self.btnThreeAct.setIcon(IconRegistry.from_name('mdi.numeric-3-circle-outline', color_on=ACT_THREE_COLOR))
-        self.btnSaveTheCat.setIcon(IconRegistry.from_name('fa5s.cat', color_on='white'))
-        self.btnHerosJourney.setIcon(IconRegistry.from_name('fa5s.mask', color_on='white'))
-        self.buttonGroup.buttonClicked.connect(self._structureChanged)
-
-        self._structure: Optional[StoryStructure] = None
-        if structure:
-            self.setWindowTitle('Story structure editor')
-            self.buttonBox.setStandardButtons(QDialogButtonBox.StandardButton.Ok)
-            self.wdgTypesContainer.setHidden(True)
-            page, clazz = self._pageAndClass(structure)
-            self.__initEditor(structure, page, clazz, copyStructure=False)
-        else:
-            self._structureChanged()
-
-    def structure(self) -> StoryStructure:
-        return self._structure
-
-    @staticmethod
-    def display(novel: Novel, structure: Optional[StoryStructure] = None) -> Optional[StoryStructure]:
-        dialog = StoryStructureSelectorDialog(novel, structure)
-        screen = QApplication.screenAt(dialog.pos())
-        if screen:
-            dialog.resize(int(screen.size().width() * 0.9), int(screen.size().height() * 0.7))
-        else:
-            dialog.resize(600, 500)
-
-        result = dialog.exec()
-
-        if result == QDialog.DialogCode.Accepted:
-            return dialog.structure()
-
-        return None
-
-    def _structureChanged(self):
-        if self.btnThreeAct.isChecked():
-            self.__initEditor(three_act_structure, self.pageThreeAct, _ThreeActStructureEditorWidget)
-        elif self.btnSaveTheCat.isChecked():
-            self.__initEditor(save_the_cat, self.pageSaveTheCat, _SaveTheCatActStructureEditorWidget)
-        elif self.btnHerosJourney.isChecked():
-            self.__initEditor(heros_journey, self.pageHerosJourney, _HerosJourneyStructureEditorWidget)
-
-    def __initEditor(self, structure: StoryStructure, page: QWidget, clazz, copyStructure: bool = True):
-        self.stackedWidget.setCurrentWidget(page)
-        if page.layout().count() == 0:
-            if copyStructure:
-                self._structure = copy.deepcopy(structure)
-            else:
-                self._structure = structure
-            page.layout().addWidget(clazz(self._novel, self._structure, self))
-        else:
-            self._structure = page.layout().itemAt(0).widget().structure()
-
-    def _pageAndClass(self, structure: StoryStructure):
-        if structure.title == three_act_structure.title:
-            return self.pageThreeAct, _ThreeActStructureEditorWidget
-        elif structure.title == save_the_cat.title:
-            return self.pageSaveTheCat, _SaveTheCatActStructureEditorWidget
-        elif structure.title == heros_journey.title:
-            return self.pageHerosJourney, _HerosJourneyStructureEditorWidget
+        return filters

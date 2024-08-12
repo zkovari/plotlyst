@@ -20,16 +20,24 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from timeit import default_timer as timer
 from typing import Any, NoReturn, Dict
 
-from plotlyst.core.domain import VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY
-
 WIP_COLOR: str = '#f6cd61'
 
 ACT_ONE_COLOR: str = '#02bcd4'
 TRANS_ACT_ONE_COLOR: str = 'rgba(2, 188, 212, 45)'
 ACT_TWO_COLOR: str = '#1bbc9c'
 TRANS_ACT_TWO_COLOR: str = 'rgba(27, 188, 156, 45)'
+ACT_TWO_COLOR_B: str = '#1B99A3'
+TRANS_ACT_TWO_COLOR_B: str = 'rgba(27, 153, 163, 45)'
 ACT_THREE_COLOR: str = '#ff7800'
 TRANS_ACT_THREE_COLOR: str = 'rgba(255, 120, 0, 45)'
+ACT_FOUR_COLOR: str = '#5A716A'
+TRANS_ACT_FOUR_COLOR: str = 'rgba(90, 113, 106, 45)'
+ACT_FIVE_COLOR: str = '#8B95C9'
+TRANS_ACT_FIVE_COLOR: str = 'rgba(139, 149, 201, 45)'
+ACT_SIX_COLOR: str = '#AD7A99'
+TRANS_ACT_SIX_COLOR: str = 'rgba(173, 122, 153, 45)'
+
+MAX_NUMBER_OF_ACTS: int = 7
 
 CONFLICT_CHARACTER_COLOR: str = '#c1666b'
 CONFLICT_SOCIETY_COLOR: str = '#69306d'
@@ -68,9 +76,13 @@ PLOTLYST_MAIN_COLOR: str = '#3C0764'  # Persian indigo, #4B0763: Indigo, #37065D
 PLOTLYST_MAIN_COMPLEMENTARY_COLOR: str = '#2C5D06'  # Dark moss green
 PLOTLYST_SECONDARY_COLOR: str = '#4B0763'  # indigo
 PLOTLYST_TERTIARY_COLOR: str = '#D4B8E0'  # Thistle
+TRANS_PLOTLYST_SECONDARY_COLOR = 'rgba(75, 7, 99, 45)'
+
+ALT_BACKGROUND_COLOR: str = '#F0E6F4'
 
 RELAXED_WHITE_COLOR: str = '#f8f9fa'
 WHITE_COLOR: str = '#FcFcFc'
+BLACK_COLOR: str = '#040406'
 RED_COLOR: str = '#ED6868'
 
 NAV_BAR_BUTTON_DEFAULT_COLOR: str = '#A89BC7'
@@ -82,32 +94,40 @@ DEFAULT_MANUSCRIPT_INDENT: int = 20
 MAXIMUM_SIZE: int = 16777215
 
 
-def emotion_color(emotion_value: int) -> str:
-    if emotion_value == VERY_UNHAPPY:
-        return VERY_UNHAPPY_EMOTION_COLOR
-    elif emotion_value == UNHAPPY:
-        return UNHAPPY_EMOTION_COLOR
-    elif emotion_value == HAPPY:
-        return HAPPY_EMOTION_COLOR
-    elif emotion_value == VERY_HAPPY:
-        return VERY_HAPPY_EMOTION_COLOR
-    else:
-        return NEUTRAL_EMOTION_COLOR
+# def emotion_color(emotion_value: int) -> str:
+#     if emotion_value == VERY_UNHAPPY:
+#         return VERY_UNHAPPY_EMOTION_COLOR
+#     elif emotion_value == UNHAPPY:
+#         return UNHAPPY_EMOTION_COLOR
+#     elif emotion_value == HAPPY:
+#         return HAPPY_EMOTION_COLOR
+#     elif emotion_value == VERY_HAPPY:
+#         return VERY_HAPPY_EMOTION_COLOR
+#     else:
+#         return NEUTRAL_EMOTION_COLOR
 
 
 def truncate_string(text: str, length: int = 25):
     return (text[:length] + '...') if len(text) > length else text
 
 
-def act_color(act: int, translucent: bool = False) -> str:
+def act_color(act: int, all_acts: int, translucent: bool = False) -> str:
     if act == 1:
         return TRANS_ACT_ONE_COLOR if translucent else ACT_ONE_COLOR
     elif act == 2:
         return TRANS_ACT_TWO_COLOR if translucent else ACT_TWO_COLOR
-    elif act == 3:
+    elif act == 3 and act < all_acts:
+        return TRANS_ACT_TWO_COLOR_B if translucent else ACT_TWO_COLOR_B
+    elif act == 4 and act < all_acts:
+        return TRANS_ACT_FOUR_COLOR if translucent else ACT_FOUR_COLOR
+    elif act == 5 and act < all_acts:
+        return TRANS_ACT_FIVE_COLOR if translucent else ACT_FIVE_COLOR
+    elif act == 6 and act < all_acts:
+        return TRANS_ACT_SIX_COLOR if translucent else ACT_SIX_COLOR
+    elif act == all_acts and all_acts > 2:
         return TRANS_ACT_THREE_COLOR if translucent else ACT_THREE_COLOR
     else:
-        return '#DBF5FA'
+        return TRANS_PLOTLYST_SECONDARY_COLOR if translucent else PLOTLYST_SECONDARY_COLOR
 
 
 def recursive(parent, children_func, action, action_first: bool = True):

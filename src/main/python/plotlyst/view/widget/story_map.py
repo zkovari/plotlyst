@@ -20,12 +20,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from typing import Optional
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QKeyEvent, QImage
+from PyQt6.QtGui import QImage
 from PyQt6.QtGui import QShowEvent
 from PyQt6.QtWidgets import QApplication
 from overrides import overrides
+from qthandy import line
 
+from plotlyst.common import BLACK_COLOR
 from plotlyst.core.client import json_client
 from plotlyst.core.domain import Character, GraphicsItemType, NODE_SUBTYPE_TOOL, NODE_SUBTYPE_COST
 from plotlyst.core.domain import Node
@@ -36,8 +37,8 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, EventItem, \
     NodeItem
-from plotlyst.view.widget.graphics.editor import EventSelectorWidget, TextLineEditorPopup, \
-    EventItemToolbar, ConnectorToolbar, SecondarySelectorWidget, TextNoteEditorPopup
+from plotlyst.view.widget.graphics.editor import EventSelectorWidget, EventItemToolbar, ConnectorToolbar, \
+    SecondarySelectorWidget, TextNoteEditorPopup, CharacterToolbar, NoteToolbar, IconItemToolbar
 from plotlyst.view.widget.graphics.items import NoteItem
 
 
@@ -87,9 +88,15 @@ class EventsMindMapView(NetworkGraphicsView):
         self._btnAddNote = self._newControlButton(
             IconRegistry.from_name('msc.note'), 'Add new note', GraphicsItemType.NOTE)
         self._btnAddCharacter = self._newControlButton(
-            IconRegistry.character_icon('#040406'), 'Add new character', GraphicsItemType.CHARACTER)
+            IconRegistry.character_icon(BLACK_COLOR), 'Add new character', GraphicsItemType.CHARACTER)
+        self._btnAddIcon = self._newControlButton(
+            IconRegistry.from_name('mdi.emoticon-outline'), 'Add new icon', GraphicsItemType.ICON)
         self._btnAddImage = self._newControlButton(IconRegistry.image_icon(), 'Add new image',
                                                    GraphicsItemType.IMAGE)
+
+        self._controlsNavBar.layout().addWidget(line())
+        self._controlsNavBar.layout().addWidget(self._btnUndo)
+        self._controlsNavBar.layout().addWidget(self._btnRedo)
         # self._btnAddSticker = self._newControlButton(IconRegistry.from_name('mdi6.sticker-circle-outline'),
         #                                              'Add new sticker',
         #                                              GraphicsItemType.COMMENT)
@@ -106,11 +113,18 @@ class EventsMindMapView(NetworkGraphicsView):
         # self._stickerEditor = StickerEditor(self)
         # self._stickerEditor.setVisible(False)
 
-        self._itemEditor = EventItemToolbar(self)
+        self._itemEditor = EventItemToolbar(self.undoStack, self)
         self._itemEditor.setVisible(False)
 
-        self._connectorEditor = ConnectorToolbar(self)
+        self._connectorEditor = ConnectorToolbar(self.undoStack, self)
         self._connectorEditor.setVisible(False)
+        self._characterEditor = CharacterToolbar(self.undoStack, self)
+        self._characterEditor.changeCharacter.connect(self._editCharacterItem)
+        self._characterEditor.setVisible(False)
+        self._noteEditor = NoteToolbar(self.undoStack, self)
+        self._noteEditor.setVisible(False)
+        self._iconEditor = IconItemToolbar(self.undoStack, self)
+        self._iconEditor.setVisible(False)
 
         self._arrangeSideBars()
 
@@ -134,6 +148,9 @@ class EventsMindMapView(NetworkGraphicsView):
             self._wdgSecondaryStickerSelector.setVisible(True)
             self._wdgSecondaryEventSelector.setHidden(True)
         elif itemType == GraphicsItemType.CHARACTER:
+            self._wdgSecondaryStickerSelector.setHidden(True)
+            self._wdgSecondaryEventSelector.setHidden(True)
+        elif itemType == GraphicsItemType.ICON:
             self._wdgSecondaryStickerSelector.setHidden(True)
             self._wdgSecondaryEventSelector.setHidden(True)
 
@@ -179,7 +196,7 @@ class EventsMindMapView(NetworkGraphicsView):
 
     @overrides
     def _editNoteItem(self, item: NoteItem):
-        popup = TextNoteEditorPopup(item, parent=self)
+        popup = TextNoteEditorPopup(self.undoStack, item, parent=self)
         font = QApplication.font()
         popup.setFont(font)
 

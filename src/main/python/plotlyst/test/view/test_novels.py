@@ -3,7 +3,7 @@ from plotlyst.core.domain import SceneStoryBeat, save_the_cat
 from plotlyst.test.common import create_plot, go_to_novel, patch_confirmed, go_to_scenes
 from plotlyst.view.main_window import MainWindow
 from plotlyst.view.novel_view import NovelView
-from plotlyst.view.widget.structure.selector import StoryStructureSelectorDialog
+from plotlyst.view.widget.structure.template import StoryStructureSelectorDialog
 
 
 def test_create_plot(qtbot, filled_window: MainWindow):
@@ -42,7 +42,7 @@ def test_change_structure(qtbot, filled_window: MainWindow, monkeypatch):
     assert btn.isChecked() and btn.text() == 'Three Act Structure'
 
     monkeypatch.setattr(StoryStructureSelectorDialog, "display", lambda *args: save_the_cat)
-    view.ui.wdgStructure.btnNew.click()
+    view.ui.wdgStructure.btnNew.menu().actions()[0].trigger()
     btn = view.ui.wdgStructure.btnGroupStructure.buttons()[1]
     btn.click()
 

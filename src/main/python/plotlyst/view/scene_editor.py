@@ -56,7 +56,7 @@ from plotlyst.view.widget.scene.functions import SceneFunctionsWidget
 from plotlyst.view.widget.scene.plot import ScenePlotLabels, \
     ScenePlotSelectorMenu
 from plotlyst.view.widget.scene.reader_drive import ReaderCuriosityEditor, ReaderInformationEditor
-from plotlyst.view.widget.structure.beat import StructureBeatSelectorButton
+from plotlyst.view.widget.structure.selector import StructureBeatSelectorButton
 from plotlyst.view.widget.tree import TreeSettings
 
 

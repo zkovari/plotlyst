@@ -32,6 +32,7 @@ from overrides import overrides
 from qttextedit import DashInsertionMode
 from qttextedit.api import AutoCapitalizationMode
 
+from plotlyst.common import act_color, RED_COLOR
 from plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_choices, \
     mbti_choices, Role, exclude_if_false, antagonist_role, exclude_if_true
 
@@ -741,8 +742,8 @@ class PlotProgressionItem(OutlineItem):
 
 @dataclass
 class StoryBeat(OutlineItem):
-    act: int = 1
-    percentage: float = 0.0
+    act: int = 0
+    percentage: float = 1.0
     description: str = ''
     type: StoryBeatType = field(default=StoryBeatType.BEAT, metadata=config(exclude=exclude_if_beat))
     ends_act: bool = field(default=False, metadata=config(exclude=exclude_if_empty))
@@ -753,7 +754,9 @@ class StoryBeat(OutlineItem):
     enabled: bool = True
     notes: str = field(default='', metadata=config(exclude=exclude_if_empty))
     custom: bool = False
+    act_colorized: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     placeholder: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    seq: int = field(default=0, metadata=config(exclude=exclude_if_empty))
 
     @overrides
     def __eq__(self, other: 'StoryBeat'):
@@ -2251,6 +2254,19 @@ class Board:
     statuses: List[TaskStatus] = field(default_factory=default_task_statues)
 
 
+class TemplateStoryStructureType(Enum):
+    NONE = 0
+    THREE_ACT = 1
+    SPINE = 2
+    TWISTS = 3
+    FIVE_ACT = 4
+
+
+class StoryStructureDisplayType(Enum):
+    Proportional_timeline = 'proportional_timeline'
+    Sequential_timeline = 'sequential_timeline'
+
+
 @dataclass
 class StoryStructure(CharacterBased):
     title: str
@@ -2261,7 +2277,12 @@ class StoryStructure(CharacterBased):
     custom: bool = False
     active: bool = False
     character_id: Optional[uuid.UUID] = None
-    acts_text: Dict[int, str] = field(default_factory=dict)
+    acts_text: Dict[int, str] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
+    acts_icon: Dict[int, str] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
+    acts: int = 3
+    display_type: StoryStructureDisplayType = field(default=StoryStructureDisplayType.Proportional_timeline)
+    template_type: TemplateStoryStructureType = field(default=TemplateStoryStructureType.NONE)
+    expected_acts: Optional[int] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
     def __post_init__(self):
         self._character: Optional[Character] = None
@@ -2269,11 +2290,37 @@ class StoryStructure(CharacterBased):
     def act_beats(self) -> List[StoryBeat]:
         return [x for x in self.beats if x.ends_act]
 
+    def sorted_beats(self) -> List[StoryBeat]:
+        return sorted(self.beats, key=lambda x: x.percentage)
+
+    def increaseAct(self):
+        self.acts += 1
+        if self.acts == 1:
+            self.acts = 2
+
+    def decreaseAct(self):
+        self.acts -= 1
+        if self.acts == 1:
+            self.acts = 0
+
+    def update_acts(self):
+        if self.acts == 0:
+            for beat in self.beats:
+                beat.act = 0
+        else:
+            act = 1
+            for beat in self.sorted_beats():
+                beat.act = act
+                if beat.act_colorized:
+                    beat.icon_color = act_color(act, self.acts)
+                if beat.ends_act:
+                    act += 1
+
 
 general_beat = StoryBeat(text='Beat',
                          id=uuid.UUID('3dc905df-1a9b-4e04-90f5-199ea908f2d5'),
                          icon='mdi.lightning-bolt-outline',
-                         description="A pivotal moment in the story",
+                         description="A pivotal moment or event that advances the plot or develops a character",
                          act=1, percentage=1)
 
 hook_beat = StoryBeat(text='Hook',
@@ -2292,13 +2339,14 @@ disturbance_beat = StoryBeat(text='Disturbance',
                              id=uuid.UUID('a954f949-8be9-46d6-8ebf-f9f76f482944'),
                              icon='mdi.chemical-weapon',
                              icon_color='#e63946',
-                             description="Disturbs the protagonist's life and sets the story in motion.",
+                             description="Disturbs the protagonist's life and sets the story in motion. It could act as the inciting incident.",
+                             placeholder="Disturbs the protagonist's life and sets the story in motion.",
                              act=1, percentage=1)
 characteristic_moment_beat = StoryBeat(text='Characteristic Moment',
                                        id=uuid.UUID('b50c32e4-1927-4633-b5a3-9765aeaee7ad'),
                                        icon='mdi6.human-scooter',
                                        icon_color='#457b9d',
-                                       description="Introduces the protagonist, highlighting their core personality, possibly flaws, goals, or weaknesses.",
+                                       description="Introduces the protagonist, highlighting their personality, including possible flaws, goals, or weaknesses.",
                                        act=1, percentage=1)
 normal_world_beat = StoryBeat(text='Normal World',
                               id=uuid.UUID('79ebc3b6-6b02-4d2d-8fdd-12274b8bb412'),
@@ -2307,9 +2355,48 @@ normal_world_beat = StoryBeat(text='Normal World',
                               description="Establishes the setting alongside the protagonist before the first major event in the story would happen.",
                               act=1, percentage=1)
 
+inciting_incident_beat = StoryBeat(text='Inciting Incident',
+                                   icon='mdi.bell-alert-outline',
+                                   icon_color='#a2ad59',
+                                   description="An event that disrupts the protagonist's life and sets the story in motion. Often an external conflict is involved that sets the protagonist in a new direction.",
+                                   placeholder="An event that disrupts the protagonist's life and sets the story in motion",
+                                   id=uuid.UUID('a0c2d94a-b53c-485e-a279-f2548bdb38ec'),
+                                   act=1, percentage=10)
+
+synchronicity_beat = StoryBeat(text='Synchronicity',
+                               icon='msc.sync',
+                               icon_color='#0077b6',
+                               description='A series of accidents or coincidences take on meaning, calling the protagonist to action as if guided by fate.',
+                               placeholder="Unrelated, but meaningful coincidences call the protagonist to action as if guided by fate.",
+                               id=uuid.UUID('e4351ee3-ed30-42c4-9c3a-2f6b690c8417'),
+                               act=1, percentage=10)
+trigger_beat = StoryBeat('Trigger',
+                         icon='mdi.lightning-bolt-outline',
+                         icon_color='#AD9C58',
+                         description="An event that sets the story in motion and introduces a new situation or problem. Often followed by the 'Establish' beat to establish the story later.",
+                         placeholder="An event that sets the story in motion and introduces a new situation or problem.",
+                         id=uuid.UUID('f127f7db-5715-4d3b-90aa-c074181c765c'),
+                         act=1, percentage=10
+                         )
+establish_beat = StoryBeat('Establish',
+                           icon='fa5s.stamp',
+                           icon_color='#AD7E58',
+                           description='An event or character decision that establishes the story. Often preceded by the Trigger beat to set the story in motion first.',
+                           placeholder='An event or character decision that establishes the story.',
+                           id=uuid.UUID('c23a3e47-1161-4869-8104-c4874ab6f98b'),
+                           act=1, percentage=17)
+
+refusal_beat = StoryBeat(text='Refusal',
+                         icon='mdi6.hand-back-left',
+                         icon_color='#e5989b',
+                         description='The protagonist hesitates or resists the inciting incident',
+                         id=uuid.UUID('9fd9c53d-8e58-4099-b538-be60fb898531'),
+                         act=1,
+                         percentage=14)
+
 turn_beat = StoryBeat(text='Turn',
                       id=uuid.UUID('31000162-4bed-49f2-9def-a70ba15ff378'),
-                      icon='mdi.boom-gate-up-outline',
+                      icon='mdi.sign-direction',
                       icon_color='#8338ec',
                       description="Shifts the story's direction")
 
@@ -2318,6 +2405,59 @@ twist_beat = StoryBeat(text='Twist',
                        icon='ph.shuffle-bold',
                        icon_color='#f20089',
                        description="Brings an unexpected development to the story by defying readers' expectations")
+
+danger_beat = StoryBeat(text='Danger',
+                        id=uuid.UUID('d87d76e1-b0b2-412d-b39b-84c622127915'),
+                        icon='ei.fire',
+                        icon_color='#f4a261',
+                        description="Moments of heightened danger, either physical or emotional")
+revelation_beat = StoryBeat(text='Revelation',
+                            icon='fa5s.binoculars',
+                            icon_color='#588157',
+                            description="A moment where a key information is revealed or discovered",
+                            id=uuid.UUID('36d8a7e9-db8d-4d87-a2d0-9170c86aa6c3'))
+
+dark_moment = StoryBeat(text='Dark Moment',
+                        icon='mdi.weather-night',
+                        icon_color='#494368',
+                        description="All-time low moment for the protagonist. They must feel worse than at the beginning of the story.",
+                        id=uuid.UUID('4ded5006-c90a-4825-9de7-e16bf62017a3'), act=2,
+                        percentage=75, enabled=False)
+
+first_pinch_point_beat = StoryBeat(text='First Pinch Point',
+                                   id=uuid.UUID('af024374-12e6-44dc-80e6-28f2bc0e59ed'),
+                                   icon='fa5s.thermometer-three-quarters',
+                                   description='A reminder of the power of antagonistic forces.',
+                                   icon_color='#b81365',
+                                   act=2, percentage=35)
+second_pinch_point_beat = StoryBeat(text='Second Pinch Point',
+                                    id=uuid.UUID('74087e28-b37a-4797-95bc-41d96f6a9393'),
+                                    icon='fa5s.biohazard',
+                                    description="A showcase of the full strength of antagonistic forces and a reminder of what's at stake.",
+                                    icon_color='#cd533b',
+                                    act=2, percentage=62)
+plot_point = StoryBeat('Plot Point',
+                       icon='mdi6.chevron-double-right',
+                       description="It propels the story into a new stage, possibly into a new act.",
+                       id=uuid.UUID('2adeeb15-ad30-4830-909b-1d8d41f3e9d6'),
+                       ends_act=True, act_colorized=True)
+plot_point_ponr = StoryBeat(text='Point of No Return',
+                            icon='fa5s.door-closed',
+                            description="It propels the story into a new stage through the character's irreversible decision. There's no going back now.",
+                            placeholder="It propels the story into a new stage through the character's irreversible decision.",
+                            id=uuid.UUID('6c1c36b8-c04a-41b9-9d2e-4f9d8f095355'),
+                            ends_act=True, act_colorized=True)
+plot_point_aha = StoryBeat(text='A-ha moment',
+                           icon='fa5.lightbulb',
+                           description="It propels the story into a new stage through the character's epiphany. They often have a realization about themselves or the plot.",
+                           placeholder="It propels the story into a new stage through the character's epiphany.",
+                           id=uuid.UUID('77e05b3c-27c3-42b2-bcbc-1f46dfc85d73'),
+                           ends_act=True, act_colorized=True)
+plot_point_rededication = StoryBeat(text='Re-dedication',
+                                    icon='fa5s.heartbeat',
+                                    description="It propels the story into a new stage when the character recommits to their goal or mission.",
+                                    id=uuid.UUID('4468e497-77f7-4758-90f2-4601f16c7685'),
+                                    ends_act=True, act_colorized=True)
 
 first_plot_point = StoryBeat(text='First Plot Point',
                              icon='mdi6.chevron-double-right',
@@ -2341,13 +2481,6 @@ second_plot_point = StoryBeat(text='Second Plot Point',
                               placeholder="It propels the protagonist towards the climax to face the main conflict",
                               icon_color='#6a0136',
                               act=2, ends_act=True, percentage=80)
-
-second_plot_point_aha = StoryBeat(text='Aha moment',
-                                  id=uuid.UUID('77e05b3c-27c3-42b2-bcbc-1f46dfc85d73'),
-                                  icon='fa5.lightbulb',
-                                  description="A-ha moment.",
-                                  icon_color='#6a0136',
-                                  act=2, ends_act=True, percentage=80)
 
 midpoint = StoryBeat(text='Midpoint',
                      icon='mdi.middleware-outline',
@@ -2376,64 +2509,91 @@ midpoint_proactive = StoryBeat('Reactive to Proactive Shift',
                                id=uuid.UUID('d7d1b457-353f-4259-92c2-0cc7da0e4b88'),
                                act=2, percentage=50
                                )
+midpoint_false_victory = StoryBeat(text='False victory',
+                                   icon='mdi.trophy-broken',
+                                   icon_color='#b5838d',
+                                   description="A moment when the protagonist appears to achieve their goal, only to face immediate significant setbacks",
+                                   id=uuid.UUID('404883e9-d110-4e83-9c52-e37bb888632c'),
+                                   act=2, percentage=50)
+midpoint_re_dedication = StoryBeat(text='Re-dedication',
+                                   icon='fa5s.heartbeat',
+                                   icon_color=RED_COLOR,
+                                   description="A moment when the protagonist renews their commitment to their goal or mission, often after facing significant setbacks or doubts.",
+                                   placeholder="A moment when the protagonist renews their commitment to their goal or mission.",
+                                   id=uuid.UUID('7b63be66-1c96-4332-af78-ffa62b79bbd4'),
+                                   act=2, percentage=50)
 crisis = StoryBeat(text='Crisis',
                    icon='mdi.arrow-decision-outline',
                    icon_color='#ce2d4f',
                    description="The protagonist must decide between two equally bad or two irreconcilable good choices.",
                    id=uuid.UUID('466688f7-ebee-4d36-a655-83ff40e1c46d'),
                    act=3, percentage=95)
+climax_beat = StoryBeat(text='Climax',
+                        icon='fa5s.chevron-up',
+                        icon_color='#ce2d4f',
+                        description="The highest point of tension. The final confrontation between the protagonist and the antagonist. The story's central conflict is resolved.",
+                        placeholder="The final confrontation where the story's central conflict is resolved",
+                        id=uuid.UUID('342eb27c-52ff-40c2-8c5e-cf563d4e38bc'),
+                        act=3, percentage=97)
+resolution_beat = StoryBeat(text='Resolution',
+                            icon='fa5s.water',
+                            icon_color='#7192be',
+                            description="An 'after' snapshot to tie up loose ends and release tension. It may introduce us to the protagonist's new life.",
+                            placeholder="An 'after' snapshot to tie up loose ends and release tension.",
+                            id=uuid.UUID('996695b1-8db6-4c68-8dc4-51bbfe720e8b'),
+                            act=3, percentage=99)
+
+contrast_beat = StoryBeat('Contrast',
+                          icon='ei.adjust',
+                          icon_color='#7192be',
+                          description="A moment that contrasts with the beginning of the story, showing how the character or their world has changed.",
+                          placeholder="A moment that contrasts with the beginning of the story.",
+                          id=uuid.UUID('be29edaf-58e1-47ec-99ab-0614fee5cd4d'),
+                          act=3, percentage=99)
+retrospection_beat = StoryBeat('Retrospection',
+                               icon='mdi.magnify-scan',
+                               icon_color='#7192be',
+                               description="A moment where a character reflects on how the plot was resolved, providing insight to the reader after the fact.",
+                               placeholder="A moment that reveals how the plot was resolved, providing insight after the fact",
+                               id=uuid.UUID('7a8581bc-ef27-402a-8e57-539d79145d37'),
+                               act=3, percentage=99)
 
 first_plot_points = (first_plot_point, first_plot_point_ponr)
-midpoints = (midpoint, midpoint_ponr, midpoint_mirror, midpoint_proactive)
+midpoints = (
+    midpoint, midpoint_ponr, midpoint_mirror, midpoint_proactive, midpoint_false_victory, midpoint_re_dedication)
+
+
+def copy_beat(beat: StoryBeat) -> StoryBeat:
+    cloned_beat = copy.deepcopy(beat)
+    cloned_beat.id = uuid.uuid4()
+    cloned_beat.custom = True
+    return cloned_beat
+
 
 three_act_structure = StoryStructure(title='Three Act Structure',
                                      id=uuid.UUID('58013be5-1efb-4de4-9dd2-1433ce6edf90'),
                                      icon='mdi.numeric-3-circle-outline',
                                      icon_color='#ff7800',
+                                     template_type=TemplateStoryStructureType.THREE_ACT,
                                      beats=[hook_beat,
-                                            StoryBeat(text='Inciting Incident',
-                                                      icon='mdi.bell-alert-outline',
-                                                      icon_color='#a2ad59',
-                                                      description="An event that changes the protagonist's life and might establishes the story. Often an external conflict is involved that sets the protagonist in a new direction.",
-                                                      placeholder="An event that changes the protagonist's life and might establishes the story",
-                                                      id=uuid.UUID('a0c2d94a-b53c-485e-a279-f2548bdb38ec'),
-                                                      act=1, percentage=10),
+                                            inciting_incident_beat,
                                             first_plot_point,
-                                            StoryBeat(text='First Pinch Point',
-                                                      id=uuid.UUID('af024374-12e6-44dc-80e6-28f2bc0e59ed'),
-                                                      icon='fa5s.thermometer-three-quarters',
-                                                      description='A reminder of the power of antagonistic forces.',
-                                                      icon_color='#b81365',
-                                                      act=2, percentage=35),
+                                            first_pinch_point_beat,
                                             midpoint,
-                                            StoryBeat(text='Second Pinch Point',
-                                                      id=uuid.UUID('74087e28-b37a-4797-95bc-41d96f6a9393'),
-                                                      icon='fa5s.biohazard',
-                                                      description="A showcase of the full strength of antagonistic forces and a reminder of what's at stake.",
-                                                      icon_color='#cd533b',
-                                                      act=2, percentage=62),
-                                            StoryBeat(text='Dark Moment',
-                                                      icon='mdi.weather-night',
-                                                      icon_color='#494368',
-                                                      description="All-time low moment for the protagonist. They must feel worse than at the beginning of the story.",
-                                                      id=uuid.UUID('4ded5006-c90a-4825-9de7-e16bf62017a3'), act=2,
-                                                      percentage=75, enabled=False),
+                                            second_pinch_point_beat,
+                                            dark_moment,
                                             second_plot_point,
                                             crisis,
-                                            StoryBeat(text='Climax',
-                                                      icon='fa5s.chevron-up',
-                                                      icon_color='#ce2d4f',
-                                                      description="The highest point of tension. The final confrontation between the protagonist and the antagonist. The story's central conflict is resolved.",
-                                                      placeholder="The final confrontation where the story's central conflict is resolved",
-                                                      id=uuid.UUID('342eb27c-52ff-40c2-8c5e-cf563d4e38bc'),
-                                                      act=3, percentage=97),
-                                            StoryBeat(text='Resolution',
-                                                      icon='fa5s.water',
-                                                      description="An 'after' snapshot to tie up loose ends and release tension.",
-                                                      icon_color='#7192be',
-                                                      id=uuid.UUID('996695b1-8db6-4c68-8dc4-51bbfe720e8b'),
-                                                      act=3, percentage=99),
+                                            climax_beat,
+                                            resolution_beat,
                                             ])
+
+five_act_structure = StoryStructure(title='Five Act Structure',
+                                    id=uuid.UUID('9b5dcfca-e140-452f-ac42-67ebb9a3b301'),
+                                    icon='mdi.numeric-5-box-outline',
+                                    icon_color='#',
+                                    template_type=TemplateStoryStructureType.FIVE_ACT,
+                                    )
 
 save_the_cat = StoryStructure(title='Save the Cat',
                               id=uuid.UUID('1f1c4433-6afa-48e1-a8dc-f8fcb94bfede'),
@@ -2665,6 +2825,71 @@ heros_journey = StoryStructure(title="Hero's Journey",
                                              percentage=98)
                                ]
                                )
+
+story_spine = StoryStructure(title="Story Spine",
+                             id=uuid.UUID('38c22213-3f9b-4a51-ac87-b7a60a535e41'),
+                             icon='mdi.alpha-s-circle-outline',
+                             display_type=StoryStructureDisplayType.Sequential_timeline,
+                             template_type=TemplateStoryStructureType.SPINE,
+                             acts=0,
+                             beats=[
+                                 StoryBeat(text='Once upon a time...',
+                                           id=uuid.UUID('3c09104c-414a-4042-bf30-887c686473cd'),
+                                           seq=1,
+                                           icon_color='#457b9d',
+                                           description="Introduces the world and key characters",
+                                           percentage=1),
+                                 StoryBeat(text='Every day...',
+                                           id=uuid.UUID('23de963d-7655-4685-a9b7-bfccdad46404'),
+                                           seq=2,
+                                           icon_color='#457b9d',
+                                           description="Depicts the characters' routine life and the status quo",
+                                           percentage=5),
+                                 StoryBeat(text='But, one day...',
+                                           id=uuid.UUID('a8fdc9bc-72fc-425f-8a97-2c501724d6e3'),
+                                           seq=3,
+                                           icon_color='#a2ad59',
+                                           description="An event disrupts the character's life",
+                                           percentage=10),
+                                 StoryBeat(text='Because of that...',
+                                           id=uuid.UUID('18412ba6-2411-4e57-9997-fc63a9a6ab60'),
+                                           seq=4,
+                                           icon_color='#cd533b',
+                                           description="The characters react to the disruption, leading to new events",
+                                           percentage=25),
+                                 StoryBeat(text='Because of that...',
+                                           id=uuid.UUID('678c5f83-8fe6-4166-bb5e-df9715f24e74'),
+                                           seq=5,
+                                           icon_color='#cd533b',
+                                           description="These events create further challenges and complications",
+                                           percentage=50),
+                                 StoryBeat(text='Because of that...',
+                                           id=uuid.UUID('c3d3450e-9819-4f47-a683-1314358206fc'),
+                                           seq=6,
+                                           icon_color='#cd533b',
+                                           description="The characters face increasing obstacles leading to a climax",
+                                           percentage=75),
+                                 StoryBeat(text='Until finally...',
+                                           id=uuid.UUID('8c87b59f-e229-47ca-9734-c656d8e8e973'),
+                                           seq=7,
+                                           icon_color='#ce2d4f',
+                                           description="Reaches the climax where the main conflict is addressed",
+                                           percentage=90),
+                                 StoryBeat(text='And ever since that day...',
+                                           id=uuid.UUID('be8740a3-caec-4045-bc48-169f8a588ed3'),
+                                           seq=8,
+                                           icon_color='#7192be',
+                                           description="Concludes with the resolution and the new status quo for the characters",
+                                           percentage=99),
+                             ]
+
+                             )
+twists_and_turns = StoryStructure(title='Twists and Turns',
+                                  id=uuid.UUID('f905ba6b-0195-4ed7-932e-0b02e49cb1ae'),
+                                  icon='ph.shuffle-bold',
+                                  display_type=StoryStructureDisplayType.Sequential_timeline,
+                                  template_type=TemplateStoryStructureType.TWISTS,
+                                  acts=0)
 
 default_story_structures = [three_act_structure, save_the_cat, heros_journey]
 
@@ -3074,6 +3299,7 @@ class GraphicsItemType(Enum):
     NOTE = 'note'
     IMAGE = 'image'
     MAP_MARKER = 'map_marker'
+    ICON = 'icon'
 
     def mimeType(self) -> str:
         return f'application/node-{self.value}'
@@ -3108,6 +3334,7 @@ class Node(CharacterBased):
     width: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     height: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     image_ref: Optional[ImageRef] = field(default=None, metadata=config(exclude=exclude_if_empty))
+    transparent: bool = field(default=False, metadata=config(exclude=exclude_if_false))
 
     def __post_init__(self):
         self._character: Optional[Character] = None
@@ -3157,6 +3384,8 @@ class Connector:
     text: str = field(default='', metadata=config(exclude=exclude_if_empty))
     cp_x: Optional[float] = None
     cp_y: Optional[float] = None
+    start_arrow_enabled: bool = field(default=False, metadata=config(exclude=exclude_if_false))
+    end_arrow_enabled: bool = field(default=True, metadata=config(exclude=exclude_if_true))
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)

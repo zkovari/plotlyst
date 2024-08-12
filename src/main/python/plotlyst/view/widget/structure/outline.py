@@ -17,44 +17,62 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import copy
-import uuid
+from enum import Enum, auto
 from functools import partial
-from typing import List, Optional
+from typing import Optional
 
-from PyQt6.QtCore import Qt, QEvent, QTimer
-from PyQt6.QtGui import QIcon, QColor, QEnterEvent
-from PyQt6.QtWidgets import QWidget, QDialog
+import qtanim
+from PyQt6.QtCore import Qt, QEvent, QTimer, pyqtSignal
+from PyQt6.QtGui import QIcon, QColor, QEnterEvent, QResizeEvent, QDragEnterEvent
+from PyQt6.QtWidgets import QWidget, QDialog, QButtonGroup
 from overrides import overrides
-from qthandy import line, vbox, margins, hbox, spacer, sp, incr_icon, transparent, italic
+from qthandy import line, vbox, margins, hbox, spacer, sp, incr_icon, transparent, italic, clear_layout, vspacer
+from qthandy.filter import OpacityEventFilter, DropEventFilter
 
-from plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR, MAX_NUMBER_OF_ACTS, act_color, ALT_BACKGROUND_COLOR
 from plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat, motion_beat, \
-    disturbance_beat, characteristic_moment_beat, normal_world_beat, general_beat, turn_beat, twist_beat
-from plotlyst.view.common import label, scrolled, push_btn
+    disturbance_beat, characteristic_moment_beat, normal_world_beat, general_beat, StoryStructure, turn_beat, \
+    twist_beat, inciting_incident_beat, refusal_beat, synchronicity_beat, establish_beat, trigger_beat, \
+    first_pinch_point_beat, second_pinch_point_beat, crisis, climax_beat, resolution_beat, contrast_beat, \
+    retrospection_beat, revelation_beat, dark_moment, plot_point, plot_point_ponr, plot_point_aha, \
+    plot_point_rededication, danger_beat, copy_beat, TemplateStoryStructureType, LayoutType
+from plotlyst.view.common import label, push_btn, wrap, tool_btn, scrolled
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.display import PopupDialog, Icon
 from plotlyst.view.widget.outline import OutlineTimelineWidget, OutlineItemWidget
-from plotlyst.view.widget.scenes import SceneStoryStructureWidget
 from plotlyst.view.widget.structure.beat import BeatsPreview
+from plotlyst.view.widget.structure.timeline import StoryStructureTimelineWidget
 
 
 class StoryStructureBeatWidget(OutlineItemWidget):
-    def __init__(self, beat: StoryBeat, parent=None):
+    StoryStructureBeatBeatMimeType: str = 'application/story-structure-beat'
+    actChanged = pyqtSignal()
+
+    def __init__(self, beat: StoryBeat, structure: StoryStructure, parent=None):
         self.beat = beat
         super().__init__(beat, parent)
-        self._structurePreview: Optional[SceneStoryStructureWidget] = None
+        self._structure = structure
+        self._allowActs = structure.custom
+        self._structurePreview: Optional[StoryStructureTimelineWidget] = None
         self._text.setText(self.beat.notes)
         self._text.setMaximumSize(220, 110)
-        self._btnIcon.removeEventFilter(self._dragEventFilter)
-        self._btnIcon.setCursor(Qt.CursorShape.ArrowCursor)
-        self.setAcceptDrops(False)
         self._initStyle(name=self.beat.text,
                         desc=self.beat.placeholder if self.beat.placeholder else self.beat.description,
                         tooltip=self.beat.description)
 
-    def attachStructurePreview(self, structurePreview: SceneStoryStructureWidget):
+        if self._allowActs:
+            self._btnEndsAct = tool_btn(QIcon(),
+                                        transparent_=True, checkable=True,
+                                        parent=self)
+            self.refreshActButton()
+            self._btnEndsAct.installEventFilter(
+                OpacityEventFilter(self._btnEndsAct, leaveOpacity=0.3, enterOpacity=0.7, ignoreCheckedButton=True))
+            self._btnEndsAct.setChecked(self.beat.ends_act)
+            self._btnEndsAct.setVisible(self._btnEndsAct.isChecked())
+            self._btnEndsAct.toggled.connect(self._actEndChanged)
+
+    def attachStructurePreview(self, structurePreview: 'StoryStructureTimelineWidget'):
         self._structurePreview = structurePreview
 
     @overrides
@@ -63,16 +81,40 @@ class StoryStructureBeatWidget(OutlineItemWidget):
             super().enterEvent(event)
         if self._structurePreview:
             self._structurePreview.highlightBeat(self.beat)
+        if self._allowActs and (self._structure.acts < self._maxNumberOfActs() or self._btnEndsAct.isChecked()):
+            self.refreshActButton()
+            self._btnEndsAct.setVisible(True)
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
         super().leaveEvent(event)
         if self._structurePreview:
             self._structurePreview.unhighlightBeats()
+        if self._allowActs:
+            self._btnEndsAct.setVisible(self._btnEndsAct.isChecked())
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        if self._allowActs:
+            self._btnEndsAct.setGeometry(5, self.iconFixedSize, 25, 25)
 
     @overrides
     def mimeType(self) -> str:
-        return ''
+        return self.StoryStructureBeatBeatMimeType
+
+    @overrides
+    def copy(self) -> 'StoryStructureBeatWidget':
+        return StoryStructureBeatWidget(self.beat, self._structure)
+
+    def refreshActButton(self):
+        self._btnEndsAct.setToolTip('Remove act' if self._btnEndsAct.isChecked() else 'Toggle new act')
+        self._btnEndsAct.setIcon(IconRegistry.act_icon(max(self.beat.act, 1), self._structure, 'grey'))
+
+        if self.beat.act_colorized:
+            self._initStyle(name=self.beat.text,
+                            desc=self.beat.placeholder if self.beat.placeholder else self.beat.description,
+                            tooltip=self.beat.description)
 
     @overrides
     def _color(self) -> str:
@@ -82,11 +124,34 @@ class StoryStructureBeatWidget(OutlineItemWidget):
     def _icon(self) -> QIcon:
         qcolor = QColor(self.beat.icon_color)
         qcolor.setAlpha(self._colorAlpha)
-        return IconRegistry.from_name(self.beat.icon, qcolor)
+        if self.beat.icon:
+            return IconRegistry.from_name(self.beat.icon, qcolor)
+        elif self.beat.seq:
+            return IconRegistry.from_name(f'mdi.numeric-{self.beat.seq}', qcolor, scale=1.5)
 
     @overrides
     def _textChanged(self):
         self.beat.notes = self._text.toPlainText()
+        self.changed.emit()
+
+    def _actEndChanged(self, toggled: bool):
+        self.beat.ends_act = toggled
+        if toggled:
+            self._structure.increaseAct()
+            qtanim.glow(self._btnEndsAct, color=QColor(act_color(max(self.beat.act, 1), self._structure.acts)))
+            self._btnRemove.setHidden(True)
+        else:
+            self._structure.decreaseAct()
+            self._btnRemove.setVisible(True)
+        self._structure.update_acts()
+
+        self.changed.emit()
+        self.actChanged.emit()
+
+    def _maxNumberOfActs(self) -> int:
+        if self._structure.expected_acts is not None:
+            return self._structure.expected_acts
+        return MAX_NUMBER_OF_ACTS
 
 
 class _StoryBeatSection(QWidget):
@@ -98,82 +163,195 @@ class _StoryBeatSection(QWidget):
                                text=beat.text, transparent_=True,
                                tooltip=beat.description, checkable=True, icon_resize=False,
                                pointy_=False)
-        self.btnAdd = push_btn(IconRegistry.plus_icon(PLOTLYST_SECONDARY_COLOR), 'Add')
+        self.btnAdd = push_btn(IconRegistry.plus_icon(PLOTLYST_SECONDARY_COLOR), 'Add', tooltip=f'Add {beat.text}')
         italic(self.btnAdd)
         self.btnAdd.setStyleSheet(f'border: 0px; color: {PLOTLYST_SECONDARY_COLOR};')
-        self.layout().addWidget(group(self._label, spacer(), self.btnAdd, margin=0))
-        desc = label(beat.description, description=True, wordWrap=True)
-        self.layout().addWidget(desc)
+        self.wdgHeader = group(self._label, spacer(), self.btnAdd, margin=0)
+        self.layout().addWidget(self.wdgHeader)
+        self.desc = label(beat.description, description=True, wordWrap=True)
+        self.layout().addWidget(wrap(self.desc, margin_left=20))
 
         self.setMinimumWidth(450)
 
+        self.wdgHeader.installEventFilter(self)
+        self.desc.installEventFilter(self)
+
+    @overrides
+    def eventFilter(self, watched: 'QObject', event: 'QEvent') -> bool:
+        if event.type() == QEvent.Type.Enter:
+            self.setStyleSheet(f'background: {ALT_BACKGROUND_COLOR};')
+        elif event.type() == QEvent.Type.Leave:
+            self.setStyleSheet('')
+        return super().eventFilter(watched, event)
+
+
+class StoryStructureElements(Enum):
+    Beginning = auto()
+    Catalyst = auto()
+    Escalation = auto()
+    Midpoint = auto()
+    Plot_points = auto()
+    Climax = auto()
+    # Falling_action = auto()
+    Ending = auto()
+
+
+story_structure_element_icons = {
+    StoryStructureElements.Beginning: 'mdi.ray-start',
+    StoryStructureElements.Catalyst: 'fa5s.vial',
+    StoryStructureElements.Escalation: 'mdi.slope-uphill',
+    StoryStructureElements.Midpoint: 'mdi.middleware-outline',
+    StoryStructureElements.Plot_points: 'mdi.pillar',
+    StoryStructureElements.Climax: 'fa5s.chevron-up',
+    # StoryStructureElements.Falling_action: 'mdi.slope-downhill',
+    StoryStructureElements.Ending: 'fa5s.water',
+}
+
 
 class StoryBeatSelectorPopup(PopupDialog):
-    def __init__(self, parent=None):
+    LAST_ELEMENT = StoryStructureElements.Beginning
+
+    def __init__(self, structure: StoryStructure, parent=None):
         super().__init__(parent)
-        self.wdgTitle = QWidget()
+        self._structure = structure
         self._beat: Optional[StoryBeat] = None
 
-        self._scrollarea, self._wdgCenter = scrolled(self.frame, frameless=True, h_on=False)
-        self._scrollarea.setProperty('transparent', True)
-        transparent(self._wdgCenter)
-        vbox(self._wdgCenter, 10, spacing=8)
-        margins(self._wdgCenter, bottom=20)
+        self.wdgTitle = QWidget()
         hbox(self.wdgTitle)
         self.wdgTitle.layout().addWidget(spacer())
         icon = Icon()
         icon.setIcon(IconRegistry.story_structure_icon())
         incr_icon(icon, 4)
         self.wdgTitle.layout().addWidget(icon)
-        self.wdgTitle.layout().addWidget(label('Common story structure beats', bold=True, h4=True))
+        if self._structure.template_type == TemplateStoryStructureType.TWISTS:
+            title = 'Twists and turns beats'
+        else:
+            title = 'Common story structure beats'
+        self.wdgTitle.layout().addWidget(label(title, bold=True, h4=True))
         self.wdgTitle.layout().addWidget(spacer())
         self.wdgTitle.layout().addWidget(self.btnReset)
+        self.frame.layout().addWidget(self.wdgTitle)
 
-        self._wdgCenter.layout().addWidget(self.wdgTitle)
-        margins(self._wdgCenter, right=20, top=15)
+        if self._structure.template_type != TemplateStoryStructureType.TWISTS:
+            self._addBeat(general_beat, self.frame)
+        self.wdgSelector = QWidget()
+        hbox(self.wdgSelector)
+        self.frame.layout().addWidget(self.wdgSelector)
+        self.wdgSecondarySelector = QWidget()
+        hbox(self.wdgSecondarySelector).addWidget(spacer())
+        self.frame.layout().addWidget(self.wdgSecondarySelector)
 
-        self._addBeat(general_beat)
-        self._addHeader('Beginning', IconRegistry.cause_icon())
-        self._addBeat(hook_beat)
-        self._addBeat(motion_beat)
-        self._addBeat(disturbance_beat)
-        self._addBeat(characteristic_moment_beat)
-        self._addBeat(normal_world_beat)
-        self._addHeader('Escalation', IconRegistry.rising_action_icon('black'))
-        self._addBeat(turn_beat)
-        self._addBeat(twist_beat)
+        self.frame.layout().addWidget(line())
 
-        # self._addHeader('Midpoint', IconRegistry.from_name('mdi.middleware-outline'))
-        # self._addBeat(midpoint_ponr)
-        # self._addBeat(midpoint_mirror)
-        # self._addBeat(midpoint_proactive)
+        self.wdgEditor = QWidget()
+        vbox(self.wdgEditor, 0, 0)
+        self.frame.layout().addWidget(self.wdgEditor)
+        self._scrollarea, self.wdgCenter = scrolled(self.wdgEditor, frameless=True, h_on=False)
+        self._scrollarea.setProperty('transparent', True)
+        self._scrollarea.setMinimumHeight(425)
+        transparent(self.wdgCenter)
+        vbox(self.wdgCenter, 10, spacing=8)
+        margins(self.wdgCenter, bottom=20)
+
+        margins(self.wdgCenter, right=20, top=15)
 
         self.btnConfirm = push_btn(text='Close', properties=['base', 'positive'])
         sp(self.btnConfirm).h_exp()
         self.btnConfirm.clicked.connect(self.reject)
-
         self.frame.layout().addWidget(self.btnConfirm)
+
+        if self._structure.template_type == TemplateStoryStructureType.TWISTS:
+            self._addBeat(twist_beat)
+            self._addBeat(turn_beat)
+            self._addBeat(danger_beat)
+            self.wdgCenter.layout().addWidget(vspacer())
+        else:
+            self.btnGroup = QButtonGroup()
+            for element in StoryStructureElements:
+                if element == StoryStructureElements.Plot_points and not self._structure.custom:
+                    continue
+                btn = push_btn(
+                    IconRegistry.from_name(story_structure_element_icons[element], 'grey',
+                                           color_on=PLOTLYST_SECONDARY_COLOR),
+                    text=element.name.replace('_', ' '), checkable=True,
+                    properties=['secondary-selector', 'transparent-rounded-bg-on-hover'])
+
+                if element in [StoryStructureElements.Midpoint, StoryStructureElements.Plot_points]:
+                    self.wdgSecondarySelector.layout().addWidget(btn)
+                else:
+                    self.wdgSelector.layout().addWidget(btn)
+                btn.toggled.connect(partial(self._elementsToggled, element))
+                self.btnGroup.addButton(btn)
+                if element == StoryBeatSelectorPopup.LAST_ELEMENT:
+                    btn.setChecked(True)
+
+            self.wdgSecondarySelector.layout().addWidget(spacer())
+            if not self.btnGroup.checkedButton():
+                self.btnGroup.buttons()[0].setChecked(True)
 
     def display(self) -> Optional[StoryBeat]:
         result = self.exec()
         if result == QDialog.DialogCode.Accepted:
-            cloned_beat = copy.deepcopy(self._beat)
-            cloned_beat.id = uuid.uuid4()
-            cloned_beat.custom = True
-            return cloned_beat
+            return copy_beat(self._beat)
 
     def _addHeader(self, name: str, icon: QIcon):
         icon_ = Icon()
         icon_.setIcon(icon)
         header = label(name, bold=True)
-        self._wdgCenter.layout().addWidget(group(icon_, header), alignment=Qt.AlignmentFlag.AlignLeft)
-        self._wdgCenter.layout().addWidget(line(color='lightgrey'))
+        self.wdgCenter.layout().addWidget(group(icon_, header), alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgCenter.layout().addWidget(line(color='lightgrey'))
 
-    def _addBeat(self, beat: StoryBeat):
+    def _addBeat(self, beat: StoryBeat, parent=None):
+        if parent is None:
+            parent = self.wdgCenter
         wdg = _StoryBeatSection(beat)
         margins(wdg, left=15)
-        self._wdgCenter.layout().addWidget(wdg)
+        parent.layout().addWidget(wdg)
         wdg.btnAdd.clicked.connect(partial(self._addClicked, beat))
+
+    def _elementsToggled(self, element: StoryStructureElements, toggled: bool):
+        if not toggled:
+            return
+        StoryBeatSelectorPopup.LAST_ELEMENT = element
+        clear_layout(self.wdgCenter)
+        if element == StoryStructureElements.Beginning:
+            self._addBeat(hook_beat)
+            self._addBeat(motion_beat)
+            self._addBeat(disturbance_beat)
+            self._addBeat(characteristic_moment_beat)
+            self._addBeat(normal_world_beat)
+        elif element == StoryStructureElements.Catalyst:
+            self._addBeat(inciting_incident_beat)
+            self._addBeat(synchronicity_beat)
+            self._addBeat(refusal_beat)
+            self._addHeader('2-step inciting incident', IconRegistry.inciting_incident_icon('black'))
+            self._addBeat(trigger_beat)
+            self._addBeat(establish_beat)
+        elif element == StoryStructureElements.Escalation:
+            self._addBeat(turn_beat)
+            self._addBeat(twist_beat)
+            self._addBeat(danger_beat)
+            self._addBeat(revelation_beat)
+            self._addBeat(first_pinch_point_beat)
+            self._addBeat(second_pinch_point_beat)
+            self._addBeat(dark_moment)
+        elif element == StoryStructureElements.Midpoint:
+            for midpoint in midpoints:
+                self._addBeat(midpoint)
+        elif element == StoryStructureElements.Plot_points:
+            self._addBeat(plot_point)
+            self._addBeat(plot_point_ponr)
+            self._addBeat(plot_point_aha)
+            self._addBeat(plot_point_rededication)
+        elif element == StoryStructureElements.Climax:
+            self._addBeat(climax_beat)
+            self._addBeat(crisis)
+        elif element == StoryStructureElements.Ending:
+            self._addBeat(resolution_beat)
+            self._addBeat(contrast_beat)
+            self._addBeat(retrospection_beat)
+
+        self.wdgCenter.layout().addWidget(vspacer())
 
     def _addClicked(self, beat: StoryBeat):
         self._beat = beat
@@ -181,37 +359,57 @@ class StoryBeatSelectorPopup(PopupDialog):
 
 
 class StoryStructureOutline(OutlineTimelineWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._structurePreview: Optional[SceneStoryStructureWidget] = None
-        self._beatsPreview: Optional[BeatsPreview] = None
+    beatChanged = pyqtSignal()
 
-    def attachStructurePreview(self, structurePreview: SceneStoryStructureWidget):
-        self._structurePreview = structurePreview
+    def __init__(self, parent=None):
+        super().__init__(parent, layout=LayoutType.FLOW)
+        self._structureTimeline: Optional[StoryStructureTimelineWidget] = None
+        self._beatsPreview: Optional[BeatsPreview] = None
+        self._structure: Optional[StoryStructure] = None
+
+    def attachStructurePreview(self, structureTimeline: StoryStructureTimelineWidget):
+        self._structureTimeline = structureTimeline
         for wdg in self._beatWidgets:
-            wdg.attachStructurePreview(self._structurePreview)
+            wdg.attachStructurePreview(self._structureTimeline)
 
     def attachBeatsPreview(self, beats: BeatsPreview):
         self._beatsPreview = beats
 
     @overrides
-    def setStructure(self, items: List[StoryBeat]):
+    def setStructure(self, structure: StoryStructure):
         self.clear()
-        self._structure = items
+        self._structure = structure
+        self._items = structure.beats
 
-        for item in sorted(items, key=lambda x: x.percentage):
+        for item in self._structure.sorted_beats():
             if item.type == StoryBeatType.BEAT and item.enabled:
                 self._addBeatWidget(item)
-        if not items:
+        if not self._items:
             self.layout().addWidget(self._newPlaceholderWidget(displayText=True))
 
         self.update()
 
     @overrides
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
+        if event.mimeData().hasFormat(StoryStructureBeatWidget.StoryStructureBeatBeatMimeType):
+            event.accept()
+        else:
+            event.ignore()
+
+    @overrides
     def _newBeatWidget(self, item: StoryBeat) -> StoryStructureBeatWidget:
-        widget = StoryStructureBeatWidget(item, parent=self)
-        widget.attachStructurePreview(self._structurePreview)
+        widget = StoryStructureBeatWidget(item, self._structure, parent=self)
+        widget.attachStructurePreview(self._structureTimeline)
+        widget.changed.connect(self.beatChanged)
+        widget.actChanged.connect(self._actChanged)
         widget.removed.connect(self._beatRemovedClicked)
+        widget.dragStarted.connect(partial(self._dragStarted, widget))
+        widget.dragStopped.connect(self._dragFinished)
+
+        widget.installEventFilter(DropEventFilter(widget, [StoryStructureBeatWidget.StoryStructureBeatBeatMimeType],
+                                                  motionDetection=Qt.Orientation.Horizontal,
+                                                  motionSlot=partial(self._dragMoved, widget),
+                                                  droppedSlot=self._dropped))
 
         return widget
 
@@ -221,33 +419,72 @@ class StoryStructureOutline(OutlineTimelineWidget):
                 QTimer.singleShot(150, self._beatsPreview.refresh)
 
         if wdg.beat.custom:
-            self._structurePreview.removeBeat(wdg.beat)
+            self._structureTimeline.removeBeat(wdg.beat)
             self._beatRemoved(wdg, teardownFunction=teardown)
         else:
             wdg.beat.enabled = False
-            self._structurePreview.toggleBeatVisibility(wdg.beat)
+            self._structureTimeline.toggleBeatVisibility(wdg.beat)
             self._beatWidgetRemoved(wdg, teardownFunction=teardown)
 
     @overrides
     def _placeholderClicked(self, placeholder: QWidget):
         self._currentPlaceholder = placeholder
-        beat = StoryBeatSelectorPopup.popup()
+        beat: Optional[StoryBeat] = StoryBeatSelectorPopup.popup(self._structure)
         if beat:
+            if beat.ends_act:
+                exp = self._structure.expected_acts if self._structure.expected_acts is not None else MAX_NUMBER_OF_ACTS
+                if self._structure.acts == exp:
+                    beat.ends_act = False
+
             self._insertBeat(beat)
+
+            if beat.ends_act:
+                self._structure.increaseAct()
+                self._structure.update_acts()
+                self._actChanged()
 
     def _insertBeat(self, beat: StoryBeat):
         def teardown():
             if self._beatsPreview:
-                self._structurePreview.insertBeat(beat)
                 QTimer.singleShot(150, self._beatsPreview.refresh)
 
         wdg = self._newBeatWidget(beat)
-        i = self.layout().indexOf(self._currentPlaceholder)
+        self._insertWidget(beat, wdg, teardownFunction=teardown)
+        self._recalculatePercentage(wdg)
+        self._structureTimeline.insertBeat(beat)
+        if beat.ends_act:
+            self._structureTimeline.refreshActs()
+
+    def _recalculatePercentage(self, wdg: StoryStructureBeatWidget):
+        beat = wdg.item
+        i = self._beatWidgets.index(wdg)
         if i > 0:
-            percentBefore = self.layout().itemAt(i - 1).widget().beat.percentage
-            if i < self.layout().count() - 1:
-                percentAfter = self.layout().itemAt(i + 1).widget().beat.percentage
+            percentBefore = self._beatWidgets[i - 1].item.percentage
+            if i < len(self._beatWidgets) - 1:
+                percentAfter = self._beatWidgets[i + 1].item.percentage
             else:
                 percentAfter = 99
             beat.percentage = percentBefore + (percentAfter - percentBefore) / 2
-        self._insertWidget(beat, wdg, teardownFunction=teardown)
+        else:
+            beat.percentage = 1
+
+        self._structure.update_acts()
+
+    @overrides
+    def _insertDroppedItem(self, wdg: OutlineItemWidget):
+        self._recalculatePercentage(wdg)
+        self._structureTimeline.setStructure(self._novel, self._structure)
+        QTimer.singleShot(150, self._beatsPreview.refresh)
+        self.timelineChanged.emit()
+
+    def _actChanged(self):
+        self._structureTimeline.refreshActs()
+        for wdg in self._beatWidgets:
+            beat: StoryBeat = wdg.item
+            if beat.ends_act:
+                wdg.refreshActButton()
+                self._structureTimeline.refreshBeat(beat)
+            elif beat.act_colorized:
+                self._structureTimeline.refreshBeat(beat)
+
+        self.timelineChanged.emit()
