@@ -358,14 +358,6 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             action('Change icon', icon=IconRegistry.icons_icon(), slot=self._changeIcon, parent=iconMenu))
 
         contextMenu = MenuWidget(self.btnSettings)
-        progress_action = action('Track general progress',
-                                 slot=self._trackGeneralProgressChanged,
-                                 checkable=True,
-                                 tooltip='Enable tracking a general progression value besides the custom plot values',
-                                 parent=contextMenu)
-        progress_action.setChecked(self.plot.default_value_enabled)
-        contextMenu.addAction(progress_action)
-        contextMenu.addSeparator()
         contextMenu.addAction(action('Remove plot', IconRegistry.trash_can_icon(), self.removalRequested.emit))
 
         self.repo = RepositoryPersistenceManager.instance()
@@ -414,10 +406,6 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self._initFrameColor()
         self._save()
         self.iconChanged.emit()
-
-    def _trackGeneralProgressChanged(self, toggled: bool):
-        self.plot.default_value_enabled = toggled
-        self._save()
 
     def _principleToggled(self, principleType: PlotPrincipleType, toggled: bool):
         if toggled:
