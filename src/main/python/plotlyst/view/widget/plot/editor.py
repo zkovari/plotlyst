@@ -112,7 +112,7 @@ class PlotTreeView(TreeView, EventListener):
         characters = [x.character(self._novel) for x in self._novel.plots if x.character_id]
         characters_set = set(characters)
         characters_set.discard(None)
-        if len(characters_set) > 1:
+        if characters_set:
             for character in characters:
                 if character in self._characterNodes.keys():
                     continue
