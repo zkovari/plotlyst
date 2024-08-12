@@ -521,6 +521,15 @@ class TextEditorBase(RichTextEditor):
         self._wdgFind.lineEditReplace().setProperty('white-bg', True)
         self._wdgFind.lineEditReplace().setProperty(IGNORE_CAPITALIZATION_PROPERTY, True)
 
+        buttons = [
+            self._wdgFind.buttonNext(), self._wdgFind.buttonReplace(), self._wdgFind.buttonReplaceAll()
+        ]
+
+        for btn in buttons:
+            decr_font(btn)
+            btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=1.0, enterOpacity=0.8))
+            btn.setProperty('find', True)
+
         self._wdgFind.setProperty('relaxed-white-bg', True)
 
 
