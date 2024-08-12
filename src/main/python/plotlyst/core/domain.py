@@ -2482,6 +2482,14 @@ second_plot_point = StoryBeat(text='Second Plot Point',
                               icon_color='#6a0136',
                               act=2, ends_act=True, percentage=80)
 
+second_plot_point_aha = StoryBeat(text='A-ha moment',
+                                  icon='fa5.lightbulb',
+                                  icon_color='#6a0136',
+                                  description="It propels the story into the climax through the character's epiphany. They often have a realization about themselves or the plot.",
+                                  placeholder="It propels the story into the climax through the character's epiphany.",
+                                  id=uuid.UUID('00ccb15d-9331-4f45-8ed7-ffc7b2e7bf90'),
+                                  act=2, ends_act=True, percentage=80)
+
 midpoint = StoryBeat(text='Midpoint',
                      icon='mdi.middleware-outline',
                      icon_color='#2e86ab',
@@ -2559,6 +2567,7 @@ retrospection_beat = StoryBeat('Retrospection',
                                act=3, percentage=99)
 
 first_plot_points = (first_plot_point, first_plot_point_ponr)
+second_plot_points = (second_plot_point, second_plot_point_aha)
 midpoints = (
     midpoint, midpoint_ponr, midpoint_mirror, midpoint_proactive, midpoint_false_victory, midpoint_re_dedication)
 

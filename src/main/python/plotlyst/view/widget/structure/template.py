@@ -36,7 +36,7 @@ from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     disturbance_beat, normal_world_beat, characteristic_moment_beat, midpoint, midpoint_ponr, midpoint_mirror, \
     midpoint_proactive, crisis, first_plot_point, first_plot_point_ponr, first_plot_points, midpoints, story_spine, \
     twists_and_turns, twist_beat, turn_beat, danger_beat, copy_beat, five_act_structure, midpoint_false_victory, \
-    midpoint_re_dedication
+    midpoint_re_dedication, second_plot_points, second_plot_point_aha, second_plot_point
 from plotlyst.view.common import ExclusiveOptionalButtonGroup, push_btn, label
 from plotlyst.view.generated.story_structure_selector_dialog_ui import Ui_StoryStructureSelectorDialog
 from plotlyst.view.icons import IconRegistry
@@ -108,6 +108,11 @@ class _ThreeActFirstPlotPoint(BeatCustomization):
     Point_of_no_return = auto()
 
 
+class _ThreeActSecondPlotPoint(BeatCustomization):
+    Second_plot_point = auto()
+    Aha_moment = auto()
+
+
 class _ThreeActMidpoint(BeatCustomization):
     Turning_point = auto()
     Point_of_no_return = auto()
@@ -144,6 +149,7 @@ def beat_option_description(option: BeatCustomization) -> str:
     elif option == _ThreeActFirstPlotPoint.Point_of_no_return:
         return first_plot_point_ponr.description
 
+
     elif option == _ThreeActMidpoint.Turning_point:
         return midpoint.description
     elif option == _ThreeActMidpoint.Point_of_no_return:
@@ -156,6 +162,11 @@ def beat_option_description(option: BeatCustomization) -> str:
         return midpoint_false_victory.description
     elif option == _ThreeActMidpoint.Re_dedication:
         return midpoint_re_dedication.description
+
+    elif option == _ThreeActSecondPlotPoint.Second_plot_point:
+        return second_plot_point.description
+    elif option == _ThreeActSecondPlotPoint.Aha_moment:
+        return second_plot_point_aha.description
 
     elif option == _ThreeActEnding.Crisis:
         return crisis.description
@@ -191,6 +202,11 @@ def beat_option_icon(option: BeatCustomization) -> Tuple[str, str]:
     elif option == _ThreeActMidpoint.Re_dedication:
         return midpoint_re_dedication.icon, midpoint_re_dedication.icon_color
 
+    elif option == _ThreeActSecondPlotPoint.Second_plot_point:
+        return second_plot_point.icon, second_plot_point.icon_color
+    elif option == _ThreeActSecondPlotPoint.Aha_moment:
+        return second_plot_point_aha.icon, second_plot_point_aha.icon_color
+
     elif option == _ThreeActEnding.Crisis:
         return crisis.icon, crisis.icon_color
 
@@ -225,6 +241,11 @@ def option_from_beat(beat: StoryBeat) -> Optional[BeatCustomization]:
     elif beat == midpoint_re_dedication:
         return _ThreeActMidpoint.Re_dedication
 
+    elif beat == second_plot_point:
+        return _ThreeActSecondPlotPoint.Second_plot_point
+    elif beat == second_plot_point_aha:
+        return _ThreeActSecondPlotPoint.Aha_moment
+
     elif beat == crisis:
         return _ThreeActEnding.Crisis
 
@@ -233,6 +254,10 @@ def option_from_beat(beat: StoryBeat) -> Optional[BeatCustomization]:
 
 def find_first_plot_point(structure: StoryStructure) -> Optional[StoryBeat]:
     return next((x for x in structure.beats if x in first_plot_points), None)
+
+
+def find_second_plot_point(structure: StoryStructure) -> Optional[StoryBeat]:
+    return next((x for x in structure.beats if x in second_plot_points), None)
 
 
 def find_midpoint(structure: StoryStructure) -> Optional[StoryBeat]:
@@ -359,6 +384,15 @@ class _ThreeActStructureEditor(_AbstractStructureEditor):
         menu.options.optionSelected.connect(self._midpointChanged)
         menu.options.optionsReset.connect(self._midpointReset)
 
+        self.btnSecondPlotPoint = ActOptionsButton('Second Plot Point', 2)
+        self.btnSecondPlotPoint.setIcon(IconRegistry.from_name('mdi6.chevron-triple-right'))
+        spp_beat = find_second_plot_point(self._structure)
+        checked = _ThreeActSecondPlotPoint.Aha_moment if spp_beat == second_plot_point_aha else None
+        menu = StructureOptionsMenu(self.btnSecondPlotPoint, 'Customize',
+                                    [_ThreeActSecondPlotPoint.Aha_moment], checked=checked)
+        menu.options.optionSelected.connect(self._secondPlotPointChanged)
+        menu.options.optionsReset.connect(self._secondPlotPointReset)
+
         crisis_beat = find_crisis(self._structure)
         checked = option_from_beat(crisis_beat) if crisis_beat else None
         self.btnEnding = ActOptionsButton('Ending', 3)
@@ -371,9 +405,9 @@ class _ThreeActStructureEditor(_AbstractStructureEditor):
         self.toggle4act = Toggle()
         self.toggle4act.setChecked(midpoint_beat.ends_act)
 
-        wdg = group(spacer(), self.btnBeginning, self.btnFirstPlotPoint, self.btnMidpoint,
+        wdg = group(spacer(), self.btnBeginning, self.btnFirstPlotPoint, self.btnMidpoint, self.btnSecondPlotPoint,
                     self.btnEnding, spacer(), spacing=15)
-        wdg.layout().insertWidget(1, self.lblCustomization, alignment=Qt.AlignmentFlag.AlignTop)
+        wdg.layout().insertWidget(1, self.lblCustomization, alignment=Qt.AlignmentFlag.AlignBottom)
         lbl = push_btn(text='Split 2nd act into two parts', transparent_=True)
         lbl.clicked.connect(self.toggle4act.animateClick)
         wdg.layout().addWidget(group(lbl, self.toggle4act, spacing=0, margin=0))
@@ -412,6 +446,21 @@ class _ThreeActStructureEditor(_AbstractStructureEditor):
         current_pp = find_first_plot_point(self._structure)
         if current_pp:
             self.beatsPreview.replaceBeat(current_pp, copy.deepcopy(first_plot_point))
+
+    def _secondPlotPointChanged(self, option: _ThreeActSecondPlotPoint):
+        if option == _ThreeActSecondPlotPoint.Aha_moment:
+            beat = second_plot_point_aha
+        else:
+            beat = second_plot_point
+
+        current_pp = find_second_plot_point(self._structure)
+        if current_pp:
+            self.beatsPreview.replaceBeat(current_pp, copy.deepcopy(beat))
+
+    def _secondPlotPointReset(self):
+        current_pp = find_second_plot_point(self._structure)
+        if current_pp:
+            self.beatsPreview.replaceBeat(current_pp, copy.deepcopy(second_plot_point))
 
     def _midpointChanged(self, midpoint_option: _ThreeActMidpoint):
         if midpoint_option == _ThreeActMidpoint.Turning_point:
