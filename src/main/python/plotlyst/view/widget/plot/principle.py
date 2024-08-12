@@ -439,6 +439,7 @@ class PlotPrincipleSelectorMenu(MenuWidget):
         self.addWidget(self._selectors)
         if self._plot.plot_type in [PlotType.Main, PlotType.Subplot]:
             menu = MenuWidget(self)
+            apply_white_menu(menu)
             menu.setTitle('Combine with character development')
             menu.setIcon(IconRegistry.conflict_self_icon())
             char_arc_selectors = PlotPrinciplesWidget(PlotType.Internal, self._plot.principles)

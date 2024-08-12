@@ -27,7 +27,7 @@ from PyQt6.QtGui import QColor, QCursor
 from PyQt6.QtWidgets import QWidget, QFrame
 from overrides import overrides
 from qthandy import bold, flow, incr_font, \
-    margins, ask_confirmation, italic, retain_when_hidden, transparent, \
+    margins, italic, retain_when_hidden, transparent, \
     clear_layout, vspacer, decr_icon, spacer, sp, pointy, incr_icon, translucent
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
@@ -51,6 +51,7 @@ from plotlyst.view.generated.plot_widget_ui import Ui_PlotWidget
 from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.characters import CharacterAvatar, CharacterSelectorMenu
+from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.labels import PlotValueLabel
 from plotlyst.view.widget.plot.matrix import StorylinesImpactMatrix
 from plotlyst.view.widget.plot.principle import PlotPrincipleSelectorMenu, PlotPrincipleEditor, \
@@ -162,7 +163,7 @@ class PlotTreeView(TreeView, EventListener):
 
     def _removePlot(self, wdg: PlotNode):
         plot = wdg.plot()
-        if not ask_confirmation(f"Delete plot '{plot.text}'?", self._centralWidget):
+        if not confirmed("The operation cannot be undone.", f"Delete plot '{plot.text}'?"):
             return
         if plot in self._selectedPlots:
             self._selectedPlots.remove(plot)
@@ -428,7 +429,10 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
 
     def _progressionToggled(self, toggled: bool):
         self.plot.has_progression = toggled
-        self.wdgProgression.setVisible(self.plot.has_progression)
+        if self.plot.has_progression:
+            qtanim.fade_in(self.wdgProgression, teardown=lambda: self.wdgProgression.setGraphicsEffect(None))
+        else:
+            qtanim.fade_out(self.wdgProgression, teardown=lambda: self.wdgProgression.setGraphicsEffect(None))
         self._save()
 
     def _dynamicPrinciplesToggled(self, toggled: bool):
