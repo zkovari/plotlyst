@@ -290,6 +290,10 @@ class SecondaryFunctionListItemWidget(ListItemWidget):
         self._lineEdit.setToolTip(tip)
 
         self.layout().insertWidget(1, self._icon)
+        lblName = label(function.type.name, description=True)
+        lblName.setFixedWidth(90)
+        self.layout().insertWidget(2, lblName)
+
         self._lineEdit.setText(self._function.text)
 
     @overrides
