@@ -882,6 +882,7 @@ class PlotPrinciple:
 class DynamicPlotPrincipleType(Enum):
     TWIST = 'twist'
     TURN = 'turn'
+    DANGER = 'danger'
     WONDER = 'wonder'
     MONSTER = 'monster'
     ALLY = 'ally'
@@ -915,7 +916,9 @@ class DynamicPlotPrincipleType(Enum):
         if self == DynamicPlotPrincipleType.TWIST:
             return 'ph.shuffle-bold'
         elif self == DynamicPlotPrincipleType.TURN:
-            return 'mdi.boom-gate-up-outline'
+            return 'mdi.sign-direction'
+        elif self == DynamicPlotPrincipleType.DANGER:
+            return 'ei.fire'
         elif self == DynamicPlotPrincipleType.WONDER:
             return 'mdi.star-four-points-outline'
         elif self == DynamicPlotPrincipleType.MONSTER:
@@ -969,6 +972,8 @@ class DynamicPlotPrincipleType(Enum):
             return "#f20089"
         elif self == DynamicPlotPrincipleType.TURN:
             return "#8338ec"
+        elif self == DynamicPlotPrincipleType.DANGER:
+            return '#f4a261'
         elif self == DynamicPlotPrincipleType.WONDER:
             return "#40916c"
         elif self == DynamicPlotPrincipleType.MONSTER:
@@ -993,7 +998,9 @@ class DynamicPlotPrincipleType(Enum):
         if self == DynamicPlotPrincipleType.TWIST:
             return "Brings an unexpected development of the story by defying readers expectations"
         elif self == DynamicPlotPrincipleType.TURN:
-            return "Delivers a shift in the story's direction by often playing with or subverting readers expectations"
+            return "Delivers a shift in the story's direction"
+        elif self == DynamicPlotPrincipleType.DANGER:
+            return "Moments of heightened danger, either physical or emotional"
         elif self == DynamicPlotPrincipleType.ALLY:
             return "A character forming alliance with the storyline's focal character"
         elif self == DynamicPlotPrincipleType.ENEMY:
@@ -1041,7 +1048,9 @@ class DynamicPlotPrincipleType(Enum):
         if self == DynamicPlotPrincipleType.TWIST:
             return "How the story develops unexpectedly by defying readers expectations"
         elif self == DynamicPlotPrincipleType.TURN:
-            return "How the story shifts by playing with or subverting readers expectations"
+            return "How does the story's direction shift?"
+        elif self == DynamicPlotPrincipleType.DANGER:
+            return "Moments of heightened danger, either physical or emotional"
         elif self == DynamicPlotPrincipleType.WONDER:
             return "Describe an element of wonder that make your fantastical world captivating"
         elif self == DynamicPlotPrincipleType.MONSTER:
@@ -1140,7 +1149,7 @@ class DynamicPlotPrincipleGroupType(Enum):
 
     def description(self) -> str:
         if self == DynamicPlotPrincipleGroupType.ESCALATION:
-            return 'Narrative turns, unexpected twists, and revelations that enhance intrigue and excitement in the storyline'
+            return 'Narrative turns, unexpected twists, and dangerous moments that enhance intrigue and excitement in the storyline'
         elif self == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
             return "Characters forming alliances and adversaries around the focal character"
         elif self == DynamicPlotPrincipleGroupType.SUSPECTS:

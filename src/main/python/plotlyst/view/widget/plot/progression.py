@@ -288,6 +288,7 @@ class DynamicPlotPrincipleSelectorMenu(MenuWidget):
         if groupType == DynamicPlotPrincipleGroupType.ESCALATION:
             self._addPrinciple(DynamicPlotPrincipleType.TURN)
             self._addPrinciple(DynamicPlotPrincipleType.TWIST)
+            self._addPrinciple(DynamicPlotPrincipleType.DANGER)
         elif groupType == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
             self._addPrinciple(DynamicPlotPrincipleType.ALLY)
             self._addPrinciple(DynamicPlotPrincipleType.ENEMY)
