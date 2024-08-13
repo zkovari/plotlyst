@@ -73,7 +73,7 @@ def principle_icon(type: PlotPrincipleType) -> QIcon:
 
     elif type == PlotPrincipleType.LINEAR_PROGRESSION:
         return IconRegistry.from_name('mdi.middleware', 'grey', 'black')
-    elif type == PlotPrincipleType.DYNAMIC_PRINCIPLES:
+    elif type == PlotPrincipleType.DYNAMIC_ELEMENTS:
         return IconRegistry.from_name('mdi6.chart-timeline-variant-shimmer', 'grey', 'black')
 
     elif type == PlotPrincipleType.SKILL_SET:
@@ -132,7 +132,7 @@ _principle_hints = {
 
     PlotPrincipleType.THEME: "Is there thematic relevance associated to this storyline?",
     PlotPrincipleType.LINEAR_PROGRESSION: "Track linear progression in this storyline",
-    PlotPrincipleType.DYNAMIC_PRINCIPLES: "Track evolving and unpredictable elements that add complexity and engagement to the storyline",
+    PlotPrincipleType.DYNAMIC_ELEMENTS: "Track evolving and unpredictable elements that add complexity and engagement to the storyline",
 
     PlotPrincipleType.SKILL_SET: "Does the character possess unique skills and abilities to resolve the storyline?",
     PlotPrincipleType.TICKING_CLOCK: "Is there deadline in which the character must take actions?",
@@ -413,7 +413,7 @@ class PlotPrincipleSelectorMenu(MenuWidget):
         margins(self._selectors, left=15)
         self._selectors.principleToggled.connect(self.principleToggled)
 
-        self.btnGenres = push_btn(IconRegistry.genre_icon(color=RELAXED_WHITE_COLOR), 'Browse genres',
+        self.btnGenres = push_btn(IconRegistry.genre_icon(color=RELAXED_WHITE_COLOR), 'Browse genre principles',
                                   properties=['base', 'positive'])
         self.btnGenres.installEventFilter(OpacityEventFilter(self.btnGenres, 0.8, 0.6))
         underline(self.btnGenres)
@@ -432,13 +432,14 @@ class PlotPrincipleSelectorMenu(MenuWidget):
             char_arc_selectors = PlotPrinciplesWidget(PlotType.Internal, self._plot.principles)
             char_arc_selectors.principleToggled.connect(self.principleToggled)
             menu.addSection('Extend with principles that are relevant to character development')
+            menu.addSeparator()
             menu.addWidget(char_arc_selectors)
             self.addSeparator()
             self.addMenu(menu)
 
         self.addSection('Narrative dynamics')
         self.addSeparator()
-        wdg = _PlotPrincipleToggle(PlotPrincipleType.DYNAMIC_PRINCIPLES, self._plot.plot_type)
+        wdg = _PlotPrincipleToggle(PlotPrincipleType.DYNAMIC_ELEMENTS, self._plot.plot_type)
         wdg.toggle.setChecked(self._plot.has_dynamic_principles)
         wdg.toggle.toggled.connect(self.dynamicPrinciplesToggled)
         margins(wdg, left=15)
@@ -470,11 +471,11 @@ class PlotDynamicPrincipleSelectorMenu(MenuWidget):
         super().__init__(parent)
         self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         apply_white_menu(self)
-        self._addGroup(DynamicPlotPrincipleGroupType.TWISTS_AND_TURNS)
+        self._addGroup(DynamicPlotPrincipleGroupType.ESCALATION)
         self._addGroup(DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES)
-        self.addSection('Fantasy', IconRegistry.from_name('msc.wand'))
-        self.addSeparator()
-        self._addGroup(DynamicPlotPrincipleGroupType.ELEMENTS_OF_WONDER)
+        # self.addSection('Fantasy', IconRegistry.from_name('msc.wand'))
+        # self.addSeparator()
+        # self._addGroup(DynamicPlotPrincipleGroupType.ELEMENTS_OF_WONDER)
 
         self.addSection('Mystery', IconRegistry.from_name('fa5s.puzzle-piece'))
         self.addSeparator()

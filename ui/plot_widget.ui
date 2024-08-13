@@ -416,7 +416,7 @@
                    <enum>Qt::NoFocus</enum>
                   </property>
                   <property name="text">
-                   <string>Dynamic principles</string>
+                   <string>Dynamic elements</string>
                   </property>
                   <property name="transparent" stdset="0">
                    <bool>true</bool>
@@ -432,7 +432,7 @@
                    <enum>Qt::ClickFocus</enum>
                   </property>
                   <property name="toolTip">
-                   <string>Edit plot principles</string>
+                   <string>Add a new dynamic element</string>
                   </property>
                   <property name="text">
                    <string/>

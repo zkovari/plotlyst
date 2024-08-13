@@ -437,7 +437,12 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
 
     def _dynamicPrinciplesToggled(self, toggled: bool):
         self.plot.has_dynamic_principles = toggled
-        self.wdgDynamicPrinciples.setVisible(self.plot.has_dynamic_principles)
+        if self.plot.has_dynamic_principles:
+            qtanim.fade_in(self.wdgDynamicPrinciples,
+                           teardown=lambda: self.wdgDynamicPrinciples.setGraphicsEffect(None))
+        else:
+            qtanim.fade_out(self.wdgDynamicPrinciples,
+                            teardown=lambda: self.wdgDynamicPrinciples.setGraphicsEffect(None))
         self._save()
 
     def _genresSelected(self):

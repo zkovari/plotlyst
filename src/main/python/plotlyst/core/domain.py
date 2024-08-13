@@ -858,7 +858,7 @@ class PlotPrincipleType(Enum):
     FIRST_LOVE = 34
     MENTOR = 35
 
-    DYNAMIC_PRINCIPLES = 36
+    DYNAMIC_ELEMENTS = 36
 
     def display_name(self) -> str:
         if self == PlotPrincipleType.WAR_MENTAL_EFFECT:
@@ -1098,7 +1098,7 @@ class DynamicPlotPrinciple(OutlineItem):
 
 
 class DynamicPlotPrincipleGroupType(Enum):
-    TWISTS_AND_TURNS = 0
+    ESCALATION = 0
     ALLIES_AND_ENEMIES = 1
     SUSPECTS = 2
     ELEMENTS_OF_WONDER = 3
@@ -1109,7 +1109,7 @@ class DynamicPlotPrincipleGroupType(Enum):
         return self.name.lower().capitalize().replace('_', ' ')
 
     def icon(self) -> str:
-        if self == DynamicPlotPrincipleGroupType.TWISTS_AND_TURNS:
+        if self == DynamicPlotPrincipleGroupType.ESCALATION:
             return 'ph.shuffle-bold'
         elif self == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
             return 'fa5s.thumbs-down'
@@ -1123,7 +1123,7 @@ class DynamicPlotPrincipleGroupType(Enum):
             return 'mdi.robber'
 
     def color(self) -> str:
-        if self == DynamicPlotPrincipleGroupType.TWISTS_AND_TURNS:
+        if self == DynamicPlotPrincipleGroupType.ESCALATION:
             return '#8338ec'
         elif self == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
             return '#9e1946'
@@ -1139,7 +1139,7 @@ class DynamicPlotPrincipleGroupType(Enum):
         return 'black'
 
     def description(self) -> str:
-        if self == DynamicPlotPrincipleGroupType.TWISTS_AND_TURNS:
+        if self == DynamicPlotPrincipleGroupType.ESCALATION:
             return 'Narrative turns, unexpected twists, and revelations that enhance intrigue and excitement in the storyline'
         elif self == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
             return "Characters forming alliances and adversaries around the focal character"

@@ -28,6 +28,7 @@ from qthandy import vbox, incr_icon, bold, spacer, retain_when_hidden, transluce
 from qthandy.filter import VisibilityToggleEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
+from plotlyst.common import WHITE_COLOR
 from plotlyst.core.domain import Novel, PlotType, PlotProgressionItem, \
     PlotProgressionItemType, DynamicPlotPrincipleGroupType, DynamicPlotPrinciple, DynamicPlotPrincipleType, Plot, \
     DynamicPlotPrincipleGroup, LayoutType, Character
@@ -284,7 +285,7 @@ class DynamicPlotPrincipleSelectorMenu(MenuWidget):
     def __init__(self, groupType: DynamicPlotPrincipleGroupType, parent=None):
         super().__init__(parent)
         self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
-        if groupType == DynamicPlotPrincipleGroupType.TWISTS_AND_TURNS:
+        if groupType == DynamicPlotPrincipleGroupType.ESCALATION:
             self._addPrinciple(DynamicPlotPrincipleType.TURN)
             self._addPrinciple(DynamicPlotPrincipleType.TWIST)
         elif groupType == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
@@ -318,10 +319,10 @@ class DynamicPlotPrincipleSelectorMenu(MenuWidget):
 
 class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
     def __init__(self, novel: Novel, group: DynamicPlotPrincipleGroup, parent=None):
-        super().__init__(parent, paintTimeline=False)
+        super().__init__(parent, paintTimeline=False, layout=LayoutType.FLOW)
         self.novel = novel
         self.group = group
-        self._hasMenu = self.group.type in [DynamicPlotPrincipleGroupType.TWISTS_AND_TURNS,
+        self._hasMenu = self.group.type in [DynamicPlotPrincipleGroupType.ESCALATION,
                                             DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES]
         if self._hasMenu:
             self._menu = DynamicPlotPrincipleSelectorMenu(self.group.type)
@@ -379,13 +380,13 @@ class DynamicPlotPrinciplesGroupWidget(QWidget):
         self.frame = frame()
         self.frame.setObjectName('frame')
         vbox(self.frame, 0, 0)
-
         self.setStyleSheet(f'''
-                        #frame {{
-                            border: 0px;
-                            border-top: 2px solid {self.group.type.color()};
-                            border-radius: 15px;
-                        }}''')
+                           #frame {{
+                                border: 1px solid lightgrey;
+                                border-radius: 8px;
+                                background: {WHITE_COLOR};
+                           }}
+                           ''')
 
         vbox(self)
         self._wdgPrinciples = DynamicPlotPrinciplesWidget(novel, self.group)
@@ -404,7 +405,7 @@ class DynamicPlotPrinciplesGroupWidget(QWidget):
         self.btnRemove.clicked.connect(self.remove)
 
         self.frame.layout().addWidget(self._wdgPrinciples)
-        self.layout().addWidget(group(spacer(), self._title, spacer(), self.btnRemove))
+        self.layout().addWidget(group(self._title, spacer(), self.btnRemove))
         self.layout().addWidget(self.frame)
 
     def refreshCharacters(self):
@@ -436,7 +437,7 @@ class DynamicPlotPrinciplesEditor(QWidget):
         elif groupType == DynamicPlotPrincipleGroupType.EVOLUTION_OF_THE_MONSTER:
             group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.MONSTER))
             group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.MONSTER))
-        elif groupType == DynamicPlotPrincipleGroupType.TWISTS_AND_TURNS:
+        elif groupType == DynamicPlotPrincipleGroupType.ESCALATION:
             group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.TURN))
         elif groupType == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
             group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.ALLY))
