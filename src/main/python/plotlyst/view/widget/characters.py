@@ -445,8 +445,6 @@ class CharacterAvatar(QWidget):
         self.btnAvatar.installEventFilter(OpacityEventFilter(parent=self.btnAvatar, enterOpacity=0.7, leaveOpacity=1.0))
         apply_border_image(self.wdgFrame, resource_registry.circular_frame1)
 
-        self._menu = MenuWidget(self.btnAvatar)
-
         self._character: Optional[Character] = None
         self._uploaded: bool = False
         self._uploadSelectorsEnabled: bool = False
@@ -459,6 +457,9 @@ class CharacterAvatar(QWidget):
     def setUploadPopupMenu(self):
         if not self._character:
             raise ValueError('Set character first')
+        if self._menu is None:
+            self._menu = MenuWidget(self.btnAvatar)
+
         wdg = AvatarSelectors(self._character)
         wdg.updated.connect(self._uploadedAvatar)
         wdg.selectorChanged.connect(self.updateAvatar)
