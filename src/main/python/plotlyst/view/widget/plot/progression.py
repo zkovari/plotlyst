@@ -20,18 +20,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import List
 
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QIcon, QEnterEvent
+from PyQt6.QtCore import Qt, pyqtSignal, QPointF
+from PyQt6.QtGui import QIcon, QEnterEvent, QPaintEvent, QPainter, QBrush, QColor
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import vbox, incr_icon, bold, spacer, retain_when_hidden, translucent, margins, transparent
+from qthandy import vbox, incr_icon, bold, spacer, retain_when_hidden, margins, transparent
 from qthandy.filter import VisibilityToggleEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
-from plotlyst.common import WHITE_COLOR
+from plotlyst.common import WHITE_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, PlotType, PlotProgressionItem, \
     PlotProgressionItemType, DynamicPlotPrincipleGroupType, DynamicPlotPrinciple, DynamicPlotPrincipleType, Plot, \
     DynamicPlotPrincipleGroup, LayoutType, Character
+from plotlyst.core.template import antagonist_role
 from plotlyst.service.cache import characters_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import frame, fade_out_and_gc, action
@@ -195,7 +196,12 @@ class DynamicPlotPrincipleWidget(OutlineItemWidget):
                 if character:
                     self._charSelector.setCharacter(character)
 
-        translucent(self._btnName, 0.7)
+        if principle.type == DynamicPlotPrincipleType.MONSTER:
+            self._btnName.setFixedHeight(45)
+            apply_button_palette_color(self._btnName, RELAXED_WHITE_COLOR)
+            self._btnName.setGraphicsEffect(None)
+            self._btnName.setText('Evolution')
+            self._btnName.setIcon(IconRegistry.from_name(self.principle.type.icon(), RELAXED_WHITE_COLOR))
 
     @overrides
     def mimeType(self) -> str:
@@ -321,6 +327,7 @@ class DynamicPlotPrincipleSelectorMenu(MenuWidget):
 class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
     def __init__(self, novel: Novel, group: DynamicPlotPrincipleGroup, parent=None):
         super().__init__(parent, paintTimeline=False, layout=LayoutType.FLOW)
+        self.layout().setSpacing(1)
         self.novel = novel
         self.group = group
         self._hasMenu = self.group.type in [DynamicPlotPrincipleGroupType.ESCALATION,
@@ -328,6 +335,29 @@ class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
         if self._hasMenu:
             self._menu = DynamicPlotPrincipleSelectorMenu(self.group.type)
             self._menu.selected.connect(self._insertPrinciple)
+
+    @overrides
+    def paintEvent(self, event: QPaintEvent) -> None:
+        if self.group.type != DynamicPlotPrincipleGroupType.EVOLUTION_OF_THE_MONSTER:
+            return super().paintEvent(event)
+
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(QColor(antagonist_role.icon_color))
+        painter.setBrush(QBrush(QColor(antagonist_role.icon_color)))
+
+        height = 50
+        offset = 20
+        for i, wdg in enumerate(self._beatWidgets):
+            painter.setOpacity(0.4 + (i + 1) * 0.6 / len(self._beatWidgets))
+            painter.drawConvexPolygon([
+                QPointF(wdg.x() - offset, wdg.y()),
+                QPointF(wdg.x(), wdg.y() + height / 2),
+                QPointF(wdg.x() - offset, wdg.y() + height),
+                QPointF(wdg.x() + wdg.width(), wdg.y() + height),
+                QPointF(wdg.x() + wdg.width() + offset, wdg.y() + height / 2),
+                QPointF(wdg.x() + wdg.width(), wdg.y())
+            ])
 
     def refreshCharacters(self):
         for wdg in self._beatWidgets:
