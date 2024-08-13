@@ -430,7 +430,7 @@ class DynamicPlotPrinciplesEditor(QWidget):
             if item.widget() and isinstance(item.widget(), DynamicPlotPrinciplesGroupWidget):
                 item.widget().refreshCharacters()
 
-    def addGroup(self, groupType: DynamicPlotPrincipleGroupType):
+    def addGroup(self, groupType: DynamicPlotPrincipleGroupType) -> DynamicPlotPrinciplesGroupWidget:
         group = DynamicPlotPrincipleGroup(groupType)
         if groupType == DynamicPlotPrincipleGroupType.ELEMENTS_OF_WONDER:
             group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.WONDER))
@@ -448,8 +448,10 @@ class DynamicPlotPrinciplesEditor(QWidget):
             group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.CREW_MEMBER))
 
         self.plot.dynamic_principles.append(group)
-        self._addGroup(group)
+        wdg = self._addGroup(group)
         self._save()
+
+        return wdg
 
     def _addGroup(self, group: DynamicPlotPrincipleGroup) -> DynamicPlotPrinciplesGroupWidget:
         wdg = DynamicPlotPrinciplesGroupWidget(self.novel, group)

@@ -35,7 +35,7 @@ from qtmenu import MenuWidget, ActionTooltipDisplayMode
 from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
     PlotPrincipleType, PlotProgressionItem, \
-    PlotProgressionItemType
+    PlotProgressionItemType, DynamicPlotPrincipleGroupType
 from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, Event, emit_event
 from plotlyst.event.handler import event_dispatchers
@@ -238,7 +238,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self._dynamicPrinciplesEditor = DynamicPlotPrinciplesEditor(self.novel, self.plot)
         margins(self._dynamicPrinciplesEditor, left=40, right=40)
         self.wdgDynamicPrinciples.layout().addWidget(self._dynamicPrinciplesEditor)
-        self._dynamicPrincipleSelectorMenu.triggered.connect(self._dynamicPrinciplesEditor.addGroup)
+        self._dynamicPrincipleSelectorMenu.triggered.connect(self._addDynamicGroup)
 
         self._initFrameColor()
         self.btnPrinciples.setIcon(IconRegistry.from_name('mdi6.note-text-outline', 'grey'))
@@ -449,6 +449,11 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         object = PrincipleSelectorObject()
         object.principleToggled.connect(self._principleToggled)
         GenrePrincipleSelectorDialog.popup(self.plot, object)
+
+    def _addDynamicGroup(self, groupType: DynamicPlotPrincipleGroupType):
+        wdg = self._dynamicPrinciplesEditor.addGroup(groupType)
+        wdg.show()
+        self.scrollArea.ensureWidgetVisible(wdg, 50, 150)
 
     def _initPrincipleEditor(self, principle: PlotPrinciple):
         editor = PlotPrincipleEditor(principle, self.plot.plot_type)
