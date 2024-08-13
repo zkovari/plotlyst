@@ -345,9 +345,20 @@ class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
     @overrides
     def _newPlaceholderWidget(self, displayText: bool = False) -> QWidget:
         wdg = super()._newPlaceholderWidget(displayText)
+        if self.group.type == DynamicPlotPrincipleGroupType.CAST:
+            text = 'Add a new cast member'
+        elif self.group.type == DynamicPlotPrincipleGroupType.SUSPECTS:
+            text = 'Add a new suspect'
+        elif self.group.type == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
+            text = 'Add a new character'
+        elif self.group.type == DynamicPlotPrincipleGroupType.EVOLUTION_OF_THE_MONSTER:
+            text = 'Add a new evolution'
+        else:
+            text = 'Add a new element'
+
         if displayText:
-            wdg.btn.setText('Insert principle')
-        wdg.btn.setToolTip('Insert new principle')
+            wdg.btn.setText(text)
+        wdg.btn.setToolTip(text)
         return wdg
 
     @overrides
