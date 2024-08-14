@@ -313,9 +313,8 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.wdgStoryStructure.toggleBeat(event.beat, event.toggled)
             return
         elif isinstance(event, NovelStoryStructureUpdated):
-            if self.ui.btnStoryStructure.isChecked():
-                self.ui.btnStoryStructureSelector.setVisible(len(self.novel.story_structures) > 1)
-            self._toggle_act_filters()
+            self._handle_structure_update()
+            return
         elif isinstance(event, NovelPanelCustomizationEvent):
             if isinstance(event, NovelStorylinesToggleEvent):
                 self.ui.btnStorymap.setVisible(event.toggled)
@@ -339,13 +338,6 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.treeChapters.refresh()
         self.ui.btnEdit.setDisabled(True)
         self.ui.btnDelete.setDisabled(True)
-
-        if self.ui.wdgStoryStructure.novel is not None:
-            clear_layout(self.ui.wdgStoryStructureParent)
-            self.ui.wdgStoryStructure = StoryStructureTimelineWidget(self.ui.wdgStoryStructureParent)
-            self.ui.wdgStoryStructureParent.layout().addWidget(self.ui.wdgStoryStructure)
-        self.ui.wdgStoryStructure.setStructure(self.novel)
-        self.ui.wdgStoryStructure.setActsClickable(False)
 
         if self.stagesModel:
             self.stagesModel.modelReset.emit()
@@ -743,6 +735,22 @@ class ScenesOutlineView(AbstractNovelView):
         for card in self.ui.cards.cards():
             card.refreshPov()
             card.refreshCharacters()
+
+    @busy
+    def _handle_structure_update(self):
+        if self.ui.btnStoryStructure.isChecked():
+            self.ui.btnStoryStructureSelector.setVisible(len(self.novel.story_structures) > 1)
+        self._toggle_act_filters()
+
+        if self.ui.wdgStoryStructure.novel is not None:
+            clear_layout(self.ui.wdgStoryStructureParent)
+            self.ui.wdgStoryStructure = StoryStructureTimelineWidget(self.ui.wdgStoryStructureParent)
+            self.ui.wdgStoryStructureParent.layout().addWidget(self.ui.wdgStoryStructure)
+        self.ui.wdgStoryStructure.setStructure(self.novel)
+        self.ui.wdgStoryStructure.setActsClickable(False)
+
+        for card in self.ui.cards.cards():
+            card.refreshBeat()
 
     def _story_map_mode_clicked(self):
         if self.ui.btnStoryMapDisplay.isChecked():
