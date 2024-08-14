@@ -413,6 +413,11 @@ class MbtiSelectorWidget(PersonalitySelectorWidget):
         self.reset()
 
     @overrides
+    def setValue(self, value: SelectionItem):
+        self._selected = value
+        self._buttons[value.text].setChecked(True)
+
+    @overrides
     def reset(self):
         self.btnGroup.buttons()[0].setChecked(True)
 
@@ -643,11 +648,13 @@ class PersonalitySelector(SecondaryActionPushButton):
         self._padding = 5
 
         self._selected: Optional[SelectionItem] = None
+        self._selector: Optional[PersonalitySelectorWidget] = None
         self._items: Dict[str, SelectionItem] = {}
         for item in self.field().selections:
             self._items[item.text] = item
 
         self._menu = MenuWidget(self)
+        self._menu.aboutToShow.connect(self._selectorShown)
         apply_white_menu(self._menu)
 
     def value(self) -> Optional[str]:
@@ -658,10 +665,8 @@ class PersonalitySelector(SecondaryActionPushButton):
     def setValue(self, value: str):
         self._selected = self._items.get(value)
         if self._selected:
-            self.selector().setValue(self._selected)
             self._updateValue()
         else:
-            self.selector().reset()
             self.setText(f'{self.field().name}...')
             self.setIcon(IconRegistry.empty_icon())
 
@@ -674,8 +679,18 @@ class PersonalitySelector(SecondaryActionPushButton):
         pass
 
     @abstractmethod
-    def selector(self) -> PersonalitySelectorWidget:
+    def _initSelector(self):
         pass
+
+    def _selectorShown(self):
+        if self._selector is None:
+            self._initSelector()
+            self._menu.addWidget(self._selector)
+
+        if self._selected:
+            self._selector.setValue(self._selected)
+        else:
+            self._selector.reset()
 
     def _updateValue(self):
         self.setText(self._selected.text)
@@ -700,7 +715,7 @@ class PersonalitySelector(SecondaryActionPushButton):
     def _selectionClicked(self):
         self._ignored = False
         self._menu.close()
-        value = self.selector().value()
+        value = self._selector.value()
         self._selected = value
         self._updateValue()
         self.selected.emit(value)
@@ -709,13 +724,6 @@ class PersonalitySelector(SecondaryActionPushButton):
 class EnneagramSelector(PersonalitySelector):
     def __init__(self, parent=None):
         super().__init__(parent)
-
-        self._selector = EnneagramSelectorWidget(self)
-        self._menu.addWidget(self._selector)
-        self._selector.btnIgnore.clicked.connect(self._ignoreClicked)
-        self._selector.btnIgnore.setToolTip('Ignore Enneagram personality type for this character')
-        self._selector.btnSelect.clicked.connect(self._selectionClicked)
-
         self.setText('Enneagram...')
 
     @overrides
@@ -723,20 +731,16 @@ class EnneagramSelector(PersonalitySelector):
         return enneagram_field
 
     @overrides
-    def selector(self) -> PersonalitySelectorWidget:
-        return self._selector
+    def _initSelector(self):
+        self._selector = EnneagramSelectorWidget(self)
+        self._selector.btnIgnore.clicked.connect(self._ignoreClicked)
+        self._selector.btnIgnore.setToolTip('Ignore Enneagram personality type for this character')
+        self._selector.btnSelect.clicked.connect(self._selectionClicked)
 
 
 class MbtiSelector(PersonalitySelector):
     def __init__(self, parent=None):
         super().__init__(parent)
-
-        self._selector = MbtiSelectorWidget(self)
-        self._menu.addWidget(self._selector)
-        self._selector.btnIgnore.clicked.connect(self._ignoreClicked)
-        self._selector.btnIgnore.setToolTip('Ignore MBTI personality type for this character')
-        self._selector.btnSelect.clicked.connect(self._selectionClicked)
-
         self.setText('MBTI...')
 
     @overrides
@@ -744,20 +748,16 @@ class MbtiSelector(PersonalitySelector):
         return mbti_field
 
     @overrides
-    def selector(self) -> PersonalitySelectorWidget:
-        return self._selector
+    def _initSelector(self):
+        self._selector = MbtiSelectorWidget(self)
+        self._selector.btnIgnore.clicked.connect(self._ignoreClicked)
+        self._selector.btnIgnore.setToolTip('Ignore MBTI personality type for this character')
+        self._selector.btnSelect.clicked.connect(self._selectionClicked)
 
 
 class LoveStyleSelector(PersonalitySelector):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._selector = LoveStyleSelectorWidget(self)
-        self._menu.addWidget(self._selector)
-
-        self._selector.btnIgnore.clicked.connect(self._ignoreClicked)
-        self._selector.btnIgnore.setToolTip('Ignore love style for this character')
-        self._selector.btnSelect.clicked.connect(self._selectionClicked)
-
         self.setText('Love style...')
 
     @overrides
@@ -765,20 +765,16 @@ class LoveStyleSelector(PersonalitySelector):
         return love_style_field
 
     @overrides
-    def selector(self) -> PersonalitySelectorWidget:
-        return self._selector
+    def _initSelector(self):
+        self._selector = LoveStyleSelectorWidget(self)
+        self._selector.btnIgnore.clicked.connect(self._ignoreClicked)
+        self._selector.btnIgnore.setToolTip('Ignore love style for this character')
+        self._selector.btnSelect.clicked.connect(self._selectionClicked)
 
 
 class DiscSelector(PersonalitySelector):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._selector = WorkStyleSelectorWidget(self)
-        self._menu.addWidget(self._selector)
-
-        self._selector.btnIgnore.clicked.connect(self._ignoreClicked)
-        self._selector.btnIgnore.setToolTip('Ignore work style for this character')
-        self._selector.btnSelect.clicked.connect(self._selectionClicked)
-
         self.setText('Work style...')
 
     @overrides
@@ -786,8 +782,11 @@ class DiscSelector(PersonalitySelector):
         return disc_field
 
     @overrides
-    def selector(self) -> PersonalitySelectorWidget:
-        return self._selector
+    def _initSelector(self):
+        self._selector = WorkStyleSelectorWidget(self)
+        self._selector.btnIgnore.clicked.connect(self._ignoreClicked)
+        self._selector.btnIgnore.setToolTip('Ignore work style for this character')
+        self._selector.btnSelect.clicked.connect(self._selectionClicked)
 
 
 class EmotionEditorSlider(QSlider):
