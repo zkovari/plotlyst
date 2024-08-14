@@ -46,7 +46,6 @@ from plotlyst.view.widget.button import FadeOutButtonGroup
 from plotlyst.view.widget.character.editor import CharacterAgeEditor
 from plotlyst.view.widget.character.editor import CharacterRoleSelector
 from plotlyst.view.widget.character.profile import CharacterProfileEditor
-from plotlyst.view.widget.character.topic import CharacterTopicsEditor
 from plotlyst.view.widget.confirm import asked
 from plotlyst.view.widget.tour.core import CharacterEditorTourEvent, \
     CharacterEditorNameLineEditTourEvent, TourEvent, CharacterEditorNameFilledTourEvent, \
@@ -222,8 +221,8 @@ class CharacterEditor(QObject, EventListener):
         self.ui.wdgAvatar.setCharacter(self.character)
         self.ui.wdgAvatar.setUploadPopupMenu()
         # self.wdgTopicsEditor.setCharacter(self.character)
-        self.profile.setCharacter(self.character)
         self.ui.wdgBackstory.setCharacter(self.character)
+        self.profile.setCharacter(self.character)
         if self.character.document and self.character.document.loaded:
             self.ui.textEdit.setText(self.character.document.content, self.character.name, title_read_only=True)
         else:

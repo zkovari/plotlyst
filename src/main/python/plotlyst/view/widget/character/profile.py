@@ -23,13 +23,13 @@ from typing import Optional, List, Dict, Any, Tuple
 
 import emoji
 import qtanim
-from PyQt6.QtCore import pyqtSignal, Qt, QSize, QObject, QEvent, QPoint
+from PyQt6.QtCore import pyqtSignal, Qt, QSize, QObject, QEvent, QPoint, QTimer
 from PyQt6.QtGui import QResizeEvent, QWheelEvent, QColor
 from PyQt6.QtWidgets import QWidget, QLabel, QSizePolicy, QSlider, QToolButton, QVBoxLayout, QGridLayout, QApplication, \
     QFrame
 from overrides import overrides
 from qthandy import vbox, clear_layout, hbox, bold, underline, spacer, vspacer, margins, pointy, retain_when_hidden, \
-    transparent, sp, gc, decr_font, grid, incr_font, line
+    transparent, sp, gc, decr_font, grid, incr_font, line, busy
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
@@ -1741,16 +1741,19 @@ class CharacterProfileEditor(QWidget):
     def setCharacter(self, character: Character):
         self._character = character
         self._settings.refresh(character)
-        self.refresh()
+        self.clear()
+        QTimer.singleShot(50, self.refresh)
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
         self._setBtnSettingsGeometry(event.size().width())
 
-    def refresh(self):
+    def clear(self):
         clear_layout(self)
 
+    @busy
+    def refresh(self):
         for section in self._character.profile:
             if section.type == CharacterProfileSectionType.Goals:
                 sc = GmcSectionContext()
