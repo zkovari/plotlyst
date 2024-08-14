@@ -601,9 +601,9 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
         self._backstoryRow = row
         self._addLabel(row, 'Backstory', IconRegistry.backstory_icon())
 
-        row += 1
-        self._topicRow = row
-        self._addLabel(row, 'Topics', IconRegistry.topics_icon())
+        # row += 1
+        # self._topicRow = row
+        # self._addLabel(row, 'Topics', IconRegistry.topics_icon())
 
         row += 1
         self._layout.addWidget(vspacer(), row, 0)
@@ -725,13 +725,13 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
             overall_progress.addValue(backstory_progress.value())
             self._addWidget(backstory_progress, self._backstoryRow, col)
 
-        if character.topics:
-            topics_progress = CircularProgressBar(parent=self)
-            topics_progress.setMaxValue(len(character.topics))
-            topics_progress.setValue(len([x for x in character.topics if x.value]))
-            overall_progress.addMaxValue(topics_progress.maxValue())
-            overall_progress.addValue(topics_progress.value())
-            self._addWidget(topics_progress, self._topicRow, col)
+        # if character.topics:
+        #     topics_progress = CircularProgressBar(parent=self)
+        #     topics_progress.setMaxValue(len(character.topics))
+        #     topics_progress.setValue(len([x for x in character.topics if x.value]))
+        #     overall_progress.addMaxValue(topics_progress.maxValue())
+        #     overall_progress.addValue(topics_progress.value())
+        #     self._addWidget(topics_progress, self._topicRow, col)
 
         self._addWidget(overall_progress, self.RowOverall, col)
 
