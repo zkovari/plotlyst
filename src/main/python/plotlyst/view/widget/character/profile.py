@@ -50,7 +50,7 @@ from plotlyst.core.template import TemplateField, iq_field, eq_field, rationalis
     work_style_choices
 from plotlyst.env import app_env
 from plotlyst.view.common import tool_btn, wrap, emoji_font, action, insert_before_the_end, push_btn, label, \
-    fade_out_and_gc
+    fade_out_and_gc, shadow
 from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
@@ -115,6 +115,9 @@ class TemplateFieldWidgetBase(ProfileFieldWidget):
 
 
 class SectionContext:
+
+    def has_white_bg(self) -> bool:
+        return False
 
     def has_addition(self) -> bool:
         return False
@@ -305,16 +308,24 @@ class ProfileSectionWidget(ProfileFieldWidget):
         # self.wdgHeader.layout().addWidget(self.progress, alignment=Qt.AlignmentFlag.AlignVCenter)
         # self.wdgHeader.layout().addWidget(spacer())
 
-        self.wdgContainer = QWidget()
-        vbox(self.wdgContainer, 0)
-        margins(self.wdgContainer, left=20)
+        self.wdgContainer = QFrame()
+        vbox(self.wdgContainer, 5)
+        if self.context.has_white_bg():
+            self.wdgContainer.setProperty('white-bg', True)
+            self.wdgContainer.setProperty('rounded', True)
+        else:
+            margins(self.wdgContainer, left=20)
 
         self.wdgBottom = QWidget()
         vbox(self.wdgBottom, 0, 0)
         margins(self.wdgBottom, left=20)
 
         self.layout().addWidget(self.wdgHeader)
-        self.layout().addWidget(self.wdgContainer)
+        if self.context.has_white_bg():
+            self.layout().addWidget(wrap(self.wdgContainer, margin_left=20))
+        else:
+            self.layout().addWidget(self.wdgContainer)
+
         self.layout().addWidget(self.wdgBottom)
 
         if self.context.has_addition():
@@ -422,6 +433,7 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
         self.wdgEditor.setProperty('rounded', True)
         self.wdgEditor.setAcceptRichText(False)
         self.wdgEditor.setTabChangesFocus(True)
+        shadow(self.wdgEditor)
         self.setMaximumWidth(600)
 
         self._filledBefore: bool = False
@@ -963,7 +975,25 @@ class MultiAttributesTemplateWidgetBase(ProfileFieldWidget):
         self.valueFilled.emit(value / count if count else 0)
 
 
+class StrengthsSectionContext(SectionContext):
+
+    @overrides
+    def has_white_bg(self) -> bool:
+        return True
+
+
+class FacultiesSectionContext(SectionContext):
+
+    @overrides
+    def has_white_bg(self) -> bool:
+        return True
+
+
 class MultiAttributeSectionContext(SectionContext):
+
+    @overrides
+    def has_white_bg(self) -> bool:
+        return True
 
     @overrides
     def has_addition(self) -> bool:
@@ -1134,7 +1164,7 @@ class StrengthsWeaknessesTableRow(QWidget):
     def __init__(self, attribute: StrengthWeaknessAttribute, parent=None):
         super().__init__(parent)
         self.attribute = attribute
-        hbox(self, 0, spacing=10)
+        hbox(self, 3, spacing=10)
         self.textStrength = self._textEditor()
         self.textStrength.setPlaceholderText('Define the strength of this attribute')
         self.textStrength.setText(self.attribute.strength)
@@ -1171,6 +1201,7 @@ class StrengthsWeaknessesTableRow(QWidget):
         editor.setMaximumWidth(500)
         editor.setProperty('white-bg', True)
         editor.setProperty('rounded', True)
+        shadow(editor)
         retain_when_hidden(editor)
         return editor
 
@@ -1183,8 +1214,7 @@ class StrengthsWeaknessesFieldWidget(TemplateFieldWidgetBase):
 
         vbox(self, 0)
         self._center = QWidget()
-        self._centerlayout: QGridLayout = grid(self._center, 0, 0, 5)
-        margins(self._centerlayout, left=5)
+        self._centerlayout: QGridLayout = grid(self._center, 5, 3, 5)
         self._centerlayout.setColumnMinimumWidth(0, 70)
         self._centerlayout.setColumnStretch(1, 1)
         self._centerlayout.setColumnStretch(2, 1)
@@ -1195,8 +1225,8 @@ class StrengthsWeaknessesFieldWidget(TemplateFieldWidgetBase):
         self.emojiWeakness = label('')
         self.emojiWeakness.setFont(emoji_font())
         self.emojiWeakness.setText(emoji.emojize(':nauseated_face:'))
-        self.lblStrength = label('Strength', underline=True)
-        self.lblWeakness = label('Weakness', underline=True)
+        self.lblStrength = label('Strength')
+        self.lblWeakness = label('Weakness')
         incr_font(self.lblStrength)
         incr_font(self.lblWeakness)
         self._centerlayout.addWidget(group(self.emojiStrength, self.lblStrength), 0, 1,
@@ -1722,13 +1752,19 @@ class CharacterProfileEditor(QWidget):
         clear_layout(self)
 
         for section in self._character.profile:
-            sc = SectionContext()
             if section.type == CharacterProfileSectionType.Goals:
                 sc = GmcSectionContext()
             elif section.type == CharacterProfileSectionType.Baggage:
                 sc = BaggageSectionContext()
             elif section.type == CharacterProfileSectionType.Flaws:
                 sc = FlawsSectionContext()
+            elif section.type == CharacterProfileSectionType.Strengths:
+                sc = StrengthsSectionContext()
+            elif section.type == CharacterProfileSectionType.Faculties:
+                sc = FacultiesSectionContext()
+            else:
+                sc = SectionContext()
+
             wdg = ProfileSectionWidget(section, sc, self._character)
             self._sections[section.type] = wdg
 
