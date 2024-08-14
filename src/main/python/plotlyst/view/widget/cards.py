@@ -211,15 +211,30 @@ class SceneCard(Ui_SceneCard, Card):
         self.quickRefresh()
         self.textSynopsis.setText(self.scene.synopsis)
 
+        self.refreshPov()
+        self.refreshCharacters()
+        self.refreshBeat()
+
+        icon = IconRegistry.scene_type_icon(self.scene)
+        if icon:
+            self.lblType.setPixmap(icon.pixmap(QSize(24, 24)))
+        else:
+            self.lblType.clear()
+
+        self.btnStage.setScene(self.scene, self.novel)
+
+    def refreshPov(self):
         if self.scene.pov:
             self.btnPov.setIcon(avatars.avatar(self.scene.pov))
         else:
             self.btnPov.setIcon(QIcon())
 
+    def refreshCharacters(self):
         clear_layout(self.wdgCharacters)
         for char in self.scene.characters:
             self.wdgCharacters.addLabel(CharacterAvatarLabel(char, 20))
 
+    def refreshBeat(self):
         beat = self.scene.beat(self.novel)
         if beat:
             icon = beat.icon if beat.icon else f'ri.number-{beat.seq}'
@@ -229,14 +244,6 @@ class SceneCard(Ui_SceneCard, Card):
             self.btnBeat.setVisible(True)
         else:
             self.btnBeat.setHidden(True)
-
-        icon = IconRegistry.scene_type_icon(self.scene)
-        if icon:
-            self.lblType.setPixmap(icon.pixmap(QSize(24, 24)))
-        else:
-            self.lblType.clear()
-
-        self.btnStage.setScene(self.scene, self.novel)
 
     @overrides
     def quickRefresh(self):
@@ -428,6 +435,9 @@ class CardsView(QFrame):
 
     def card(self, item: Any) -> Optional[Card]:
         return self._cards.get(item, None)
+
+    def cards(self) -> Iterable[Card]:
+        return self._cards.values()
 
     def setCardsWidth(self, value: int):
         self._cardsWidth = value

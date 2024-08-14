@@ -33,7 +33,7 @@ from qtmenu import MenuWidget
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, ScenePurposeType, \
-    StoryStructure, NovelSetting, CardSizeRatio
+    StoryStructure, NovelSetting, CardSizeRatio, Character
 from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, emit_event
 from plotlyst.event.handler import event_dispatchers
@@ -293,7 +293,8 @@ class ScenesOutlineView(AbstractNovelView):
     @overrides
     def event_received(self, event: Event):
         if isinstance(event, (CharacterChangedEvent, CharacterDeletedEvent)):
-            self._scene_filter.povFilter.updateCharacters(self.novel.pov_characters(), checkAll=True)
+            self._handle_character_changed(event.character)
+            return
         elif isinstance(event, SceneChangedEvent):
             self._handle_scene_changed(event.scene)
             return
@@ -735,6 +736,13 @@ class ScenesOutlineView(AbstractNovelView):
     def _handle_scene_deletion(self, scene: Scene):
         self.selected_card = None
         self.ui.cards.remove(scene)
+
+    @busy
+    def _handle_character_changed(self, _: Character):
+        self._scene_filter.povFilter.updateCharacters(self.novel.pov_characters(), checkAll=True)
+        for card in self.ui.cards.cards():
+            card.refreshPov()
+            card.refreshCharacters()
 
     def _story_map_mode_clicked(self):
         if self.ui.btnStoryMapDisplay.isChecked():
