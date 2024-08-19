@@ -28,6 +28,7 @@ from overrides import overrides
 from qthandy import vbox, hbox, bold, margins, clear_layout, transparent, retain_when_hidden, incr_font
 from qtmenu import MenuWidget
 
+from plotlyst.common import ALT_BACKGROUND_COLOR, PLOTLYST_TERTIARY_COLOR
 from plotlyst.view.common import ButtonPressResizeEventFilter, action
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.button import EyeToggle
@@ -41,9 +42,9 @@ class TreeSettings:
     font_incr: int = 0
     bg_color: str = ''
     action_buttons_color: str = 'grey'
-    selection_bg_color: str = '#D8D5D5'
+    selection_bg_color: str = PLOTLYST_TERTIARY_COLOR
     selection_text_color: str = ''
-    hover_bg_color: str = '#E9E7E7'
+    hover_bg_color: str = ALT_BACKGROUND_COLOR
 
 
 class BaseTreeWidget(QWidget):
@@ -207,7 +208,7 @@ class ContainerNode(BaseTreeWidget):
         self._container.setHidden(True)
         vbox(self._container, 1, spacing=0)
         margins(self._container, left=20)
-        margins(self._wdgTitle, left=15)
+        margins(self._wdgTitle, top=2, bottom=2)
         self.layout().addWidget(self._wdgTitle)
         self.layout().addWidget(self._container)
 

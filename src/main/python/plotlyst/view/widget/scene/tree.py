@@ -24,10 +24,10 @@ from typing import List
 
 from PyQt6.QtCore import QMimeData, QPointF
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QShowEvent
+from PyQt6.QtGui import QShowEvent, QIcon
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import gc, translucent, clear_layout, vbox, margins
+from qthandy import gc, translucent, clear_layout, vbox
 from qthandy import vspacer
 from qthandy.filter import DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget
@@ -60,7 +60,8 @@ class SceneWidget(ContainerNode):
         self._icon.setIcon(IconRegistry.from_name(self._dotIcon, 'lightgrey'))
         self._icon.setVisible(True)
         self._wdgTitle.layout().setSpacing(0)
-        margins(self._wdgTitle, left=0, top=0, bottom=0)
+        # margins(self._wdgTitle, left=0, top=0, bottom=0)
+        # margins(self._wdgTitle, top=3, bottom=3)
 
         self.refresh()
 
@@ -110,7 +111,6 @@ class ChapterWidget(ContainerNode):
         self._chapter = chapter
         self._novel = novel
         self._readOnly = readOnly
-        margins(self._wdgTitle, top=2, bottom=2)
 
         self.setPlusButtonEnabled(not self._readOnly)
         self.setMenuEnabled(not self._readOnly)
@@ -125,15 +125,7 @@ class ChapterWidget(ContainerNode):
             self.refresh()
 
     def refresh(self):
-        if self._chapter.type is None:
-            self._icon.setIcon(IconRegistry.chapter_icon())
-        elif self._chapter.type == ChapterType.Prologue:
-            self._icon.setIcon(IconRegistry.prologue_icon())
-        elif self._chapter.type == ChapterType.Epilogue:
-            self._icon.setIcon(IconRegistry.epilogue_icon())
-        elif self._chapter.type == ChapterType.Interlude:
-            self._icon.setIcon(IconRegistry.interlude_icon())
-
+        self._icon.setIcon(self._chapterIcon())
         self._lblTitle.setText(self._chapter.display_name())
 
     def chapter(self) -> Chapter:
@@ -144,6 +136,11 @@ class ChapterWidget(ContainerNode):
 
     def sceneWidgets(self) -> List[SceneWidget]:
         return self.childrenWidgets()
+
+    @overrides
+    def _reStyle(self):
+        super()._reStyle()
+        self._icon.setIcon(self._chapterIcon())
 
     @overrides
     def _initMenuActions(self, menu: MenuWidget):
@@ -160,6 +157,17 @@ class ChapterWidget(ContainerNode):
         menu.addMenu(convertMenu)
         menu.addSeparator()
         menu.addAction(self._actionDelete)
+
+    def _chapterIcon(self) -> QIcon:
+        color = 'black' if self._selected else 'grey'
+        if self._chapter.type is None:
+            return IconRegistry.chapter_icon(color=color)
+        elif self._chapter.type == ChapterType.Prologue:
+            return IconRegistry.prologue_icon(color=color)
+        elif self._chapter.type == ChapterType.Epilogue:
+            return IconRegistry.epilogue_icon(color=color)
+        elif self._chapter.type == ChapterType.Interlude:
+            return IconRegistry.interlude_icon(color=color)
 
 
 class ScenesTreeView(TreeView, EventListener):

@@ -160,22 +160,22 @@ class IconRegistry:
         return IconRegistry.from_name('fa5s.scroll', color=color, color_on=color_on)
 
     @staticmethod
-    def chapter_icon() -> QIcon:
-        return IconRegistry.from_name('ei.book')
+    def chapter_icon(**kwargs) -> QIcon:
+        return IconRegistry.from_name('ei.book', **kwargs)
 
     @staticmethod
-    def prologue_icon() -> QIcon:
+    def prologue_icon(**kwargs) -> QIcon:
         # color='#669bbc'
-        return IconRegistry.from_name('mdi.alpha-p-box-outline')
+        return IconRegistry.from_name('mdi.alpha-p-box-outline', **kwargs)
 
     @staticmethod
-    def epilogue_icon() -> QIcon:
+    def epilogue_icon(**kwargs) -> QIcon:
         # color='#e76f51'
-        return IconRegistry.from_name('mdi.alpha-e-box-outline')
+        return IconRegistry.from_name('mdi.alpha-e-box-outline', **kwargs)
 
     @staticmethod
-    def interlude_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.information-variant')
+    def interlude_icon(**kwargs) -> QIcon:
+        return IconRegistry.from_name('mdi.information-variant', **kwargs)
 
     @staticmethod
     def book_icon(color='black', color_on=PLOTLYST_SECONDARY_COLOR) -> QIcon:
