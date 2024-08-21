@@ -81,6 +81,12 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnProgress.setIcon(IconRegistry.from_name('mdi.calendar-month-outline', 'black', PLOTLYST_MAIN_COLOR))
         self.ui.btnExport.setIcon(IconRegistry.from_name('mdi.file-export-outline', 'black', PLOTLYST_MAIN_COLOR))
 
+        self.ui.btnTreeToggle.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
+        self.ui.btnTreeToggleSecondary.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
+        self.ui.btnTreeToggleSecondary.setHidden(True)
+        self.ui.btnTreeToggle.clicked.connect(self._hide_sidebar)
+        self.ui.btnTreeToggleSecondary.clicked.connect(self._show_sidebar)
+
         self._btnGroupSideBar = ExclusiveOptionalButtonGroup()
         self._btnGroupSideBar.addButton(self.ui.btnSceneInfo)
         self._btnGroupSideBar.addButton(self.ui.btnGoals)
@@ -464,3 +470,22 @@ class ManuscriptView(AbstractNovelView):
         self.ui.textEdit.textEdit.setAutoCapitalizationMode(mode)
         self.novel.prefs.manuscript.capitalization = mode
         self.repo.update_novel(self.novel)
+
+    def _hide_sidebar(self):
+        def finished():
+            qtanim.fade_in(self.ui.btnTreeToggleSecondary)
+            margins(self._wdgToolbar, left=margin_left)
+
+        left_size = self.ui.wdgLeftSide.width()
+        if self.ui.textEdit.textEdit.viewportMargins().left() > left_size:
+            margin_left = left_size
+        else:
+            margin_left = 50
+        qtanim.toggle_expansion(self.ui.wdgLeftSide, False, teardown=finished)
+        self.ui.btnTreeToggleSecondary.setChecked(False)
+
+    def _show_sidebar(self):
+        qtanim.toggle_expansion(self.ui.wdgLeftSide, True)
+        self.ui.btnTreeToggle.setChecked(True)
+        self.ui.btnTreeToggleSecondary.setVisible(False)
+        margins(self._wdgToolbar, left=2)
