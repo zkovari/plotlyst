@@ -474,6 +474,7 @@ class ManuscriptTextEdit(TextEditBase):
 
     def __init__(self, parent=None):
         super(ManuscriptTextEdit, self).__init__(parent)
+        self._pasteAsOriginalEnabled = False
         self.highlighter = GrammarHighlighter(self.document(), checkEnabled=False,
                                               highlightStyle=GrammarHighlightStyle.BACKGOUND)
 
