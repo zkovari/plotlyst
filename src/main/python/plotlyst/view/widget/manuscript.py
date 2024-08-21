@@ -688,7 +688,7 @@ class ManuscriptTextEditor(TextEditorBase):
         self._novel: Optional[Novel] = None
         self.toolbar().setHidden(True)
         self._titleVisible: bool = True
-        self.setCharacterWidth(50)
+        self.setCharacterWidth(40)
         self._scenes: List[Scene] = []
 
         self._textTitle = QLineEdit()
@@ -972,9 +972,6 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         self.lblWords: Optional[WordsDisplay] = None
         self._firstInit: bool = True
 
-        self.sliderDocWidth.valueChanged.connect(
-            lambda x: self.wdgDistractionFreeEditor.layout().setContentsMargins(int(self.width() / 3) - x, 0,
-                                                                                int(self.width() / 3) - x, 0))
         self.wdgSprint = SprintWidget(self)
         self.wdgSprint.setCompactMode(True)
         self.wdgHeader.layout().insertWidget(0, self.wdgSprint, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -1014,10 +1011,6 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         self.editor.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
         self.wdgBottom.setVisible(True)
-        self.sliderDocWidth.setMaximum(int(self.width() / 3))
-        if self.sliderDocWidth.value() <= 2:
-            self.sliderDocWidth.setValue(self.sliderDocWidth.maximum() // 2)
-
         if self._firstInit:
             self.btnNightMode.setChecked(True)
             self.btnTypewriterMode.setChecked(True)

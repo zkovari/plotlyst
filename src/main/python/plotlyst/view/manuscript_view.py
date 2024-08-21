@@ -180,7 +180,8 @@ class ManuscriptView(AbstractNovelView):
         menu = MenuWidget(self._btnContext)
         apply_white_menu(menu)
         menu.addWidget(self._contextMenuWidget)
-        self._contextMenuWidget.setSectionVisible(TextEditorSettingsSection.WIDTH, False)
+        self._contextMenuWidget.setSectionVisible(TextEditorSettingsSection.PAGE_WIDTH, False)
+        self._contextMenuWidget.setSectionVisible(TextEditorSettingsSection.TEXT_WIDTH, True)
         if self.novel.prefs.manuscript.font.get(app_env.platform(), ''):
             font_: QFont = self.ui.textEdit.textEdit.font()
             font_.setFamily(self.novel.prefs.manuscript.font[app_env.platform()].family)

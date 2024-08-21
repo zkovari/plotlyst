@@ -77,7 +77,7 @@
        <number>6</number>
       </property>
       <property name="leftMargin">
-       <number>6</number>
+       <number>15</number>
       </property>
       <property name="topMargin">
        <number>2</number>
@@ -88,34 +88,6 @@
       <property name="bottomMargin">
        <number>2</number>
       </property>
-      <item alignment="Qt::AlignLeft">
-       <widget class="QSlider" name="sliderDocWidth">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>200</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="minimum">
-         <number>1</number>
-        </property>
-        <property name="maximum">
-         <number>10</number>
-        </property>
-        <property name="value">
-         <number>2</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
       <item>
        <widget class="QToolButton" name="btnFocus">
         <property name="cursor">
