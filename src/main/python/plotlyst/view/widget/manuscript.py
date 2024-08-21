@@ -483,7 +483,7 @@ class ManuscriptTextEdit(TextEditBase):
         self._wordTagHighlighter: Optional[WordTagHighlighter] = None
 
         if app_env.is_linux():
-            self.setFont(QFont('Palatino', 16))
+            self.setFont(QFont('Palatino', 14))
         elif app_env.is_mac():
             self.setFont(QFont('Palatino', 16))
         elif app_env.is_windows():
