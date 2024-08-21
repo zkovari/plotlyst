@@ -413,7 +413,7 @@ class ManuscriptView(AbstractNovelView):
             else:
                 # self._wdgReadability.cbAdverbs.setChecked(False)
                 self.ui.textEdit.setGrammarCheckEnabled(True)
-                QTimer.singleShot(50, self.ui.textEdit.asyncCheckGrammar)
+                QTimer.singleShot(150, self.ui.textEdit.asyncCheckGrammar)
         else:
             self.ui.textEdit.setGrammarCheckEnabled(False)
             self.ui.textEdit.checkGrammar()
