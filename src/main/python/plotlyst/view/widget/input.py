@@ -38,7 +38,7 @@ from qthandy import transparent, hbox, margins, pointy, sp, line, flow, vbox, tr
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
-from qttextedit.api import AutoCapitalizationMode
+from qttextedit.api import AutoCapitalizationMode, PopupBase
 
 from plotlyst.common import IGNORE_CAPITALIZATION_PROPERTY, RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, RED_COLOR
 from plotlyst.core.domain import TextStatistics, Character, Label
@@ -51,7 +51,7 @@ from plotlyst.model.characters_model import CharactersTableModel
 from plotlyst.model.common import proxy
 from plotlyst.service.grammar import language_tool_proxy, dictionary
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import action, label, push_btn, tool_btn, insert_before, fade_out_and_gc
+from plotlyst.view.common import action, label, push_btn, tool_btn, insert_before, fade_out_and_gc, shadow
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_color
 from plotlyst.view.style.text import apply_texteditor_toolbar_style
@@ -306,7 +306,7 @@ class CharacterContentAssistMenu(QMenu):
         self.characterSelected.emit(char)
 
 
-class GrammarPopup(QFrame):
+class GrammarPopup(PopupBase):
     replacementRequested = pyqtSignal(str)
 
     def __init__(self, parent):
@@ -358,6 +358,15 @@ class GrammarPopup(QFrame):
 
     def unlock(self):
         self._locked = False
+
+    @overrides
+    def aboutToShow(self):
+        self.lock()
+
+    @overrides
+    def activate(self):
+        self.unlock()
+        shadow(self)
 
     def _button(self, replacement: str) -> QPushButton:
         btn = QPushButton(replacement, self)
@@ -442,29 +451,19 @@ class TextEditBase(EnhancedTextEdit):
 
                 self._replacementInfo = ReplacementInfo(cursor, start, length)
                 self._wdgGrammarPopup.init(replacements, msg, style)
-                self._popupWidget(self._wdgGrammarPopup, event.pos())
+                self._popup(self._wdgGrammarPopup, event.pos())
 
     @overrides
     def focusOutEvent(self, event: QFocusEvent):
-        self._hidePopup(self._wdgGrammarPopup)
-
-    def _popupWidget(self, wdg: GrammarPopup, pos: QPoint):
-        ml = self.viewportMargins().left()
-        tl = self.viewportMargins().top()
-        global_pos: QPoint = self.mapToGlobal(pos) - QPoint(-ml,
-                                                            wdg.sizeHint().height() + 40 - tl) - QApplication.activeWindow().pos()
-        wdg.setGeometry(global_pos.x(), global_pos.y(), wdg.sizeHint().width(),
-                        wdg.sizeHint().height())
-
-        wdg.lock()
-        qtanim.fade_in(wdg, teardown=wdg.unlock)
+        super().focusOutEvent(event)
+        self._hideGrammarPopup(self._wdgGrammarPopup)
 
     @overrides
     def _cursorPositionChanged(self):
-        self._hidePopup(self._wdgGrammarPopup)
+        self._hideGrammarPopup(self._wdgGrammarPopup)
         super()._cursorPositionChanged()
 
-    def _hidePopup(self, wdg: GrammarPopup):
+    def _hideGrammarPopup(self, wdg: GrammarPopup):
         if wdg and wdg.isVisible() and not wdg.locked():
             wdg.hide()
 
@@ -474,19 +473,6 @@ class TextEditBase(EnhancedTextEdit):
             return data.misspellings
 
         return []
-
-    # def paintEvent(self, event: QtGui.QPaintEvent) -> None:
-    #     super(_TextEditor, self).paintEvent(event)
-    #     painter = QPainter(self.viewport())
-    #     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-    #     painter.setPen(QPen(QColor('#02bcd4'), 20, Qt.PenStyle.SolidLine))
-    #     painter.setBrush(QColor('#02bcd4'))
-    #     # painter.begin()
-    #     # painter.setPen(QPen(Qt.GlobalColor.black), 12, Qt.PenStyle.SolidLine)
-    #     self.textCursor().position()
-    #     rect = self.cursorRect(self.textCursor())
-    #     painter.drawText(rect.x(), rect.y(), 'Painted text')
-    #     # painter.drawLine(0, 0, self.width(), self.height())
 
     def _replaceWord(self, replacement: str):
         cursor = self._replacementInfo.cursor
