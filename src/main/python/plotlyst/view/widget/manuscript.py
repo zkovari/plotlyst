@@ -40,6 +40,8 @@ from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget, group
 from qttextedit import TextBlockState, remove_font, OBJECT_REPLACEMENT_CHARACTER, DashInsertionMode
 from qttextedit.api import AutoCapitalizationMode
+from qttextedit.ops import Heading2Operation, Heading3Operation, InsertListOperation, InsertNumberedListOperation, \
+    Heading1Operation
 from qttextedit.util import EN_DASH, EM_DASH
 from textstat import textstat
 
@@ -495,6 +497,8 @@ class ManuscriptTextEdit(TextEditBase):
         self.document().documentLayout().registerHandler(SceneSeparatorTextFormat, self._sceneTextObject)
 
         self._setDefaultStyleSheet()
+        self.setCommandOperations([Heading1Operation, Heading2Operation, Heading3Operation, InsertListOperation,
+                                   InsertNumberedListOperation])
 
     @overrides
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
