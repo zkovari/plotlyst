@@ -409,20 +409,20 @@ class TextEditBase(EnhancedTextEdit):
     #         rect = self.cursorRect(self.textCursor())
     #         self._popupMenu(menu, QPoint(rect.x(), rect.y()))
 
-    @overrides
-    def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
-        super(TextEditBase, self).mouseMoveEvent(event)
-        cursor = self.cursorForPosition(event.pos())
-        if cursor.atBlockStart() or cursor.atBlockEnd():
-            QApplication.restoreOverrideCursor()
-            return
-
-        for start, length, replacements, msg, style in self._errors(cursor):
-            if start <= cursor.positionInBlock() <= start + length:
-                if QApplication.overrideCursor() is None:
-                    QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
-                return
-        QApplication.restoreOverrideCursor()
+    # @overrides
+    # def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
+    #     super(TextEditBase, self).mouseMoveEvent(event)
+    #     cursor = self.cursorForPosition(event.pos())
+    #     if cursor.atBlockStart() or cursor.atBlockEnd():
+    #         QApplication.restoreOverrideCursor()
+    #         return
+    #
+    #     for start, length, replacements, msg, style in self._errors(cursor):
+    #         if start <= cursor.positionInBlock() <= start + length:
+    #             if QApplication.overrideCursor() is None:
+    #                 QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
+    #             return
+    #     QApplication.restoreOverrideCursor()
 
     @overrides
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
