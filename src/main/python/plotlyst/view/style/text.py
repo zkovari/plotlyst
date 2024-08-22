@@ -86,7 +86,7 @@ line_edit_styles = """
     QLineEdit {
         background-color: #f8f9fa;
     }
-
+    
     QLineEdit[white-bg=true] {
         background-color: #FcFcFc;
     }
@@ -95,6 +95,10 @@ line_edit_styles = """
         border-radius: 6px;
         padding: 4px;
         border: 1px solid lightgrey;
+    }
+    
+    QLineEdit[rounded=true]:focus {
+        border: 1px solid #D4B8E0;
     }
     
     QLineEdit[transparent=true] {
@@ -114,7 +118,11 @@ text_edit_styles = """
         padding: 4px;
         border: 1px solid lightgrey;
     }
-
+    
+    QTextEdit[rounded=true]:focus {
+        border: 1px solid #D4B8E0;
+    }
+    
     QTextEdit[white-bg=true] {
         background-color: #FcFcFc;
     }
