@@ -49,7 +49,7 @@ from plotlyst.view.layout import group
 from plotlyst.view.style.text import apply_text_color
 from plotlyst.view.widget.button import DotsMenuButton
 from plotlyst.view.widget.display import Icon, PopupDialog, DotsDragIcon
-from plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit
+from plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, MarkdownPopupTextEditorToolbar
 from plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
 from plotlyst.view.widget.utility import IconSelectorDialog
 from plotlyst.view.widget.world._topics import ecological_topics, cultural_topics, historical_topics, \
@@ -171,6 +171,9 @@ class TextElementEditor(WorldBuildingEntityElementWidget):
         self.textEdit.setAcceptRichText(True)
         self.textEdit.setCommandOperations([Heading2Operation, Heading3Operation, InsertListOperation,
                                             InsertNumberedListOperation, InsertDividerOperation])
+        toolbar = MarkdownPopupTextEditorToolbar()
+        toolbar.activate(self.textEdit)
+        self.textEdit.setPopupWidget(toolbar)
         if self._underSection():
             self.textEdit.setPlaceholderText("Describe this section, or press '/' for commands...")
         else:

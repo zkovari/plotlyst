@@ -386,7 +386,39 @@ class ReplacementInfo:
     length: int
 
 
-class PopupTextEditorToolbar(TextEditorToolbar, PopupBase):
+class BasePopupTextEditorToolbar(TextEditorToolbar, PopupBase):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setProperty('rounded', True)
+        self.setProperty('relaxed-white-bg', True)
+        margins(self, 5, 5, 5, 5)
+
+    @overrides
+    def beforeShown(self):
+        self.updateFormat(self._linkedTextEdit)
+
+    @overrides
+    def afterShown(self):
+        shadow(self)
+
+
+class MarkdownPopupTextEditorToolbar(BasePopupTextEditorToolbar):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setProperty('rounded', True)
+        self.setProperty('relaxed-white-bg', True)
+        margins(self, 5, 5, 5, 5)
+
+        self.addTextEditorOperation(BoldOperation)
+        self.addTextEditorOperation(ItalicOperation)
+        self.addTextEditorOperation(UnderlineOperation)
+        self.addTextEditorOperation(StrikethroughOperation)
+        self.addSeparator()
+        self.addTextEditorOperation(InsertListOperation)
+        self.addTextEditorOperation(InsertNumberedListOperation)
+
+
+class HtmlPopupTextEditorToolbar(BasePopupTextEditorToolbar):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setProperty('rounded', True)
@@ -403,14 +435,6 @@ class PopupTextEditorToolbar(TextEditorToolbar, PopupBase):
         self.addSeparator()
         self.addTextEditorOperation(InsertListOperation)
         self.addTextEditorOperation(InsertNumberedListOperation)
-
-    @overrides
-    def beforeShown(self):
-        self.updateFormat(self._linkedTextEdit)
-
-    @overrides
-    def afterShown(self):
-        shadow(self)
 
 
 class TextEditBase(EnhancedTextEdit):

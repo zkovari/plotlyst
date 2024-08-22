@@ -68,7 +68,7 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.display import WordsDisplay, IconText
 from plotlyst.view.widget.input import TextEditBase, GrammarHighlighter, GrammarHighlightStyle, Toggle, TextEditorBase, \
-    PopupTextEditorToolbar
+    HtmlPopupTextEditorToolbar
 
 
 class TimerSetupWidget(QWidget, Ui_TimerSetupWidget):
@@ -483,7 +483,7 @@ class ManuscriptTextEdit(TextEditBase):
         self._nightModeHighlighter: Optional[NightModeHighlighter] = None
         self._wordTagHighlighter: Optional[WordTagHighlighter] = None
 
-        toolbar = PopupTextEditorToolbar()
+        toolbar = HtmlPopupTextEditorToolbar()
         toolbar.activate(self)
         self.setPopupWidget(toolbar)
 
