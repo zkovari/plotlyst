@@ -58,7 +58,7 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QWidget" name="" native="true">
+        <widget class="QWidget" name="widget" native="true">
          <layout class="QHBoxLayout" name="horizontalLayout_4">
           <property name="spacing">
            <number>3</number>
@@ -196,7 +196,7 @@
        <number>0</number>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="pageText">
        <layout class="QVBoxLayout" name="verticalLayout">
@@ -910,7 +910,7 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>80</width>
+             <width>98</width>
              <height>70</height>
             </rect>
            </property>
@@ -945,7 +945,38 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="pageEmpty"/>
+      <widget class="QWidget" name="pageEmpty">
+       <layout class="QVBoxLayout" name="verticalLayout_17">
+        <property name="spacing">
+         <number>3</number>
+        </property>
+        <property name="leftMargin">
+         <number>15</number>
+        </property>
+        <property name="topMargin">
+         <number>15</number>
+        </property>
+        <property name="rightMargin">
+         <number>15</number>
+        </property>
+        <property name="bottomMargin">
+         <number>35</number>
+        </property>
+        <item alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+         <widget class="QLabel" name="lblEmptyPage">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="description" stdset="0">
+           <bool>true</bool>
+          </property>
+          <property name="h4" stdset="0">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="pageDistractionFree">
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <property name="spacing">

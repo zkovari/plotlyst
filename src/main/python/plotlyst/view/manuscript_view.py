@@ -326,7 +326,7 @@ class ManuscriptView(AbstractNovelView):
             self.ui.textEdit.setChapterScenes(scenes, chapter.display_name())
             self._miniSceneEditor.setScenes(scenes)
         else:
-            self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
+            self._empty_page('Add a scene to this chapter to start writing')
             self._miniSceneEditor.reset()
 
         self.ui.btnNotes.setChecked(False)
@@ -451,7 +451,8 @@ class ManuscriptView(AbstractNovelView):
     def _is_empty_page(self) -> bool:
         return self.ui.stackedWidget.currentWidget() == self.ui.pageEmpty
 
-    def _empty_page(self):
+    def _empty_page(self, message: str = ''):
+        self.ui.lblEmptyPage.setText(message)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
 
     def _fontChanged(self, family: str):
