@@ -443,7 +443,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="btnCreate">
+       <widget class="QPushButton" name="btnNext">
         <property name="minimumSize">
          <size>
           <width>150</width>
