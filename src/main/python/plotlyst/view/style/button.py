@@ -510,6 +510,34 @@ btn_style_tool_button_dark_toggle = """
     }
 """
 
+radio_btn = """
+    QRadioButton {
+        background-color: transparent;
+        color: black;
+    }
+
+    QRadioButton::indicator {
+        width: 15px;
+        height: 15px;
+        border-radius:8px;
+    }
+    
+    QRadioButton::indicator:checked {
+        background-color:       #4B0763;
+        border:                 1px solid #3C0764;
+    }
+    
+    QRadioButton::indicator:unchecked {
+        background-color:       transparent;
+        border:                 1px solid lightgrey;
+    }
+    
+    QRadioButton::indicator:unchecked:hover {
+        background-color:       transparent;
+        border:                 1px solid #D4B8E0;
+    }
+"""
+
 style = "\n".join([
     btn_style_no_menu,
     btn_style_base,
@@ -533,7 +561,8 @@ style = "\n".join([
     btn_style_tool_button_conflict_selector,
     btn_style_tool_button_gender,
     btn_style_tool_button_main_navbar,
-    btn_style_tool_button_dark_toggle
+    btn_style_tool_button_dark_toggle,
+    radio_btn
 ])
 
 
