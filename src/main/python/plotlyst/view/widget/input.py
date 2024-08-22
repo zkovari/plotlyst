@@ -38,7 +38,9 @@ from qthandy import transparent, hbox, margins, pointy, sp, line, flow, vbox, tr
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
-from qttextedit.api import AutoCapitalizationMode, PopupBase
+from qttextedit.api import AutoCapitalizationMode, PopupBase, TextEditorToolbar
+from qttextedit.ops import BoldOperation, ItalicOperation, UnderlineOperation, StrikethroughOperation, \
+    AlignLeftOperation, AlignCenterOperation, AlignRightOperation, InsertListOperation, InsertNumberedListOperation
 
 from plotlyst.common import IGNORE_CAPITALIZATION_PROPERTY, RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, RED_COLOR
 from plotlyst.core.domain import TextStatistics, Character, Label
@@ -360,11 +362,11 @@ class GrammarPopup(PopupBase):
         self._locked = False
 
     @overrides
-    def aboutToShow(self):
+    def beforeShown(self):
         self.lock()
 
     @overrides
-    def activate(self):
+    def afterShown(self):
         self.unlock()
         shadow(self)
 
@@ -382,6 +384,33 @@ class ReplacementInfo:
     cursor: QTextCursor
     start: int
     length: int
+
+
+class PopupTextEditorToolbar(TextEditorToolbar, PopupBase):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setProperty('rounded', True)
+        self.setProperty('relaxed-white-bg', True)
+        margins(self, 5, 5, 5, 5)
+        self.addTextEditorOperation(BoldOperation)
+        self.addTextEditorOperation(ItalicOperation)
+        self.addTextEditorOperation(UnderlineOperation)
+        self.addTextEditorOperation(StrikethroughOperation)
+        self.addSeparator()
+        self.addTextEditorOperation(AlignLeftOperation)
+        self.addTextEditorOperation(AlignCenterOperation)
+        self.addTextEditorOperation(AlignRightOperation)
+        self.addSeparator()
+        self.addTextEditorOperation(InsertListOperation)
+        self.addTextEditorOperation(InsertNumberedListOperation)
+
+    @overrides
+    def beforeShown(self):
+        self.updateFormat(self._linkedTextEdit)
+
+    @overrides
+    def afterShown(self):
+        shadow(self)
 
 
 class TextEditBase(EnhancedTextEdit):
