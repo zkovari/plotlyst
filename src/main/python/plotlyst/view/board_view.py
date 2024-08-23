@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from overrides import overrides
-from qthandy import bold
+from qthandy import bold, retain_when_hidden
 from qthandy.filter import InstantTooltipEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
@@ -44,6 +44,9 @@ class BoardView(AbstractNovelView):
         self.ui.btnSettings.setIcon(IconRegistry.cog_icon())
         self.ui.btnChart.installEventFilter(InstantTooltipEventFilter(self.ui.btnChart))
         self.ui.btnSettings.installEventFilter(InstantTooltipEventFilter(self.ui.btnSettings))
+
+        retain_when_hidden(self.ui.wdgTop)
+        self.ui.wdgTop.setHidden(True)
 
         bold(self.ui.lblTitle)
         self.ui.iconBoard.setIcon(IconRegistry.board_icon())
