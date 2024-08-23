@@ -362,7 +362,7 @@ class StoryStructureOutline(OutlineTimelineWidget):
     beatChanged = pyqtSignal()
 
     def __init__(self, parent=None):
-        super().__init__(parent, layout=LayoutType.FLOW)
+        super().__init__(parent)
         self._structureTimeline: Optional[StoryStructureTimelineWidget] = None
         self._beatsPreview: Optional[BeatsPreview] = None
         self._structure: Optional[StoryStructure] = None
