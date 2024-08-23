@@ -550,6 +550,7 @@ class ScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributionWidget, E
         self.btnTags.setIcon(IconRegistry.tags_icon())
         self.btnInformation.setIcon(IconRegistry.from_name('fa5s.book-reader', color_on=PLOTLYST_SECONDARY_COLOR))
         self.btnTags.setHidden(True)
+        self.btnInformation.setHidden(True)
 
         self._model = CharactersScenesDistributionTableModel(self.novel)
         self._scenes_proxy = DistributionFilterProxyModel()
@@ -580,6 +581,7 @@ class ScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributionWidget, E
 
         self.btnCharacters.setChecked(True)
         self.btnConflicts.setVisible(self.novel.prefs.toggled(NovelSetting.Track_conflict))
+        self.btnConflicts.setHidden(True)
         event_dispatchers.instance(self.novel).register(self, NovelConflictTrackingToggleEvent)
 
         self.refresh()
