@@ -529,7 +529,11 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.cards.applyFilter(self._card_filter)
 
     def _story_structure_toggled(self, toggled: bool):
-        self.ui.wdgStoryStructureParent.setVisible(toggled)
+        if toggled:
+            qtanim.fade_in(self.ui.wdgStoryStructureParent, teardown=lambda: self.ui.wdgStoryStructureParent.setGraphicsEffect(None))
+        else:
+            qtanim.fade_out(self.ui.wdgStoryStructureParent, teardown=lambda: self.ui.wdgStoryStructureParent.setGraphicsEffect(None))
+
         if toggled:
             self.ui.btnStoryStructureSelector.setVisible(len(self.novel.story_structures) > 1)
             if self.ui.btnStoryStructureSelector.isVisible():
