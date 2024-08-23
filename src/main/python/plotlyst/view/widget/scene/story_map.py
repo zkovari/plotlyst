@@ -35,7 +35,7 @@ from qthandy import decr_font, transparent, clear_layout, hbox, spacer, vbox
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
-from plotlyst.common import RELAXED_WHITE_COLOR
+from plotlyst.common import RELAXED_WHITE_COLOR, WHITE_COLOR
 from plotlyst.common import truncate_string
 from plotlyst.core.domain import Scene, Novel, Plot, \
     ScenePlotReference
@@ -44,7 +44,7 @@ from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import SceneOrderChangedEvent
 from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import hmax, action, tool_btn, ButtonPressResizeEventFilter, fade_out_and_gc
+from plotlyst.view.common import hmax, action, tool_btn, ButtonPressResizeEventFilter, fade_out_and_gc, shadow
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.button import WordWrappedPushButton
 from plotlyst.view.widget.display import Icon
@@ -419,6 +419,7 @@ class _ScenePlotAssociationsWidget(QWidget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setPen(QColor(self.plot.icon_color))
         painter.setBrush(QColor(self.plot.icon_color))
+        painter.setOpacity(0.7)
 
         if self._vertical:
             painter.drawRect(self.rect().width() // 2 - 4, 5, 8, self.rect().height())
@@ -456,7 +457,8 @@ class _ScenePlotAssociationsWidget(QWidget):
         wdg.setPlaceholderText('How is the scene related to this storyline?')
         wdg.setTabChangesFocus(True)
         wdg.setStyleSheet(f'''
-                            border:2px solid {self.plot.icon_color};
+                            border:1px solid {self.plot.icon_color};
+                            background: {WHITE_COLOR};
                             padding: 4px;
                             border-radius: 6px;
                         ''')
@@ -480,10 +482,11 @@ class _ScenePlotAssociationsWidget(QWidget):
         wdg.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         btnPlus = tool_btn(IconRegistry.plus_circle_icon('grey'), 'Associate to storyline', transparent_=True)
         btnPlus.setIconSize(QSize(32, 32))
-        btnPlus.installEventFilter(OpacityEventFilter(btnPlus, enterOpacity=0.7, leaveOpacity=0.2))
+        btnPlus.installEventFilter(OpacityEventFilter(btnPlus, enterOpacity=0.7, leaveOpacity=0.1))
         btnPlus.clicked.connect(partial(self._linkToPlot, wdg, scene))
         vbox(wdg).addWidget(btnPlus, alignment=Qt.AlignmentFlag.AlignCenter)
         wdg.setFixedSize(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT)
+        wdg.installEventFilter(VisibilityToggleEventFilter(btnPlus, wdg))
 
         return wdg
 
