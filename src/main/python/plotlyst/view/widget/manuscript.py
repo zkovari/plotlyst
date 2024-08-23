@@ -36,7 +36,7 @@ from nltk import WhitespaceTokenizer
 from overrides import overrides
 from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins, vbox, line, bold, vline, decr_font, \
     underline, transparent, italic, decr_icon, pointy, vspacer
-from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
+from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, group
 from qttextedit import TextBlockState, remove_font, OBJECT_REPLACEMENT_CHARACTER, DashInsertionMode
 from qttextedit.api import AutoCapitalizationMode
@@ -902,9 +902,6 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
         self.btnRefresh.setHidden(True)
         self._updatedDoc: Optional[QTextDocument] = None
         self.btnRefresh.clicked.connect(lambda: self.checkTextDocument(self._updatedDoc))
-
-        self.cbAdverbs.setToolTip('Not available yet')
-        self.cbAdverbs.installEventFilter(InstantTooltipEventFilter(self.cbAdverbs))
 
     def checkTextDocument(self, doc: QTextDocument):
         text = doc.toPlainText()

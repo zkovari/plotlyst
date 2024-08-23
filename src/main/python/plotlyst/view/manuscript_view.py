@@ -199,7 +199,6 @@ class ManuscriptView(AbstractNovelView):
         self._langSelectionWidget.languageChanged.connect(self._language_changed)
         self._cbSpellCheck.toggled.connect(self._spellcheck_toggled)
         self._cbSpellCheck.clicked.connect(self._spellcheck_clicked)
-        self._wdgReadability.cbAdverbs.toggled.connect(self._adverb_highlight_toggled)
         self._spellcheck_toggled(self._cbSpellCheck.isChecked())
 
         self._dist_free_editor = DistractionFreeManuscriptEditor(self.ui.pageDistractionFree)
@@ -284,7 +283,6 @@ class ManuscriptView(AbstractNovelView):
         self.ui.wdgBottom.layout().insertWidget(1, self.ui.lblWordCount, alignment=Qt.AlignmentFlag.AlignCenter)
         self.ui.lblWordCount.setVisible(True)
         self.ui.splitterEditor.insertWidget(0, self.ui.textEdit)
-        self._wdgReadability.cbAdverbs.setChecked(False)
 
     def _update_story_goal(self):
         wc = sum([x.manuscript.statistics.wc for x in self.novel.scenes if x.manuscript and x.manuscript.statistics])
@@ -411,7 +409,6 @@ class ManuscriptView(AbstractNovelView):
                 self._cbSpellCheck.setChecked(False)
                 emit_critical(language_tool_proxy.error)
             else:
-                # self._wdgReadability.cbAdverbs.setChecked(False)
                 self.ui.textEdit.setGrammarCheckEnabled(True)
                 QTimer.singleShot(150, self.ui.textEdit.asyncCheckGrammar)
         else:
