@@ -22,7 +22,7 @@ from typing import List, Optional
 from PyQt6.QtCore import pyqtSignal, QSize, Qt, QTimer
 from PyQt6.QtGui import QPixmap, QColor, QTextDocument
 from overrides import overrides
-from qthandy import transparent, incr_font, italic, busy, retain_when_hidden, incr_icon, bold, underline
+from qthandy import transparent, incr_font, italic, busy, retain_when_hidden, incr_icon, bold
 from qthandy.filter import VisibilityToggleEventFilter, InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -47,7 +47,7 @@ from plotlyst.view.style.base import apply_border_image
 from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.library import ShelvesTreeView
-from plotlyst.view.widget.tour import TutorialsTreeView, Tutorial
+from plotlyst.view.widget.tour import Tutorial
 from plotlyst.view.widget.tour.content import tutorial_titles, tutorial_descriptions
 from plotlyst.view.widget.tour.core import LibraryTourEvent, NewStoryButtonTourEvent, \
     NewStoryDialogOpenTourEvent, TutorialNovelSelectTourEvent, NovelDisplayTourEvent, tutorial_novel, \
@@ -110,15 +110,11 @@ class HomeView(AbstractView):
             btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.7, ignoreCheckedButton=True))
             btn.installEventFilter(TooltipPositionEventFilter(btn))
 
+        self.ui.btnTutorials.setHidden(True)
         self.ui.btnProgress.setHidden(True)
         self.ui.btnRoadmap.setHidden(True)
 
         self.ui.lblWelcomeMain.setText(home_page_welcome_text)
-        self.ui.btnVisitTutorials.setIcon(IconRegistry.from_name('mdi6.school-outline', NAV_BAR_BUTTON_DEFAULT_COLOR))
-        transparent(self.ui.btnVisitTutorials)
-        underline(self.ui.btnVisitTutorials)
-        self.ui.btnVisitTutorials.installEventFilter(OpacityEventFilter(self.ui.btnVisitTutorials, leaveOpacity=0.5))
-        self.ui.btnVisitTutorials.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnVisitTutorials))
 
         self.ui.btnFirstStory.setIcon(IconRegistry.book_icon())
         self.ui.btnFirstStory.installEventFilter(OpacityEventFilter(self.ui.btnFirstStory, leaveOpacity=0.7))
@@ -185,25 +181,25 @@ class HomeView(AbstractView):
                                (self.ui.btnProgress, self.ui.pageProgress),
                                (self.ui.btnRoadmap, self.ui.pageRoadmap)])
 
-        self._tutorialsTreeView = TutorialsTreeView(settings=TreeSettings(font_incr=2))
-        self._tutorialsTreeView.tutorialSelected.connect(self._tutorial_selected)
-        self.ui.splitterTutorials.setSizes([150, 500])
-        self.ui.btnStartTutorial.setIcon(IconRegistry.from_name('fa5s.play-circle', 'white'))
-        self.ui.btnStartTutorial.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnStartTutorial))
-        self.ui.btnStartTutorial.clicked.connect(self._start_tutorial)
-        self.ui.wdgTutorialsParent.layout().addWidget(self._tutorialsTreeView)
-        self.ui.stackTutorial.setCurrentWidget(self.ui.pageTutorialsEmpty)
+        # self._tutorialsTreeView = TutorialsTreeView(settings=TreeSettings(font_incr=2))
+        # self._tutorialsTreeView.tutorialSelected.connect(self._tutorial_selected)
+        # self.ui.splitterTutorials.setSizes([150, 500])
+        # self.ui.btnStartTutorial.setIcon(IconRegistry.from_name('fa5s.play-circle', 'white'))
+        # self.ui.btnStartTutorial.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnStartTutorial))
+        # self.ui.btnStartTutorial.clicked.connect(self._start_tutorial)
+        # self.ui.wdgTutorialsParent.layout().addWidget(self._tutorialsTreeView)
+        # self.ui.stackTutorial.setCurrentWidget(self.ui.pageTutorialsEmpty)
 
-        self.ui.textTutorial.setViewportMargins(20, 20, 20, 20)
-        document: QTextDocument = self.ui.textTutorial.document()
-        font = self.ui.textTutorial.font()
-        font.setPointSize(font.pointSize() + 2)
-        document.setDefaultFont(font)
-
-        transparent(self.ui.lineTutorialTitle)
-        self.ui.lineTutorialTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        incr_font(self.ui.lineTutorialTitle, 10)
-        bold(self.ui.lineTutorialTitle)
+        # self.ui.textTutorial.setViewportMargins(20, 20, 20, 20)
+        # document: QTextDocument = self.ui.textTutorial.document()
+        # font = self.ui.textTutorial.font()
+        # font.setPointSize(font.pointSize() + 2)
+        # document.setDefaultFont(font)
+        #
+        # transparent(self.ui.lineTutorialTitle)
+        # self.ui.lineTutorialTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # incr_font(self.ui.lineTutorialTitle, 10)
+        # bold(self.ui.lineTutorialTitle)
 
         self.ui.btnLibrary.setChecked(True)
         self.ui.stackWdgNovels.setCurrentWidget(self.ui.pageEmpty)
