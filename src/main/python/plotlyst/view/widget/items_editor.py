@@ -22,7 +22,7 @@ from typing import Optional
 from PyQt6.QtCore import QModelIndex, Qt, pyqtSignal, QPoint
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QAbstractItemView, QTableView
-from qthandy import ask_confirmation, vbox, spacer, hbox, vline
+from qthandy import vbox, spacer, hbox, vline
 from qthandy.filter import OpacityEventFilter
 
 from plotlyst.core.domain import SelectionItem
@@ -30,6 +30,7 @@ from plotlyst.model.common import SelectionItemsModel
 from plotlyst.view.common import show_color_picker, PopupMenuBuilder, tool_btn
 from plotlyst.view.delegates import TextItemDelegate
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.utility import IconSelectorDialog
 
 
@@ -181,7 +182,8 @@ class ItemsEditorWidget(QWidget):
         if not indexes:
             return
         item: SelectionItem = self.model.item(indexes[0])
-        if self.askRemovalConfirmation and not ask_confirmation(f'Are you sure you want to remove "{item.text}"?'):
+        if self.askRemovalConfirmation and not confirmed('This operation cannot be undone.',
+                                                         f'Are you sure you want to remove "{item.text}"?'):
             return
         self.model.remove(indexes[0])
 

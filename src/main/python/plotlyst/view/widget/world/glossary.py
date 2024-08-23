@@ -161,6 +161,7 @@ class WorldBuildingGlossaryEditor(QWidget):
         self.editor.setInlineAdditionEnabled(False)
         self.editor.btnAdd.clicked.connect(self._addNew)
         self.editor.editRequested.connect(self._edit)
+        self.editor.setAskRemovalConfirmation(True)
         self.glossaryModel = GlossaryModel(self._novel)
         self.editor.setModel(self.glossaryModel)
         self.editor.tableView.setColumnHidden(GlossaryModel.ColIcon, True)
