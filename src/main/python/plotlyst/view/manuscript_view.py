@@ -390,7 +390,7 @@ class ManuscriptView(AbstractNovelView):
             qtanim.collapse(self.ui.wdgSide)
             return
 
-        if toggled:
+        if toggled and not self.ui.wdgSide.isVisible():
             qtanim.expand(self.ui.wdgSide)
 
         if btn is self.ui.btnReadability:
