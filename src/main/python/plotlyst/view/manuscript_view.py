@@ -278,7 +278,7 @@ class ManuscriptView(AbstractNovelView):
         margins(self.widget, 4, 2, 2, 2)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageText)
         self.ui.wdgTitle.setVisible(True)
-        self.ui.wdgLeftSide.setVisible(True)
+        self.ui.wdgLeftSide.setVisible(self.ui.btnTreeToggle.isChecked())
 
         self.ui.wdgBottom.layout().insertWidget(1, self.ui.lblWordCount, alignment=Qt.AlignmentFlag.AlignCenter)
         self.ui.lblWordCount.setVisible(True)
