@@ -80,15 +80,15 @@ class ArcsTreeView(TreeView):
         self._storylineNodes: Dict[Plot, PlotArcNode] = {}
         self._storylinesNode = ContainerNode('Storylines', IconRegistry.storylines_icon(color='grey'), readOnly=True)
 
-        self._conflictNode = EyeToggleNode('Conflict', IconRegistry.conflict_icon())
-        self._conflictNode.setToggleTooltip('Toggle overall conflict intensity')
-        self._conflictNode.toggled.connect(self.conflictToggled)
-
-        self._agendaCharactersNode = ContainerNode('Characters', IconRegistry.character_icon('grey'), readOnly=True)
+        # self._conflictNode = EyeToggleNode('Conflict', IconRegistry.conflict_icon())
+        # self._conflictNode.setToggleTooltip('Toggle overall conflict intensity')
+        # self._conflictNode.toggled.connect(self.conflictToggled)
+        #
+        # self._agendaCharactersNode = ContainerNode('Characters', IconRegistry.character_icon('grey'), readOnly=True)
 
     def refresh(self):
         clear_layout(self._centralWidget, auto_delete=False)
-        self._agendaCharactersNode.clearChildren()
+        # self._agendaCharactersNode.clearChildren()
 
         for plot in self._novel.plots:
             if plot not in self._storylineNodes.keys():
@@ -97,18 +97,18 @@ class ArcsTreeView(TreeView):
                 node.plotToggled.connect(self.storylineToggled.emit)
                 self._storylinesNode.addChild(node)
 
-        characters = set()
-        for scene in self._novel.scenes:
-            for agenda in scene.agendas:
-                if agenda.character_id:
-                    characters.add(agenda.character(self._novel))
-
-        for character in characters:
-            self._addCharacterAgendaNodes(character)
+        # characters = set()
+        # for scene in self._novel.scenes:
+        #     for agenda in scene.agendas:
+        #         if agenda.character_id:
+        #             characters.add(agenda.character(self._novel))
+        #
+        # for character in characters:
+        #     self._addCharacterAgendaNodes(character)
 
         self._centralWidget.layout().addWidget(self._storylinesNode)
-        self._centralWidget.layout().addWidget(self._conflictNode)
-        self._centralWidget.layout().addWidget(self._agendaCharactersNode)
+        # self._centralWidget.layout().addWidget(self._conflictNode)
+        # self._centralWidget.layout().addWidget(self._agendaCharactersNode)
         self._centralWidget.layout().addWidget(vspacer())
 
     def removeStoryline(self, plot: Plot):
