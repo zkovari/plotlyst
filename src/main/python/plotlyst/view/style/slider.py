@@ -24,27 +24,36 @@ from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget
 
 style = '''
+
+QSlider:horizontal {
+  min-height: 20px;
+  max-height: 20px;
+}
+
 QSlider::groove:horizontal {
-    border: 1px solid #999999;
-    height: 6px;
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #B1B1B1, stop:1 #c4c4c4);
+    border: 1px solid #adb5bd;
+    border-radius: 2px;
+    background: #dee2e6;
+    height: 4px;
     margin: 0px 0;
 }
 
 QSlider::handle:horizontal {
     background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #4B0763, stop:1 #4B0763);
     border: 1px solid #4B0763;
-    width: 15px;
-    margin: -3px -1px;
+    width: 13px;
+    height: 13px;
+    margin: -5px -2px;
     border-radius: 3px;
+}
+
+QSlider::sub-page:horizontal {
+    background: #4B0763;
 }
 
 QSlider::handle:horizontal[conflict=true] {
     background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #b4b4b4, stop:1 #8f8f8f);
     border: 1px solid #5c5c5c;
-    width: 15px;
-    margin: -3px -1px;
-    border-radius: 3px;
 }
 
 QSlider::add-page:horizontal[conflict=true] {
