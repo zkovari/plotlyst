@@ -59,9 +59,9 @@ class TimerModel(QObject):
             self._timer.start()
 
     def _tick(self):
-        self.value -= 1
-        self.valueChanged.emit()
-
         if self.value == 0:
             self._timer.stop()
             self.finished.emit()
+        else:
+            self.value -= 1
+            self.valueChanged.emit()
