@@ -240,7 +240,6 @@ class CharactersView(AbstractNovelView):
         self.ui.btnEdit.setDisabled(True)
         self.ui.btnDelete.setDisabled(True)
 
-        self._init_cards()
         self._progress.refresh()
         self._wdgCharactersCompTree.refresh()
 
@@ -258,8 +257,11 @@ class CharactersView(AbstractNovelView):
         self.ui.cards.clear()
 
         for character in self.novel.characters:
-            card = CharacterCard(character, self.ui.cards)
+            card = self.__init_card_widget(character)
             self.ui.cards.addCard(card)
+
+    def __init_card_widget(self, character: Character) -> CharacterCard:
+        return CharacterCard(character, self.ui.cards)
 
     def _on_character_selected(self, selection: QItemSelection):
         self._enable_action_buttons(len(selection.indexes()) > 0)
@@ -323,6 +325,9 @@ class CharactersView(AbstractNovelView):
         character = self.editor.character
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
         self.title.setVisible(True)
+        card = self.ui.cards.card(character)
+        if card:
+            card.refresh()
 
         emit_event(self.novel, CharacterChangedEvent(self, character))
         self.refresh()
@@ -334,6 +339,8 @@ class CharactersView(AbstractNovelView):
             character.prefs.settings[personality.value] = self.novel.prefs.toggled(personality)
         self.novel.characters.append(character)
         self.repo.insert_character(self.novel, character)
+        card = self.__init_card_widget(character)
+        self.ui.cards.addCard(card)
         self._edit_character(character)
 
     @busy
@@ -348,6 +355,7 @@ class CharactersView(AbstractNovelView):
 
         if character and delete_character(self.novel, character):
             emit_event(self.novel, CharacterDeletedEvent(self, character))
+            self.ui.cards.remove(character)
             self.refresh()
 
     def _comparison_type_clicked(self):

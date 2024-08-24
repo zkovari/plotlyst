@@ -135,28 +135,12 @@ class CharacterCard(Ui_CharacterCard, Card):
         self.character = character
         self.textName.setContentsMargins(0, 0, 0, 0)
         self.textName.document().setDocumentMargin(0)
-        self.textName.setText(self.character.name)
-        self.textName.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        set_avatar(self.lblPic, self.character, size=118)
 
         transparent(self.btnEnneagram)
-        enneagram = self.character.enneagram()
-        if enneagram:
-            self.btnEnneagram.setIcon(IconRegistry.from_name(enneagram.icon, enneagram.icon_color))
-            self.btnEnneagram.setToolTip(enneagram_help[enneagram.text])
-        mbti = self.character.mbti()
-        if mbti:
-            apply_button_palette_color(self.btnMbti, mbti.icon_color)
-            self.btnMbti.setText(mbti.text)
-            self.btnMbti.setIcon(IconRegistry.from_name(mbti.icon, mbti.icon_color))
-            self.btnMbti.setToolTip(mbti_help[mbti.text])
-
         retain_when_hidden(self.iconRole)
-        self.iconRole.setHidden(self.character.prefs.avatar.use_role)
-        if self.character.role and not self.character.prefs.avatar.use_role:
-            self.iconRole.setRole(self.character.role)
-            self.iconRole.setToolTip(self.character.role.text)
+
         self._setStyleSheet()
+        self.refresh()
 
     @overrides
     def mimeType(self) -> str:
@@ -169,6 +153,28 @@ class CharacterCard(Ui_CharacterCard, Card):
     @overrides
     def copy(self) -> 'Card':
         return CharacterCard(self.character)
+
+    @overrides
+    def refresh(self):
+        self.textName.setText(self.character.name)
+        self.textName.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        set_avatar(self.lblPic, self.character, size=118)
+
+        enneagram = self.character.enneagram()
+        if enneagram:
+            self.btnEnneagram.setIcon(IconRegistry.from_name(enneagram.icon, enneagram.icon_color))
+            self.btnEnneagram.setToolTip(enneagram_help[enneagram.text])
+        mbti = self.character.mbti()
+        if mbti:
+            apply_button_palette_color(self.btnMbti, mbti.icon_color)
+            self.btnMbti.setText(mbti.text)
+            self.btnMbti.setIcon(IconRegistry.from_name(mbti.icon, mbti.icon_color))
+            self.btnMbti.setToolTip(mbti_help[mbti.text])
+
+        self.iconRole.setHidden(self.character.prefs.avatar.use_role)
+        if self.character.role and not self.character.prefs.avatar.use_role:
+            self.iconRole.setRole(self.character.role)
+            self.iconRole.setToolTip(self.character.role.text)
 
 
 class SceneCard(Ui_SceneCard, Card):
