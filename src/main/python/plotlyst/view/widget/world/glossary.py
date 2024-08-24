@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional, Any
+from typing import Optional, Any, Dict
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QModelIndex
@@ -31,7 +31,7 @@ from plotlyst.core.domain import Novel, GlossaryItem
 from plotlyst.core.template import SelectionItem
 from plotlyst.model.common import SelectionItemsModel
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import push_btn
+from plotlyst.view.common import push_btn, label
 from plotlyst.view.widget.display import PopupDialog
 from plotlyst.view.widget.input import AutoAdjustableTextEdit
 from plotlyst.view.widget.items_editor import ItemsEditorWidget
@@ -96,9 +96,10 @@ class GlossaryModel(SelectionItemsModel):
 
 
 class GlossaryEditorDialog(PopupDialog):
-    def __init__(self, glossary: Optional[GlossaryItem] = None, parent=None):
+    def __init__(self, glossary: Dict[str, GlossaryItem], term: Optional[GlossaryItem] = None, parent=None):
         super().__init__(parent)
         self._glossary = glossary
+        self._term = term
 
         self.lineKey = QLineEdit()
         self.lineKey.setProperty('white-bg', True)
@@ -106,6 +107,10 @@ class GlossaryEditorDialog(PopupDialog):
         self.lineKey.setProperty(IGNORE_CAPITALIZATION_PROPERTY, True)
         self.lineKey.setPlaceholderText('Term')
         self.lineKey.textChanged.connect(self._keyChanged)
+
+        self.lblError = label('Term already exists', italic=True)
+        self.lblError.setProperty('error', True)
+        self.lblError.setHidden(True)
 
         self.textDefinition = AutoAdjustableTextEdit(height=150)
         self.textDefinition.setProperty('white-bg', True)
@@ -118,17 +123,18 @@ class GlossaryEditorDialog(PopupDialog):
 
         self.btnConfirm = push_btn(text='Confirm', properties=['base', 'positive'])
         sp(self.btnConfirm).h_exp()
-        self.btnConfirm.clicked.connect(self.accept)
+        self.btnConfirm.clicked.connect(self._confirm)
         self.btnConfirm.setDisabled(True)
         self.btnConfirm.installEventFilter(
             DisabledClickEventFilter(self.btnConfirm, lambda: qtanim.shake(self.lineKey)))
 
-        if self._glossary:
-            self.lineKey.setText(self._glossary.key)
-            self.textDefinition.setText(self._glossary.text)
+        if self._term:
+            self.lineKey.setText(self._term.key)
+            self.textDefinition.setText(self._term.text)
 
         self.frame.layout().addWidget(self.wdgTitle)
         self.frame.layout().addWidget(self.lineKey)
+        self.frame.layout().addWidget(self.lblError)
         self.frame.layout().addWidget(self.textDefinition)
         self.frame.layout().addWidget(self.btnConfirm)
 
@@ -136,19 +142,35 @@ class GlossaryEditorDialog(PopupDialog):
         result = self.exec()
 
         if result == QDialog.DialogCode.Accepted:
-            if self._glossary is None:
-                self._glossary = GlossaryItem('')
-            self._glossary.key = self.lineKey.text()
-            self._glossary.text = self.textDefinition.toMarkdown().strip()
+            if self._term is None:
+                self._term = GlossaryItem('')
+            self._term.key = self.lineKey.text()
+            self._term.text = self.textDefinition.toMarkdown().strip()
 
-            return self._glossary
+            return self._term
+
+    @classmethod
+    def edit(cls, glossary: Dict[str, GlossaryItem], term: Optional[GlossaryItem] = None) -> Optional[GlossaryItem]:
+        return cls.popup(glossary, term)
 
     def _keyChanged(self, key: str):
         self.btnConfirm.setEnabled(len(key) > 0)
+        self.lblError.setHidden(True)
 
-    @classmethod
-    def edit(cls, glossary: Optional[GlossaryItem] = None) -> Optional[GlossaryItem]:
-        return cls.popup(glossary)
+    def _confirm(self):
+        key = self.lineKey.text()
+        if self._term and self._term.key == key:
+            self.accept()
+        else:
+            if key in self._glossary.keys():
+                qtanim.shake(self.lineKey)
+                self.lblError.setVisible(True)
+            else:
+                self.accept()
+
+
+
+
 
 
 class WorldBuildingGlossaryEditor(QWidget):
@@ -180,14 +202,16 @@ class WorldBuildingGlossaryEditor(QWidget):
         self.repo = RepositoryPersistenceManager.instance()
 
     def _addNew(self):
-        glossary = GlossaryEditorDialog.edit()
+        glossary = GlossaryEditorDialog.edit(self._novel.world.glossary)
         if glossary:
             self._updateGlossary(glossary)
 
     def _edit(self, item: GlossaryItem):
-        edited_glossary = GlossaryEditorDialog.edit(item)
+        prev_key = item.key
+        edited_glossary = GlossaryEditorDialog.edit(self._novel.world.glossary, item)
         if edited_glossary:
-            self._novel.world.glossary.pop(item.key)
+            if prev_key != edited_glossary.key:
+                self._novel.world.glossary.pop(prev_key)
             self._updateGlossary(edited_glossary)
 
     def _updateGlossary(self, glossary: GlossaryItem):
