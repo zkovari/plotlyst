@@ -719,6 +719,8 @@ class ConnectorItem(QGraphicsPathItem):
         arrowPen.setColor(self._color)
         self._endArrowheadItem.setPen(arrowPen)
         self._endArrowheadItem.setBrush(self._color)
+        self._startArrowheadItem.setPen(arrowPen)
+        self._startArrowheadItem.setBrush(self._color)
 
         if self._icon:
             self._iconBadge.setIcon(IconRegistry.from_name(self._icon, self._color.name()), self._color)
