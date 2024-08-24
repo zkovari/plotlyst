@@ -27,7 +27,7 @@ from PyQt6.QtCore import Qt, QModelIndex, \
 from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget, QHeaderView
 from overrides import overrides
-from qthandy import incr_font, translucent, clear_layout, busy, bold, sp, transparent, incr_icon, retain_when_hidden
+from qthandy import incr_font, translucent, clear_layout, busy, bold, sp, transparent, incr_icon
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -39,7 +39,7 @@ from plotlyst.event.core import EventListener, emit_event
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
     SceneSelectedEvent, SceneSelectionClearedEvent, ActiveSceneStageChanged, \
-    ChapterChangedEvent, AvailableSceneStagesChanged, CharacterChangedEvent, CharacterDeletedEvent, \
+    AvailableSceneStagesChanged, CharacterChangedEvent, CharacterDeletedEvent, \
     NovelAboutToSyncEvent, NovelSyncEvent, NovelStoryStructureActivationRequest, NovelPanelCustomizationEvent, \
     NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelPovTrackingToggleEvent, SceneAddedEvent, \
     SceneStoryBeatChangedEvent
@@ -115,7 +115,6 @@ class ScenesOutlineView(AbstractNovelView):
     def __init__(self, novel: Novel):
         super().__init__(novel,
                          [NovelStoryStructureUpdated, CharacterChangedEvent, SceneAddedEvent, SceneChangedEvent,
-                          ChapterChangedEvent,
                           SceneDeletedEvent,
                           SceneOrderChangedEvent, NovelAboutToSyncEvent, NovelStorylinesToggleEvent,
                           NovelStructureToggleEvent, NovelPovTrackingToggleEvent, SceneStoryBeatChangedEvent])
@@ -528,9 +527,11 @@ class ScenesOutlineView(AbstractNovelView):
 
     def _story_structure_toggled(self, toggled: bool):
         if toggled:
-            qtanim.fade_in(self.ui.wdgStoryStructureParent, teardown=lambda: self.ui.wdgStoryStructureParent.setGraphicsEffect(None))
+            qtanim.fade_in(self.ui.wdgStoryStructureParent,
+                           teardown=lambda: self.ui.wdgStoryStructureParent.setGraphicsEffect(None))
         else:
-            qtanim.fade_out(self.ui.wdgStoryStructureParent, teardown=lambda: self.ui.wdgStoryStructureParent.setGraphicsEffect(None))
+            qtanim.fade_out(self.ui.wdgStoryStructureParent,
+                            teardown=lambda: self.ui.wdgStoryStructureParent.setGraphicsEffect(None))
 
         if toggled:
             self.ui.btnStoryStructureSelector.setVisible(len(self.novel.story_structures) > 1)
