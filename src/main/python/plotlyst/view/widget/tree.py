@@ -25,7 +25,7 @@ from PyQt6.QtGui import QIcon, QResizeEvent
 from PyQt6.QtWidgets import QScrollArea, QFrame, QSizePolicy, QToolButton
 from PyQt6.QtWidgets import QWidget, QLabel
 from overrides import overrides
-from qthandy import vbox, hbox, bold, margins, clear_layout, transparent, retain_when_hidden, incr_font
+from qthandy import vbox, hbox, bold, margins, clear_layout, transparent, retain_when_hidden, incr_font, pointy
 from qtmenu import MenuWidget
 
 from plotlyst.common import ALT_BACKGROUND_COLOR, PLOTLYST_TERTIARY_COLOR
@@ -297,9 +297,17 @@ class EyeToggleNode(ContainerNode):
         self._btnVisible = EyeToggle()
         self._btnVisible.toggled.connect(self._toggled)
         self._wdgTitle.layout().addWidget(self._btnVisible)
+        pointy(self._wdgTitle)
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.MouseButtonRelease and self.isEnabled():
+            self._btnVisible.toggle()
+            return True
+        return super().eventFilter(watched, event)
 
     def setToggleTooltip(self, tooltip: str):
-        self._btnVisible.setToolTip(tooltip)
+        self._wdgTitle.setToolTip(tooltip)
 
     def isToggled(self):
         return self._btnVisible.isChecked()

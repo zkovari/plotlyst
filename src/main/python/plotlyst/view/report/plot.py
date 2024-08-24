@@ -28,7 +28,7 @@ from PyQt6.QtGui import QPen, QColor, QShowEvent
 from overrides import overrides
 from qthandy import clear_layout, vspacer, gc
 
-from plotlyst.common import clamp
+from plotlyst.common import clamp, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Novel, Plot, Character, Motivation
 from plotlyst.view.common import icon_to_html_img
 from plotlyst.view.generated.report.plot_report_ui import Ui_PlotReport
@@ -68,6 +68,7 @@ class PlotArcNode(EyeToggleNode):
 class ArcsTreeView(TreeView):
     storylineToggled = pyqtSignal(Plot, bool)
     conflictToggled = pyqtSignal(bool)
+    generalProgressToggled = pyqtSignal(bool)
     characterConflictToggled = pyqtSignal(Character, bool)
     characterEmotionToggled = pyqtSignal(Character, bool)
     characterMotivationToggled = pyqtSignal(Character, bool)
@@ -77,6 +78,9 @@ class ArcsTreeView(TreeView):
         self._novel = novel
         self._centralWidget.setProperty('relaxed-white-bg', True)
 
+        self._generalProgressNode = EyeToggleNode('Progress', IconRegistry.rising_action_icon(color='black'))
+        self._generalProgressNode.setToggleTooltip('Toggle overall story progression')
+        self._generalProgressNode.toggled.connect(self.generalProgressToggled)
         self._storylineNodes: Dict[Plot, PlotArcNode] = {}
         self._storylinesNode = ContainerNode('Storylines', IconRegistry.storylines_icon(color='grey'), readOnly=True)
 
@@ -106,8 +110,8 @@ class ArcsTreeView(TreeView):
         # for character in characters:
         #     self._addCharacterAgendaNodes(character)
 
+        self._centralWidget.layout().addWidget(self._generalProgressNode)
         self._centralWidget.layout().addWidget(self._storylinesNode)
-        # self._centralWidget.layout().addWidget(self._conflictNode)
         # self._centralWidget.layout().addWidget(self._agendaCharactersNode)
         self._centralWidget.layout().addWidget(vspacer())
 
@@ -143,6 +147,7 @@ class ArcReport(AbstractReport, Ui_PlotReport):
         self._treeView = ArcsTreeView(novel)
         self._treeView.storylineToggled.connect(self.chartValues.setStorylineVisible)
         self._treeView.conflictToggled.connect(self.chartValues.setConflictVisible)
+        self._treeView.generalProgressToggled.connect(self.chartValues.setProgressVisible)
         self._treeView.characterEmotionToggled.connect(self.chartValues.setCharacterEmotionVisible)
         self._treeView.characterMotivationToggled.connect(self.chartValues.setCharacterMotivationVisible)
         self._treeView.characterConflictToggled.connect(self.chartValues.setCharacterConflictVisible)
@@ -201,6 +206,7 @@ class StoryArcChart(BaseChart):
 
         self._overallConflict: bool = False
         self._overallConflictSeries: Optional[QAbstractSeries] = None
+        self._overallProgressSeries: Optional[QAbstractSeries] = None
         self._plots: Dict[Plot, List[QAbstractSeries]] = {}
 
         self._characters: Dict[Character, CharacterArcs] = {}
@@ -218,6 +224,16 @@ class StoryArcChart(BaseChart):
         else:
             for serie in self._plots.pop(plot):
                 self.removeSeries(serie)
+
+    def setProgressVisible(self, visible: bool):
+        if visible:
+            self._overallProgressSeries = self._progressSeries()
+            self.addSeries(self._overallProgressSeries)
+            self._overallProgressSeries.attachAxis(self._axisY)
+            self._overallProgressSeries.attachAxis(self._axisX)
+        else:
+            self.removeSeries(self._overallProgressSeries)
+            self._overallProgressSeries = None
 
     def setConflictVisible(self, visible: bool):
         if visible:
@@ -297,6 +313,36 @@ class StoryArcChart(BaseChart):
                 charge += scene_ref.data.charge
                 series.append(i + 1, clamp(charge, self.MIN, self.MAX))
         return all_series
+
+    def _progressSeries(self) -> QAbstractSeries:
+        series = QSplineSeries()
+        series.setName(icon_to_html_img(IconRegistry.rising_action_icon(PLOTLYST_SECONDARY_COLOR)) + 'Overall progress')
+        pen = QPen()
+        pen.setColor(QColor(PLOTLYST_SECONDARY_COLOR))
+        pen.setWidth(2)
+        series.setPen(pen)
+        charge = 0
+        series.append(0, charge)
+        for i, scene in enumerate(self.novel.scenes):
+            posCharge = 0
+            negCharge = 0
+            for ref in scene.plot_values:
+                if ref.data.charge:
+                    if ref.data.charge > 0:
+                        posCharge = max(posCharge, ref.data.charge)
+                    else:
+                        negCharge = min(negCharge, ref.data.charge)
+            if abs(negCharge) > posCharge:
+                scene_charge = negCharge
+            else:
+                scene_charge = posCharge
+
+            if not scene_charge:
+                scene_charge = scene.progress
+            charge += scene_charge
+            series.append(i + 1, clamp(charge, self.MIN, self.MAX))
+
+        return series
 
     def _conflictSeries(self, character: Optional[Character] = None) -> QAbstractSeries:
         series = QLineSeries()
