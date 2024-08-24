@@ -391,9 +391,8 @@ class ScenePurposeSelectorWidget(QWidget):
         super().__init__(parent)
 
         vbox(self)
-        self._btnSkip = QPushButton('Skip')
+        self._btnSkip = QPushButton('Skip, and jump to the editor')
         self._btnSkip.setIcon(IconRegistry.from_name('ri.share-forward-fill'))
-        underline(self._btnSkip)
         transparent(self._btnSkip)
         pointy(self._btnSkip)
         self._btnSkip.installEventFilter(OpacityEventFilter(self._btnSkip))
