@@ -22,7 +22,6 @@ from typing import Optional
 
 from PyQt6.QtGui import QImage
 from PyQt6.QtGui import QShowEvent
-from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 from qthandy import line
 
@@ -38,8 +37,7 @@ from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, EventItem, \
     NodeItem
 from plotlyst.view.widget.graphics.editor import EventSelectorWidget, EventItemToolbar, ConnectorToolbar, \
-    SecondarySelectorWidget, TextNoteEditorPopup, CharacterToolbar, NoteToolbar, IconItemToolbar
-from plotlyst.view.widget.graphics.items import NoteItem
+    SecondarySelectorWidget, CharacterToolbar, NoteToolbar, IconItemToolbar
 
 
 class EventsMindMapScene(NetworkScene):
@@ -193,16 +191,6 @@ class EventsMindMapView(NetworkGraphicsView):
     #     popup.aboutToHide.connect(lambda: setText(popup.text()))
     #
     #     popup.exec(self.mapToGlobal(view_pos))
-
-    @overrides
-    def _editNoteItem(self, item: NoteItem):
-        popup = TextNoteEditorPopup(self.undoStack, item, parent=self)
-        font = QApplication.font()
-        popup.setFont(font)
-
-        view_pos = self.mapFromScene(item.textSceneRect().topLeft())
-
-        popup.exec(self.mapToGlobal(view_pos), animated=False)
 
     @overrides
     def _showEventItemToolbar(self, item: EventItem):

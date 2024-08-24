@@ -564,6 +564,7 @@ class ConnectorItem(QGraphicsPathItem):
         self._relation = relation
         self._iconBadge.setIcon(IconRegistry.from_name(relation.icon, relation.icon_color), self._color)
         self._iconBadge.setVisible(True)
+        self._label.setText(relation.text)
 
         self.rearrange()
 

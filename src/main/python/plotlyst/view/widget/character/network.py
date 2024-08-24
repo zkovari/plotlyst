@@ -19,21 +19,23 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QAction, QUndoStack
+from PyQt6.QtCore import pyqtSignal, QPointF
+from PyQt6.QtGui import QAction, QUndoStack, QImage
 from overrides import overrides
-from qthandy import vline
+from qthandy import vline, line
 from qtmenu import GridMenuWidget
 
 from plotlyst.core.client import json_client
 from plotlyst.core.domain import Diagram, Relation, Node
 from plotlyst.core.domain import Novel, Character, GraphicsItemType
+from plotlyst.service.image import LoadedImage, upload_image, load_image
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import action
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene
-from plotlyst.view.widget.graphics.editor import ConnectorToolbar, RelationsButton
+from plotlyst.view.widget.graphics.editor import ConnectorToolbar, RelationsButton, NoteToolbar, IconItemToolbar, \
+    CharacterToolbar
 
 
 class RelationsEditorScene(NetworkScene):
@@ -55,6 +57,18 @@ class RelationsEditorScene(NetworkScene):
     def _save(self):
         self.repo.update_diagram(self._novel, self._diagram)
 
+    @overrides
+    def _uploadImage(self) -> Optional[LoadedImage]:
+        return upload_image(self._novel)
+
+    @overrides
+    def _loadImage(self, node: Node) -> Optional[QImage]:
+        return load_image(self._novel, node.image_ref)
+
+    @overrides
+    def _addNewDefaultItem(self, pos: QPointF):
+        self._addNewItem(pos, GraphicsItemType.CHARACTER)
+
 
 class CharacterNetworkView(NetworkGraphicsView):
     def __init__(self, novel: Novel, parent=None):
@@ -63,13 +77,27 @@ class CharacterNetworkView(NetworkGraphicsView):
 
         self._btnAddCharacter = self._newControlButton(IconRegistry.character_icon('#040406'), 'Add new character',
                                                        GraphicsItemType.CHARACTER)
-        # self._btnAddSticker = self._newControlButton(IconRegistry.from_name('mdi6.sticker-circle-outline'),
-        #                                              'Add new sticker', GraphicsItemType.STICKER)
-        # self._btnAddSticker.setDisabled(True)
-        # self._btnAddSticker.setToolTip('Feature is not yet available')
+        self._controlsNavBar.layout().addWidget(line())
+        self._btnAddNote = self._newControlButton(
+            IconRegistry.from_name('msc.note'), 'Add new note', GraphicsItemType.NOTE)
+        self._btnAddIcon = self._newControlButton(
+            IconRegistry.from_name('mdi.emoticon-outline'), 'Add new icon', GraphicsItemType.ICON)
+        self._btnAddImage = self._newControlButton(IconRegistry.image_icon(), 'Add new image',
+                                                   GraphicsItemType.IMAGE)
 
+        self._controlsNavBar.layout().addWidget(line())
+        self._controlsNavBar.layout().addWidget(self._btnUndo)
+        self._controlsNavBar.layout().addWidget(self._btnRedo)
+
+        self._characterEditor = CharacterToolbar(self.undoStack, self)
+        self._characterEditor.changeCharacter.connect(self._editCharacterItem)
+        self._characterEditor.setVisible(False)
         self._connectorEditor = RelationConnectorToolbar(self.undoStack, self)
         self._connectorEditor.setVisible(False)
+        self._noteEditor = NoteToolbar(self.undoStack, self)
+        self._noteEditor.setVisible(False)
+        self._iconEditor = IconItemToolbar(self.undoStack, self)
+        self._iconEditor.setVisible(False)
 
     @overrides
     def _initScene(self) -> NetworkScene:

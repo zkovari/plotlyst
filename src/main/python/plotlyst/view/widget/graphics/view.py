@@ -41,7 +41,7 @@ from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.graphics import CharacterItem, ConnectorItem
 from plotlyst.view.widget.graphics.commands import GraphicsItemCommand, TextEditingCommand
 from plotlyst.view.widget.graphics.editor import ZoomBar, ConnectorToolbar, TextLineEditorPopup, CharacterToolbar, \
-    NoteToolbar, IconItemToolbar
+    NoteToolbar, IconItemToolbar, TextNoteEditorPopup
 from plotlyst.view.widget.graphics.items import NodeItem, EventItem, NoteItem, IconItem
 from plotlyst.view.widget.graphics.scene import NetworkScene
 
@@ -317,7 +317,13 @@ class NetworkGraphicsView(BaseGraphicsView):
         popup.exec(self.mapToGlobal(view_pos))
 
     def _editNoteItem(self, item: NoteItem):
-        pass
+        popup = TextNoteEditorPopup(self.undoStack, item, parent=self)
+        font = QApplication.font()
+        popup.setFont(font)
+
+        view_pos = self.mapFromScene(item.textSceneRect().topLeft())
+
+        popup.exec(self.mapToGlobal(view_pos), animated=False)
 
     def _showConnectorToolbar(self, item: ConnectorItem):
         if self._connectorEditor:

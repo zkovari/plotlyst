@@ -189,7 +189,7 @@ class NetworkScene(QGraphicsScene):
             if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
                 pos = self._cursorScenePos()
                 if pos:
-                    self._addNewItem(pos, GraphicsItemType.EVENT)
+                    self._addNewDefaultItem(pos)
             else:
                 pass
         elif event.button() & Qt.MouseButton.RightButton or event.button() & Qt.MouseButton.MiddleButton:
@@ -231,7 +231,7 @@ class NetworkScene(QGraphicsScene):
                 event.button() & Qt.MouseButton.LeftButton and not self.itemAt(event.scenePos(), QTransform())):
             pos = self._cursorScenePos()
             if pos:
-                self._addNewItem(pos, GraphicsItemType.EVENT)
+                self._addNewDefaultItem(pos)
         else:
             super().mouseDoubleClickEvent(event)
 
@@ -409,6 +409,9 @@ class NetworkScene(QGraphicsScene):
             return
         viewPos: QPoint = view.mapFromGlobal(QCursor.pos())
         return view.mapToScene(viewPos)
+
+    def _addNewDefaultItem(self, pos: QPointF):
+        self._addNewItem(pos, GraphicsItemType.EVENT)
 
     def _addNewItem(self, scenePos: QPointF, itemType: GraphicsItemType, subType: str = '') -> NodeItem:
         if itemType == GraphicsItemType.CHARACTER:
