@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import qtanim
 from PyQt6.QtCore import QTimer, Qt
-from PyQt6.QtGui import QColor, QFont
+from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QInputDialog
 from overrides import overrides
 from qthandy import translucent, bold, margins, spacer, transparent, vspacer, decr_icon, vline
@@ -41,7 +41,7 @@ from plotlyst.service.grammar import language_tool_proxy
 from plotlyst.service.persistence import flush_or_fail
 from plotlyst.view._view import AbstractNovelView
 from plotlyst.view.common import tool_btn, ButtonPressResizeEventFilter, action, \
-    ExclusiveOptionalButtonGroup, link_buttons_to_pages, icon_to_html_img
+    ExclusiveOptionalButtonGroup, link_buttons_to_pages
 from plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -148,13 +148,12 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnEditGoal.clicked.connect(self._edit_wc_goal)
 
         self._chartProgress = ProgressChart(maxValue=self.novel.manuscript_goals.target_wc,
-                                            title_prefix=icon_to_html_img(IconRegistry.goal_icon(PLOTLYST_MAIN_COLOR)),
+                                            title_prefix='Progress:',
                                             color=PLOTLYST_MAIN_COLOR,
                                             titleColor=PLOTLYST_MAIN_COLOR,
                                             emptySliceColor=RELAXED_WHITE_COLOR)
-        self._chartProgress.setBackgroundBrush(QColor(RELAXED_WHITE_COLOR))
         self._chartProgressView = ChartView()
-        self._chartProgressView.setFixedSize(200, 200)
+        self._chartProgressView.setFixedSize(200, 250)
         self._chartProgressView.setChart(self._chartProgress)
         self.ui.pageGoal.layout().addWidget(self._chartProgressView, alignment=Qt.AlignmentFlag.AlignTop)
         self.ui.pageGoal.layout().addWidget(vspacer())
