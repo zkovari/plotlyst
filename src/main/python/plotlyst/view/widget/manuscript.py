@@ -183,7 +183,7 @@ class ManuscriptFormattingWidget(QWidget):
         vbox(self.wdgDashSettings, 0)
         margins(self.wdgDashSettings, left=10)
         self.wdgDashSettings.layout().addWidget(
-            label("Insert an en dash or em dash automatically when typing double hyphens (--)", description=True,
+            label("Insert a dash automatically when typing double hyphens (--)", description=True,
                   wordWrap=True),
             alignment=Qt.AlignmentFlag.AlignLeft)
         self.toggleEn = Toggle()
@@ -210,7 +210,7 @@ class ManuscriptFormattingWidget(QWidget):
         vbox(self.wdgCapitalizationSettings, 0)
         margins(self.wdgCapitalizationSettings, left=10)
         self.wdgCapitalizationSettings.layout().addWidget(
-            label("Auto-capitalize the first letter at paragraph or sentence level", description=True,
+            label("Auto-capitalize the first letter at paragraph or sentence level (experimental)", description=True,
                   wordWrap=True), alignment=Qt.AlignmentFlag.AlignLeft)
         self.toggleParagraphCapital = Toggle()
         self.toggleSentenceCapital = Toggle()
@@ -228,7 +228,7 @@ class ManuscriptFormattingWidget(QWidget):
             group(label('Paragraph'), self.toggleParagraphCapital, spacing=0),
             alignment=Qt.AlignmentFlag.AlignRight)
         self.wdgCapitalizationSettings.layout().addWidget(
-            group(label('Sentence (experimental)'), self.toggleSentenceCapital, spacing=0),
+            group(label('Sentence'), self.toggleSentenceCapital, spacing=0),
             alignment=Qt.AlignmentFlag.AlignRight)
 
         self.layout().addWidget(self.wdgCapitalizationSettings)
@@ -262,6 +262,7 @@ class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
         self.novel = novel
 
         self.wdgShutDown.setHidden(True)
+        self.scrollAreaWidgetContents.layout().insertWidget(1, label('Spellcheck language', bold=True))
 
         self.btnArabicIcon.setIcon(IconRegistry.from_name('mdi.abjad-arabic'))
 

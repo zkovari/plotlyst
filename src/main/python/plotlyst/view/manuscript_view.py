@@ -22,7 +22,7 @@ from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QColor, QFont
 from PyQt6.QtWidgets import QInputDialog
 from overrides import overrides
-from qthandy import translucent, bold, margins, spacer, vline, transparent, vspacer, decr_icon
+from qthandy import translucent, bold, margins, spacer, transparent, vspacer, decr_icon, vline
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 from qttextedit import DashInsertionMode
@@ -45,7 +45,6 @@ from plotlyst.view.common import tool_btn, ButtonPressResizeEventFilter, action,
 from plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
-from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.display import Icon, ChartView
 from plotlyst.view.widget.input import Toggle
 from plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
@@ -80,6 +79,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnReadability.setIcon(IconRegistry.from_name('fa5s.glasses', 'black', PLOTLYST_MAIN_COLOR))
         self.ui.btnProgress.setIcon(IconRegistry.from_name('mdi.calendar-month-outline', 'black', PLOTLYST_MAIN_COLOR))
         self.ui.btnExport.setIcon(IconRegistry.from_name('mdi.file-export-outline', 'black', PLOTLYST_MAIN_COLOR))
+        self.ui.btnSettings.setIcon(IconRegistry.cog_icon(color_on=PLOTLYST_MAIN_COLOR))
 
         self.ui.btnTreeToggle.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
         self.ui.btnTreeToggleSecondary.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
@@ -93,6 +93,7 @@ class ManuscriptView(AbstractNovelView):
         self._btnGroupSideBar.addButton(self.ui.btnReadability)
         self._btnGroupSideBar.addButton(self.ui.btnProgress)
         self._btnGroupSideBar.addButton(self.ui.btnExport)
+        self._btnGroupSideBar.addButton(self.ui.btnSettings)
         for btn in self._btnGroupSideBar.buttons():
             btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.5, ignoreCheckedButton=True))
             btn.installEventFilter(ButtonPressResizeEventFilter(btn))
@@ -102,7 +103,8 @@ class ManuscriptView(AbstractNovelView):
                               [(self.ui.btnSceneInfo, self.ui.pageInfo), (self.ui.btnGoals, self.ui.pageGoal),
                                (self.ui.btnExport, self.ui.pageExport),
                                (self.ui.btnProgress, self.ui.pageProgress),
-                               (self.ui.btnReadability, self.ui.pageReadability)])
+                               (self.ui.btnReadability, self.ui.pageReadability),
+                               (self.ui.btnSettings, self.ui.pageSettings)])
 
         bold(self.ui.lblWordCount)
 
@@ -124,19 +126,19 @@ class ManuscriptView(AbstractNovelView):
         self.ui.pageProgress.layout().addWidget(ManuscriptProgressCalendarLegend())
         self.ui.pageProgress.layout().addWidget(vspacer())
 
-        self._btnDistractionFree = tool_btn(IconRegistry.expand_icon(), 'Enter distraction-free mode', base=True)
-        transparent(self._btnDistractionFree)
+        self._btnDistractionFree = tool_btn(IconRegistry.expand_icon(), 'Enter distraction-free mode',
+                                            transparent_=True)
         decr_icon(self._btnDistractionFree)
+        self._btnDistractionFree.installEventFilter(OpacityEventFilter(self._btnDistractionFree, leaveOpacity=0.5))
         self._wdgSprint = SprintWidget()
         transparent(self._wdgSprint.btnTimer)
         decr_icon(self._wdgSprint.btnTimer)
+        self._wdgSprint.btnTimer.installEventFilter(OpacityEventFilter(self._wdgSprint.btnTimer, leaveOpacity=0.5))
         self._spellCheckIcon = Icon()
         self._spellCheckIcon.setIcon(IconRegistry.from_name('fa5s.spell-check'))
         self._spellCheckIcon.setToolTip('Spellcheck')
         self._cbSpellCheck = Toggle()
         self._cbSpellCheck.setToolTip('Toggle spellcheck')
-        self._btnContext = tool_btn(IconRegistry.context_icon(), 'Manuscript settings')
-        transparent(self._btnContext)
 
         self.ui.btnEditGoal.setIcon(IconRegistry.edit_icon())
         transparent(self.ui.btnEditGoal)
@@ -165,11 +167,10 @@ class ManuscriptView(AbstractNovelView):
         self.ui.pageExport.layout().addWidget(self._exportWidget)
         self.ui.pageExport.layout().addWidget(vspacer())
 
-        self._wdgToolbar = group(self._btnDistractionFree, self._wdgSprint, spacer(), self._spellCheckIcon,
-                                 self._cbSpellCheck,
-                                 vline(), self._btnContext)
+        self._wdgToolbar = group(spacer(), self._wdgSprint, vline(), self._spellCheckIcon,
+                                 self._cbSpellCheck, self._btnDistractionFree)
         self.ui.wdgTop.layout().addWidget(self._wdgToolbar)
-        margins(self._wdgToolbar, right=21)
+        margins(self._wdgToolbar, right=10)
 
         self._addSceneMenu = MenuWidget(self.ui.btnAdd)
         self._addSceneMenu.addAction(action('Add scene', IconRegistry.scene_icon(), self.ui.treeChapters.addScene))
@@ -181,11 +182,10 @@ class ManuscriptView(AbstractNovelView):
         self._formattingSettings.dashChanged.connect(self._dashInsertionChanged)
         self._formattingSettings.capitalizationChanged.connect(self._capitalizationChanged)
         self._contextMenuWidget = TextEditorSettingsWidget()
+        self._contextMenuWidget.setProperty('borderless', True)
         self._contextMenuWidget.addTab(self._formattingSettings, IconRegistry.from_name('ri.double-quotes-r'), '')
         self._contextMenuWidget.addTab(self._langSelectionWidget, IconRegistry.from_name('fa5s.spell-check'), '')
-        menu = MenuWidget(self._btnContext)
-        apply_white_menu(menu)
-        menu.addWidget(self._contextMenuWidget)
+        self.ui.pageSettings.layout().addWidget(self._contextMenuWidget)
         self._contextMenuWidget.setSectionVisible(TextEditorSettingsSection.PAGE_WIDTH, False)
         self._contextMenuWidget.setSectionVisible(TextEditorSettingsSection.TEXT_WIDTH, True)
         if self.novel.prefs.manuscript.font.get(app_env.platform(), ''):
@@ -472,13 +472,7 @@ class ManuscriptView(AbstractNovelView):
     def _hide_sidebar(self):
         def finished():
             qtanim.fade_in(self.ui.btnTreeToggleSecondary)
-            margins(self._wdgToolbar, left=margin_left)
 
-        left_size = self.ui.wdgLeftSide.width()
-        if self.ui.textEdit.textEdit.viewportMargins().left() > left_size:
-            margin_left = left_size
-        else:
-            margin_left = 50
         qtanim.toggle_expansion(self.ui.wdgLeftSide, False, teardown=finished)
         self.ui.btnTreeToggleSecondary.setChecked(False)
 
@@ -486,4 +480,3 @@ class ManuscriptView(AbstractNovelView):
         qtanim.toggle_expansion(self.ui.wdgLeftSide, True)
         self.ui.btnTreeToggle.setChecked(True)
         self.ui.btnTreeToggleSecondary.setVisible(False)
-        margins(self._wdgToolbar, left=2)

@@ -196,7 +196,7 @@
        <number>0</number>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="pageText">
        <layout class="QVBoxLayout" name="verticalLayout">
@@ -573,6 +573,25 @@
                  </property>
                 </layout>
                </widget>
+               <widget class="QWidget" name="pageSettings">
+                <layout class="QVBoxLayout" name="verticalLayout_18">
+                 <property name="spacing">
+                  <number>3</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>2</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>2</number>
+                 </property>
+                </layout>
+               </widget>
                <widget class="QWidget" name="pageProgress">
                 <layout class="QVBoxLayout" name="verticalLayout_14">
                  <property name="spacing">
@@ -794,6 +813,41 @@
               </widget>
              </item>
              <item>
+              <widget class="Line" name="line_4">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="btnSettings">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>Export</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>28</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="transparent-circle-bg-on-hover" stdset="0">
+                <bool>true</bool>
+               </property>
+               <property name="large" stdset="0">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
               <spacer name="verticalSpacer_2">
                <property name="orientation">
                 <enum>Qt::Vertical</enum>
@@ -910,7 +964,7 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>98</width>
+             <width>80</width>
              <height>70</height>
             </rect>
            </property>
