@@ -361,9 +361,9 @@ class SceneFunctionsWidget(QWidget):
         self.menuPrimary.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         self.menuPrimary.addSection('Select a primary function that this scene fulfils')
         self.menuPrimary.addSeparator()
-        self.menuPrimary.addAction(action('Advance plot', IconRegistry.storylines_icon(),
+        self.menuPrimary.addAction(action('Advance story', IconRegistry.storylines_icon(),
                                           slot=partial(self._addPrimary, StoryElementType.Plot),
-                                          tooltip="This scene primarily advances or complicates the story by affecting the plot, character arc, or relationships"))
+                                          tooltip="This scene primarily advances or complicates the story by affecting the plot, character development, or relationships"))
         self.menuPrimary.addAction(
             action('Character insight', IconRegistry.character_icon(),
                    slot=partial(self._addPrimary, StoryElementType.Character),
