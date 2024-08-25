@@ -371,9 +371,6 @@ class SceneFunctionsWidget(QWidget):
         self.menuPrimary.addAction(action('Mystery', IconRegistry.from_name('ei.question-sign'),
                                           slot=partial(self._addPrimary, StoryElementType.Mystery),
                                           tooltip="This scene primarily introduces or deepens a mystery that drives the narrative forward"))
-        self.menuPrimary.addAction(action('Revelation', IconRegistry.from_name('fa5s.binoculars'),
-                                          slot=partial(self._addPrimary, StoryElementType.Revelation),
-                                          tooltip="This scene primarily reveals a key information"))
         self.menuPrimary.addAction(action('Resonance', IconRegistry.theme_icon('black'),
                                           slot=partial(self._addPrimary, StoryElementType.Resonance),
                                           tooltip="This scene primarily establishes an emotional or thematic impact"))
@@ -466,8 +463,6 @@ class SceneFunctionsWidget(QWidget):
             wdg = CharacterPrimarySceneFunctionWidget(self._novel, self._scene, function)
         elif function.type == StoryElementType.Mystery:
             wdg = MysteryPrimarySceneFunctionWidget(self._novel, self._scene, function)
-        elif function.type == StoryElementType.Revelation:
-            wdg = RevelationPrimarySceneFunctionWidget(self._novel, self._scene, function)
         elif function.type == StoryElementType.Resonance:
             wdg = ResonancePrimarySceneFunctionWidget(self._novel, self._scene, function)
         else:
