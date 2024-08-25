@@ -447,7 +447,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if app_env.is_windows():
             self.menubar.setFont(QApplication.font())
 
-        self.actionAbout.triggered.connect(lambda: AboutDialog().exec())
+        self.actionAbout.triggered.connect(lambda: AboutDialog.popup())
         self.actionPreview.triggered.connect(lambda: ManuscriptPreviewDialog().display(app_env.novel))
         self.actionCut.setIcon(IconRegistry.cut_icon())
         self.actionCut.triggered.connect(self._cut_text)
