@@ -171,7 +171,8 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgMidbar.layout().insertWidget(1, self._btnPlotSelector)
 
         self._functionsEditor = SceneFunctionsWidget(self.novel)
-        self._functionsEditor.storylineLinked.connect(self._storyline_linked)
+        self._functionsEditor.storylineLinked.connect(self._storyline_linked_from_function)
+        self._functionsEditor.storylineRemoved.connect(self._storyline_removed_from_function)
         self.ui.scrollAreaFunctions.layout().addWidget(self._functionsEditor)
 
         self._agencyEditor = SceneAgencyEditor(self.novel)
@@ -320,10 +321,21 @@ class SceneEditor(QObject, EventListener):
         self.scene.plot_values.remove(plotRef)
         self._progressEditor.refresh()
 
-    def _storyline_linked(self, storyline: Plot):
+    def _storyline_linked_from_function(self, storyline: Plot):
         if next((x for x in self.scene.plot_values if x.plot.id == storyline.id), None) is None:
             labels = self._storyline_selected(storyline)
             qtanim.glow(labels.icon(), loop=3, color=QColor(storyline.icon_color))
+
+    def _storyline_removed_from_function(self, storyline: Plot):
+        ref = next((x for x in self.scene.plot_values if x.plot.id == storyline.id), None)
+        if ref is None:
+            return
+        for i in range(self.ui.wdgStorylines.layout().count()):
+            widget = self.ui.wdgStorylines.layout().itemAt(i).widget()
+            if widget and isinstance(widget, ScenePlotLabels):
+                if widget.storylineRef() == ref:
+                    self._storyline_removed(widget, ref)
+                    break
 
     def _add_plot_ref(self, plotRef: ScenePlotReference) -> ScenePlotLabels:
         labels = ScenePlotLabels(self.scene, plotRef)

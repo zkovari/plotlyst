@@ -63,6 +63,7 @@ class PrimarySceneFunctionWidget(TextEditBubbleWidget):
 
 class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
     storylineSelected = pyqtSignal(Plot)
+    storylineRemoved = pyqtSignal(Plot)
 
     def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
         super().__init__(novel, scene, function, parent)
@@ -71,7 +72,7 @@ class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
         self._menu.plotSelected.connect(self._plotSelected)
         self._menu.setScene(scene)
 
-    def _plot(self) -> Optional[Plot]:
+    def plot(self) -> Optional[Plot]:
         return next((x for x in self.novel.plots if x.id == self.function.ref), None)
 
     def _setPlotStyle(self, plot: Plot):
@@ -93,12 +94,15 @@ class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
         self.storylineSelected.emit(plot)
 
     def _plotRemoved(self):
+        plot = self.plot()
         self.function.ref = None
         gc(self._menu)
         self._menu = SceneFunctionPlotSelectorMenu(self.novel, self._title)
         self._menu.plotSelected.connect(self._plotSelected)
         self._menu.setScene(self.scene)
         self._resetPlotStyle()
+        if plot:
+            self.storylineRemoved.emit(plot)
 
 
 class PlotPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
@@ -106,7 +110,7 @@ class PlotPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
         super().__init__(novel, scene, function, parent)
         self._textedit.setPlaceholderText("How does the story move forward")
         if self.function.ref:
-            storyline = self._plot()
+            storyline = self.plot()
             if storyline is not None:
                 self._setPlotStyle(storyline)
         else:
@@ -259,6 +263,7 @@ class SecondaryFunctionsList(ListView):
 
 class SceneFunctionsWidget(QWidget):
     storylineLinked = pyqtSignal(Plot)
+    storylineRemoved = pyqtSignal(Plot)
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -373,6 +378,12 @@ class SceneFunctionsWidget(QWidget):
 
     def _removePrimary(self, wdg: PrimarySceneFunctionWidget):
         self._scene.functions.primary.remove(wdg.function)
+        if isinstance(wdg, _StorylineAssociatedFunctionWidget):
+            if wdg.function.ref:
+                plot = wdg.plot()
+                if plot:
+                    self.storylineRemoved.emit(plot)
+
         fade_out_and_gc(self.wdgPrimary, wdg)
 
     def __initPrimaryWidget(self, function: SceneFunction):
@@ -388,5 +399,6 @@ class SceneFunctionsWidget(QWidget):
         wdg.removed.connect(partial(self._removePrimary, wdg))
         if isinstance(wdg, _StorylineAssociatedFunctionWidget):
             wdg.storylineSelected.connect(self.storylineLinked)
+            wdg.storylineRemoved.connect(self.storylineRemoved)
         self.wdgPrimary.layout().addWidget(wdg)
         return wdg
