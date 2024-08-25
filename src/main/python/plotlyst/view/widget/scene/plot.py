@@ -27,8 +27,8 @@ from PyQt6.QtGui import QColor, QMouseEvent, QEnterEvent, QResizeEvent
 from PyQt6.QtWidgets import QWidget, QToolButton, QGraphicsDropShadowEffect, QTextEdit
 from overrides import overrides
 from qthandy import vbox, hbox, transparent, retain_when_hidden, spacer, sp, decr_icon, line, vline, \
-    margins, italic, decr_font
-from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, InstantTooltipEventFilter, \
+    margins, italic, decr_font, translucent
+from qthandy.filter import VisibilityToggleEventFilter, InstantTooltipEventFilter, \
     DisabledClickEventFilter
 from qtmenu import MenuWidget
 
@@ -385,28 +385,25 @@ class ScenePlotLabels(QWidget):
         self._plotref = plotref
         hbox(self)
 
-        self._icon = tool_btn(IconRegistry.from_name(self._plotref.plot.icon, self._plotref.plot.icon_color),
-                              transparent_=True)
+        self._icon = Icon()
+        self._icon.setIcon(IconRegistry.from_name(self._plotref.plot.icon, self._plotref.plot.icon_color))
+        translucent(self._icon, 0.7)
+        # self._icon.installEventFilter(OpacityEventFilter(self._icon, leaveOpacity=1.0, enterOpacity=0.7))
+        # self._plotValueMenu = MenuWidget(self._icon)
+        # apply_white_menu(self._plotValueMenu)
+        #
+        # self._plotValueEditor = ScenePlotValueEditor(self._scene, self._plotref)
+        # self._plotValueMenu.addWidget(self._plotValueEditor)
+        # self._plotValueMenu.aboutToShow.connect(self._plotValueEditor.checkFunction)
+        #
+        # self._plotValueDisplay = PlotValuesDisplay(self._plotref)
+        # self._plotValueEditor.charged.connect(self._plotValueDisplay.updateValue)
+        # self._plotValueEditor.generalProgressCharged.connect(self.generalProgressCharged)
 
-        tooltip = f'{self._plotref.plot.text}<hr><i>Click to charge storyline values</p>'
-        self._icon.setToolTip(tooltip)
-
-        self._icon.installEventFilter(OpacityEventFilter(self._icon, leaveOpacity=1.0, enterOpacity=0.7))
-        self._plotValueMenu = MenuWidget(self._icon)
-        apply_white_menu(self._plotValueMenu)
-
-        self._plotValueEditor = ScenePlotValueEditor(self._scene, self._plotref)
-        self._plotValueMenu.addWidget(self._plotValueEditor)
-        self._plotValueMenu.aboutToShow.connect(self._plotValueEditor.checkFunction)
-
-        self._plotValueDisplay = PlotValuesDisplay(self._plotref)
-        self._plotValueEditor.charged.connect(self._plotValueDisplay.updateValue)
-        self._plotValueEditor.generalProgressCharged.connect(self.generalProgressCharged)
-
-        for value in self._plotref.data.values:
-            plot_value = value.plot_value(self._plotref.plot)
-            if plot_value:
-                self._plotValueDisplay.updateValue(plot_value, value)
+        # for value in self._plotref.data.values:
+        #     plot_value = value.plot_value(self._plotref.plot)
+        #     if plot_value:
+        #         self._plotValueDisplay.updateValue(plot_value, value)
 
         self._btnReset = RemovalButton()
         self._btnReset.clicked.connect(self.reset.emit)
@@ -414,7 +411,6 @@ class ScenePlotLabels(QWidget):
 
         self.layout().addWidget(vline())
         self.layout().addWidget(self._icon)
-        self.layout().addWidget(self._plotValueDisplay)
         self.layout().addWidget(self._btnReset)
 
         self.installEventFilter(VisibilityToggleEventFilter(self._btnReset, self))
@@ -426,4 +422,4 @@ class ScenePlotLabels(QWidget):
         return self._plotref
 
     def activate(self):
-        self._plotValueMenu.exec()
+        pass

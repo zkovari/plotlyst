@@ -324,7 +324,7 @@ class SceneEditor(QObject, EventListener):
     def _storyline_linked_from_function(self, storyline: Plot):
         if next((x for x in self.scene.plot_values if x.plot.id == storyline.id), None) is None:
             labels = self._storyline_selected(storyline)
-            qtanim.glow(labels.icon(), loop=3, color=QColor(storyline.icon_color))
+            qtanim.glow(labels.icon(), loop=1, color=QColor(storyline.icon_color))
 
     def _storyline_removed_from_function(self, storyline: Plot):
         ref = next((x for x in self.scene.plot_values if x.plot.id == storyline.id), None)
