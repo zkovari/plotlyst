@@ -21,8 +21,8 @@ from functools import partial
 from typing import Optional
 
 import qtanim
-from PyQt6.QtCore import Qt, QEvent, pyqtSignal
-from PyQt6.QtGui import QColor, QEnterEvent, QIcon
+from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QColor, QIcon
 from PyQt6.QtWidgets import QWidget, QAbstractButton
 from overrides import overrides
 from qthandy import vbox, incr_icon, incr_font, flow, margins, vspacer, hbox, clear_layout, pointy, gc
@@ -134,90 +134,12 @@ class PlotPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
         return self._title
 
 
-class _AlternativeStorylineAssociatedFunctionWidget(_StorylineAssociatedFunctionWidget):
-    def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
-        super().__init__(novel, scene, function, parent)
-
-        self._btnStorylineLink = tool_btn(IconRegistry.storylines_icon(color='lightgrey'), transparent_=True,
-                                          tooltip='Link storyline to this element',
-                                          parent=self)
-        self._btnStorylineLink.installEventFilter(OpacityEventFilter(self._btnStorylineLink, leaveOpacity=0.7))
-        self._btnStorylineLink.setGeometry(5, 18, 20, 20)
-        self._btnStorylineLink.clicked.connect(self._btnStorylineClicked)
-
-        if self.function.ref:
-            self._btnStorylineLink.setVisible(True)
-            storyline = self._plot()
-            if storyline is not None:
-                self._setPlotStyle(storyline)
-        else:
-            self._btnStorylineLink.setVisible(False)
-
-        shadow(self._textedit)
-
-    @overrides
-    def enterEvent(self, event: QEnterEvent) -> None:
-        super().enterEvent(event)
-        if self.function.ref:
-            self._btnStorylineLink.setVisible(True)
-
-    @overrides
-    def leaveEvent(self, event: QEvent) -> None:
-        super().leaveEvent(event)
-        if not self.function.ref:
-            self._btnStorylineLink.setVisible(False)
-
-    @overrides
-    def _plotSelected(self, plot: Plot):
-        self._btnStorylineLink.setVisible(True)
-        super()._plotSelected(plot)
-
-    @overrides
-    def _storylineParent(self):
-        return self._btnStorylineLink
-
-    def _btnStorylineClicked(self):
-        self._menu.exec()
-
-
-class MysteryPrimarySceneFunctionWidget(_AlternativeStorylineAssociatedFunctionWidget):
+class MysteryPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
     def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
         super().__init__(novel, scene, function, parent)
         self._title.setIcon(IconRegistry.from_name('ei.question-sign', PLOTLYST_SECONDARY_COLOR))
         self._title.setText('Mystery')
         self._textedit.setPlaceholderText("What mystery is introduced or deepened")
-
-    @overrides
-    def _setPlotStyle(self, plot: Plot):
-        super()._setPlotStyle(plot)
-        self._btnStorylineLink.setIcon(IconRegistry.from_name(plot.icon, plot.icon_color))
-        self._title.setIcon(IconRegistry.from_name('ei.question-sign', plot.icon_color))
-
-    @overrides
-    def _resetPlotStyle(self):
-        self._btnStorylineLink.setVisible(False)
-        self._btnStorylineLink.setIcon(IconRegistry.storylines_icon(color='lightgrey'))
-        self._title.setIcon(IconRegistry.from_name('ei.question-sign', PLOTLYST_SECONDARY_COLOR))
-
-
-class RevelationPrimarySceneFunctionWidget(_AlternativeStorylineAssociatedFunctionWidget):
-    def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
-        super().__init__(novel, scene, function, parent)
-        self._title.setIcon(IconRegistry.from_name('fa5s.binoculars', PLOTLYST_SECONDARY_COLOR))
-        self._title.setText('Revelation')
-        self._textedit.setPlaceholderText("What key information is revealed or discovered")
-
-    @overrides
-    def _setPlotStyle(self, plot: Plot):
-        super()._setPlotStyle(plot)
-        self._btnStorylineLink.setIcon(IconRegistry.from_name(plot.icon, plot.icon_color))
-        self._title.setIcon(IconRegistry.from_name('fa5s.binoculars', plot.icon_color))
-
-    @overrides
-    def _resetPlotStyle(self):
-        self._btnStorylineLink.setVisible(False)
-        self._btnStorylineLink.setIcon(IconRegistry.storylines_icon(color='lightgrey'))
-        self._title.setIcon(IconRegistry.from_name('fa5s.binoculars', PLOTLYST_SECONDARY_COLOR))
 
 
 class CharacterPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
