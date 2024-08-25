@@ -63,7 +63,6 @@ class PrimarySceneFunctionWidget(TextEditBubbleWidget):
 
 class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
     storylineSelected = pyqtSignal(Plot)
-    storylineEditRequested = pyqtSignal(Plot)
 
     def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
         super().__init__(novel, scene, function, parent)
@@ -78,9 +77,6 @@ class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
     def _setPlotStyle(self, plot: Plot):
         gc(self._menu)
         self._menu = MenuWidget(self._title)
-        self._menu.addAction(
-            action('Edit', IconRegistry.edit_icon(), slot=partial(self.storylineEditRequested.emit, plot)))
-        self._menu.addSeparator()
         self._menu.addAction(
             action('Unlink storyline', IconRegistry.from_name('fa5s.unlink', RED_COLOR), slot=self._plotRemoved))
 
@@ -263,7 +259,6 @@ class SecondaryFunctionsList(ListView):
 
 class SceneFunctionsWidget(QWidget):
     storylineLinked = pyqtSignal(Plot)
-    storylineEditRequested = pyqtSignal(Plot)
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -393,6 +388,5 @@ class SceneFunctionsWidget(QWidget):
         wdg.removed.connect(partial(self._removePrimary, wdg))
         if isinstance(wdg, _StorylineAssociatedFunctionWidget):
             wdg.storylineSelected.connect(self.storylineLinked)
-            wdg.storylineEditRequested.connect(self.storylineEditRequested)
         self.wdgPrimary.layout().addWidget(wdg)
         return wdg

@@ -510,7 +510,6 @@ class _CornerIcon(QToolButton):
 
 class SceneElementWidget(QWidget):
     storylineSelected = pyqtSignal(Plot)
-    storylineEditRequested = pyqtSignal(Plot)
 
     def __init__(self, novel: Novel, type: StoryElementType, row: int, col: int, parent=None):
         super().__init__(parent)
@@ -772,9 +771,6 @@ class SceneElementWidget(QWidget):
         self._btnStorylineLink.clicked.disconnect()
         gc(self._storylineMenu)
         self._storylineMenu = MenuWidget(self._btnStorylineLink)
-        self._storylineMenu.addAction(
-            action('Edit', IconRegistry.edit_icon(), slot=partial(self.storylineEditRequested.emit, storyline)))
-        self._storylineMenu.addSeparator()
         self._storylineMenu.addAction(action('Remove', IconRegistry.trash_can_icon(), slot=self._storylineRemoved))
 
     def _storylineRemoved(self):
@@ -1180,7 +1176,6 @@ class AbstractSceneElementsEditor(QWidget):
 
 class SceneStorylineEditor(AbstractSceneElementsEditor):
     storylineLinked = pyqtSignal(Plot)
-    storylineEditRequested = pyqtSignal(Plot)
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -1199,7 +1194,6 @@ class SceneStorylineEditor(AbstractSceneElementsEditor):
                 else:
                     placeholder = EventElementEditor(self._novel, row, col, StoryElementType.Effect)
                 placeholder.storylineSelected.connect(self.storylineLinked)
-                placeholder.storylineEditRequested.connect(self.storylineEditRequested)
                 self._wdgElements.layout().addWidget(placeholder, row, col, 1, 1)
 
         self._addLine(0, 1, True)

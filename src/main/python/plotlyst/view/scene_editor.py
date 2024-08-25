@@ -172,7 +172,6 @@ class SceneEditor(QObject, EventListener):
 
         self._functionsEditor = SceneFunctionsWidget(self.novel)
         self._functionsEditor.storylineLinked.connect(self._storyline_linked)
-        self._functionsEditor.storylineEditRequested.connect(self._storyline_edit)
         self.ui.scrollAreaFunctions.layout().addWidget(self._functionsEditor)
 
         self._agencyEditor = SceneAgencyEditor(self.novel)
@@ -325,13 +324,6 @@ class SceneEditor(QObject, EventListener):
         if next((x for x in self.scene.plot_values if x.plot.id == storyline.id), None) is None:
             labels = self._storyline_selected(storyline)
             qtanim.glow(labels.icon(), loop=3, color=QColor(storyline.icon_color))
-
-    def _storyline_edit(self, storyline: Plot):
-        for i in range(self.ui.wdgStorylines.layout().count()):
-            item = self.ui.wdgStorylines.layout().itemAt(i)
-            if item and isinstance(item.widget(),
-                                   ScenePlotLabels) and item.widget().storylineRef().plot.id == storyline.id:
-                item.widget().activate()
 
     def _add_plot_ref(self, plotRef: ScenePlotReference) -> ScenePlotLabels:
         labels = ScenePlotLabels(self.scene, plotRef)
