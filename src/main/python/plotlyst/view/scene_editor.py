@@ -34,7 +34,7 @@ from qtmenu import MenuWidget
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.client import json_client
 from plotlyst.core.domain import Novel, Scene, Document, StoryBeat, \
-    Character, ScenePurposeType, ScenePurpose, Plot, ScenePlotReference, NovelSetting, StoryElementType
+    Character, ScenePurposeType, ScenePurpose, Plot, ScenePlotReference, NovelSetting, StoryElementType, SceneOutcome
 from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, Event, emit_event
 from plotlyst.event.handler import event_dispatchers
@@ -114,6 +114,7 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgPov.setFixedSize(170, 170)
 
         self._progressEditor = SceneProgressEditor()
+        self._progressEditor.progressCharged.connect(self._update_outcome)
         self._structureSelector = StructureBeatSelectorButton(self.novel)
         self._structureSelector.setVisible(self.novel.prefs.toggled(NovelSetting.Structure))
         self._structureSelector.selected.connect(self._beat_selected)
@@ -173,7 +174,7 @@ class SceneEditor(QObject, EventListener):
         self._functionsEditor = SceneFunctionsWidget(self.novel)
         self._functionsEditor.storylineLinked.connect(self._storyline_linked_from_function)
         self._functionsEditor.storylineRemoved.connect(self._storyline_removed_from_function)
-        self._functionsEditor.storylineCharged.connect(self._progressEditor.refresh)
+        self._functionsEditor.storylineCharged.connect(self._update_progress)
 
         self.ui.scrollAreaFunctions.layout().addWidget(self._functionsEditor)
 
@@ -322,7 +323,7 @@ class SceneEditor(QObject, EventListener):
 
     def _storyline_removed(self, labels: ScenePlotLabels):
         fade_out_and_gc(self.ui.wdgStorylines.layout(), labels)
-        self._progressEditor.refresh()
+        self._update_progress()
 
     def _storyline_linked_from_function(self, ref: ScenePlotReference):
         labels = self._add_plot_ref(ref)
@@ -335,6 +336,23 @@ class SceneEditor(QObject, EventListener):
                 if widget.storylineRef() == ref:
                     self._storyline_removed(widget)
                     break
+
+    def _update_progress(self):
+        self._progressEditor.refresh()
+        self._update_outcome()
+
+    def _update_outcome(self):
+        charge = self._progressEditor.charge()
+        alt_charge = self._progressEditor.altCharge()
+        if charge > 0:
+            if charge == abs(alt_charge):
+                self.scene.outcome = SceneOutcome.TRADE_OFF
+            else:
+                self.scene.outcome = SceneOutcome.RESOLUTION
+        else:
+            self.scene.outcome = SceneOutcome.DISASTER
+
+        self._btnPurposeType.refresh()
 
     def _add_plot_ref(self, plotRef: ScenePlotReference) -> ScenePlotLabels:
         labels = ScenePlotLabels(self.scene, plotRef)

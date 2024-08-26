@@ -1651,6 +1651,8 @@ class _SceneAgendaEditor(AbstractSceneElementsEditor, EventListener):
 
 
 class SceneProgressEditor(ProgressEditor):
+    progressCharged = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._scene: Optional[Scene] = None
@@ -1692,6 +1694,7 @@ class SceneProgressEditor(ProgressEditor):
             return
         self._scene.progress += charge
         self.refresh()
+        self.progressCharged.emit()
 
     @overrides
     def charge(self) -> int:
