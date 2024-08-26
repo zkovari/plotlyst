@@ -278,6 +278,20 @@ class SecondaryFunctionListItemWidget(ListItemWidget):
 
         self._lineEdit.setText(self._function.text)
 
+    def setCharacterEnabled(self, novel: Novel):
+        charSelector = CharacterSelectorButton(novel, iconSize=16)
+        charSelector.characterSelected.connect(self._characterSelected)
+        self.layout().insertWidget(1, charSelector)
+        self._icon.setHidden(True)
+
+        if self._function.character_id:
+            character = characters_registry.character(str(self._function.character_id))
+            if character:
+                charSelector.setCharacter(character)
+
+    def _characterSelected(self, character: Character):
+        self._function.character_id = character.id
+
     @overrides
     def _textChanged(self, text: str):
         super()._textChanged(text)
@@ -285,8 +299,9 @@ class SecondaryFunctionListItemWidget(ListItemWidget):
 
 
 class SecondaryFunctionsList(ListView):
-    def __init__(self, parent=None):
+    def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
+        self._novel = novel
         self._scene: Optional[Scene] = None
         margins(self, left=20)
         self._btnAdd.setHidden(True)
@@ -298,10 +313,15 @@ class SecondaryFunctionsList(ListView):
             self.addItem(function)
 
     @overrides
+    def addItem(self, item: SceneFunction) -> ListItemWidget:
+        wdg = super().addItem(item)
+        if item.type == StoryElementType.Character:
+            wdg.setCharacterEnabled(self._novel)
+        return wdg
+
+    @overrides
     def _addNewItem(self):
-        function = SceneFunction(StoryElementType.Mystery)
-        self._scene.functions.secondary.append(function)
-        self.addItem(function)
+        pass
 
     @overrides
     def _listItemWidgetClass(self):
@@ -314,7 +334,9 @@ class SecondaryFunctionsList(ListView):
 
     @overrides
     def _dropped(self, mimeData: ObjectReferenceMimeData):
-        super()._dropped(mimeData)
+        wdg = super()._dropped(mimeData)
+        if wdg.item().type == StoryElementType.Character:
+            wdg.setCharacterEnabled(self._novel)
         items = []
         for wdg in self.widgets():
             items.append(wdg.item())
@@ -399,7 +421,7 @@ class SceneFunctionsWidget(QWidget):
         flow(self.wdgPrimary, spacing=13)
         margins(self.wdgPrimary, left=20, top=0)
 
-        self.listSecondary = SecondaryFunctionsList()
+        self.listSecondary = SecondaryFunctionsList(self._novel)
 
         wdgPrimaryHeader = QWidget()
         hbox(wdgPrimaryHeader, 0, 0)

@@ -117,13 +117,18 @@ class ListView(QFrame):
         self._dragged: Optional[ListItemWidget] = None
         self._toBeRemoved = False
 
-    def addItem(self, item: Any):
+    def addItem(self, item: Any) -> ListItemWidget:
+        def teardown():
+            wdg.setGraphicsEffect(None)
+            wdg.activate()
+
         wdg = self.__newItemWidget(item)
 
         self.layout().insertWidget(self.layout().count() - 2, wdg)
         if self.isVisible():
-            anim = fade_in(wdg, 150)
-            anim.finished.connect(wdg.activate)
+            fade_in(wdg, 150, teardown=teardown)
+
+        return wdg
 
     def clear(self):
         clear_layout(self, auto_delete=False)
@@ -170,13 +175,15 @@ class ListView(QFrame):
             self.layout().insertWidget(i + 1, self._dragPlaceholder)
         self._dragPlaceholder.setVisible(True)
 
-    def _dropped(self, mimeData: ObjectReferenceMimeData):
+    def _dropped(self, mimeData: ObjectReferenceMimeData) -> ListItemWidget:
         wdg = self.__newItemWidget(mimeData.reference())
         self.layout().replaceWidget(self._dragPlaceholder, wdg)
         gc(self._dragPlaceholder)
         self._dragPlaceholder = None
 
         self._toBeRemoved = True
+
+        return wdg
 
     def _dragFinished(self, widget: ListItemWidget):
         if self._dragPlaceholder:
@@ -191,7 +198,7 @@ class ListView(QFrame):
 
         self._toBeRemoved = False
 
-    def __newItemWidget(self, item: Any):
+    def __newItemWidget(self, item: Any) -> ListItemWidget:
         wdg = self._listItemWidgetClass()(item)
         wdg.deleted.connect(partial(self._deleteItemWidget, wdg))
         wdg.dragStarted.connect(partial(self._dragStarted, wdg))
