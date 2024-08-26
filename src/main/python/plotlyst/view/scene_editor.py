@@ -312,37 +312,26 @@ class SceneEditor(QObject, EventListener):
             self.ui.wdgPov.btnAvatar.setToolTip('Select point of view character')
 
     def _storyline_selected_from_toolbar(self, storyline: Plot):
-        self._storyline_selected(storyline)
         self._functionsEditor.addPrimaryType(StoryElementType.Plot, storyline)
 
-    def _storyline_selected(self, storyline: Plot) -> ScenePlotLabels:
-        plotRef = ScenePlotReference(storyline)
-        self.scene.plot_values.append(plotRef)
-        return self._add_plot_ref(plotRef)
-
     def _storyline_removed_from_toolbar(self, labels: ScenePlotLabels, plotRef: ScenePlotReference):
-        self._storyline_removed(labels, plotRef)
+        self._storyline_removed(labels)
         self._functionsEditor.storylineRemovedEvent(plotRef.plot)
 
-    def _storyline_removed(self, labels: ScenePlotLabels, plotRef: ScenePlotReference):
+    def _storyline_removed(self, labels: ScenePlotLabels):
         fade_out_and_gc(self.ui.wdgStorylines.layout(), labels)
-        self.scene.plot_values.remove(plotRef)
         self._progressEditor.refresh()
 
-    def _storyline_linked_from_function(self, storyline: Plot):
-        if next((x for x in self.scene.plot_values if x.plot.id == storyline.id), None) is None:
-            labels = self._storyline_selected(storyline)
-            qtanim.glow(labels.icon(), loop=1, color=QColor(storyline.icon_color))
+    def _storyline_linked_from_function(self, ref: ScenePlotReference):
+        labels = self._add_plot_ref(ref)
+        qtanim.glow(labels.icon(), loop=1, color=QColor(ref.plot.icon_color))
 
-    def _storyline_removed_from_function(self, storyline: Plot):
-        ref = next((x for x in self.scene.plot_values if x.plot.id == storyline.id), None)
-        if ref is None:
-            return
+    def _storyline_removed_from_function(self, ref: ScenePlotReference):
         for i in range(self.ui.wdgStorylines.layout().count()):
             widget = self.ui.wdgStorylines.layout().itemAt(i).widget()
             if widget and isinstance(widget, ScenePlotLabels):
                 if widget.storylineRef() == ref:
-                    self._storyline_removed(widget, ref)
+                    self._storyline_removed(widget)
                     break
 
     def _add_plot_ref(self, plotRef: ScenePlotReference) -> ScenePlotLabels:

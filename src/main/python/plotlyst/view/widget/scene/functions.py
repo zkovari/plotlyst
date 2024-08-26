@@ -30,7 +30,7 @@ from qthandy.filter import OpacityEventFilter, ObjectReferenceMimeData
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RED_COLOR
-from plotlyst.core.domain import Scene, Novel, StoryElementType, Character, SceneFunction, Plot
+from plotlyst.core.domain import Scene, Novel, StoryElementType, Character, SceneFunction, Plot, ScenePlotReference
 from plotlyst.service.cache import characters_registry
 from plotlyst.view.common import push_btn, tool_btn, action, shadow, label, fade_out_and_gc
 from plotlyst.view.icons import IconRegistry
@@ -62,10 +62,11 @@ class PrimarySceneFunctionWidget(TextEditBubbleWidget):
 
 
 class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
-    storylineSelected = pyqtSignal(Plot)
-    storylineRemoved = pyqtSignal(Plot)
+    storylineSelected = pyqtSignal(ScenePlotReference)
+    storylineRemoved = pyqtSignal(ScenePlotReference)
 
     def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
+        self._plotRef: Optional[ScenePlotReference] = None
         super().__init__(novel, scene, function, parent)
         pointy(self._title)
         self._menu = SceneFunctionPlotSelectorMenu(novel, self._title)
@@ -76,8 +77,22 @@ class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
         return next((x for x in self.novel.plots if x.id == self.function.ref), None)
 
     def setPlot(self, plot: Plot):
-        self.function.ref = plot.id
-        self._setPlotStyle(plot)
+        self._plotSelected(plot)
+
+    def plotRef(self) -> ScenePlotReference:
+        return self._plotRef
+
+    def setPlotRef(self, ref: ScenePlotReference):
+        self._plotRef = ref
+        self._setPlotStyle(self._plotRef.plot)
+        self._textedit.setText(self._plotRef.data.comment)
+
+    @overrides
+    def _textChanged(self):
+        if self._plotRef:
+            self._plotRef.data.comment = self._textedit.toPlainText()
+        else:
+            super()._textChanged()
 
     def _setPlotStyle(self, plot: Plot):
         gc(self._menu)
@@ -93,32 +108,30 @@ class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
 
     def _plotSelected(self, plot: Plot):
         self.function.ref = plot.id
+        self._plotRef = ScenePlotReference(plot)
+        self._plotRef.data.comment = self._textedit.toPlainText()
+        self.scene.plot_values.append(self._plotRef)
         self._setPlotStyle(plot)
         qtanim.glow(self._storylineParent(), color=QColor(plot.icon_color))
-        self.storylineSelected.emit(plot)
+        self.storylineSelected.emit(self._plotRef)
 
     def _plotRemoved(self):
-        plot = self.plot()
         self.function.ref = None
         gc(self._menu)
         self._menu = SceneFunctionPlotSelectorMenu(self.novel, self._title)
         self._menu.plotSelected.connect(self._plotSelected)
         self._menu.setScene(self.scene)
         self._resetPlotStyle()
-        if plot:
-            self.storylineRemoved.emit(plot)
+        self.scene.plot_values.remove(self._plotRef)
+        self.storylineRemoved.emit(self._plotRef)
+        self._plotRef = None
 
 
 class PlotPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
     def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
         super().__init__(novel, scene, function, parent)
         self._textedit.setPlaceholderText("How does the story move forward")
-        if self.function.ref:
-            storyline = self.plot()
-            if storyline is not None:
-                self._setPlotStyle(storyline)
-        else:
-            self._resetPlotStyle()
+        self._resetPlotStyle()
 
         shadow(self._textedit)
 
@@ -266,8 +279,8 @@ class SecondaryFunctionsList(ListView):
 
 
 class SceneFunctionsWidget(QWidget):
-    storylineLinked = pyqtSignal(Plot)
-    storylineRemoved = pyqtSignal(Plot)
+    storylineLinked = pyqtSignal(ScenePlotReference)
+    storylineRemoved = pyqtSignal(ScenePlotReference)
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -377,6 +390,7 @@ class SceneFunctionsWidget(QWidget):
             if widget and isinstance(widget, _StorylineAssociatedFunctionWidget):
                 if widget.function.ref == storyline.id:
                     self._scene.functions.primary.remove(widget.function)
+                    self._scene.plot_values.remove(widget.plotRef())
                     fade_out_and_gc(self.wdgPrimary, widget)
                     return
 
@@ -397,10 +411,10 @@ class SceneFunctionsWidget(QWidget):
     def _removePrimary(self, wdg: PrimarySceneFunctionWidget):
         self._scene.functions.primary.remove(wdg.function)
         if isinstance(wdg, _StorylineAssociatedFunctionWidget):
-            if wdg.function.ref:
-                plot = wdg.plot()
-                if plot:
-                    self.storylineRemoved.emit(plot)
+            ref = wdg.plotRef()
+            if ref:
+                self._scene.plot_values.remove(ref)
+                self.storylineRemoved.emit(ref)
 
         fade_out_and_gc(self.wdgPrimary, wdg)
 
@@ -416,6 +430,10 @@ class SceneFunctionsWidget(QWidget):
 
         wdg.removed.connect(partial(self._removePrimary, wdg))
         if isinstance(wdg, _StorylineAssociatedFunctionWidget):
+            for ref in self._scene.plot_values:
+                if ref.plot.id == function.ref:
+                    wdg.setPlotRef(ref)
+
             wdg.storylineSelected.connect(self.storylineLinked)
             wdg.storylineRemoved.connect(self.storylineRemoved)
         self.wdgPrimary.layout().addWidget(wdg)
