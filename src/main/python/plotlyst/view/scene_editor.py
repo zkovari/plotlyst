@@ -173,6 +173,8 @@ class SceneEditor(QObject, EventListener):
         self._functionsEditor = SceneFunctionsWidget(self.novel)
         self._functionsEditor.storylineLinked.connect(self._storyline_linked_from_function)
         self._functionsEditor.storylineRemoved.connect(self._storyline_removed_from_function)
+        self._functionsEditor.storylineCharged.connect(self._progressEditor.refresh)
+
         self.ui.scrollAreaFunctions.layout().addWidget(self._functionsEditor)
 
         self._agencyEditor = SceneAgencyEditor(self.novel)
@@ -337,7 +339,6 @@ class SceneEditor(QObject, EventListener):
     def _add_plot_ref(self, plotRef: ScenePlotReference) -> ScenePlotLabels:
         labels = ScenePlotLabels(self.scene, plotRef)
         labels.reset.connect(partial(self._storyline_removed_from_toolbar, labels, plotRef))
-        labels.generalProgressCharged.connect(self._progressEditor.refresh)
         self.ui.wdgStorylines.layout().addWidget(labels)
         self._btnPlotSelector.setText('')
 

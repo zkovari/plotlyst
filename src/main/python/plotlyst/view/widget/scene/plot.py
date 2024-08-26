@@ -21,24 +21,21 @@ from abc import abstractmethod
 from functools import partial
 from typing import Optional, Dict
 
-import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QSize, QEvent
-from PyQt6.QtGui import QColor, QMouseEvent, QEnterEvent, QResizeEvent
-from PyQt6.QtWidgets import QWidget, QToolButton, QGraphicsDropShadowEffect, QTextEdit
+from PyQt6.QtGui import QColor, QEnterEvent, QResizeEvent
+from PyQt6.QtWidgets import QWidget, QToolButton, QGraphicsDropShadowEffect
 from overrides import overrides
-from qthandy import vbox, hbox, transparent, retain_when_hidden, spacer, sp, decr_icon, line, vline, \
-    margins, italic, decr_font, translucent
-from qthandy.filter import VisibilityToggleEventFilter, InstantTooltipEventFilter, \
-    DisabledClickEventFilter
+from qthandy import vbox, hbox, retain_when_hidden, sp, decr_icon, vline, \
+    margins, italic, translucent
+from qthandy.filter import VisibilityToggleEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.core.domain import Novel, Scene, ScenePlotReference, PlotValue, ScenePlotValueCharge, \
-    Plot, SceneFunction
-from plotlyst.view.common import action, tool_btn, wrap, label
+    Plot
+from plotlyst.view.common import action, tool_btn
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.style.button import apply_button_palette_color
-from plotlyst.view.widget.button import SecondaryActionToolButton
 from plotlyst.view.widget.display import Icon
 from plotlyst.view.widget.input import RemovalButton
 from plotlyst.view.widget.labels import PlotValueLabel
@@ -194,64 +191,6 @@ class ScenePlotGeneralProgressEditor(ProgressEditor):
         self.refresh()
         self.charged.emit()
 
-
-class ScenePlotValueChargeWidget(QWidget):
-    charged = pyqtSignal(PlotValue, ScenePlotValueCharge)
-
-    def __init__(self, plotReference: ScenePlotReference, value: PlotValue, parent=None):
-        super(ScenePlotValueChargeWidget, self).__init__(parent)
-        self.plotReference = plotReference
-        self.value: PlotValue = value
-        self._lbl = PlotValueLabel(value)
-        sp(self._lbl).h_max()
-        hbox(self)
-
-        self.charge: int = 0
-        self.plot_value_charge: Optional[ScenePlotValueCharge] = None
-        for v in self.plotReference.data.values:
-            if v.plot_value_id == value.id:
-                self.charge = v.charge
-                self.plot_value_charge = v
-
-        self.chargeIcon = QToolButton()
-        transparent(self.chargeIcon)
-        self.chargeIcon.setIcon(IconRegistry.charge_icon(self.charge))
-
-        self.posCharge = SecondaryActionToolButton()
-        self.posCharge.setIcon(IconRegistry.plus_circle_icon('grey'))
-        decr_icon(self.posCharge, 4)
-        self.posCharge.clicked.connect(lambda: self._changeCharge(1))
-        retain_when_hidden(self.posCharge)
-        self.negCharge = SecondaryActionToolButton()
-        self.negCharge.setIcon(IconRegistry.minus_icon('grey'))
-        decr_icon(self.negCharge, 4)
-        self.negCharge.clicked.connect(lambda: self._changeCharge(-1))
-        retain_when_hidden(self.negCharge)
-
-        self.layout().addWidget(self.chargeIcon)
-        self.layout().addWidget(self._lbl, alignment=Qt.AlignmentFlag.AlignLeft)
-        self.layout().addWidget(spacer())
-        self.layout().addWidget(self.negCharge)
-        self.layout().addWidget(self.posCharge)
-
-        self._updateButtons()
-
-    def _changeCharge(self, increment: int):
-        self.charge += increment
-        if self.plot_value_charge is None:
-            self.plot_value_charge = ScenePlotValueCharge(self.value.id, self.charge)
-            self.plotReference.data.values.append(self.plot_value_charge)
-        self.plot_value_charge.charge = self.charge
-
-        self.chargeIcon.setIcon(IconRegistry.charge_icon(self.charge))
-        if increment > 0:
-            qtanim.glow(self.chargeIcon, color=QColor('#52b788'))
-        else:
-            qtanim.glow(self.chargeIcon, color=QColor('#9d0208'))
-
-        self._updateButtons()
-        self.charged.emit(self.value, self.plot_value_charge)
-
     def _updateButtons(self):
         if not self.negCharge.isEnabled():
             self.negCharge.setEnabled(True)
@@ -265,72 +204,6 @@ class ScenePlotValueChargeWidget(QWidget):
         if self.charge == -3:
             self.negCharge.setDisabled(True)
             self.negCharge.setHidden(True)
-
-
-class ScenePlotValueEditor(QWidget):
-    charged = pyqtSignal(PlotValue, ScenePlotValueCharge)
-    generalProgressCharged = pyqtSignal()
-
-    def __init__(self, scene: Scene, plotReference: ScenePlotReference, parent=None):
-        super().__init__(parent)
-        self.scene = scene
-        self.plotReference = plotReference
-        self._locked: bool = False
-
-        self.setProperty('relaxed-white-bg', True)
-        vbox(self)
-
-        self._text = QTextEdit()
-        self._text.setProperty('rounded', True)
-        self._text.setProperty('white-bg', True)
-        self._text.setPlaceholderText('Describe how the scene is related to this storyline')
-        self._text.setMaximumSize(180, 150)
-        self._text.setText(self.plotReference.data.comment)
-        self._text.textChanged.connect(self._textChanged)
-        self._lblFunctionHint = label('Referenced by primary function', description=True, wordWrap=True)
-        decr_font(self._lblFunctionHint)
-        self._lblFunctionHint.setHidden(True)
-        self._text.installEventFilter(DisabledClickEventFilter(self._text, lambda: qtanim.shake(self._lblFunctionHint)))
-
-        self.layout().addWidget(self._lblFunctionHint, alignment=Qt.AlignmentFlag.AlignRight)
-        self.layout().addWidget(self._text)
-        self.layout().addWidget(line(color='lightgrey'))
-
-        if self.plotReference.plot.default_value_enabled:
-            wdg = ScenePlotGeneralProgressEditor(self.plotReference)
-            wdg.charged.connect(self.generalProgressCharged)
-            self.layout().addWidget(wrap(wdg, margin_left=15), alignment=Qt.AlignmentFlag.AlignCenter)
-            self.layout().addWidget(line(color='lightgrey'))
-
-        # if self.plotReference.plot.values:
-        #     self.layout().addWidget(QLabel('Custom values'))
-
-        for value in self.plotReference.plot.values:
-            wdg = ScenePlotValueChargeWidget(self.plotReference, value)
-            wdg.charged.connect(self.charged.emit)
-            self.layout().addWidget(wdg)
-
-    @overrides
-    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
-        pass
-
-    def checkFunction(self):
-        function: Optional[SceneFunction] = next(
-            (x for x in self.scene.functions.primary if x.ref == self.plotReference.plot.id), None)
-        if function:
-            self._locked = True
-            self._text.setPlainText(function.text)
-        else:
-            if self._locked:
-                self._text.setPlainText(self.plotReference.data.comment)
-            self._locked = False
-
-        self._lblFunctionHint.setVisible(self._locked)
-        self._text.setDisabled(self._locked)
-
-    def _textChanged(self):
-        if not self._locked:
-            self.plotReference.data.comment = self._text.toPlainText()
 
 
 class ScenePlotSelectorMenu(MenuWidget):
@@ -366,13 +239,6 @@ class ScenePlotSelectorMenu(MenuWidget):
 
     def _occupiedPlotIds(self):
         return [x.plot.id for x in self._scene.plot_values]
-
-
-class SceneFunctionPlotSelectorMenu(ScenePlotSelectorMenu):
-
-    @overrides
-    def _occupiedPlotIds(self):
-        return [x.ref for x in self._scene.functions.primary]
 
 
 class ScenePlotLabels(QWidget):

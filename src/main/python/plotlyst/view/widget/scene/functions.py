@@ -21,8 +21,8 @@ from functools import partial
 from typing import Optional
 
 import qtanim
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QIcon
+from PyQt6.QtCore import Qt, pyqtSignal, QEvent
+from PyQt6.QtGui import QColor, QIcon, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QAbstractButton
 from overrides import overrides
 from qthandy import vbox, incr_icon, incr_font, flow, margins, vspacer, hbox, clear_layout, pointy, gc
@@ -39,7 +39,8 @@ from plotlyst.view.widget.characters import CharacterSelectorButton
 from plotlyst.view.widget.display import Icon
 from plotlyst.view.widget.input import TextEditBubbleWidget
 from plotlyst.view.widget.list import ListView, ListItemWidget
-from plotlyst.view.widget.scene.plot import SceneFunctionPlotSelectorMenu
+from plotlyst.view.widget.scene.plot import ScenePlotGeneralProgressEditor, \
+    ScenePlotSelectorMenu
 
 
 class PrimarySceneFunctionWidget(TextEditBubbleWidget):
@@ -64,14 +65,34 @@ class PrimarySceneFunctionWidget(TextEditBubbleWidget):
 class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
     storylineSelected = pyqtSignal(ScenePlotReference)
     storylineRemoved = pyqtSignal(ScenePlotReference)
+    storylineCharged = pyqtSignal()
 
     def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
         self._plotRef: Optional[ScenePlotReference] = None
         super().__init__(novel, scene, function, parent)
         pointy(self._title)
-        self._menu = SceneFunctionPlotSelectorMenu(novel, self._title)
+        self._menu = ScenePlotSelectorMenu(novel, self._title)
         self._menu.plotSelected.connect(self._plotSelected)
         self._menu.setScene(scene)
+
+        self._btnProgress = tool_btn(IconRegistry.from_name('mdi.chevron-double-up', color='grey'),
+                                     transparent_=True,
+                                     tooltip='Track progress', parent=self)
+        self._btnProgress.installEventFilter(OpacityEventFilter(self._btnProgress, leaveOpacity=0.7))
+        self._btnProgress.setGeometry(0, 18, 20, 20)
+        self._btnProgress.setHidden(True)
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        super().enterEvent(event)
+        if self._plotRef:
+            self._btnProgress.setVisible(True)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        super().leaveEvent(event)
+        if not self._plotRef or not self._plotRef.data.charge:
+            self._btnProgress.setVisible(False)
 
     def plot(self) -> Optional[Plot]:
         return next((x for x in self.novel.plots if x.id == self.function.ref), None)
@@ -86,6 +107,16 @@ class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
         self._plotRef = ref
         self._setPlotStyle(self._plotRef.plot)
         self._textedit.setText(self._plotRef.data.comment)
+        if self._plotRef.data.charge:
+            self._btnProgress.setVisible(True)
+
+        editor = ScenePlotGeneralProgressEditor(self._plotRef)
+        editor.charged.connect(self._chargeClicked)
+        menu = MenuWidget(self._btnProgress)
+        apply_white_menu(menu)
+        menu.addWidget(editor)
+
+        self._charged()
 
     @overrides
     def _textChanged(self):
@@ -93,6 +124,18 @@ class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
             self._plotRef.data.comment = self._textedit.toPlainText()
         else:
             super()._textChanged()
+
+    def _chargeClicked(self):
+        self._charged()
+        if self._plotRef.data.charge:
+            self._btnProgress.setVisible(True)
+        self.storylineCharged.emit()
+
+    def _charged(self):
+        if self._plotRef.data.charge:
+            self._btnProgress.setIcon(IconRegistry.charge_icon(self._plotRef.data.charge))
+        else:
+            self._btnProgress.setIcon(IconRegistry.from_name('mdi.chevron-double-up', color='grey'))
 
     def _setPlotStyle(self, plot: Plot):
         gc(self._menu)
@@ -108,20 +151,20 @@ class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
 
     def _plotSelected(self, plot: Plot):
         self.function.ref = plot.id
-        self._plotRef = ScenePlotReference(plot)
-        self._plotRef.data.comment = self._textedit.toPlainText()
-        self.scene.plot_values.append(self._plotRef)
-        self._setPlotStyle(plot)
+        ref = ScenePlotReference(plot)
+        self.scene.plot_values.append(ref)
+        self.setPlotRef(ScenePlotReference(plot))
         qtanim.glow(self._storylineParent(), color=QColor(plot.icon_color))
         self.storylineSelected.emit(self._plotRef)
 
     def _plotRemoved(self):
         self.function.ref = None
         gc(self._menu)
-        self._menu = SceneFunctionPlotSelectorMenu(self.novel, self._title)
+        self._menu = ScenePlotSelectorMenu(self.novel, self._title)
         self._menu.plotSelected.connect(self._plotSelected)
         self._menu.setScene(self.scene)
         self._resetPlotStyle()
+        self._btnProgress.setVisible(False)
         self.scene.plot_values.remove(self._plotRef)
         self.storylineRemoved.emit(self._plotRef)
         self._plotRef = None
@@ -281,6 +324,7 @@ class SecondaryFunctionsList(ListView):
 class SceneFunctionsWidget(QWidget):
     storylineLinked = pyqtSignal(ScenePlotReference)
     storylineRemoved = pyqtSignal(ScenePlotReference)
+    storylineCharged = pyqtSignal()
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -436,5 +480,6 @@ class SceneFunctionsWidget(QWidget):
 
             wdg.storylineSelected.connect(self.storylineLinked)
             wdg.storylineRemoved.connect(self.storylineRemoved)
+            wdg.storylineCharged.connect(self.storylineCharged)
         self.wdgPrimary.layout().addWidget(wdg)
         return wdg

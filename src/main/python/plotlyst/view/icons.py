@@ -633,11 +633,11 @@ class IconRegistry:
         if charge == 0:
             return IconRegistry.from_name('mdi.wave', color)
         elif charge == 1:
-            return IconRegistry.from_name('mdi.chevron-right', color)
+            return IconRegistry.from_name('mdi.chevron-up', color)
         elif charge == 2:
-            return IconRegistry.from_name('mdi.chevron-double-right', color)
+            return IconRegistry.from_name('mdi.chevron-double-up', color)
         elif charge >= 3:
-            return IconRegistry.from_name('mdi.chevron-triple-right', color)
+            return IconRegistry.from_name('mdi.chevron-triple-up', color)
 
     @staticmethod
     def male_gender_icon(color: str = 'black') -> QIcon:
