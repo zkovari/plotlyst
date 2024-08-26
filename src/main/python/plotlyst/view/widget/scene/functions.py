@@ -75,6 +75,10 @@ class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
     def plot(self) -> Optional[Plot]:
         return next((x for x in self.novel.plots if x.id == self.function.ref), None)
 
+    def setPlot(self, plot: Plot):
+        self.function.ref = plot.id
+        self._setPlotStyle(plot)
+
     def _setPlotStyle(self, plot: Plot):
         gc(self._menu)
         self._menu = MenuWidget(self._title)
@@ -364,11 +368,25 @@ class SceneFunctionsWidget(QWidget):
 
         self.listSecondary.setScene(self._scene)
 
-    def _addPrimary(self, type_: StoryElementType):
+    def addPrimaryType(self, type_: StoryElementType, storyline: Optional[Plot] = None):
+        self._addPrimary(type_, storyline)
+
+    def storylineRemovedEvent(self, storyline: Plot):
+        for i in range(self.wdgPrimary.layout().count()):
+            widget = self.wdgPrimary.layout().itemAt(i).widget()
+            if widget and isinstance(widget, _StorylineAssociatedFunctionWidget):
+                if widget.function.ref == storyline.id:
+                    self._scene.functions.primary.remove(widget.function)
+                    fade_out_and_gc(self.wdgPrimary, widget)
+                    return
+
+    def _addPrimary(self, type_: StoryElementType, storyline: Optional[Plot] = None):
         function = SceneFunction(type_)
         self._scene.functions.primary.append(function)
 
         wdg = self.__initPrimaryWidget(function)
+        if storyline:
+            wdg.setPlot(storyline)
         qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
 
     def _addSecondary(self, type_: StoryElementType):

@@ -34,7 +34,7 @@ from qtmenu import MenuWidget
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.client import json_client
 from plotlyst.core.domain import Novel, Scene, Document, StoryBeat, \
-    Character, ScenePurposeType, ScenePurpose, Plot, ScenePlotReference, NovelSetting
+    Character, ScenePurposeType, ScenePurpose, Plot, ScenePlotReference, NovelSetting, StoryElementType
 from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, Event, emit_event
 from plotlyst.event.handler import event_dispatchers
@@ -166,7 +166,7 @@ class SceneEditor(QObject, EventListener):
                                          tooltip='Link storylines to this scene', transparent_=True)
         self._btnPlotSelector.installEventFilter(OpacityEventFilter(self._btnPlotSelector, leaveOpacity=0.8))
         self._plotSelectorMenu = ScenePlotSelectorMenu(self.novel, self._btnPlotSelector)
-        self._plotSelectorMenu.plotSelected.connect(self._storyline_selected)
+        self._plotSelectorMenu.plotSelected.connect(self._storyline_selected_from_toolbar)
         hbox(self.ui.wdgStorylines)
         self.ui.wdgMidbar.layout().insertWidget(1, self._btnPlotSelector)
 
@@ -311,10 +311,18 @@ class SceneEditor(QObject, EventListener):
             self.ui.wdgPov.reset()
             self.ui.wdgPov.btnAvatar.setToolTip('Select point of view character')
 
+    def _storyline_selected_from_toolbar(self, storyline: Plot):
+        self._storyline_selected(storyline)
+        self._functionsEditor.addPrimaryType(StoryElementType.Plot, storyline)
+
     def _storyline_selected(self, storyline: Plot) -> ScenePlotLabels:
         plotRef = ScenePlotReference(storyline)
         self.scene.plot_values.append(plotRef)
         return self._add_plot_ref(plotRef)
+
+    def _storyline_removed_from_toolbar(self, labels: ScenePlotLabels, plotRef: ScenePlotReference):
+        self._storyline_removed(labels, plotRef)
+        self._functionsEditor.storylineRemovedEvent(plotRef.plot)
 
     def _storyline_removed(self, labels: ScenePlotLabels, plotRef: ScenePlotReference):
         fade_out_and_gc(self.ui.wdgStorylines.layout(), labels)
@@ -339,7 +347,7 @@ class SceneEditor(QObject, EventListener):
 
     def _add_plot_ref(self, plotRef: ScenePlotReference) -> ScenePlotLabels:
         labels = ScenePlotLabels(self.scene, plotRef)
-        labels.reset.connect(partial(self._storyline_removed, labels, plotRef))
+        labels.reset.connect(partial(self._storyline_removed_from_toolbar, labels, plotRef))
         labels.generalProgressCharged.connect(self._progressEditor.refresh)
         self.ui.wdgStorylines.layout().addWidget(labels)
         self._btnPlotSelector.setText('')
