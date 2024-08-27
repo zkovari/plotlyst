@@ -38,7 +38,7 @@ from qtmenu import MenuWidget
 from plotlyst.common import RELAXED_WHITE_COLOR, WHITE_COLOR, PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.common import truncate_string
 from plotlyst.core.domain import Scene, Novel, Plot, \
-    ScenePlotReference
+    ScenePlotReference, SceneFunction, StoryElementType
 from plotlyst.event.core import Event, EventListener
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import SceneOrderChangedEvent
@@ -264,14 +264,18 @@ class StoryLinesMapWidget(QWidget):
     def _plot_changed(self, plot: Plot, checked: bool):
         if checked:
             self._clicked_scene.plot_values.append(ScenePlotReference(plot))
+            function = SceneFunction(StoryElementType.Plot)
+            function.ref = plot.id
+            self._clicked_scene.functions.primary.append(function)
         else:
-            to_be_removed = None
-            for plot_v in self._clicked_scene.plot_values:
-                if plot_v.plot is plot:
-                    to_be_removed = plot_v
-                    break
-            if to_be_removed:
-                self._clicked_scene.plot_values.remove(to_be_removed)
+            ref_to_be_removed = next((plot_v for plot_v in self._clicked_scene.plot_values if plot_v.plot is plot),
+                                     None)
+            function_to_be_removed = next(
+                (func for func in self._clicked_scene.functions.primary if func.ref == plot.id), None)
+            if ref_to_be_removed:
+                self._clicked_scene.plot_values.remove(ref_to_be_removed)
+            if function_to_be_removed:
+                self._clicked_scene.functions.primary.remove(function_to_be_removed)
         RepositoryPersistenceManager.instance().update_scene(self._clicked_scene)
 
         self.update()
