@@ -32,7 +32,7 @@ from qthandy import transparent, flow, \
     clear_layout, hbox, btn_popup, italic
 from qtmenu import MenuWidget
 
-from plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.client import json_client
 from plotlyst.core.domain import Scene, Novel, SceneOutcome, Tag, SceneStage, \
     ReaderPosition, InformationAcquisition, Document, \
@@ -439,9 +439,13 @@ class SceneStageButton(QToolButton, EventListener):
 
             if scene_stage_index >= active_stage_index:
                 self._stageOk = True
-                self.setIcon(IconRegistry.ok_icon(PLOTLYST_SECONDARY_COLOR))
 
-        if not self._stageOk:
+        if self._scene.stage:
+            if self._stageOk:
+                self.setIcon(IconRegistry.ok_icon(PLOTLYST_SECONDARY_COLOR))
+            else:
+                self.setIcon(IconRegistry.progress_check_icon(PLOTLYST_TERTIARY_COLOR))
+        else:
             self.setIcon(IconRegistry.progress_check_icon('grey'))
 
         menu = MenuWidget(self)
