@@ -422,7 +422,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.selected_card.clearSelection()
             self.selected_card = None
 
-        self.ui.btnDelete.setEnabled(False)
+        self.ui.btnDelete.setEnabled(True)
         self.ui.btnEdit.setEnabled(False)
 
     def _hide_chapters_clicked(self, toggled: bool):
@@ -692,14 +692,10 @@ class ScenesOutlineView(AbstractNovelView):
             self._handle_scene_deletion(scene)
             emit_event(self.novel, SceneDeletedEvent(self, scene))
 
-        # elif not scene:
-        #     chapters = self.ui.treeChapters.selectedChapters()
-        #     title = chapters[0].title_index(self.novel)
-        #     if chapters:
-        #         if ask_confirmation(
-        #                 f'Are you sure you want to delete chapter "{title}"? (scenes will remain)'):
-        #             self.chaptersModel.removeChapter(index)
-        #             emit_event(ChapterChangedEvent(self))
+        elif not scene:
+            chapters = self.ui.treeChapters.selectedChapters()
+            if chapters:
+                self.ui.treeChapters.removeChapter(chapters[0])
 
     def _on_scene_cards_swapped(self, scenes: List[Scene]):
         self.novel.scenes[:] = scenes

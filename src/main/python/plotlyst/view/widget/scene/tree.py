@@ -41,6 +41,7 @@ from plotlyst.events import SceneOrderChangedEvent, ChapterChangedEvent
 from plotlyst.service.persistence import RepositoryPersistenceManager, delete_scene
 from plotlyst.view.common import action, insert_before_the_end
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
 
@@ -314,6 +315,11 @@ class ScenesTreeView(TreeView, EventListener):
         emit_event(self._novel, SceneAddedEvent(self, scene), delay=10)
         self.sceneAdded.emit(scene)
 
+    def removeChapter(self, chapter: Chapter):
+        wdg = self._chapters.get(chapter)
+        if wdg:
+            self._deleteChapter(wdg)
+
     def addPrologue(self):
         pass
 
@@ -405,6 +411,8 @@ class ScenesTreeView(TreeView, EventListener):
             self._selectedChapters.remove(chapterWdg.chapter())
 
     def _deleteChapter(self, chapterWdg: ChapterWidget):
+        if not confirmed('All scenes inside will remain.', f'Delete {chapterWdg.chapter().display_name()}?'):
+            return
         chapter = chapterWdg.chapter()
         if chapter in self._selectedChapters:
             self._selectedChapters.remove(chapter)
