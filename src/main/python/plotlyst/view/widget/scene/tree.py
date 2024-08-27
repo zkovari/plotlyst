@@ -24,7 +24,7 @@ from typing import List
 
 from PyQt6.QtCore import QMimeData, QPointF
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QShowEvent, QIcon
+from PyQt6.QtGui import QShowEvent, QIcon, QAction
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 from qthandy import gc, translucent, clear_layout, vbox
@@ -104,6 +104,7 @@ class ChapterWidget(ContainerNode):
     addScene = pyqtSignal()
     addChapter = pyqtSignal()
     converted = pyqtSignal(ChapterType)
+    resetType = pyqtSignal()
 
     def __init__(self, chapter: Chapter, novel: Novel, parent=None, readOnly: bool = False,
                  settings: Optional[TreeSettings] = None):
@@ -148,6 +149,9 @@ class ChapterWidget(ContainerNode):
         convertMenu = MenuWidget()
         convertMenu.setTitle('Convert into')
         convertMenu.setIcon(IconRegistry.from_name('ph.arrows-left-right'))
+        chapterConvertAction = action('Chapter', IconRegistry.chapter_icon(), slot=self.resetType)
+        convertMenu.addAction(chapterConvertAction)
+        convertMenu.addSeparator()
         convertMenu.addAction(
             action('Prologue', IconRegistry.prologue_icon(), slot=partial(self.converted.emit, ChapterType.Prologue)))
         convertMenu.addAction(
@@ -155,6 +159,7 @@ class ChapterWidget(ContainerNode):
         convertMenu.addAction(
             action('Interlude', IconRegistry.interlude_icon(),
                    slot=partial(self.converted.emit, ChapterType.Interlude)))
+        convertMenu.aboutToShow.connect(partial(self._showConvertMenu, chapterConvertAction))
         menu.addMenu(convertMenu)
         menu.addSeparator()
         menu.addAction(self._actionDelete)
@@ -169,6 +174,9 @@ class ChapterWidget(ContainerNode):
             return IconRegistry.epilogue_icon(color=color)
         elif self._chapter.type == ChapterType.Interlude:
             return IconRegistry.interlude_icon(color=color)
+
+    def _showConvertMenu(self, convertChapterAction: QAction):
+        convertChapterAction.setDisabled(self._chapter.type is None)
 
 
 class ScenesTreeView(TreeView, EventListener):
@@ -439,7 +447,7 @@ class ScenesTreeView(TreeView, EventListener):
 
         self._emitChapterChange()
 
-    def _convertChapter(self, chapterWdg: ChapterWidget, chapterType: ChapterType):
+    def _convertChapter(self, chapterWdg: ChapterWidget, chapterType: Optional[ChapterType] = None):
         chapterWdg.chapter().type = chapterType
         self._novel.update_chapter_titles()
 
@@ -607,6 +615,7 @@ class ScenesTreeView(TreeView, EventListener):
         if not self._readOnly:
             chapterWdg.deleted.connect(partial(self._deleteChapter, chapterWdg))
             chapterWdg.converted.connect(partial(self._convertChapter, chapterWdg))
+            chapterWdg.resetType.connect(partial(self._convertChapter, chapterWdg))
             chapterWdg.addScene.connect(partial(self._addScene, chapterWdg))
             chapterWdg.addChapter.connect(partial(self._insertChapter, chapterWdg))
             chapterWdg.installEventFilter(
