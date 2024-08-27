@@ -1029,6 +1029,9 @@
                   </item>
                   <item>
                    <widget class="QPushButton" name="btnStoryGridDisplay">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
                     <property name="cursor">
                      <cursorShape>PointingHandCursor</cursorShape>
                     </property>
@@ -1311,7 +1314,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="btnGroupStoryMapView"/>
   <buttongroup name="btnGroupViews"/>
+  <buttongroup name="btnGroupStoryMapView"/>
  </buttongroups>
 </ui>
