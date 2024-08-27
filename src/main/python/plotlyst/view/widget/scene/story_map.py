@@ -571,7 +571,7 @@ class StoryMap(QWidget, EventListener):
                     transparent(btn)
                     titles.layout().addWidget(btn)
                 titles.layout().addWidget(spacer())
-            wdg.sceneSelected.connect(self.sceneSelected.emit)
+            wdg.sceneSelected.connect(self.sceneSelected)
 
     @busy
     def setMode(self, mode: StoryMapDisplayMode):

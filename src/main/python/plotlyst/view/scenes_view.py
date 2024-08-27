@@ -379,7 +379,7 @@ class ScenesOutlineView(AbstractNovelView):
                 if filters:
                     for k, v in filters.items():
                         self.storymap_view.setActsFilter(k, v)
-                self.storymap_view.sceneSelected.connect(self.ui.wdgStoryStructure.highlightScene)
+                self.storymap_view.sceneSelected.connect(self._storymap_scene_selected)
                 self.storymap_view.setNovel(self.novel)
         elif self.ui.btnCharactersDistributionView.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageCharactersDistribution)
@@ -557,6 +557,11 @@ class ScenesOutlineView(AbstractNovelView):
         if self.ui.treeChapters.isVisible():
             self.ui.treeChapters.selectScene(card.scene)
         emit_event(self.novel, SceneSelectedEvent(self, card.scene))
+
+    def _storymap_scene_selected(self, scene: Scene):
+        self.ui.wdgStoryStructure.highlightScene(scene)
+        if self.ui.treeChapters.isVisible():
+            self.ui.treeChapters.selectScene(scene)
 
     def _selection_cleared(self):
         self._enable_action_buttons(False)
