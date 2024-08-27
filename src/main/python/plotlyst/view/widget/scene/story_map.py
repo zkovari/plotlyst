@@ -35,7 +35,7 @@ from qthandy import decr_font, transparent, clear_layout, hbox, spacer, vbox
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
-from plotlyst.common import RELAXED_WHITE_COLOR, WHITE_COLOR
+from plotlyst.common import RELAXED_WHITE_COLOR, WHITE_COLOR, PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.common import truncate_string
 from plotlyst.core.domain import Scene, Novel, Plot, \
     ScenePlotReference
@@ -44,7 +44,7 @@ from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import SceneOrderChangedEvent
 from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import hmax, action, tool_btn, ButtonPressResizeEventFilter, fade_out_and_gc, shadow
+from plotlyst.view.common import hmax, action, tool_btn, ButtonPressResizeEventFilter, fade_out_and_gc
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.button import WordWrappedPushButton
 from plotlyst.view.widget.display import Icon
@@ -211,7 +211,7 @@ class StoryLinesMapWidget(QWidget):
     def _draw_scene_ellipse(self, painter: QPainter, scene: Scene, x: int, y: int):
         selected = scene is self._clicked_scene
         if scene.plot_values:
-            pen_color = '#CB4D4D' if selected else Qt.GlobalColor.black
+            pen_color = PLOTLYST_TERTIARY_COLOR if selected else Qt.GlobalColor.black
             if len(scene.plot_values) == 1:
                 painter.setPen(QPen(QColor(pen_color), 3, Qt.PenStyle.SolidLine))
                 painter.setBrush(Qt.GlobalColor.black)
@@ -223,7 +223,7 @@ class StoryLinesMapWidget(QWidget):
                 painter.setBrush(Qt.GlobalColor.white)
                 painter.drawEllipse(x, y - 10, 20, 20)
         else:
-            pen_color = '#CB4D4D' if scene is self._clicked_scene else Qt.GlobalColor.gray
+            pen_color = PLOTLYST_SECONDARY_COLOR if scene is self._clicked_scene else Qt.GlobalColor.gray
             painter.setPen(QPen(QColor(pen_color), 3, Qt.PenStyle.SolidLine))
             painter.setBrush(Qt.GlobalColor.gray)
             size = 18 if selected else 14
