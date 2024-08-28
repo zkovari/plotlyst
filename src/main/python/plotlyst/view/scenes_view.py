@@ -200,6 +200,9 @@ class ScenesOutlineView(AbstractNovelView):
         structure_visible = self.novel.prefs.toggled(NovelSetting.Structure)
         self.ui.btnStoryStructure.setVisible(structure_visible)
         self.ui.wdgStoryStructure.setVisible(structure_visible)
+        self.ui.btnLinkStoryline.setIcon(IconRegistry.storylines_icon(color='grey'))
+        self.ui.btnLinkStoryline.installEventFilter(OpacityEventFilter(self.ui.btnLinkStoryline, leaveOpacity=0.7))
+        self.ui.btnLinkStoryline.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnLinkStoryline))
 
         self.ui.wdgOrientation.setHidden(True)
         self.ui.rbHorizontal.setIcon(IconRegistry.from_name('fa5s.grip-lines'))

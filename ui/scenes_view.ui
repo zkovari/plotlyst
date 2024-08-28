@@ -1075,13 +1075,13 @@
                 <widget class="QWidget" name="wdgStorymapToolbar" native="true">
                  <layout class="QHBoxLayout" name="wdgStorymapSettingsBar">
                   <property name="spacing">
-                   <number>2</number>
+                   <number>0</number>
                   </property>
                   <property name="leftMargin">
                    <number>0</number>
                   </property>
                   <property name="topMargin">
-                   <number>0</number>
+                   <number>10</number>
                   </property>
                   <property name="rightMargin">
                    <number>0</number>
@@ -1089,6 +1089,19 @@
                   <property name="bottomMargin">
                    <number>0</number>
                   </property>
+                  <item>
+                   <widget class="QPushButton" name="btnLinkStoryline">
+                    <property name="cursor">
+                     <cursorShape>PointingHandCursor</cursorShape>
+                    </property>
+                    <property name="text">
+                     <string>Link storyline</string>
+                    </property>
+                    <property name="transparent" stdset="0">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
                   <item>
                    <spacer name="horizontalSpacer_7">
                     <property name="orientation">
@@ -1102,13 +1115,16 @@
                     </property>
                    </spacer>
                   </item>
-                  <item alignment="Qt::AlignVCenter">
-                   <widget class="QLabel" name="label">
+                  <item>
+                   <widget class="QPushButton" name="pushButton">
+                    <property name="cursor">
+                     <cursorShape>PointingHandCursor</cursorShape>
+                    </property>
                     <property name="text">
                      <string>Detailed</string>
                     </property>
-                    <property name="buddy">
-                     <cstring>cbStoryMapDetailed</cstring>
+                    <property name="transparent" stdset="0">
+                     <bool>true</bool>
                     </property>
                    </widget>
                   </item>
@@ -1187,7 +1203,7 @@
                     <x>0</x>
                     <y>0</y>
                     <width>387</width>
-                    <height>525</height>
+                    <height>513</height>
                    </rect>
                   </property>
                   <property name="sizePolicy">
@@ -1309,6 +1325,22 @@
     <hint type="destinationlabel">
      <x>174</x>
      <y>54</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>cbStoryMapDetailed</receiver>
+   <slot>animateClick()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>681</x>
+     <y>121</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>733</x>
+     <y>122</y>
     </hint>
    </hints>
   </connection>
