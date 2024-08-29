@@ -433,6 +433,8 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
         self.wdgEditor.setProperty('rounded', True)
         self.wdgEditor.setAcceptRichText(False)
         self.wdgEditor.setTabChangesFocus(True)
+        if app_env.is_mac():
+            incr_font(self.wdgEditor)
         shadow(self.wdgEditor)
         self.setMaximumWidth(600)
 
@@ -1174,6 +1176,10 @@ class StrengthsWeaknessesTableRow(QWidget):
         self.textWeakness.setPlaceholderText('Define the weakness of this attribute')
         self.textWeakness.setText(self.attribute.weakness)
         self.textWeakness.textChanged.connect(self._weaknessChanged)
+
+        if app_env.is_mac():
+            incr_font(self.textStrength)
+            incr_font(self.textWeakness)
 
         self.layout().addWidget(self.textStrength)
         self.layout().addWidget(self.textWeakness)
