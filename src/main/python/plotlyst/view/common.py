@@ -401,8 +401,12 @@ def remove_and_gc(parent: QWidget, widget: QWidget):
     gc(widget)
 
 
-def insert_before_the_end(parent: QWidget, widget: QWidget, leave: int = 1):
-    parent.layout().insertWidget(parent.layout().count() - leave, widget)
+def insert_before_the_end(parent: QWidget, widget: QWidget, leave: int = 1, alignment=None):
+    i = parent.layout().count() - leave
+    if alignment:
+        parent.layout().insertWidget(i, widget, alignment=alignment)
+    else:
+        parent.layout().insertWidget(i, widget)
 
 
 def insert_before(parent: QWidget, widget: QWidget, reference: QWidget):

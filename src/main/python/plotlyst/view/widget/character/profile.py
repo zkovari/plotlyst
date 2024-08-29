@@ -346,7 +346,7 @@ class ProfileSectionWidget(ProfileFieldWidget):
             else:
                 self._btnPrimary.clicked.connect(self._initNewPrimaryField)
 
-            self.wdgBottom.layout().addWidget(self._btnPrimary)
+            self.wdgContainer.layout().addWidget(self._btnPrimary)
 
         self.children: List[ProfileFieldWidget] = []
         # self.progressStatuses: Dict[ProfileFieldWidget, float] = {}
@@ -358,7 +358,10 @@ class ProfileSectionWidget(ProfileFieldWidget):
         if self.section.type == CharacterProfileSectionType.Summary:
             self.wdgContainer.layout().addWidget(widget, alignment=Qt.AlignmentFlag.AlignTop)
         else:
-            self.wdgContainer.layout().addWidget(widget)
+            if self.context.has_addition():
+                insert_before_the_end(self.wdgContainer, widget)
+            else:
+                self.wdgContainer.layout().addWidget(widget)
         # self.progressStatuses[widget] = False
         # widget.valueFilled.connect(partial(self._valueFilled, widget))
         # widget.valueReset.connect(partial(self._valueReset, widget))
