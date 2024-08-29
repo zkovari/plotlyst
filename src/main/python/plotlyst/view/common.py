@@ -613,3 +613,7 @@ def calculate_resized_dimensions(width: int, height: int, max_size: int = 512):
         w, h = width, height
 
     return int(w), int(h)
+
+
+def fade_in(wdg: QWidget):
+    qtanim.fade_in(wdg, duration=150, teardown=lambda: wdg.setGraphicsEffect(None))

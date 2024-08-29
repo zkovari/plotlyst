@@ -50,7 +50,7 @@ from plotlyst.core.template import TemplateField, iq_field, eq_field, rationalis
     work_style_choices
 from plotlyst.env import app_env
 from plotlyst.view.common import tool_btn, wrap, emoji_font, action, insert_before_the_end, push_btn, label, \
-    fade_out_and_gc, shadow
+    fade_out_and_gc, shadow, fade_in
 from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
@@ -1408,7 +1408,7 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
         self.lblFear.setText(item.meta['fear'])
         self.wdgEditor.setToolTip(enneagram_help[item.text])
         if self.isVisible():
-            qtanim.fade_in(self.wdgAttr)
+            fade_in(self.wdgAttr)
         else:
             self.wdgAttr.setVisible(True)
 
@@ -1461,7 +1461,7 @@ class MbtiFieldWidget(TemplateFieldWidgetBase):
 
         self.lblKeywords.setText(mbti_keywords.get(item.text, ''))
         if self.isVisible():
-            qtanim.fade_in(self.wdgAttr)
+            fade_in(self.wdgAttr)
         else:
             self.wdgAttr.setVisible(True)
 
@@ -1515,7 +1515,7 @@ class LoveStyleFieldWidget(TemplateFieldWidgetBase):
         self.lblKeywords.setText(item.meta['desc'])
         self.wdgEditor.setToolTip(love_style_help[item.text])
         if self.isVisible():
-            qtanim.fade_in(self.wdgAttr)
+            fade_in(self.wdgAttr)
         else:
             self.wdgAttr.setVisible(True)
 
@@ -1566,7 +1566,7 @@ class WorkStyleFieldWidget(TemplateFieldWidgetBase):
         self.lblKeywords.setText(item.meta['desc'])
         self.wdgEditor.setToolTip(work_style_help[item.text])
         if self.isVisible():
-            qtanim.fade_in(self.wdgAttr)
+            fade_in(self.wdgAttr)
         else:
             self.wdgAttr.setVisible(True)
 
