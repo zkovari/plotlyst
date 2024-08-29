@@ -653,6 +653,8 @@ class PersonalitySelector(SecondaryActionPushButton):
         for item in self.field().selections:
             self._items[item.text] = item
 
+        incr_font(self, 2)
+
         self._menu = MenuWidget(self)
         self._menu.aboutToShow.connect(self._selectorShown)
         apply_white_menu(self._menu)
@@ -725,6 +727,7 @@ class EnneagramSelector(PersonalitySelector):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setText('Enneagram...')
+        self.setIcon(IconRegistry.from_name('mdi.numeric-9-circle', 'grey'))
 
     @overrides
     def field(self) -> TemplateField:
@@ -742,6 +745,7 @@ class MbtiSelector(PersonalitySelector):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setText('MBTI...')
+        self.setIcon(IconRegistry.from_name('mdi.head-question-outline', 'grey'))
 
     @overrides
     def field(self) -> TemplateField:
@@ -759,6 +763,7 @@ class LoveStyleSelector(PersonalitySelector):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setText('Love style...')
+        self.setIcon(IconRegistry.from_name('fa5s.heart', 'grey'))
 
     @overrides
     def field(self) -> TemplateField:
@@ -776,6 +781,7 @@ class DiscSelector(PersonalitySelector):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setText('Work style...')
+        self.setIcon(IconRegistry.from_name('fa5s.briefcase', 'grey'))
 
     @overrides
     def field(self) -> TemplateField:
