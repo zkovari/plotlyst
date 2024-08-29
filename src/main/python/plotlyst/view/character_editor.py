@@ -353,15 +353,18 @@ class CharacterEditor(QObject, EventListener):
             self.ui.btnMoreGender.setVisible(False)
         else:
             self.character.gender = ''
-            self.ui.btnMoreGender.setVisible(self.btnGroupGender.secondaryLocked())
+            self.ui.btnMoreGender.setVisible(True)
 
-    def _display_more_gender_clicked(self):
-        self.btnGroupGender.setSecondaryLocked(False)
+    def _display_more_gender_clicked(self, toggled: bool):
+        self.btnGroupGender.setSecondaryLocked(not toggled)
         for btn in [self.ui.btnTransgender, self.ui.btnNonBinary, self.ui.btnGenderless]:
-            anim = qtanim.fade_in(btn)
+            if toggled:
+                anim = qtanim.fade_in(btn)
+            else:
+                anim = qtanim.fade_out(btn)
             anim.finished.connect(partial(translucent, btn, 0.4))
 
-        self.ui.btnMoreGender.setHidden(True)
+        self.ui.btnMoreGender.setText('«' if toggled else '»')
 
     def _save(self):
         if self.character.role and self.character.role.text == protagonist_role.text:

@@ -653,11 +653,11 @@ class IconRegistry:
 
     @staticmethod
     def non_binary_gender_icon(color: str = 'black') -> QIcon:
-        return IconRegistry.from_name('mdi.gender-male-female-variant', color=color, color_on='#7209b7')
+        return IconRegistry.from_name('mdi.gender-non-binary', color=color, color_on='#7209b7')
 
     @staticmethod
     def genderless_icon(color: str = 'black') -> QIcon:
-        return IconRegistry.from_name('fa5s.genderless', color=color, color_on='#6c757d')
+        return IconRegistry.from_name('ri.genderless-line', color=color, color_on='#6c757d')
 
     @staticmethod
     def gender_icon(gender: str):
