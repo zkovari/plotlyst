@@ -311,7 +311,10 @@ class ProfileSectionWidget(ProfileFieldWidget):
         self.wdgContainer = QFrame()
         vbox(self.wdgContainer, 5)
         if self.context.has_white_bg():
-            self.wdgContainer.setProperty('white-bg', True)
+            if app_env.is_mac():
+                self.wdgContainer.setProperty('relaxed-white-bg', True)
+            else:
+                self.wdgContainer.setProperty('white-bg', True)
             self.wdgContainer.setProperty('rounded', True)
         else:
             margins(self.wdgContainer, left=20)
