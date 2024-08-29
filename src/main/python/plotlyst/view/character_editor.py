@@ -38,7 +38,6 @@ from plotlyst.events import NovelAboutToSyncEvent
 from plotlyst.resources import resource_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.service.tour import TourService
-from plotlyst.view.common import emoji_font, set_tab_icon, wrap, ButtonPressResizeEventFilter, set_tab_visible
 from plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_bg_image, apply_white_menu
@@ -122,9 +121,11 @@ class CharacterEditor(QObject, EventListener):
         menu.aboutToShow.connect(self._ageEditor.setFocus)
 
         self._lineOccupation = QLineEdit()
+        self._lineOccupation.setProperty('rounded', True)
         self._lineOccupation.setPlaceholderText('Fill out occupation')
         self._lineOccupation.textEdited.connect(self._occupation_changed)
-        menu = btn_popup(self.ui.btnOccupation, wrap(self._lineOccupation, margin_bottom=2))
+        menu = MenuWidget(self.ui.btnOccupation)
+        menu.addWidget(self._lineOccupation)
         menu.aboutToShow.connect(self._lineOccupation.setFocus)
         self._lineOccupation.editingFinished.connect(menu.hide)
 
