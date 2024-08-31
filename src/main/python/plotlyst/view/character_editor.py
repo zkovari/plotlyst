@@ -161,7 +161,7 @@ class CharacterEditor(QObject, EventListener):
         self.profile = CharacterProfileEditor(self.novel)
         if app_env.is_windows() or app_env.is_linux():
             self.ui.wdgProfile.setProperty('relaxed-white-bg', True)
-        margins(self.ui.wdgTop, bottom=15)
+            margins(self.ui.wdgTop, bottom=15)
         self.ui.wdgProfile.layout().addWidget(self.profile)
 
         apply_bg_image(self.ui.scrollAreaBackstoryContents, resource_registry.cover1)
