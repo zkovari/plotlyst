@@ -397,9 +397,9 @@ class CharacterProfileSectionType(Enum):
     Summary = 'summary'
     Personality = 'personality'
     Philosophy = 'philosophy'
-    Strengths = 'strengths and weaknesses'
     Faculties = 'faculties'
     Flaws = 'flaws'
+    Strengths = 'strengths and weaknesses'
     Baggage = 'baggage'
     Goals = 'goals'
 
@@ -469,9 +469,6 @@ def default_character_profile() -> List[CharacterProfileSectionReference]:
         CharacterProfileSectionReference(CharacterProfileSectionType.Philosophy, fields=[
             CharacterProfileFieldReference(CharacterProfileFieldType.Field_Values)
         ]),
-        CharacterProfileSectionReference(CharacterProfileSectionType.Strengths, fields=[
-            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Strengths)
-        ]),
         CharacterProfileSectionReference(CharacterProfileSectionType.Faculties, fields=[
             CharacterProfileFieldReference(CharacterProfileFieldType.Field_Faculties_IQ),
             CharacterProfileFieldReference(CharacterProfileFieldType.Field_Faculties_EQ),
@@ -480,6 +477,9 @@ def default_character_profile() -> List[CharacterProfileSectionReference]:
             CharacterProfileFieldReference(CharacterProfileFieldType.Field_Faculties_Creativity)
         ]),
         CharacterProfileSectionReference(CharacterProfileSectionType.Flaws),
+        CharacterProfileSectionReference(CharacterProfileSectionType.Strengths, fields=[
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Strengths)
+        ]),
         CharacterProfileSectionReference(CharacterProfileSectionType.Baggage),
         CharacterProfileSectionReference(CharacterProfileSectionType.Goals)
     ]
