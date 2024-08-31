@@ -708,10 +708,10 @@ class PersonalitySelector(SecondaryActionPushButton):
         self.initStyleSheet()
 
     def _ignoreClicked(self):
+        self._menu.close()
         if confirmed(
                 "The personality type won't be considered for this character. You can enable it back anytime.",
                 f"Ignore {self.field().name}"):
-            self._menu.close()
             self._updateIgnoredValue()
             self.ignored.emit()
 
