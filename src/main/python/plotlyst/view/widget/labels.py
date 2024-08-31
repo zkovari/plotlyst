@@ -24,11 +24,11 @@ from PyQt6.QtCore import QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QIcon, QMouseEvent
 from PyQt6.QtWidgets import QWidget, QLabel, QFrame, QToolButton, QSizePolicy
 from overrides import overrides
-from qthandy import hbox, vline, vbox, clear_layout, transparent, flow
+from qthandy import hbox, vline, vbox, clear_layout, transparent, flow, incr_font
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
-from plotlyst.common import truncate_string, RELAXED_WHITE_COLOR
+from plotlyst.common import truncate_string, RELAXED_WHITE_COLOR, RED_COLOR
 from plotlyst.core.domain import Character, Conflict, SelectionItem, Novel, ScenePlotReference, \
     CharacterGoal, PlotValue, Scene, GoalReference
 from plotlyst.env import app_env
@@ -151,19 +151,21 @@ class TraitLabel(QLabel):
         super(TraitLabel, self).__init__(parent)
 
         self.setText(trait)
+        if app_env.is_mac():
+            incr_font(self)
 
         if positive:
             bg_color = '#519872'
             border_color = '#034732'
         else:
-            bg_color = '#db5461'
+            bg_color = RED_COLOR
             border_color = '#ef2917'
         self.setStyleSheet(f'''TraitLabel {{
             background-color: {bg_color};
-            border: 2px solid {border_color};
+            border: 1px solid {border_color};
             border-radius: 8px;
+            padding: 2px;
             color: white;
-            padding-left: 0px; padding-right: 0px; padding-top: 0px; padding-bottom: 0px;
         }}''')
 
 
