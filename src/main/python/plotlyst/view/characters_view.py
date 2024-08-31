@@ -354,6 +354,7 @@ class CharactersView(AbstractNovelView):
             character = self.selected_card.character
 
         if character and delete_character(self.novel, character):
+            self.selected_card = None
             emit_event(self.novel, CharacterDeletedEvent(self, character))
             self.ui.cards.remove(character)
             self.refresh()
