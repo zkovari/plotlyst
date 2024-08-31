@@ -3639,7 +3639,7 @@ class Novel(NovelDescriptor):
     def new_novel(title: str = '') -> 'Novel':
         novel = Novel(title)
         copied_structure = copy.deepcopy(three_act_structure)
-        copied_structure.beats[0].enabled = False  # hook
+        # copied_structure.beats[0].enabled = False  # hook
         copied_structure.beats[3].enabled = False  # pinch 1
         copied_structure.beats[5].enabled = False  # pinch 2
         copied_structure.beats[8].enabled = False  # crisis
