@@ -1236,14 +1236,14 @@ class StorylineLinkType(Enum):
     Catalyst = auto()
     Impact = auto()
     Contrast = auto()
-    Reflect_char = auto()
+    Reflect_character = auto()
     Reflect_plot = auto()
     Reveal = auto()
     Resolve = auto()
     Compete = auto()
 
     def display_name(self) -> str:
-        if self == StorylineLinkType.Reflect_char:
+        if self == StorylineLinkType.Reflect_character:
             return 'Reflect character'
         elif self == StorylineLinkType.Reflect_plot:
             return 'Reflect plot'
@@ -1257,7 +1257,7 @@ class StorylineLinkType(Enum):
             return 'mdi.motion-outline'
         elif self == StorylineLinkType.Contrast:
             return 'ei.adjust'
-        elif self == StorylineLinkType.Reflect_char:
+        elif self == StorylineLinkType.Reflect_character:
             return 'msc.mirror'
         elif self == StorylineLinkType.Reflect_plot:
             return 'msc.mirror'
@@ -1280,7 +1280,7 @@ class StorylineLinkType(Enum):
             return 'A storyline impacts or influences the events in an other storyline'
         elif self == StorylineLinkType.Contrast:
             return 'The storylines contrast each other in any way, e.g.,theme, tone, or pacing'
-        elif self == StorylineLinkType.Reflect_char:
+        elif self == StorylineLinkType.Reflect_character:
             return "The relationship plot reflects the character's changes"
         elif self == StorylineLinkType.Reflect_plot:
             return "The relationship plot reflects larger plot themes of conflicts through character interactions"
@@ -1299,7 +1299,7 @@ class StorylineLinkType(Enum):
             return ""
         elif self == StorylineLinkType.Contrast:
             return ""
-        elif self == StorylineLinkType.Reflect_char:
+        elif self == StorylineLinkType.Reflect_character:
             return ""
         elif self == StorylineLinkType.Reflect_plot:
             return ""
