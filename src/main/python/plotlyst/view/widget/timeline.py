@@ -60,8 +60,8 @@ class BackstoryCard(QWidget):
 
         self.cardFrame = frame()
         self.cardFrame.setObjectName('cardFrame')
-        vbox(self.cardFrame, 5, 5)
-        margins(self.cardFrame, left=8)
+        vbox(self.cardFrame, spacing=5)
+        margins(self.cardFrame, left=5)
 
         self.btnType = tool_btn(QIcon(), parent=self)
         self.btnType.setIconSize(QSize(24, 24))
@@ -80,6 +80,7 @@ class BackstoryCard(QWidget):
         self.textSummary = AutoAdjustableTextEdit(height=40)
         self.textSummary.setPlaceholderText("Summarize this event")
         self.textSummary.setBlockFormat(lineSpacing=120)
+        self.textSummary.setViewportMargins(3, 0, 3, 0)
         self.textSummary.setProperty('transparent', True)
         self.textSummary.textChanged.connect(self._synopsisChanged)
         incr_font(self.textSummary, 2)
