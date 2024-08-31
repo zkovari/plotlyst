@@ -28,7 +28,7 @@ import emoji
 import qtanim
 from PyQt6.QtCharts import QPieSeries, QPieSlice
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QRectF
-from PyQt6.QtGui import QIcon, QColor, QMouseEvent
+from PyQt6.QtGui import QIcon, QColor, QMouseEvent, QKeySequence
 from PyQt6.QtWidgets import QWidget, QSpinBox, QSlider, QTextBrowser, QButtonGroup, QToolButton, QLabel, QSizePolicy, \
     QLineEdit, QDialog
 from overrides import overrides
@@ -354,6 +354,7 @@ class EnneagramSelectorWidget(PersonalitySelectorWidget):
     def _addItem(self, item: SelectionItem):
         btn = tool_btn(IconRegistry.from_name(item.icon, 'lightgrey', item.icon_color), checkable=True,
                        transparent_=True)
+        btn.setShortcut(QKeySequence(str(item.meta.get('number', 1))))
         btn.setIconSize(QSize(32, 32))
         btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.5, ignoreCheckedButton=True))
         btn.toggled.connect(partial(self._toggled, item))
