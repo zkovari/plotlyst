@@ -286,7 +286,7 @@ class StoryStructureSettingsPopup(PopupDialog):
     def __init__(self, structure: StoryStructure, parent=None):
         super().__init__(parent)
         self.structure = structure
-        self.setMinimumSize(550, 250)
+        # self.setMinimumSize(550, 250)
 
         self.wdgTitle = QWidget()
         hbox(self.wdgTitle)
