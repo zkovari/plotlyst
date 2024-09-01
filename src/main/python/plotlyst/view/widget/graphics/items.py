@@ -1416,6 +1416,7 @@ class NoteItem(NodeItem):
         painter.setFont(self._font)
         if self._node.text:
             doc = QTextDocument()
+            doc.setTextWidth(self._textRect.width())
             doc.setMarkdown(self._node.text)
             painter.translate(self._textRect.x(), self._textRect.y())
             doc.drawContents(painter)
