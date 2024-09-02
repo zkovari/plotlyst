@@ -412,7 +412,7 @@ class AvatarSelectors(QWidget):
         self.selectorChanged.emit()
 
     def _upload_avatar(self):
-        filename: str = QFileDialog.getOpenFileName(None, 'Choose an image', '', 'Images (*.png *.jpg *jpeg)')
+        filename: str = QFileDialog.getOpenFileName(None, 'Choose an image', '', 'Images (*.png *.jpg *jpeg *.webp)')
         if not filename or not filename[0]:
             return
         reader = QImageReader(filename[0])

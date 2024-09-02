@@ -50,7 +50,7 @@ def save_clipboard_image(novel: Novel) -> Optional[LoadedImage]:
 
 
 def upload_image(novel: Novel) -> Optional[LoadedImage]:
-    file_path, _ = QFileDialog.getOpenFileName(None, "Choose an image", "", "Images (*.png *.jpg *.jpeg)")
+    file_path, _ = QFileDialog.getOpenFileName(None, "Choose an image", "", "Images (*.png *.jpg *.jpeg *.webp)")
     if file_path:
         reader = QImageReader(file_path)
         reader.setAutoTransform(True)
