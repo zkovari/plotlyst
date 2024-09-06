@@ -531,6 +531,12 @@ class _StorySpineStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
         super().__init__(novel, structure, parent)
 
+        vbox(self.wdgCustom, spacing=15)
+        margins(self.wdgCustom, top=20)
+        self.wdgCustom.layout().addWidget(label(
+            "A simple narrative framework created by Kenn Adams that consists a series of connected phrases, beginning with the status quo, followed by a disrupting event, and ending with resolution.",
+            description=True, wordWrap=True))
+
 
 class _TwistsAndTurnsStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
