@@ -82,6 +82,9 @@ class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
         self._btnProgress.setGeometry(0, 18, 20, 20)
         self._btnProgress.setHidden(True)
 
+        self._progressMenu = MenuWidget(self._btnProgress)
+        apply_white_menu(self._progressMenu)
+
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
         super().enterEvent(event)
@@ -112,9 +115,8 @@ class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
 
         editor = ScenePlotGeneralProgressEditor(self._plotRef)
         editor.charged.connect(self._chargeClicked)
-        menu = MenuWidget(self._btnProgress)
-        apply_white_menu(menu)
-        menu.addWidget(editor)
+        self._progressMenu.clear()
+        self._progressMenu.addWidget(editor)
 
         self._charged()
 
@@ -153,7 +155,7 @@ class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
         self.function.ref = plot.id
         ref = ScenePlotReference(plot)
         self.scene.plot_values.append(ref)
-        self.setPlotRef(ScenePlotReference(plot))
+        self.setPlotRef(ref)
         qtanim.glow(self._storylineParent(), color=QColor(plot.icon_color))
         self.storylineSelected.emit(self._plotRef)
 
@@ -464,9 +466,7 @@ class SceneFunctionsWidget(QWidget):
         function = SceneFunction(type_)
         self._scene.functions.primary.append(function)
 
-        wdg = self.__initPrimaryWidget(function)
-        if storyline:
-            wdg.setPlot(storyline)
+        wdg = self.__initPrimaryWidget(function, storyline)
         qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
 
     def _addSecondary(self, type_: StoryElementType):
@@ -484,7 +484,7 @@ class SceneFunctionsWidget(QWidget):
 
         fade_out_and_gc(self.wdgPrimary, wdg)
 
-    def __initPrimaryWidget(self, function: SceneFunction):
+    def __initPrimaryWidget(self, function: SceneFunction, storyline: Optional[Plot] = None):
         if function.type == StoryElementType.Character:
             wdg = CharacterPrimarySceneFunctionWidget(self._novel, self._scene, function)
         elif function.type == StoryElementType.Mystery:
@@ -496,12 +496,14 @@ class SceneFunctionsWidget(QWidget):
 
         wdg.removed.connect(partial(self._removePrimary, wdg))
         if isinstance(wdg, _StorylineAssociatedFunctionWidget):
-            for ref in self._scene.plot_values:
-                if ref.plot.id == function.ref:
-                    wdg.setPlotRef(ref)
 
             wdg.storylineSelected.connect(self.storylineLinked)
             wdg.storylineRemoved.connect(self.storylineRemoved)
             wdg.storylineCharged.connect(self.storylineCharged)
+            if storyline:
+                wdg.setPlot(storyline)
+            for ref in self._scene.plot_values:
+                if ref.plot.id == function.ref:
+                    wdg.setPlotRef(ref)
         self.wdgPrimary.layout().addWidget(wdg)
         return wdg

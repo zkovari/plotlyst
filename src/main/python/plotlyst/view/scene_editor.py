@@ -318,8 +318,8 @@ class SceneEditor(QObject, EventListener):
         self._functionsEditor.addPrimaryType(StoryElementType.Plot, storyline)
 
     def _storyline_removed_from_toolbar(self, labels: ScenePlotLabels, plotRef: ScenePlotReference):
-        self._storyline_removed(labels)
         self._functionsEditor.storylineRemovedEvent(plotRef.plot)
+        self._storyline_removed(labels)
 
     def _storyline_removed(self, labels: ScenePlotLabels):
         fade_out_and_gc(self.ui.wdgStorylines.layout(), labels)
@@ -333,7 +333,7 @@ class SceneEditor(QObject, EventListener):
         for i in range(self.ui.wdgStorylines.layout().count()):
             widget = self.ui.wdgStorylines.layout().itemAt(i).widget()
             if widget and isinstance(widget, ScenePlotLabels):
-                if widget.storylineRef() == ref:
+                if widget.storylineRef() is ref:
                     self._storyline_removed(widget)
                     break
 
