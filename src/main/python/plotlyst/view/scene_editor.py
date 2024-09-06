@@ -403,7 +403,7 @@ class SceneEditor(QObject, EventListener):
     def _save_scene(self):
         self.scene.title = self.ui.lineTitle.text()
         self.scene.synopsis = self.ui.textSynopsis.toPlainText()
-        self.scene.day = self.ui.sbDay.value()
+        # self.scene.day = self.ui.sbDay.value()
 
         self.scene.tag_references.clear()
         # for tag in self.tag_selector.tags():

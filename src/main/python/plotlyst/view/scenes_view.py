@@ -757,7 +757,7 @@ class ScenesOutlineView(AbstractNovelView):
             card.refreshPov()
             card.refreshCharacters()
 
-    @busy
+    # @busy
     def _handle_structure_update(self):
         if self.ui.btnStoryStructure.isChecked():
             self.ui.btnStoryStructureSelector.setVisible(len(self.novel.story_structures) > 1)

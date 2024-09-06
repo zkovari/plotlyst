@@ -518,9 +518,8 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
     @busy
     def _refreshStructure(self, structure: StoryStructure):
         self.wdgStructureOutline.setStructure(structure)
-        # self._structureNotes.setStructure(structure)
-
         self.wdgPreview.setStructure(self.novel, structure)
+
         self.wdgPreview.setHidden(structure.display_type == StoryStructureDisplayType.Sequential_timeline)
         self._beatsPreview.attachStructurePreview(self.wdgPreview)
         self.wdgStructureOutline.attachStructurePreview(self.wdgPreview)
@@ -549,7 +548,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.wdgPreview.setBeatsMoveable(True)
         self.wdgPreview.setActsClickable(False)
         self.wdgPreview.setActsResizeable(True)
-        self.wdgPreview.actsResized.connect(lambda: emit_event(self.novel, NovelStoryStructureUpdated(self)))
+        self.wdgPreview.actsResized.connect(self._emit)
         self.wdgPreview.beatMoved.connect(self._beatMoved)
 
     def _timelineChanged(self):
@@ -557,7 +556,11 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self._emit()
 
     def _beatMoved(self):
-        QTimer.singleShot(20, lambda: self._refreshStructure(self.novel.active_story_structure))
+        def refresh(structure: StoryStructure):
+            self.wdgStructureOutline.setStructure(structure)
+            self._beatsPreview.setStructure(structure)
+
+        QTimer.singleShot(20, lambda: refresh(self.novel.active_story_structure))
         self._emit()
 
     def _toggleDeleteButton(self):
