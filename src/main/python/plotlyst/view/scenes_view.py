@@ -96,7 +96,8 @@ class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
         self.refresh()
 
         dispatcher = event_dispatchers.instance(self.novel)
-        dispatcher.register(self, SceneChangedEvent, SceneDeletedEvent, NovelSyncEvent, NovelStoryStructureUpdated)
+        dispatcher.register(self, SceneChangedEvent, SceneAddedEvent, SceneDeletedEvent, NovelSyncEvent,
+                            NovelStoryStructureUpdated)
 
     @overrides
     def event_received(self, event: Event):
@@ -308,6 +309,7 @@ class ScenesOutlineView(AbstractNovelView):
             i = self.novel.scenes.index(event.scene)
             card = self.__init_card_widget(event.scene)
             self.ui.cards.insertAt(i, card)
+            self._handle_scene_added()
             return
         elif isinstance(event, SceneOrderChangedEvent):
             self.ui.cards.reorderCards(self.novel.scenes)
@@ -477,10 +479,11 @@ class ScenesOutlineView(AbstractNovelView):
         self.title.setVisible(True)
         self._scene_filter.povFilter.updateCharacters(self.novel.pov_characters(), checkAll=True)
 
-        emit_event(self.novel, SceneChangedEvent(self, self.editor.scene))
         self._handle_scene_changed(self.editor.scene)
         if self._scene_added is not None:
             emit_event(self.novel, SceneAddedEvent(self, self._scene_added), delay=10)
+
+            self._handle_scene_added()
         self._scene_added = None
 
     @busy
@@ -722,6 +725,9 @@ class ScenesOutlineView(AbstractNovelView):
         if card:
             card.refresh()
 
+        if self.characters_distribution:
+            self.characters_distribution.refreshAverage()
+
     def _handle_scene_order_changed(self):
         self.repo.update_novel(self.novel)
         for card in self.ui.cards.cards():
@@ -730,6 +736,19 @@ class ScenesOutlineView(AbstractNovelView):
     def _handle_scene_deletion(self, scene: Scene):
         self.selected_card = None
         self.ui.cards.remove(scene)
+        self._update_table_models()
+
+    def _handle_scene_added(self):
+        self._update_table_models()
+
+    def _update_table_models(self):
+        self.tblModel.modelReset.emit()
+        if self.stagesModel:
+            self.stagesModel.modelReset.emit()
+        if self.stagesProgress:
+            self.stagesProgress.refresh()
+        if self.characters_distribution:
+            self.characters_distribution.refresh()
 
     @busy
     def _handle_character_changed(self, _: Character):

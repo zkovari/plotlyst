@@ -598,17 +598,20 @@ class ScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributionWidget, E
                 self.btnCharacters.setChecked(True)
 
     def refresh(self):
-        if self.novel.scenes:
-            self.average = sum([len(x.characters) + 1 for x in self.novel.scenes]) / len(self.novel.scenes)
-        else:
-            self.average = 0
+        self.refreshAverage()
         for col in range(self._model.columnCount()):
             if col == CharactersScenesDistributionTableModel.IndexTags:
                 continue
             self.tblCharacters.hideColumn(col)
-        self.spinAverage.setValue(self.average)
         self.tblSceneDistribution.horizontalHeader().setMaximumSectionSize(15)
         self._model.modelReset.emit()
+
+    def refreshAverage(self):
+        if self.novel.scenes:
+            self.average = sum([len(x.characters) + 1 for x in self.novel.scenes]) / len(self.novel.scenes)
+        else:
+            self.average = 0
+        self.spinAverage.setValue(self.average)
 
     def setActsFilter(self, act: int, filter: bool):
         self._scenes_proxy.setActsFilter(act, filter)

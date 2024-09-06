@@ -66,7 +66,6 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
 
     def __init__(self, novel: Novel, parent=None):
         self.novel = novel
-        self._data: List[Scene] = novel.scenes
         _headers = [''] * 8
         _headers[self.ColTitle] = 'Title'
         _headers[self.ColType] = 'Type'
@@ -96,14 +95,14 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
 
     @overrides
     def rowCount(self, parent: QModelIndex = Qt.ItemDataRole.DisplayRole) -> int:
-        return len(self._data)
+        return len(self.novel.scenes)
 
     @overrides
     def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
         if not index.isValid():
             return QVariant()
 
-        scene: Scene = self._data[index.row()]
+        scene: Scene = self.novel.scenes[index.row()]
         if role == self.SceneRole:
             return scene
         elif role == Qt.ItemDataRole.FontRole:
@@ -168,7 +167,7 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
 
     @overrides
     def setData(self, index: QModelIndex, value: Any, role: int = Qt.ItemDataRole.EditRole) -> bool:
-        scene: Scene = self._data[index.row()]
+        scene: Scene = self.novel.scenes[index.row()]
 
         if index.column() == self.ColSynopsis:
             scene.synopsis = value
@@ -190,7 +189,7 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
     @overrides
     def mimeData(self, indexes: List[QModelIndex]) -> QMimeData:
         mime_data = QMimeData()
-        scene = self._data[indexes[0].row()]
+        scene = self.novel.scenes[indexes[0].row()]
         mime_data.setData(self.MimeType, QByteArray(pickle.dumps(scene)))
         return mime_data
 
@@ -216,12 +215,12 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
             return False
 
         scene: Scene = pickle.loads(data.data(self.MimeType))
-        old_index = self._data.index(scene)
+        old_index = self.novel.scenes.index(scene)
         if row < old_index:
             new_index = row
         else:
             new_index = row - 1
-        self._data.insert(new_index, self._data.pop(old_index))
+        self.novel.scenes.insert(new_index, self.novel.scenes.pop(old_index))
 
         self.orderChanged.emit()
         return True
