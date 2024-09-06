@@ -568,6 +568,7 @@ class ScenesOutlineView(AbstractNovelView):
 
     def _selection_cleared(self):
         self._enable_action_buttons(False)
+        self.selected_card = None
         self.ui.treeChapters.clearSelection()
 
     def _enable_action_buttons(self, enabled: bool):
