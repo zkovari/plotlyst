@@ -1090,14 +1090,11 @@
                    <number>0</number>
                   </property>
                   <item>
-                   <widget class="QPushButton" name="btnLinkStoryline">
-                    <property name="cursor">
-                     <cursorShape>PointingHandCursor</cursorShape>
-                    </property>
+                   <widget class="QLabel" name="label">
                     <property name="text">
-                     <string>Link storyline</string>
+                     <string>Double-click or right-click a scene circle to link storylines</string>
                     </property>
-                    <property name="transparent" stdset="0">
+                    <property name="description" stdset="0">
                      <bool>true</bool>
                     </property>
                    </widget>
@@ -1202,7 +1199,7 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>387</width>
+                    <width>469</width>
                     <height>513</height>
                    </rect>
                   </property>
