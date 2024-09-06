@@ -720,6 +720,9 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.repo.update_novel(self.novel)
 
+        for card in self.ui.cards.cards():
+            card.quickRefresh()
+
         emit_event(self.novel, SceneOrderChangedEvent(self))
 
     def _on_scene_moved(self):
