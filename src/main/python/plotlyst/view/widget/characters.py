@@ -337,15 +337,14 @@ class AvatarSelectors(QWidget):
             self.wdgSelectors.layout().setSpacing(15)
 
         self.btnImage = push_btn(text='Image', base=True, checkable=True)
-        self.btnInitial = push_btn(text='Name initial', base=True, checkable=True)
-        self.btnInitial.setIcon(IconRegistry.from_name('mdi.alpha-a-circle'))
-        self.btnRole = push_btn(text='Role icon', base=True, checkable=True)
-        self.btnRole.setIcon(IconRegistry.from_name('fa5s.chess-bishop'))
-        self.btnCustomIcon = push_btn(text='Custom icon', base=True, checkable=True)
-        self.btnCustomIcon.setIcon(IconRegistry.icons_icon())
+        self.btnInitial = push_btn(IconRegistry.from_name('mdi.alpha-a-circle'), text='Name initial', base=True,
+                                   checkable=True)
+        self.btnRole = push_btn(IconRegistry.from_name('fa5s.chess-bishop'), text='Role icon', base=True,
+                                checkable=True)
+        self.btnCustomIcon = push_btn(IconRegistry.icons_icon(), text='Custom icon', base=True, checkable=True)
 
-        self.btnUploadAvatar = push_btn(text='Upload image', properties=['base', 'highlighted'])
-        self.btnUploadAvatar.setIcon(IconRegistry.upload_icon(color='white'))
+        self.btnUploadAvatar = push_btn(IconRegistry.upload_icon(color=RELAXED_WHITE_COLOR), text='Upload image',
+                                        properties=['base', 'positive'])
         self.btnUploadAvatar.clicked.connect(self._upload_avatar)
         # self.btnAi.setIcon(IconRegistry.from_name('mdi.robot-happy-outline', 'white'))
         # self.btnAi.clicked.connect(self._select_ai)
