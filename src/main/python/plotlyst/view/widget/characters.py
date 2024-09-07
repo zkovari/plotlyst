@@ -586,6 +586,13 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
             self._refreshNext = False
             self.refresh()
 
+    def refreshNext(self):
+        if self.isVisible():
+            self.refresh()
+            self._refreshNext = False
+        else:
+            self._refreshNext = True
+
     def refresh(self):
         if not self.novel:
             return

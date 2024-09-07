@@ -240,7 +240,7 @@ class CharactersView(AbstractNovelView):
         self.ui.btnEdit.setDisabled(True)
         self.ui.btnDelete.setDisabled(True)
 
-        self._progress.refresh()
+        self._progress.refreshNext()
         self._wdgCharactersCompTree.refresh()
 
     def _show_card_menu(self, card: CharacterCard, pos: QPoint):
