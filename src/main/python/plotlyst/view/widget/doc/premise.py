@@ -649,8 +649,8 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         premise: PremiseReview = indexes[0].data(role=PremiseArchiveTableModel.PremiseRole)
         if premise:
             if self.textPremise.toPlainText() and not asked(
-                    "Do you restore a previous premise? The current one will be lost.",
-                    'Restore premise', btnConfirmText='Restore'):
+                    "The current premise will be lost unless it is saved for later.",
+                    'Do you restore a previous premise?', btnConfirmText='Restore'):
                 return
             self.textPremise.setText(premise.premise)
 

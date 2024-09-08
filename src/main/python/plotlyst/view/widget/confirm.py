@@ -24,7 +24,7 @@ from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QDialog, QWidget
 from qthandy import hbox, sp, vbox
 
-from plotlyst.common import RELAXED_WHITE_COLOR, DECONSTRUCTIVE_COLOR
+from plotlyst.common import RELAXED_WHITE_COLOR, DECONSTRUCTIVE_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.view.common import label, push_btn
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -56,15 +56,16 @@ class BaseDialog(PopupDialog):
         self.wdgCenter.layout().addWidget(self.btnReset,
                                           alignment=Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight)
 
-        self.btnConfirm = push_btn(text='Confirm')
+        self.btnConfirm = push_btn(text='Confirm', properties=['confirm'])
         self.btnConfirm.clicked.connect(self.accept)
-        self.btnCancel = push_btn(QIcon(), text='Cancel', properties=['cancel'])
+        self.btnCancel = push_btn(QIcon(), text='Cancel', properties=['confirm', 'cancel'])
         self.btnCancel.clicked.connect(self.reject)
         self.btnCancel.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.btnConfirm.setFocus()
 
         self.frame.layout().addWidget(self.wdgCenter)
-        self.frame.layout().addWidget(group(self.btnCancel, self.btnConfirm, spacing=6), alignment=Qt.AlignmentFlag.AlignRight)
+        self.frame.layout().addWidget(group(self.btnCancel, self.btnConfirm, spacing=6),
+                                      alignment=Qt.AlignmentFlag.AlignRight)
         # self.frame.layout().addWidget(line())
         # self.frame.layout().addWidget(vspacer())
 
@@ -95,18 +96,10 @@ class QuestionDialog(BaseDialog):
     def __init__(self, message: str, title: str, btnConfirmText: str, btnCancelText: str,
                  parent=None):
         super().__init__(message, title, parent)
+        self.icon.setIcon(IconRegistry.from_name('fa5s.question', PLOTLYST_SECONDARY_COLOR))
         self.btnConfirm.setText(btnConfirmText)
         self.btnCancel.setText(btnCancelText)
         self.btnConfirm.setProperty('positive', True)
-
-        # self.btnConfirm = push_btn(text=btnConfirmText, properties=['base', 'positive'])
-        # self.btnConfirm.clicked.connect(self.accept)
-        # self.btnCancel = push_btn(text=btnCancelText, base=True)
-        # self.btnCancel.clicked.connect(self.reject)
-        # self.btnCancel.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
-        # self.btnConfirm.setFocus()
-
-        # self.frame.layout().addWidget(group(self.btnCancel, self.btnConfirm))
 
     @classmethod
     def ask(cls, message: str, title: str, btnConfirmText: str, btnCancelText: str) -> bool:

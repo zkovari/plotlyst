@@ -89,22 +89,6 @@ btn_style_highlighted = """
     }
 """
 
-# Continued from the previous code
-
-btn_style_deconstructive = """
-    QPushButton[deconstructive=true]:!disabled {
-        background: #E11D48;
-        border-radius: 6px;
-        color: #f8f9fa;
-        font: bold;
-        padding: 5px 15px 5px 15px;
-    }
-
-    QPushButton[deconstructive=true]:hover {
-        background: #E84E6F;
-    }
-"""
-
 btn_style_confirm = """
     QPushButton[confirm=true]:!disabled {
         border: 1px solid lightgrey;
@@ -113,12 +97,21 @@ btn_style_confirm = """
     }
 """
 
+btn_style_deconstructive = """
+    QPushButton[deconstructive=true]:!disabled {
+        background: #E11D48;
+        color: #f8f9fa;
+        font: bold;
+    }
+
+    QPushButton[deconstructive=true]:hover {
+        background: #E84E6F;
+    }
+"""
+
 btn_style_cancel = """
     QPushButton[cancel=true]:!disabled {
-        border: 1px solid lightgrey;
-        border-radius: 6px;
         background: #FcFcFc;
-        padding: 5px 15px 5px 15px;
     }
     QPushButton[cancel=true]:!disabled:hover {
         background: #f8f9fa;
@@ -566,6 +559,7 @@ style = "\n".join([
     btn_style_large,
     btn_style_positive,
     btn_style_highlighted,
+    btn_style_confirm,
     btn_style_deconstructive,
     btn_style_cancel,
     btn_style_transparent,
