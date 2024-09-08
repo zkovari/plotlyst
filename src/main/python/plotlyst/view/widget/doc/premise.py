@@ -615,7 +615,10 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
             self.keywordHighlighter = None
 
     def _clearPremise(self):
-        if self.textPremise.toPlainText() and confirmed("The current premise will be lost.", "Reset current premise"):
+        title = "Are you sure you want to reset the current premise?"
+        if self.textPremise.toPlainText() and confirmed(
+                "This action cannot be undone, and the current premise will be lost unless it's saved for later.",
+                title):
             self.textPremise.clear()
 
     def _savePremise(self):
@@ -649,8 +652,8 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         premise: PremiseReview = indexes[0].data(role=PremiseArchiveTableModel.PremiseRole)
         if premise:
             if self.textPremise.toPlainText() and not asked(
-                    "Do you restore a previous premise? The current one will be lost.",
-                    'Restore premise', btnConfirmText='Restore'):
+                    "The current premise will be lost unless it is saved for later.",
+                    'Do you restore a previous premise?', btnConfirmText='Restore'):
                 return
             self.textPremise.setText(premise.premise)
 

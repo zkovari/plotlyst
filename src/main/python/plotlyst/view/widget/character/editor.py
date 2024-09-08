@@ -53,7 +53,7 @@ from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.button import SecondaryActionPushButton, SelectionItemPushButton
 from plotlyst.view.widget.chart import BaseChart, SelectionItemPieSlice
-from plotlyst.view.widget.confirm import confirmed
+from plotlyst.view.widget.confirm import asked
 from plotlyst.view.widget.display import Icon, MajorRoleIcon, SecondaryRoleIcon, MinorRoleIcon, \
     IconText, RoleIcon, TruitySourceWidget, PopupDialog, ChartView
 from plotlyst.view.widget.input import Toggle
@@ -709,9 +709,9 @@ class PersonalitySelector(SecondaryActionPushButton):
 
     def _ignoreClicked(self):
         self._menu.close()
-        if confirmed(
+        if asked(
                 "The personality type won't be considered for this character. You can enable it back anytime.",
-                f"Ignore {self.field().name}"):
+                f'Ignore personality type "{self.field().name}" for this character?'):
             self._updateIgnoredValue()
             self.ignored.emit()
 

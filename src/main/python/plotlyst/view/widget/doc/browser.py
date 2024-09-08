@@ -304,7 +304,9 @@ class DocumentsTreeView(TreeView):
 
     def _deleteDocWidget(self, wdg: DocumentNode):
         doc = wdg.doc()
-        if not confirmed("The document and all its content will be lost.", f"Delete document '{doc.title}'?"):
+        title = f'Are you sure you want to delete the document "{doc.title if doc.title else "Untitled"}"?'
+        msg = 'This action cannot be undone, and the document and all its content will be lost.'
+        if not confirmed(msg, title):
             return
         if doc in self._selectedDocuments:
             self._selectedDocuments.remove(doc)

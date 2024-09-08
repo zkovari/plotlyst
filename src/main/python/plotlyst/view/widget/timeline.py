@@ -27,7 +27,7 @@ from PyQt6.QtGui import QIcon, QColor, QPainter, QPaintEvent, QBrush, QResizeEve
 from PyQt6.QtWidgets import QWidget, QSizePolicy, \
     QLineEdit, QToolButton
 from overrides import overrides
-from qthandy import vbox, hbox, sp, vspacer, clear_layout, spacer, ask_confirmation, incr_font, bold, \
+from qthandy import vbox, hbox, sp, vspacer, clear_layout, spacer, incr_font, bold, \
     margins
 from qthandy.filter import VisibilityToggleEventFilter
 
@@ -36,6 +36,7 @@ from plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, \
 from plotlyst.core.domain import BackstoryEvent
 from plotlyst.view.common import tool_btn, frame
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.input import RemovalButton, AutoAdjustableTextEdit
 
 
@@ -147,7 +148,8 @@ class BackstoryCard(QWidget):
         self.edited.emit()
 
     def _remove(self):
-        if self.backstory.synopsis and not ask_confirmation(f'Remove event "{self.backstory.keyphrase}"?'):
+        if self.backstory.synopsis and not confirmed('This action cannot be undone.',
+                                                     f'Are you sure you want to remove the event "{self.backstory.keyphrase if self.backstory.keyphrase else "Untitled"}"?'):
             return
         self.deleteRequested.emit(self)
 

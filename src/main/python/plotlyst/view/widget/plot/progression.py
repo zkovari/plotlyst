@@ -503,7 +503,8 @@ class DynamicPlotPrinciplesEditor(QWidget):
         return wdg
 
     def _removeGroup(self, wdg: DynamicPlotPrinciplesGroupWidget):
-        if wdg.group.principles and not confirmed("All principles within will be lost.", "Remove principle group?"):
+        title = f'Are you sure you want to delete the storyline elements "{wdg.group.type.display_name()}"?'
+        if wdg.group.principles and not confirmed("This action cannot be undone.", title):
             return
 
         self.plot.dynamic_principles.remove(wdg.group)

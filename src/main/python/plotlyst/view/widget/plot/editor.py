@@ -163,7 +163,8 @@ class PlotTreeView(TreeView, EventListener):
 
     def _removePlot(self, wdg: PlotNode):
         plot = wdg.plot()
-        if not confirmed("The operation cannot be undone.", f"Delete plot '{plot.text}'?"):
+        title = f'Are you sure you want to delete the storyline "{plot.text}"?'
+        if not confirmed("This action cannot be undone.", title):
             return
         if plot in self._selectedPlots:
             self._selectedPlots.remove(plot)
@@ -661,18 +662,6 @@ class PlotEditor(QWidget, Ui_PlotEditor):
 
         self._wdgImpactMatrix.refresh()
         emit_event(self.novel, StorylineRemovedEvent(self, plot))
-
-    # def _remove(self, widget: PlotWidget):
-    #     if ask_confirmation(f'Are you sure you want to delete the plot {widget.plot.text}?'):
-    #         if app_env.test_env():
-    #             self.__destroy(widget)
-    #         else:
-    #             anim = qtanim.fade_out(widget, duration=150)
-    #             anim.finished.connect(partial(self.__destroy, widget))
-    #
-    # def __destroy(self, widget: PlotWidget):
-    #     delete_plot(self.novel, widget.plot)
-    #     self.scrollAreaWidgetContents.layout().removeWidget(widget.parent())
 
     def _displayImpactMatrix(self, checked: bool):
         self._wdgList.clearSelection()
