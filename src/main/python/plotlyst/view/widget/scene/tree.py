@@ -419,7 +419,9 @@ class ScenesTreeView(TreeView, EventListener):
             self._selectedChapters.remove(chapterWdg.chapter())
 
     def _deleteChapter(self, chapterWdg: ChapterWidget):
-        if not confirmed('All scenes inside will remain.', f'Delete {chapterWdg.chapter().display_name()}?'):
+        title = f'Are you sure you want to the delete the chapter "{chapterWdg.chapter().display_name()}"?'
+        msg = "<html><ul><li>This action cannot be undone.</li><li>The scenes inside this chapter <b>WON'T</b> be deleted.</li>"
+        if not confirmed(msg, title):
             return
         chapter = chapterWdg.chapter()
         if chapter in self._selectedChapters:

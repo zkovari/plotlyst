@@ -460,10 +460,11 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         structure = self.novel.active_story_structure
         number_of_beats = len([x for x in structure.beats if x.enabled and x.type == StoryBeatType.BEAT])
         occupied = len(acts_registry.occupied_beats())
+        title = f'Are you sure you want to delete the story structure "{structure.title}"?'
         msg = '<html><ul><li>This operation cannot be undone.<li>All scene associations to this structure will be unlinked.'
         if occupied:
-            msg += f'<li>Linked structure beats to scenes: <b>{occupied}/{number_of_beats}</b>'
-        if not confirmed(msg, f'Remove story structure "{structure.title}"?'):
+            msg += f'<li>Number of linked structure beats to scenes: <b>{occupied}/{number_of_beats}</b>'
+        if not confirmed(msg, title):
             return
 
         to_be_removed_button: Optional[QPushButton] = None

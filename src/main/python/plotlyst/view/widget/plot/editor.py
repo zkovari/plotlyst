@@ -163,7 +163,8 @@ class PlotTreeView(TreeView, EventListener):
 
     def _removePlot(self, wdg: PlotNode):
         plot = wdg.plot()
-        if not confirmed("The operation cannot be undone.", f"Delete plot '{plot.text}'?"):
+        title = f'Are you sure you want to delete the storyline "{plot.text}"?'
+        if not confirmed("This action cannot be undone.", title):
             return
         if plot in self._selectedPlots:
             self._selectedPlots.remove(plot)

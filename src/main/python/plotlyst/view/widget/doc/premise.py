@@ -615,7 +615,10 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
             self.keywordHighlighter = None
 
     def _clearPremise(self):
-        if self.textPremise.toPlainText() and confirmed("The current premise will be lost.", "Reset current premise"):
+        title = "Are you sure you want to reset the current premise?"
+        if self.textPremise.toPlainText() and confirmed(
+                "This action cannot be undone, and the current premise will be lost unless it's saved for later.",
+                title):
             self.textPremise.clear()
 
     def _savePremise(self):

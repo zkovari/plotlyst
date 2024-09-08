@@ -319,8 +319,8 @@ class HomeView(AbstractView):
     def _on_delete(self, novel: Optional[NovelDescriptor] = None):
         if novel is None:
             novel = self._selected_novel
-        title = f'Delete the novel "{novel.title}"?'
-        msg = '<html>This cannot be undone.<br>All characters and scenes will be lost.'
+        title = f'Are you sure you want to delete the novel "{novel.title}"?'
+        msg = '<html><ul><li>This action cannot be undone.</li><li>All characters and scenes will be lost.</li>'
         if confirmed(msg, title):
             self.repo.delete_novel(novel)
             self._novels.remove(novel)

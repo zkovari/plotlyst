@@ -289,8 +289,9 @@ def delete_scene(novel: Novel, scene: Scene, forced: bool = False) -> bool:
 
 
 def delete_character(novel: Novel, character: Character, forced: bool = False) -> bool:
-    title = f'Delete character "{character.name}"?'
-    msg = f'This operation cannot be undone.'
+    name = character.name if character.name else 'Unnamed character'
+    title = f'Are you sure you want to delete the character "{name}"?'
+    msg = "This action cannot be undone, and all this character's information will be lost."
     if forced or confirmed(msg, title):
         novel.characters.remove(character)
         repo = RepositoryPersistenceManager.instance()
