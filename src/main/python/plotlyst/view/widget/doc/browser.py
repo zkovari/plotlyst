@@ -24,7 +24,7 @@ from typing import Set, Optional, Dict
 from PyQt6.QtCore import pyqtSignal, Qt, QMimeData, QPointF, QDir, QTimer
 from PyQt6.QtWidgets import QFileDialog
 from overrides import overrides
-from qthandy import clear_layout, vspacer, translucent, gc, retain_when_hidden
+from qthandy import clear_layout, vspacer, translucent, gc
 from qthandy.filter import DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
@@ -74,7 +74,7 @@ class DocumentAdditionMenu(MenuWidget):
         self._character_menu.close()
 
     def _documentSelected(self, docType=DocumentType.DOCUMENT, character: Optional[Character] = None):
-        doc = Document('', type=docType, icon='mdi.file-document', icon_color='grey')
+        doc = Document('', type=docType, icon='mdi.file-document')
         if character:
             doc.title = ''
             doc.character_id = character.id
@@ -105,8 +105,7 @@ class DocumentNode(ContainerNode):
         super().__init__(doc.display_name(), parent, settings=settings)
         self._novel = novel
         self._doc = doc
-
-        retain_when_hidden(self._icon)
+        self.setTranslucentIconEnabled(True)
 
         if not self._doc.character_id:
             self._actionChangeIcon.setVisible(True)
