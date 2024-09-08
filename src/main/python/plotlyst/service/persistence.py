@@ -274,10 +274,11 @@ def delete_plot(novel: Novel, plot: Plot):
 
 
 def delete_scene(novel: Novel, scene: Scene, forced: bool = False) -> bool:
-    title = f'Delete scene "{scene.title_or_index(novel)}"?'
-    msg = f'<html>This operation cannot be undone.'
+    title = f'Are you sure you want to delete the scene "{scene.title_or_index(novel)}"?'
+    msg = f'<html>This action cannot be undone.'
     if scene.manuscript and scene.manuscript.statistics and scene.manuscript.statistics.wc:
-        msg += f'<br>Word count number that will be lost: <b>{scene.manuscript.statistics.wc}.</b>'
+        msg = f'<html><ul><li>This action cannot be undone.</li>'
+        msg += f'<li>Word count number that will be lost: <b>{scene.manuscript.statistics.wc}</b></li>'
     if forced or confirmed(msg, title):
         novel.scenes.remove(scene)
         repo = RepositoryPersistenceManager.instance()

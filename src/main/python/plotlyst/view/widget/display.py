@@ -28,8 +28,7 @@ from PyQt6.QtGui import QPainter, QShowEvent, QColor, QPaintEvent, QBrush, QKeyE
 from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy, QTextBrowser, QFrame, QDialog, \
     QApplication
 from overrides import overrides
-from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon, pointy, hbox, busy, italic, decr_font, \
-    margins
+from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon, pointy, hbox, busy, italic, decr_font
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -320,7 +319,7 @@ class OverlayWidget(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        self.setStyleSheet("background-color: rgba(0, 0, 0, 100);")
+        self.setStyleSheet("background-color: rgba(0, 0, 0, 125);")
         self.setFixedSize(self.parent().size())
 
     @staticmethod
@@ -351,10 +350,10 @@ class PopupDialog(QDialog):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         vbox(self)
         self.frame = frame()
-        self.frame.setProperty('relaxed-white-bg', True)
+        self.frame.setProperty('white-bg', True)
         self.frame.setProperty('large-rounded', True)
-        vbox(self.frame, 10, 10)
-        margins(self.frame, bottom=15)
+        vbox(self.frame, 15, 10)
+        # margins(self.frame, bottom=15)
         self.layout().addWidget(self.frame)
         self.setMinimumSize(200, 150)
         shadow(self.frame)
