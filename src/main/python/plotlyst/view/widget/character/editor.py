@@ -1086,7 +1086,7 @@ class CharacterRoleSelector(QWidget):
         if toggled:
             self._currentButton = btn
             self._currentRole = role
-            self.iconRole.setRole(role, animate=True, showText=True)
+            self.iconRole.setRole(role, showText=True)
             self.textBrowser.setHtml(character_roles_description[role])
             self.btnPromote.setVisible(role.can_be_promoted)
             self.btnPromote.setChecked(role.promoted)
@@ -1140,7 +1140,7 @@ class CharacterRoleSelector(QWidget):
 
         self._updatePromotionButton(self._currentRole.promoted)
 
-        self.iconRole.setRole(self._currentRole, animate=True, showText=True)
+        self.iconRole.setRole(self._currentRole, showText=True)
         self._currentButton.setSelectionItem(self._currentRole)
         self.rolePromoted.emit(self._currentRole)
 

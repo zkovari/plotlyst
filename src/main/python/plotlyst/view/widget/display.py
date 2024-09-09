@@ -21,7 +21,6 @@ from abc import abstractmethod
 from typing import Optional, Any
 
 import emoji
-import qtanim
 from PyQt6.QtCharts import QChartView
 from PyQt6.QtCore import pyqtProperty, QSize, Qt, QPoint, pyqtSignal
 from PyQt6.QtGui import QPainter, QShowEvent, QColor, QPaintEvent, QBrush, QKeyEvent
@@ -34,7 +33,7 @@ from qtmenu import MenuWidget
 
 from plotlyst.common import PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.help import mid_revision_scene_structure_help
-from plotlyst.core.template import Role, protagonist_role
+from plotlyst.core.template import Role
 from plotlyst.core.text import wc
 from plotlyst.view.common import emoji_font, insert_before_the_end, \
     ButtonPressResizeEventFilter, restyle, label, frame, shadow, tool_btn, push_btn, action, open_url
@@ -205,19 +204,12 @@ class MinorRoleIcon(_AbstractRoleIcon):
 
 class RoleIcon(_AbstractRoleIcon):
 
-    def setRole(self, role: Role, animate: bool = False, showText: bool = False):
+    def setRole(self, role: Role, showText: bool = False):
         if role.icon:
             self.setIcon(IconRegistry.from_name(role.icon, role.icon_color))
         if showText:
             self.setText(role.text)
             self.setStyleSheet(self.styleSheet() + f'QPushButton {{color: {role.icon_color};}}')
-
-        if animate and role.is_major():
-            if role.text == protagonist_role.text:
-                color = '#a8dadc'
-            else:
-                color = '#f4978e'
-            qtanim.colorize(self, duration=1000, strength=0.7, color=QColor(color))
 
 
 class _AbstractIcon:
