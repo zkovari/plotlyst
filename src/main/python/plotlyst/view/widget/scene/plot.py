@@ -191,19 +191,16 @@ class ScenePlotGeneralProgressEditor(ProgressEditor):
         self.refresh()
         self.charged.emit()
 
+    @overrides
     def _updateButtons(self):
         if not self.negCharge.isEnabled():
             self.negCharge.setEnabled(True)
-            self.negCharge.setVisible(True)
         if not self.posCharge.isEnabled():
             self.posCharge.setEnabled(True)
-            self.posCharge.setVisible(True)
-        if self.charge == 3:
+        if self.charge() == 3:
             self.posCharge.setDisabled(True)
-            self.posCharge.setHidden(True)
-        if self.charge == -3:
+        if self.charge() == -3:
             self.negCharge.setDisabled(True)
-            self.negCharge.setHidden(True)
 
 
 class ScenePlotSelectorMenu(MenuWidget):
