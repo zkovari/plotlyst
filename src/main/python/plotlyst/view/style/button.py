@@ -578,8 +578,7 @@ style = "\n".join([
     btn_style_tool_button_conflict_selector,
     btn_style_tool_button_gender,
     btn_style_tool_button_main_navbar,
-    btn_style_tool_button_dark_toggle,
-    radio_btn
+    btn_style_tool_button_dark_toggle
 ])
 
 
