@@ -234,6 +234,8 @@ class ScenePlotSelectorMenu(MenuWidget):
         if not self.actions():
             self.addSection('No corresponding storylines were found')
 
+        self._frame.updateGeometry()
+
     def _occupiedPlotIds(self):
         return [x.plot.id for x in self._scene.plot_values]
 
