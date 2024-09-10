@@ -194,6 +194,6 @@ def apply_white_menu(menu: MenuWidget):
                             background-color: #DCDCDC;
                         }}
                         QLabel[description=true] {{
-                            color: grey;
+                            color: #5E6C84;
                         }}
                         ''')
