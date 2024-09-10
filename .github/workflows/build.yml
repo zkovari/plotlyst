@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04, windows-2019, macos-11 ]
+        os: [ ubuntu-20.04, windows-2019, macos-12 ]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -75,7 +75,7 @@ jobs:
         run: |
           fbs freeze
 
-      - if: matrix.os == 'macos-11'
+      - if: matrix.os == 'macos-12'
         name: Sign Macos App
         env:
           MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
@@ -89,7 +89,7 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k ${{secrets.KEYCHAIN_PWD}} build.keychain
           /usr/bin/codesign -v --timestamp --options=runtime --entitlements entitlements.plist --deep --force -s ${{secrets.MACOS_CERTIFICATE_IDENTITY}} target/Plotlyst.app
 
-      - if: matrix.os == 'macos-11'
+      - if: matrix.os == 'macos-12'
         name: "Notarize Macos App"
         uses: lando/notarize-action@v2.0.2
         with:
@@ -99,7 +99,7 @@ jobs:
           appstore-connect-team-id: W527JJ9SK4
           verbose: true
 
-      - if: matrix.os == 'macos-11'
+      - if: matrix.os == 'macos-12'
         name: "Staple Macos App"
         uses: BoundfoxStudios/action-xcode-staple@v1
         with:
@@ -115,7 +115,7 @@ jobs:
           name: app-deb-artifact
           path: target/Plotlyst.deb
       - uses: actions/upload-artifact@v2
-        if: matrix.os == 'macos-11'
+        if: matrix.os == 'macos-12'
         with:
           name: app-mac-artifact
           path: target/Plotlyst.dmg
