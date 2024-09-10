@@ -341,6 +341,7 @@ class ProfileSectionWidget(ProfileFieldWidget):
             if self.context.has_menu():
                 self._menu = MenuWidget(self._btnPrimary)
                 self._menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+                apply_white_menu(self._menu)
                 for field in fields:
                     self._menu.addAction(
                         action(field.name, icon=IconRegistry.from_name(field.icon), tooltip=field.description,
