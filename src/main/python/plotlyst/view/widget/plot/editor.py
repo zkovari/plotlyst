@@ -564,23 +564,24 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         menu.addAction(
             action('Main plot', IconRegistry.storylines_icon(), slot=lambda: self.newPlot(PlotType.Main),
-                   tooltip="The central storyline that drives the narrative"))
+                   tooltip="The central storyline that drives the narrative", incr_font_=1))
         menu.addAction(
             action('Character arc', IconRegistry.conflict_self_icon(), lambda: self.newPlot(PlotType.Internal),
-                   tooltip="The transformation or personal growth of a character"))
+                   tooltip="The transformation or personal growth of a character", incr_font_=1))
         menu.addAction(
             action('Subplot', IconRegistry.subplot_icon(), lambda: self.newPlot(PlotType.Subplot),
-                   tooltip="A secondary storyline to complement the main plot"))
+                   tooltip="A secondary storyline to complement the main plot", incr_font_=1))
 
         submenu = MenuWidget()
         submenu.setTitle('Other')
         submenu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         submenu.addAction(action('Relationship plot', IconRegistry.from_name('fa5s.people-arrows'),
                                  slot=lambda: self.newPlot(PlotType.Relation),
-                                 tooltip="Relationship dynamics between two characters"))
+                                 tooltip="Relationship dynamics between two characters", incr_font_=1))
         submenu.addAction(action('Global storyline', IconRegistry.from_name('fa5s.globe'),
                                  slot=lambda: self.newPlot(PlotType.Global),
-                                 tooltip="A broader storyline that can encompass multiple storylines without serving as the central plot itself"))
+                                 tooltip="A broader storyline that can encompass multiple storylines without serving as the central plot itself",
+                                 incr_font_=1))
         menu.addSeparator()
         menu.addMenu(submenu)
         apply_white_menu(submenu)

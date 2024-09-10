@@ -370,17 +370,21 @@ class SceneFunctionsWidget(QWidget):
         self.menuPrimary.addSeparator()
         self.menuPrimary.addAction(action('Advance story', IconRegistry.storylines_icon(),
                                           slot=partial(self._addPrimary, StoryElementType.Plot),
-                                          tooltip="This scene primarily advances or complicates the story by affecting the plot, character development, or relationships"))
+                                          tooltip="This scene primarily advances or complicates the story by affecting the plot, character development, or relationships",
+                                          incr_font_=2))
         self.menuPrimary.addAction(
             action('Character insight', IconRegistry.character_icon(),
                    slot=partial(self._addPrimary, StoryElementType.Character),
-                   tooltip="This scene primarily provides new information, layers, or development about a character"))
+                   tooltip="This scene primarily provides new information, layers, or development about a character",
+                   incr_font_=2))
         self.menuPrimary.addAction(action('Mystery', IconRegistry.from_name('ei.question-sign'),
                                           slot=partial(self._addPrimary, StoryElementType.Mystery),
-                                          tooltip="This scene primarily introduces or deepens a mystery that drives the narrative forward"))
+                                          tooltip="This scene primarily introduces or deepens a mystery that drives the narrative forward",
+                                          incr_font_=2))
         self.menuPrimary.addAction(action('Resonance', IconRegistry.theme_icon('black'),
                                           slot=partial(self._addPrimary, StoryElementType.Resonance),
-                                          tooltip="This scene primarily establishes an emotional or thematic impact"))
+                                          tooltip="This scene primarily establishes an emotional or thematic impact",
+                                          incr_font_=2))
         apply_white_menu(self.menuPrimary)
         self.btnPrimary.clicked.connect(self.btnPrimaryPlus.click)
 
@@ -398,23 +402,23 @@ class SceneFunctionsWidget(QWidget):
         self.menuSecondary.addAction(
             action('Setup', IconRegistry.setup_scene_icon('black'),
                    slot=partial(self._addSecondary, StoryElementType.Setup),
-                   tooltip="Sets up a story element for a later payoff"))
+                   tooltip="Sets up a story element for a later payoff", incr_font_=1))
         self.menuSecondary.addAction(
             action('Information', IconRegistry.general_info_icon('black'),
                    slot=partial(self._addSecondary, StoryElementType.Information),
-                   tooltip="New information to be conveyed"))
+                   tooltip="New information to be conveyed", incr_font_=1))
         self.menuSecondary.addAction(
             action('Character insight', IconRegistry.character_icon(),
                    slot=partial(self._addSecondary, StoryElementType.Character),
-                   tooltip="New information about a character"))
+                   tooltip="New information about a character", incr_font_=1))
         self.menuSecondary.addAction(
             action('Mystery', IconRegistry.from_name('ei.question-sign'),
                    slot=partial(self._addSecondary, StoryElementType.Mystery),
-                   tooltip="A smaller mystery to be introduced or deepened"))
+                   tooltip="A smaller mystery to be introduced or deepened", incr_font_=1))
         self.menuSecondary.addAction(
             action('Resonance', IconRegistry.theme_icon('black'),
                    slot=partial(self._addSecondary, StoryElementType.Resonance),
-                   tooltip="Emotional or thematic impact"))
+                   tooltip="Emotional or thematic impact", incr_font_=1))
 
         apply_white_menu(self.menuSecondary)
         self.btnSecondary.clicked.connect(self.btnSecondaryPlus.click)

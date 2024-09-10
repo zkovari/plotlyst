@@ -36,7 +36,7 @@ from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemVie
 from fbs_runtime import platform
 from overrides import overrides
 from qtanim import fade_out
-from qthandy import hbox, vbox, margins, gc, transparent, spacer, sp, pointy
+from qthandy import hbox, vbox, margins, gc, transparent, spacer, sp, pointy, bold, incr_font
 from qthandy.filter import DisabledClickEventFilter
 
 from plotlyst.common import WHITE_COLOR
@@ -96,7 +96,7 @@ def _text_color_with_rgb(r: int, g: int, b: int) -> str:
 
 
 def action(text: str, icon: Optional[QIcon] = None, slot=None, parent=None, checkable: bool = False,
-           tooltip: str = '') -> QAction:
+           tooltip: str = '', incr_font_: Optional[int] = None) -> QAction:
     _action = QAction(text)
     if icon:
         _action.setIcon(icon)
@@ -104,6 +104,8 @@ def action(text: str, icon: Optional[QIcon] = None, slot=None, parent=None, chec
         _action.triggered.connect(slot)
     if parent:
         _action.setParent(parent)
+    if incr_font_ is not None:
+        incr_font(_action, incr_font_)
     _action.setCheckable(checkable)
     _action.setToolTip(tooltip)
 
