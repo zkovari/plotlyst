@@ -31,6 +31,7 @@ from plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntity
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import action, fade_out_and_gc
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
 
@@ -39,20 +40,22 @@ class EntityAdditionMenu(MenuWidget):
 
     def __init__(self, parent=None):
         super(EntityAdditionMenu, self).__init__(parent)
+        # self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         self.addAction(action('Entity', IconRegistry.world_building_icon(),
                               slot=lambda: self._triggered(WorldBuildingEntityType.ABSTRACT),
                               tooltip='Any physical, human, or abstract entity in the world, e.g., location, kingdom, magic, God, etc.'))
-        self.addSeparator()
+        # self.addSeparator()
 
-        submenu = MenuWidget()
-        submenu.setTitle('Link')
-        submenu.setIcon(IconRegistry.from_name('fa5s.link'))
-        submenu.setDisabled(True)
-        submenu.addAction(action('Location', IconRegistry.location_icon()))
-        submenu.addAction(action('Social group', IconRegistry.group_icon()))
-        submenu.addAction(action('Character', IconRegistry.character_icon()))
-
-        self.addMenu(submenu)
+        # submenu = MenuWidget()
+        # submenu.setTitle('Link')
+        # submenu.setIcon(IconRegistry.from_name('fa5s.link'))
+        # submenu.setDisabled(True)
+        # submenu.addAction(action('Location', IconRegistry.location_icon()))
+        # submenu.addAction(action('Social group', IconRegistry.group_icon()))
+        # submenu.addAction(action('Character', IconRegistry.character_icon()))
+        #
+        # self.addMenu(submenu)
+        apply_white_menu(self)
 
     def _triggered(self, wdType: WorldBuildingEntityType):
         if wdType == WorldBuildingEntityType.SETTING:
