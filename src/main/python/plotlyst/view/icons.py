@@ -633,11 +633,11 @@ class IconRegistry:
         if charge == 0:
             return IconRegistry.from_name('mdi.wave', color)
         elif charge == 1:
-            return IconRegistry.from_name('mdi.chevron-right', color)
+            return IconRegistry.from_name('mdi.chevron-up', color)
         elif charge == 2:
-            return IconRegistry.from_name('mdi.chevron-double-right', color)
+            return IconRegistry.from_name('mdi.chevron-double-up', color)
         elif charge >= 3:
-            return IconRegistry.from_name('mdi.chevron-triple-right', color)
+            return IconRegistry.from_name('mdi.chevron-triple-up', color)
 
     @staticmethod
     def male_gender_icon(color: str = 'black') -> QIcon:
@@ -653,11 +653,11 @@ class IconRegistry:
 
     @staticmethod
     def non_binary_gender_icon(color: str = 'black') -> QIcon:
-        return IconRegistry.from_name('mdi.gender-male-female-variant', color=color, color_on='#7209b7')
+        return IconRegistry.from_name('mdi.gender-non-binary', color=color, color_on='#7209b7')
 
     @staticmethod
     def genderless_icon(color: str = 'black') -> QIcon:
-        return IconRegistry.from_name('fa5s.genderless', color=color, color_on='#6c757d')
+        return IconRegistry.from_name('ri.genderless-line', color=color, color_on='#6c757d')
 
     @staticmethod
     def gender_icon(gender: str):

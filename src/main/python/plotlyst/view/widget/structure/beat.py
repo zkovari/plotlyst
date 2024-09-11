@@ -22,7 +22,7 @@ from functools import partial
 from typing import Optional, Dict
 
 from PyQt6.QtCore import QEvent, QObject, pyqtSignal, Qt
-from PyQt6.QtWidgets import QFrame, QWidget, QTextEdit
+from PyQt6.QtWidgets import QFrame, QWidget
 from overrides import overrides
 from qthandy import transparent, gc, clear_layout, italic, flow, vbox, hbox, translucent, bold, retain_when_hidden
 
@@ -32,7 +32,7 @@ from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
 from plotlyst.view.common import label
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.display import Icon
-from plotlyst.view.widget.input import Toggle
+from plotlyst.view.widget.input import Toggle, AutoAdjustableTextEdit
 from plotlyst.view.widget.structure.timeline import StoryStructureTimelineWidget
 
 
@@ -51,8 +51,8 @@ class BeatWidget(QFrame):
 
         self.lblTitle = label(bold=True)
         transparent(self.lblTitle)
-        self.textDescription = QTextEdit()
-        self.textDescription.setMaximumHeight(130)
+        self.textDescription = AutoAdjustableTextEdit()
+        # self.textDescription.setMaximumHeight(130)
         self.textDescription.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.textDescription.setReadOnly(True)
         italic(self.textDescription)

@@ -36,7 +36,7 @@ from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemVie
 from fbs_runtime import platform
 from overrides import overrides
 from qtanim import fade_out
-from qthandy import hbox, vbox, margins, gc, transparent, spacer, sp, pointy
+from qthandy import hbox, vbox, margins, gc, transparent, spacer, sp, pointy, bold, incr_font
 from qthandy.filter import DisabledClickEventFilter
 
 from plotlyst.common import WHITE_COLOR
@@ -96,7 +96,7 @@ def _text_color_with_rgb(r: int, g: int, b: int) -> str:
 
 
 def action(text: str, icon: Optional[QIcon] = None, slot=None, parent=None, checkable: bool = False,
-           tooltip: str = '') -> QAction:
+           tooltip: str = '', incr_font_: Optional[int] = None) -> QAction:
     _action = QAction(text)
     if icon:
         _action.setIcon(icon)
@@ -104,6 +104,8 @@ def action(text: str, icon: Optional[QIcon] = None, slot=None, parent=None, chec
         _action.triggered.connect(slot)
     if parent:
         _action.setParent(parent)
+    if incr_font_ is not None:
+        incr_font(_action, incr_font_)
     _action.setCheckable(checkable)
     _action.setToolTip(tooltip)
 
@@ -401,8 +403,12 @@ def remove_and_gc(parent: QWidget, widget: QWidget):
     gc(widget)
 
 
-def insert_before_the_end(parent: QWidget, widget: QWidget, leave: int = 1):
-    parent.layout().insertWidget(parent.layout().count() - leave, widget)
+def insert_before_the_end(parent: QWidget, widget: QWidget, leave: int = 1, alignment=None):
+    i = parent.layout().count() - leave
+    if alignment:
+        parent.layout().insertWidget(i, widget, alignment=alignment)
+    else:
+        parent.layout().insertWidget(i, widget)
 
 
 def insert_before(parent: QWidget, widget: QWidget, reference: QWidget):
@@ -613,3 +619,7 @@ def calculate_resized_dimensions(width: int, height: int, max_size: int = 512):
         w, h = width, height
 
     return int(w), int(h)
+
+
+def fade_in(wdg: QWidget):
+    qtanim.fade_in(wdg, duration=150, teardown=lambda: wdg.setGraphicsEffect(None))

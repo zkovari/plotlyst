@@ -331,6 +331,8 @@ class ManuscriptLengthChart(BaseChart):
                         chapter_wc += scene.manuscript.statistics.wc
                 set_.append(chapter_wc)
 
+        set_.setColor(QColor(PLOTLYST_SECONDARY_COLOR))
+
         series = QBarSeries()
         series.append(set_)
         if len(self._xData(novel)) < 5:

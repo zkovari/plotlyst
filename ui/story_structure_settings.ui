@@ -189,6 +189,9 @@
        </property>
        <item>
         <layout class="QVBoxLayout" name="layoutPreview">
+         <property name="spacing">
+          <number>8</number>
+         </property>
          <property name="leftMargin">
           <number>40</number>
          </property>
@@ -257,8 +260,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>518</width>
-                <height>247</height>
+                <width>512</width>
+                <height>237</height>
                </rect>
               </property>
               <property name="relaxed-white-bg" stdset="0">
@@ -322,8 +325,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>518</width>
-                <height>247</height>
+                <width>512</width>
+                <height>242</height>
                </rect>
               </property>
               <property name="sizePolicy">
@@ -376,8 +379,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>518</width>
-                <height>227</height>
+                <width>512</width>
+                <height>222</height>
                </rect>
               </property>
               <property name="relaxed-white-bg" stdset="0">

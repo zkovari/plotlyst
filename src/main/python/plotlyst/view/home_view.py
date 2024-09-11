@@ -20,9 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import List, Optional
 
 from PyQt6.QtCore import pyqtSignal, QSize, Qt, QTimer
-from PyQt6.QtGui import QPixmap, QColor, QTextDocument
+from PyQt6.QtGui import QPixmap, QColor
 from overrides import overrides
-from qthandy import transparent, incr_font, italic, busy, retain_when_hidden, incr_icon, bold
+from qthandy import transparent, incr_font, italic, busy, retain_when_hidden, incr_icon
 from qthandy.filter import VisibilityToggleEventFilter, InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -160,7 +160,7 @@ class HomeView(AbstractView):
         self._btnAddNew = push_btn(IconRegistry.plus_icon(RELAXED_WHITE_COLOR), tooltip='Add a new story',
                                    properties=['base', 'positive'])
         self._btnAddNew.clicked.connect(self._add_new_novel)
-        self._shelvesTreeView = ShelvesTreeView(settings=TreeSettings(font_incr=1))
+        self._shelvesTreeView = ShelvesTreeView(settings=TreeSettings(font_incr=2))
         self.ui.splitterLibrary.setSizes([150, 500])
         self.ui.wdgShelvesParent.layout().addWidget(wrap(self._btnAddNew, margin_left=10, margin_top=10),
                                                     alignment=Qt.AlignmentFlag.AlignLeft)
@@ -319,8 +319,8 @@ class HomeView(AbstractView):
     def _on_delete(self, novel: Optional[NovelDescriptor] = None):
         if novel is None:
             novel = self._selected_novel
-        title = f'Delete the novel "{novel.title}"?'
-        msg = '<html>This cannot be undone.<br>All characters and scenes will be lost.'
+        title = f'Are you sure you want to delete the novel "{novel.title}"?'
+        msg = '<html><ul><li>This action cannot be undone.</li><li>All characters and scenes will be lost.</li>'
         if confirmed(msg, title):
             self.repo.delete_novel(novel)
             self._novels.remove(novel)

@@ -25,7 +25,7 @@ from PyQt6.QtWidgets import QWidget, QListView, QSizePolicy, QToolButton, QButto
     QGridLayout, QColorDialog
 from overrides import overrides
 from qthandy import flow, transparent, pointy, grid, vspacer, italic, underline, decr_font, incr_font, bold, \
-    spacer, line, decr_icon, ask_confirmation, vline
+    spacer, line, decr_icon, vline, ask_confirmation
 from qthandy.filter import OpacityEventFilter
 
 from plotlyst.common import PLOTLYST_MAIN_COMPLEMENTARY_COLOR, RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
@@ -386,8 +386,9 @@ class _ResourceControllers:
             self.btnDownload.setEnabled(True)
 
     def _askRemove(self):
+        # still use old ask_confirmation because it is opened from a dialog
         if ask_confirmation(
-                f"Remove downloaded resource '{self._resource.human_name}'? Some functionality might stop working."):
+                f'Are you sure you want to remove the downloaded resource "{self._resource.human_name}"? Some functionality might stop working.'):
             self.remove()
 
 

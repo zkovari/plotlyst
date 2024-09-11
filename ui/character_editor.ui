@@ -451,8 +451,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>858</width>
-            <height>477</height>
+            <width>703</width>
+            <height>485</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -495,7 +495,7 @@
        <enum>Qt::ClickFocus</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tabTopics">
        <property name="bg" stdset="0">
@@ -534,13 +534,13 @@
          <number>0</number>
         </property>
         <property name="topMargin">
-         <number>15</number>
+         <number>3</number>
         </property>
         <property name="rightMargin">
-         <number>2</number>
+         <number>0</number>
         </property>
         <property name="bottomMargin">
-         <number>2</number>
+         <number>0</number>
         </property>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout">
@@ -557,7 +557,7 @@
            <number>0</number>
           </property>
           <property name="bottomMargin">
-           <number>10</number>
+           <number>5</number>
           </property>
           <item>
            <widget class="QPushButton" name="btnNewBackstory">
@@ -609,8 +609,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>98</width>
-             <height>28</height>
+             <width>467</width>
+             <height>557</height>
             </rect>
            </property>
            <property name="sizePolicy">

@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import copy
 from functools import partial
 from typing import Optional
 
@@ -24,7 +25,7 @@ import qtanim
 from PyQt6.QtCore import pyqtSignal, QObject, QTimer
 from PyQt6.QtWidgets import QWidget, QAbstractButton, QLineEdit, QCompleter
 from overrides import overrides
-from qthandy import translucent, btn_popup, bold, italic, incr_font, margins
+from qthandy import translucent, bold, italic, incr_font
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -38,7 +39,7 @@ from plotlyst.events import NovelAboutToSyncEvent
 from plotlyst.resources import resource_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.service.tour import TourService
-from plotlyst.view.common import emoji_font, set_tab_icon, wrap, ButtonPressResizeEventFilter, set_tab_visible
+from plotlyst.view.common import emoji_font, set_tab_icon, ButtonPressResizeEventFilter, set_tab_visible
 from plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_bg_image, apply_white_menu
@@ -122,9 +123,11 @@ class CharacterEditor(QObject, EventListener):
         menu.aboutToShow.connect(self._ageEditor.setFocus)
 
         self._lineOccupation = QLineEdit()
+        self._lineOccupation.setProperty('rounded', True)
         self._lineOccupation.setPlaceholderText('Fill out occupation')
         self._lineOccupation.textEdited.connect(self._occupation_changed)
-        menu = btn_popup(self.ui.btnOccupation, wrap(self._lineOccupation, margin_bottom=2))
+        menu = MenuWidget(self.ui.btnOccupation)
+        menu.addWidget(self._lineOccupation)
         menu.aboutToShow.connect(self._lineOccupation.setFocus)
         self._lineOccupation.editingFinished.connect(menu.hide)
 
@@ -156,9 +159,6 @@ class CharacterEditor(QObject, EventListener):
         # self.ui.tabTopics.layout().addWidget(self.wdgTopicsEditor)
 
         self.profile = CharacterProfileEditor(self.novel)
-        # if app_env.is_windows() or app_env.is_linux():
-        self.ui.wdgProfile.setProperty('relaxed-white-bg', True)
-        margins(self.ui.wdgTop, bottom=15)
         self.ui.wdgProfile.layout().addWidget(self.profile)
 
         apply_bg_image(self.ui.scrollAreaBackstoryContents, resource_registry.cover1)
@@ -260,9 +260,10 @@ class CharacterEditor(QObject, EventListener):
                 self.profile.applyMinorRoleSettings()
 
         self._roleMenu.close()
-        if role.text == protagonist_role.text and self.character.gender == FEMALE:
-            role.icon = 'fa5s.chess-queen'
-        self.character.role = role
+        new_role = copy.deepcopy(role)
+        if new_role.text == protagonist_role.text and self.character.gender == FEMALE:
+            new_role.icon = 'fa5s.chess-queen'
+        self.character.role = new_role
         self._display_role()
         if self.character.prefs.avatar.use_role:
             self.ui.wdgAvatar.updateAvatar()
@@ -350,15 +351,18 @@ class CharacterEditor(QObject, EventListener):
             self.ui.btnMoreGender.setVisible(False)
         else:
             self.character.gender = ''
-            self.ui.btnMoreGender.setVisible(self.btnGroupGender.secondaryLocked())
+            self.ui.btnMoreGender.setVisible(True)
 
-    def _display_more_gender_clicked(self):
-        self.btnGroupGender.setSecondaryLocked(False)
+    def _display_more_gender_clicked(self, toggled: bool):
+        self.btnGroupGender.setSecondaryLocked(not toggled)
         for btn in [self.ui.btnTransgender, self.ui.btnNonBinary, self.ui.btnGenderless]:
-            anim = qtanim.fade_in(btn)
+            if toggled:
+                anim = qtanim.fade_in(btn)
+            else:
+                anim = qtanim.fade_out(btn)
             anim.finished.connect(partial(translucent, btn, 0.4))
 
-        self.ui.btnMoreGender.setHidden(True)
+        self.ui.btnMoreGender.setText('«' if toggled else '»')
 
     def _save(self):
         if self.character.role and self.character.role.text == protagonist_role.text:

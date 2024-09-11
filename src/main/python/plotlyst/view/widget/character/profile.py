@@ -50,7 +50,7 @@ from plotlyst.core.template import TemplateField, iq_field, eq_field, rationalis
     work_style_choices
 from plotlyst.env import app_env
 from plotlyst.view.common import tool_btn, wrap, emoji_font, action, insert_before_the_end, push_btn, label, \
-    fade_out_and_gc, shadow
+    fade_out_and_gc, shadow, fade_in
 from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
@@ -311,7 +311,10 @@ class ProfileSectionWidget(ProfileFieldWidget):
         self.wdgContainer = QFrame()
         vbox(self.wdgContainer, 5)
         if self.context.has_white_bg():
-            self.wdgContainer.setProperty('white-bg', True)
+            if app_env.is_mac():
+                self.wdgContainer.setProperty('relaxed-white-bg', True)
+            else:
+                self.wdgContainer.setProperty('white-bg', True)
             self.wdgContainer.setProperty('rounded', True)
         else:
             margins(self.wdgContainer, left=20)
@@ -338,6 +341,7 @@ class ProfileSectionWidget(ProfileFieldWidget):
             if self.context.has_menu():
                 self._menu = MenuWidget(self._btnPrimary)
                 self._menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+                apply_white_menu(self._menu)
                 for field in fields:
                     self._menu.addAction(
                         action(field.name, icon=IconRegistry.from_name(field.icon), tooltip=field.description,
@@ -346,7 +350,7 @@ class ProfileSectionWidget(ProfileFieldWidget):
             else:
                 self._btnPrimary.clicked.connect(self._initNewPrimaryField)
 
-            self.wdgBottom.layout().addWidget(self._btnPrimary)
+            self.wdgContainer.layout().addWidget(self._btnPrimary)
 
         self.children: List[ProfileFieldWidget] = []
         # self.progressStatuses: Dict[ProfileFieldWidget, float] = {}
@@ -358,7 +362,10 @@ class ProfileSectionWidget(ProfileFieldWidget):
         if self.section.type == CharacterProfileSectionType.Summary:
             self.wdgContainer.layout().addWidget(widget, alignment=Qt.AlignmentFlag.AlignTop)
         else:
-            self.wdgContainer.layout().addWidget(widget)
+            if self.context.has_addition():
+                insert_before_the_end(self.wdgContainer, widget)
+            else:
+                self.wdgContainer.layout().addWidget(widget)
         # self.progressStatuses[widget] = False
         # widget.valueFilled.connect(partial(self._valueFilled, widget))
         # widget.valueReset.connect(partial(self._valueReset, widget))
@@ -433,6 +440,8 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
         self.wdgEditor.setProperty('rounded', True)
         self.wdgEditor.setAcceptRichText(False)
         self.wdgEditor.setTabChangesFocus(True)
+        if app_env.is_mac():
+            incr_font(self.wdgEditor)
         shadow(self.wdgEditor)
         self.setMaximumWidth(600)
 
@@ -1175,6 +1184,10 @@ class StrengthsWeaknessesTableRow(QWidget):
         self.textWeakness.setText(self.attribute.weakness)
         self.textWeakness.textChanged.connect(self._weaknessChanged)
 
+        if app_env.is_mac():
+            incr_font(self.textStrength)
+            incr_font(self.textWeakness)
+
         self.layout().addWidget(self.textStrength)
         self.layout().addWidget(self.textWeakness)
 
@@ -1402,7 +1415,7 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
         self.lblFear.setText(item.meta['fear'])
         self.wdgEditor.setToolTip(enneagram_help[item.text])
         if self.isVisible():
-            qtanim.fade_in(self.wdgAttr)
+            fade_in(self.wdgAttr)
         else:
             self.wdgAttr.setVisible(True)
 
@@ -1455,7 +1468,7 @@ class MbtiFieldWidget(TemplateFieldWidgetBase):
 
         self.lblKeywords.setText(mbti_keywords.get(item.text, ''))
         if self.isVisible():
-            qtanim.fade_in(self.wdgAttr)
+            fade_in(self.wdgAttr)
         else:
             self.wdgAttr.setVisible(True)
 
@@ -1509,7 +1522,7 @@ class LoveStyleFieldWidget(TemplateFieldWidgetBase):
         self.lblKeywords.setText(item.meta['desc'])
         self.wdgEditor.setToolTip(love_style_help[item.text])
         if self.isVisible():
-            qtanim.fade_in(self.wdgAttr)
+            fade_in(self.wdgAttr)
         else:
             self.wdgAttr.setVisible(True)
 
@@ -1560,7 +1573,7 @@ class WorkStyleFieldWidget(TemplateFieldWidgetBase):
         self.lblKeywords.setText(item.meta['desc'])
         self.wdgEditor.setToolTip(work_style_help[item.text])
         if self.isVisible():
-            qtanim.fade_in(self.wdgAttr)
+            fade_in(self.wdgAttr)
         else:
             self.wdgAttr.setVisible(True)
 

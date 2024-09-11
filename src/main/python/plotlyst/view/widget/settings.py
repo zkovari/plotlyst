@@ -415,9 +415,9 @@ class NovelSettingsWidget(QWidget, EventListener):
 
         vbox(self, spacing=10)
         self._settings: Dict[NovelSetting, NovelSettingToggle] = {}
-        self._addSettingToggle(NovelSetting.Mindmap)
-        self._addSettingToggle(NovelSetting.Structure)
         self._addSettingToggle(NovelSetting.Storylines)
+        self._addSettingToggle(NovelSetting.Structure)
+        self._addSettingToggle(NovelSetting.Mindmap)
         wdgCharacters = self._addSettingToggle(NovelSetting.Characters)
         self._addSettingToggle(NovelSetting.Character_enneagram, wdgCharacters)
         self._addSettingToggle(NovelSetting.Character_mbti, wdgCharacters)
@@ -432,8 +432,8 @@ class NovelSettingsWidget(QWidget, EventListener):
         # self._addSettingToggle(NovelSetting.Track_motivation, wdgScenes)
         # self._addSettingToggle(NovelSetting.Track_conflict, wdgScenes)
         self._addSettingToggle(NovelSetting.World_building)
-        self._addSettingToggle(NovelSetting.Documents)
         self._addSettingToggle(NovelSetting.Manuscript)
+        self._addSettingToggle(NovelSetting.Documents)
         self._addSettingToggle(NovelSetting.Management)
         self.layout().addWidget(vspacer())
 

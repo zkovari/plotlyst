@@ -27,7 +27,7 @@ from PyQt6.QtGui import QIcon, QColor, QImageReader, QImage, QPixmap, \
 from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QSizePolicy, QLabel, QPushButton, \
     QFileDialog, QMessageBox, QGridLayout
 from overrides import overrides
-from qthandy import vspacer, transparent, gc, line, spacer, clear_layout, hbox, flow, translucent, margins, pointy
+from qthandy import vspacer, transparent, gc, line, spacer, clear_layout, hbox, flow, translucent, margins, pointy, vbox
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
@@ -39,9 +39,8 @@ from plotlyst.event.core import EventListener, Event
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import CharacterSummaryChangedEvent
 from plotlyst.resources import resource_registry
-from plotlyst.view.common import action, ButtonPressResizeEventFilter, tool_btn
-from plotlyst.view.dialog.utility import ArtbreederDialog, ImageCropDialog
-from plotlyst.view.generated.avatar_selectors_ui import Ui_AvatarSelectors
+from plotlyst.view.common import action, ButtonPressResizeEventFilter, tool_btn, label, push_btn
+from plotlyst.view.dialog.utility import ImageCropDialog
 from plotlyst.view.generated.characters_progress_widget_ui import Ui_CharactersProgressWidget
 from plotlyst.view.icons import avatars, IconRegistry
 from plotlyst.view.style.base import apply_border_image
@@ -324,30 +323,54 @@ class CharacterLinkWidget(QWidget):
         self.characterSelected.emit(character)
 
 
-class AvatarSelectors(QWidget, Ui_AvatarSelectors):
+class AvatarSelectors(QWidget):
     updated = pyqtSignal()
     selectorChanged = pyqtSignal()
 
     def __init__(self, character: Character, parent=None):
         super(AvatarSelectors, self).__init__(parent)
-        self.setupUi(self)
         self.character = character
-        self.btnUploadAvatar.setIcon(IconRegistry.upload_icon(color='white'))
+        vbox(self, 5, 5)
+        self.wdgSelectors = QWidget()
+        vbox(self.wdgSelectors)
+        if app_env.is_mac():
+            self.wdgSelectors.layout().setSpacing(15)
+
+        self.btnImage = push_btn(text='Image', base=True, checkable=True)
+        self.btnInitial = push_btn(IconRegistry.from_name('mdi.alpha-a-circle'), text='Name initial', base=True,
+                                   checkable=True)
+        self.btnRole = push_btn(IconRegistry.from_name('fa5s.chess-bishop'), text='Role icon', base=True,
+                                checkable=True)
+        self.btnCustomIcon = push_btn(IconRegistry.icons_icon(), text='Custom icon', base=True, checkable=True)
+
+        self.btnUploadAvatar = push_btn(IconRegistry.upload_icon(color=RELAXED_WHITE_COLOR), text='Upload image',
+                                        properties=['base', 'positive'])
         self.btnUploadAvatar.clicked.connect(self._upload_avatar)
-        self.btnAi.setIcon(IconRegistry.from_name('mdi.robot-happy-outline', 'white'))
+        # self.btnAi.setIcon(IconRegistry.from_name('mdi.robot-happy-outline', 'white'))
         # self.btnAi.clicked.connect(self._select_ai)
-        self.btnAi.setHidden(True)
-        self.btnInitial.setIcon(IconRegistry.from_name('mdi.alpha-a-circle'))
-        self.btnRole.setIcon(IconRegistry.from_name('fa5s.chess-bishop'))
-        self.btnCustomIcon.setIcon(IconRegistry.icons_icon())
         if character.avatar:
             pass
         else:
             self.btnImage.setHidden(True)
             if self.character.prefs.avatar.use_image:
                 self.character.prefs.avatar.allow_initial()
-
+        self.btnGroupSelectors = QButtonGroup()
+        self.btnGroupSelectors.addButton(self.btnImage)
+        self.btnGroupSelectors.addButton(self.btnInitial)
+        self.btnGroupSelectors.addButton(self.btnRole)
+        self.btnGroupSelectors.addButton(self.btnCustomIcon)
         self.btnGroupSelectors.buttonClicked.connect(self._selectorClicked)
+
+        self.layout().addWidget(label('Avatar options', bold=True, underline=True),
+                                alignment=Qt.AlignmentFlag.AlignCenter)
+        self.wdgSelectors.layout().addWidget(self.btnImage)
+        self.wdgSelectors.layout().addWidget(self.btnInitial)
+        self.wdgSelectors.layout().addWidget(self.btnRole)
+        self.wdgSelectors.layout().addWidget(self.btnCustomIcon)
+        self.layout().addWidget(self.wdgSelectors)
+        self.layout().addWidget(line(color='lightgrey'))
+        self.layout().addWidget(self.btnUploadAvatar)
+
         self.refresh()
 
     def refresh(self):
@@ -388,7 +411,7 @@ class AvatarSelectors(QWidget, Ui_AvatarSelectors):
         self.selectorChanged.emit()
 
     def _upload_avatar(self):
-        filename: str = QFileDialog.getOpenFileName(None, 'Choose an image', '', 'Images (*.png *.jpg *jpeg)')
+        filename: str = QFileDialog.getOpenFileName(None, 'Choose an image', '', 'Images (*.png *.jpg *jpeg *.webp)')
         if not filename or not filename[0]:
             return
         reader = QImageReader(filename[0])
@@ -419,11 +442,11 @@ class AvatarSelectors(QWidget, Ui_AvatarSelectors):
 
         self.updated.emit()
 
-    def _select_ai(self):
-        diag = ArtbreederDialog()
-        pixmap = diag.display()
-        if pixmap:
-            self._update_avatar(pixmap)
+    # def _select_ai(self):
+    #     diag = ArtbreederDialog()
+    #     pixmap = diag.display()
+    #     if pixmap:
+    #         self._update_avatar(pixmap)
 
 
 class CharacterAvatar(QWidget):
@@ -562,6 +585,13 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
         if self._refreshNext:
             self._refreshNext = False
             self.refresh()
+
+    def refreshNext(self):
+        if self.isVisible():
+            self.refresh()
+            self._refreshNext = False
+        else:
+            self._refreshNext = True
 
     def refresh(self):
         if not self.novel:

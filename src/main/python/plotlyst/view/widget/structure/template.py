@@ -531,6 +531,12 @@ class _StorySpineStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
         super().__init__(novel, structure, parent)
 
+        vbox(self.wdgCustom, spacing=15)
+        margins(self.wdgCustom, top=20)
+        self.wdgCustom.layout().addWidget(label(
+            "A simple narrative framework created by Kenn Adams that consists a series of connected phrases, beginning with the status quo, followed by a disrupting event, and ending with resolution.",
+            description=True, wordWrap=True))
+
 
 class _TwistsAndTurnsStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
@@ -585,7 +591,9 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
         self.btnFiveAct.setIcon(IconRegistry.from_name('mdi.numeric-5-box-outline', color_on=WHITE_COLOR))
         self.btnFiveAct.setHidden(True)
         self.btnSaveTheCat.setIcon(IconRegistry.from_name('fa5s.cat', color_on=WHITE_COLOR))
+        self.btnSaveTheCat.setHidden(True)
         self.btnHerosJourney.setIcon(IconRegistry.from_name('fa5s.mask', color_on=WHITE_COLOR))
+        self.btnHerosJourney.setHidden(True)
         self.btnStorySpine.setIcon(IconRegistry.from_name('mdi.alpha-s-circle-outline', color_on=WHITE_COLOR))
         self.btnTwists.setIcon(IconRegistry.from_name('ph.shuffle-bold', color_on=WHITE_COLOR))
         self.buttonGroup.buttonClicked.connect(self._structureChanged)

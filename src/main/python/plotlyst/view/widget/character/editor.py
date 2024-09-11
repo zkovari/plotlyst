@@ -28,7 +28,7 @@ import emoji
 import qtanim
 from PyQt6.QtCharts import QPieSeries, QPieSlice
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QRectF
-from PyQt6.QtGui import QIcon, QColor, QMouseEvent
+from PyQt6.QtGui import QIcon, QColor, QMouseEvent, QKeySequence
 from PyQt6.QtWidgets import QWidget, QSpinBox, QSlider, QTextBrowser, QButtonGroup, QToolButton, QLabel, QSizePolicy, \
     QLineEdit, QDialog
 from overrides import overrides
@@ -53,7 +53,7 @@ from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.button import SecondaryActionPushButton, SelectionItemPushButton
 from plotlyst.view.widget.chart import BaseChart, SelectionItemPieSlice
-from plotlyst.view.widget.confirm import confirmed
+from plotlyst.view.widget.confirm import asked
 from plotlyst.view.widget.display import Icon, MajorRoleIcon, SecondaryRoleIcon, MinorRoleIcon, \
     IconText, RoleIcon, TruitySourceWidget, PopupDialog, ChartView
 from plotlyst.view.widget.input import Toggle
@@ -354,6 +354,7 @@ class EnneagramSelectorWidget(PersonalitySelectorWidget):
     def _addItem(self, item: SelectionItem):
         btn = tool_btn(IconRegistry.from_name(item.icon, 'lightgrey', item.icon_color), checkable=True,
                        transparent_=True)
+        btn.setShortcut(QKeySequence(str(item.meta.get('number', 1))))
         btn.setIconSize(QSize(32, 32))
         btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.5, ignoreCheckedButton=True))
         btn.toggled.connect(partial(self._toggled, item))
@@ -653,6 +654,8 @@ class PersonalitySelector(SecondaryActionPushButton):
         for item in self.field().selections:
             self._items[item.text] = item
 
+        incr_font(self, 2)
+
         self._menu = MenuWidget(self)
         self._menu.aboutToShow.connect(self._selectorShown)
         apply_white_menu(self._menu)
@@ -705,10 +708,10 @@ class PersonalitySelector(SecondaryActionPushButton):
         self.initStyleSheet()
 
     def _ignoreClicked(self):
-        if confirmed(
+        self._menu.close()
+        if asked(
                 "The personality type won't be considered for this character. You can enable it back anytime.",
-                f"Ignore {self.field().name}"):
-            self._menu.close()
+                f'Ignore personality type "{self.field().name}" for this character?'):
             self._updateIgnoredValue()
             self.ignored.emit()
 
@@ -725,6 +728,7 @@ class EnneagramSelector(PersonalitySelector):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setText('Enneagram...')
+        self.setIcon(IconRegistry.from_name('mdi.numeric-9-circle', 'grey'))
 
     @overrides
     def field(self) -> TemplateField:
@@ -742,6 +746,7 @@ class MbtiSelector(PersonalitySelector):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setText('MBTI...')
+        self.setIcon(IconRegistry.from_name('mdi.head-question-outline', 'grey'))
 
     @overrides
     def field(self) -> TemplateField:
@@ -759,6 +764,7 @@ class LoveStyleSelector(PersonalitySelector):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setText('Love style...')
+        self.setIcon(IconRegistry.from_name('fa5s.heart', 'grey'))
 
     @overrides
     def field(self) -> TemplateField:
@@ -776,6 +782,7 @@ class DiscSelector(PersonalitySelector):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setText('Work style...')
+        self.setIcon(IconRegistry.from_name('fa5s.briefcase', 'grey'))
 
     @overrides
     def field(self) -> TemplateField:
@@ -1005,8 +1012,10 @@ class CharacterRoleSelector(QWidget):
         self.iconRole = RoleIcon()
         incr_font(self.iconRole, 2)
         self.btnPromote = SecondaryActionPushButton()
-        self.btnPromote.setIcon(IconRegistry.from_name('mdi.chevron-double-up', CHARACTER_MAJOR_COLOR))
-        self.btnPromote.setText('Promote')
+        incr_icon(self.btnPromote, 4)
+        incr_font(self.btnPromote)
+        self.btnPromote.setPadding(3)
+        self._updatePromotionButton(False)
         self.btnPromote.clicked.connect(self._promoted)
 
         self._currentRole = protagonist_role
@@ -1073,18 +1082,21 @@ class CharacterRoleSelector(QWidget):
             if btn.selectionItem().text == role.text:
                 btn.setSelectionItem(role)
                 btn.setChecked(True)
+                self._updatePromotionButton(role.promoted)
+                self._currentRole.promoted = role.promoted
+                self._updateRolePriorityIcon()
+                self.iconRole.setRole(role, showText=True)
                 break
 
     def _roleToggled(self, btn: SelectionItemPushButton, role: Role, toggled: bool):
         if toggled:
             self._currentButton = btn
             self._currentRole = role
-            self.iconRole.setRole(role, animate=True, showText=True)
+            self.iconRole.setRole(role, showText=True)
             self.textBrowser.setHtml(character_roles_description[role])
             self.btnPromote.setVisible(role.can_be_promoted)
             self.btnPromote.setChecked(role.promoted)
             self._updatePromotionButton(role.promoted)
-
             self._updateRolePriorityIcon()
 
             clear_layout(self.wdgExamples)
@@ -1102,10 +1114,16 @@ class CharacterRoleSelector(QWidget):
     def _updatePromotionButton(self, promoted: bool):
         if promoted:
             self.btnPromote.setText('Demote')
+            self.btnPromote.setToolTip('Demote to a secondary character')
             self.btnPromote.setIcon(IconRegistry.from_name('mdi.chevron-double-down', CHARACTER_SECONDARY_COLOR))
+            color = CHARACTER_SECONDARY_COLOR
         else:
             self.btnPromote.setText('Promote')
+            self.btnPromote.setToolTip('Promote to a major character')
             self.btnPromote.setIcon(IconRegistry.from_name('mdi.chevron-double-up', CHARACTER_MAJOR_COLOR))
+            color = CHARACTER_MAJOR_COLOR
+        self.btnPromote.initStyleSheet(border_color=color, border_style='solid', color=color,
+                                       bg_color=RELAXED_WHITE_COLOR, border_radius=12)
 
     def _updateRolePriorityIcon(self, anim: bool = False):
         self.iconMajor.setHidden(True)
@@ -1133,7 +1151,7 @@ class CharacterRoleSelector(QWidget):
 
         self._updatePromotionButton(self._currentRole.promoted)
 
-        self.iconRole.setRole(self._currentRole, animate=True, showText=True)
+        self.iconRole.setRole(self._currentRole, showText=True)
         self._currentButton.setSelectionItem(self._currentRole)
         self.rolePromoted.emit(self._currentRole)
 

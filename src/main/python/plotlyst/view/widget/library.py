@@ -36,6 +36,7 @@ class NovelNode(ContainerNode):
         super(NovelNode, self).__init__(novel.title, parent=parent, settings=settings)
         self._novel = novel
         self.setPlusButtonEnabled(False)
+        self.setTranslucentIconEnabled(True)
         self._actionChangeIcon.setVisible(True)
         self.refresh()
 
@@ -46,9 +47,9 @@ class NovelNode(ContainerNode):
         self._lblTitle.setText(self._novel.title)
         if self._novel.icon:
             self._icon.setIcon(IconRegistry.from_name(self._novel.icon, self._novel.icon_color))
-            self._icon.setVisible(True)
         else:
-            self._icon.setHidden(True)
+            self._icon.setIcon(IconRegistry.book_icon('black', 'black'))
+        self._icon.setVisible(True)
 
     @overrides
     def _iconChanged(self, iconName: str, iconColor: str):
@@ -82,22 +83,22 @@ class ShelvesTreeView(TreeView):
         self._selectedNovels: Set[NovelDescriptor] = set()
         self._novels: Dict[NovelDescriptor, NovelNode] = {}
 
-        self._wdgNovels = ShelveNode('Novels', IconRegistry.book_icon(), settings=self._settings)
+        self._wdgNovels = ShelveNode('Novels', IconRegistry.from_name('mdi.bookshelf'), settings=self._settings)
         self._wdgNovels.selectionChanged.connect(self._novelsShelveSelectionChanged)
         self._wdgNovels.newNovelRequested.connect(self.newNovelRequested.emit)
-        self._wdgShortStories = ShelveNode('Short stories', IconRegistry.from_name('ph.file-text'),
-                                           settings=self._settings)
-        self._wdgIdeas = ShelveNode('Ideas', IconRegistry.decision_icon(), settings=self._settings)
-        self._wdgNotes = ShelveNode('Notes', IconRegistry.document_edition_icon(), settings=self._settings)
+        # self._wdgShortStories = ShelveNode('Short stories', IconRegistry.from_name('ph.file-text'),
+        #                                    settings=self._settings)
+        # self._wdgIdeas = ShelveNode('Ideas', IconRegistry.decision_icon(), settings=self._settings)
+        # self._wdgNotes = ShelveNode('Notes', IconRegistry.document_edition_icon(), settings=self._settings)
 
-        self._wdgShortStories.setDisabled(True)
-        self._wdgIdeas.setDisabled(True)
-        self._wdgNotes.setDisabled(True)
+        # self._wdgShortStories.setDisabled(True)
+        # self._wdgIdeas.setDisabled(True)
+        # self._wdgNotes.setDisabled(True)
 
         self._centralWidget.layout().addWidget(self._wdgNovels)
-        self._centralWidget.layout().addWidget(self._wdgShortStories)
-        self._centralWidget.layout().addWidget(self._wdgIdeas)
-        self._centralWidget.layout().addWidget(self._wdgNotes)
+        # self._centralWidget.layout().addWidget(self._wdgShortStories)
+        # self._centralWidget.layout().addWidget(self._wdgIdeas)
+        # self._centralWidget.layout().addWidget(self._wdgNotes)
         self._centralWidget.layout().addWidget(vspacer())
 
     def setSettings(self, settings: TreeSettings):

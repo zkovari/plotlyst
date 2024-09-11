@@ -27,7 +27,7 @@ from PyQt6.QtGui import QIcon, QColor, QPainter, QPaintEvent, QBrush, QResizeEve
 from PyQt6.QtWidgets import QWidget, QSizePolicy, \
     QLineEdit, QToolButton
 from overrides import overrides
-from qthandy import vbox, hbox, sp, vspacer, clear_layout, spacer, ask_confirmation, incr_font, bold, \
+from qthandy import vbox, hbox, sp, vspacer, clear_layout, spacer, incr_font, bold, \
     margins
 from qthandy.filter import VisibilityToggleEventFilter
 
@@ -36,6 +36,7 @@ from plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, \
 from plotlyst.core.domain import BackstoryEvent
 from plotlyst.view.common import tool_btn, frame
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.input import RemovalButton, AutoAdjustableTextEdit
 
 
@@ -59,7 +60,9 @@ class BackstoryCard(QWidget):
         margins(self, top=18)
 
         self.cardFrame = frame()
-        vbox(self.cardFrame)
+        self.cardFrame.setObjectName('cardFrame')
+        vbox(self.cardFrame, spacing=5)
+        margins(self.cardFrame, left=5)
 
         self.btnType = tool_btn(QIcon(), parent=self)
         self.btnType.setIconSize(QSize(24, 24))
@@ -72,21 +75,22 @@ class BackstoryCard(QWidget):
         self.lineKeyPhrase.setPlaceholderText('Keyphrase')
         self.lineKeyPhrase.setProperty('transparent', True)
         self.lineKeyPhrase.textEdited.connect(self._keyphraseEdited)
-        incr_font(self.lineKeyPhrase)
+        incr_font(self.lineKeyPhrase, 2)
         bold(self.lineKeyPhrase)
 
         self.textSummary = AutoAdjustableTextEdit(height=40)
         self.textSummary.setPlaceholderText("Summarize this event")
+        self.textSummary.setBlockFormat(lineSpacing=120)
+        self.textSummary.setViewportMargins(3, 0, 3, 0)
         self.textSummary.setProperty('transparent', True)
-        self.textSummary.setProperty('rounded', True)
         self.textSummary.textChanged.connect(self._synopsisChanged)
+        incr_font(self.textSummary, 2)
 
         wdgTop = QWidget()
         hbox(wdgTop, 0, 0)
         wdgTop.layout().addWidget(self.lineKeyPhrase)
         wdgTop.layout().addWidget(self.btnRemove, alignment=Qt.AlignmentFlag.AlignTop)
         self.cardFrame.layout().addWidget(wdgTop)
-        self.cardFrame.setObjectName('cardFrame')
         self.cardFrame.layout().addWidget(self.textSummary)
         self.layout().addWidget(self.cardFrame)
 
@@ -144,7 +148,8 @@ class BackstoryCard(QWidget):
         self.edited.emit()
 
     def _remove(self):
-        if self.backstory.synopsis and not ask_confirmation(f'Remove event "{self.backstory.keyphrase}"?'):
+        if self.backstory.synopsis and not confirmed('This action cannot be undone.',
+                                                     f'Are you sure you want to remove the event "{self.backstory.keyphrase if self.backstory.keyphrase else "Untitled"}"?'):
             return
         self.deleteRequested.emit(self)
 

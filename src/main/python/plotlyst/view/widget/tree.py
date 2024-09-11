@@ -25,7 +25,8 @@ from PyQt6.QtGui import QIcon, QResizeEvent
 from PyQt6.QtWidgets import QScrollArea, QFrame, QSizePolicy, QToolButton
 from PyQt6.QtWidgets import QWidget, QLabel
 from overrides import overrides
-from qthandy import vbox, hbox, bold, margins, clear_layout, transparent, retain_when_hidden, incr_font, pointy
+from qthandy import vbox, hbox, bold, margins, clear_layout, transparent, retain_when_hidden, incr_font, pointy, \
+    translucent
 from qtmenu import MenuWidget
 
 from plotlyst.common import ALT_BACKGROUND_COLOR, PLOTLYST_TERTIARY_COLOR
@@ -57,6 +58,7 @@ class BaseTreeWidget(QWidget):
         super(BaseTreeWidget, self).__init__(parent)
         self._menuEnabled: bool = True
         self._plusEnabled: bool = True
+        self._translucentIcon: bool = False
 
         if settings is None:
             self._settings = TreeSettings()
@@ -138,6 +140,13 @@ class BaseTreeWidget(QWidget):
     def isSelectionEnabled(self) -> bool:
         return self._selectionEnabled
 
+    def setTranslucentIconEnabled(self, enabled: bool):
+        self._translucentIcon = enabled
+        if enabled:
+            translucent(self._icon, 0.4)
+        else:
+            self._icon.setGraphicsEffect(None)
+
     def setMenuEnabled(self, enabled: bool):
         self._menuEnabled = enabled
 
@@ -155,6 +164,8 @@ class BaseTreeWidget(QWidget):
             return
         self._selected = selected
         bold(self._lblTitle, self._selected)
+        if self._translucentIcon:
+            translucent(self._icon, 0.9 if selected else 0.4)
         self._reStyle()
 
     def _changeIcon(self):

@@ -89,17 +89,32 @@ btn_style_highlighted = """
     }
 """
 
-# Continued from the previous code
+btn_style_confirm = """
+    QPushButton[confirm=true]:!disabled {
+        border: 1px solid lightgrey;
+        border-radius: 6px;
+        padding: 5px 15px 5px 15px;
+    }
+"""
 
 btn_style_deconstructive = """
     QPushButton[deconstructive=true]:!disabled {
-        background-color: #EE8074;
-        color: #fff;
+        background: #E11D48;
+        color: #f8f9fa;
         font: bold;
     }
 
     QPushButton[deconstructive=true]:hover {
-        background-color: #c0392b;
+        background: #E84E6F;
+    }
+"""
+
+btn_style_cancel = """
+    QPushButton[cancel=true]:!disabled {
+        background: #FcFcFc;
+    }
+    QPushButton[cancel=true]:!disabled:hover {
+        background: #f8f9fa;
     }
 """
 
@@ -544,7 +559,9 @@ style = "\n".join([
     btn_style_large,
     btn_style_positive,
     btn_style_highlighted,
+    btn_style_confirm,
     btn_style_deconstructive,
+    btn_style_cancel,
     btn_style_transparent,
     btn_style_secondary_field_attribute,
     btn_style_top_level_nav,
@@ -561,8 +578,7 @@ style = "\n".join([
     btn_style_tool_button_conflict_selector,
     btn_style_tool_button_gender,
     btn_style_tool_button_main_navbar,
-    btn_style_tool_button_dark_toggle,
-    radio_btn
+    btn_style_tool_button_dark_toggle
 ])
 
 

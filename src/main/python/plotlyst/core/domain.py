@@ -397,9 +397,9 @@ class CharacterProfileSectionType(Enum):
     Summary = 'summary'
     Personality = 'personality'
     Philosophy = 'philosophy'
-    Strengths = 'strengths and weaknesses'
     Faculties = 'faculties'
     Flaws = 'flaws'
+    Strengths = 'strengths and weaknesses'
     Baggage = 'baggage'
     Goals = 'goals'
 
@@ -469,9 +469,6 @@ def default_character_profile() -> List[CharacterProfileSectionReference]:
         CharacterProfileSectionReference(CharacterProfileSectionType.Philosophy, fields=[
             CharacterProfileFieldReference(CharacterProfileFieldType.Field_Values)
         ]),
-        CharacterProfileSectionReference(CharacterProfileSectionType.Strengths, fields=[
-            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Strengths)
-        ]),
         CharacterProfileSectionReference(CharacterProfileSectionType.Faculties, fields=[
             CharacterProfileFieldReference(CharacterProfileFieldType.Field_Faculties_IQ),
             CharacterProfileFieldReference(CharacterProfileFieldType.Field_Faculties_EQ),
@@ -480,6 +477,9 @@ def default_character_profile() -> List[CharacterProfileSectionReference]:
             CharacterProfileFieldReference(CharacterProfileFieldType.Field_Faculties_Creativity)
         ]),
         CharacterProfileSectionReference(CharacterProfileSectionType.Flaws),
+        CharacterProfileSectionReference(CharacterProfileSectionType.Strengths, fields=[
+            CharacterProfileFieldReference(CharacterProfileFieldType.Field_Strengths)
+        ]),
         CharacterProfileSectionReference(CharacterProfileSectionType.Baggage),
         CharacterProfileSectionReference(CharacterProfileSectionType.Goals)
     ]
@@ -1236,14 +1236,14 @@ class StorylineLinkType(Enum):
     Catalyst = auto()
     Impact = auto()
     Contrast = auto()
-    Reflect_char = auto()
+    Reflect_character = auto()
     Reflect_plot = auto()
     Reveal = auto()
     Resolve = auto()
     Compete = auto()
 
     def display_name(self) -> str:
-        if self == StorylineLinkType.Reflect_char:
+        if self == StorylineLinkType.Reflect_character:
             return 'Reflect character'
         elif self == StorylineLinkType.Reflect_plot:
             return 'Reflect plot'
@@ -1257,7 +1257,7 @@ class StorylineLinkType(Enum):
             return 'mdi.motion-outline'
         elif self == StorylineLinkType.Contrast:
             return 'ei.adjust'
-        elif self == StorylineLinkType.Reflect_char:
+        elif self == StorylineLinkType.Reflect_character:
             return 'msc.mirror'
         elif self == StorylineLinkType.Reflect_plot:
             return 'msc.mirror'
@@ -1280,7 +1280,7 @@ class StorylineLinkType(Enum):
             return 'A storyline impacts or influences the events in an other storyline'
         elif self == StorylineLinkType.Contrast:
             return 'The storylines contrast each other in any way, e.g.,theme, tone, or pacing'
-        elif self == StorylineLinkType.Reflect_char:
+        elif self == StorylineLinkType.Reflect_character:
             return "The relationship plot reflects the character's changes"
         elif self == StorylineLinkType.Reflect_plot:
             return "The relationship plot reflects larger plot themes of conflicts through character interactions"
@@ -1299,7 +1299,7 @@ class StorylineLinkType(Enum):
             return ""
         elif self == StorylineLinkType.Contrast:
             return ""
-        elif self == StorylineLinkType.Reflect_char:
+        elif self == StorylineLinkType.Reflect_character:
             return ""
         elif self == StorylineLinkType.Reflect_plot:
             return ""
@@ -3639,7 +3639,7 @@ class Novel(NovelDescriptor):
     def new_novel(title: str = '') -> 'Novel':
         novel = Novel(title)
         copied_structure = copy.deepcopy(three_act_structure)
-        copied_structure.beats[0].enabled = False  # hook
+        # copied_structure.beats[0].enabled = False  # hook
         copied_structure.beats[3].enabled = False  # pinch 1
         copied_structure.beats[5].enabled = False  # pinch 2
         copied_structure.beats[8].enabled = False  # crisis

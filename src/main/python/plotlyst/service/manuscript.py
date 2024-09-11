@@ -24,7 +24,6 @@ import pypandoc
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QTextDocument, QTextCursor, QTextCharFormat, QFont, QTextBlockFormat, QTextFormat, QTextBlock
 from PyQt6.QtWidgets import QFileDialog
-from qthandy import ask_confirmation
 from slugify import slugify
 
 from plotlyst.core.client import json_client
@@ -32,6 +31,7 @@ from plotlyst.core.domain import Novel, Document, DocumentProgress, Scene, Docum
 from plotlyst.env import open_location, app_env
 from plotlyst.resources import resource_registry, ResourceType
 from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.widget.confirm import asked
 from plotlyst.view.widget.utility import ask_for_resource
 
 
@@ -79,7 +79,8 @@ def export_manuscript_to_docx(novel: Novel):
     spec_args = ['--reference-doc', resource_registry.manuscript_docx_template]
     pypandoc.convert_text(html, to='docx', format='html', extra_args=spec_args, outputfile=target_path)
 
-    if ask_confirmation('Export was finished. Open file in editor?'):
+    if asked('The file will be opened in an external editor associated with that file format.',
+             'Export was finished. Open file in editor?', btnCancelText='No'):
         open_location(target_path)
 
 

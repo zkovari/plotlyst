@@ -286,7 +286,7 @@ class StoryStructureSettingsPopup(PopupDialog):
     def __init__(self, structure: StoryStructure, parent=None):
         super().__init__(parent)
         self.structure = structure
-        self.setMinimumSize(550, 250)
+        # self.setMinimumSize(550, 250)
 
         self.wdgTitle = QWidget()
         hbox(self.wdgTitle)
@@ -460,10 +460,11 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         structure = self.novel.active_story_structure
         number_of_beats = len([x for x in structure.beats if x.enabled and x.type == StoryBeatType.BEAT])
         occupied = len(acts_registry.occupied_beats())
+        title = f'Are you sure you want to delete the story structure "{structure.title}"?'
         msg = '<html><ul><li>This operation cannot be undone.<li>All scene associations to this structure will be unlinked.'
         if occupied:
-            msg += f'<li>Linked structure beats to scenes: <b>{occupied}/{number_of_beats}</b>'
-        if not confirmed(msg, f'Remove story structure "{structure.title}"?'):
+            msg += f'<li>Number of linked structure beats to scenes: <b>{occupied}/{number_of_beats}</b>'
+        if not confirmed(msg, title):
             return
 
         to_be_removed_button: Optional[QPushButton] = None
@@ -518,9 +519,8 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
     @busy
     def _refreshStructure(self, structure: StoryStructure):
         self.wdgStructureOutline.setStructure(structure)
-        # self._structureNotes.setStructure(structure)
-
         self.wdgPreview.setStructure(self.novel, structure)
+
         self.wdgPreview.setHidden(structure.display_type == StoryStructureDisplayType.Sequential_timeline)
         self._beatsPreview.attachStructurePreview(self.wdgPreview)
         self.wdgStructureOutline.attachStructurePreview(self.wdgPreview)
@@ -549,7 +549,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.wdgPreview.setBeatsMoveable(True)
         self.wdgPreview.setActsClickable(False)
         self.wdgPreview.setActsResizeable(True)
-        self.wdgPreview.actsResized.connect(lambda: emit_event(self.novel, NovelStoryStructureUpdated(self)))
+        self.wdgPreview.actsResized.connect(self._emit)
         self.wdgPreview.beatMoved.connect(self._beatMoved)
 
     def _timelineChanged(self):
@@ -557,7 +557,11 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self._emit()
 
     def _beatMoved(self):
-        QTimer.singleShot(20, lambda: self._refreshStructure(self.novel.active_story_structure))
+        def refresh(structure: StoryStructure):
+            self.wdgStructureOutline.setStructure(structure)
+            self._beatsPreview.setStructure(structure)
+
+        QTimer.singleShot(20, lambda: refresh(self.novel.active_story_structure))
         self._emit()
 
     def _toggleDeleteButton(self):

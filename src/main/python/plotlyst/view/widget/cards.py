@@ -384,6 +384,9 @@ class CardsView(QFrame):
 
     @overrides
     def mouseReleaseEvent(self, a0: QtGui.QMouseEvent) -> None:
+        self.clearSelection()
+
+    def clearSelection(self):
         if self._selected:
             self._selected.clearSelection()
             self._selected = None
@@ -513,6 +516,7 @@ class CardsView(QFrame):
         self._dragPlaceholder.setVisible(True)
 
     def _dropped(self, _: QMimeData):
+        self.clearSelection()
         card = self._dragged.copy()
         self._initCardWidget(card)
 

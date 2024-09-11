@@ -434,9 +434,9 @@ class ConnectorItem(QGraphicsPathItem):
             self.setPen(QPen(self._color, 2))
 
         self._arrowhead = QPolygonF([
-            QPointF(0, -5),
-            QPointF(10, 0),
-            QPointF(0, 5),
+            QPointF(0, -4),
+            QPointF(8, 0),
+            QPointF(0, 4),
         ])
         self._endArrowheadItem = QGraphicsPolygonItem(self._arrowhead, self)
         self._endArrowheadItem.setPen(QPen(self._color, 1))
@@ -1416,6 +1416,7 @@ class NoteItem(NodeItem):
         painter.setFont(self._font)
         if self._node.text:
             doc = QTextDocument()
+            doc.setTextWidth(self._textRect.width())
             doc.setMarkdown(self._node.text)
             painter.translate(self._textRect.x(), self._textRect.y())
             doc.drawContents(painter)

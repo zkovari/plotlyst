@@ -24,7 +24,7 @@
     <number>2</number>
    </property>
    <property name="topMargin">
-    <number>0</number>
+    <number>2</number>
    </property>
    <property name="rightMargin">
     <number>9</number>
@@ -503,10 +503,10 @@
              <attribute name="verticalHeaderVisible">
               <bool>false</bool>
              </attribute>
-             <attribute name="verticalHeaderMinimumSectionSize">
+             <attribute name="verticalHeaderDefaultSectionSize">
               <number>33</number>
              </attribute>
-             <attribute name="verticalHeaderDefaultSectionSize">
+             <attribute name="verticalHeaderMinimumSectionSize">
               <number>33</number>
              </attribute>
             </widget>
@@ -991,8 +991,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>873</width>
-                    <height>520</height>
+                    <width>870</width>
+                    <height>481</height>
                    </rect>
                   </property>
                   <property name="relaxed-white-bg" stdset="0">
@@ -1143,8 +1143,8 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="btnGroupComparison"/>
   <buttongroup name="btnGroupViews"/>
+  <buttongroup name="btnGroupComparison"/>
   <buttongroup name="btnGroupComparisonView"/>
  </buttongroups>
 </ui>

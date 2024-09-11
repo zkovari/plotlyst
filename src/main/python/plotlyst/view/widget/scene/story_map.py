@@ -35,16 +35,16 @@ from qthandy import decr_font, transparent, clear_layout, hbox, spacer, vbox
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
-from plotlyst.common import RELAXED_WHITE_COLOR, WHITE_COLOR
+from plotlyst.common import RELAXED_WHITE_COLOR, WHITE_COLOR, PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.common import truncate_string
 from plotlyst.core.domain import Scene, Novel, Plot, \
-    ScenePlotReference
+    ScenePlotReference, SceneFunction, StoryElementType
 from plotlyst.event.core import Event, EventListener
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import SceneOrderChangedEvent
 from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import hmax, action, tool_btn, ButtonPressResizeEventFilter, fade_out_and_gc, shadow
+from plotlyst.view.common import hmax, action, tool_btn, ButtonPressResizeEventFilter, fade_out_and_gc
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.button import WordWrappedPushButton
 from plotlyst.view.widget.display import Icon
@@ -211,7 +211,7 @@ class StoryLinesMapWidget(QWidget):
     def _draw_scene_ellipse(self, painter: QPainter, scene: Scene, x: int, y: int):
         selected = scene is self._clicked_scene
         if scene.plot_values:
-            pen_color = '#CB4D4D' if selected else Qt.GlobalColor.black
+            pen_color = PLOTLYST_TERTIARY_COLOR if selected else Qt.GlobalColor.black
             if len(scene.plot_values) == 1:
                 painter.setPen(QPen(QColor(pen_color), 3, Qt.PenStyle.SolidLine))
                 painter.setBrush(Qt.GlobalColor.black)
@@ -223,7 +223,7 @@ class StoryLinesMapWidget(QWidget):
                 painter.setBrush(Qt.GlobalColor.white)
                 painter.drawEllipse(x, y - 10, 20, 20)
         else:
-            pen_color = '#CB4D4D' if scene is self._clicked_scene else Qt.GlobalColor.gray
+            pen_color = PLOTLYST_SECONDARY_COLOR if scene is self._clicked_scene else Qt.GlobalColor.gray
             painter.setPen(QPen(QColor(pen_color), 3, Qt.PenStyle.SolidLine))
             painter.setBrush(Qt.GlobalColor.gray)
             size = 18 if selected else 14
@@ -264,14 +264,18 @@ class StoryLinesMapWidget(QWidget):
     def _plot_changed(self, plot: Plot, checked: bool):
         if checked:
             self._clicked_scene.plot_values.append(ScenePlotReference(plot))
+            function = SceneFunction(StoryElementType.Plot)
+            function.ref = plot.id
+            self._clicked_scene.functions.primary.append(function)
         else:
-            to_be_removed = None
-            for plot_v in self._clicked_scene.plot_values:
-                if plot_v.plot is plot:
-                    to_be_removed = plot_v
-                    break
-            if to_be_removed:
-                self._clicked_scene.plot_values.remove(to_be_removed)
+            ref_to_be_removed = next((plot_v for plot_v in self._clicked_scene.plot_values if plot_v.plot is plot),
+                                     None)
+            function_to_be_removed = next(
+                (func for func in self._clicked_scene.functions.primary if func.ref == plot.id), None)
+            if ref_to_be_removed:
+                self._clicked_scene.plot_values.remove(ref_to_be_removed)
+            if function_to_be_removed:
+                self._clicked_scene.functions.primary.remove(function_to_be_removed)
         RepositoryPersistenceManager.instance().update_scene(self._clicked_scene)
 
         self.update()
@@ -571,7 +575,7 @@ class StoryMap(QWidget, EventListener):
                     transparent(btn)
                     titles.layout().addWidget(btn)
                 titles.layout().addWidget(spacer())
-            wdg.sceneSelected.connect(self.sceneSelected.emit)
+            wdg.sceneSelected.connect(self.sceneSelected)
 
     @busy
     def setMode(self, mode: StoryMapDisplayMode):

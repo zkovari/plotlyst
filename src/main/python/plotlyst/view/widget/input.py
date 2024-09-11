@@ -1153,7 +1153,7 @@ class LabelWidget(QFrame):
             }}
             #labelText {{
                 color: {RELAXED_WHITE_COLOR};
-                font-family: Serif;
+                font-family: {app_env.serif_font()};
             }}''')
 
         self.btnMenu = DotsMenuButton()
@@ -1233,7 +1233,7 @@ class LabelsEditor(QFrame):
                 color: {RELAXED_WHITE_COLOR};
             }}
             #labelPlaceholder {{
-                font-family: Serif;
+                font-family: {app_env.serif_font()};
             }}
         ''')
 

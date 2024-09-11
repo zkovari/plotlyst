@@ -163,7 +163,8 @@ class PlotTreeView(TreeView, EventListener):
 
     def _removePlot(self, wdg: PlotNode):
         plot = wdg.plot()
-        if not confirmed("The operation cannot be undone.", f"Delete plot '{plot.text}'?"):
+        title = f'Are you sure you want to delete the storyline "{plot.text}"?'
+        if not confirmed("This action cannot be undone.", title):
             return
         if plot in self._selectedPlots:
             self._selectedPlots.remove(plot)
@@ -563,23 +564,24 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         menu.addAction(
             action('Main plot', IconRegistry.storylines_icon(), slot=lambda: self.newPlot(PlotType.Main),
-                   tooltip="The central storyline that drives the narrative"))
+                   tooltip="The central storyline that drives the narrative", incr_font_=1))
         menu.addAction(
             action('Character arc', IconRegistry.conflict_self_icon(), lambda: self.newPlot(PlotType.Internal),
-                   tooltip="The transformation or personal growth of a character"))
+                   tooltip="The transformation or personal growth of a character", incr_font_=1))
         menu.addAction(
             action('Subplot', IconRegistry.subplot_icon(), lambda: self.newPlot(PlotType.Subplot),
-                   tooltip="A secondary storyline to complement the main plot"))
+                   tooltip="A secondary storyline to complement the main plot", incr_font_=1))
 
         submenu = MenuWidget()
         submenu.setTitle('Other')
         submenu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         submenu.addAction(action('Relationship plot', IconRegistry.from_name('fa5s.people-arrows'),
                                  slot=lambda: self.newPlot(PlotType.Relation),
-                                 tooltip="Relationship dynamics between two characters"))
+                                 tooltip="Relationship dynamics between two characters", incr_font_=1))
         submenu.addAction(action('Global storyline', IconRegistry.from_name('fa5s.globe'),
                                  slot=lambda: self.newPlot(PlotType.Global),
-                                 tooltip="A broader storyline that can encompass multiple storylines without serving as the central plot itself"))
+                                 tooltip="A broader storyline that can encompass multiple storylines without serving as the central plot itself",
+                                 incr_font_=1))
         menu.addSeparator()
         menu.addMenu(submenu)
         apply_white_menu(submenu)
@@ -661,18 +663,6 @@ class PlotEditor(QWidget, Ui_PlotEditor):
 
         self._wdgImpactMatrix.refresh()
         emit_event(self.novel, StorylineRemovedEvent(self, plot))
-
-    # def _remove(self, widget: PlotWidget):
-    #     if ask_confirmation(f'Are you sure you want to delete the plot {widget.plot.text}?'):
-    #         if app_env.test_env():
-    #             self.__destroy(widget)
-    #         else:
-    #             anim = qtanim.fade_out(widget, duration=150)
-    #             anim.finished.connect(partial(self.__destroy, widget))
-    #
-    # def __destroy(self, widget: PlotWidget):
-    #     delete_plot(self.novel, widget.plot)
-    #     self.scrollAreaWidgetContents.layout().removeWidget(widget.parent())
 
     def _displayImpactMatrix(self, checked: bool):
         self._wdgList.clearSelection()

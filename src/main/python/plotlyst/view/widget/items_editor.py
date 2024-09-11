@@ -182,8 +182,8 @@ class ItemsEditorWidget(QWidget):
         if not indexes:
             return
         item: SelectionItem = self.model.item(indexes[0])
-        if self.askRemovalConfirmation and not confirmed('This operation cannot be undone.',
-                                                         f'Are you sure you want to remove "{item.text}"?'):
+        if self.askRemovalConfirmation and not confirmed('This action cannot be undone.',
+                                                         f'Are you sure you want to remove the element "{item.text}"?'):
             return
         self.model.remove(indexes[0])
 

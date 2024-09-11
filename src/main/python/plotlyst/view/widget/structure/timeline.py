@@ -28,7 +28,7 @@ from PyQt6.QtCore import Qt, QEvent, pyqtSignal, QObject, QSize
 from PyQt6.QtGui import QColor, QDragEnterEvent, QDropEvent, QResizeEvent, QCursor, QPainter, QPaintEvent, QPen
 from PyQt6.QtWidgets import QWidget, QToolButton, QSizePolicy, QPushButton, QSplitter, QAbstractButton
 from overrides import overrides
-from qthandy import hbox, transparent, italic, translucent, gc, pointy, clear_layout, vbox, margins, decr_font
+from qthandy import hbox, transparent, italic, translucent, gc, clear_layout, vbox, margins, decr_font
 from qthandy.filter import InstantTooltipEventFilter, DragEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, act_color, RELAXED_WHITE_COLOR
@@ -213,9 +213,6 @@ class StoryStructureTimelineWidget(QWidget):
             gc(wdg)
         self._beats.clear()
 
-        if not self.isProportionalDisplay():
-            self.setBeatsMoveable(False)
-
         occupied_beats = acts_registry.occupied_beats()
         for beat in self.structure.sorted_beats():
             if beat.type == StoryBeatType.CONTAINER:
@@ -254,7 +251,7 @@ class StoryStructureTimelineWidget(QWidget):
             btn.toggled.connect(partial(self._beatToggled, btn))
             btn.clicked.connect(partial(self._beatClicked, btn))
             btn.installEventFilter(self)
-            if self._beatsMoveable and not beat.ends_act and not is_midpoint(beat):
+            if self._beatsMoveable and not beat.ends_act and not is_midpoint(beat) and self.isProportionalDisplay():
                 btn.installEventFilter(
                     DragEventFilter(btn, self.BeatMimeType, btn.dataFunc, hideTarget=True))
                 btn.setCursor(Qt.CursorShape.OpenHandCursor)
@@ -508,8 +505,8 @@ class StoryStructureTimelineWidget(QWidget):
         # if toggled:
         #     btn.setCheckable(False)
         # else:
-            # pointy(btn)
-            # btn.setCheckable(True)
+        # pointy(btn)
+        # btn.setCheckable(True)
         self._beatToggled(btn, toggled)
 
     def toggleBeatVisibility(self, beat: StoryBeat):

@@ -34,7 +34,7 @@ from qtmenu import MenuWidget
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.client import json_client
 from plotlyst.core.domain import Novel, Scene, Document, StoryBeat, \
-    Character, ScenePurposeType, ScenePurpose, Plot, ScenePlotReference, NovelSetting
+    Character, ScenePurposeType, ScenePurpose, Plot, ScenePlotReference, NovelSetting, StoryElementType, SceneOutcome
 from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, Event, emit_event
 from plotlyst.event.handler import event_dispatchers
@@ -114,6 +114,7 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgPov.setFixedSize(170, 170)
 
         self._progressEditor = SceneProgressEditor()
+        self._progressEditor.progressCharged.connect(self._update_outcome)
         self._structureSelector = StructureBeatSelectorButton(self.novel)
         self._structureSelector.setVisible(self.novel.prefs.toggled(NovelSetting.Structure))
         self._structureSelector.selected.connect(self._beat_selected)
@@ -166,13 +167,15 @@ class SceneEditor(QObject, EventListener):
                                          tooltip='Link storylines to this scene', transparent_=True)
         self._btnPlotSelector.installEventFilter(OpacityEventFilter(self._btnPlotSelector, leaveOpacity=0.8))
         self._plotSelectorMenu = ScenePlotSelectorMenu(self.novel, self._btnPlotSelector)
-        self._plotSelectorMenu.plotSelected.connect(self._storyline_selected)
+        self._plotSelectorMenu.plotSelected.connect(self._storyline_selected_from_toolbar)
         hbox(self.ui.wdgStorylines)
         self.ui.wdgMidbar.layout().insertWidget(1, self._btnPlotSelector)
 
         self._functionsEditor = SceneFunctionsWidget(self.novel)
-        self._functionsEditor.storylineLinked.connect(self._storyline_linked)
-        self._functionsEditor.storylineEditRequested.connect(self._storyline_edit)
+        self._functionsEditor.storylineLinked.connect(self._storyline_linked_from_function)
+        self._functionsEditor.storylineRemoved.connect(self._storyline_removed_from_function)
+        self._functionsEditor.storylineCharged.connect(self._update_progress)
+
         self.ui.scrollAreaFunctions.layout().addWidget(self._functionsEditor)
 
         self._agencyEditor = SceneAgencyEditor(self.novel)
@@ -311,32 +314,49 @@ class SceneEditor(QObject, EventListener):
             self.ui.wdgPov.reset()
             self.ui.wdgPov.btnAvatar.setToolTip('Select point of view character')
 
-    def _storyline_selected(self, storyline: Plot) -> ScenePlotLabels:
-        plotRef = ScenePlotReference(storyline)
-        self.scene.plot_values.append(plotRef)
-        return self._add_plot_ref(plotRef)
+    def _storyline_selected_from_toolbar(self, storyline: Plot):
+        self._functionsEditor.addPrimaryType(StoryElementType.Plot, storyline)
 
-    def _storyline_removed(self, labels: ScenePlotLabels, plotRef: ScenePlotReference):
+    def _storyline_removed_from_toolbar(self, labels: ScenePlotLabels, plotRef: ScenePlotReference):
+        self._functionsEditor.storylineRemovedEvent(plotRef.plot)
+        self._storyline_removed(labels)
+
+    def _storyline_removed(self, labels: ScenePlotLabels):
         fade_out_and_gc(self.ui.wdgStorylines.layout(), labels)
-        self.scene.plot_values.remove(plotRef)
-        self._progressEditor.refresh()
+        self._update_progress()
 
-    def _storyline_linked(self, storyline: Plot):
-        if next((x for x in self.scene.plot_values if x.plot.id == storyline.id), None) is None:
-            labels = self._storyline_selected(storyline)
-            qtanim.glow(labels.icon(), loop=3, color=QColor(storyline.icon_color))
+    def _storyline_linked_from_function(self, ref: ScenePlotReference):
+        labels = self._add_plot_ref(ref)
+        qtanim.glow(labels.icon(), loop=1, color=QColor(ref.plot.icon_color))
 
-    def _storyline_edit(self, storyline: Plot):
+    def _storyline_removed_from_function(self, ref: ScenePlotReference):
         for i in range(self.ui.wdgStorylines.layout().count()):
-            item = self.ui.wdgStorylines.layout().itemAt(i)
-            if item and isinstance(item.widget(),
-                                   ScenePlotLabels) and item.widget().storylineRef().plot.id == storyline.id:
-                item.widget().activate()
+            widget = self.ui.wdgStorylines.layout().itemAt(i).widget()
+            if widget and isinstance(widget, ScenePlotLabels):
+                if widget.storylineRef() is ref:
+                    self._storyline_removed(widget)
+                    break
+
+    def _update_progress(self):
+        self._progressEditor.refresh()
+        self._update_outcome()
+
+    def _update_outcome(self):
+        charge = self._progressEditor.charge()
+        alt_charge = self._progressEditor.altCharge()
+        if charge > 0:
+            if charge == abs(alt_charge):
+                self.scene.outcome = SceneOutcome.TRADE_OFF
+            else:
+                self.scene.outcome = SceneOutcome.RESOLUTION
+        else:
+            self.scene.outcome = SceneOutcome.DISASTER
+
+        self._btnPurposeType.refresh()
 
     def _add_plot_ref(self, plotRef: ScenePlotReference) -> ScenePlotLabels:
         labels = ScenePlotLabels(self.scene, plotRef)
-        labels.reset.connect(partial(self._storyline_removed, labels, plotRef))
-        labels.generalProgressCharged.connect(self._progressEditor.refresh)
+        labels.reset.connect(partial(self._storyline_removed_from_toolbar, labels, plotRef))
         self.ui.wdgStorylines.layout().addWidget(labels)
         self._btnPlotSelector.setText('')
 
@@ -383,7 +403,7 @@ class SceneEditor(QObject, EventListener):
     def _save_scene(self):
         self.scene.title = self.ui.lineTitle.text()
         self.scene.synopsis = self.ui.textSynopsis.toPlainText()
-        self.scene.day = self.ui.sbDay.value()
+        # self.scene.day = self.ui.sbDay.value()
 
         self.scene.tag_references.clear()
         # for tag in self.tag_selector.tags():

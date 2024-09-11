@@ -61,3 +61,5 @@ class StorylineSelectorMenu(MenuWidget):
             self.addAction(action_)
         if not self.actions():
             self.addSection('No corresponding storylines were found')
+
+        self._frame.updateGeometry()

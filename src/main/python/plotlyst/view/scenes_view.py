@@ -27,7 +27,7 @@ from PyQt6.QtCore import Qt, QModelIndex, \
 from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget, QHeaderView
 from overrides import overrides
-from qthandy import incr_font, translucent, clear_layout, busy, bold, sp, transparent, incr_icon
+from qthandy import incr_font, translucent, clear_layout, busy, bold, sp, transparent, incr_icon, retain_when_hidden
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -96,7 +96,8 @@ class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
         self.refresh()
 
         dispatcher = event_dispatchers.instance(self.novel)
-        dispatcher.register(self, SceneChangedEvent, SceneDeletedEvent, NovelSyncEvent, NovelStoryStructureUpdated)
+        dispatcher.register(self, SceneChangedEvent, SceneAddedEvent, SceneDeletedEvent, NovelSyncEvent,
+                            NovelStoryStructureUpdated)
 
     @overrides
     def event_received(self, event: Event):
@@ -137,7 +138,8 @@ class ScenesOutlineView(AbstractNovelView):
         self.characters_distribution: Optional[ScenesDistributionWidget] = None
 
         self.tblModel = ScenesTableModel(novel)
-        self.tblModel.setDragEnabled(not self.novel.is_readonly())
+        # self.tblModel.setDragEnabled(not self.novel.is_readonly())
+        self.tblModel.setDragEnabled(False)
         self._proxy = ScenesFilterProxyModel()
         self._proxy.setSourceModel(self.tblModel)
         self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
@@ -147,8 +149,8 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.tblScenes.horizontalHeader().setProperty('main-header', True)
         self.ui.tblScenes.verticalHeader().setFixedWidth(40)
         self.ui.tblScenes.verticalHeader().setVisible(True)
-        self.tblModel.orderChanged.connect(self._on_scene_moved)
-        self.tblModel.sceneChanged.connect(self._on_scene_changed)
+        self.tblModel.orderChanged.connect(self._on_scene_moved_in_table)
+        self.tblModel.sceneChanged.connect(self._on_scene_changed_in_table)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColTitle, 250)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColCharacters, 170)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColType, 55)
@@ -210,6 +212,8 @@ class ScenesOutlineView(AbstractNovelView):
         incr_icon(self.ui.btnStoryMapDisplay, 2)
         incr_font(self.ui.btnStoryGridDisplay, 2)
         incr_icon(self.ui.btnStoryGridDisplay, 2)
+        retain_when_hidden(self.ui.wdgStorymapToolbar)
+        self.ui.wdgStorymapSelectors.setHidden(True)
 
         self.ui.btnStageCustomize.setIcon(IconRegistry.cog_icon())
         transparent(self.ui.btnStageCustomize)
@@ -302,9 +306,11 @@ class ScenesOutlineView(AbstractNovelView):
             i = self.novel.scenes.index(event.scene)
             card = self.__init_card_widget(event.scene)
             self.ui.cards.insertAt(i, card)
+            self._handle_scene_added()
             return
         elif isinstance(event, SceneOrderChangedEvent):
             self.ui.cards.reorderCards(self.novel.scenes)
+            self._handle_scene_order_changed()
             return
         elif isinstance(event, SceneStoryBeatChangedEvent):
             self.ui.wdgStoryStructure.toggleBeat(event.beat, event.toggled)
@@ -377,7 +383,7 @@ class ScenesOutlineView(AbstractNovelView):
                 if filters:
                     for k, v in filters.items():
                         self.storymap_view.setActsFilter(k, v)
-                self.storymap_view.sceneSelected.connect(self.ui.wdgStoryStructure.highlightScene)
+                self.storymap_view.sceneSelected.connect(self._storymap_scene_selected)
                 self.storymap_view.setNovel(self.novel)
         elif self.ui.btnCharactersDistributionView.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageCharactersDistribution)
@@ -420,7 +426,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.selected_card.clearSelection()
             self.selected_card = None
 
-        self.ui.btnDelete.setEnabled(False)
+        self.ui.btnDelete.setEnabled(True)
         self.ui.btnEdit.setEnabled(False)
 
     def _hide_chapters_clicked(self, toggled: bool):
@@ -470,10 +476,11 @@ class ScenesOutlineView(AbstractNovelView):
         self.title.setVisible(True)
         self._scene_filter.povFilter.updateCharacters(self.novel.pov_characters(), checkAll=True)
 
-        emit_event(self.novel, SceneChangedEvent(self, self.editor.scene))
         self._handle_scene_changed(self.editor.scene)
         if self._scene_added is not None:
             emit_event(self.novel, SceneAddedEvent(self, self._scene_added), delay=10)
+
+            self._handle_scene_added()
         self._scene_added = None
 
     @busy
@@ -556,8 +563,14 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.treeChapters.selectScene(card.scene)
         emit_event(self.novel, SceneSelectedEvent(self, card.scene))
 
+    def _storymap_scene_selected(self, scene: Scene):
+        self.ui.wdgStoryStructure.highlightScene(scene)
+        if self.ui.treeChapters.isVisible():
+            self.ui.treeChapters.selectScene(scene)
+
     def _selection_cleared(self):
         self._enable_action_buttons(False)
+        self.selected_card = None
         self.ui.treeChapters.clearSelection()
 
     def _enable_action_buttons(self, enabled: bool):
@@ -655,11 +668,6 @@ class ScenesOutlineView(AbstractNovelView):
             #         self.ui.wdgProgressCharts.layout().insertWidget(i, chartview)
 
     def _on_custom_menu_requested(self, pos: QPoint):
-        def toggle_wip(scene: Scene):
-            scene.wip = not scene.wip
-            self.repo.update_scene(scene)
-            self.refresh()
-
         index: QModelIndex = self.ui.tblScenes.indexAt(pos)
         menu = MenuWidget()
         action_ = action('Insert new scene', IconRegistry.plus_icon(),
@@ -690,36 +698,22 @@ class ScenesOutlineView(AbstractNovelView):
             self._handle_scene_deletion(scene)
             emit_event(self.novel, SceneDeletedEvent(self, scene))
 
-        # elif not scene:
-        #     chapters = self.ui.treeChapters.selectedChapters()
-        #     title = chapters[0].title_index(self.novel)
-        #     if chapters:
-        #         if ask_confirmation(
-        #                 f'Are you sure you want to delete chapter "{title}"? (scenes will remain)'):
-        #             self.chaptersModel.removeChapter(index)
-        #             emit_event(ChapterChangedEvent(self))
+        elif not scene:
+            chapters = self.ui.treeChapters.selectedChapters()
+            if chapters:
+                self.ui.treeChapters.removeChapter(chapters[0])
 
     def _on_scene_cards_swapped(self, scenes: List[Scene]):
         self.novel.scenes[:] = scenes
-
-        self.tblModel.modelReset.emit()
-
-        if self.stagesModel:
-            self.stagesModel.modelReset.emit()
-        if self.stagesProgress:
-            self.stagesProgress.refresh()
-        if self.characters_distribution:
-            self.characters_distribution.refresh()
-
-        self.repo.update_novel(self.novel)
-
+        self._handle_scene_order_changed()
         emit_event(self.novel, SceneOrderChangedEvent(self))
 
-    def _on_scene_moved(self):
-        self.repo.update_novel(self.novel)
-        self.refresh()
+    def _on_scene_moved_in_table(self):
+        self.ui.cards.reorderCards(self.novel.scenes)
+        self._handle_scene_order_changed()
+        emit_event(self.novel, SceneOrderChangedEvent(self))
 
-    def _on_scene_changed(self, scene: Scene):
+    def _on_scene_changed_in_table(self, scene: Scene):
         emit_event(self.novel, SceneChangedEvent(self, scene))
         self._handle_scene_changed(scene)
 
@@ -728,9 +722,30 @@ class ScenesOutlineView(AbstractNovelView):
         if card:
             card.refresh()
 
+        if self.characters_distribution:
+            self.characters_distribution.refreshAverage()
+
+    def _handle_scene_order_changed(self):
+        self.repo.update_novel(self.novel)
+        for card in self.ui.cards.cards():
+            card.quickRefresh()
+
     def _handle_scene_deletion(self, scene: Scene):
         self.selected_card = None
         self.ui.cards.remove(scene)
+        self._update_table_models()
+
+    def _handle_scene_added(self):
+        self._update_table_models()
+
+    def _update_table_models(self):
+        self.tblModel.modelReset.emit()
+        if self.stagesModel:
+            self.stagesModel.modelReset.emit()
+        if self.stagesProgress:
+            self.stagesProgress.refresh()
+        if self.characters_distribution:
+            self.characters_distribution.refresh()
 
     @busy
     def _handle_character_changed(self, _: Character):
@@ -739,7 +754,7 @@ class ScenesOutlineView(AbstractNovelView):
             card.refreshPov()
             card.refreshCharacters()
 
-    @busy
+    # @busy
     def _handle_structure_update(self):
         if self.ui.btnStoryStructure.isChecked():
             self.ui.btnStoryStructureSelector.setVisible(len(self.novel.story_structures) > 1)

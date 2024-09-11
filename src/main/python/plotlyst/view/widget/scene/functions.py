@@ -21,8 +21,8 @@ from functools import partial
 from typing import Optional
 
 import qtanim
-from PyQt6.QtCore import Qt, QEvent, pyqtSignal
-from PyQt6.QtGui import QColor, QEnterEvent, QIcon
+from PyQt6.QtCore import Qt, pyqtSignal, QEvent
+from PyQt6.QtGui import QColor, QIcon, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QAbstractButton
 from overrides import overrides
 from qthandy import vbox, incr_icon, incr_font, flow, margins, vspacer, hbox, clear_layout, pointy, gc
@@ -30,7 +30,7 @@ from qthandy.filter import OpacityEventFilter, ObjectReferenceMimeData
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RED_COLOR
-from plotlyst.core.domain import Scene, Novel, StoryElementType, Character, SceneFunction, Plot
+from plotlyst.core.domain import Scene, Novel, StoryElementType, Character, SceneFunction, Plot, ScenePlotReference
 from plotlyst.service.cache import characters_registry
 from plotlyst.view.common import push_btn, tool_btn, action, shadow, label, fade_out_and_gc
 from plotlyst.view.icons import IconRegistry
@@ -39,7 +39,8 @@ from plotlyst.view.widget.characters import CharacterSelectorButton
 from plotlyst.view.widget.display import Icon
 from plotlyst.view.widget.input import TextEditBubbleWidget
 from plotlyst.view.widget.list import ListView, ListItemWidget
-from plotlyst.view.widget.scene.plot import SceneFunctionPlotSelectorMenu
+from plotlyst.view.widget.scene.plot import ScenePlotGeneralProgressEditor, \
+    ScenePlotSelectorMenu
 
 
 class PrimarySceneFunctionWidget(TextEditBubbleWidget):
@@ -62,25 +63,85 @@ class PrimarySceneFunctionWidget(TextEditBubbleWidget):
 
 
 class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
-    storylineSelected = pyqtSignal(Plot)
-    storylineEditRequested = pyqtSignal(Plot)
+    storylineSelected = pyqtSignal(ScenePlotReference)
+    storylineRemoved = pyqtSignal(ScenePlotReference)
+    storylineCharged = pyqtSignal()
 
     def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
+        self._plotRef: Optional[ScenePlotReference] = None
         super().__init__(novel, scene, function, parent)
         pointy(self._title)
-        self._menu = SceneFunctionPlotSelectorMenu(novel, self._title)
+        self._menu = ScenePlotSelectorMenu(novel, self._title)
         self._menu.plotSelected.connect(self._plotSelected)
         self._menu.setScene(scene)
 
-    def _plot(self) -> Optional[Plot]:
+        self._btnProgress = tool_btn(IconRegistry.from_name('mdi.chevron-double-up', color='grey'),
+                                     transparent_=True,
+                                     tooltip='Track progress', parent=self)
+        self._btnProgress.installEventFilter(OpacityEventFilter(self._btnProgress, leaveOpacity=0.7))
+        self._btnProgress.setGeometry(0, 18, 20, 20)
+        self._btnProgress.setHidden(True)
+
+        self._progressMenu = MenuWidget(self._btnProgress)
+        apply_white_menu(self._progressMenu)
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        super().enterEvent(event)
+        if self._plotRef:
+            self._btnProgress.setVisible(True)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        super().leaveEvent(event)
+        if not self._plotRef or not self._plotRef.data.charge:
+            self._btnProgress.setVisible(False)
+
+    def plot(self) -> Optional[Plot]:
         return next((x for x in self.novel.plots if x.id == self.function.ref), None)
+
+    def setPlot(self, plot: Plot):
+        self._plotSelected(plot)
+
+    def plotRef(self) -> ScenePlotReference:
+        return self._plotRef
+
+    def setPlotRef(self, ref: ScenePlotReference):
+        self._plotRef = ref
+        self._setPlotStyle(self._plotRef.plot)
+        self._textedit.setText(self._plotRef.data.comment)
+        if self._plotRef.data.charge:
+            self._btnProgress.setVisible(True)
+
+        editor = ScenePlotGeneralProgressEditor(self._plotRef)
+        editor.charged.connect(self._chargeClicked)
+        self._progressMenu.clear()
+        self._progressMenu.addWidget(editor)
+
+        self._charged()
+
+    @overrides
+    def _textChanged(self):
+        if self._plotRef:
+            self._plotRef.data.comment = self._textedit.toPlainText()
+        else:
+            super()._textChanged()
+
+    def _chargeClicked(self):
+        self._charged()
+        if self._plotRef.data.charge:
+            self._btnProgress.setVisible(True)
+        self.storylineCharged.emit()
+
+    def _charged(self):
+        if self._plotRef.data.charge:
+            self._btnProgress.setIcon(IconRegistry.charge_icon(self._plotRef.data.charge))
+        else:
+            self._btnProgress.setIcon(IconRegistry.from_name('mdi.chevron-double-up', color='grey'))
 
     def _setPlotStyle(self, plot: Plot):
         gc(self._menu)
         self._menu = MenuWidget(self._title)
-        self._menu.addAction(
-            action('Edit', IconRegistry.edit_icon(), slot=partial(self.storylineEditRequested.emit, plot)))
-        self._menu.addSeparator()
         self._menu.addAction(
             action('Unlink storyline', IconRegistry.from_name('fa5s.unlink', RED_COLOR), slot=self._plotRemoved))
 
@@ -92,29 +153,30 @@ class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
 
     def _plotSelected(self, plot: Plot):
         self.function.ref = plot.id
-        self._setPlotStyle(plot)
+        ref = ScenePlotReference(plot)
+        self.scene.plot_values.append(ref)
+        self.setPlotRef(ref)
         qtanim.glow(self._storylineParent(), color=QColor(plot.icon_color))
-        self.storylineSelected.emit(plot)
+        self.storylineSelected.emit(self._plotRef)
 
     def _plotRemoved(self):
         self.function.ref = None
         gc(self._menu)
-        self._menu = SceneFunctionPlotSelectorMenu(self.novel, self._title)
+        self._menu = ScenePlotSelectorMenu(self.novel, self._title)
         self._menu.plotSelected.connect(self._plotSelected)
         self._menu.setScene(self.scene)
         self._resetPlotStyle()
+        self._btnProgress.setVisible(False)
+        self.scene.plot_values.remove(self._plotRef)
+        self.storylineRemoved.emit(self._plotRef)
+        self._plotRef = None
 
 
 class PlotPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
     def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
         super().__init__(novel, scene, function, parent)
         self._textedit.setPlaceholderText("How does the story move forward")
-        if self.function.ref:
-            storyline = self._plot()
-            if storyline is not None:
-                self._setPlotStyle(storyline)
-        else:
-            self._resetPlotStyle()
+        self._resetPlotStyle()
 
         shadow(self._textedit)
 
@@ -134,90 +196,12 @@ class PlotPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
         return self._title
 
 
-class _AlternativeStorylineAssociatedFunctionWidget(_StorylineAssociatedFunctionWidget):
-    def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
-        super().__init__(novel, scene, function, parent)
-
-        self._btnStorylineLink = tool_btn(IconRegistry.storylines_icon(color='lightgrey'), transparent_=True,
-                                          tooltip='Link storyline to this element',
-                                          parent=self)
-        self._btnStorylineLink.installEventFilter(OpacityEventFilter(self._btnStorylineLink, leaveOpacity=0.7))
-        self._btnStorylineLink.setGeometry(5, 18, 20, 20)
-        self._btnStorylineLink.clicked.connect(self._btnStorylineClicked)
-
-        if self.function.ref:
-            self._btnStorylineLink.setVisible(True)
-            storyline = self._plot()
-            if storyline is not None:
-                self._setPlotStyle(storyline)
-        else:
-            self._btnStorylineLink.setVisible(False)
-
-        shadow(self._textedit)
-
-    @overrides
-    def enterEvent(self, event: QEnterEvent) -> None:
-        super().enterEvent(event)
-        if self.function.ref:
-            self._btnStorylineLink.setVisible(True)
-
-    @overrides
-    def leaveEvent(self, event: QEvent) -> None:
-        super().leaveEvent(event)
-        if not self.function.ref:
-            self._btnStorylineLink.setVisible(False)
-
-    @overrides
-    def _plotSelected(self, plot: Plot):
-        self._btnStorylineLink.setVisible(True)
-        super()._plotSelected(plot)
-
-    @overrides
-    def _storylineParent(self):
-        return self._btnStorylineLink
-
-    def _btnStorylineClicked(self):
-        self._menu.exec()
-
-
-class MysteryPrimarySceneFunctionWidget(_AlternativeStorylineAssociatedFunctionWidget):
+class MysteryPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
     def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
         super().__init__(novel, scene, function, parent)
         self._title.setIcon(IconRegistry.from_name('ei.question-sign', PLOTLYST_SECONDARY_COLOR))
         self._title.setText('Mystery')
         self._textedit.setPlaceholderText("What mystery is introduced or deepened")
-
-    @overrides
-    def _setPlotStyle(self, plot: Plot):
-        super()._setPlotStyle(plot)
-        self._btnStorylineLink.setIcon(IconRegistry.from_name(plot.icon, plot.icon_color))
-        self._title.setIcon(IconRegistry.from_name('ei.question-sign', plot.icon_color))
-
-    @overrides
-    def _resetPlotStyle(self):
-        self._btnStorylineLink.setVisible(False)
-        self._btnStorylineLink.setIcon(IconRegistry.storylines_icon(color='lightgrey'))
-        self._title.setIcon(IconRegistry.from_name('ei.question-sign', PLOTLYST_SECONDARY_COLOR))
-
-
-class RevelationPrimarySceneFunctionWidget(_AlternativeStorylineAssociatedFunctionWidget):
-    def __init__(self, novel: Novel, scene: Scene, function: SceneFunction, parent=None):
-        super().__init__(novel, scene, function, parent)
-        self._title.setIcon(IconRegistry.from_name('fa5s.binoculars', PLOTLYST_SECONDARY_COLOR))
-        self._title.setText('Revelation')
-        self._textedit.setPlaceholderText("What key information is revealed or discovered")
-
-    @overrides
-    def _setPlotStyle(self, plot: Plot):
-        super()._setPlotStyle(plot)
-        self._btnStorylineLink.setIcon(IconRegistry.from_name(plot.icon, plot.icon_color))
-        self._title.setIcon(IconRegistry.from_name('fa5s.binoculars', plot.icon_color))
-
-    @overrides
-    def _resetPlotStyle(self):
-        self._btnStorylineLink.setVisible(False)
-        self._btnStorylineLink.setIcon(IconRegistry.storylines_icon(color='lightgrey'))
-        self._title.setIcon(IconRegistry.from_name('fa5s.binoculars', PLOTLYST_SECONDARY_COLOR))
 
 
 class CharacterPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
@@ -296,6 +280,20 @@ class SecondaryFunctionListItemWidget(ListItemWidget):
 
         self._lineEdit.setText(self._function.text)
 
+    def setCharacterEnabled(self, novel: Novel):
+        charSelector = CharacterSelectorButton(novel, iconSize=16)
+        charSelector.characterSelected.connect(self._characterSelected)
+        self.layout().insertWidget(1, charSelector)
+        self._icon.setHidden(True)
+
+        if self._function.character_id:
+            character = characters_registry.character(str(self._function.character_id))
+            if character:
+                charSelector.setCharacter(character)
+
+    def _characterSelected(self, character: Character):
+        self._function.character_id = character.id
+
     @overrides
     def _textChanged(self, text: str):
         super()._textChanged(text)
@@ -303,8 +301,9 @@ class SecondaryFunctionListItemWidget(ListItemWidget):
 
 
 class SecondaryFunctionsList(ListView):
-    def __init__(self, parent=None):
+    def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
+        self._novel = novel
         self._scene: Optional[Scene] = None
         margins(self, left=20)
         self._btnAdd.setHidden(True)
@@ -316,10 +315,15 @@ class SecondaryFunctionsList(ListView):
             self.addItem(function)
 
     @overrides
+    def addItem(self, item: SceneFunction) -> ListItemWidget:
+        wdg = super().addItem(item)
+        if item.type == StoryElementType.Character:
+            wdg.setCharacterEnabled(self._novel)
+        return wdg
+
+    @overrides
     def _addNewItem(self):
-        function = SceneFunction(StoryElementType.Mystery)
-        self._scene.functions.secondary.append(function)
-        self.addItem(function)
+        pass
 
     @overrides
     def _listItemWidgetClass(self):
@@ -332,7 +336,9 @@ class SecondaryFunctionsList(ListView):
 
     @overrides
     def _dropped(self, mimeData: ObjectReferenceMimeData):
-        super()._dropped(mimeData)
+        wdg = super()._dropped(mimeData)
+        if wdg.item().type == StoryElementType.Character:
+            wdg.setCharacterEnabled(self._novel)
         items = []
         for wdg in self.widgets():
             items.append(wdg.item())
@@ -340,8 +346,9 @@ class SecondaryFunctionsList(ListView):
 
 
 class SceneFunctionsWidget(QWidget):
-    storylineLinked = pyqtSignal(Plot)
-    storylineEditRequested = pyqtSignal(Plot)
+    storylineLinked = pyqtSignal(ScenePlotReference)
+    storylineRemoved = pyqtSignal(ScenePlotReference)
+    storylineCharged = pyqtSignal()
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -361,22 +368,23 @@ class SceneFunctionsWidget(QWidget):
         self.menuPrimary.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         self.menuPrimary.addSection('Select a primary function that this scene fulfils')
         self.menuPrimary.addSeparator()
-        self.menuPrimary.addAction(action('Advance plot', IconRegistry.storylines_icon(),
+        self.menuPrimary.addAction(action('Advance story', IconRegistry.storylines_icon(),
                                           slot=partial(self._addPrimary, StoryElementType.Plot),
-                                          tooltip="This scene primarily advances or complicates the story by affecting the plot, character arc, or relationships"))
+                                          tooltip="This scene primarily advances or complicates the story by affecting the plot, character development, or relationships",
+                                          incr_font_=2))
         self.menuPrimary.addAction(
             action('Character insight', IconRegistry.character_icon(),
                    slot=partial(self._addPrimary, StoryElementType.Character),
-                   tooltip="This scene primarily provides new information, layers, or development about a character"))
+                   tooltip="This scene primarily provides new information, layers, or development about a character",
+                   incr_font_=2))
         self.menuPrimary.addAction(action('Mystery', IconRegistry.from_name('ei.question-sign'),
                                           slot=partial(self._addPrimary, StoryElementType.Mystery),
-                                          tooltip="This scene primarily introduces or deepens a mystery that drives the narrative forward"))
-        self.menuPrimary.addAction(action('Revelation', IconRegistry.from_name('fa5s.binoculars'),
-                                          slot=partial(self._addPrimary, StoryElementType.Revelation),
-                                          tooltip="This scene primarily reveals a key information"))
+                                          tooltip="This scene primarily introduces or deepens a mystery that drives the narrative forward",
+                                          incr_font_=2))
         self.menuPrimary.addAction(action('Resonance', IconRegistry.theme_icon('black'),
                                           slot=partial(self._addPrimary, StoryElementType.Resonance),
-                                          tooltip="This scene primarily establishes an emotional or thematic impact"))
+                                          tooltip="This scene primarily establishes an emotional or thematic impact",
+                                          incr_font_=2))
         apply_white_menu(self.menuPrimary)
         self.btnPrimary.clicked.connect(self.btnPrimaryPlus.click)
 
@@ -394,23 +402,23 @@ class SceneFunctionsWidget(QWidget):
         self.menuSecondary.addAction(
             action('Setup', IconRegistry.setup_scene_icon('black'),
                    slot=partial(self._addSecondary, StoryElementType.Setup),
-                   tooltip="Sets up a story element for a later payoff"))
+                   tooltip="Sets up a story element for a later payoff", incr_font_=1))
         self.menuSecondary.addAction(
             action('Information', IconRegistry.general_info_icon('black'),
                    slot=partial(self._addSecondary, StoryElementType.Information),
-                   tooltip="New information to be conveyed"))
+                   tooltip="New information to be conveyed", incr_font_=1))
         self.menuSecondary.addAction(
             action('Character insight', IconRegistry.character_icon(),
                    slot=partial(self._addSecondary, StoryElementType.Character),
-                   tooltip="New information about a character"))
+                   tooltip="New information about a character", incr_font_=1))
         self.menuSecondary.addAction(
             action('Mystery', IconRegistry.from_name('ei.question-sign'),
                    slot=partial(self._addSecondary, StoryElementType.Mystery),
-                   tooltip="A smaller mystery to be introduced or deepened"))
+                   tooltip="A smaller mystery to be introduced or deepened", incr_font_=1))
         self.menuSecondary.addAction(
             action('Resonance', IconRegistry.theme_icon('black'),
                    slot=partial(self._addSecondary, StoryElementType.Resonance),
-                   tooltip="Emotional or thematic impact"))
+                   tooltip="Emotional or thematic impact", incr_font_=1))
 
         apply_white_menu(self.menuSecondary)
         self.btnSecondary.clicked.connect(self.btnSecondaryPlus.click)
@@ -419,7 +427,7 @@ class SceneFunctionsWidget(QWidget):
         flow(self.wdgPrimary, spacing=13)
         margins(self.wdgPrimary, left=20, top=0)
 
-        self.listSecondary = SecondaryFunctionsList()
+        self.listSecondary = SecondaryFunctionsList(self._novel)
 
         wdgPrimaryHeader = QWidget()
         hbox(wdgPrimaryHeader, 0, 0)
@@ -445,11 +453,24 @@ class SceneFunctionsWidget(QWidget):
 
         self.listSecondary.setScene(self._scene)
 
-    def _addPrimary(self, type_: StoryElementType):
+    def addPrimaryType(self, type_: StoryElementType, storyline: Optional[Plot] = None):
+        self._addPrimary(type_, storyline)
+
+    def storylineRemovedEvent(self, storyline: Plot):
+        for i in range(self.wdgPrimary.layout().count()):
+            widget = self.wdgPrimary.layout().itemAt(i).widget()
+            if widget and isinstance(widget, _StorylineAssociatedFunctionWidget):
+                if widget.function.ref == storyline.id:
+                    self._scene.functions.primary.remove(widget.function)
+                    self._scene.plot_values.remove(widget.plotRef())
+                    fade_out_and_gc(self.wdgPrimary, widget)
+                    return
+
+    def _addPrimary(self, type_: StoryElementType, storyline: Optional[Plot] = None):
         function = SceneFunction(type_)
         self._scene.functions.primary.append(function)
 
-        wdg = self.__initPrimaryWidget(function)
+        wdg = self.__initPrimaryWidget(function, storyline)
         qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
 
     def _addSecondary(self, type_: StoryElementType):
@@ -459,15 +480,19 @@ class SceneFunctionsWidget(QWidget):
 
     def _removePrimary(self, wdg: PrimarySceneFunctionWidget):
         self._scene.functions.primary.remove(wdg.function)
+        if isinstance(wdg, _StorylineAssociatedFunctionWidget):
+            ref = wdg.plotRef()
+            if ref:
+                self._scene.plot_values.remove(ref)
+                self.storylineRemoved.emit(ref)
+
         fade_out_and_gc(self.wdgPrimary, wdg)
 
-    def __initPrimaryWidget(self, function: SceneFunction):
+    def __initPrimaryWidget(self, function: SceneFunction, storyline: Optional[Plot] = None):
         if function.type == StoryElementType.Character:
             wdg = CharacterPrimarySceneFunctionWidget(self._novel, self._scene, function)
         elif function.type == StoryElementType.Mystery:
             wdg = MysteryPrimarySceneFunctionWidget(self._novel, self._scene, function)
-        elif function.type == StoryElementType.Revelation:
-            wdg = RevelationPrimarySceneFunctionWidget(self._novel, self._scene, function)
         elif function.type == StoryElementType.Resonance:
             wdg = ResonancePrimarySceneFunctionWidget(self._novel, self._scene, function)
         else:
@@ -475,7 +500,14 @@ class SceneFunctionsWidget(QWidget):
 
         wdg.removed.connect(partial(self._removePrimary, wdg))
         if isinstance(wdg, _StorylineAssociatedFunctionWidget):
+
             wdg.storylineSelected.connect(self.storylineLinked)
-            wdg.storylineEditRequested.connect(self.storylineEditRequested)
+            wdg.storylineRemoved.connect(self.storylineRemoved)
+            wdg.storylineCharged.connect(self.storylineCharged)
+            if storyline:
+                wdg.setPlot(storyline)
+            for ref in self._scene.plot_values:
+                if ref.plot.id == function.ref:
+                    wdg.setPlotRef(ref)
         self.wdgPrimary.layout().addWidget(wdg)
         return wdg

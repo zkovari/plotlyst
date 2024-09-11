@@ -83,12 +83,12 @@ class StorylinesConnectionWidget(QWidget):
         self._wdgDefault.layout().addWidget(self._btnLink, alignment=Qt.AlignmentFlag.AlignCenter)
         self._wdgDefault.installEventFilter(VisibilityToggleEventFilter(self._btnLink, self._wdgDefault))
 
-        self._icon = push_btn(properties=['transparent'])
+        self._icon = push_btn(text='Connection', properties=['transparent'])
         self._text = QTextEdit()
         self._text.setProperty('rounded', True)
         self._text.setProperty('white-bg', True)
         self._text.setMinimumSize(175, 100)
-        self._text.setMaximumSize(200, 120)
+        self._text.setMaximumSize(190, 120)
         self._text.verticalScrollBar().setVisible(False)
         self._text.textChanged.connect(self._textChanged)
         vbox(self._wdgActive)
@@ -116,7 +116,7 @@ class StorylinesConnectionWidget(QWidget):
                 self._addAction(StorylineLinkType.Reveal)
         elif self._source.plot_type == PlotType.Relation:
             if self._target.plot_type == PlotType.Internal:
-                self._addAction(StorylineLinkType.Reflect_char)
+                self._addAction(StorylineLinkType.Reflect_character)
             elif self._target.plot_type != PlotType.Relation:
                 self._addAction(StorylineLinkType.Reflect_plot)
 
@@ -172,7 +172,7 @@ class StorylinesConnectionWidget(QWidget):
         self.unlinked.emit()
 
     def _addAction(self, type: StorylineLinkType):
-        self._menu.addAction(action(type.name, IconRegistry.from_name(type.icon())
+        self._menu.addAction(action(type.name.replace('_', ' '), IconRegistry.from_name(type.icon())
                                     , tooltip=type.desc(), slot=partial(self._typeChanged, type)))
 
 
