@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import copy
 from functools import partial
 from typing import Optional
 
@@ -259,9 +260,10 @@ class CharacterEditor(QObject, EventListener):
                 self.profile.applyMinorRoleSettings()
 
         self._roleMenu.close()
-        if role.text == protagonist_role.text and self.character.gender == FEMALE:
-            role.icon = 'fa5s.chess-queen'
-        self.character.role = role
+        new_role = copy.deepcopy(role)
+        if new_role.text == protagonist_role.text and self.character.gender == FEMALE:
+            new_role.icon = 'fa5s.chess-queen'
+        self.character.role = new_role
         self._display_role()
         if self.character.prefs.avatar.use_role:
             self.ui.wdgAvatar.updateAvatar()
