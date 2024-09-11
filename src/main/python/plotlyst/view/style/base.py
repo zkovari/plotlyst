@@ -182,18 +182,15 @@ def apply_white_menu(menu: MenuWidget):
                             border-radius: 5px;
                         }}
                         MenuItemWidget:hover {{
-                            background-color: #EDEDED;
+                            background-color: #F0E6F4;
                         }}
                         MenuItemWidget[pressed=true] {{
                             background-color: #DCDCDC;
                         }}
                         SubmenuWidget:hover {{
-                            background-color: #EDEDED;
+                            background-color: #F0E6F4;
                         }}
                         SubmenuWidget[pressed=true] {{
                             background-color: #DCDCDC;
-                        }}
-                        QLabel[description=true] {{
-                            color: #5E6C84;
                         }}
                         ''')

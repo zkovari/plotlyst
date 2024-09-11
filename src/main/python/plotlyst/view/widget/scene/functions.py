@@ -385,7 +385,6 @@ class SceneFunctionsWidget(QWidget):
                                           slot=partial(self._addPrimary, StoryElementType.Resonance),
                                           tooltip="This scene primarily establishes an emotional or thematic impact",
                                           incr_font_=2))
-        apply_white_menu(self.menuPrimary)
         self.btnPrimary.clicked.connect(self.btnPrimaryPlus.click)
 
         self.btnSecondary = push_btn(IconRegistry.from_name('fa5s.list', 'grey'), 'Secondary',
@@ -420,7 +419,6 @@ class SceneFunctionsWidget(QWidget):
                    slot=partial(self._addSecondary, StoryElementType.Resonance),
                    tooltip="Emotional or thematic impact", incr_font_=1))
 
-        apply_white_menu(self.menuSecondary)
         self.btnSecondary.clicked.connect(self.btnSecondaryPlus.click)
 
         self.wdgPrimary = QWidget()
