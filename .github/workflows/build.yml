@@ -109,17 +109,17 @@ jobs:
         run: |
           fbs installer
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         if: matrix.os == 'ubuntu-20.04'
         with:
           name: app-deb-artifact
           path: target/Plotlyst.deb
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         if: matrix.os == 'macos-12'
         with:
           name: app-mac-artifact
           path: target/Plotlyst.dmg
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         if: matrix.os == 'windows-2019'
         with:
           name: app-win-artifact
