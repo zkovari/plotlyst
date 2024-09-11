@@ -85,7 +85,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=lambda mode: AppMode[mode.upper()], choices=list(AppMode), default=AppMode.PROD)
-    parser.add_argument('--clear', action='store_true', default=True)
+    parser.add_argument('--clear', action='store_true')
     args = parser.parse_args()
     app_env.mode = args.mode
 
