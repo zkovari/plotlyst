@@ -650,8 +650,8 @@ def promote_role(role: Role):
         role.icon = deuteragonist_role.icon
         role.icon_color = deuteragonist_role.icon_color
     elif role == love_interest_role:
-        role.icon = 'mdi6.heart-multiple'
-        role.icon_color = '#CD374B'
+        role.icon = 'mdi.heart-multiple'
+        role.icon_color = '#b22d3e'
     elif role == contagonist_role:
         role.icon = 'fa5s.biohazard'
     elif role == foil_role:
