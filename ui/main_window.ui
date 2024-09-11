@@ -894,6 +894,7 @@
     </property>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
+    <addaction name="actionLogs"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -1048,6 +1049,11 @@
    </property>
    <property name="toolTip">
     <string>Display quick panel customization in the toolbar</string>
+   </property>
+  </action>
+  <action name="actionLogs">
+   <property name="text">
+    <string>Logs</string>
    </property>
   </action>
  </widget>

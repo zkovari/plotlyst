@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import logging
 import os
 from dataclasses import dataclass, field
 from datetime import date
@@ -62,6 +63,8 @@ class ResourceRegistry:
         # resource_url2 = app_context.get_resource(name)
         if app_env.is_windows():
             resource_url = resource_url.replace('\\', '/')
+
+        logging.info(f'Local resource ({name}) was found: {resource_url}')
 
         return resource_url
 

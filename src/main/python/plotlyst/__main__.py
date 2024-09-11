@@ -17,6 +17,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import logging
+
+from plotlyst.service.log import setup_logging
 
 try:
     import argparse
@@ -89,8 +92,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
     app_env.mode = args.mode
 
+    setup_logging()
+
     if platform.is_linux():
         font = QFont('Helvetica', max(QApplication.font().pointSize(), 12))
+        logging.info(f'Linux OS was detected. Set font to Helvetica, {font.pointSize()}pt')
         QApplication.setFont(font)
     elif QApplication.font().pointSize() < 12:
         font = QApplication.font()

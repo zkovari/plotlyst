@@ -59,7 +59,6 @@ from plotlyst.view.board_view import BoardView
 from plotlyst.view.characters_view import CharactersView
 from plotlyst.view.comments_view import CommentsView
 from plotlyst.view.common import TooltipPositionEventFilter, ButtonPressResizeEventFilter
-from plotlyst.view.dialog.about import AboutDialog
 from plotlyst.view.dialog.manuscript import ManuscriptPreviewDialog
 from plotlyst.view.docs_view import DocumentsView
 from plotlyst.view.generated.main_window_ui import Ui_MainWindow
@@ -71,6 +70,7 @@ from plotlyst.view.reports_view import ReportsView
 from plotlyst.view.scenes_view import ScenesOutlineView
 from plotlyst.view.widget.button import ToolbarButton, NovelSyncButton
 from plotlyst.view.widget.input import CapitalizationEventFilter
+from plotlyst.view.widget.log import LogsPopup
 from plotlyst.view.widget.settings import NovelQuickPanelCustomizationButton
 from plotlyst.view.widget.tour.core import TutorialNovelOpenTourEvent, tutorial_novel, \
     TutorialNovelCloseTourEvent, NovelTopLevelButtonTourEvent, HomeTopLevelButtonTourEvent, NovelEditorDisplayTourEvent, \
@@ -449,6 +449,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self.actionAbout.setVisible(False)
         # self.actionAbout.triggered.connect(lambda: AboutDialog.popup())
+        self.actionLogs.triggered.connect(lambda: LogsPopup.popup())
         self.actionPreview.triggered.connect(lambda: ManuscriptPreviewDialog().display(app_env.novel))
         self.actionCut.setIcon(IconRegistry.cut_icon())
         self.actionCut.triggered.connect(self._cut_text)
