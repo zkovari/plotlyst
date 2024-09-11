@@ -85,7 +85,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=lambda mode: AppMode[mode.upper()], choices=list(AppMode), default=AppMode.PROD)
-    parser.add_argument('--clear', action='store_true')
+    parser.add_argument('--clear', action='store_true', default=True)
     args = parser.parse_args()
     app_env.mode = args.mode
 
@@ -124,8 +124,8 @@ if __name__ == '__main__':
         raise ex
     window.show()
     window.activateWindow()
-    first_launch = settings.first_launch()
-    if first_launch:
-        AboutDialog().exec()
-        settings.set_launched_before()
+    # first_launch = settings.first_launch()
+    # if first_launch:
+    #     QTimer.singleShot(1000, AboutDialog.popup)
+    #     settings.set_launched_before()
     sys.exit(app.exec_())

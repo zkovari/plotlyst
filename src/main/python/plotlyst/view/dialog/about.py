@@ -17,13 +17,16 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from PyQt6.QtWidgets import QDialog
+from PyQt6.QtWidgets import QLabel
 
-from plotlyst.view.generated.about_dialog_ui import Ui_AboutDialog
+from plotlyst.view.widget.display import PopupDialog
 
 
-class AboutDialog(Ui_AboutDialog, QDialog):
+class AboutDialog(PopupDialog):
     def __init__(self, parent=None):
         super(AboutDialog, self).__init__(parent)
 
-        self.setupUi(self)
+        self.frame.layout().addWidget(QLabel('Test'))
+
+    def display(self):
+        self.exec()
