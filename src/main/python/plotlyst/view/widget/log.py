@@ -23,7 +23,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QTableView
 
 from plotlyst.service.log import LogHandler
-from plotlyst.view.common import stretch_col
+from plotlyst.view.common import stretch_col, push_btn
 from plotlyst.view.widget.display import PopupDialog
 
 
@@ -45,8 +45,12 @@ class LogsPopup(PopupDialog):
         self.tblView.setColumnWidth(0, 30)
         self.tblView.setColumnWidth(2, 200)
 
+        self.btnClose = push_btn(text='Close', properties=['confirm', 'cancel'])
+        self.btnClose.clicked.connect(self.accept)
+
         self.frame.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
         self.frame.layout().addWidget(self.tblView)
+        self.frame.layout().addWidget(self.btnClose, alignment=Qt.AlignmentFlag.AlignRight)
 
     def display(self):
         self.exec()
