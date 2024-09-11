@@ -60,7 +60,9 @@ class ResourceRegistry:
 
     def __get_resource(self, name: str, context: Optional[ApplicationContext] = None):
         if context:
-            return context.get_resource(name)
+            resource_url = context.get_resource(name)
+            logging.info(f'Resource through app context ({name}) was found: {resource_url}')
+            return resource_url
 
         resource_url = pkg_resources.resource_filename(__name__, f'images/{name}')
         if app_env.is_windows():
