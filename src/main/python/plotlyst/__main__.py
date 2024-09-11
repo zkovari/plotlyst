@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from PyQt6.QtCore import QTimer
 
 try:
     import argparse
@@ -125,8 +124,8 @@ if __name__ == '__main__':
         raise ex
     window.show()
     window.activateWindow()
-    first_launch = settings.first_launch()
-    if first_launch:
-        QTimer.singleShot(1000, AboutDialog.popup)
-        settings.set_launched_before()
+    # first_launch = settings.first_launch()
+    # if first_launch:
+    #     QTimer.singleShot(1000, AboutDialog.popup)
+    #     settings.set_launched_before()
     sys.exit(app.exec_())
