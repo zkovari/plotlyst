@@ -161,7 +161,7 @@
      <item>
       <widget class="QStackedWidget" name="stackedWidget">
        <property name="currentIndex">
-        <number>0</number>
+        <number>2</number>
        </property>
        <widget class="QWidget" name="pageNewStory">
         <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -270,7 +270,7 @@
        <widget class="QWidget" name="pageScrivener">
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <property name="spacing">
-          <number>3</number>
+          <number>6</number>
          </property>
          <property name="leftMargin">
           <number>2</number>
@@ -279,7 +279,7 @@
           <number>40</number>
          </property>
          <property name="rightMargin">
-          <number>2</number>
+          <number>10</number>
          </property>
          <property name="bottomMargin">
           <number>2</number>
@@ -293,28 +293,22 @@
             <string>mdi6.application-import</string>
            </property>
            <property name="description" stdset="0">
-            <string>By selecting a Scrivener project, you can load your story's content ito Plotlyst.</string>
+            <string>Select your Scrivener project to import your binder's content into Plotlyst.</string>
            </property>
           </widget>
          </item>
          <item alignment="Qt::AlignRight">
           <widget class="QPushButton" name="btnLoadScrivener">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
            <property name="cursor">
             <cursorShape>PointingHandCursor</cursorShape>
            </property>
            <property name="text">
-            <string>Select Scrivener project</string>
-           </property>
-           <property name="base" stdset="0">
-            <bool>true</bool>
+            <string>Select a Scrivener project</string>
            </property>
            <property name="positive" stdset="0">
+            <bool>true</bool>
+           </property>
+           <property name="confirm" stdset="0">
             <bool>true</bool>
            </property>
           </widget>
