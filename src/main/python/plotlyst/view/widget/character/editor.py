@@ -1012,8 +1012,10 @@ class CharacterRoleSelector(QWidget):
         self.iconRole = RoleIcon()
         incr_font(self.iconRole, 2)
         self.btnPromote = SecondaryActionPushButton()
-        self.btnPromote.setIcon(IconRegistry.from_name('mdi.chevron-double-up', CHARACTER_MAJOR_COLOR))
-        self.btnPromote.setText('Promote')
+        incr_icon(self.btnPromote, 4)
+        incr_font(self.btnPromote)
+        self.btnPromote.setPadding(3)
+        self._updatePromotionButton(False)
         self.btnPromote.clicked.connect(self._promoted)
 
         self._currentRole = protagonist_role
@@ -1112,10 +1114,16 @@ class CharacterRoleSelector(QWidget):
     def _updatePromotionButton(self, promoted: bool):
         if promoted:
             self.btnPromote.setText('Demote')
+            self.btnPromote.setToolTip('Demote to a secondary character')
             self.btnPromote.setIcon(IconRegistry.from_name('mdi.chevron-double-down', CHARACTER_SECONDARY_COLOR))
+            color = CHARACTER_SECONDARY_COLOR
         else:
             self.btnPromote.setText('Promote')
+            self.btnPromote.setToolTip('Promote to a major character')
             self.btnPromote.setIcon(IconRegistry.from_name('mdi.chevron-double-up', CHARACTER_MAJOR_COLOR))
+            color = CHARACTER_MAJOR_COLOR
+        self.btnPromote.initStyleSheet(border_color=color, border_style='solid', color=color,
+                                       bg_color=RELAXED_WHITE_COLOR, border_radius=12)
 
     def _updateRolePriorityIcon(self, anim: bool = False):
         self.iconMajor.setHidden(True)
