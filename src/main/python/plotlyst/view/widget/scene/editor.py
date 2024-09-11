@@ -323,6 +323,7 @@ class ScenePurposeWidget(QFrame):
                 icon.setIcon(purpose_icon(type))
                 icon.setDisabled(True)
                 icon.setToolTip(scene_purposes[type].display_name)
+                icon.installEventFilter(InstantTooltipEventFilter(icon))
                 icons.layout().addWidget(icon)
             icons.layout().addWidget(spacer())
             self._wdgInfo.layout().addWidget(wrap(lbl, margin_top=10))
