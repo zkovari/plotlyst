@@ -48,19 +48,21 @@ class ResourceRegistry:
         self._circular_frame1 = None
         self._manuscript_docx_template = None
 
-    def set_up(self):
-        self._cork = self.__get_resource('cork.wav')
-        self._frame1 = self.__get_resource('frame_1.png')
-        self._cover1 = self.__get_resource('cover_1.jpg')
-        self._paper_bg1 = self.__get_resource('paper_bg.jpg')
-        self._vintage_pocket_banner = self.__get_resource('antique.jpg')
-        self._banner = self.__get_resource('plotlyst_banner.png')
-        self._circular_frame1 = self.__get_resource('circular_frame1.png')
-        self._manuscript_docx_template = self.__get_resource('manuscript-template.docx')
+    def set_up(self, context: Optional[ApplicationContext] = None):
+        self._cork = self.__get_resource('cork.wav', context)
+        self._frame1 = self.__get_resource('frame_1.png', context)
+        self._cover1 = self.__get_resource('cover_1.jpg', context)
+        self._paper_bg1 = self.__get_resource('paper_bg.jpg', context)
+        self._vintage_pocket_banner = self.__get_resource('antique.jpg', context)
+        self._banner = self.__get_resource('plotlyst_banner.png', context)
+        self._circular_frame1 = self.__get_resource('circular_frame1.png', context)
+        self._manuscript_docx_template = self.__get_resource('manuscript-template.docx', context)
 
-    def __get_resource(self, name: str):
+    def __get_resource(self, name: str, context: Optional[ApplicationContext] = None):
+        if context:
+            return context.get_resource(name)
+
         resource_url = pkg_resources.resource_filename(__name__, f'images/{name}')
-        # resource_url2 = app_context.get_resource(name)
         if app_env.is_windows():
             resource_url = resource_url.replace('\\', '/')
 

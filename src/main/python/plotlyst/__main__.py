@@ -106,7 +106,7 @@ if __name__ == '__main__':
     settings.init_org()
     if args.clear:
         settings.clear()
-    resource_registry.set_up()
+    resource_registry.set_up(appctxt)
     resource_manager.init()
     workspace: Optional[str] = settings.workspace()
     if not workspace or not os.path.exists(workspace):
