@@ -645,6 +645,7 @@ class DocumentTextEditor(TextEditorBase):
         self._btnIcon.installEventFilter(OpacityEventFilter(self._btnIcon, leaveOpacity=1.0, enterOpacity=0.8))
         self._btnIcon.clicked.connect(self._changeIcon)
         self._textTitle = QLineEdit()
+        self._textTitle.setPlaceholderText('Untitled')
         self._textTitle.setProperty('transparent', True)
         self._textTitle.setFrame(False)
         title_font = self._textTitle.font()

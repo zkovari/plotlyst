@@ -206,7 +206,7 @@ class DocumentsView(AbstractNovelView):
 
     def _title_changed_in_editor(self, title: str):
         if self._current_doc:
-            if title and title != self._current_doc.title:
+            if title != self._current_doc.title:
                 self._current_doc.title = title
                 self.ui.treeDocuments.updateDocument(self._current_doc)
                 self.repo.update_novel(self.novel)
