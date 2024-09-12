@@ -81,15 +81,10 @@ class EventLogHandler:
         apply_color(self.statusbar, 'black')
 
 
-class DialogExceptionHandler:
-
-    def init(self):
-        pass
-
-    def handle(self, exception_type, exception_value: Exception, exception_traceback):
-        msg = ''.join(str(exception_value.args))
-        details: List[str] = traceback.format_exception(exception_type, exception_value, exception_traceback)
-        emit_critical(msg, ''.join(details))
+def handle_exception(exception_type, exception_value: Exception, exception_traceback):
+    msg = ''.join(str(exception_value.args))
+    details: List[str] = traceback.format_exception(exception_type, exception_value, exception_traceback)
+    emit_critical(msg, ''.join(details))
 
 
 TEvent = TypeVar('TEvent', bound=Event)

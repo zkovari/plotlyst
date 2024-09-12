@@ -17,11 +17,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import logging
-
-from plotlyst.service.log import setup_logging
 
 try:
+    import logging
     import argparse
     import os
     import subprocess
@@ -29,6 +27,7 @@ try:
     import traceback
     from typing import Optional
 
+    from fbs_runtime.excepthook import enable_excepthook_for_threads
     from overrides import overrides
 
     from plotlyst.env import AppMode, app_env
@@ -36,6 +35,7 @@ try:
     from plotlyst.settings import settings
     from plotlyst.service.persistence import flush_or_fail
     from plotlyst.service.dir import select_new_project_directory, default_directory
+    from plotlyst.service.log import setup_logging
 
     from PyQt6.QtGui import QFont
     from PyQt6.QtWidgets import QApplication, QMessageBox
@@ -44,11 +44,11 @@ try:
     from fbs_runtime.application_context import cached_property, is_frozen
 
     from plotlyst.core.client import json_client
-    from plotlyst.event.handler import DialogExceptionHandler
+    from plotlyst.event.handler import handle_exception
     from plotlyst.view.main_window import MainWindow
     from plotlyst.view.stylesheet import APP_STYLESHEET
 except Exception as ex:
-    appctxt = ApplicationContext()
+    app = QApplication(sys.argv)
     QMessageBox.critical(None, 'Could not launch application', traceback.format_exc())
     raise ex
 
@@ -59,23 +59,6 @@ class AppContext(ApplicationContext):
     def run(self):
         pass
 
-    @cached_property
-    def exception_handlers(self):
-        result = super().exception_handlers
-        result.append(self.dialog_exception_handler)
-        return result
-
-    @cached_property
-    def app(self):
-        result = self._qt_binding.QApplication([])
-        result.setApplicationName('Plotlyst')
-        result.setApplicationVersion('0.1.0')
-        return result
-
-    @cached_property
-    def dialog_exception_handler(self):
-        return DialogExceptionHandler()
-
 
 if __name__ == '__main__':
     if app_env.is_windows():
@@ -84,6 +67,11 @@ if __name__ == '__main__':
     else:
         appctxt = AppContext()
         app = appctxt.app
+    app.setApplicationName('Plotlyst')
+    app.setApplicationVersion('0.1.0')
+
+    sys.excepthook = handle_exception
+    enable_excepthook_for_threads()
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=lambda mode: AppMode[mode.upper()], choices=list(AppMode), default=AppMode.PROD)
