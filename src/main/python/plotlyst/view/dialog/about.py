@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import QLabel, QWidget
+from PyQt6.QtWidgets import QLabel, QWidget, QApplication
 from qthandy import hbox
 
 from plotlyst.resources import resource_registry
@@ -39,9 +39,12 @@ class AboutDialog(PopupDialog):
         self.btnClose.clicked.connect(self.accept)
         hbox(self.wdgBanner).addWidget(self.lblBanner, alignment=Qt.AlignmentFlag.AlignCenter)
 
+        version = QApplication.instance().applicationVersion()
+
         self.frame.layout().addWidget(self.wdgBanner)
         self.frame.layout().addWidget(label("Plotlyst is an indie software developed by Zsolt Kovari", h4=True))
         self.frame.layout().addWidget(label('Copyright (C) 2021-2024  Zsolt Kovari', description=True))
+        self.frame.layout().addWidget(label(f'Version: {version}', description=True))
         self.frame.layout().addWidget(self.btnClose, alignment=Qt.AlignmentFlag.AlignRight)
 
     def display(self):
