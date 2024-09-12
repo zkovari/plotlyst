@@ -55,7 +55,7 @@ from plotlyst.view.widget.tour.core import CharacterEditorTourEvent, \
 
 
 class CharacterEditor(QObject, EventListener):
-    close = pyqtSignal()
+    close = pyqtSignal(Character)
 
     def __init__(self, novel: Novel):
         super().__init__()
@@ -234,7 +234,8 @@ class CharacterEditor(QObject, EventListener):
         if isinstance(event, TourEvent):
             self.__handle_tour_event(event)
         elif isinstance(event, NovelAboutToSyncEvent):
-            self._save()
+            if self.character is not None:
+                self._save()
 
     def _name_edited(self, text: str):
         self.character.name = text
@@ -382,7 +383,8 @@ class CharacterEditor(QObject, EventListener):
             self.character.document.content = self.ui.textEdit.textEdit.toHtml()
             self.repo.update_doc(self.novel, self.character.document)
 
-        self.close.emit()
+        self.close.emit(self.character)
+        self.character = None
 
     def __handle_tour_event(self, event: TourEvent):
         if isinstance(event, CharacterEditorTourEvent):

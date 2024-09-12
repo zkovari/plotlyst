@@ -476,7 +476,6 @@ class ScenesOutlineView(AbstractNovelView):
         self.title.setVisible(True)
         self._scene_filter.povFilter.updateCharacters(self.novel.pov_characters(), checkAll=True)
 
-        self._handle_scene_changed(self.editor.scene)
         if self._scene_added is not None:
             emit_event(self.novel, SceneAddedEvent(self, self._scene_added), delay=10)
 

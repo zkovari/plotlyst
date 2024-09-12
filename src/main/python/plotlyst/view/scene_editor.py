@@ -210,7 +210,8 @@ class SceneEditor(QObject, EventListener):
     @overrides
     def event_received(self, event: Event):
         if isinstance(event, NovelAboutToSyncEvent):
-            self._on_close()
+            if self.scene is not None:
+                self._on_close()
         elif isinstance(event, NovelStorylinesToggleEvent):
             self.ui.wdgStorylines.setVisible(event.toggled)
             self._btnPlotSelector.setVisible(event.toggled)
@@ -425,6 +426,7 @@ class SceneEditor(QObject, EventListener):
 
     def _on_close(self):
         self._save_scene()
+        self.scene = None
         self.close.emit()
 
     @busy

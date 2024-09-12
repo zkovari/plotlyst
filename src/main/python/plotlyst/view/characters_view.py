@@ -321,8 +321,7 @@ class CharactersView(AbstractNovelView):
         self.editor.ui.lineName.setFocus()
 
     @busy
-    def _on_close_editor(self):
-        character = self.editor.character
+    def _on_close_editor(self, character: Character):
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
         self.title.setVisible(True)
         card = self.ui.cards.card(character)
