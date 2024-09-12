@@ -33,7 +33,7 @@ from textstat import textstat
 
 from plotlyst.common import NAV_BAR_BUTTON_DEFAULT_COLOR, \
     NAV_BAR_BUTTON_CHECKED_COLOR, PLOTLYST_MAIN_COLOR
-from plotlyst.core.client import client, json_client
+from plotlyst.core.client import client
 from plotlyst.core.domain import Novel, NovelPanel, ScenesView, NovelSetting
 from plotlyst.core.text import sentence_count
 from plotlyst.env import app_env, open_location
@@ -47,6 +47,7 @@ from plotlyst.events import NovelDeletedEvent, \
     NovelManagementToggleEvent, NovelManuscriptToggleEvent
 from plotlyst.resources import resource_manager, ResourceType, ResourceDownloadedEvent
 from plotlyst.service.cache import acts_registry, characters_registry
+from plotlyst.service.common import try_shutdown_to_apply_change
 from plotlyst.service.dir import select_new_project_directory
 from plotlyst.service.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
 from plotlyst.service.importer import ScrivenerSyncImporter
@@ -69,6 +70,7 @@ from plotlyst.view.novel_view import NovelView
 from plotlyst.view.reports_view import ReportsView
 from plotlyst.view.scenes_view import ScenesOutlineView
 from plotlyst.view.widget.button import ToolbarButton, NovelSyncButton
+from plotlyst.view.widget.confirm import asked
 from plotlyst.view.widget.input import CapitalizationEventFilter
 from plotlyst.view.widget.log import LogsPopup
 from plotlyst.view.widget.settings import NovelQuickPanelCustomizationButton
@@ -537,16 +539,13 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self._on_view_changed()
 
     def _change_project_dir(self):
+        if not asked("Your project directory is where all your novels are stored in one place.",
+                     "Do you want to change your project directory?", btnConfirmText='Change directory'):
+            return
         workspace = select_new_project_directory()
         if workspace:
-            self.home_mode.setChecked(True)
             settings.set_workspace(workspace)
-            if self.novel:
-                self.close_novel()
-
-            json_client.init(workspace)
-            self.home_view.refresh()
-            self.actionDirPlaceholder.setText(settings.workspace())
+            QTimer.singleShot(250, try_shutdown_to_apply_change)
 
     def _toggle_quick_settings(self, toggled: bool):
         self._actionSettings.setVisible(toggled)
