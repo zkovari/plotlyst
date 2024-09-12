@@ -38,6 +38,7 @@ from plotlyst.core.domain import SelectionItem, Novel, tag_characterization, tag
 from plotlyst.service.importer import SyncImporter
 from plotlyst.view.common import ButtonPressResizeEventFilter, tool_btn, spin, action
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.style.base import apply_white_menu
 
 
 class SelectionItemPushButton(QPushButton):
@@ -390,9 +391,11 @@ class _NovelSyncWidget(QWidget):
         self.btnChangeLocation.installEventFilter(OpacityEventFilter(self.btnChangeLocation))
         self._wdgTop.layout().addWidget(self.lblTitle, alignment=Qt.AlignmentFlag.AlignCenter)
         self._wdgTop.layout().addWidget(self.btnChangeLocation, alignment=Qt.AlignmentFlag.AlignRight)
+        self.btnChangeLocation.setHidden(True)
 
         self.lblUpdateMessage = QLabel()
         self.lblUpdateMessage.setProperty('description', True)
+        self.lblUpdateMessage.setMinimumWidth(200)
         self._wdgCenter.layout().addWidget(self.lblUpdateMessage, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self.lblErrorNotFoundMessage = QLabel('Project not found.')
@@ -416,9 +419,9 @@ class _NovelSyncWidget(QWidget):
         self._wdgBottom.layout().addWidget(self.btnCheck, alignment=Qt.AlignmentFlag.AlignCenter)
         self._wdgBottom.layout().addWidget(self.btnSync, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        self.installEventFilter(VisibilityToggleEventFilter(self.btnChangeLocation, self))
+        # self.installEventFilter(VisibilityToggleEventFilter(self.btnChangeLocation, self))
 
-        vbox(self)
+        vbox(self, 5)
         self.layout().addWidget(self._wdgTop)
         self.layout().addWidget(self._wdgCenter)
         self.layout().addWidget(self._wdgBottom)
@@ -442,6 +445,7 @@ class NovelSyncButton(QPushButton):
         self._menu = MenuWidget(self)
         self._wdgSync = _NovelSyncWidget()
         self._menu.addWidget(self._wdgSync)
+        apply_white_menu(self._menu)
 
         self._wdgSync.btnCheck.clicked.connect(self._checkForUpdates)
         self._wdgSync.btnSync.clicked.connect(self._sync)
