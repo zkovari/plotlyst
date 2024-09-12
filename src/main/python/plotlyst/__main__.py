@@ -45,7 +45,6 @@ try:
 
     from plotlyst.core.client import json_client
     from plotlyst.event.handler import DialogExceptionHandler
-    from plotlyst.view.dialog.about import AboutDialog
     from plotlyst.view.main_window import MainWindow
     from plotlyst.view.stylesheet import APP_STYLESHEET
 except Exception as ex:

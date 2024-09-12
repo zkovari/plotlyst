@@ -892,9 +892,28 @@
     <property name="toolTipsVisible">
      <bool>true</bool>
     </property>
+    <widget class="QMenu" name="menuSocials">
+     <property name="title">
+      <string>Socials</string>
+     </property>
+     <addaction name="actionFacebook"/>
+     <addaction name="actionYoutube"/>
+     <addaction name="actionInstagram"/>
+     <addaction name="actionXTwitter"/>
+     <addaction name="actionPinterest"/>
+    </widget>
+    <addaction name="separator"/>
+    <addaction name="actionLogs"/>
+    <addaction name="actionResourceManager"/>
+    <addaction name="separator"/>
+    <addaction name="actionPlotlystWebsite"/>
+    <addaction name="menuSocials"/>
+    <addaction name="separator"/>
+    <addaction name="actionContact"/>
+    <addaction name="actionFeatureRequest"/>
+    <addaction name="actionRoadmap"/>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
-    <addaction name="actionLogs"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -904,19 +923,9 @@
     <addaction name="actionCopy"/>
     <addaction name="actionPaste"/>
    </widget>
-   <widget class="QMenu" name="menuTools">
-    <property name="title">
-     <string>Tools</string>
-    </property>
-    <property name="toolTipsVisible">
-     <bool>true</bool>
-    </property>
-    <addaction name="actionResourceManager"/>
-   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuView"/>
-   <addaction name="menuTools"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
@@ -1054,6 +1063,51 @@
   <action name="actionLogs">
    <property name="text">
     <string>Logs</string>
+   </property>
+  </action>
+  <action name="actionContact">
+   <property name="text">
+    <string>Contact</string>
+   </property>
+  </action>
+  <action name="actionFeatureRequest">
+   <property name="text">
+    <string>Feature request</string>
+   </property>
+  </action>
+  <action name="actionPlotlystWebsite">
+   <property name="text">
+    <string>Plotlyst website</string>
+   </property>
+  </action>
+  <action name="actionRoadmap">
+   <property name="text">
+    <string>Roadmap</string>
+   </property>
+  </action>
+  <action name="actionFacebook">
+   <property name="text">
+    <string>Facebook</string>
+   </property>
+  </action>
+  <action name="actionYoutube">
+   <property name="text">
+    <string>Youtube</string>
+   </property>
+  </action>
+  <action name="actionInstagram">
+   <property name="text">
+    <string>Instagram</string>
+   </property>
+  </action>
+  <action name="actionXTwitter">
+   <property name="text">
+    <string>X (Twitter)</string>
+   </property>
+  </action>
+  <action name="actionPinterest">
+   <property name="text">
+    <string>Pinterest</string>
    </property>
   </action>
  </widget>

@@ -59,8 +59,8 @@ from plotlyst.view._view import AbstractView
 from plotlyst.view.board_view import BoardView
 from plotlyst.view.characters_view import CharactersView
 from plotlyst.view.comments_view import CommentsView
-from plotlyst.view.common import TooltipPositionEventFilter, ButtonPressResizeEventFilter
-from plotlyst.view.dialog.manuscript import ManuscriptPreviewDialog
+from plotlyst.view.common import TooltipPositionEventFilter, ButtonPressResizeEventFilter, open_url
+from plotlyst.view.dialog.about import AboutDialog
 from plotlyst.view.docs_view import DocumentsView
 from plotlyst.view.generated.main_window_ui import Ui_MainWindow
 from plotlyst.view.home_view import HomeView
@@ -449,10 +449,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if app_env.is_windows():
             self.menubar.setFont(QApplication.font())
 
-        self.actionAbout.setVisible(False)
-        # self.actionAbout.triggered.connect(lambda: AboutDialog.popup())
-        self.actionLogs.triggered.connect(lambda: LogsPopup.popup())
-        self.actionPreview.triggered.connect(lambda: ManuscriptPreviewDialog().display(app_env.novel))
         self.actionCut.setIcon(IconRegistry.cut_icon())
         self.actionCut.triggered.connect(self._cut_text)
         self.actionCopy.setIcon(IconRegistry.copy_icon())
@@ -463,13 +459,41 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionQuickCustomization.setChecked(settings.toolbar_quick_settings())
         self.actionQuickCustomization.toggled.connect(self._toggle_quick_settings)
 
-        self.actionResourceManager.triggered.connect(lambda: ResourceManagerDialog().display())
-
         self.actionDirPlaceholder.setText(settings.workspace())
         self.actionOpenProjectDir.setIcon(IconRegistry.from_name('fa5s.external-link-alt'))
         self.actionOpenProjectDir.triggered.connect(lambda: open_location(settings.workspace()))
         self.actionChangeDir.setIcon(IconRegistry.from_name('fa5s.folder-open'))
         self.actionChangeDir.triggered.connect(self._change_project_dir)
+
+        self.actionLogs.setIcon(IconRegistry.from_name('fa5.file-code'))
+        self.actionLogs.triggered.connect(lambda: LogsPopup.popup())
+        self.actionPlotlystWebsite.setIcon(IconRegistry.from_name('mdi.web'))
+        self.actionPlotlystWebsite.triggered.connect(lambda: open_url('https://plotlyst.com'))
+        self.actionContact.setIcon(IconRegistry.from_name('mdi.email-outline'))
+        self.actionContact.triggered.connect(lambda: open_url('https://plotlyst.com/contact/'))
+        self.actionResourceManager.setIcon(IconRegistry.from_name('fa5s.cloud-download-alt'))
+        self.actionResourceManager.triggered.connect(lambda: ResourceManagerDialog().display())
+        self.actionRoadmap.setIcon(IconRegistry.from_name('fa5s.map'))
+        self.actionRoadmap.triggered.connect(lambda: open_url('https://plotlyst.featurebase.app/roadmap'))
+        self.actionFeatureRequest.setIcon(IconRegistry.from_name('mdi.comment-text'))
+        self.actionFeatureRequest.triggered.connect(lambda: open_url('https://plotlyst.featurebase.app/'))
+
+        self.menuSocials.setIcon(IconRegistry.from_name('ri.share-fill'))
+        self.actionFacebook.setIcon(IconRegistry.from_name('fa5b.facebook'))
+        self.actionYoutube.setIcon(IconRegistry.from_name('fa5b.youtube'))
+        self.actionInstagram.setIcon(IconRegistry.from_name('fa5b.instagram'))
+        self.actionXTwitter.setIcon(IconRegistry.from_name('fa5b.twitter'))
+        self.actionPinterest.setIcon(IconRegistry.from_name('fa5b.pinterest'))
+        self.actionXTwitter.triggered.connect(lambda: open_url('https://twitter.com/plotlyst'))
+        self.actionInstagram.triggered.connect(lambda: open_url('https://www.instagram.com/plotlyst'))
+        self.actionFacebook.triggered.connect(
+            lambda: open_url('https://www.facebook.com/people/Plotlyst/61557773998679/'))
+        self.actionYoutube.triggered.connect(lambda: open_url('https://www.youtube.com/@Plotlyst'))
+        self.actionPinterest.triggered.connect(lambda: open_url('https://pinterest.com/Plotlyst'))
+
+        if not app_env.is_mac():
+            self.actionAbout.setIcon(IconRegistry.from_name('fa5s.info'))
+        self.actionAbout.triggered.connect(lambda: AboutDialog.popup())
 
     def _init_toolbar(self):
         self.toolBar.setContextMenuPolicy(Qt.ContextMenuPolicy.PreventContextMenu)

@@ -17,16 +17,32 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from PyQt6.QtWidgets import QLabel
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPixmap
+from PyQt6.QtWidgets import QLabel, QWidget
+from qthandy import hbox
 
+from plotlyst.resources import resource_registry
+from plotlyst.view.common import push_btn, label
 from plotlyst.view.widget.display import PopupDialog
 
 
 class AboutDialog(PopupDialog):
     def __init__(self, parent=None):
-        super(AboutDialog, self).__init__(parent)
+        super().__init__(parent)
 
-        self.frame.layout().addWidget(QLabel('Test'))
+        self.wdgBanner = QWidget()
+        self.wdgBanner.setProperty('banner-bg', True)
+        self.lblBanner = QLabel()
+        self.lblBanner.setPixmap(QPixmap(resource_registry.banner))
+        self.btnClose = push_btn(text='Close', properties=['confirm', 'cancel'])
+        self.btnClose.clicked.connect(self.accept)
+        hbox(self.wdgBanner).addWidget(self.lblBanner, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self.frame.layout().addWidget(self.wdgBanner)
+        self.frame.layout().addWidget(label("Plotlyst is an indie software developed by Zsolt Kovari", h4=True))
+        self.frame.layout().addWidget(label('Copyright (C) 2021-2024  Zsolt Kovari', description=True))
+        self.frame.layout().addWidget(self.btnClose, alignment=Qt.AlignmentFlag.AlignRight)
 
     def display(self):
         self.exec()
