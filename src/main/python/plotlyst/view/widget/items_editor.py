@@ -183,7 +183,7 @@ class ItemsEditorWidget(QWidget):
             return
         item: SelectionItem = self.model.item(indexes[0])
         if self.askRemovalConfirmation and not confirmed('This action cannot be undone.',
-                                                         f'Are you sure you want to remove the element "{item.text}"?'):
+                                                         f'Are you sure you want to remove the element "{self._itemDisplayText(item)}"?'):
             return
         self.model.remove(indexes[0])
 
@@ -224,3 +224,6 @@ class ItemsEditorWidget(QWidget):
         builder.add_action('Insert after', IconRegistry.from_name('mdi6.arrow-down-right'),
                            lambda: self._insert(index.row() + 1))
         builder.popup()
+
+    def _itemDisplayText(self, item: SelectionItem) -> str:
+        return item.text

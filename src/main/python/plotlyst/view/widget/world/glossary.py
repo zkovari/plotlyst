@@ -95,6 +95,18 @@ class GlossaryModel(SelectionItemsModel):
         self.glossaryRemoved.emit()
 
 
+class GlossaryItemsEditorWidget(ItemsEditorWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setInlineEditionEnabled(False)
+        self.setInlineAdditionEnabled(False)
+        self.setAskRemovalConfirmation(True)
+
+    @overrides
+    def _itemDisplayText(self, item: GlossaryItem) -> str:
+        return item.key
+
+
 class GlossaryEditorDialog(PopupDialog):
     def __init__(self, glossary: Dict[str, GlossaryItem], term: Optional[GlossaryItem] = None, parent=None):
         super().__init__(parent)
@@ -169,21 +181,14 @@ class GlossaryEditorDialog(PopupDialog):
                 self.accept()
 
 
-
-
-
-
 class WorldBuildingGlossaryEditor(QWidget):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
         vbox(self)
-        self.editor = ItemsEditorWidget()
-        self.editor.setInlineEditionEnabled(False)
-        self.editor.setInlineAdditionEnabled(False)
+        self.editor = GlossaryItemsEditorWidget()
         self.editor.btnAdd.clicked.connect(self._addNew)
         self.editor.editRequested.connect(self._edit)
-        self.editor.setAskRemovalConfirmation(True)
         self.glossaryModel = GlossaryModel(self._novel)
         self.editor.setModel(self.glossaryModel)
         self.editor.tableView.setColumnHidden(GlossaryModel.ColIcon, True)
