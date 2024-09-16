@@ -168,6 +168,11 @@ class TextElementEditor(WorldBuildingEntityElementWidget):
 
         self.textEdit = AutoAdjustableTextEdit()
         self.textEdit.setProperty('transparent', True)
+        if self._underSection():
+            margins(self, left=0)
+            self.textEdit.setViewportMargins(20, 0, 0, 0)
+            self.textEdit.setSidebarEnabled(True)
+            self.textEdit.setSidebarMenuEnabled(False)
         self.textEdit.setCommandsEnabled(True)
         self.textEdit.setAcceptRichText(True)
         self.textEdit.setCommandOperations([Heading2Operation, Heading3Operation, InsertListOperation,
