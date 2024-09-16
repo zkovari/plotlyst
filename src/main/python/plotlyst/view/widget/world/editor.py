@@ -36,6 +36,7 @@ from qtmenu import MenuWidget
 from qttextedit.ops import Heading2Operation, Heading3Operation, InsertListOperation, InsertNumberedListOperation, \
     InsertDividerOperation
 
+from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityElement, WorldBuildingEntityElementType, \
     BackstoryEvent, Variable, VariableType, \
     Topic
@@ -740,8 +741,8 @@ class TopicSelectionDialog(PopupDialog):
         self._addSection('Nefarious', nefarious_topics)
         self._addSection('Environmental', environmental_topics)
 
-        self.btnSelect = push_btn(IconRegistry.ok_icon('white'), self.DEFAULT_SELECT_BTN_TEXT,
-                                  properties=['positive', 'base'])
+        self.btnSelect = push_btn(IconRegistry.ok_icon(RELAXED_WHITE_COLOR), self.DEFAULT_SELECT_BTN_TEXT,
+                                  properties=['positive', 'confirm'])
         self.btnSelect.setDisabled(True)
         self.btnSelect.clicked.connect(self.accept)
 
@@ -847,7 +848,7 @@ class WorldBuildingEntityEditor(QWidget):
 
         self.wdgEditorMiddle = QWidget()
         vbox(self.wdgEditorMiddle, spacing=10)
-        margins(self.wdgEditorMiddle, left=20, bottom=20)
+        margins(self.wdgEditorMiddle, left=40, bottom=40)
         self.wdgEditorSide = QWidget()
         vbox(self.wdgEditorSide, 7, spacing=10)
         margins(self.wdgEditorSide, left=15, right=15)
@@ -889,7 +890,7 @@ class WorldBuildingEntityEditor(QWidget):
 
     def layoutChangedEvent(self):
         self.wdgEditorSide.setVisible(self._entity.side_visible)
-        margins(self.wdgEditorMiddle, right=2 if self._entity.side_visible else 20)
+        margins(self.wdgEditorMiddle, right=2 if self._entity.side_visible else 40)
 
     def _addPlaceholder(self, middle: bool = True):
         wdg = push_btn(IconRegistry.plus_icon('grey'), 'Add section' if middle else 'Add block', transparent_=True)
