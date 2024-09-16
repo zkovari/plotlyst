@@ -90,6 +90,7 @@ class EntityNode(ContainerNode):
         super(EntityNode, self).__init__(entity.name, parent=parent, settings=settings)
         self._entity = entity
         self.setPlusButtonEnabled(True)
+        self.setTranslucentIconEnabled(True)
         self._additionMenu = EntityAdditionMenu(self._btnAdd)
         self._additionMenu.entityTriggered.connect(self.addEntity.emit)
         self.setPlusMenu(self._additionMenu)
@@ -103,9 +104,9 @@ class EntityNode(ContainerNode):
 
         if self._entity.icon:
             self._icon.setIcon(IconRegistry.from_name(self._entity.icon, self._entity.icon_color))
-            self._icon.setVisible(True)
         else:
-            self._icon.setHidden(True)
+            self._icon.setIcon(IconRegistry.from_name('msc.debug-stackframe-dot'))
+        self._icon.setVisible(True)
 
 
 class RootNode(EntityNode):
