@@ -640,6 +640,9 @@ class TimelineElementEditor(WorldBuildingEntityElementWidget):
         self.layout().addWidget(self.timeline)
         self.timeline.changed.connect(self.save)
 
+        self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
+
         self.btnDrag.raise_()
 
 
