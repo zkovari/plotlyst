@@ -186,6 +186,7 @@ class TextElementEditor(WorldBuildingEntityElementWidget):
             self.textEdit.setPlaceholderText('Describe this entity...')
         self.textEdit.textChanged.connect(self._textChanged)
         self.textEdit.setMarkdown(element.text)
+        self.textEdit.setBlockFormat(margin_bottom=10, margin_top=10)
 
         font = self.textEdit.font()
         if app_env.is_mac():
