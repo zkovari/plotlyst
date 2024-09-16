@@ -305,6 +305,7 @@ class QuoteElementEditor(WorldBuildingEntityElementWidget):
                     color: #510442;
                 }}''')
         self.lineEditRef.setPlaceholderText('Source')
+        self.lineEditRef.setText(self.element.ref)
         self.lineEditRef.textEdited.connect(self._quoteRefEdited)
         self.wdgQuoteRef = QWidget()
         hbox(self.wdgQuoteRef, 2, 0)
