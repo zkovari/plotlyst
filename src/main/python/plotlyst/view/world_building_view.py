@@ -21,10 +21,11 @@ from dataclasses import dataclass
 from typing import Optional
 
 import qtanim
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor
+from PyQt6.QtCore import Qt, QRectF
+from PyQt6.QtGui import QColor, QPainter
+from PyQt6.QtSvg import QSvgRenderer
+from PyQt6.QtWidgets import QWidget, QGraphicsColorizeEffect
 from overrides import overrides
-from qthandy import line
 from qthandy.filter import OpacityEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
@@ -54,6 +55,23 @@ class WorldBuildingPalette:
     tertiary_color: str
 
 
+class WorldBuildingSeparatorWidget(QWidget):
+    def __init__(self, palette: WorldBuildingPalette):
+        super().__init__()
+        self.svg_renderer = QSvgRenderer(resource_registry.divider1)
+        self.setMinimumSize(400, 55)
+
+        effect = QGraphicsColorizeEffect(self)
+        effect.setColor(QColor(palette.primary_color))
+        self.setGraphicsEffect(effect)
+
+    @overrides
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        rect = QRectF(0, 0, self.width(), self.height())
+        self.svg_renderer.render(painter, rect)
+
+
 class WorldBuildingView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
@@ -73,8 +91,8 @@ class WorldBuildingView(AbstractNovelView):
             border-radius: 12px;
         }}
         ''')
-        # self.ui.lblBanner.setPixmap(QPixmap(resource_registry.vintage_pocket_banner))
-        # apply_border_image(self.ui.wdgSeparator, resource_registry.frame1)
+        separator = WorldBuildingSeparatorWidget(self._palette)
+        self.ui.wdgNameHeader.layout().addWidget(separator)
 
         self._entity: Optional[WorldBuildingEntity] = None
 
@@ -101,8 +119,6 @@ class WorldBuildingView(AbstractNovelView):
         self._additionMenu = EntityAdditionMenu(self.ui.btnNew)
         self._additionMenu.entityTriggered.connect(self.ui.treeWorld.addEntity)
         self.ui.iconReaderMode.setIcon(IconRegistry.from_name('fa5s.eye'))
-
-        self.ui.wdgSeparator.layout().addWidget(line(color=self._palette.primary_color))
 
         self.ui.btnWorldView.setIcon(IconRegistry.world_building_icon())
         self.ui.btnMapView.setIcon(IconRegistry.from_name('fa5s.map-marked-alt', color_on=PLOTLYST_SECONDARY_COLOR))

@@ -465,7 +465,7 @@
                    <height>16777215</height>
                   </size>
                  </property>
-                 <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0">
+                 <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0">
                   <property name="spacing">
                    <number>5</number>
                   </property>
@@ -473,7 +473,7 @@
                    <number>0</number>
                   </property>
                   <property name="topMargin">
-                   <number>25</number>
+                   <number>40</number>
                   </property>
                   <property name="rightMargin">
                    <number>0</number>
@@ -485,7 +485,7 @@
                    <widget class="QWidget" name="wdgNameHeader" native="true">
                     <layout class="QVBoxLayout" name="verticalLayout_7">
                      <property name="spacing">
-                      <number>15</number>
+                      <number>20</number>
                      </property>
                      <property name="leftMargin">
                       <number>0</number>
@@ -502,27 +502,6 @@
                      <item>
                       <widget class="QLineEdit" name="lineName"/>
                      </item>
-                    </layout>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QWidget" name="wdgSeparator" native="true">
-                    <property name="border-image" stdset="0">
-                     <bool>true</bool>
-                    </property>
-                    <layout class="QHBoxLayout" name="horizontalLayout_3">
-                     <property name="leftMargin">
-                      <number>15</number>
-                     </property>
-                     <property name="topMargin">
-                      <number>10</number>
-                     </property>
-                     <property name="rightMargin">
-                      <number>15</number>
-                     </property>
-                     <property name="bottomMargin">
-                      <number>10</number>
-                     </property>
                     </layout>
                    </widget>
                   </item>
