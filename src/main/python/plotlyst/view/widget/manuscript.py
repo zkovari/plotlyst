@@ -721,6 +721,7 @@ class ManuscriptTextEditor(TextEditorBase):
         _textedit = ManuscriptTextEdit()
         _textedit.zoomIn(int(_textedit.font().pointSize() * 0.25))
         _textedit.setBlockFormat(DEFAULT_MANUSCRIPT_LINE_SPACE, textIndent=DEFAULT_MANUSCRIPT_INDENT)
+        _textedit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoNone)
         _textedit.selectionChanged.connect(self.selectionChanged.emit)
         _textedit.textChanged.connect(self._textChanged)
         _textedit.setProperty('borderless', True)
