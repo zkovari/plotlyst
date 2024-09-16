@@ -29,7 +29,7 @@ from qthandy.filter import DisabledClickEventFilter
 from plotlyst.common import IGNORE_CAPITALIZATION_PROPERTY
 from plotlyst.core.domain import Novel, GlossaryItem
 from plotlyst.core.template import SelectionItem
-from plotlyst.model.common import SelectionItemsModel
+from plotlyst.model.common import SelectionItemsModel, proxy
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import push_btn, label
 from plotlyst.view.widget.display import PopupDialog
@@ -190,7 +190,9 @@ class WorldBuildingGlossaryEditor(QWidget):
         self.editor.btnAdd.clicked.connect(self._addNew)
         self.editor.editRequested.connect(self._edit)
         self.glossaryModel = GlossaryModel(self._novel)
-        self.editor.setModel(self.glossaryModel)
+        proxyModel = proxy(self.glossaryModel)
+        proxyModel.sort(GlossaryModel.ColName)
+        self.editor.setModel(self.glossaryModel, proxyModel)
         self.editor.tableView.setColumnHidden(GlossaryModel.ColIcon, True)
         self.editor.tableView.setColumnWidth(GlossaryModel.ColName, 200)
         self.editor.tableView.setContentsMargins(10, 15, 10, 5)

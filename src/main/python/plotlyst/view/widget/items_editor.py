@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt6.QtCore import QModelIndex, Qt, pyqtSignal, QPoint
+from PyQt6.QtCore import QModelIndex, Qt, pyqtSignal, QPoint, QSortFilterProxyModel
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QAbstractItemView, QTableView
 from qthandy import vbox, spacer, hbox, vline
@@ -40,6 +40,7 @@ class ItemsEditorWidget(QWidget):
     def __init__(self, parent=None):
         super(ItemsEditorWidget, self).__init__(parent)
         self.model: Optional[SelectionItemsModel] = None
+        self.proxy: Optional[QSortFilterProxyModel] = None
 
         self.bgColorFieldEnabled: bool = False
         self.askRemovalConfirmation: bool = False
@@ -88,9 +89,13 @@ class ItemsEditorWidget(QWidget):
         self.layout().addWidget(self.toolbar)
         self.layout().addWidget(self.tableView)
 
-    def setModel(self, model: SelectionItemsModel):
+    def setModel(self, model: SelectionItemsModel, proxy: Optional[QSortFilterProxyModel] = None):
         self.model = model
-        self.tableView.setModel(self.model)
+        self.proxy = proxy
+        if proxy:
+            self.tableView.setModel(proxy)
+        else:
+            self.tableView.setModel(self.model)
         self.tableView.selectionModel().selectionChanged.connect(self._item_selected)
         self.tableView.clicked.connect(self._item_clicked)
         self.tableView.setItemDelegate(TextItemDelegate())
@@ -168,24 +173,25 @@ class ItemsEditorWidget(QWidget):
         self._editAfterInsert(row)
 
     def _edit(self):
-        indexes = self.tableView.selectedIndexes()
-        if not indexes:
+        index = self._selectedIndex()
+        if not index:
             return
         if self.inlineEditionEnabled:
-            if self.model.columnIsEditable(indexes[0].column()):
-                self.tableView.edit(indexes[0])
+            if self.model.columnIsEditable(index.column()):
+                self.tableView.edit(index)
         else:
-            self.editRequested.emit(self.model.item(indexes[0]))
+            item = index.data(SelectionItemsModel.ItemRole)
+            self.editRequested.emit(item)
 
     def _remove(self):
-        indexes = self.tableView.selectedIndexes()
-        if not indexes:
+        index = self._selectedIndex()
+        if not index:
             return
-        item: SelectionItem = self.model.item(indexes[0])
+        item = index.data(SelectionItemsModel.ItemRole)
         if self.askRemovalConfirmation and not confirmed('This action cannot be undone.',
                                                          f'Are you sure you want to remove the element "{self._itemDisplayText(item)}"?'):
             return
-        self.model.remove(indexes[0])
+        self.model.remove(index)
 
         self.btnEdit.setDisabled(True)
         self.btnRemove.setDisabled(True)
@@ -227,3 +233,13 @@ class ItemsEditorWidget(QWidget):
 
     def _itemDisplayText(self, item: SelectionItem) -> str:
         return item.text
+
+    def _selectedIndex(self) -> Optional[QModelIndex]:
+        indexes = self.tableView.selectedIndexes()
+        if not indexes:
+            return
+
+        if self.proxy:
+            return self.proxy.mapToSource(indexes[0])
+        else:
+            return indexes[0]
