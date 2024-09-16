@@ -22,7 +22,7 @@ from typing import Optional
 
 import qtanim
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QPixmap
+from PyQt6.QtGui import QColor
 from overrides import overrides
 from qthandy import line
 from qthandy.filter import OpacityEventFilter
@@ -39,7 +39,8 @@ from plotlyst.view.generated.world_building_view_ui import Ui_WorldBuildingView
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_bg_image
 from plotlyst.view.widget.tree import TreeSettings
-from plotlyst.view.widget.world.editor import WorldBuildingEntityEditor, WorldBuildingEditorSettingsWidget, EntityLayoutType
+from plotlyst.view.widget.world.editor import WorldBuildingEntityEditor, WorldBuildingEditorSettingsWidget, \
+    EntityLayoutType
 from plotlyst.view.widget.world.glossary import WorldBuildingGlossaryEditor
 from plotlyst.view.widget.world.map import WorldBuildingMapView
 from plotlyst.view.widget.world.tree import EntityAdditionMenu
@@ -72,7 +73,8 @@ class WorldBuildingView(AbstractNovelView):
             border-radius: 12px;
         }}
         ''')
-        self.ui.lblBanner.setPixmap(QPixmap(resource_registry.vintage_pocket_banner))
+        # self.ui.lblBanner.setPixmap(QPixmap(resource_registry.vintage_pocket_banner))
+        # apply_border_image(self.ui.wdgSeparator, resource_registry.frame1)
 
         self._entity: Optional[WorldBuildingEntity] = None
 
