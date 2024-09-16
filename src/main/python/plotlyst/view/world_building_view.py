@@ -129,7 +129,7 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.splitterNav.setSizes([150, 500])
         font = self.ui.lineName.font()
         font.setPointSize(32)
-        font.setFamily(app_env.sans_serif_font())
+        font.setFamily(app_env.serif_font())
         self.ui.lineName.setFont(font)
         self.ui.lineName.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.ui.lineName.setStyleSheet(f'''
