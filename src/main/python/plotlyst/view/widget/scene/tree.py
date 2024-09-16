@@ -45,11 +45,11 @@ from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
 
-class SceneWidget(ContainerNode):
+class SceneNode(ContainerNode):
 
     def __init__(self, scene: Scene, novel: Novel, parent=None, readOnly: bool = False,
                  settings: Optional[TreeSettings] = None):
-        super(SceneWidget, self).__init__(scene.title_or_index(novel), parent=parent, settings=settings)
+        super(SceneNode, self).__init__(scene.title_or_index(novel), parent=parent, settings=settings)
         self._scene = scene
         self._novel = novel
         self._readOnly = readOnly
@@ -99,7 +99,7 @@ class SceneWidget(ContainerNode):
             self._icon.setIcon(IconRegistry.from_name(self._dotIcon, 'lightgrey'))
 
 
-class ChapterWidget(ContainerNode):
+class ChapterNode(ContainerNode):
     deleted = pyqtSignal()
     addScene = pyqtSignal()
     addChapter = pyqtSignal()
@@ -108,8 +108,8 @@ class ChapterWidget(ContainerNode):
 
     def __init__(self, chapter: Chapter, novel: Novel, parent=None, readOnly: bool = False,
                  settings: Optional[TreeSettings] = None):
-        super(ChapterWidget, self).__init__(chapter.display_name(), IconRegistry.chapter_icon(), parent,
-                                            settings=settings)
+        super(ChapterNode, self).__init__(chapter.display_name(), IconRegistry.chapter_icon(), parent,
+                                          settings=settings)
         self._chapter = chapter
         self._novel = novel
         self._readOnly = readOnly
@@ -136,7 +136,7 @@ class ChapterWidget(ContainerNode):
     def novel(self) -> Novel:
         return self._novel
 
-    def sceneWidgets(self) -> List[SceneWidget]:
+    def sceneWidgets(self) -> List[SceneNode]:
         return self.childrenWidgets()
 
     @overrides
@@ -196,14 +196,14 @@ class ScenesTreeView(TreeView, EventListener):
 
         self._refreshNeeded = False
 
-        self._chapters: Dict[Chapter, ChapterWidget] = {}
-        self._scenes: Dict[Scene, SceneWidget] = {}
+        self._chapters: Dict[Chapter, ChapterNode] = {}
+        self._scenes: Dict[Scene, SceneNode] = {}
         self._selectedScenes: Set[Scene] = set()
         self._selectedChapters: Set[Chapter] = set()
         self.setStyleSheet('ScenesTreeView {background-color: rgb(244, 244, 244);}')
 
-        self._dummyWdg: Optional[Union[SceneWidget, ChapterWidget]] = None
-        self._toBeRemoved: Optional[Union[SceneWidget, ChapterWidget]] = None
+        self._dummyWdg: Optional[Union[SceneNode, ChapterNode]] = None
+        self._toBeRemoved: Optional[Union[SceneNode, ChapterNode]] = None
         self._spacer: QWidget = vspacer()
         vbox(self._spacer)
         self._spacer.setAcceptDrops(True)
@@ -278,8 +278,8 @@ class ScenesTreeView(TreeView, EventListener):
 
         self._centralWidget.layout().addWidget(self._spacer)
 
-        removed_chapters: List[ChapterWidget] = [self._chapters[x] for x in self._chapters.keys() if
-                                                 x not in self._novel.chapters]
+        removed_chapters: List[ChapterNode] = [self._chapters[x] for x in self._chapters.keys() if
+                                               x not in self._novel.chapters]
         self._chapters = {k: self._chapters[k] for k in self._chapters.keys() if k in self._novel.chapters}
         for chapterWdg in removed_chapters:
             chapterWdg.setHidden(True)
@@ -378,7 +378,7 @@ class ScenesTreeView(TreeView, EventListener):
         else:
             self._refreshNeeded = True
 
-    def _addScene(self, chapterWdg: ChapterWidget):
+    def _addScene(self, chapterWdg: ChapterNode):
         scene = self._novel.new_scene()
         scene.chapter = chapterWdg.chapter()
         self._novel.scenes.append(scene)
@@ -391,7 +391,7 @@ class ScenesTreeView(TreeView, EventListener):
         self._reorderScenes()
         self.sceneAdded.emit(scene)
 
-    def _insertChapter(self, chapterWdg: ChapterWidget):
+    def _insertChapter(self, chapterWdg: ChapterNode):
         i = self._centralWidget.layout().indexOf(chapterWdg) + 1
         chapter = Chapter('')
         self._novel.chapters.insert(i, chapter)
@@ -402,7 +402,7 @@ class ScenesTreeView(TreeView, EventListener):
         self.repo.update_novel(self._novel)
         self._refreshChapterTitles()
 
-    def _sceneSelectionChanged(self, sceneWdg: SceneWidget, selected: bool):
+    def _sceneSelectionChanged(self, sceneWdg: SceneNode, selected: bool):
         if selected:
             self.clearSelection()
             self._selectedScenes.add(sceneWdg.scene())
@@ -410,7 +410,7 @@ class ScenesTreeView(TreeView, EventListener):
         elif sceneWdg.scene() in self._selectedScenes:
             self._selectedScenes.remove(sceneWdg.scene())
 
-    def _chapterSelectionChanged(self, chapterWdg: ChapterWidget, selected: bool):
+    def _chapterSelectionChanged(self, chapterWdg: ChapterNode, selected: bool):
         if selected:
             self.clearSelection()
             self._selectedChapters.add(chapterWdg.chapter())
@@ -418,7 +418,7 @@ class ScenesTreeView(TreeView, EventListener):
         elif chapterWdg.chapter() in self._selectedChapters:
             self._selectedChapters.remove(chapterWdg.chapter())
 
-    def _deleteChapter(self, chapterWdg: ChapterWidget):
+    def _deleteChapter(self, chapterWdg: ChapterNode):
         title = f'Are you sure you want to the delete the chapter "{chapterWdg.chapter().display_name()}"?'
         msg = "<html><ul><li>This action cannot be undone.</li><li>The scenes inside this chapter <b>WON'T</b> be deleted.</li>"
         if not confirmed(msg, title):
@@ -449,7 +449,7 @@ class ScenesTreeView(TreeView, EventListener):
 
         self._emitChapterChange()
 
-    def _convertChapter(self, chapterWdg: ChapterWidget, chapterType: Optional[ChapterType] = None):
+    def _convertChapter(self, chapterWdg: ChapterNode, chapterType: Optional[ChapterType] = None):
         chapterWdg.chapter().type = chapterType
         self._novel.update_chapter_titles()
 
@@ -460,7 +460,7 @@ class ScenesTreeView(TreeView, EventListener):
     def _emitChapterChange(self):
         emit_event(self._novel, ChapterChangedEvent(self), delay=10)
 
-    def _deleteScene(self, sceneWdg: SceneWidget):
+    def _deleteScene(self, sceneWdg: SceneNode):
         scene = sceneWdg.scene()
         if delete_scene(self._novel, scene):
             if scene in self._selectedScenes:
@@ -475,10 +475,10 @@ class ScenesTreeView(TreeView, EventListener):
 
     def _dragStarted(self, wdg: QWidget):
         wdg.setHidden(True)
-        if isinstance(wdg, SceneWidget):
-            self._dummyWdg = SceneWidget(wdg.scene(), wdg.novel(), settings=self._settings)
-        elif isinstance(wdg, ChapterWidget):
-            self._dummyWdg = ChapterWidget(wdg.chapter(), wdg.novel(), settings=self._settings)
+        if isinstance(wdg, SceneNode):
+            self._dummyWdg = SceneNode(wdg.scene(), wdg.novel(), settings=self._settings)
+        elif isinstance(wdg, ChapterNode):
+            self._dummyWdg = ChapterNode(wdg.chapter(), wdg.novel(), settings=self._settings)
             for v in self._scenes.values():
                 v.setDisabled(True)
         else:
@@ -516,8 +516,8 @@ class ScenesTreeView(TreeView, EventListener):
         self._spacer.layout().removeWidget(self._dummyWdg)
         self._dummyWdg.setParent(self._centralWidget)
 
-    def _dragMovedOnChapter(self, chapterWdg: ChapterWidget, edge: Qt.Edge, _: QPointF):
-        if isinstance(self._dummyWdg, ChapterWidget):
+    def _dragMovedOnChapter(self, chapterWdg: ChapterNode, edge: Qt.Edge, _: QPointF):
+        if isinstance(self._dummyWdg, ChapterNode):
             i = self._centralWidget.layout().indexOf(chapterWdg)
             if edge == Qt.Edge.TopEdge:
                 self._centralWidget.layout().insertWidget(i, self._dummyWdg)
@@ -546,8 +546,8 @@ class ScenesTreeView(TreeView, EventListener):
                 ref.chapter = None
                 new_widget.setParent(self._centralWidget)
                 self._centralWidget.layout().insertWidget(self._centralWidget.layout().count() - 1, new_widget)
-            elif isinstance(self._dummyWdg.parent().parent(), ChapterWidget):
-                chapter_wdg: ChapterWidget = self._dummyWdg.parent().parent()
+            elif isinstance(self._dummyWdg.parent().parent(), ChapterNode):
+                chapter_wdg: ChapterNode = self._dummyWdg.parent().parent()
                 ref.chapter = chapter_wdg.chapter()
                 new_widget.setParent(chapter_wdg)
                 i = chapter_wdg.containerWidget().layout().indexOf(self._dummyWdg)
@@ -585,11 +585,11 @@ class ScenesTreeView(TreeView, EventListener):
             if item is None:
                 continue
             wdg = item.widget()
-            if isinstance(wdg, ChapterWidget):
+            if isinstance(wdg, ChapterNode):
                 chapters.append(wdg.chapter())
                 for scene_wdg in wdg.sceneWidgets():
                     scenes.append(scene_wdg.scene())
-            elif isinstance(wdg, SceneWidget):
+            elif isinstance(wdg, SceneNode):
                 scenes.append(wdg.scene())
 
         self._novel.chapters[:] = chapters
@@ -602,7 +602,7 @@ class ScenesTreeView(TreeView, EventListener):
         self.repo.update_novel(self._novel)
         emit_event(self._novel, SceneOrderChangedEvent(self), delay=10)
 
-    def _dragMovedOnScene(self, sceneWdg: SceneWidget, edge: Qt.Edge, _: QPointF):
+    def _dragMovedOnScene(self, sceneWdg: SceneNode, edge: Qt.Edge, _: QPointF):
         i = sceneWdg.parent().layout().indexOf(sceneWdg)
         if edge == Qt.Edge.TopEdge:
             sceneWdg.parent().layout().insertWidget(i, self._dummyWdg)
@@ -612,7 +612,7 @@ class ScenesTreeView(TreeView, EventListener):
 
     # noinspection PyTypeChecker
     def __initChapterWidget(self, chapter: Chapter):
-        chapterWdg = ChapterWidget(chapter, self._novel, readOnly=self._readOnly, settings=self._settings)
+        chapterWdg = ChapterNode(chapter, self._novel, readOnly=self._readOnly, settings=self._settings)
         chapterWdg.selectionChanged.connect(partial(self._chapterSelectionChanged, chapterWdg))
         if not self._readOnly:
             chapterWdg.deleted.connect(partial(self._deleteChapter, chapterWdg))
@@ -638,8 +638,8 @@ class ScenesTreeView(TreeView, EventListener):
         return chapterWdg
 
     # noinspection PyTypeChecker
-    def __initSceneWidget(self, scene: Scene) -> SceneWidget:
-        sceneWdg = SceneWidget(scene, self._novel, readOnly=self._readOnly, settings=self._settings)
+    def __initSceneWidget(self, scene: Scene) -> SceneNode:
+        sceneWdg = SceneNode(scene, self._novel, readOnly=self._readOnly, settings=self._settings)
         self._scenes[scene] = sceneWdg
         sceneWdg.selectionChanged.connect(partial(self._sceneSelectionChanged, sceneWdg))
         sceneWdg.doubleClicked.connect(partial(self.sceneDoubleClicked.emit, scene))
