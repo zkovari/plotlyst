@@ -21,7 +21,7 @@ from functools import partial
 from typing import Optional, Dict, Set
 
 from PyQt6.QtCore import pyqtSignal, QMimeData, Qt, QPointF, QTimer
-from qthandy import vspacer, clear_layout, transparent, translucent, gc
+from qthandy import vspacer, clear_layout, transparent, translucent, gc, margins
 from qthandy.filter import DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget
 
@@ -129,6 +129,7 @@ class WorldBuildingTreeView(TreeView):
         self._entities: Dict[WorldBuildingEntity, EntityNode] = {}
         self._selectedEntities: Set[WorldBuildingEntity] = set()
         transparent(self)
+        margins(self._centralWidget, left=10)
 
         self._dummyWdg: Optional[EntityNode] = None
         self._toBeRemoved: Optional[EntityNode] = None
