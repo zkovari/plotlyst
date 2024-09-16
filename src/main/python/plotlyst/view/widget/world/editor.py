@@ -329,7 +329,7 @@ class QuoteElementEditor(WorldBuildingEntityElementWidget):
         self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
         self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
 
-        self.btnMenu.raise_()
+        self.btnDrag.raise_()
 
     def _quoteChanged(self):
         self.element.text = self.textEdit.toMarkdown()
