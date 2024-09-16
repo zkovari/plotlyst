@@ -590,6 +590,12 @@ class HighlightedTextElementEditor(WorldBuildingEntityElementWidget):
         self.textEdit.setPlaceholderText('Begin writing...')
         self.textEdit.setProperty('transparent', True)
         self.textEdit.setMarkdown(self.element.text)
+        self.textEdit.setCommandsEnabled(True)
+        self.textEdit.setCommandOperations([Heading2Operation, Heading3Operation, InsertListOperation,
+                                            InsertNumberedListOperation, InsertDividerOperation])
+        toolbar = MarkdownPopupTextEditorToolbar()
+        toolbar.activate(self.textEdit)
+        self.textEdit.setPopupWidget(toolbar)
         self.textEdit.textChanged.connect(self._textChanged)
         vbox(self.frame, 10).addWidget(self.textEdit)
 
