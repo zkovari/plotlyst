@@ -2137,8 +2137,8 @@ class GlossaryItem(SelectionItem):
     key: str = ''
 
     @overrides
-    def __eq__(self, other: 'SceneStage'):
-        if isinstance(other, SceneStage):
+    def __eq__(self, other: 'GlossaryItem'):
+        if isinstance(other, GlossaryItem):
             return self.key == other.key
         return False
 
