@@ -44,7 +44,7 @@ linguistic_topics = [
           icon='mdi.alphabetical'),
     Topic('Slang', TopicType.Worldbuilding, uuid.UUID('5433fda2-de02-48cb-832b-67f4616ab4a3'),
           icon='mdi6.message-question-outline'),
-    Topic('Curses', TopicType.Worldbuilding, uuid.UUID('20e90f8a-4e03-4e81-bcaa-63f05ea813fc'),
+    Topic('Profanities', TopicType.Worldbuilding, uuid.UUID('20e90f8a-4e03-4e81-bcaa-63f05ea813fc'),
           icon='mdi6.message-flash-outline'),
     Topic('Communication', TopicType.Worldbuilding, uuid.UUID('c8a5da02-02b3-4174-b099-416b327db80a'),
           icon='fa5s.paper-plane')
