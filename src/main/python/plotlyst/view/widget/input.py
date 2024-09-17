@@ -1360,3 +1360,20 @@ class TextEditBubbleWidget(QFrame):
 
     def _textChanged(self):
         pass
+
+
+class SearchField(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        hbox(self, 0, 0)
+        self.btnIcon = tool_btn(IconRegistry.from_name('mdi.magnify'), transparent_=True, pointy_=False)
+        self.lineSearch = QLineEdit()
+        self.lineSearch.setPlaceholderText('Search')
+        self.lineSearch.setClearButtonEnabled(True)
+        self.lineSearch.setProperty('rounded', True)
+        self.lineSearch.setProperty('white-bg', True)
+
+        self.btnIcon.clicked.connect(self.lineSearch.setFocus)
+
+        self.layout().addWidget(self.btnIcon)
+        self.layout().addWidget(self.lineSearch)
