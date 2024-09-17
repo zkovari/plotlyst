@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from dataclasses import dataclass
 from typing import Optional
 
 import qtanim
@@ -44,15 +43,8 @@ from plotlyst.view.widget.world.editor import WorldBuildingEntityEditor, WorldBu
     EntityLayoutType
 from plotlyst.view.widget.world.glossary import WorldBuildingGlossaryEditor
 from plotlyst.view.widget.world.map import WorldBuildingMapView
+from plotlyst.view.widget.world.theme import WorldBuildingPalette
 from plotlyst.view.widget.world.tree import EntityAdditionMenu
-
-
-@dataclass
-class WorldBuildingPalette:
-    bg_color: str
-    primary_color: str
-    secondary_color: str
-    tertiary_color: str
 
 
 class WorldBuildingSeparatorWidget(QWidget):
