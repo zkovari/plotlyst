@@ -73,7 +73,7 @@ infrastructural_topics = [
     Topic('Deathcare', TopicType.Worldbuilding, uuid.UUID('2c93de12-ba6d-4bdb-bf8a-1494882468d2'),
           icon='mdi.grave-stone'),
     Topic('Transportation', TopicType.Worldbuilding, uuid.UUID('69bc684e-7fc6-4566-a114-af7206424fe9'),
-          icon='fa5s.train'),
+          icon='mdi6.horse-human'),
     Topic('Education', TopicType.Worldbuilding, uuid.UUID('6de9799d-5858-4811-b3e5-9ea9a5077e75'),
           icon='fa5s.graduation-cap'),
     Topic('Agriculture', TopicType.Worldbuilding, uuid.UUID('875683dd-6322-4011-8399-ddb278a58e09'), icon='mdi.corn'),
