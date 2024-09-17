@@ -631,9 +631,13 @@ class WorldBuildingMapView(BaseGraphicsView):
     def _addNewMap(self):
         loadedImage: Optional[LoadedImage] = upload_image(self._novel)
         if loadedImage:
-            self._novel.world.maps.clear()
-            map = WorldBuildingMap(loadedImage.ref)
-            self._novel.world.maps.append(map)
+            if not self._novel.world.maps:
+                map = WorldBuildingMap(loadedImage.ref)
+                self._novel.world.maps.append(map)
+            else:
+                map = self._novel.world.maps[0]
+                map.ref = loadedImage.ref
+                map.dominant_color = ''
             self._scene.loadMap(map)
             self._loadMap(map)
             self.repo.update_world(self._novel)
