@@ -35,7 +35,7 @@ from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, WorldBuildingMap, WorldBuildingMarker, GraphicsItemType
 from plotlyst.service.image import load_image, upload_image, LoadedImage
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import tool_btn, action, shadow, scrolled, wrap, TooltipPositionEventFilter
+from plotlyst.view.common import tool_btn, action, shadow, scrolled, wrap, TooltipPositionEventFilter, dominant_color
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.button import CollapseButton
 from plotlyst.view.widget.graphics import BaseGraphicsView
@@ -613,8 +613,15 @@ class WorldBuildingMapView(BaseGraphicsView):
         self.setToolTip('')
 
     def _loadMap(self, map: WorldBuildingMap):
-        self._bgItem = self._scene.loadMap(map)
+        self._bgItem: QGraphicsPixmapItem = self._scene.loadMap(map)
         if self._bgItem:
+            if map.dominant_color:
+                bg_color = QColor(map.dominant_color)
+            else:
+                bg_color = dominant_color(self._bgItem.pixmap())
+                map.dominant_color = bg_color.name()
+            self.setBackgroundBrush(bg_color)
+
             # call to calculate rect size
             _ = self._scene.sceneRect()
             self.centerOn(self._bgItem)
@@ -647,9 +654,9 @@ class WorldBuildingMapView(BaseGraphicsView):
 
     def _fillUpEditMenu(self):
         self._menuEdit.clear()
-        addAction = action('Add map', IconRegistry.plus_icon(), tooltip="Upload a picture for your map",
+        addAction = action('Add map', IconRegistry.plus_icon(), tooltip="Upload am image for your map",
                            slot=self._addNewMap)
         if self._scene.map():
             addAction.setText('Replace map')
-            addAction.setToolTip('Upload a new picture for your map')
+            addAction.setToolTip('Replace your current map with a new image')
         self._menuEdit.addAction(addAction)

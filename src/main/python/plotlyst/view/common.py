@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import math
 import sys
+from collections import Counter
 from functools import partial
 from typing import Optional, Tuple, List, Union
 
@@ -623,3 +624,21 @@ def calculate_resized_dimensions(width: int, height: int, max_size: int = 512):
 
 def fade_in(wdg: QWidget):
     qtanim.fade_in(wdg, duration=150, teardown=lambda: wdg.setGraphicsEffect(None))
+
+
+def dominant_color(pixmap: QPixmap) -> QColor:
+    image = pixmap.toImage()
+    resize_factor = 0.5
+    skip = 5
+    new_width = int(image.width() * resize_factor)
+    new_height = int(image.height() * resize_factor)
+    downsampled_image = image.scaled(new_width, new_height)
+    colors = []
+    for x in range(0, downsampled_image.width(), skip):
+        for y in range(0, downsampled_image.height(), skip):
+            pixel_color = image.pixelColor(x, y).rgb()
+            colors.append(pixel_color)
+
+    color_counter = Counter(colors)
+    dominant_rgb = color_counter.most_common(1)[0][0]
+    return QColor(dominant_rgb)

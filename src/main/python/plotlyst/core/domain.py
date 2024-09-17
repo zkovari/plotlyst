@@ -2164,6 +2164,7 @@ class WorldBuildingMap:
     title: str = ''
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     markers: List[WorldBuildingMarker] = field(default_factory=list)
+    dominant_color: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
