@@ -157,11 +157,14 @@ class TextBlockData(QTextBlockUserData):
 class AbstractTextBlockHighlighter(QSyntaxHighlighter):
     def _currentblockData(self) -> TextBlockData:
         data = self.currentBlockUserData()
-        if data is None or not isinstance(data, TextBlockData):
-            data = TextBlockData()
+        if data is None or not isinstance(data, self._blockClass()):
+            data = self._blockClass()()
             self.setCurrentBlockUserData(data)
 
         return data
+
+    def _blockClass(self):
+        return TextBlockData
 
 
 class GrammarHighlightStyle(Enum):

@@ -26,7 +26,7 @@ from PyQt6.QtCore import pyqtSignal, Qt, QSize, QMimeData, QPointF, QEvent
 from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMouseEvent, QColor, QIcon, QImage, \
     QShowEvent, QPixmap, QCursor, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QDialog, QGridLayout, QSlider, QToolButton, QButtonGroup, \
-    QLabel
+    QLabel, QToolTip
 from overrides import overrides
 from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy, \
     grid, flow, spacer, line, incr_icon, gc, translucent
@@ -56,6 +56,38 @@ from plotlyst.view.widget.utility import IconSelectorDialog
 from plotlyst.view.widget.world._topics import ecological_topics, cultural_topics, historical_topics, \
     linguistic_topics, technological_topics, economic_topics, infrastructural_topics, religious_topics, \
     fantastic_topics, nefarious_topics, environmental_topics
+from plotlyst.view.widget.world.glossary import GlossaryTextBlockHighlighter, GlossaryTextBlockData
+
+
+class WorldBuildingTextEdit(AutoAdjustableTextEdit):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self.setProperty('transparent', True)
+        self.setCommandsEnabled(True)
+        self.setAcceptRichText(True)
+        self.setCommandOperations([Heading2Operation, Heading3Operation, InsertListOperation,
+                                   InsertNumberedListOperation, InsertDividerOperation])
+
+        self._glossaryHighlighter = GlossaryTextBlockHighlighter(novel.world.glossary, self.document())
+        toolbar = MarkdownPopupTextEditorToolbar()
+        toolbar.activate(self)
+        self.setPopupWidget(toolbar)
+
+    @overrides
+    def event(self, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.ToolTip:
+            cursor = self.cursorForPosition(event.pos())
+            block = cursor.block()
+            block_data: GlossaryTextBlockData = block.userData()
+
+            if block_data:
+                cursor_pos = cursor.positionInBlock()
+                for ref in block_data.refs:
+                    if ref.start <= cursor_pos <= ref.start + ref.length:
+                        QToolTip.showText(event.globalPos(), ref.glossary.text)
+                        return True
+
+        return super().event(event)
 
 
 class WorldBuildingEntityElementWidget(QWidget):
@@ -166,20 +198,13 @@ class TextElementEditor(WorldBuildingEntityElementWidget):
         super().__init__(novel, element, parent)
         self._capitalized = False
 
-        self.textEdit = AutoAdjustableTextEdit()
-        self.textEdit.setProperty('transparent', True)
+        self.textEdit = WorldBuildingTextEdit(novel)
         if self._underSection():
             margins(self, left=0)
             self.textEdit.setViewportMargins(20, 0, 0, 0)
             self.textEdit.setSidebarEnabled(True)
             self.textEdit.setSidebarMenuEnabled(False)
-        self.textEdit.setCommandsEnabled(True)
-        self.textEdit.setAcceptRichText(True)
-        self.textEdit.setCommandOperations([Heading2Operation, Heading3Operation, InsertListOperation,
-                                            InsertNumberedListOperation, InsertDividerOperation])
-        toolbar = MarkdownPopupTextEditorToolbar()
-        toolbar.activate(self.textEdit)
-        self.textEdit.setPopupWidget(toolbar)
+
         if self._underSection():
             self.textEdit.setPlaceholderText("Describe this section, or press '/' for commands...")
         else:
@@ -584,19 +609,13 @@ class HighlightedTextElementEditor(WorldBuildingEntityElementWidget):
                             border-radius: 4px;
                             background: #E3D0BD;
                         }''')
-        self.textEdit = AutoAdjustableTextEdit()
+
+        self.textEdit = WorldBuildingTextEdit(novel)
         font: QFont = self.textEdit.font()
         font.setPointSize(14)
         self.textEdit.setFont(font)
         self.textEdit.setPlaceholderText('Begin writing...')
-        self.textEdit.setProperty('transparent', True)
         self.textEdit.setMarkdown(self.element.text)
-        self.textEdit.setCommandsEnabled(True)
-        self.textEdit.setCommandOperations([Heading2Operation, Heading3Operation, InsertListOperation,
-                                            InsertNumberedListOperation, InsertDividerOperation])
-        toolbar = MarkdownPopupTextEditorToolbar()
-        toolbar.activate(self.textEdit)
-        self.textEdit.setPopupWidget(toolbar)
         self.textEdit.textChanged.connect(self._textChanged)
         vbox(self.frame, 10).addWidget(self.textEdit)
 

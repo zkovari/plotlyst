@@ -17,10 +17,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional, Any, Dict
+import re
+from dataclasses import dataclass
+from typing import Optional, Any, Dict, List
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QModelIndex
+from PyQt6.QtGui import QTextCharFormat, QColor, QTextDocument, QTextBlockUserData
 from PyQt6.QtWidgets import QWidget, QLineEdit, QTableView, QApplication, QDialog
 from overrides import overrides
 from qthandy import vbox, hbox, sp
@@ -33,7 +36,7 @@ from plotlyst.model.common import SelectionItemsModel, proxy
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import push_btn, label
 from plotlyst.view.widget.display import PopupDialog
-from plotlyst.view.widget.input import AutoAdjustableTextEdit
+from plotlyst.view.widget.input import AutoAdjustableTextEdit, AbstractTextBlockHighlighter
 from plotlyst.view.widget.items_editor import ItemsEditorWidget
 
 
@@ -105,6 +108,62 @@ class GlossaryItemsEditorWidget(ItemsEditorWidget):
     @overrides
     def _itemDisplayText(self, item: GlossaryItem) -> str:
         return item.key
+
+
+@dataclass
+class GlossaryTextReference:
+    start: int
+    length: int
+    glossary: GlossaryItem
+
+
+class GlossaryTextBlockData(QTextBlockUserData):
+    def __init__(self):
+        super().__init__()
+        self.refs: List[GlossaryTextReference] = []
+
+
+class GlossaryTextBlockHighlighter(AbstractTextBlockHighlighter):
+
+    def __init__(self, glossary: Dict[str, GlossaryItem], document: QTextDocument):
+        super().__init__(document)
+        self._glossary = glossary
+        self.underline_format = QTextCharFormat()
+        self.underline_format.setUnderlineStyle(QTextCharFormat.UnderlineStyle.DashUnderline)
+        self.underline_format.setUnderlineColor(QColor('#510442'))
+
+    @overrides
+    def highlightBlock(self, text):
+        words = text.split()
+        index = 0
+        data: GlossaryTextBlockData = self._currentblockData()
+        data.refs.clear()
+
+        for word in words:
+            clean_word = word.strip('.,!?()[]')
+
+            if clean_word in self._glossary:
+                start_index = text.find(word, index)
+                length = len(word)
+                self.setFormat(start_index, length, self.underline_format)
+                data.refs.append(GlossaryTextReference(start_index, length, self._glossary[clean_word]))
+
+            index += len(word) + 1
+
+        for key in self._glossary.keys():
+            if ' ' in key:
+                pattern = re.escape(key)
+                for match in re.finditer(pattern, text):
+                    start_index = match.start()
+                    length = match.end() - start_index
+                    self.setFormat(start_index, length, self.underline_format)
+                    data.refs.append(GlossaryTextReference(start_index, length, self._glossary[key]))
+
+        self.setCurrentBlockUserData(data)
+
+    @overrides
+    def _blockClass(self):
+        return GlossaryTextBlockData
 
 
 class GlossaryEditorDialog(PopupDialog):
