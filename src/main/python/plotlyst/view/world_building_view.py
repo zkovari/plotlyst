@@ -27,7 +27,7 @@ from PyQt6.QtWidgets import QWidget, QGraphicsColorizeEffect
 from overrides import overrides
 from qthandy.filter import OpacityEventFilter
 
-from plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, WorldBuildingEntity
 from plotlyst.env import app_env
 from plotlyst.resources import resource_registry
@@ -88,11 +88,16 @@ class WorldBuildingView(AbstractNovelView):
 
         self._entity: Optional[WorldBuildingEntity] = None
 
-        self.ui.btnNew.setIcon(IconRegistry.plus_icon(color='white'))
+        self.ui.btnNew.setIcon(IconRegistry.plus_icon(color=RELAXED_WHITE_COLOR))
         self.ui.btnNew.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnNew))
         self.ui.btnTreeToggle.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
         self.ui.btnTreeToggle.clicked.connect(lambda x: qtanim.toggle_expansion(self.ui.wdgWorldContainer, x))
         self.ui.btnSettings.setIcon(IconRegistry.cog_icon())
+
+        self.ui.btnAddLocation.setIcon(IconRegistry.plus_icon(color=RELAXED_WHITE_COLOR))
+        self.ui.btnAddLocation.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnAddLocation))
+        self.ui.btnTreeToggleMilieu.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
+        self.ui.btnTreeToggleMilieu.clicked.connect(lambda x: qtanim.toggle_expansion(self.ui.wdgMilieuSidebar, x))
 
         width = settings.worldbuilding_editor_max_width()
         self.ui.wdgCenterEditor.setMaximumWidth(width)
@@ -112,7 +117,8 @@ class WorldBuildingView(AbstractNovelView):
         self._additionMenu.entityTriggered.connect(self.ui.treeWorld.addEntity)
         self.ui.iconReaderMode.setIcon(IconRegistry.from_name('fa5s.eye'))
 
-        self.ui.btnWorldView.setIcon(IconRegistry.world_building_icon())
+        self.ui.btnMilieuView.setIcon(IconRegistry.world_building_icon())
+        self.ui.btnWorldView.setIcon(IconRegistry.from_name('ri.quill-pen-fill'))
         self.ui.btnMapView.setIcon(IconRegistry.from_name('fa5s.map-marked-alt', color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnHistoryView.setIcon(
             IconRegistry.from_name('mdi.timeline-outline', color_on=PLOTLYST_SECONDARY_COLOR))
@@ -151,17 +157,18 @@ class WorldBuildingView(AbstractNovelView):
         self.glossaryEditor = WorldBuildingGlossaryEditor(self.novel)
         self.ui.wdgGlossaryParent.layout().addWidget(self.glossaryEditor)
 
-        link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnWorldView, self.ui.pageEntity),
+        link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnMilieuView, self.ui.pageMilieu),
+                                                      (self.ui.btnWorldView, self.ui.pageEntity),
                                                       (self.ui.btnMapView, self.ui.pageMap),
                                                       (self.ui.btnHistoryView, self.ui.pageTimeline),
                                                       (self.ui.btnGlossaryView, self.ui.pageGlossary)])
-        self.ui.btnWorldView.setChecked(True)
+        self.ui.btnMilieuView.setChecked(True)
 
         self.ui.iconReaderMode.setHidden(True)
         self.ui.readerModeToggle.setHidden(True)
         self.ui.btnHistoryView.setHidden(True)
 
-        self.ui.btnTreeToggle.setChecked(True)
+        # self.ui.btnTreeToggle.setChecked(True)
 
     @overrides
     def refresh(self):
