@@ -30,6 +30,7 @@ from plotlyst.core.domain import Novel, Location
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import fade_in
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.tree import ContainerNode, TreeSettings, ItemBasedTreeView, ItemBasedNode
 
 
@@ -80,6 +81,7 @@ class LocationNode(ItemBasedNode):
 
 class LocationsTreeView(ItemBasedTreeView):
     locationSelected = pyqtSignal(Location)
+    locationDeleted = pyqtSignal(Location)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -132,6 +134,24 @@ class LocationsTreeView(ItemBasedTreeView):
         node.item().children.append(location)
         self._save()
 
+    def _deleteLocation(self, node: LocationNode):
+        loc: Location = node.item()
+        title = f'Are you sure you want to delete the location "{loc.name if loc.name else "Untitled"}"?'
+        msg = 'This action cannot be undone, and the location and all its references will be lost.'
+        if not confirmed(msg, title):
+            return
+
+        if isinstance(node.parent().parent(), LocationNode):
+            parent: LocationNode = node.parent().parent()
+            parent.item().children.remove(loc)
+        else:
+            self._novel.locations.remove(loc)
+
+        self._deleteNode(node)
+        self.locationDeleted.emit(loc)
+
+        self._save()
+
     @overrides
     def _emitSelectionChanged(self, location: Location):
         self.locationSelected.emit(location)
@@ -144,6 +164,7 @@ class LocationsTreeView(ItemBasedTreeView):
         self._nodes[location] = node
         node.selectionChanged.connect(partial(self._selectionChanged, node))
         node.added.connect(partial(self._addLocationUnder, node))
+        node.deleted.connect(partial(self._deleteLocation, node))
         return node
 
 
@@ -175,6 +196,10 @@ class LocationEditor(QWidget):
         self.lineEditName.setText(self._location.name)
         if not self._location.name:
             self.lineEditName.setFocus()
+
+    def locationDeletedEvent(self, location: Location):
+        if location is self._location:
+            self.setVisible(False)
 
     def _nameEdited(self, name: str):
         self._location.name = name

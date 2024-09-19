@@ -31,7 +31,7 @@ from qthandy import vbox, hbox, bold, margins, clear_layout, transparent, retain
 from qtmenu import MenuWidget
 
 from plotlyst.common import ALT_BACKGROUND_COLOR, PLOTLYST_TERTIARY_COLOR
-from plotlyst.view.common import ButtonPressResizeEventFilter, action
+from plotlyst.view.common import ButtonPressResizeEventFilter, action, fade_out_and_gc
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.button import EyeToggle
 from plotlyst.view.widget.display import Icon
@@ -378,6 +378,13 @@ class ItemBasedTreeView(TreeView):
             self.clearSelection()
             self._selectedItems.add(node.item())
             self._emitSelectionChanged(node.item())
+
+    def _deleteNode(self, node: ItemBasedNode):
+        if node.item() in self._selectedItems:
+            self._selectedItems.remove(node.item())
+        self._nodes.pop(node.item())
+
+        fade_out_and_gc(node.parent(), node)
 
     @abstractmethod
     def _emitSelectionChanged(self, item: Any):
