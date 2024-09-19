@@ -27,6 +27,7 @@ from qthandy import vbox, incr_font, sp, vspacer
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR
 from plotlyst.core.domain import Novel, Location
+from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
@@ -38,6 +39,7 @@ class LocationsParentNode(ContainerNode):
         super().__init__('Locations', IconRegistry.location_icon(), parent, settings=settings)
         self.setMenuEnabled(False)
         self.setTranslucentIconEnabled(True)
+        self.setSelectionEnabled(False)
         sp(self._lblTitle).h_min()
         self._btnAdd.setIcon(IconRegistry.plus_icon(PLOTLYST_MAIN_COLOR))
         self._btnAdd.clicked.connect(self.newLocationRequested.emit)
@@ -56,7 +58,7 @@ class LocationNode(ContainerNode):
         return self._location
 
     def refresh(self):
-        self._lblTitle.setText(self._location.name)
+        self._lblTitle.setText(self._location.name if self._location.name else 'Location')
         # if self._novel.icon:
         #     self._icon.setIcon(IconRegistry.from_name(self._novel.icon, self._novel.icon_color))
         # else:
@@ -130,20 +132,39 @@ class LocationsTreeView(TreeView):
 
 
 class LocationEditor(QWidget):
-    def __init__(self, parent=None):
+    locationNameChanged = pyqtSignal(Location)
+
+    def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
+        self._novel = novel
 
         self._location: Optional[Location] = None
 
         self.lineEditName = QLineEdit()
         self.lineEditName.setPlaceholderText('Location name')
         self.lineEditName.setProperty('transparent', True)
-        self.lineEditName.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # self.lineEditName.setAlignment(Qt.AlignmentFlag.AlignCenter)
         incr_font(self.lineEditName, 8)
+        self.lineEditName.textEdited.connect(self._nameEdited)
 
         vbox(self)
         self.layout().addWidget(self.lineEditName)
 
+        self.repo = RepositoryPersistenceManager.instance()
+
+        self.setVisible(False)
+
     def setLocation(self, location: Location):
+        self.setVisible(True)
         self._location = location
         self.lineEditName.setText(self._location.name)
+        if not self._location.name:
+            self.lineEditName.setFocus()
+
+    def _nameEdited(self, name: str):
+        self._location.name = name
+        self._save()
+        self.locationNameChanged.emit(self._location)
+
+    def _save(self):
+        self.repo.update_novel(self._novel)
