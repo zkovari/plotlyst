@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Optional, Set, Dict
+from typing import Optional
 
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QWidget, QLineEdit
@@ -29,7 +29,7 @@ from plotlyst.common import PLOTLYST_MAIN_COLOR
 from plotlyst.core.domain import Novel, Location
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.icons import IconRegistry
-from plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
+from plotlyst.view.widget.tree import ContainerNode, TreeSettings, ItemBasedTreeView, ItemBasedNode
 
 
 class LocationsParentNode(ContainerNode):
@@ -45,7 +45,7 @@ class LocationsParentNode(ContainerNode):
         self._btnAdd.clicked.connect(self.newLocationRequested.emit)
 
 
-class LocationNode(ContainerNode):
+class LocationNode(ItemBasedNode):
     def __init__(self, location: Location, parent=None, settings: Optional[TreeSettings] = None):
         super().__init__(location.name, parent=parent, settings=settings)
         self._location = location
@@ -54,9 +54,11 @@ class LocationNode(ContainerNode):
         self._actionChangeIcon.setVisible(True)
         self.refresh()
 
-    def location(self) -> Location:
+    @overrides
+    def item(self) -> Location:
         return self._location
 
+    @overrides
     def refresh(self):
         self._lblTitle.setText(self._location.name if self._location.name else 'Location')
         # if self._novel.icon:
@@ -73,18 +75,15 @@ class LocationNode(ContainerNode):
         # self._novel.icon_color = iconColor
 
 
-class LocationsTreeView(TreeView):
+class LocationsTreeView(ItemBasedTreeView):
     locationSelected = pyqtSignal(Location)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self._novel: Optional[Novel] = None
         self._settings = TreeSettings(font_incr=2)
-        self._selectedLocations: Set[Location] = set()
-        self._locations: Dict[Location, LocationNode] = {}
 
         self._nodeLocations = LocationsParentNode(settings=self._settings)
-        self._nodeLocations.selectionChanged.connect(self._locationsParentSelectionChanged)
         self._nodeLocations.newLocationRequested.connect(self.addNewLocation)
 
         self._centralWidget.layout().addWidget(self._nodeLocations)
@@ -96,7 +95,7 @@ class LocationsTreeView(TreeView):
         self._novel = novel
 
         self.clearSelection()
-        self._locations.clear()
+        self._nodes.clear()
 
         self._nodeLocations.clearChildren()
         for location in self._novel.locations:
@@ -104,17 +103,9 @@ class LocationsTreeView(TreeView):
             self._nodeLocations.addChild(node)
 
         if self._novel.locations:
-            node = self._locations[self._novel.locations[0]]
+            node = self._nodes[self._novel.locations[0]]
             node.select()
             self._selectionChanged(node, True)
-
-    def updateLocation(self, location: Location):
-        self._locations[location].refresh()
-
-    def clearSelection(self):
-        for location in self._selectedLocations:
-            self._locations[location].deselect()
-        self._selectedLocations.clear()
 
     def addNewLocation(self):
         location = Location()
@@ -124,23 +115,16 @@ class LocationsTreeView(TreeView):
         self._novel.locations.append(location)
         self._save()
 
-    def _selectionChanged(self, node: LocationNode, selected: bool):
-        if selected:
-            self.clearSelection()
-            self._nodeLocations.deselect()
-            self._selectedLocations.add(node.location())
-            self.locationSelected.emit(node.location())
-
-    def _locationsParentSelectionChanged(self, selected: bool):
-        if selected:
-            self.clearSelection()
+    @overrides
+    def _emitSelectionChanged(self, location: Location):
+        self.locationSelected.emit(location)
 
     def _save(self):
         self.repo.update_novel(self._novel)
 
     def __initLocationNode(self, location: Location) -> LocationNode:
         node = LocationNode(location, settings=self._settings)
-        self._locations[location] = node
+        self._nodes[location] = node
         node.selectionChanged.connect(partial(self._selectionChanged, node))
         return node
 

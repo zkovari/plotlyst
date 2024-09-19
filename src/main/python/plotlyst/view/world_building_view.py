@@ -106,7 +106,7 @@ class WorldBuildingView(AbstractNovelView):
         self.locationEditor = LocationEditor(self.novel)
         self.ui.treeLocations.locationSelected.connect(self.locationEditor.setLocation)
         self.ui.treeLocations.setNovel(self.novel)
-        self.locationEditor.locationNameChanged.connect(self.ui.treeLocations.updateLocation)
+        self.locationEditor.locationNameChanged.connect(self.ui.treeLocations.updateItem)
         self.ui.btnAddLocation.clicked.connect(self.ui.treeLocations.addNewLocation)
         self.ui.wdgMilieuCenterEditor.layout().insertWidget(0, self.locationEditor)
         self.ui.splitterMilieuNav.setSizes([150, 500])

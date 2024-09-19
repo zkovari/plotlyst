@@ -17,8 +17,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import Optional, List, Dict, Any, Set
 
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent, QSize
 from PyQt6.QtGui import QIcon, QResizeEvent
@@ -344,3 +345,40 @@ class TreeView(QScrollArea):
 
     def centralWidget(self) -> QWidget:
         return self._centralWidget
+
+
+class ItemBasedNode(ContainerNode):
+
+    @abstractmethod
+    def item(self) -> Any:
+        pass
+
+    @abstractmethod
+    def refresh(self):
+        pass
+
+
+class ItemBasedTreeView(TreeView):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self._nodes: Dict[Any, ItemBasedNode] = {}
+        self._selectedItems: Set[Any] = set()
+
+    def clearSelection(self):
+        for item in self._selectedItems:
+            self._nodes[item].deselect()
+        self._selectedItems.clear()
+
+    def updateItem(self, item: Any):
+        self._nodes[item].refresh()
+
+    def _selectionChanged(self, node: ItemBasedNode, selected: bool):
+        if selected:
+            self.clearSelection()
+            self._selectedItems.add(node.item())
+            self._emitSelectionChanged(node.item())
+
+    @abstractmethod
+    def _emitSelectionChanged(self, item: Any):
+        pass
