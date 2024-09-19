@@ -85,7 +85,7 @@ class ShelvesTreeView(TreeView):
 
         self._wdgNovels = ShelveNode('Novels', IconRegistry.from_name('mdi.bookshelf'), settings=self._settings)
         self._wdgNovels.selectionChanged.connect(self._novelsShelveSelectionChanged)
-        self._wdgNovels.newNovelRequested.connect(self.newNovelRequested.emit)
+        self._wdgNovels.newNovelRequested.connect(self.newNovelRequested)
         # self._wdgShortStories = ShelveNode('Short stories', IconRegistry.from_name('ph.file-text'),
         #                                    settings=self._settings)
         # self._wdgIdeas = ShelveNode('Ideas', IconRegistry.decision_icon(), settings=self._settings)

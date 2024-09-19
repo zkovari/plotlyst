@@ -17,8 +17,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import Optional, List, Dict, Any, Set
 
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent, QSize
 from PyQt6.QtGui import QIcon, QResizeEvent
@@ -30,7 +31,7 @@ from qthandy import vbox, hbox, bold, margins, clear_layout, transparent, retain
 from qtmenu import MenuWidget
 
 from plotlyst.common import ALT_BACKGROUND_COLOR, PLOTLYST_TERTIARY_COLOR
-from plotlyst.view.common import ButtonPressResizeEventFilter, action
+from plotlyst.view.common import ButtonPressResizeEventFilter, action, fade_out_and_gc
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.button import EyeToggle
 from plotlyst.view.widget.display import Icon
@@ -248,7 +249,7 @@ class ContainerNode(BaseTreeWidget):
                 if self._plusEnabled and self.isEnabled():
                     self._btnAdd.setVisible(True)
                     self._btnAdd.raise_()
-                if not self._selected and self.isEnabled():
+                if not self._selected and self.isEnabled() and self._selectionEnabled:
                     self._wdgTitle.setStyleSheet(f'#wdgTitle {{background-color: {self._settings.hover_bg_color};}}')
             elif event.type() == QEvent.Type.Leave:
                 if (self._menuEnabled and self._btnMenu.menu().isVisible()) or \
@@ -344,3 +345,47 @@ class TreeView(QScrollArea):
 
     def centralWidget(self) -> QWidget:
         return self._centralWidget
+
+
+class ItemBasedNode(ContainerNode):
+
+    @abstractmethod
+    def item(self) -> Any:
+        pass
+
+    @abstractmethod
+    def refresh(self):
+        pass
+
+
+class ItemBasedTreeView(TreeView):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self._nodes: Dict[Any, ItemBasedNode] = {}
+        self._selectedItems: Set[Any] = set()
+
+    def clearSelection(self):
+        for item in self._selectedItems:
+            self._nodes[item].deselect()
+        self._selectedItems.clear()
+
+    def updateItem(self, item: Any):
+        self._nodes[item].refresh()
+
+    def _selectionChanged(self, node: ItemBasedNode, selected: bool):
+        if selected:
+            self.clearSelection()
+            self._selectedItems.add(node.item())
+            self._emitSelectionChanged(node.item())
+
+    def _deleteNode(self, node: ItemBasedNode):
+        if node.item() in self._selectedItems:
+            self._selectedItems.remove(node.item())
+        self._nodes.pop(node.item())
+
+        fade_out_and_gc(node.parent(), node)
+
+    @abstractmethod
+    def _emitSelectionChanged(self, item: Any):
+        pass
