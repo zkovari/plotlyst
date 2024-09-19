@@ -111,7 +111,7 @@ class DocumentNode(ContainerNode):
             self._actionChangeIcon.setVisible(True)
             self._actionChangeTitle.setVisible(True)
         menu = DocumentAdditionMenu(self._novel, self._btnAdd)
-        menu.documentTriggered.connect(self.added.emit)
+        menu.documentTriggered.connect(self.added)
         self.refresh()
 
     def doc(self) -> Document:

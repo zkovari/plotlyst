@@ -2171,6 +2171,7 @@ class WorldBuildingMap:
 class Location:
     name: str = ''
     id: uuid.UUID = field(default_factory=uuid.uuid4)
+    children: List['Location'] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
 
     @overrides
     def __eq__(self, other: 'Location'):

@@ -109,7 +109,7 @@ class WorldBuildingView(AbstractNovelView):
         self.locationEditor.locationNameChanged.connect(self.ui.treeLocations.updateItem)
         self.ui.btnAddLocation.clicked.connect(self.ui.treeLocations.addNewLocation)
         self.ui.wdgMilieuCenterEditor.layout().insertWidget(0, self.locationEditor)
-        self.ui.splitterMilieuNav.setSizes([150, 500])
+        self.ui.splitterMilieuNav.setSizes([175, 500])
 
         width = settings.worldbuilding_editor_max_width()
         self.ui.wdgCenterEditor.setMaximumWidth(width)

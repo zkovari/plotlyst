@@ -25,9 +25,10 @@ from PyQt6.QtWidgets import QWidget, QLineEdit
 from overrides import overrides
 from qthandy import vbox, incr_font, sp, vspacer, line
 
-from plotlyst.common import PLOTLYST_MAIN_COLOR
+from plotlyst.common import PLOTLYST_MAIN_COLOR, recursive
 from plotlyst.core.domain import Novel, Location
 from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import fade_in
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.tree import ContainerNode, TreeSettings, ItemBasedTreeView, ItemBasedNode
 
@@ -46,12 +47,14 @@ class LocationsParentNode(ContainerNode):
 
 
 class LocationNode(ItemBasedNode):
+    added = pyqtSignal()
+
     def __init__(self, location: Location, parent=None, settings: Optional[TreeSettings] = None):
         super().__init__(location.name, parent=parent, settings=settings)
         self._location = location
-        self.setPlusButtonEnabled(False)
         self.setTranslucentIconEnabled(True)
-        self._actionChangeIcon.setVisible(True)
+        self._actionChangeIcon.setVisible(False)
+        self._btnAdd.clicked.connect(self.added)
         self.refresh()
 
     @overrides
@@ -92,6 +95,10 @@ class LocationsTreeView(ItemBasedTreeView):
         self.repo = RepositoryPersistenceManager.instance()
 
     def setNovel(self, novel: Novel):
+        def addChildWdg(parent: Location, child: Location):
+            childWdg = self.__initLocationNode(child)
+            self._nodes[parent].addChild(childWdg)
+
         self._novel = novel
 
         self.clearSelection()
@@ -101,6 +108,7 @@ class LocationsTreeView(ItemBasedTreeView):
         for location in self._novel.locations:
             node = self.__initLocationNode(location)
             self._nodeLocations.addChild(node)
+            recursive(location, lambda parent: parent.children, addChildWdg)
 
         if self._novel.locations:
             node = self._nodes[self._novel.locations[0]]
@@ -115,6 +123,15 @@ class LocationsTreeView(ItemBasedTreeView):
         self._novel.locations.append(location)
         self._save()
 
+    def _addLocationUnder(self, node: LocationNode):
+        location = Location()
+        child = self.__initLocationNode(location)
+        node.addChild(child)
+        fade_in(child)
+
+        node.item().children.append(location)
+        self._save()
+
     @overrides
     def _emitSelectionChanged(self, location: Location):
         self.locationSelected.emit(location)
@@ -126,6 +143,7 @@ class LocationsTreeView(ItemBasedTreeView):
         node = LocationNode(location, settings=self._settings)
         self._nodes[location] = node
         node.selectionChanged.connect(partial(self._selectionChanged, node))
+        node.added.connect(partial(self._addLocationUnder, node))
         return node
 
 
