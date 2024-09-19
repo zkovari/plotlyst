@@ -47,7 +47,7 @@ from plotlyst.core.domain import Novel, Character, Scene, Chapter, SceneStage, \
     default_character_networks, ScenePurposeType, StoryElement, SceneOutcome, ChapterType, SceneStructureItem, \
     DocumentProgress, ReaderQuestion, SceneReaderQuestion, ImageRef, SceneReaderInformation, \
     CharacterProfileSectionReference, CharacterMultiAttribute, default_character_profile, CharacterPersonality, \
-    StrengthWeaknessAttribute, PremiseBuilder, SceneFunctions
+    StrengthWeaknessAttribute, PremiseBuilder, SceneFunctions, Location
 from plotlyst.core.template import Role, exclude_if_empty, exclude_if_black, exclude_if_false
 from plotlyst.env import app_env
 
@@ -221,6 +221,7 @@ class NovelInfo:
     version: ApplicationNovelVersion = ApplicationNovelVersion.R0
     prefs: NovelPreferences = field(default_factory=NovelPreferences)
     world: WorldBuilding = field(default_factory=WorldBuilding)
+    locations: List[Location] = field(default_factory=list)
     board: Board = field(default_factory=Board)
     manuscript_goals: ManuscriptGoals = field(default_factory=ManuscriptGoals)
     events_map: Diagram = field(default_factory=default_events_map)
@@ -617,7 +618,7 @@ class JsonClient:
                       story_structures=novel_info.story_structures,
                       conflicts=conflicts, goals=[x for x in novel_info.goals if str(x.id) in goal_ids], tags=tags_dict,
                       documents=novel_info.documents, premise=novel_info.premise, synopsis=novel_info.synopsis,
-                      prefs=novel_info.prefs, manuscript_goals=novel_info.manuscript_goals,
+                      prefs=novel_info.prefs, locations=novel_info.locations, manuscript_goals=novel_info.manuscript_goals,
                       events_map=novel_info.events_map,
                       character_networks=novel_info.character_networks,
                       manuscript_progress=novel_info.manuscript_progress, questions=novel_info.questions)
@@ -658,7 +659,7 @@ class JsonClient:
                                tag_types=list(novel.tags.keys()),
                                documents=novel.documents,
                                premise=novel.premise, synopsis=novel.synopsis,
-                               version=LATEST_VERSION, prefs=novel.prefs, manuscript_goals=novel.manuscript_goals,
+                               version=LATEST_VERSION, prefs=novel.prefs, locations=novel.locations, manuscript_goals=novel.manuscript_goals,
                                events_map=novel.events_map, character_networks=novel.character_networks,
                                manuscript_progress=novel.manuscript_progress, questions=novel.questions)
 

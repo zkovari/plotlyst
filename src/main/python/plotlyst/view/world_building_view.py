@@ -103,9 +103,9 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.btnMilieuImage.installEventFilter(
             OpacityEventFilter(self.ui.btnMilieuImage, leaveOpacity=1.0, enterOpacity=0.7))
 
-        self.ui.treeLocations.setNovel(self.novel)
         self.locationEditor = LocationEditor(self.novel)
         self.ui.treeLocations.locationSelected.connect(self.locationEditor.setLocation)
+        self.ui.treeLocations.setNovel(self.novel)
         self.locationEditor.locationNameChanged.connect(self.ui.treeLocations.updateLocation)
         self.ui.btnAddLocation.clicked.connect(self.ui.treeLocations.addNewLocation)
         self.ui.wdgMilieuCenterEditor.layout().insertWidget(0, self.locationEditor)

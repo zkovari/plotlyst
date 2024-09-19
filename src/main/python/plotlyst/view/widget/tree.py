@@ -248,7 +248,7 @@ class ContainerNode(BaseTreeWidget):
                 if self._plusEnabled and self.isEnabled():
                     self._btnAdd.setVisible(True)
                     self._btnAdd.raise_()
-                if not self._selected and self.isEnabled():
+                if not self._selected and self.isEnabled() and self._selectionEnabled:
                     self._wdgTitle.setStyleSheet(f'#wdgTitle {{background-color: {self._settings.hover_bg_color};}}')
             elif event.type() == QEvent.Type.Leave:
                 if (self._menuEnabled and self._btnMenu.menu().isVisible()) or \

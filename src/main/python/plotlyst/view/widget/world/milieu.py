@@ -20,10 +20,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Optional, Set, Dict
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QWidget, QLineEdit
 from overrides import overrides
-from qthandy import vbox, incr_font, sp, vspacer
+from qthandy import vbox, incr_font, sp, vspacer, line
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR
 from plotlyst.core.domain import Novel, Location
@@ -90,6 +90,8 @@ class LocationsTreeView(TreeView):
         self._centralWidget.layout().addWidget(self._nodeLocations)
         self._centralWidget.layout().addWidget(vspacer())
 
+        self.repo = RepositoryPersistenceManager.instance()
+
     def setNovel(self, novel: Novel):
         self._novel = novel
 
@@ -97,9 +99,14 @@ class LocationsTreeView(TreeView):
         self._locations.clear()
 
         self._nodeLocations.clearChildren()
-        for location in novel.locations:
+        for location in self._novel.locations:
             node = self.__initLocationNode(location)
             self._nodeLocations.addChild(node)
+
+        if self._novel.locations:
+            node = self._locations[self._novel.locations[0]]
+            node.select()
+            self._selectionChanged(node, True)
 
     def updateLocation(self, location: Location):
         self._locations[location].refresh()
@@ -110,8 +117,12 @@ class LocationsTreeView(TreeView):
         self._selectedLocations.clear()
 
     def addNewLocation(self):
-        node = self.__initLocationNode(Location())
+        location = Location()
+        node = self.__initLocationNode(location)
         self._nodeLocations.addChild(node)
+
+        self._novel.locations.append(location)
+        self._save()
 
     def _selectionChanged(self, node: LocationNode, selected: bool):
         if selected:
@@ -123,6 +134,9 @@ class LocationsTreeView(TreeView):
     def _locationsParentSelectionChanged(self, selected: bool):
         if selected:
             self.clearSelection()
+
+    def _save(self):
+        self.repo.update_novel(self._novel)
 
     def __initLocationNode(self, location: Location) -> LocationNode:
         node = LocationNode(location, settings=self._settings)
@@ -137,18 +151,17 @@ class LocationEditor(QWidget):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
-
         self._location: Optional[Location] = None
 
         self.lineEditName = QLineEdit()
         self.lineEditName.setPlaceholderText('Location name')
         self.lineEditName.setProperty('transparent', True)
-        # self.lineEditName.setAlignment(Qt.AlignmentFlag.AlignCenter)
         incr_font(self.lineEditName, 8)
         self.lineEditName.textEdited.connect(self._nameEdited)
 
         vbox(self)
         self.layout().addWidget(self.lineEditName)
+        self.layout().addWidget(line())
 
         self.repo = RepositoryPersistenceManager.instance()
 
