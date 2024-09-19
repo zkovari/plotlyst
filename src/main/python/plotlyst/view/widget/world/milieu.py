@@ -17,8 +17,26 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QWidget, QLineEdit
+from qthandy import vbox, incr_font
+
 from plotlyst.view.widget.tree import TreeView
 
 
 class LocationsTreeView(TreeView):
     pass
+
+
+class LocationEditor(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.lineEditName = QLineEdit()
+        self.lineEditName.setPlaceholderText('Location name')
+        self.lineEditName.setProperty('transparent', True)
+        self.lineEditName.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        incr_font(self.lineEditName, 8)
+
+        vbox(self)
+        self.layout().addWidget(self.lineEditName)

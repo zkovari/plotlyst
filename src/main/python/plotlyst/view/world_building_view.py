@@ -25,6 +25,7 @@ from PyQt6.QtGui import QColor, QPainter
 from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtWidgets import QWidget, QGraphicsColorizeEffect
 from overrides import overrides
+from qthandy import incr_font
 from qthandy.filter import OpacityEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
@@ -43,6 +44,7 @@ from plotlyst.view.widget.world.editor import WorldBuildingEntityEditor, WorldBu
     EntityLayoutType
 from plotlyst.view.widget.world.glossary import WorldBuildingGlossaryEditor
 from plotlyst.view.widget.world.map import WorldBuildingMapView
+from plotlyst.view.widget.world.milieu import LocationEditor
 from plotlyst.view.widget.world.theme import WorldBuildingPalette
 from plotlyst.view.widget.world.tree import EntityAdditionMenu
 
@@ -98,6 +100,12 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.btnAddLocation.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnAddLocation))
         self.ui.btnTreeToggleMilieu.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
         self.ui.btnTreeToggleMilieu.clicked.connect(lambda x: qtanim.toggle_expansion(self.ui.wdgMilieuSidebar, x))
+        self.ui.btnMilieuImage.setIcon(IconRegistry.image_icon(color='grey'))
+        self.ui.btnMilieuImage.installEventFilter(
+            OpacityEventFilter(self.ui.btnMilieuImage, leaveOpacity=1.0, enterOpacity=0.7))
+
+        self.locationEditor = LocationEditor()
+        self.ui.wdgMilieuCenterEditor.layout().insertWidget(0, self.locationEditor)
 
         width = settings.worldbuilding_editor_max_width()
         self.ui.wdgCenterEditor.setMaximumWidth(width)

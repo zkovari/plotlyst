@@ -50,6 +50,10 @@ QWidget[bg=true] {
     background-color: #EFEFF4;
 }
 
+QWidget[darker-bg=true] {
+    background-color: #E5E5EE;
+}
+
 QWidget[white-bg=true] {
     background-color: #FcFcFc;
 }
