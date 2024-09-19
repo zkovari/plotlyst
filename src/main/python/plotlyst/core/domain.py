@@ -2167,6 +2167,22 @@ class WorldBuildingMap:
     dominant_color: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
 
+@dataclass
+class Location:
+    name: str = ''
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+
+    @overrides
+    def __eq__(self, other: 'Location'):
+        if isinstance(other, Location):
+            return self.id == other.id
+        return False
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
+
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class WorldBuilding:
@@ -3578,6 +3594,7 @@ class Novel(NovelDescriptor):
     synopsis: Optional['Document'] = None
     prefs: NovelPreferences = field(default_factory=NovelPreferences)
     world: WorldBuilding = field(default_factory=WorldBuilding)
+    locations: List[Location] = field(default_factory=list)
     board: Board = field(default_factory=Board)
     manuscript_goals: ManuscriptGoals = field(default_factory=ManuscriptGoals)
     events_map: Diagram = field(default_factory=default_events_map)

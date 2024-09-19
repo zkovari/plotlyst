@@ -25,7 +25,6 @@ from PyQt6.QtGui import QColor, QPainter
 from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtWidgets import QWidget, QGraphicsColorizeEffect
 from overrides import overrides
-from qthandy import incr_font
 from qthandy.filter import OpacityEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
@@ -104,8 +103,12 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.btnMilieuImage.installEventFilter(
             OpacityEventFilter(self.ui.btnMilieuImage, leaveOpacity=1.0, enterOpacity=0.7))
 
+        self.ui.treeLocations.setNovel(self.novel)
         self.locationEditor = LocationEditor()
+        self.ui.treeLocations.locationSelected.connect(self.locationEditor.setLocation)
+        self.ui.btnAddLocation.clicked.connect(self.ui.treeLocations.addNewLocation)
         self.ui.wdgMilieuCenterEditor.layout().insertWidget(0, self.locationEditor)
+        self.ui.splitterMilieuNav.setSizes([150, 500])
 
         width = settings.worldbuilding_editor_max_width()
         self.ui.wdgCenterEditor.setMaximumWidth(width)

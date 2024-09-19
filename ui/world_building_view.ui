@@ -803,7 +803,7 @@
         <widget class="QWidget" name="widget_2" native="true">
          <layout class="QHBoxLayout" name="horizontalLayout_9">
           <item>
-           <widget class="QSplitter" name="splitter">
+           <widget class="QSplitter" name="splitterMilieuNav">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
