@@ -44,7 +44,7 @@ from plotlyst.env import app_env
 from plotlyst.service.image import upload_image, load_image
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import action, push_btn, frame, insert_before_the_end, fade_out_and_gc, \
-    tool_btn, label, scrolled, wrap, calculate_resized_dimensions, ButtonPressResizeEventFilter
+    tool_btn, label, scrolled, wrap, calculate_resized_dimensions, ButtonPressResizeEventFilter, fade_in
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.text import apply_text_color
@@ -143,7 +143,7 @@ class WorldBuildingEntityElementWidget(QWidget):
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
         if self._cornerBtnEnabled:
-            qtanim.fade_in(self.btnDrag)
+            fade_in(self.btnDrag)
 
     @overrides
     def leaveEvent(self, _: QEvent) -> None:
