@@ -150,6 +150,10 @@ class BaseItemToolbar(QWidget):
         widget.setVisible(False)
 
     def _toggleSecondarySelector(self, secondary: QWidget):
+        for wdg in self._secondaryWidgets:
+            if wdg is not secondary:
+                wdg.setVisible(False)
+
         secondary.setVisible(not secondary.isVisible())
         if secondary.isVisible():
             self.setFixedHeight(self._toolbar.sizeHint().height() + secondary.sizeHint().height())
