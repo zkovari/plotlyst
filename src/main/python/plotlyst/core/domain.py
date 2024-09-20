@@ -2156,6 +2156,7 @@ class WorldBuildingMarker:
     color: str = '#ef233c'
     color_selected: str = '#A50C1E'
     icon: str = 'mdi.circle'
+    size: int = field(default=0, metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass

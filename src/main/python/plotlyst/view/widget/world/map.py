@@ -22,25 +22,28 @@ from typing import Optional, Any
 
 import qtanim
 from PyQt6.QtCore import Qt, QPoint, QSize, QPointF, QRectF, pyqtSignal, QTimer, QObject
-from PyQt6.QtGui import QColor, QPixmap, QShowEvent, QResizeEvent, QImage, QPainter, QKeyEvent, QIcon
+from PyQt6.QtGui import QColor, QPixmap, QShowEvent, QResizeEvent, QImage, QPainter, QKeyEvent, QIcon, QUndoStack
 from PyQt6.QtWidgets import QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem, QAbstractGraphicsShapeItem, QWidget, \
     QGraphicsSceneMouseEvent, QGraphicsOpacityEffect, QGraphicsDropShadowEffect, QFrame, QLineEdit, \
-    QApplication, QGraphicsSceneDragDropEvent
+    QApplication, QGraphicsSceneDragDropEvent, QSlider
 from overrides import overrides
-from qthandy import busy, vbox, vspacer, sp, line, decr_icon, incr_font, flow, incr_icon, bold, decr_font
+from qthandy import busy, vbox, sp, line, incr_font, flow, incr_icon, bold, vline, \
+    margins, decr_font, translucent
 from qthandy.filter import OpacityEventFilter, DragEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
+from qtpy import sip
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, WorldBuildingMap, WorldBuildingMarker, GraphicsItemType
 from plotlyst.service.image import load_image, upload_image, LoadedImage
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import tool_btn, action, shadow, scrolled, wrap, TooltipPositionEventFilter, dominant_color
+from plotlyst.view.common import tool_btn, action, shadow, TooltipPositionEventFilter, dominant_color, push_btn
 from plotlyst.view.icons import IconRegistry
-from plotlyst.view.widget.button import CollapseButton
 from plotlyst.view.widget.graphics import BaseGraphicsView
-from plotlyst.view.widget.graphics.editor import ZoomBar
+from plotlyst.view.widget.graphics.editor import ZoomBar, BaseItemToolbar, \
+    SecondarySelectorWidget
 from plotlyst.view.widget.input import AutoAdjustableTextEdit
+from plotlyst.view.widget.utility import IconSelectorDialog
 
 
 class PopupText(QFrame):
@@ -97,7 +100,8 @@ class MarkerColorSelectorWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        flow(self)
+        flow(self, 2, 2)
+        margins(self, bottom=5)
         for color in marker_colors:
             btn = tool_btn(IconRegistry.from_name('fa5s.map-marker', color), transparent_=True)
             btn.setIconSize(QSize(32, 32))
@@ -123,12 +127,91 @@ class MarkerIconSelectorWidget(QWidget):
                       'fa5s.train', 'mdi.ship-wheel', 'mdi.sail-boat',
                       'fa5s.mountain', 'fa5s.tree', 'mdi.tree', 'mdi.island', 'mdi.circle'
                       ]
-        flow(self, 0, 1)
+        vbox(self)
+        self.wdgIcons = QWidget()
+        flow(self.wdgIcons, 0, 1)
+        margins(self.wdgIcons, bottom=5)
+        self.btnCustom = push_btn(IconRegistry.icons_icon(), 'Custom icon', transparent_=True)
+        decr_font(self.btnCustom)
+        self.btnCustom.clicked.connect(self._selectCustomIcon)
+
         for icon in self.icons:
             btn = tool_btn(IconRegistry.from_name(icon), transparent_=True)
             btn.setIconSize(QSize(24, 24))
             btn.clicked.connect(partial(self.iconSelected.emit, icon))
-            self.layout().addWidget(btn)
+            self.wdgIcons.layout().addWidget(btn)
+
+        self.layout().addWidget(self.wdgIcons)
+        self.layout().addWidget(line())
+        self.layout().addWidget(self.btnCustom, alignment=Qt.AlignmentFlag.AlignLeft)
+
+    def _selectCustomIcon(self):
+        result = IconSelectorDialog.popup(pickColor=False)
+        if result:
+            self.iconSelected.emit(result[0])
+
+
+class MarkerItemToolbar(BaseItemToolbar):
+    def __init__(self, undoStack: QUndoStack, parent=None):
+        super().__init__(undoStack, parent)
+        self._item: Optional[MarkerItem] = None
+
+        self._sbSize = QSlider()
+        self._sbSize.setMinimum(30)
+        self._sbSize.setMaximum(90)
+        self._sbSize.setValue(50)
+        self._sbSize.setOrientation(Qt.Orientation.Horizontal)
+        self._sbSize.valueChanged.connect(self._sizeChanged)
+
+        self._btnColor = tool_btn(IconRegistry.from_name('fa5s.map-marker', color='black'), 'Change style',
+                                  transparent_=True)
+
+        self._colorPicker = MarkerColorSelectorWidget(self)
+        self._colorSecondaryWidget = SecondarySelectorWidget(self)
+        margins(self._colorSecondaryWidget, bottom=5, left=0, right=0, top=2)
+        self._colorSecondaryWidget.addWidget(self._colorPicker, 0, 0)
+        self.addSecondaryWidget(self._btnColor, self._colorSecondaryWidget)
+        self._colorPicker.colorSelected.connect(self._colorChanged)
+
+        self._btnIcon = tool_btn(IconRegistry.from_name('mdi.emoticon-outline'), 'Change icon', transparent_=True)
+        self._iconPicker = MarkerIconSelectorWidget(self)
+        self._iconSecondaryWidget = SecondarySelectorWidget(self)
+        margins(self._iconSecondaryWidget, bottom=5, left=0, right=0, top=2)
+        self._iconSecondaryWidget.addWidget(self._iconPicker, 0, 0)
+        self.addSecondaryWidget(self._btnIcon, self._iconSecondaryWidget)
+        self._iconPicker.iconSelected.connect(self._iconChanged)
+
+        self._toolbar.layout().addWidget(self._btnColor)
+        self._toolbar.layout().addWidget(self._btnIcon)
+        self._toolbar.layout().addWidget(vline())
+        self._toolbar.layout().addWidget(self._sbSize)
+
+        self._iconPicker.setFixedWidth(self.sizeHint().width())
+
+    def setMarker(self, item: 'MarkerItem'):
+        self._item = None
+        self._hideSecondarySelectors()
+
+        marker = item.marker()
+        self._btnColor.setIcon(IconRegistry.from_name('fa5s.map-marker', color=marker.color))
+        self._sbSize.setValue(marker.size if marker.size else 50)
+
+        self._item = item
+
+    def _colorChanged(self, color: str):
+        if self._item:
+            self._item.setColor(color)
+            self._btnColor.setIcon(IconRegistry.from_name('fa5s.map-marker', color=color))
+
+    def _iconChanged(self, icon: str):
+        if self._item:
+            translucent(self._iconSecondaryWidget, 0.1)
+            self._item.setIcon(icon)
+            QTimer.singleShot(500, lambda: self._iconSecondaryWidget.setGraphicsEffect(None))
+
+    def _sizeChanged(self, value: int):
+        if self._item:
+            self._item.setSize(value)
 
 
 class MarkerItem(QAbstractGraphicsShapeItem):
@@ -138,9 +221,9 @@ class MarkerItem(QAbstractGraphicsShapeItem):
     def __init__(self, marker: WorldBuildingMarker, parent=None):
         super().__init__(parent)
         self._marker = marker
-        self.__default_type_size = 25
-        self._width = self.DEFAULT_MARKER_WIDTH
-        self._height = self.DEFAULT_MARKER_HEIGHT
+        self._width = marker.size if marker.size else self.DEFAULT_MARKER_WIDTH
+        self._height = int(self._width * (self.DEFAULT_MARKER_HEIGHT / self.DEFAULT_MARKER_WIDTH))
+        self.__default_type_size = self._width // 2
         self._typeSize = self.__default_type_size
 
         self._posChangedTimer = QTimer()
@@ -167,6 +250,27 @@ class MarkerItem(QAbstractGraphicsShapeItem):
     def mapScene(self) -> 'WorldBuildingMapScene':
         return self.scene()
 
+    def setColor(self, color: str):
+        self._marker.color = color
+        self._marker.color_selected = marker_selected_colors[color]
+        self.refresh()
+
+    def setIcon(self, icon: str):
+        self._marker.icon = icon
+        self.refresh()
+
+    def setSize(self, size: int):
+        self._width = size
+        self._height = int(size * (self.DEFAULT_MARKER_HEIGHT / self.DEFAULT_MARKER_WIDTH))
+        self.__default_type_size = self._width // 2
+        self._typeSize = self.__default_type_size
+
+        self._marker.size = self._width
+
+        self.prepareGeometryChange()
+        self.update()
+        self.mapScene().markerChangedEvent(self)
+
     def refresh(self):
         self._iconMarker = IconRegistry.from_name('fa5s.map-marker', self._marker.color)
         self._iconMarkerSelected = IconRegistry.from_name('fa5s.map-marker', self._marker.color_selected)
@@ -190,12 +294,18 @@ class MarkerItem(QAbstractGraphicsShapeItem):
             marker = self._iconMarker
         marker.paint(painter, 0, 0, self._width, self._height)
         if self._marker.icon:
-            self._iconType.paint(painter, (self._width - self._typeSize) // 2, 15, self._typeSize, self._typeSize)
+            self._iconType.paint(painter, (self._width - self._typeSize) // 2,
+                                 int((self._height - self._typeSize) * 1 / 3),
+                                 self._typeSize,
+                                 self._typeSize)
 
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
             self._posChangedTimer.start()
+            scene = self.mapScene()
+            if scene:
+                scene.itemMovedEvent(self)
         if change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
             self._onSelection(value)
         return super().itemChange(change, value)
@@ -239,7 +349,7 @@ class MarkerItem(QAbstractGraphicsShapeItem):
             effect = QGraphicsDropShadowEffect()
             effect.setBlurRadius(12)
             effect.setOffset(0)
-            effect.setColor(QColor('white'))
+            effect.setColor(QColor(RELAXED_WHITE_COLOR))
             self.setGraphicsEffect(effect)
 
             self._typeSize = self.__default_type_size + 2
@@ -251,107 +361,111 @@ class MarkerItem(QAbstractGraphicsShapeItem):
             self.scene().hidePopupEvent()
 
 
-class EntityEditorWidget(QFrame):
-    changed = pyqtSignal(MarkerItem)
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._marker: Optional[WorldBuildingMarker] = None
-        self._item: Optional[MarkerItem] = None
-        self.setFrameShape(QFrame.Shape.StyledPanel)
-        self.setStyleSheet('''QFrame {
-            background: #ede0d4;
-            border-radius: 12px;
-        }''')
-
-        vbox(self, 5, 0)
-        self._scrollarea, self.wdgCenter = scrolled(self)
-        self._scrollarea.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self._scrollarea.setProperty('transparent', True)
-        self.wdgCenter.setProperty('transparent', True)
-
-        shadow(self)
-        vbox(self.wdgCenter, 2, spacing=6)
-
-        self.lineTitle = QLineEdit()
-        self.lineTitle.setProperty('transparent', True)
-        self.lineTitle.setPlaceholderText('Name')
-        self.lineTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        incr_font(self.lineTitle)
-        bold(self.lineTitle)
-        self.lineTitle.textEdited.connect(self._nameChanged)
-
-        self.textEdit = AutoAdjustableTextEdit(height=100)
-        self.textEdit.setProperty('transparent', True)
-        self.textEdit.setProperty('rounded', True)
-        self.textEdit.setPlaceholderText('Edit synopsis')
-        self.textEdit.setMaximumHeight(150)
-        self.textEdit.textChanged.connect(self._synopsisChanged)
-
-        self.wdgColorSelector = MarkerColorSelectorWidget()
-        self.wdgColorSelector.colorSelected.connect(self._colorChanged)
-        self.wdgIconSelector = MarkerIconSelectorWidget()
-        self.wdgIconSelector.iconReset.connect(self._iconReset)
-        self.wdgIconSelector.iconSelected.connect(self._iconChanged)
-
-        self.wdgCenter.layout().addWidget(self.lineTitle)
-        self.wdgCenter.layout().addWidget(line(color='lightgrey'))
-        self._addHeader('Synopsis', self.textEdit)
-        self._addHeader('Color', self.wdgColorSelector)
-        self._addHeader('Icon', self.wdgIconSelector)
-        self.wdgCenter.layout().addWidget(vspacer())
-
-        self.setFixedWidth(200)
-
-        sp(self).v_max()
-
-    def setMarker(self, item: MarkerItem):
-        self._marker = None
-        self._item = None
-        self.textEdit.setText(item.marker().description)
-        self.lineTitle.setText(item.marker().name)
-        self._marker = item.marker()
-        self._item = item
-
-    def _nameChanged(self, text: str):
-        if self._marker:
-            self._marker.name = text
-            self.changed.emit(self._item)
-
-    def _synopsisChanged(self):
-        if self._marker:
-            self._marker.description = self.textEdit.toPlainText()
-            self.changed.emit(self._item)
-
-    def _colorChanged(self, color: str):
-        if self._marker:
-            self._marker.color = color
-            self._marker.color_selected = marker_selected_colors[color]
-            self._item.refresh()
-
-    def _iconChanged(self, icon: str):
-        if self._marker:
-            self._marker.icon = icon
-            self._item.refresh()
-
-    def _iconReset(self):
-        if self._marker:
-            self._marker.icon = ''
-            self._item.refresh()
-
-    def _addHeader(self, text: str, wdg: QWidget) -> CollapseButton:
-        btn = CollapseButton(Qt.Edge.RightEdge, Qt.Edge.BottomEdge)
-        decr_icon(btn, 4)
-        decr_font(btn)
-        btn.setChecked(True)
-        btn.setText(text)
-        wrapped = wrap(wdg, margin_left=5)
-        btn.toggled.connect(wrapped.setVisible)
-
-        self.wdgCenter.layout().addWidget(btn, alignment=Qt.AlignmentFlag.AlignLeft)
-        self.wdgCenter.layout().addWidget(wrapped)
-
-        return btn
+# class EntityEditorWidget(QFrame):
+#     changed = pyqtSignal(MarkerItem)
+#
+#     def __init__(self, parent=None):
+#         super().__init__(parent)
+#         self._marker: Optional[WorldBuildingMarker] = None
+#         self._item: Optional[MarkerItem] = None
+#         self.setFrameShape(QFrame.Shape.StyledPanel)
+#         self.setStyleSheet('''QFrame {
+#             background: #ede0d4;
+#             border-radius: 12px;
+#         }''')
+#
+#         vbox(self, 5, 0)
+#         self._scrollarea, self.wdgCenter = scrolled(self)
+#         self._scrollarea.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+#         self._scrollarea.setProperty('transparent', True)
+#         self.wdgCenter.setProperty('transparent', True)
+#
+#         shadow(self)
+#         vbox(self.wdgCenter, 2, spacing=6)
+#
+#         self.btnLinkMilieu = push_btn(IconRegistry.world_building_icon(), 'Link to milieu', transparent_=True)
+#         decr_font(self.btnLinkMilieu)
+#
+#         self.lineTitle = QLineEdit()
+#         self.lineTitle.setProperty('transparent', True)
+#         self.lineTitle.setPlaceholderText('Name')
+#         self.lineTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+#         incr_font(self.lineTitle)
+#         bold(self.lineTitle)
+#         self.lineTitle.textEdited.connect(self._nameChanged)
+#
+#         self.textEdit = AutoAdjustableTextEdit(height=100)
+#         self.textEdit.setProperty('transparent', True)
+#         self.textEdit.setProperty('rounded', True)
+#         self.textEdit.setPlaceholderText('Edit synopsis')
+#         self.textEdit.setMaximumHeight(150)
+#         self.textEdit.textChanged.connect(self._synopsisChanged)
+#
+#         self.wdgColorSelector = MarkerColorSelectorWidget()
+#         self.wdgColorSelector.colorSelected.connect(self._colorChanged)
+#         self.wdgIconSelector = MarkerIconSelectorWidget()
+#         self.wdgIconSelector.iconReset.connect(self._iconReset)
+#         self.wdgIconSelector.iconSelected.connect(self._iconChanged)
+#
+#         self.wdgCenter.layout().addWidget(self.btnLinkMilieu, alignment=Qt.AlignmentFlag.AlignRight)
+#         self.wdgCenter.layout().addWidget(self.lineTitle)
+#         self.wdgCenter.layout().addWidget(line(color='lightgrey'))
+#         self._addHeader('Synopsis', self.textEdit)
+#         self._addHeader('Color', self.wdgColorSelector)
+#         self._addHeader('Icon', self.wdgIconSelector)
+#         self.wdgCenter.layout().addWidget(vspacer())
+#
+#         self.setFixedWidth(200)
+#
+#         sp(self).v_max()
+#
+#     def setMarker(self, item: MarkerItem):
+#         self._marker = None
+#         self._item = None
+#         self.textEdit.setText(item.marker().description)
+#         self.lineTitle.setText(item.marker().name)
+#         self._marker = item.marker()
+#         self._item = item
+#
+#     def _nameChanged(self, text: str):
+#         if self._marker:
+#             self._marker.name = text
+#             self.changed.emit(self._item)
+#
+#     def _synopsisChanged(self):
+#         if self._marker:
+#             self._marker.description = self.textEdit.toPlainText()
+#             self.changed.emit(self._item)
+#
+#     def _colorChanged(self, color: str):
+#         if self._marker:
+#             self._marker.color = color
+#             self._marker.color_selected = marker_selected_colors[color]
+#             self._item.refresh()
+#
+#     def _iconChanged(self, icon: str):
+#         if self._marker:
+#             self._marker.icon = icon
+#             self._item.refresh()
+#
+#     def _iconReset(self):
+#         if self._marker:
+#             self._marker.icon = ''
+#             self._item.refresh()
+#
+#     def _addHeader(self, text: str, wdg: QWidget) -> CollapseButton:
+#         btn = CollapseButton(Qt.Edge.RightEdge, Qt.Edge.BottomEdge)
+#         decr_icon(btn, 4)
+#         decr_font(btn)
+#         btn.setChecked(True)
+#         btn.setText(text)
+#         wrapped = wrap(wdg, margin_left=5)
+#         btn.toggled.connect(wrapped.setVisible)
+#
+#         self.wdgCenter.layout().addWidget(btn, alignment=Qt.AlignmentFlag.AlignLeft)
+#         self.wdgCenter.layout().addWidget(wrapped)
+#
+#         return btn
 
 
 class WorldBuildingMapScene(QGraphicsScene):
@@ -359,6 +473,7 @@ class WorldBuildingMapScene(QGraphicsScene):
     hidePopup = pyqtSignal()
     cancelItemAddition = pyqtSignal()
     itemAdded = pyqtSignal()
+    itemMoved = pyqtSignal()
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -445,6 +560,9 @@ class WorldBuildingMapScene(QGraphicsScene):
     def markerChangedEvent(self, _: MarkerItem):
         self.repo.update_world(self._novel)
 
+    def itemMovedEvent(self, _: MarkerItem):
+        self.itemMoved.emit()
+
     def startAdditionMode(self, _: GraphicsItemType):
         self._additionMode = True
 
@@ -496,8 +614,14 @@ class WorldBuildingMapView(BaseGraphicsView):
                                                     'Add new marker (or double-click on the map)',
                                                     GraphicsItemType.MAP_MARKER)
 
-        self._wdgEditor = EntityEditorWidget(self)
-        self._wdgEditor.setHidden(True)
+        # self._wdgEditor = EntityEditorWidget(self)
+        # self._wdgEditor.setHidden(True)
+
+        self.undoStack = QUndoStack()
+        self.undoStack.setUndoLimit(100)
+
+        self._markerEditor = MarkerItemToolbar(self.undoStack, self)
+        self._markerEditor.setVisible(False)
 
         self._popup = PopupText(self)
         self._popup.setHidden(True)
@@ -525,8 +649,9 @@ class WorldBuildingMapView(BaseGraphicsView):
         self._scene.showPopup.connect(self._showPopup)
         self._scene.hidePopup.connect(self._hidePopup)
         self._scene.itemAdded.connect(self._endAddition)
+        self._scene.itemMoved.connect(self._itemMoved)
         self._scene.cancelItemAddition.connect(self._endAddition)
-        self._wdgEditor.changed.connect(self._scene.markerChangedEvent)
+        # self._wdgEditor.changed.connect(self._scene.markerChangedEvent)
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -573,10 +698,10 @@ class WorldBuildingMapView(BaseGraphicsView):
         self._controlsNavBar.setGeometry(10, 100, self._controlsNavBar.sizeHint().width(),
                                          self._controlsNavBar.sizeHint().height())
 
-        self._wdgEditor.setGeometry(self.width() - self._wdgEditor.width() - 20,
-                                    20,
-                                    self._wdgEditor.width(),
-                                    self._wdgEditor.sizeHint().height())
+        # self._wdgEditor.setGeometry(self.width() - self._wdgEditor.width() - 20,
+        #                             20,
+        #                             self._wdgEditor.width(),
+        #                             self._wdgEditor.sizeHint().height())
 
     def _newControlButton(self, icon: QIcon, tooltip: str, itemType: GraphicsItemType):
         btn = tool_btn(icon, tooltip,
@@ -643,11 +768,14 @@ class WorldBuildingMapView(BaseGraphicsView):
             self.repo.update_world(self._novel)
 
     def _selectionChanged(self):
+        if sip.isdeleted(self._scene):
+            return
         if len(self._scene.selectedItems()) == 1:
-            self._wdgEditor.setMarker(self._scene.selectedItems()[0])
-            qtanim.fade_in(self._wdgEditor)
+            item = self._scene.selectedItems()[0]
+            self._markerEditor.setMarker(item)
+            self._popupAbove(self._markerEditor, item)
         else:
-            qtanim.fade_out(self._wdgEditor)
+            self._markerEditor.setVisible(False)
 
     def _showPopup(self, item: MarkerItem):
         self._popup.setText(item.marker().name, item.marker().description)
@@ -655,6 +783,10 @@ class WorldBuildingMapView(BaseGraphicsView):
 
     def _hidePopup(self):
         self._popup.setHidden(True)
+
+    def _itemMoved(self):
+        self._markerEditor.setVisible(False)
+        self._hidePopup()
 
     def _fillUpEditMenu(self):
         self._menuEdit.clear()
