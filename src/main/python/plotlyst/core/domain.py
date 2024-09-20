@@ -2173,6 +2173,7 @@ class WorldBuildingMap:
 class Location:
     name: str = ''
     id: uuid.UUID = field(default_factory=uuid.uuid4)
+    summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
     children: List['Location'] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
 
     @overrides

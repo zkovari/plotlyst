@@ -31,6 +31,7 @@ from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import fade_in
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.confirm import confirmed
+from plotlyst.view.widget.input import DecoratedTextEdit
 from plotlyst.view.widget.tree import ContainerNode, TreeSettings, ItemBasedTreeView, ItemBasedNode
 
 
@@ -182,9 +183,19 @@ class LocationEditor(QWidget):
         incr_font(self.lineEditName, 8)
         self.lineEditName.textEdited.connect(self._nameEdited)
 
+        self.textSummary = DecoratedTextEdit()
+        self.textSummary.setProperty('rounded', True)
+        self.textSummary.setProperty('white-bg', True)
+        self.textSummary.setPlaceholderText('Summarize this location')
+        self.textSummary.setMaximumSize(450, 85)
+        self.textSummary.setEmoji(':scroll:', 'Summary')
+        self.textSummary.textChanged.connect(self._summaryChanged)
+
         vbox(self)
         self.layout().addWidget(self.lineEditName)
         self.layout().addWidget(line())
+        self.layout().addWidget(self.textSummary)
+        self.layout().addWidget(vspacer())
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -194,6 +205,7 @@ class LocationEditor(QWidget):
         self.setVisible(True)
         self._location = location
         self.lineEditName.setText(self._location.name)
+        self.textSummary.setText(self._location.summary)
         if not self._location.name:
             self.lineEditName.setFocus()
 
@@ -205,6 +217,10 @@ class LocationEditor(QWidget):
         self._location.name = name
         self._save()
         self.locationNameChanged.emit(self._location)
+
+    def _summaryChanged(self):
+        self._location.summary = self.textSummary.toPlainText()
+        self._save()
 
     def _save(self):
         self.repo.update_novel(self._novel)
