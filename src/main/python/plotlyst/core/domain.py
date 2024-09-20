@@ -2161,11 +2161,12 @@ class WorldBuildingMarker:
 
 @dataclass
 class WorldBuildingMap:
-    ref: ImageRef
+    ref: Optional[ImageRef] = None
     title: str = ''
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     markers: List[WorldBuildingMarker] = field(default_factory=list)
     dominant_color: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    default: bool = field(default=False, metadata=config(exclude=exclude_if_false))
 
 
 @dataclass
@@ -2185,12 +2186,16 @@ class Location:
         return hash(str(self.id))
 
 
+def default_maps() -> List[WorldBuildingMap]:
+    return [WorldBuildingMap(default=True)]
+
+
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class WorldBuilding:
     root_entity: WorldBuildingEntity = field(default_factory=worldbuilding_root)
     glossary: Dict[str, GlossaryItem] = field(default_factory=dict)
-    maps: List[WorldBuildingMap] = field(default_factory=list)
+    maps: List[WorldBuildingMap] = field(default_factory=default_maps)
 
 
 @dataclass

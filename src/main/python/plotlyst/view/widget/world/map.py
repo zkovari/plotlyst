@@ -35,6 +35,7 @@ from qtpy import sip
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, WorldBuildingMap, WorldBuildingMarker, GraphicsItemType
+from plotlyst.resources import resource_registry
 from plotlyst.service.image import load_image, upload_image, LoadedImage
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import tool_btn, action, shadow, TooltipPositionEventFilter, dominant_color, push_btn
@@ -526,7 +527,10 @@ class WorldBuildingMapScene(QGraphicsScene):
     @busy
     def loadMap(self, map: WorldBuildingMap) -> Optional[QGraphicsPixmapItem]:
         self.clear()
-        image: Optional[QImage] = load_image(self._novel, map.ref)
+        if map.ref:
+            image: Optional[QImage] = load_image(self._novel, map.ref)
+        else:
+            image = QImage(resource_registry.paper_bg)
         if image:
             self._map = map
             item = QGraphicsPixmapItem()
@@ -660,13 +664,7 @@ class WorldBuildingMapView(BaseGraphicsView):
         if not self._shown:
             self._shown = True
             if self._novel.world.maps:
-                map = self._novel.world.maps[0]
                 self._loadMap(self._novel.world.maps[0])
-                self._bgItem = self._scene.loadMap(map)
-                if self._bgItem:
-                    # call to calculate rect size
-                    _ = self._scene.sceneRect()
-                    self.centerOn(self._bgItem)
 
     @overrides
     def itemAt(self, pos: QPoint) -> QGraphicsItem:
@@ -738,20 +736,21 @@ class WorldBuildingMapView(BaseGraphicsView):
         self.setToolTip('')
 
     def _loadMap(self, map: WorldBuildingMap):
-        self._bgItem: QGraphicsPixmapItem = self._scene.loadMap(map)
-        if self._bgItem:
-            if map.dominant_color:
-                bg_color = QColor(map.dominant_color)
-            else:
-                bg_color = dominant_color(self._bgItem.pixmap())
-                map.dominant_color = bg_color.name()
-            self.setBackgroundBrush(bg_color)
+        self._bgItem = self._scene.loadMap(map)
+        if self._bgItem is None:
+            return
 
-            # call to calculate rect size
-            _ = self._scene.sceneRect()
-            self.centerOn(self._bgItem)
-            self._controlsNavBar.setVisible(True)
-            self._wdgZoomBar.setVisible(True)
+        if map.dominant_color:
+            bg_color = QColor(map.dominant_color)
+        else:
+            bg_color = dominant_color(self._bgItem.pixmap())
+            map.dominant_color = bg_color.name()
+        self.setBackgroundBrush(bg_color)
+        # call to calculate rect size
+        _ = self._scene.sceneRect()
+        self.centerOn(self._bgItem)
+        self._controlsNavBar.setVisible(True)
+        self._wdgZoomBar.setVisible(True)
 
     def _addNewMap(self):
         loadedImage: Optional[LoadedImage] = upload_image(self._novel)
@@ -763,7 +762,6 @@ class WorldBuildingMapView(BaseGraphicsView):
                 map = self._novel.world.maps[0]
                 map.ref = loadedImage.ref
                 map.dominant_color = ''
-            self._scene.loadMap(map)
             self._loadMap(map)
             self.repo.update_world(self._novel)
 
