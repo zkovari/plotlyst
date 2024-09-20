@@ -23,12 +23,13 @@ from enum import Enum
 from functools import partial
 from typing import Optional, List
 
+import emoji
 import qtanim
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize, pyqtSignal, QModelIndex, QItemSelectionModel
 from PyQt6.QtGui import QFont, QTextCursor, QTextCharFormat, QKeyEvent, QPaintEvent, QPainter, QBrush, QLinearGradient, \
     QColor, QSyntaxHighlighter, \
-    QTextDocument, QTextBlockUserData, QIcon, QResizeEvent, QFocusEvent
+    QTextDocument, QTextBlockUserData, QIcon, QResizeEvent, QFocusEvent, QTextBlockFormat
 from PyQt6.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QMenu, \
     QApplication, QToolButton, QLineEdit, QWidgetAction, QListView, QSpinBox, QWidget, QLabel, QDialog
 from language_tool_python import LanguageTool
@@ -53,7 +54,7 @@ from plotlyst.model.characters_model import CharactersTableModel
 from plotlyst.model.common import proxy
 from plotlyst.service.grammar import language_tool_proxy, dictionary
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import action, label, push_btn, tool_btn, insert_before, fade_out_and_gc, shadow
+from plotlyst.view.common import action, label, push_btn, tool_btn, insert_before, fade_out_and_gc, shadow, emoji_font
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_color
 from plotlyst.view.style.text import apply_texteditor_toolbar_style
@@ -1377,3 +1378,43 @@ class SearchField(QWidget):
 
         self.layout().addWidget(self.btnIcon)
         self.layout().addWidget(self.lineSearch)
+
+
+class DecoratedTextEdit(QTextEdit):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._has_text = False
+        self._updateStylesheet()
+        self.textChanged.connect(self._onTextChanged)
+
+        self._decoration = None
+
+    def setEmoji(self, name: str, tooltip: str = ''):
+        self._decoration = QLabel(self)
+        self._decoration.setToolTip(tooltip)
+        self._decoration.setFont(emoji_font())
+        self._decoration.setText(emoji.emojize(name))
+        self._decoration.setGeometry(3, 10, 20, 20)
+
+    def _updateStylesheet(self):
+        self.setStyleSheet("QTextEdit {padding-left: 20px;}")
+
+    def _indent(self, value: int):
+        cursor = self.textCursor()
+        block_format = QTextBlockFormat()
+        block_format.setTextIndent(value)
+
+        self.textChanged.disconnect(self._onTextChanged)
+        cursor.mergeBlockFormat(block_format)
+        self.textChanged.connect(self._onTextChanged)
+
+    def _onTextChanged(self):
+        if self.toPlainText():
+            if not self._has_text:
+                self.setStyleSheet('')
+                self._indent(20)
+                self._has_text = True
+        elif self._has_text:
+            self._indent(0)
+            self._updateStylesheet()
+            self._has_text = False
