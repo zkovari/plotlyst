@@ -19,15 +19,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
 from dataclasses import dataclass
+from functools import partial
 from typing import Optional, List, Dict, Any, Set
 
-from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent, QSize
+from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent, QSize, QPointF, QMimeData
 from PyQt6.QtGui import QIcon, QResizeEvent
 from PyQt6.QtWidgets import QScrollArea, QFrame, QSizePolicy, QToolButton
 from PyQt6.QtWidgets import QWidget, QLabel
 from overrides import overrides
 from qthandy import vbox, hbox, bold, margins, clear_layout, transparent, retain_when_hidden, incr_font, pointy, \
-    translucent
+    translucent, gc
+from qthandy.filter import DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.common import ALT_BACKGROUND_COLOR, PLOTLYST_TERTIARY_COLOR
@@ -365,6 +367,9 @@ class ItemBasedTreeView(TreeView):
         self._nodes: Dict[Any, ItemBasedNode] = {}
         self._selectedItems: Set[Any] = set()
 
+        self._dummyWdg: Optional[ItemBasedNode] = None
+        self._toBeRemoved: Optional[ItemBasedNode] = None
+
     def clearSelection(self):
         for item in self._selectedItems:
             self._nodes[item].deselect()
@@ -386,6 +391,129 @@ class ItemBasedTreeView(TreeView):
 
         fade_out_and_gc(node.parent(), node)
 
+    def _topLevelItems(self) -> List[Any]:
+        pass
+
     @abstractmethod
     def _emitSelectionChanged(self, item: Any):
         pass
+
+    def _node(self, item: Any) -> ItemBasedNode:
+        pass
+
+    def _initNode(self, item: Any) -> ItemBasedNode:
+        pass
+
+    def _save(self):
+        pass
+
+    def _enhanceWithDnd(self, node: ItemBasedNode):
+        node.installEventFilter(
+            DragEventFilter(node, self._mimeType(), dataFunc=lambda node: node.item(),
+                            grabbed=node.titleLabel(),
+                            startedSlot=partial(self._dragStarted, node),
+                            finishedSlot=partial(self._dragStopped, node)))
+        node.titleWidget().setAcceptDrops(True)
+        node.titleWidget().installEventFilter(
+            DropEventFilter(node, [self._mimeType()],
+                            motionDetection=Qt.Orientation.Vertical,
+                            motionSlot=partial(self._dragMovedOnEntity, node),
+                            droppedSlot=self._drop
+                            )
+        )
+
+    def _mimeType(self) -> str:
+        pass
+
+    def _dragStarted(self, node: ItemBasedNode):
+        node.setHidden(True)
+        self._dummyWdg = self._node(node.item())
+        self._dummyWdg.setPlusButtonEnabled(False)
+        self._dummyWdg.setMenuEnabled(False)
+        translucent(self._dummyWdg)
+        self._dummyWdg.setHidden(True)
+        self._dummyWdg.setParent(self._centralWidget)
+        self._dummyWdg.setAcceptDrops(True)
+        self._dummyWdg.installEventFilter(
+            DropEventFilter(self._dummyWdg, [self._mimeType()], droppedSlot=self._drop))
+
+    def _dragStopped(self, node: ItemBasedNode):
+        if self._dummyWdg:
+            gc(self._dummyWdg)
+            self._dummyWdg = None
+
+        if self._toBeRemoved:
+            gc(self._toBeRemoved)
+            self._toBeRemoved = None
+        else:
+            node.setVisible(True)
+
+    def _dragMovedOnEntity(self, node: ItemBasedNode, edge: Qt.Edge, point: QPointF):
+        i = node.parent().layout().indexOf(node)
+        if edge == Qt.Edge.TopEdge:
+            node.parent().layout().insertWidget(i, self._dummyWdg)
+        elif point.x() > 50:
+            node.insertChild(0, self._dummyWdg)
+        else:
+            node.parent().layout().insertWidget(i + 1, self._dummyWdg)
+
+        self._dummyWdg.setVisible(True)
+
+    def _drop(self, mimeData: QMimeData):
+        self.clearSelection()
+
+        if self._dummyWdg.isHidden():
+            return
+        ref: Any = mimeData.reference()
+        self._toBeRemoved = self._nodes[ref]
+        new_widget = self._initNode(ref)
+        for child in self._toBeRemoved.childrenWidgets():
+            new_widget.addChild(child)
+
+        if self._dummyWdg.parent() is self._centralWidget:
+            # print('1. target parent is central')
+            new_index = self._centralWidget.layout().indexOf(self._dummyWdg)
+            if self._toBeRemoved.parent() is self._centralWidget:  # swap order on top
+                # print('2. source parent is central')
+                old_index = self._centralWidget.layout().indexOf(self._toBeRemoved)
+                self._topLevelItems().remove(ref)
+                if old_index < new_index:
+                    # print('2.1 from above')
+                    self._topLevelItems().insert(new_index - 1, ref)
+                else:
+                    # print('2.2 from below')
+                    self._topLevelItems().insert(new_index, ref)
+            else:
+                # print('3. source is not central')
+                self._removeFromParentEntity(ref, self._toBeRemoved)
+                self._topLevelItems().insert(new_index, ref)
+
+            self._centralWidget.layout().insertWidget(new_index, new_widget)
+        elif isinstance(self._dummyWdg.parent().parent(), ItemBasedNode):
+            # print('4. target is node')
+            doc_parent_wdg: ItemBasedNode = self._dummyWdg.parent().parent()
+            new_index = doc_parent_wdg.containerWidget().layout().indexOf(self._dummyWdg)
+            if self._toBeRemoved.parent() is not self._centralWidget and \
+                    self._toBeRemoved.parent().parent() is self._dummyWdg.parent().parent():  # swap under same parent doc
+                # print('4.1. source is not central and swap under the same')
+                old_index = doc_parent_wdg.indexOf(self._toBeRemoved)
+                doc_parent_wdg.item().children.remove(ref)
+                if old_index < new_index:
+                    # print('4.2 from above')
+                    doc_parent_wdg.item().children.insert(new_index - 1, ref)
+                else:
+                    # print('4.3 from below')
+                    doc_parent_wdg.item().children.insert(new_index, ref)
+            else:
+                # print('4.1. source can be anything')
+                self._removeFromParentEntity(ref, self._toBeRemoved)
+                doc_parent_wdg.item().children.insert(new_index, ref)
+
+            doc_parent_wdg.insertChild(new_index, new_widget)
+
+        self._dummyWdg.setHidden(True)
+        self._save()
+
+    def _removeFromParentEntity(self, item: Any, node: ItemBasedNode):
+        parent: ItemBasedNode = node.parent().parent()
+        parent.item().children.remove(item)
