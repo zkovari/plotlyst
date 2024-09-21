@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from language_tool_python import LanguageTool
 
 from plotlyst.core.domain import Character, NovelDescriptor, Scene, SceneStage, Task, NovelSetting, \
-    StoryStructure, Novel, Plot, StoryBeat
+    StoryStructure, Novel, Plot, StoryBeat, Location
 from plotlyst.event.core import Event
 
 
@@ -39,6 +39,16 @@ class CharacterSummaryChangedEvent(Event):
 @dataclass
 class CharacterDeletedEvent(Event):
     character: Character
+
+
+@dataclass
+class LocationAddedEvent(Event):
+    location: Location
+
+
+@dataclass
+class LocationDeletedEvent(Event):
+    location: Location
 
 
 @dataclass

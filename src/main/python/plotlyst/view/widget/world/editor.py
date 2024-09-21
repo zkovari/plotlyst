@@ -39,7 +39,7 @@ from qttextedit.ops import Heading2Operation, Heading3Operation, InsertListOpera
 from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityElement, WorldBuildingEntityElementType, \
     BackstoryEvent, Variable, VariableType, \
-    Topic
+    Topic, Location
 from plotlyst.env import app_env
 from plotlyst.service.image import upload_image, load_image
 from plotlyst.service.persistence import RepositoryPersistenceManager
@@ -58,6 +58,7 @@ from plotlyst.view.widget.world._topics import ecological_topics, cultural_topic
     linguistic_topics, technological_topics, economic_topics, infrastructural_topics, religious_topics, \
     fantastic_topics, nefarious_topics, environmental_topics
 from plotlyst.view.widget.world.glossary import GlossaryTextBlockHighlighter, GlossaryTextBlockData
+from plotlyst.view.widget.world.milieu import LocationsTreeView
 
 
 class WorldBuildingTextEdit(AutoAdjustableTextEdit):
@@ -1264,3 +1265,33 @@ class WorldBuildingEditorSettingsWidget(QWidget):
 
     def setEntity(self, entity: WorldBuildingEntity):
         self.layoutSettings.setEntity(entity)
+
+
+class MilieuSelectorPopup(PopupDialog):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._selectedElement: Optional[Location] = None
+
+        self.treeView = LocationsTreeView()
+        self.treeView.setNovel(novel, readOnly=True)
+        self.treeView.setMinimumSize(300, 400)
+        self.treeView.setMaximumSize(500, 500)
+        sp(self.treeView).v_exp().h_exp()
+        self.treeView.locationSelected.connect(self._selected)
+
+        self.btnSelect = push_btn(text='Select', properties=['confirm', 'positive'])
+        self.btnSelect.clicked.connect(self.accept)
+        self.btnClose = push_btn(text='Cancel', properties=['confirm', 'cancel'])
+        self.btnClose.clicked.connect(self.reject)
+
+        self.frame.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
+        self.frame.layout().addWidget(self.treeView)
+        self.frame.layout().addWidget(group(self.btnClose, self.btnSelect), alignment=Qt.AlignmentFlag.AlignRight)
+
+    def display(self) -> Optional[Location]:
+        result = self.exec()
+        if result == QDialog.DialogCode.Accepted:
+            return self._selectedElement
+
+    def _selected(self, location: Location):
+        self._selectedElement = location

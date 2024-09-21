@@ -21,11 +21,12 @@ from typing import Optional, Dict, Set
 
 from overrides import overrides
 
-from plotlyst.core.domain import Novel, Scene, StoryBeat, Character
+from plotlyst.common import recursive
+from plotlyst.core.domain import Novel, Scene, StoryBeat, Character, Location
 from plotlyst.event.core import EventListener, Event
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import SceneChangedEvent, SceneDeletedEvent, SceneStoryBeatChangedEvent, \
-    CharacterChangedEvent, CharacterDeletedEvent
+    CharacterChangedEvent, CharacterDeletedEvent, LocationAddedEvent, LocationDeletedEvent
 
 
 class NovelActsRegistry(EventListener):
@@ -82,30 +83,52 @@ class NovelActsRegistry(EventListener):
 acts_registry = NovelActsRegistry()
 
 
-class CharactersRegistry(EventListener):
-    def __init__(self, parent=None):
+class EntitiesRegistry(EventListener):
+    def __init__(self):
         self.novel: Optional[Novel] = None
         self._characters: Dict[str, Character] = {}
+        self._locations: Dict[str, Location] = {}
 
     def set_novel(self, novel: Novel):
         self.novel = novel
         dispatcher = event_dispatchers.instance(self.novel)
-        dispatcher.register(self, CharacterChangedEvent, CharacterDeletedEvent)
+        dispatcher.register(self, CharacterChangedEvent, CharacterDeletedEvent, LocationAddedEvent,
+                            LocationDeletedEvent)
         self.refresh()
 
     def character(self, s_id: str) -> Optional[Character]:
         return self._characters.get(s_id, None)
 
+    def location(self, s_id: str) -> Optional[Location]:
+        return self._locations.get(s_id, None)
+
     @overrides
     def event_received(self, event: Event):
-        if self.novel:
-            self.refresh()
+        if self.novel is None:
+            return
+
+        if isinstance(event, (CharacterChangedEvent, CharacterDeletedEvent)):
+            self._refreshCharacters()
+        elif isinstance(event, (LocationAddedEvent, LocationDeletedEvent)):
+            self._refreshLocations()
 
     def refresh(self):
-        if self.novel:
-            self._characters.clear()
-            for character in self.novel.characters:
-                self._characters[str(character.id)] = character
+        self._refreshCharacters()
+        self._refreshLocations()
+
+    def _refreshCharacters(self):
+        self._characters.clear()
+        for character in self.novel.characters:
+            self._characters[str(character.id)] = character
+
+    def _refreshLocations(self):
+        def addChild(parent: Location, child: Location):
+            self._locations[str(child.id)] = child
+
+        self._locations.clear()
+        for location in self.novel.locations:
+            self._locations[str(location.id)] = location
+            recursive(location, lambda parent: parent.children, addChild)
 
 
-characters_registry = CharactersRegistry()
+entities_registry = EntitiesRegistry()

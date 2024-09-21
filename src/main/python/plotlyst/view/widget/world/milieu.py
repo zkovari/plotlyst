@@ -27,6 +27,8 @@ from qthandy import vbox, incr_font, vspacer, line, clear_layout
 
 from plotlyst.common import recursive
 from plotlyst.core.domain import Novel, Location
+from plotlyst.event.core import emit_event
+from plotlyst.events import LocationAddedEvent, LocationDeletedEvent
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import fade_in, insert_before_the_end
 from plotlyst.view.icons import IconRegistry
@@ -38,9 +40,12 @@ from plotlyst.view.widget.tree import TreeSettings, ItemBasedTreeView, ItemBased
 class LocationNode(ItemBasedNode):
     added = pyqtSignal()
 
-    def __init__(self, location: Location, parent=None, settings: Optional[TreeSettings] = None):
+    def __init__(self, location: Location, parent=None, readOnly: bool = False,
+                 settings: Optional[TreeSettings] = None):
         super().__init__(location.name, parent=parent, settings=settings)
         self._location = location
+        self.setPlusButtonEnabled(not readOnly)
+        self.setMenuEnabled(not readOnly)
         self.setTranslucentIconEnabled(True)
         self._actionChangeIcon.setVisible(False)
         self._btnAdd.clicked.connect(self.added)
@@ -75,16 +80,18 @@ class LocationsTreeView(ItemBasedTreeView):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._novel: Optional[Novel] = None
+        self._readOnly = False
         self._settings = TreeSettings(font_incr=2)
 
         self.repo = RepositoryPersistenceManager.instance()
 
-    def setNovel(self, novel: Novel):
+    def setNovel(self, novel: Novel, readOnly: bool = False):
         def addChildWdg(parent: Location, child: Location):
             childWdg = self._initNode(child)
             self._nodes[parent].addChild(childWdg)
 
         self._novel = novel
+        self._readOnly = readOnly
 
         self.clearSelection()
         self._nodes.clear()
@@ -111,6 +118,8 @@ class LocationsTreeView(ItemBasedTreeView):
         self._novel.locations.append(location)
         self._save()
 
+        emit_event(self._novel, LocationAddedEvent(self, location))
+
     def _addLocationUnder(self, node: LocationNode):
         location = Location()
         child = self._initNode(location)
@@ -119,6 +128,7 @@ class LocationsTreeView(ItemBasedTreeView):
 
         node.item().children.append(location)
         self._save()
+        emit_event(self._novel, LocationAddedEvent(self, location))
 
     def _deleteLocation(self, node: LocationNode):
         loc: Location = node.item()
@@ -137,6 +147,7 @@ class LocationsTreeView(ItemBasedTreeView):
         self.locationDeleted.emit(loc)
 
         self._save()
+        emit_event(self._novel, LocationDeletedEvent(self, loc))
 
     @overrides
     def _emitSelectionChanged(self, location: Location):
@@ -167,13 +178,14 @@ class LocationsTreeView(ItemBasedTreeView):
 
     @overrides
     def _initNode(self, location: Location) -> LocationNode:
-        node = LocationNode(location, settings=self._settings)
+        node = LocationNode(location, readOnly=self._readOnly, settings=self._settings)
         self._nodes[location] = node
         node.selectionChanged.connect(partial(self._selectionChanged, node))
         node.added.connect(partial(self._addLocationUnder, node))
         node.deleted.connect(partial(self._deleteLocation, node))
 
-        self._enhanceWithDnd(node)
+        if not self._readOnly:
+            self._enhanceWithDnd(node)
 
         return node
 

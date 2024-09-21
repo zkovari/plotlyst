@@ -33,9 +33,10 @@ from qthandy.filter import OpacityEventFilter, DragEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 from qtpy import sip
 
-from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
-from plotlyst.core.domain import Novel, WorldBuildingMap, WorldBuildingMarker, GraphicsItemType
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR, PLOTLYST_TERTIARY_COLOR
+from plotlyst.core.domain import Novel, WorldBuildingMap, WorldBuildingMarker, GraphicsItemType, Location
 from plotlyst.resources import resource_registry
+from plotlyst.service.cache import entities_registry
 from plotlyst.service.image import load_image, upload_image, LoadedImage
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import tool_btn, action, shadow, TooltipPositionEventFilter, dominant_color, push_btn
@@ -45,6 +46,7 @@ from plotlyst.view.widget.graphics.editor import ZoomBar, BaseItemToolbar, \
     SecondarySelectorWidget
 from plotlyst.view.widget.input import AutoAdjustableTextEdit
 from plotlyst.view.widget.utility import IconSelectorDialog
+from plotlyst.view.widget.world.editor import MilieuSelectorPopup
 
 
 class PopupText(QFrame):
@@ -153,16 +155,13 @@ class MarkerIconSelectorWidget(QWidget):
 
 
 class MarkerItemToolbar(BaseItemToolbar):
-    def __init__(self, undoStack: QUndoStack, parent=None):
+    def __init__(self, novel: Novel, undoStack: QUndoStack, parent=None):
         super().__init__(undoStack, parent)
+        self._novel = novel
         self._item: Optional[MarkerItem] = None
 
-        self._sbSize = QSlider()
-        self._sbSize.setMinimum(30)
-        self._sbSize.setMaximum(90)
-        self._sbSize.setValue(50)
-        self._sbSize.setOrientation(Qt.Orientation.Horizontal)
-        self._sbSize.valueChanged.connect(self._sizeChanged)
+        self._btnMilieuLink = tool_btn(IconRegistry.world_building_icon(), tooltip='Link to milieu', transparent_=True)
+        self._btnMilieuLink.clicked.connect(self._linkToMilieu)
 
         self._btnColor = tool_btn(IconRegistry.from_name('fa5s.map-marker', color='black'), 'Change style',
                                   transparent_=True)
@@ -182,6 +181,15 @@ class MarkerItemToolbar(BaseItemToolbar):
         self.addSecondaryWidget(self._btnIcon, self._iconSecondaryWidget)
         self._iconPicker.iconSelected.connect(self._iconChanged)
 
+        self._sbSize = QSlider()
+        self._sbSize.setMinimum(30)
+        self._sbSize.setMaximum(90)
+        self._sbSize.setValue(50)
+        self._sbSize.setOrientation(Qt.Orientation.Horizontal)
+        self._sbSize.valueChanged.connect(self._sizeChanged)
+
+        self._toolbar.layout().addWidget(self._btnMilieuLink)
+        self._toolbar.layout().addWidget(vline())
         self._toolbar.layout().addWidget(self._btnColor)
         self._toolbar.layout().addWidget(self._btnIcon)
         self._toolbar.layout().addWidget(vline())
@@ -194,10 +202,22 @@ class MarkerItemToolbar(BaseItemToolbar):
         self._hideSecondarySelectors()
 
         marker = item.marker()
+        if marker.ref:
+            self._btnMilieuLink.setIcon(IconRegistry.world_building_icon(PLOTLYST_TERTIARY_COLOR))
+        else:
+            self._btnMilieuLink.setIcon(IconRegistry.world_building_icon())
+
         self._btnColor.setIcon(IconRegistry.from_name('fa5s.map-marker', color=marker.color))
         self._sbSize.setValue(marker.size if marker.size else 50)
 
         self._item = item
+
+    @busy
+    def _linkToMilieu(self, _):
+        element: Location = MilieuSelectorPopup.popup(self._novel)
+        if element and self._item:
+            self._item.setLocation(element)
+            self._btnMilieuLink.setIcon(IconRegistry.world_building_icon(PLOTLYST_TERTIARY_COLOR))
 
     def _colorChanged(self, color: str):
         if self._item:
@@ -250,6 +270,10 @@ class MarkerItem(QAbstractGraphicsShapeItem):
 
     def mapScene(self) -> 'WorldBuildingMapScene':
         return self.scene()
+
+    def setLocation(self, location: Location):
+        self._marker.ref = location.id
+        self.mapScene().markerChangedEvent(self)
 
     def setColor(self, color: str):
         self._marker.color = color
@@ -320,8 +344,12 @@ class MarkerItem(QAbstractGraphicsShapeItem):
             self._typeSize = self.__default_type_size + 1
             self.update()
 
-            if self._marker.description or self._marker.name:
-                QTimer.singleShot(250, self._triggerPopup)
+            if self._marker.ref:
+                if entities_registry.location(str(self._marker.ref)):
+                    QTimer.singleShot(250, self._triggerPopup)
+                else:
+                    self._marker.ref = None
+                    self.mapScene().markerChangedEvent(self)
 
     @overrides
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
@@ -330,7 +358,7 @@ class MarkerItem(QAbstractGraphicsShapeItem):
             self._typeSize = self.__default_type_size
             self.update()
 
-            if self._marker.description or self._marker.name:
+            if self._marker.ref:
                 self.scene().hidePopupEvent()
 
     def _posChangedOnTimeout(self):
@@ -624,7 +652,7 @@ class WorldBuildingMapView(BaseGraphicsView):
         self.undoStack = QUndoStack()
         self.undoStack.setUndoLimit(100)
 
-        self._markerEditor = MarkerItemToolbar(self.undoStack, self)
+        self._markerEditor = MarkerItemToolbar(self._novel, self.undoStack, self)
         self._markerEditor.setVisible(False)
 
         self._popup = PopupText(self)
@@ -771,13 +799,16 @@ class WorldBuildingMapView(BaseGraphicsView):
         if len(self._scene.selectedItems()) == 1:
             item = self._scene.selectedItems()[0]
             self._markerEditor.setMarker(item)
+            self._hidePopup()
             self._popupAbove(self._markerEditor, item)
         else:
             self._markerEditor.setVisible(False)
 
     def _showPopup(self, item: MarkerItem):
-        self._popup.setText(item.marker().name, item.marker().description)
-        self._popupAbove(self._popup, item)
+        location = entities_registry.location(str(item.marker().ref))
+        if location:
+            self._popup.setText(location.name, location.summary)
+            self._popupAbove(self._popup, item)
 
     def _hidePopup(self):
         self._popup.setHidden(True)

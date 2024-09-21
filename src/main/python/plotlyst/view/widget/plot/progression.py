@@ -33,7 +33,7 @@ from plotlyst.core.domain import Novel, PlotType, PlotProgressionItem, \
     PlotProgressionItemType, DynamicPlotPrincipleGroupType, DynamicPlotPrinciple, DynamicPlotPrincipleType, Plot, \
     DynamicPlotPrincipleGroup, LayoutType, Character
 from plotlyst.core.template import antagonist_role
-from plotlyst.service.cache import characters_registry
+from plotlyst.service.cache import entities_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import frame, fade_out_and_gc, action
 from plotlyst.view.icons import IconRegistry
@@ -192,7 +192,7 @@ class DynamicPlotPrincipleWidget(OutlineItemWidget):
             self.layout().insertWidget(0, self._charSelector, alignment=Qt.AlignmentFlag.AlignCenter)
 
             if self.principle.character_id:
-                character = characters_registry.character(self.principle.character_id)
+                character = entities_registry.character(self.principle.character_id)
                 if character:
                     self._charSelector.setCharacter(character)
 
@@ -209,7 +209,7 @@ class DynamicPlotPrincipleWidget(OutlineItemWidget):
 
     def refreshCharacters(self):
         if self._hasCharacter and self.principle.character_id:
-            character = characters_registry.character(self.principle.character_id)
+            character = entities_registry.character(self.principle.character_id)
             if character:
                 self._charSelector.setCharacter(character)
             else:

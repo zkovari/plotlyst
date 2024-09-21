@@ -38,7 +38,7 @@ from plotlyst.event.core import Event, EventListener
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import NovelPanelCustomizationEvent, NovelEmotionTrackingToggleEvent, \
     NovelMotivationTrackingToggleEvent, NovelConflictTrackingToggleEvent, CharacterDeletedEvent
-from plotlyst.service.cache import characters_registry
+from plotlyst.service.cache import entities_registry
 from plotlyst.view.common import push_btn, label, fade_out_and_gc, tool_btn, action, ExclusiveOptionalButtonGroup
 from plotlyst.view.generated.scene_goal_stakes_ui import Ui_GoalReferenceStakesEditor
 from plotlyst.view.icons import IconRegistry, avatars
@@ -797,7 +797,7 @@ class CharacterAgencyEditor(QWidget):
         self.installEventFilter(VisibilityToggleEventFilter(self._btnDots, self))
 
         if self.agenda.character_id:
-            character = characters_registry.character(str(self.agenda.character_id))
+            character = entities_registry.character(str(self.agenda.character_id))
             if character:
                 self._charDisplay.setIcon(avatars.avatar(character))
 

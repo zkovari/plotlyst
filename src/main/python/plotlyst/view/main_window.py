@@ -46,7 +46,7 @@ from plotlyst.events import NovelDeletedEvent, \
     NovelWorldBuildingToggleEvent, NovelCharactersToggleEvent, NovelScenesToggleEvent, NovelDocumentsToggleEvent, \
     NovelManagementToggleEvent, NovelManuscriptToggleEvent
 from plotlyst.resources import resource_manager, ResourceType, ResourceDownloadedEvent
-from plotlyst.service.cache import acts_registry, characters_registry
+from plotlyst.service.cache import acts_registry, entities_registry
 from plotlyst.service.common import try_shutdown_to_apply_change
 from plotlyst.service.dir import select_new_project_directory
 from plotlyst.service.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
@@ -120,7 +120,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         if self.novel:
             acts_registry.set_novel(self.novel)
-            characters_registry.set_novel(self.novel)
+            entities_registry.set_novel(self.novel)
             dictionary.set_novel(self.novel)
             app_env.novel = self.novel
 
@@ -591,7 +591,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.novel = client.fetch_novel(novel.id)
         self.repo.set_persistence_enabled(not novel.tutorial)
         acts_registry.set_novel(self.novel)
-        characters_registry.set_novel(self.novel)
+        entities_registry.set_novel(self.novel)
         dictionary.set_novel(self.novel)
         app_env.novel = self.novel
 

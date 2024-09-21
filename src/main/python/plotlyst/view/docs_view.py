@@ -32,7 +32,7 @@ from plotlyst.core.client import json_client
 from plotlyst.core.domain import Novel, Document, DocumentType, FontSettings
 from plotlyst.env import app_env
 from plotlyst.events import SceneChangedEvent, SceneDeletedEvent
-from plotlyst.service.cache import characters_registry
+from plotlyst.service.cache import entities_registry
 from plotlyst.view._view import AbstractNovelView
 from plotlyst.view.common import ButtonPressResizeEventFilter
 from plotlyst.view.generated.notes_view_ui import Ui_NotesView
@@ -146,7 +146,7 @@ class DocumentsView(AbstractNovelView):
         self.ui.stackedEditor.setCurrentWidget(self.ui.docEditorPage)
         self.textEditor.setGrammarCheckEnabled(False)
 
-        char = characters_registry.character(str(self._current_doc.character_id))
+        char = entities_registry.character(str(self._current_doc.character_id))
         if char:
             self.textEditor.setText(self._current_doc.content, char.name, icon=avatars.avatar(char),
                                     title_read_only=True)

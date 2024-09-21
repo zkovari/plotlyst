@@ -31,7 +31,7 @@ from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RED_COLOR
 from plotlyst.core.domain import Scene, Novel, StoryElementType, Character, SceneFunction, Plot, ScenePlotReference
-from plotlyst.service.cache import characters_registry
+from plotlyst.service.cache import entities_registry
 from plotlyst.view.common import push_btn, tool_btn, action, shadow, label, fade_out_and_gc
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_white_menu
@@ -224,7 +224,7 @@ class CharacterPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
         shadow(self._textedit)
 
         if self.function.character_id:
-            character = characters_registry.character(str(self.function.character_id))
+            character = entities_registry.character(str(self.function.character_id))
             if character:
                 self._charSelector.setCharacter(character)
 
@@ -287,7 +287,7 @@ class SecondaryFunctionListItemWidget(ListItemWidget):
         self._icon.setHidden(True)
 
         if self._function.character_id:
-            character = characters_registry.character(str(self._function.character_id))
+            character = entities_registry.character(str(self._function.character_id))
             if character:
                 charSelector.setCharacter(character)
 
