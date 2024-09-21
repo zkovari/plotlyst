@@ -29,7 +29,7 @@ from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QDialog, QGridLayout,
     QLabel, QToolTip
 from overrides import overrides
 from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy, \
-    grid, flow, spacer, line, incr_icon, gc, translucent
+    grid, flow, spacer, line, incr_icon, gc, translucent, incr_font
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter, DragEventFilter, \
     DropEventFilter
 from qtmenu import MenuWidget
@@ -764,6 +764,8 @@ class TopicSelectorButton(QToolButton):
         self.setCheckable(True)
         pointy(self)
         incr_icon(self, 4)
+        if app_env.is_mac():
+            incr_font(self)
         self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         self.setStyleSheet('''
                     QToolButton {

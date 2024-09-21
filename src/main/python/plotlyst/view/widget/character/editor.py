@@ -46,6 +46,7 @@ from plotlyst.core.template import SelectionItem, enneagram_field, TemplateField
     promote_role, demote_role, Role, protagonist_role, antagonist_role, major_role, secondary_role, tertiary_role, \
     love_interest_role, supporter_role, adversary_role, contagonist_role, guide_role, confidant_role, sidekick_role, \
     foil_role, henchmen_role, love_style_field, disc_field
+from plotlyst.env import app_env
 from plotlyst.view.common import push_btn, action, tool_btn, label, wrap, restyle, \
     scroll_area, emoji_font
 from plotlyst.view.icons import IconRegistry, set_avatar
@@ -425,6 +426,8 @@ class MbtiSelectorWidget(PersonalitySelectorWidget):
     def _addItem(self, item: SelectionItem, index: int):
         btn = tool_btn(IconRegistry.from_name(item.icon, 'grey', item.icon_color), transparent_=True, checkable=True)
         btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        if app_env.is_mac():
+            incr_font(btn)
         btn.setText(item.text)
         btn.setIconSize(QSize(32, 32))
         btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.5, ignoreCheckedButton=True))
