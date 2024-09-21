@@ -28,7 +28,7 @@ from qthandy import vbox, incr_font, vspacer, line, clear_layout
 from plotlyst.common import recursive
 from plotlyst.core.domain import Novel, Location
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import fade_in
+from plotlyst.view.common import fade_in, insert_before_the_end
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.input import DecoratedTextEdit
@@ -104,7 +104,9 @@ class LocationsTreeView(ItemBasedTreeView):
     def addNewLocation(self):
         location = Location()
         node = self._initNode(location)
-        self._nodeLocations.addChild(node)
+        insert_before_the_end(self._centralWidget, node)
+        node.select()
+        self._selectionChanged(node, node.isSelected())
 
         self._novel.locations.append(location)
         self._save()
