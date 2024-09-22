@@ -33,7 +33,7 @@ from qthandy.filter import OpacityEventFilter, DragEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 from qtpy import sip
 
-from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR, PLOTLYST_TERTIARY_COLOR
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR, PLOTLYST_TERTIARY_COLOR, PLOTLYST_MAIN_COLOR
 from plotlyst.core.domain import Novel, WorldBuildingMap, WorldBuildingMarker, GraphicsItemType, Location
 from plotlyst.resources import resource_registry
 from plotlyst.service.cache import entities_registry
@@ -63,7 +63,7 @@ class PopupText(QFrame):
         self.lineTitle = QLineEdit()
         self.lineTitle.setProperty('transparent', True)
         self.lineTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.lineTitle.setPlaceholderText('Marker')
+        self.lineTitle.setPlaceholderText('Location')
         incr_font(self.lineTitle)
         bold(self.lineTitle)
         self.lineTitle.setReadOnly(True)
@@ -217,6 +217,8 @@ class MarkerItemToolbar(BaseItemToolbar):
         element: Location = MilieuSelectorPopup.popup(self._novel)
         if element and self._item:
             self._item.setLocation(element)
+            self._item.setSelected(False)
+            self._item.highlight()
             self._btnMilieuLink.setIcon(IconRegistry.world_building_icon(PLOTLYST_TERTIARY_COLOR))
 
     def _colorChanged(self, color: str):
@@ -264,6 +266,8 @@ class MarkerItem(QAbstractGraphicsShapeItem):
             self._iconType = QIcon()
 
         self.setPos(self._marker.x, self._marker.y)
+
+        self._checkRef()
 
     def marker(self) -> WorldBuildingMarker:
         return self._marker
@@ -355,11 +359,24 @@ class MarkerItem(QAbstractGraphicsShapeItem):
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         if not self.isSelected():
             self.setGraphicsEffect(None)
+            self._checkRef()
             self._typeSize = self.__default_type_size
             self.update()
 
             if self._marker.ref:
                 self.scene().hidePopupEvent()
+
+    def activate(self):
+        self._checkRef()
+
+    def highlight(self):
+        self.mapScene().highlightItem(self)
+
+    def _checkRef(self):
+        if not self._marker.ref:
+            effect = QGraphicsOpacityEffect()
+            effect.setOpacity(0.5)
+            self.setGraphicsEffect(effect)
 
     def _posChangedOnTimeout(self):
         self._posChangedTimer.stop()
@@ -385,9 +402,7 @@ class MarkerItem(QAbstractGraphicsShapeItem):
         else:
             self._typeSize = self.__default_type_size
             self.setGraphicsEffect(None)
-
-        if self._marker.description or self._marker.name:
-            self.scene().hidePopupEvent()
+            self._checkRef()
 
 
 # class EntityEditorWidget(QFrame):
@@ -601,6 +616,10 @@ class WorldBuildingMapScene(QGraphicsScene):
     def endAdditionMode(self):
         self._additionMode = False
 
+    def highlightItem(self, item: MarkerItem):
+        anim = qtanim.glow(item, duration=250, radius=50, loop=1, color=QColor(PLOTLYST_MAIN_COLOR), teardown=item.activate)
+        anim.setParent(self._animParent)
+
     def _addMarker(self, pos: QPointF):
         pos = pos - QPointF(MarkerItem.DEFAULT_MARKER_WIDTH / 2, MarkerItem.DEFAULT_MARKER_HEIGHT)
         marker = WorldBuildingMarker(pos.x(), pos.y())
@@ -609,7 +628,7 @@ class WorldBuildingMapScene(QGraphicsScene):
         self.addItem(markerItem)
         self.repo.update_world(self._novel)
 
-        anim = qtanim.fade_in(markerItem)
+        anim = qtanim.fade_in(markerItem, teardown=markerItem.activate)
         anim.setParent(self._animParent)
 
         self.itemAdded.emit()
