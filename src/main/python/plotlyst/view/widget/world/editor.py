@@ -1273,11 +1273,11 @@ class MilieuSelectorPopup(PopupDialog):
         self._selectedElement: Optional[Location] = None
 
         self.treeView = LocationsTreeView()
+        self.treeView.locationSelected.connect(self._selected)
         self.treeView.setNovel(novel, readOnly=True)
         self.treeView.setMinimumSize(300, 400)
         self.treeView.setMaximumSize(500, 500)
         sp(self.treeView).v_exp().h_exp()
-        self.treeView.locationSelected.connect(self._selected)
 
         self.btnSelect = push_btn(text='Select', properties=['confirm', 'positive'])
         self.btnSelect.clicked.connect(self.accept)
