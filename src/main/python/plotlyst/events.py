@@ -18,11 +18,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from dataclasses import dataclass
+from typing import Any
+from uuid import UUID
 
 from language_tool_python import LanguageTool
 
 from plotlyst.core.domain import Character, NovelDescriptor, Scene, SceneStage, Task, NovelSetting, \
-    StoryStructure, Novel, Plot, StoryBeat, Location
+    StoryStructure, Novel, Plot, StoryBeat, Location, WorldBuildingEntity
 from plotlyst.event.core import Event
 
 
@@ -49,6 +51,27 @@ class LocationAddedEvent(Event):
 @dataclass
 class LocationDeletedEvent(Event):
     location: Location
+
+
+@dataclass
+class WorldEntityAddedEvent(Event):
+    entity: WorldBuildingEntity
+
+
+@dataclass
+class ItemLinkedEvent(Event):
+    item: Any
+
+
+@dataclass
+class ItemUnlinkedEvent(Event):
+    item: Any
+    ref: UUID
+
+
+@dataclass
+class WorldEntityDeletedEvent(Event):
+    entity: WorldBuildingEntity
 
 
 @dataclass

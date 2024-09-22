@@ -17,7 +17,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional, Dict, Set
+from typing import Optional, Dict, Set, Any, List
+from uuid import UUID
 
 from overrides import overrides
 
@@ -26,7 +27,8 @@ from plotlyst.core.domain import Novel, Scene, StoryBeat, Character, Location
 from plotlyst.event.core import EventListener, Event
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import SceneChangedEvent, SceneDeletedEvent, SceneStoryBeatChangedEvent, \
-    CharacterChangedEvent, CharacterDeletedEvent, LocationAddedEvent, LocationDeletedEvent
+    CharacterChangedEvent, CharacterDeletedEvent, LocationAddedEvent, LocationDeletedEvent, WorldEntityAddedEvent, \
+    WorldEntityDeletedEvent, ItemLinkedEvent, ItemUnlinkedEvent
 
 
 class NovelActsRegistry(EventListener):
@@ -88,12 +90,14 @@ class EntitiesRegistry(EventListener):
         self.novel: Optional[Novel] = None
         self._characters: Dict[str, Character] = {}
         self._locations: Dict[str, Location] = {}
+        self._references: Dict[str, List[Any]] = {}
 
     def set_novel(self, novel: Novel):
         self.novel = novel
         dispatcher = event_dispatchers.instance(self.novel)
         dispatcher.register(self, CharacterChangedEvent, CharacterDeletedEvent, LocationAddedEvent,
-                            LocationDeletedEvent)
+                            LocationDeletedEvent, WorldEntityAddedEvent, WorldEntityDeletedEvent, ItemLinkedEvent,
+                            ItemUnlinkedEvent)
         self.refresh()
 
     def character(self, s_id: str) -> Optional[Character]:
@@ -109,12 +113,29 @@ class EntitiesRegistry(EventListener):
 
         if isinstance(event, (CharacterChangedEvent, CharacterDeletedEvent)):
             self._refreshCharacters()
-        elif isinstance(event, (LocationAddedEvent, LocationDeletedEvent)):
+        elif isinstance(event, LocationAddedEvent):
             self._refreshLocations()
+        elif isinstance(event, LocationDeletedEvent):
+            self._refreshLocations()
+            self._references.pop(str(event.location.id), None)
+        elif isinstance(event, WorldEntityAddedEvent):
+            if event.entity.ref:
+                self.__addReference(event.entity.ref, event.entity)
+        elif isinstance(event, WorldEntityDeletedEvent):
+            if event.entity.ref:
+                self.__removeReference(event.entity, event.entity.ref)
+        elif isinstance(event, ItemLinkedEvent):
+            self.__addReference(event.item.ref, event.item)
+        elif isinstance(event, ItemUnlinkedEvent):
+            self.__removeReference(event.item, event.ref)
 
     def refresh(self):
         self._refreshCharacters()
         self._refreshLocations()
+        self._refreshReferences()
+
+    def refs(self, item: Any) -> List[Any]:
+        return self._references.get(str(item.id), [])
 
     def _refreshCharacters(self):
         self._characters.clear()
@@ -122,7 +143,7 @@ class EntitiesRegistry(EventListener):
             self._characters[str(character.id)] = character
 
     def _refreshLocations(self):
-        def addChild(parent: Location, child: Location):
+        def addChild(_: Location, child: Location):
             self._locations[str(child.id)] = child
 
         self._locations.clear()
@@ -130,5 +151,32 @@ class EntitiesRegistry(EventListener):
             self._locations[str(location.id)] = location
             recursive(location, lambda parent: parent.children, addChild)
 
+    def _refreshReferences(self):
+        def addChild(_: Any, child: Any):
+            if child.ref:
+                self.__addReference(child.ref, child)
+
+        for entity in self.novel.world.root_entity.children:
+            if entity.ref:
+                self.__addReference(entity.ref, entity)
+            recursive(entity, lambda parent: parent.children, addChild)
+
+    def __addReference(self, id: UUID, ref: Any):
+        if str(id) not in self._references.keys():
+            self._references[str(id)] = []
+        self._references[str(id)].append(ref)
+
+    def __removeReference(self, source: Any, id: UUID):
+        self._references[str(id)].remove(source)
+
 
 entities_registry = EntitiesRegistry()
+
+
+def try_location(item) -> Optional[Location]:
+    if item.ref:
+        location = entities_registry.location(str(item.ref))
+        if location:
+            return location
+        else:
+            item.ref = None

@@ -26,9 +26,10 @@ from overrides import overrides
 from qthandy import vbox, incr_font, vspacer, line, clear_layout
 
 from plotlyst.common import recursive
-from plotlyst.core.domain import Novel, Location
+from plotlyst.core.domain import Novel, Location, WorldBuildingEntity
 from plotlyst.event.core import emit_event
 from plotlyst.events import LocationAddedEvent, LocationDeletedEvent
+from plotlyst.service.cache import entities_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import fade_in, insert_before_the_end
 from plotlyst.view.icons import IconRegistry
@@ -76,6 +77,8 @@ class LocationsTreeView(ItemBasedTreeView):
     LOCATION_ENTITY_MIMETYPE = 'application/milieu-location'
     locationSelected = pyqtSignal(Location)
     locationDeleted = pyqtSignal(Location)
+    updateWorldBuildingEntity = pyqtSignal(WorldBuildingEntity)
+    unlinkWorldBuildingEntity = pyqtSignal(WorldBuildingEntity)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -107,6 +110,13 @@ class LocationsTreeView(ItemBasedTreeView):
             node = self._nodes[self._novel.locations[0]]
             node.select()
             self._selectionChanged(node, True)
+
+    @overrides
+    def updateItem(self, location: Location):
+        super().updateItem(location)
+        for ref in entities_registry.refs(location):
+            if isinstance(ref, WorldBuildingEntity):
+                self.updateWorldBuildingEntity.emit(ref)
 
     def addNewLocation(self):
         location = Location()
@@ -145,6 +155,10 @@ class LocationsTreeView(ItemBasedTreeView):
 
         self._deleteNode(node)
         self.locationDeleted.emit(loc)
+
+        for ref in entities_registry.refs(loc):
+            if isinstance(ref, WorldBuildingEntity):
+                self.unlinkWorldBuildingEntity.emit(ref)
 
         self._save()
         emit_event(self._novel, LocationDeletedEvent(self, loc))

@@ -249,7 +249,7 @@
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>4</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="pageEntity">
       <property name="bg-image" stdset="0">
@@ -460,8 +460,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>108</width>
-                <height>122</height>
+                <width>402</width>
+                <height>589</height>
                </rect>
               </property>
               <property name="sizePolicy">
@@ -538,7 +538,11 @@
                       <number>10</number>
                      </property>
                      <item>
-                      <widget class="QLineEdit" name="lineName"/>
+                      <widget class="QLineEdit" name="lineName">
+                       <property name="placeholderText">
+                        <string>New entity</string>
+                       </property>
+                      </widget>
                      </item>
                     </layout>
                    </widget>
@@ -917,7 +921,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>298</width>
+                <width>277</width>
                 <height>550</height>
                </rect>
               </property>
@@ -972,7 +976,7 @@
                  <property name="darker-bg" stdset="0">
                   <bool>true</bool>
                  </property>
-                 <layout class="QVBoxLayout" name="verticalLayout_10" stretch="">
+                 <layout class="QVBoxLayout" name="verticalLayout_10">
                   <property name="spacing">
                    <number>5</number>
                   </property>

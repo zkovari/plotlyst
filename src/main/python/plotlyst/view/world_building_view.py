@@ -31,6 +31,7 @@ from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, WorldBuildingEntity
 from plotlyst.env import app_env
 from plotlyst.resources import resource_registry
+from plotlyst.service.cache import try_location
 from plotlyst.settings import settings
 from plotlyst.view._view import AbstractNovelView
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, shadow, \
@@ -107,6 +108,8 @@ class WorldBuildingView(AbstractNovelView):
         self.locationEditor = LocationEditor(self.novel)
         self.ui.treeLocations.locationSelected.connect(self.locationEditor.setLocation)
         self.ui.treeLocations.locationDeleted.connect(self.locationEditor.locationDeletedEvent)
+        self.ui.treeLocations.updateWorldBuildingEntity.connect(self._update_world_building_entity)
+        self.ui.treeLocations.unlinkWorldBuildingEntity.connect(self._unlink_world_building_entity)
         self.ui.treeLocations.setNovel(self.novel)
         self.locationEditor.locationNameChanged.connect(self.ui.treeLocations.updateItem)
         self.ui.btnAddLocation.clicked.connect(self.ui.treeLocations.addNewLocation)
@@ -127,7 +130,7 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.btnSettings.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnSettings))
         self.ui.btnSettings.installEventFilter(OpacityEventFilter(self.ui.btnSettings, 0.9, leaveOpacity=0.7))
         shadow(self.ui.wdgWorldContainer)
-        self._additionMenu = EntityAdditionMenu(self.ui.btnNew)
+        self._additionMenu = EntityAdditionMenu(self.novel, self.ui.btnNew)
         self._additionMenu.entityTriggered.connect(self.ui.treeWorld.addEntity)
         self.ui.iconReaderMode.setIcon(IconRegistry.from_name('fa5s.eye'))
 
@@ -163,6 +166,7 @@ class WorldBuildingView(AbstractNovelView):
                                                    selection_text_color=self._palette.primary_color))
         self.ui.treeWorld.setNovel(self.novel)
         self.ui.treeWorld.entitySelected.connect(self._selection_changed)
+        self.ui.treeWorld.milieuLinked.connect(self._milieu_linked)
         self.ui.treeWorld.selectRoot()
 
         self.map = WorldBuildingMapView(self.novel)
@@ -182,8 +186,6 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.readerModeToggle.setHidden(True)
         self.ui.btnHistoryView.setHidden(True)
 
-        # self.ui.btnTreeToggle.setChecked(True)
-
     @overrides
     def refresh(self):
         pass
@@ -191,8 +193,21 @@ class WorldBuildingView(AbstractNovelView):
     def _selection_changed(self, entity: WorldBuildingEntity):
         self._entity = entity
         self._wdgSettings.setEntity(self._entity)
-        self.ui.lineName.setText(self._entity.name)
+        self._update_name()
         self._editor.setEntity(self._entity)
+
+    def _update_name(self):
+        if self._entity.ref:
+            location = try_location(self._entity)
+            if location:
+                self.ui.lineName.setText(location.name)
+                self.ui.lineName.setReadOnly(True)
+            else:
+                self.ui.treeWorld.updateEntity(self._entity)
+                self.ui.lineName.setReadOnly(False)
+        else:
+            self.ui.lineName.setText(self._entity.name)
+            self.ui.lineName.setReadOnly(False)
 
     def _name_edited(self, name: str):
         self._entity.name = name
@@ -217,3 +232,20 @@ class WorldBuildingView(AbstractNovelView):
 
             self.repo.update_world(self.novel)
             self._editor.layoutChangedEvent()
+
+    def _update_world_building_entity(self, entity: WorldBuildingEntity):
+        self.ui.treeWorld.updateEntity(entity)
+        if self._entity is entity:
+            self._update_name()
+
+    def _milieu_linked(self, entity: WorldBuildingEntity):
+        if self._entity is entity:
+            self._update_name()
+
+    def _unlink_world_building_entity(self, entity: WorldBuildingEntity):
+        entity.ref = None
+        self.ui.treeWorld.updateEntity(entity)
+        if self._entity is entity:
+            self._update_name()
+
+        self.repo.update_world(self.novel)

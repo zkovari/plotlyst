@@ -57,7 +57,7 @@ class BaseTreeWidget(QWidget):
     iconChanged = pyqtSignal()
     titleChanged = pyqtSignal()
 
-    def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None, settings: Optional[TreeSettings] = None):
+    def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None, settings: Optional[TreeSettings] = None, readOnly: bool = False):
         super(BaseTreeWidget, self).__init__(parent)
         self._menuEnabled: bool = True
         self._plusEnabled: bool = True
@@ -99,7 +99,8 @@ class BaseTreeWidget(QWidget):
         self._actionChangeIcon = action('Change icon', IconRegistry.icons_icon(), self._changeIcon)
         self._actionChangeTitle = action('Rename', IconRegistry.edit_icon(), self._changeTitle)
         self._actionDelete = action('Delete', IconRegistry.trash_can_icon(), self.deleted.emit)
-        self._initMenu()
+        if not readOnly:
+            self._initMenu()
 
         self._wdgTitle.layout().addWidget(self._icon)
         self._wdgTitle.layout().addWidget(self._lblTitle)
@@ -215,7 +216,7 @@ class ContainerNode(BaseTreeWidget):
 
     def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None, settings: Optional[TreeSettings] = None,
                  readOnly: bool = False):
-        super(ContainerNode, self).__init__(title, icon, parent, settings)
+        super(ContainerNode, self).__init__(title, icon, parent, settings, readOnly)
         vbox(self, 0, 0)
 
         self._container = QWidget(self)

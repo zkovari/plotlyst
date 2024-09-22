@@ -18,89 +18,92 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Optional, Dict, Set
+from typing import Optional, Dict, Set, List
 
 from PyQt6.QtCore import pyqtSignal, QMimeData, Qt, QPointF, QTimer
-from qthandy import vspacer, clear_layout, transparent, translucent, gc, margins
+from overrides import overrides
+from qthandy import vspacer, clear_layout, transparent, translucent, gc, margins, busy
 from qthandy.filter import DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.common import recursive
-from plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityType, \
-    WorldBuildingEntityElement, WorldBuildingEntityElementType
+from plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityElement, WorldBuildingEntityElementType, \
+    Location
+from plotlyst.event.core import emit_event
+from plotlyst.events import WorldEntityAddedEvent, WorldEntityDeletedEvent, ItemLinkedEvent, ItemUnlinkedEvent
+from plotlyst.service.cache import try_location
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import action, fade_out_and_gc
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_white_menu
+from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
+from plotlyst.view.widget.world.editor import MilieuSelectorPopup
 
 
 class EntityAdditionMenu(MenuWidget):
     entityTriggered = pyqtSignal(WorldBuildingEntity)
 
-    def __init__(self, parent=None):
+    def __init__(self, novel: Novel, parent=None):
         super(EntityAdditionMenu, self).__init__(parent)
+        self._novel = novel
         # self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
-        self.addAction(action('Entity', IconRegistry.world_building_icon(),
-                              slot=lambda: self._triggered(WorldBuildingEntityType.ABSTRACT),
-                              tooltip='Any physical, human, or abstract entity in the world, e.g., location, kingdom, magic, God, etc.'))
-        # self.addSeparator()
+        self.addAction(action('Article', IconRegistry.from_name('ri.quill-pen-fill'),
+                              slot=self._entityTriggered,
+                              tooltip='Write an article about any physical, human, or abstract entity in the world, e.g., kingdom, magic, religion, etc.'))
+        self.addSeparator()
+        self.addAction(action('Link milieu', IconRegistry.world_building_icon(), slot=self._linkToMilieu,
+                              tooltip="Link a milieu element"))
 
-        # submenu = MenuWidget()
-        # submenu.setTitle('Link')
-        # submenu.setIcon(IconRegistry.from_name('fa5s.link'))
-        # submenu.setDisabled(True)
-        # submenu.addAction(action('Location', IconRegistry.location_icon()))
-        # submenu.addAction(action('Social group', IconRegistry.group_icon()))
-        # submenu.addAction(action('Character', IconRegistry.character_icon()))
-        #
-        # self.addMenu(submenu)
         apply_white_menu(self)
 
-    def _triggered(self, wdType: WorldBuildingEntityType):
-        if wdType == WorldBuildingEntityType.SETTING:
-            name = 'New location'
-            icon_name = 'fa5s.map-pin'
-        elif wdType == WorldBuildingEntityType.GROUP:
-            name = 'New group'
-            icon_name = 'mdi.account-group'
-        elif wdType == WorldBuildingEntityType.ITEM:
-            name = 'New item'
-            icon_name = ''
-        elif wdType == WorldBuildingEntityType.CONTAINER:
-            name = 'Container'
-            icon_name = ''
-        else:
-            name = 'New entity'
-            icon_name = ''
+    def _entityTriggered(self):
+        entity = WorldBuildingEntity('New entity', elements=self.__newElements())
+        self.entityTriggered.emit(entity)
 
+    @busy
+    def _linkToMilieu(self, _):
+        element: Location = MilieuSelectorPopup.popup(self._novel)
+        if element:
+            entity = WorldBuildingEntity('', elements=self.__newElements(), ref=element.id)
+            self.entityTriggered.emit(entity)
+
+    def __newElements(self) -> List[WorldBuildingEntityElement]:
         main_section = WorldBuildingEntityElement(WorldBuildingEntityElementType.Main_Section)
         main_section.blocks.append(WorldBuildingEntityElement(WorldBuildingEntityElementType.Header))
         main_section.blocks.append(WorldBuildingEntityElement(WorldBuildingEntityElementType.Text))
-        entity = WorldBuildingEntity(name, icon=icon_name, type=wdType,
-                                     elements=[main_section])
-
-        self.entityTriggered.emit(entity)
+        return [main_section]
 
 
 class EntityNode(ContainerNode):
     addEntity = pyqtSignal(WorldBuildingEntity)
+    milieuLinked = pyqtSignal(Location)
 
-    def __init__(self, entity: WorldBuildingEntity, parent=None, settings: Optional[TreeSettings] = None):
+    def __init__(self, novel: Novel, entity: WorldBuildingEntity, parent=None, settings: Optional[TreeSettings] = None):
+        self._actionLinkMilieu = action('Link milieu', IconRegistry.world_building_icon(), slot=self._linkToMilieu,
+                                        tooltip="Link a milieu element")
         super(EntityNode, self).__init__(entity.name, parent=parent, settings=settings)
+
+        self._novel = novel
         self._entity = entity
         self.setPlusButtonEnabled(True)
         self.setTranslucentIconEnabled(True)
-        self._additionMenu = EntityAdditionMenu(self._btnAdd)
+        self._additionMenu = EntityAdditionMenu(self._novel, self._btnAdd)
         self._additionMenu.entityTriggered.connect(self.addEntity.emit)
         self.setPlusMenu(self._additionMenu)
+
         self.refresh()
 
     def entity(self) -> WorldBuildingEntity:
         return self._entity
 
     def refresh(self):
-        self._lblTitle.setText(self._entity.name)
+        if self._entity.ref:
+            location = try_location(self._entity)
+            if location:
+                self._lblTitle.setText(location.name)
+        else:
+            self._lblTitle.setText(self._entity.name if self._entity.name else 'New entity')
 
         if self._entity.icon:
             self._icon.setIcon(IconRegistry.from_name(self._entity.icon, self._entity.icon_color))
@@ -108,11 +111,23 @@ class EntityNode(ContainerNode):
             self._icon.setIcon(IconRegistry.from_name('msc.debug-stackframe-dot'))
         self._icon.setVisible(True)
 
+    @overrides
+    def _initMenuActions(self, menu: MenuWidget):
+        menu.addAction(self._actionLinkMilieu)
+        menu.addSeparator()
+        menu.addAction(self._actionDelete)
+
+    @busy
+    def _linkToMilieu(self, _):
+        element: Location = MilieuSelectorPopup.popup(self._novel)
+        if element:
+            self.milieuLinked.emit(element)
+
 
 class RootNode(EntityNode):
 
-    def __init__(self, entity: WorldBuildingEntity, parent=None, settings: Optional[TreeSettings] = None):
-        super(RootNode, self).__init__(entity, parent=parent, settings=settings)
+    def __init__(self, novel: Novel, entity: WorldBuildingEntity, parent=None, settings: Optional[TreeSettings] = None):
+        super(RootNode, self).__init__(novel, entity, parent=parent, settings=settings)
         self.setMenuEnabled(False)
         self.setPlusButtonEnabled(False)
 
@@ -120,6 +135,7 @@ class RootNode(EntityNode):
 class WorldBuildingTreeView(TreeView):
     WORLD_ENTITY_MIMETYPE = 'application/world-entity'
     entitySelected = pyqtSignal(WorldBuildingEntity)
+    milieuLinked = pyqtSignal(WorldBuildingEntity)
 
     def __init__(self, parent=None, settings: Optional[TreeSettings] = None):
         super(WorldBuildingTreeView, self).__init__(parent)
@@ -146,7 +162,7 @@ class WorldBuildingTreeView(TreeView):
 
     def setNovel(self, novel: Novel):
         self._novel = novel
-        self._root = RootNode(self._novel.world.root_entity, settings=self._settings)
+        self._root = RootNode(self._novel, self._novel.world.root_entity, settings=self._settings)
         self._root.selectionChanged.connect(partial(self._entitySelectionChanged, self._root))
         self.refresh()
 
@@ -155,6 +171,8 @@ class WorldBuildingTreeView(TreeView):
         self._root.addChild(wdg)
         self._novel.world.root_entity.children.append(entity)
         self.repo.update_world(self._novel)
+
+        emit_event(self._novel, WorldEntityAddedEvent(self, entity))
 
     def refresh(self):
         def addChildWdg(parent: WorldBuildingEntity, child: WorldBuildingEntity):
@@ -181,6 +199,16 @@ class WorldBuildingTreeView(TreeView):
             self._entities[entity].deselect()
         self._selectedEntities.clear()
 
+    def _linkMilieu(self, node: EntityNode, location: Location):
+        entity = node.entity()
+        if entity.ref:
+            emit_event(self._novel, ItemUnlinkedEvent(self, entity, entity.ref))
+
+        entity.ref = location.id
+        node.refresh()
+        self.milieuLinked.emit(entity)
+        emit_event(self._novel, ItemLinkedEvent(self, entity))
+
     def _entitySelectionChanged(self, node: EntityNode, selected: bool):
         if selected:
             self.clearSelection()
@@ -195,8 +223,22 @@ class WorldBuildingTreeView(TreeView):
         parent.entity().children.append(entity)
         self.repo.update_world(self._novel)
 
+        emit_event(self._novel, WorldEntityAddedEvent(self, entity))
+
     def _removeEntity(self, node: EntityNode):
         entity = node.entity()
+
+        name = entity.name
+        if entity.ref:
+            location = try_location(entity)
+            if location:
+                name = location.name
+
+        title = f'Are you sure you want to delete the entity "{name if name else "Untitled"}"?'
+        msg = 'This action cannot be undone, and the article and all its content will be lost.'
+        if not confirmed(msg, title):
+            return
+
         self.clearSelection()
         self.selectRoot()
 
@@ -204,9 +246,11 @@ class WorldBuildingTreeView(TreeView):
         fade_out_and_gc(node.parent(), node)
         self.repo.update_world(self._novel)
 
+        emit_event(self._novel, WorldEntityDeletedEvent(self, entity))
+
     def _dragStarted(self, wdg: EntityNode):
         wdg.setHidden(True)
-        self._dummyWdg = EntityNode(wdg.entity(), settings=self._settings)
+        self._dummyWdg = EntityNode(self._novel, wdg.entity(), settings=self._settings)
         self._dummyWdg.setPlusButtonEnabled(False)
         self._dummyWdg.setMenuEnabled(False)
         translucent(self._dummyWdg)
@@ -273,8 +317,9 @@ class WorldBuildingTreeView(TreeView):
         parent.entity().children.remove(entity)
 
     def __initEntityWidget(self, entity: WorldBuildingEntity) -> EntityNode:
-        node = EntityNode(entity, settings=self._settings)
+        node = EntityNode(self._novel, entity, settings=self._settings)
         node.selectionChanged.connect(partial(self._entitySelectionChanged, node))
+        node.milieuLinked.connect(partial(self._linkMilieu, node))
         node.addEntity.connect(partial(self._addEntity, node))
         node.deleted.connect(partial(self._removeEntity, node))
 

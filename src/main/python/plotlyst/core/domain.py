@@ -2112,6 +2112,7 @@ class WorldBuildingEntity:
     side_elements: List[WorldBuildingEntityElement] = field(default_factory=list,
                                                             metadata=config(exclude=exclude_if_empty))
     side_visible: bool = field(default=True, metadata=config(exclude=exclude_if_true))
+    ref: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
     @overrides
     def __eq__(self, other: 'WorldBuildingEntity'):
