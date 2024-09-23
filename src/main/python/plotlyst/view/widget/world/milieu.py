@@ -300,6 +300,25 @@ class LocationAttributeSelectorMenu(MenuWidget):
         self.addWidget(self.settingTaste)
         self.addWidget(self.settingTexture)
 
+    def reset(self):
+        self.settingSight.setChecked(False)
+        self.settingSound.setChecked(False)
+        self.settingSmell.setChecked(False)
+        self.settingTaste.setChecked(False)
+        self.settingTexture.setChecked(False)
+
+    def setTypeChecked(self, attrType: LocationSensorType, checked: bool):
+        if attrType == LocationSensorType.SIGHT:
+            self.settingSight.setChecked(checked)
+        elif attrType == LocationSensorType.SOUND:
+            self.settingSound.setChecked(checked)
+        elif attrType == LocationSensorType.SMELL:
+            self.settingSmell.setChecked(checked)
+        elif attrType == LocationSensorType.TASTE:
+            self.settingTaste.setChecked(checked)
+        elif attrType == LocationSensorType.TEXTURE:
+            self.settingTexture.setChecked(checked)
+
 
 class LocationEditor(QWidget):
     locationNameChanged = pyqtSignal(Location)
@@ -369,6 +388,8 @@ class LocationEditor(QWidget):
 
     def setLocation(self, location: Location):
         clear_layout(self.wdgAttributes)
+        self._attributesSelectorMenu.reset()
+
         self.setVisible(True)
         self._location = location
         self.lineEditName.setText(self._location.name)
@@ -376,7 +397,9 @@ class LocationEditor(QWidget):
 
         for k, v in self._location.sensory_detail.perceptions.items():
             if v.enabled:
-                self._addAttribute(LocationSensorType[k], v)
+                attrType = LocationSensorType[k]
+                self._addAttribute(attrType, v)
+                self._attributesSelectorMenu.setTypeChecked(attrType, True)
 
         self.wdgDayNightHeader.setVisible(self._location.sensory_detail.night_mode)
         self._attributesSelectorMenu.toggleDayNight.setChecked(self._location.sensory_detail.night_mode)
