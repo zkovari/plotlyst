@@ -17,14 +17,17 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from enum import Enum
 from functools import partial
 from typing import Optional, List
 
+import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import QWidget, QLineEdit
 from overrides import overrides
 from qthandy import vbox, incr_font, vspacer, line, clear_layout, incr_icon, decr_icon
-from qthandy.filter import OpacityEventFilter
+from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter
+from qtmenu import MenuWidget
 
 from plotlyst.common import recursive
 from plotlyst.core.domain import Novel, Location, WorldBuildingEntity
@@ -36,8 +39,10 @@ from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import fade_in, insert_before_the_end, DelayedSignalSlotConnector, push_btn, tool_btn
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
+from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.input import DecoratedTextEdit
+from plotlyst.view.widget.settings import SettingBaseWidget
 from plotlyst.view.widget.tree import TreeSettings, ItemBasedTreeView, ItemBasedNode
 
 
@@ -207,6 +212,77 @@ class LocationsTreeView(ItemBasedTreeView):
         return node
 
 
+class LocationAttributeType(Enum):
+    SIGHT = 0
+    SOUND = 1
+    SMELL = 2
+    TASTE = 3
+    TEXTURE = 4
+
+    def display_name(self) -> str:
+        return self.name.lower().capitalize()
+
+    def description(self) -> str:
+        if self == LocationAttributeType.SIGHT:
+            return 'What are the most significant visual details in this location?'
+        elif self == LocationAttributeType.SOUND:
+            return 'What ambient or distinct sounds can be heard here?'
+        elif self == LocationAttributeType.SMELL:
+            return 'What scents or odors define the atmosphere of this place?'
+        elif self == LocationAttributeType.TASTE:
+            return 'Is there any taste in the air or through local cuisine?'
+        elif self == LocationAttributeType.TEXTURE:
+            return 'What textures can be felt when interacting with surfaces here?'
+
+    def icon(self) -> str:
+        if self == LocationAttributeType.SIGHT:
+            return 'fa5.eye'
+        elif self == LocationAttributeType.SOUND:
+            return 'fa5s.music'
+        elif self == LocationAttributeType.SMELL:
+            return 'fa5s.air-freshener'
+        elif self == LocationAttributeType.TASTE:
+            return 'mdi.food-drumstick'
+        elif self == LocationAttributeType.TEXTURE:
+            return 'mdi.hand'
+
+
+class LocationAttributeSetting(SettingBaseWidget):
+    def __init__(self, attrType: LocationAttributeType, parent=None):
+        super().__init__(parent)
+        self._attrType = attrType
+        self._title.setText(attrType.display_name())
+        self._title.setIcon(IconRegistry.from_name(attrType.icon()))
+        self._description.setText(attrType.description())
+
+        self._title.installEventFilter(DisabledClickEventFilter(self._wdgTitle, lambda: qtanim.shake(self._toggle)))
+        self._wdgTitle.installEventFilter(DisabledClickEventFilter(self._wdgTitle, lambda: qtanim.shake(self._toggle)))
+
+    @overrides
+    def _clicked(self, toggled: bool):
+        pass
+
+
+class LocationAttributeSelectorMenu(MenuWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        apply_white_menu(self)
+
+        self.settingSight = LocationAttributeSetting(LocationAttributeType.SIGHT)
+        self.settingSound = LocationAttributeSetting(LocationAttributeType.SOUND)
+        self.settingSmell = LocationAttributeSetting(LocationAttributeType.SMELL)
+        self.settingTaste = LocationAttributeSetting(LocationAttributeType.TASTE)
+        self.settingTaste.setChecked(False)
+        self.settingTexture = LocationAttributeSetting(LocationAttributeType.TEXTURE)
+        self.settingTexture.setChecked(False)
+
+        self.addWidget(self.settingSight)
+        self.addWidget(self.settingSound)
+        self.addWidget(self.settingSmell)
+        self.addWidget(self.settingTaste)
+        self.addWidget(self.settingTexture)
+
+
 class LocationEditor(QWidget):
     locationNameChanged = pyqtSignal(Location)
 
@@ -238,7 +314,10 @@ class LocationEditor(QWidget):
         incr_font(self.btnAttributes, 2)
         decr_icon(self.btnAttributesEditor)
         self.btnAttributes.installEventFilter(OpacityEventFilter(self.btnAttributes, leaveOpacity=0.7))
-        # self.btnAttributes.clicked.connect(lambda: self._attributesSelectorMenu.exec())
+
+        self._attributesSelectorMenu = LocationAttributeSelectorMenu(self.btnAttributesEditor)
+        # self._attributesSelectorMenu.principleToggled.connect(self._principleToggled)
+        self.btnAttributes.clicked.connect(lambda: self._attributesSelectorMenu.exec())
 
         vbox(self)
         self.layout().addWidget(self.lineEditName)
