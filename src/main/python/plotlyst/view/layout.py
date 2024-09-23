@@ -19,15 +19,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from PyQt6.QtWidgets import QWidget
-from qthandy import hbox, vbox
+from qthandy import hbox, vbox, margins
 
 
-def group(*widgets, vertical: bool = True, margin: int = 2, spacing: int = 3, parent=None) -> QWidget:
+def group(*widgets, vertical: bool = True, margin: int = 2, spacing: int = 3, margin_top: int = 0,
+          parent=None) -> QWidget:
     container = QWidget(parent)
     if vertical:
         hbox(container, margin, spacing)
     else:
         vbox(container, margin, spacing)
+
+    if margin_top:
+        margins(container, top=margin_top)
 
     for w in widgets:
         container.layout().addWidget(w)

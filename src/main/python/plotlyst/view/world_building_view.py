@@ -106,6 +106,8 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.wdgMilieuRightBar.setHidden(True)
 
         self.locationEditor = LocationEditor(self.novel)
+        self.ui.wdgMilieuCenterEditor.layout().insertWidget(0, self.locationEditor)
+
         self.ui.treeLocations.locationSelected.connect(self.locationEditor.setLocation)
         self.ui.treeLocations.locationDeleted.connect(self.locationEditor.locationDeletedEvent)
         self.ui.treeLocations.updateWorldBuildingEntity.connect(self._update_world_building_entity)
@@ -113,7 +115,6 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.treeLocations.setNovel(self.novel)
         self.locationEditor.locationNameChanged.connect(self.ui.treeLocations.updateItem)
         self.ui.btnAddLocation.clicked.connect(self.ui.treeLocations.addNewLocation)
-        self.ui.wdgMilieuCenterEditor.layout().insertWidget(0, self.locationEditor)
         self.ui.splitterMilieuNav.setSizes([175, 500])
 
         width = settings.worldbuilding_editor_max_width()

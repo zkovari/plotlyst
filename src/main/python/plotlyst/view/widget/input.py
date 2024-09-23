@@ -1380,9 +1380,10 @@ class SearchField(QWidget):
         self.layout().addWidget(self.lineSearch)
 
 
-class DecoratedTextEdit(QTextEdit):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+class DecoratedTextEdit(AutoAdjustableTextEdit):
+    def __init__(self, parent=None, height: int = 75):
+        super().__init__(parent, height=height)
+        self._indentSize: int = 25
         self._has_text = False
         self._updateStylesheet()
         self.textChanged.connect(self._onTextChanged)
@@ -1394,10 +1395,10 @@ class DecoratedTextEdit(QTextEdit):
         self._decoration.setToolTip(tooltip)
         self._decoration.setFont(emoji_font())
         self._decoration.setText(emoji.emojize(name))
-        self._decoration.setGeometry(3, 10, 20, 20)
+        self._decoration.setGeometry(2, 4, self._indentSize, self._indentSize)
 
     def _updateStylesheet(self):
-        self.setStyleSheet("QTextEdit {padding-left: 20px;}")
+        self.setStyleSheet(f"QTextEdit {{padding-left: {self._indentSize}px;}}")
 
     def _indent(self, value: int):
         cursor = self.textCursor()
@@ -1412,7 +1413,7 @@ class DecoratedTextEdit(QTextEdit):
         if self.toPlainText():
             if not self._has_text:
                 self.setStyleSheet('')
-                self._indent(20)
+                self._indent(self._indentSize)
                 self._has_text = True
         elif self._has_text:
             self._indent(0)
