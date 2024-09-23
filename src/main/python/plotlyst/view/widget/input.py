@@ -1381,8 +1381,8 @@ class SearchField(QWidget):
 
 
 class DecoratedTextEdit(AutoAdjustableTextEdit):
-    def __init__(self, parent=None):
-        super().__init__(parent, height=75)
+    def __init__(self, parent=None, height: int = 75):
+        super().__init__(parent, height=height)
         self._indentSize: int = 25
         self._has_text = False
         self._updateStylesheet()

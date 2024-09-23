@@ -398,7 +398,7 @@ class LocationEditor(QWidget):
         self.layout().addWidget(self.lineEditName)
         self.layout().addWidget(line())
         self.layout().addWidget(self.textSummary)
-        self.layout().addWidget(group(self.btnAttributes, self.btnAttributesEditor, margin=0, spacing=0),
+        self.layout().addWidget(group(self.btnAttributes, self.btnAttributesEditor, margin=0, spacing=0, margin_top=15),
                                 alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(self.wdgDayNightHeader)
         self.layout().addWidget(self.wdgAttributes)
