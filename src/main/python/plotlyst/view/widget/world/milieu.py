@@ -25,7 +25,7 @@ import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import QWidget, QLineEdit, QGraphicsColorizeEffect
 from overrides import overrides
-from qthandy import vbox, incr_font, vspacer, line, clear_layout, incr_icon, decr_icon, margins, spacer, hbox, grid
+from qthandy import vbox, incr_font, vspacer, line, clear_layout, incr_icon, decr_icon, margins, spacer, hbox, grid, sp
 from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
@@ -36,7 +36,8 @@ from plotlyst.events import LocationAddedEvent, LocationDeletedEvent, \
     RequestMilieuDictionaryResetEvent
 from plotlyst.service.cache import entities_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import fade_in, insert_before_the_end, DelayedSignalSlotConnector, push_btn, tool_btn, label
+from plotlyst.view.common import fade_in, insert_before_the_end, DelayedSignalSlotConnector, push_btn, tool_btn, label, \
+    fade_out_and_gc
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
@@ -249,8 +250,22 @@ class LocationAttributeType(Enum):
         elif self == LocationAttributeType.TEXTURE:
             return 'mdi.hand'
 
+    def emoji(self) -> str:
+        if self == LocationAttributeType.SIGHT:
+            return ':eyes:'
+        elif self == LocationAttributeType.SOUND:
+            return ':musical_note:'
+        elif self == LocationAttributeType.SMELL:
+            return ':nose:'
+        elif self == LocationAttributeType.TASTE:
+            return ':tongue:'
+        elif self == LocationAttributeType.TEXTURE:
+            return ':hand_with_fingers_splayed:'
+
 
 class LocationAttributeSetting(SettingBaseWidget):
+    settingChanged = pyqtSignal(LocationAttributeType, bool)
+
     def __init__(self, attrType: LocationAttributeType, parent=None):
         super().__init__(parent)
         self._attrType = attrType
@@ -266,10 +281,26 @@ class LocationAttributeSetting(SettingBaseWidget):
 
     @overrides
     def _clicked(self, toggled: bool):
-        pass
+        self.settingChanged.emit(self._attrType, toggled)
+
+
+class LocationAttributeTextEdit(DecoratedTextEdit):
+    def __init__(self, attrType: LocationAttributeType, parent=None):
+        super().__init__(parent)
+        self.setProperty('rounded', True)
+        self.setProperty('white-bg', True)
+        desc = attrType.description()
+        self.setPlaceholderText(desc)
+        self.setMaximumWidth(600)
+        self.setToolTip(desc)
+        self.setEmoji(attrType.emoji(), desc)
+
+        sp(self).v_exp()
 
 
 class LocationAttributeSelectorMenu(MenuWidget):
+    settingChanged = pyqtSignal(LocationAttributeType, bool)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         apply_white_menu(self)
@@ -280,6 +311,12 @@ class LocationAttributeSelectorMenu(MenuWidget):
         self.settingTaste.setChecked(False)
         self.settingTexture = LocationAttributeSetting(LocationAttributeType.TEXTURE)
         self.settingTexture.setChecked(False)
+
+        self.settingSight.settingChanged.connect(self.settingChanged)
+        self.settingSound.settingChanged.connect(self.settingChanged)
+        self.settingSmell.settingChanged.connect(self.settingChanged)
+        self.settingTaste.settingChanged.connect(self.settingChanged)
+        self.settingTexture.settingChanged.connect(self.settingChanged)
 
         self.toggleDayNight = Toggle()
         effect = QGraphicsColorizeEffect(self.toggleDayNight)
@@ -340,7 +377,7 @@ class LocationEditor(QWidget):
 
         self._attributesSelectorMenu = LocationAttributeSelectorMenu(self.btnAttributesEditor)
         self._attributesSelectorMenu.toggleDayNight.toggled.connect(self._dayNightToggled)
-        # self._attributesSelectorMenu.principleToggled.connect(self._principleToggled)
+        self._attributesSelectorMenu.settingChanged.connect(self._settingChanged)
         self.btnAttributes.clicked.connect(lambda: self._attributesSelectorMenu.exec())
 
         self.wdgDayNightHeader = QWidget()
@@ -350,7 +387,12 @@ class LocationEditor(QWidget):
         self.wdgDayNightHeader.setHidden(True)
 
         self.wdgAttributes = QWidget()
-        grid(self.wdgAttributes)
+        self._gridAttributesLayout = grid(self.wdgAttributes)
+        spac = spacer()
+        sp(spac).h_preferred()
+        self._gridAttributesLayout.addWidget(spac, 25, 1, 1, 1)
+        margins(self.wdgAttributes, left=15)
+        self._gridAttributesLayout.setVerticalSpacing(15)
 
         vbox(self)
         self.layout().addWidget(self.lineEditName)
@@ -365,6 +407,10 @@ class LocationEditor(QWidget):
         self.repo = RepositoryPersistenceManager.instance()
 
         self.setVisible(False)
+
+        self._settingChanged(LocationAttributeType.SIGHT, True)
+        self._settingChanged(LocationAttributeType.SOUND, True)
+        self._settingChanged(LocationAttributeType.SMELL, True)
 
     def setLocation(self, location: Location):
         self.setVisible(True)
@@ -392,6 +438,20 @@ class LocationEditor(QWidget):
 
     def _dayNightToggled(self, toggled: bool):
         self.wdgDayNightHeader.setVisible(toggled)
+
+    def _settingChanged(self, attrType: LocationAttributeType, toggled: bool):
+        if toggled:
+            wdg = self._addAttribute(attrType)
+            fade_in(wdg)
+        else:
+            item = self._gridAttributesLayout.itemAtPosition(attrType.value, 0)
+            if item and item.widget():
+                fade_out_and_gc(self.wdgAttributes, item.widget())
+
+    def _addAttribute(self, attrType: LocationAttributeType) -> LocationAttributeTextEdit:
+        wdg = LocationAttributeTextEdit(attrType)
+        self._gridAttributesLayout.addWidget(wdg, attrType.value, 0, 1, 1)
+        return wdg
 
     def _save(self):
         self.repo.update_novel(self._novel)
