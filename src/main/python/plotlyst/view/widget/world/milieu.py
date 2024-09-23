@@ -388,6 +388,7 @@ class LocationEditor(QWidget):
 
         self.wdgAttributes = QWidget()
         self._gridAttributesLayout = grid(self.wdgAttributes)
+        sp(self.wdgAttributes).v_max()
         spac = spacer()
         sp(spac).h_preferred()
         self._gridAttributesLayout.addWidget(spac, 25, 1, 1, 1)
@@ -408,15 +409,17 @@ class LocationEditor(QWidget):
 
         self.setVisible(False)
 
-        self._settingChanged(LocationAttributeType.SIGHT, True)
-        self._settingChanged(LocationAttributeType.SOUND, True)
-        self._settingChanged(LocationAttributeType.SMELL, True)
-
     def setLocation(self, location: Location):
+        clear_layout(self.wdgAttributes)
         self.setVisible(True)
         self._location = location
         self.lineEditName.setText(self._location.name)
         self.textSummary.setText(self._location.summary)
+
+        self._addAttribute(LocationAttributeType.SIGHT)
+        self._addAttribute(LocationAttributeType.SOUND)
+        self._addAttribute(LocationAttributeType.SMELL)
+
         if not self._location.name:
             self.lineEditName.setFocus()
 
