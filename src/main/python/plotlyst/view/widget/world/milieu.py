@@ -236,6 +236,8 @@ class LocationAttributeSetting(SettingBaseWidget):
 
 
 class LocationAttributeTextEdit(DecoratedTextEdit):
+    changed = pyqtSignal()
+
     def __init__(self, attrType: LocationSensorType, perception: SensoryPerception, parent=None,
                  nightMode: bool = False):
         super().__init__(parent)
@@ -254,8 +256,17 @@ class LocationAttributeTextEdit(DecoratedTextEdit):
             self.setText(self._perception.night_text)
         else:
             self.setText(self._perception.text)
+        self.textChanged.connect(self._textChanged)
 
         sp(self).v_exp()
+
+    def _textChanged(self):
+        if self._nightMode:
+            self._perception.night_text = self.toPlainText()
+        else:
+            self._perception.text = self.toPlainText()
+
+        self.changed.emit()
 
 
 class LocationAttributeSelectorMenu(MenuWidget):
@@ -446,6 +457,7 @@ class LocationEditor(QWidget):
 
     def _addAttribute(self, attrType: LocationSensorType, perception: SensoryPerception) -> LocationAttributeTextEdit:
         wdg = LocationAttributeTextEdit(attrType, perception)
+        wdg.changed.connect(self._save)
         self._gridAttributesLayout.addWidget(wdg, attrType.value, 0, 1, 1)
         return wdg
 
