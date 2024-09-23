@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from enum import Enum
 from functools import partial
 from typing import Optional, List
 
@@ -30,7 +29,7 @@ from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.common import recursive
-from plotlyst.core.domain import Novel, Location, WorldBuildingEntity
+from plotlyst.core.domain import Novel, Location, WorldBuildingEntity, LocationSensorType
 from plotlyst.event.core import emit_event
 from plotlyst.events import LocationAddedEvent, LocationDeletedEvent, \
     RequestMilieuDictionaryResetEvent
@@ -214,59 +213,10 @@ class LocationsTreeView(ItemBasedTreeView):
         return node
 
 
-class LocationAttributeType(Enum):
-    SIGHT = 0
-    LIGHT = 1
-    SOUND = 2
-    SMELL = 3
-    TASTE = 4
-    TEXTURE = 5
-    TEMPERATURE = 6
-
-    def display_name(self) -> str:
-        return self.name.lower().capitalize()
-
-    def description(self) -> str:
-        if self == LocationAttributeType.SIGHT:
-            return 'What are the most significant visual details in this location?'
-        elif self == LocationAttributeType.SOUND:
-            return 'What ambient or distinct sounds can be heard here?'
-        elif self == LocationAttributeType.SMELL:
-            return 'What scents or odors define the atmosphere of this place?'
-        elif self == LocationAttributeType.TASTE:
-            return 'Is there any taste in the air or through local cuisine?'
-        elif self == LocationAttributeType.TEXTURE:
-            return 'What textures can be felt when interacting with surfaces here?'
-
-    def icon(self) -> str:
-        if self == LocationAttributeType.SIGHT:
-            return 'fa5.eye'
-        elif self == LocationAttributeType.SOUND:
-            return 'fa5s.music'
-        elif self == LocationAttributeType.SMELL:
-            return 'fa5s.air-freshener'
-        elif self == LocationAttributeType.TASTE:
-            return 'mdi.food-drumstick'
-        elif self == LocationAttributeType.TEXTURE:
-            return 'mdi.hand'
-
-    def emoji(self) -> str:
-        if self == LocationAttributeType.SIGHT:
-            return ':eyes:'
-        elif self == LocationAttributeType.SOUND:
-            return ':musical_note:'
-        elif self == LocationAttributeType.SMELL:
-            return ':nose:'
-        elif self == LocationAttributeType.TASTE:
-            return ':tongue:'
-        elif self == LocationAttributeType.TEXTURE:
-            return ':hand_with_fingers_splayed:'
-
-
 class LocationAttributeSetting(SettingBaseWidget):
-    settingChanged = pyqtSignal(LocationAttributeType, bool)
+    settingChanged = pyqtSignal(LocationSensorType, bool)
 
-    def __init__(self, attrType: LocationAttributeType, parent=None):
+    def __init__(self, attrType: LocationSensorType, parent=None):
         super().__init__(parent)
         self._attrType = attrType
         self._title.setText(attrType.display_name())
@@ -285,7 +235,7 @@ class LocationAttributeSetting(SettingBaseWidget):
 
 
 class LocationAttributeTextEdit(DecoratedTextEdit):
-    def __init__(self, attrType: LocationAttributeType, parent=None):
+    def __init__(self, attrType: LocationSensorType, parent=None):
         super().__init__(parent)
         self.setProperty('rounded', True)
         self.setProperty('white-bg', True)
@@ -299,17 +249,17 @@ class LocationAttributeTextEdit(DecoratedTextEdit):
 
 
 class LocationAttributeSelectorMenu(MenuWidget):
-    settingChanged = pyqtSignal(LocationAttributeType, bool)
+    settingChanged = pyqtSignal(LocationSensorType, bool)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         apply_white_menu(self)
-        self.settingSight = LocationAttributeSetting(LocationAttributeType.SIGHT)
-        self.settingSound = LocationAttributeSetting(LocationAttributeType.SOUND)
-        self.settingSmell = LocationAttributeSetting(LocationAttributeType.SMELL)
-        self.settingTaste = LocationAttributeSetting(LocationAttributeType.TASTE)
+        self.settingSight = LocationAttributeSetting(LocationSensorType.SIGHT)
+        self.settingSound = LocationAttributeSetting(LocationSensorType.SOUND)
+        self.settingSmell = LocationAttributeSetting(LocationSensorType.SMELL)
+        self.settingTaste = LocationAttributeSetting(LocationSensorType.TASTE)
         self.settingTaste.setChecked(False)
-        self.settingTexture = LocationAttributeSetting(LocationAttributeType.TEXTURE)
+        self.settingTexture = LocationAttributeSetting(LocationSensorType.TEXTURE)
         self.settingTexture.setChecked(False)
 
         self.settingSight.settingChanged.connect(self.settingChanged)
@@ -416,12 +366,12 @@ class LocationEditor(QWidget):
         self.lineEditName.setText(self._location.name)
         self.textSummary.setText(self._location.summary)
 
-        self._addAttribute(LocationAttributeType.SIGHT)
-        self._addAttribute(LocationAttributeType.SOUND)
-        self._addAttribute(LocationAttributeType.SMELL)
+        self._addAttribute(LocationSensorType.SIGHT)
+        self._addAttribute(LocationSensorType.SOUND)
+        self._addAttribute(LocationSensorType.SMELL)
 
-        self.wdgDayNightHeader.setVisible(self._location.perception_night_mode)
-        self._attributesSelectorMenu.toggleDayNight.setChecked(self._location.perception_night_mode)
+        self.wdgDayNightHeader.setVisible(self._location.sensory_detail.night_mode)
+        self._attributesSelectorMenu.toggleDayNight.setChecked(self._location.sensory_detail.night_mode)
 
         if not self._location.name:
             self.lineEditName.setFocus()
@@ -444,10 +394,10 @@ class LocationEditor(QWidget):
 
     def _dayNightToggled(self, toggled: bool):
         self.wdgDayNightHeader.setVisible(toggled)
-        self._location.perception_night_mode = toggled
+        self._location.sensory_detail.night_mode = toggled
         self._save()
 
-    def _settingChanged(self, attrType: LocationAttributeType, toggled: bool):
+    def _settingChanged(self, attrType: LocationSensorType, toggled: bool):
         if toggled:
             wdg = self._addAttribute(attrType)
             fade_in(wdg)
@@ -456,7 +406,7 @@ class LocationEditor(QWidget):
             if item and item.widget():
                 fade_out_and_gc(self.wdgAttributes, item.widget())
 
-    def _addAttribute(self, attrType: LocationAttributeType) -> LocationAttributeTextEdit:
+    def _addAttribute(self, attrType: LocationSensorType) -> LocationAttributeTextEdit:
         wdg = LocationAttributeTextEdit(attrType)
         self._gridAttributesLayout.addWidget(wdg, attrType.value, 0, 1, 1)
         return wdg

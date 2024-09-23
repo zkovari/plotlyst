@@ -2171,13 +2171,76 @@ class WorldBuildingMap:
     default: bool = field(default=False, metadata=config(exclude=exclude_if_false))
 
 
+class LocationSensorType(Enum):
+    SIGHT = 0
+    LIGHT = 1
+    SOUND = 2
+    SMELL = 3
+    TASTE = 4
+    TEXTURE = 5
+    TEMPERATURE = 6
+
+    def display_name(self) -> str:
+        return self.name.lower().capitalize()
+
+    def description(self) -> str:
+        if self == LocationSensorType.SIGHT:
+            return 'What are the most significant visual details in this location?'
+        elif self == LocationSensorType.SOUND:
+            return 'What ambient or distinct sounds can be heard here?'
+        elif self == LocationSensorType.SMELL:
+            return 'What scents or odors define the atmosphere of this place?'
+        elif self == LocationSensorType.TASTE:
+            return 'Is there any taste in the air or through local cuisine?'
+        elif self == LocationSensorType.TEXTURE:
+            return 'What textures can be felt when interacting with surfaces here?'
+
+    def icon(self) -> str:
+        if self == LocationSensorType.SIGHT:
+            return 'fa5.eye'
+        elif self == LocationSensorType.SOUND:
+            return 'fa5s.music'
+        elif self == LocationSensorType.SMELL:
+            return 'fa5s.air-freshener'
+        elif self == LocationSensorType.TASTE:
+            return 'mdi.food-drumstick'
+        elif self == LocationSensorType.TEXTURE:
+            return 'mdi.hand'
+
+    def emoji(self) -> str:
+        if self == LocationSensorType.SIGHT:
+            return ':eyes:'
+        elif self == LocationSensorType.SOUND:
+            return ':musical_note:'
+        elif self == LocationSensorType.SMELL:
+            return ':nose:'
+        elif self == LocationSensorType.TASTE:
+            return ':tongue:'
+        elif self == LocationSensorType.TEXTURE:
+            return ':hand_with_fingers_splayed:'
+
+
+@dataclass
+class SensoryPerception:
+    text: str = ''
+    night_text: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    enabled: bool = field(default=False, metadata=config(exclude=exclude_if_false))
+
+
+@dataclass
+class SensoryDetail:
+    night_mode: bool = field(default=False, metadata=config(exclude=exclude_if_false))
+    perceptions: Dict[LocationSensorType, SensoryPerception] = field(default_factory=dict,
+                                                                     metadata=config(exclude=exclude_if_empty))
+
+
 @dataclass
 class Location:
     name: str = ''
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
     children: List['Location'] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
-    perception_night_mode: bool = field(default=False, metadata=config(exclude=exclude_if_false))
+    sensory_detail: SensoryDetail = field(default_factory=SensoryDetail)
 
     @overrides
     def __eq__(self, other: 'Location'):
