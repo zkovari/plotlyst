@@ -25,7 +25,7 @@ import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import QWidget, QLineEdit, QGraphicsColorizeEffect
 from overrides import overrides
-from qthandy import vbox, incr_font, vspacer, line, clear_layout, incr_icon, decr_icon, margins, spacer, hbox
+from qthandy import vbox, incr_font, vspacer, line, clear_layout, incr_icon, decr_icon, margins, spacer, hbox, grid
 from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
@@ -339,8 +339,18 @@ class LocationEditor(QWidget):
         self.btnAttributes.installEventFilter(OpacityEventFilter(self.btnAttributes, leaveOpacity=0.7))
 
         self._attributesSelectorMenu = LocationAttributeSelectorMenu(self.btnAttributesEditor)
+        self._attributesSelectorMenu.toggleDayNight.toggled.connect(self._dayNightToggled)
         # self._attributesSelectorMenu.principleToggled.connect(self._principleToggled)
         self.btnAttributes.clicked.connect(lambda: self._attributesSelectorMenu.exec())
+
+        self.wdgDayNightHeader = QWidget()
+        hbox(self.wdgDayNightHeader)
+        self.wdgDayNightHeader.layout().addWidget(Emoji(emoji=':sun_with_face:'))
+        self.wdgDayNightHeader.layout().addWidget(Emoji(emoji=':waxing_crescent_moon:'))
+        self.wdgDayNightHeader.setHidden(True)
+
+        self.wdgAttributes = QWidget()
+        grid(self.wdgAttributes)
 
         vbox(self)
         self.layout().addWidget(self.lineEditName)
@@ -348,6 +358,8 @@ class LocationEditor(QWidget):
         self.layout().addWidget(self.textSummary)
         self.layout().addWidget(group(self.btnAttributes, self.btnAttributesEditor, margin=0, spacing=0),
                                 alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self.wdgDayNightHeader)
+        self.layout().addWidget(self.wdgAttributes)
         self.layout().addWidget(vspacer())
 
         self.repo = RepositoryPersistenceManager.instance()
@@ -377,6 +389,9 @@ class LocationEditor(QWidget):
     def _summaryChanged(self):
         self._location.summary = self.textSummary.toPlainText()
         self._save()
+
+    def _dayNightToggled(self, toggled: bool):
+        self.wdgDayNightHeader.setVisible(toggled)
 
     def _save(self):
         self.repo.update_novel(self._novel)
