@@ -126,7 +126,12 @@ text_edit_styles = """
     QTextEdit[white-bg=true] {
         background-color: #FcFcFc;
     }
-
+    
+    QTextEdit[night-mode=true] {
+        background-color: rgba(39, 39, 39, 200);
+        color: #f8f9fa;
+    }
+    
     QTextEdit[transparent=true] {
         border: 0px;
         background-color: rgba(0, 0, 0, 0);

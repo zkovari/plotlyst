@@ -245,7 +245,10 @@ class LocationAttributeTextEdit(DecoratedTextEdit):
         self._nightMode = nightMode
 
         self.setProperty('rounded', True)
-        self.setProperty('white-bg', True)
+        if nightMode:
+            self.setProperty('night-mode', True)
+        else:
+            self.setProperty('white-bg', True)
         desc = attrType.description()
         self.setPlaceholderText(desc)
         self.setMaximumWidth(600)
@@ -254,6 +257,9 @@ class LocationAttributeTextEdit(DecoratedTextEdit):
 
         if self._nightMode:
             self.setText(self._perception.night_text)
+            effect = QGraphicsColorizeEffect()
+            effect.setColor(Qt.GlobalColor.black)
+            self.setGraphicsEffect(effect)
         else:
             self.setText(self._perception.text)
         self.textChanged.connect(self._textChanged)
@@ -373,6 +379,7 @@ class LocationEditor(QWidget):
         self.wdgDayNightHeader.layout().addWidget(Emoji(emoji=':sun_with_face:'))
         self.wdgDayNightHeader.layout().addWidget(Emoji(emoji=':waxing_crescent_moon:'))
         self.wdgDayNightHeader.setHidden(True)
+        margins(self.wdgDayNightHeader, left=15)
 
         self.wdgAttributes = QWidget()
         self._gridAttributesLayout: QGridLayout = grid(self.wdgAttributes)
@@ -382,6 +389,7 @@ class LocationEditor(QWidget):
         self._gridAttributesLayout.addWidget(spac, 25, 1, 1, 1)
         margins(self.wdgAttributes, left=15)
         self._gridAttributesLayout.setVerticalSpacing(15)
+        self._gridAttributesLayout.setHorizontalSpacing(7)
 
         vbox(self)
         self.layout().addWidget(self.lineEditName)
@@ -472,8 +480,8 @@ class LocationEditor(QWidget):
         wdg = self._initPerceptionWidget(attrType, perception)
         self._gridAttributesLayout.addWidget(wdg, attrType.value, 0, 1, 1, alignment=Qt.AlignmentFlag.AlignTop)
         if self._location.sensory_detail.night_mode:
-            wdg = self._initPerceptionWidget(attrType, perception, nightMode=True)
-            self._gridAttributesLayout.addWidget(wdg, attrType.value, 1, 1, 1, alignment=Qt.AlignmentFlag.AlignTop)
+            wdgNight = self._initPerceptionWidget(attrType, perception, nightMode=True)
+            self._gridAttributesLayout.addWidget(wdgNight, attrType.value, 1, 1, 1, alignment=Qt.AlignmentFlag.AlignTop)
         return wdg
 
     def _removeAttribute(self, attrType: LocationSensorType, nightMode: bool = False):
