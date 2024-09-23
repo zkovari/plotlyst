@@ -192,7 +192,7 @@ class GlossaryEditorDialog(PopupDialog):
         hbox(self.wdgTitle)
         self.wdgTitle.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
 
-        self.btnConfirm = push_btn(text='Confirm', properties=['base', 'positive'])
+        self.btnConfirm = push_btn(text='Confirm', properties=['confirm', 'positive'])
         sp(self.btnConfirm).h_exp()
         self.btnConfirm.clicked.connect(self._confirm)
         self.btnConfirm.setDisabled(True)

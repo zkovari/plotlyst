@@ -90,7 +90,7 @@ btn_style_highlighted = """
 """
 
 btn_style_confirm = """
-    QPushButton[confirm=true]:!disabled {
+    QPushButton[confirm=true] {
         border: 1px solid lightgrey;
         border-radius: 6px;
         padding: 5px 15px 5px 15px;

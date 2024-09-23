@@ -56,7 +56,9 @@ from plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, Timelin
 from plotlyst.view.widget.utility import IconSelectorDialog
 from plotlyst.view.widget.world._topics import ecological_topics, cultural_topics, historical_topics, \
     linguistic_topics, technological_topics, economic_topics, infrastructural_topics, religious_topics, \
-    fantastic_topics, nefarious_topics, environmental_topics
+    fantastic_topics, nefarious_topics, environmental_topics, ecology_topic, culture_topic, history_topic, \
+    language_topic, technology_topic, economy_topic, infrastructure_topic, religion_topic, fantasy_topic, \
+    villainy_topic, environment_topic
 from plotlyst.view.widget.world.glossary import GlossaryTextBlockHighlighter, GlossaryTextBlockData
 from plotlyst.view.widget.world.milieu import LocationsTreeView
 
@@ -752,7 +754,7 @@ class MainSectionElementEditor(SectionElementEditor):
 
 
 class TopicSelectorButton(QToolButton):
-    def __init__(self, topic: Topic):
+    def __init__(self, topic: Topic, group: bool = False):
         super().__init__()
         self.topic = topic
 
@@ -764,37 +766,44 @@ class TopicSelectorButton(QToolButton):
         self.setCheckable(True)
         pointy(self)
         incr_icon(self, 4)
-        if app_env.is_mac():
+        if not group and app_env.is_mac():
             incr_font(self)
-        self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
-        self.setStyleSheet('''
-                    QToolButton {
+        if group:
+            self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        else:
+            self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+
+        radius = 6 if group else 10
+        padding = 6 if group else 2
+        self.setStyleSheet(f'''
+                    QToolButton {{
                         border: 1px hidden lightgrey;
-                        border-radius: 10px;
-                    }
-                    QToolButton:hover:!checked {
+                        border-radius: {radius}px;
+                        padding: {padding}px;
+                    }}
+                    QToolButton:hover:!checked {{
                         background: #FCF5FE;
-                    }
-                    QToolButton:checked {
+                    }}
+                    QToolButton:checked {{
                         background: #D4B8E0;
-                    }
+                    }}
                     ''')
 
 
 class TopicGroupWidget(QWidget):
-    def __init__(self, header: str, parent=None):
+    def __init__(self, header: Topic, parent=None):
         super().__init__(parent)
         self._header = header
-        vbox(self)
+        self.headerTopicBtn = TopicSelectorButton(header, group=True)
+        vbox(self, 2, 0)
+        margins(self, top=5)
         self._topics: Dict[str, TopicSelectorButton] = {}
 
         self.container = QWidget()
         flow(self.container)
         margins(self.container, left=10)
 
-        self.header = label(self._header, bold=True)
-
-        self.layout().addWidget(self.header, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self.headerTopicBtn)
         self.layout().addWidget(line(color='lightgrey'))
         self.layout().addWidget(self.container)
 
@@ -804,7 +813,7 @@ class TopicGroupWidget(QWidget):
 
     def filter(self, term: str):
         if term:
-            if term in self._header:
+            if term in self._header.text:
                 # qtanim.glow(self.header, color=QColor(PLOTLYST_SECONDARY_COLOR), teardown=lambda: self.header.setGraphicsEffect(None))
                 self._setVisibleAll(True)
                 return
@@ -843,6 +852,8 @@ class TopicSelectionDialog(PopupDialog):
         self._selectedTopics = []
 
         self.frame.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
+        self.frame.layout().addWidget(label('Common worldbuilding topics', h4=True),
+                                      alignment=Qt.AlignmentFlag.AlignCenter)
         self.search = SearchField()
         self.search.lineSearch.textEdited.connect(self._search)
         self.frame.layout().addWidget(self.search, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -855,25 +866,27 @@ class TopicSelectionDialog(PopupDialog):
 
         self._sections: Dict[str, TopicGroupWidget] = {}
 
-        self._addSection('Ecology', ecological_topics)
-        self._addSection('Culture', cultural_topics)
-        self._addSection('History', historical_topics)
-        self._addSection('Language', linguistic_topics)
-        self._addSection('Technology', technological_topics)
-        self._addSection('Economy', economic_topics)
-        self._addSection('Infrastructure', infrastructural_topics)
-        self._addSection('Religion', religious_topics)
-        self._addSection('Fantasy', fantastic_topics)
-        self._addSection('Villainy', nefarious_topics)
-        self._addSection('Environment', environmental_topics)
+        self._addSection(ecology_topic, ecological_topics)
+        self._addSection(culture_topic, cultural_topics)
+        self._addSection(history_topic, historical_topics)
+        self._addSection(language_topic, linguistic_topics)
+        self._addSection(technology_topic, technological_topics)
+        self._addSection(economy_topic, economic_topics)
+        self._addSection(infrastructure_topic, infrastructural_topics)
+        self._addSection(religion_topic, religious_topics)
+        self._addSection(fantasy_topic, fantastic_topics)
+        self._addSection(villainy_topic, nefarious_topics)
+        self._addSection(environment_topic, environmental_topics)
 
         self.btnSelect = push_btn(IconRegistry.ok_icon(RELAXED_WHITE_COLOR), self.DEFAULT_SELECT_BTN_TEXT,
                                   properties=['positive', 'confirm'])
         self.btnSelect.setDisabled(True)
         self.btnSelect.clicked.connect(self.accept)
+        self.btnCancel = push_btn(text='Cancel', properties=['confirm', 'cancel'])
+        self.btnCancel.clicked.connect(self.reject)
 
         self._wdgCenter.layout().addWidget(vspacer())
-        self.frame.layout().addWidget(self.btnSelect)
+        self.frame.layout().addWidget(group(self.btnCancel, self.btnSelect), alignment=Qt.AlignmentFlag.AlignRight)
 
     def display(self) -> List[Topic]:
         self.search.lineSearch.setFocus()
@@ -883,9 +896,10 @@ class TopicSelectionDialog(PopupDialog):
 
         return []
 
-    def _addSection(self, header: str, topics: List[Topic]):
+    def _addSection(self, header: Topic, topics: List[Topic]):
         wdg = TopicGroupWidget(header)
-        self._sections[header] = wdg
+        wdg.headerTopicBtn.toggled.connect(partial(self._toggled, header))
+        self._sections[header.text] = wdg
         self._wdgCenter.layout().addWidget(wdg)
 
         for topic in topics:

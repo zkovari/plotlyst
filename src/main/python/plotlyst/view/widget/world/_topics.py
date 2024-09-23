@@ -2,6 +2,18 @@ import uuid
 
 from plotlyst.core.domain import Topic, TopicType
 
+ecology_topic = Topic('Ecology', TopicType.Worldbuilding, uuid.UUID('79d2cf6e-6c7f-4c21-bb3a-93c78f939cbb'), icon='fa5s.dna')
+culture_topic = Topic('Culture', TopicType.Worldbuilding, uuid.UUID('6db2e0ff-74c7-4fcb-ad68-6bc0154f6711'), icon='mdi.vector-circle')
+history_topic = Topic('History', TopicType.Worldbuilding, uuid.UUID('5420df8b-d988-429f-8ff1-689cd72d5bf7'), icon='mdi.bank')
+language_topic = Topic('Language', TopicType.Worldbuilding, uuid.UUID('127e506d-c6b1-4b58-aa99-d1760b8ebbcc'), icon='fa5s.language')
+technology_topic = Topic('Technology', TopicType.Worldbuilding, uuid.UUID('1bbf2d3a-02fc-4986-8dab-32f03171a54f'), icon='fa5s.lightbulb')
+economy_topic = Topic('Economy', TopicType.Worldbuilding, uuid.UUID('93e6efc2-05d7-4b01-89d4-043c9015f1aa'), icon='fa5s.coins')
+infrastructure_topic = Topic('Infrastructure', TopicType.Worldbuilding, uuid.UUID('6e64adfe-e189-418d-b920-c8e980653bed'), icon='fa5s.cogs')
+religion_topic = Topic('Religion', TopicType.Worldbuilding, uuid.UUID('26ed9fb3-f4d4-44f1-b8c6-8fbbe5ff35b4'), icon='fa5s.praying-hands')
+fantasy_topic = Topic('Fantasy', TopicType.Worldbuilding, uuid.UUID('9500c592-c838-4483-b4d2-9a70ef9c3e47'), icon='fa5s.magic')
+villainy_topic = Topic('Villainy', TopicType.Worldbuilding, uuid.UUID('928e4075-59a4-4745-9691-8d897f94abf1'), icon='mdi.emoticon-devil')
+environment_topic = Topic('Environment', TopicType.Worldbuilding, uuid.UUID('9704cb8c-b671-4bc6-ba8e-fa2a4469ce6f'), icon='mdi.nature')
+
 ecological_topics = [
     Topic('Races', TopicType.Worldbuilding, uuid.UUID('882e3c1c-acf1-4590-a6d9-3875ab65fb89'), icon='ei.person'),
     Topic('Fauna', TopicType.Worldbuilding, uuid.UUID('0aa32bef-e901-49ca-b642-8c5b94a3022c'), icon='mdi.bird'),
@@ -32,7 +44,6 @@ cultural_topics = [
           icon='mdi.popcorn')
 ]
 historical_topics = [
-    Topic('History', TopicType.Worldbuilding, uuid.UUID('5420df8b-d988-429f-8ff1-689cd72d5bf7'), icon='mdi.bank'),
     Topic('Legends', TopicType.Worldbuilding, uuid.UUID('6f8c672e-bc61-4a43-8737-090151fed2b5'), icon='mdi6.bow-arrow'),
     Topic('Fossils', TopicType.Worldbuilding, uuid.UUID('abe594a9-33e9-46bc-b229-bfb3305415fc'), icon='mdi.bone'),
     Topic('Artifacts', TopicType.Worldbuilding, uuid.UUID('a5700efd-bdac-4961-8cb3-c70bb0907383'),
