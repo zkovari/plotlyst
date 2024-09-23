@@ -2230,7 +2230,7 @@ class SensoryPerception:
 @dataclass
 class SensoryDetail:
     night_mode: bool = field(default=False, metadata=config(exclude=exclude_if_false))
-    perceptions: Dict[LocationSensorType, SensoryPerception] = field(default_factory=dict,
+    perceptions: Dict[str, SensoryPerception] = field(default_factory=dict,
                                                                      metadata=config(exclude=exclude_if_empty))
 
 

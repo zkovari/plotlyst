@@ -29,7 +29,7 @@ from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.common import recursive
-from plotlyst.core.domain import Novel, Location, WorldBuildingEntity, LocationSensorType
+from plotlyst.core.domain import Novel, Location, WorldBuildingEntity, LocationSensorType, SensoryPerception
 from plotlyst.event.core import emit_event
 from plotlyst.events import LocationAddedEvent, LocationDeletedEvent, \
     RequestMilieuDictionaryResetEvent
@@ -223,6 +223,7 @@ class LocationAttributeSetting(SettingBaseWidget):
         self._title.setIcon(IconRegistry.from_name(attrType.icon()))
         self._description.setWordWrap(False)
         self._description.setText(attrType.description())
+        self._toggle.setChecked(False)
 
         margins(self, left=10)
 
@@ -235,8 +236,12 @@ class LocationAttributeSetting(SettingBaseWidget):
 
 
 class LocationAttributeTextEdit(DecoratedTextEdit):
-    def __init__(self, attrType: LocationSensorType, parent=None):
+    def __init__(self, attrType: LocationSensorType, perception: SensoryPerception, parent=None,
+                 nightMode: bool = False):
         super().__init__(parent)
+        self._perception = perception
+        self._nightMode = nightMode
+
         self.setProperty('rounded', True)
         self.setProperty('white-bg', True)
         desc = attrType.description()
@@ -244,6 +249,11 @@ class LocationAttributeTextEdit(DecoratedTextEdit):
         self.setMaximumWidth(600)
         self.setToolTip(desc)
         self.setEmoji(attrType.emoji(), desc)
+
+        if self._nightMode:
+            self.setText(self._perception.night_text)
+        else:
+            self.setText(self._perception.text)
 
         sp(self).v_exp()
 
@@ -258,9 +268,7 @@ class LocationAttributeSelectorMenu(MenuWidget):
         self.settingSound = LocationAttributeSetting(LocationSensorType.SOUND)
         self.settingSmell = LocationAttributeSetting(LocationSensorType.SMELL)
         self.settingTaste = LocationAttributeSetting(LocationSensorType.TASTE)
-        self.settingTaste.setChecked(False)
         self.settingTexture = LocationAttributeSetting(LocationSensorType.TEXTURE)
-        self.settingTexture.setChecked(False)
 
         self.settingSight.settingChanged.connect(self.settingChanged)
         self.settingSound.settingChanged.connect(self.settingChanged)
@@ -366,9 +374,9 @@ class LocationEditor(QWidget):
         self.lineEditName.setText(self._location.name)
         self.textSummary.setText(self._location.summary)
 
-        self._addAttribute(LocationSensorType.SIGHT)
-        self._addAttribute(LocationSensorType.SOUND)
-        self._addAttribute(LocationSensorType.SMELL)
+        for k, v in self._location.sensory_detail.perceptions.items():
+            if v.enabled:
+                self._addAttribute(LocationSensorType[k], v)
 
         self.wdgDayNightHeader.setVisible(self._location.sensory_detail.night_mode)
         self._attributesSelectorMenu.toggleDayNight.setChecked(self._location.sensory_detail.night_mode)
@@ -398,16 +406,23 @@ class LocationEditor(QWidget):
         self._save()
 
     def _settingChanged(self, attrType: LocationSensorType, toggled: bool):
+        if attrType not in self._location.sensory_detail.perceptions:
+            self._location.sensory_detail.perceptions[attrType.name] = SensoryPerception()
+
+        perception = self._location.sensory_detail.perceptions[attrType.name]
+        perception.enabled = toggled
         if toggled:
-            wdg = self._addAttribute(attrType)
+            wdg = self._addAttribute(attrType, perception)
             fade_in(wdg)
         else:
             item = self._gridAttributesLayout.itemAtPosition(attrType.value, 0)
             if item and item.widget():
                 fade_out_and_gc(self.wdgAttributes, item.widget())
 
-    def _addAttribute(self, attrType: LocationSensorType) -> LocationAttributeTextEdit:
-        wdg = LocationAttributeTextEdit(attrType)
+        self._save()
+
+    def _addAttribute(self, attrType: LocationSensorType, perception: SensoryPerception) -> LocationAttributeTextEdit:
+        wdg = LocationAttributeTextEdit(attrType, perception)
         self._gridAttributesLayout.addWidget(wdg, attrType.value, 0, 1, 1)
         return wdg
 
