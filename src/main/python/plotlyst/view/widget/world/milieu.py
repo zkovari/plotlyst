@@ -20,10 +20,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Optional, List
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import QWidget, QLineEdit
 from overrides import overrides
-from qthandy import vbox, incr_font, vspacer, line, clear_layout
+from qthandy import vbox, incr_font, vspacer, line, clear_layout, incr_icon, decr_icon
+from qthandy.filter import OpacityEventFilter
 
 from plotlyst.common import recursive
 from plotlyst.core.domain import Novel, Location, WorldBuildingEntity
@@ -32,8 +33,9 @@ from plotlyst.events import LocationAddedEvent, LocationDeletedEvent, \
     RequestMilieuDictionaryResetEvent
 from plotlyst.service.cache import entities_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import fade_in, insert_before_the_end, DelayedSignalSlotConnector
+from plotlyst.view.common import fade_in, insert_before_the_end, DelayedSignalSlotConnector, push_btn, tool_btn
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.layout import group
 from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.input import DecoratedTextEdit
 from plotlyst.view.widget.tree import TreeSettings, ItemBasedTreeView, ItemBasedNode
@@ -229,10 +231,21 @@ class LocationEditor(QWidget):
         self.textSummary.setEmoji(':scroll:', 'Summary')
         self.textSummary.textChanged.connect(self._summaryChanged)
 
+        self.btnAttributes = push_btn(IconRegistry.from_name('mdi6.note-text-outline', 'grey'), text='Attributes',
+                                      transparent_=True)
+        self.btnAttributesEditor = tool_btn(IconRegistry.plus_edit_icon('grey'), transparent_=True)
+        incr_icon(self.btnAttributes, 2)
+        incr_font(self.btnAttributes, 2)
+        decr_icon(self.btnAttributesEditor)
+        self.btnAttributes.installEventFilter(OpacityEventFilter(self.btnAttributes, leaveOpacity=0.7))
+        # self.btnAttributes.clicked.connect(lambda: self._attributesSelectorMenu.exec())
+
         vbox(self)
         self.layout().addWidget(self.lineEditName)
         self.layout().addWidget(line())
         self.layout().addWidget(self.textSummary)
+        self.layout().addWidget(group(self.btnAttributes, self.btnAttributesEditor, margin=0, spacing=0),
+                                alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(vspacer())
 
         self.repo = RepositoryPersistenceManager.instance()
