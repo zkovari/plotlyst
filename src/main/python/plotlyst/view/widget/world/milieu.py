@@ -25,7 +25,7 @@ import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import QWidget, QLineEdit
 from overrides import overrides
-from qthandy import vbox, incr_font, vspacer, line, clear_layout, incr_icon, decr_icon
+from qthandy import vbox, incr_font, vspacer, line, clear_layout, incr_icon, decr_icon, margins
 from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
@@ -253,7 +253,10 @@ class LocationAttributeSetting(SettingBaseWidget):
         self._attrType = attrType
         self._title.setText(attrType.display_name())
         self._title.setIcon(IconRegistry.from_name(attrType.icon()))
+        self._description.setWordWrap(False)
         self._description.setText(attrType.description())
+
+        margins(self, left=10)
 
         self._title.installEventFilter(DisabledClickEventFilter(self._wdgTitle, lambda: qtanim.shake(self._toggle)))
         self._wdgTitle.installEventFilter(DisabledClickEventFilter(self._wdgTitle, lambda: qtanim.shake(self._toggle)))
@@ -267,7 +270,6 @@ class LocationAttributeSelectorMenu(MenuWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         apply_white_menu(self)
-
         self.settingSight = LocationAttributeSetting(LocationAttributeType.SIGHT)
         self.settingSound = LocationAttributeSetting(LocationAttributeType.SOUND)
         self.settingSmell = LocationAttributeSetting(LocationAttributeType.SMELL)
@@ -275,6 +277,9 @@ class LocationAttributeSelectorMenu(MenuWidget):
         self.settingTaste.setChecked(False)
         self.settingTexture = LocationAttributeSetting(LocationAttributeType.TEXTURE)
         self.settingTexture.setChecked(False)
+
+        self.addSection('Sensory perceptions')
+        self.addSeparator()
 
         self.addWidget(self.settingSight)
         self.addWidget(self.settingSound)
