@@ -936,7 +936,8 @@ class SectionAdditionMenu(MenuWidget):
         self.addAction(action('New section', IconRegistry.plus_icon('grey'), slot=self.newSectionSelected))
         self.addSeparator()
         self.addAction(
-            action('Select topic...', IconRegistry.world_building_icon('grey'), slot=self.topicSectionSelected))
+            action('Select topics...', IconRegistry.from_name('mdi.card-text-outline', 'grey'),
+                   slot=self.topicSectionSelected))
 
 
 class MainBlockAdditionMenu(MenuWidget):

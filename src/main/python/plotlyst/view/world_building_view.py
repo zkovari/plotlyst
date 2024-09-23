@@ -132,6 +132,7 @@ class WorldBuildingView(AbstractNovelView):
         shadow(self.ui.wdgWorldContainer)
         self._additionMenu = EntityAdditionMenu(self.novel, self.ui.btnNew)
         self._additionMenu.entityTriggered.connect(self.ui.treeWorld.addEntity)
+        self._additionMenu.topicsSelected.connect(self.ui.treeWorld.addEntities)
         self.ui.iconReaderMode.setIcon(IconRegistry.from_name('fa5s.eye'))
 
         self.ui.btnMilieuView.setIcon(IconRegistry.world_building_icon())

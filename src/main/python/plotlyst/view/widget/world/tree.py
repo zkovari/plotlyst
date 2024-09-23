@@ -38,11 +38,12 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
-from plotlyst.view.widget.world.editor import MilieuSelectorPopup
+from plotlyst.view.widget.world.editor import MilieuSelectorPopup, TopicSelectionDialog
 
 
 class EntityAdditionMenu(MenuWidget):
     entityTriggered = pyqtSignal(WorldBuildingEntity)
+    topicsSelected = pyqtSignal(list)
 
     def __init__(self, novel: Novel, parent=None):
         super(EntityAdditionMenu, self).__init__(parent)
@@ -54,6 +55,9 @@ class EntityAdditionMenu(MenuWidget):
         self.addSeparator()
         self.addAction(action('Link milieu', IconRegistry.world_building_icon(), slot=self._linkToMilieu,
                               tooltip="Link a milieu element"))
+        self.addAction(
+            action('Select topics...', IconRegistry.from_name('mdi.card-text-outline'), slot=self._linkToTopics,
+                   tooltip="Link to common worldbuilding topics"))
 
         apply_white_menu(self)
 
@@ -68,6 +72,15 @@ class EntityAdditionMenu(MenuWidget):
             entity = WorldBuildingEntity('', elements=self.__newElements(), ref=element.id)
             self.entityTriggered.emit(entity)
 
+    def _linkToTopics(self):
+        topics = TopicSelectionDialog.popup()
+        if topics:
+            entities = []
+            for topic in topics:
+                entity = WorldBuildingEntity(topic.text, icon=topic.icon, elements=self.__newElements(), ref=topic.id)
+                entities.append(entity)
+            self.topicsSelected.emit(entities)
+
     def __newElements(self) -> List[WorldBuildingEntityElement]:
         main_section = WorldBuildingEntityElement(WorldBuildingEntityElementType.Main_Section)
         main_section.blocks.append(WorldBuildingEntityElement(WorldBuildingEntityElementType.Header))
@@ -77,6 +90,7 @@ class EntityAdditionMenu(MenuWidget):
 
 class EntityNode(ContainerNode):
     addEntity = pyqtSignal(WorldBuildingEntity)
+    addEntities = pyqtSignal(list)
     milieuLinked = pyqtSignal(Location)
 
     def __init__(self, novel: Novel, entity: WorldBuildingEntity, parent=None, settings: Optional[TreeSettings] = None):
@@ -89,7 +103,8 @@ class EntityNode(ContainerNode):
         self.setPlusButtonEnabled(True)
         self.setTranslucentIconEnabled(True)
         self._additionMenu = EntityAdditionMenu(self._novel, self._btnAdd)
-        self._additionMenu.entityTriggered.connect(self.addEntity.emit)
+        self._additionMenu.entityTriggered.connect(self.addEntity)
+        self._additionMenu.topicsSelected.connect(self.addEntities)
         self.setPlusMenu(self._additionMenu)
 
         self.refresh()
@@ -174,6 +189,10 @@ class WorldBuildingTreeView(TreeView):
 
         emit_event(self._novel, WorldEntityAddedEvent(self, entity))
 
+    def addEntities(self, entities: List[WorldBuildingEntity]):
+        for entity in entities:
+            self.addEntity(entity)
+
     def refresh(self):
         def addChildWdg(parent: WorldBuildingEntity, child: WorldBuildingEntity):
             childWdg = self.__initEntityWidget(child)
@@ -224,6 +243,10 @@ class WorldBuildingTreeView(TreeView):
         self.repo.update_world(self._novel)
 
         emit_event(self._novel, WorldEntityAddedEvent(self, entity))
+
+    def _addEntities(self, parent: EntityNode, entities: List[WorldBuildingEntity]):
+        for entity in entities:
+            self._addEntity(parent, entity)
 
     def _removeEntity(self, node: EntityNode):
         entity = node.entity()
@@ -321,6 +344,7 @@ class WorldBuildingTreeView(TreeView):
         node.selectionChanged.connect(partial(self._entitySelectionChanged, node))
         node.milieuLinked.connect(partial(self._linkMilieu, node))
         node.addEntity.connect(partial(self._addEntity, node))
+        node.addEntities.connect(partial(self._addEntities, node))
         node.deleted.connect(partial(self._removeEntity, node))
 
         node.installEventFilter(
