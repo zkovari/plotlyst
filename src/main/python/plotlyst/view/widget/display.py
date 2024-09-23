@@ -120,17 +120,20 @@ class Subtitle(QWidget):
 
 
 class Emoji(QLabel):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, emoji: str = ''):
         super(Emoji, self).__init__(parent)
+        self._emoji = emoji
         self._emojiFont = emoji_font()
 
         self.setFont(self._emojiFont)
+
+        self.setMaximumWidth(30)
 
     @overrides
     def showEvent(self, event: QShowEvent) -> None:
         if self.text():
             return
-        emoji_name: str = self.property('emoji')
+        emoji_name = self._emoji if self._emoji else self.property('emoji')
         if not emoji_name:
             return
 

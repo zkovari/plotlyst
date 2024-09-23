@@ -23,9 +23,9 @@ from typing import Optional, List
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt
-from PyQt6.QtWidgets import QWidget, QLineEdit
+from PyQt6.QtWidgets import QWidget, QLineEdit, QGraphicsColorizeEffect
 from overrides import overrides
-from qthandy import vbox, incr_font, vspacer, line, clear_layout, incr_icon, decr_icon, margins
+from qthandy import vbox, incr_font, vspacer, line, clear_layout, incr_icon, decr_icon, margins, spacer, hbox
 from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
@@ -36,12 +36,13 @@ from plotlyst.events import LocationAddedEvent, LocationDeletedEvent, \
     RequestMilieuDictionaryResetEvent
 from plotlyst.service.cache import entities_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import fade_in, insert_before_the_end, DelayedSignalSlotConnector, push_btn, tool_btn
+from plotlyst.view.common import fade_in, insert_before_the_end, DelayedSignalSlotConnector, push_btn, tool_btn, label
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.confirm import confirmed
-from plotlyst.view.widget.input import DecoratedTextEdit
+from plotlyst.view.widget.display import Emoji
+from plotlyst.view.widget.input import DecoratedTextEdit, Toggle
 from plotlyst.view.widget.settings import SettingBaseWidget
 from plotlyst.view.widget.tree import TreeSettings, ItemBasedTreeView, ItemBasedNode
 
@@ -214,10 +215,12 @@ class LocationsTreeView(ItemBasedTreeView):
 
 class LocationAttributeType(Enum):
     SIGHT = 0
-    SOUND = 1
-    SMELL = 2
-    TASTE = 3
-    TEXTURE = 4
+    LIGHT = 1
+    SOUND = 2
+    SMELL = 3
+    TASTE = 4
+    TEXTURE = 5
+    TEMPERATURE = 6
 
     def display_name(self) -> str:
         return self.name.lower().capitalize()
@@ -278,7 +281,22 @@ class LocationAttributeSelectorMenu(MenuWidget):
         self.settingTexture = LocationAttributeSetting(LocationAttributeType.TEXTURE)
         self.settingTexture.setChecked(False)
 
-        self.addSection('Sensory perceptions')
+        self.toggleDayNight = Toggle()
+        effect = QGraphicsColorizeEffect(self.toggleDayNight)
+        effect.setColor(Qt.GlobalColor.black)
+        self.toggleDayNight.setGraphicsEffect(effect)
+
+        self.wdgPerceptionsHeader = QWidget()
+        hbox(self.wdgPerceptionsHeader, spacing=0)
+        self.wdgPerceptionsHeader.layout().addWidget(label('Sensory perceptions'))
+        self.wdgPerceptionsHeader.layout().addWidget(spacer())
+        self.wdgPerceptionsHeader.layout().addWidget(label('Day-night cycle', description=True))
+        self.wdgPerceptionsHeader.layout().addWidget(Emoji(self, ':sun_with_face:'))
+        self.wdgPerceptionsHeader.layout().addWidget(label('/'))
+        self.wdgPerceptionsHeader.layout().addWidget(Emoji(self, ':waxing_crescent_moon:'))
+        self.wdgPerceptionsHeader.layout().addWidget(self.toggleDayNight)
+
+        self.addWidget(self.wdgPerceptionsHeader)
         self.addSeparator()
 
         self.addWidget(self.settingSight)
