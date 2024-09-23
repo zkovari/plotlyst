@@ -22,7 +22,7 @@ from typing import Optional, List
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt
-from PyQt6.QtWidgets import QWidget, QLineEdit, QGraphicsColorizeEffect
+from PyQt6.QtWidgets import QWidget, QLineEdit, QGraphicsColorizeEffect, QGridLayout
 from overrides import overrides
 from qthandy import vbox, incr_font, vspacer, line, clear_layout, incr_icon, decr_icon, margins, spacer, hbox, grid, sp
 from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter
@@ -364,7 +364,7 @@ class LocationEditor(QWidget):
         self.btnAttributes.installEventFilter(OpacityEventFilter(self.btnAttributes, leaveOpacity=0.7))
 
         self._attributesSelectorMenu = LocationAttributeSelectorMenu(self.btnAttributesEditor)
-        self._attributesSelectorMenu.toggleDayNight.toggled.connect(self._dayNightToggled)
+        self._attributesSelectorMenu.toggleDayNight.clicked.connect(self._dayNightToggled)
         self._attributesSelectorMenu.settingChanged.connect(self._settingChanged)
         self.btnAttributes.clicked.connect(lambda: self._attributesSelectorMenu.exec())
 
@@ -375,7 +375,7 @@ class LocationEditor(QWidget):
         self.wdgDayNightHeader.setHidden(True)
 
         self.wdgAttributes = QWidget()
-        self._gridAttributesLayout = grid(self.wdgAttributes)
+        self._gridAttributesLayout: QGridLayout = grid(self.wdgAttributes)
         sp(self.wdgAttributes).v_max()
         spac = spacer()
         sp(spac).h_preferred()
@@ -437,10 +437,20 @@ class LocationEditor(QWidget):
     def _dayNightToggled(self, toggled: bool):
         self.wdgDayNightHeader.setVisible(toggled)
         self._location.sensory_detail.night_mode = toggled
+
+        for k, v in self._location.sensory_detail.perceptions.items():
+            attrType = LocationSensorType[k]
+            if v.enabled and toggled:
+                wdg = self._initPerceptionWidget(attrType, v, nightMode=True)
+                self._gridAttributesLayout.addWidget(wdg, attrType.value, 1, 1, 1,
+                                                     alignment=Qt.AlignmentFlag.AlignTop)
+            elif v.enabled and not toggled:
+                self._removeAttribute(attrType, nightMode=True)
+
         self._save()
 
     def _settingChanged(self, attrType: LocationSensorType, toggled: bool):
-        if attrType not in self._location.sensory_detail.perceptions:
+        if attrType.name not in self._location.sensory_detail.perceptions:
             self._location.sensory_detail.perceptions[attrType.name] = SensoryPerception()
 
         perception = self._location.sensory_detail.perceptions[attrType.name]
@@ -452,14 +462,31 @@ class LocationEditor(QWidget):
             item = self._gridAttributesLayout.itemAtPosition(attrType.value, 0)
             if item and item.widget():
                 fade_out_and_gc(self.wdgAttributes, item.widget())
+            self._removeAttribute(attrType)
+            if self._location.sensory_detail.night_mode:
+                self._removeAttribute(attrType, nightMode=True)
 
         self._save()
 
     def _addAttribute(self, attrType: LocationSensorType, perception: SensoryPerception) -> LocationAttributeTextEdit:
-        wdg = LocationAttributeTextEdit(attrType, perception)
-        wdg.changed.connect(self._save)
-        self._gridAttributesLayout.addWidget(wdg, attrType.value, 0, 1, 1)
+        wdg = self._initPerceptionWidget(attrType, perception)
+        self._gridAttributesLayout.addWidget(wdg, attrType.value, 0, 1, 1, alignment=Qt.AlignmentFlag.AlignTop)
+        if self._location.sensory_detail.night_mode:
+            wdg = self._initPerceptionWidget(attrType, perception, nightMode=True)
+            self._gridAttributesLayout.addWidget(wdg, attrType.value, 1, 1, 1, alignment=Qt.AlignmentFlag.AlignTop)
         return wdg
+
+    def _removeAttribute(self, attrType: LocationSensorType, nightMode: bool = False):
+        col = 1 if nightMode else 0
+        item = self._gridAttributesLayout.itemAtPosition(attrType.value, col)
+        if item and item.widget():
+            fade_out_and_gc(self.wdgAttributes, item.widget())
 
     def _save(self):
         self.repo.update_novel(self._novel)
+
+    def _initPerceptionWidget(self, attrType: LocationSensorType,
+                              perception: SensoryPerception, nightMode: bool = False) -> LocationAttributeTextEdit:
+        wdg = LocationAttributeTextEdit(attrType, perception, nightMode=nightMode)
+        wdg.changed.connect(self._save)
+        return wdg
