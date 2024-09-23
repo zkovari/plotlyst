@@ -24,10 +24,11 @@ import language_tool_python
 from PyQt6.QtCore import QRunnable
 from language_tool_python import LanguageTool
 from overrides import overrides
-from plotlyst.core.domain import Novel, Event
+
+from plotlyst.core.domain import Novel, Event, Location
 from plotlyst.event.core import emit_global_event, emit_info, EventListener
 from plotlyst.event.handler import event_dispatchers
-from plotlyst.events import LanguageToolSet, CharacterChangedEvent
+from plotlyst.events import LanguageToolSet, CharacterChangedEvent, RequestMilieuDictionaryResetEvent
 
 
 class LanguageToolServerSetupWorker(QRunnable):
@@ -96,23 +97,23 @@ class Dictionary(EventListener):
     def set_novel(self, novel: Novel):
         self.novel = novel
         dispatcher = event_dispatchers.instance(self.novel)
-        dispatcher.register(self, CharacterChangedEvent)
+        dispatcher.register(self, CharacterChangedEvent, RequestMilieuDictionaryResetEvent)
         self.refresh()
 
     def refresh(self):
         self.words.clear()
         for character in self.novel.characters:
             self.words.add(character.name)
-        # for location in self.novel.locations:
-        #     self._add_locations(location)
+        for location in self.novel.locations:
+            self._add_locations(location)
 
-    # def _add_locations(self, location: Location):
-    #     self.words.add(location.name)
-    #     for child in location.children:
-    #         self._add_locations(child)
+    def _add_locations(self, location: Location):
+        self.words.add(location.name)
+        for child in location.children:
+            self._add_locations(child)
 
     def is_known_word(self, word: str) -> bool:
-        return word in self.words
+        return word in self.words or word in self.novel.world.glossary
 
 
 dictionary = Dictionary()

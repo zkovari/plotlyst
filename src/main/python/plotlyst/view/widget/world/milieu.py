@@ -28,10 +28,11 @@ from qthandy import vbox, incr_font, vspacer, line, clear_layout
 from plotlyst.common import recursive
 from plotlyst.core.domain import Novel, Location, WorldBuildingEntity
 from plotlyst.event.core import emit_event
-from plotlyst.events import LocationAddedEvent, LocationDeletedEvent
+from plotlyst.events import LocationAddedEvent, LocationDeletedEvent, \
+    RequestMilieuDictionaryResetEvent
 from plotlyst.service.cache import entities_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import fade_in, insert_before_the_end
+from plotlyst.view.common import fade_in, insert_before_the_end, DelayedSignalSlotConnector
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.input import DecoratedTextEdit
@@ -217,6 +218,7 @@ class LocationEditor(QWidget):
         self.lineEditName.setProperty('transparent', True)
         incr_font(self.lineEditName, 8)
         self.lineEditName.textEdited.connect(self._nameEdited)
+        DelayedSignalSlotConnector(self.lineEditName.textEdited, self._nameSet, parent=self)
 
         self.textSummary = DecoratedTextEdit()
         self.textSummary.setProperty('rounded', True)
@@ -253,6 +255,9 @@ class LocationEditor(QWidget):
         self._location.name = name
         self._save()
         self.locationNameChanged.emit(self._location)
+
+    def _nameSet(self, _: str):
+        emit_event(self._novel, RequestMilieuDictionaryResetEvent(self))
 
     def _summaryChanged(self):
         self._location.summary = self.textSummary.toPlainText()

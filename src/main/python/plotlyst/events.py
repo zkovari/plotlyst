@@ -49,6 +49,11 @@ class LocationAddedEvent(Event):
 
 
 @dataclass
+class RequestMilieuDictionaryResetEvent(Event):
+    pass
+
+
+@dataclass
 class LocationDeletedEvent(Event):
     location: Location
 
