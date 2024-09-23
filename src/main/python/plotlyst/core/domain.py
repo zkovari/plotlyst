@@ -2177,6 +2177,7 @@ class Location:
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
     children: List['Location'] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    perception_night_mode: bool = field(default=False, metadata=config(exclude=exclude_if_false))
 
     @overrides
     def __eq__(self, other: 'Location'):

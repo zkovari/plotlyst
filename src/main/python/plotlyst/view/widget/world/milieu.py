@@ -420,6 +420,9 @@ class LocationEditor(QWidget):
         self._addAttribute(LocationAttributeType.SOUND)
         self._addAttribute(LocationAttributeType.SMELL)
 
+        self.wdgDayNightHeader.setVisible(self._location.perception_night_mode)
+        self._attributesSelectorMenu.toggleDayNight.setChecked(self._location.perception_night_mode)
+
         if not self._location.name:
             self.lineEditName.setFocus()
 
@@ -441,6 +444,8 @@ class LocationEditor(QWidget):
 
     def _dayNightToggled(self, toggled: bool):
         self.wdgDayNightHeader.setVisible(toggled)
+        self._location.perception_night_mode = toggled
+        self._save()
 
     def _settingChanged(self, attrType: LocationAttributeType, toggled: bool):
         if toggled:
