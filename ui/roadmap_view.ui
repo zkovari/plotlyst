@@ -111,7 +111,7 @@
       <item>
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>Planned, in-progress, and done tasks for the Free and Plotlyst Plus versions. Beta: not yet released but currently available features in the Beta version</string>
+         <string>Planned, in-progress, and completed tasks for both the Free and Plotlyst Plus versions. Beta: upcoming features that are currently available in the Beta version.</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -337,6 +337,9 @@
      </property>
      <property name="childrenCollapsible">
       <bool>false</bool>
+     </property>
+     <property name="framed" stdset="0">
+      <bool>true</bool>
      </property>
      <widget class="QWidget" name="wdgCategoriesParent" native="true">
       <property name="sizePolicy">

@@ -31,7 +31,7 @@ from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, Drag
 from qtmenu import MenuWidget
 
 from plotlyst.common import RELAXED_WHITE_COLOR
-from plotlyst.core.domain import TaskStatus, Task, Novel, Character, task_tags, Board
+from plotlyst.core.domain import TaskStatus, Task, Novel, Character, task_tags
 from plotlyst.core.template import SelectionItem
 from plotlyst.env import app_env
 from plotlyst.event.core import Event, emit_event
@@ -40,7 +40,7 @@ from plotlyst.events import CharacterDeletedEvent, TaskChanged, TaskDeleted, Tas
     TaskChangedFromWip
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import ButtonPressResizeEventFilter, shadow, action, tool_btn, \
-    any_menu_visible
+    any_menu_visible, insert_before_the_end
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.button import CollapseButton, TaskTagSelector
@@ -245,13 +245,16 @@ class BaseStatusColumnWidget(QFrame):
         vbox(self, 1, 20)
         self._header = _StatusHeader(self._status)
         self._header.collapseToggled.connect(self._collapseToggled)
-        self._container = QWidget(self)
+        self._container = QFrame(self)
+        self._container.setProperty('darker-bg', True)
+        self._container.setProperty('rounded', True)
         spacing = 6 if app_env.is_mac() else 12
-        vbox(self._container, margin=5, spacing=spacing)
+        vbox(self._container, margin=10, spacing=spacing)
+        self._container.layout().addWidget(vspacer())
+
         self.setMaximumWidth(TASK_WIDGET_MAX_WIDTH)
         self.layout().addWidget(self._header)
         self.layout().addWidget(self._container)
-        self.layout().addWidget(vspacer())
 
     def _collapseToggled(self, toggled: bool):
         for i in range(self._container.layout().count()):
@@ -277,7 +280,7 @@ class StatusColumnWidget(BaseStatusColumnWidget):
         self._btnAdd.installEventFilter(ButtonPressResizeEventFilter(self._btnAdd))
         self._btnAdd.installEventFilter(OpacityEventFilter(self._btnAdd))
 
-        self._container.layout().addWidget(self._btnAdd, alignment=Qt.AlignmentFlag.AlignLeft)
+        insert_before_the_end(self._container, self._btnAdd, alignment=Qt.AlignmentFlag.AlignLeft)
 
         self.installEventFilter(VisibilityToggleEventFilter(self._btnAdd, self))
         self.setAcceptDrops(True)
@@ -306,7 +309,7 @@ class StatusColumnWidget(BaseStatusColumnWidget):
 
     def addTask(self, task: Task, edit: bool = False) -> TaskWidget:
         wdg = TaskWidget(task, self)
-        self._container.layout().insertWidget(self._container.layout().count() - 1, wdg,
+        self._container.layout().insertWidget(self._container.layout().count() - 2, wdg,
                                               alignment=Qt.AlignmentFlag.AlignTop)
         wdg.installEventFilter(
             DragEventFilter(self, mimeType=TASK_MIME_TYPE, dataFunc=self._grabbedTaskData,
@@ -322,7 +325,7 @@ class StatusColumnWidget(BaseStatusColumnWidget):
         if self._status.wip:
             emit_event(self._novel, TaskChangedToWip(self, task))
 
-        self._header.updateTitle(self._container.layout().count() - 1)
+        self._header.updateTitle(self._container.layout().count() - 2)
         return wdg
 
     def _addNewTask(self):
@@ -371,7 +374,7 @@ class StatusColumnWidget(BaseStatusColumnWidget):
         taskWidget.setHidden(True)
         self._container.layout().removeWidget(taskWidget)
         gc(taskWidget)
-        self._header.updateTitle(self._container.layout().count() - 1)
+        self._header.updateTitle(self._container.layout().count() - 2)
 
 
 class BoardWidget(QWidget):

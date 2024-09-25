@@ -22,18 +22,30 @@ from typing import Optional, Dict
 
 from PyQt6.QtCore import QEvent, QThreadPool, QSize, Qt
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QWidget, QSizePolicy, QFrame, QLineEdit
+from PyQt6.QtWidgets import QWidget, QSizePolicy, QFrame
 from overrides import overrides
-from qthandy import clear_layout, hbox, spacer, margins, vbox, incr_font, retain_when_hidden
+from qthandy import clear_layout, hbox, spacer, margins, vbox, incr_font, retain_when_hidden, decr_icon, translucent
+from qthandy.filter import VisibilityToggleEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Board, Task
+from plotlyst.core.template import SelectionItem
 from plotlyst.env import app_env
 from plotlyst.service.resource import JsonDownloadWorker, JsonDownloadResult
-from plotlyst.view.common import push_btn, spin, shadow
+from plotlyst.view.common import push_btn, spin, shadow, tool_btn
 from plotlyst.view.generated.roadmap_view_ui import Ui_RoadmapView
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.layout import group
+from plotlyst.view.widget.input import AutoAdjustableLineEdit
 from plotlyst.view.widget.task import BaseStatusColumnWidget
+
+tag_character = SelectionItem('character', icon='fa5s.user', icon_color='darkBlue')
+tag_milieu = SelectionItem('milieu', icon='mdi.globe-model', icon_color='#2d6a4f')
+tag_scene = SelectionItem('scene', icon='mdi.movie-open', icon_color=PLOTLYST_SECONDARY_COLOR)
+
+task_tags: Dict[str, SelectionItem] = {}
+for tag in [tag_character, tag_milieu, tag_scene]:
+    task_tags[tag.text] = tag
 
 
 class RoadmapTaskWidget(QFrame):
@@ -42,12 +54,15 @@ class RoadmapTaskWidget(QFrame):
         super().__init__(parent)
         self._task: Task = task
 
+        self.setProperty('relaxed-white-bg', True)
+        self.setProperty('rounded', True)
+
         vbox(self, margin=5)
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self.setMinimumHeight(75)
         shadow(self, 3)
 
-        self._lineTitle = QLineEdit(self)
+        self._lineTitle = AutoAdjustableLineEdit(self, defaultWidth=100)
         self._lineTitle.setPlaceholderText('New task')
         self._lineTitle.setText(task.title)
         self._lineTitle.setFrame(False)
@@ -57,12 +72,25 @@ class RoadmapTaskWidget(QFrame):
         self._lineTitle.setFont(font)
         incr_font(self._lineTitle)
 
-        # top_wdg = group(self._lineTitle, spacer(), self._charSelector, margin=0, spacing=1)
-        self.layout().addWidget(self._lineTitle, alignment=Qt.AlignmentFlag.AlignTop)
+        self._btnOpenInExternal = tool_btn(IconRegistry.from_name('fa5s.external-link-alt', 'grey'), transparent_=True,
+                                           tooltip='Open in browser')
+        retain_when_hidden(self._btnOpenInExternal)
+        decr_icon(self._btnOpenInExternal, 4)
+
+        top_wdg = group(self._lineTitle, spacer(), self._btnOpenInExternal, margin=0, spacing=1)
+        self.layout().addWidget(top_wdg, alignment=Qt.AlignmentFlag.AlignTop)
 
         self._wdgBottom = QWidget()
         retain_when_hidden(self._wdgBottom)
         hbox(self._wdgBottom)
+
+        for tag_name in self._task.tags:
+            tag = task_tags.get(tag_name)
+            if tag:
+                btn = tool_btn(IconRegistry.from_name(tag.icon, tag.icon_color), transparent_=True)
+                decr_icon(btn, 4)
+                translucent(btn, 0.7)
+                self._wdgBottom.layout().addWidget(btn)
 
         # self._btnTags = TaskTagSelector(self._wdgBottom)
         # self._btnTags.tagSelected.connect(self._tagChanged)
@@ -77,21 +105,7 @@ class RoadmapTaskWidget(QFrame):
         # else:
         #     self._btnTags.setHidden(True)
 
-        # self.installEventFilter(self)
-
-    # @overrides
-    # def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-    #     if event.type() == QEvent.Type.Enter:
-    #         if not self._task.character_id:
-    #             self._charSelector.setVisible(True)
-    #         self._btnMenu.setVisible(True)
-    #         self._btnResolve.setVisible(True)
-    #         self._btnTags.setVisible(True)
-    #     elif event.type() == QEvent.Type.Leave:
-    #         if any_menu_visible(self._charSelector, self._btnMenu, self._btnTags):
-    #             return True
-    #         self._onLeave()
-    #     return super(TaskWidget, self).eventFilter(watched, event)
+        self.installEventFilter(VisibilityToggleEventFilter(self._btnOpenInExternal, self))
 
     def task(self) -> Task:
         return self._task
@@ -138,6 +152,8 @@ class RoadmapView(QWidget, Ui_RoadmapView):
 
         self.btnRoadmapIcon.setIcon(IconRegistry.from_name('fa5s.road'))
         self.btnPlus.setIcon(IconRegistry.from_name('mdi.certificate', color_on=PLOTLYST_SECONDARY_COLOR))
+
+        self.splitter.setSizes([150, 550])
 
         self._last_fetched = None
         self._downloading = False
