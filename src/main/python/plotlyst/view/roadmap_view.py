@@ -109,10 +109,12 @@ class RoadmapTaskWidget(QFrame):
 
 class RoadmapStatusColumn(BaseStatusColumnWidget):
 
-    def addTask(self, task: Task, board: Board):
+    def addTask(self, task: Task, board: Board) -> RoadmapTaskWidget:
         wdg = RoadmapTaskWidget(task, board.tags, self)
         self._container.layout().insertWidget(self._container.layout().count() - 1, wdg,
                                               alignment=Qt.AlignmentFlag.AlignTop)
+
+        return wdg
 
 
 class RoadmapBoardWidget(QWidget):
@@ -120,10 +122,12 @@ class RoadmapBoardWidget(QWidget):
         super().__init__(parent)
         hbox(self, spacing=20)
         self._statusColumns: Dict[str, RoadmapStatusColumn] = {}
+        self._tasks: Dict[Task, RoadmapTaskWidget] = {}
 
     def setBoard(self, board: Board):
         clear_layout(self)
         self._statusColumns.clear()
+        self._tasks.clear()
 
         for status in board.statuses:
             column = RoadmapStatusColumn(status)
@@ -132,12 +136,25 @@ class RoadmapBoardWidget(QWidget):
 
         for task in board.tasks:
             column = self._statusColumns.get(str(task.status_ref))
-            column.addTask(task, board)
+            wdg = column.addTask(task, board)
+            self._tasks[task] = wdg
 
         _spacer = spacer()
         _spacer.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         self.layout().addWidget(_spacer)
         margins(self, left=20)
+
+    def showAll(self):
+        for wdg in self._tasks.values():
+            wdg.setVisible(True)
+
+    def filterVersion(self, version: str):
+        for task, wdg in self._tasks.items():
+            wdg.setVisible(task.version == version)
+
+    def filterBeta(self):
+        for task, wdg in self._tasks.items():
+            wdg.setVisible(task.beta)
 
 
 class RoadmapView(QWidget, Ui_RoadmapView):
@@ -158,6 +175,11 @@ class RoadmapView(QWidget, Ui_RoadmapView):
 
         self._roadmapWidget = RoadmapBoardWidget()
         self.scrollAreaWidgetContents.layout().addWidget(self._roadmapWidget)
+
+        self.btnAll.clicked.connect(self._roadmapWidget.showAll)
+        self.btnFree.clicked.connect(lambda: self._roadmapWidget.filterVersion('Free'))
+        self.btnPlus.clicked.connect(lambda: self._roadmapWidget.filterVersion('Plus'))
+        self.btnBeta.clicked.connect(self._roadmapWidget.filterBeta)
 
         self.wdgLoading.setHidden(True)
 
@@ -181,6 +203,7 @@ class RoadmapView(QWidget, Ui_RoadmapView):
         self._thread_pool.start(runnable)
 
     def _handle_downloaded_data(self, data):
+        self.btnAll.setChecked(True)
         self._board = Board.from_dict(data)
         self._roadmapWidget.setBoard(self._board)
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
