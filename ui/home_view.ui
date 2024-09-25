@@ -1284,13 +1284,6 @@ It offers a range of tools to support various stages of novel writing, including
          <property name="bottomMargin">
           <number>0</number>
          </property>
-         <item alignment="Qt::AlignHCenter">
-          <widget class="QLabel" name="label_3">
-           <property name="text">
-            <string>Coming soon</string>
-           </property>
-          </widget>
-         </item>
         </layout>
        </widget>
       </widget>

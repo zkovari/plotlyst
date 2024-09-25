@@ -43,6 +43,7 @@ from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFi
 from plotlyst.view.dialog.home import StoryCreationDialog
 from plotlyst.view.generated.home_view_ui import Ui_HomeView
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.roadmap_view import RoadmapView
 from plotlyst.view.style.base import apply_border_image
 from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.confirm import confirmed
@@ -112,7 +113,6 @@ class HomeView(AbstractView):
 
         self.ui.btnTutorials.setHidden(True)
         self.ui.btnProgress.setHidden(True)
-        self.ui.btnRoadmap.setHidden(True)
 
         self.ui.lblWelcomeMain.setText(home_page_welcome_text)
 
@@ -181,6 +181,9 @@ class HomeView(AbstractView):
                                (self.ui.btnProgress, self.ui.pageProgress),
                                (self.ui.btnRoadmap, self.ui.pageRoadmap)])
 
+        self._roadmapView = RoadmapView()
+        self.ui.pageRoadmap.layout().addWidget(self._roadmapView)
+
         # self._tutorialsTreeView = TutorialsTreeView(settings=TreeSettings(font_incr=2))
         # self._tutorialsTreeView.tutorialSelected.connect(self._tutorial_selected)
         # self.ui.splitterTutorials.setSizes([150, 500])
@@ -201,7 +204,7 @@ class HomeView(AbstractView):
         # incr_font(self.ui.lineTutorialTitle, 10)
         # bold(self.ui.lineTutorialTitle)
 
-        self.ui.btnLibrary.setChecked(True)
+        self.ui.btnRoadmap.setChecked(True)
         self.ui.stackWdgNovels.setCurrentWidget(self.ui.pageEmpty)
 
         self._novels = client.novels()

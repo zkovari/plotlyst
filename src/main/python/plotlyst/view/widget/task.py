@@ -31,7 +31,7 @@ from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, Drag
 from qtmenu import MenuWidget
 
 from plotlyst.common import RELAXED_WHITE_COLOR
-from plotlyst.core.domain import TaskStatus, Task, Novel, Character, task_tags
+from plotlyst.core.domain import TaskStatus, Task, Novel, Character, task_tags, Board
 from plotlyst.core.template import SelectionItem
 from plotlyst.env import app_env
 from plotlyst.event.core import Event, emit_event
@@ -237,15 +237,11 @@ class _StatusHeader(QFrame):
         self._title.setText(f'{self._status.text.upper()} {suffix}')
 
 
-class StatusColumnWidget(QFrame):
-    taskChanged = pyqtSignal(Task)
-    taskDeleted = pyqtSignal(Task)
-    taskResolved = pyqtSignal(Task)
-
-    def __init__(self, novel: Novel, status: TaskStatus, parent=None):
-        super(StatusColumnWidget, self).__init__(parent)
-        self._novel = novel
+class BaseStatusColumnWidget(QFrame):
+    def __init__(self, status: TaskStatus, parent=None):
+        super().__init__(parent)
         self._status = status
+
         vbox(self, 1, 20)
         self._header = _StatusHeader(self._status)
         self._header.collapseToggled.connect(self._collapseToggled)
@@ -256,6 +252,22 @@ class StatusColumnWidget(QFrame):
         self.layout().addWidget(self._header)
         self.layout().addWidget(self._container)
         self.layout().addWidget(vspacer())
+
+    def _collapseToggled(self, toggled: bool):
+        for i in range(self._container.layout().count()):
+            item = self._container.layout().itemAt(i)
+            if item.widget() and isinstance(item.widget(), TaskWidget):
+                item.widget().setHidden(toggled)
+
+
+class StatusColumnWidget(BaseStatusColumnWidget):
+    taskChanged = pyqtSignal(Task)
+    taskDeleted = pyqtSignal(Task)
+    taskResolved = pyqtSignal(Task)
+
+    def __init__(self, novel: Novel, status: TaskStatus, parent=None):
+        super(StatusColumnWidget, self).__init__(status, parent)
+        self._novel = novel
 
         self._btnAdd = QPushButton('New Task', self)
         self._btnAdd.setIcon(IconRegistry.plus_icon('grey'))
@@ -323,12 +335,6 @@ class StatusColumnWidget(QFrame):
         self._novel.board.tasks.remove(task)
         self.__removeTaskWidget(taskWidget)
         self.taskDeleted.emit(task)
-
-    def _collapseToggled(self, toggled: bool):
-        for i in range(self._container.layout().count()):
-            item = self._container.layout().itemAt(i)
-            if item.widget() and isinstance(item.widget(), TaskWidget):
-                item.widget().setHidden(toggled)
 
     def _grabbedTaskData(self, widget: TaskWidget):
         return widget.task()
