@@ -29,7 +29,7 @@ from qthandy import clear_layout, hbox, spacer, margins, vbox, incr_font, retain
 from qthandy.filter import VisibilityToggleEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR
-from plotlyst.core.domain import Board, Task
+from plotlyst.core.domain import Board, Task, TaskStatus
 from plotlyst.core.template import SelectionItem
 from plotlyst.env import app_env
 from plotlyst.service.resource import JsonDownloadWorker, JsonDownloadResult
@@ -110,11 +110,15 @@ class RoadmapTaskWidget(QFrame):
 
 class RoadmapStatusColumn(BaseStatusColumnWidget):
 
+    def __init__(self, status: TaskStatus, parent=None):
+        super().__init__(status, parent, collapseEnabled=False, headerAdditionEnabled=False)
+
     def addTask(self, task: Task, board: Board) -> RoadmapTaskWidget:
         wdg = RoadmapTaskWidget(task, board.tags, self)
         self._container.layout().insertWidget(self._container.layout().count() - 1, wdg,
                                               alignment=Qt.AlignmentFlag.AlignTop)
 
+        self._header.updateTitle(self._container.layout().count() - 1)
         return wdg
 
 

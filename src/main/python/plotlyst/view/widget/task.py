@@ -186,7 +186,8 @@ class _StatusHeader(QFrame):
     collapseToggled = pyqtSignal(bool)
     addTask = pyqtSignal()
 
-    def __init__(self, status: TaskStatus, parent=None):
+    def __init__(self, status: TaskStatus, parent=None, collapseEnabled: bool = True,
+                 headerAdditionEnabled: bool = True):
         super(_StatusHeader, self).__init__(parent)
         self._status = status
         self.setStyleSheet(f'''_StatusHeader {{
@@ -199,7 +200,10 @@ class _StatusHeader(QFrame):
         bold(self._title)
         self.updateTitle()
         self._btnCollapse = CollapseButton(Qt.Edge.BottomEdge, Qt.Edge.LeftEdge, self)
-        self.installEventFilter(VisibilityToggleEventFilter(self._btnCollapse, self))
+        if collapseEnabled:
+            self.installEventFilter(VisibilityToggleEventFilter(self._btnCollapse, self))
+        else:
+            self._btnCollapse.setHidden(True)
         shadow(self)
 
         self._btnAdd = QToolButton()
@@ -219,7 +223,10 @@ class _StatusHeader(QFrame):
         ''')
         pointy(self._btnAdd)
         self._btnAdd.installEventFilter(ButtonPressResizeEventFilter(self._btnAdd))
-        self.installEventFilter(VisibilityToggleEventFilter(self._btnAdd, self))
+        if headerAdditionEnabled:
+            self.installEventFilter(VisibilityToggleEventFilter(self._btnAdd, self))
+        else:
+            self._btnAdd.setHidden(True)
 
         self.layout().addWidget(self._title)
         self.layout().addWidget(self._btnCollapse)
@@ -238,12 +245,14 @@ class _StatusHeader(QFrame):
 
 
 class BaseStatusColumnWidget(QFrame):
-    def __init__(self, status: TaskStatus, parent=None):
+    def __init__(self, status: TaskStatus, parent=None, collapseEnabled: bool = True,
+                 headerAdditionEnabled: bool = True):
         super().__init__(parent)
         self._status = status
 
         vbox(self, 1, 20)
-        self._header = _StatusHeader(self._status)
+        self._header = _StatusHeader(self._status, collapseEnabled=collapseEnabled,
+                                     headerAdditionEnabled=headerAdditionEnabled)
         self._header.collapseToggled.connect(self._collapseToggled)
         self._container = QFrame(self)
         self._container.setProperty('darker-bg', True)
