@@ -26,15 +26,15 @@ from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QWidget, QSizePolicy, QFrame
 from overrides import overrides
 from qthandy import clear_layout, hbox, spacer, margins, vbox, incr_font, retain_when_hidden, decr_icon, translucent, \
-    decr_font, transparent, vspacer
-from qthandy.filter import VisibilityToggleEventFilter
+    decr_font, transparent, vspacer, italic
+from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 
-from plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Board, Task, TaskStatus
 from plotlyst.core.template import SelectionItem
 from plotlyst.env import app_env
 from plotlyst.service.resource import JsonDownloadWorker, JsonDownloadResult
-from plotlyst.view.common import push_btn, spin, shadow, tool_btn, open_url
+from plotlyst.view.common import push_btn, spin, shadow, tool_btn, open_url, ButtonPressResizeEventFilter
 from plotlyst.view.generated.roadmap_view_ui import Ui_RoadmapView
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -243,6 +243,17 @@ class RoadmapView(QWidget, Ui_RoadmapView):
 
         self.btnRoadmapIcon.setIcon(IconRegistry.from_name('fa5s.road'))
         self.btnPlus.setIcon(IconRegistry.from_name('mdi.certificate', color_on=PLOTLYST_SECONDARY_COLOR))
+        self.btnVisitRoadmap.setIcon(IconRegistry.from_name('fa5s.external-link-alt'))
+        self.btnVisitRoadmap.installEventFilter(ButtonPressResizeEventFilter(self.btnVisitRoadmap))
+        self.btnVisitRoadmap.clicked.connect(lambda: open_url('https://plotlyst.featurebase.app/roadmap'))
+        decr_icon(self.btnVisitRoadmap, 2)
+        decr_font(self.btnVisitRoadmap)
+        italic(self.btnVisitRoadmap)
+        self.btnVisitRoadmap.installEventFilter(OpacityEventFilter(self.btnVisitRoadmap, enterOpacity=0.7))
+
+        self.btnSubmitRequest.setIcon(IconRegistry.from_name('mdi.comment-text', RELAXED_WHITE_COLOR))
+        self.btnSubmitRequest.installEventFilter(ButtonPressResizeEventFilter(self.btnSubmitRequest))
+        self.btnSubmitRequest.clicked.connect(lambda: open_url('https://plotlyst.featurebase.app/'))
 
         self.splitter.setSizes([150, 550])
 

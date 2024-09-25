@@ -77,12 +77,25 @@
         </property>
        </spacer>
       </item>
-      <item>
+      <item alignment="Qt::AlignBottom">
        <widget class="QLabel" name="lblLastUpdated">
         <property name="text">
          <string/>
         </property>
         <property name="description" stdset="0">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item alignment="Qt::AlignBottom">
+       <widget class="QPushButton" name="btnVisitRoadmap">
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
+        <property name="text">
+         <string>Visit online board</string>
+        </property>
+        <property name="transparent" stdset="0">
          <bool>true</bool>
         </property>
        </widget>
@@ -310,6 +323,22 @@
          </size>
         </property>
        </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnSubmitRequest">
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
+        <property name="text">
+         <string>Submit a request</string>
+        </property>
+        <property name="confirm" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="positive" stdset="0">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
