@@ -3654,6 +3654,10 @@ class ManuscriptGoals:
     target_wc: int = 80000
 
 
+def default_locations() -> List[Location]:
+    return [Location('New location')]
+
+
 @dataclass
 class Novel(NovelDescriptor):
     story_structures: List[StoryStructure] = field(default_factory=list)
@@ -3672,7 +3676,7 @@ class Novel(NovelDescriptor):
     synopsis: Optional['Document'] = None
     prefs: NovelPreferences = field(default_factory=NovelPreferences)
     world: WorldBuilding = field(default_factory=WorldBuilding)
-    locations: List[Location] = field(default_factory=list)
+    locations: List[Location] = field(default_factory=default_locations)
     board: Board = field(default_factory=Board)
     manuscript_goals: ManuscriptGoals = field(default_factory=ManuscriptGoals)
     events_map: Diagram = field(default_factory=default_events_map)
