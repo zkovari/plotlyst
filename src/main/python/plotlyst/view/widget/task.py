@@ -40,7 +40,7 @@ from plotlyst.events import CharacterDeletedEvent, TaskChanged, TaskDeleted, Tas
     TaskChangedFromWip
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import ButtonPressResizeEventFilter, shadow, action, tool_btn, \
-    any_menu_visible
+    any_menu_visible, insert_before_the_end
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.button import CollapseButton, TaskTagSelector
@@ -186,7 +186,8 @@ class _StatusHeader(QFrame):
     collapseToggled = pyqtSignal(bool)
     addTask = pyqtSignal()
 
-    def __init__(self, status: TaskStatus, parent=None):
+    def __init__(self, status: TaskStatus, parent=None, collapseEnabled: bool = True,
+                 headerAdditionEnabled: bool = True):
         super(_StatusHeader, self).__init__(parent)
         self._status = status
         self.setStyleSheet(f'''_StatusHeader {{
@@ -199,7 +200,10 @@ class _StatusHeader(QFrame):
         bold(self._title)
         self.updateTitle()
         self._btnCollapse = CollapseButton(Qt.Edge.BottomEdge, Qt.Edge.LeftEdge, self)
-        self.installEventFilter(VisibilityToggleEventFilter(self._btnCollapse, self))
+        if collapseEnabled:
+            self.installEventFilter(VisibilityToggleEventFilter(self._btnCollapse, self))
+        else:
+            self._btnCollapse.setHidden(True)
         shadow(self)
 
         self._btnAdd = QToolButton()
@@ -219,7 +223,10 @@ class _StatusHeader(QFrame):
         ''')
         pointy(self._btnAdd)
         self._btnAdd.installEventFilter(ButtonPressResizeEventFilter(self._btnAdd))
-        self.installEventFilter(VisibilityToggleEventFilter(self._btnAdd, self))
+        if headerAdditionEnabled:
+            self.installEventFilter(VisibilityToggleEventFilter(self._btnAdd, self))
+        else:
+            self._btnAdd.setHidden(True)
 
         self.layout().addWidget(self._title)
         self.layout().addWidget(self._btnCollapse)
@@ -237,25 +244,42 @@ class _StatusHeader(QFrame):
         self._title.setText(f'{self._status.text.upper()} {suffix}')
 
 
-class StatusColumnWidget(QFrame):
+class BaseStatusColumnWidget(QFrame):
+    def __init__(self, status: TaskStatus, parent=None, collapseEnabled: bool = True,
+                 headerAdditionEnabled: bool = True):
+        super().__init__(parent)
+        self._status = status
+
+        vbox(self, 1, 20)
+        self._header = _StatusHeader(self._status, collapseEnabled=collapseEnabled,
+                                     headerAdditionEnabled=headerAdditionEnabled)
+        self._header.collapseToggled.connect(self._collapseToggled)
+        self._container = QFrame(self)
+        self._container.setProperty('darker-bg', True)
+        self._container.setProperty('rounded', True)
+        spacing = 6 if app_env.is_mac() else 12
+        vbox(self._container, margin=10, spacing=spacing)
+        self._container.layout().addWidget(vspacer())
+
+        self.setMaximumWidth(TASK_WIDGET_MAX_WIDTH)
+        self.layout().addWidget(self._header)
+        self.layout().addWidget(self._container)
+
+    def _collapseToggled(self, toggled: bool):
+        for i in range(self._container.layout().count()):
+            item = self._container.layout().itemAt(i)
+            if item.widget() and isinstance(item.widget(), TaskWidget):
+                item.widget().setHidden(toggled)
+
+
+class StatusColumnWidget(BaseStatusColumnWidget):
     taskChanged = pyqtSignal(Task)
     taskDeleted = pyqtSignal(Task)
     taskResolved = pyqtSignal(Task)
 
     def __init__(self, novel: Novel, status: TaskStatus, parent=None):
-        super(StatusColumnWidget, self).__init__(parent)
+        super(StatusColumnWidget, self).__init__(status, parent)
         self._novel = novel
-        self._status = status
-        vbox(self, 1, 20)
-        self._header = _StatusHeader(self._status)
-        self._header.collapseToggled.connect(self._collapseToggled)
-        self._container = QWidget(self)
-        spacing = 6 if app_env.is_mac() else 12
-        vbox(self._container, margin=5, spacing=spacing)
-        self.setMaximumWidth(TASK_WIDGET_MAX_WIDTH)
-        self.layout().addWidget(self._header)
-        self.layout().addWidget(self._container)
-        self.layout().addWidget(vspacer())
 
         self._btnAdd = QPushButton('New Task', self)
         self._btnAdd.setIcon(IconRegistry.plus_icon('grey'))
@@ -265,7 +289,7 @@ class StatusColumnWidget(QFrame):
         self._btnAdd.installEventFilter(ButtonPressResizeEventFilter(self._btnAdd))
         self._btnAdd.installEventFilter(OpacityEventFilter(self._btnAdd))
 
-        self._container.layout().addWidget(self._btnAdd, alignment=Qt.AlignmentFlag.AlignLeft)
+        insert_before_the_end(self._container, self._btnAdd, alignment=Qt.AlignmentFlag.AlignLeft)
 
         self.installEventFilter(VisibilityToggleEventFilter(self._btnAdd, self))
         self.setAcceptDrops(True)
@@ -281,7 +305,7 @@ class StatusColumnWidget(QFrame):
 
     def event_received(self, event: Event):
         if isinstance(event, CharacterDeletedEvent):
-            for i in range(self._container.layout().count() - 1):
+            for i in range(self._container.layout().count() - 2):
                 item = self._container.layout().itemAt(i)
                 if item.widget():
                     taskWdg: TaskWidget = item.widget()
@@ -294,7 +318,7 @@ class StatusColumnWidget(QFrame):
 
     def addTask(self, task: Task, edit: bool = False) -> TaskWidget:
         wdg = TaskWidget(task, self)
-        self._container.layout().insertWidget(self._container.layout().count() - 1, wdg,
+        self._container.layout().insertWidget(self._container.layout().count() - 2, wdg,
                                               alignment=Qt.AlignmentFlag.AlignTop)
         wdg.installEventFilter(
             DragEventFilter(self, mimeType=TASK_MIME_TYPE, dataFunc=self._grabbedTaskData,
@@ -310,7 +334,7 @@ class StatusColumnWidget(QFrame):
         if self._status.wip:
             emit_event(self._novel, TaskChangedToWip(self, task))
 
-        self._header.updateTitle(self._container.layout().count() - 1)
+        self._header.updateTitle(self._container.layout().count() - 2)
         return wdg
 
     def _addNewTask(self):
@@ -323,12 +347,6 @@ class StatusColumnWidget(QFrame):
         self._novel.board.tasks.remove(task)
         self.__removeTaskWidget(taskWidget)
         self.taskDeleted.emit(task)
-
-    def _collapseToggled(self, toggled: bool):
-        for i in range(self._container.layout().count()):
-            item = self._container.layout().itemAt(i)
-            if item.widget() and isinstance(item.widget(), TaskWidget):
-                item.widget().setHidden(toggled)
 
     def _grabbedTaskData(self, widget: TaskWidget):
         return widget.task()
@@ -365,7 +383,7 @@ class StatusColumnWidget(QFrame):
         taskWidget.setHidden(True)
         self._container.layout().removeWidget(taskWidget)
         gc(taskWidget)
-        self._header.updateTitle(self._container.layout().count() - 1)
+        self._header.updateTitle(self._container.layout().count() - 2)
 
 
 class BoardWidget(QWidget):

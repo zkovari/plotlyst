@@ -2231,7 +2231,7 @@ class SensoryPerception:
 class SensoryDetail:
     night_mode: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     perceptions: Dict[str, SensoryPerception] = field(default_factory=dict,
-                                                                     metadata=config(exclude=exclude_if_empty))
+                                                      metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass
@@ -2319,6 +2319,9 @@ class Task(CharacterBased):
     summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
     character_id: Optional[uuid.UUID] = None
     tags: List[str] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    web_link: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    version: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    beta: bool = field(default=False, metadata=config(exclude=exclude_if_false))
 
     def __post_init__(self):
         if self.creation_date is None:
@@ -2355,6 +2358,7 @@ def default_task_statues() -> List[TaskStatus]:
 class Board:
     tasks: List[Task] = field(default_factory=list)
     statuses: List[TaskStatus] = field(default_factory=default_task_statues)
+    tags: Dict[str, SelectionItem] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
 
 
 class TemplateStoryStructureType(Enum):
