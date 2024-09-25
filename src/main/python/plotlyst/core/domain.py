@@ -2358,6 +2358,7 @@ def default_task_statues() -> List[TaskStatus]:
 class Board:
     tasks: List[Task] = field(default_factory=list)
     statuses: List[TaskStatus] = field(default_factory=default_task_statues)
+    tags: Dict[str, SelectionItem] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
 
 
 class TemplateStoryStructureType(Enum):

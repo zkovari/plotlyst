@@ -41,18 +41,10 @@ from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.input import AutoAdjustableTextEdit
 from plotlyst.view.widget.task import BaseStatusColumnWidget
 
-tag_character = SelectionItem('character', icon='fa5s.user', icon_color='darkBlue')
-tag_milieu = SelectionItem('milieu', icon='mdi.globe-model', icon_color='#2d6a4f')
-tag_scene = SelectionItem('scene', icon='mdi.movie-open', icon_color=PLOTLYST_SECONDARY_COLOR)
-
-task_tags: Dict[str, SelectionItem] = {}
-for tag in [tag_character, tag_milieu, tag_scene]:
-    task_tags[tag.text] = tag
-
 
 class RoadmapTaskWidget(QFrame):
 
-    def __init__(self, task: Task, parent=None):
+    def __init__(self, task: Task, tags: Dict[str, SelectionItem], parent=None):
         super().__init__(parent)
         self._task: Task = task
 
@@ -88,10 +80,10 @@ class RoadmapTaskWidget(QFrame):
         hbox(self._wdgBottom)
 
         for tag_name in self._task.tags:
-            tag = task_tags.get(tag_name)
+            tag = tags.get(tag_name)
             if tag:
                 btn = tool_btn(IconRegistry.from_name(tag.icon, tag.icon_color), transparent_=True, icon_resize=False,
-                               pointy_=False)
+                               pointy_=False, tooltip=tag.text)
                 decr_icon(btn, 4)
                 translucent(btn, 0.7)
                 self._wdgBottom.layout().addWidget(btn)
@@ -117,8 +109,8 @@ class RoadmapTaskWidget(QFrame):
 
 class RoadmapStatusColumn(BaseStatusColumnWidget):
 
-    def addTask(self, task: Task):
-        wdg = RoadmapTaskWidget(task, self)
+    def addTask(self, task: Task, board: Board):
+        wdg = RoadmapTaskWidget(task, board.tags, self)
         self._container.layout().insertWidget(self._container.layout().count() - 1, wdg,
                                               alignment=Qt.AlignmentFlag.AlignTop)
 
@@ -140,7 +132,7 @@ class RoadmapBoardWidget(QWidget):
 
         for task in board.tasks:
             column = self._statusColumns.get(str(task.status_ref))
-            column.addTask(task)
+            column.addTask(task, board)
 
         _spacer = spacer()
         _spacer.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
