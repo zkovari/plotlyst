@@ -189,8 +189,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
             QApplication.instance().installEventFilter(CapitalizationEventFilter(self))
 
-        self.home_mode.setChecked(True)
-
     @overrides
     def closeEvent(self, event: QCloseEvent) -> None:
         if language_tool_proxy.is_set():
