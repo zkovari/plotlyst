@@ -25,6 +25,7 @@ from PyQt6.QtGui import QColor, QPainter
 from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtWidgets import QWidget, QGraphicsColorizeEffect
 from overrides import overrides
+from qthandy import bold
 from qthandy.filter import OpacityEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
@@ -89,6 +90,9 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.wdgNameHeader.layout().addWidget(separator)
 
         self._entity: Optional[WorldBuildingEntity] = None
+
+        self.ui.btnMilieuIcon.setIcon(IconRegistry.world_building_icon())
+        bold(self.ui.lblTitleMilieu)
 
         self.ui.btnNew.setIcon(IconRegistry.plus_icon(color=RELAXED_WHITE_COLOR))
         self.ui.btnNew.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnNew))

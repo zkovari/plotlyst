@@ -32,6 +32,50 @@
    <property name="bottomMargin">
     <number>0</number>
    </property>
+   <item alignment="Qt::AlignHCenter">
+    <widget class="QWidget" name="widget_3" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_11">
+      <property name="spacing">
+       <number>3</number>
+      </property>
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>2</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <property name="bottomMargin">
+       <number>2</number>
+      </property>
+      <item>
+       <widget class="QToolButton" name="btnMilieuIcon">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="transparent" stdset="0">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="lblTitleMilieu">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Milieu and world-building</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
    <item>
     <widget class="QWidget" name="wdgButtonsHeader" native="true">
      <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -461,7 +505,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>402</width>
-                <height>589</height>
+                <height>559</height>
                </rect>
               </property>
               <property name="sizePolicy">
@@ -921,8 +965,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>277</width>
-                <height>550</height>
+                <width>162</width>
+                <height>87</height>
                </rect>
               </property>
               <property name="sizePolicy">
