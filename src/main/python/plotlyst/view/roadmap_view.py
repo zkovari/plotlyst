@@ -18,9 +18,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import datetime
-from typing import Optional, Dict
+from functools import partial
+from typing import Optional, Dict, Set
 
-from PyQt6.QtCore import QEvent, QThreadPool, QSize, Qt
+from PyQt6.QtCore import QEvent, QThreadPool, QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QWidget, QSizePolicy, QFrame
 from overrides import overrides
@@ -47,6 +48,8 @@ versions_counter: Dict[str, int] = {}
 
 
 class TagsTreeView(TreeView):
+    toggled = pyqtSignal(str, bool)
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -56,6 +59,7 @@ class TagsTreeView(TreeView):
             node = EyeToggleNode(f'{k.capitalize()} ({tags_counter.get(k, 0)})',
                                  IconRegistry.from_name(v.icon, color=v.icon_color))
             node.setToolTip(v.text)
+            node.toggled.connect(partial(self.toggled.emit, k))
             self._centralWidget.layout().addWidget(node)
 
         self._centralWidget.layout().addWidget(vspacer())
@@ -150,11 +154,15 @@ class RoadmapBoardWidget(QWidget):
         hbox(self, spacing=20)
         self._statusColumns: Dict[str, RoadmapStatusColumn] = {}
         self._tasks: Dict[Task, RoadmapTaskWidget] = {}
+        self._tagFilters: Set[str] = set()
 
     def setBoard(self, board: Board):
         clear_layout(self)
         self._statusColumns.clear()
         self._tasks.clear()
+        self._tagFilters.clear()
+        self._version: str = ''
+        self._beta: bool = False
 
         for status in board.statuses:
             column = RoadmapStatusColumn(status)
@@ -180,16 +188,51 @@ class RoadmapBoardWidget(QWidget):
         margins(self, left=20)
 
     def showAll(self):
-        for wdg in self._tasks.values():
-            wdg.setVisible(True)
+        self._version = ''
+        self._beta = False
+
+        for task, wdg in self._tasks.items():
+            wdg.setVisible(self._filter(task))
 
     def filterVersion(self, version: str):
+        self._version = version
+        self._beta = False
+
         for task, wdg in self._tasks.items():
-            wdg.setVisible(task.version == version)
+            wdg.setVisible(self._filter(task))
 
     def filterBeta(self):
+        self._version = ''
+        self._beta = True
+
         for task, wdg in self._tasks.items():
-            wdg.setVisible(task.beta)
+            wdg.setVisible(self._filter(task))
+
+    def filterTag(self, tag: str, filtered: bool):
+        if filtered:
+            self._tagFilters.add(tag)
+        else:
+            self._tagFilters.remove(tag)
+
+        for task, wdg in self._tasks.items():
+            wdg.setVisible(self._filter(task))
+
+    def _filter(self, task: Task) -> bool:
+        if self._version and task.version != self._version:
+            return False
+        if self._beta and not task.beta:
+            return False
+
+        return self._filteredByTags(task)
+
+    def _filteredByTags(self, task: Task) -> bool:
+        if not self._tagFilters:
+            return True
+
+        for tag in task.tags:
+            if tag in self._tagFilters:
+                return True
+        return False
 
 
 class RoadmapView(QWidget, Ui_RoadmapView):
@@ -213,6 +256,7 @@ class RoadmapView(QWidget, Ui_RoadmapView):
 
         self._tagsTree = TagsTreeView()
         self.wdgCategoriesParent.layout().addWidget(self._tagsTree)
+        self._tagsTree.toggled.connect(self._roadmapWidget.filterTag)
 
         self.btnAll.clicked.connect(self._roadmapWidget.showAll)
         self.btnFree.clicked.connect(lambda: self._roadmapWidget.filterVersion('Free'))
