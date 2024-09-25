@@ -24,19 +24,21 @@ from PyQt6.QtCore import QEvent, QThreadPool, QSize, Qt
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QWidget, QSizePolicy, QFrame
 from overrides import overrides
-from qthandy import clear_layout, hbox, spacer, margins, vbox, incr_font, retain_when_hidden, decr_icon, translucent
+from qthandy import clear_layout, hbox, spacer, margins, vbox, incr_font, retain_when_hidden, decr_icon, translucent, \
+    decr_font, transparent
 from qthandy.filter import VisibilityToggleEventFilter
 
-from plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR
 from plotlyst.core.domain import Board, Task
 from plotlyst.core.template import SelectionItem
 from plotlyst.env import app_env
 from plotlyst.service.resource import JsonDownloadWorker, JsonDownloadResult
-from plotlyst.view.common import push_btn, spin, shadow, tool_btn
+from plotlyst.view.common import push_btn, spin, shadow, tool_btn, open_url
 from plotlyst.view.generated.roadmap_view_ui import Ui_RoadmapView
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
-from plotlyst.view.widget.input import AutoAdjustableLineEdit
+from plotlyst.view.style.button import apply_button_palette_color
+from plotlyst.view.widget.input import AutoAdjustableTextEdit
 from plotlyst.view.widget.task import BaseStatusColumnWidget
 
 tag_character = SelectionItem('character', icon='fa5s.user', icon_color='darkBlue')
@@ -62,10 +64,10 @@ class RoadmapTaskWidget(QFrame):
         self.setMinimumHeight(75)
         shadow(self, 3)
 
-        self._lineTitle = AutoAdjustableLineEdit(self, defaultWidth=100)
+        self._lineTitle = AutoAdjustableTextEdit(self)
         self._lineTitle.setPlaceholderText('New task')
         self._lineTitle.setText(task.title)
-        self._lineTitle.setFrame(False)
+        transparent(self._lineTitle)
         self._lineTitle.setReadOnly(True)
         font = QFont(app_env.sans_serif_font())
         font.setWeight(QFont.Weight.Medium)
@@ -74,6 +76,7 @@ class RoadmapTaskWidget(QFrame):
 
         self._btnOpenInExternal = tool_btn(IconRegistry.from_name('fa5s.external-link-alt', 'grey'), transparent_=True,
                                            tooltip='Open in browser')
+        self._btnOpenInExternal.clicked.connect(lambda: open_url(self._task.web_link))
         retain_when_hidden(self._btnOpenInExternal)
         decr_icon(self._btnOpenInExternal, 4)
 
@@ -87,23 +90,24 @@ class RoadmapTaskWidget(QFrame):
         for tag_name in self._task.tags:
             tag = task_tags.get(tag_name)
             if tag:
-                btn = tool_btn(IconRegistry.from_name(tag.icon, tag.icon_color), transparent_=True)
+                btn = tool_btn(IconRegistry.from_name(tag.icon, tag.icon_color), transparent_=True, icon_resize=False,
+                               pointy_=False)
                 decr_icon(btn, 4)
                 translucent(btn, 0.7)
                 self._wdgBottom.layout().addWidget(btn)
 
-        # self._btnTags = TaskTagSelector(self._wdgBottom)
-        # self._btnTags.tagSelected.connect(self._tagChanged)
-
         self._wdgBottom.layout().addWidget(spacer())
-        self.layout().addWidget(self._wdgBottom, alignment=Qt.AlignmentFlag.AlignBottom)
+        if self._task.version == 'Plus':
+            self._btnVersion = push_btn(text=self._task.version, properties=['transparent'],
+                                        tooltip='Feature will be available in Plotlyst Plus', icon_resize=False,
+                                        pointy_=False)
+            self._btnVersion.setIcon(IconRegistry.from_name('mdi.certificate', color=PLOTLYST_MAIN_COLOR))
+            apply_button_palette_color(self._btnVersion, PLOTLYST_MAIN_COLOR)
+            decr_font(self._btnVersion)
+            decr_icon(self._btnVersion, 2)
+            self._wdgBottom.layout().addWidget(self._btnVersion)
 
-        # if self._task.tags:
-        #     tag = task_tags.get(self._task.tags[0], None)
-        #     if tag:
-        #         self._btnTags.select(tag)
-        # else:
-        #     self._btnTags.setHidden(True)
+        self.layout().addWidget(self._wdgBottom, alignment=Qt.AlignmentFlag.AlignBottom)
 
         self.installEventFilter(VisibilityToggleEventFilter(self._btnOpenInExternal, self))
 
