@@ -56,15 +56,16 @@ class RoadmapTaskWidget(QFrame):
         self.setMinimumHeight(75)
         shadow(self, 3)
 
-        self._lineTitle = AutoAdjustableTextEdit(self)
-        self._lineTitle.setPlaceholderText('New task')
-        self._lineTitle.setText(task.title)
-        transparent(self._lineTitle)
-        self._lineTitle.setReadOnly(True)
+        self._textTitle = AutoAdjustableTextEdit(self)
+        self._textTitle.setPlaceholderText('New task')
+        self._textTitle.setText(task.title)
+        self.setToolTip(task.summary)
+        transparent(self._textTitle)
+        self._textTitle.setReadOnly(True)
         font = QFont(app_env.sans_serif_font())
         font.setWeight(QFont.Weight.Medium)
-        self._lineTitle.setFont(font)
-        incr_font(self._lineTitle)
+        self._textTitle.setFont(font)
+        incr_font(self._textTitle)
 
         self._btnOpenInExternal = tool_btn(IconRegistry.from_name('fa5s.external-link-alt', 'grey'), transparent_=True,
                                            tooltip='Open in browser')
@@ -72,7 +73,7 @@ class RoadmapTaskWidget(QFrame):
         retain_when_hidden(self._btnOpenInExternal)
         decr_icon(self._btnOpenInExternal, 4)
 
-        top_wdg = group(self._lineTitle, spacer(), self._btnOpenInExternal, margin=0, spacing=1)
+        top_wdg = group(self._textTitle, spacer(), self._btnOpenInExternal, margin=0, spacing=1)
         self.layout().addWidget(top_wdg, alignment=Qt.AlignmentFlag.AlignTop)
 
         self._wdgBottom = QWidget()
