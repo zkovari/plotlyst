@@ -43,6 +43,7 @@ from plotlyst.view.widget.task import BaseStatusColumnWidget
 from plotlyst.view.widget.tree import TreeView, EyeToggleNode
 
 tags_counter: Dict[str, int] = {}
+versions_counter: Dict[str, int] = {}
 
 
 class TagsTreeView(TreeView):
@@ -52,7 +53,8 @@ class TagsTreeView(TreeView):
     def setTags(self, tags: Dict[str, SelectionItem]):
         self.clear()
         for k, v in tags.items():
-            node = EyeToggleNode(f'{k.capitalize()} ({tags_counter.get(k, 0)})', IconRegistry.from_name(v.icon, color=v.icon_color))
+            node = EyeToggleNode(f'{k.capitalize()} ({tags_counter.get(k, 0)})',
+                                 IconRegistry.from_name(v.icon, color=v.icon_color))
             node.setToolTip(v.text)
             self._centralWidget.layout().addWidget(node)
 
@@ -167,6 +169,10 @@ class RoadmapBoardWidget(QWidget):
                 if tag not in tags_counter:
                     tags_counter[tag] = 0
                 tags_counter[tag] += 1
+            if task.beta:
+                versions_counter['Beta'] += 1
+            if task.version:
+                versions_counter[task.version] += 1
 
         _spacer = spacer()
         _spacer.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
@@ -237,10 +243,18 @@ class RoadmapView(QWidget, Ui_RoadmapView):
     def _handle_downloaded_data(self, data):
         self.btnAll.setChecked(True)
         tags_counter.clear()
+        versions_counter.clear()
+        versions_counter['Free'] = 0
+        versions_counter['Plus'] = 0
+        versions_counter['Beta'] = 0
 
         self._board = Board.from_dict(data)
         self._roadmapWidget.setBoard(self._board)
         self._tagsTree.setTags(self._board.tags)
+
+        self.btnFree.setText(f'Free ({versions_counter.get("Free", 0)})')
+        self.btnPlus.setText(f'Plus ({versions_counter.get("Plus", 0)})')
+        self.btnBeta.setText(f'Beta ({versions_counter.get("Beta", 0)})')
 
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
         self.lblLastUpdated.setText(f"Last updated: {now}")
