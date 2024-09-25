@@ -296,7 +296,7 @@ class StatusColumnWidget(BaseStatusColumnWidget):
 
     def event_received(self, event: Event):
         if isinstance(event, CharacterDeletedEvent):
-            for i in range(self._container.layout().count() - 1):
+            for i in range(self._container.layout().count() - 2):
                 item = self._container.layout().itemAt(i)
                 if item.widget():
                     taskWdg: TaskWidget = item.widget()
