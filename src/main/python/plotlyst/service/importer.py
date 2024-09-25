@@ -177,6 +177,7 @@ class ScrivenerSyncImporter(SyncImporter):
                 old_scene.title = new_scene.title
                 if old_scene.manuscript and new_scene.manuscript:
                     old_scene.manuscript.content = new_scene.manuscript.content
+                    old_scene.manuscript.statistics = new_scene.manuscript.statistics
                     old_scene.manuscript.loaded = True
                 elif old_scene.manuscript and new_scene.manuscript is None:
                     old_scene.manuscript.content = ''
