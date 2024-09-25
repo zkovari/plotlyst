@@ -25,7 +25,7 @@ from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QWidget, QSizePolicy, QFrame
 from overrides import overrides
 from qthandy import clear_layout, hbox, spacer, margins, vbox, incr_font, retain_when_hidden, decr_icon, translucent, \
-    decr_font, transparent
+    decr_font, transparent, vspacer
 from qthandy.filter import VisibilityToggleEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR
@@ -40,6 +40,26 @@ from plotlyst.view.layout import group
 from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.input import AutoAdjustableTextEdit
 from plotlyst.view.widget.task import BaseStatusColumnWidget
+from plotlyst.view.widget.tree import TreeView, EyeToggleNode
+
+tags_counter: Dict[str, int] = {}
+
+
+class TagsTreeView(TreeView):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def setTags(self, tags: Dict[str, SelectionItem]):
+        self.clear()
+        for k, v in tags.items():
+            node = EyeToggleNode(f'{k.capitalize()} ({tags_counter.get(k, 0)})', IconRegistry.from_name(v.icon, color=v.icon_color))
+            node.setToolTip(v.text)
+            self._centralWidget.layout().addWidget(node)
+
+        self._centralWidget.layout().addWidget(vspacer())
+
+    def clear(self):
+        clear_layout(self._centralWidget)
 
 
 class RoadmapTaskWidget(QFrame):
@@ -143,6 +163,10 @@ class RoadmapBoardWidget(QWidget):
             column = self._statusColumns.get(str(task.status_ref))
             wdg = column.addTask(task, board)
             self._tasks[task] = wdg
+            for tag in task.tags:
+                if tag not in tags_counter:
+                    tags_counter[tag] = 0
+                tags_counter[tag] += 1
 
         _spacer = spacer()
         _spacer.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
@@ -181,6 +205,9 @@ class RoadmapView(QWidget, Ui_RoadmapView):
         self._roadmapWidget = RoadmapBoardWidget()
         self.scrollAreaWidgetContents.layout().addWidget(self._roadmapWidget)
 
+        self._tagsTree = TagsTreeView()
+        self.wdgCategoriesParent.layout().addWidget(self._tagsTree)
+
         self.btnAll.clicked.connect(self._roadmapWidget.showAll)
         self.btnFree.clicked.connect(lambda: self._roadmapWidget.filterVersion('Free'))
         self.btnPlus.clicked.connect(lambda: self._roadmapWidget.filterVersion('Plus'))
@@ -209,11 +236,16 @@ class RoadmapView(QWidget, Ui_RoadmapView):
 
     def _handle_downloaded_data(self, data):
         self.btnAll.setChecked(True)
+        tags_counter.clear()
+
         self._board = Board.from_dict(data)
         self._roadmapWidget.setBoard(self._board)
+        self._tagsTree.setTags(self._board.tags)
+
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
         self.lblLastUpdated.setText(f"Last updated: {now}")
         self._last_fetched = datetime.datetime.now()
+
         self._handle_downloading_status(False)
 
     def _handle_download_failure(self, status_code: int, message: str):
