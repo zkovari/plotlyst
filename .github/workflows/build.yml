@@ -67,7 +67,7 @@ jobs:
           pip install git+https://github.com/plotlyst/qt-frames.git
           pip install git+https://github.com/plotlyst/qt-toolbox-widget.git
           pip install git+https://github.com/plotlyst/language_tool_python.git@plotlyst
-          pip install git+https://github.com/plotlyst/pypandoc.git@plotlyst'
+          pip install git+https://github.com/plotlyst/pypandoc.git@plotlyst
       - name: Generate code
         run: |
           qt-uic --source ui --target src/main/python/plotlyst/view/generated
