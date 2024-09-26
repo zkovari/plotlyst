@@ -31,8 +31,10 @@ from plotlyst.core.scrivener import ScrivenerParser
 from plotlyst.event.core import emit_event
 from plotlyst.events import NovelSyncEvent, NovelAboutToSyncEvent, CharacterDeletedEvent, \
     SceneDeletedEvent
+from plotlyst.resources import ResourceType
 from plotlyst.service.persistence import RepositoryPersistenceManager, flush_or_fail, delete_character, \
     delete_scene
+from plotlyst.service.resource import ask_for_resource
 from plotlyst.view.icons import IconRegistry
 
 
@@ -105,6 +107,8 @@ class ScrivenerSyncImporter(SyncImporter):
 
     @busy
     def sync(self, novel: Novel):
+        if not ask_for_resource(ResourceType.PANDOC):
+            return
         emit_event(novel, NovelAboutToSyncEvent(self, novel))
         novel.import_origin.last_mod_time = self._mod_time(novel)
 
