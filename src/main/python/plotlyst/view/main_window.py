@@ -52,7 +52,7 @@ from plotlyst.service.dir import select_new_project_directory
 from plotlyst.service.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
 from plotlyst.service.importer import ScrivenerSyncImporter
 from plotlyst.service.persistence import RepositoryPersistenceManager, flush_or_fail
-from plotlyst.service.resource import download_resource, download_nltk_resources
+from plotlyst.service.resource import download_resource, download_nltk_resources, ResourceManagerDialog
 from plotlyst.service.tour import TourService
 from plotlyst.settings import settings
 from plotlyst.view._view import AbstractView
@@ -78,7 +78,6 @@ from plotlyst.view.widget.tour.core import TutorialNovelOpenTourEvent, tutorial_
     TutorialNovelCloseTourEvent, NovelTopLevelButtonTourEvent, HomeTopLevelButtonTourEvent, NovelEditorDisplayTourEvent, \
     AllNovelViewsTourEvent, GeneralNovelViewTourEvent, CharacterViewTourEvent, ScenesViewTourEvent, \
     DocumentsViewTourEvent, ManuscriptViewTourEvent, AnalysisViewTourEvent, BoardViewTourEvent, BaseNovelViewTourEvent
-from plotlyst.view.widget.utility import ResourceManagerDialog
 from plotlyst.view.world_building_view import WorldBuildingView
 
 textstat.sentence_count = sentence_count

@@ -54,7 +54,7 @@ from plotlyst.view.widget.progress import ProgressChart
 from plotlyst.view.widget.scene.editor import SceneMiniEditor
 from plotlyst.view.widget.scenes import SceneNotesEditor
 from plotlyst.view.widget.tree import TreeSettings
-from plotlyst.view.widget.utility import ask_for_resource
+from plotlyst.service.resource import ask_for_resource
 
 
 class ManuscriptView(AbstractNovelView):

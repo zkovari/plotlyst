@@ -28,7 +28,7 @@ from overrides import overrides
 from qtanim import fade_in
 from qthandy import hbox, translucent, bold, incr_font, transparent, retain_when_hidden, underline, vbox, decr_icon, \
     incr_icon, italic, pointy
-from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
+from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, GridMenuWidget
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR

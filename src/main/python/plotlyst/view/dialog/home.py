@@ -40,7 +40,7 @@ from plotlyst.view.widget.input import Toggle
 from plotlyst.view.widget.novel import NovelCustomizationWizard
 from plotlyst.view.widget.tour.core import NewStoryTitleInDialogTourEvent, \
     NewStoryTitleFillInDialogTourEvent, NewStoryDialogOkayButtonTourEvent, NewStoryDialogWizardCustomizationTourEvent
-from plotlyst.view.widget.utility import ask_for_resource
+from plotlyst.service.resource import ask_for_resource
 
 
 class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):

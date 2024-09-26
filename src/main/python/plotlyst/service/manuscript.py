@@ -32,7 +32,7 @@ from plotlyst.env import open_location, app_env
 from plotlyst.resources import resource_registry, ResourceType
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.widget.confirm import asked
-from plotlyst.view.widget.utility import ask_for_resource
+from plotlyst.service.resource import ask_for_resource
 
 
 def prepare_content_for_convert(html: str) -> str:
