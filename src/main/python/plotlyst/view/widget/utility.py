@@ -397,7 +397,7 @@ class ResourceManagerWidget(QWidget, EventListener):
     def __init__(self, resourceTypes: Optional[List[ResourceType]] = None, parent=None):
         super(ResourceManagerWidget, self).__init__(parent)
         if not resourceTypes:
-            resourceTypes = [ResourceType.JRE_8, ResourceType.PANDOC, ResourceType.NLTK_AVERAGED_PERCEPTRON_TAGGER,
+            resourceTypes = [ResourceType.JRE_8, ResourceType.PANDOC,
                              ResourceType.NLTK_PUNKT_TOKENIZER]
         self._resources: Dict[ResourceType, _ResourceControllers] = {}
 

@@ -78,7 +78,7 @@ def download_nltk_resources():
 class NltkResourceDownloadWorker(QRunnable):
 
     def __init__(self, resourceType: Optional[ResourceType] = None):
-        super(NltkResourceDownloadWorker, self).__init__()
+        super().__init__()
         if resourceType:
             self.resource_types: List[ResourceType] = [resourceType]
         else:
