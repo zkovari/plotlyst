@@ -608,7 +608,8 @@ class ScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributionWidget, E
 
     def refreshAverage(self):
         if self.novel.scenes:
-            self.average = sum([len(x.characters) + 1 for x in self.novel.scenes]) / len(self.novel.scenes)
+            self.average = sum([len(x.characters) + 1 if x.pov else 0 for x in self.novel.scenes]) / len(
+                self.novel.scenes)
         else:
             self.average = 0
         self.spinAverage.setValue(self.average)
