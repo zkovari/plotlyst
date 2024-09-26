@@ -32,7 +32,6 @@ dependencies = [
     "nltk==3.7",
     "requests==2.27.1",
     "qt-handy",
-    "pypandoc==1.11",
 ]
 
 [project.optional-dependencies]
@@ -62,5 +61,6 @@ requires = [
     'qt-tour @ git+https://github.com/plotlyst/qt-tour.git',
     'fbs @ git+https://github.com/plotlyst/fbs.git@frozen',
     'qt-textedit @ git+https://github.com/plotlyst/qt-textedit.git',
-    'language_tool_python @ git+https://github.com/plotlyst/language_tool_python.git@plotlyst'
+    'language_tool_python @ git+https://github.com/plotlyst/language_tool_python.git@plotlyst',
+    'pypandoc @ git+https://github.com/plotlyst/pypandoc.git@plotlyst'
 ]
