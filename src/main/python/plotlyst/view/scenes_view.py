@@ -425,8 +425,8 @@ class ScenesOutlineView(AbstractNovelView):
         if self.selected_card:
             self.selected_card.clearSelection()
             self.selected_card = None
-
-        self.ui.btnDelete.setEnabled(True)
+        if not self.novel.is_readonly():
+            self.ui.btnDelete.setEnabled(True)
         self.ui.btnEdit.setEnabled(False)
 
     def _hide_chapters_clicked(self, toggled: bool):
