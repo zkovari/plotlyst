@@ -139,7 +139,7 @@ class ResourceDescriptor:
         return f'{self.name}.{self.extension}'
 
 
-PANDOC_VERSION: str = '3.1.2'
+PANDOC_VERSION: str = '3.4'
 
 _pandoc_resource = ResourceDescriptor('pandoc', 'formatting', '', human_name='Exporter', version=PANDOC_VERSION,
                                       description='Necessary for exporting to docx format')
