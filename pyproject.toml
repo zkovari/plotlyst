@@ -30,7 +30,7 @@ dependencies = [
     "striprtf==0.0.19",
     "textstat==0.7.2",
     "nltk==3.7",
-    "requests==2.27.1",
+    "requests==2.32.3",
     "qt-handy",
 ]
 
