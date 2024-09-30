@@ -23,6 +23,7 @@ from typing import Optional, Set
 import language_tool_python
 from PyQt6.QtCore import QRunnable
 from language_tool_python import LanguageTool
+from language_tool_python.download_lt import LATEST_VERSION
 from overrides import overrides
 
 from plotlyst.core.domain import Novel, Event, Location
@@ -56,6 +57,7 @@ class LanguageToolProxy:
     def set(self, language_tool: LanguageTool):
         self._language_tool = language_tool
         self._error = None
+        logging.info(f'Grammar checker was set up with version {LATEST_VERSION}.')
         emit_info('Grammar checker was set up.')
         emit_global_event(LanguageToolSet(self, self._language_tool))
 
