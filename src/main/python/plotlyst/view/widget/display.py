@@ -371,8 +371,11 @@ class PopupDialog(QDialog):
             QApplication.restoreOverrideCursor()
         dialog = cls(*args, **kwargs)
         window = QApplication.activeWindow()
-        overlay = OverlayWidget(window)
-        overlay.show()
+        if window:
+            overlay = OverlayWidget(window)
+            overlay.show()
+        else:
+            overlay = None
 
         dialog.move(
             window.frameGeometry().center() - QPoint(dialog.sizeHint().width() // 2, dialog.sizeHint().height() // 2))
@@ -380,7 +383,8 @@ class PopupDialog(QDialog):
         try:
             return dialog.display()
         finally:
-            overlay.setHidden(True)
+            if overlay is not None:
+                overlay.setHidden(True)
             if override_cursor:
                 QApplication.setOverrideCursor(override_cursor)
 
