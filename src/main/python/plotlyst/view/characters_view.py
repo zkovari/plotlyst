@@ -231,6 +231,9 @@ class CharactersView(AbstractNovelView):
     def event_received(self, event: Event):
         if isinstance(event, TourEvent):
             self.__handle_tour_event(event)
+        elif isinstance(event, NovelSyncEvent):
+            self._sync()
+            return
         else:
             super().event_received(event)
 
@@ -242,6 +245,10 @@ class CharactersView(AbstractNovelView):
 
         self._progress.refreshNext()
         self._wdgCharactersCompTree.refresh()
+
+    def _sync(self):
+        self.refresh()
+        self._init_cards()
 
     def _show_card_menu(self, card: CharacterCard, pos: QPoint):
         menu = MenuWidget()
