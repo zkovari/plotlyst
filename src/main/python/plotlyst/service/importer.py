@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 from PyQt6.QtCore import QObject
 from PyQt6.QtGui import QIcon
@@ -119,10 +119,10 @@ class ScrivenerSyncImporter(SyncImporter):
         for scene in novel.scenes:
             scene.chapter = None
         self._sync_chapters(novel, new_novel)
-        self._sync_scenes(novel, new_novel)
+        new_scenes, removed_scenes = self._sync_scenes(novel, new_novel)
 
         self.repo.update_project_novel(novel)
-        emit_event(novel, NovelSyncEvent(self, novel))
+        emit_event(novel, NovelSyncEvent(self, novel, new_scenes, removed_scenes))
 
     def _mod_time(self, novel: Novel) -> int:
         scriv_file = self._parser.find_scrivener_file(novel.import_origin.source)
@@ -174,32 +174,40 @@ class ScrivenerSyncImporter(SyncImporter):
         for scene in novel.scenes:
             current[scene] = scene
 
-        new_scenes = []
-        for new_scene in new_novel.scenes:
-            if new_scene in current.keys():
-                old_scene = current[new_scene]
-                old_scene.title = new_scene.title
-                if old_scene.manuscript and new_scene.manuscript:
-                    old_scene.manuscript.content = new_scene.manuscript.content
-                    old_scene.manuscript.statistics = new_scene.manuscript.statistics
-                    old_scene.manuscript.loaded = True
-                elif old_scene.manuscript and new_scene.manuscript is None:
-                    old_scene.manuscript.content = ''
-                elif old_scene.manuscript is None and new_scene.manuscript:
-                    old_scene.manuscript = new_scene.manuscript
+        scenes: List[Scene] = []
+        new_scenes: List[Scene] = []
+        for imported_scene in new_novel.scenes:
+            old_scene = current.get(imported_scene, None)
 
-                if new_scene.chapter:
-                    old_scene.chapter = chapters[new_scene.chapter]
-                new_scenes.append(old_scene)
+            if old_scene:
+                old_scene.title = imported_scene.title
+                imported_manuscript = imported_scene.manuscript
+                old_manuscript = old_scene.manuscript
+
+                if old_manuscript and imported_manuscript:
+                    old_manuscript.content = imported_manuscript.content
+                    old_manuscript.statistics = imported_manuscript.statistics
+                    old_manuscript.loaded = True
+                elif old_manuscript and not imported_manuscript:
+                    old_manuscript.content = ''
+                elif not old_manuscript and imported_manuscript:
+                    old_scene.manuscript = imported_manuscript
+
+                if imported_scene.chapter:
+                    old_scene.chapter = chapters[imported_scene.chapter]
 
                 self.repo.update_scene(old_scene)
                 if old_scene.manuscript:
                     self.repo.update_doc(novel, old_scene.manuscript)
+
+                scenes.append(old_scene)
+
             else:
-                new_scenes.append(new_scene)
-                self.repo.insert_scene(novel, new_scene)
-                if new_scene.manuscript:
-                    self.repo.update_doc(novel, new_scene.manuscript)
+                scenes.append(imported_scene)
+                new_scenes.append(imported_scene)
+                self.repo.insert_scene(novel, imported_scene)
+                if imported_scene.manuscript:
+                    self.repo.update_doc(novel, imported_scene.manuscript)
 
         removed_scenes = [k for k in current.keys() if k not in new_novel.scenes]
 
@@ -207,4 +215,6 @@ class ScrivenerSyncImporter(SyncImporter):
             delete_scene(novel, scene, forced=True)
             emit_event(novel, SceneDeletedEvent(self, scene))
 
-        novel.scenes[:] = new_scenes
+        novel.scenes[:] = scenes
+
+        return new_scenes, removed_scenes

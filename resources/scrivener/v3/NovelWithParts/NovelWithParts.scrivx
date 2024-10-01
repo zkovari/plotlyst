@@ -77,7 +77,7 @@
                             </TextSettings>
                             <Children>
                                 <BinderItem UUID="F5604565-3F9E-451B-98E0-142BE1BDE83D" Type="Text" Created="2021-08-06 10:24:35 +0200" Modified="2021-08-06 10:24:35 +0200">
-                                    <Title>Scene</Title>
+                                    <Title>My new scene</Title>
                                     <MetaData>
                                         <IncludeInCompile>Yes</IncludeInCompile>
                                     </MetaData>

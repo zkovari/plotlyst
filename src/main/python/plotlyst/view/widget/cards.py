@@ -412,7 +412,7 @@ class CardsView(QFrame):
 
     def remove(self, obj: Any):
         self._selected = None
-        card = self._cards.pop(obj)
+        card = self._cards.pop(obj, None)
         if card:
             card.setDisabled(True)
             card.setVisible(False)

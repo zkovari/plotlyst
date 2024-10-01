@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, List
 from uuid import UUID
 
 from language_tool_python import LanguageTool
@@ -170,6 +170,8 @@ class NovelAboutToSyncEvent(Event):
 @dataclass
 class NovelSyncEvent(Event):
     novel: NovelDescriptor
+    new_scenes: List[Scene]
+    deleted_scenes: List[Scene]
 
 
 @dataclass

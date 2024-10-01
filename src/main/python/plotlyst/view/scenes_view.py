@@ -318,6 +318,9 @@ class ScenesOutlineView(AbstractNovelView):
         elif isinstance(event, NovelStoryStructureUpdated):
             self._handle_structure_update()
             return
+        elif isinstance(event, NovelSyncEvent):
+            self._sync(event)
+            return
         elif isinstance(event, NovelPanelCustomizationEvent):
             if isinstance(event, NovelStorylinesToggleEvent):
                 self.ui.btnStorymap.setVisible(event.toggled)
@@ -349,7 +352,20 @@ class ScenesOutlineView(AbstractNovelView):
         if self.characters_distribution:
             self.characters_distribution.refresh()
 
-        self._init_cards()
+    def _sync(self, event: NovelSyncEvent):
+        self.selected_card = None
+        self.ui.cards.clearSelection()
+
+        for scene in event.new_scenes:
+            card = self.__init_card_widget(scene)
+            self.ui.cards.addCard(card)
+
+        self.ui.cards.reorderCards(self.novel.scenes)
+        for card in self.ui.cards.cards():
+            card.quickRefresh()
+
+        self.refresh()
+        self._filter_cards()
 
     def _switch_view(self):
         height = 50
@@ -508,16 +524,11 @@ class ScenesOutlineView(AbstractNovelView):
 
     def _init_cards(self):
         self.selected_card = None
-        bar_value = self.ui.scrollArea.verticalScrollBar().value()
         self.ui.cards.clear()
 
         for scene in self.novel.scenes:
             card = self.__init_card_widget(scene)
             self.ui.cards.addCard(card)
-
-        # restore scrollbar that might have moved
-        if bar_value <= self.ui.scrollArea.verticalScrollBar().maximum():
-            self.ui.scrollArea.verticalScrollBar().setValue(bar_value)
 
         self._filter_cards()
 
