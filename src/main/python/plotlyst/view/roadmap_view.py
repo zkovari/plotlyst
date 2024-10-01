@@ -236,6 +236,7 @@ class RoadmapBoardWidget(QWidget):
 
 
 class RoadmapView(QWidget, Ui_RoadmapView):
+    DOWNLOAD_THRESHOLD_SECONDS = 60 * 60 * 8  # 8 hours in seconds
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -283,7 +284,8 @@ class RoadmapView(QWidget, Ui_RoadmapView):
         if self._downloading:
             return
 
-        if self._last_fetched is None or (datetime.datetime.now() - self._last_fetched).total_seconds() > 86400:
+        if self._last_fetched is None or (
+                datetime.datetime.now() - self._last_fetched).total_seconds() > self.DOWNLOAD_THRESHOLD_SECONDS:
             self._handle_downloading_status(True)
             self._download_data()
 
