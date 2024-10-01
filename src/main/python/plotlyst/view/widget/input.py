@@ -322,7 +322,9 @@ class GrammarPopup(PopupBase):
         self.setProperty('relaxed-white-bg', True)
         self.lblType = label(bold=True)
         self.wdgReplacements = QWidget()
-        flow(self.wdgReplacements)
+        flow(self.wdgReplacements, margin=5, spacing=10 if app_env.is_mac() else 3)
+        if app_env.is_mac():
+            margins(self.wdgReplacements, bottom=10)
         self.btnClose = RemovalButton()
         self.lblMessage = label(description=True, wordWrap=True)
         self.lblMessage.setMinimumWidth(200)

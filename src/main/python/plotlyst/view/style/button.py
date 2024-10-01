@@ -187,6 +187,7 @@ btn_style_lang_spellcheck_suggestion = """
         border-radius: 5px;
         padding: 3px;
         color: #f8f9fa;
+        margin: 2px;
     }
 """
 
