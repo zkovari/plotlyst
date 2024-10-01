@@ -39,7 +39,8 @@ from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, Event, emit_event
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import NovelAboutToSyncEvent, SceneStoryBeatChangedEvent, \
-    NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelPovTrackingToggleEvent, SceneChangedEvent
+    NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelPovTrackingToggleEvent, SceneChangedEvent, \
+    NovelSyncEvent
 from plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
@@ -204,7 +205,8 @@ class SceneEditor(QObject, EventListener):
         self.ui.splitter.setSizes([140, 500])
 
         dispatcher = event_dispatchers.instance(self.novel)
-        dispatcher.register(self, NovelAboutToSyncEvent, NovelStorylinesToggleEvent, NovelStructureToggleEvent,
+        dispatcher.register(self, NovelAboutToSyncEvent, NovelSyncEvent, NovelStorylinesToggleEvent,
+                            NovelStructureToggleEvent,
                             NovelPovTrackingToggleEvent)
 
     @overrides
@@ -212,6 +214,8 @@ class SceneEditor(QObject, EventListener):
         if isinstance(event, NovelAboutToSyncEvent):
             if self.scene is not None:
                 self._on_close()
+        elif isinstance(event, NovelSyncEvent):
+            self.ui.treeScenes.refresh()
         elif isinstance(event, NovelStorylinesToggleEvent):
             self.ui.wdgStorylines.setVisible(event.toggled)
             self._btnPlotSelector.setVisible(event.toggled)
