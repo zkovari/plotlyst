@@ -80,10 +80,10 @@ setting_descriptions: Dict[NovelSetting, str] = {
     NovelSetting.Documents: "Add documents for your planning or research",
     NovelSetting.Management: "Stay organized by tracking your tasks in a simple Kanban board",
     NovelSetting.Track_pov: "Track the point of view characters of your story",
-    NovelSetting.Character_enneagram: 'Consider enneagram personality type for characters (existing characters are not affected)',
-    NovelSetting.Character_mbti: 'Consider MBTI personality type for characters (existing characters are not affected)',
-    NovelSetting.Character_love_style: "Consider the characters' preferred love style (existing characters are not affected)",
-    NovelSetting.Character_work_style: "Consider the characters' most typical working style (existing characters are not affected)",
+    NovelSetting.Character_enneagram: 'Consider enneagram personality type for characters',
+    NovelSetting.Character_mbti: 'Consider MBTI personality type for characters',
+    NovelSetting.Character_love_style: "Consider the characters' preferred love style",
+    NovelSetting.Character_work_style: "Consider the characters' most typical working style",
 }
 
 panel_events = [NovelMindmapToggleEvent, NovelCharactersToggleEvent,
