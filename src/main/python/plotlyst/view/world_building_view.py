@@ -25,7 +25,7 @@ from PyQt6.QtGui import QColor, QPainter
 from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtWidgets import QWidget, QGraphicsColorizeEffect
 from overrides import overrides
-from qthandy import bold
+from qthandy import bold, incr_icon, incr_font
 from qthandy.filter import OpacityEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
@@ -91,9 +91,6 @@ class WorldBuildingView(AbstractNovelView):
 
         self._entity: Optional[WorldBuildingEntity] = None
 
-        self.ui.btnMilieuIcon.setIcon(IconRegistry.world_building_icon())
-        bold(self.ui.lblTitleMilieu)
-
         self.ui.btnNew.setIcon(IconRegistry.plus_icon(color=RELAXED_WHITE_COLOR))
         self.ui.btnNew.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnNew))
         self.ui.btnTreeToggle.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
@@ -138,7 +135,6 @@ class WorldBuildingView(AbstractNovelView):
         self._additionMenu = EntityAdditionMenu(self.novel, self.ui.btnNew)
         self._additionMenu.entityTriggered.connect(self.ui.treeWorld.addEntity)
         self._additionMenu.topicsSelected.connect(self.ui.treeWorld.addEntities)
-        self.ui.iconReaderMode.setIcon(IconRegistry.from_name('fa5s.eye'))
 
         self.ui.btnMilieuView.setIcon(IconRegistry.world_building_icon())
         self.ui.btnWorldView.setIcon(IconRegistry.from_name('ri.quill-pen-fill'))
@@ -146,6 +142,10 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.btnHistoryView.setIcon(
             IconRegistry.from_name('mdi.timeline-outline', color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnGlossaryView.setIcon(IconRegistry.from_name('mdi.book-alphabet', color_on=PLOTLYST_SECONDARY_COLOR))
+
+        for btn in self.ui.buttonGroup.buttons():
+            incr_icon(btn, 2)
+            incr_font(btn, 2)
 
         self.ui.splitterNav.setSizes([150, 500])
         font = self.ui.lineName.font()
@@ -188,8 +188,6 @@ class WorldBuildingView(AbstractNovelView):
                                                       (self.ui.btnGlossaryView, self.ui.pageGlossary)])
         self.ui.btnMilieuView.setChecked(True)
 
-        self.ui.iconReaderMode.setHidden(True)
-        self.ui.readerModeToggle.setHidden(True)
         self.ui.btnHistoryView.setHidden(True)
 
     @overrides

@@ -24,7 +24,7 @@
     <number>0</number>
    </property>
    <property name="topMargin">
-    <number>2</number>
+    <number>15</number>
    </property>
    <property name="rightMargin">
     <number>0</number>
@@ -32,50 +32,6 @@
    <property name="bottomMargin">
     <number>0</number>
    </property>
-   <item alignment="Qt::AlignHCenter">
-    <widget class="QWidget" name="widget_3" native="true">
-     <layout class="QHBoxLayout" name="horizontalLayout_11">
-      <property name="spacing">
-       <number>3</number>
-      </property>
-      <property name="leftMargin">
-       <number>5</number>
-      </property>
-      <property name="topMargin">
-       <number>2</number>
-      </property>
-      <property name="rightMargin">
-       <number>5</number>
-      </property>
-      <property name="bottomMargin">
-       <number>2</number>
-      </property>
-      <item>
-       <widget class="QToolButton" name="btnMilieuIcon">
-        <property name="text">
-         <string/>
-        </property>
-        <property name="transparent" stdset="0">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="lblTitleMilieu">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Milieu and world-building</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
    <item>
     <widget class="QWidget" name="wdgButtonsHeader" native="true">
      <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -105,7 +61,7 @@
        </spacer>
       </item>
       <item>
-       <widget class="QToolButton" name="btnMilieuView">
+       <widget class="QPushButton" name="btnMilieuView">
         <property name="cursor">
          <cursorShape>PointingHandCursor</cursorShape>
         </property>
@@ -113,7 +69,7 @@
          <string>Milieu entities</string>
         </property>
         <property name="text">
-         <string/>
+         <string>Milieu</string>
         </property>
         <property name="shortcut">
          <string>1</string>
@@ -124,7 +80,13 @@
         <property name="checked">
          <bool>false</bool>
         </property>
-        <property name="base" stdset="0">
+        <property name="transparent-rounded-bg-on-hover" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="secondary-selector" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="transparent-magnolia-rounded-bg-on-hover" stdset="0">
          <bool>true</bool>
         </property>
         <attribute name="buttonGroup">
@@ -140,7 +102,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="btnWorldView">
+       <widget class="QPushButton" name="btnWorldView">
         <property name="cursor">
          <cursorShape>PointingHandCursor</cursorShape>
         </property>
@@ -148,7 +110,7 @@
          <string>Worldbuilding bible with articles</string>
         </property>
         <property name="text">
-         <string/>
+         <string>Worldbuilding bible</string>
         </property>
         <property name="shortcut">
          <string>1</string>
@@ -159,7 +121,13 @@
         <property name="checked">
          <bool>false</bool>
         </property>
-        <property name="base" stdset="0">
+        <property name="transparent-rounded-bg-on-hover" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="secondary-selector" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="transparent-magnolia-rounded-bg-on-hover" stdset="0">
          <bool>true</bool>
         </property>
         <attribute name="buttonGroup">
@@ -168,7 +136,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="btnMapView">
+       <widget class="QPushButton" name="btnMapView">
         <property name="cursor">
          <cursorShape>PointingHandCursor</cursorShape>
         </property>
@@ -176,7 +144,7 @@
          <string>Map</string>
         </property>
         <property name="text">
-         <string/>
+         <string>Map</string>
         </property>
         <property name="shortcut">
          <string>3</string>
@@ -187,7 +155,13 @@
         <property name="checked">
          <bool>false</bool>
         </property>
-        <property name="base" stdset="0">
+        <property name="transparent-rounded-bg-on-hover" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="secondary-selector" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="transparent-magnolia-rounded-bg-on-hover" stdset="0">
          <bool>true</bool>
         </property>
         <attribute name="buttonGroup">
@@ -196,7 +170,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="btnHistoryView">
+       <widget class="QPushButton" name="btnHistoryView">
         <property name="cursor">
          <cursorShape>PointingHandCursor</cursorShape>
         </property>
@@ -204,7 +178,7 @@
          <string>Timeline</string>
         </property>
         <property name="text">
-         <string/>
+         <string>Timeline</string>
         </property>
         <property name="shortcut">
          <string>3</string>
@@ -215,7 +189,13 @@
         <property name="checked">
          <bool>false</bool>
         </property>
-        <property name="base" stdset="0">
+        <property name="transparent-rounded-bg-on-hover" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="secondary-selector" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="transparent-magnolia-rounded-bg-on-hover" stdset="0">
          <bool>true</bool>
         </property>
         <attribute name="buttonGroup">
@@ -224,7 +204,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="btnGlossaryView">
+       <widget class="QPushButton" name="btnGlossaryView">
         <property name="cursor">
          <cursorShape>PointingHandCursor</cursorShape>
         </property>
@@ -232,7 +212,7 @@
          <string>Glossary</string>
         </property>
         <property name="text">
-         <string/>
+         <string>Glossary</string>
         </property>
         <property name="shortcut">
          <string>3</string>
@@ -243,7 +223,13 @@
         <property name="checked">
          <bool>false</bool>
         </property>
-        <property name="base" stdset="0">
+        <property name="transparent-rounded-bg-on-hover" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="secondary-selector" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="transparent-magnolia-rounded-bg-on-hover" stdset="0">
          <bool>true</bool>
         </property>
         <attribute name="buttonGroup">
@@ -263,29 +249,6 @@
          </size>
         </property>
        </spacer>
-      </item>
-      <item>
-       <widget class="QToolButton" name="iconReaderMode">
-        <property name="cursor">
-         <cursorShape>PointingHandCursor</cursorShape>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-        <property name="transparent" stdset="0">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="Toggle" name="readerModeToggle">
-        <property name="cursor">
-         <cursorShape>PointingHandCursor</cursorShape>
-        </property>
-        <property name="text">
-         <string>CheckBox</string>
-        </property>
-       </widget>
       </item>
      </layout>
     </widget>
@@ -505,7 +468,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>402</width>
-                <height>559</height>
+                <height>577</height>
                </rect>
               </property>
               <property name="sizePolicy">
@@ -1143,35 +1106,13 @@
    <header>plotlyst.view.widget.world</header>
   </customwidget>
   <customwidget>
-   <class>Toggle</class>
-   <extends>QCheckBox</extends>
-   <header>plotlyst.view.widget.input</header>
-  </customwidget>
-  <customwidget>
    <class>LocationsTreeView</class>
    <extends>QTreeView</extends>
    <header>plotlyst.view.widget.world.milieu</header>
   </customwidget>
  </customwidgets>
  <resources/>
- <connections>
-  <connection>
-   <sender>iconReaderMode</sender>
-   <signal>clicked()</signal>
-   <receiver>readerModeToggle</receiver>
-   <slot>toggle()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>766</x>
-     <y>24</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>802</x>
-     <y>21</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
  <buttongroups>
   <buttongroup name="buttonGroup"/>
  </buttongroups>

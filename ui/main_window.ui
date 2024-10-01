@@ -248,7 +248,7 @@
               <cursorShape>PointingHandCursor</cursorShape>
              </property>
              <property name="toolTip">
-              <string>World building</string>
+              <string>World-building</string>
              </property>
              <property name="text">
               <string/>

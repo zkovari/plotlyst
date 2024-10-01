@@ -352,7 +352,7 @@ btn_style_abstract_button_transparent = """
     }
     
     QAbstractButton:hover[transparent-magnolia-rounded-bg-on-hover=true] {
-        background: #FCF5FE;
+        background: #F0E6F4;
     }
 
     QAbstractButton:hover[top-selector=true] {
