@@ -1,1 +1,141 @@
-
+- [ ] Novels
+  - [ ] Create
+  - [ ] Wizard
+  - [ ] Name
+  - [ ] Settings applied
+  - [ ] Reload
+  - [ ] Switch novel with different settings and state
+  - [ ] edit title, subtitle, icon
+  - [ ] edit title in open editor
+- [ ] change project dir
+- [ ] roadmap
+- [ ] premise, synopsis
+- [ ] structure
+  - [ ] select from templates
+  - [ ] edit in dialog
+  - [ ] edit in outline
+  - [ ] move beats on timeline
+  - [ ] settings
+  - [ ] link/unlink to scenes
+  - [ ] switch structure: in scene view too
+  - [ ] new empty structure
+  - [ ] link character
+- [ ] Storylines
+  - [ ] create
+  - [ ] principles
+  - [ ] dynamic principles
+  - [ ] genre principles
+  - [ ] timeline
+  - [ ] icon, color
+  - [ ] character link
+  - [ ] tree update
+- [ ] Mindmap
+  - [ ] nodes
+  - [ ] edit
+  - [ ] delete
+  - [ ] undo/redo
+  - [ ] image
+- [ ] Settings
+  - [ ] toggle
+  - [ ] from toolbar
+  - [ ] toggle toolbar button
+- [ ] Characters
+  - [ ] new
+  - [ ] name
+  - [ ] gender
+  - [ ] occupation
+  - [ ] role
+  - [ ] role promotion/demotion
+  - [ ] attrs
+  - [ ] faculties edit
+  - [ ] backstory
+  - [ ] notes
+  - [ ] comparison
+    - [ ] edit summary
+    - [ ] edit faculties
+  - [ ] table edit
+  - [ ] filter
+  - [ ] progress update
+  - [ ] network
+  - [ ] character changes/update
+  - [ ] with long name
+  - [ ] with noname
+- [ ] Scenes
+  - [ ] new
+  - [ ] edit
+  - [ ] move
+  - [ ] chapter
+  - [ ] delete
+  - [ ] characters
+  - [ ] beats
+  - [ ] functions
+  - [ ] storylines
+  - [ ] notes
+  - [ ] storymap
+  - [ ] table
+  - [ ] filter
+  - [ ] progress
+  - [ ] structures
+  - [ ] sync mode
+- [ ] Worldbuilding
+  - [ ] locations
+  - [ ] attrs
+  - [ ] day-night cycles
+  - [ ] bible
+    - [ ] root node
+    - [ ] sections
+    - [ ] blocks
+    - [ ] dnd blocks
+    - [ ] topic article
+    - [ ] link location
+    - [ ] unlink location
+    - [ ] delete linked location
+    - [ ] delete linked article
+    - [ ] rename linked location
+  - [ ] glossary
+    - [ ] glossary highlight
+  - [ ] map
+    - [ ] markers
+    - [ ] link location
+    - [ ] update linked location
+    - [ ] delete linked location
+- [ ] Manuscript
+  - [ ] edit
+  - [ ] sprint
+  - [ ] dist-free mode
+  - [ ] calendar
+  - [ ] max progress
+  - [ ] readability
+  - [ ] WC
+  - [ ] settings
+    - [ ] text settings
+    - [ ] settings applied after close
+  - [ ] spellcheck
+  - [ ] edit in tree
+    - [ ] remove scene
+    - [ ] move
+    - [ ] rename
+  - [ ] richtext
+  - [ ] change progress
+  - [ ] export to docx
+- [ ] Documents
+  - [ ] New
+  - [ ] premise doc
+  - [ ] link character
+  - [ ] pdf
+  - [ ] richtext
+  - [ ] export to pdf
+- [ ] Reports
+  - [ ] arc chart
+  - [ ] manuscript
+- [ ] Board
+  - [ ] New task
+  - [ ] move
+  - [ ] tag
+  - [ ] character
+  - [ ] resolve
+  - [ ] delete
+- [ ] Cross-updates
+  - [ ] Change character avatar
+    - [ ] mindmap node, structure, storyline, scenes, characters view, document
+    - [ ] delete character
