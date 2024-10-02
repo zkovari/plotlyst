@@ -26,7 +26,7 @@ from typing import List, Optional, Dict, Union, Set
 import qtanim
 from PyQt6.QtCore import Qt, QEvent, pyqtSignal, QObject, QSize
 from PyQt6.QtGui import QColor, QDragEnterEvent, QDropEvent, QResizeEvent, QCursor, QPainter, QPaintEvent, QPen
-from PyQt6.QtWidgets import QWidget, QToolButton, QSizePolicy, QPushButton, QSplitter, QAbstractButton
+from PyQt6.QtWidgets import QWidget, QToolButton, QSizePolicy, QPushButton, QSplitter, QAbstractButton, QToolTip
 from overrides import overrides
 from qthandy import hbox, transparent, italic, translucent, gc, clear_layout, vbox, margins, decr_font
 from qthandy.filter import InstantTooltipEventFilter, DragEventFilter
@@ -64,6 +64,20 @@ class _BeatButton(QToolButton):
         self._initBorderStyle(125)
         # else:
         #     transparent(self)
+
+    @overrides
+    def event(self, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.ToolTip:
+            tip = f'''<html><div style="color: {self.beat.icon_color}"><b align=center>{self.beat.text}</b>
+            <p/>
+            <hr/>
+            <p/>
+            {self.beat.notes}</div>
+            '''
+            QToolTip.showText(event.globalPos(), tip)
+            return True
+
+        return super().event(event)
 
     def setTextStyle(self):
         self.style = _BeatButtonStyle.Text
@@ -246,7 +260,6 @@ class StoryStructureTimelineWidget(QWidget):
             else:
                 icon = f'mdi.numeric-{beat.seq}'
             btn.setIcon(IconRegistry.from_name(icon, beat.icon_color, scale=1.5))
-        btn.setToolTip(f'<b style="color: {beat.icon_color}">{beat.text}')
         if beat.type == StoryBeatType.BEAT:
             btn.toggled.connect(partial(self._beatToggled, btn))
             btn.clicked.connect(partial(self._beatClicked, btn))
