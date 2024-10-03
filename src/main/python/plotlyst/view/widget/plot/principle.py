@@ -28,13 +28,13 @@ from overrides import overrides
 from qthandy import bold, margins, italic, vbox, transparent, \
     hbox, spacer, sp, pointy, line, underline
 from qthandy.filter import OpacityEventFilter
-from qtmenu import MenuWidget, group, ActionTooltipDisplayMode
+from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from plotlyst.common import RELAXED_WHITE_COLOR, CONFLICT_SELF_COLOR
 from plotlyst.core.domain import Plot, PlotType, PlotPrinciple, \
     PlotPrincipleType, PlotEventType, DynamicPlotPrincipleGroupType
 from plotlyst.core.template import antagonist_role
-from plotlyst.view.common import shadow, label, tool_btn, push_btn, scrolled, action
+from plotlyst.view.common import shadow, label, tool_btn, push_btn, scrolled, action, wrap
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
@@ -264,7 +264,7 @@ class _PlotPrincipleToggle(QWidget):
         self.toggle = Toggle(self)
         self.layout().addWidget(group(self._label, spacer(), self.toggle, margin=0))
         desc = label(hint, description=True)
-        self.layout().addWidget(desc)
+        self.layout().addWidget(wrap(desc, margin_left=20))
 
         self.toggle.toggled.connect(self._label.setChecked)
 

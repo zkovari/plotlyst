@@ -22,7 +22,7 @@ from PyQt6.QtWidgets import QWidget
 from qthandy import hbox, vbox, margins
 
 
-def group(*widgets, vertical: bool = True, margin: int = 2, spacing: int = 3, margin_top: int = 0,
+def group(*widgets, vertical: bool = True, margin: int = 2, spacing: int = 3, margin_top: int = 0, margin_left: int = 0,
           parent=None) -> QWidget:
     container = QWidget(parent)
     if vertical:
@@ -32,6 +32,8 @@ def group(*widgets, vertical: bool = True, margin: int = 2, spacing: int = 3, ma
 
     if margin_top:
         margins(container, top=margin_top)
+    if margin_left:
+        margins(container, top=margin_left)
 
     for w in widgets:
         container.layout().addWidget(w)
