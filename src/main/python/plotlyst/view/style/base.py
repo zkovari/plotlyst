@@ -59,7 +59,7 @@ QWidget[white-bg=true] {
 }
 
 QWidget[relaxed-white-bg=true] {
-    background-color: #f8f9fa;
+    background-color: #F5F6F8;
 }
 
 QWidget[banner-bg=true] {
@@ -80,7 +80,7 @@ QFrame[bottom-bar=true] {
 }
 
 QFrame[relaxed-white-bg=true] {
-    background-color: #f8f9fa;
+    background-color: #F5F6F8;
 }
 
 QFrame[white-bg=true] {
@@ -94,7 +94,7 @@ QFrame[rounded=true] {
 
 QFrame[revision-badge=true] {
     border: 3px solid #622675;
-    background: #f8f9fa;
+    background: #F5F6F8;
     padding: 6px;
     border-radius: 12px;
 }
@@ -105,7 +105,7 @@ QFrame[large-rounded=true] {
 }
 
 QDialog[relaxed-white-bg] {
-    background-color: #f8f9fa;
+    background-color: #F5F6F8;
 }
 
 QToolBox::tab[conflict-selector=true] {
@@ -130,11 +130,11 @@ QScrollArea[transparent=true] {
 }
 
 QScrollArea[relaxed-white-bg=true] {
-    background-color: #f8f9fa;
+    background-color: #F5F6F8;
 }
 
 TaskWidget {
-    background-color: #f8f9fa;
+    background-color: #F5F6F8;
     border: 1px solid lightGrey;
     border-radius: 6px;
 }

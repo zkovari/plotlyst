@@ -54,7 +54,7 @@ QTabBar::tab {
 }
 
 QTabBar::tab:selected {
-    background: #f8f9fa;
+    background: #F5F6F8;
 }
 
 QTabBar::tab:!selected {

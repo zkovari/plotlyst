@@ -100,7 +100,7 @@ btn_style_confirm = """
 btn_style_deconstructive = """
     QPushButton[deconstructive=true]:!disabled {
         background: #E11D48;
-        color: #f8f9fa;
+        color: #F5F6F8;
         font: bold;
     }
 
@@ -114,7 +114,7 @@ btn_style_cancel = """
         background: #FcFcFc;
     }
     QPushButton[cancel=true]:!disabled:hover {
-        background: #f8f9fa;
+        background: #F5F6F8;
     }
 """
 
@@ -186,7 +186,7 @@ btn_style_lang_spellcheck_suggestion = """
         border: 1px solid #4B0763;
         border-radius: 5px;
         padding: 3px;
-        color: #f8f9fa;
+        color: #F5F6F8;
         margin: 2px;
     }
 """
@@ -206,7 +206,7 @@ btn_style_find = """
         padding: 2px;
         border-radius: 2px;
         border: 1px solid lightgrey;
-        background: #f8f9fa;
+        background: #F5F6F8;
     }
     QPushButton[find=true]:pressed {
         padding: 2px;
@@ -228,7 +228,7 @@ btn_style_importer_sync = """
 
     QPushButton:hover[importer-sync=true] {
         border: 1px outset #410253;
-        background-color: #f8f9fa;
+        background-color: #F5F6F8;
     }
 """
 
