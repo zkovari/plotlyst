@@ -25,7 +25,7 @@ from PyQt6.QtGui import QColor, QPainter
 from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtWidgets import QWidget, QGraphicsColorizeEffect
 from overrides import overrides
-from qthandy import bold, incr_icon, incr_font
+from qthandy import incr_icon, incr_font
 from qthandy.filter import OpacityEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
@@ -179,6 +179,7 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.pageMap.layout().addWidget(self.map)
 
         self.glossaryEditor = WorldBuildingGlossaryEditor(self.novel)
+        self.ui.wdgGlossaryParent.setStyleSheet('QWidget {background: #ede0d4;}')
         self.ui.wdgGlossaryParent.layout().addWidget(self.glossaryEditor)
 
         link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnMilieuView, self.ui.pageMilieu),

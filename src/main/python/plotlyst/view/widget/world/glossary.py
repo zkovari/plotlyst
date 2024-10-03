@@ -271,6 +271,7 @@ class WorldBuildingGlossaryEditor(QWidget):
         self._novel = novel
         vbox(self)
         self.editor = GlossaryItemsEditorWidget()
+        self.editor.setStyleSheet('background: #ede0d4;')
         self.editor.btnAdd.clicked.connect(self._addNew)
         self.editor.editRequested.connect(self._edit)
         self.glossaryModel = GlossaryModel(self._novel)
