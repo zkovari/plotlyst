@@ -22,9 +22,9 @@ from dataclasses import dataclass
 from typing import Optional, Any, Dict, List
 
 import qtanim
-from PyQt6.QtCore import pyqtSignal, Qt, QModelIndex
-from PyQt6.QtGui import QTextCharFormat, QColor, QTextDocument, QTextBlockUserData
-from PyQt6.QtWidgets import QWidget, QLineEdit, QTableView, QApplication, QDialog
+from PyQt6.QtCore import pyqtSignal, Qt, QModelIndex, QRect, QSize
+from PyQt6.QtGui import QTextCharFormat, QColor, QTextDocument, QTextBlockUserData, QResizeEvent, QShowEvent
+from PyQt6.QtWidgets import QWidget, QLineEdit, QTableView, QApplication, QDialog, QStyledItemDelegate, QTextEdit
 from overrides import overrides
 from qthandy import vbox, hbox, sp
 from qthandy.filter import DisabledClickEventFilter
@@ -36,7 +36,7 @@ from plotlyst.model.common import SelectionItemsModel, proxy
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import push_btn, label
 from plotlyst.view.widget.display import PopupDialog
-from plotlyst.view.widget.input import AutoAdjustableTextEdit, AbstractTextBlockHighlighter
+from plotlyst.view.widget.input import AbstractTextBlockHighlighter
 from plotlyst.view.widget.items_editor import ItemsEditorWidget
 
 
@@ -63,6 +63,7 @@ class GlossaryModel(SelectionItemsModel):
             font.setPointSize(13)
             if index.column() == self.ColName:
                 font.setBold(True)
+                font.setPointSize(15)
             return font
         if index.column() == self.ColName:
             if role == Qt.ItemDataRole.DisplayRole:
@@ -96,6 +97,28 @@ class GlossaryModel(SelectionItemsModel):
         self._novel.world.glossary.pop(glossary.key)
         self.refresh()
         self.glossaryRemoved.emit()
+
+
+class GlossaryDelegate(QStyledItemDelegate):
+    TopMargin: int = 30
+
+    @overrides
+    def paint(self, painter, option, index):
+        if index.column() == 3:
+            option.rect = QRect(option.rect.x(), option.rect.y() + self.TopMargin, option.rect.width(),
+                                option.rect.height() - self.TopMargin)
+
+        painter.save()
+        super().paint(painter, option, index)
+        painter.restore()
+
+    @overrides
+    def sizeHint(self, option, index):
+        if index.column() == 3:
+            original_size = super().sizeHint(option, index)
+            return QSize(original_size.width(), original_size.height() + self.TopMargin)
+
+        return super().sizeHint(option, index)
 
 
 class GlossaryItemsEditorWidget(ItemsEditorWidget):
@@ -183,7 +206,7 @@ class GlossaryEditorDialog(PopupDialog):
         self.lblError.setProperty('error', True)
         self.lblError.setHidden(True)
 
-        self.textDefinition = AutoAdjustableTextEdit(height=150)
+        self.textDefinition = QTextEdit()
         self.textDefinition.setProperty('white-bg', True)
         self.textDefinition.setProperty('rounded', True)
         self.textDefinition.setPlaceholderText('Define term')
@@ -201,7 +224,7 @@ class GlossaryEditorDialog(PopupDialog):
 
         if self._term:
             self.lineKey.setText(self._term.key)
-            self.textDefinition.setText(self._term.text)
+            self.textDefinition.setMarkdown(self._term.text)
 
         self.frame.layout().addWidget(self.wdgTitle)
         self.frame.layout().addWidget(self.lineKey)
@@ -243,6 +266,8 @@ class GlossaryEditorDialog(PopupDialog):
 class WorldBuildingGlossaryEditor(QWidget):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
+        self._shown: bool = False
+
         self._novel = novel
         vbox(self)
         self.editor = GlossaryItemsEditorWidget()
@@ -256,16 +281,29 @@ class WorldBuildingGlossaryEditor(QWidget):
         self.editor.tableView.setColumnWidth(GlossaryModel.ColName, 200)
         self.editor.tableView.setContentsMargins(10, 15, 10, 5)
 
+        self.editor.tableView.setItemDelegate(GlossaryDelegate())
+
         self.glossaryModel.modelReset.connect(self.editor.tableView.resizeRowsToContents)
         self.glossaryModel.glossaryRemoved.connect(self._save)
 
         self.editor.tableView.setStyleSheet('QTableView::item { border: 0px; padding: 5px; }')
-        self.editor.tableView.resizeRowsToContents()
         self.editor.tableView.setAlternatingRowColors(True)
         self.editor.tableView.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
 
         self.layout().addWidget(self.editor)
         self.repo = RepositoryPersistenceManager.instance()
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        self.editor.tableView.resizeRowsToContents()
+
+    @overrides
+    def showEvent(self, event: QShowEvent) -> None:
+        super().showEvent(event)
+        if not self._shown:
+            self.editor.tableView.resizeRowsToContents()
+            self._shown = True
 
     def _addNew(self):
         glossary = GlossaryEditorDialog.edit(self._novel.world.glossary)
