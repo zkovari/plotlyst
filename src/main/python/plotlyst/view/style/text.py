@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from PyQt6.QtGui import QColor, QPalette
 from PyQt6.QtWidgets import QWidget
 
-from plotlyst.common import RELAXED_WHITE_COLOR
+from plotlyst.view.style.theme import BG_SECONDARY_COLOR, TEXT_COLOR_ON_DARK_BG
 
 label_style_description = """
     QLabel[description=true] {
@@ -32,14 +32,14 @@ label_style_description = """
     }
 """
 
-label_style_error_night_mode = """
-    QLabel[error=true] {
+label_style_error_night_mode = f"""
+    QLabel[error=true] {{
         color: #e76f51;
-    }
+    }}
 
-    QLabel[night-mode=true] {
-        color: #F5F6F8;
-    }
+    QLabel[night-mode=true] {{
+        color: {TEXT_COLOR_ON_DARK_BG};
+    }}
 """
 
 label_style_headings = """
@@ -68,83 +68,80 @@ label_style_headings = """
     }
 """
 
-# QTextBrowser styles
-text_browser_styles = """
-    QTextBrowser {
-        background-color: #F5F6F8;
-    }
+text_browser_styles = f"""
+    QTextBrowser {{
+        background-color: {BG_SECONDARY_COLOR};
+    }}
 
-    QTextBrowser[rounded=true] {
+    QTextBrowser[rounded=true] {{
         border-radius: 6px;
         padding: 4px;
         border: 1px solid lightgrey;
-    }
+    }}
 """
 
-# QLineEdit styles
-line_edit_styles = """
-    QLineEdit {
-        background-color: #F5F6F8;
-    }
+line_edit_styles = f"""
+    QLineEdit {{
+        background-color: {BG_SECONDARY_COLOR};
+    }}
     
-    QLineEdit[white-bg=true] {
+    QLineEdit[white-bg=true] {{
         background-color: #FcFcFc;
-    }
+    }}
 
-    QLineEdit[rounded=true] {
+    QLineEdit[rounded=true] {{
         border-radius: 6px;
         padding: 4px;
         border: 1px solid lightgrey;
-    }
+    }}
     
-    QLineEdit[rounded=true]:focus {
+    QLineEdit[rounded=true]:focus {{
         border: 1px solid #D4B8E0;
-    }
+    }}
     
-    QLineEdit[transparent=true] {
+    QLineEdit[transparent=true] {{
         border: 0px;
         background-color: rgba(0, 0, 0, 0);
-    }
+    }}
 """
 
-# QTextEdit styles
-text_edit_styles = """
-    QTextEdit {
-        background-color: #F5F6F8;
-    }
+text_edit_styles = f"""
+    QTextEdit {{
+        background-color: {BG_SECONDARY_COLOR};
+    }}
 
-    QTextEdit[rounded=true] {
+    QTextEdit[rounded=true] {{
         border-radius: 6px;
         padding: 4px;
         border: 1px solid lightgrey;
-    }
+    }}
     
-    QTextEdit[rounded=true]:focus {
+    QTextEdit[rounded=true]:focus {{
         border: 1px solid #D4B8E0;
-    }
+    }}
     
-    QTextEdit[white-bg=true] {
+    QTextEdit[white-bg=true] {{
         background-color: #FcFcFc;
-    }
+    }}
     
-    QTextEdit[night-mode=true] {
+    QTextEdit[night-mode=true] {{
         background-color: rgba(39, 39, 39, 200);
-        color: #F5F6F8;
-    }
+        color: {TEXT_COLOR_ON_DARK_BG};
+    }}
     
-    QTextEdit[transparent=true] {
+    QTextEdit[transparent=true] {{
         border: 0px;
         background-color: rgba(0, 0, 0, 0);
-    }
+    }}
     
-    QTextEdit[description=true] {
+    QTextEdit[description=true] {{
         color: #5E6C84;
-    }
+    }}
     
-    QTextEdit[borderless=true] {
+    QTextEdit[borderless=true] {{
         border: 0px;
-        background-color: #F5F6F8;
-    }
+        background-color: {BG_SECONDARY_COLOR};
+    }}
 """
 
 widget_styles_hint_widget = """
@@ -169,7 +166,7 @@ style = "\n".join([
 def apply_texteditor_toolbar_style(widget: QWidget):
     widget.setStyleSheet(f'''
                             QFrame {{
-                                background-color: {RELAXED_WHITE_COLOR};
+                                background-color: {BG_SECONDARY_COLOR};
                             }}
 
                             QToolButton {{

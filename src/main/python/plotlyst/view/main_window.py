@@ -69,6 +69,7 @@ from plotlyst.view.manuscript_view import ManuscriptView
 from plotlyst.view.novel_view import NovelView
 from plotlyst.view.reports_view import ReportsView
 from plotlyst.view.scenes_view import ScenesOutlineView
+from plotlyst.view.style.theme import BG_PRIMARY_COLOR
 from plotlyst.view.widget.button import ToolbarButton, NovelSyncButton
 from plotlyst.view.widget.confirm import asked
 from plotlyst.view.widget.input import CapitalizationEventFilter
@@ -99,7 +100,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         palette.setColor(QPalette.ColorGroup.Active, QPalette.ColorRole.Text, QColor('#040406'))
         palette.setColor(QPalette.ColorRole.ToolTipText, QColor(PLOTLYST_MAIN_COLOR))
         palette.setColor(QPalette.ColorRole.PlaceholderText, QColor('#5E6C84'))
-        palette.setColor(QPalette.ColorRole.Window, QColor('#EFEFF4'))
+        palette.setColor(QPalette.ColorRole.Window, QColor(BG_PRIMARY_COLOR))
         QApplication.setPalette(palette)
 
         if app_env.is_mac():

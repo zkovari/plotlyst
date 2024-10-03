@@ -17,71 +17,72 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from plotlyst.view.style.theme import BG_SECONDARY_COLOR
 
-style = '''
+style = f'''
 
-QHeaderView::section {
-    background-color: #F5F6F8; border: 0px; color: black;
-}
+QHeaderView::section {{
+    background-color: {BG_SECONDARY_COLOR}; border: 0px; color: black;
+}}
 
-QHeaderView {
-    background-color: #F5F6F8;
-}
+QHeaderView {{
+    background-color: {BG_SECONDARY_COLOR};
+}}
 
-QTableView {
-    background-color: #F5F6F8;
+QTableView {{
+    background-color: {BG_SECONDARY_COLOR};
     alternate-background-color: #F0E6F4;
-}
+}}
 
-QTableView QTableCornerButton::section {
-    background-color: #F5F6F8;
-}
+QTableView QTableCornerButton::section {{
+    background-color: {BG_SECONDARY_COLOR};
+}}
 
-QHeaderView::section[main-header] {
+QHeaderView::section[main-header] {{
     background: #622675;
     color: #f8f0fa;
     padding: 4px;
     border-right: 1px solid #f8f0fa;
     font-size: 16px;
-}
+}}
 
-QTreeView {
+QTreeView {{
     background-color: rgb(244, 244, 244);
-}
+}}
 
-QTreeView::branch {
+QTreeView::branch {{
     background-color: rgb(244, 244, 244);
     border: 0px;
-}
+}}
 
-QTreeView::branch:selected {
+QTreeView::branch:selected {{
     background-color: #D8D5D5;
     border: 0px;
-}
+}}
 
-QTreeView::branch:hover:!selected {
+QTreeView::branch:hover:!selected {{
     background-color: #D8D5D5;
     border: 0px;
-}
+}}
 
-QTreeView::item:hover:!selected {
+QTreeView::item:hover:!selected {{
     background-color: #D8D5D5;
     border: 0px;
-}
+}}
 
-QTreeView::item:selected:active {
+QTreeView::item:selected:active {{
     background-color: #D8D5D5;
     color: black;
-}
+}}
 
-QTreeView::item:selected:!active {
+QTreeView::item:selected:!active {{
     background-color: #D8D5D5;
     color: black;
-}
+}}
 
-QListView {
-    background-color: #F5F6F8;
+QListView {{
+    background-color: {BG_SECONDARY_COLOR};
     alternate-background-color: #F0E6F4;
-}
+}}
 
 '''

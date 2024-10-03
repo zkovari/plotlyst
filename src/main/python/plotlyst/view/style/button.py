@@ -23,6 +23,8 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QPalette
 from PyQt6.QtWidgets import QAbstractButton
 
+from plotlyst.view.style.theme import TEXT_COLOR_ON_DARK_BG, BG_SECONDARY_COLOR
+
 btn_style_no_menu = """
     QPushButton::menu-indicator[no-menu] {
         width:0px;
@@ -97,25 +99,25 @@ btn_style_confirm = """
     }
 """
 
-btn_style_deconstructive = """
-    QPushButton[deconstructive=true]:!disabled {
+btn_style_deconstructive = f"""
+    QPushButton[deconstructive=true]:!disabled {{
         background: #E11D48;
-        color: #F5F6F8;
+        color: {TEXT_COLOR_ON_DARK_BG};
         font: bold;
-    }
+    }}
 
-    QPushButton[deconstructive=true]:hover {
+    QPushButton[deconstructive=true]:hover {{
         background: #E84E6F;
-    }
+    }}
 """
 
-btn_style_cancel = """
-    QPushButton[cancel=true]:!disabled {
+btn_style_cancel = f"""
+    QPushButton[cancel=true]:!disabled {{
         background: #FcFcFc;
-    }
-    QPushButton[cancel=true]:!disabled:hover {
-        background: #F5F6F8;
-    }
+    }}
+    QPushButton[cancel=true]:!disabled:hover {{
+        background: {BG_SECONDARY_COLOR};
+    }}
 """
 
 btn_style_transparent = """
@@ -180,15 +182,15 @@ btn_style_main_side_nav = """
     }
 """
 
-btn_style_lang_spellcheck_suggestion = """
-    QPushButton[lang-spellcheck-suggestion=true] {
+btn_style_lang_spellcheck_suggestion = f"""
+    QPushButton[lang-spellcheck-suggestion=true] {{
         background: #4B0763;
         border: 1px solid #4B0763;
         border-radius: 5px;
         padding: 3px;
-        color: #F5F6F8;
+        color: {TEXT_COLOR_ON_DARK_BG};
         margin: 2px;
-    }
+    }}
 """
 
 btn_style_return = """
@@ -200,36 +202,36 @@ btn_style_return = """
     }
 """
 
-btn_style_find = """
-    QPushButton[find=true] {
+btn_style_find = f"""
+    QPushButton[find=true] {{
         margin: 2px;
         padding: 2px;
         border-radius: 2px;
         border: 1px solid lightgrey;
-        background: #F5F6F8;
-    }
-    QPushButton[find=true]:pressed {
+        background: {BG_SECONDARY_COLOR};
+    }}
+    QPushButton[find=true]:pressed {{
         padding: 2px;
         margin: 1px;
-    }
-    QPushButton[find=true]:disabled {
+    }}
+    QPushButton[find=true]:disabled {{
         opacity: 0.65;
-    }
+    }}
 """
 
-btn_style_importer_sync = """
-    QPushButton[importer-sync=true] {
+btn_style_importer_sync = f"""
+    QPushButton[importer-sync=true] {{
         padding: 2px;
         border-radius: 6px;
         border: 1px hidden #410253;
         background-color: rgba(0, 0, 0, 0);
         color: #410253;
-    }
+    }}
 
-    QPushButton:hover[importer-sync=true] {
+    QPushButton:hover[importer-sync=true] {{
         border: 1px outset #410253;
-        background-color: #F5F6F8;
-    }
+        background-color: {BG_SECONDARY_COLOR};
+    }}
 """
 
 btn_style_structure_customization = """
