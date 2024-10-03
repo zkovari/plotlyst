@@ -293,6 +293,8 @@ class HomeView(AbstractView):
 
             self.refresh()
             self._shelvesTreeView.selectNovel(novel)
+            if len(self._novels) == 1:
+                self.loadNovel.emit(novel)
 
     def _title_edited(self, title: str):
         if title:
