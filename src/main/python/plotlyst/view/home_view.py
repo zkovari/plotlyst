@@ -170,6 +170,7 @@ class HomeView(AbstractView):
         self._shelvesTreeView.novelsShelveSelected.connect(self.reset)
         self._shelvesTreeView.newNovelRequested.connect(self._add_new_novel)
         self._shelvesTreeView.novelDeletionRequested.connect(self._on_delete)
+        self._shelvesTreeView.novelOpenRequested.connect(self.loadNovel)
 
         self.ui.pageNovelDisplay.installEventFilter(
             VisibilityToggleEventFilter(self.ui.btnNovelSettings, self.ui.pageNovelDisplay))

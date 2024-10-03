@@ -72,6 +72,7 @@ class ShelvesTreeView(TreeView):
     novelSelected = pyqtSignal(NovelDescriptor)
     novelChanged = pyqtSignal(NovelDescriptor)
     novelDeletionRequested = pyqtSignal(NovelDescriptor)
+    novelOpenRequested = pyqtSignal(NovelDescriptor)
     novelsShelveSelected = pyqtSignal()
     newNovelRequested = pyqtSignal()
 
@@ -119,6 +120,7 @@ class ShelvesTreeView(TreeView):
             node.selectionChanged.connect(partial(self._novelSelectionChanged, node))
             node.iconChanged.connect(partial(self.novelChanged.emit, novel))
             node.deleted.connect(partial(self.novelDeletionRequested.emit, novel))
+            node.doubleClicked.connect(partial(self.novelOpenRequested.emit, novel))
 
     def updateNovel(self, novel: NovelDescriptor):
         self._novels[novel].refresh()
