@@ -36,6 +36,7 @@ from plotlyst.view.generated.novel_creation_dialog_ui import Ui_NovelCreationDia
 from plotlyst.view.generated.plot_value_editor_dialog_ui import Ui_PlotValueEditorDialog
 from plotlyst.view.generated.synopsis_editor_dialog_ui import Ui_SynopsisEditorDialog
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.input import HtmlPopupTextEditorToolbar
 from plotlyst.view.widget.utility import IconSelectorDialog
 
 
@@ -317,12 +318,19 @@ class SynopsisEditorDialog(QDialog, Ui_SynopsisEditorDialog):
         self.setupUi(self)
         self._novel = novel
 
+        self.btnClose.clicked.connect(self.reject)
+
         self.textSynopsis.setPlaceholderText(synopsis_editor_placeholder)
         self.textSynopsis.setMargins(0, 10, 0, 10)
-        self.textSynopsis.setGrammarCheckEnabled(False)
+        self.textSynopsis.setGrammarCheckEnabled(self._novel.prefs.docs.grammar_check)
 
         self.textSynopsis.setToolbarVisible(False)
         self.textSynopsis.setTitleVisible(False)
+        self.textSynopsis.setCharacterWidth(60)
+
+        toolbar = HtmlPopupTextEditorToolbar()
+        toolbar.activate(self.textSynopsis.textEdit)
+        self.textSynopsis.textEdit.setPopupWidget(toolbar)
 
         self.textSynopsis.setText(novel.synopsis.content)
 

@@ -39,6 +39,7 @@ from plotlyst.view.dialog.novel import NovelEditionDialog, SynopsisEditorDialog
 from plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_border_image
+from plotlyst.view.widget.input import HtmlPopupTextEditorToolbar
 from plotlyst.view.widget.plot.editor import PlotEditor
 from plotlyst.view.widget.settings import NovelSettingsWidget
 from plotlyst.view.widget.story_map import EventsMindMapView
@@ -94,12 +95,16 @@ class NovelView(AbstractNovelView):
         self.ui.textPremise.textChanged.connect(self._premise_changed)
         self.ui.textSynopsis.setPlaceholderText(synopsis_editor_placeholder)
         self.ui.textSynopsis.setMargins(0, 10, 0, 10)
-        self.ui.textSynopsis.textEdit.setSidebarEnabled(False)
+        self.ui.textSynopsis.textEdit.setSidebarEnabled(True)
         self.ui.textSynopsis.textEdit.setTabChangesFocus(True)
         self.ui.textSynopsis.textEdit.setProperty('transparent', False)
         self.ui.textSynopsis.textEdit.setProperty('rounded', True)
         self.ui.textSynopsis.textEdit.setProperty('relaxed-white-bg', False)
         self.ui.textSynopsis.setGrammarCheckEnabled(self.novel.prefs.docs.grammar_check)
+        self.ui.textSynopsis.setCharacterWidth(60)
+        toolbar = HtmlPopupTextEditorToolbar()
+        toolbar.activate(self.ui.textSynopsis.textEdit)
+        self.ui.textSynopsis.textEdit.setPopupWidget(toolbar)
 
         self.ui.textSynopsis.setToolbarVisible(False)
         self.ui.textSynopsis.setTitleVisible(False)
