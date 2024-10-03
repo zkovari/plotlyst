@@ -3553,7 +3553,7 @@ class FontSettings:
 
 @dataclass
 class DocsPreferences:
-    grammar_check: bool = True
+    grammar_check: bool = False
     font: Dict[str, FontSettings] = field(default_factory=dict)
 
 
