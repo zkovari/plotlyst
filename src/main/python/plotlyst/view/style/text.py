@@ -38,7 +38,7 @@ label_style_error_night_mode = """
     }
 
     QLabel[night-mode=true] {
-        color: #f8f9fa;
+        color: #F5F6F8;
     }
 """
 
@@ -71,7 +71,7 @@ label_style_headings = """
 # QTextBrowser styles
 text_browser_styles = """
     QTextBrowser {
-        background-color: #f8f9fa;
+        background-color: #F5F6F8;
     }
 
     QTextBrowser[rounded=true] {
@@ -84,7 +84,7 @@ text_browser_styles = """
 # QLineEdit styles
 line_edit_styles = """
     QLineEdit {
-        background-color: #f8f9fa;
+        background-color: #F5F6F8;
     }
     
     QLineEdit[white-bg=true] {
@@ -110,7 +110,7 @@ line_edit_styles = """
 # QTextEdit styles
 text_edit_styles = """
     QTextEdit {
-        background-color: #f8f9fa;
+        background-color: #F5F6F8;
     }
 
     QTextEdit[rounded=true] {
@@ -129,7 +129,7 @@ text_edit_styles = """
     
     QTextEdit[night-mode=true] {
         background-color: rgba(39, 39, 39, 200);
-        color: #f8f9fa;
+        color: #F5F6F8;
     }
     
     QTextEdit[transparent=true] {
@@ -143,7 +143,7 @@ text_edit_styles = """
     
     QTextEdit[borderless=true] {
         border: 0px;
-        background-color: #f8f9fa;
+        background-color: #F5F6F8;
     }
 """
 

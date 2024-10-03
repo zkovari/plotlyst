@@ -21,20 +21,20 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 style = '''
 
 QHeaderView::section {
-    background-color: #f8f9fa; border: 0px; color: black;
+    background-color: #F5F6F8; border: 0px; color: black;
 }
 
 QHeaderView {
-    background-color: #f8f9fa;
+    background-color: #F5F6F8;
 }
 
 QTableView {
-    background-color: #f8f9fa;
+    background-color: #F5F6F8;
     alternate-background-color: #F0E6F4;
 }
 
 QTableView QTableCornerButton::section {
-    background-color: #f8f9fa;
+    background-color: #F5F6F8;
 }
 
 QHeaderView::section[main-header] {
@@ -80,7 +80,7 @@ QTreeView::item:selected:!active {
 }
 
 QListView {
-    background-color: #f8f9fa;
+    background-color: #F5F6F8;
     alternate-background-color: #F0E6F4;
 }
 
