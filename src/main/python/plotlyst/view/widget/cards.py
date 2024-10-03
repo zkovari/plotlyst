@@ -118,7 +118,7 @@ class Card(QFrame):
            }}''')
 
     def _bgColor(self, selected: bool = False) -> str:
-        return '#dec3c3' if selected else '#f9f4f4'
+        return '#dec3c3' if selected else '#f3e8e8'
 
     def _borderSize(self, selected: bool = False) -> int:
         return 4 if selected else 2
