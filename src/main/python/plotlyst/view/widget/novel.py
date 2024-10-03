@@ -27,7 +27,7 @@ from overrides import overrides
 from qthandy import vspacer, spacer, transparent, bold, vbox, hbox, line, margins
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
-from plotlyst.core.domain import StoryStructure, Novel, TagType, SelectionItem, Tag, NovelSetting
+from plotlyst.core.domain import StoryStructure, Novel, TagType, SelectionItem, Tag, NovelSetting, ScenesView
 from plotlyst.model.characters_model import CharactersTableModel
 from plotlyst.model.common import SelectionItemsModel
 from plotlyst.model.novel import NovelTagsModel
@@ -272,7 +272,13 @@ class NovelCustomizationWizard(QWidget):
         self._novel.prefs.settings[setting.value] = toggled
 
     def _updateCounter(self):
-        self.lblCounter.setText(f'<html><i>Selected features: <b>{len(self.wdgPanelSettings.toggledSettings())}/9')
+        toggledSettings = self.wdgPanelSettings.toggledSettings()
+        self.lblCounter.setText(f'<html><i>Selected features: <b>{len(toggledSettings)}/9')
+
+        self._novel.prefs.panels.scenes_view = None
+        if len(toggledSettings) == 1:
+            if NovelSetting.Manuscript in toggledSettings:
+                self._novel.prefs.panels.scenes_view = ScenesView.MANUSCRIPT
 
     def _recommend(self, writerType: WriterType):
         if writerType == WriterType.Architect:
