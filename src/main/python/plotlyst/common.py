@@ -20,6 +20,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from timeit import default_timer as timer
 from typing import Any, NoReturn, Dict
 
+from plotlyst.view.style.theme import BG_SECONDARY_COLOR
+
 WIP_COLOR: str = '#f6cd61'
 
 ACT_ONE_COLOR: str = '#02bcd4'
@@ -80,7 +82,7 @@ TRANS_PLOTLYST_SECONDARY_COLOR = 'rgba(75, 7, 99, 45)'
 
 ALT_BACKGROUND_COLOR: str = '#F0E6F4'
 
-RELAXED_WHITE_COLOR: str = '#F5F6F8'
+RELAXED_WHITE_COLOR: str = BG_SECONDARY_COLOR
 WHITE_COLOR: str = '#FcFcFc'
 BLACK_COLOR: str = '#040406'
 RED_COLOR: str = '#ED6868'
