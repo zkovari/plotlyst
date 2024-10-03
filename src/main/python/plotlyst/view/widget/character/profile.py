@@ -119,6 +119,12 @@ class SectionContext:
     def has_white_bg(self) -> bool:
         return False
 
+    def has_muted_bg(self) -> bool:
+        return False
+
+    def has_bg(self) -> bool:
+        return self.has_white_bg() or self.has_muted_bg()
+
     def has_addition(self) -> bool:
         return False
 
@@ -310,12 +316,12 @@ class ProfileSectionWidget(ProfileFieldWidget):
 
         self.wdgContainer = QFrame()
         vbox(self.wdgContainer, 5)
-        if self.context.has_white_bg():
-            if app_env.is_mac():
-                self.wdgContainer.setProperty('relaxed-white-bg', True)
-            else:
-                self.wdgContainer.setProperty('white-bg', True)
+        if self.context.has_bg():
             self.wdgContainer.setProperty('rounded', True)
+            if self.context.has_white_bg():
+                self.wdgContainer.setProperty('relaxed-white-bg', True)
+            elif self.context.has_muted_bg():
+                self.wdgContainer.setProperty('darker-bg', True)
         else:
             margins(self.wdgContainer, left=20)
 
@@ -324,7 +330,7 @@ class ProfileSectionWidget(ProfileFieldWidget):
         margins(self.wdgBottom, left=20)
 
         self.layout().addWidget(self.wdgHeader)
-        if self.context.has_white_bg():
+        if self.context.has_bg():
             self.layout().addWidget(wrap(self.wdgContainer, margin_left=20))
         else:
             self.layout().addWidget(self.wdgContainer)
@@ -987,7 +993,7 @@ class MultiAttributesTemplateWidgetBase(ProfileFieldWidget):
 class StrengthsSectionContext(SectionContext):
 
     @overrides
-    def has_white_bg(self) -> bool:
+    def has_muted_bg(self) -> bool:
         return True
 
 
@@ -1001,7 +1007,7 @@ class FacultiesSectionContext(SectionContext):
 class MultiAttributeSectionContext(SectionContext):
 
     @overrides
-    def has_white_bg(self) -> bool:
+    def has_muted_bg(self) -> bool:
         return True
 
     @overrides

@@ -28,7 +28,7 @@ from qthandy import vbox, incr_icon, bold, spacer, retain_when_hidden, margins, 
 from qthandy.filter import VisibilityToggleEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
-from plotlyst.common import WHITE_COLOR, RELAXED_WHITE_COLOR
+from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, PlotType, PlotProgressionItem, \
     PlotProgressionItemType, DynamicPlotPrincipleGroupType, DynamicPlotPrinciple, DynamicPlotPrincipleType, Plot, \
     DynamicPlotPrincipleGroup, LayoutType, Character
@@ -39,6 +39,7 @@ from plotlyst.view.common import frame, fade_out_and_gc, action
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.button import apply_button_palette_color
+from plotlyst.view.style.theme import BG_MUTED_COLOR
 from plotlyst.view.widget.characters import CharacterSelectorButton
 from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.display import IconText
@@ -426,7 +427,7 @@ class DynamicPlotPrinciplesGroupWidget(QWidget):
                            #frame {{
                                 border: 1px solid lightgrey;
                                 border-radius: 8px;
-                                background: {WHITE_COLOR};
+                                background: {BG_MUTED_COLOR};
                            }}
                            ''')
 
