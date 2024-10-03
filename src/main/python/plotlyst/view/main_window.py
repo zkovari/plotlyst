@@ -337,6 +337,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
                 btn.setHidden(True)
             self._actionSettings.setVisible(False)
             self._actionScrivener.setVisible(False)
+            self.actionQuickCustomization.setDisabled(True)
             return
 
         sender: EventSender = event_senders.instance(self.novel)
@@ -349,6 +350,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             btn.setVisible(True)
 
         self._actionSettings.setVisible(settings.toolbar_quick_settings())
+        self.actionQuickCustomization.setEnabled(True)
         self.btnSettings.setNovel(self.novel)
         self.outline_mode.setEnabled(True)
         self.outline_mode.setVisible(True)
@@ -658,6 +660,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.comments_view = None
 
         self._actionSettings.setVisible(False)
+        self.actionQuickCustomization.setDisabled(True)
 
         self.outline_mode.setDisabled(True)
         self.outline_mode.setText('')
