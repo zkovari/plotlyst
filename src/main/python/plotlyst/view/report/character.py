@@ -22,17 +22,18 @@ from typing import List
 from PyQt6.QtCharts import QPolarChart, QCategoryAxis, QLineSeries, QAreaSeries
 from PyQt6.QtCharts import QValueAxis
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPen
+from PyQt6.QtGui import QPen, QColor
 from overrides import overrides
 from qthandy import hbox, vbox, margins, flow
 
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Novel, Character
 from plotlyst.view.common import icon_to_html_img
 from plotlyst.view.generated.report.character_report_ui import Ui_CharacterReport
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.report import AbstractReport
 from plotlyst.view.widget.chart import SupporterRoleChart, GenderCharacterChart, \
-    PolarBaseChart, RoleChart, EnneagramChart
+    PolarBaseChart, RoleChart
 from plotlyst.view.widget.display import ChartView
 
 
@@ -85,10 +86,10 @@ class CharacterReport(AbstractReport, Ui_CharacterReport):
         self.chartViewGenderMinor.setChart(self._chartGenderMinor)
         self.wdgGenderGroups.layout().addWidget(self.chartViewGenderMinor)
 
-        self._chartEnneagram = EnneagramChart()
-        self.chartViewEnneagram = self.__newChartView(self.largeSize)
-        self.chartViewEnneagram.setChart(self._chartEnneagram)
-        self.wdgPersonality.layout().addWidget(self.chartViewEnneagram)
+        # self._chartEnneagram = EnneagramChart()
+        # self.chartViewEnneagram = self.__newChartView(self.largeSize)
+        # self.chartViewEnneagram.setChart(self._chartEnneagram)
+        # self.wdgPersonality.layout().addWidget(self.chartViewEnneagram)
 
         self._chartAge = AgeChart()
         self.chartViewAge = self.__newChartView(self.mediumSize)
@@ -105,7 +106,7 @@ class CharacterReport(AbstractReport, Ui_CharacterReport):
         self._chartGenderMajor.refresh(self.novel.major_characters())
         self._chartGenderSecondary.refresh(self.novel.secondary_characters())
         self._chartGenderMinor.refresh(self.novel.minor_characters())
-        self._chartEnneagram.refresh(self.novel.characters)
+        # self._chartEnneagram.refresh(self.novel.characters)
         self._chartAge.refresh(self.novel.characters)
 
     def __newChartView(self, size: int):
@@ -120,11 +121,9 @@ class AgeChart(PolarBaseChart):
         self._rad_axis = QValueAxis()
         self._rad_axis.setLabelsVisible(False)
         self._angular_axis = QCategoryAxis()
-        self._angular_axis.setRange(0, 45)
-        self._angular_axis.append(icon_to_html_img(IconRegistry.baby_icon()), 3)
-        self._angular_axis.append(icon_to_html_img(IconRegistry.child_icon()), 10)
-        self._angular_axis.append(icon_to_html_img(IconRegistry.teenager_icon()), 15)
-        self._angular_axis.append(icon_to_html_img(IconRegistry.adult_icon()), 35)
+        self._angular_axis.setRange(0, 90)
+        for age in [3, 8, 12, 18, 30, 45, 65]:
+            self._angular_axis.append(str(age), age)
 
     def refresh(self, characters: List[Character]):
         self.reset()
@@ -143,11 +142,11 @@ class AgeChart(PolarBaseChart):
 
         ages = {}
         for char in characters:
-            if char.age is None:
+            if not char.age:
                 continue
             if char.age_infinite:
                 continue
-            age = 45 if char.age > 45 else char.age
+            age = 90 if char.age > 90 else char.age
             if age not in ages.keys():
                 ages[age] = 1
             ages[age] = ages[age] + 1
@@ -166,7 +165,7 @@ class AgeChart(PolarBaseChart):
         self.addSeries(lower_series)
 
         series = QAreaSeries(upper_series, lower_series)
-        series.setColor(Qt.GlobalColor.darkBlue)
+        series.setColor(QColor(PLOTLYST_SECONDARY_COLOR))
         series.setPen(pen)
 
         self.addSeries(series)

@@ -117,6 +117,10 @@ class CharactersReportPage(ReportPage):
         self._dispatcher.register(self, CharacterChangedEvent, CharacterDeletedEvent)
 
     @overrides
+    def _hasFrame(self) -> bool:
+        return True
+
+    @overrides
     def _initReport(self):
         return CharacterReport(self._novel)
 
@@ -214,7 +218,7 @@ class ReportsView(AbstractNovelView):
         self.ui.btnArc.setIcon(IconRegistry.rising_action_icon('black', color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnManuscript.setIcon(IconRegistry.manuscript_icon())
 
-        self.ui.btnCharacters.setHidden(True)
+        # self.ui.btnCharacters.setHidden(True)
         self.ui.btnConflict.setHidden(True)
 
         for btn in self.ui.buttonGroup.buttons():
@@ -223,8 +227,8 @@ class ReportsView(AbstractNovelView):
             btn.setProperty('large', True)
             btn.setProperty('top-selector', True)
 
-        # self._page_characters = CharactersReportPage(self.novel)
-        # self.ui.stackedWidget.addWidget(self._page_characters)
+        self._page_characters = CharactersReportPage(self.novel)
+        self.ui.stackedWidget.addWidget(self._page_characters)
         self._page_scenes = ScenesReportPage(self.novel)
         self.ui.stackedWidget.addWidget(self._page_scenes)
         # self._page_conflicts = ConflictsReportPage(self.novel)
@@ -235,11 +239,12 @@ class ReportsView(AbstractNovelView):
         self.ui.stackedWidget.addWidget(self._page_manuscript)
 
         link_buttons_to_pages(self.ui.stackedWidget, [
+            (self.ui.btnCharacters, self._page_characters),
             (self.ui.btnScenes, self._page_scenes),
             (self.ui.btnArc, self._page_arc),
             (self.ui.btnManuscript, self._page_manuscript)])
 
-        self.ui.btnScenes.setChecked(True)
+        self.ui.btnCharacters.setChecked(True)
 
     @overrides
     def refresh(self):
