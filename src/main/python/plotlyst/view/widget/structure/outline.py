@@ -35,7 +35,7 @@ from plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat,
     twist_beat, inciting_incident_beat, refusal_beat, synchronicity_beat, establish_beat, trigger_beat, \
     first_pinch_point_beat, second_pinch_point_beat, crisis, climax_beat, resolution_beat, contrast_beat, \
     retrospection_beat, revelation_beat, dark_moment, plot_point, plot_point_ponr, plot_point_aha, \
-    plot_point_rededication, danger_beat, copy_beat, TemplateStoryStructureType, LayoutType
+    plot_point_rededication, danger_beat, copy_beat, TemplateStoryStructureType
 from plotlyst.view.common import label, push_btn, wrap, tool_btn, scrolled
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -401,7 +401,7 @@ class StoryStructureOutline(OutlineTimelineWidget):
         widget = StoryStructureBeatWidget(item, self._structure, parent=self)
         widget.attachStructurePreview(self._structureTimeline)
         widget.changed.connect(self.beatChanged)
-        widget.actChanged.connect(self._actChanged)
+        widget.actChanged.connect(partial(self._actChanged, widget))
         widget.removed.connect(self._beatRemovedClicked)
         widget.dragStarted.connect(partial(self._dragStarted, widget))
         widget.dragStopped.connect(self._dragFinished)
@@ -477,7 +477,10 @@ class StoryStructureOutline(OutlineTimelineWidget):
         QTimer.singleShot(150, self._beatsPreview.refresh)
         self.timelineChanged.emit()
 
-    def _actChanged(self):
+    def _actChanged(self, wdg: Optional[StoryStructureBeatWidget] = None):
+        if wdg:
+            self._structureTimeline.refreshBeat(wdg.beat)
+
         self._structureTimeline.refreshActs()
         for wdg in self._beatWidgets:
             beat: StoryBeat = wdg.item

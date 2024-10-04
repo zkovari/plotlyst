@@ -46,6 +46,8 @@ class _BeatButtonStyle(Enum):
 
 
 class _BeatButton(QToolButton):
+    BeatMimeType = 'application/story-beat'
+
     def __init__(self, beat: StoryBeat, parent=None):
         super(_BeatButton, self).__init__(parent)
         self.beat = beat
@@ -54,6 +56,9 @@ class _BeatButton(QToolButton):
 
         self.installEventFilter(InstantTooltipEventFilter(self))
         transparent(self)
+
+        self._dragEventFilter = DragEventFilter(self, self.BeatMimeType, self.dataFunc, hideTarget=True)
+        self._dragEnabled: bool = False
 
     def dataFunc(self, _):
         return self.beat
@@ -64,6 +69,18 @@ class _BeatButton(QToolButton):
         self._initBorderStyle(125)
         # else:
         #     transparent(self)
+
+    def setDragEnabled(self, enabled: bool):
+        if self._dragEnabled == enabled:
+            return
+
+        self._dragEnabled = enabled
+        if enabled:
+            self.installEventFilter(self._dragEventFilter)
+            self.setCursor(Qt.CursorShape.OpenHandCursor)
+        else:
+            self.removeEventFilter(self._dragEventFilter)
+            self.setCursor(Qt.CursorShape.ArrowCursor)
 
     @overrides
     def event(self, event: QEvent) -> bool:
@@ -264,10 +281,7 @@ class StoryStructureTimelineWidget(QWidget):
             btn.toggled.connect(partial(self._beatToggled, btn))
             btn.clicked.connect(partial(self._beatClicked, btn))
             btn.installEventFilter(self)
-            if self._beatsMoveable and not beat.ends_act and not is_midpoint(beat) and self.isProportionalDisplay():
-                btn.installEventFilter(
-                    DragEventFilter(btn, self.BeatMimeType, btn.dataFunc, hideTarget=True))
-                btn.setCursor(Qt.CursorShape.OpenHandCursor)
+            self._refreshBeatButtonDragStatus(btn)
             if not self.isProportionalDisplay():
                 if self.structure.template_type == TemplateStoryStructureType.SPINE:
                     btn.setTextStyle()
@@ -389,6 +403,7 @@ class StoryStructureTimelineWidget(QWidget):
             if beat.icon:
                 btn.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
             btn.setToolTip(f'<b style="color: {beat.icon_color}">{beat.text}')
+            self._refreshBeatButtonDragStatus(btn)
 
     def refreshActs(self):
         self._clearActs()
@@ -555,6 +570,12 @@ class StoryStructureTimelineWidget(QWidget):
             builder.add_action('Remove', IconRegistry.trash_can_icon(),
                                lambda: self.beatRemovalRequested.emit(btn.beat))
             builder.popup()
+
+    def _refreshBeatButtonDragStatus(self, btn: _BeatButton):
+        if self._beatsMoveable and not btn.beat.ends_act and not is_midpoint(btn.beat) and self.isProportionalDisplay():
+            btn.setDragEnabled(True)
+        else:
+            btn.setDragEnabled(False)
 
     def _actResized(self, pos: int, index: int):
         old_percentage = 0
