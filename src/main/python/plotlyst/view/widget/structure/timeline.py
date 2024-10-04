@@ -150,7 +150,8 @@ class _ActButton(QPushButton):
         super().__init__(parent)
         self.structure = structure
         self.act = act
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
+        self.setMinimumWidth(10)
         if act == 0:
             self.setText('Structure')
         else:
