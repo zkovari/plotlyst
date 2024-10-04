@@ -110,6 +110,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self.novel = None
         self._current_text_widget = None
+        self._actionNovelEditor: Optional[QAction] = None
         self._actionScrivener: Optional[QAction] = None
         self._actionSettings: Optional[QAction] = None
         last_novel_id = settings.last_novel_id()
@@ -271,7 +272,11 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         elif isinstance(event, NovelUpdatedEvent):
             if self.novel and event.novel.id == self.novel.id:
                 self.novel.title = event.novel.title
+                self.novel.icon = event.novel.icon
+                self.novel.icon_color = event.novel.icon_color
                 self.outline_mode.setText(self.novel.title)
+                if self.novel.icon:
+                    self.outline_mode.setIcon(IconRegistry.from_name(self.novel.icon, self.novel.icon_color))
         elif isinstance(event, OpenDistractionFreeMode):
             self.btnComments.setChecked(False)
             self._toggle_fullscreen(on=True)
@@ -506,7 +511,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self.outline_mode = ToolbarButton(self.toolBar)
         self.outline_mode.setMinimumWidth(80)
-        self.outline_mode.setText('My novel')
         self.outline_mode.setIcon(IconRegistry.book_icon(color_on='#240046'))
 
         self._mode_btn_group = QButtonGroup()
@@ -534,7 +538,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.toolBar.addWidget(spacer(5))
         self.toolBar.addSeparator()
         self.toolBar.addWidget(spacer(5))
-        self.toolBar.addWidget(self.outline_mode)
+        self._actionNovelEditor = self.toolBar.addWidget(self.outline_mode)
         self.toolBar.addWidget(spacer())
         self._actionScrivener = self.toolBar.addWidget(self.btnScrivener)
         self._actionSettings = self.toolBar.addWidget(self.btnSettings)
@@ -548,9 +552,12 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if self.novel:
             self.outline_mode.setChecked(True)
             self.outline_mode.setText(self.novel.title)
+            if self.novel.icon:
+                self.outline_mode.setIcon(IconRegistry.from_name(self.novel.icon, self.novel.icon_color))
         else:
             self.home_mode.setChecked(True)
             self.outline_mode.setDisabled(True)
+            self._actionNovelEditor.setVisible(False)
             self.outline_mode.setText('')
 
     def _init_statusbar(self):
@@ -605,8 +612,12 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             settings.set_last_novel_id(self.novel.id)
 
         self.outline_mode.setEnabled(True)
-        self.outline_mode.setVisible(True)
+        self._actionNovelEditor.setVisible(True)
         self.outline_mode.setText(self.novel.title)
+        if self.novel.icon:
+            self.outline_mode.setIcon(IconRegistry.from_name(self.novel.icon, self.novel.icon_color))
+        else:
+            self.outline_mode.setIcon(IconRegistry.book_icon(color_on='#240046'))
         self.outline_mode.setChecked(True)
 
         self.actionPreview.setEnabled(True)
@@ -664,6 +675,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionQuickCustomization.setDisabled(True)
 
         self.outline_mode.setDisabled(True)
+        self._actionNovelEditor.setVisible(False)
         self.outline_mode.setText('')
 
         self.actionPreview.setDisabled(True)

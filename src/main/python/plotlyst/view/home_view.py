@@ -313,6 +313,8 @@ class HomeView(AbstractView):
         self._shelvesTreeView.updateNovel(self._selected_novel)
         self.repo.update_project_novel(self._selected_novel)
 
+        emit_global_event(NovelUpdatedEvent(self, self._selected_novel))
+
     def _novel_changed_in_browser(self, novel: NovelDescriptor):
         if self._selected_novel and self._selected_novel.id == novel.id:
             self.ui.lineNovelTitle.setText(self._selected_novel.title)
@@ -321,6 +323,8 @@ class HomeView(AbstractView):
             else:
                 self._iconSelector.reset()
         self.repo.update_project_novel(novel)
+
+        emit_global_event(NovelUpdatedEvent(self, self._selected_novel))
 
     def _on_delete(self, novel: Optional[NovelDescriptor] = None):
         if novel is None:
