@@ -578,11 +578,12 @@ class StoryStructureTimelineWidget(QWidget):
         else:
             btn.setDragEnabled(False)
 
-    def _actResized(self, pos: int, index: int):
+    def _actResized(self, pos: int, act: int):
         old_percentage = 0
         new_percentage = 0
+
         for beat in self._beats.keys():
-            if beat.ends_act and beat.act == index:
+            if beat.ends_act and beat.act == act:
                 old_percentage = beat.percentage
                 beat.percentage = self._percentageForX(pos - self._beatHeight // 2)
                 new_percentage = beat.percentage
@@ -595,5 +596,31 @@ class StoryStructureTimelineWidget(QWidget):
                 elif con.percentage_end == old_percentage:
                     con.percentage_end = new_percentage
 
+            act_percentages = self._calculateActPercentages()
+
+            for beat in self._beats.keys():
+                if beat.act == act:
+                    if beat.ends_act:
+                        continue
+                    act_start_percentage = act_percentages[beat.act - 1][0]
+                    act_range = old_percentage - act_start_percentage
+
+                    if act_range > 0:
+                        relative_percentage = (beat.percentage - act_start_percentage) / act_range
+                        new_act_range = new_percentage - act_start_percentage
+                        beat.percentage = act_start_percentage + (relative_percentage * new_act_range)
+
         self._rearrangeBeats()
         self.actsResized.emit()
+
+    def _calculateActPercentages(self):
+        total_width = self._actsSplitter.width()
+        percentages = []
+        for act_button in self._acts:
+            button_geometry = act_button.geometry()
+            act_start = button_geometry.left()
+            act_width = button_geometry.width()
+            act_start_percentage = act_start / total_width
+            act_end_percentage = (act_start + act_width) / total_width
+            percentages.append((act_start_percentage, act_end_percentage))
+        return percentages
