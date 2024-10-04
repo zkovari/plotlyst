@@ -22,9 +22,9 @@ from enum import Enum, auto
 from typing import Optional, List
 
 from PyQt6.QtGui import QShowEvent
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QWidget, QFrame
 from overrides import overrides
-from qthandy import bold, vbox
+from qthandy import bold, vbox, hbox
 from qthandy.filter import OpacityEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
@@ -64,9 +64,17 @@ class ReportPage(QWidget, EventListener):
 
         vbox(self)
 
-        self._scrollarea, self._wdgCenter = scrolled(self)
-        vbox(self._wdgCenter)
-        self._wdgCenter.setProperty('relaxed-white-bg', True)
+        self._scrollarea, self._wdgCenter = scrolled(self, frameless=True)
+        hbox(self._wdgCenter)
+        if self._hasFrame():
+            self._wdgFrame = QFrame()
+            self._wdgCenter.layout().addWidget(self._wdgFrame)
+            self._wdgFrame.setProperty('relaxed-white-bg', True)
+            self._wdgFrame.setProperty('large-rounded', True)
+            hbox(self._wdgFrame, 20, 0)
+            self._wdgFrame.setMaximumWidth(1200)
+        else:
+            self._wdgCenter.setProperty('relaxed-white-bg', True)
 
         self._dispatcher = event_dispatchers.instance(self._novel)
         self._dispatcher.register(self, NovelSyncEvent)
@@ -75,7 +83,10 @@ class ReportPage(QWidget, EventListener):
     def showEvent(self, event: QShowEvent) -> None:
         if self._report is None:
             self._report = self._initReport()
-            self._wdgCenter.layout().addWidget(self._report)
+            if self._hasFrame():
+                self._wdgFrame.layout().addWidget(self._report)
+            else:
+                self._wdgCenter.layout().addWidget(self._report)
         elif self._refreshNext:
             self.refresh()
             self._refreshNext = False
@@ -90,6 +101,9 @@ class ReportPage(QWidget, EventListener):
     def refresh(self):
         if self._report:
             self._report.refresh()
+
+    def _hasFrame(self) -> bool:
+        return False
 
     @abstractmethod
     def _initReport(self) -> AbstractReport:
@@ -112,6 +126,10 @@ class ScenesReportPage(ReportPage):
         super(ScenesReportPage, self).__init__(novel, parent)
         self._dispatcher.register(self, SceneChangedEvent, SceneDeletedEvent, CharacterChangedEvent,
                                   CharacterDeletedEvent, NovelStoryStructureUpdated)
+
+    @overrides
+    def _hasFrame(self) -> bool:
+        return True
 
     @overrides
     def _initReport(self):
