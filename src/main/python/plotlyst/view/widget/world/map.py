@@ -26,7 +26,7 @@ from PyQt6.QtGui import QColor, QPixmap, QShowEvent, QResizeEvent, QImage, QPain
     QPainterPath, QPen
 from PyQt6.QtWidgets import QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem, QAbstractGraphicsShapeItem, QWidget, \
     QGraphicsSceneMouseEvent, QGraphicsOpacityEffect, QGraphicsDropShadowEffect, QFrame, QLineEdit, \
-    QApplication, QGraphicsSceneDragDropEvent, QSlider, QGraphicsRectItem, QGraphicsEllipseItem, QGraphicsPathItem
+    QApplication, QGraphicsSceneDragDropEvent, QSlider, QGraphicsPathItem
 from overrides import overrides
 from qthandy import busy, vbox, sp, line, incr_font, flow, incr_icon, bold, vline, \
     margins, decr_font, translucent
@@ -40,7 +40,8 @@ from plotlyst.resources import resource_registry
 from plotlyst.service.cache import entities_registry
 from plotlyst.service.image import load_image, upload_image, LoadedImage
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import tool_btn, action, shadow, TooltipPositionEventFilter, dominant_color, push_btn
+from plotlyst.view.common import tool_btn, action, shadow, TooltipPositionEventFilter, dominant_color, push_btn, \
+    ExclusiveOptionalButtonGroup
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.graphics import BaseGraphicsView
 from plotlyst.view.widget.graphics.editor import ZoomBar, BaseItemToolbar, \
@@ -513,6 +514,25 @@ class MarkerItem(QAbstractGraphicsShapeItem):
 #         return btn
 
 
+class AreaSelectorWidget(SecondarySelectorWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self._btnSquare = self.addItemTypeButton(GraphicsItemType.MAP_AREA_SQUARE,
+                                                 IconRegistry.from_name('mdi.select'),
+                                                 'Select a square-shaped area', 0, 0)
+        self._btnCircle = self.addItemTypeButton(GraphicsItemType.MAP_AREA_CIRCLE,
+                                                 IconRegistry.from_name('mdi.selection-ellipse'),
+                                                 'Select a circle-shaped area', 1, 0)
+        self._btnCustom = self.addItemTypeButton(GraphicsItemType.MAP_AREA_CUSTOM,
+                                                 IconRegistry.from_name('mdi.draw'),
+                                                 'Draw and select a custom area', 2, 0)
+
+    @overrides
+    def showEvent(self, event: QShowEvent) -> None:
+        self._btnCustom.setChecked(True)
+
+
 class WorldBuildingMapScene(QGraphicsScene):
     showPopup = pyqtSignal(MarkerItem)
     hidePopup = pyqtSignal()
@@ -658,8 +678,9 @@ class WorldBuildingMapScene(QGraphicsScene):
     def itemMovedEvent(self, _: MarkerItem):
         self.itemMoved.emit()
 
-    def startAdditionMode(self, _: GraphicsItemType):
+    def startAdditionMode(self, itemType: GraphicsItemType):
         self._additionMode = True
+        print(itemType)
 
     def endAdditionMode(self):
         self._additionMode = False
@@ -710,9 +731,18 @@ class WorldBuildingMapView(BaseGraphicsView):
         vbox(self._controlsNavBar, 5, 6)
         self._controlsNavBar.setHidden(True)
 
+        self._btnGroup = ExclusiveOptionalButtonGroup()
+
         self._btnAddMarker = self._newControlButton(IconRegistry.from_name('fa5s.map-marker'),
                                                     'Add new marker (or double-click on the map)',
                                                     GraphicsItemType.MAP_MARKER)
+        self._btnAddArea = self._newControlButton(IconRegistry.from_name('mdi.select'),
+                                                  'Add a new area',
+                                                  GraphicsItemType.MAP_AREA_CUSTOM)
+
+        self._wdgSecondaryAreaSelector = AreaSelectorWidget(self)
+        self._wdgSecondaryAreaSelector.setVisible(False)
+        self._wdgSecondaryAreaSelector.selected.connect(self._startAddition)
 
         # self._wdgEditor = EntityEditorWidget(self)
         # self._wdgEditor.setHidden(True)
@@ -792,6 +822,12 @@ class WorldBuildingMapView(BaseGraphicsView):
         self._controlsNavBar.setGeometry(10, 100, self._controlsNavBar.sizeHint().width(),
                                          self._controlsNavBar.sizeHint().height())
 
+        secondary_x = self._controlsNavBar.pos().x() + self._controlsNavBar.sizeHint().width() + 5
+        secondary_y = self._controlsNavBar.pos().y() + self._btnAddArea.pos().y()
+        self._wdgSecondaryAreaSelector.setGeometry(secondary_x, secondary_y,
+                                                   self._wdgSecondaryAreaSelector.sizeHint().width(),
+                                                   self._wdgSecondaryAreaSelector.sizeHint().height())
+
         # self._wdgEditor.setGeometry(self.width() - self._wdgEditor.width() - 20,
         #                             20,
         #                             self._wdgEditor.width(),
@@ -807,6 +843,7 @@ class WorldBuildingMapView(BaseGraphicsView):
         btn.installEventFilter(TooltipPositionEventFilter(btn))
         incr_icon(btn, 2)
 
+        self._btnGroup.addButton(btn)
         self._controlsNavBar.layout().addWidget(btn)
         btn.clicked.connect(partial(self._mainControlClicked, itemType))
 
@@ -820,16 +857,28 @@ class WorldBuildingMapView(BaseGraphicsView):
             self._scene.endAdditionMode()
 
     def _startAddition(self, itemType: GraphicsItemType):
+        for btn in self._btnGroup.buttons():
+            if not btn.isChecked():
+                btn.setDisabled(True)
+
         if not QApplication.overrideCursor():
             QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
 
+        if itemType.name.startswith('MAP_AREA'):
+            self._wdgSecondaryAreaSelector.setVisible(True)
+        else:
+            self._wdgSecondaryAreaSelector.setVisible(False)
+
         self._scene.startAdditionMode(itemType)
-        self.setToolTip('Click to add a new marker')
 
     def _endAddition(self):
-        self._btnAddMarker.setChecked(False)
+        for btn in self._btnGroup.buttons():
+            btn.setEnabled(True)
+            if btn.isChecked():
+                btn.setChecked(False)
+
+        self._wdgSecondaryAreaSelector.setHidden(True)
         QApplication.restoreOverrideCursor()
-        self.setToolTip('')
 
     def _loadMap(self, map: WorldBuildingMap):
         self._bgItem = self._scene.loadMap(map)
