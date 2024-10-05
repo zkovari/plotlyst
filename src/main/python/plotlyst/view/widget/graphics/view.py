@@ -49,7 +49,7 @@ from plotlyst.view.widget.graphics.scene import NetworkScene
 class BaseGraphicsView(QGraphicsView):
     def __init__(self, parent=None):
         super(BaseGraphicsView, self).__init__(parent)
-        self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
+        self.setDragMode(QGraphicsView.DragMode.NoDrag)
         self.setResizeAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         self._moveOriginX = 0
         self._moveOriginY = 0
@@ -66,7 +66,7 @@ class BaseGraphicsView(QGraphicsView):
             self._moveOriginX = event.pos().x()
             self._moveOriginY = event.pos().y()
         else:
-            self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
+            self.setDragMode(QGraphicsView.DragMode.NoDrag)
         super(BaseGraphicsView, self).mousePressEvent(event)
 
     @overrides
@@ -86,7 +86,7 @@ class BaseGraphicsView(QGraphicsView):
     @overrides
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         if self.dragMode() != QGraphicsView.DragMode.RubberBandDrag:
-            self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
+            self.setDragMode(QGraphicsView.DragMode.NoDrag)
         super().mouseReleaseEvent(event)
 
     @overrides
