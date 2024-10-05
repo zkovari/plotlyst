@@ -515,6 +515,33 @@ class MarkerItem(QAbstractGraphicsShapeItem):
 #         return btn
 
 
+class AreaSquareItem(QGraphicsRectItem):
+    def __init__(self, rect: QRectF, parent=None):
+        super().__init__(rect, parent)
+        self.setFlag(
+            QGraphicsItem.GraphicsItemFlag.ItemIsMovable |
+            QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
+        self.setAcceptHoverEvents(True)
+
+
+class AreaCircleItem(QGraphicsEllipseItem):
+    def __init__(self, rect: QRectF, parent=None):
+        super().__init__(rect, parent)
+        self.setFlag(
+            QGraphicsItem.GraphicsItemFlag.ItemIsMovable |
+            QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
+        self.setAcceptHoverEvents(True)
+
+
+class AreaCustomPathItem(QGraphicsPathItem):
+    def __init__(self, path: QPainterPath, parent=None):
+        super().__init__(path, parent)
+        self.setFlag(
+            QGraphicsItem.GraphicsItemFlag.ItemIsMovable |
+            QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
+        self.setAcceptHoverEvents(True)
+
+
 class AreaSelectorWidget(SecondarySelectorWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -624,12 +651,12 @@ class WorldBuildingMapScene(QGraphicsScene):
         if self.isAreaAdditionMode():
             self._area_start_point = event.scenePos()
             if self._additionDescriptor == GraphicsItemType.MAP_AREA_SQUARE:
-                self._current_area_item = QGraphicsRectItem(QRectF(self._area_start_point, self._area_start_point))
+                self._current_area_item = AreaSquareItem(QRectF(self._area_start_point, self._area_start_point))
             elif self._additionDescriptor == GraphicsItemType.MAP_AREA_CIRCLE:
-                self._current_area_item = QGraphicsEllipseItem(QRectF(self._area_start_point, self._area_start_point))
+                self._current_area_item = AreaCircleItem(QRectF(self._area_start_point, self._area_start_point))
             else:
                 self._area_custom_path = QPainterPath(self._area_start_point)
-                self._current_area_item = QGraphicsPathItem(self._area_custom_path)
+                self._current_area_item = AreaCustomPathItem(self._area_custom_path)
             self._current_area_item.setPen(QPen(Qt.GlobalColor.black, 2))  # Set the pen style
             self._current_area_item.setBrush(QColor('red'))
             self._current_area_item.setOpacity(0.25)
