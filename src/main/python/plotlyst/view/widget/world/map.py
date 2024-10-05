@@ -22,10 +22,12 @@ from typing import Optional, Any
 
 import qtanim
 from PyQt6.QtCore import Qt, QPoint, QSize, QPointF, QRectF, pyqtSignal, QTimer, QObject
-from PyQt6.QtGui import QColor, QPixmap, QShowEvent, QResizeEvent, QImage, QPainter, QKeyEvent, QIcon, QUndoStack
+from PyQt6.QtGui import QColor, QPixmap, QShowEvent, QResizeEvent, QImage, QPainter, QKeyEvent, QIcon, QUndoStack, \
+    QPainterPath, QPen, QMouseEvent
 from PyQt6.QtWidgets import QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem, QAbstractGraphicsShapeItem, QWidget, \
     QGraphicsSceneMouseEvent, QGraphicsOpacityEffect, QGraphicsDropShadowEffect, QFrame, QLineEdit, \
-    QApplication, QGraphicsSceneDragDropEvent, QSlider
+    QApplication, QGraphicsSceneDragDropEvent, QSlider, QGraphicsRectItem, QGraphicsEllipseItem, QGraphicsPathItem, \
+    QGraphicsView
 from overrides import overrides
 from qthandy import busy, vbox, sp, line, incr_font, flow, incr_icon, bold, vline, \
     margins, decr_font, translucent
@@ -545,11 +547,9 @@ class WorldBuildingMapScene(QGraphicsScene):
         self._map: Optional[WorldBuildingMap] = None
         self._animParent = QObject()
         self._additionDescriptor: Optional[GraphicsItemType] = None
-        self._pressed = False
-        self.start_point = None
-        # self.current_rect_item = None
-        self.current_path_item = None
-        self.path = None
+        self._area_start_point = None
+        self._current_area_item = None
+        self._area_custom_path = None
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -558,6 +558,11 @@ class WorldBuildingMapScene(QGraphicsScene):
 
     def isAdditionMode(self) -> bool:
         return self._additionDescriptor is not None
+
+    def isAreaAdditionMode(self) -> bool:
+        if self._additionDescriptor and self._additionDescriptor.name.startswith('MAP_AREA'):
+            return True
+        return False
 
     def showPopupEvent(self, item: MarkerItem):
         self.showPopup.emit(item)
@@ -614,58 +619,60 @@ class WorldBuildingMapScene(QGraphicsScene):
         else:
             self._map = None
 
-    # @overrides
-    # def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-    #     self._pressed = True
-    #     self.start_point = event.scenePos()
-    #     # self.current_rect_item = QGraphicsRectItem(QRectF(self.start_point, self.start_point))
-    #     # self.current_rect_item = QGraphicsEllipseItem(QRectF(self.start_point, self.start_point))
-    #     # self.addItem(self.current_rect_item)
-    #     start_point = event.scenePos()
-    #     self.path = QPainterPath(start_point)
-    #     self.current_path_item = QGraphicsPathItem(self.path)
-    #     self.current_path_item.setPen(QPen(Qt.GlobalColor.black, 2))  # Set the pen style
-    #     self.current_path_item.setBrush(QColor('red'))
-    #     self.current_path_item.setOpacity(0.25)
-    #     self.addItem(self.current_path_item)
-    #
-    #     super().mousePressEvent(event)
+    @overrides
+    def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        if self.isAreaAdditionMode():
+            self._area_start_point = event.scenePos()
+            if self._additionDescriptor == GraphicsItemType.MAP_AREA_SQUARE:
+                self._current_area_item = QGraphicsRectItem(QRectF(self._area_start_point, self._area_start_point))
+            elif self._additionDescriptor == GraphicsItemType.MAP_AREA_CIRCLE:
+                self._current_area_item = QGraphicsEllipseItem(QRectF(self._area_start_point, self._area_start_point))
+            else:
+                self._area_custom_path = QPainterPath(self._area_start_point)
+                self._current_area_item = QGraphicsPathItem(self._area_custom_path)
+            self._current_area_item.setPen(QPen(Qt.GlobalColor.black, 2))  # Set the pen style
+            self._current_area_item.setBrush(QColor('red'))
+            self._current_area_item.setOpacity(0.25)
+            self.addItem(self._current_area_item)
 
-    # @overrides
-    # def mouseMoveEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-    #     # if self._pressed and self.start_point and self.current_rect_item:
-    #     #     current_point = event.scenePos()
-    #     #     rect = QRectF(self.start_point, current_point).normalized()  # normalize to handle negative coordinates
-    #     #     if event.modifiers() & Qt.KeyboardModifier.ShiftModifier:
-    #     #         size = min(rect.width(), rect.height())
-    #     #         rect = QRectF(self.start_point, self.start_point + QPointF(size, size)).normalized()
-    #     #
-    #     #     self.current_rect_item.setRect(rect)
-    #     if self.current_path_item and self.path:
-    #         current_point = event.scenePos()
-    #         # Add a line segment to the current path
-    #         self.path.lineTo(current_point)
-    #         # Update the graphics path item with the new path
-    #         self.current_path_item.setPath(self.path)
-    #
-    #     super().mouseMoveEvent(event)
+        super().mousePressEvent(event)
+
+    @overrides
+    def mouseMoveEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        if self._current_area_item:
+            current_point = event.scenePos()
+            if self._additionDescriptor != GraphicsItemType.MAP_AREA_CUSTOM:
+                rect = QRectF(self._area_start_point,
+                              current_point).normalized()  # normalize to handle negative coordinates
+                if event.modifiers() & Qt.KeyboardModifier.ShiftModifier:
+                    size = min(rect.width(), rect.height())
+                    rect = QRectF(self._area_start_point, self._area_start_point + QPointF(size, size)).normalized()
+                self._current_area_item.setRect(rect)
+            elif self._area_custom_path:
+                current_point = event.scenePos()
+                self._area_custom_path.lineTo(current_point)
+                self._current_area_item.setPath(self._area_custom_path)
+
+        super().mouseMoveEvent(event)
 
     @overrides
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        # self._pressed = False
-        #
-        # self.path.lineTo(self.start_point)
-        # self.current_path_item.setPath(self.path)
-        # self.current_path_item = None
-        # self.path = None
+        if self._current_area_item and self._area_custom_path:
+            self._area_custom_path.lineTo(self._area_start_point)
+            self._current_area_item.setPath(self._area_custom_path)
+
+        self._area_start_point = None
+        self._current_area_item = None
+        self._area_custom_path = None
         if self.isAdditionMode() and event.button() & Qt.MouseButton.RightButton:
             self.cancelItemAddition.emit()
             self.endAdditionMode()
         elif self.isAdditionMode():
             if self._additionDescriptor == GraphicsItemType.MAP_MARKER:
                 self._addMarker(event.scenePos())
-            else:
-                print(self._additionDescriptor)
+            elif self.isAreaAdditionMode():
+                self.cancelItemAddition.emit()
+                self.endAdditionMode()
 
         super().mouseReleaseEvent(event)
 
@@ -806,6 +813,12 @@ class WorldBuildingMapView(BaseGraphicsView):
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
         self._arrangeSideBars()
+
+    @overrides
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        if event.button() == Qt.MouseButton.LeftButton and self._scene.isAreaAdditionMode():
+            self.setDragMode(QGraphicsView.DragMode.NoDrag)
+        super().mousePressEvent(event)
 
     @overrides
     def _scale(self, scale: float):
