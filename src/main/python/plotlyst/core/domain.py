@@ -2028,6 +2028,35 @@ def default_stages() -> List[SceneStage]:
             SceneStage('Proofread'), SceneStage('Final')]
 
 
+class GraphicsItemType(Enum):
+    CHARACTER = 'character'
+    STICKER = 'sticker'
+    EVENT = 'event'
+    COMMENT = 'comment'
+    SETUP = 'setup'
+    NOTE = 'note'
+    IMAGE = 'image'
+    MAP_MARKER = 'map_marker'
+    ICON = 'icon'
+    MAP_AREA_SQUARE = 'map_area_square'
+    MAP_AREA_CIRCLE = 'map_area_circle'
+    MAP_AREA_CUSTOM = 'map_area_custom'
+
+    def mimeType(self) -> str:
+        return f'application/node-{self.value}'
+
+
+NODE_SUBTYPE_GOAL = 'goal'
+NODE_SUBTYPE_CONFLICT = 'conflict'
+NODE_SUBTYPE_DISTURBANCE = 'disturbance'
+NODE_SUBTYPE_BACKSTORY = 'backstory'
+NODE_SUBTYPE_INTERNAL_CONFLICT = 'internal_conflict'
+NODE_SUBTYPE_QUESTION = 'question'
+NODE_SUBTYPE_FORESHADOWING = 'foreshadowing'
+NODE_SUBTYPE_TOOL = 'tool'
+NODE_SUBTYPE_COST = 'cost'
+
+
 class VariableType(Enum):
     Text = 0
 
@@ -2152,6 +2181,7 @@ class GlossaryItem(SelectionItem):
 class WorldBuildingMarker:
     x: float
     y: float
+    type: GraphicsItemType = GraphicsItemType.MAP_MARKER
     name: str = ''
     description: str = ''
     color: str = '#ef233c'
@@ -3404,35 +3434,6 @@ def default_tags() -> Dict[TagType, List[Tag]]:
             tags[t] = []
 
     return tags
-
-
-class GraphicsItemType(Enum):
-    CHARACTER = 'character'
-    STICKER = 'sticker'
-    EVENT = 'event'
-    COMMENT = 'comment'
-    SETUP = 'setup'
-    NOTE = 'note'
-    IMAGE = 'image'
-    MAP_MARKER = 'map_marker'
-    ICON = 'icon'
-    MAP_AREA_SQUARE = 'map_area_square'
-    MAP_AREA_CIRCLE = 'map_area_circle'
-    MAP_AREA_CUSTOM = 'map_area_custom'
-
-    def mimeType(self) -> str:
-        return f'application/node-{self.value}'
-
-
-NODE_SUBTYPE_GOAL = 'goal'
-NODE_SUBTYPE_CONFLICT = 'conflict'
-NODE_SUBTYPE_DISTURBANCE = 'disturbance'
-NODE_SUBTYPE_BACKSTORY = 'backstory'
-NODE_SUBTYPE_INTERNAL_CONFLICT = 'internal_conflict'
-NODE_SUBTYPE_QUESTION = 'question'
-NODE_SUBTYPE_FORESHADOWING = 'foreshadowing'
-NODE_SUBTYPE_TOOL = 'tool'
-NODE_SUBTYPE_COST = 'cost'
 
 
 @dataclass
