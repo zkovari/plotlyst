@@ -429,15 +429,6 @@ class BaseMapAreaItem(BaseMapItem):
         color.setAlpha(125)
         self.setBrush(color)
 
-    @overrides
-    def _posChangedOnTimeout(self):
-        self._posChangedTimer.stop()
-        self._marker.x = self.rect().x() + self.scenePos().x()
-        self._marker.y = self.rect().y() + self.scenePos().y()
-        scene = self.mapScene()
-        if scene:
-            scene.markerChangedEvent(self)
-
 
 class AreaSquareItem(QGraphicsRectItem, BaseMapAreaItem):
     def __init__(self, marker: WorldBuildingMarker, rect: QRectF, parent=None):
@@ -463,6 +454,15 @@ class AreaSquareItem(QGraphicsRectItem, BaseMapAreaItem):
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         self._hoverLeave(event)
 
+    @overrides
+    def _posChangedOnTimeout(self):
+        self._posChangedTimer.stop()
+        self._marker.x = self.rect().x() + self.scenePos().x()
+        self._marker.y = self.rect().y() + self.scenePos().y()
+        scene = self.mapScene()
+        if scene:
+            scene.markerChangedEvent(self)
+
 
 class AreaCircleItem(QGraphicsEllipseItem, BaseMapAreaItem):
     def __init__(self, marker: WorldBuildingMarker, rect: QRectF, parent=None):
@@ -487,6 +487,15 @@ class AreaCircleItem(QGraphicsEllipseItem, BaseMapAreaItem):
     @overrides
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         self._hoverLeave(event)
+
+    @overrides
+    def _posChangedOnTimeout(self):
+        self._posChangedTimer.stop()
+        self._marker.x = self.rect().x() + self.scenePos().x()
+        self._marker.y = self.rect().y() + self.scenePos().y()
+        scene = self.mapScene()
+        if scene:
+            scene.markerChangedEvent(self)
 
 
 class AreaCustomPathItem(QGraphicsPathItem, BaseMapAreaItem):
