@@ -709,9 +709,12 @@ class WorldBuildingMapScene(QGraphicsScene):
 
     @overrides
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        if self._current_area_item and self._additionDescriptor == GraphicsItemType.MAP_AREA_CUSTOM:
-            self._current_area_item.finish(self._area_start_point)
-            self.repo.update_world(self._novel)
+        if self._current_area_item:
+            if self._additionDescriptor == GraphicsItemType.MAP_AREA_CUSTOM:
+                self._current_area_item.finish(self._area_start_point)
+                self.repo.update_world(self._novel)
+
+            self._current_area_item.activate()
 
         self._area_start_point = None
         self._current_area_item = None
