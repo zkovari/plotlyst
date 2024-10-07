@@ -255,6 +255,9 @@ class BaseMapItem:
         self._posChangedTimer.setInterval(1000)
         self._posChangedTimer.timeout.connect(self._posChangedOnTimeout)
 
+    def marker(self) -> WorldBuildingMarker:
+        return self._marker
+
     def mapScene(self) -> 'WorldBuildingMapScene':
         return self.scene()
 
@@ -303,11 +306,19 @@ class BaseMapItem:
             self.setGraphicsEffect(None)
             self._checkRef()
 
-    def _posChangedOnTimeout(self):
-        pass
-
     def _checkRef(self):
-        pass
+        if not self._marker.ref:
+            effect = QGraphicsOpacityEffect()
+            effect.setOpacity(0.5)
+            self.setGraphicsEffect(effect)
+
+    def _posChangedOnTimeout(self):
+        self._posChangedTimer.stop()
+        self._marker.x = self.scenePos().x()
+        self._marker.y = self.scenePos().y()
+        scene = self.mapScene()
+        if scene:
+            scene.markerChangedEvent(self)
 
     def _triggerPopup(self):
         if not self.isSelected() and self.isUnderMouse():
@@ -326,10 +337,6 @@ class MarkerItem(QAbstractGraphicsShapeItem, BaseMapItem):
         self.__default_type_size = self._width // 2
         self._typeSize = self.__default_type_size
 
-        # self._posChangedTimer = QTimer()
-        # self._posChangedTimer.setInterval(1000)
-        # self._posChangedTimer.timeout.connect(self._posChangedOnTimeout)
-
         self._iconMarker = IconRegistry.from_name('fa5s.map-marker', self._marker.color)
         self._iconMarkerSelected = IconRegistry.from_name('fa5s.map-marker', self._marker.color_selected)
         if self._marker.icon:
@@ -340,12 +347,6 @@ class MarkerItem(QAbstractGraphicsShapeItem, BaseMapItem):
         self.setPos(self._marker.x, self._marker.y)
 
         self._checkRef()
-
-    def marker(self) -> WorldBuildingMarker:
-        return self._marker
-
-    # def mapScene(self) -> 'WorldBuildingMapScene':
-    #     return self.scene()
 
     def setLocation(self, location: Location):
         self._marker.ref = location.id
@@ -419,156 +420,29 @@ class MarkerItem(QAbstractGraphicsShapeItem, BaseMapItem):
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         self._hoverLeave(event)
 
-    # def activate(self):
-    #     self._checkRef()
-    #
-    # def highlight(self):
-    #     self.mapScene().highlightItem(self)
 
-    def _checkRef(self):
-        if not self._marker.ref:
-            effect = QGraphicsOpacityEffect()
-            effect.setOpacity(0.5)
-            self.setGraphicsEffect(effect)
+class BaseMapAreaItem(BaseMapItem):
+    def setMarker(self, marker: WorldBuildingMarker):
+        self._marker = marker
+        self.setPen(QPen(Qt.GlobalColor.black, 1))
+        color = QColor(marker.color)
+        color.setAlpha(125)
+        self.setBrush(color)
 
+    @overrides
     def _posChangedOnTimeout(self):
         self._posChangedTimer.stop()
-        self._marker.x = self.scenePos().x()
-        self._marker.y = self.scenePos().y()
+        self._marker.x = self.rect().x() + self.scenePos().x()
+        self._marker.y = self.rect().y() + self.scenePos().y()
         scene = self.mapScene()
         if scene:
             scene.markerChangedEvent(self)
 
-    # def _triggerPopup(self):
-    #     if not self.isSelected() and self.isUnderMouse():
-    #         self.scene().showPopupEvent(self)
 
-    # def _onSelection(self, selected: bool):
-    #     if selected:
-    #         effect = QGraphicsDropShadowEffect()
-    #         effect.setBlurRadius(12)
-    #         effect.setOffset(0)
-    #         effect.setColor(QColor(RELAXED_WHITE_COLOR))
-    #         self.setGraphicsEffect(effect)
-    #
-    #         self._typeSize = self.__default_type_size + 2
-    #     else:
-    #         self._typeSize = self.__default_type_size
-    #         self.setGraphicsEffect(None)
-    #         self._checkRef()
-
-
-# class EntityEditorWidget(QFrame):
-#     changed = pyqtSignal(MarkerItem)
-#
-#     def __init__(self, parent=None):
-#         super().__init__(parent)
-#         self._marker: Optional[WorldBuildingMarker] = None
-#         self._item: Optional[MarkerItem] = None
-#         self.setFrameShape(QFrame.Shape.StyledPanel)
-#         self.setStyleSheet('''QFrame {
-#             background: #ede0d4;
-#             border-radius: 12px;
-#         }''')
-#
-#         vbox(self, 5, 0)
-#         self._scrollarea, self.wdgCenter = scrolled(self)
-#         self._scrollarea.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-#         self._scrollarea.setProperty('transparent', True)
-#         self.wdgCenter.setProperty('transparent', True)
-#
-#         shadow(self)
-#         vbox(self.wdgCenter, 2, spacing=6)
-#
-#         self.btnLinkMilieu = push_btn(IconRegistry.world_building_icon(), 'Link to milieu', transparent_=True)
-#         decr_font(self.btnLinkMilieu)
-#
-#         self.lineTitle = QLineEdit()
-#         self.lineTitle.setProperty('transparent', True)
-#         self.lineTitle.setPlaceholderText('Name')
-#         self.lineTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-#         incr_font(self.lineTitle)
-#         bold(self.lineTitle)
-#         self.lineTitle.textEdited.connect(self._nameChanged)
-#
-#         self.textEdit = AutoAdjustableTextEdit(height=100)
-#         self.textEdit.setProperty('transparent', True)
-#         self.textEdit.setProperty('rounded', True)
-#         self.textEdit.setPlaceholderText('Edit synopsis')
-#         self.textEdit.setMaximumHeight(150)
-#         self.textEdit.textChanged.connect(self._synopsisChanged)
-#
-#         self.wdgColorSelector = MarkerColorSelectorWidget()
-#         self.wdgColorSelector.colorSelected.connect(self._colorChanged)
-#         self.wdgIconSelector = MarkerIconSelectorWidget()
-#         self.wdgIconSelector.iconReset.connect(self._iconReset)
-#         self.wdgIconSelector.iconSelected.connect(self._iconChanged)
-#
-#         self.wdgCenter.layout().addWidget(self.btnLinkMilieu, alignment=Qt.AlignmentFlag.AlignRight)
-#         self.wdgCenter.layout().addWidget(self.lineTitle)
-#         self.wdgCenter.layout().addWidget(line(color='lightgrey'))
-#         self._addHeader('Synopsis', self.textEdit)
-#         self._addHeader('Color', self.wdgColorSelector)
-#         self._addHeader('Icon', self.wdgIconSelector)
-#         self.wdgCenter.layout().addWidget(vspacer())
-#
-#         self.setFixedWidth(200)
-#
-#         sp(self).v_max()
-#
-#     def setMarker(self, item: MarkerItem):
-#         self._marker = None
-#         self._item = None
-#         self.textEdit.setText(item.marker().description)
-#         self.lineTitle.setText(item.marker().name)
-#         self._marker = item.marker()
-#         self._item = item
-#
-#     def _nameChanged(self, text: str):
-#         if self._marker:
-#             self._marker.name = text
-#             self.changed.emit(self._item)
-#
-#     def _synopsisChanged(self):
-#         if self._marker:
-#             self._marker.description = self.textEdit.toPlainText()
-#             self.changed.emit(self._item)
-#
-#     def _colorChanged(self, color: str):
-#         if self._marker:
-#             self._marker.color = color
-#             self._marker.color_selected = marker_selected_colors[color]
-#             self._item.refresh()
-#
-#     def _iconChanged(self, icon: str):
-#         if self._marker:
-#             self._marker.icon = icon
-#             self._item.refresh()
-#
-#     def _iconReset(self):
-#         if self._marker:
-#             self._marker.icon = ''
-#             self._item.refresh()
-#
-#     def _addHeader(self, text: str, wdg: QWidget) -> CollapseButton:
-#         btn = CollapseButton(Qt.Edge.RightEdge, Qt.Edge.BottomEdge)
-#         decr_icon(btn, 4)
-#         decr_font(btn)
-#         btn.setChecked(True)
-#         btn.setText(text)
-#         wrapped = wrap(wdg, margin_left=5)
-#         btn.toggled.connect(wrapped.setVisible)
-#
-#         self.wdgCenter.layout().addWidget(btn, alignment=Qt.AlignmentFlag.AlignLeft)
-#         self.wdgCenter.layout().addWidget(wrapped)
-#
-#         return btn
-
-
-class AreaSquareItem(QGraphicsRectItem, BaseMapItem):
+class AreaSquareItem(QGraphicsRectItem, BaseMapAreaItem):
     def __init__(self, marker: WorldBuildingMarker, rect: QRectF, parent=None):
         super().__init__(rect, parent)
-        self._marker = marker
+        self.setMarker(marker)
 
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
@@ -590,10 +464,10 @@ class AreaSquareItem(QGraphicsRectItem, BaseMapItem):
         self._hoverLeave(event)
 
 
-class AreaCircleItem(QGraphicsEllipseItem, BaseMapItem):
+class AreaCircleItem(QGraphicsEllipseItem, BaseMapAreaItem):
     def __init__(self, marker: WorldBuildingMarker, rect: QRectF, parent=None):
         super().__init__(rect, parent)
-        self._marker = marker
+        self.setMarker(marker)
 
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
@@ -615,10 +489,10 @@ class AreaCircleItem(QGraphicsEllipseItem, BaseMapItem):
         self._hoverLeave(event)
 
 
-class AreaCustomPathItem(QGraphicsPathItem, BaseMapItem):
+class AreaCustomPathItem(QGraphicsPathItem, BaseMapAreaItem):
     def __init__(self, marker: WorldBuildingMarker, path: QPainterPath, parent=None):
         super().__init__(path, parent)
-        self._marker = marker
+        self.setMarker(marker)
 
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
@@ -673,7 +547,7 @@ class WorldBuildingMapScene(QGraphicsScene):
         self._animParent = QObject()
         self._additionDescriptor: Optional[GraphicsItemType] = None
         self._area_start_point = None
-        self._current_area_item = None
+        self._current_area_item: Optional[BaseMapItem] = None
         self._area_custom_path = None
 
         self.repo = RepositoryPersistenceManager.instance()
@@ -740,7 +614,16 @@ class WorldBuildingMapScene(QGraphicsScene):
             self.addItem(item)
 
             for marker in self._map.markers:
-                markerItem = MarkerItem(marker)
+                if marker.type == GraphicsItemType.MAP_MARKER:
+                    markerItem = MarkerItem(marker)
+                elif marker.type == GraphicsItemType.MAP_AREA_SQUARE:
+                    rect = QRectF(marker.x, marker.y, marker.width, marker.height)
+                    markerItem = AreaSquareItem(marker, rect)
+                elif marker.type == GraphicsItemType.MAP_AREA_CIRCLE:
+                    rect = QRectF(marker.x, marker.y, marker.width, marker.height)
+                    markerItem = AreaCircleItem(marker, rect)
+                else:
+                    continue
                 self.addItem(markerItem)
 
             return item
@@ -751,22 +634,6 @@ class WorldBuildingMapScene(QGraphicsScene):
     def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
         if self.isAreaAdditionMode():
             self._addArea(event.scenePos())
-            # self._area_start_point = event.scenePos()
-            # marker = WorldBuildingMarker(self._area_start_point.x(), self._area_start_point.y())
-            # if self._additionDescriptor == GraphicsItemType.MAP_AREA_SQUARE:
-            #     self._current_area_item = AreaSquareItem(marker, QRectF(self._area_start_point, self._area_start_point))
-            # elif self._additionDescriptor == GraphicsItemType.MAP_AREA_CIRCLE:
-            #     self._current_area_item = AreaCircleItem(marker, QRectF(self._area_start_point, self._area_start_point))
-            # else:
-            #     self._area_custom_path = QPainterPath(self._area_start_point)
-            #     self._current_area_item = AreaCustomPathItem(marker, self._area_custom_path)
-            # self._current_area_item.setPen(QPen(Qt.GlobalColor.black, 1))
-            # color = QColor(marker.color)
-            # color.setAlpha(125)
-            # self._current_area_item.setBrush(color)
-            # # self._current_area_item.setOpacity(0.25)
-            # self.addItem(self._current_area_item)
-
         super().mousePressEvent(event)
 
     @overrides
@@ -780,6 +647,8 @@ class WorldBuildingMapScene(QGraphicsScene):
                     size = min(rect.width(), rect.height())
                     rect = QRectF(self._area_start_point, self._area_start_point + QPointF(size, size)).normalized()
                 self._current_area_item.setRect(rect)
+                self._current_area_item.marker().width = int(rect.width())
+                self._current_area_item.marker().height = int(rect.height())
             elif self._area_custom_path:
                 current_point = event.scenePos()
                 self._area_custom_path.lineTo(current_point)
@@ -792,6 +661,7 @@ class WorldBuildingMapScene(QGraphicsScene):
         if self._current_area_item and self._area_custom_path:
             self._area_custom_path.lineTo(self._area_start_point)
             self._current_area_item.setPath(self._area_custom_path)
+            self.repo.update_world(self._novel)
 
         self._area_start_point = None
         self._current_area_item = None
@@ -848,24 +718,19 @@ class WorldBuildingMapScene(QGraphicsScene):
         self._area_start_point = pos
         marker = WorldBuildingMarker(self._area_start_point.x(), self._area_start_point.y(),
                                      type=self._additionDescriptor)
+        self._map.markers.append(marker)
         if self._additionDescriptor == GraphicsItemType.MAP_AREA_SQUARE:
             self._current_area_item = AreaSquareItem(marker, QRectF(self._area_start_point, self._area_start_point))
         elif self._additionDescriptor == GraphicsItemType.MAP_AREA_CIRCLE:
             self._current_area_item = AreaCircleItem(marker, QRectF(self._area_start_point, self._area_start_point))
         else:
-            self._area_custom_path = QPainterPath(self._area_start_point)
+            self._area_custom_path = QPainterPath(0)
             self._current_area_item = AreaCustomPathItem(marker, self._area_custom_path)
-        self._current_area_item.setPen(QPen(Qt.GlobalColor.black, 1))
-        color = QColor(marker.color)
-        color.setAlpha(125)
-        self._current_area_item.setBrush(color)
-        # self._current_area_item.setOpacity(0.25)
         self.addItem(self._current_area_item)
 
     def _removeItem(self, item: QGraphicsItem):
         def remove():
-            if isinstance(item, MarkerItem):
-                self._map.markers.remove(item.marker())
+            self._map.markers.remove(item.marker())
             self.repo.update_world(self._novel)
             self.removeItem(item)
 
