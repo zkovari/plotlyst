@@ -268,6 +268,15 @@ class BaseMapItem:
     def highlight(self):
         self.mapScene().highlightItem(self)
 
+    def setColor(self, color: str):
+        self._marker.color = color
+        self._marker.color_selected = marker_selected_colors[color]
+        self.refresh()
+
+    def refresh(self):
+        self.update()
+        self.mapScene().markerChangedEvent(self)
+
     def _hoverEnter(self, event: 'QGraphicsSceneHoverEvent') -> None:
         if not self.isSelected():
             effect = QGraphicsOpacityEffect()
@@ -353,11 +362,6 @@ class MarkerItem(QAbstractGraphicsShapeItem, BaseMapItem):
         self._marker.ref = location.id
         self.mapScene().markerChangedEvent(self)
 
-    def setColor(self, color: str):
-        self._marker.color = color
-        self._marker.color_selected = marker_selected_colors[color]
-        self.refresh()
-
     def setIcon(self, icon: str):
         self._marker.icon = icon
         self.refresh()
@@ -380,8 +384,7 @@ class MarkerItem(QAbstractGraphicsShapeItem, BaseMapItem):
         if self._marker.icon:
             self._iconType = IconRegistry.from_name(self._marker.icon, RELAXED_WHITE_COLOR)
 
-        self.update()
-        self.mapScene().markerChangedEvent(self)
+        super().refresh()
 
     @overrides
     def boundingRect(self) -> QRectF:
@@ -429,6 +432,13 @@ class BaseMapAreaItem(BaseMapItem):
         color = QColor(marker.color)
         color.setAlpha(125)
         self.setBrush(color)
+
+    @overrides
+    def refresh(self):
+        color = QColor(self._marker.color)
+        color.setAlpha(125)
+        self.setBrush(color)
+        super().refresh()
 
 
 class AreaSquareItem(QGraphicsRectItem, BaseMapAreaItem):
@@ -678,6 +688,7 @@ class WorldBuildingMapScene(QGraphicsScene):
                 else:
                     continue
                 self.addItem(markerItem)
+                markerItem.activate()
 
             return item
         else:
