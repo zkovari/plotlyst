@@ -268,6 +268,10 @@ class BaseMapItem:
     def highlight(self):
         self.mapScene().highlightItem(self)
 
+    def setLocation(self, location: Location):
+        self._marker.ref = location.id
+        self.mapScene().markerChangedEvent(self)
+
     def setColor(self, color: str):
         self._marker.color = color
         self._marker.color_selected = marker_selected_colors[color]
@@ -357,10 +361,6 @@ class MarkerItem(QAbstractGraphicsShapeItem, BaseMapItem):
         self.setPos(self._marker.x, self._marker.y)
 
         self._checkRef()
-
-    def setLocation(self, location: Location):
-        self._marker.ref = location.id
-        self.mapScene().markerChangedEvent(self)
 
     def setIcon(self, icon: str):
         self._marker.icon = icon
@@ -592,7 +592,7 @@ class AreaSelectorWidget(SecondarySelectorWidget):
 
 
 class WorldBuildingMapScene(QGraphicsScene):
-    showPopup = pyqtSignal(MarkerItem)
+    showPopup = pyqtSignal(BaseMapItem)
     hidePopup = pyqtSignal()
     cancelItemAddition = pyqtSignal()
     itemAdded = pyqtSignal()
@@ -1014,7 +1014,7 @@ class WorldBuildingMapView(BaseGraphicsView):
         else:
             self._markerEditor.setVisible(False)
 
-    def _showPopup(self, item: MarkerItem):
+    def _showPopup(self, item: BaseMapItem):
         location = entities_registry.location(str(item.marker().ref))
         if location:
             self._popup.setText(location.name, location.summary)
