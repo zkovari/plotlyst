@@ -685,7 +685,7 @@ class WorldBuildingMapScene(QGraphicsScene):
 
     @overrides
     def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        if self.isAreaAdditionMode():
+        if self.isAreaAdditionMode() and event.button() == Qt.MouseButton.LeftButton:
             self._addArea(event.scenePos())
         super().mousePressEvent(event)
 
