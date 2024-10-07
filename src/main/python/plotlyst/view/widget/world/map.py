@@ -214,6 +214,10 @@ class MarkerItemToolbar(BaseItemToolbar):
         self._btnColor.setIcon(IconRegistry.from_name('fa5s.map-marker', color=marker.color))
         self._sbSize.setValue(marker.size if marker.size else 50)
 
+        self._btnIcon.setEnabled(marker.type == GraphicsItemType.MAP_MARKER)
+        self._sbSize.setVisible(marker.type == GraphicsItemType.MAP_MARKER)
+        self._toolbar.updateGeometry()
+
         self._item = item
 
     @busy
