@@ -997,10 +997,9 @@ class WorldBuildingMapView(BaseGraphicsView):
             return
         if len(self._scene.selectedItems()) == 1:
             item = self._scene.selectedItems()[0]
-            if isinstance(item, MarkerItem):
-                self._markerEditor.setMarker(item)
-                self._hidePopup()
-                self._popupAbove(self._markerEditor, item)
+            self._markerEditor.setMarker(item)
+            self._hidePopup()
+            self._popupAbove(self._markerEditor, item)
         else:
             self._markerEditor.setVisible(False)
 
