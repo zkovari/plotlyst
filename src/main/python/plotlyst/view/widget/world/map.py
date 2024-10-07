@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import math
 from functools import partial
 from typing import Optional, Any
 
@@ -502,6 +503,8 @@ class AreaCustomPathItem(QGraphicsPathItem, BaseMapAreaItem):
     def __init__(self, marker: WorldBuildingMarker, path: QPainterPath, parent=None):
         super().__init__(path, parent)
         self.setMarker(marker)
+        self._threshold = 5
+        self._last_point = None
 
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
@@ -521,6 +524,31 @@ class AreaCustomPathItem(QGraphicsPathItem, BaseMapAreaItem):
     @overrides
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         self._hoverLeave(event)
+
+    def addPoint(self, point: QPointF):
+        path = self.path()
+        if self._last_point is None:
+            path.moveTo(point)
+            self._last_point = point
+        else:
+            distance = self.distance(self._last_point, point)
+            if distance >= self._threshold:
+                path.lineTo(point)
+                self._last_point = point
+            else:
+                print(f'ignore {point}')
+
+        self.setPath(path)
+
+    def finish(self, point: QPointF):
+        path = self.path()
+        path.lineTo(point)
+        self.setPath(path)
+
+        self._last_point = None
+
+    def distance(self, p1: QPointF, p2: QPointF) -> float:
+        return math.hypot(p2.x() - p1.x(), p2.y() - p1.y())
 
 
 class AreaSelectorWidget(SecondarySelectorWidget):
@@ -557,7 +585,6 @@ class WorldBuildingMapScene(QGraphicsScene):
         self._additionDescriptor: Optional[GraphicsItemType] = None
         self._area_start_point = None
         self._current_area_item: Optional[BaseMapItem] = None
-        self._area_custom_path = None
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -658,23 +685,20 @@ class WorldBuildingMapScene(QGraphicsScene):
                 self._current_area_item.setRect(rect)
                 self._current_area_item.marker().width = int(rect.width())
                 self._current_area_item.marker().height = int(rect.height())
-            elif self._area_custom_path:
-                current_point = event.scenePos()
-                self._area_custom_path.lineTo(current_point)
-                self._current_area_item.setPath(self._area_custom_path)
+            else:
+                self._current_area_item.addPoint(event.scenePos())
 
         super().mouseMoveEvent(event)
 
     @overrides
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        if self._current_area_item and self._area_custom_path:
-            self._area_custom_path.lineTo(self._area_start_point)
-            self._current_area_item.setPath(self._area_custom_path)
+        if self._current_area_item and self._additionDescriptor == GraphicsItemType.MAP_AREA_CUSTOM:
+            self._current_area_item.finish(self._area_start_point)
+            print(self._current_area_item.path().elementCount())
             self.repo.update_world(self._novel)
 
         self._area_start_point = None
         self._current_area_item = None
-        self._area_custom_path = None
         if self.isAdditionMode() and event.button() & Qt.MouseButton.RightButton:
             self.cancelItemAddition.emit()
             self.endAdditionMode()
@@ -727,14 +751,14 @@ class WorldBuildingMapScene(QGraphicsScene):
         self._area_start_point = pos
         marker = WorldBuildingMarker(self._area_start_point.x(), self._area_start_point.y(),
                                      type=self._additionDescriptor)
-        self._map.markers.append(marker)
+        # self._map.markers.append(marker)
         if self._additionDescriptor == GraphicsItemType.MAP_AREA_SQUARE:
             self._current_area_item = AreaSquareItem(marker, QRectF(self._area_start_point, self._area_start_point))
         elif self._additionDescriptor == GraphicsItemType.MAP_AREA_CIRCLE:
             self._current_area_item = AreaCircleItem(marker, QRectF(self._area_start_point, self._area_start_point))
         else:
-            self._area_custom_path = QPainterPath(0)
-            self._current_area_item = AreaCustomPathItem(marker, self._area_custom_path)
+            path = QPainterPath(self._area_start_point)
+            self._current_area_item = AreaCustomPathItem(marker, path)
         self.addItem(self._current_area_item)
 
     def _removeItem(self, item: QGraphicsItem):
