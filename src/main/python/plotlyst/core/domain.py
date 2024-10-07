@@ -2178,6 +2178,12 @@ class GlossaryItem(SelectionItem):
 
 
 @dataclass
+class Point:
+    x: float
+    y: float
+
+
+@dataclass
 class WorldBuildingMarker:
     x: float
     y: float
@@ -2191,6 +2197,7 @@ class WorldBuildingMarker:
     height: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     width: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     ref: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
+    points: List[Point] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass

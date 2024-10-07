@@ -37,7 +37,7 @@ from qtmenu import MenuWidget, ActionTooltipDisplayMode
 from qtpy import sip
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR, PLOTLYST_TERTIARY_COLOR, PLOTLYST_MAIN_COLOR
-from plotlyst.core.domain import Novel, WorldBuildingMap, WorldBuildingMarker, GraphicsItemType, Location
+from plotlyst.core.domain import Novel, WorldBuildingMap, WorldBuildingMarker, GraphicsItemType, Location, Point
 from plotlyst.resources import resource_registry
 from plotlyst.service.cache import entities_registry
 from plotlyst.service.image import load_image, upload_image, LoadedImage
@@ -531,12 +531,11 @@ class AreaCustomPathItem(QGraphicsPathItem, BaseMapAreaItem):
             path.moveTo(point)
             self._last_point = point
         else:
-            distance = self.distance(self._last_point, point)
-            if distance >= self._threshold:
-                path.lineTo(point)
-                self._last_point = point
-            else:
-                print(f'ignore {point}')
+            if self._distance(self._last_point, point) < self._threshold:
+                return
+            path.lineTo(point)
+            self._last_point = point
+            self._marker.points.append(Point(int(point.x()), int(point.y())))
 
         self.setPath(path)
 
@@ -547,8 +546,20 @@ class AreaCustomPathItem(QGraphicsPathItem, BaseMapAreaItem):
 
         self._last_point = None
 
-    def distance(self, p1: QPointF, p2: QPointF) -> float:
+    def _distance(self, p1: QPointF, p2: QPointF) -> float:
         return math.hypot(p2.x() - p1.x(), p2.y() - p1.y())
+
+    @overrides
+    def _posChangedOnTimeout(self):
+        self._posChangedTimer.stop()
+        self._marker.x += self.scenePos().x()
+        self._marker.y += self.scenePos().y()
+        for point in self._marker.points:
+            point.x += self.scenePos().x()
+            point.y += self.scenePos().y()
+        scene = self.mapScene()
+        if scene:
+            scene.markerChangedEvent(self)
 
 
 class AreaSelectorWidget(SecondarySelectorWidget):
@@ -658,6 +669,12 @@ class WorldBuildingMapScene(QGraphicsScene):
                 elif marker.type == GraphicsItemType.MAP_AREA_CIRCLE:
                     rect = QRectF(marker.x, marker.y, marker.width, marker.height)
                     markerItem = AreaCircleItem(marker, rect)
+                elif marker.type == GraphicsItemType.MAP_AREA_CUSTOM:
+                    path = QPainterPath(QPointF(marker.x, marker.y))
+                    for point in marker.points:
+                        path.lineTo(point.x, point.y)
+                    path.lineTo(marker.x, marker.y)
+                    markerItem = AreaCustomPathItem(marker, path)
                 else:
                     continue
                 self.addItem(markerItem)
@@ -694,7 +711,6 @@ class WorldBuildingMapScene(QGraphicsScene):
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
         if self._current_area_item and self._additionDescriptor == GraphicsItemType.MAP_AREA_CUSTOM:
             self._current_area_item.finish(self._area_start_point)
-            print(self._current_area_item.path().elementCount())
             self.repo.update_world(self._novel)
 
         self._area_start_point = None
@@ -751,7 +767,7 @@ class WorldBuildingMapScene(QGraphicsScene):
         self._area_start_point = pos
         marker = WorldBuildingMarker(self._area_start_point.x(), self._area_start_point.y(),
                                      type=self._additionDescriptor)
-        # self._map.markers.append(marker)
+        self._map.markers.append(marker)
         if self._additionDescriptor == GraphicsItemType.MAP_AREA_SQUARE:
             self._current_area_item = AreaSquareItem(marker, QRectF(self._area_start_point, self._area_start_point))
         elif self._additionDescriptor == GraphicsItemType.MAP_AREA_CIRCLE:
