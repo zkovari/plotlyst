@@ -697,6 +697,11 @@ class SectionElementEditor(WorldBuildingEntityElementWidget):
         wdg = self.__initBlockWidget(element)
         self.layout().insertWidget(i, wdg)
 
+    def _addClicked(self, wdg: WorldBuildingEntityElementWidget):
+        menu = MainBlockAdditionMenu()
+        menu.newBlockSelected.connect(partial(self._addBlock, wdg))
+        menu.exec(QCursor.pos())
+
     def _addBlock(self, wdg: WorldBuildingEntityElementWidget, type_: WorldBuildingEntityElementType):
         element = WorldBuildingEntityElement(type_)
         newBlockWdg = self.__initBlockWidget(element)
@@ -721,8 +726,7 @@ class SectionElementEditor(WorldBuildingEntityElementWidget):
 
     def __initBlockWidget(self, element: WorldBuildingEntityElement) -> WorldBuildingEntityElementWidget:
         wdg = WorldBuildingEntityElementWidget.newWidget(self.novel, element, self)
-        menu = MainBlockAdditionMenu(wdg.btnAdd)
-        menu.newBlockSelected.connect(partial(self._addBlock, wdg))
+        wdg.btnAdd.clicked.connect(partial(self._addClicked, wdg))
         wdg.removed.connect(partial(self._removeBlock, wdg))
 
         mimeType = self.WORLD_SECTION_MIMETYPE if element.type == WorldBuildingEntityElementType.Header else self.WORLD_BLOCK_MIMETYPE
