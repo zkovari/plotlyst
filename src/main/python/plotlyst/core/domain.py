@@ -2080,7 +2080,7 @@ class Variable:
 
 
 class WorldBuildingEntityType(Enum):
-    ABSTRACT = 1
+    ARTICLE = 1
     SETTING = 2
     GROUP = 3
     ITEM = 4
@@ -2136,7 +2136,7 @@ class WorldBuildingEntity:
     emoji: str = field(default='', metadata=config(exclude=exclude_if_empty))
     bg_color: str = field(default='', metadata=config(exclude=exclude_if_empty))
     summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
-    type: WorldBuildingEntityType = WorldBuildingEntityType.ABSTRACT
+    type: WorldBuildingEntityType = WorldBuildingEntityType.ARTICLE
     elements: List[WorldBuildingEntityElement] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     side_elements: List[WorldBuildingEntityElement] = field(default_factory=list,
                                                             metadata=config(exclude=exclude_if_empty))
