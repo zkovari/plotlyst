@@ -2099,6 +2099,7 @@ class WorldBuildingEntityElementType(Enum):
     Section = 8
     Highlight = 9
     Main_Section = 10
+    Conceits = 11
 
 
 @dataclass
@@ -2146,6 +2147,50 @@ class WorldBuildingEntity:
     @overrides
     def __eq__(self, other: 'WorldBuildingEntity'):
         if isinstance(other, WorldBuildingEntity):
+            return self.id == other.id
+        return False
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
+
+class WorldConceitType(Enum):
+    Geography = 'geography'
+    Biology = 'biology'
+    Magic = 'magic'
+    Metaphysics = 'metaphysics'
+    Technology = 'technology'
+    Culture = 'culture'
+
+    def icon(self) -> str:
+        if self == WorldConceitType.Geography:
+            return 'ph.globe-bold'
+        elif self == WorldConceitType.Biology:
+            return 'mdi.dna'
+        elif self == WorldConceitType.Magic:
+            return 'ei.magic'
+        elif self == WorldConceitType.Metaphysics:
+            return 'mdi.eye-circle-outline'
+        elif self == WorldConceitType.Technology:
+            return 'ei.cogs'
+        elif self == WorldConceitType.Culture:
+            return 'mdi.vector-circle'
+
+
+@dataclass
+class WorldConceit:
+    name: str
+    type: WorldConceitType
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    text: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    icon: str = ''
+    icon_color: str = 'black'
+    conceits: List['WorldConceit'] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+
+    @overrides
+    def __eq__(self, other: 'WorldConceit'):
+        if isinstance(other, WorldConceit):
             return self.id == other.id
         return False
 
@@ -2302,6 +2347,7 @@ class WorldBuilding:
     root_entity: WorldBuildingEntity = field(default_factory=worldbuilding_root)
     glossary: Dict[str, GlossaryItem] = field(default_factory=dict)
     maps: List[WorldBuildingMap] = field(default_factory=default_maps)
+    conceits: List[WorldConceit] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass
