@@ -39,7 +39,7 @@ from qttextedit.ops import Heading2Operation, Heading3Operation, InsertListOpera
 from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityElement, WorldBuildingEntityElementType, \
     BackstoryEvent, Variable, VariableType, \
-    Topic, Location, WorldConceitType
+    Topic, Location, WorldConceitType, WorldConceit
 from plotlyst.env import app_env
 from plotlyst.service.image import upload_image, load_image
 from plotlyst.service.persistence import RepositoryPersistenceManager
@@ -51,7 +51,7 @@ from plotlyst.view.style.text import apply_text_color
 from plotlyst.view.widget.button import DotsMenuButton
 from plotlyst.view.widget.display import Icon, PopupDialog, DotsDragIcon
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, MarkdownPopupTextEditorToolbar, \
-    SearchField
+    SearchField, TextEditBubbleWidget
 from plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
 from plotlyst.view.widget.utility import IconSelectorDialog
 from plotlyst.view.widget.world._topics import ecological_topics, cultural_topics, historical_topics, \
@@ -672,6 +672,15 @@ class TimelineElementEditor(WorldBuildingEntityElementWidget):
         self.btnDrag.raise_()
 
 
+class ConceitBubble(TextEditBubbleWidget):
+    def __init__(self, conceit: WorldConceit, parent=None):
+        super().__init__(parent)
+        self.conceit = conceit
+
+        self._title.setIcon(IconRegistry.from_name(self.conceit.icon, '#510442'))
+        self._title.setText(self.conceit.name)
+
+
 class ConceitsElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent)
@@ -728,11 +737,17 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
     def _showMenu(self):
         menu = MenuWidget()
         for conceitType in WorldConceitType:
-            action_ = action(conceitType.name, IconRegistry.from_name(conceitType.icon()))
+            action_ = action(conceitType.name, IconRegistry.from_name(conceitType.icon()),
+                             slot=partial(self._addNewConceit, conceitType))
             incr_font(action_, 2)
             menu.addAction(action_)
 
         menu.exec()
+
+    def _addNewConceit(self, conceitType: WorldConceitType):
+        conceit = WorldConceit('Conceit', type=conceitType, icon=conceitType.icon())
+        bubble = ConceitBubble(conceit)
+        self._wdgDisplay.layout().addWidget(bubble)
 
 
 class SectionElementEditor(WorldBuildingEntityElementWidget):
