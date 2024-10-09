@@ -32,7 +32,7 @@ from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp,
     grid, flow, spacer, line, incr_icon, gc, translucent, incr_font
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter, DragEventFilter, \
     DropEventFilter
-from qtmenu import MenuWidget
+from qtmenu import MenuWidget, ActionTooltipDisplayMode
 from qttextedit.ops import Heading2Operation, Heading3Operation, InsertListOperation, InsertNumberedListOperation, \
     InsertDividerOperation
 
@@ -957,6 +957,15 @@ class MainBlockAdditionMenu(MenuWidget):
                               slot=lambda: self.newBlockSelected.emit(WorldBuildingEntityElementType.Image)))
         self.addAction(action('Timeline', IconRegistry.from_name('mdi.timeline'),
                               slot=lambda: self.newBlockSelected.emit(WorldBuildingEntityElementType.Timeline)))
+
+        if app_env.is_plus():
+            otherMenu = MenuWidget()
+            otherMenu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+            tooltip = "Track fantasy elements that deviate from our world, introducing a sense of wonder into the story"
+            otherMenu.addAction(action('Fantasy conceits', IconRegistry.from_name('ei.magic'), tooltip=tooltip))
+            otherMenu.setTitle('Other')
+            self.addSeparator()
+            self.addMenu(otherMenu)
 
 
 class SideBlockAdditionMenu(MenuWidget):
