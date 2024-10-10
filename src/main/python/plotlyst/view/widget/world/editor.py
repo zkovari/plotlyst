@@ -26,20 +26,20 @@ from PyQt6.QtCore import pyqtSignal, Qt, QSize, QMimeData, QPointF, QEvent
 from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMouseEvent, QColor, QIcon, QImage, \
     QShowEvent, QPixmap, QCursor, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QDialog, QGridLayout, QSlider, QToolButton, QButtonGroup, \
-    QLabel, QToolTip
+    QLabel, QToolTip, QSpacerItem, QSizePolicy
 from overrides import overrides
 from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy, \
-    grid, flow, spacer, line, incr_icon, gc, translucent, incr_font
+    grid, flow, spacer, line, incr_icon, gc, translucent, incr_font, vline, bold
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter, DragEventFilter, \
     DropEventFilter
-from qtmenu import MenuWidget
+from qtmenu import MenuWidget, ActionTooltipDisplayMode
 from qttextedit.ops import Heading2Operation, Heading3Operation, InsertListOperation, InsertNumberedListOperation, \
     InsertDividerOperation
 
 from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityElement, WorldBuildingEntityElementType, \
     BackstoryEvent, Variable, VariableType, \
-    Topic, Location
+    Topic, Location, WorldConceitType, WorldConceit
 from plotlyst.env import app_env
 from plotlyst.service.image import upload_image, load_image
 from plotlyst.service.persistence import RepositoryPersistenceManager
@@ -59,6 +59,7 @@ from plotlyst.view.widget.world._topics import ecological_topics, cultural_topic
     fantastic_topics, nefarious_topics, environmental_topics, ecology_topic, culture_topic, history_topic, \
     language_topic, technology_topic, economy_topic, infrastructure_topic, religion_topic, fantasy_topic, \
     villainy_topic, environment_topic
+from plotlyst.view.widget.world.conceit import ConceitsTreeView, ConceitBubble
 from plotlyst.view.widget.world.glossary import GlossaryTextBlockHighlighter, GlossaryTextBlockData
 from plotlyst.view.widget.world.milieu import LocationsTreeView
 
@@ -187,6 +188,8 @@ class WorldBuildingEntityElementWidget(QWidget):
             return HighlightedTextElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Timeline:
             return TimelineElementEditor(novel, element, parent)
+        elif element.type == WorldBuildingEntityElementType.Conceits:
+            return ConceitsElementEditor(novel, element, parent)
         else:
             raise ValueError(f'Unsupported WorldBuildingEntityElement type {element.type}')
 
@@ -670,6 +673,157 @@ class TimelineElementEditor(WorldBuildingEntityElementWidget):
         self.btnDrag.raise_()
 
 
+class ConceitsElementEditor(WorldBuildingEntityElementWidget):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
+        super().__init__(novel, element, parent)
+
+        self._wdgToolbar = QWidget()
+        hbox(self._wdgToolbar)
+        self._wdgEditor = frame(self)
+        vbox(self._wdgEditor)
+        self._splitter = QSplitter(self._wdgEditor)
+        self._splitter.setChildrenCollapsible(False)
+        self._splitter.setHandleWidth(10)
+        self._splitter.setProperty('framed', True)
+        self._splitter.setSizes([100, 500])
+        self._wdgEditor.layout().addWidget(self._splitter)
+
+        self._wdgTree = ConceitsTreeView(novel)
+        self._wdgTree.rootSelected.connect(self.refresh)
+        self._wdgTree.conceitSelected.connect(self._conceitSelected)
+        self._wdgTree.conceitTypeSelected.connect(self._conceitTypeSelected)
+        self._wdgTree.conceitDeleted.connect(self._conceitNodeDeleted)
+        self._wdgDisplay = QWidget()
+        flow(self._wdgDisplay, 10, 8)
+        self._splitter.addWidget(self._wdgTree)
+        self._splitter.addWidget(self._wdgDisplay)
+
+        self._btnToggleTree = tool_btn(IconRegistry.from_name('mdi.file-tree-outline', '#510442'), transparent_=True,
+                                       checkable=True)
+        self._btnToggleTree.installEventFilter(
+            OpacityEventFilter(self._btnToggleTree, enterOpacity=0.6, ignoreCheckedButton=True))
+        self._btnToggleTree.clicked.connect(lambda x: qtanim.toggle_expansion(self._wdgTree, x))
+        self._btnAddConceit = tool_btn(IconRegistry.plus_icon('#510442'), tooltip='Add conceit', transparent_=True)
+        self._btnAddConceit.clicked.connect(self._showMenu)
+        self._btnTitle = push_btn(text='Fantasy conceits', pointy_=False, icon_resize=False)
+        self._btnTitle.setStyleSheet(
+            f'color: #343a40; background-color: rgba(0, 0, 0, 0); border: 0px;font-family: {app_env.serif_font()};')
+        bold(self._btnTitle)
+
+        self._wdgToolbar.layout().addWidget(self._btnToggleTree)
+        self._wdgToolbar.layout().addWidget(vline())
+        self._wdgToolbar.layout().addWidget(self._btnAddConceit)
+        self._wdgToolbar.layout().addWidget(spacer())
+        self._wdgToolbar.layout().addWidget(self._btnTitle)
+        self._wdgToolbar.layout().addWidget(spacer())
+
+        self.layout().addWidget(self._wdgToolbar)
+        self.layout().addWidget(self._wdgEditor)
+
+        self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
+
+        self._wdgToolbar.setStyleSheet('''
+                        .QWidget {
+                            border: 0px;
+                            background: #dabfa7;
+                        }''')
+        self._wdgEditor.setStyleSheet('''
+                        .QFrame {
+                            border: 1px solid #E3D0BD;
+                            border-top-left-radius: 0px;
+                            border-top-right-radius: 0px;
+                            border-bottom-left-radius: 15px;
+                            border-bottom-right-radius: 15px;
+                        }''')
+
+        self.btnDrag.raise_()
+        self._wdgTree.setVisible(self._btnToggleTree.isChecked())
+
+        self.refresh()
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        self._wdgDisplay.updateGeometry()
+
+    def refresh(self):
+        clear_layout(self._wdgDisplay)
+        for conceit in self.novel.world.conceits:
+            bubble = self._initBubble(conceit)
+            self._wdgDisplay.layout().addWidget(bubble)
+
+    def _showMenu(self):
+        menu = MenuWidget()
+        for conceitType in WorldConceitType:
+            action_ = action(conceitType.name, IconRegistry.from_name(conceitType.icon()),
+                             slot=partial(self._addNewConceit, conceitType))
+            incr_font(action_, 2)
+            menu.addAction(action_)
+
+        menu.exec()
+
+    def _addNewConceit(self, conceitType: WorldConceitType):
+        conceit = WorldConceit('Conceit', type=conceitType)
+        bubble = self._initBubble(conceit)
+        self._wdgDisplay.layout().addWidget(bubble)
+        fade_in(bubble)
+
+        self.novel.world.conceits.append(conceit)
+        self.save()
+        self._wdgTree.refresh()
+
+    def _initBubble(self, conceit: WorldConceit) -> ConceitBubble:
+        bubble = ConceitBubble(conceit)
+        bubble.nameEdited.connect(partial(self._conceitChanged, conceit))
+        bubble.iconChanged.connect(partial(self._conceitChanged, conceit))
+        bubble.textChanged.connect(self.save)
+        bubble.removed.connect(partial(self._conceitRemoved, bubble))
+        return bubble
+
+    def _conceitChanged(self, conceit: WorldConceit):
+        self._wdgTree.updateItem(conceit)
+        self.save()
+
+    def _conceitRemoved(self, bubble: ConceitBubble):
+        self.novel.world.conceits.remove(bubble.conceit)
+        fade_out_and_gc(self._wdgDisplay, bubble)
+
+        self._wdgTree.refresh()
+        self.save()
+
+    def _conceitSelected(self, conceit: WorldConceit):
+        clear_layout(self._wdgDisplay)
+
+        bubble = self._initBubble(conceit)
+        self._wdgDisplay.layout().addWidget(bubble)
+        self._wdgDisplay.layout().addItem(QSpacerItem(0, 5, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum))
+        if conceit.children:
+            lbl = label('Subtypes', underline=True)
+            self._wdgDisplay.layout().addWidget(lbl)
+            self._wdgDisplay.layout().addItem(
+                QSpacerItem(0, 5, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum))
+
+        for conceit in conceit.children:
+            bubble = self._initBubble(conceit)
+            self._wdgDisplay.layout().addWidget(bubble)
+
+    def _conceitTypeSelected(self, conceitType: WorldConceitType):
+        clear_layout(self._wdgDisplay)
+        for conceit in self.novel.world.conceits:
+            if conceit.type == conceitType:
+                bubble = self._initBubble(conceit)
+                self._wdgDisplay.layout().addWidget(bubble)
+
+    def _conceitNodeDeleted(self, conceit: WorldConceit):
+        for i in range(self._wdgDisplay.layout().count()):
+            wdg = self._wdgDisplay.layout().itemAt(i).widget()
+            if wdg and isinstance(wdg, ConceitBubble):
+                if wdg.conceit == conceit:
+                    fade_out_and_gc(self._wdgDisplay, wdg)
+                    return
+
+
 class SectionElementEditor(WorldBuildingEntityElementWidget):
     WORLD_BLOCK_MIMETYPE = 'application/world-block'
     WORLD_SECTION_MIMETYPE = 'application/world-section'
@@ -957,6 +1111,17 @@ class MainBlockAdditionMenu(MenuWidget):
                               slot=lambda: self.newBlockSelected.emit(WorldBuildingEntityElementType.Image)))
         self.addAction(action('Timeline', IconRegistry.from_name('mdi.timeline'),
                               slot=lambda: self.newBlockSelected.emit(WorldBuildingEntityElementType.Timeline)))
+
+        if app_env.is_plus():
+            otherMenu = MenuWidget()
+            otherMenu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+            tooltip = "Track fantasy elements that deviate from our world, introducing a sense of wonder into the story"
+            otherMenu.addAction(action('Fantasy conceits', IconRegistry.from_name('ei.magic'), tooltip=tooltip,
+                                       slot=lambda: self.newBlockSelected.emit(
+                                           WorldBuildingEntityElementType.Conceits)))
+            otherMenu.setTitle('Other')
+            self.addSeparator()
+            self.addMenu(otherMenu)
 
 
 class SideBlockAdditionMenu(MenuWidget):

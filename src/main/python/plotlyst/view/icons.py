@@ -711,6 +711,10 @@ class IconRegistry:
         return IconRegistry.from_name('ei.refresh', color=color)
 
     @staticmethod
+    def dot_icon(**kwargs) -> QIcon:
+        return IconRegistry.from_name('msc.debug-stackframe-dot', **kwargs)
+
+    @staticmethod
     def from_selection_item(item: SelectionItem) -> QIcon:
         return IconRegistry.from_name(item.icon, item.icon_color)
 

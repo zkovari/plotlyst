@@ -69,6 +69,9 @@ class AppEnvironment:
     def is_prod(self) -> bool:
         return self._mode == AppMode.PROD
 
+    def is_plus(self) -> bool:
+        return True
+
     def test_env(self) -> bool:
         if os.getenv('PLOTLYST_TEST_ENV'):
             return True
