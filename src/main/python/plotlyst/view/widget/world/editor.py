@@ -674,23 +674,31 @@ class TimelineElementEditor(WorldBuildingEntityElementWidget):
 
 class ConceitBubble(TextEditBubbleWidget):
     def __init__(self, conceit: WorldConceit, parent=None):
-        super().__init__(parent)
+        super().__init__(parent, titleEditable=True, titleMaxWidth=150)
         self.conceit = conceit
 
         self._title.setIcon(IconRegistry.from_name(self.conceit.icon, '#510442'))
         self._title.setText(self.conceit.name)
+        self._textedit.setPlaceholderText('An element of wonder that deviates from our world')
+        self._textedit.setStyleSheet('''
+            QTextEdit {
+                border: 1px solid #dabfa7;
+                border-radius: 6px;
+                padding: 4px;
+                background-color: #e3d0bd;
+            }
+        ''')
 
 
 class ConceitsElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent)
 
-        self._wdgEditor = frame(self)
         self._wdgToolbar = QWidget()
-        self._wdgDisplay = QWidget()
-        vbox(self._wdgEditor, 0)
         hbox(self._wdgToolbar)
-        flow(self._wdgDisplay)
+        self._wdgEditor = frame(self)
+        flow(self._wdgEditor, 10, 8)
+        sp(self._wdgEditor).v_max()
 
         self._btnToggleTree = tool_btn(IconRegistry.from_name('mdi.file-tree-outline', '#510442'), transparent_=True,
                                        checkable=True)
@@ -705,16 +713,14 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
 
         self._wdgToolbar.layout().addWidget(self._btnToggleTree)
         self._wdgToolbar.layout().addWidget(vline())
-
         self._wdgToolbar.layout().addWidget(self._btnAddConceit)
         self._wdgToolbar.layout().addWidget(spacer())
         self._wdgToolbar.layout().addWidget(self._btnTitle)
         self._wdgToolbar.layout().addWidget(spacer())
 
-        self._wdgEditor.layout().addWidget(self._wdgToolbar)
-        self._wdgEditor.layout().addWidget(self._wdgDisplay)
-
+        self.layout().addWidget(self._wdgToolbar)
         self.layout().addWidget(self._wdgEditor)
+
         self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
         self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
 
@@ -734,6 +740,11 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
 
         self.btnDrag.raise_()
 
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        self._wdgEditor.updateGeometry()
+
     def _showMenu(self):
         menu = MenuWidget()
         for conceitType in WorldConceitType:
@@ -747,7 +758,7 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
     def _addNewConceit(self, conceitType: WorldConceitType):
         conceit = WorldConceit('Conceit', type=conceitType, icon=conceitType.icon())
         bubble = ConceitBubble(conceit)
-        self._wdgDisplay.layout().addWidget(bubble)
+        self._wdgEditor.layout().addWidget(bubble)
 
 
 class SectionElementEditor(WorldBuildingEntityElementWidget):
