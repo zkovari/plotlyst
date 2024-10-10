@@ -51,7 +51,7 @@ from plotlyst.view.style.text import apply_text_color
 from plotlyst.view.widget.button import DotsMenuButton
 from plotlyst.view.widget.display import Icon, PopupDialog, DotsDragIcon
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, MarkdownPopupTextEditorToolbar, \
-    SearchField, TextEditBubbleWidget
+    SearchField
 from plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
 from plotlyst.view.widget.utility import IconSelectorDialog
 from plotlyst.view.widget.world._topics import ecological_topics, cultural_topics, historical_topics, \
@@ -59,7 +59,7 @@ from plotlyst.view.widget.world._topics import ecological_topics, cultural_topic
     fantastic_topics, nefarious_topics, environmental_topics, ecology_topic, culture_topic, history_topic, \
     language_topic, technology_topic, economy_topic, infrastructure_topic, religion_topic, fantasy_topic, \
     villainy_topic, environment_topic
-from plotlyst.view.widget.world.conceit import ConceitsTreeView
+from plotlyst.view.widget.world.conceit import ConceitsTreeView, ConceitBubble
 from plotlyst.view.widget.world.glossary import GlossaryTextBlockHighlighter, GlossaryTextBlockData
 from plotlyst.view.widget.world.milieu import LocationsTreeView
 
@@ -673,31 +673,6 @@ class TimelineElementEditor(WorldBuildingEntityElementWidget):
         self.btnDrag.raise_()
 
 
-class ConceitBubble(TextEditBubbleWidget):
-    nameEdited = pyqtSignal()
-
-    def __init__(self, conceit: WorldConceit, parent=None):
-        super().__init__(parent, titleEditable=True, titleMaxWidth=150)
-        self.conceit = conceit
-
-        self._title.setIcon(IconRegistry.from_name(self.conceit.icon, '#510442'))
-        self._title.setText(self.conceit.name)
-        self._title.lineEdit.textEdited.connect(self._titleEdited)
-        self._textedit.setPlaceholderText('An element of wonder that deviates from our world')
-        self._textedit.setStyleSheet('''
-            QTextEdit {
-                border: 1px solid #dabfa7;
-                border-radius: 6px;
-                padding: 4px;
-                background-color: #e3d0bd;
-            }
-        ''')
-
-    def _titleEdited(self, text: str):
-        self.conceit.name = text
-        self.nameEdited.emit()
-
-
 class ConceitsElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent)
@@ -797,6 +772,7 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
     def _initBubble(self, conceit: WorldConceit) -> ConceitBubble:
         bubble = ConceitBubble(conceit)
         bubble.nameEdited.connect(partial(self._conceitNameChanged, conceit))
+        bubble.textChanged.connect(self.save)
         return bubble
 
     def _conceitNameChanged(self, conceit: WorldConceit):

@@ -28,7 +28,40 @@ from plotlyst.common import recursive
 from plotlyst.core.domain import WorldConceit, WorldBuilding, WorldConceitType, Novel
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.input import TextEditBubbleWidget
 from plotlyst.view.widget.tree import ItemBasedNode, TreeSettings, ItemBasedTreeView, ContainerNode
+
+
+class ConceitBubble(TextEditBubbleWidget):
+    nameEdited = pyqtSignal()
+    textChanged = pyqtSignal()
+
+    def __init__(self, conceit: WorldConceit, parent=None):
+        super().__init__(parent, titleEditable=True, titleMaxWidth=150)
+        self.conceit = conceit
+
+        self._title.setIcon(IconRegistry.from_name(self.conceit.icon, '#510442'))
+        self._title.setText(self.conceit.name)
+        self._title.lineEdit.textEdited.connect(self._titleEdited)
+        self._textedit.setPlaceholderText('An element of wonder that deviates from our world')
+        self._textedit.setStyleSheet('''
+            QTextEdit {
+                border: 1px solid #dabfa7;
+                border-radius: 6px;
+                padding: 4px;
+                background-color: #e3d0bd;
+            }
+        ''')
+        self._textedit.setText(self.conceit.text)
+        self._textedit.textChanged.connect(self._textChanged)
+
+    def _titleEdited(self, text: str):
+        self.conceit.name = text
+        self.nameEdited.emit()
+
+    def _textChanged(self):
+        self.conceit.text = self._textedit.toPlainText()
+        self.textChanged.emit()
 
 
 class ConceitNode(ItemBasedNode):
@@ -75,10 +108,15 @@ class ConceitRootNode(ItemBasedNode):
 
 
 class ConceitTypeNode(ItemBasedNode):
-    def __init__(self, conceitType: WorldConceitType, parent=None):
-        super().__init__(conceitType.name, IconRegistry.from_name(conceitType.icon()), parent)
+    def __init__(self, conceit: WorldConceit, parent=None, settings: Optional[TreeSettings] = None):
+        super().__init__(conceit.name, IconRegistry.from_name(conceit.type.icon()), parent, settings=settings)
+        self._conceit = conceit
         self.setMenuEnabled(False)
         self.setPlusButtonEnabled(False)
+
+    @overrides
+    def item(self) -> WorldConceit:
+        return self._conceit
 
 
 class ConceitsTreeView(ItemBasedTreeView):
@@ -120,8 +158,11 @@ class ConceitsTreeView(ItemBasedTreeView):
 
         typeNodes: Dict[WorldConceitType, ContainerNode] = {}
         for conceitType in WorldConceitType:
-            typeNode = ContainerNode(conceitType.name, IconRegistry.from_name(conceitType.icon()), readOnly=True)
+            conceit = WorldConceit(conceitType.name, type=conceitType)
+            typeNode = ConceitTypeNode(conceit, settings=self._settings)
             typeNodes[conceitType] = typeNode
+            self._nodes[conceit] = typeNode
+            typeNode.selectionChanged.connect(partial(self._selectionChanged, typeNode))
             self._rootNode.addChild(typeNode)
 
         for conceit in self._world.conceits:
