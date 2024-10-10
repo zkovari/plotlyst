@@ -45,7 +45,8 @@ class ConceitBubble(TextEditBubbleWidget):
         self._removalEnabled = True
 
         icon = self.conceit.icon if self.conceit.icon else self.conceit.type.icon()
-        self._title.setIcon(IconRegistry.from_name(icon, '#510442'))
+        color = self.conceit.icon_color if self.conceit.icon_color else '#510442'
+        self._title.setIcon(IconRegistry.from_name(icon, color))
         self._title.setText(self.conceit.name)
         self._title.lineEdit.textEdited.connect(self._titleEdited)
         self._title.iconChanged.connect(self._iconChanged)
@@ -70,6 +71,9 @@ class ConceitBubble(TextEditBubbleWidget):
 
     def _iconChanged(self, icon: str, color: str):
         self.conceit.icon = icon
+        if color == 'black' or color == '#000000':
+            color = '#510442'
+            self._title.setIcon(IconRegistry.from_name(icon, color))
         self.conceit.icon_color = color
         self.iconChanged.emit()
 

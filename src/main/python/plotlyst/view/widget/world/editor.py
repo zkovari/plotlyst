@@ -685,7 +685,7 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
         self._splitter.setChildrenCollapsible(False)
         self._splitter.setHandleWidth(10)
         self._splitter.setProperty('framed', True)
-        self._splitter.setSizes([150, 500])
+        self._splitter.setSizes([100, 500])
         self._wdgEditor.layout().addWidget(self._splitter)
 
         self._wdgTree = ConceitsTreeView(novel)
