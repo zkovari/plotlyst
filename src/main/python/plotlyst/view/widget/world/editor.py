@@ -741,7 +741,7 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
-        self._wdgEditor.updateGeometry()
+        self._wdgDisplay.updateGeometry()
 
     def refresh(self):
         clear_layout(self._wdgDisplay)
@@ -773,10 +773,18 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
         bubble = ConceitBubble(conceit)
         bubble.nameEdited.connect(partial(self._conceitNameChanged, conceit))
         bubble.textChanged.connect(self.save)
+        bubble.removed.connect(partial(self._conceitRemoved, bubble))
         return bubble
 
     def _conceitNameChanged(self, conceit: WorldConceit):
         self._wdgTree.updateItem(conceit)
+        self.save()
+
+    def _conceitRemoved(self, bubble: ConceitBubble):
+        self.novel.world.conceits.remove(bubble.conceit)
+        fade_out_and_gc(self._wdgDisplay, bubble)
+
+        self._wdgTree.refresh()
         self.save()
 
 

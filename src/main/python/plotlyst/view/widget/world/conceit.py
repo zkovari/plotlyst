@@ -40,6 +40,8 @@ class ConceitBubble(TextEditBubbleWidget):
         super().__init__(parent, titleEditable=True, titleMaxWidth=150)
         self.conceit = conceit
 
+        self._removalEnabled = True
+
         self._title.setIcon(IconRegistry.from_name(self.conceit.icon, '#510442'))
         self._title.setText(self.conceit.name)
         self._title.lineEdit.textEdited.connect(self._titleEdited)
