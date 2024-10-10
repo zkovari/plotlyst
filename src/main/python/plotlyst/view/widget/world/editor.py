@@ -674,12 +674,15 @@ class TimelineElementEditor(WorldBuildingEntityElementWidget):
 
 
 class ConceitBubble(TextEditBubbleWidget):
+    nameEdited = pyqtSignal()
+
     def __init__(self, conceit: WorldConceit, parent=None):
         super().__init__(parent, titleEditable=True, titleMaxWidth=150)
         self.conceit = conceit
 
         self._title.setIcon(IconRegistry.from_name(self.conceit.icon, '#510442'))
         self._title.setText(self.conceit.name)
+        self._title.lineEdit.textEdited.connect(self._titleEdited)
         self._textedit.setPlaceholderText('An element of wonder that deviates from our world')
         self._textedit.setStyleSheet('''
             QTextEdit {
@@ -689,6 +692,10 @@ class ConceitBubble(TextEditBubbleWidget):
                 background-color: #e3d0bd;
             }
         ''')
+
+    def _titleEdited(self, text: str):
+        self.conceit.name = text
+        self.nameEdited.emit()
 
 
 class ConceitsElementEditor(WorldBuildingEntityElementWidget):
@@ -764,7 +771,7 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
     def refresh(self):
         clear_layout(self._wdgDisplay)
         for conceit in self.novel.world.conceits:
-            bubble = ConceitBubble(conceit)
+            bubble = self._initBubble(conceit)
             self._wdgDisplay.layout().addWidget(bubble)
 
     def _showMenu(self):
@@ -779,10 +786,21 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
 
     def _addNewConceit(self, conceitType: WorldConceitType):
         conceit = WorldConceit('Conceit', type=conceitType, icon=conceitType.icon())
-        bubble = ConceitBubble(conceit)
+        bubble = self._initBubble(conceit)
         self._wdgDisplay.layout().addWidget(bubble)
+        fade_in(bubble)
 
         self.novel.world.conceits.append(conceit)
+        self.save()
+        self._wdgTree.refresh()
+
+    def _initBubble(self, conceit: WorldConceit) -> ConceitBubble:
+        bubble = ConceitBubble(conceit)
+        bubble.nameEdited.connect(partial(self._conceitNameChanged, conceit))
+        return bubble
+
+    def _conceitNameChanged(self, conceit: WorldConceit):
+        self._wdgTree.updateItem(conceit)
         self.save()
 
 

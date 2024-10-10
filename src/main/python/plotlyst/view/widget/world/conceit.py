@@ -62,14 +62,23 @@ class ConceitNode(ItemBasedNode):
         pass
 
 
-# class ConceitRootNode(ContainerNode):
-#     def __init__(self, parent=None):
-#         super().__init__('Conceits', parent, readOnly=True)
+class ConceitRootNode(ItemBasedNode):
+    def __init__(self, root: WorldConceit, parent=None, settings: Optional[TreeSettings] = None):
+        super().__init__('Conceits', parent, settings=settings)
+        self._root = root
+        self.setMenuEnabled(False)
+        self.setPlusButtonEnabled(False)
+
+    @overrides
+    def item(self) -> WorldConceit:
+        return self._root
 
 
-class ConceitTypeNode(ContainerNode):
+class ConceitTypeNode(ItemBasedNode):
     def __init__(self, conceitType: WorldConceitType, parent=None):
-        super().__init__(conceitType.name, IconRegistry.from_name(conceitType.icon()), parent, readOnly=True)
+        super().__init__(conceitType.name, IconRegistry.from_name(conceitType.icon()), parent)
+        self.setMenuEnabled(False)
+        self.setPlusButtonEnabled(False)
 
 
 class ConceitsTreeView(ItemBasedTreeView):
@@ -88,6 +97,8 @@ class ConceitsTreeView(ItemBasedTreeView):
                                       hover_bg_color='#E3D0BD',
                                       selection_text_color='#510442')
         self._centralWidget.setStyleSheet(f'#centralWidget {{background: {self._settings.bg_color};}}')
+        self._root = WorldConceit('Conceits', None)
+        self._rootNode: Optional[ConceitRootNode] = None
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -102,14 +113,16 @@ class ConceitsTreeView(ItemBasedTreeView):
         self._nodes.clear()
         clear_layout(self._centralWidget)
 
-        rootNode = ContainerNode('Conceits', readOnly=True)
-        self._centralWidget.layout().addWidget(rootNode)
+        self._rootNode = ConceitRootNode(self._root, settings=self._settings)
+        self._nodes[self._root] = self._rootNode
+        self._rootNode.selectionChanged.connect(partial(self._selectionChanged, self._rootNode))
+        self._centralWidget.layout().addWidget(self._rootNode)
 
         typeNodes: Dict[WorldConceitType, ContainerNode] = {}
         for conceitType in WorldConceitType:
             typeNode = ContainerNode(conceitType.name, IconRegistry.from_name(conceitType.icon()), readOnly=True)
             typeNodes[conceitType] = typeNode
-            rootNode.addChild(typeNode)
+            self._rootNode.addChild(typeNode)
 
         for conceit in self._world.conceits:
             node = self._initNode(conceit)
@@ -120,6 +133,9 @@ class ConceitsTreeView(ItemBasedTreeView):
         for node in typeNodes.values():
             if not node.childrenWidgets():
                 node.setVisible(False)
+
+        self._rootNode.select()
+        self._selectionChanged(self._rootNode, True)
 
     @overrides
     def _emitSelectionChanged(self, conceit: WorldConceit):
