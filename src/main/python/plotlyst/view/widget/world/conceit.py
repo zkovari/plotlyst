@@ -43,7 +43,8 @@ class ConceitBubble(TextEditBubbleWidget):
 
         self._removalEnabled = True
 
-        self._title.setIcon(IconRegistry.from_name(self.conceit.icon, '#510442'))
+        icon = self.conceit.icon if self.conceit.icon else self.conceit.type.icon()
+        self._title.setIcon(IconRegistry.from_name(icon, '#510442'))
         self._title.setText(self.conceit.name)
         self._title.lineEdit.textEdited.connect(self._titleEdited)
         self._textedit.setPlaceholderText('An element of wonder that deviates from our world')
@@ -80,6 +81,7 @@ class ConceitNode(ItemBasedNode):
         self._actionChangeIcon.setVisible(False)
         self._btnAdd.clicked.connect(self.added)
         self.refresh()
+        self._icon.setVisible(True)
 
     @overrides
     def item(self) -> WorldConceit:
@@ -125,6 +127,7 @@ class ConceitTypeNode(ItemBasedNode):
 class ConceitsTreeView(ItemBasedTreeView):
     CONCEIT_ENTITY_MIMETYPE = 'application/world-conceit'
     conceitSelected = pyqtSignal(WorldConceit)
+    rootSelected = pyqtSignal()
     conceitDeleted = pyqtSignal(WorldConceit)
 
     def __init__(self, novel: Novel, parent=None):
@@ -183,7 +186,10 @@ class ConceitsTreeView(ItemBasedTreeView):
 
     @overrides
     def _emitSelectionChanged(self, conceit: WorldConceit):
-        self.conceitSelected.emit(conceit)
+        if conceit == self._root:
+            self.rootSelected.emit()
+        else:
+            self.conceitSelected.emit(conceit)
 
     @overrides
     def _mimeType(self) -> str:
