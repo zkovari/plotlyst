@@ -2100,6 +2100,7 @@ class WorldBuildingEntityElementType(Enum):
     Highlight = 9
     Main_Section = 10
     Conceits = 11
+    ProgressOutline = 12
 
 
 @dataclass

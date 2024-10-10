@@ -22,7 +22,7 @@ from typing import List, Dict
 
 import qtanim
 from PyQt6.QtCharts import QPieSeries, QPieSlice
-from PyQt6.QtCore import Qt, QSize, QPoint
+from PyQt6.QtCore import Qt, QSize, QPoint, QPointF
 from PyQt6.QtGui import QPainter, QColor, QPaintEvent, QPen, QPainterPath, QFont, QBrush
 from PyQt6.QtWidgets import QWidget, QSizePolicy
 from overrides import overrides
@@ -30,7 +30,7 @@ from qthandy import clear_layout, hbox
 
 from plotlyst.common import CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR, CHARACTER_MINOR_COLOR, \
     RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, act_color
-from plotlyst.core.domain import Novel, SceneStage
+from plotlyst.core.domain import Novel, SceneStage, OutlineItem
 from plotlyst.core.template import RoleImportance
 from plotlyst.event.core import EventListener, Event
 from plotlyst.event.handler import event_dispatchers
@@ -40,6 +40,7 @@ from plotlyst.view.common import icon_to_html_img
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.chart import BaseChart
 from plotlyst.view.widget.display import ChartView
+from plotlyst.view.widget.outline import OutlineTimelineWidget, OutlineItemWidget
 
 
 class ProgressChartView(ChartView):
@@ -300,3 +301,57 @@ class CircularProgressBar(QWidget):
             self.setToolTip(f'{int(self.value() / self.maxValue() * 100)}%')
         else:
             self.setToolTip(f'{self.value():g} out of {self.maxValue()}')
+
+
+class ProgressionItemWidget(OutlineItemWidget):
+
+    def __init__(self, item: OutlineItem, parent=None):
+        super().__init__(item, parent)
+        self._btnIcon.removeEventFilter(self._dragEventFilter)
+        self._btnIcon.setCursor(Qt.CursorShape.ArrowCursor)
+        self.setAcceptDrops(False)
+
+    @overrides
+    def mimeType(self) -> str:
+        return 'application/progression-outline-item'
+
+
+class ProgressionOutlineWidget(OutlineTimelineWidget):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.setStructure([OutlineItem('Test1')])
+
+    @overrides
+    def _newBeatWidget(self, item: OutlineItem) -> OutlineItemWidget:
+        wdg = ProgressionItemWidget(item)
+        wdg.removed.connect(self._beatRemoved)
+        return wdg
+
+    @overrides
+    def _placeholderClicked(self, placeholder: QWidget):
+        self._currentPlaceholder = placeholder
+        item = OutlineItem('New item')
+        widget = self._newBeatWidget(item)
+        self._insertWidget(item, widget)
+
+    @overrides
+    def paintEvent(self, event: QPaintEvent) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(QColor(PLOTLYST_MAIN_COLOR))
+        painter.setBrush(QBrush(QColor(PLOTLYST_MAIN_COLOR)))
+
+        height = 50
+        offset = 20
+        for i, wdg in enumerate(self._beatWidgets):
+            painter.setOpacity(0.4 + (i + 1) * 0.6 / len(self._beatWidgets))
+            painter.drawConvexPolygon([
+                QPointF(wdg.x() - offset, wdg.y()),
+                QPointF(wdg.x(), wdg.y() + height / 2),
+                QPointF(wdg.x() - offset, wdg.y() + height),
+                QPointF(wdg.x() + wdg.width(), wdg.y() + height),
+                QPointF(wdg.x() + wdg.width() + offset, wdg.y() + height / 2),
+                QPointF(wdg.x() + wdg.width(), wdg.y())
+            ])

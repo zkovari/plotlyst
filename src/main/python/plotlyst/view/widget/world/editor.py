@@ -52,6 +52,7 @@ from plotlyst.view.widget.button import DotsMenuButton
 from plotlyst.view.widget.display import Icon, PopupDialog, DotsDragIcon
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, MarkdownPopupTextEditorToolbar, \
     SearchField
+from plotlyst.view.widget.progress import ProgressionOutlineWidget
 from plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
 from plotlyst.view.widget.utility import IconSelectorDialog
 from plotlyst.view.widget.world._topics import ecological_topics, cultural_topics, historical_topics, \
@@ -190,6 +191,8 @@ class WorldBuildingEntityElementWidget(QWidget):
             return TimelineElementEditor(novel, element, parent)
         elif element.type == WorldBuildingEntityElementType.Conceits:
             return ConceitsElementEditor(novel, element, parent)
+        elif element.type == WorldBuildingEntityElementType.ProgressOutline:
+            return ProgressOutlineElementEditor(novel, element, parent)
         else:
             raise ValueError(f'Unsupported WorldBuildingEntityElement type {element.type}')
 
@@ -824,6 +827,25 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
                     return
 
 
+class EntityProgressionOutlineWidget(ProgressionOutlineWidget):
+    def __init__(self, element: WorldBuildingEntityElement, parent=None):
+        super().__init__(parent)
+
+
+class ProgressOutlineElementEditor(WorldBuildingEntityElementWidget):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
+        super().__init__(novel, element, parent)
+
+        self.progress = EntityProgressionOutlineWidget(element)
+        self.layout().addWidget(self.progress)
+        # self.timeline.changed.connect(self.save)
+
+        self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
+
+        self.btnDrag.raise_()
+
+
 class SectionElementEditor(WorldBuildingEntityElementWidget):
     WORLD_BLOCK_MIMETYPE = 'application/world-block'
     WORLD_SECTION_MIMETYPE = 'application/world-section'
@@ -1114,12 +1136,18 @@ class MainBlockAdditionMenu(MenuWidget):
 
         if app_env.is_plus():
             otherMenu = MenuWidget()
+            otherMenu.setTitle('Other')
             otherMenu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+
             tooltip = "Track fantasy elements that deviate from our world, introducing a sense of wonder into the story"
             otherMenu.addAction(action('Fantasy conceits', IconRegistry.from_name('ei.magic'), tooltip=tooltip,
                                        slot=lambda: self.newBlockSelected.emit(
                                            WorldBuildingEntityElementType.Conceits)))
-            otherMenu.setTitle('Other')
+            otherMenu.addAction(action('Progression timeline', IconRegistry.from_name('mdi6.calendar-arrow-right'),
+                                       slot=lambda: self.newBlockSelected.emit(
+                                           WorldBuildingEntityElementType.ProgressOutline)
+                                       ))
+
             self.addSeparator()
             self.addMenu(otherMenu)
 
