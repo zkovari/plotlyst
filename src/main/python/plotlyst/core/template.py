@@ -380,7 +380,7 @@ gmc_field = TemplateField('GMC', type=TemplateFieldType.COMPLEX, id=uuid.UUID('a
 
 goal_field = TemplateField('External goal', type=TemplateFieldType.SMALL_TEXT, emoji=':bullseye:',
                            description="Tangible objectives pursued by the character",
-                           placeholder="What external goal does the character want to accomplish?",
+                           placeholder="What tangible, external goal does the character want to accomplish?",
                            id=uuid.UUID('99526331-6f3b-429d-ad22-0a4a90ee9d77'), has_notes=True,
                            icon='mdi.target')
 internal_goal_field = TemplateField('Internal goal', type=TemplateFieldType.SMALL_TEXT,
@@ -390,22 +390,22 @@ internal_goal_field = TemplateField('Internal goal', type=TemplateFieldType.SMAL
                                     id=uuid.UUID('090d2431-3ae7-4aa3-81b3-2737a8043db7'), has_notes=True,
                                     icon='ri.user-heart-line')
 motivation_field = TemplateField('Motivation', type=TemplateFieldType.SMALL_TEXT, emoji=':right-facing_fist:',
-                                 placeholder='Why does the character want to accomplish their goal?',
+                                 placeholder='What practical or situational reason drives the character to accomplish their goal?',
                                  id=uuid.UUID('5aa2c2e6-90a6-42b2-af7b-b4c82a56390e'), has_notes=True)
 internal_motivation_field = TemplateField('Internal motivation', type=TemplateFieldType.SMALL_TEXT, emoji=':red_heart:',
-                                          placeholder='Why does the character want to feel that way?',
+                                          placeholder='What deeper, often subconscious, reason drives the character?',
                                           id=uuid.UUID('6388368e-6d52-4259-b1e2-1d9c1aa5c89d'), has_notes=True)
 conflict_field = TemplateField('Conflict', type=TemplateFieldType.SMALL_TEXT, emoji=':crossed_swords:',
                                placeholder='What external force is stopping the character from their goal?',
                                id=uuid.UUID('c7e39f6d-4b94-4060-b3a6-d2604247ca80'), has_notes=True)
 internal_conflict_field = TemplateField('Internal conflict', type=TemplateFieldType.SMALL_TEXT, emoji=':fearful_face:',
-                                        placeholder='What stops the character from their desired emotional state?',
+                                        placeholder='What emotional, mental, or psychological barriers hold back the character?',
                                         id=uuid.UUID('8dcf6ce1-6679-4100-b332-8898ee2a2e3c'), has_notes=True)
 stakes_field = TemplateField('Stakes', type=TemplateFieldType.SMALL_TEXT, emoji=':skull:',
-                             placeholder="What's at stake if the character fails to reach their goal?",
+                             placeholder="What could the character lose in the physical world if they fail to reach their goal?",
                              id=uuid.UUID('15770e28-b801-44c4-a6e6-ddba33935bc4'), has_notes=True)
 internal_stakes_field = TemplateField('Internal stakes', type=TemplateFieldType.SMALL_TEXT, emoji=':broken_heart:',
-                                      placeholder="What's at stake if the character fails to achieve that emotional state?",
+                                      placeholder="What could the character could lose emotionally or psychologically?",
                                       id=uuid.UUID('95f58293-c77a-4ec7-9e1f-b2f38d123e8d'), has_notes=True)
 methods_field = TemplateField('Methods', type=TemplateFieldType.SMALL_TEXT, emoji=':hammer_and_pick:',
                               placeholder="How does the character try to achieve their goals?",
