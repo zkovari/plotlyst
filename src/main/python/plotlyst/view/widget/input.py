@@ -105,10 +105,11 @@ class AutoAdjustableTextEdit(EnhancedTextEdit):
 
 
 class AutoAdjustableLineEdit(QLineEdit):
-    def __init__(self, parent=None, defaultWidth: int = 200):
+    def __init__(self, parent=None, defaultWidth: int = 200, maxWidth: Optional[int] = None):
         super(AutoAdjustableLineEdit, self).__init__(parent)
         self._padding = 10
         self._defaultWidth = defaultWidth + self._padding
+        self._maxWidth = maxWidth
         self._resizedOnShow: bool = False
         self.setFixedWidth(self._defaultWidth)
         self.textChanged.connect(self._resizeToContent)
@@ -126,7 +127,9 @@ class AutoAdjustableLineEdit(QLineEdit):
         if text:
             text_width = self.fontMetrics().boundingRect(text).width()
             width = max(text_width + self._padding, self._defaultWidth)
-            self.setFixedWidth(width)
+            if self._maxWidth:
+                width = min(width, self._maxWidth)
+            self.setMaximumWidth(width)
         else:
             self.setFixedWidth(self._defaultWidth)
 
@@ -1313,18 +1316,41 @@ class LabelsEditor(QFrame):
         self.labelRemoved.emit(label)
 
 
+class DecoratedLineEdit(QWidget):
+    def __init__(self, parent=None, maxWidth: Optional[int] = None):
+        super().__init__(parent)
+        hbox(self, 0, 0)
+        self.icon = QToolButton()
+        transparent(self.icon)
+        self.lineEdit = AutoAdjustableLineEdit(defaultWidth=50, maxWidth=maxWidth)
+        transparent(self.lineEdit)
+
+        self.layout().addWidget(self.icon)
+        self.layout().addWidget(self.lineEdit)
+
+    def setIcon(self, icon: QIcon):
+        self.icon.setIcon(icon)
+
+    def setText(self, text: str):
+        self.lineEdit.setText(text)
+
+
 class TextEditBubbleWidget(QFrame):
     removed = pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, titleEditable: bool = False, titleMaxWidth: Optional[int] = None):
         super().__init__(parent)
         self._removalEnabled: bool = False
 
         vbox(self)
-        self._title = QPushButton()
-        transparent(self._title)
-        bold(self._title)
-        self._title.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        if titleEditable:
+            self._title = DecoratedLineEdit(maxWidth=titleMaxWidth)
+            bold(self._title.lineEdit)
+        else:
+            self._title = QPushButton()
+            transparent(self._title)
+            bold(self._title)
+            self._title.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self._textedit = QTextEdit(self)
         self._textedit.setProperty('white-bg', True)
