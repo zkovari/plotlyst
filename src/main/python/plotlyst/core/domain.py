@@ -2186,7 +2186,7 @@ class WorldConceit:
     text: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon: str = ''
     icon_color: str = 'black'
-    conceits: List['WorldConceit'] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    children: List['WorldConceit'] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
 
     @overrides
     def __eq__(self, other: 'WorldConceit'):

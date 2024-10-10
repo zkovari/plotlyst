@@ -59,6 +59,7 @@ from plotlyst.view.widget.world._topics import ecological_topics, cultural_topic
     fantastic_topics, nefarious_topics, environmental_topics, ecology_topic, culture_topic, history_topic, \
     language_topic, technology_topic, economy_topic, infrastructure_topic, religion_topic, fantasy_topic, \
     villainy_topic, environment_topic
+from plotlyst.view.widget.world.conceit import ConceitsTreeView
 from plotlyst.view.widget.world.glossary import GlossaryTextBlockHighlighter, GlossaryTextBlockData
 from plotlyst.view.widget.world.milieu import LocationsTreeView
 
@@ -697,13 +698,25 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
         self._wdgToolbar = QWidget()
         hbox(self._wdgToolbar)
         self._wdgEditor = frame(self)
-        flow(self._wdgEditor, 10, 8)
-        sp(self._wdgEditor).v_max()
+        vbox(self._wdgEditor)
+        self._splitter = QSplitter(self._wdgEditor)
+        self._splitter.setChildrenCollapsible(False)
+        self._splitter.setHandleWidth(10)
+        self._splitter.setProperty('framed', True)
+        self._splitter.setSizes([150, 500])
+        self._wdgEditor.layout().addWidget(self._splitter)
+
+        self._wdgTree = ConceitsTreeView(novel)
+        self._wdgDisplay = QWidget()
+        flow(self._wdgDisplay, 10, 8)
+        self._splitter.addWidget(self._wdgTree)
+        self._splitter.addWidget(self._wdgDisplay)
 
         self._btnToggleTree = tool_btn(IconRegistry.from_name('mdi.file-tree-outline', '#510442'), transparent_=True,
                                        checkable=True)
         self._btnToggleTree.installEventFilter(
             OpacityEventFilter(self._btnToggleTree, enterOpacity=0.6, ignoreCheckedButton=True))
+        self._btnToggleTree.clicked.connect(lambda x: qtanim.toggle_expansion(self._wdgTree, x))
         self._btnAddConceit = tool_btn(IconRegistry.plus_icon('#510442'), tooltip='Add conceit', transparent_=True)
         self._btnAddConceit.clicked.connect(self._showMenu)
         self._btnTitle = push_btn(text='Fantasy conceits', pointy_=False, icon_resize=False)
@@ -739,11 +752,20 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
                         }''')
 
         self.btnDrag.raise_()
+        self._wdgTree.setVisible(self._btnToggleTree.isChecked())
+
+        self.refresh()
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
         self._wdgEditor.updateGeometry()
+
+    def refresh(self):
+        clear_layout(self._wdgDisplay)
+        for conceit in self.novel.world.conceits:
+            bubble = ConceitBubble(conceit)
+            self._wdgDisplay.layout().addWidget(bubble)
 
     def _showMenu(self):
         menu = MenuWidget()
@@ -758,7 +780,10 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
     def _addNewConceit(self, conceitType: WorldConceitType):
         conceit = WorldConceit('Conceit', type=conceitType, icon=conceitType.icon())
         bubble = ConceitBubble(conceit)
-        self._wdgEditor.layout().addWidget(bubble)
+        self._wdgDisplay.layout().addWidget(bubble)
+
+        self.novel.world.conceits.append(conceit)
+        self.save()
 
 
 class SectionElementEditor(WorldBuildingEntityElementWidget):
