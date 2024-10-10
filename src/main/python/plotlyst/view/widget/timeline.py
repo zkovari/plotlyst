@@ -84,7 +84,7 @@ class BackstoryCard(QWidget):
         self.textSummary.setViewportMargins(3, 0, 3, 0)
         self.textSummary.setProperty('transparent', True)
         self.textSummary.textChanged.connect(self._synopsisChanged)
-        incr_font(self.textSummary, 2)
+        incr_font(self.textSummary)
 
         wdgTop = QWidget()
         hbox(wdgTop, 0, 0)
@@ -155,7 +155,8 @@ class BackstoryCard(QWidget):
 
 
 class BackstoryCardPlaceholder(QWidget):
-    def __init__(self, card: BackstoryCard, alignment: int = Qt.AlignmentFlag.AlignRight, parent=None):
+    def __init__(self, card: BackstoryCard, alignment: int = Qt.AlignmentFlag.AlignRight, parent=None,
+                 compact: bool = True):
         super().__init__(parent)
         self.alignment = alignment
         self.card = card
@@ -165,9 +166,15 @@ class BackstoryCardPlaceholder(QWidget):
         self.spacer.setFixedWidth(self.width() // 2 + 3)
         if self.alignment == Qt.AlignmentFlag.AlignRight:
             self.layout().addWidget(self.spacer)
-            self._layout.addWidget(self.card, alignment=Qt.AlignmentFlag.AlignLeft)
+            if compact:
+                self._layout.addWidget(self.card, alignment=Qt.AlignmentFlag.AlignLeft)
+            else:
+                self._layout.addWidget(self.card)
         elif self.alignment == Qt.AlignmentFlag.AlignLeft:
-            self._layout.addWidget(self.card, alignment=Qt.AlignmentFlag.AlignRight)
+            if compact:
+                self._layout.addWidget(self.card, alignment=Qt.AlignmentFlag.AlignRight)
+            else:
+                self._layout.addWidget(self.card)
             self.layout().addWidget(self.spacer)
         else:
             self.layout().addWidget(self.card)
@@ -223,12 +230,13 @@ class _ControlButtons(QWidget):
 class TimelineWidget(QWidget):
     changed = pyqtSignal()
 
-    def __init__(self, theme: Optional[TimelineTheme] = None, parent=None):
+    def __init__(self, theme: Optional[TimelineTheme] = None, parent=None, compact: bool = True):
         self._spacers: List[QWidget] = []
         super().__init__(parent)
         if theme is None:
             theme = TimelineTheme()
         self._theme = theme
+        self._compact = compact
         self._layout = vbox(self, spacing=0)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self._lineTopMargin: int = 0
@@ -261,7 +269,8 @@ class TimelineWidget(QWidget):
             else:
                 alignment = Qt.AlignmentFlag.AlignLeft
             prev_alignment = alignment
-            event = BackstoryCardPlaceholder(self.cardClass()(backstory, self._theme), alignment, parent=self)
+            event = BackstoryCardPlaceholder(self.cardClass()(backstory, self._theme), alignment, parent=self,
+                                             compact=self._compact)
             event.card.deleteRequested.connect(self._remove)
 
             self._spacers.append(event.spacer)

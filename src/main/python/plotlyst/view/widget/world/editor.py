@@ -643,10 +643,13 @@ class EntityTimelineCard(BackstoryCard):
         super().__init__(backstory, parent)
         self.refresh()
 
+        self.setMinimumWidth(250)
+        self.setMaximumWidth(450)
+
 
 class EntityTimelineWidget(TimelineWidget):
     def __init__(self, element: WorldBuildingEntityElement, parent=None):
-        super().__init__(TimelineTheme(timeline_color='#510442', card_bg_color='#E3D0BD'), parent)
+        super().__init__(TimelineTheme(timeline_color='#510442', card_bg_color='#E3D0BD'), parent, compact=False)
         self.element = element
         self.refresh()
 
