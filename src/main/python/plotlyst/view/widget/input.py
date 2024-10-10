@@ -1317,11 +1317,17 @@ class LabelsEditor(QFrame):
 
 
 class DecoratedLineEdit(QWidget):
-    def __init__(self, parent=None, maxWidth: Optional[int] = None):
+    iconChanged = pyqtSignal(str, str)
+
+    def __init__(self, parent=None, maxWidth: Optional[int] = None, iconEditable: bool = False):
         super().__init__(parent)
         hbox(self, 0, 0)
         self.icon = QToolButton()
         transparent(self.icon)
+        if iconEditable:
+            pointy(self.icon)
+            self.icon.installEventFilter(OpacityEventFilter(self.icon, leaveOpacity=1.0, enterOpacity=0.7))
+            self.icon.clicked.connect(self._changeIcon)
         self.lineEdit = AutoAdjustableLineEdit(defaultWidth=50, maxWidth=maxWidth)
         transparent(self.lineEdit)
 
@@ -1334,17 +1340,24 @@ class DecoratedLineEdit(QWidget):
     def setText(self, text: str):
         self.lineEdit.setText(text)
 
+    def _changeIcon(self):
+        result = IconSelectorDialog.popup()
+        if result:
+            self.icon.setIcon(IconRegistry.from_name(result[0], result[1].name()))
+            self.iconChanged.emit(result[0], result[1].name())
+
 
 class TextEditBubbleWidget(QFrame):
     removed = pyqtSignal()
 
-    def __init__(self, parent=None, titleEditable: bool = False, titleMaxWidth: Optional[int] = None):
+    def __init__(self, parent=None, titleEditable: bool = False, titleMaxWidth: Optional[int] = None,
+                 iconEditable: bool = False):
         super().__init__(parent)
         self._removalEnabled: bool = False
 
         vbox(self)
         if titleEditable:
-            self._title = DecoratedLineEdit(maxWidth=titleMaxWidth)
+            self._title = DecoratedLineEdit(maxWidth=titleMaxWidth, iconEditable=iconEditable)
             bold(self._title.lineEdit)
         else:
             self._title = QPushButton()

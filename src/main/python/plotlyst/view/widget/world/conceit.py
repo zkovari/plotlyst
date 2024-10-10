@@ -36,9 +36,10 @@ from plotlyst.view.widget.tree import ItemBasedNode, TreeSettings, ItemBasedTree
 class ConceitBubble(TextEditBubbleWidget):
     nameEdited = pyqtSignal()
     textChanged = pyqtSignal()
+    iconChanged = pyqtSignal()
 
     def __init__(self, conceit: WorldConceit, parent=None):
-        super().__init__(parent, titleEditable=True, titleMaxWidth=150)
+        super().__init__(parent, titleEditable=True, titleMaxWidth=150, iconEditable=True)
         self.conceit = conceit
 
         self._removalEnabled = True
@@ -47,6 +48,7 @@ class ConceitBubble(TextEditBubbleWidget):
         self._title.setIcon(IconRegistry.from_name(icon, '#510442'))
         self._title.setText(self.conceit.name)
         self._title.lineEdit.textEdited.connect(self._titleEdited)
+        self._title.iconChanged.connect(self._iconChanged)
         self._textedit.setPlaceholderText('An element of wonder that deviates from our world')
         self._textedit.setStyleSheet('''
             QTextEdit {
@@ -57,7 +59,6 @@ class ConceitBubble(TextEditBubbleWidget):
             }
         ''')
         self._textedit.setText(self.conceit.text)
-        self._textedit.textChanged.connect(self._textChanged)
 
     def _titleEdited(self, text: str):
         self.conceit.name = text
@@ -66,6 +67,11 @@ class ConceitBubble(TextEditBubbleWidget):
     def _textChanged(self):
         self.conceit.text = self._textedit.toPlainText()
         self.textChanged.emit()
+
+    def _iconChanged(self, icon: str, color: str):
+        self.conceit.icon = icon
+        self.conceit.icon_color = color
+        self.iconChanged.emit()
 
 
 class ConceitNode(ItemBasedNode):
@@ -91,7 +97,7 @@ class ConceitNode(ItemBasedNode):
     def refresh(self):
         self._lblTitle.setText(self._conceit.name if self._conceit.name else 'Conceit')
         if self._conceit.icon:
-            self._icon.setIcon(IconRegistry.from_name(self._conceit.icon))
+            self._icon.setIcon(IconRegistry.from_name(self._conceit.icon, self._conceit.icon_color))
         else:
             self._icon.setIcon(IconRegistry.dot_icon())
 

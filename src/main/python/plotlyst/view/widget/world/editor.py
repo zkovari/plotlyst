@@ -26,7 +26,7 @@ from PyQt6.QtCore import pyqtSignal, Qt, QSize, QMimeData, QPointF, QEvent
 from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMouseEvent, QColor, QIcon, QImage, \
     QShowEvent, QPixmap, QCursor, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QDialog, QGridLayout, QSlider, QToolButton, QButtonGroup, \
-    QLabel, QToolTip
+    QLabel, QToolTip, QSpacerItem, QSizePolicy
 from overrides import overrides
 from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy, \
     grid, flow, spacer, line, incr_icon, gc, translucent, incr_font, vline, bold
@@ -775,12 +775,13 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
 
     def _initBubble(self, conceit: WorldConceit) -> ConceitBubble:
         bubble = ConceitBubble(conceit)
-        bubble.nameEdited.connect(partial(self._conceitNameChanged, conceit))
+        bubble.nameEdited.connect(partial(self._conceitChanged, conceit))
+        bubble.iconChanged.connect(partial(self._conceitChanged, conceit))
         bubble.textChanged.connect(self.save)
         bubble.removed.connect(partial(self._conceitRemoved, bubble))
         return bubble
 
-    def _conceitNameChanged(self, conceit: WorldConceit):
+    def _conceitChanged(self, conceit: WorldConceit):
         self._wdgTree.updateItem(conceit)
         self.save()
 
@@ -793,6 +794,16 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
 
     def _conceitSelected(self, conceit: WorldConceit):
         clear_layout(self._wdgDisplay)
+
+        bubble = self._initBubble(conceit)
+        self._wdgDisplay.layout().addWidget(bubble)
+        self._wdgDisplay.layout().addItem(QSpacerItem(0, 5, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum))
+        if conceit.children:
+            lbl = label('Subtypes', underline=True)
+            self._wdgDisplay.layout().addWidget(lbl)
+            self._wdgDisplay.layout().addItem(
+                QSpacerItem(0, 5, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum))
+
         for conceit in conceit.children:
             bubble = self._initBubble(conceit)
             self._wdgDisplay.layout().addWidget(bubble)
