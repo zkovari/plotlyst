@@ -128,6 +128,7 @@ class ConceitsTreeView(ItemBasedTreeView):
     CONCEIT_ENTITY_MIMETYPE = 'application/world-conceit'
     conceitSelected = pyqtSignal(WorldConceit)
     rootSelected = pyqtSignal()
+    conceitTypeSelected = pyqtSignal(WorldConceitType)
     conceitDeleted = pyqtSignal(WorldConceit)
 
     def __init__(self, novel: Novel, parent=None):
@@ -188,6 +189,8 @@ class ConceitsTreeView(ItemBasedTreeView):
     def _emitSelectionChanged(self, conceit: WorldConceit):
         if conceit == self._root:
             self.rootSelected.emit()
+        elif isinstance(self._nodes[conceit], ConceitTypeNode):
+            self.conceitTypeSelected.emit(conceit.type)
         else:
             self.conceitSelected.emit(conceit)
 
