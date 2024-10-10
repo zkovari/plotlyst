@@ -689,6 +689,7 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
         self._wdgEditor.layout().addWidget(self._splitter)
 
         self._wdgTree = ConceitsTreeView(novel)
+        self._wdgTree.conceitDeleted.connect(self._conceitNodeDeleted)
         self._wdgDisplay = QWidget()
         flow(self._wdgDisplay, 10, 8)
         self._splitter.addWidget(self._wdgTree)
@@ -786,6 +787,14 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
 
         self._wdgTree.refresh()
         self.save()
+
+    def _conceitNodeDeleted(self, conceit: WorldConceit):
+        for i in range(self._wdgDisplay.layout().count()):
+            wdg = self._wdgDisplay.layout().itemAt(i).widget()
+            if wdg and isinstance(wdg, ConceitBubble):
+                if wdg.conceit == conceit:
+                    fade_out_and_gc(self._wdgDisplay, wdg)
+                    return
 
 
 class SectionElementEditor(WorldBuildingEntityElementWidget):

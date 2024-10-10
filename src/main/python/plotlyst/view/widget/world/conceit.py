@@ -27,6 +27,7 @@ from qthandy import clear_layout, vspacer
 from plotlyst.common import recursive
 from plotlyst.core.domain import WorldConceit, WorldBuilding, WorldConceitType, Novel
 from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import fade_in
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.input import TextEditBubbleWidget
 from plotlyst.view.widget.tree import ItemBasedNode, TreeSettings, ItemBasedTreeView, ContainerNode
@@ -200,13 +201,34 @@ class ConceitsTreeView(ItemBasedTreeView):
     def _save(self):
         self.repo.update_world(self._novel)
 
+    def _addConceitUnder(self, parent: ConceitNode):
+        conceit = WorldConceit('Conceit', type=parent.item().type)
+        child = self._initNode(conceit)
+        parent.addChild(child)
+        fade_in(child)
+
+        parent.item().children.append(conceit)
+        self._save()
+
+    def _deleteConceit(self, node: ConceitNode):
+        conceit: WorldConceit = node.item()
+        if isinstance(node.parent().parent(), ConceitNode):
+            parent: ConceitNode = node.parent().parent()
+            parent.item().children.remove(conceit)
+        else:
+            self._novel.world.conceits.remove(conceit)
+
+        self._deleteNode(node)
+        self.conceitDeleted.emit(conceit)
+        self._save()
+
     @overrides
     def _initNode(self, conceit: WorldConceit) -> ConceitNode:
         node = ConceitNode(conceit, readOnly=self._readOnly, settings=self._settings)
         self._nodes[conceit] = node
         node.selectionChanged.connect(partial(self._selectionChanged, node))
-        # node.added.connect(partial(self._addLocationUnder, node))
-        # node.deleted.connect(partial(self._deleteLocation, node))
+        node.added.connect(partial(self._addConceitUnder, node))
+        node.deleted.connect(partial(self._deleteConceit, node))
 
         # if not self._readOnly:
         #     self._enhanceWithDnd(node)
