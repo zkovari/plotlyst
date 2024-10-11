@@ -140,7 +140,7 @@ class TopicGroupSelector(QWidget):
 
 
 class TopicSelectionDialog(PopupDialog):
-    DEFAULT_SELECT_BTN_TEXT: str = 'Select worldbuilding topics'
+    DEFAULT_SELECT_BTN_TEXT: str = 'Select topics'
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -161,27 +161,12 @@ class TopicSelectionDialog(PopupDialog):
 
         self._sections: Dict[str, TopicGroupSelector] = {}
 
-        # self._addSection(ecology_topic, ecological_topics)
-        # self._addSection(culture_topic, cultural_topics)
-        # self._addSection(history_topic, historical_topics)
-        # self._addSection(language_topic, linguistic_topics)
-        # self._addSection(technology_topic, technological_topics)
-        # self._addSection(economy_topic, economic_topics)
-        # self._addSection(infrastructure_topic, infrastructural_topics)
-        # self._addSection(religion_topic, religious_topics)
-        # self._addSection(fantasy_topic, fantastic_topics)
-        # self._addSection(villainy_topic, nefarious_topics)
-        # self._addSection(environment_topic, environmental_topics)
-
         self.btnSelect = push_btn(IconRegistry.ok_icon(RELAXED_WHITE_COLOR), self.DEFAULT_SELECT_BTN_TEXT,
                                   properties=['positive', 'confirm'])
         self.btnSelect.setDisabled(True)
         self.btnSelect.clicked.connect(self.accept)
         self.btnCancel = push_btn(text='Cancel', properties=['confirm', 'cancel'])
         self.btnCancel.clicked.connect(self.reject)
-
-        # self._wdgCenter.layout().addWidget(vspacer())
-        # self.frame.layout().addWidget(group(self.btnCancel, self.btnSelect), alignment=Qt.AlignmentFlag.AlignRight)
 
     def display(self) -> List[Topic]:
         self.search.lineSearch.setFocus()
