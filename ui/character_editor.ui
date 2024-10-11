@@ -451,8 +451,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>703</width>
-            <height>485</height>
+            <width>858</width>
+            <height>477</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -495,10 +495,10 @@
        <enum>Qt::ClickFocus</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tabTopics">
-       <property name="bg" stdset="0">
+       <property name="relaxed-white-bg" stdset="0">
         <bool>true</bool>
        </property>
        <attribute name="title">
@@ -609,8 +609,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>467</width>
-             <height>557</height>
+             <width>327</width>
+             <height>562</height>
             </rect>
            </property>
            <property name="sizePolicy">

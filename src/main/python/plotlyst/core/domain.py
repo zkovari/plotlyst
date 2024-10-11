@@ -110,6 +110,10 @@ class TopicType(Enum):
     Beliefs = auto()
     Worldbuilding = auto()
 
+    @property
+    def text(self):
+        return self.name
+
     def description(self) -> str:
         if self == TopicType.Physical:
             return 'Body type, clothing, hairstyle, etc.'
@@ -567,6 +571,24 @@ class CharacterPersonality:
     work: Optional[CharacterPersonalityAttribute] = None
 
 
+class TopicElementType(Enum):
+    Text = 0
+    Icon = 1
+    Image = 2
+
+
+@dataclass
+class TopicElementBlock:
+    type: TopicElementType = field(default=TopicElementType.Text)
+    text: str = field(default='', metadata=config(exclude=exclude_if_empty))
+
+
+@dataclass
+class TopicElement:
+    id: uuid.UUID
+    blocks: List[TopicElementBlock] = field(default_factory=list)
+
+
 @dataclass
 class Character:
     name: str
@@ -584,7 +606,7 @@ class Character:
     document: Optional['Document'] = None
     journals: List['Document'] = field(default_factory=list)
     prefs: CharacterPreferences = field(default_factory=CharacterPreferences)
-    topics: List[TemplateValue] = field(default_factory=list)
+    topics: List[TopicElement] = field(default_factory=list)
     big_five: Dict[str, List[int]] = field(default_factory=default_big_five_values)
     profile: List[CharacterProfileSectionReference] = field(default_factory=default_character_profile)
     summary: str = field(default='', metadata=config(exclude=exclude_if_empty))

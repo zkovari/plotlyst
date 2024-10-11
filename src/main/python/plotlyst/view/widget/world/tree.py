@@ -38,7 +38,7 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
-from plotlyst.view.widget.world.editor import MilieuSelectorPopup, TopicSelectionDialog
+from plotlyst.view.widget.world.editor import MilieuSelectorPopup, WorldBuildingTopicSelectionDialog
 
 
 class EntityAdditionMenu(MenuWidget):
@@ -73,7 +73,7 @@ class EntityAdditionMenu(MenuWidget):
             self.entityTriggered.emit(entity)
 
     def _linkToTopics(self):
-        topics = TopicSelectionDialog.popup()
+        topics = WorldBuildingTopicSelectionDialog.popup()
         if topics:
             entities = []
             for topic in topics:
