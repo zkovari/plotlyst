@@ -20,20 +20,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Dict, List, Union
 
-import qtanim
-from PyQt6.QtCore import Qt, QSize, pyqtSignal, QEvent
-from PyQt6.QtGui import QEnterEvent
+from PyQt6.QtCore import Qt, QSize, pyqtSignal
 from PyQt6.QtWidgets import QWidget, QTextEdit, QGridLayout, QToolButton, QDialog
-from overrides import overrides
-from qthandy import vbox, bold, line, margins, spacer, grid, hbox, italic, clear_layout, flow, pointy, incr_icon, \
+from qthandy import vbox, bold, line, margins, spacer, grid, hbox, clear_layout, flow, pointy, incr_icon, \
     incr_font, transparent
-from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
-from qtmenu import MenuWidget, ActionTooltipDisplayMode
+from qthandy.filter import VisibilityToggleEventFilter
 
 from plotlyst.common import RELAXED_WHITE_COLOR
-from plotlyst.core.domain import TemplateValue, Topic, TopicType, TopicElement, TopicElementBlock
+from plotlyst.core.domain import Topic, TopicType, TopicElement, TopicElementBlock
 from plotlyst.env import app_env
-from plotlyst.view.common import tool_btn, push_btn, fade_out_and_gc, ButtonPressResizeEventFilter, label, \
+from plotlyst.view.common import push_btn, fade_out_and_gc, ButtonPressResizeEventFilter, label, \
     scrolled
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -208,8 +204,6 @@ class TopicSelectionDialog(PopupDialog):
 
 
 class TopicGroupWidget(QWidget):
-    removed = pyqtSignal()
-    topicAdded = pyqtSignal(Topic, TopicElement)
     topicRemoved = pyqtSignal(Topic, TopicElement)
 
     def __init__(self, topicType: TopicType, parent=None):
@@ -222,45 +216,19 @@ class TopicGroupWidget(QWidget):
         self.btnHeader.setText(self._type.display_name())
         self.btnHeader.setToolTip(self._type.description())
         bold(self.btnHeader)
-        self.btnEdit = tool_btn(IconRegistry.edit_icon(), transparent_=True)
-        self.btnEdit.installEventFilter(OpacityEventFilter(self.btnEdit))
-        self.menuTopics = MenuWidget(self.btnEdit)
-        self.menuTopics.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         self._topicWidgets: Dict[Topic, TopicWidget] = {}
-
-        self.btnRemoval = RemovalButton()
-        self.btnRemoval.clicked.connect(self.removed)
-        self.btnRemoval.setHidden(True)
 
         self.wdgHeader = QWidget()
         hbox(self.wdgHeader)
-        self.wdgHeader.layout().addWidget(self.btnHeader)
-        self.wdgHeader.layout().addWidget(self.btnEdit)
-        self.wdgHeader.layout().addWidget(spacer())
-        self.wdgHeader.layout().addWidget(self.btnRemoval)
+        self.wdgHeader.layout().addWidget(self.btnHeader, alignment=Qt.AlignmentFlag.AlignLeft)
         self.wdgTopics = QWidget()
-        self.btnAddTopic = push_btn(IconRegistry.plus_icon('grey'), 'Add topic', transparent_=True)
-        italic(self.btnAddTopic)
-        self.btnAddTopic.installEventFilter(OpacityEventFilter(self.btnAddTopic))
-        self.btnAddTopic.clicked.connect(lambda: self.menuTopics.exec())
 
         vbox(self.wdgTopics)
-        self.wdgTopics.layout().addWidget(self.btnAddTopic)
         self.btnHeader.toggled.connect(self.wdgTopics.setHidden)
-
-        self.installEventFilter(VisibilityToggleEventFilter(self.btnEdit, self.wdgHeader))
 
         self.layout().addWidget(self.wdgHeader)
         self.layout().addWidget(line())
         self.layout().addWidget(self.wdgTopics)
-
-    @overrides
-    def enterEvent(self, event: QEnterEvent) -> None:
-        self.btnRemoval.setVisible(len(self._topicWidgets) == 0)
-
-    @overrides
-    def leaveEvent(self, _: QEvent) -> None:
-        self.btnRemoval.setHidden(True)
 
     def addTopic(self, topic: Topic, element: TopicElement) -> 'TopicWidget':
         wdg = TopicWidget(topic, element)
@@ -268,25 +236,11 @@ class TopicGroupWidget(QWidget):
         self._topicWidgets[topic] = wdg
         self.wdgTopics.layout().addWidget(wdg)
 
-        self.btnAddTopic.setHidden(True)
-        self.btnRemoval.setHidden(True)
-
         return wdg
-
-    def _addNewTopic(self, topic: Topic):
-        def activate():
-            wdg.activate()
-
-        value = TemplateValue(topic.id, '')
-        wdg = self.addTopic(topic, value)
-
-        qtanim.fade_in(wdg, duration=150, teardown=activate)
-
-        self.topicAdded.emit(topic, value)
 
     def _removeTopic(self, topic: Topic):
         wdg = self._topicWidgets.pop(topic)
-        self.topicRemoved.emit(topic, wdg.value())
+        self.topicRemoved.emit(topic, wdg.element())
         fade_out_and_gc(self.wdgTopics, wdg)
 
 
@@ -323,7 +277,7 @@ class TopicWidget(QWidget):
                                   tooltip=topic.description, transparent_=True)
 
         self._btnRemoval = RemovalButton()
-        self._btnRemoval.clicked.connect(self.removalRequested.emit)
+        self._btnRemoval.clicked.connect(self.removalRequested)
 
         self._top = group(self.btnHeader, spacer(), self._btnRemoval, margin=0, spacing=1)
         margins(self._top, left=20)
@@ -335,25 +289,13 @@ class TopicWidget(QWidget):
             wdg = TopicTextBlockWidget(topic, block)
             margins(wdg, left=20)
             layout_.addWidget(wdg)
-            # self._blocks.append(wdg)
-        # bottom = group(self.textEdit, vertical=False, margin=0, spacing=0)
-        # layout_.addWidget(bottom, alignment=Qt.AlignmentFlag.AlignTop)
 
-    def activate(self):
-        pass
-        # self.textEdit.setFocus()
-
-    # def value(self):
-    #     return self._block
-    #
-    # def plainText(self) -> str:
-    #     return self.textEdit.toPlainText()
+    def element(self) -> TopicElement:
+        return self._element
 
 
 class TopicsEditor(QWidget):
-    topicGroupRemoved = pyqtSignal(TopicType)
-    topicAdded = pyqtSignal(Topic, TemplateValue)
-    topicRemoved = pyqtSignal(Topic, TemplateValue)
+    topicRemoved = pyqtSignal(Topic, TopicElement)
 
     def __init__(self, parent=None):
         super(TopicsEditor, self).__init__(parent)
@@ -363,8 +305,6 @@ class TopicsEditor(QWidget):
 
     def addTopicGroup(self, topicType: TopicType):
         wdg = TopicGroupWidget(topicType)
-        wdg.removed.connect(partial(self.removeTopicGroup, topicType))
-        wdg.topicAdded.connect(self.topicAdded)
         wdg.topicRemoved.connect(self.topicRemoved)
         self._topicGroups[topicType] = wdg
 
@@ -379,8 +319,3 @@ class TopicsEditor(QWidget):
     def clear(self):
         self._topicGroups.clear()
         clear_layout(self)
-
-    def removeTopicGroup(self, topicType: TopicType):
-        wdg = self._topicGroups.pop(topicType)
-        fade_out_and_gc(self, wdg)
-        self.topicGroupRemoved.emit(topicType)

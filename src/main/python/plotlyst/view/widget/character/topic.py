@@ -24,7 +24,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QWidget
 from qthandy import vbox, vspacer
 
-from plotlyst.core.domain import Character, Topic, TemplateValue, TopicType, TopicElement, TopicElementBlock
+from plotlyst.core.domain import Character, Topic, TopicType, TopicElement, TopicElementBlock
 from plotlyst.view.common import push_btn, scrolled
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -304,8 +304,6 @@ class CharacterTopicsEditor(QWidget):
         vbox(self._wdgCenter)
         self._wdgCenter.layout().addWidget(self._wdgTopics)
         self._wdgCenter.layout().addWidget(vspacer())
-        self._wdgTopics.topicGroupRemoved.connect(self._topicGroupRemoved)
-        self._wdgTopics.topicAdded.connect(self._topicAdded)
         self._wdgTopics.topicRemoved.connect(self._topicRemoved)
 
     def setCharacter(self, character: Character):
@@ -317,20 +315,6 @@ class CharacterTopicsEditor(QWidget):
             if topic:
                 self._wdgTopics.addTopic(topic, element)
 
-    def _addTopicGroup(self, topicType: TopicType):
-        if self._character is None:
-            return
-        self._wdgTopics.addTopicGroup(topicType)
-
-    def _topicGroupRemoved(self, topicType: TopicType):
-        pass
-
-    def _topicAdded(self, topic: Topic, value: TemplateValue):
-        pass
-
-    def _topicRemoved(self, topic: Topic, value: TemplateValue):
-        self._character.topics.remove(value)
-
     def _selectTopics(self):
         topics = CharacterTopicSelectionDialog.popup()
         if topics:
@@ -338,3 +322,6 @@ class CharacterTopicsEditor(QWidget):
                 element = TopicElement(topic.id, blocks=[TopicElementBlock()])
                 self._character.topics.append(element)
                 self._wdgTopics.addTopic(topic, element)
+
+    def _topicRemoved(self, topic: Topic, element: TopicElement):
+        self._character.topics.remove(element)
