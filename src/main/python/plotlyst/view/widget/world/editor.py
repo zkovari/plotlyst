@@ -28,15 +28,14 @@ from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMous
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QDialog, QGridLayout, QSlider, QToolButton, QButtonGroup, \
     QLabel, QToolTip, QSpacerItem, QSizePolicy
 from overrides import overrides
-from qthandy import vspacer, clear_layout, transparent, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy, \
-    grid, flow, spacer, line, incr_icon, gc, translucent, incr_font, vline, bold
+from qthandy import vspacer, clear_layout, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy, \
+    grid, flow, spacer, line, gc, translucent, incr_font, vline, bold
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter, DragEventFilter, \
     DropEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 from qttextedit.ops import Heading2Operation, Heading3Operation, InsertListOperation, InsertNumberedListOperation, \
     InsertDividerOperation
 
-from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityElement, WorldBuildingEntityElementType, \
     BackstoryEvent, Variable, VariableType, \
     Topic, Location, WorldConceitType, WorldConceit
@@ -44,15 +43,15 @@ from plotlyst.env import app_env
 from plotlyst.service.image import upload_image, load_image
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import action, push_btn, frame, insert_before_the_end, fade_out_and_gc, \
-    tool_btn, label, scrolled, wrap, calculate_resized_dimensions, ButtonPressResizeEventFilter, fade_in
+    tool_btn, label, wrap, calculate_resized_dimensions, fade_in
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.text import apply_text_color
 from plotlyst.view.widget.button import DotsMenuButton
 from plotlyst.view.widget.display import Icon, PopupDialog, DotsDragIcon
-from plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, MarkdownPopupTextEditorToolbar, \
-    SearchField
+from plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, MarkdownPopupTextEditorToolbar
 from plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
+from plotlyst.view.widget.topic import TopicSelectionDialog
 from plotlyst.view.widget.utility import IconSelectorDialog
 from plotlyst.view.widget.world._topics import ecological_topics, cultural_topics, historical_topics, \
     linguistic_topics, technological_topics, economic_topics, infrastructural_topics, religious_topics, \
@@ -914,180 +913,6 @@ class MainSectionElementEditor(SectionElementEditor):
             item.widget().frame.setHidden(True)
 
 
-class TopicSelectorButton(QToolButton):
-    def __init__(self, topic: Topic, group: bool = False):
-        super().__init__()
-        self.topic = topic
-
-        self.setMinimumWidth(100)
-        self.installEventFilter(ButtonPressResizeEventFilter(self))
-        self.setText(topic.text)
-        self.setIcon(IconRegistry.from_name(topic.icon))
-        self.setToolTip(topic.description)
-        self.setCheckable(True)
-        pointy(self)
-        incr_icon(self, 4)
-        if not group and app_env.is_mac():
-            incr_font(self)
-        if group:
-            self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        else:
-            self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
-
-        radius = 6 if group else 10
-        padding = 6 if group else 2
-        self.setStyleSheet(f'''
-                    QToolButton {{
-                        border: 1px hidden lightgrey;
-                        border-radius: {radius}px;
-                        padding: {padding}px;
-                    }}
-                    QToolButton:hover:!checked {{
-                        background: #FCF5FE;
-                    }}
-                    QToolButton:checked {{
-                        background: #D4B8E0;
-                    }}
-                    ''')
-
-
-class TopicGroupWidget(QWidget):
-    def __init__(self, header: Topic, parent=None):
-        super().__init__(parent)
-        self._header = header
-        self.headerTopicBtn = TopicSelectorButton(header, group=True)
-        vbox(self, 2, 0)
-        margins(self, top=5)
-        self._topics: Dict[str, TopicSelectorButton] = {}
-
-        self.container = QWidget()
-        flow(self.container)
-        margins(self.container, left=10)
-
-        self.layout().addWidget(self.headerTopicBtn)
-        self.layout().addWidget(line(color='lightgrey'))
-        self.layout().addWidget(self.container)
-
-    def addTopic(self, btn: TopicSelectorButton):
-        self.container.layout().addWidget(btn)
-        self._topics[btn.topic.text] = btn
-
-    def filter(self, term: str):
-        if term:
-            if term in self._header.text:
-                # qtanim.glow(self.header, color=QColor(PLOTLYST_SECONDARY_COLOR), teardown=lambda: self.header.setGraphicsEffect(None))
-                self._setVisibleAll(True)
-                return
-
-            visibleSection = False
-            for topic in self._topics.keys():
-                visibleTopic = term in topic
-                self._topics[topic].setVisible(visibleTopic)
-                if visibleTopic:
-                    visibleSection = True
-
-            self.setVisible(visibleSection)
-        else:
-            self._setVisibleAll(True)
-
-    def _setVisibleAll(self, visible: bool):
-        for _, btn in self._topics.items():
-            btn.setVisible(visible)
-        self.setVisible(True)
-
-
-# if not term:
-#     for _, btn in self._topics.items():
-#         btn.setVisible(True)
-#     return
-#
-# for topic in self._topics.keys():
-#     self._topics[topic].setVisible(term in topic)
-
-
-class TopicSelectionDialog(PopupDialog):
-    DEFAULT_SELECT_BTN_TEXT: str = 'Select worldbuilding topics'
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._selectedTopics = []
-
-        self.frame.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
-        self.frame.layout().addWidget(label('Common worldbuilding topics', h4=True),
-                                      alignment=Qt.AlignmentFlag.AlignCenter)
-        self.search = SearchField()
-        self.search.lineSearch.textEdited.connect(self._search)
-        self.frame.layout().addWidget(self.search, alignment=Qt.AlignmentFlag.AlignLeft)
-        self._scrollarea, self._wdgCenter = scrolled(self.frame, frameless=True, h_on=False)
-        self._scrollarea.setProperty('transparent', True)
-        transparent(self._wdgCenter)
-        vbox(self._wdgCenter, 10)
-        # self._wdgCenter.setStyleSheet('QWidget {background: #ede0d4;}')
-        self.setMinimumWidth(550)
-
-        self._sections: Dict[str, TopicGroupWidget] = {}
-
-        self._addSection(ecology_topic, ecological_topics)
-        self._addSection(culture_topic, cultural_topics)
-        self._addSection(history_topic, historical_topics)
-        self._addSection(language_topic, linguistic_topics)
-        self._addSection(technology_topic, technological_topics)
-        self._addSection(economy_topic, economic_topics)
-        self._addSection(infrastructure_topic, infrastructural_topics)
-        self._addSection(religion_topic, religious_topics)
-        self._addSection(fantasy_topic, fantastic_topics)
-        self._addSection(villainy_topic, nefarious_topics)
-        self._addSection(environment_topic, environmental_topics)
-
-        self.btnSelect = push_btn(IconRegistry.ok_icon(RELAXED_WHITE_COLOR), self.DEFAULT_SELECT_BTN_TEXT,
-                                  properties=['positive', 'confirm'])
-        self.btnSelect.setDisabled(True)
-        self.btnSelect.clicked.connect(self.accept)
-        self.btnCancel = push_btn(text='Cancel', properties=['confirm', 'cancel'])
-        self.btnCancel.clicked.connect(self.reject)
-
-        self._wdgCenter.layout().addWidget(vspacer())
-        self.frame.layout().addWidget(group(self.btnCancel, self.btnSelect), alignment=Qt.AlignmentFlag.AlignRight)
-
-    def display(self) -> List[Topic]:
-        self.search.lineSearch.setFocus()
-        result = self.exec()
-        if result == QDialog.DialogCode.Accepted:
-            return self._selectedTopics
-
-        return []
-
-    def _addSection(self, header: Topic, topics: List[Topic]):
-        wdg = TopicGroupWidget(header)
-        wdg.headerTopicBtn.toggled.connect(partial(self._toggled, header))
-        self._sections[header.text] = wdg
-        self._wdgCenter.layout().addWidget(wdg)
-
-        for topic in topics:
-            btn = TopicSelectorButton(topic)
-            # self._topics[topic.text] = btn
-            btn.toggled.connect(partial(self._toggled, topic))
-            wdg.addTopic(btn)
-
-        self._wdgCenter.layout().addWidget(wdg)
-
-    def _toggled(self, topic: Topic, checked: bool):
-        if checked:
-            self._selectedTopics.append(topic)
-        else:
-            self._selectedTopics.remove(topic)
-
-        self.btnSelect.setEnabled(len(self._selectedTopics) > 0)
-        if self._selectedTopics:
-            self.btnSelect.setText(f'{self.DEFAULT_SELECT_BTN_TEXT} ({len(self._selectedTopics)})')
-        else:
-            self.btnSelect.setText(self.DEFAULT_SELECT_BTN_TEXT)
-
-    def _search(self, term: str):
-        for wdg in self._sections.values():
-            wdg.filter(term)
-
-
 class SectionAdditionMenu(MenuWidget):
     newSectionSelected = pyqtSignal()
     topicSectionSelected = pyqtSignal()
@@ -1136,6 +961,28 @@ class SideBlockAdditionMenu(MenuWidget):
                               slot=lambda: self.newSideBlockSelected.emit(WorldBuildingEntityElementType.Variables)))
         self.addAction(action('Highlighted text', IconRegistry.from_name('mdi6.card-text'),
                               slot=lambda: self.newSideBlockSelected.emit(WorldBuildingEntityElementType.Highlight)))
+
+
+class WorldBuildingTopicSelectionDialog(TopicSelectionDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self._title.setText('Common worldbuilding topics')
+
+        self._addSection(ecology_topic, ecological_topics)
+        self._addSection(culture_topic, cultural_topics)
+        self._addSection(history_topic, historical_topics)
+        self._addSection(language_topic, linguistic_topics)
+        self._addSection(technology_topic, technological_topics)
+        self._addSection(economy_topic, economic_topics)
+        self._addSection(infrastructure_topic, infrastructural_topics)
+        self._addSection(religion_topic, religious_topics)
+        self._addSection(fantasy_topic, fantastic_topics)
+        self._addSection(villainy_topic, nefarious_topics)
+        self._addSection(environment_topic, environmental_topics)
+
+        self._wdgCenter.layout().addWidget(vspacer())
+        self.frame.layout().addWidget(group(self.btnCancel, self.btnSelect), alignment=Qt.AlignmentFlag.AlignRight)
 
 
 class WorldBuildingEntityEditor(QWidget):
@@ -1235,7 +1082,7 @@ class WorldBuildingEntityEditor(QWidget):
         self.repo.update_world(self._novel)
 
     def _selectNewTopic(self):
-        topics = TopicSelectionDialog.popup()
+        topics = WorldBuildingTopicSelectionDialog.popup()
         if topics:
             for topic in topics:
                 self._addNewSection(topic)
