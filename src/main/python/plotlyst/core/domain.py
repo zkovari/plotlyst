@@ -2028,6 +2028,35 @@ def default_stages() -> List[SceneStage]:
             SceneStage('Proofread'), SceneStage('Final')]
 
 
+class GraphicsItemType(Enum):
+    CHARACTER = 'character'
+    STICKER = 'sticker'
+    EVENT = 'event'
+    COMMENT = 'comment'
+    SETUP = 'setup'
+    NOTE = 'note'
+    IMAGE = 'image'
+    MAP_MARKER = 'map_marker'
+    ICON = 'icon'
+    MAP_AREA_SQUARE = 'map_area_square'
+    MAP_AREA_CIRCLE = 'map_area_circle'
+    MAP_AREA_CUSTOM = 'map_area_custom'
+
+    def mimeType(self) -> str:
+        return f'application/node-{self.value}'
+
+
+NODE_SUBTYPE_GOAL = 'goal'
+NODE_SUBTYPE_CONFLICT = 'conflict'
+NODE_SUBTYPE_DISTURBANCE = 'disturbance'
+NODE_SUBTYPE_BACKSTORY = 'backstory'
+NODE_SUBTYPE_INTERNAL_CONFLICT = 'internal_conflict'
+NODE_SUBTYPE_QUESTION = 'question'
+NODE_SUBTYPE_FORESHADOWING = 'foreshadowing'
+NODE_SUBTYPE_TOOL = 'tool'
+NODE_SUBTYPE_COST = 'cost'
+
+
 class VariableType(Enum):
     Text = 0
 
@@ -2051,7 +2080,7 @@ class Variable:
 
 
 class WorldBuildingEntityType(Enum):
-    ABSTRACT = 1
+    ARTICLE = 1
     SETTING = 2
     GROUP = 3
     ITEM = 4
@@ -2070,6 +2099,7 @@ class WorldBuildingEntityElementType(Enum):
     Section = 8
     Highlight = 9
     Main_Section = 10
+    Conceits = 11
 
 
 @dataclass
@@ -2107,7 +2137,7 @@ class WorldBuildingEntity:
     emoji: str = field(default='', metadata=config(exclude=exclude_if_empty))
     bg_color: str = field(default='', metadata=config(exclude=exclude_if_empty))
     summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
-    type: WorldBuildingEntityType = WorldBuildingEntityType.ABSTRACT
+    type: WorldBuildingEntityType = WorldBuildingEntityType.ARTICLE
     elements: List[WorldBuildingEntityElement] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     side_elements: List[WorldBuildingEntityElement] = field(default_factory=list,
                                                             metadata=config(exclude=exclude_if_empty))
@@ -2117,6 +2147,50 @@ class WorldBuildingEntity:
     @overrides
     def __eq__(self, other: 'WorldBuildingEntity'):
         if isinstance(other, WorldBuildingEntity):
+            return self.id == other.id
+        return False
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
+
+class WorldConceitType(Enum):
+    Geography = 'geography'
+    Biology = 'biology'
+    Magic = 'magic'
+    Metaphysics = 'metaphysics'
+    Technology = 'technology'
+    Culture = 'culture'
+
+    def icon(self) -> str:
+        if self == WorldConceitType.Geography:
+            return 'ph.globe-bold'
+        elif self == WorldConceitType.Biology:
+            return 'mdi.dna'
+        elif self == WorldConceitType.Magic:
+            return 'ei.magic'
+        elif self == WorldConceitType.Metaphysics:
+            return 'mdi.eye-circle-outline'
+        elif self == WorldConceitType.Technology:
+            return 'ei.cogs'
+        elif self == WorldConceitType.Culture:
+            return 'mdi.vector-circle'
+
+
+@dataclass
+class WorldConceit:
+    name: str
+    type: WorldConceitType
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    text: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    icon_color: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    children: List['WorldConceit'] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+
+    @overrides
+    def __eq__(self, other: 'WorldConceit'):
+        if isinstance(other, WorldConceit):
             return self.id == other.id
         return False
 
@@ -2149,16 +2223,26 @@ class GlossaryItem(SelectionItem):
 
 
 @dataclass
+class Point:
+    x: float
+    y: float
+
+
+@dataclass
 class WorldBuildingMarker:
     x: float
     y: float
+    type: GraphicsItemType = GraphicsItemType.MAP_MARKER
     name: str = ''
     description: str = ''
     color: str = '#ef233c'
     color_selected: str = '#A50C1E'
     icon: str = 'mdi.circle'
     size: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    height: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    width: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     ref: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
+    points: List[Point] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass
@@ -2263,6 +2347,7 @@ class WorldBuilding:
     root_entity: WorldBuildingEntity = field(default_factory=worldbuilding_root)
     glossary: Dict[str, GlossaryItem] = field(default_factory=dict)
     maps: List[WorldBuildingMap] = field(default_factory=default_maps)
+    conceits: List[WorldConceit] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass
@@ -3404,32 +3489,6 @@ def default_tags() -> Dict[TagType, List[Tag]]:
             tags[t] = []
 
     return tags
-
-
-class GraphicsItemType(Enum):
-    CHARACTER = 'character'
-    STICKER = 'sticker'
-    EVENT = 'event'
-    COMMENT = 'comment'
-    SETUP = 'setup'
-    NOTE = 'note'
-    IMAGE = 'image'
-    MAP_MARKER = 'map_marker'
-    ICON = 'icon'
-
-    def mimeType(self) -> str:
-        return f'application/node-{self.value}'
-
-
-NODE_SUBTYPE_GOAL = 'goal'
-NODE_SUBTYPE_CONFLICT = 'conflict'
-NODE_SUBTYPE_DISTURBANCE = 'disturbance'
-NODE_SUBTYPE_BACKSTORY = 'backstory'
-NODE_SUBTYPE_INTERNAL_CONFLICT = 'internal_conflict'
-NODE_SUBTYPE_QUESTION = 'question'
-NODE_SUBTYPE_FORESHADOWING = 'foreshadowing'
-NODE_SUBTYPE_TOOL = 'tool'
-NODE_SUBTYPE_COST = 'cost'
 
 
 @dataclass

@@ -65,8 +65,6 @@ class BaseGraphicsView(QGraphicsView):
             self.setDragMode(QGraphicsView.DragMode.NoDrag)
             self._moveOriginX = event.pos().x()
             self._moveOriginY = event.pos().y()
-        else:
-            self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
         super(BaseGraphicsView, self).mousePressEvent(event)
 
     @overrides

@@ -53,7 +53,7 @@ class EntityAdditionMenu(MenuWidget):
                               slot=self._entityTriggered,
                               tooltip='Write an article about any physical, human, or abstract entity in the world, e.g., kingdom, magic, religion, etc.'))
         self.addSeparator()
-        self.addAction(action('Link milieu', IconRegistry.world_building_icon(), slot=self._linkToMilieu,
+        self.addAction(action('Link milieu...', IconRegistry.world_building_icon(), slot=self._linkToMilieu,
                               tooltip="Link a milieu element"))
         self.addAction(
             action('Select topics...', IconRegistry.from_name('mdi.card-text-outline'), slot=self._linkToTopics,

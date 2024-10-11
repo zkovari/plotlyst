@@ -105,10 +105,11 @@ class AutoAdjustableTextEdit(EnhancedTextEdit):
 
 
 class AutoAdjustableLineEdit(QLineEdit):
-    def __init__(self, parent=None, defaultWidth: int = 200):
+    def __init__(self, parent=None, defaultWidth: int = 200, maxWidth: Optional[int] = None):
         super(AutoAdjustableLineEdit, self).__init__(parent)
         self._padding = 10
         self._defaultWidth = defaultWidth + self._padding
+        self._maxWidth = maxWidth
         self._resizedOnShow: bool = False
         self.setFixedWidth(self._defaultWidth)
         self.textChanged.connect(self._resizeToContent)
@@ -126,7 +127,9 @@ class AutoAdjustableLineEdit(QLineEdit):
         if text:
             text_width = self.fontMetrics().boundingRect(text).width()
             width = max(text_width + self._padding, self._defaultWidth)
-            self.setFixedWidth(width)
+            if self._maxWidth:
+                width = min(width, self._maxWidth)
+            self.setMaximumWidth(width)
         else:
             self.setFixedWidth(self._defaultWidth)
 
@@ -1313,18 +1316,54 @@ class LabelsEditor(QFrame):
         self.labelRemoved.emit(label)
 
 
+class DecoratedLineEdit(QWidget):
+    iconChanged = pyqtSignal(str, str)
+
+    def __init__(self, parent=None, maxWidth: Optional[int] = None, iconEditable: bool = False):
+        super().__init__(parent)
+        hbox(self, 0, 0)
+        self.icon = QToolButton()
+        transparent(self.icon)
+        if iconEditable:
+            pointy(self.icon)
+            self.icon.installEventFilter(OpacityEventFilter(self.icon, leaveOpacity=1.0, enterOpacity=0.7))
+            self.icon.clicked.connect(self._changeIcon)
+        self.lineEdit = AutoAdjustableLineEdit(defaultWidth=50, maxWidth=maxWidth)
+        transparent(self.lineEdit)
+
+        self.layout().addWidget(self.icon)
+        self.layout().addWidget(self.lineEdit)
+
+    def setIcon(self, icon: QIcon):
+        self.icon.setIcon(icon)
+
+    def setText(self, text: str):
+        self.lineEdit.setText(text)
+
+    def _changeIcon(self):
+        result = IconSelectorDialog.popup()
+        if result:
+            self.icon.setIcon(IconRegistry.from_name(result[0], result[1].name()))
+            self.iconChanged.emit(result[0], result[1].name())
+
+
 class TextEditBubbleWidget(QFrame):
     removed = pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, titleEditable: bool = False, titleMaxWidth: Optional[int] = None,
+                 iconEditable: bool = False):
         super().__init__(parent)
         self._removalEnabled: bool = False
 
         vbox(self)
-        self._title = QPushButton()
-        transparent(self._title)
-        bold(self._title)
-        self._title.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        if titleEditable:
+            self._title = DecoratedLineEdit(maxWidth=titleMaxWidth, iconEditable=iconEditable)
+            bold(self._title.lineEdit)
+        else:
+            self._title = QPushButton()
+            transparent(self._title)
+            bold(self._title)
+            self._title.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self._textedit = QTextEdit(self)
         self._textedit.setProperty('white-bg', True)

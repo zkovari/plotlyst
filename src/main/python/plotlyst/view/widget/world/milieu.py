@@ -76,7 +76,6 @@ class LocationNode(ItemBasedNode):
 
     @overrides
     def _iconChanged(self, iconName: str, iconColor: str):
-        print('icon changed')
         pass
         # self._novel.icon = iconName
         # self._novel.icon_color = iconColor
