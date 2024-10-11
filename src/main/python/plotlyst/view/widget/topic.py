@@ -23,7 +23,7 @@ from typing import Dict, List, Union
 from PyQt6.QtCore import Qt, QSize, pyqtSignal
 from PyQt6.QtWidgets import QWidget, QTextEdit, QGridLayout, QToolButton, QDialog
 from qthandy import vbox, bold, line, margins, spacer, grid, hbox, clear_layout, flow, pointy, incr_icon, \
-    incr_font, transparent
+    incr_font, transparent, vspacer, sp
 from qthandy.filter import VisibilityToggleEventFilter
 
 from plotlyst.common import RELAXED_WHITE_COLOR
@@ -222,8 +222,8 @@ class TopicGroupWidget(QWidget):
         hbox(self.wdgHeader)
         self.wdgHeader.layout().addWidget(self.btnHeader, alignment=Qt.AlignmentFlag.AlignLeft)
         self.wdgTopics = QWidget()
-
         vbox(self.wdgTopics)
+        sp(self.wdgTopics).v_max()
         self.btnHeader.toggled.connect(self.wdgTopics.setHidden)
 
         self.layout().addWidget(self.wdgHeader)
@@ -300,6 +300,7 @@ class TopicsEditor(QWidget):
     def __init__(self, parent=None):
         super(TopicsEditor, self).__init__(parent)
         self._gridLayout: QGridLayout = grid(self)
+        self._gridLayout.addWidget(vspacer(), 25, 0, 1, 1)
 
         self._topicGroups: Dict[TopicType, TopicGroupWidget] = {}
 
