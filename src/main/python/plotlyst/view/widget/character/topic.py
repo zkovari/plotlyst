@@ -24,7 +24,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QWidget
 from qthandy import vbox, vspacer
 
-from plotlyst.core.domain import Character, Topic, TemplateValue, TopicType
+from plotlyst.core.domain import Character, Topic, TemplateValue, TopicType, TopicElement, TopicElementBlock
 from plotlyst.view.common import push_btn, scrolled
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -315,9 +315,7 @@ class CharacterTopicsEditor(QWidget):
         for element in character.topics:
             topic = topic_ids.get(str(element.id))
             if topic:
-                topicType = TopicType(topic.type)
-                self._wdgTopics.addTopic(topic, topicType, element)
-                self._menu.updateTopic(topicType, False)
+                self._wdgTopics.addTopic(topic, element)
 
     def _addTopicGroup(self, topicType: TopicType):
         if self._character is None:
@@ -325,10 +323,10 @@ class CharacterTopicsEditor(QWidget):
         self._wdgTopics.addTopicGroup(topicType)
 
     def _topicGroupRemoved(self, topicType: TopicType):
-        self._menu.updateTopic(topicType, True)
+        pass
 
     def _topicAdded(self, topic: Topic, value: TemplateValue):
-        self._character.topics.append(value)
+        pass
 
     def _topicRemoved(self, topic: Topic, value: TemplateValue):
         self._character.topics.remove(value)
@@ -337,5 +335,6 @@ class CharacterTopicsEditor(QWidget):
         topics = CharacterTopicSelectionDialog.popup()
         if topics:
             for topic in topics:
-                print(topic.text)
-                # self._addNewSection(topic)
+                element = TopicElement(topic.id, blocks=[TopicElementBlock()])
+                self._character.topics.append(element)
+                self._wdgTopics.addTopic(topic, element)

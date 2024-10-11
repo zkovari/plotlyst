@@ -22,7 +22,7 @@ from typing import Dict, List, Union
 
 import qtanim
 from PyQt6.QtCore import Qt, QSize, pyqtSignal, QEvent
-from PyQt6.QtGui import QAction, QEnterEvent
+from PyQt6.QtGui import QEnterEvent
 from PyQt6.QtWidgets import QWidget, QTextEdit, QGridLayout, QToolButton, QDialog
 from overrides import overrides
 from qthandy import vbox, bold, line, margins, spacer, grid, hbox, italic, clear_layout, flow, pointy, incr_icon, \
@@ -241,13 +241,7 @@ class TopicGroupWidget(QWidget):
         self.btnEdit.installEventFilter(OpacityEventFilter(self.btnEdit))
         self.menuTopics = MenuWidget(self.btnEdit)
         self.menuTopics.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
-        self._topicActions: Dict[Topic, QAction] = {}
         self._topicWidgets: Dict[Topic, TopicWidget] = {}
-        # for topic in topics[self._type]:
-        #     action_ = action(topic.text, icon=IconRegistry.from_name(topic.icon), tooltip=topic.description,
-        #                      slot=partial(self._addNewTopic, topic))
-        #     self._topicActions[topic] = action_
-        #     self.menuTopics.addAction(action_)
 
         self.btnRemoval = RemovalButton()
         self.btnRemoval.clicked.connect(self.removed)
@@ -289,8 +283,6 @@ class TopicGroupWidget(QWidget):
         self._topicWidgets[topic] = wdg
         self.wdgTopics.layout().addWidget(wdg)
 
-        self._topicActions[topic].setDisabled(True)
-
         self.btnAddTopic.setHidden(True)
         self.btnRemoval.setHidden(True)
 
@@ -309,7 +301,6 @@ class TopicGroupWidget(QWidget):
 
     def _removeTopic(self, topic: Topic):
         wdg = self._topicWidgets.pop(topic)
-        self._topicActions[topic].setEnabled(True)
         self.topicRemoved.emit(topic, wdg.value())
         fade_out_and_gc(self.wdgTopics, wdg)
 
@@ -317,6 +308,7 @@ class TopicGroupWidget(QWidget):
 class TopicTextBlockWidget(QWidget):
     def __init__(self, topic: Topic, block: TopicElementBlock, parent=None):
         super().__init__(parent)
+        vbox(self)
         self._block: TopicElementBlock = block
         self.textEdit = AutoAdjustableTextEdit(height=60)
         self.textEdit.setProperty('transparent', True)
@@ -326,6 +318,8 @@ class TopicTextBlockWidget(QWidget):
         self.textEdit.setMarkdown(block.text)
 
         self.textEdit.textChanged.connect(self._textChanged)
+
+        self.layout().addWidget(self.textEdit)
 
     def _textChanged(self):
         self._block.text = self.textEdit.toMarkdown()
@@ -391,11 +385,11 @@ class TopicsEditor(QWidget):
 
         self._gridLayout.addWidget(wdg, topicType.value, 0)
 
-    def addTopic(self, topic: Topic, topicType: TopicType, element: TopicElement):
-        if topicType not in self._topicGroups:
-            self.addTopicGroup(topicType)
+    def addTopic(self, topic: Topic, element: TopicElement):
+        if topic.type not in self._topicGroups:
+            self.addTopicGroup(topic.type)
 
-        self._topicGroups[topicType].addTopic(topic, element)
+        self._topicGroups[topic.type].addTopic(topic, element)
 
     def clear(self):
         self._topicGroups.clear()
