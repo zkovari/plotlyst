@@ -57,7 +57,7 @@ from plotlyst.view.widget.world._topics import ecological_topics, cultural_topic
     linguistic_topics, technological_topics, economic_topics, infrastructural_topics, religious_topics, \
     fantastic_topics, nefarious_topics, environmental_topics, ecology_topic, culture_topic, history_topic, \
     language_topic, technology_topic, economy_topic, infrastructure_topic, religion_topic, fantasy_topic, \
-    villainy_topic, environment_topic
+    villainy_topic, environment_topic, magic_topics, magic_topic
 from plotlyst.view.widget.world.conceit import ConceitsTreeView, ConceitBubble
 from plotlyst.view.widget.world.glossary import GlossaryTextBlockHighlighter, GlossaryTextBlockData
 from plotlyst.view.widget.world.milieu import LocationsTreeView
@@ -978,6 +978,7 @@ class WorldBuildingTopicSelectionDialog(TopicSelectionDialog):
         self._addSection(infrastructure_topic, infrastructural_topics)
         self._addSection(religion_topic, religious_topics)
         self._addSection(fantasy_topic, fantastic_topics)
+        self._addSection(magic_topic, magic_topics)
         self._addSection(villainy_topic, nefarious_topics)
         self._addSection(environment_topic, environmental_topics)
 

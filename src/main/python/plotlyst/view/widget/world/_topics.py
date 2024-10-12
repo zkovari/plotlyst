@@ -2,17 +2,30 @@ import uuid
 
 from plotlyst.core.domain import Topic, TopicType
 
-ecology_topic = Topic('Ecology', TopicType.Worldbuilding, uuid.UUID('79d2cf6e-6c7f-4c21-bb3a-93c78f939cbb'), icon='fa5s.dna')
-culture_topic = Topic('Culture', TopicType.Worldbuilding, uuid.UUID('6db2e0ff-74c7-4fcb-ad68-6bc0154f6711'), icon='mdi.vector-circle')
-history_topic = Topic('History', TopicType.Worldbuilding, uuid.UUID('5420df8b-d988-429f-8ff1-689cd72d5bf7'), icon='mdi.bank')
-language_topic = Topic('Language', TopicType.Worldbuilding, uuid.UUID('127e506d-c6b1-4b58-aa99-d1760b8ebbcc'), icon='fa5s.language')
-technology_topic = Topic('Technology', TopicType.Worldbuilding, uuid.UUID('1bbf2d3a-02fc-4986-8dab-32f03171a54f'), icon='fa5s.lightbulb')
-economy_topic = Topic('Economy', TopicType.Worldbuilding, uuid.UUID('93e6efc2-05d7-4b01-89d4-043c9015f1aa'), icon='fa5s.coins')
-infrastructure_topic = Topic('Infrastructure', TopicType.Worldbuilding, uuid.UUID('6e64adfe-e189-418d-b920-c8e980653bed'), icon='fa5s.cogs')
-religion_topic = Topic('Religion', TopicType.Worldbuilding, uuid.UUID('26ed9fb3-f4d4-44f1-b8c6-8fbbe5ff35b4'), icon='fa5s.praying-hands')
-fantasy_topic = Topic('Fantasy', TopicType.Worldbuilding, uuid.UUID('9500c592-c838-4483-b4d2-9a70ef9c3e47'), icon='fa5s.magic')
-villainy_topic = Topic('Villainy', TopicType.Worldbuilding, uuid.UUID('928e4075-59a4-4745-9691-8d897f94abf1'), icon='mdi.emoticon-devil')
-environment_topic = Topic('Environment', TopicType.Worldbuilding, uuid.UUID('9704cb8c-b671-4bc6-ba8e-fa2a4469ce6f'), icon='mdi.nature')
+ecology_topic = Topic('Ecology', TopicType.Worldbuilding, uuid.UUID('79d2cf6e-6c7f-4c21-bb3a-93c78f939cbb'),
+                      icon='fa5s.dna')
+culture_topic = Topic('Culture', TopicType.Worldbuilding, uuid.UUID('6db2e0ff-74c7-4fcb-ad68-6bc0154f6711'),
+                      icon='mdi.vector-circle')
+history_topic = Topic('History', TopicType.Worldbuilding, uuid.UUID('5420df8b-d988-429f-8ff1-689cd72d5bf7'),
+                      icon='mdi.bank')
+language_topic = Topic('Language', TopicType.Worldbuilding, uuid.UUID('127e506d-c6b1-4b58-aa99-d1760b8ebbcc'),
+                       icon='fa5s.language')
+technology_topic = Topic('Technology', TopicType.Worldbuilding, uuid.UUID('1bbf2d3a-02fc-4986-8dab-32f03171a54f'),
+                         icon='fa5s.lightbulb')
+economy_topic = Topic('Economy', TopicType.Worldbuilding, uuid.UUID('93e6efc2-05d7-4b01-89d4-043c9015f1aa'),
+                      icon='fa5s.coins')
+infrastructure_topic = Topic('Infrastructure', TopicType.Worldbuilding,
+                             uuid.UUID('6e64adfe-e189-418d-b920-c8e980653bed'), icon='fa5s.cogs')
+religion_topic = Topic('Religion', TopicType.Worldbuilding, uuid.UUID('26ed9fb3-f4d4-44f1-b8c6-8fbbe5ff35b4'),
+                       icon='fa5s.praying-hands')
+fantasy_topic = Topic('Fantasy', TopicType.Worldbuilding, uuid.UUID('9500c592-c838-4483-b4d2-9a70ef9c3e47'),
+                      icon='fa5s.magic')
+magic_topic = Topic('Magic', TopicType.Worldbuilding, uuid.UUID('562efc59-4fdf-4ebb-ab64-b25555658402'),
+                    icon='fa5s.magic')
+villainy_topic = Topic('Villainy', TopicType.Worldbuilding, uuid.UUID('928e4075-59a4-4745-9691-8d897f94abf1'),
+                       icon='mdi.emoticon-devil')
+environment_topic = Topic('Environment', TopicType.Worldbuilding, uuid.UUID('9704cb8c-b671-4bc6-ba8e-fa2a4469ce6f'),
+                          icon='mdi.nature')
 
 ecological_topics = [
     Topic('Races', TopicType.Worldbuilding, uuid.UUID('882e3c1c-acf1-4590-a6d9-3875ab65fb89'), icon='ei.person'),
@@ -101,7 +114,7 @@ religious_topics = [
           icon='mdi6.crystal-ball')
 ]
 fantastic_topics = [
-    Topic('Magic', TopicType.Worldbuilding, uuid.UUID('562efc59-4fdf-4ebb-ab64-b25555658402'), icon='fa5s.magic'),
+    magic_topic,
     Topic('Constructs', TopicType.Worldbuilding, uuid.UUID('e6303c7c-0ba7-4ea8-9c45-b37d9dba8469'), icon='mdi.robot'),
     Topic('Paranormal', TopicType.Worldbuilding, uuid.UUID('23604779-52e0-43c7-96b9-bbd08cde8ade'), icon='mdi6.ghost'),
     Topic('Aliens', TopicType.Worldbuilding, uuid.UUID('8d25f651-dd2e-4d34-814e-09b5c91cd26b'), icon='mdi.alien'),
@@ -109,6 +122,26 @@ fantastic_topics = [
           icon='fa5s.dragon'),
     Topic('Legendary items', TopicType.Worldbuilding, uuid.UUID('afa517d6-d964-4514-b4b1-7673f7b5c969'),
           icon='mdi6.axe-battle')
+]
+magic_topics = [
+    Topic('Rules', TopicType.Worldbuilding, uuid.UUID('a4b6941f-5cde-4fa5-b912-b0284a6bbd53'),
+          icon='mdi6.list-box-outline'),
+    Topic('Costs', TopicType.Worldbuilding, uuid.UUID('7e61fd66-4831-4895-8685-f3608479dd7d'), icon='fa5s.coins'),
+    Topic('Limitations', TopicType.Worldbuilding, uuid.UUID('24c5434d-e6ab-43a2-9e29-bdcff3e8d16b'),
+          icon='fa5s.hourglass-half'),
+    Topic('Weaknesses', TopicType.Worldbuilding, uuid.UUID('9eecc59c-e6ba-4978-9377-1f4085ce267d'), icon='msc.warning'),
+    Topic('Powers', TopicType.Worldbuilding, uuid.UUID('3c362cfd-c8d3-4142-91b0-cff5f7084f79'),
+          icon='fa5b.superpowers'),
+    Topic('Scaling', TopicType.Worldbuilding, uuid.UUID('c776c7a8-6e02-4ab2-a611-7de7125e4a5f'),
+          icon='mdi6.thermostat'),
+    Topic('Source', TopicType.Worldbuilding, uuid.UUID('74f8fbe4-f89e-4e5f-8241-28b391ae4b57'),
+          icon='mdi.source-commit-start-next-local'),
+    Topic('Reverberation', TopicType.Worldbuilding, uuid.UUID('b9247d02-a4a7-4c20-878e-7ef0738ae493'),
+          icon='mdi.access-point'),
+    Topic('Acquisition', TopicType.Worldbuilding, uuid.UUID('97317f5f-2101-4cd0-a282-4ecb1aaf0541'), icon='mdi.school'),
+    Topic('Aspects', TopicType.Worldbuilding, uuid.UUID('fcf88f33-27e0-4849-b6f0-014ca0140dd0'), icon='mdi.cog-box'),
+    Topic('Accessibility', TopicType.Worldbuilding, uuid.UUID('6820b4df-f7af-451e-8492-fa3902ce2ab5'),
+          icon='ei.universal-access')
 ]
 nefarious_topics = [
     Topic('Outlaws', TopicType.Worldbuilding, uuid.UUID('f6768a15-6b68-474b-a6db-982ffbb5b6f0'), icon='mdi.robber'),
