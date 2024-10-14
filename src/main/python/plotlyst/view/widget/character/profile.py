@@ -385,6 +385,10 @@ class ProfileSectionWidget(ProfileFieldWidget):
                 insert_before_the_end(self.wdgContainer, widget)
             else:
                 self.wdgContainer.layout().addWidget(widget)
+        if isinstance(widget, MultiAttributesTemplateWidgetBase):
+            widget.removed.connect(partial(self._removePrimaryField, widget, widget.ref))
+            widget.renamed.connect(partial(self._renamePrimaryField, widget))
+
         # self.progressStatuses[widget] = False
         # widget.valueFilled.connect(partial(self._valueFilled, widget))
         # widget.valueReset.connect(partial(self._valueReset, widget))
@@ -433,8 +437,6 @@ class ProfileSectionWidget(ProfileFieldWidget):
         self.section.fields.append(field)
 
         fieldWdg = field_widget(field, self.character)
-        fieldWdg.removed.connect(partial(self._removePrimaryField, fieldWdg, field))
-        fieldWdg.renamed.connect(partial(self._renamePrimaryField, fieldWdg))
         self.attachWidget(fieldWdg)
 
     def _removePrimaryField(self, wdg: 'MultiAttributesTemplateWidgetBase', fieldRef: CharacterProfileFieldReference):
