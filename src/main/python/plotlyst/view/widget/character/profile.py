@@ -172,7 +172,7 @@ def character_primary_attribute_type(field: TemplateField) -> MultiAttributePrim
     elif field is psychological_need_field:
         return MultiAttributePrimaryType.Psychological_need
     elif field is interpersonal_need_field:
-        return MultiAttributePrimaryType.Moral_need
+        return MultiAttributePrimaryType.Interpersonal_need
 
 
 def character_primary_field(type_: MultiAttributePrimaryType) -> TemplateField:
@@ -199,7 +199,7 @@ def character_primary_field(type_: MultiAttributePrimaryType) -> TemplateField:
         return void_field
     elif type_ == MultiAttributePrimaryType.Psychological_need:
         return psychological_need_field
-    elif type_ == MultiAttributePrimaryType.Moral_need:
+    elif type_ == MultiAttributePrimaryType.Interpersonal_need:
         return interpersonal_need_field
 
 
@@ -438,7 +438,6 @@ class ProfileSectionWidget(ProfileFieldWidget):
         self.attachWidget(fieldWdg)
 
     def _removePrimaryField(self, wdg: 'MultiAttributesTemplateWidgetBase', fieldRef: CharacterProfileFieldReference):
-        print(f'remove {fieldRef}')
         self.section.fields.remove(fieldRef)
         self.context.primaryAttributes(self.character).append(wdg.attribute)
         self.children.remove(wdg)
