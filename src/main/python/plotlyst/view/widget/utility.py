@@ -27,7 +27,7 @@ from qthandy import flow, transparent, pointy, grid, vline
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.model.common import proxy
-from plotlyst.view.common import ButtonPressResizeEventFilter, tool_btn
+from plotlyst.view.common import ButtonPressResizeEventFilter, tool_btn, push_btn
 from plotlyst.view.generated.icon_selector_widget_ui import Ui_IconsSelectorWidget
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget._icons import icons_registry
@@ -247,8 +247,12 @@ class IconSelectorDialog(PopupDialog):
         self.selector.setColor(color)
         self.selector.iconSelected.connect(self._icon_selected)
 
+        self.btnClose = push_btn(text='Close', properties=['confirm', 'cancel'])
+        self.btnClose.clicked.connect(self.reject)
+
         self.frame.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
         self.frame.layout().addWidget(self.selector)
+        self.frame.layout().addWidget(self.btnClose, alignment=Qt.AlignmentFlag.AlignRight)
 
     def display(self) -> Optional[Tuple[str, QColor]]:
         result = self.exec()
