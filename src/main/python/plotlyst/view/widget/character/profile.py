@@ -47,7 +47,7 @@ from plotlyst.core.template import TemplateField, iq_field, eq_field, rationalis
     baggage_defense_mechanism_field, wound_field, demon_field, baggage_trigger_field, fear_field, misbelief_field, \
     flaw_triggers_field, flaw_coping_field, flaw_manifestation_field, flaw_relation_field, flaw_goals_field, \
     flaw_growth_field, flaw_deterioration_field, enneagram_choices, SelectionItem, mbti_choices, love_style_choices, \
-    work_style_choices
+    work_style_choices, void_field, psychological_need_field, interpersonal_need_field
 from plotlyst.env import app_env
 from plotlyst.view.common import tool_btn, wrap, emoji_font, action, insert_before_the_end, push_btn, label, \
     fade_out_and_gc, shadow, fade_in
@@ -167,6 +167,12 @@ def character_primary_attribute_type(field: TemplateField) -> MultiAttributePrim
         return MultiAttributePrimaryType.Misbelief
     elif field is flaw_placeholder_field:
         return MultiAttributePrimaryType.Flaw
+    elif field is void_field:
+        return MultiAttributePrimaryType.Void
+    elif field is psychological_need_field:
+        return MultiAttributePrimaryType.Psychological_need
+    elif field is interpersonal_need_field:
+        return MultiAttributePrimaryType.Interpersonal_need
 
 
 def character_primary_field(type_: MultiAttributePrimaryType) -> TemplateField:
@@ -188,6 +194,13 @@ def character_primary_field(type_: MultiAttributePrimaryType) -> TemplateField:
 
     elif type_ == MultiAttributePrimaryType.Flaw:
         return flaw_placeholder_field
+
+    elif type_ == MultiAttributePrimaryType.Void:
+        return void_field
+    elif type_ == MultiAttributePrimaryType.Psychological_need:
+        return psychological_need_field
+    elif type_ == MultiAttributePrimaryType.Interpersonal_need:
+        return interpersonal_need_field
 
 
 def character_secondary_attribute_type(field: TemplateField) -> MultiAttributeSecondaryType:
@@ -1037,6 +1050,24 @@ class GmcSectionContext(MultiAttributeSectionContext):
         return CharacterProfileFieldType.Field_Goals
 
 
+class LackSectionContext(MultiAttributeSectionContext):
+    @overrides
+    def primaryButtonText(self) -> str:
+        return 'Add new lack'
+
+    @overrides
+    def primaryFields(self) -> List[TemplateField]:
+        return [void_field, psychological_need_field, interpersonal_need_field]
+
+    @overrides
+    def primaryAttributes(self, character: Character) -> List[CharacterMultiAttribute]:
+        return character.lack
+
+    @overrides
+    def primaryFieldType(self) -> CharacterProfileFieldType:
+        return CharacterProfileFieldType.Field_Lacks
+
+
 class BaggageSectionContext(MultiAttributeSectionContext):
 
     @overrides
@@ -1102,6 +1133,13 @@ class GmcFieldWidget(MultiAttributesTemplateWidgetBase):
                     internal_stakes_field]
         else:
             return [methods_field, internal_motivation_field, internal_conflict_field, internal_stakes_field]
+
+
+class LackFieldWidget(MultiAttributesTemplateWidgetBase):
+    def __init__(self, attribute: CharacterMultiAttribute, character: Character,
+                 ref: CharacterProfileFieldReference, parent=None):
+        super().__init__(attribute, character, parent=parent)
+        self.ref = ref
 
 
 class BaggageFieldWidget(MultiAttributesTemplateWidgetBase):
@@ -1643,6 +1681,13 @@ def field_widget(ref: CharacterProfileFieldReference, character: Character) -> P
                 attribute = gmc
                 break
         return GmcFieldWidget(attribute, character, ref)
+    elif ref.type == CharacterProfileFieldType.Field_Lacks:
+        attribute = None
+        for lack in character.lack:
+            if lack.id == ref.ref:
+                attribute = lack
+                break
+        return LackFieldWidget(attribute, character, ref)
     elif ref.type == CharacterProfileFieldType.Field_Baggage:
         attribute = None
         for baggage in character.baggage:
@@ -1776,6 +1821,8 @@ class CharacterProfileEditor(QWidget):
         for section in self._character.profile:
             if section.type == CharacterProfileSectionType.Goals:
                 sc = GmcSectionContext()
+            elif section.type == CharacterProfileSectionType.Lack:
+                sc = LackSectionContext()
             elif section.type == CharacterProfileSectionType.Baggage:
                 sc = BaggageSectionContext()
             elif section.type == CharacterProfileSectionType.Flaws:

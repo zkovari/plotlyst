@@ -145,6 +145,7 @@ class CharacterInfo:
     traits: List[str] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     values: List[str] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     gmc: List[CharacterMultiAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    lack: List[CharacterMultiAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     baggage: List[CharacterMultiAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     flaws: List[CharacterMultiAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     strengths: List[StrengthWeaknessAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
@@ -515,6 +516,7 @@ class JsonClient:
                                       traits=info.traits,
                                       values=info.values,
                                       gmc=info.gmc,
+                                      lack=info.lack,
                                       baggage=info.baggage,
                                       flaws=info.flaws,
                                       strengths=info.strengths,
@@ -698,6 +700,7 @@ class JsonClient:
                                   traits=char.traits,
                                   values=char.values,
                                   gmc=char.gmc,
+                                  lack=char.lack,
                                   baggage=char.baggage,
                                   flaws=char.flaws,
                                   strengths=char.strengths,

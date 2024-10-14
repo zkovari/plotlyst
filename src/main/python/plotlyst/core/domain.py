@@ -406,6 +406,7 @@ class CharacterProfileSectionType(Enum):
     Strengths = 'strengths and weaknesses'
     Baggage = 'baggage'
     Goals = 'goals'
+    Lack = 'lack'
 
     # def description(self) -> str:
     #     if self == CharacterProfileSectionType.Summary:
@@ -444,6 +445,7 @@ class CharacterProfileFieldType(Enum):
     Field_Flaws = 'flaws'
     Field_Baggage = 'baggage'
     Field_Goals = 'goals'
+    Field_Lacks = 'lacks'
 
 
 @dataclass
@@ -485,7 +487,8 @@ def default_character_profile() -> List[CharacterProfileSectionReference]:
             CharacterProfileFieldReference(CharacterProfileFieldType.Field_Strengths)
         ]),
         CharacterProfileSectionReference(CharacterProfileSectionType.Baggage),
-        CharacterProfileSectionReference(CharacterProfileSectionType.Goals)
+        CharacterProfileSectionReference(CharacterProfileSectionType.Goals),
+        CharacterProfileSectionReference(CharacterProfileSectionType.Lack)
     ]
 
 
@@ -498,6 +501,9 @@ class MultiAttributePrimaryType(Enum):
     Fear = 'fear'
     Misbelief = 'misbelief'
     Flaw = 'flaw'
+    Void = 'void'
+    Psychological_need = 'psychological_need'
+    Interpersonal_need = 'interpersonal_need'
 
 
 class MultiAttributeSecondaryType(Enum):
@@ -614,6 +620,7 @@ class Character:
     traits: List[str] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     values: List[str] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     gmc: List[CharacterMultiAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    lack: List[CharacterMultiAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     baggage: List[CharacterMultiAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     flaws: List[CharacterMultiAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     strengths: List[StrengthWeaknessAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
