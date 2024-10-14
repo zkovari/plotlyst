@@ -47,7 +47,7 @@ from plotlyst.core.template import TemplateField, iq_field, eq_field, rationalis
     baggage_defense_mechanism_field, wound_field, demon_field, baggage_trigger_field, fear_field, misbelief_field, \
     flaw_triggers_field, flaw_coping_field, flaw_manifestation_field, flaw_relation_field, flaw_goals_field, \
     flaw_growth_field, flaw_deterioration_field, enneagram_choices, SelectionItem, mbti_choices, love_style_choices, \
-    work_style_choices, need_field
+    work_style_choices, void_field, psychological_need_field, moral_need_field
 from plotlyst.env import app_env
 from plotlyst.view.common import tool_btn, wrap, emoji_font, action, insert_before_the_end, push_btn, label, \
     fade_out_and_gc, shadow, fade_in
@@ -167,6 +167,12 @@ def character_primary_attribute_type(field: TemplateField) -> MultiAttributePrim
         return MultiAttributePrimaryType.Misbelief
     elif field is flaw_placeholder_field:
         return MultiAttributePrimaryType.Flaw
+    elif field is void_field:
+        return MultiAttributePrimaryType.Void
+    elif field is psychological_need_field:
+        return MultiAttributePrimaryType.Psychological_need
+    elif field is moral_need_field:
+        return MultiAttributePrimaryType.Moral_need
 
 
 def character_primary_field(type_: MultiAttributePrimaryType) -> TemplateField:
@@ -188,6 +194,13 @@ def character_primary_field(type_: MultiAttributePrimaryType) -> TemplateField:
 
     elif type_ == MultiAttributePrimaryType.Flaw:
         return flaw_placeholder_field
+
+    elif type_ == MultiAttributePrimaryType.Void:
+        return void_field
+    elif type_ == MultiAttributePrimaryType.Psychological_need:
+        return psychological_need_field
+    elif type_ == MultiAttributePrimaryType.Moral_need:
+        return moral_need_field
 
 
 def character_secondary_attribute_type(field: TemplateField) -> MultiAttributeSecondaryType:
@@ -425,6 +438,7 @@ class ProfileSectionWidget(ProfileFieldWidget):
         self.attachWidget(fieldWdg)
 
     def _removePrimaryField(self, wdg: 'MultiAttributesTemplateWidgetBase', fieldRef: CharacterProfileFieldReference):
+        print(f'remove {fieldRef}')
         self.section.fields.remove(fieldRef)
         self.context.primaryAttributes(self.character).append(wdg.attribute)
         self.children.remove(wdg)
@@ -1044,7 +1058,7 @@ class LackSectionContext(MultiAttributeSectionContext):
 
     @overrides
     def primaryFields(self) -> List[TemplateField]:
-        return [need_field]
+        return [void_field, psychological_need_field, moral_need_field]
 
     @overrides
     def primaryAttributes(self, character: Character) -> List[CharacterMultiAttribute]:

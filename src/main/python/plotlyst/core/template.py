@@ -409,15 +409,21 @@ internal_stakes_field = TemplateField('Internal stakes', type=TemplateFieldType.
 methods_field = TemplateField('Methods', type=TemplateFieldType.SMALL_TEXT, emoji=':hammer_and_pick:',
                               placeholder="How does the character try to achieve their goals?",
                               id=uuid.UUID('40d50e34-8dbf-4491-8fa9-854f060be5ef'), has_notes=True)
-need_field = TemplateField('Need', type=TemplateFieldType.SMALL_TEXT, emoji=':old_key:',
-                           placeholder='What does the character actually need?',
-                           id=uuid.UUID('2adb45eb-5a6f-4958-82f1-f4ae65124322'), icon='ri.key-fill')
 weaknesses_field = TemplateField('Weakness', type=TemplateFieldType.SMALL_TEXT, emoji=':nauseated_face:',
                                  placeholder="What are the character's weaknesses in the story?",
                                  id=uuid.UUID('f2aa5655-88b2-41ae-a630-c7e56795a858'))
 strength_field = TemplateField('Strength', type=TemplateFieldType.SMALL_TEXT, emoji=':smiling_face_with_sunglasses:',
                                placeholder="What are the character's strengths in the story?",
                                id=uuid.UUID('4bc4269d-9ce7-47cf-aa65-23e7f8b1a250'))
+void_field = TemplateField('Void', type=TemplateFieldType.SMALL_TEXT, emoji=':old_key:',
+                           placeholder='',
+                           id=uuid.UUID('de65f5b9-06fd-481e-a75a-f8dc2990717c'), icon='fa5s.circle')
+psychological_need_field = TemplateField('Psychological need', type=TemplateFieldType.SMALL_TEXT, emoji=':old_key:',
+                                         placeholder='?',
+                                         id=uuid.UUID('2adb45eb-5a6f-4958-82f1-f4ae65124322'), icon='ri.key-fill')
+moral_need_field = TemplateField('Moral need', type=TemplateFieldType.SMALL_TEXT, emoji=':old_key:',
+                                 placeholder='',
+                                 id=uuid.UUID('a9b9b418-a4ab-479e-a0f4-155c663575f2'), icon='fa5s.balance-scale-left')
 
 values_field = TemplateField('Values', type=TemplateFieldType.LABELS, emoji=':smiling_face_with_open_hands:',
                              id=uuid.UUID('47e2e30e-1708-414b-be79-3413063a798d'))

@@ -501,6 +501,9 @@ class MultiAttributePrimaryType(Enum):
     Fear = 'fear'
     Misbelief = 'misbelief'
     Flaw = 'flaw'
+    Void = 'void'
+    Psychological_need = 'psychological_need'
+    Moral_need = 'moral_need'
 
 
 class MultiAttributeSecondaryType(Enum):
