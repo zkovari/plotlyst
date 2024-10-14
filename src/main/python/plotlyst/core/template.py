@@ -376,7 +376,6 @@ summary_field = TemplateField('Summary', type=TemplateFieldType.SMALL_TEXT,
 desire_field = TemplateField('Desire', type=TemplateFieldType.SMALL_TEXT, emoji=':star-struck:',
                              placeholder='What does the character want?',
                              id=uuid.UUID('eb6626ea-4d07-4b8a-80f0-d92d2fe7f1c3'))
-gmc_field = TemplateField('GMC', type=TemplateFieldType.COMPLEX, id=uuid.UUID('a8ac1eb0-dc18-4bd6-8ff4-47864d0dc431'))
 
 goal_field = TemplateField('External goal', type=TemplateFieldType.SMALL_TEXT, emoji=':bullseye:',
                            description="Tangible objectives pursued by the character",
@@ -412,7 +411,7 @@ methods_field = TemplateField('Methods', type=TemplateFieldType.SMALL_TEXT, emoj
                               id=uuid.UUID('40d50e34-8dbf-4491-8fa9-854f060be5ef'), has_notes=True)
 need_field = TemplateField('Need', type=TemplateFieldType.SMALL_TEXT, emoji=':old_key:',
                            placeholder='What does the character actually need?',
-                           id=uuid.UUID('2adb45eb-5a6f-4958-82f1-f4ae65124322'))
+                           id=uuid.UUID('2adb45eb-5a6f-4958-82f1-f4ae65124322'), icon='ri.key-fill')
 weaknesses_field = TemplateField('Weakness', type=TemplateFieldType.SMALL_TEXT, emoji=':nauseated_face:',
                                  placeholder="What are the character's weaknesses in the story?",
                                  id=uuid.UUID('f2aa5655-88b2-41ae-a630-c7e56795a858'))

@@ -706,6 +706,9 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
             elif section.type == CharacterProfileSectionType.Goals:
                 progress.setMaxValue(0)
                 handleMultiAttribute(character.gmc)
+            elif section.type == CharacterProfileSectionType.Lack:
+                progress.setMaxValue(0)
+                handleMultiAttribute(character.lack)
             elif section.type == CharacterProfileSectionType.Flaws:
                 progress.setMaxValue(0)
                 handleMultiAttribute(character.flaws)
