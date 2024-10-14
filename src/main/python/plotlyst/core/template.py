@@ -415,15 +415,19 @@ weaknesses_field = TemplateField('Weakness', type=TemplateFieldType.SMALL_TEXT, 
 strength_field = TemplateField('Strength', type=TemplateFieldType.SMALL_TEXT, emoji=':smiling_face_with_sunglasses:',
                                placeholder="What are the character's strengths in the story?",
                                id=uuid.UUID('4bc4269d-9ce7-47cf-aa65-23e7f8b1a250'))
-void_field = TemplateField('Void', type=TemplateFieldType.SMALL_TEXT, emoji=':old_key:',
-                           placeholder='',
+void_field = TemplateField('Void', type=TemplateFieldType.SMALL_TEXT, emoji=':new_moon:',
+                           description="An emptiness or absence the character feels in their life that drives their actions",
+                           placeholder='What deep emptiness or absence does the character feel in their life?',
                            id=uuid.UUID('de65f5b9-06fd-481e-a75a-f8dc2990717c'), icon='fa5s.circle')
 psychological_need_field = TemplateField('Psychological need', type=TemplateFieldType.SMALL_TEXT, emoji=':old_key:',
-                                         placeholder='?',
+                                         description="An often subconscious internal struggle the character must overcome to achieve personal growth",
+                                         placeholder='What personal flaw must the character overcome to achieve emotional or psychological growth?',
                                          id=uuid.UUID('2adb45eb-5a6f-4958-82f1-f4ae65124322'), icon='ri.key-fill')
-moral_need_field = TemplateField('Moral need', type=TemplateFieldType.SMALL_TEXT, emoji=':old_key:',
-                                 placeholder='',
-                                 id=uuid.UUID('a9b9b418-a4ab-479e-a0f4-155c663575f2'), icon='fa5s.balance-scale-left')
+interpersonal_need_field = TemplateField('Interpersonal need', type=TemplateFieldType.SMALL_TEXT, emoji=':handshake:',
+                                         description="The character's growth in how they relate to others and improve their relationships",
+                                         placeholder='What changes must the character make build healthier connections with others?',
+                                         id=uuid.UUID('a9b9b418-a4ab-479e-a0f4-155c663575f2'),
+                                         icon='fa5s.handshake')
 
 values_field = TemplateField('Values', type=TemplateFieldType.LABELS, emoji=':smiling_face_with_open_hands:',
                              id=uuid.UUID('47e2e30e-1708-414b-be79-3413063a798d'))
