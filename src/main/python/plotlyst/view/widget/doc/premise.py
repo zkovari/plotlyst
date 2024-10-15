@@ -375,6 +375,8 @@ class PremiseArchiveTableModel(QAbstractTableModel):
             return self.premise.saved_premises[index.row()].premise
         elif role == self.PremiseRole:
             return self.premise.saved_premises[index.row()]
+        elif role == Qt.ItemDataRole.FontRole:
+            return QApplication.font()
 
 
 class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
