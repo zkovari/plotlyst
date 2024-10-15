@@ -148,7 +148,7 @@ class CharacterEditor(QObject, EventListener):
         set_tab_visible(self.ui.tabAttributes, self.ui.tabGoals, False)
 
         self.ui.wdgAvatar.btnAvatar.setToolTip('Character avatar. Click to add an image')
-        self.ui.wdgAvatar.avatarUpdated.connect(self.ui.wdgBackstory.refreshCharacter)
+        self.ui.wdgAvatar.avatarUpdated.connect(self._avatar_updated)
         self.ui.wdgAvatar.setFixedSize(180, 180)
 
         self.ui.splitter.setSizes([400, 400])
@@ -365,6 +365,11 @@ class CharacterEditor(QObject, EventListener):
             anim.finished.connect(partial(translucent, btn, 0.4))
 
         self.ui.btnMoreGender.setText('«' if toggled else '»')
+
+    def _avatar_updated(self):
+        self.ui.wdgBackstory.refreshCharacter()
+        if self.character.prefs.avatar.use_role and self.character.role is None:
+            qtanim.shake(self.ui.btnRole)
 
     def _save(self):
         if self.character.role and self.character.role.text == protagonist_role.text:
