@@ -1024,6 +1024,10 @@ class IconItem(CircleShapedNodeItem):
         super().paint(painter, option, widget)
         self._icon.paint(painter, self.Margin, self.Margin, self._size, self._size)
 
+    @overrides
+    def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        self.networkScene().editItemEvent(self)
+
 
 class EventItem(NodeItem):
     Margin: int = 15

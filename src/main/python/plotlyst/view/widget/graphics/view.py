@@ -44,6 +44,7 @@ from plotlyst.view.widget.graphics.editor import ZoomBar, ConnectorToolbar, Text
     NoteToolbar, IconItemToolbar, TextNoteEditorPopup
 from plotlyst.view.widget.graphics.items import NodeItem, EventItem, NoteItem, IconItem
 from plotlyst.view.widget.graphics.scene import NetworkScene
+from plotlyst.view.widget.utility import IconSelectorDialog
 
 
 class BaseGraphicsView(QGraphicsView):
@@ -278,6 +279,8 @@ class NetworkGraphicsView(BaseGraphicsView):
             self._editEventItem(item)
         elif isinstance(item, NoteItem):
             self._editNoteItem(item)
+        elif isinstance(item, IconItem):
+            self._editIconItem(item)
 
     def _showItemToolbar(self, item: NodeItem):
         if isinstance(item, ConnectorItem):
@@ -322,6 +325,12 @@ class NetworkGraphicsView(BaseGraphicsView):
         view_pos = self.mapFromScene(item.textSceneRect().topLeft())
 
         popup.exec(self.mapToGlobal(view_pos), animated=False)
+
+    def _editIconItem(self, item: IconItem):
+        result = IconSelectorDialog.popup(pickColor=False)
+        if result:
+            command = GraphicsItemCommand(item, item.setIcon, item.icon(), result[0])
+            self.undoStack.push(command)
 
     def _showConnectorToolbar(self, item: ConnectorItem):
         if self._connectorEditor:
