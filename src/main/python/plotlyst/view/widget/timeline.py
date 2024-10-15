@@ -47,6 +47,7 @@ class TimelineTheme:
 
 
 class BackstoryCard(QWidget):
+    TYPE_SIZE: int = 36
     edited = pyqtSignal()
     deleteRequested = pyqtSignal(object)
     relationChanged = pyqtSignal()
@@ -57,12 +58,12 @@ class BackstoryCard(QWidget):
         self._theme = theme
 
         vbox(self)
-        margins(self, top=18)
+        margins(self, top=self.TYPE_SIZE // 2)
 
         self.cardFrame = frame()
         self.cardFrame.setObjectName('cardFrame')
         vbox(self.cardFrame, spacing=5)
-        margins(self.cardFrame, left=5)
+        margins(self.cardFrame, left=5, bottom=15)
 
         self.btnType = tool_btn(QIcon(), parent=self)
         self.btnType.setIconSize(QSize(24, 24))
@@ -88,6 +89,7 @@ class BackstoryCard(QWidget):
 
         wdgTop = QWidget()
         hbox(wdgTop, 0, 0)
+        margins(wdgTop, top=5)
         wdgTop.layout().addWidget(self.lineKeyPhrase)
         wdgTop.layout().addWidget(self.btnRemove, alignment=Qt.AlignmentFlag.AlignTop)
         self.cardFrame.layout().addWidget(wdgTop)
@@ -103,7 +105,7 @@ class BackstoryCard(QWidget):
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
-        self.btnType.setGeometry(self.width() // 2 - 18, 2, 36, 36)
+        self.btnType.setGeometry(self.width() // 2 - self.TYPE_SIZE // 2, 2, self.TYPE_SIZE, self.TYPE_SIZE)
 
     def refresh(self):
         self._refreshStyle()
