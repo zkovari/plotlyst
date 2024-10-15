@@ -154,7 +154,8 @@ class ConflictsReportPage(ReportPage):
 class ArcReportPage(ReportPage):
     def __init__(self, novel: Novel, parent=None):
         super(ArcReportPage, self).__init__(novel, parent)
-        self._dispatcher.register(self, StorylineCreatedEvent, StorylineRemovedEvent, CharacterChangedEvent)
+        self._dispatcher.register(self, StorylineCreatedEvent, StorylineRemovedEvent, SceneChangedEvent,
+                                  SceneDeletedEvent, CharacterChangedEvent)
 
     @overrides
     def _initReport(self):
