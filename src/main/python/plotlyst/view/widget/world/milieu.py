@@ -251,7 +251,6 @@ class LocationAttributeTextEdit(DecoratedTextEdit):
         desc = attrType.description()
         self.setPlaceholderText(desc)
         self.setMaximumWidth(600)
-        self.setToolTip(desc)
         self.setEmoji(attrType.emoji(), desc)
 
         if self._nightMode:
@@ -356,7 +355,6 @@ class LocationEditor(QWidget):
         self.textSummary.setProperty('white-bg', True)
         self.textSummary.setPlaceholderText('Summarize this location')
         self.textSummary.setMaximumSize(450, 85)
-        self.textSummary.setToolTip('Summary')
         self.textSummary.setEmoji(':scroll:', 'Summary')
         self.textSummary.textChanged.connect(self._summaryChanged)
 
