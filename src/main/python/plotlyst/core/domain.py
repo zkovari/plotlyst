@@ -1740,9 +1740,9 @@ emotion_story_scene_purpose = ScenePurpose(ScenePurposeType.Emotion, 'Resonance'
                                                      'evocative imagery', 'ambience',
                                                      'thematic resonance'])
 setup_story_scene_purpose = ScenePurpose(ScenePurposeType.Setup, 'Setup',
-                                         keywords=['plant', 'foreshadowing', 'setup', 'transition'])
+                                         keywords=['plant', 'foreshadowing', 'setup'])
 exposition_story_scene_purpose = ScenePurpose(ScenePurposeType.Exposition, 'Exposition',
-                                              keywords=['introduction', 'description', 'information'])
+                                              keywords=['introduction', 'description', 'information', 'transition'])
 
 scene_purposes: Dict[ScenePurposeType, ScenePurpose] = {
     ScenePurposeType.Story: advance_story_scene_purpose,
