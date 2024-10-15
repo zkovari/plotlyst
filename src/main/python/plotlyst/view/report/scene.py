@@ -1,7 +1,9 @@
 from typing import Optional, Dict
 
-from PyQt6.QtCharts import QPieSeries
+from PyQt6.QtCharts import QPieSeries, QPieSlice
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QCursor
+from PyQt6.QtWidgets import QToolTip
 from overrides import overrides
 
 from plotlyst.core.domain import Novel, Character
@@ -65,14 +67,18 @@ class PovDistributionChart(BaseChart):
 
         series = QPieSeries()
         series.setHoleSize(0.45)
+        series.hovered.connect(self._hovered)
         for k, v in self.pov_number.items():
             if v:
                 slice = series.append(k.name, v)
                 slice.setLabel(icon_to_html_img(avatars.avatar(k)))
                 slice.setLabelVisible()
 
-        for slice in series.slices():
-            slice.setLabel(slice.label() + " {:.1f}%".format(100 * slice.percentage()))
-
         self.removeAllSeries()
         self.addSeries(series)
+
+    def _hovered(self, slice: QPieSlice, state: bool):
+        if state:
+            QToolTip.showText(QCursor.pos(), slice.label() + " {:.1f}%".format(100 * slice.percentage()))
+        else:
+            QToolTip.hideText()
