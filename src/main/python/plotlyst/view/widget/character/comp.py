@@ -265,7 +265,9 @@ class CharacterComparisonWidget(QWidget):
         super().__init__(parent)
         self._novel = novel
         self._characters: Dict[Character, CharacterOverviewWidget] = {}
-        hbox(self)
+        flow(self, 15, 15)
+        margins(self, left=45, right=45)
+        self._currentLayout: LayoutType = LayoutType.FLOW
         self._currentDisplay: CharacterComparisonAttribute = CharacterComparisonAttribute.SUMMARY
 
     def updateCharacter(self, character: Character, enabled: bool):
@@ -280,6 +282,9 @@ class CharacterComparisonWidget(QWidget):
             fade_out_and_gc(self, wdg)
 
     def updateLayout(self, layoutType: LayoutType):
+        if self._currentLayout == layoutType:
+            return
+
         widgets = []
         for i in range(self.layout().count()):
             widgets.append(self.layout().itemAt(i).widget())
@@ -291,7 +296,8 @@ class CharacterComparisonWidget(QWidget):
         elif layoutType == LayoutType.VERTICAL:
             vbox(self)
         elif layoutType == LayoutType.FLOW:
-            flow(self)
+            flow(self, 15, 15)
+            margins(self, left=45, right=45)
 
         for wdg in widgets:
             self.layout().addWidget(wdg)
@@ -299,9 +305,13 @@ class CharacterComparisonWidget(QWidget):
         for wdg in self._characters.values():
             wdg.display(self._currentDisplay)
 
+        self._currentLayout = layoutType
+
     def displayAttribute(self, attribute: CharacterComparisonAttribute):
         if attribute == CharacterComparisonAttribute.BACKSTORY:
             self.updateLayout(LayoutType.HORIZONTAL)
+        else:
+            self.updateLayout(LayoutType.FLOW)
 
         for wdg in self._characters.values():
             wdg.display(attribute)

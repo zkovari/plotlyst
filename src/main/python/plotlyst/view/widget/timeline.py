@@ -100,7 +100,7 @@ class BackstoryCard(QWidget):
 
         self.btnType.raise_()
 
-        self.setMinimumWidth(60)
+        self.setMinimumWidth(200)
         sp(self).v_max()
 
     @overrides

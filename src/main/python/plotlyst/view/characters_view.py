@@ -25,12 +25,12 @@ from PyQt6.QtCore import QItemSelection, QPoint
 from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import busy, incr_font, bold, retain_when_hidden
+from qthandy import busy, incr_font, bold
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
-from plotlyst.core.domain import Novel, Character, LayoutType, CardSizeRatio, NovelSetting
+from plotlyst.core.domain import Novel, Character, CardSizeRatio, NovelSetting
 from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, Event, emit_event
 from plotlyst.event.handler import event_dispatchers, global_event_dispatcher
@@ -162,9 +162,6 @@ class CharactersView(AbstractNovelView):
         self.ui.cards.setCardsWidth(142)
         self._init_cards()
 
-        self.ui.btnHorizontalComparison.setIcon(IconRegistry.from_name('ph.columns-bold'))
-        self.ui.btnVerticalComparison.setIcon(IconRegistry.from_name('ph.rows-bold'))
-        self.ui.btnGridComparison.setIcon(IconRegistry.from_name('ph.grid-four-bold'))
         self.ui.btnSummaryComparison.setIcon(IconRegistry.synopsis_icon(color_on=PLOTLYST_SECONDARY_COLOR))
         # self.ui.btnBigFiveComparison.setIcon(IconRegistry.big_five_icon(color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnBigFiveComparison.setHidden(True)
@@ -182,10 +179,6 @@ class CharactersView(AbstractNovelView):
             partial(qtanim.toggle_expansion, self.ui.wdgCharactersCompTreeParent))
 
         self._wdgCharactersCompTree.characterToggled.connect(self._wdgComparison.updateCharacter)
-        retain_when_hidden(self.ui.wdgComparisonLayout)
-        self.ui.btnHorizontalComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.HORIZONTAL))
-        self.ui.btnVerticalComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.VERTICAL))
-        self.ui.btnGridComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.FLOW))
         self.ui.btnSummaryComparison.clicked.connect(
             lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.SUMMARY))
         self.ui.btnFacultiesComparison.clicked.connect(
@@ -368,12 +361,9 @@ class CharactersView(AbstractNovelView):
     def _comparison_type_clicked(self):
         btn = self.ui.btnGroupComparison.checkedButton()
         if btn is self.ui.btnBackstoryComparison:
-            self.ui.btnHorizontalComparison.setChecked(True)
-            self.ui.wdgComparisonLayout.setHidden(True)
             apply_bg_image(self.ui.scrollAreaComparisonContent, resource_registry.cover1)
         else:
             self.ui.scrollAreaComparisonContent.setStyleSheet('')
-            self.ui.wdgComparisonLayout.setVisible(True)
 
     def _character_prefs_toggled(self, setting: NovelSetting, toggled: bool):
         self.novel.prefs.settings[setting.value] = toggled
