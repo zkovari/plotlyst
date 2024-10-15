@@ -1187,12 +1187,13 @@ class StrengthWeaknessEditor(PopupDialog):
         self.toggleWeakness.setChecked(True)
         self.btnGroup.buttonToggled.connect(self._changed)
 
-        self.btnConfirm = push_btn(text='Confirm', properties=['base', 'positive'])
-        sp(self.btnConfirm).h_exp()
+        self.btnConfirm = push_btn(text='Confirm', properties=['confirm', 'positive'])
         self.btnConfirm.clicked.connect(self.accept)
         self.btnConfirm.setDisabled(True)
         self.btnConfirm.installEventFilter(
             DisabledClickEventFilter(self.btnConfirm, self._disabledClick))
+        self.btnCancel = push_btn(text='Cancel', properties=['confirm', 'cancel'])
+        self.btnCancel.clicked.connect(self.reject)
 
         if attribute:
             self.lineKey.setText(attribute.name)
@@ -1216,7 +1217,7 @@ class StrengthWeaknessEditor(PopupDialog):
             group(self.emojiStrength, label('Is it a character strength?'), spacer(), self.toggleStrength))
         self.frame.layout().addWidget(
             group(self.emojiWeakness, label('Is it a character weakness?'), spacer(), self.toggleWeakness))
-        self.frame.layout().addWidget(self.btnConfirm)
+        self.frame.layout().addWidget(group(self.btnCancel, self.btnConfirm), alignment=Qt.AlignmentFlag.AlignRight)
 
     def display(self) -> Optional[StrengthWeaknessAttribute]:
         result = self.exec()
