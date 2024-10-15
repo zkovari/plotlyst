@@ -283,8 +283,8 @@ def character_role_examples(role: Role) -> List[CharacterRoleExample]:
         ]
     elif role == antagonist_role:
         return [
-            CharacterRoleExample('Sauron', 'Lord_of_the_rings', 'fa5s.ring'),
-            CharacterRoleExample('The Joker', 'Batman', 'fa5s.theater-masks', False),
+            CharacterRoleExample('Sauron', Lord_of_the_rings, 'fa5s.ring'),
+            CharacterRoleExample('The Joker', 'Batman', 'fa5s.theater-masks'),
             CharacterRoleExample('Voldemort', Harry_Potter, 'ei.magic'),
             CharacterRoleExample('Agent Smith', 'Matrix', 'mdi.sunglasses'),
         ]
