@@ -252,23 +252,8 @@ class ScenePlotLabels(QWidget):
 
         self._icon = Icon()
         self._icon.setIcon(IconRegistry.from_name(self._plotref.plot.icon, self._plotref.plot.icon_color))
+        self._icon.setToolTip(plotref.plot.text)
         translucent(self._icon, 0.7)
-        # self._icon.installEventFilter(OpacityEventFilter(self._icon, leaveOpacity=1.0, enterOpacity=0.7))
-        # self._plotValueMenu = MenuWidget(self._icon)
-        # apply_white_menu(self._plotValueMenu)
-        #
-        # self._plotValueEditor = ScenePlotValueEditor(self._scene, self._plotref)
-        # self._plotValueMenu.addWidget(self._plotValueEditor)
-        # self._plotValueMenu.aboutToShow.connect(self._plotValueEditor.checkFunction)
-        #
-        # self._plotValueDisplay = PlotValuesDisplay(self._plotref)
-        # self._plotValueEditor.charged.connect(self._plotValueDisplay.updateValue)
-        # self._plotValueEditor.generalProgressCharged.connect(self.generalProgressCharged)
-
-        # for value in self._plotref.data.values:
-        #     plot_value = value.plot_value(self._plotref.plot)
-        #     if plot_value:
-        #         self._plotValueDisplay.updateValue(plot_value, value)
 
         self._btnReset = RemovalButton()
         self._btnReset.clicked.connect(self.reset.emit)
