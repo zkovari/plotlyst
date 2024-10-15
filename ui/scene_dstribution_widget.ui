@@ -65,7 +65,7 @@
         <cursorShape>PointingHandCursor</cursorShape>
        </property>
        <property name="toolTip">
-        <string>Compare summary</string>
+        <string>Character distributions per scenes</string>
        </property>
        <property name="text">
         <string>Characters</string>
@@ -93,7 +93,7 @@
         <cursorShape>PointingHandCursor</cursorShape>
        </property>
        <property name="toolTip">
-        <string>Compare summary</string>
+        <string>Conflict distributions per scenes</string>
        </property>
        <property name="text">
         <string>Conflicts</string>
@@ -121,7 +121,7 @@
         <cursorShape>PointingHandCursor</cursorShape>
        </property>
        <property name="toolTip">
-        <string>Compare summary</string>
+        <string>Tag distributions per scenes</string>
        </property>
        <property name="text">
         <string>Tags</string>
@@ -149,7 +149,7 @@
         <cursorShape>PointingHandCursor</cursorShape>
        </property>
        <property name="toolTip">
-        <string>Compare summary</string>
+        <string>Reader information distributions per scenes</string>
        </property>
        <property name="text">
         <string>Information</string>
