@@ -328,8 +328,9 @@ class CharacterNode(ContainerNode):
         self.refresh()
 
     def refresh(self):
-        self._lblTitle.setText(self._character.name)
-        icon = avatars.avatar(self._character, fallback=False)
+        name = self._character.name if self._character.name else 'Character'
+        self._lblTitle.setText(name)
+        icon = avatars.avatar(self._character, fallback=True)
         if icon:
             self._icon.setIcon(icon)
             self._icon.setVisible(True)
