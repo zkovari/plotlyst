@@ -329,6 +329,7 @@ class ProfileSectionWidget(ProfileFieldWidget):
 
         self.wdgContainer = QFrame()
         vbox(self.wdgContainer, 5)
+        self.wdgContainer.setMaximumWidth(800)
         if self.context.has_bg():
             self.wdgContainer.setProperty('rounded', True)
             if self.context.has_white_bg():
