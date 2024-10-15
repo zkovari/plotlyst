@@ -345,6 +345,7 @@ class ManuscriptLengthChart(BaseChart):
         self.addAxis(axis_x, Qt.AlignmentFlag.AlignBottom)
 
         axis_y = QValueAxis()
+        axis_y.setLabelFormat("%.0f")
         self.addAxis(axis_y, Qt.AlignmentFlag.AlignLeft)
 
         self.addSeries(series)
