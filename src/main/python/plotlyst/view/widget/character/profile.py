@@ -1234,8 +1234,8 @@ class StrengthsWeaknessesTableRow(QWidget):
             incr_font(self.textStrength)
             incr_font(self.textWeakness)
 
-        self.layout().addWidget(self.textStrength)
-        self.layout().addWidget(self.textWeakness)
+        self.layout().addWidget(self.textStrength, alignment=Qt.AlignmentFlag.AlignTop)
+        self.layout().addWidget(self.textWeakness, alignment=Qt.AlignmentFlag.AlignTop)
 
         self.textStrength.setVisible(self.attribute.has_strength)
         self.textWeakness.setVisible(self.attribute.has_weakness)
