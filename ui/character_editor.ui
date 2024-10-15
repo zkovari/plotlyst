@@ -495,7 +495,7 @@
        <enum>Qt::ClickFocus</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tabTopics">
        <property name="relaxed-white-bg" stdset="0">
@@ -509,7 +509,7 @@
          <number>3</number>
         </property>
         <property name="leftMargin">
-         <number>10</number>
+         <number>25</number>
         </property>
         <property name="topMargin">
          <number>15</number>
@@ -534,7 +534,7 @@
          <number>0</number>
         </property>
         <property name="topMargin">
-         <number>3</number>
+         <number>15</number>
         </property>
         <property name="rightMargin">
          <number>0</number>
@@ -610,7 +610,7 @@
              <x>0</x>
              <y>0</y>
              <width>327</width>
-             <height>562</height>
+             <height>550</height>
             </rect>
            </property>
            <property name="sizePolicy">
@@ -693,8 +693,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>100</width>
-             <height>30</height>
+             <width>325</width>
+             <height>594</height>
             </rect>
            </property>
            <property name="relaxed-white-bg" stdset="0">
