@@ -1869,7 +1869,7 @@ class CharacterProfileEditor(QWidget):
         for sectionType in [CharacterProfileSectionType.Philosophy, CharacterProfileSectionType.Strengths,
                             CharacterProfileSectionType.Faculties, CharacterProfileSectionType.Flaws,
                             CharacterProfileSectionType.Baggage,
-                            CharacterProfileSectionType.Goals
+                            CharacterProfileSectionType.Goals, CharacterProfileSectionType.Lack
                             ]:
             self._sections[sectionType].setVisible(False)
             self._settings.toggleSection(sectionType, False)
