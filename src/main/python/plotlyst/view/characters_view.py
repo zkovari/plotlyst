@@ -230,6 +230,10 @@ class CharactersView(AbstractNovelView):
         else:
             super().event_received(event)
 
+    def close_event(self):
+        if self.ui.stackedWidget.currentWidget() == self.ui.pageEditor:
+            self.editor.close_event()
+
     @overrides
     def refresh(self):
         self.model.modelReset.emit()

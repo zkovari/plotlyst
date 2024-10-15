@@ -291,6 +291,10 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.cards.orderChanged.connect(self._on_scene_cards_swapped)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
 
+    def close_event(self):
+        if self.ui.stackedWidget.currentWidget() == self.ui.pageEditor:
+            self.editor.close_event()
+
     @overrides
     def event_received(self, event: Event):
         if isinstance(event, (CharacterChangedEvent, CharacterDeletedEvent)):

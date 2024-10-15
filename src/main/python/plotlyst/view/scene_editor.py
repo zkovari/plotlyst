@@ -224,6 +224,10 @@ class SceneEditor(QObject, EventListener):
         elif isinstance(event, NovelPovTrackingToggleEvent):
             self.ui.wdgPov.setVisible(event.toggled)
 
+    def close_event(self):
+        if self.scene is not None:
+            self._on_close()
+
     def refresh(self):
         self.ui.treeScenes.refresh()
 

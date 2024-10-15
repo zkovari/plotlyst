@@ -129,6 +129,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.pageHome.layout().addWidget(self.home_view.widget)
         self.home_view.loadNovel.connect(self._load_new_novel)
 
+        self.characters_view: Optional[CharactersView] = None
+        self.scenes_outline_view: Optional[ScenesOutlineView] = None
+
         self._init_menubar()
         self._init_toolbar()
         self._init_statusbar()
@@ -196,6 +199,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             language_tool_proxy.tool.close()
 
         if self.novel:
+            if self.characters_view:
+                self.characters_view.close_event()
+            if self.scenes_outline_view:
+                self.scenes_outline_view.close_event()
             self._persist_last_novel_state()
 
         if self._threadpool.activeThreadCount():

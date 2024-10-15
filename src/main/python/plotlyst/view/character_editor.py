@@ -238,6 +238,10 @@ class CharacterEditor(QObject, EventListener):
             if self.character is not None:
                 self._save()
 
+    def close_event(self):
+        if self.character is not None:
+            self._save()
+
     def _name_edited(self, text: str):
         self.character.name = text
         if self.character.prefs.avatar.use_initial:
