@@ -28,7 +28,7 @@ from qthandy import hbox, vline, vbox, clear_layout, transparent, flow, incr_fon
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
-from plotlyst.common import truncate_string, RELAXED_WHITE_COLOR, RED_COLOR
+from plotlyst.common import truncate_string, RELAXED_WHITE_COLOR, RED_COLOR, PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.domain import Character, Conflict, SelectionItem, Novel, ScenePlotReference, \
     CharacterGoal, PlotValue, Scene, GoalReference
 from plotlyst.env import app_env
@@ -96,7 +96,7 @@ class CharacterLabel(Label):
                 self.layout().addWidget(self.lblRole)
             border_color = role.icon_color
         else:
-            border_color = '#bad7f2'
+            border_color = PLOTLYST_TERTIARY_COLOR
 
         self.setStyleSheet(f'''
         CharacterLabel {{
