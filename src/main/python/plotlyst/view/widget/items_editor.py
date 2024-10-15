@@ -49,6 +49,7 @@ class ItemsEditorWidget(QWidget):
         self.inlineEditionEnabled: bool = True
         self.inlineAdditionEnabled: bool = True
         self.removalEnabled: bool = True
+        self.iconEditionEnabled: bool = True
 
         vbox(self)
         self.toolbar = QWidget()
@@ -123,6 +124,9 @@ class ItemsEditorWidget(QWidget):
 
     def setInlineAdditionEnabled(self, enabled: bool):
         self.inlineAdditionEnabled = enabled
+
+    def setIconEditionEnabled(self, enabled: bool):
+        self.iconEditionEnabled = enabled
 
     def setAdditionEnabled(self, enabled: bool):
         self.btnAdd.setEnabled(enabled)
@@ -208,7 +212,7 @@ class ItemsEditorWidget(QWidget):
             self.btnRemove.setEnabled(False)
 
     def _item_clicked(self, index: QModelIndex):
-        if index.column() == SelectionItemsModel.ColIcon:
+        if index.column() == SelectionItemsModel.ColIcon and self.iconEditionEnabled:
             result = IconSelectorDialog.popup()
             if result:
                 self.model.setData(index, (result[0], result[1].name()), role=Qt.ItemDataRole.DecorationRole)

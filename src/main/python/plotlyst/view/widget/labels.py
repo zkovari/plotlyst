@@ -396,6 +396,7 @@ class LabelsEditorWidget(QFrame):
         wdg.setInlineEditionEnabled(False)
         wdg.setAdditionEnabled(False)
         wdg.setRemoveEnabled(False)
+        wdg.setIconEditionEnabled(False)
         wdg.toolbar.setHidden(True)
         return wdg
 
