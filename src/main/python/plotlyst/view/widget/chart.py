@@ -317,6 +317,7 @@ class ManuscriptLengthChart(BaseChart):
         self.setMinimumWidth(max(len(self._xData(novel)), 15) * 35)
         if self._byScenes:
             set_ = QBarSet('Scene')
+            set_.hovered.connect(self._hovered)
             for scene in novel.scenes:
                 scene_wc = 0
                 if scene.manuscript and scene.manuscript.statistics:
@@ -324,6 +325,7 @@ class ManuscriptLengthChart(BaseChart):
                 set_.append(scene_wc)
         else:
             set_ = QBarSet('Chapter')
+            set_.hovered.connect(self._hovered)
             for i, chapter in enumerate(novel.chapters):
                 chapter_wc = 0
                 for scene in novel.scenes_in_chapter(chapter):
@@ -357,6 +359,13 @@ class ManuscriptLengthChart(BaseChart):
             return novel.scenes
         else:
             return novel.chapters
+
+    def _hovered(self, status: bool, index: int):
+        if status:
+            barset: QBarSet = self.series()[0].barSets()[0]
+            QToolTip.showText(QCursor.pos(), f' Word count: {int(barset.at(index))}')
+        else:
+            QToolTip.hideText()
 
 
 class ActDistributionChart(BaseChart):
