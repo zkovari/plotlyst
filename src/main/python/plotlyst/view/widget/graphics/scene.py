@@ -186,12 +186,7 @@ class NetworkScene(QGraphicsScene):
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         if (not self.isAdditionMode() and not self.linkMode() and
                 event.button() & Qt.MouseButton.LeftButton and not self.itemAt(event.scenePos(), QTransform())):
-            if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
-                pos = self._cursorScenePos()
-                if pos:
-                    self._addNewDefaultItem(pos)
-            else:
-                pass
+            pass
         elif event.button() & Qt.MouseButton.RightButton or event.button() & Qt.MouseButton.MiddleButton:
             # disallow view movement to clear item selection
             return
