@@ -274,7 +274,7 @@ class TopicWidget(QWidget):
         self._element = element
 
         self.btnHeader = push_btn(IconRegistry.from_name(topic.icon, topic.icon_color), topic.text,
-                                  tooltip=topic.description, transparent_=True)
+                                  tooltip=topic.description, transparent_=True, pointy_=False, icon_resize=False)
 
         self._btnRemoval = RemovalButton()
         self._btnRemoval.clicked.connect(self.removalRequested)
