@@ -34,11 +34,12 @@ from plotlyst.core.domain import Novel, Document, Chapter, DocumentProgress, Fon
 from plotlyst.core.domain import Scene
 from plotlyst.env import app_env
 from plotlyst.event.core import emit_global_event, emit_critical, emit_info, Event, emit_event
-from plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode, \
+from plotlyst.events import SceneChangedEvent, OpenDistractionFreeMode, \
     SceneDeletedEvent, ExitDistractionFreeMode, NovelSyncEvent, CloseNovelEvent
 from plotlyst.resources import ResourceType
 from plotlyst.service.grammar import language_tool_proxy
 from plotlyst.service.persistence import flush_or_fail
+from plotlyst.service.resource import ask_for_resource
 from plotlyst.view._view import AbstractNovelView
 from plotlyst.view.common import tool_btn, ButtonPressResizeEventFilter, action, \
     ExclusiveOptionalButtonGroup, link_buttons_to_pages
@@ -54,13 +55,12 @@ from plotlyst.view.widget.progress import ProgressChart
 from plotlyst.view.widget.scene.editor import SceneMiniEditor
 from plotlyst.view.widget.scenes import SceneNotesEditor
 from plotlyst.view.widget.tree import TreeSettings
-from plotlyst.service.resource import ask_for_resource
 
 
 class ManuscriptView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        super().__init__(novel, [NovelUpdatedEvent])
+        super().__init__(novel, [SceneDeletedEvent])
         self.ui = Ui_ManuscriptView()
         self.ui.setupUi(self.widget)
         self.ui.splitter.setSizes([150, 500])
@@ -256,6 +256,7 @@ class ManuscriptView(AbstractNovelView):
                     self._empty_page()
                 else:
                     self._editChapter(event.scene.chapter)
+            return
         super(ManuscriptView, self).event_received(event)
 
     @overrides
