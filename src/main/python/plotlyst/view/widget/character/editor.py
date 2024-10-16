@@ -33,7 +33,7 @@ from PyQt6.QtWidgets import QWidget, QSpinBox, QSlider, QTextBrowser, QButtonGro
     QLineEdit, QDialog
 from overrides import overrides
 from qthandy import vbox, pointy, hbox, sp, vspacer, underline, decr_font, flow, clear_layout, translucent, line, grid, \
-    spacer, transparent, incr_font, margins, incr_icon
+    spacer, transparent, incr_font, margins, incr_icon, decr_icon
 from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter
 from qtmenu import MenuWidget
 
@@ -1004,13 +1004,17 @@ class CharacterRoleSelector(QWidget):
 
         self.iconMajor = MajorRoleIcon()
         self.iconMajor.setToolTip("The selected role is a major character role")
+        self.iconMajor.setText('Major')
         self.iconSecondary = SecondaryRoleIcon()
         self.iconSecondary.setToolTip("The selected role is a secondary character role")
+        self.iconSecondary.setText('Secondary')
         self.iconMinor = MinorRoleIcon()
         self.iconMinor.setToolTip("The selected role is a minor character role")
-        translucent(self.iconMajor, 0.5)
-        translucent(self.iconSecondary, 0.5)
-        translucent(self.iconMinor, 0.5)
+        self.iconMinor.setText('Tertiary')
+        for btn in [self.iconMajor, self.iconSecondary, self.iconMinor]:
+            decr_font(btn, 2)
+            decr_icon(btn, 4)
+            translucent(btn, 0.5)
 
         self.iconRole = RoleIcon()
         incr_font(self.iconRole, 2)
@@ -1137,11 +1141,13 @@ class CharacterRoleSelector(QWidget):
         if self._currentRole.is_major():
             self.iconMajor.setVisible(True)
             if anim:
-                qtanim.glow(self.iconMajor, color=QColor(CHARACTER_MAJOR_COLOR))
+                qtanim.glow(self.iconMajor, color=QColor(CHARACTER_MAJOR_COLOR),
+                            teardown=lambda: translucent(self.iconMajor, 0.5))
         elif self._currentRole.is_secondary():
             self.iconSecondary.setVisible(True)
             if anim:
-                qtanim.glow(self.iconSecondary, color=QColor(CHARACTER_SECONDARY_COLOR))
+                qtanim.glow(self.iconSecondary, color=QColor(CHARACTER_SECONDARY_COLOR),
+                            teardown=lambda: translucent(self.iconSecondary, 0.5))
         else:
             self.iconMinor.setVisible(True)
 
@@ -1153,7 +1159,9 @@ class CharacterRoleSelector(QWidget):
         self._currentRole.promoted = not self._currentRole.promoted
         self._updateRolePriorityIcon(anim=True)
 
+        qtanim.fade_out(self.btnPromote)
         self._updatePromotionButton(self._currentRole.promoted)
+        qtanim.fade_in(self.btnPromote)
 
         self.iconRole.setRole(self._currentRole, showText=True)
         self._currentButton.setSelectionItem(self._currentRole)
