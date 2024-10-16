@@ -28,7 +28,7 @@ from PyQt6.QtGui import QColor, QPixmap, QShowEvent, QResizeEvent, QImage, QPain
 from PyQt6.QtWidgets import QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem, QAbstractGraphicsShapeItem, QWidget, \
     QGraphicsSceneMouseEvent, QGraphicsOpacityEffect, QGraphicsDropShadowEffect, QFrame, QLineEdit, \
     QApplication, QGraphicsSceneDragDropEvent, QSlider, QGraphicsRectItem, QGraphicsEllipseItem, QGraphicsPathItem, \
-    QGraphicsView
+    QGraphicsView, QGraphicsEffect
 from overrides import overrides
 from qthandy import busy, vbox, sp, line, incr_font, flow, incr_icon, bold, vline, \
     margins, decr_font, translucent
@@ -325,10 +325,20 @@ class BaseMapItem:
             self._checkRef()
 
     def _checkRef(self):
-        if not self._marker.ref:
-            effect = QGraphicsOpacityEffect()
-            effect.setOpacity(0.5)
-            self.setGraphicsEffect(effect)
+        if self._marker.ref:
+            effect = self._effectWithRef()
+            if effect:
+                self.setGraphicsEffect(effect)
+        else:
+            self.setGraphicsEffect(self._effectWithoutRef())
+
+    def _effectWithRef(self) -> Optional[QGraphicsEffect]:
+        return None
+
+    def _effectWithoutRef(self) -> QGraphicsEffect:
+        effect = QGraphicsOpacityEffect()
+        effect.setOpacity(0.5)
+        return effect
 
     def _posChangedOnTimeout(self):
         self._posChangedTimer.stop()
@@ -437,12 +447,20 @@ class BaseMapAreaItem(BaseMapItem):
         color.setAlpha(125)
         self.setBrush(color)
 
+        self._checkRef()
+
     @overrides
     def refresh(self):
         color = QColor(self._marker.color)
         color.setAlpha(125)
         self.setBrush(color)
         super().refresh()
+
+    @overrides
+    def _effectWithRef(self) -> Optional[QGraphicsEffect]:
+        effect = QGraphicsOpacityEffect()
+        effect.setOpacity(0.7)
+        return effect
 
 
 class AreaSquareItem(QGraphicsRectItem, BaseMapAreaItem):
