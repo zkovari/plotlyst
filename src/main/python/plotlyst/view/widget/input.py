@@ -56,6 +56,7 @@ from plotlyst.service.grammar import language_tool_proxy, dictionary
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import action, label, push_btn, tool_btn, insert_before, fade_out_and_gc, shadow, emoji_font
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_color
 from plotlyst.view.style.text import apply_texteditor_toolbar_style
 from plotlyst.view.widget._toggle import AnimatedToggle
@@ -1032,7 +1033,7 @@ class FontSizeSpinBox(QWidget):
 
 
 class TextInputDialog(PopupDialog):
-    def __init__(self, title: str, placeholder: str, value: str = '', parent=None):
+    def __init__(self, title: str, placeholder: str, value: str = '', description: str = '', parent=None):
         super().__init__(parent)
 
         self.title = label(title, h4=True)
@@ -1042,6 +1043,9 @@ class TextInputDialog(PopupDialog):
         self.wdgTitle.layout().addWidget(self.title, alignment=Qt.AlignmentFlag.AlignLeft)
         self.wdgTitle.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
 
+        self.lblDescription = label(description, description=True, wordWrap=True)
+        self.lblDescription.setMinimumWidth(450)
+
         self.lineKey = QLineEdit()
         self.lineKey.setProperty('white-bg', True)
         self.lineKey.setProperty('rounded', True)
@@ -1049,7 +1053,7 @@ class TextInputDialog(PopupDialog):
         self.lineKey.setText(value)
         self.lineKey.textChanged.connect(self._textChanged)
 
-        self.btnConfirm = push_btn(text='Confirm', properties=['base', 'positive'])
+        self.btnConfirm = push_btn(text='Confirm', properties=['confirm', 'positive'])
         self.btnConfirm.setShortcut(Qt.Key.Key_Return)
         sp(self.btnConfirm).h_exp()
         self.btnConfirm.clicked.connect(self.accept)
@@ -1058,9 +1062,15 @@ class TextInputDialog(PopupDialog):
             DisabledClickEventFilter(self.btnConfirm, lambda: qtanim.shake(self.lineKey)))
         self.lineKey.editingFinished.connect(self.btnConfirm.click)
 
+        self.btnCancel = push_btn(text='Cancel', properties=['confirm', 'cancel'])
+        self.btnCancel.clicked.connect(self.reject)
+
         self.frame.layout().addWidget(self.wdgTitle)
+        self.frame.layout().addWidget(self.lblDescription)
+        if not description:
+            self.lblDescription.setHidden(True)
         self.frame.layout().addWidget(self.lineKey)
-        self.frame.layout().addWidget(self.btnConfirm)
+        self.frame.layout().addWidget(group(self.btnCancel, self.btnConfirm), alignment=Qt.AlignmentFlag.AlignRight)
 
     def display(self) -> Optional[str]:
         result = self.exec()
@@ -1071,8 +1081,8 @@ class TextInputDialog(PopupDialog):
         return None
 
     @classmethod
-    def edit(cls, title: str = 'Edit text', placeholder: str = 'Edit text', value: str = ''):
-        return cls.popup(title, placeholder, value)
+    def edit(cls, title: str = 'Edit text', placeholder: str = 'Edit text', value: str = '', description: str = ''):
+        return cls.popup(title, placeholder, value, description)
 
     def _textChanged(self, key: str):
         self.btnConfirm.setEnabled(len(key) > 0)

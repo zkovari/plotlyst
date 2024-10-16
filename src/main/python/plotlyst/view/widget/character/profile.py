@@ -149,6 +149,9 @@ class SectionContext:
     def editorPlaceholder(self) -> str:
         return 'Name of the attribute'
 
+    def editorDescription(self) -> str:
+        return ''
+
 
 def character_primary_attribute_type(field: TemplateField) -> MultiAttributePrimaryType:
     if field is goal_field:
@@ -425,7 +428,8 @@ class ProfileSectionWidget(ProfileFieldWidget):
     #     self.progress.setValue(sum(self.progressStatuses.values()))
 
     def _initNewPrimaryField(self):
-        label = TextInputDialog.edit(self.context.editorTitle(), self.context.editorPlaceholder())
+        label = TextInputDialog.edit(self.context.editorTitle(), self.context.editorPlaceholder(),
+                                     description=self.context.editorDescription())
         if label:
             self._addPrimaryField(flaw_placeholder_field, label)
 
@@ -447,7 +451,8 @@ class ProfileSectionWidget(ProfileFieldWidget):
         fade_out_and_gc(self.wdgContainer, wdg)
 
     def _renamePrimaryField(self, wdg: 'MultiAttributesTemplateWidgetBase'):
-        label = TextInputDialog.edit('Rename attribute', self.context.editorPlaceholder(), wdg.attribute.label)
+        label = TextInputDialog.edit('Rename attribute', self.context.editorPlaceholder(), wdg.attribute.label,
+                                     self.context.editorDescription())
         if label:
             wdg.attribute.label = label
             wdg.setLabel(label)
@@ -1119,6 +1124,12 @@ class FlawsSectionContext(MultiAttributeSectionContext):
     @overrides
     def editorPlaceholder(self) -> str:
         return 'Name of the flaw'
+
+    @overrides
+    def editorDescription(self) -> str:
+        desc = "<html>A significant character flaw can impact the character's behavior, decision-making, and relationships, often influencing the direction of the plot."
+        desc += "<br>It can also serve as the foundation for the character's growth or arc."
+        return desc
 
 
 class GmcFieldWidget(MultiAttributesTemplateWidgetBase):
