@@ -31,7 +31,8 @@ from qttextedit.ops import TextEditorSettingsSection, FontSectionSettingWidget
 from plotlyst.core.client import json_client
 from plotlyst.core.domain import Novel, Document, DocumentType, FontSettings
 from plotlyst.env import app_env
-from plotlyst.events import SceneChangedEvent, SceneDeletedEvent
+from plotlyst.event.core import Event
+from plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent
 from plotlyst.service.cache import entities_registry
 from plotlyst.view._view import AbstractNovelView
 from plotlyst.view.common import ButtonPressResizeEventFilter
@@ -46,7 +47,7 @@ from plotlyst.view.widget.tree import TreeSettings
 class DocumentsView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        super().__init__(novel, [SceneChangedEvent, SceneDeletedEvent])
+        super().__init__(novel, [CharacterChangedEvent, CharacterDeletedEvent])
         self.ui = Ui_NotesView()
         self.ui.setupUi(self.widget)
         self._current_doc: Optional[Document] = None
@@ -86,6 +87,33 @@ class DocumentsView(AbstractNovelView):
         menu.documentTriggered.connect(self._add_doc)
 
         self.ui.stackedEditor.setCurrentWidget(self.ui.emptyPage)
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, CharacterChangedEvent):
+            for doc in self.ui.treeDocuments.documents():
+                if doc.character_id == event.character.id:
+                    self.ui.treeDocuments.updateDocument(doc)
+            if self._current_doc and self._current_doc.character_id == event.character.id:
+                self.textEditor.setTitle(event.character.name)
+                self.textEditor.setTitleIcon(avatars.avatar(event.character))
+            return
+        if isinstance(event, CharacterDeletedEvent):
+            for doc in self.ui.treeDocuments.documents():
+                if doc.character_id == event.character.id:
+                    doc.reset_character()
+                    doc.title = 'Character'
+                    self.ui.treeDocuments.updateDocument(doc)
+
+                    if self._current_doc == doc:
+                        self.textEditor.setTitle(doc.title)
+                        self.textEditor.setTitleIcon(IconRegistry.from_name(doc.icon))
+                        self.textEditor.setTitleReadOnly(False)
+
+                    self.repo.update_novel(self.novel)
+            return
+
+        super().event_received(event)
 
     @overrides
     def refresh(self):

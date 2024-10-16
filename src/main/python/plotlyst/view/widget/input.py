@@ -736,6 +736,9 @@ class DocumentTextEditor(TextEditorBase):
     def setTitle(self, title: str):
         self._textTitle.setText(title)
 
+    def setTitleReadOnly(self, readOnly: bool):
+        self._textTitle.setReadOnly(readOnly)
+
     def setPlaceholderText(self, text: str):
         self.textEdit.setPlaceholderText(text)
 

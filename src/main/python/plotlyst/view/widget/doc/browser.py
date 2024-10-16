@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
 from pathlib import Path
-from typing import Set, Optional, Dict
+from typing import Set, Optional, Dict, Iterable
 
 from PyQt6.QtCore import pyqtSignal, Qt, QMimeData, QPointF, QDir, QTimer
 from PyQt6.QtWidgets import QFileDialog
@@ -183,6 +183,9 @@ class DocumentsTreeView(TreeView):
         self._docSelectionChanged(wdg, wdg.isSelected())
 
         self._save()
+
+    def documents(self) -> Iterable[Document]:
+        return self._docs.keys()
 
     def refresh(self):
         def addChildWdg(parent: Document, child: Document):
