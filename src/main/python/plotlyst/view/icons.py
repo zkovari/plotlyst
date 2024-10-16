@@ -786,16 +786,17 @@ class AvatarsRegistry:
         return False
 
     def name_initial_icon(self, character: Character, fallback: bool = True) -> QIcon:
-        _sum = sum([ord(x) for x in character.name])
-        color = CHARACTER_INITIAL_AVATAR_COLOR_CODES[_sum % len(CHARACTER_INITIAL_AVATAR_COLOR_CODES)]
-
         if not character.name:
             return self._dummy_avatar()
 
-        if character.name[0].isnumeric():
-            icon = f'mdi.numeric-{int(character.name[0])}-circle-outline'
-        elif character.name[0].isalpha():
-            icon = f'mdi.alpha-{character.name[0].lower()}-circle-outline'
+        _uuid_int = character.id.int
+        color = CHARACTER_INITIAL_AVATAR_COLOR_CODES[_uuid_int % len(CHARACTER_INITIAL_AVATAR_COLOR_CODES)]
+
+        first_char = character.name[0]
+        if first_char.isnumeric():
+            icon = f'mdi.numeric-{int(first_char)}-circle-outline'
+        elif 'a' <= first_char.lower() <= 'z':
+            icon = f'mdi.alpha-{first_char.lower()}-circle-outline'
         elif fallback:
             return self._dummy_avatar()
         else:

@@ -115,12 +115,43 @@ STORY_LINE_COLOR_CODES: Dict[str, List[str]] = {
 }
 
 CHARACTER_INITIAL_AVATAR_COLOR_CODES: List[str] = [
-    '#03396c',
-    '#0e9aa7',
-    '#62c370',
-    '#cc3363',
-    '#f5e960',
-    '#3c4f76',
-    '#b388eb',
-    '#8093f1',
+    '#03396c',  # Deep navy blue
+    '#0e9aa7',  # Bright teal
+    '#62c370',  # Fresh green
+    '#cc3363',  # Deep magenta
+    '#4db6ac',  # Light teal
+    '#1b5e20',  # Forest green
+    '#00796b',  # Muted green-teal
+    '#62a6e5',  # Sky blue
+    '#007bb8',  # Bright blue
+    '#81c784',  # Light green
+
+    '#4e342e',  # Dark brown
+    '#6f9b5a',  # Olive green
+    '#e57373',  # Warm muted red
+    '#b388eb',  # Soft lavender
+    '#ff6f61',  # Coral red
+    '#795548',  # Brown
+
+    '#9575cd',  # Muted purple
+    '#26a69a',  # Teal
+    '#7986cb',  # Periwinkle
+    '#ccff90',  # Light lime green
+    '#4caf50',  # Medium green
+
+    '#f06292',  # Hot pink
+    '#ffccbc',  # Light pink
+    '#81d4fa',  # Light blue
+    '#ef5350',  # Light red
+    '#7b1fa2',  # Dark magenta
+    '#455a64',  # Dark cyan
+    '#bdbdbd',  # Gray
+    '#90a4ae',  # Cool gray
+    '#9c27b0',  # Rich purple
+
+    '#c2185b',  # Dark pink
+    '#ff9800',  # Bright orange
+    '#e1bee7',  # Pale violet
+    '#8bc34a',  # Lime green
+    '#ffc107',  # Soft amber
 ]
