@@ -377,8 +377,9 @@ class PopupDialog(QDialog):
         else:
             overlay = None
 
-        dialog.move(
-            window.frameGeometry().center() - QPoint(dialog.sizeHint().width() // 2, dialog.sizeHint().height() // 2))
+        if window:
+            dialog.move(window.frameGeometry().center() - QPoint(dialog.sizeHint().width() // 2,
+                                                                 dialog.sizeHint().height() // 2))
 
         try:
             return dialog.display()
