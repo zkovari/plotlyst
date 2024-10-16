@@ -30,6 +30,7 @@ from qtmenu import MenuWidget
 
 from plotlyst.common import recursive
 from plotlyst.core.domain import Novel, Location, WorldBuildingEntity, LocationSensorType, SensoryPerception
+from plotlyst.env import app_env
 from plotlyst.event.core import emit_event
 from plotlyst.events import LocationAddedEvent, LocationDeletedEvent, \
     RequestMilieuDictionaryResetEvent
@@ -256,6 +257,10 @@ class LocationAttributeTextEdit(DecoratedTextEdit):
         if self._nightMode:
             self.setText(self._perception.night_text)
             effect = QGraphicsColorizeEffect()
+            if app_env.is_windows() and attrType == LocationSensorType.SOUND:
+                emojieffect = QGraphicsColorizeEffect()
+                emojieffect.setColor(Qt.GlobalColor.gray)
+                self.decoration().setGraphicsEffect(emojieffect)
             effect.setColor(Qt.GlobalColor.black)
             self.setGraphicsEffect(effect)
         else:

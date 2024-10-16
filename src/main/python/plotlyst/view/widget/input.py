@@ -1442,6 +1442,9 @@ class DecoratedTextEdit(AutoAdjustableTextEdit):
 
         self._decoration = None
 
+    def decoration(self) -> Optional[QLabel]:
+        return self._decoration
+
     def setEmoji(self, name: str, tooltip: str = ''):
         self._decoration = QLabel(self)
         self._decoration.setToolTip(tooltip)
