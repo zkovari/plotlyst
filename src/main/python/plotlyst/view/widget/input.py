@@ -1115,20 +1115,21 @@ class TextAreaInputDialog(PopupDialog):
         self.textEdit.textChanged.connect(self._textChanged)
         self.textEdit.installEventFilter(self)
 
-        self.btnConfirm = push_btn(text='Confirm', properties=['base', 'positive'])
-        self.btnConfirm.setFixedWidth(250)
+        self.btnConfirm = push_btn(text='Confirm', properties=['confirm', 'positive'])
         self.btnConfirm.setShortcut(Qt.Key.Key_Return)
         sp(self.btnConfirm).h_exp()
         self.btnConfirm.clicked.connect(self.accept)
         self.btnConfirm.setDisabled(True)
         self.btnConfirm.installEventFilter(
             DisabledClickEventFilter(self.btnConfirm, lambda: qtanim.shake(self.textEdit)))
+        self.btnCancel = push_btn(text='Cancel', properties=['confirm', 'cancel'])
+        self.btnCancel.clicked.connect(self.reject)
 
         self.frame.layout().addWidget(self.wdgTitle)
         self.frame.layout().addWidget(line())
         self.frame.layout().addWidget(self.lblDesc)
         self.frame.layout().addWidget(self.textEdit, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.frame.layout().addWidget(self.btnConfirm, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.frame.layout().addWidget(group(self.btnCancel, self.btnConfirm), alignment=Qt.AlignmentFlag.AlignRight)
 
     def display(self) -> Optional[str]:
         result = self.exec()
