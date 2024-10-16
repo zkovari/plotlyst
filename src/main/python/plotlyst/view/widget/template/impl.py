@@ -24,19 +24,18 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QModelIndex, QSize
 from PyQt6.QtGui import QMouseEvent, QIcon, QWheelEvent
 from PyQt6.QtWidgets import QHBoxLayout, QWidget, QLineEdit, QToolButton, QLabel, \
-    QSpinBox, QButtonGroup, QListView, QSlider
+    QSpinBox, QButtonGroup, QListView, QSlider, QFrame
 from overrides import overrides
 from qthandy import spacer, hbox, vbox, bold, line, underline, retain_when_hidden
 
 from plotlyst.core.template import TemplateField, SelectionItem
 from plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
-from plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.button import CollapseButton
 from plotlyst.view.widget.display import Subtitle, Icon
-from plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle
+from plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle, SearchField
 from plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
 from plotlyst.view.widget.progress import CircularProgressBar
 from plotlyst.view.widget.template.base import TemplateDisplayWidget, TemplateFieldWidgetBase, \
@@ -93,10 +92,29 @@ class TraitSelectionWidget(LabelsSelectionWidget):
             if not item.meta.get('positive', True):
                 self._wdgLabels.addLabel(TraitLabel(item.text, positive=False))
 
-    class Popup(QWidget, Ui_TraitSelectionWidget):
+    class Popup(QWidget):
         def __init__(self, parent=None):
             super().__init__(parent)
-            self.setupUi(self)
+            vbox(self, 0, 0)
+
+            self.wdgMain = QWidget()
+            self.wdgMain.setProperty('relaxed-white-bg', True)
+            vbox(self.wdgMain, 5, 10)
+            self.layout().addWidget(self.wdgMain)
+
+            self.lineFilter = SearchField()
+            self.lstPositiveTraitsView = QListView()
+            self.lstPositiveTraitsView.setFrameShape(QFrame.Shape.NoFrame)
+            self.lstNegativeTraitsView = QListView()
+            self.lstNegativeTraitsView.setFrameShape(QFrame.Shape.NoFrame)
+
+            self.wdgLists = QWidget()
+            hbox(self.wdgLists)
+            self.wdgLists.layout().addWidget(self.lstPositiveTraitsView)
+            self.wdgLists.layout().addWidget(self.lstNegativeTraitsView)
+            self.wdgMain.layout().addWidget(self.lineFilter, alignment=Qt.AlignmentFlag.AlignRight)
+            self.wdgMain.layout().addWidget(self.wdgLists)
+
             self.positiveProxy = TraitsProxyModel()
             self.negativeProxy = TraitsProxyModel(positive=False)
             self._model: Optional[TraitsFieldItemsSelectionModel] = None
@@ -110,13 +128,14 @@ class TraitSelectionWidget(LabelsSelectionWidget):
             self.positiveProxy.setSourceModel(model)
             self.positiveProxy.setFilterKeyColumn(TemplateFieldSelectionModel.ColName)
             self.lstPositiveTraitsView.setModel(self.positiveProxy)
-            self.filterPositive.textChanged.connect(self.positiveProxy.setFilterRegularExpression)
 
             self.negativeProxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
             self.negativeProxy.setSourceModel(model)
             self.negativeProxy.setFilterKeyColumn(TemplateFieldSelectionModel.ColName)
             self.lstNegativeTraitsView.setModel(self.negativeProxy)
-            self.filterNegative.textChanged.connect(self.negativeProxy.setFilterRegularExpression)
+
+            self.lineFilter.lineSearch.textChanged.connect(self.positiveProxy.setFilterRegularExpression)
+            self.lineFilter.lineSearch.textChanged.connect(self.negativeProxy.setFilterRegularExpression)
 
             for lst in [self.lstPositiveTraitsView, self.lstNegativeTraitsView]:
                 lst.setModelColumn(TemplateFieldSelectionModel.ColName)
