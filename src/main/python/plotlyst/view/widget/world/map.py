@@ -32,7 +32,7 @@ from PyQt6.QtWidgets import QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem, 
 from overrides import overrides
 from qthandy import busy, vbox, sp, line, incr_font, flow, incr_icon, bold, vline, \
     margins, decr_font, translucent
-from qthandy.filter import OpacityEventFilter, DragEventFilter
+from qthandy.filter import DragEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 from qtpy import sip
 
@@ -43,7 +43,7 @@ from plotlyst.service.cache import entities_registry
 from plotlyst.service.image import load_image, upload_image, LoadedImage
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import tool_btn, action, shadow, TooltipPositionEventFilter, dominant_color, push_btn, \
-    ExclusiveOptionalButtonGroup
+    ExclusiveOptionalButtonGroup, restyle
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.graphics import BaseGraphicsView
 from plotlyst.view.widget.graphics.editor import ZoomBar, BaseItemToolbar, \
@@ -848,16 +848,8 @@ class WorldBuildingMapView(BaseGraphicsView):
         self._popup.setHidden(True)
 
         self._btnEdit = tool_btn(IconRegistry.plus_edit_icon(PLOTLYST_SECONDARY_COLOR), parent=self)
-        self._btnEdit.installEventFilter(OpacityEventFilter(self._btnEdit, 0.8, 0.5))
-        self._btnEdit.setIconSize(QSize(48, 48))
-        self._btnEdit.setStyleSheet(f'''
-        QToolButton {{
-            border: 2px solid {PLOTLYST_SECONDARY_COLOR};
-            border-radius: 36px;
-            background: {RELAXED_WHITE_COLOR};
-            padding: 10px;
-        }}
-        ''')
+        self._btnEdit.installEventFilter(OpacityEventFilter(self._btnEdit, 0.9, 0.7))
+        self._btnEdit.setObjectName('btnEdit')
 
         self._menuEdit = MenuWidget(self._btnEdit)
         self._menuEdit.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
@@ -911,10 +903,7 @@ class WorldBuildingMapView(BaseGraphicsView):
         self._wdgZoomBar.setGeometry(10, self.height() - self._wdgZoomBar.sizeHint().height() - 25,
                                      self._wdgZoomBar.sizeHint().width(),
                                      self._wdgZoomBar.sizeHint().height())
-        self._btnEdit.setGeometry(self.width() - self._btnEdit.sizeHint().width() - 20,
-                                  self.height() - self._btnEdit.sizeHint().height() - 20,
-                                  self._btnEdit.sizeHint().width(),
-                                  self._btnEdit.sizeHint().height())
+        self.__arrangeEditBtn()
 
         self._controlsNavBar.setGeometry(10, 100, self._controlsNavBar.sizeHint().width(),
                                          self._controlsNavBar.sizeHint().height())
@@ -925,10 +914,11 @@ class WorldBuildingMapView(BaseGraphicsView):
                                                    self._wdgSecondaryAreaSelector.sizeHint().width(),
                                                    self._wdgSecondaryAreaSelector.sizeHint().height())
 
-        # self._wdgEditor.setGeometry(self.width() - self._wdgEditor.width() - 20,
-        #                             20,
-        #                             self._wdgEditor.width(),
-        #                             self._wdgEditor.sizeHint().height())
+    def __arrangeEditBtn(self):
+        self._btnEdit.setGeometry(self.width() - self._btnEdit.sizeHint().width() - 20,
+                                  self.height() - self._btnEdit.sizeHint().height() - 20,
+                                  self._btnEdit.sizeHint().width(),
+                                  self._btnEdit.sizeHint().height())
 
     def _newControlButton(self, icon: QIcon, tooltip: str, itemType: GraphicsItemType):
         btn = tool_btn(icon, tooltip,
@@ -994,6 +984,29 @@ class WorldBuildingMapView(BaseGraphicsView):
         self._controlsNavBar.setVisible(True)
         self._wdgZoomBar.setVisible(True)
 
+        if map.ref:
+            self._btnEdit.setIconSize(QSize(32, 32))
+            self._btnEdit.setStyleSheet(f'''
+                    #btnEdit {{
+                        border: 2px solid {PLOTLYST_SECONDARY_COLOR};
+                        border-radius: 26px;
+                        background: {RELAXED_WHITE_COLOR};
+                        padding: 8px;
+                    }}
+                    ''')
+        else:
+            self._btnEdit.setIconSize(QSize(48, 48))
+            self._btnEdit.setStyleSheet(f'''
+                    #btnEdit {{
+                        border: 2px solid {PLOTLYST_SECONDARY_COLOR};
+                        border-radius: 36px;
+                        background: {RELAXED_WHITE_COLOR};
+                        padding: 10px;
+                    }}
+                    ''')
+        restyle(self._btnEdit)
+        self.__arrangeEditBtn()
+
     def _addNewMap(self):
         loadedImage: Optional[LoadedImage] = upload_image(self._novel)
         if loadedImage:
@@ -1035,7 +1048,7 @@ class WorldBuildingMapView(BaseGraphicsView):
         self._menuEdit.clear()
         addAction = action('Add map', IconRegistry.plus_icon(), tooltip="Upload am image for your map",
                            slot=self._addNewMap)
-        if self._scene.map():
+        if self._scene.map() and self._scene.map().ref:
             addAction.setText('Replace map')
             addAction.setToolTip('Replace your current map with a new image')
         self._menuEdit.addAction(addAction)
