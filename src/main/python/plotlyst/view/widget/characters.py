@@ -37,7 +37,7 @@ from plotlyst.core.template import SelectionItem, TemplateField, RoleImportance
 from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, Event
 from plotlyst.event.handler import event_dispatchers
-from plotlyst.events import CharacterSummaryChangedEvent
+from plotlyst.events import CharacterSummaryChangedEvent, CharacterBackstoryChangedEvent
 from plotlyst.resources import resource_registry
 from plotlyst.view.common import action, ButtonPressResizeEventFilter, tool_btn, label, push_btn
 from plotlyst.view.dialog.utility import ImageCropDialog
@@ -573,12 +573,11 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
     def setNovel(self, novel: Novel):
         self.novel = novel
         dispatcher = event_dispatchers.instance(self.novel)
-        dispatcher.register(self, CharacterSummaryChangedEvent)
+        dispatcher.register(self, CharacterSummaryChangedEvent, CharacterBackstoryChangedEvent)
 
     @overrides
     def event_received(self, event: Event):
-        if isinstance(event, CharacterSummaryChangedEvent):
-            self._refreshNext = True
+        self._refreshNext = True
 
     @overrides
     def showEvent(self, event: QShowEvent) -> None:

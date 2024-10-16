@@ -39,6 +39,11 @@ class CharacterSummaryChangedEvent(Event):
 
 
 @dataclass
+class CharacterBackstoryChangedEvent(Event):
+    character: Character
+
+
+@dataclass
 class CharacterDeletedEvent(Event):
     character: Character
 

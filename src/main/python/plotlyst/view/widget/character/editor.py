@@ -915,7 +915,6 @@ class CharacterBackstoryCard(BackstoryCard):
 
 
 class CharacterTimelineWidget(TimelineWidget):
-    changed = pyqtSignal()
 
     def __init__(self, parent=None):
         super(CharacterTimelineWidget, self).__init__(parent=parent)

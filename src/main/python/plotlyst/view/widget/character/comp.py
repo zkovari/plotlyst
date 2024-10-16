@@ -33,7 +33,8 @@ from plotlyst.core.template import iq_field, eq_field, rationalism_field, creati
     willpower_field, TemplateField
 from plotlyst.event.core import EventListener, Event, emit_event
 from plotlyst.event.handler import event_dispatchers
-from plotlyst.events import CharacterSummaryChangedEvent, CharacterChangedEvent, CharacterDeletedEvent
+from plotlyst.events import CharacterSummaryChangedEvent, CharacterChangedEvent, CharacterDeletedEvent, \
+    CharacterBackstoryChangedEvent
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import fade_out_and_gc, remove_and_gc
 from plotlyst.view.icons import set_avatar, avatars
@@ -190,8 +191,9 @@ class FacultiesDisplay(QWidget, BaseDisplay):
 
 
 class BackstoryDisplay(CharacterTimelineWidget, BaseDisplay):
-    def __init__(self, character: Character, parent=None):
+    def __init__(self, novel: Novel, character: Character, parent=None):
         super().__init__(parent)
+        self._novel = novel
         self._character = character
         self.setCharacter(self._character)
 
@@ -199,6 +201,7 @@ class BackstoryDisplay(CharacterTimelineWidget, BaseDisplay):
 
     def _save(self):
         self.repo.update_character(self._character)
+        emit_event(self._novel, CharacterBackstoryChangedEvent(self, self._character))
 
 
 class CharacterOverviewWidget(QWidget, EventListener):
@@ -258,7 +261,7 @@ class CharacterOverviewWidget(QWidget, EventListener):
             self._displayContainer.layout().addWidget(self._display)
         elif attribute == CharacterComparisonAttribute.BACKSTORY:
             self._wdgHeader.setHidden(True)
-            self._display = BackstoryDisplay(self._character)
+            self._display = BackstoryDisplay(self._novel, self._character)
             self._displayContainer.layout().addWidget(self._display)
 
 
