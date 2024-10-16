@@ -334,11 +334,11 @@ class GenrePrincipleSelectorDialog(PopupDialog):
         self._addPrinciple(PlotPrincipleType.FIRST_LOVE)
         self._addPrinciple(PlotPrincipleType.MENTOR)
 
-        self.btnConfirm = push_btn(text='Close', properties=['base', 'positive'])
-        sp(self.btnConfirm).h_exp()
-        self.btnConfirm.clicked.connect(self.accept)
+        self.btnClose = push_btn(text='Close', properties=['confirm', 'cancel'])
+        sp(self.btnClose).h_exp()
+        self.btnClose.clicked.connect(self.reject)
 
-        self.frame.layout().addWidget(self.btnConfirm)
+        self.frame.layout().addWidget(self.btnClose, alignment=Qt.AlignmentFlag.AlignRight)
 
     def display(self):
         self.exec()

@@ -255,10 +255,10 @@ class StoryBeatSelectorPopup(PopupDialog):
 
         margins(self.wdgCenter, right=20, top=15)
 
-        self.btnConfirm = push_btn(text='Close', properties=['base', 'positive'])
-        sp(self.btnConfirm).h_exp()
-        self.btnConfirm.clicked.connect(self.reject)
-        self.frame.layout().addWidget(self.btnConfirm)
+        self.btnClose = push_btn(text='Close', properties=['confirm', 'cancel'])
+        sp(self.btnClose).h_exp()
+        self.btnClose.clicked.connect(self.reject)
+        self.frame.layout().addWidget(self.btnClose, alignment=Qt.AlignmentFlag.AlignRight)
 
         if self._structure.template_type == TemplateStoryStructureType.TWISTS:
             self._addBeat(twist_beat)

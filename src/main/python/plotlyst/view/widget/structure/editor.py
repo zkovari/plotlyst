@@ -307,10 +307,9 @@ class StoryStructureSettingsPopup(PopupDialog):
             self.actSetting = ActSetting(self.structure)
             self.frame.layout().addWidget(self.actSetting)
 
-        self.btnConfirm = push_btn(text='Close', properties=['base', 'positive'])
-        sp(self.btnConfirm).h_exp()
-        self.btnConfirm.clicked.connect(self.reject)
-        self.frame.layout().addWidget(self.btnConfirm)
+        self.btnClose = push_btn(text='Close', properties=['confirm', 'cancel'])
+        self.btnClose.clicked.connect(self.reject)
+        self.frame.layout().addWidget(self.btnClose, alignment=Qt.AlignmentFlag.AlignRight)
 
     def display(self):
         self.exec()

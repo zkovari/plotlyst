@@ -1024,7 +1024,8 @@ class CharacterRoleSelector(QWidget):
         self._currentRole = protagonist_role
         self._currentButton: Optional[SelectionItemPushButton] = None
 
-        self.btnSelect = push_btn(IconRegistry.ok_icon('white'), 'Select', properties=['base', 'positive'])
+        self.btnSelect = push_btn(IconRegistry.ok_icon(RELAXED_WHITE_COLOR), 'Select',
+                                  properties=['confirm', 'positive'])
         self.btnSelect.clicked.connect(self._select)
 
         self.wdgDisplayHeader = QWidget()

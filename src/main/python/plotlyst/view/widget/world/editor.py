@@ -470,12 +470,14 @@ class VariableEditorDialog(PopupDialog):
         hbox(self.wdgTitle)
         self.wdgTitle.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
 
-        self.btnConfirm = push_btn(text='Confirm', properties=['base', 'positive'])
-        sp(self.btnConfirm).h_exp()
+        self.btnConfirm = push_btn(text='Confirm', properties=['confirm', 'positive'])
         self.btnConfirm.clicked.connect(self.accept)
         self.btnConfirm.setDisabled(True)
         self.btnConfirm.installEventFilter(
             DisabledClickEventFilter(self.btnConfirm, lambda: qtanim.shake(self.lineKey)))
+
+        self.btnCancel = push_btn(text='Cancel', properties=['confirm', 'cancel'])
+        self.btnCancel.clicked.connect(self.reject)
 
         if self._variable:
             self.lineKey.setText(self._variable.key)
@@ -483,7 +485,7 @@ class VariableEditorDialog(PopupDialog):
         self.frame.layout().addWidget(self.wdgTitle)
         self.frame.layout().addWidget(self.lineKey)
         self.frame.layout().addWidget(self.lineValue)
-        self.frame.layout().addWidget(self.btnConfirm)
+        self.frame.layout().addWidget(group(self.btnCancel, self.btnConfirm), alignment=Qt.AlignmentFlag.AlignRight)
 
     def display(self) -> Optional[Variable]:
         result = self.exec()

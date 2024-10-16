@@ -580,7 +580,7 @@ class CharacterChangesSelectorPopup(PopupDialog):
         self.wdgSelectors.layout().addWidget(self.wdgFinal)
         self.wdgSelectors.layout().addWidget(spacer())
 
-        self.btnConfirm = push_btn(text='Confirm', properties=['base', 'positive'])
+        self.btnConfirm = push_btn(text='Confirm', properties=['confirm', 'positive'])
         self.btnConfirm.setFixedWidth(250)
         self.btnConfirm.setShortcut(Qt.Key.Key_Return)
         sp(self.btnConfirm).h_exp()
