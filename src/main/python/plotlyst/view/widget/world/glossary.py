@@ -35,6 +35,7 @@ from plotlyst.core.template import SelectionItem
 from plotlyst.model.common import SelectionItemsModel, proxy
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import push_btn, label
+from plotlyst.view.layout import group
 from plotlyst.view.widget.display import PopupDialog
 from plotlyst.view.widget.input import AbstractTextBlockHighlighter
 from plotlyst.view.widget.items_editor import ItemsEditorWidget
@@ -195,6 +196,17 @@ class GlossaryEditorDialog(PopupDialog):
         self._glossary = glossary
         self._term = term
 
+        self.title = label('Edit glossary item' if glossary else 'Add glossary item', h4=True)
+        sp(self.title).v_max()
+        self.wdgTitle = QWidget()
+        hbox(self.wdgTitle)
+        self.wdgTitle.layout().addWidget(self.title, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgTitle.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
+
+        self.lblDesc = label("Define terms and definitions that are specific to your fictional world.",
+                             description=True, wordWrap=True)
+        sp(self.lblDesc).v_max()
+
         self.lineKey = QLineEdit()
         self.lineKey.setProperty('white-bg', True)
         self.lineKey.setProperty('rounded', True)
@@ -211,26 +223,25 @@ class GlossaryEditorDialog(PopupDialog):
         self.textDefinition.setProperty('rounded', True)
         self.textDefinition.setPlaceholderText('Define term')
 
-        self.wdgTitle = QWidget()
-        hbox(self.wdgTitle)
-        self.wdgTitle.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
-
         self.btnConfirm = push_btn(text='Confirm', properties=['confirm', 'positive'])
         sp(self.btnConfirm).h_exp()
         self.btnConfirm.clicked.connect(self._confirm)
         self.btnConfirm.setDisabled(True)
         self.btnConfirm.installEventFilter(
             DisabledClickEventFilter(self.btnConfirm, lambda: qtanim.shake(self.lineKey)))
+        self.btnCancel = push_btn(text='Cancel', properties=['confirm', 'cancel'])
+        self.btnCancel.clicked.connect(self.reject)
 
         if self._term:
             self.lineKey.setText(self._term.key)
             self.textDefinition.setMarkdown(self._term.text)
 
         self.frame.layout().addWidget(self.wdgTitle)
+        self.frame.layout().addWidget(self.lblDesc)
         self.frame.layout().addWidget(self.lineKey)
         self.frame.layout().addWidget(self.lblError)
         self.frame.layout().addWidget(self.textDefinition)
-        self.frame.layout().addWidget(self.btnConfirm)
+        self.frame.layout().addWidget(group(self.btnCancel, self.btnConfirm), alignment=Qt.AlignmentFlag.AlignRight)
 
     def display(self) -> GlossaryItem:
         result = self.exec()
