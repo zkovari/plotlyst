@@ -461,7 +461,12 @@ class ProfileSectionWidget(ProfileFieldWidget):
 class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, parent=None, minHeight: int = 60):
         super(SmallTextTemplateFieldWidget, self).__init__(parent)
-        _layout = vbox(self, margin=self._boxMargin, spacing=self._boxSpacing)
+
+        hbox(self, 0, 0)
+        self._wdgMain = QWidget()
+        self.layout().addWidget(self._wdgMain)
+
+        _layout = vbox(self._wdgMain, margin=self._boxMargin, spacing=self._boxSpacing)
         self.wdgEditor = AutoAdjustableTextEdit(height=minHeight)
         self.wdgEditor.setProperty('white-bg', True)
         self.wdgEditor.setProperty('rounded', True)
@@ -941,16 +946,15 @@ class _PrimaryFieldWidget(QWidget):
             if secondary_attribute is None:
                 secondary_attribute = CharacterSecondaryAttribute(type_)
                 self.attribute.attributes[type_.value] = secondary_attribute
-            wdg = CustomTextField(secondary, secondary_attribute, minHeight=50)
+            wdg = CustomTextField(secondary, secondary_attribute, minHeight=60)
             wdg.valueFilled.connect(self.valueChanged.emit)
             wdg.valueReset.connect(self.valueChanged.emit)
             self._secondaryFieldWidgets[secondary] = wdg
             item = self._secondaryWdgContainer.layout().itemAt(i)
             icon = Icon()
             icon.setIcon(IconRegistry.from_name('msc.dash', 'grey'))
-            spac = spacer()
-            sp(spac).h_preferred()
-            self._secondaryWdgContainer.layout().replaceWidget(item.widget(), group(icon, wdg, spac))
+            wdg.layout().insertWidget(0, icon)
+            self._secondaryWdgContainer.layout().replaceWidget(item.widget(), wdg)
         else:
             self._secondaryWdgContainer.layout().replaceWidget(self._secondaryFieldWidgets[secondary], spacer())
             gc(self._secondaryFieldWidgets[secondary])
