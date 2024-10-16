@@ -22,9 +22,10 @@ from dataclasses import dataclass
 from typing import Optional, Any, Dict, List
 
 import qtanim
-from PyQt6.QtCore import pyqtSignal, Qt, QModelIndex, QRect, QSize
-from PyQt6.QtGui import QTextCharFormat, QColor, QTextDocument, QTextBlockUserData, QResizeEvent, QShowEvent
-from PyQt6.QtWidgets import QWidget, QLineEdit, QTableView, QApplication, QDialog, QStyledItemDelegate, QTextEdit
+from PyQt6.QtCore import pyqtSignal, Qt, QModelIndex, QSize, QRect
+from PyQt6.QtGui import QTextCharFormat, QColor, QTextDocument, QTextBlockUserData, QResizeEvent, QShowEvent, QBrush
+from PyQt6.QtWidgets import QWidget, QLineEdit, QTableView, QApplication, QDialog, QStyledItemDelegate, QTextEdit, \
+    QStyleOptionViewItem, QStyle
 from overrides import overrides
 from qthandy import vbox, hbox, sp
 from qthandy.filter import DisabledClickEventFilter
@@ -104,14 +105,15 @@ class GlossaryDelegate(QStyledItemDelegate):
     TopMargin: int = 30
 
     @overrides
-    def paint(self, painter, option, index):
+    def paint(self, painter, option: QStyleOptionViewItem, index):
+        if option.state & QStyle.StateFlag.State_Selected:
+            painter.fillRect(option.rect, QBrush(QColor("#dabfa7")))
+
         if index.column() == 3:
             option.rect = QRect(option.rect.x(), option.rect.y() + self.TopMargin, option.rect.width(),
                                 option.rect.height() - self.TopMargin)
 
-        painter.save()
         super().paint(painter, option, index)
-        painter.restore()
 
     @overrides
     def sizeHint(self, option, index):
@@ -298,8 +300,17 @@ class WorldBuildingGlossaryEditor(QWidget):
         self.glossaryModel.modelReset.connect(self.editor.tableView.resizeRowsToContents)
         self.glossaryModel.glossaryRemoved.connect(self._save)
 
-        self.editor.tableView.setStyleSheet('QTableView::item { border: 0px; padding: 5px; }')
-        self.editor.tableView.setAlternatingRowColors(True)
+        self.editor.tableView.setStyleSheet('''
+            QTableView::item {
+                border: 0px;
+                padding: 5px; 
+            }
+            QTableView::item:selected {
+                background: #dabfa7;
+                color: black;
+            }
+            ''')
+        self.editor.tableView.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.editor.tableView.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
 
         self.layout().addWidget(self.editor)
