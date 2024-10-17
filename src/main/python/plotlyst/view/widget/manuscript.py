@@ -596,7 +596,7 @@ class ManuscriptTextEdit(TextEditBase):
             sceneSepCharFormat = QTextCharFormat()
             sceneSepCharFormat.setObjectType(SceneSeparatorTextFormat)
             sceneSepCharFormat.setToolTip(scene.synopsis)
-            # sceneSepCharFormat.setAnchor(True)
+            sceneSepCharFormat.setAnchor(True)
             sceneSepCharFormat.setAnchorHref(f'{SceneSeparatorTextFormatPrefix}{scene.id}')
 
             return sceneSepCharFormat
@@ -616,7 +616,7 @@ class ManuscriptTextEdit(TextEditBase):
         self.document().clearUndoRedoStacks()
 
     def insertNewBlock(self):
-        self.textCursor().insertBlock(self._defaultBlockFormat)
+        self.textCursor().insertBlock(self._defaultBlockFormat, QTextCharFormat())
 
     def _addScene(self, scene: Scene):
         if not scene.manuscript.loaded:
