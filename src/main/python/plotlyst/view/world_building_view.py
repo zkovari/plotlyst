@@ -173,6 +173,7 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.treeWorld.setNovel(self.novel)
         self.ui.treeWorld.entitySelected.connect(self._selection_changed)
         self.ui.treeWorld.milieuLinked.connect(self._milieu_linked)
+        self.ui.treeWorld.milieuUnlinked.connect(self._milieu_unlinked)
         self.ui.treeWorld.selectRoot()
 
         self.map = WorldBuildingMapView(self.novel)
@@ -244,6 +245,10 @@ class WorldBuildingView(AbstractNovelView):
             self._update_name()
 
     def _milieu_linked(self, entity: WorldBuildingEntity):
+        if self._entity is entity:
+            self._update_name()
+
+    def _milieu_unlinked(self, entity: WorldBuildingEntity):
         if self._entity is entity:
             self._update_name()
 

@@ -92,14 +92,18 @@ class EntityNode(ContainerNode):
     addEntity = pyqtSignal(WorldBuildingEntity)
     addEntities = pyqtSignal(list)
     milieuLinked = pyqtSignal(Location)
+    milieuUnlinked = pyqtSignal()
 
     def __init__(self, novel: Novel, entity: WorldBuildingEntity, parent=None, settings: Optional[TreeSettings] = None):
         self._actionLinkMilieu = action('Link milieu', IconRegistry.world_building_icon(), slot=self._linkToMilieu,
                                         tooltip="Link a milieu element")
-        super(EntityNode, self).__init__(entity.name, parent=parent, settings=settings)
-
+        self._actionUnlinkMilieu = action('Unlink milieu', IconRegistry.from_name('fa5s.unlink'),
+                                          slot=self._unlinkMilieu,
+                                          tooltip="Unlink from a milieu element")
         self._novel = novel
         self._entity = entity
+        super(EntityNode, self).__init__(entity.name, parent=parent, settings=settings)
+
         self.setPlusButtonEnabled(True)
         self.setTranslucentIconEnabled(True)
         self._additionMenu = EntityAdditionMenu(self._novel, self._btnAdd)
@@ -129,6 +133,10 @@ class EntityNode(ContainerNode):
     @overrides
     def _initMenuActions(self, menu: MenuWidget):
         menu.addAction(self._actionLinkMilieu)
+        menu.addAction(self._actionUnlinkMilieu)
+        self._actionLinkMilieu.setVisible(self._entity.ref is None)
+        self._actionUnlinkMilieu.setVisible(self._entity.ref is not None)
+
         menu.addSeparator()
         menu.addAction(self._actionDelete)
 
@@ -137,6 +145,13 @@ class EntityNode(ContainerNode):
         element: Location = MilieuSelectorPopup.popup(self._novel)
         if element:
             self.milieuLinked.emit(element)
+            self._actionLinkMilieu.setVisible(False)
+            self._actionUnlinkMilieu.setVisible(True)
+
+    def _unlinkMilieu(self):
+        self._actionLinkMilieu.setVisible(True)
+        self._actionUnlinkMilieu.setVisible(False)
+        self.milieuUnlinked.emit()
 
 
 class RootNode(EntityNode):
@@ -146,11 +161,16 @@ class RootNode(EntityNode):
         self.setMenuEnabled(False)
         self.setPlusButtonEnabled(False)
 
+    @overrides
+    def _initMenuActions(self, menu: MenuWidget):
+        pass
+
 
 class WorldBuildingTreeView(TreeView):
     WORLD_ENTITY_MIMETYPE = 'application/world-entity'
     entitySelected = pyqtSignal(WorldBuildingEntity)
     milieuLinked = pyqtSignal(WorldBuildingEntity)
+    milieuUnlinked = pyqtSignal(WorldBuildingEntity)
 
     def __init__(self, parent=None, settings: Optional[TreeSettings] = None):
         super(WorldBuildingTreeView, self).__init__(parent)
@@ -185,7 +205,7 @@ class WorldBuildingTreeView(TreeView):
         wdg = self.__initEntityWidget(entity)
         self._root.addChild(wdg)
         self._novel.world.root_entity.children.append(entity)
-        self.repo.update_world(self._novel)
+        self._save()
 
         emit_event(self._novel, WorldEntityAddedEvent(self, entity))
 
@@ -228,6 +248,16 @@ class WorldBuildingTreeView(TreeView):
         self.milieuLinked.emit(entity)
         emit_event(self._novel, ItemLinkedEvent(self, entity))
 
+    def _unlinkMilieu(self, node: EntityNode):
+        entity = node.entity()
+        if entity.ref:
+            emit_event(self._novel, ItemUnlinkedEvent(self, entity, entity.ref))
+
+            entity.ref = None
+            node.refresh()
+            self.milieuUnlinked.emit(entity)
+            self._save()
+
     def _entitySelectionChanged(self, node: EntityNode, selected: bool):
         if selected:
             self.clearSelection()
@@ -240,7 +270,7 @@ class WorldBuildingTreeView(TreeView):
         wdg = self.__initEntityWidget(entity)
         parent.addChild(wdg)
         parent.entity().children.append(entity)
-        self.repo.update_world(self._novel)
+        self._save()
 
         emit_event(self._novel, WorldEntityAddedEvent(self, entity))
 
@@ -267,7 +297,7 @@ class WorldBuildingTreeView(TreeView):
 
         node.parent().parent().entity().children.remove(entity)
         fade_out_and_gc(node.parent(), node)
-        self.repo.update_world(self._novel)
+        self._save()
 
         emit_event(self._novel, WorldEntityDeletedEvent(self, entity))
 
@@ -333,6 +363,9 @@ class WorldBuildingTreeView(TreeView):
         entity_parent_wdg.insertChild(new_index, new_widget)
 
         self._dummyWdg.setHidden(True)
+        self._save()
+
+    def _save(self):
         self.repo.update_world(self._novel)
 
     def _removeFromParentEntity(self, entity: WorldBuildingEntity, wdg: EntityNode):
@@ -343,6 +376,7 @@ class WorldBuildingTreeView(TreeView):
         node = EntityNode(self._novel, entity, settings=self._settings)
         node.selectionChanged.connect(partial(self._entitySelectionChanged, node))
         node.milieuLinked.connect(partial(self._linkMilieu, node))
+        node.milieuUnlinked.connect(partial(self._unlinkMilieu, node))
         node.addEntity.connect(partial(self._addEntity, node))
         node.addEntities.connect(partial(self._addEntities, node))
         node.deleted.connect(partial(self._removeEntity, node))
