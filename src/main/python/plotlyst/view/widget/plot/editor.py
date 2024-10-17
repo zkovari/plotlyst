@@ -97,7 +97,8 @@ class PlotTreeView(TreeView, EventListener):
 
         self.refresh()
 
-        event_dispatchers.instance(self._novel).register(self, StorylineCharacterAssociationChanged)
+        event_dispatchers.instance(self._novel).register(self, StorylineCharacterAssociationChanged,
+                                                         CharacterChangedEvent)
 
     @overrides
     def event_received(self, event: Event):
@@ -374,7 +375,13 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
                 self._characterSelector.reset()
             if self._characterRelationSelector and self._characterRelationSelector.character() and self._characterRelationSelector.character().id == event.character.id:
                 self._characterRelationSelector.reset()
-            self._dynamicPrinciplesEditor.refreshCharacters()
+        elif isinstance(event, CharacterChangedEvent):
+            if self._characterSelector.character() and self._characterSelector.character().id == event.character.id:
+                self._characterSelector.updateAvatar()
+            if self._characterRelationSelector and self._characterRelationSelector.character() and self._characterRelationSelector.character().id == event.character.id:
+                self._characterRelationSelector.updateAvatar()
+
+        self._dynamicPrinciplesEditor.refreshCharacters()
 
     def _updateIcon(self):
         if self.plot.icon:
