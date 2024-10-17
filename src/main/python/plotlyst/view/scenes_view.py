@@ -720,6 +720,7 @@ class ScenesOutlineView(AbstractNovelView):
     def _on_scene_cards_swapped(self, scenes: List[Scene]):
         self.novel.scenes[:] = scenes
         self._handle_scene_order_changed()
+        self.selected_card = None
         emit_event(self.novel, SceneOrderChangedEvent(self))
 
     def _on_scene_moved_in_table(self):
