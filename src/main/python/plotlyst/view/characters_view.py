@@ -286,6 +286,8 @@ class CharactersView(AbstractNovelView):
     def _characters_swapped(self, characters: List[Character]):
         self.novel.characters[:] = characters
 
+        self.selected_card = None
+
         self.refresh()
         self.repo.update_novel(self.novel)
 
