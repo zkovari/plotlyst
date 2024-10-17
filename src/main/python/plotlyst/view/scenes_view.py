@@ -717,7 +717,20 @@ class ScenesOutlineView(AbstractNovelView):
             if chapters:
                 self.ui.treeChapters.removeChapter(chapters[0])
 
-    def _on_scene_cards_swapped(self, scenes: List[Scene]):
+    def _on_scene_cards_swapped(self, scenes: List[Scene], droppedCard: SceneCard):
+        droppedScene = droppedCard.scene
+        i = scenes.index(droppedScene)
+        if i == 0 and len(scenes) > 1:  # first pos
+            if scenes[1].chapter:
+                droppedScene.chapter = scenes[1].chapter
+                self.repo.update_scene(droppedScene)
+        elif i == len(scenes) - 1 and i > 0:  # last pos
+            droppedScene.chapter = scenes[i - 1].chapter
+            self.repo.update_scene(droppedScene)
+        elif i < len(scenes) - 1:
+            droppedScene.chapter = scenes[i + 1].chapter
+            self.repo.update_scene(droppedScene)
+
         self.novel.scenes[:] = scenes
         self._handle_scene_order_changed()
         self.selected_card = None

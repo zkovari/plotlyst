@@ -357,7 +357,7 @@ class CardsView(QFrame):
     cardEntered = pyqtSignal(Card)
     cardDoubleClicked = pyqtSignal(Card)
     cardCustomContextMenuRequested = pyqtSignal(Card, QPoint)
-    orderChanged = pyqtSignal(list)
+    orderChanged = pyqtSignal(list, Card)  # dropped Card
     selectionCleared = pyqtSignal()
 
     def __init__(self, parent=None):
@@ -517,11 +517,11 @@ class CardsView(QFrame):
 
     def _dropped(self, _: QMimeData):
         self.clearSelection()
-        card = self._dragged.copy()
-        self._initCardWidget(card)
+        droppedCard = self._dragged.copy()
+        self._initCardWidget(droppedCard)
 
         i = self._layout.indexOf(self._dragPlaceholder)
-        self._layout.insertWidget(i, card)
+        self._layout.insertWidget(i, droppedCard)
 
         data = []
         for i in range(self._layout.count()):
@@ -529,7 +529,8 @@ class CardsView(QFrame):
             if card is self._dragPlaceholder or card is self._dragged:
                 continue
             data.append(card.data())
-        QTimer.singleShot(10, lambda: self.orderChanged.emit(data))
+
+        QTimer.singleShot(10, lambda: self.orderChanged.emit(data, droppedCard))
         gc(self._dragPlaceholder)
         self._dragPlaceholder = None
 

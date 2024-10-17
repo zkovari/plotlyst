@@ -283,7 +283,7 @@ class CharactersView(AbstractNovelView):
             self.ui.btnDelete.setEnabled(True)
         self.ui.btnEdit.setEnabled(True)
 
-    def _characters_swapped(self, characters: List[Character]):
+    def _characters_swapped(self, characters: List[Character], _: CharacterCard):
         self.novel.characters[:] = characters
 
         self.selected_card = None
