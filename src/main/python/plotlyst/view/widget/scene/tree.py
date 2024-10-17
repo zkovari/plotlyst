@@ -208,7 +208,7 @@ class ScenesTreeView(TreeView, EventListener):
         vbox(self._spacer)
         self._spacer.setAcceptDrops(True)
         self._spacer.installEventFilter(
-            DropEventFilter(self, [self.SCENE_MIME_TYPE, self.CHAPTER_MIME_TYPE], enteredSlot=self._dragEnteredForEnd,
+            DropEventFilter(self, [self.SCENE_MIME_TYPE], enteredSlot=self._dragEnteredForEnd,
                             leftSlot=self._dragLeftFromEnd, droppedSlot=self._drop))
 
         self._centralWidget.setAcceptDrops(True)
