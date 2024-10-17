@@ -23,7 +23,7 @@ from typing import Optional, Dict, List
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QMimeData, QPointF, QEvent
-from PyQt6.QtGui import QTextCharFormat, QTextCursor, QFont, QResizeEvent, QMouseEvent, QColor, QIcon, QImage, \
+from PyQt6.QtGui import QFont, QResizeEvent, QMouseEvent, QColor, QIcon, QImage, \
     QShowEvent, QPixmap, QCursor, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QDialog, QGridLayout, QSlider, QToolButton, QButtonGroup, \
     QLabel, QToolTip, QSpacerItem, QSizePolicy
@@ -202,7 +202,8 @@ class WorldBuildingEntityElementWidget(QWidget):
 class TextElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
         super().__init__(novel, element, parent)
-        self._capitalized = False
+        self._capitalizedChecked = False
+        self._isProcessingTextChanged = False
 
         self.textEdit = WorldBuildingTextEdit(novel)
         if self._underSection():
@@ -215,17 +216,18 @@ class TextElementEditor(WorldBuildingEntityElementWidget):
             self.textEdit.setPlaceholderText("Describe this section, or press '/' for commands...")
         else:
             self.textEdit.setPlaceholderText('Describe this entity...')
+        font = self.textEdit.font()
+        if app_env.is_mac():
+            self._fontPointSize = 18
+        else:
+            self._fontPointSize = 16
+        font.setPointSize(self._fontPointSize)
+        font.setFamily(app_env.sans_serif_font())
+        self.textEdit.setFont(font)
+
         self.textEdit.textChanged.connect(self._textChanged)
         self.textEdit.setMarkdown(element.text)
         self.textEdit.setBlockFormat(margin_bottom=10, margin_top=10)
-
-        font = self.textEdit.font()
-        if app_env.is_mac():
-            font.setPointSize(18)
-        else:
-            font.setPointSize(16)
-        font.setFamily(app_env.sans_serif_font())
-        self.textEdit.setFont(font)
 
         self.layout().addWidget(self.textEdit)
         self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -236,21 +238,57 @@ class TextElementEditor(WorldBuildingEntityElementWidget):
         self.element.text = self.textEdit.toMarkdown()
         self.save()
 
-        if not self.textEdit.toPlainText() or len(self.textEdit.toPlainText()) == 1:
-            self._capitalized = False
-            return
-
-        if self._capitalized:
-            return
-
-        format_first_letter = QTextCharFormat()
-        format_first_letter.setFontPointSize(32)
-
-        cursor = QTextCursor(self.textEdit.document())
-        cursor.movePosition(QTextCursor.MoveOperation.Start)
-        cursor.movePosition(QTextCursor.MoveOperation.NextCharacter, QTextCursor.MoveMode.KeepAnchor)
-        self._capitalized = True
-        cursor.setCharFormat(format_first_letter)
+        # if self._isProcessingTextChanged:
+        #     return
+        # self._isProcessingTextChanged = True
+        #
+        # cursor = QTextCursor(self.textEdit.document())
+        # text = self.textEdit.toPlainText()
+        # if not text or len(text) == 1:
+        #     self._capitalizedChecked = False
+        #     self._isProcessingTextChanged = False
+        #     return
+        #
+        # cursor.movePosition(QTextCursor.MoveOperation.Start)
+        # cursor.movePosition(QTextCursor.MoveOperation.NextCharacter, QTextCursor.MoveMode.KeepAnchor)
+        #
+        # if cursor.block().textList():
+        #     self._capitalizedChecked = True
+        #     self._isProcessingTextChanged = False
+        #     return
+        # if cursor.blockFormat().headingLevel() > 0:
+        #     self._capitalizedChecked = True
+        #     self._isProcessingTextChanged = False
+        #     return
+        #
+        # if self.textEdit.textCursor().position() == 1 and self._capitalizedChecked:
+        #     print('pos 1 and cap checked already')
+        #     self._capitalizedChecked = False
+        #     format_normal = QTextCharFormat()
+        #     format_normal.setFontPointSize(self._fontPointSize)
+        #     resetCursor = QTextCursor(self.textEdit.document())
+        #     resetCursor.select(QTextCursor.SelectionType.Document)
+        #     resetCursor.mergeCharFormat(format_normal)
+        # elif self.textEdit.textCursor().position() == 2 and self._capitalizedChecked:
+        #     print('reset at pos 2')
+        #     resetCursor = self.textEdit.textCursor()
+        #     select_previous_character(resetCursor)
+        #     format_normal = QTextCharFormat()
+        #     format_normal.setFontPointSize(self._fontPointSize)
+        #     resetCursor.mergeCharFormat(format_normal)
+        #
+        # if self._capitalizedChecked:
+        #     self._isProcessingTextChanged = False
+        #     return
+        #
+        # if not self._capitalizedChecked and cursor.hasSelection():
+        #     print('capitalize')
+        #     self._capitalizedChecked = True
+        #     format_first_letter = QTextCharFormat()
+        #     format_first_letter.setFontPointSize(32)
+        #     cursor.setCharFormat(format_first_letter)
+        #
+        # self._isProcessingTextChanged = False
 
 
 class HeaderElementEditor(WorldBuildingEntityElementWidget):
