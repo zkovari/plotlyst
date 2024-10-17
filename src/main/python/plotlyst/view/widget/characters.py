@@ -161,7 +161,7 @@ class CharacterSelectorButtons(QWidget):
         self._buttonsPerCharacters.clear()
 
 
-class CharacterSelectorMenu(MenuWidget):
+class CharacterSelectorMenu(ScrollableMenuWidget):
     selected = pyqtSignal(Character)
 
     def __init__(self, novel: Novel, parent=None):
@@ -169,6 +169,8 @@ class CharacterSelectorMenu(MenuWidget):
         self._novel = novel
         self._characters: Optional[List[Character]] = None
         self.aboutToShow.connect(self._beforeShow)
+
+        self._scrollarea.setMinimumHeight(300)
 
     def setCharacters(self, character: List[Character]):
         self._characters = character
