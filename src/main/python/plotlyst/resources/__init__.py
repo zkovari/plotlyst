@@ -48,6 +48,7 @@ class ResourceRegistry:
         self._banner = None
         self._circular_frame1 = None
         self._manuscript_docx_template = None
+        self._plotlyst_icon = None
 
     def set_up(self, context: Optional[ApplicationContext] = None):
         self._cork = self.__get_resource('cork.wav', context)
@@ -58,6 +59,7 @@ class ResourceRegistry:
         self._banner = self.__get_resource('plotlyst_banner.png', context)
         self._circular_frame1 = self.__get_resource('circular_frame1.png', context)
         self._manuscript_docx_template = self.__get_resource('manuscript-template.docx', context)
+        self._plotlyst_icon = self.__get_resource('Icon.ico', context)
 
     def __get_resource(self, name: str, context: Optional[ApplicationContext] = None):
         if context:
@@ -104,6 +106,10 @@ class ResourceRegistry:
     @property
     def manuscript_docx_template(self) -> str:
         return self._manuscript_docx_template
+
+    @property
+    def plotlyst_icon(self) -> str:
+        return self._plotlyst_icon
 
 
 resource_registry = ResourceRegistry()

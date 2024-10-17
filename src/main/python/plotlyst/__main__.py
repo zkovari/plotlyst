@@ -37,7 +37,7 @@ try:
     from plotlyst.service.dir import select_new_project_directory, default_directory
     from plotlyst.service.log import setup_logging
 
-    from PyQt6.QtGui import QFont
+    from PyQt6.QtGui import QFont, QIcon
     from PyQt6.QtWidgets import QApplication, QMessageBox
     from fbs_runtime.application_context.PyQt6 import ApplicationContext
     from fbs_runtime import platform
@@ -95,6 +95,11 @@ if __name__ == '__main__':
         settings.clear()
     resource_registry.set_up(appctxt)
     resource_manager.init()
+
+    if app_env.is_windows():
+        icon = QIcon(resource_registry.plotlyst_icon)
+        app.setWindowIcon(icon)
+
     workspace: Optional[str] = settings.workspace()
     if not workspace or not os.path.exists(workspace):
         workspace = default_directory()
