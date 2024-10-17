@@ -1216,13 +1216,15 @@ class ManuscriptProgressCalendar(QCalendarWidget):
         self._initButton(item.widget().layout().itemAt(0), 'ei.circle-arrow-left')
         self._initButton(item.widget().layout().itemAt(6), 'ei.circle-arrow-right')
 
-        item = self.layout().itemAt(1)
-        if isinstance(item.widget(), QTableView):
-            item.widget().setStyleSheet(f'''
+        widget = self.layout().itemAt(1).widget()
+        if isinstance(widget, QTableView):
+            widget.setStyleSheet(f'''
             QTableView {{
                 selection-background-color: {RELAXED_WHITE_COLOR};
             }}
             ''')
+            widget.horizontalHeader().setMinimumSectionSize(20)
+            widget.verticalHeader().setMinimumSectionSize(20)
 
         today = QDate.currentDate()
         self.setMaximumDate(today)
@@ -1232,6 +1234,7 @@ class ManuscriptProgressCalendar(QCalendarWidget):
         if QDate.currentDate() != self.maximumDate():
             self.setMaximumDate(QDate.currentDate())
             self.showToday()
+        super().showEvent(event)
 
     @overrides
     def showToday(self) -> None:
