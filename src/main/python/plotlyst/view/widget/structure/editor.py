@@ -347,6 +347,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.btnLinkCharacter.setIcon(IconRegistry.character_icon())
         self.btnLinkCharacter.installEventFilter(ButtonPressResizeEventFilter(self.btnLinkCharacter))
         self.btnLinkCharacter.installEventFilter(OpacityEventFilter(self.btnLinkCharacter, leaveOpacity=0.8))
+        self.btnLinkCharacter.clicked.connect(self._showCharacterMenu)
         self.btnConfigure.setIcon(IconRegistry.cog_icon(color='grey'))
         italic(self.btnConfigure)
         self.btnConfigure.installEventFilter(ButtonPressResizeEventFilter(self.btnConfigure))
@@ -359,8 +360,6 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
                      IconRegistry.from_name('mdi6.grid', color_on=PLOTLYST_SECONDARY_COLOR))
         set_tab_icon(self.tabWidget, self.tabNotes, IconRegistry.document_edition_icon())
         set_tab_visible(self.tabWidget, self.tabNotes, False)
-
-        self._characterMenu: Optional[CharacterSelectorMenu] = None
 
         self.btnGroupStructure = QButtonGroup()
         self.btnGroupStructure.setExclusive(True)
@@ -414,9 +413,6 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         dispatcher = event_dispatchers.instance(self.novel)
         dispatcher.register(self, CharacterChangedEvent, CharacterDeletedEvent, NovelSyncEvent,
                             NovelStoryStructureActivationRequest)
-
-        self._characterMenu = CharacterSelectorMenu(self.novel, self.btnLinkCharacter)
-        self._characterMenu.selected.connect(self._characterLinked)
 
         self.wdgStructureOutline.setNovel(self.novel)
 
@@ -495,8 +491,25 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self._activeStructureToggled(self.novel.active_story_structure, True)
         self._emit()
 
+    def _showCharacterMenu(self):
+        if self.novel.active_story_structure.character_id:
+            menu = MenuWidget()
+            menu.addAction(
+                action('Unlink character', IconRegistry.from_name('fa5s.unlink'), slot=self._characterUnlinked))
+        else:
+            menu = CharacterSelectorMenu(self.novel)
+            menu.selected.connect(self._characterLinked)
+        menu.exec()
+
     def _characterLinked(self, character: Character):
         self.novel.active_story_structure.set_character(character)
+        self.__handleCharacterLinkChange()
+
+    def _characterUnlinked(self):
+        self.novel.active_story_structure.reset_character()
+        self.__handleCharacterLinkChange()
+
+    def __handleCharacterLinkChange(self):
         self.btnGroupStructure.checkedButton().refresh(True)
         self._save()
         self._activeStructureToggled(self.novel.active_story_structure, True)
