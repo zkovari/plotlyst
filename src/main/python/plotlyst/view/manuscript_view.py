@@ -27,7 +27,8 @@ from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 from qttextedit import DashInsertionMode
 from qttextedit.api import AutoCapitalizationMode
-from qttextedit.ops import TextEditorSettingsWidget, TextEditorSettingsSection, FontSectionSettingWidget
+from qttextedit.ops import TextEditorSettingsWidget, TextEditorSettingsSection, FontSectionSettingWidget, \
+    FontSizeSectionSettingWidget, TextWidthSectionSettingWidget
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, Document, Chapter, DocumentProgress, FontSettings
@@ -187,10 +188,16 @@ class ManuscriptView(AbstractNovelView):
         self.ui.pageSettings.layout().addWidget(self._contextMenuWidget)
         self._contextMenuWidget.setSectionVisible(TextEditorSettingsSection.PAGE_WIDTH, False)
         self._contextMenuWidget.setSectionVisible(TextEditorSettingsSection.TEXT_WIDTH, True)
-        if self.novel.prefs.manuscript.font.get(app_env.platform(), ''):
+        if app_env.platform() in self.novel.prefs.manuscript.font.keys():
+            fontSettings = self._getFontSettings()
             font_: QFont = self.ui.textEdit.textEdit.font()
-            font_.setFamily(self.novel.prefs.manuscript.font[app_env.platform()].family)
+            if fontSettings.family:
+                font_.setFamily(fontSettings.family)
+            if fontSettings.font_size:
+                font_.setPointSize(fontSettings.font_size)
             self.ui.textEdit.textEdit.setFont(font_)
+            if fontSettings.text_width:
+                self.ui.textEdit.setCharacterWidth(fontSettings.text_width)
         self.ui.textEdit.textEdit.setDashInsertionMode(self.novel.prefs.manuscript.dash)
         self.ui.textEdit.textEdit.setAutoCapitalizationMode(self.novel.prefs.manuscript.capitalization)
         self.ui.textEdit.attachSettingsWidget(self._contextMenuWidget)
@@ -231,8 +238,15 @@ class ManuscriptView(AbstractNovelView):
         self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
         self.ui.textEdit.sceneTitleChanged.connect(self._scene_title_changed)
         self.ui.textEdit.progressChanged.connect(self._progress_changed)
-        section: FontSectionSettingWidget = self.ui.textEdit.settingsWidget().section(TextEditorSettingsSection.FONT)
-        section.fontSelected.connect(self._fontChanged)
+        fontSection: FontSectionSettingWidget = self.ui.textEdit.settingsWidget().section(
+            TextEditorSettingsSection.FONT)
+        fontSection.fontSelected.connect(self._fontChanged)
+        sizeSection: FontSizeSectionSettingWidget = self.ui.textEdit.settingsWidget().section(
+            TextEditorSettingsSection.FONT_SIZE)
+        sizeSection.sizeChanged.connect(self._fontSizeChanged)
+        textWidthSection: TextWidthSectionSettingWidget = self.ui.textEdit.settingsWidget().section(
+            TextEditorSettingsSection.TEXT_WIDTH)
+        textWidthSection.widthChanged.connect(self._textWidthChanged)
         self._btnDistractionFree.clicked.connect(self._enter_distraction_free)
 
         if self.novel.chapters:
@@ -453,11 +467,24 @@ class ManuscriptView(AbstractNovelView):
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
 
     def _fontChanged(self, family: str):
-        if app_env.platform() not in self.novel.prefs.manuscript.font.keys():
-            self.novel.prefs.manuscript.font[app_env.platform()] = FontSettings()
-        fontSettings = self.novel.prefs.manuscript.font[app_env.platform()]
+        fontSettings = self._getFontSettings()
         fontSettings.family = family
         self.repo.update_novel(self.novel)
+
+    def _fontSizeChanged(self, size: int):
+        fontSettings = self._getFontSettings()
+        fontSettings.font_size = size
+        self.repo.update_novel(self.novel)
+
+    def _textWidthChanged(self, width: int):
+        fontSettings = self._getFontSettings()
+        fontSettings.text_width = width
+        self.repo.update_novel(self.novel)
+
+    def _getFontSettings(self) -> FontSettings:
+        if app_env.platform() not in self.novel.prefs.manuscript.font.keys():
+            self.novel.prefs.manuscript.font[app_env.platform()] = FontSettings()
+        return self.novel.prefs.manuscript.font[app_env.platform()]
 
     def _dashInsertionChanged(self, mode: DashInsertionMode):
         self.ui.textEdit.textEdit.setDashInsertionMode(mode)

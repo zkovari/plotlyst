@@ -3637,6 +3637,8 @@ class Relation(SelectionItem):
 @dataclass
 class FontSettings:
     family: str = ''
+    text_width: int = 0
+    font_size: int = 0
 
 
 @dataclass
