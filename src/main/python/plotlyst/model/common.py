@@ -22,7 +22,7 @@ from typing import List, Any, Set, Optional, Dict
 
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, Qt, QAbstractItemModel, QSortFilterProxyModel, pyqtSignal, \
     QVariant
-from PyQt6.QtGui import QFont, QColor, QBrush
+from PyQt6.QtGui import QColor, QBrush
 from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 
@@ -103,12 +103,10 @@ class SelectionItemsModel(QAbstractTableModel):
     def checkItem(self, item: SelectionItem):
         if self._checkable:
             self._checked.add(item)
-            # self.selection_changed.emit()
 
     def uncheckItem(self, item: SelectionItem):
         if self._checkable and item in self._checked:
             self._checked.remove(item)
-            self.selection_changed.emit()
 
     def toggleCheckedItem(self, item: SelectionItem):
         if self._checkable:
@@ -156,6 +154,7 @@ class SelectionItemsModel(QAbstractTableModel):
     def remove(self, index: QModelIndex):
         if self._checkable:
             self.uncheckItem(self.item(index))
+            self.selection_changed.emit()
         self.modelReset.emit()
 
     @overrides
