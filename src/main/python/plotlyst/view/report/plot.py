@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from dataclasses import dataclass, field
 from functools import partial
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Iterable
 
 import qtanim
 from PyQt6.QtCharts import QSplineSeries, QValueAxis, QLegend, QAbstractSeries, QLineSeries
@@ -115,6 +115,12 @@ class ArcsTreeView(TreeView):
         # self._centralWidget.layout().addWidget(self._agendaCharactersNode)
         self._centralWidget.layout().addWidget(vspacer())
 
+    def isGeneralProgressToggled(self) -> bool:
+        return self._generalProgressNode.isToggled()
+
+    def toggledStorylines(self) -> Iterable[Plot]:
+        return [x for x in self._storylineNodes.keys() if self._storylineNodes[x].isToggled()]
+
     def removeStoryline(self, plot: Plot):
         node = self._storylineNodes.pop(plot)
         if node.isToggled():
@@ -162,6 +168,13 @@ class ArcReport(AbstractReport, Ui_PlotReport):
     @overrides
     def refresh(self):
         self._treeView.refresh()
+        self.chartValues.clear()
+        self.chartValues.refresh()
+        if self._treeView.isGeneralProgressToggled():
+            self.chartValues.setProgressVisible(True)
+
+        for plot in self._treeView.toggledStorylines():
+            self.chartValues.setStorylineVisible(plot, True)
 
     def removeStoryline(self, plot: Plot):
         self._treeView.removeStoryline(plot)
@@ -284,6 +297,9 @@ class StoryArcChart(BaseChart):
 
     def refresh(self):
         self._axisX.setRange(0, len(self.novel.scenes))
+
+    def clear(self):
+        self.removeAllSeries()
 
     def _characterArcs(self, character: Character) -> CharacterArcs:
         if character not in self._characters.keys():
