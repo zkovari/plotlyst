@@ -286,21 +286,21 @@
         <height>208</height>
        </rect>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
+      <layout class="QHBoxLayout" name="horizontalLayout_5">
        <property name="spacing">
-        <number>0</number>
+        <number>3</number>
        </property>
        <property name="leftMargin">
-        <number>20</number>
-       </property>
-       <property name="topMargin">
         <number>15</number>
        </property>
+       <property name="topMargin">
+        <number>5</number>
+       </property>
        <property name="rightMargin">
-        <number>0</number>
+        <number>15</number>
        </property>
        <property name="bottomMargin">
-        <number>0</number>
+        <number>5</number>
        </property>
       </layout>
      </widget>
