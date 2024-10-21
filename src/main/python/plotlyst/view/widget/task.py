@@ -18,16 +18,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Dict
+from typing import Dict, Optional
 
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QMimeData, QObject, QEvent
-from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QWidget, QFrame, QSizePolicy, QLabel, QToolButton, QPushButton
+from PyQt6.QtGui import QFont, QMouseEvent
+from PyQt6.QtWidgets import QWidget, QFrame, QSizePolicy, QLabel, QToolButton, QPushButton, QDialog, QLineEdit, \
+    QTextEdit
 from overrides import overrides
 from qthandy import vbox, hbox, transparent, vspacer, margins, spacer, bold, retain_when_hidden, incr_font, \
-    gc, decr_icon, pointy
-from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, DragEventFilter, DropEventFilter
+    gc, decr_icon, pointy, sp
+from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, DragEventFilter, DropEventFilter, \
+    DisabledClickEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.common import RELAXED_WHITE_COLOR
@@ -40,16 +42,80 @@ from plotlyst.events import CharacterDeletedEvent, TaskChanged, TaskDeleted, Tas
     TaskChangedFromWip
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import ButtonPressResizeEventFilter, shadow, action, tool_btn, \
-    any_menu_visible, insert_before_the_end
+    any_menu_visible, insert_before_the_end, label, push_btn
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.button import CollapseButton, TaskTagSelector
 from plotlyst.view.widget.characters import CharacterSelectorButton
-from plotlyst.view.widget.input import AutoAdjustableLineEdit
+from plotlyst.view.widget.display import PopupDialog
 
 TASK_WIDGET_MAX_WIDTH = 350
 
 TASK_MIME_TYPE: str = 'application/task'
+
+
+class TaskEditorPopup(PopupDialog):
+    def __init__(self, status: Optional[TaskStatus] = None, task: Optional[Task] = None, parent=None):
+        super().__init__(parent)
+        self._status = status
+        self._task = task
+
+        if self._status is None and self._task is None:
+            raise ValueError('Either status or task must be given')
+
+        self.title = label('Edit task' if self._task else 'Add new task', h4=True)
+        sp(self.title).v_max()
+        self.wdgTitle = QWidget()
+        hbox(self.wdgTitle)
+        self.wdgTitle.layout().addWidget(self.title, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgTitle.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
+
+        # self.lblDesc = label("Define terms and definitions that are specific to your fictional world.",
+        #                      description=True, wordWrap=True)
+        # sp(self.lblDesc).v_max()
+
+        self.lineTitle = QLineEdit()
+        incr_font(self.lineTitle)
+        self.lineTitle.setProperty('white-bg', True)
+        self.lineTitle.setProperty('rounded', True)
+        self.lineTitle.setPlaceholderText('Title of your task')
+        self.lineTitle.textChanged.connect(self._titleChanged)
+
+        self.textSummary = QTextEdit()
+        self.textSummary.setProperty('white-bg', True)
+        self.textSummary.setProperty('rounded', True)
+        self.textSummary.setPlaceholderText('Task description')
+
+        self.btnConfirm = push_btn(text='Confirm', properties=['confirm', 'positive'])
+        sp(self.btnConfirm).h_exp()
+        self.btnConfirm.clicked.connect(self.accept)
+        self.btnConfirm.setDisabled(True)
+        self.btnConfirm.installEventFilter(
+            DisabledClickEventFilter(self.btnConfirm, lambda: qtanim.shake(self.lineTitle)))
+        self.btnCancel = push_btn(text='Cancel', properties=['confirm', 'cancel'])
+        self.btnCancel.clicked.connect(self.reject)
+
+        if self._task:
+            self.lineTitle.setText(self._task.title)
+            self.textSummary.setMarkdown(self._task.summary)
+
+        self.frame.layout().addWidget(self.wdgTitle)
+        self.frame.layout().addWidget(self.lineTitle)
+        self.frame.layout().addWidget(self.textSummary)
+        self.frame.layout().addWidget(group(self.btnCancel, self.btnConfirm), alignment=Qt.AlignmentFlag.AlignRight)
+
+    def display(self) -> Optional[Task]:
+        result = self.exec()
+        if result == QDialog.DialogCode.Accepted:
+            if self._task:
+                self._task.title = self.lineTitle.text()
+                self._task.summary = self.textSummary.toPlainText()
+                return self._task
+            else:
+                return Task(self.lineTitle.text(), self._status.id, summary=self.textSummary.toPlainText())
+
+    def _titleChanged(self, key: str):
+        self.btnConfirm.setEnabled(len(key) > 0)
 
 
 class TaskWidget(QFrame):
@@ -66,14 +132,14 @@ class TaskWidget(QFrame):
         self.setMinimumHeight(75)
         shadow(self, 3)
 
-        self._lineTitle = AutoAdjustableLineEdit(self, defaultWidth=100)
-        self._lineTitle.setPlaceholderText('New task')
-        self._lineTitle.setText(task.title)
-        self._lineTitle.setFrame(False)
+        self._lineTitle = label(task.title, wordWrap=True)
+        sp(self._lineTitle).h_exp()
         font = QFont(app_env.sans_serif_font())
         font.setWeight(QFont.Weight.Medium)
         self._lineTitle.setFont(font)
         incr_font(self._lineTitle)
+
+        self.setToolTip(self._task.summary)
 
         self._charSelector = CharacterSelectorButton(app_env.novel, self, opacityEffectEnabled=False, iconSize=24)
         self._charSelector.setToolTip('Link character')
@@ -85,7 +151,11 @@ class TaskWidget(QFrame):
         retain_when_hidden(self._charSelector)
         self._charSelector.characterSelected.connect(self._linkCharacter)
         self._charSelector.menu().aboutToHide.connect(self._onLeave)
-        top_wdg = group(self._lineTitle, spacer(), self._charSelector, margin=0, spacing=1)
+        top_wdg = QWidget()
+        hbox(top_wdg, 0, 1)
+        top_wdg.layout().addWidget(self._lineTitle)
+        top_wdg.layout().addWidget(self._charSelector, alignment=Qt.AlignmentFlag.AlignTop)
+        # top_wdg = group(self._lineTitle, self._charSelector, margin=0, spacing=1)
         self.layout().addWidget(top_wdg, alignment=Qt.AlignmentFlag.AlignTop)
 
         self._wdgBottom = QWidget()
@@ -104,7 +174,7 @@ class TaskWidget(QFrame):
                                  parent=self._wdgBottom)
         decr_icon(self._btnMenu)
         menu = MenuWidget(self._btnMenu)
-        menu.addAction(action('Rename', IconRegistry.edit_icon(), self._lineTitle.setFocus))
+        menu.addAction(action('Edit', IconRegistry.edit_icon(), self._edit))
         menu.addSeparator()
         menu.addAction(action('Delete', IconRegistry.trash_can_icon(), lambda: self.removalRequested.emit(self)))
         menu.aboutToHide.connect(self._onLeave)
@@ -124,8 +194,8 @@ class TaskWidget(QFrame):
         self._btnMenu.setHidden(True)
 
         self.installEventFilter(self)
-        self._lineTitle.textEdited.connect(self._titleEdited)
-        self._lineTitle.editingFinished.connect(self._titleEditingFinished)
+        # self._lineTitle.textEdited.connect(self._titleEdited)
+        # self._lineTitle.editingFinished.connect(self._titleEditingFinished)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
@@ -141,6 +211,11 @@ class TaskWidget(QFrame):
             self._onLeave()
         return super(TaskWidget, self).eventFilter(watched, event)
 
+    @overrides
+    def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
+        super().mouseDoubleClickEvent(event)
+        self._edit()
+
     def task(self) -> Task:
         return self._task
 
@@ -148,13 +223,15 @@ class TaskWidget(QFrame):
         anim = qtanim.fade_in(self, 150)
         anim.finished.connect(self._activated)
 
-    def _titleEdited(self, text: str):
-        self._task.title = text
-        self.changed.emit()
+    def refresh(self):
+        self._lineTitle.setText(self._task.title)
+        self.setToolTip(self._task.summary)
 
-    def _titleEditingFinished(self):
-        if not self._task.title:
-            self.removalRequested.emit(self)
+    def _edit(self):
+        task = TaskEditorPopup.popup(task=self._task)
+        if task:
+            self.refresh()
+            self.changed.emit()
 
     def _activated(self):
         self._lineTitle.setFocus()
@@ -316,7 +393,7 @@ class StatusColumnWidget(BaseStatusColumnWidget):
     def status(self) -> TaskStatus:
         return self._status
 
-    def addTask(self, task: Task, edit: bool = False) -> TaskWidget:
+    def addTask(self, task: Task) -> TaskWidget:
         wdg = TaskWidget(task, self)
         self._container.layout().insertWidget(self._container.layout().count() - 2, wdg,
                                               alignment=Qt.AlignmentFlag.AlignTop)
@@ -328,8 +405,6 @@ class StatusColumnWidget(BaseStatusColumnWidget):
         wdg.changed.connect(partial(self.taskChanged.emit, task))
         wdg.resolved.connect(partial(self.__removeTaskWidget, wdg))
         wdg.resolved.connect(partial(self.taskResolved.emit, task))
-        if edit:
-            wdg.activate()
 
         if self._status.wip:
             emit_event(self._novel, TaskChangedToWip(self, task))
@@ -338,9 +413,11 @@ class StatusColumnWidget(BaseStatusColumnWidget):
         return wdg
 
     def _addNewTask(self):
-        task = Task('', self._status.id)
-        self._novel.board.tasks.append(task)
-        self.addTask(task, edit=True)
+        task = TaskEditorPopup.popup(status=self._status)
+        if task:
+            self._novel.board.tasks.append(task)
+            wdg = self.addTask(task)
+            wdg.activate()
 
     def _deleteTask(self, taskWidget: TaskWidget):
         task = taskWidget.task()
@@ -421,10 +498,12 @@ class BoardWidget(QWidget):
     def addNewTask(self):
         if self._statusColumns:
             column = self._firstStatusColumn()
-            task = Task('', column.status().id)
-            self._novel.board.tasks.append(task)
-            column.addTask(task, edit=True)
-            self.taskAdded.emit(task)
+            task = TaskEditorPopup.popup(status=column.status())
+            if task:
+                self._novel.board.tasks.append(task)
+                wdg = column.addTask(task)
+                wdg.activate()
+                self.taskAdded.emit(task)
 
     def _firstStatusColumn(self) -> StatusColumnWidget:
         return self._statusColumns[str(self._novel.board.statuses[0].id)]

@@ -139,6 +139,12 @@ TaskWidget {{
     border-radius: 6px;
 }}
 
+TaskWidget:hover {{
+    background-color: {BG_PRIMARY_COLOR};
+    border: 1px solid lightGrey;
+    border-radius: 6px;
+}}
+
 QSplitter::handle:horizontal {{
     width: 20px;
     border: 0px;
