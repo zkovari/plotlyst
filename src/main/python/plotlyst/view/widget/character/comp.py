@@ -240,7 +240,8 @@ class CharacterOverviewWidget(QWidget, EventListener):
         if isinstance(event, CharacterChangedEvent):
             if event.character is self._character and self._display is not None:
                 set_avatar(self._avatar, self._character, size=118)
-                self._roleIcon.setRole(self._character.role, showText=True)
+                if self._character.role:
+                    self._roleIcon.setRole(self._character.role, showText=True)
                 self._display.refresh()
 
     def display(self, attribute: CharacterComparisonAttribute):
