@@ -36,14 +36,14 @@ from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import TaskStatus, Task, Novel, Character, task_tags
 from plotlyst.core.template import SelectionItem
 from plotlyst.env import app_env
-from plotlyst.event.core import Event, emit_event
+from plotlyst.event.core import Event, emit_event, EventListener
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import CharacterDeletedEvent, TaskChanged, TaskDeleted, TaskChangedToWip, \
-    TaskChangedFromWip
+    TaskChangedFromWip, CharacterChangedEvent
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import ButtonPressResizeEventFilter, shadow, action, tool_btn, \
     any_menu_visible, insert_before_the_end, label, push_btn
-from plotlyst.view.icons import IconRegistry
+from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.layout import group
 from plotlyst.view.widget.button import CollapseButton, TaskTagSelector
 from plotlyst.view.widget.characters import CharacterSelectorButton
@@ -70,12 +70,9 @@ class TaskEditorPopup(PopupDialog):
         self.wdgTitle.layout().addWidget(self.title, alignment=Qt.AlignmentFlag.AlignLeft)
         self.wdgTitle.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
 
-        # self.lblDesc = label("Define terms and definitions that are specific to your fictional world.",
-        #                      description=True, wordWrap=True)
-        # sp(self.lblDesc).v_max()
-
         self.lineTitle = QLineEdit()
         incr_font(self.lineTitle)
+        self.lineTitle.setMinimumWidth(300)
         self.lineTitle.setProperty('white-bg', True)
         self.lineTitle.setProperty('rounded', True)
         self.lineTitle.setPlaceholderText('Title of your task')
@@ -155,7 +152,6 @@ class TaskWidget(QFrame):
         hbox(top_wdg, 0, 1)
         top_wdg.layout().addWidget(self._lineTitle)
         top_wdg.layout().addWidget(self._charSelector, alignment=Qt.AlignmentFlag.AlignTop)
-        # top_wdg = group(self._lineTitle, self._charSelector, margin=0, spacing=1)
         self.layout().addWidget(top_wdg, alignment=Qt.AlignmentFlag.AlignTop)
 
         self._wdgBottom = QWidget()
@@ -194,8 +190,6 @@ class TaskWidget(QFrame):
         self._btnMenu.setHidden(True)
 
         self.installEventFilter(self)
-        # self._lineTitle.textEdited.connect(self._titleEdited)
-        # self._lineTitle.editingFinished.connect(self._titleEditingFinished)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
@@ -257,6 +251,9 @@ class TaskWidget(QFrame):
     def resetCharacter(self):
         self._task.reset_character()
         self._charSelector.clear()
+
+    def updateCharacter(self, character: Character):
+        self._charSelector.setIcon(avatars.avatar(character))
 
 
 class _StatusHeader(QFrame):
@@ -349,7 +346,7 @@ class BaseStatusColumnWidget(QFrame):
                 item.widget().setHidden(toggled)
 
 
-class StatusColumnWidget(BaseStatusColumnWidget):
+class StatusColumnWidget(BaseStatusColumnWidget, EventListener):
     taskChanged = pyqtSignal(Task)
     taskDeleted = pyqtSignal(Task)
     taskResolved = pyqtSignal(Task)
@@ -378,17 +375,20 @@ class StatusColumnWidget(BaseStatusColumnWidget):
         self._header.addTask.connect(self._addNewTask)
 
         dispatcher = event_dispatchers.instance(self._novel)
-        dispatcher.register(self, CharacterDeletedEvent)
+        dispatcher.register(self, CharacterDeletedEvent, CharacterChangedEvent)
 
+    @overrides
     def event_received(self, event: Event):
-        if isinstance(event, CharacterDeletedEvent):
-            for i in range(self._container.layout().count() - 2):
-                item = self._container.layout().itemAt(i)
-                if item.widget():
-                    taskWdg: TaskWidget = item.widget()
-                    if taskWdg.task().character_id == event.character.id:
+        for i in range(self._container.layout().count() - 2):
+            item = self._container.layout().itemAt(i)
+            if item.widget():
+                taskWdg: TaskWidget = item.widget()
+                if taskWdg.task().character_id == event.character.id:
+                    if isinstance(event, CharacterDeletedEvent):
                         taskWdg.resetCharacter()
                         self.taskChanged.emit(taskWdg.task())
+                    elif isinstance(event, CharacterChangedEvent):
+                        taskWdg.updateCharacter(event.character)
 
     def status(self) -> TaskStatus:
         return self._status
