@@ -21,7 +21,7 @@ from typing import Optional
 
 from PyQt6.QtCore import QObject, QEvent
 from overrides import overrides
-from qthandy import retain_when_hidden, decr_icon, gc
+from qthandy import retain_when_hidden
 from qthandy.filter import OpacityEventFilter
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR
@@ -34,7 +34,7 @@ from plotlyst.events import NovelUpdatedEvent, \
     NovelPanelCustomizationEvent
 from plotlyst.resources import resource_registry
 from plotlyst.view._view import AbstractNovelView
-from plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon, set_tab_visible, tool_btn
+from plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon, set_tab_visible
 from plotlyst.view.dialog.novel import NovelEditionDialog, SynopsisEditorDialog
 from plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from plotlyst.view.icons import IconRegistry
@@ -82,13 +82,13 @@ class NovelView(AbstractNovelView):
         self.ui.btnPremiseIcon.setIcon(IconRegistry.from_name('mdi.label-variant'))
         self._dialogSynopsisEditor: Optional[SynopsisEditorDialog] = None
 
-        self._btnSynopsisExtendEdit = tool_btn(IconRegistry.expand_icon(), tooltip='Edit in full view',
-                                               transparent_=True)
-        decr_icon(self._btnSynopsisExtendEdit, 2)
-        self._btnSynopsisExtendEdit.installEventFilter(
-            OpacityEventFilter(self._btnSynopsisExtendEdit, leaveOpacity=0.55))
-        self.ui.subtitleSynopsis.addWidget(self._btnSynopsisExtendEdit)
-        self._btnSynopsisExtendEdit.clicked.connect(self._expandSynopsisEditor)
+        # self._btnSynopsisExtendEdit = tool_btn(IconRegistry.expand_icon(), tooltip='Edit in full view',
+        #                                        transparent_=True)
+        # decr_icon(self._btnSynopsisExtendEdit, 2)
+        # self._btnSynopsisExtendEdit.installEventFilter(
+        #     OpacityEventFilter(self._btnSynopsisExtendEdit, leaveOpacity=0.55))
+        # self.ui.subtitleSynopsis.addWidget(self._btnSynopsisExtendEdit)
+        # self._btnSynopsisExtendEdit.clicked.connect(self._expandSynopsisEditor)
 
         self.ui.lblTitle.setText(self.novel.title)
         self.ui.textPremise.setText(self.novel.premise)
@@ -172,22 +172,22 @@ class NovelView(AbstractNovelView):
         self.novel.premise = text
         self.repo.update_novel(self.novel)
 
-    def _expandSynopsisEditor(self):
-        if self.novel.synopsis is None:
-            self.__init_synopsis_doc()
-        self._dialogSynopsisEditor = SynopsisEditorDialog(self.novel)
-        self.ui.textSynopsis.setDisabled(True)
-        self._btnSynopsisExtendEdit.setDisabled(True)
-        self._dialogSynopsisEditor.accepted.connect(self._closeSynopsisEditor)
-        self._dialogSynopsisEditor.rejected.connect(self._closeSynopsisEditor)
-        self._dialogSynopsisEditor.show()
+    # def _expandSynopsisEditor(self):
+    # if self.novel.synopsis is None:
+    #     self.__init_synopsis_doc()
+    # self._dialogSynopsisEditor = SynopsisEditorDialog(self.novel)
+    # self.ui.textSynopsis.setDisabled(True)
+    # self._btnSynopsisExtendEdit.setDisabled(True)
+    # self._dialogSynopsisEditor.accepted.connect(self._closeSynopsisEditor)
+    # self._dialogSynopsisEditor.rejected.connect(self._closeSynopsisEditor)
+    # self._dialogSynopsisEditor.show()
 
-    def _closeSynopsisEditor(self):
-        self.ui.textSynopsis.setEnabled(True)
-        self.ui.textSynopsis.setText(self._dialogSynopsisEditor.synopsis())
-        self._btnSynopsisExtendEdit.setEnabled(True)
-        gc(self._dialogSynopsisEditor)
-        self._dialogSynopsisEditor = None
+    # def _closeSynopsisEditor(self):
+    #     self.ui.textSynopsis.setEnabled(True)
+    #     self.ui.textSynopsis.setText(self._dialogSynopsisEditor.synopsis())
+    #     self._btnSynopsisExtendEdit.setEnabled(True)
+    #     gc(self._dialogSynopsisEditor)
+    #     self._dialogSynopsisEditor = None
 
     def _synopsis_changed(self):
         if self.novel.synopsis is None:
