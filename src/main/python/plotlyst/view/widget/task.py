@@ -392,8 +392,10 @@ class BoardWidget(QWidget):
     def __init__(self, novel: Novel, parent=None):
         super(BoardWidget, self).__init__(parent)
         self._novel = novel
+        self._columnSpacing = 20
+        self.setMaximumWidth(TASK_WIDGET_MAX_WIDTH * 3 + self._columnSpacing * 2)
 
-        hbox(self, spacing=20)
+        hbox(self, spacing=self._columnSpacing)
         self._statusColumns: Dict[str, StatusColumnWidget] = {}
         for status in self._novel.board.statuses:
             column = StatusColumnWidget(novel, status)
