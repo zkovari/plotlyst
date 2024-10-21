@@ -404,7 +404,7 @@ stakes_field = TemplateField('Stakes', type=TemplateFieldType.SMALL_TEXT, emoji=
                              placeholder="What could the character lose in the physical world if they fail to reach their goal?",
                              id=uuid.UUID('15770e28-b801-44c4-a6e6-ddba33935bc4'), has_notes=True)
 internal_stakes_field = TemplateField('Internal stakes', type=TemplateFieldType.SMALL_TEXT, emoji=':broken_heart:',
-                                      placeholder="What could the character could lose emotionally or psychologically?",
+                                      placeholder="What could the character lose emotionally or psychologically?",
                                       id=uuid.UUID('95f58293-c77a-4ec7-9e1f-b2f38d123e8d'), has_notes=True)
 methods_field = TemplateField('Methods', type=TemplateFieldType.SMALL_TEXT, emoji=':hammer_and_pick:',
                               placeholder="How does the character try to achieve their goals?",
