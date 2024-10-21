@@ -25,7 +25,7 @@ from PyQt6.QtCore import Qt, pyqtSignal, QSize, QByteArray, QBuffer, QIODevice
 from PyQt6.QtGui import QIcon, QColor, QImageReader, QImage, QPixmap, \
     QShowEvent
 from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QSizePolicy, QLabel, QPushButton, \
-    QFileDialog, QMessageBox, QGridLayout
+    QFileDialog, QMessageBox, QGridLayout, QFrame
 from overrides import overrides
 from qthandy import vspacer, transparent, gc, line, spacer, clear_layout, hbox, flow, translucent, margins, pointy, vbox
 from qthandy.filter import OpacityEventFilter
@@ -170,7 +170,22 @@ class CharacterSelectorMenu(ScrollableMenuWidget):
         self._characters: Optional[List[Character]] = None
         self.aboutToShow.connect(self._beforeShow)
 
-        self._scrollarea.setMinimumHeight(300)
+    @overrides
+    def sizeHint(self) -> QSize:
+        hint: QSize = super().sizeHint()
+
+        has_characters = len(self.characters()) > 0
+        if has_characters:
+            hint.setHeight(20)
+        for i in range(self._frame.layout().count()):
+            widget: QWidget = self._frame.layout().itemAt(i).widget()
+            if not isinstance(widget, QFrame):
+                hint = hint.expandedTo(QSize(widget.width(), hint.height()))
+
+            if has_characters and i < 11:
+                hint = hint.expandedTo(QSize(hint.width(), hint.height() + widget.height()))
+
+        return hint
 
     def setCharacters(self, character: List[Character]):
         self._characters = character
