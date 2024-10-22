@@ -1441,6 +1441,8 @@ class DecoratedTextEdit(AutoAdjustableTextEdit):
         self._indentSize: int = 25
         self._has_text = False
         self._updateStylesheet()
+        if app_env.is_mac():
+            incr_font(self)
         self.textChanged.connect(self._onTextChanged)
 
         self._decoration = None
@@ -1453,7 +1455,8 @@ class DecoratedTextEdit(AutoAdjustableTextEdit):
         self._decoration.setToolTip(tooltip)
         self._decoration.setFont(emoji_font())
         self._decoration.setText(emoji.emojize(name))
-        self._decoration.setGeometry(2, 4, self._indentSize, self._indentSize)
+        y = 0 if app_env.is_mac() else 4
+        self._decoration.setGeometry(2, y, self._indentSize, self._indentSize)
 
     def _updateStylesheet(self):
         self.setStyleSheet(f"QTextEdit {{padding-left: {self._indentSize}px;}}")

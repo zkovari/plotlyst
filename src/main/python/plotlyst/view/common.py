@@ -37,7 +37,7 @@ from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemVie
 from fbs_runtime import platform
 from overrides import overrides
 from qtanim import fade_out
-from qthandy import hbox, vbox, margins, gc, transparent, spacer, sp, pointy, bold, incr_font
+from qthandy import hbox, vbox, margins, gc, transparent, spacer, sp, pointy, incr_font
 from qthandy.filter import DisabledClickEventFilter
 
 from plotlyst.common import WHITE_COLOR
@@ -66,7 +66,7 @@ def rounded_pixmap(original: QPixmap) -> QPixmap:
 
 def emoji_font() -> QFont:
     if platform.is_mac():
-        return QFont('Apple Color Emoji', 20)
+        return QFont('Apple Color Emoji', 16)
     if platform.is_windows():
         return QFont('Segoe UI Emoji', 14)
     return QFont('Noto Emoji', 18)
