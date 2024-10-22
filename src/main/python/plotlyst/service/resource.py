@@ -30,16 +30,16 @@ from PyQt6.QtWidgets import QDialog, QLabel, QToolButton, QPushButton, QWidget, 
 from overrides import overrides
 from pypandoc import download_pandoc
 from qthandy import italic, vspacer, incr_font, bold, decr_font, transparent, decr_icon, pointy, ask_confirmation, grid, \
-    underline, line, spacer
+    underline, line, spacer, vbox
 from qthandy.filter import OpacityEventFilter
 
 from plotlyst.common import PLOTLYST_MAIN_COMPLEMENTARY_COLOR
-from plotlyst.env import app_env
+from plotlyst.env import app_env, open_location
 from plotlyst.event.core import emit_global_event, EventListener, Event
 from plotlyst.event.handler import global_event_dispatcher
 from plotlyst.resources import ResourceType, resource_manager, ResourceDownloadedEvent, \
     ResourceRemovedEvent, is_nltk, PANDOC_VERSION, ResourceExtension, ResourceDescriptor, ResourceStatusChangedEvent
-from plotlyst.view.common import ButtonPressResizeEventFilter, spin
+from plotlyst.view.common import ButtonPressResizeEventFilter, spin, push_btn
 from plotlyst.view.generated.resource_manager_dialog_ui import Ui_ResourceManagerDialog
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -368,7 +368,16 @@ class ResourceManagerWidget(QWidget, EventListener):
                              ResourceType.NLTK_PUNKT_TOKENIZER]
         self._resources: Dict[ResourceType, _ResourceControllers] = {}
 
-        self._gridLayout: QGridLayout = grid(self)
+        self._wdgDisplay = QWidget()
+        vbox(self)
+
+        btnOpenCacheFolder = push_btn(IconRegistry.from_name('fa5.folder-open'), 'Open cache folder', transparent_=True)
+        btnOpenCacheFolder.installEventFilter(OpacityEventFilter(btnOpenCacheFolder))
+        btnOpenCacheFolder.clicked.connect(lambda: open_location(app_env.cache_dir))
+
+        self.layout().addWidget(btnOpenCacheFolder, alignment=Qt.AlignmentFlag.AlignRight)
+        self.layout().addWidget(self._wdgDisplay)
+        self._gridLayout: QGridLayout = grid(self._wdgDisplay)
 
         header = QLabel('Resource')
         underline(header)
