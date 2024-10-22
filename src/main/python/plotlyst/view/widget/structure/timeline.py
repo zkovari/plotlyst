@@ -172,10 +172,6 @@ class _ActButton(QPushButton):
                 ''')
 
 
-def is_midpoint(beat: StoryBeat) -> bool:
-    return beat.text == 'Midpoint'
-
-
 class StoryStructureTimelineWidget(QWidget):
     BeatMimeType = 'application/story-beat'
 
@@ -573,7 +569,7 @@ class StoryStructureTimelineWidget(QWidget):
             builder.popup()
 
     def _refreshBeatButtonDragStatus(self, btn: _BeatButton):
-        if self._beatsMoveable and not btn.beat.ends_act and not is_midpoint(btn.beat) and self.isProportionalDisplay():
+        if self._beatsMoveable and not btn.beat.ends_act and self.isProportionalDisplay():
             btn.setDragEnabled(True)
         else:
             btn.setDragEnabled(False)
