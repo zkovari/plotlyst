@@ -386,6 +386,7 @@ class ConnectorCPSocket(QAbstractGraphicsShapeItem):
     def __init__(self, size: int = 16, parent=None):
         super().__init__(parent)
         self._size = size
+        self._active = True
         self.setCursor(Qt.CursorShape.SizeAllCursor)
         self.setFlag(
             QGraphicsItem.GraphicsItemFlag.ItemIsMovable |
@@ -408,9 +409,15 @@ class ConnectorCPSocket(QAbstractGraphicsShapeItem):
 
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
-        if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
+        if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged and self._active:
             self.parentItem().rearrangeCP(value)
         return super().itemChange(change, value)
+
+    def activate(self):
+        self._active = True
+
+    def deactivate(self):
+        self._active = False
 
 
 class ConnectorItem(QGraphicsPathItem):
@@ -637,6 +644,9 @@ class ConnectorItem(QGraphicsPathItem):
             self._rearrangeCurvedConnector(path, endPoint)
         else:
             self._rearrangeLinearConnector(path, width, height)
+            self._cp.deactivate()
+            self._rearrangeCPSocket(path)
+            self._cp.activate()
 
         self._endArrowheadItem.setPos(width, height)
         self._startArrowheadItem.setPos(0, 0)
