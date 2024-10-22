@@ -85,7 +85,9 @@ class TopicGroupSelector(QWidget):
         elif isinstance(header, TopicType):
             self._headerName = header.display_name()
             self.headerTopicBtn = push_btn(icon=IconRegistry.from_name(header.icon()), text=self._headerName,
-                                           pointy_=False, icon_resize=False, tooltip=header.description())
+                                           pointy_=False, icon_resize=False, tooltip=header.description(),
+                                           transparent_=True)
+
         vbox(self, 2, 0)
         margins(self, top=5)
         self._topics: Dict[str, TopicSelectorButton] = {}
