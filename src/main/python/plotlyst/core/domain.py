@@ -1719,8 +1719,9 @@ class ScenePurpose:
     pacing: str = ''
 
 
-advance_story_scene_purpose = ScenePurpose(ScenePurposeType.Story, 'Advance\nstory',
-                                           keywords=['goal', 'conflict', 'action', 'outcome', 'tension', 'revelation',
+advance_story_scene_purpose = ScenePurpose(ScenePurposeType.Story, 'Drive',
+                                           keywords=['motion', 'goal', 'conflict', 'narrative drive', 'advancing story',
+                                                     'action', 'outcome', 'tension', 'revelation',
                                                      'mystery', 'catalyst', 'crisis', 'cause & effect'],
                                            include=[ScenePurposeType.Character, ScenePurposeType.Emotion,
                                                     ScenePurposeType.Setup],
