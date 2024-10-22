@@ -452,8 +452,6 @@ class StoryStructureOutline(OutlineTimelineWidget):
         self._insertWidget(beat, wdg, teardownFunction=teardown)
         self._recalculatePercentage(wdg)
         self._structureTimeline.insertBeat(beat)
-        if beat.ends_act:
-            self._structureTimeline.refreshActs()
 
     def _recalculatePercentage(self, wdg: StoryStructureBeatWidget):
         beat = wdg.item
