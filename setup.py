@@ -18,7 +18,7 @@ def get_briefcase_version():
 def get_base_version():
     with open("src/main/python/plotlyst/version.py") as f:
         content = f.read()
-        match = re.search(r"plotlyst_version = ['\"]([^'\"]+)['\"]", content)
+        match = re.search(r"plotlyst_product_version = ['\"]([^'\"]+)['\"]", content)
         if match:
             return match.group(1)
         raise RuntimeError("Unable to find __version__ string in version.py")

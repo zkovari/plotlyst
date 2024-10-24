@@ -29,7 +29,7 @@ try:
     from fbs_runtime.excepthook import enable_excepthook_for_threads
     from overrides import overrides
 
-    from plotlyst.version import plotlyst_version
+    from plotlyst.version import plotlyst_display_version
     from plotlyst.env import AppMode, app_env
     from plotlyst.resources import resource_registry, resource_manager
     from plotlyst.settings import settings
@@ -68,7 +68,7 @@ if __name__ == '__main__':
         appctxt = AppContext()
         app = appctxt.app
     app.setApplicationName('Plotlyst')
-    app.setApplicationVersion(plotlyst_version)
+    app.setApplicationVersion(plotlyst_display_version)
 
     sys.excepthook = handle_exception
     enable_excepthook_for_threads()
