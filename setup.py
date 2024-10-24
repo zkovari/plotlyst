@@ -27,7 +27,7 @@ def get_base_version():
 
 def get_full_version(base_version):
     timestamp = time.strftime("%Y%m%d.%H%M%S")
-    return f"{base_version}.{timestamp}"
+    return f"{base_version}+{timestamp}"
 
 
 def check_versions(base_version):
@@ -52,11 +52,8 @@ def generate_json_file(version):
         json.dump(settings, json_file, indent=4)
 
 
-base_version = get_base_version()
-
-check_versions(base_version)
-
-version = get_full_version(base_version)
+version = get_base_version()
+check_versions(version)
 
 generate_json_file(version)
 
