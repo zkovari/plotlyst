@@ -18,4 +18,4 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-plotlyst_version = '2024.11rc1.dev1'
+plotlyst_version = '0.1.0.dev1'

@@ -1,7 +1,6 @@
 import json
 import os
 import re
-import time
 
 from setuptools import setup
 
@@ -23,11 +22,6 @@ def get_base_version():
         if match:
             return match.group(1)
         raise RuntimeError("Unable to find __version__ string in version.py")
-
-
-def get_full_version(base_version):
-    timestamp = time.strftime("%Y%m%d.%H%M%S")
-    return f"{base_version}+{timestamp}"
 
 
 def check_versions(base_version):
