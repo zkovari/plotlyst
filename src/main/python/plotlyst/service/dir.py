@@ -27,7 +27,7 @@ from plotlyst.env import app_env
 
 
 def select_new_project_directory() -> Optional[str]:
-    workspace = QFileDialog.getExistingDirectory(None, 'Choose directory')
+    workspace = QFileDialog.getExistingDirectory(None, 'Choose a directory for your novels')
 
     if not workspace:
         return None

@@ -901,6 +901,7 @@
      <addaction name="actionInstagram"/>
      <addaction name="actionXTwitter"/>
      <addaction name="actionPinterest"/>
+     <addaction name="actionSocialDiscord"/>
     </widget>
     <addaction name="separator"/>
     <addaction name="actionLogs"/>
@@ -910,6 +911,7 @@
     <addaction name="menuSocials"/>
     <addaction name="separator"/>
     <addaction name="actionContact"/>
+    <addaction name="actionDiscord"/>
     <addaction name="actionFeatureRequest"/>
     <addaction name="actionRoadmap"/>
     <addaction name="separator"/>
@@ -1108,6 +1110,16 @@
   <action name="actionPinterest">
    <property name="text">
     <string>Pinterest</string>
+   </property>
+  </action>
+  <action name="actionDiscord">
+   <property name="text">
+    <string>Discord</string>
+   </property>
+  </action>
+  <action name="actionSocialDiscord">
+   <property name="text">
+    <string>Discord</string>
    </property>
   </action>
  </widget>

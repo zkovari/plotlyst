@@ -491,6 +491,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionRoadmap.triggered.connect(lambda: open_url('https://plotlyst.featurebase.app/roadmap'))
         self.actionFeatureRequest.setIcon(IconRegistry.from_name('mdi.comment-text'))
         self.actionFeatureRequest.triggered.connect(lambda: open_url('https://plotlyst.featurebase.app/'))
+        self.actionDiscord.setIcon(IconRegistry.from_name('fa5b.discord'))
+        self.actionSocialDiscord.setIcon(IconRegistry.from_name('fa5b.discord'))
+        self.actionDiscord.triggered.connect(lambda: open_url('https://discord.com/invite/9HZWnvNzM6'))
+        self.actionSocialDiscord.triggered.connect(lambda: open_url('https://discord.com/invite/9HZWnvNzM6'))
 
         self.menuSocials.setIcon(IconRegistry.from_name('ri.share-fill'))
         self.actionFacebook.setIcon(IconRegistry.from_name('fa5b.facebook'))
