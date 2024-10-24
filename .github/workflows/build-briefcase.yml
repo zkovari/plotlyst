@@ -33,6 +33,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: plotlyst-app
-          path: dist\Plotlyst-0.1.0.msi
+          path: dist\Plotlyst-*.msi
       
 

@@ -4,6 +4,7 @@ venv
 profile.stats
 test.docx
 document.pdf
+src/build/settings/base.json
 
 generated
 coverage

@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
 try:
     import logging
     import argparse
@@ -30,6 +29,7 @@ try:
     from fbs_runtime.excepthook import enable_excepthook_for_threads
     from overrides import overrides
 
+    from plotlyst.version import plotlyst_display_version
     from plotlyst.env import AppMode, app_env
     from plotlyst.resources import resource_registry, resource_manager
     from plotlyst.settings import settings
@@ -68,7 +68,7 @@ if __name__ == '__main__':
         appctxt = AppContext()
         app = appctxt.app
     app.setApplicationName('Plotlyst')
-    app.setApplicationVersion('0.1.0')
+    app.setApplicationVersion(plotlyst_display_version)
 
     sys.excepthook = handle_exception
     enable_excepthook_for_threads()
