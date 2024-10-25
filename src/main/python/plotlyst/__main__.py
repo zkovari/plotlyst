@@ -37,8 +37,8 @@ try:
     from plotlyst.service.dir import select_new_project_directory, default_directory
     from plotlyst.service.log import setup_logging
 
-    from PyQt6.QtGui import QFont, QIcon
-    from PyQt6.QtWidgets import QApplication, QMessageBox
+    from PyQt6.QtGui import QFont, QIcon, QPixmap
+    from PyQt6.QtWidgets import QApplication, QMessageBox, QSplashScreen
     from fbs_runtime.application_context.PyQt6 import ApplicationContext
     from fbs_runtime import platform
     from fbs_runtime.application_context import cached_property, is_frozen
@@ -115,12 +115,19 @@ if __name__ == '__main__':
     except Exception as ex:
         QMessageBox.critical(None, 'Could not initialize database', traceback.format_exc())
         raise ex
+    splash_pixmap = QPixmap(resource_registry.banner)
+    splash = QSplashScreen(splash_pixmap)
+    splash.show()
+    app.processEvents()
+
     try:
         window = MainWindow()
     except Exception as ex:
         QMessageBox.critical(None, 'Could not create main window', traceback.format_exc())
         raise ex
+
     window.show()
+    splash.finish(window)
     window.activateWindow()
     # first_launch = settings.first_launch()
     # if first_launch:

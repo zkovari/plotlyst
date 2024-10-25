@@ -46,7 +46,7 @@ test = [
 [tool.briefcase]
 project_name = "Plotlyst"
 bundle = "com.plotlyst"
-version = "0.1.1"
+version = "0.1.2"
 
 [tool.briefcase.app.plotlyst]
 formal_name = "Plotlyst"
