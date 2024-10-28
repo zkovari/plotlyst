@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import logging
 from functools import partial
 from typing import Optional
 
@@ -233,10 +232,6 @@ class SceneEditor(QObject, EventListener):
         self.ui.treeScenes.refresh()
 
     def set_scene(self, scene: Scene):
-        try:
-            raise ValueError('Test error')
-        except ValueError:
-            logging.exception('Test error caughed in scenes editor')
         self.scene = scene
         self.ui.treeScenes.selectScene(self.scene)
 

@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QSt
     QToolButton, QAbstractButton, QScrollArea, QButtonGroup
 from overrides import overrides
 from qthandy import vbox, vspacer, transparent, sp, line, incr_font, hbox, pointy, vline, retain_when_hidden, margins, \
-    spacer, underline, bold, grid, gc, clear_layout, ask_confirmation, decr_icon, italic, translucent
+    spacer, bold, grid, gc, clear_layout, ask_confirmation, decr_icon, italic, translucent
 from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget, GridMenuWidget
 
@@ -245,10 +245,10 @@ class ScenePurposeTypeButton(QPushButton):
 
             self.setIcon(IconRegistry.action_scene_icon(resolution, trade_off, motion))
             if resolution:
-                bgColor = '#12BB86'
+                bgColor = '#14CE93'
                 borderColor = '#0b6e4f'
             elif trade_off:
-                bgColor = '#E188C2'
+                bgColor = '#E491C7'
                 borderColor = '#832161'
             elif motion:
                 bgColor = '#E0BD9B'
@@ -261,7 +261,7 @@ class ScenePurposeTypeButton(QPushButton):
             bgColor = 'lightgrey'
             borderColor = 'grey'
         else:
-            bgColor = 'darkGrey'
+            bgColor = 'lightgrey'
             borderColor = 'grey'
 
         self.setStyleSheet(f'''
@@ -269,7 +269,7 @@ class ScenePurposeTypeButton(QPushButton):
                 background: {bgColor};
                 border: 2px solid {borderColor};
                 border-radius: 8px;
-                padding: 2px;
+                padding: 5px 10px 5px 10px;
             }}
             QPushButton::menu-indicator{{
                 width:0px;
