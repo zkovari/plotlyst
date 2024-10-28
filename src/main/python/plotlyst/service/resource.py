@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import logging
 import os
 import shutil
 import tarfile
@@ -32,14 +33,16 @@ from pypandoc import download_pandoc
 from qthandy import italic, vspacer, incr_font, bold, decr_font, transparent, decr_icon, pointy, ask_confirmation, grid, \
     underline, line, spacer, vbox
 from qthandy.filter import OpacityEventFilter
+from requests import ConnectionError
 
-from plotlyst.common import PLOTLYST_MAIN_COMPLEMENTARY_COLOR
+from plotlyst.common import has_internet, PLOTLYST_MAIN_COLOR
 from plotlyst.env import app_env, open_location
 from plotlyst.event.core import emit_global_event, EventListener, Event
 from plotlyst.event.handler import global_event_dispatcher
 from plotlyst.resources import ResourceType, resource_manager, ResourceDownloadedEvent, \
-    ResourceRemovedEvent, is_nltk, PANDOC_VERSION, ResourceExtension, ResourceDescriptor, ResourceStatusChangedEvent
-from plotlyst.view.common import ButtonPressResizeEventFilter, spin, push_btn
+    ResourceRemovedEvent, is_nltk, ResourceExtension, ResourceDescriptor, ResourceStatusChangedEvent, PANDOC_VERSION, \
+    ResourceDownloadFailedEvent
+from plotlyst.view.common import ButtonPressResizeEventFilter, spin, push_btn, fade_in
 from plotlyst.view.generated.resource_manager_dialog_ui import Ui_ResourceManagerDialog
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -106,12 +109,15 @@ class NltkResourceDownloadWorker(QRunnable):
             os.makedirs(resource_path, exist_ok=True)
 
             resource_zip_path = os.path.join(resource_path, resource.filename())
-            download_file(resource.web_url, resource_zip_path)
+            try:
+                download_file(resource.web_url, resource_zip_path)
+            except ConnectionError:
+                handle_resource_connection_error(self, resource_type)
+                return
             with zipfile.ZipFile(resource_zip_path) as zip_ref:
                 zip_ref.extractall(resource_path)
 
             emit_global_event(ResourceDownloadedEvent(self, resource_type))
-            print(f'Resource {resource.name} was successfully downloaded')
 
 
 class JreResourceDownloadWorker(QRunnable):
@@ -129,7 +135,11 @@ class JreResourceDownloadWorker(QRunnable):
         os.makedirs(resource_path, exist_ok=True)
 
         compressed_resource_path = os.path.join(resource_path, resource.filename())
-        download_file(resource.web_url, compressed_resource_path)
+        try:
+            download_file(resource.web_url, compressed_resource_path)
+        except ConnectionError:
+            handle_resource_connection_error(self, self._type)
+            return
 
         if resource.extension == ResourceExtension.tar_gz.value:
             with tarfile.open(compressed_resource_path) as tar_ref:
@@ -158,8 +168,20 @@ class PandocResourceDownloadWorker(QRunnable):
         target_path = os.path.join(resource_path, resource.name)
         os.makedirs(target_path, exist_ok=True)
 
-        download_pandoc(version=PANDOC_VERSION, targetfolder=target_path, download_folder=resource_path)
-        emit_global_event(ResourceDownloadedEvent(self, self._type))
+        try:
+            download_pandoc(version=PANDOC_VERSION, targetfolder=target_path, download_folder=resource_path)
+        except ConnectionError:
+            handle_resource_connection_error(self, self._type)
+        else:
+            emit_global_event(ResourceDownloadedEvent(self, self._type))
+
+
+def handle_resource_connection_error(runnable: QRunnable, resource_type: ResourceType):
+    if has_internet():
+        logging.exception('Could not establish connection to download resource: %s', resource_type.name)
+    else:
+        logging.warning('There was no internet connection to download resource: %s', resource_type.name)
+    emit_global_event(ResourceDownloadFailedEvent(runnable, resource_type))
 
 
 class JsonDownloadResult(QObject):
@@ -296,6 +318,8 @@ class _ResourceControllers:
         self.description = QLabel(self._resource.description)
         decr_font(self.description)
         self.description.setProperty('description', True)
+        self.error = QLabel()
+        self.error.setProperty('error', True)
         self.btnStatus = QToolButton()
         italic(self.btnStatus)
         transparent(self.btnStatus)
@@ -339,8 +363,9 @@ class _ResourceControllers:
         download_resource(self._resourceType)
 
     def refresh(self):
+        self.error.setHidden(True)
         if resource_manager.has_resource(self._resourceType):
-            self.btnStatus.setIcon(IconRegistry.ok_icon(PLOTLYST_MAIN_COMPLEMENTARY_COLOR))
+            self.btnStatus.setIcon(IconRegistry.ok_icon(PLOTLYST_MAIN_COLOR))
             self.btnStatus.setToolTip('Downloaded')
             self.btnRemove.setVisible(True)
             self.btnRemove.setEnabled(True)
@@ -351,6 +376,11 @@ class _ResourceControllers:
             self.btnRemove.setHidden(True)
             self.btnDownload.setVisible(True)
             self.btnDownload.setEnabled(True)
+
+    def failed(self, message: str):
+        self.error.setText(message)
+        fade_in(self.error)
+        self.btnStatus.setIcon(IconRegistry.from_name('fa5s.minus'))
 
     def _askRemove(self):
         # still use old ask_confirmation because it is opened from a dialog
@@ -390,15 +420,20 @@ class ResourceManagerWidget(QWidget, EventListener):
         for i, resourceType in enumerate(resourceTypes):
             contr = _ResourceControllers(resourceType)
             self._resources[resourceType] = contr
-            self._gridLayout.addWidget(group(contr.label, contr.description, vertical=False, spacing=2), i + 2, 0)
+            self._gridLayout.addWidget(group(contr.label, contr.description, contr.error, vertical=False, spacing=2),
+                                       i + 2, 0)
             self._gridLayout.addWidget(contr.btnStatus, i + 2, 1, alignment=Qt.AlignmentFlag.AlignCenter)
             self._gridLayout.addWidget(contr.btnRemove, i + 2, 2, alignment=Qt.AlignmentFlag.AlignCenter)
             self._gridLayout.addWidget(contr.btnDownload, i + 2, 3, alignment=Qt.AlignmentFlag.AlignCenter)
             self._gridLayout.addWidget(spacer(), i + 2, 4)
 
-        global_event_dispatcher.register(self, ResourceStatusChangedEvent)
+        global_event_dispatcher.register(self, ResourceStatusChangedEvent, ResourceDownloadFailedEvent)
 
     @overrides
     def event_received(self, event: Event):
         if isinstance(event, ResourceStatusChangedEvent):
-            self._resources[event.type].refresh()
+            if event.type in self._resources:
+                self._resources[event.type].refresh()
+        elif isinstance(event, ResourceDownloadFailedEvent):
+            if event.type in self._resources:
+                self._resources[event.type].failed('Could not download resource')

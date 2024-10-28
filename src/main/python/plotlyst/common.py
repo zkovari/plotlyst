@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import socket
 from timeit import default_timer as timer
 from typing import Any, NoReturn, Dict
 
@@ -188,3 +189,17 @@ def raise_unrecognized_arg(arg: Any) -> NoReturn:
 
 def clamp(value, min_n, max_n):
     return max(min(max_n, value), min_n)
+
+
+def has_internet() -> bool:
+    remote_server = "www.google.com"
+    port = 80
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(3)
+    try:
+        sock.connect((remote_server, port))
+        return True
+    except socket.error:
+        return False
+    finally:
+        sock.close()

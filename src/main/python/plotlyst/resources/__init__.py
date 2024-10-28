@@ -170,6 +170,11 @@ class ResourceDownloadedEvent(Event):
 
 
 @dataclass
+class ResourceDownloadFailedEvent(Event):
+    type: ResourceType
+
+
+@dataclass
 class ResourceRemovedEvent(Event):
     type: ResourceType
 
