@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from logging import LogRecord
+from typing import List
 
 from PyQt6.QtCore import QAbstractTableModel, Qt
 from overrides import overrides
@@ -29,7 +30,7 @@ from plotlyst.view.icons import IconRegistry
 class LogTableModel(QAbstractTableModel):
     def __init__(self):
         super().__init__()
-        self.log_records = []
+        self.log_records: List[LogRecord] = []
         self.max_logs = 1000
         self.errorIcon = IconRegistry.from_name('msc.error', RED_COLOR)
         self.warningIcon = IconRegistry.from_name('msc.warning', '#e9c46a')
@@ -45,15 +46,6 @@ class LogTableModel(QAbstractTableModel):
 
     @overrides
     def data(self, index, role=Qt.ItemDataRole.DisplayRole):
-        if role == Qt.ItemDataRole.DisplayRole or role == Qt.ItemDataRole.ToolTipRole:
-            row = index.row()
-            col = index.column()
-            log_record = self.log_records[row]
-
-            if col == 1:
-                return log_record.msg
-            elif col == 2:
-                return log_record.asctime
         if role == Qt.ItemDataRole.DecorationRole and index.column() == 0:
             log_record = self.log_records[index.row()]
             if log_record.levelname == 'INFO':
@@ -62,6 +54,22 @@ class LogTableModel(QAbstractTableModel):
                 return self.warningIcon
             elif log_record.levelname == 'ERROR':
                 return self.errorIcon
+        if index.column() > 0:
+            if role == Qt.ItemDataRole.DisplayRole:
+                log_record = self.log_records[index.row()]
+                if index.column() == 1:
+                    return log_record.getMessage()
+                elif index.column() == 2:
+                    return log_record.asctime
+            if role == Qt.ItemDataRole.ToolTipRole:
+                log_record = self.log_records[index.row()]
+                if index.column() == 1:
+                    if log_record.exc_info:
+                        return log_record.exc_text
+                    else:
+                        return log_record.getMessage()
+                elif index.column() == 2:
+                    return log_record.asctime
 
     def addLogRecord(self, log_record: LogRecord):
         if len(self.log_records) >= self.max_logs:
