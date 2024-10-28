@@ -147,7 +147,7 @@ enneagram_field = TemplateField(name='Enneagram', type=TemplateFieldType.TEXT_SE
                                                                 'fear': 'Being incorrect, corrupt, evil',
                                                                 'number': 1}),
                                             SelectionItem('Giver', icon='mdi.numeric-2-circle',
-                                                          icon_color='#7ae7c7',
+                                                          icon_color='#40D1DE',
                                                           meta={'positive': ['Generous', 'Warm', 'Caring'],
                                                                 'negative': ['Possessive'],
                                                                 'desire': 'To be loved and appreciated',
@@ -171,7 +171,7 @@ enneagram_field = TemplateField(name='Enneagram', type=TemplateFieldType.TEXT_SE
                                                                 'number': 4}
                                                           ),
                                             SelectionItem('Investigator', icon='mdi.numeric-5-circle',
-                                                          icon_color='#ffc600',
+                                                          icon_color='#EABE20',
                                                           meta={'positive': ['Perceptive', 'Curious', 'Innovative'],
                                                                 'negative': ['Isolated'],
                                                                 'desire': 'Be competent',
