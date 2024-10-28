@@ -21,6 +21,7 @@ from logging import LogRecord
 from typing import List
 
 from PyQt6.QtCore import QAbstractTableModel, Qt
+from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 
 from plotlyst.common import RED_COLOR
@@ -28,6 +29,8 @@ from plotlyst.view.icons import IconRegistry
 
 
 class LogTableModel(QAbstractTableModel):
+    LogRecordRole = Qt.ItemDataRole.UserRole + 1
+
     def __init__(self):
         super().__init__()
         self.log_records: List[LogRecord] = []
@@ -46,6 +49,8 @@ class LogTableModel(QAbstractTableModel):
 
     @overrides
     def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+        if role == self.LogRecordRole:
+            return self.log_records[index.row()]
         if role == Qt.ItemDataRole.DecorationRole and index.column() == 0:
             log_record = self.log_records[index.row()]
             if log_record.levelname == 'INFO':
@@ -54,22 +59,16 @@ class LogTableModel(QAbstractTableModel):
                 return self.warningIcon
             elif log_record.levelname == 'ERROR':
                 return self.errorIcon
-        if index.column() > 0:
-            if role == Qt.ItemDataRole.DisplayRole:
-                log_record = self.log_records[index.row()]
-                if index.column() == 1:
-                    return log_record.getMessage()
-                elif index.column() == 2:
-                    return log_record.asctime
-            if role == Qt.ItemDataRole.ToolTipRole:
-                log_record = self.log_records[index.row()]
-                if index.column() == 1:
-                    if log_record.exc_info:
-                        return log_record.exc_text
-                    else:
-                        return log_record.getMessage()
-                elif index.column() == 2:
-                    return log_record.asctime
+        if role == Qt.ItemDataRole.DisplayRole or role == Qt.ItemDataRole.ToolTipRole:
+            log_record = self.log_records[index.row()]
+            if index.column() == 1:
+                return log_record.getMessage()
+            elif index.column() == 2:
+                return log_record.asctime
+        if role == Qt.ItemDataRole.FontRole:
+            font = QApplication.font()
+            font.setPointSize(font.pointSize() - 1)
+            return font
 
     def addLogRecord(self, log_record: LogRecord):
         if len(self.log_records) >= self.max_logs:

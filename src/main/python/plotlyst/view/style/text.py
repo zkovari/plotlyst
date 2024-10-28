@@ -78,6 +78,11 @@ text_browser_styles = f"""
         padding: 4px;
         border: 1px solid lightgrey;
     }}
+    
+    QTextBrowser[error=true] {{
+        color: #e76f51;
+    }}
+    
 """
 
 line_edit_styles = f"""
