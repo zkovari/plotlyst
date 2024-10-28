@@ -221,10 +221,10 @@ mbti_field = TemplateField(name='MBTI', type=TemplateFieldType.TEXT_SELECTION,
                                        SelectionItem('ESTP', icon='ei.fire', icon_color='#2a9d8f'),
                                        SelectionItem('ESFP', icon='mdi.microphone-variant', icon_color='#2a9d8f'),
 
-                                       SelectionItem('INFJ', icon='ph.tree-fill', icon_color='#e9c46a'),  # yellow
-                                       SelectionItem('INTJ', icon='fa5s.drafting-compass', icon_color='#e9c46a'),
-                                       SelectionItem('ENFP', icon='fa5.sun', icon_color='#e9c46a'),
-                                       SelectionItem('ENTP', icon='fa5.lightbulb', icon_color='#e9c46a'),
+                                       SelectionItem('INFJ', icon='ph.tree-fill', icon_color='#E5BC53'),  # yellow
+                                       SelectionItem('INTJ', icon='fa5s.drafting-compass', icon_color='#E5BC53'),
+                                       SelectionItem('ENFP', icon='fa5.sun', icon_color='#E5BC53'),
+                                       SelectionItem('ENTP', icon='fa5.lightbulb', icon_color='#E5BC53'),
 
                                        SelectionItem('ISTP', icon='fa5s.hammer', icon_color='#457b9d'),  # blue
                                        SelectionItem('INTP', icon='ei.puzzle', icon_color='#457b9d'),
