@@ -593,7 +593,6 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
         self.btnSaveTheCat.setIcon(IconRegistry.from_name('fa5s.cat', color_on=WHITE_COLOR))
         self.btnSaveTheCat.setHidden(True)
         self.btnHerosJourney.setIcon(IconRegistry.from_name('fa5s.mask', color_on=WHITE_COLOR))
-        self.btnHerosJourney.setHidden(True)
         self.btnStorySpine.setIcon(IconRegistry.from_name('mdi.alpha-s-circle-outline', color_on=WHITE_COLOR))
         self.btnTwists.setIcon(IconRegistry.from_name('ph.shuffle-bold', color_on=WHITE_COLOR))
         self.buttonGroup.buttonClicked.connect(self._structureChanged)
