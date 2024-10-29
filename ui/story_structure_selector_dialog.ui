@@ -355,12 +355,6 @@
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
        <widget class="QPushButton" name="btnCancel">
-        <property name="minimumSize">
-         <size>
-          <width>80</width>
-          <height>0</height>
-         </size>
-        </property>
         <property name="cursor">
          <cursorShape>PointingHandCursor</cursorShape>
         </property>
@@ -368,18 +362,18 @@
          <string>Cancel</string>
         </property>
         <property name="base" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="confirm" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="cancel" stdset="0">
          <bool>true</bool>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="btnConfirm">
-        <property name="minimumSize">
-         <size>
-          <width>150</width>
-          <height>0</height>
-         </size>
-        </property>
         <property name="cursor">
          <cursorShape>PointingHandCursor</cursorShape>
         </property>
@@ -387,9 +381,12 @@
          <string>Confirm</string>
         </property>
         <property name="base" stdset="0">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
         <property name="positive" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="confirm" stdset="0">
          <bool>true</bool>
         </property>
        </widget>

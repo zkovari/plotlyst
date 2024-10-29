@@ -525,6 +525,26 @@ class _SaveTheCatActStructureEditor(_AbstractStructureEditor):
 class _HerosJourneyStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
         super().__init__(novel, structure, parent)
+        hbox(self.wdgCustom)
+        margins(self.wdgCustom, top=20)
+
+        self.lblCustomization = QLabel('Customization:')
+        underline(self.lblCustomization)
+        bold(self.lblCustomization)
+
+        wdg = group(spacer(), spacer(), spacing=15)
+        wdg.layout().insertWidget(1, self.lblCustomization, alignment=Qt.AlignmentFlag.AlignBottom)
+
+        self.toggleOrdeal = Toggle()
+        lbl = push_btn(IconRegistry.from_name('mdi6.skull'), text='Ordeal midpoint', transparent_=True,
+                       tooltip='Set the ordeal beat to the midpoint')
+        lbl.clicked.connect(self.toggleOrdeal.animateClick)
+        wdg.layout().insertWidget(0, group(lbl, self.toggleOrdeal, spacing=0, margin=0))
+        self.toggleOrdeal.toggled.connect(self._toggleMindpointOrdeal)
+        self.wdgCustom.layout().addWidget(wdg)
+
+    def _toggleMindpointOrdeal(self, toggled: bool):
+        pass
 
 
 class _StorySpineStructureEditor(_AbstractStructureEditor):
