@@ -192,7 +192,7 @@ class SceneEditor(QObject, EventListener):
 
         self.ui.btnClose.clicked.connect(self._on_close)
 
-        self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._btnPurposeType.refresh)
+        # self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._btnPurposeType.refresh)
 
         self.ui.tabWidget.setCurrentWidget(self.ui.tabFunctions)
         self.ui.tabWidgetDrive.setCurrentWidget(self.ui.tabAgency)
@@ -238,7 +238,7 @@ class SceneEditor(QObject, EventListener):
         self._update_pov_avatar()
         self.ui.sbDay.setValue(self.scene.day)
 
-        self.ui.wdgSceneStructure.setScene(self.novel, self.scene)
+        # self.ui.wdgSceneStructure.setScene(self.novel, self.scene)
         # self.tag_selector.setScene(self.scene)
         self._functionsEditor.setScene(self.scene)
         # self._agencyEditor.setScene(self.scene)
