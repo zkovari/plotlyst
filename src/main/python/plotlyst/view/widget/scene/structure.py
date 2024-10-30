@@ -85,6 +85,14 @@ class SceneBeatItem(QAbstractGraphicsShapeItem):
     def direction(self) -> TimelineElementDirection:
         return self._direction
 
+    def connectionPoint(self) -> QPointF:
+        if self._beat.shape == TimelineElementShape.Straight:
+            return self.scenePos() + QPointF(self.boundingRect().width(), 0)
+        elif self._beat.shape == TimelineElementShape.Curve_right:
+            return self.scenePos() + QPointF(0, self._height - self._timelineHeight)
+        else:
+            return self.scenePos() + QPointF(self.boundingRect().width(), 0)
+
     @overrides
     def boundingRect(self) -> QRectF:
         diff = 0 if self._beat.shape == TimelineElementShape.Straight else self._beat.width
@@ -175,7 +183,12 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         overlap = SceneBeatItem.OFFSET // 2
         if beat.shape != TimelineElementShape.Straight:
             overlap += beat.width
-        item.setPos(previous.scenePos() + QPointF(previous.boundingRect().width() - overlap, 0))
+
+        if previous.direction() == TimelineElementDirection.Right:
+            item.setPos(previous.connectionPoint() - QPointF(overlap, 0))
+        elif previous.direction() == TimelineElementDirection.Left:
+            item.setPos(previous.connectionPoint() - QPointF(item.boundingRect().width() - overlap, 0))
+
         self.addItem(item)
 
         return item
