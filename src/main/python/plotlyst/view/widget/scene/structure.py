@@ -32,12 +32,6 @@ from plotlyst.view.widget.graphics import BaseGraphicsView
 from plotlyst.view.widget.graphics.editor import ZoomBar
 
 
-class TimelineElementShape(Enum):
-    Straight = 0
-    Curve_left = 1
-    Curve_right = 1
-
-
 class TimelineElementDirection(Enum):
     Left = 0
     Right = 1
@@ -57,7 +51,7 @@ class TimelineElementDirection(Enum):
 
 @dataclass
 class SceneBeat:
-    shape: TimelineElementShape = TimelineElementShape.Straight
+    angle: int = 0
     width: int = 180
 
 
@@ -71,7 +65,7 @@ class SceneBeatItem(QAbstractGraphicsShapeItem):
         print(self._direction)
         self._width = self._beat.width + self.OFFSET * 2
         self._xDiff = 0
-        if self._beat.shape == TimelineElementShape.Straight:
+        if self.isStraight():
             self._height = 86
         else:
             self._xDiff = 75
@@ -85,17 +79,23 @@ class SceneBeatItem(QAbstractGraphicsShapeItem):
     def direction(self) -> TimelineElementDirection:
         return self._direction
 
+    def isStraight(self) -> bool:
+        return self._beat.angle == 0
+
+    def isCurveRight(self) -> bool:
+        return self._beat.angle == -180
+
     def connectionPoint(self) -> QPointF:
-        if self._beat.shape == TimelineElementShape.Straight:
+        if self.isStraight():
             return self.scenePos() + QPointF(self.boundingRect().width(), 0)
-        elif self._beat.shape == TimelineElementShape.Curve_right:
+        elif self.isCurveRight():
             return self.scenePos() + QPointF(0, self._height - self._timelineHeight)
         else:
             return self.scenePos() + QPointF(self.boundingRect().width(), 0)
 
     @overrides
     def boundingRect(self) -> QRectF:
-        diff = 0 if self._beat.shape == TimelineElementShape.Straight else self._beat.width
+        diff = 0 if self.isStraight() else self._beat.width
         return QRectF(0, 0, self._width + diff, self._height)
 
     @overrides
@@ -107,7 +107,7 @@ class SceneBeatItem(QAbstractGraphicsShapeItem):
             painter.setPen(QPen(QColor('grey'), 0))
             painter.setBrush(QColor('grey'))
 
-        if self._beat.shape == TimelineElementShape.Straight:
+        if self.isStraight():
             if self._direction == TimelineElementDirection.Right:
                 painter.drawConvexPolygon([
                     QPointF(0, 0),  # Top left point
@@ -126,7 +126,7 @@ class SceneBeatItem(QAbstractGraphicsShapeItem):
                     QPointF(0, self._timelineHeight / 2),  # Center left point
                     QPointF(self.OFFSET, 0)  # Top left point
                 ])
-        elif self._beat.shape == TimelineElementShape.Curve_right:
+        elif self.isCurveRight():
             x = self._beat.width
             painter.drawConvexPolygon([
                 QPointF(x, 0),  # Top left point
@@ -171,17 +171,17 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         self.addItem(item)
 
         item = self.addNewItem(SceneBeat(width=135), item)
-        item = self.addNewItem(SceneBeat(TimelineElementShape.Curve_right), item)
+        item = self.addNewItem(SceneBeat(angle=-180), item)
         self.addNewItem(SceneBeat(), item)
 
     def addNewItem(self, beat: SceneBeat, previous: SceneBeatItem) -> SceneBeatItem:
-        if beat.shape == TimelineElementShape.Straight:
+        if beat.angle == 0:
             direction = previous.direction()
         else:
             direction = previous.direction().opposite()
         item = SceneBeatItem(beat, direction)
         overlap = SceneBeatItem.OFFSET // 2
-        if beat.shape != TimelineElementShape.Straight:
+        if beat.angle != 0:
             overlap += beat.width
 
         if previous.direction() == TimelineElementDirection.Right:
