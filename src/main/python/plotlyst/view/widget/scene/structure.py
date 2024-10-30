@@ -18,7 +18,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from dataclasses import dataclass
-from enum import Enum
 from typing import Optional
 
 from PyQt6.QtCore import QRectF, QPointF, Qt
@@ -32,23 +31,6 @@ from plotlyst.view.widget.graphics import BaseGraphicsView
 from plotlyst.view.widget.graphics.editor import ZoomBar
 
 
-class TimelineElementDirection(Enum):
-    Left = 0
-    Right = 1
-    Top = 2
-    Bottom = 3
-
-    def opposite(self) -> 'TimelineElementDirection':
-        if self == TimelineElementDirection.Left:
-            return TimelineElementDirection.Right
-        if self == TimelineElementDirection.Right:
-            return TimelineElementDirection.Left
-        if self == TimelineElementDirection.Top:
-            return TimelineElementDirection.Bottom
-        if self == TimelineElementDirection.Bottom:
-            return TimelineElementDirection.Top
-
-
 @dataclass
 class SceneBeat:
     angle: int = 0
@@ -58,11 +40,10 @@ class SceneBeat:
 class SceneBeatItem(QAbstractGraphicsShapeItem):
     OFFSET: int = 35
 
-    def __init__(self, beat: SceneBeat, direction: TimelineElementDirection, parent=None):
+    def __init__(self, beat: SceneBeat, globalAngle: int, parent=None):
         super().__init__(parent)
         self._beat = beat
-        self._direction = direction
-        print(self._direction)
+        self._globalAngle = globalAngle
         self._width = self._beat.width + self.OFFSET * 2
         self._xDiff = 0
         if self.isStraight():
@@ -75,9 +56,6 @@ class SceneBeatItem(QAbstractGraphicsShapeItem):
         self._timelineHeight = 86
 
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
-
-    def direction(self) -> TimelineElementDirection:
-        return self._direction
 
     def isStraight(self) -> bool:
         return self._beat.angle == 0
@@ -108,7 +86,7 @@ class SceneBeatItem(QAbstractGraphicsShapeItem):
             painter.setBrush(QColor('grey'))
 
         if self.isStraight():
-            if self._direction == TimelineElementDirection.Right:
+            if self._globalAngle == 0:
                 painter.drawConvexPolygon([
                     QPointF(0, 0),  # Top left point
                     QPointF(self.OFFSET, self._timelineHeight / 2),  # Center left point
@@ -117,7 +95,7 @@ class SceneBeatItem(QAbstractGraphicsShapeItem):
                     QPointF(self._width, self._timelineHeight / 2),  # Center right point with offset
                     QPointF(self._width - self.OFFSET, 0)  # Top right point
                 ])
-            else:
+            elif self._globalAngle < 0:
                 painter.drawConvexPolygon([
                     QPointF(self._width, 0),  # Top right point
                     QPointF(self._width - self.OFFSET, self._timelineHeight / 2),  # Center right point with offset
@@ -166,8 +144,9 @@ class SceneStructureGraphicsScene(QGraphicsScene):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
+        self._globalAngle = 0
 
-        item = SceneBeatItem(SceneBeat(width=350), TimelineElementDirection.Right)
+        item = SceneBeatItem(SceneBeat(width=350), self._globalAngle)
         self.addItem(item)
 
         item = self.addNewItem(SceneBeat(width=135), item)
@@ -175,19 +154,17 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         self.addNewItem(SceneBeat(), item)
 
     def addNewItem(self, beat: SceneBeat, previous: SceneBeatItem) -> SceneBeatItem:
-        if beat.angle == 0:
-            direction = previous.direction()
-        else:
-            direction = previous.direction().opposite()
-        item = SceneBeatItem(beat, direction)
+        item = SceneBeatItem(beat, self._globalAngle)
         overlap = SceneBeatItem.OFFSET // 2
         if beat.angle != 0:
             overlap += beat.width
 
-        if previous.direction() == TimelineElementDirection.Right:
+        if self._globalAngle == 0:
             item.setPos(previous.connectionPoint() - QPointF(overlap, 0))
-        elif previous.direction() == TimelineElementDirection.Left:
+        elif self._globalAngle < 0:
             item.setPos(previous.connectionPoint() - QPointF(item.boundingRect().width() - overlap, 0))
+
+        self._globalAngle += beat.angle
 
         self.addItem(item)
 
