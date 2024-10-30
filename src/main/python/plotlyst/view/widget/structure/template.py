@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import copy
 from enum import Enum, auto
 from functools import partial
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Set
 
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from PyQt6.QtWidgets import QWidget, QPushButton, QDialog, QScrollArea, QApplication, QLabel
@@ -36,13 +36,15 @@ from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     disturbance_beat, normal_world_beat, characteristic_moment_beat, midpoint, midpoint_ponr, midpoint_mirror, \
     midpoint_proactive, crisis, first_plot_point, first_plot_point_ponr, first_plot_points, midpoints, story_spine, \
     twists_and_turns, twist_beat, turn_beat, danger_beat, copy_beat, five_act_structure, midpoint_false_victory, \
-    midpoint_re_dedication, second_plot_points, second_plot_point_aha, second_plot_point
+    midpoint_re_dedication, second_plot_points, second_plot_point_aha, second_plot_point, midpoint_hero_ordeal, \
+    midpoint_hero_mirror, second_plot_point_hero_road_back, second_plot_point_hero_ordeal, hero_reward, \
+    hero_false_victory
 from plotlyst.view.common import ExclusiveOptionalButtonGroup, push_btn, label
 from plotlyst.view.generated.story_structure_selector_dialog_ui import Ui_StoryStructureSelectorDialog
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
-from plotlyst.view.widget.display import IconText
+from plotlyst.view.widget.display import IconText, ReferencesButton
 from plotlyst.view.widget.input import Toggle
 from plotlyst.view.widget.structure.beat import BeatsPreview
 from plotlyst.view.widget.structure.outline import StoryStructureTimelineWidget
@@ -262,6 +264,14 @@ def find_second_plot_point(structure: StoryStructure) -> Optional[StoryBeat]:
 
 def find_midpoint(structure: StoryStructure) -> Optional[StoryBeat]:
     return next((x for x in structure.beats if x in midpoints), None)
+
+
+def find_beat_in(structure: StoryStructure, beats: Set[StoryBeat]) -> Optional[StoryBeat]:
+    return next((x for x in structure.beats if x in beats), None)
+
+
+def find_beat(structure: StoryStructure, beat: StoryBeat) -> Optional[StoryBeat]:
+    return next((x for x in structure.beats if x == beat), None)
 
 
 def find_crisis(structure: StoryStructure) -> Optional[StoryBeat]:
@@ -525,6 +535,46 @@ class _SaveTheCatActStructureEditor(_AbstractStructureEditor):
 class _HerosJourneyStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
         super().__init__(novel, structure, parent)
+        hbox(self.wdgCustom)
+        margins(self.wdgCustom, top=20)
+
+        ref = ReferencesButton()
+        ref.addRefs([
+            ('The Hero With a Thousand Faces by Joseph Campbell',
+             'https://www.amazon.com/Thousand-Faces-Collected-Joseph-Campbell/dp/1577315936'),
+            ("The Writer's Journey by Christopher Vogler",
+             'https://www.amazon.com/Writers-Journey-Anniversary-Mythic-Structure/dp/1615933158'),
+            ('Writing Archetypal Character Arcs by K.M. Weiland',
+             'https://www.amazon.com/Writing-Archetypal-Character-Arcs-Journey-ebook/dp/B0BX2LBLC9'),
+            ('A new character-driven Hero’s Journey written by Allen Palmer',
+             'https://www.crackingyarns.com.au/2011/04/04/a-new-character-driven-heros-journey-2/')])
+
+        wdg = group(spacer(), spacer(), ref, spacing=15)
+
+        self.toggleOrdeal = Toggle()
+        lbl = push_btn(IconRegistry.from_name('mdi6.skull'), text='Ordeal midpoint', transparent_=True,
+                       tooltip='Set the ordeal beat to the midpoint')
+        lbl.clicked.connect(self.toggleOrdeal.animateClick)
+        wdg.layout().insertWidget(0, group(lbl, self.toggleOrdeal, spacing=0, margin=0))
+        self.wdgCustom.layout().addWidget(wdg)
+
+        if find_beat(self._structure, midpoint_hero_ordeal):
+            self.toggleOrdeal.setChecked(True)
+
+        self.toggleOrdeal.toggled.connect(self._toggleMindpointOrdeal)
+
+    def _toggleMindpointOrdeal(self, toggled: bool):
+        self.__replaceBeatIn(midpoint_hero_ordeal if toggled else midpoint_hero_mirror,
+                             {midpoint_hero_ordeal, midpoint_hero_mirror})
+        self.__replaceBeatIn(second_plot_point_hero_road_back if toggled else second_plot_point_hero_ordeal,
+                             {second_plot_point_hero_ordeal, second_plot_point_hero_road_back})
+        self.__replaceBeatIn(hero_reward if toggled else hero_false_victory,
+                             {hero_reward, hero_false_victory})
+
+    def __replaceBeatIn(self, beat: StoryBeat, match: Set[StoryBeat]):
+        current = find_beat_in(self._structure, match)
+        if current:
+            self.beatsPreview.replaceBeat(current, copy.deepcopy(beat))
 
 
 class _StorySpineStructureEditor(_AbstractStructureEditor):
@@ -593,7 +643,6 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
         self.btnSaveTheCat.setIcon(IconRegistry.from_name('fa5s.cat', color_on=WHITE_COLOR))
         self.btnSaveTheCat.setHidden(True)
         self.btnHerosJourney.setIcon(IconRegistry.from_name('fa5s.mask', color_on=WHITE_COLOR))
-        self.btnHerosJourney.setHidden(True)
         self.btnStorySpine.setIcon(IconRegistry.from_name('mdi.alpha-s-circle-outline', color_on=WHITE_COLOR))
         self.btnTwists.setIcon(IconRegistry.from_name('ph.shuffle-bold', color_on=WHITE_COLOR))
         self.buttonGroup.buttonClicked.connect(self._structureChanged)

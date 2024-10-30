@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
-from typing import Optional, Any
+from typing import Optional, Any, Tuple, List
 
 import emoji
 from PyQt6.QtCharts import QChartView
@@ -511,3 +511,19 @@ class ArrowButton(QToolButton):
             self.stateReset.emit()
         else:
             self._increaseState()
+
+
+class ReferencesButton(QPushButton):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        transparent(self)
+        self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.7))
+        pointy(self)
+        italic(self)
+        self.setText('References')
+
+        self._menu = MenuWidget(self)
+
+    def addRefs(self, refs: List[Tuple[str, str]]):
+        for ref in refs:
+            self._menu.addAction(action(ref[0], slot=lambda: open_url(ref[1])))
