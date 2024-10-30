@@ -44,7 +44,7 @@ from plotlyst.view.generated.story_structure_selector_dialog_ui import Ui_StoryS
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
-from plotlyst.view.widget.display import IconText
+from plotlyst.view.widget.display import IconText, ReferencesButton
 from plotlyst.view.widget.input import Toggle
 from plotlyst.view.widget.structure.beat import BeatsPreview
 from plotlyst.view.widget.structure.outline import StoryStructureTimelineWidget
@@ -538,12 +538,18 @@ class _HerosJourneyStructureEditor(_AbstractStructureEditor):
         hbox(self.wdgCustom)
         margins(self.wdgCustom, top=20)
 
-        self.lblCustomization = QLabel('Customization:')
-        underline(self.lblCustomization)
-        bold(self.lblCustomization)
+        ref = ReferencesButton()
+        ref.addRefs([
+            ('The Hero With a Thousand Faces by Joseph Campbell',
+             'https://www.amazon.com/Thousand-Faces-Collected-Joseph-Campbell/dp/1577315936'),
+            ("The Writer's Journey by Christopher Vogler",
+             'https://www.amazon.com/Writers-Journey-Anniversary-Mythic-Structure/dp/1615933158'),
+            ('Writing Archetypal Character Arcs by K.M. Weiland',
+             'https://www.amazon.com/Writing-Archetypal-Character-Arcs-Journey-ebook/dp/B0BX2LBLC9'),
+            ('A new character-driven Hero’s Journey written by Allen Palmer',
+             'https://www.crackingyarns.com.au/2011/04/04/a-new-character-driven-heros-journey-2/')])
 
-        wdg = group(spacer(), spacer(), spacing=15)
-        wdg.layout().insertWidget(1, self.lblCustomization, alignment=Qt.AlignmentFlag.AlignBottom)
+        wdg = group(spacer(), spacer(), ref, spacing=15)
 
         self.toggleOrdeal = Toggle()
         lbl = push_btn(IconRegistry.from_name('mdi6.skull'), text='Ordeal midpoint', transparent_=True,
