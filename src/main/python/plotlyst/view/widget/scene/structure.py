@@ -86,58 +86,60 @@ class SceneBeatItem(QAbstractGraphicsShapeItem):
             painter.setBrush(QColor('grey'))
 
         if self.isStraight():
-            if self._globalAngle == 0:
-                painter.drawConvexPolygon([
-                    QPointF(0, 0),  # Top left point
-                    QPointF(self.OFFSET, self._timelineHeight / 2),  # Center left point
-                    QPointF(0, self._timelineHeight),  # Bottom left point
-                    QPointF(self._width - self.OFFSET, self._timelineHeight),  # Bottom right point
-                    QPointF(self._width, self._timelineHeight / 2),  # Center right point with offset
-                    QPointF(self._width - self.OFFSET, 0)  # Top right point
-                ])
-            elif self._globalAngle < 0:
-                painter.drawConvexPolygon([
-                    QPointF(self._width, 0),  # Top right point
-                    QPointF(self._width - self.OFFSET, self._timelineHeight / 2),  # Center right point with offset
-                    QPointF(self._width, self._timelineHeight),  # Bottom right point
-                    QPointF(self.OFFSET, self._timelineHeight),  # Bottom left point
-                    QPointF(0, self._timelineHeight / 2),  # Center left point
-                    QPointF(self.OFFSET, 0)  # Top left point
-                ])
+            self._drawStraight(painter)
         elif self.isCurveRight():
-            x = self._beat.width
-            painter.drawConvexPolygon([
-                QPointF(x, 0),  # Top left point
-                QPointF(x + self.OFFSET, self._timelineHeight / 2),  # Center left point
-                QPointF(x, self._timelineHeight),  # Bottom left point
-                QPointF(x + self.OFFSET, self._timelineHeight),  # Bottom right point
-                QPointF(x + self.OFFSET, 0)  # Top right point
-            ])
+            self._drawCurveRight(painter)
 
-            y = self._height - self._timelineHeight
-            painter.drawConvexPolygon([
-                QPointF(self._beat.width + self.OFFSET + self._timelineHeight, y),  # Top right point
-                QPointF(self._beat.width + self.OFFSET + self._timelineHeight, y + self._timelineHeight),
-                # Bottom right point
-                QPointF(self.OFFSET, y + self._timelineHeight),  # Bottom left point with offset
-                QPointF(0, y + self._timelineHeight / 2),  # Center left point
-                QPointF(self.OFFSET, y)  # Top left point with offset
-            ])
+    def _drawStraight(self, painter: QPainter):
+        base_shape = [
+            QPointF(0, 0),  # Top left point
+            QPointF(self.OFFSET, self._timelineHeight / 2),  # Center left point
+            QPointF(0, self._timelineHeight),  # Bottom left point
+            QPointF(self._width - self.OFFSET, self._timelineHeight),  # Bottom right point
+            QPointF(self._width, self._timelineHeight / 2),  # Center right point with offset
+            QPointF(self._width - self.OFFSET, 0)  # Top right point
+        ]
 
-            pen = painter.pen()
-            pen.setWidth(self._timelineHeight)
-            painter.setPen(pen)
-            painter.setBrush(Qt.BrushStyle.NoBrush)
+        shape = base_shape if self._globalAngle == 0 else [
+            QPointF(self._width - point.x(), point.y()) for point in base_shape
+        ]
 
-            path = QPainterPath()
-            pen_half = self._timelineHeight // 2
-            path.moveTo(x + self.OFFSET + pen_half, pen_half)
-            path.arcTo(QRectF(x + pen_half, pen_half,
-                              self._width - self.OFFSET - self._timelineHeight,
-                              self._height - self._timelineHeight),
-                       90, -180)
+        painter.drawConvexPolygon(shape)
 
-            painter.drawPath(path)
+    def _drawCurveRight(self, painter: QPainter):
+        x = self._beat.width
+        painter.drawConvexPolygon([
+            QPointF(x, 0),  # Top left point
+            QPointF(x + self.OFFSET, self._timelineHeight / 2),  # Center left point
+            QPointF(x, self._timelineHeight),  # Bottom left point
+            QPointF(x + self.OFFSET, self._timelineHeight),  # Bottom right point
+            QPointF(x + self.OFFSET, 0)  # Top right point
+        ])
+
+        y = self._height - self._timelineHeight
+        painter.drawConvexPolygon([
+            QPointF(self._beat.width + self.OFFSET + self._timelineHeight, y),  # Top right point
+            QPointF(self._beat.width + self.OFFSET + self._timelineHeight, y + self._timelineHeight),
+            # Bottom right point
+            QPointF(self.OFFSET, y + self._timelineHeight),  # Bottom left point with offset
+            QPointF(0, y + self._timelineHeight / 2),  # Center left point
+            QPointF(self.OFFSET, y)  # Top left point with offset
+        ])
+
+        pen = painter.pen()
+        pen.setWidth(self._timelineHeight)
+        painter.setPen(pen)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+
+        path = QPainterPath()
+        pen_half = self._timelineHeight // 2
+        path.moveTo(x + self.OFFSET + pen_half, pen_half)
+        path.arcTo(QRectF(x + pen_half, pen_half,
+                          self._width - self.OFFSET - self._timelineHeight,
+                          self._height - self._timelineHeight),
+                   90, -180)
+
+        painter.drawPath(path)
 
 
 class SceneStructureGraphicsScene(QGraphicsScene):
@@ -151,7 +153,8 @@ class SceneStructureGraphicsScene(QGraphicsScene):
 
         item = self.addNewItem(SceneBeat(width=135), item)
         item = self.addNewItem(SceneBeat(angle=-180), item)
-        self.addNewItem(SceneBeat(), item)
+        item = self.addNewItem(SceneBeat(), item)
+        # item = self.addNewItem(SceneBeat(angle=-180), item)
 
     def addNewItem(self, beat: SceneBeat, previous: SceneBeatItem) -> SceneBeatItem:
         item = SceneBeatItem(beat, self._globalAngle)
