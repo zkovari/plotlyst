@@ -456,6 +456,8 @@ class StoryStructureTimelineWidget(QWidget):
             btn.setToolTip(f'<b style="color: {new.icon_color}">{new.text}')
             btn.beat = new
 
+            self.toggleBeatVisibility(new)
+
     def removeBeat(self, beat: StoryBeat):
         if beat.type == StoryBeatType.BEAT:
             btn = self._beats.pop(beat)

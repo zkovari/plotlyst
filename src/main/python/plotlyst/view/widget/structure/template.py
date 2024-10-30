@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import copy
 from enum import Enum, auto
 from functools import partial
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Set
 
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from PyQt6.QtWidgets import QWidget, QPushButton, QDialog, QScrollArea, QApplication, QLabel
@@ -36,7 +36,9 @@ from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     disturbance_beat, normal_world_beat, characteristic_moment_beat, midpoint, midpoint_ponr, midpoint_mirror, \
     midpoint_proactive, crisis, first_plot_point, first_plot_point_ponr, first_plot_points, midpoints, story_spine, \
     twists_and_turns, twist_beat, turn_beat, danger_beat, copy_beat, five_act_structure, midpoint_false_victory, \
-    midpoint_re_dedication, second_plot_points, second_plot_point_aha, second_plot_point
+    midpoint_re_dedication, second_plot_points, second_plot_point_aha, second_plot_point, midpoint_hero_ordeal, \
+    midpoint_hero_mirror, second_plot_point_hero_road_back, second_plot_point_hero_ordeal, hero_reward, \
+    hero_false_victory
 from plotlyst.view.common import ExclusiveOptionalButtonGroup, push_btn, label
 from plotlyst.view.generated.story_structure_selector_dialog_ui import Ui_StoryStructureSelectorDialog
 from plotlyst.view.icons import IconRegistry
@@ -262,6 +264,14 @@ def find_second_plot_point(structure: StoryStructure) -> Optional[StoryBeat]:
 
 def find_midpoint(structure: StoryStructure) -> Optional[StoryBeat]:
     return next((x for x in structure.beats if x in midpoints), None)
+
+
+def find_beat_in(structure: StoryStructure, beats: Set[StoryBeat]) -> Optional[StoryBeat]:
+    return next((x for x in structure.beats if x in beats), None)
+
+
+def find_beat(structure: StoryStructure, beat: StoryBeat) -> Optional[StoryBeat]:
+    return next((x for x in structure.beats if x == beat), None)
 
 
 def find_crisis(structure: StoryStructure) -> Optional[StoryBeat]:
@@ -540,11 +550,25 @@ class _HerosJourneyStructureEditor(_AbstractStructureEditor):
                        tooltip='Set the ordeal beat to the midpoint')
         lbl.clicked.connect(self.toggleOrdeal.animateClick)
         wdg.layout().insertWidget(0, group(lbl, self.toggleOrdeal, spacing=0, margin=0))
-        self.toggleOrdeal.toggled.connect(self._toggleMindpointOrdeal)
         self.wdgCustom.layout().addWidget(wdg)
 
+        if find_beat(self._structure, midpoint_hero_ordeal):
+            self.toggleOrdeal.setChecked(True)
+
+        self.toggleOrdeal.toggled.connect(self._toggleMindpointOrdeal)
+
     def _toggleMindpointOrdeal(self, toggled: bool):
-        pass
+        self.__replaceBeatIn(midpoint_hero_ordeal if toggled else midpoint_hero_mirror,
+                             {midpoint_hero_ordeal, midpoint_hero_mirror})
+        self.__replaceBeatIn(second_plot_point_hero_road_back if toggled else second_plot_point_hero_ordeal,
+                             {second_plot_point_hero_ordeal, second_plot_point_hero_road_back})
+        self.__replaceBeatIn(hero_reward if toggled else hero_false_victory,
+                             {hero_reward, hero_false_victory})
+
+    def __replaceBeatIn(self, beat: StoryBeat, match: Set[StoryBeat]):
+        current = find_beat_in(self._structure, match)
+        if current:
+            self.beatsPreview.replaceBeat(current, copy.deepcopy(beat))
 
 
 class _StorySpineStructureEditor(_AbstractStructureEditor):
