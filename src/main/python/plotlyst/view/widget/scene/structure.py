@@ -41,6 +41,7 @@ class TimelineElementDirection(Enum):
 @dataclass
 class SceneBeat:
     direction: TimelineElementDirection = TimelineElementDirection.Straight
+    width: int = 180
 
 
 class SceneBeatItem(QAbstractGraphicsShapeItem):
@@ -49,10 +50,13 @@ class SceneBeatItem(QAbstractGraphicsShapeItem):
     def __init__(self, beat: SceneBeat, parent=None):
         super().__init__(parent)
         self._beat = beat
-        self._width = 250
+        self._width = self._beat.width + self.OFFSET * 2
+        self._xDiff = 0
         if self._beat.direction == TimelineElementDirection.Straight:
-            self._height = 85
+            self._height = 86
         else:
+            self._xDiff = 75
+            self._width += self._xDiff
             self._height = 350
 
         self._timelineHeight = 86
@@ -61,7 +65,8 @@ class SceneBeatItem(QAbstractGraphicsShapeItem):
 
     @overrides
     def boundingRect(self) -> QRectF:
-        return QRectF(0, 0, self._width, self._height)
+        diff = 0 if self._beat.direction == TimelineElementDirection.Straight else self._beat.width
+        return QRectF(0, 0, self._width + diff, self._height)
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
@@ -82,21 +87,23 @@ class SceneBeatItem(QAbstractGraphicsShapeItem):
                 QPointF(self._width - self.OFFSET, 0)  # Top right point
             ])
         elif self._beat.direction == TimelineElementDirection.Curve_right:
+            x = self._beat.width
             painter.drawConvexPolygon([
-                QPointF(0, 0),  # Top left point
-                QPointF(self.OFFSET, self._timelineHeight / 2),  # Center left point
-                QPointF(0, self._timelineHeight),  # Bottom left point
-                QPointF(self.OFFSET, self._timelineHeight),  # Bottom right point
-                QPointF(self.OFFSET, 0)  # Top right point
+                QPointF(x, 0),  # Top left point
+                QPointF(x + self.OFFSET, self._timelineHeight / 2),  # Center left point
+                QPointF(x, self._timelineHeight),  # Bottom left point
+                QPointF(x + self.OFFSET, self._timelineHeight),  # Bottom right point
+                QPointF(x + self.OFFSET, 0)  # Top right point
             ])
 
             y = self._height - self._timelineHeight
             painter.drawConvexPolygon([
-                QPointF(self._width, y),  # Top right point
-                QPointF(self._width, y + self._timelineHeight),  # Bottom right point
-                QPointF(self.OFFSET, y + self._timelineHeight),  # Bottom left point
-                QPointF(0, y + self._timelineHeight / 2),  # Center left point with offset
-                QPointF(self.OFFSET, y)  # Top left point
+                QPointF(self._beat.width + self.OFFSET + self._timelineHeight, y),  # Top right point
+                QPointF(self._beat.width + self.OFFSET + self._timelineHeight, y + self._timelineHeight),
+                # Bottom right point
+                QPointF(self.OFFSET, y + self._timelineHeight),  # Bottom left point with offset
+                QPointF(0, y + self._timelineHeight / 2),  # Center left point
+                QPointF(self.OFFSET, y)  # Top left point with offset
             ])
 
             pen = painter.pen()
@@ -106,10 +113,12 @@ class SceneBeatItem(QAbstractGraphicsShapeItem):
 
             path = QPainterPath()
             pen_half = self._timelineHeight // 2
-            path.moveTo(self.OFFSET + pen_half, pen_half)
-            path.arcTo(QRectF(pen_half, pen_half, self._width - self.OFFSET - self._timelineHeight - pen_half,
+            path.moveTo(x + self.OFFSET + pen_half, pen_half)
+            path.arcTo(QRectF(x + pen_half, pen_half,
+                              self._width - self.OFFSET - self._timelineHeight,
                               self._height - self._timelineHeight),
                        90, -180)
+
             painter.drawPath(path)
 
 
@@ -118,15 +127,19 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         super().__init__(parent)
         self._novel = novel
 
-        item = SceneBeatItem(SceneBeat())
+        item = SceneBeatItem(SceneBeat(width=350))
         self.addItem(item)
 
-        item = self.addNewItem(SceneBeat(), item)
-        self.addNewItem(SceneBeat(TimelineElementDirection.Curve_right), item)
+        item = self.addNewItem(SceneBeat(width=135), item)
+        item = self.addNewItem(SceneBeat(TimelineElementDirection.Curve_right), item)
+        # self.addNewItem(SceneBeat(), item)
 
     def addNewItem(self, beat: SceneBeat, previous: SceneBeatItem) -> SceneBeatItem:
         item = SceneBeatItem(beat)
-        item.setPos(previous.scenePos() + QPointF(previous.boundingRect().width() - SceneBeatItem.OFFSET // 2, 0))
+        overlap = SceneBeatItem.OFFSET // 2
+        if beat.direction != TimelineElementDirection.Straight:
+            overlap += beat.width
+        item.setPos(previous.scenePos() + QPointF(previous.boundingRect().width() - overlap, 0))
         self.addItem(item)
 
         return item
