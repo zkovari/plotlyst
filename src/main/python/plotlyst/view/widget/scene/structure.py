@@ -59,6 +59,9 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
 
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
 
+        if self._globalAngle > 0:
+            self.setRotation(-self._globalAngle)
+
     def item(self) -> SceneBeat:
         return self._beat
 
@@ -108,15 +111,14 @@ class StraightOutlineItem(OutlineItemBase):
     @overrides
     def adjustTo(self, previous: 'OutlineItemBase'):
         diff = QPointF(self.OFFSET - previous.item().spacing, 0)
-        if self._globalAngle == 0:
-            self.setPos(previous.connectionPoint() - diff)
-        elif self._globalAngle > 0:
-            transform = QTransform()
-            transform.rotate(-self._globalAngle)
-            rotated_diff = transform.map(diff)
-            self.setPos(previous.connectionPoint() - rotated_diff)
-        else:
-            self.setPos(previous.connectionPoint() - QPointF(self._width + previous.item().spacing - self.OFFSET, 0))
+
+        if self._globalAngle > 0:
+            transform = QTransform().rotate(-self._globalAngle)
+            diff = transform.map(diff)
+        elif self._globalAngle < 0:
+            diff.setX(self._width - diff.x())
+
+        self.setPos(previous.connectionPoint() - diff)
 
     @overrides
     def _calculateShape(self):
@@ -234,8 +236,6 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         self._globalAngle = 0
 
         item = StraightOutlineItem(SceneBeat(text='1', width=350, spacing=45), self._globalAngle)
-        if self._globalAngle > 0:
-            item.setRotation(-self._globalAngle)
         self.addItem(item)
 
         item = self.addNewItem(SceneBeat(text='2', width=135, color='blue'), item)
@@ -249,8 +249,6 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         else:
             item = UTurnOutlineItem(beat, self._globalAngle)
 
-        if self._globalAngle > 0:
-            item.setRotation(-self._globalAngle)
         item.adjustTo(previous)
         self.addItem(item)
         return item
