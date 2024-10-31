@@ -61,6 +61,11 @@ def draw_zero(painter: QPainter):
     painter.drawEllipse(QPointF(0, 0), 1, 1)
 
 
+def draw_point(painter: QPainter, point: QPointF, color=Qt.GlobalColor.blue, size: int = 1):
+    painter.setPen(QPen(QColor(color), size, Qt.PenStyle.DashLine))
+    painter.drawEllipse(point, 1, 1)
+
+
 def draw_helpers(painter: QPainter, item: QAbstractGraphicsShapeItem):
     draw_rect(painter, item)
     draw_center(painter, item)

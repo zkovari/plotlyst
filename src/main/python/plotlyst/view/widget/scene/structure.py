@@ -27,8 +27,10 @@ from overrides import overrides
 
 from plotlyst.common import PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.domain import Novel
+from plotlyst.view.common import spawn
 from plotlyst.view.widget.graphics import BaseGraphicsView
 from plotlyst.view.widget.graphics.editor import ZoomBar
+from plotlyst.view.widget.graphics.items import draw_zero, draw_point, draw_rect
 
 
 @dataclass
@@ -67,7 +69,7 @@ class SceneBeatItem(QAbstractGraphicsShapeItem):
         if self.isStraight():
             return self.scenePos() + QPointF(self.boundingRect().width(), 0)
         elif self.isCurveRight():
-            return self.scenePos() + QPointF(0, self._height - self._timelineHeight)
+            return self.pos() + QPointF(0, self._height - self._timelineHeight)
         else:
             return self.scenePos() + QPointF(self.boundingRect().width(), 0)
 
@@ -89,6 +91,10 @@ class SceneBeatItem(QAbstractGraphicsShapeItem):
             self._drawStraight(painter)
         elif self.isCurveRight():
             self._drawCurveRight(painter)
+            draw_point(painter, QPointF(0, self._height - self._timelineHeight), 'red', 15)
+            draw_rect(painter, self)
+
+        draw_zero(painter)
 
     def _drawStraight(self, painter: QPainter):
         base_shape = [
@@ -108,23 +114,37 @@ class SceneBeatItem(QAbstractGraphicsShapeItem):
 
     def _drawCurveRight(self, painter: QPainter):
         x = self._beat.width
-        painter.drawConvexPolygon([
+        y = self._height - self._timelineHeight
+
+        # Define the base shape points for the two convex polygons
+        top_curve_shape = [
             QPointF(x, 0),  # Top left point
             QPointF(x + self.OFFSET, self._timelineHeight / 2),  # Center left point
             QPointF(x, self._timelineHeight),  # Bottom left point
             QPointF(x + self.OFFSET, self._timelineHeight),  # Bottom right point
             QPointF(x + self.OFFSET, 0)  # Top right point
-        ])
+        ]
 
-        y = self._height - self._timelineHeight
-        painter.drawConvexPolygon([
+        bottom_curve_shape = [
             QPointF(self._beat.width + self.OFFSET + self._timelineHeight, y),  # Top right point
             QPointF(self._beat.width + self.OFFSET + self._timelineHeight, y + self._timelineHeight),
             # Bottom right point
             QPointF(self.OFFSET, y + self._timelineHeight),  # Bottom left point with offset
             QPointF(0, y + self._timelineHeight / 2),  # Center left point
             QPointF(self.OFFSET, y)  # Top left point with offset
-        ])
+        ]
+
+        # Mirror the shape points if _globalAngle is negative
+        if self._globalAngle < 0:
+            top_curve_shape = [QPointF(self._width - point.x() + self._timelineHeight * 2, point.y())
+                               for
+                               point in
+                               top_curve_shape]
+            bottom_curve_shape = [QPointF(self._width - point.x() + self._timelineHeight * 2, point.y()) for
+                                  point in bottom_curve_shape]
+
+        painter.drawConvexPolygon(top_curve_shape)
+        painter.drawConvexPolygon(bottom_curve_shape)
 
         pen = painter.pen()
         pen.setWidth(self._timelineHeight)
@@ -133,11 +153,17 @@ class SceneBeatItem(QAbstractGraphicsShapeItem):
 
         path = QPainterPath()
         pen_half = self._timelineHeight // 2
-        path.moveTo(x + self.OFFSET + pen_half, pen_half)
-        path.arcTo(QRectF(x + pen_half, pen_half,
-                          self._width - self.OFFSET - self._timelineHeight,
-                          self._height - self._timelineHeight),
-                   90, -180)
+
+        arc_x_start = x + self.OFFSET + pen_half
+        if self._globalAngle < 0:
+            arc_x_start = self._width - arc_x_start
+
+        path.moveTo(arc_x_start, pen_half)
+        path.arcTo(QRectF(
+            arc_x_start - pen_half, pen_half,
+            self._width - self.OFFSET - self._timelineHeight,
+            self._height - self._timelineHeight
+        ), 90, -180)
 
         painter.drawPath(path)
 
@@ -153,19 +179,24 @@ class SceneStructureGraphicsScene(QGraphicsScene):
 
         item = self.addNewItem(SceneBeat(width=135), item)
         item = self.addNewItem(SceneBeat(angle=-180), item)
-        item = self.addNewItem(SceneBeat(), item)
-        # item = self.addNewItem(SceneBeat(angle=-180), item)
+        # item = self.addNewItem(SceneBeat(), item)
+        item = self.addNewItem(SceneBeat(angle=-180), item)
 
     def addNewItem(self, beat: SceneBeat, previous: SceneBeatItem) -> SceneBeatItem:
         item = SceneBeatItem(beat, self._globalAngle)
         overlap = SceneBeatItem.OFFSET // 2
-        if beat.angle != 0:
+        if beat.angle < 0:
             overlap += beat.width
 
         if self._globalAngle == 0:
             item.setPos(previous.connectionPoint() - QPointF(overlap, 0))
         elif self._globalAngle < 0:
-            item.setPos(previous.connectionPoint() - QPointF(item.boundingRect().width() - overlap, 0))
+            if beat.angle == 0:
+                item.setPos(previous.connectionPoint() - QPointF(item.boundingRect().width() - overlap, 0))
+            else:
+                print(overlap)
+                print(item.boundingRect().width())
+                item.setPos(previous.connectionPoint() - QPointF(item.boundingRect().width() - overlap, 0))
 
         self._globalAngle += beat.angle
 
