@@ -110,7 +110,7 @@ class StraightOutlineItem(OutlineItemBase):
         diff = QPointF(self.OFFSET - previous.item().spacing, 0)
         if self._globalAngle == 0:
             self.setPos(previous.connectionPoint() - diff)
-        elif self._globalAngle == 90:
+        elif self._globalAngle > 0:
             transform = QTransform()
             transform.rotate(-self._globalAngle)
             rotated_diff = transform.map(diff)
