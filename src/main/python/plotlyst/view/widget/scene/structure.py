@@ -182,13 +182,20 @@ class UTurnOutlineItem(OutlineItemBase):
 
         if self._globalAngle >= 0:
             self._localCpPoint = QPointF(0, self._height - self._timelineHeight)
+        else:
+            self._localCpPoint = QPointF(self._width, self._height - self._timelineHeight)
 
         pen_half = self._timelineHeight // 2
-        arc_x_start = self._beat.width + self.OFFSET + pen_half
-        self._arcRect = QRectF(arc_x_start - pen_half, pen_half, arcWidth, self._height - self._timelineHeight)
+        arc_margin = 8  # needed for slight adjustment
 
-        # 8 is needed for slight adjustment
-        self._topStartX = self._width - self._arcRect.width() - self.OFFSET - self._timelineHeight - 8
+        if self._globalAngle >= 0:
+            arc_x_start = self._beat.width + self.OFFSET + pen_half
+            self._arcRect = QRectF(arc_x_start - pen_half, pen_half, arcWidth, self._height - self._timelineHeight)
+        else:
+            arc_x_start = pen_half + arc_margin
+            self._arcRect = QRectF(arc_x_start, pen_half, arcWidth, self._height - self._timelineHeight)
+
+        self._topStartX = self._width - self._arcRect.width() - self.OFFSET - self._timelineHeight - arc_margin
 
     @overrides
     def _draw(self, painter: QPainter):
@@ -211,11 +218,11 @@ class UTurnOutlineItem(OutlineItemBase):
 
         # Mirror the shape points if _globalAngle is negative
         if self._globalAngle < 0:
-            top_curve_shape = [QPointF(self._width - point.x() + self._timelineHeight * 2, point.y())
+            top_curve_shape = [QPointF(self._width - point.x(), point.y())
                                for
                                point in
                                top_curve_shape]
-            bottom_curve_shape = [QPointF(self._width - point.x() + self._timelineHeight * 2, point.y()) for
+            bottom_curve_shape = [QPointF(self._width - point.x(), point.y()) for
                                   point in bottom_curve_shape]
 
         painter.drawConvexPolygon(top_curve_shape)
@@ -227,11 +234,18 @@ class UTurnOutlineItem(OutlineItemBase):
         painter.setBrush(Qt.BrushStyle.NoBrush)
 
         path = QPainterPath()
-        path.moveTo(self._arcRect.x(), self._arcRect.y())
-        path.arcTo(self._arcRect, 90, -180)
+        if self._globalAngle >= 0:
+            path.moveTo(self._arcRect.x(), self._arcRect.y())
+            path.arcTo(self._arcRect, 90, -180)
+        else:
+            path.moveTo(self._arcRect.x() + self._arcRect.width(), self._arcRect.y())
+            path.arcTo(self._arcRect, 90, 180)
 
         painter.drawPath(path)
         draw_rect(painter, self._arcRect)
+
+        painter.setPen(QPen(QColor('black'), 1))
+        painter.drawText(0, y, self._beat.width, self._timelineHeight, Qt.AlignmentFlag.AlignCenter, self._beat.text)
 
 
 class SceneStructureGraphicsScene(QGraphicsScene):
@@ -243,10 +257,11 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         item = StraightOutlineItem(SceneBeat(text='1', width=50, spacing=17), self._globalAngle)
         self.addItem(item)
 
-        # item = self.addNewItem(SceneBeat(text='2', width=135, color='blue'), item)
-        item = self.addNewItem(SceneBeat(angle=-180, color='green'), item)
-        item = self.addNewItem(SceneBeat('3'), item)
-        # item = self.addNewItem(SceneBeat(angle=-180), item)
+        item = self.addNewItem(SceneBeat(text='2', width=135, color='blue'), item)
+        item = self.addNewItem(SceneBeat(text='Curved', angle=-180, color='green'), item)
+        # item = self.addNewItem(SceneBeat('3'), item)
+        item = self.addNewItem(SceneBeat(angle=-180), item)
+        item = self.addNewItem(SceneBeat('4'), item)
 
     def addNewItem(self, beat: SceneBeat, previous: OutlineItemBase) -> OutlineItemBase:
         if beat.angle == 0:
@@ -258,23 +273,11 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         self.addItem(item)
 
         self._globalAngle += beat.angle
+        if self._globalAngle == -360:
+            self._globalAngle = 0
 
         return item
 
-        # overlap = self._spacing
-        # if beat.angle < 0:
-        #     overlap += beat.width
-        #
-        # if self._globalAngle == 0:
-        #     item.setPos(previous.connectionPoint() - QPointF(overlap, 0))
-        # elif self._globalAngle < 0:
-        #     if beat.angle == 0:
-        #         item.setPos(previous.connectionPoint() - QPointF(item.boundingRect().width() - overlap, 0))
-        #     else:
-        #         print(overlap)
-        #         print(item.boundingRect().width())
-        #         item.setPos(previous.connectionPoint() - QPointF(item.boundingRect().width() - overlap, 0))
-        #
 
 class SceneStructureView(BaseGraphicsView):
     def __init__(self, parent=None):
