@@ -46,8 +46,9 @@ def v_center(ref_height: int, item_height: int) -> int:
     return (ref_height - item_height) // 2
 
 
-def draw_rect(painter: QPainter, item: QAbstractGraphicsShapeItem):
-    painter.setPen(QPen(Qt.GlobalColor.red, 1, Qt.PenStyle.DashLine))
+def draw_rect(painter: QPainter, item: QAbstractGraphicsShapeItem, color=Qt.GlobalColor.red):
+    painter.setPen(QPen(QColor(color), 1, Qt.PenStyle.DashLine))
+    painter.setBrush(Qt.BrushStyle.NoBrush)
     painter.drawRoundedRect(item.boundingRect(), 2, 2)
 
 

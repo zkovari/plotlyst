@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Optional
 
@@ -30,53 +31,34 @@ from plotlyst.core.domain import Novel
 from plotlyst.view.common import spawn
 from plotlyst.view.widget.graphics import BaseGraphicsView
 from plotlyst.view.widget.graphics.editor import ZoomBar
-from plotlyst.view.widget.graphics.items import draw_zero, draw_point, draw_rect
+from plotlyst.view.widget.graphics.items import draw_rect
 
 
 @dataclass
 class SceneBeat:
     angle: int = 0
     width: int = 180
+    color: str = 'red'
 
 
-class SceneBeatItem(QAbstractGraphicsShapeItem):
+class OutlineItemBase(QAbstractGraphicsShapeItem):
     OFFSET: int = 35
 
     def __init__(self, beat: SceneBeat, globalAngle: int, parent=None):
         super().__init__(parent)
         self._beat = beat
         self._globalAngle = globalAngle
-        self._width = self._beat.width + self.OFFSET * 2
-        self._xDiff = 0
-        if self.isStraight():
-            self._height = 86
-        else:
-            self._xDiff = 75
-            self._width += self._xDiff
-            self._height = 350
-
+        self._width = 0
+        self._height = 0
         self._timelineHeight = 86
+
+        self._calculateSize()
 
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
 
-    def isStraight(self) -> bool:
-        return self._beat.angle == 0
-
-    def isCurveRight(self) -> bool:
-        return self._beat.angle == -180
-
-    def connectionPoint(self) -> QPointF:
-        if self.isStraight():
-            return self.scenePos() + QPointF(self.boundingRect().width(), 0)
-        elif self.isCurveRight():
-            return self.pos() + QPointF(0, self._height - self._timelineHeight)
-        else:
-            return self.scenePos() + QPointF(self.boundingRect().width(), 0)
-
     @overrides
     def boundingRect(self) -> QRectF:
-        diff = 0 if self.isStraight() else self._beat.width
-        return QRectF(0, 0, self._width + diff, self._height)
+        return QRectF(0, 0, self._width, self._height)
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
@@ -87,16 +69,35 @@ class SceneBeatItem(QAbstractGraphicsShapeItem):
             painter.setPen(QPen(QColor('grey'), 0))
             painter.setBrush(QColor('grey'))
 
-        if self.isStraight():
-            self._drawStraight(painter)
-        elif self.isCurveRight():
-            self._drawCurveRight(painter)
-            draw_point(painter, QPointF(0, self._height - self._timelineHeight), 'red', 15)
-            draw_rect(painter, self)
+        self._draw(painter)
+        draw_rect(painter, self, self._beat.color)
 
-        draw_zero(painter)
+    @abstractmethod
+    def connectionPoint(self) -> QPointF:
+        pass
 
-    def _drawStraight(self, painter: QPainter):
+    @abstractmethod
+    def _calculateSize(self):
+        pass
+
+    @abstractmethod
+    def _draw(self, painter: QPainter):
+        pass
+
+
+class StraightOutlineItem(OutlineItemBase):
+
+    @overrides
+    def connectionPoint(self) -> QPointF:
+        return self.scenePos() + QPointF(self.boundingRect().width(), 0)
+
+    @overrides
+    def _calculateSize(self):
+        self._width = self._beat.width + self.OFFSET * 2
+        self._height = self._timelineHeight
+
+    @overrides
+    def _draw(self, painter: QPainter):
         base_shape = [
             QPointF(0, 0),  # Top left point
             QPointF(self.OFFSET, self._timelineHeight / 2),  # Center left point
@@ -112,7 +113,22 @@ class SceneBeatItem(QAbstractGraphicsShapeItem):
 
         painter.drawConvexPolygon(shape)
 
-    def _drawCurveRight(self, painter: QPainter):
+
+class UTurnOutlineItem(OutlineItemBase):
+
+    @overrides
+    def connectionPoint(self) -> QPointF:
+        return self.pos() + QPointF(0, self._height - self._timelineHeight)
+
+    @overrides
+    def _calculateSize(self):
+        self._width = self._beat.width * 2 + self.OFFSET * 2
+        self._xDiff = 75
+        self._width += self._xDiff
+        self._height = 350
+
+    @overrides
+    def _draw(self, painter: QPainter):
         x = self._beat.width
         y = self._height - self._timelineHeight
 
@@ -173,18 +189,23 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         super().__init__(parent)
         self._novel = novel
         self._globalAngle = 0
+        self._spacing = 17
 
-        item = SceneBeatItem(SceneBeat(width=350), self._globalAngle)
+        item = StraightOutlineItem(SceneBeat(width=350), self._globalAngle)
         self.addItem(item)
 
-        item = self.addNewItem(SceneBeat(width=135), item)
-        item = self.addNewItem(SceneBeat(angle=-180), item)
-        # item = self.addNewItem(SceneBeat(), item)
-        item = self.addNewItem(SceneBeat(angle=-180), item)
+        item = self.addNewItem(SceneBeat(width=135, color='blue'), item)
+        # item = self.addNewItem(SceneBeat(angle=-180, color='green'), item)
+        item = self.addNewItem(SceneBeat(), item)
+        # item = self.addNewItem(SceneBeat(angle=-180), item)
 
-    def addNewItem(self, beat: SceneBeat, previous: SceneBeatItem) -> SceneBeatItem:
-        item = SceneBeatItem(beat, self._globalAngle)
-        overlap = SceneBeatItem.OFFSET // 2
+    def addNewItem(self, beat: SceneBeat, previous: OutlineItemBase) -> OutlineItemBase:
+        if beat.angle == 0:
+            item = StraightOutlineItem(beat, self._globalAngle)
+        else:
+            item = UTurnOutlineItem(beat, self._globalAngle)
+
+        overlap = self._spacing
         if beat.angle < 0:
             overlap += beat.width
 
