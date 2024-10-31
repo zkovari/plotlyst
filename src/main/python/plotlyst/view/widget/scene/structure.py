@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from PyQt6.QtCore import QRectF, QPointF, Qt
-from PyQt6.QtGui import QColor, QResizeEvent, QPainter, QPainterPath, QPen
+from PyQt6.QtGui import QColor, QResizeEvent, QPainter, QPainterPath, QPen, QTransform
 from PyQt6.QtWidgets import QGraphicsScene, QAbstractGraphicsShapeItem, QWidget, QGraphicsItem
 from overrides import overrides
 
@@ -80,7 +80,7 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
         draw_point(painter, self._localCpPoint, self._beat.color, 12)
 
     def connectionPoint(self) -> QPointF:
-        return self.scenePos() + self._localCpPoint
+        return self.mapToScene(self._localCpPoint)
 
     @abstractmethod
     def adjustTo(self, previous: 'OutlineItemBase'):
@@ -107,9 +107,15 @@ class StraightOutlineItem(OutlineItemBase):
 
     @overrides
     def adjustTo(self, previous: 'OutlineItemBase'):
+        diff = QPointF(self.OFFSET - previous.item().spacing, 0)
         if self._globalAngle == 0:
-            self.setPos(previous.connectionPoint() - QPointF(self.OFFSET - previous.item().spacing, 0))
-        elif self._globalAngle < 0:
+            self.setPos(previous.connectionPoint() - diff)
+        elif self._globalAngle == 90:
+            transform = QTransform()
+            transform.rotate(-self._globalAngle)
+            rotated_diff = transform.map(diff)
+            self.setPos(previous.connectionPoint() - rotated_diff)
+        else:
             self.setPos(previous.connectionPoint() - QPointF(self._width + previous.item().spacing - self.OFFSET, 0))
 
     @overrides
@@ -117,7 +123,7 @@ class StraightOutlineItem(OutlineItemBase):
         self._width = self._beat.width + self.OFFSET * 2
         self._height = self._timelineHeight
 
-        if self._globalAngle == 0:
+        if self._globalAngle >= 0:
             self._localCpPoint = QPointF(self._width, 0)
         else:
             self._localCpPoint = QPointF(0, 0)
@@ -131,9 +137,10 @@ class StraightOutlineItem(OutlineItemBase):
             QPointF(self._width - self.OFFSET, 0)  # Top right point
         ]
 
-        shape = base_shape if self._globalAngle == 0 else [
-            QPointF(self._width - point.x(), point.y()) for point in base_shape
-        ]
+        if self._globalAngle == -180:
+            shape = [QPointF(self._width - point.x(), point.y()) for point in base_shape]
+        else:
+            shape = base_shape
 
         for point in shape:
             self._path.lineTo(point)
@@ -227,6 +234,8 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         self._globalAngle = 0
 
         item = StraightOutlineItem(SceneBeat(text='1', width=350, spacing=45), self._globalAngle)
+        if self._globalAngle > 0:
+            item.setRotation(-self._globalAngle)
         self.addItem(item)
 
         item = self.addNewItem(SceneBeat(text='2', width=135, color='blue'), item)
@@ -240,6 +249,8 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         else:
             item = UTurnOutlineItem(beat, self._globalAngle)
 
+        if self._globalAngle > 0:
+            item.setRotation(-self._globalAngle)
         item.adjustTo(previous)
         self.addItem(item)
         return item
