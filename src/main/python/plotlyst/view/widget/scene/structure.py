@@ -31,7 +31,7 @@ from plotlyst.core.domain import Novel
 from plotlyst.view.common import spawn
 from plotlyst.view.widget.graphics import BaseGraphicsView
 from plotlyst.view.widget.graphics.editor import ZoomBar
-from plotlyst.view.widget.graphics.items import draw_rect, draw_point
+from plotlyst.view.widget.graphics.items import draw_bounding_rect, draw_point, draw_rect
 
 
 @dataclass
@@ -79,7 +79,7 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
             painter.setBrush(QColor('grey'))
 
         self._draw(painter)
-        draw_rect(painter, self, self._beat.color)
+        draw_bounding_rect(painter, self, self._beat.color)
         draw_point(painter, self._localCpPoint, self._beat.color, 12)
 
     def connectionPoint(self) -> QPointF:
@@ -157,39 +157,53 @@ class StraightOutlineItem(OutlineItemBase):
 
 class UTurnOutlineItem(OutlineItemBase):
 
-    # @overrides
-    # def connectionPoint(self) -> QPointF:
-    #     return self.pos() + QPointF(0, self._height - self._timelineHeight)
+    def __init__(self, beat: SceneBeat, globalAngle: int, parent=None):
+        self._arcRect = QRectF()
+        self._topStartX = 0
+        super().__init__(beat, globalAngle, parent)
 
     @overrides
     def adjustTo(self, previous: 'OutlineItemBase'):
-        pass
+        diff = QPointF(self._topStartX + self.OFFSET - previous.item().spacing, 0)
+
+        if self._globalAngle > 0:
+            transform = QTransform().rotate(-self._globalAngle)
+            diff = transform.map(diff)
+        elif self._globalAngle < 0:
+            diff.setX(self._width - diff.x())
+
+        self.setPos(previous.connectionPoint() - diff)
 
     @overrides
     def _calculateShape(self):
-        self._width = self._beat.width * 2 + self.OFFSET * 2
-        self._xDiff = 75
-        self._width += self._xDiff
         self._height = 350
+        arcWidth = 200
+        self._width = self._beat.width + arcWidth + self._timelineHeight
+
+        if self._globalAngle >= 0:
+            self._localCpPoint = QPointF(0, self._height - self._timelineHeight)
+
+        pen_half = self._timelineHeight // 2
+        arc_x_start = self._beat.width + self.OFFSET + pen_half
+        self._arcRect = QRectF(arc_x_start - pen_half, pen_half, arcWidth, self._height - self._timelineHeight)
+
+        # 8 is needed for slight adjustment
+        self._topStartX = self._width - self._arcRect.width() - self.OFFSET - self._timelineHeight - 8
 
     @overrides
     def _draw(self, painter: QPainter):
-        x = self._beat.width
-        y = self._height - self._timelineHeight
-
-        # Define the base shape points for the two convex polygons
         top_curve_shape = [
-            QPointF(x, 0),  # Top left point
-            QPointF(x + self.OFFSET, self._timelineHeight / 2),  # Center left point
-            QPointF(x, self._timelineHeight),  # Bottom left point
-            QPointF(x + self.OFFSET, self._timelineHeight),  # Bottom right point
-            QPointF(x + self.OFFSET, 0)  # Top right point
+            QPointF(self._topStartX, 0),  # Top left point
+            QPointF(self._topStartX + self.OFFSET, self._timelineHeight / 2),  # Center left point
+            QPointF(self._topStartX, self._timelineHeight),  # Bottom left point
+            QPointF(self._topStartX + self.OFFSET, self._timelineHeight),  # Bottom right point
+            QPointF(self._topStartX + self.OFFSET, 0)  # Top right point
         ]
 
+        y = self._height - self._timelineHeight
         bottom_curve_shape = [
             QPointF(self._beat.width + self.OFFSET + self._timelineHeight, y),  # Top right point
-            QPointF(self._beat.width + self.OFFSET + self._timelineHeight, y + self._timelineHeight),
-            # Bottom right point
+            QPointF(self._beat.width + self.OFFSET + self._timelineHeight, y + self._timelineHeight),  # Bottom right
             QPointF(self.OFFSET, y + self._timelineHeight),  # Bottom left point with offset
             QPointF(0, y + self._timelineHeight / 2),  # Center left point
             QPointF(self.OFFSET, y)  # Top left point with offset
@@ -213,20 +227,11 @@ class UTurnOutlineItem(OutlineItemBase):
         painter.setBrush(Qt.BrushStyle.NoBrush)
 
         path = QPainterPath()
-        pen_half = self._timelineHeight // 2
-
-        arc_x_start = x + self.OFFSET + pen_half
-        if self._globalAngle < 0:
-            arc_x_start = self._width - arc_x_start
-
-        path.moveTo(arc_x_start, pen_half)
-        path.arcTo(QRectF(
-            arc_x_start - pen_half, pen_half,
-            self._width - self.OFFSET - self._timelineHeight,
-            self._height - self._timelineHeight
-        ), 90, -180)
+        path.moveTo(self._arcRect.x(), self._arcRect.y())
+        path.arcTo(self._arcRect, 90, -180)
 
         painter.drawPath(path)
+        draw_rect(painter, self._arcRect)
 
 
 class SceneStructureGraphicsScene(QGraphicsScene):
@@ -235,11 +240,11 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         self._novel = novel
         self._globalAngle = 0
 
-        item = StraightOutlineItem(SceneBeat(text='1', width=350, spacing=45), self._globalAngle)
+        item = StraightOutlineItem(SceneBeat(text='1', width=50, spacing=17), self._globalAngle)
         self.addItem(item)
 
-        item = self.addNewItem(SceneBeat(text='2', width=135, color='blue'), item)
-        # item = self.addNewItem(SceneBeat(angle=-180, color='green'), item)
+        # item = self.addNewItem(SceneBeat(text='2', width=135, color='blue'), item)
+        item = self.addNewItem(SceneBeat(angle=-180, color='green'), item)
         item = self.addNewItem(SceneBeat('3'), item)
         # item = self.addNewItem(SceneBeat(angle=-180), item)
 
@@ -251,6 +256,9 @@ class SceneStructureGraphicsScene(QGraphicsScene):
 
         item.adjustTo(previous)
         self.addItem(item)
+
+        self._globalAngle += beat.angle
+
         return item
 
         # overlap = self._spacing
@@ -267,7 +275,6 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         #         print(item.boundingRect().width())
         #         item.setPos(previous.connectionPoint() - QPointF(item.boundingRect().width() - overlap, 0))
         #
-        # self._globalAngle += beat.angle
 
 class SceneStructureView(BaseGraphicsView):
     def __init__(self, parent=None):

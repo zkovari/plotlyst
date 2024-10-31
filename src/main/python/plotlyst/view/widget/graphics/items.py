@@ -46,10 +46,16 @@ def v_center(ref_height: int, item_height: int) -> int:
     return (ref_height - item_height) // 2
 
 
-def draw_rect(painter: QPainter, item: QAbstractGraphicsShapeItem, color=Qt.GlobalColor.red):
+def draw_bounding_rect(painter: QPainter, item: QAbstractGraphicsShapeItem, color=Qt.GlobalColor.red):
     painter.setPen(QPen(QColor(color), 1, Qt.PenStyle.DashLine))
     painter.setBrush(Qt.BrushStyle.NoBrush)
     painter.drawRoundedRect(item.boundingRect(), 2, 2)
+
+
+def draw_rect(painter: QPainter, rect: QRectF, color=Qt.GlobalColor.darkCyan):
+    painter.setPen(QPen(QColor(color), 1, Qt.PenStyle.DashLine))
+    painter.setBrush(Qt.BrushStyle.NoBrush)
+    painter.drawRect(rect)
 
 
 def draw_center(painter: QPainter, item: QAbstractGraphicsShapeItem):
@@ -68,7 +74,7 @@ def draw_point(painter: QPainter, point: QPointF, color=Qt.GlobalColor.blue, siz
 
 
 def draw_helpers(painter: QPainter, item: QAbstractGraphicsShapeItem):
-    draw_rect(painter, item)
+    draw_bounding_rect(painter, item)
     draw_center(painter, item)
     draw_zero(painter)
 
