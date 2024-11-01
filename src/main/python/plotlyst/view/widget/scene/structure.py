@@ -17,13 +17,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import math
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Any
 
 from PyQt6.QtCore import QRectF, QPointF, Qt
-from PyQt6.QtGui import QColor, QResizeEvent, QPainter, QPainterPath, QPen, QTransform
-from PyQt6.QtWidgets import QGraphicsScene, QAbstractGraphicsShapeItem, QWidget, QGraphicsItem
+from PyQt6.QtGui import QColor, QResizeEvent, QPainter, QPainterPath, QPen, QTransform, QPolygonF
+from PyQt6.QtWidgets import QGraphicsScene, QAbstractGraphicsShapeItem, QWidget, QGraphicsItem, QGraphicsPolygonItem
 from overrides import overrides
 
 from plotlyst.common import PLOTLYST_TERTIARY_COLOR
@@ -31,7 +32,7 @@ from plotlyst.core.domain import Novel
 from plotlyst.view.common import spawn
 from plotlyst.view.widget.graphics import BaseGraphicsView
 from plotlyst.view.widget.graphics.editor import ZoomBar
-from plotlyst.view.widget.graphics.items import draw_bounding_rect, draw_point, draw_rect
+from plotlyst.view.widget.graphics.items import draw_bounding_rect, draw_point, draw_rect, BezierCPSocket
 
 
 @dataclass
@@ -248,6 +249,132 @@ class UTurnOutlineItem(OutlineItemBase):
         painter.drawText(0, y, self._beat.width, self._timelineHeight, Qt.AlignmentFlag.AlignCenter, self._beat.text)
 
 
+class _BaseShapeItem(QGraphicsPolygonItem):
+    OFFSET: int = 35
+
+    def __init__(self, beat: SceneBeat, parent=None):
+        super().__init__(parent)
+        self._beat = beat
+        self._timelineHeight = 85
+
+        top_shape_points = [
+            QPointF(0, 0),  # Top left point
+            QPointF(self.OFFSET, self._timelineHeight / 2),  # Center left point
+            QPointF(0, self._timelineHeight),  # Bottom left point
+            QPointF(self._beat.width - self.OFFSET, self._timelineHeight),  # Bottom right point
+            QPointF(self._beat.width, self._timelineHeight / 2),  # Center right point with offset
+            QPointF(self._beat.width - self.OFFSET, 0)  # Top right point
+        ]
+        polygon = QPolygonF(top_shape_points)
+        self.setPolygon(polygon)
+        self.setPen(QPen(QColor('grey'), 0))
+        self.setBrush(QColor('grey'))
+
+        self.setFlag(
+            QGraphicsItem.GraphicsItemFlag.ItemIsSelectable | QGraphicsItem.GraphicsItemFlag.ItemIsMovable | QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
+
+    @overrides
+    def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
+        if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
+            print(f'shape pos {value}')
+            self.parentItem().update()
+        return super().itemChange(change, value)
+
+
+class RisingOutlineItem(OutlineItemBase):
+    def __init__(self, beat: SceneBeat, globalAngle: int, parent=None):
+        self._arcRect = QRectF()
+        super().__init__(beat, globalAngle, parent)
+
+        self.setFlag(self.flags() | QGraphicsItem.GraphicsItemFlag.ItemClipsToShape)
+
+        self._cp1 = BezierCPSocket(10, self)
+        self._cp1.setPos(228, 335)
+        self._cp2 = BezierCPSocket(10, self)
+        self._cp2.setPos(218, 178)
+
+        self._top_shape_item = _BaseShapeItem(self._beat, self)
+        self._top_shape_item.setRotation(-45)
+        self._top_shape_item.setPos(225, 115)
+
+    @overrides
+    def adjustTo(self, previous: 'OutlineItemBase'):
+        diff = QPointF(self.OFFSET - previous.item().spacing, self._height - self._timelineHeight)
+
+        if self._globalAngle > 0:
+            transform = QTransform().rotate(-self._globalAngle)
+            diff = transform.map(diff)
+        elif self._globalAngle < 0:
+            diff.setX(self._width - diff.x())
+
+        self.setPos(previous.connectionPoint() - diff)
+
+    def rearrangeCP(self, pos: QPointF):
+        print(pos)
+        self.update()
+
+    @overrides
+    def _calculateShape(self):
+        self._width = 400
+        arcSize = 200
+        self._height = self._beat.width + arcSize
+
+        if self._globalAngle >= 0:
+            c = math.sqrt(self.OFFSET ** 2 + (self._timelineHeight // 2) ** 2)
+            # self._localCpPoint = QPointF(self._width - c, 0)
+            self._localCpPoint = QPointF(self._width, 0)
+
+        pen_half = self._timelineHeight // 2
+        arc_x_start = self.OFFSET + pen_half
+        self._arcRect = QRectF(arc_x_start, pen_half, arcSize,
+                               self._height - self._timelineHeight)
+
+    @overrides
+    def _draw(self, painter: QPainter):
+        bottom_curve_shape = [
+            QPointF(0, self._height - self._timelineHeight),  # Top left point
+            QPointF(0 + self.OFFSET, self._height - self._timelineHeight / 2),  # Center left point
+            QPointF(0, self._height),  # Bottom left point
+            QPointF(0 + self.OFFSET, self._height),  # Bottom right point
+            QPointF(0 + self.OFFSET, self._height - self._timelineHeight)  # Top right point
+        ]
+
+        top_shape = [
+            QPointF(0, 0),  # Top left point
+            QPointF(self.OFFSET, self._timelineHeight / 2),  # Center left point
+            QPointF(0, self._timelineHeight),  # Bottom left point
+            QPointF(self._width - self.OFFSET, self._timelineHeight),  # Bottom right point
+            QPointF(self._width, self._timelineHeight / 2),  # Center right point with offset
+            QPointF(self._width - self.OFFSET, 0)  # Top right point
+        ]
+
+        painter.drawConvexPolygon(bottom_curve_shape)
+        # painter.save()
+        # painter.rotate(-45)
+        # painter.drawConvexPolygon(top_shape)
+        # painter.restore()
+
+        pen = painter.pen()
+        pen.setWidth(self._timelineHeight)
+        painter.setPen(pen)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+
+        pen_half = self._timelineHeight // 2
+
+        path = QPainterPath()
+        if self._globalAngle >= 0:
+            path.moveTo(self._arcRect.x(), self._height - pen_half)
+            # path.arcTo(self._arcRect, -45, 45)
+            x = self.OFFSET + pen_half
+            y = self._height - pen_half - 5
+            # path.quadTo(self._cp1.pos(), self._top_shape_item.pos() + QPointF(pen_half + 5, 15))
+            path.cubicTo(self._cp1.pos(), self._cp2.pos(),
+                         self._top_shape_item.pos() + QPointF(pen_half - 5, pen_half // 2))
+
+        painter.drawPath(path)
+        draw_rect(painter, self._arcRect)
+
+
 class SceneStructureGraphicsScene(QGraphicsScene):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -258,14 +385,19 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         self.addItem(item)
 
         item = self.addNewItem(SceneBeat(text='2', width=135, color='blue'), item)
-        item = self.addNewItem(SceneBeat(text='Curved', angle=-180, color='green'), item)
-        # item = self.addNewItem(SceneBeat('3'), item)
-        item = self.addNewItem(SceneBeat(angle=-180), item)
-        item = self.addNewItem(SceneBeat('4'), item)
+        item = self.addNewItem(SceneBeat(text='Rising', angle=45, color='green'), item)
+        item = self.addNewItem(SceneBeat('3'), item)
+        # item = self.addNewItem(SceneBeat(text='Curved 2', angle=-180), item)
+        # item = self.addNewItem(SceneBeat('4'), item)
+        # item = self.addNewItem(SceneBeat('4'), item)
+        # item = self.addNewItem(SceneBeat('4'), item)
+        # item = self.addNewItem(SceneBeat(text='Curved', angle=-180, color='green'), item)
 
     def addNewItem(self, beat: SceneBeat, previous: OutlineItemBase) -> OutlineItemBase:
         if beat.angle == 0:
             item = StraightOutlineItem(beat, self._globalAngle)
+        elif beat.angle == 45:
+            item = RisingOutlineItem(beat, self._globalAngle)
         else:
             item = UTurnOutlineItem(beat, self._globalAngle)
 
