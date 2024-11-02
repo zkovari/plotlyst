@@ -32,7 +32,7 @@ from plotlyst.core.domain import Novel
 from plotlyst.view.common import spawn
 from plotlyst.view.widget.graphics import BaseGraphicsView
 from plotlyst.view.widget.graphics.editor import ZoomBar
-from plotlyst.view.widget.graphics.items import draw_bounding_rect, draw_point, draw_rect, BezierCPSocket
+from plotlyst.view.widget.graphics.items import draw_bounding_rect, draw_point, draw_rect
 
 
 @dataclass
@@ -285,17 +285,20 @@ class RisingOutlineItem(OutlineItemBase):
     def __init__(self, beat: SceneBeat, globalAngle: int, parent=None):
         self._arcRect = QRectF()
         super().__init__(beat, globalAngle, parent)
+        # self.setFlag(self.flags() | QGraphicsItem.GraphicsItemFlag.ItemClipsToShape)
+        self._cp1Pos = QPointF(174, 286)
+        # self._cp1 = BezierCPSocket(10, self)
+        # self._cp1.setPos(self._cp1Pos)
+        self._cp2Pos = QPointF(218, 178)
+        # self._cp2 = BezierCPSocket(10, self)
+        # self._cp2.setPos(self._cp2Pos)
 
-        self.setFlag(self.flags() | QGraphicsItem.GraphicsItemFlag.ItemClipsToShape)
-
-        self._cp1 = BezierCPSocket(10, self)
-        self._cp1.setPos(228, 335)
-        self._cp2 = BezierCPSocket(10, self)
-        self._cp2.setPos(218, 178)
-
+        self._topShapePos = QPointF(236, 103)
         self._top_shape_item = _BaseShapeItem(self._beat, self)
-        self._top_shape_item.setRotation(-45)
-        self._top_shape_item.setPos(225, 115)
+        # self._top_shape_item = StraightOutlineItem(self._beat, 0, self)
+        # self._top_shape_item.setRotation(-45)
+        # self._top_shape_item.setPos(self._topShapePos)
+        self._top_shape_item.setVisible(False)
 
     @overrides
     def adjustTo(self, previous: 'OutlineItemBase'):
@@ -316,7 +319,7 @@ class RisingOutlineItem(OutlineItemBase):
     @overrides
     def _calculateShape(self):
         self._width = 400
-        arcSize = 200
+        arcSize = 150
         self._height = self._beat.width + arcSize
 
         if self._globalAngle >= 0:
@@ -338,21 +341,15 @@ class RisingOutlineItem(OutlineItemBase):
             QPointF(0 + self.OFFSET, self._height),  # Bottom right point
             QPointF(0 + self.OFFSET, self._height - self._timelineHeight)  # Top right point
         ]
-
-        top_shape = [
-            QPointF(0, 0),  # Top left point
-            QPointF(self.OFFSET, self._timelineHeight / 2),  # Center left point
-            QPointF(0, self._timelineHeight),  # Bottom left point
-            QPointF(self._width - self.OFFSET, self._timelineHeight),  # Bottom right point
-            QPointF(self._width, self._timelineHeight / 2),  # Center right point with offset
-            QPointF(self._width - self.OFFSET, 0)  # Top right point
-        ]
-
         painter.drawConvexPolygon(bottom_curve_shape)
-        # painter.save()
-        # painter.rotate(-45)
-        # painter.drawConvexPolygon(top_shape)
-        # painter.restore()
+
+        painter.save()
+        painter.translate(self._topShapePos)
+        painter.rotate(-45)
+        painter.drawConvexPolygon(self._top_shape_item.polygon())
+        painter.setPen(QPen(QColor('black'), 1))
+        painter.drawText(0, 0, self._beat.width, self._timelineHeight, Qt.AlignmentFlag.AlignCenter, self._beat.text)
+        painter.restore()
 
         pen = painter.pen()
         pen.setWidth(self._timelineHeight)
@@ -364,12 +361,10 @@ class RisingOutlineItem(OutlineItemBase):
         path = QPainterPath()
         if self._globalAngle >= 0:
             path.moveTo(self._arcRect.x(), self._height - pen_half)
-            # path.arcTo(self._arcRect, -45, 45)
             x = self.OFFSET + pen_half
             y = self._height - pen_half - 5
-            # path.quadTo(self._cp1.pos(), self._top_shape_item.pos() + QPointF(pen_half + 5, 15))
-            path.cubicTo(self._cp1.pos(), self._cp2.pos(),
-                         self._top_shape_item.pos() + QPointF(pen_half - 5, pen_half // 2))
+            path.cubicTo(self._cp1Pos, self._cp2Pos,
+                         self._topShapePos + QPointF(pen_half - 5, pen_half // 2))
 
         painter.drawPath(path)
         draw_rect(painter, self._arcRect)
