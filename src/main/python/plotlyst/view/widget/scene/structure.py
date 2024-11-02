@@ -273,6 +273,12 @@ class _BaseShapeItem(QGraphicsPolygonItem):
         self.setFlag(
             QGraphicsItem.GraphicsItemFlag.ItemIsSelectable | QGraphicsItem.GraphicsItemFlag.ItemIsMovable | QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
 
+    def topRightPoint(self) -> QPointF:
+        return QPointF(self._beat.width - self.OFFSET, 0)
+
+    def bottomRightPoint(self) -> QPointF:
+        return QPointF(self._beat.width - self.OFFSET, self._timelineHeight)
+
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
@@ -287,6 +293,7 @@ class RisingOutlineItem(OutlineItemBase):
         self._cp1Pos = QPointF(174, 0)
         self._cp2Pos = QPointF(218, 0)
         self._topShapePos = QPointF(236, 0)
+        self._topShapeItem = _BaseShapeItem(beat)
         super().__init__(beat, globalAngle, parent)
         # self.setFlag(self.flags() | QGraphicsItem.GraphicsItemFlag.ItemClipsToShape)
         # self._cp1 = BezierCPSocket(10, self)
@@ -294,11 +301,10 @@ class RisingOutlineItem(OutlineItemBase):
         # self._cp2 = BezierCPSocket(10, self)
         # self._cp2.setPos(self._cp2Pos)
 
-        self._top_shape_item = _BaseShapeItem(self._beat, self)
         # self._top_shape_item = StraightOutlineItem(self._beat, 0, self)
         # self._top_shape_item.setRotation(-45)
         # self._top_shape_item.setPos(self._topShapePos)
-        self._top_shape_item.setVisible(False)
+        self._topShapeItem.setVisible(False)
 
     @overrides
     def adjustTo(self, previous: 'OutlineItemBase'):
@@ -319,6 +325,7 @@ class RisingOutlineItem(OutlineItemBase):
     @overrides
     def _calculateShape(self):
         def calculatePoints():
+            # these numbers were found by manually moving BezierCPSocket points
             self._cp1Pos.setY(self._height - 44)
             self._cp2Pos.setY(self._height - 152)
             self._topShapePos.setY(self._height - 227)
@@ -327,14 +334,14 @@ class RisingOutlineItem(OutlineItemBase):
         self._height = 227
         calculatePoints()
 
-        original_point = QPointF(self._beat.width, self._timelineHeight / 2)
         transform = QTransform()
         transform.translate(self._topShapePos.x(), self._topShapePos.y())
         transform.rotate(-45)
-        transformed_point = transform.map(original_point)
 
-        self._width = transformed_point.x() + 5
-        self._height += abs(transformed_point.y()) + 5
+        transformed_point = transform.map(self._topShapeItem.bottomRightPoint())
+        self._width = transformed_point.x()
+        transformed_point = transform.map(self._topShapeItem.topRightPoint())
+        self._height += abs(transformed_point.y())
         calculatePoints()
 
         if self._globalAngle >= 0:
@@ -356,7 +363,7 @@ class RisingOutlineItem(OutlineItemBase):
         painter.save()
         painter.translate(self._topShapePos)
         painter.rotate(-45)
-        painter.drawConvexPolygon(self._top_shape_item.polygon())
+        painter.drawConvexPolygon(self._topShapeItem.polygon())
         painter.setPen(QPen(QColor('black'), 1))
         painter.drawText(0, 0, self._beat.width, self._timelineHeight, Qt.AlignmentFlag.AlignCenter, self._beat.text)
         painter.restore()
