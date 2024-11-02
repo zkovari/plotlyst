@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import math
 from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Optional, Any
@@ -318,9 +317,9 @@ class RisingOutlineItem(OutlineItemBase):
 
         self.setPos(previous.connectionPoint() - diff)
 
-    def rearrangeCP(self, pos: QPointF):
-        print(pos)
-        self.update()
+    # def rearrangeCP(self, pos: QPointF):
+    #     print(pos)
+    #     self.update()
 
     @overrides
     def _calculateShape(self):
@@ -345,9 +344,7 @@ class RisingOutlineItem(OutlineItemBase):
         calculatePoints()
 
         if self._globalAngle >= 0:
-            c = math.sqrt(self.OFFSET ** 2 + (self._timelineHeight // 2) ** 2)
-            # self._localCpPoint = QPointF(self._width - c, 0)
-            self._localCpPoint = QPointF(self._width, 0)
+            self._localCpPoint = QPointF(self._width - self._timelineHeight // 2 + 5, -24)
 
     @overrides
     def _draw(self, painter: QPainter):
@@ -396,10 +393,10 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         self.addItem(item)
 
         item = self.addNewItem(SceneBeat(text='2', width=135, color='blue'), item)
-        item = self.addNewItem(SceneBeat(text='Rising', width=250, angle=45, color='green'), item)
-        # item = self.addNewItem(SceneBeat('3'), item)
+        item = self.addNewItem(SceneBeat(text='Rising', width=310, angle=45, color='green'), item)
+        item = self.addNewItem(SceneBeat('3'), item)
         # item = self.addNewItem(SceneBeat(text='Curved 2', angle=-180), item)
-        # item = self.addNewItem(SceneBeat('4'), item)
+        item = self.addNewItem(SceneBeat('4'), item)
         # item = self.addNewItem(SceneBeat('4'), item)
         # item = self.addNewItem(SceneBeat('4'), item)
         # item = self.addNewItem(SceneBeat(text='Curved', angle=-180, color='green'), item)
