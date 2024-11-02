@@ -295,9 +295,9 @@ class RisingOutlineItem(OutlineItemBase):
         self._topShapeItem = _BaseShapeItem(beat)
         super().__init__(beat, globalAngle, parent)
         # self.setFlag(self.flags() | QGraphicsItem.GraphicsItemFlag.ItemClipsToShape)
-        # self._cp1 = BezierCPSocket(10, self)
+        # self._cp1 = BezierCPSocket(10, self, index=1)
         # self._cp1.setPos(self._cp1Pos)
-        # self._cp2 = BezierCPSocket(10, self)
+        # self._cp2 = BezierCPSocket(10, self, index=2)
         # self._cp2.setPos(self._cp2Pos)
 
         # self._top_shape_item = StraightOutlineItem(self._beat, 0, self)
@@ -317,9 +317,17 @@ class RisingOutlineItem(OutlineItemBase):
 
         self.setPos(previous.connectionPoint() - diff)
 
-    # def rearrangeCP(self, pos: QPointF):
-    #     print(pos)
-    #     self.update()
+    def rearrangeCP1(self, pos: QPointF):
+        print(f'cp1 {pos}')
+        self._cp1Pos.setX(pos.x())
+        self._cp1Pos.setY(pos.y())
+        self.update()
+
+    def rearrangeCP2(self, pos: QPointF):
+        print(f'cp2 {pos}')
+        self._cp2Pos.setX(pos.x())
+        self._cp2Pos.setY(pos.y())
+        self.update()
 
     @overrides
     def _calculateShape(self):
@@ -393,10 +401,11 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         self.addItem(item)
 
         item = self.addNewItem(SceneBeat(text='2', width=135, color='blue'), item)
-        item = self.addNewItem(SceneBeat(text='Rising', width=310, angle=45, color='green'), item)
+        item = self.addNewItem(SceneBeat(text='Rising', angle=45, color='green'), item)
         item = self.addNewItem(SceneBeat('3'), item)
-        # item = self.addNewItem(SceneBeat(text='Curved 2', angle=-180), item)
+        item = self.addNewItem(SceneBeat(text='Rising 2', angle=45, color='green'), item)
         item = self.addNewItem(SceneBeat('4'), item)
+        item = self.addNewItem(SceneBeat(text='Curved 2', angle=-180), item)
         # item = self.addNewItem(SceneBeat('4'), item)
         # item = self.addNewItem(SceneBeat('4'), item)
         # item = self.addNewItem(SceneBeat(text='Curved', angle=-180, color='green'), item)
