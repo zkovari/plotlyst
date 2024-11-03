@@ -369,20 +369,22 @@ class RisingOutlineItem(OutlineItemBase):
         pen.setWidth(self._timelineHeight)
         painter.setPen(pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
-
-        pen_half = self._timelineHeight // 2
-
-        path = QPainterPath()
-        path.moveTo(self._quadStartPoint)
-        path.cubicTo(self._cp1Pos, self._cp2Pos,
-                     self._topShapePos + QPointF(pen_half - 5, pen_half // 2))
-
-        painter.drawPath(path)
+        self._drawCurve(painter)
 
         draw_point(painter, self._topShapePos, 'red', 10)
 
+    def _drawCurve(self, painter):
+        pen_half = self._timelineHeight // 2
+        path = QPainterPath()
+        path.moveTo(self._quadStartPoint)
+        # path.cubicTo(self._cp1Pos, self._cp2Pos, self._topShapePos + QPointF(pen_half - 5, pen_half // 2))
+        path.cubicTo(self._cp1Pos, self._cp2Pos, self._topShapePos + QPointF(pen_half - 5, pen_half // 2))
+        # path.cubicTo(self._cp1Pos, self._cp2Pos, self._topShapePos)
+        painter.drawPath(path)
+
     def _drawEnding(self, painter: QPainter):
         painter.save()
+
         painter.translate(self._topShapePos)
         painter.rotate(-self._beat.angle)
         painter.drawConvexPolygon(self._topShapeItem.polygon())
@@ -446,12 +448,22 @@ class FallingOutlineItem(RisingOutlineItem):
     @overrides
     def _drawEnding(self, painter: QPainter):
         painter.save()
-        painter.translate(self._topShapePos)
+        painter.translate(self._topShapePos + QPointF(self._timelineHeight // 2, -self._timelineHeight))
         painter.rotate(-self._beat.angle)
         painter.drawConvexPolygon(self._topShapeItem.polygon())
         painter.setPen(QPen(QColor('black'), 1))
         painter.drawText(0, 0, self._beat.width, self._timelineHeight, Qt.AlignmentFlag.AlignCenter, self._beat.text)
         painter.restore()
+
+    @overrides
+    def _drawCurve(self, painter):
+        pen_half = self._timelineHeight // 2
+        path = QPainterPath()
+        path.moveTo(self._quadStartPoint)
+        # path.cubicTo(self._cp1Pos, self._cp2Pos, self._topShapePos + QPointF(pen_half - 5, pen_half // 2))
+        path.cubicTo(self._cp1Pos, self._cp2Pos, self._topShapePos + QPointF(pen_half - 5, -pen_half // 2))
+        # path.cubicTo(self._cp1Pos, self._cp2Pos, self._topShapePos)
+        painter.drawPath(path)
 
 
 class SceneStructureGraphicsScene(QGraphicsScene):
