@@ -377,9 +377,7 @@ class RisingOutlineItem(OutlineItemBase):
         pen_half = self._timelineHeight // 2
         path = QPainterPath()
         path.moveTo(self._quadStartPoint)
-        # path.cubicTo(self._cp1Pos, self._cp2Pos, self._topShapePos + QPointF(pen_half - 5, pen_half // 2))
         path.cubicTo(self._cp1Pos, self._cp2Pos, self._topShapePos + QPointF(pen_half - 5, pen_half // 2))
-        # path.cubicTo(self._cp1Pos, self._cp2Pos, self._topShapePos)
         painter.drawPath(path)
 
     def _drawEnding(self, painter: QPainter):
@@ -460,9 +458,7 @@ class FallingOutlineItem(RisingOutlineItem):
         pen_half = self._timelineHeight // 2
         path = QPainterPath()
         path.moveTo(self._quadStartPoint)
-        # path.cubicTo(self._cp1Pos, self._cp2Pos, self._topShapePos + QPointF(pen_half - 5, pen_half // 2))
         path.cubicTo(self._cp1Pos, self._cp2Pos, self._topShapePos + QPointF(pen_half - 5, -pen_half // 2))
-        # path.cubicTo(self._cp1Pos, self._cp2Pos, self._topShapePos)
         painter.drawPath(path)
 
 
