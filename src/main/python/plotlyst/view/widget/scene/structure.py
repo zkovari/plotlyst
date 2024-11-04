@@ -23,7 +23,8 @@ from typing import Optional, Any
 
 from PyQt6.QtCore import QRectF, QPointF, Qt
 from PyQt6.QtGui import QColor, QResizeEvent, QPainter, QPainterPath, QPen, QTransform, QPolygonF
-from PyQt6.QtWidgets import QGraphicsScene, QAbstractGraphicsShapeItem, QWidget, QGraphicsItem, QGraphicsPolygonItem
+from PyQt6.QtWidgets import QGraphicsScene, QAbstractGraphicsShapeItem, QWidget, QGraphicsItem, QGraphicsPolygonItem, \
+    QApplication
 from overrides import overrides
 
 from plotlyst.common import PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
@@ -58,6 +59,9 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
         self._selectedColor = QColor(PLOTLYST_TERTIARY_COLOR)
         self._hoveredSelectedColor = QColor(stronger_color(PLOTLYST_TERTIARY_COLOR, factor=0.99))
         self._hovered: bool = False
+
+        self._font = QApplication.font()
+        self._font.setPointSize(16)
 
         self._localCpPoint = QPointF(0, 0)
         self._calculateShape()
@@ -188,6 +192,7 @@ class StraightOutlineItem(OutlineItemBase):
     def _draw(self, painter: QPainter):
         painter.drawPath(self._path)
 
+        painter.setFont(self._font)
         painter.setPen(QPen(QColor('black'), 1))
         painter.drawText(self.boundingRect(), Qt.AlignmentFlag.AlignCenter, self._beat.text)
 
@@ -288,6 +293,7 @@ class UTurnOutlineItem(OutlineItemBase):
         painter.drawPath(path)
         # draw_rect(painter, self._arcRect)
 
+        painter.setFont(self._font)
         painter.setPen(QPen(QColor('black'), 1))
         if self._globalAngle >= 0:
             painter.drawText(self.OFFSET, y, self._beat.width, self._timelineHeight, Qt.AlignmentFlag.AlignCenter,
@@ -441,6 +447,8 @@ class RisingOutlineItem(OutlineItemBase):
         painter.translate(self._topShapePos)
         painter.rotate(-self._beat.angle)
         painter.drawConvexPolygon(self._topShapeItem.polygon())
+
+        painter.setFont(self._font)
         painter.setPen(QPen(QColor('black'), 1))
         painter.drawText(0, 0, self._beat.width, self._timelineHeight, Qt.AlignmentFlag.AlignCenter, self._beat.text)
         painter.restore()
@@ -530,6 +538,8 @@ class FallingOutlineItem(RisingOutlineItem):
         painter.translate(self._topShapeItem.pos())
         painter.rotate(-self._beat.angle)
         painter.drawConvexPolygon(self._topShapeItem.polygon())
+
+        painter.setFont(self._font)
         painter.setPen(QPen(QColor('black'), 1))
         painter.drawText(0, 0, self._beat.width, self._timelineHeight, Qt.AlignmentFlag.AlignCenter, self._beat.text)
         painter.restore()
@@ -558,7 +568,7 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         item = self.addNewItem(SceneBeat(text='2', width=135, color='blue'), item)
         item = self.addNewItem(SceneBeat(text='Falling', angle=-45, color='green'), item)
         item = self.addNewItem(SceneBeat('3/a'), item)
-        item = self.addNewItem(SceneBeat('3/b'), item)
+        item = self.addNewItem(SceneBeat('Falling action'), item)
         # item = self.addNewItem(SceneBeat(text='Rising', angle=45, color='green'), item)
         # item = self.addNewItem(SceneBeat(text='Falling', angle=-45, color='green'), item)
 
