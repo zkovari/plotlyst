@@ -320,6 +320,9 @@ class RisingOutlineItem(OutlineItemBase):
         if self._globalAngle > 0:
             transform = QTransform().rotate(-self._globalAngle)
             diff = transform.map(diff)
+        elif self._globalAngle == -45:
+            transform = QTransform().rotate(-self._globalAngle)
+            diff = transform.map(diff)
         elif self._globalAngle < 0:
             diff.setX(self._width - diff.x())
 
@@ -424,6 +427,9 @@ class FallingOutlineItem(RisingOutlineItem):
         if self._globalAngle > 0:
             transform = QTransform().rotate(-self._globalAngle)
             diff = transform.map(diff)
+        elif self._globalAngle == -45:
+            transform = QTransform().rotate(-self._globalAngle)
+            diff = transform.map(diff)
         elif self._globalAngle < 0:
             diff.setX(self._width - diff.x())
 
@@ -493,26 +499,30 @@ class FallingOutlineItem(RisingOutlineItem):
 
 
 class SceneStructureGraphicsScene(QGraphicsScene):
+    DEFAULT_ANGLE = 0
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
-        self._globalAngle = 0
+        self._globalAngle = self.DEFAULT_ANGLE
 
         item = StraightOutlineItem(SceneBeat(text='1', width=50, spacing=17), self._globalAngle)
+        item.setPos(0, -100)
         self.addItem(item)
 
         item = self.addNewItem(SceneBeat(text='2', width=135, color='blue'), item)
-        # item = self.addNewItem(SceneBeat(text='Rising', angle=45, color='green'), item)
-        # item = self.addNewItem(SceneBeat('3'), item)
-        # item = self.addNewItem(SceneBeat(text='Curved 2', angle=-180), item)
         item = self.addNewItem(SceneBeat(text='Falling', angle=-45, color='green'), item)
         item = self.addNewItem(SceneBeat('3/a'), item)
         item = self.addNewItem(SceneBeat('3/b'), item)
         item = self.addNewItem(SceneBeat(text='Rising', angle=45, color='green'), item)
+        # item = self.addNewItem(SceneBeat(text='Falling', angle=-45, color='green'), item)
 
-        self._globalAngle = 0
+        self._drawBottom()
+
+    def _drawBottom(self):
+        self._globalAngle = self.DEFAULT_ANGLE
         item = StraightOutlineItem(SceneBeat(text='Other item', width=50, spacing=17), self._globalAngle)
-        item.setPos(0, -100)
+        item.setPos(0, 100)
         self.addItem(item)
         item = self.addNewItem(SceneBeat(text='2', width=135, color='blue'), item)
         item = self.addNewItem(SceneBeat(text='Rising', angle=45, color='green'), item)
