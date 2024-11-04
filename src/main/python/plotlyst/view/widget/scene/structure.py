@@ -70,7 +70,7 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
         elif self._globalAngle == -135:
             self.setRotation(-45)
 
-        shadow(self, offset=0, radius=8, color=PLOTLYST_SECONDARY_COLOR, alpha=175)
+        self._shadow()
 
     def item(self) -> SceneBeat:
         return self._beat
@@ -96,11 +96,13 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         self._hovered = True
         self.update()
+        self._shadow(10)
 
     @overrides
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         self._hovered = False
         self.update()
+        self._shadow()
 
     def connectionPoint(self) -> QPointF:
         return self.mapToScene(self._localCpPoint)
@@ -116,6 +118,9 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
     @abstractmethod
     def _draw(self, painter: QPainter):
         pass
+
+    def _shadow(self, radius: int = 8):
+        shadow(self, offset=0, radius=radius, color=PLOTLYST_SECONDARY_COLOR, alpha=175)
 
 
 class StraightOutlineItem(OutlineItemBase):
