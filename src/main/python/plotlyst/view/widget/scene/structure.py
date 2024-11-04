@@ -27,7 +27,7 @@ from PyQt6.QtWidgets import QGraphicsScene, QAbstractGraphicsShapeItem, QWidget,
     QApplication
 from overrides import overrides
 
-from plotlyst.common import PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
+from plotlyst.common import PLOTLYST_TERTIARY_COLOR, RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Novel
 from plotlyst.view.common import spawn, shadow, stronger_color
 from plotlyst.view.style.theme import BG_MUTED_COLOR
@@ -97,6 +97,12 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
         # draw_point(painter, self._localCpPoint, self._beat.color, 12)
 
     @overrides
+    def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
+        if change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
+            self._onSelection(value)
+        return super().itemChange(change, value)
+
+    @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         self._hovered = True
         self.update()
@@ -123,8 +129,17 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
     def _draw(self, painter: QPainter):
         pass
 
-    def _shadow(self, radius: int = 8):
-        shadow(self, offset=0, radius=radius, color=PLOTLYST_SECONDARY_COLOR, alpha=175)
+    def _onSelection(self, selected: bool):
+        if selected:
+            shadow(self, offset=0, radius=10, color=PLOTLYST_SECONDARY_COLOR, alpha=175)
+        else:
+            shadow(self, offset=0, radius=8, color='black', alpha=175)
+
+    def _shadow(self, radius: int = 8, alpha=175):
+        if self.isSelected():
+            shadow(self, offset=0, radius=radius, color=PLOTLYST_SECONDARY_COLOR, alpha=alpha)
+        else:
+            shadow(self, offset=0, radius=radius, color='black', alpha=alpha)
 
 
 class StraightOutlineItem(OutlineItemBase):
