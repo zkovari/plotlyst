@@ -303,8 +303,9 @@ class RisingOutlineItem(OutlineItemBase):
         # self._cp2.setPos(self._cp2Pos)
 
         # self._top_shape_item = StraightOutlineItem(self._beat, 0, self)
-        # self._top_shape_item.setRotation(-45)
-        # self._top_shape_item.setPos(self._topShapePos)
+        # self._topShapeItem.setParentItem(self)
+        # self._topShapeItem.setRotation(-self._beat.angle)
+        # self._topShapeItem.setPos(self._topShapePos)
         self._topShapeItem.setVisible(False)
 
     @overrides
@@ -404,6 +405,13 @@ class RisingOutlineItem(OutlineItemBase):
 
 class FallingOutlineItem(RisingOutlineItem):
 
+    def __init__(self, beat: SceneBeat, globalAngle: int, parent=None):
+        super().__init__(beat, globalAngle, parent)
+        self._topShapeItem.setParentItem(self)
+        self._topShapeItem.setRotation(-self._beat.angle)
+        # self._topShapeItem.setPos(QPointF(294, 164))
+        # self._topShapeItem.setVisible(True)
+
     @overrides
     def adjustTo(self, previous: 'OutlineItemBase'):
         diff = QPointF(self.OFFSET - previous.item().spacing, 0)
@@ -418,7 +426,20 @@ class FallingOutlineItem(RisingOutlineItem):
 
     @overrides
     def _calculateShape(self):
-        super()._calculateShape()
+        self._width = self._topShapePos.x()
+        self._height = 227
+        self._recalculateControlPoints()
+
+        self._topShapeItem.setPos(QPointF(294, 164))
+        transform = QTransform()
+        transform.translate(self._topShapeItem.pos().x(), self._topShapeItem.pos().y())
+        transform.rotate(-self._beat.angle)
+
+        self._width = transform.map(self._topShapeItem.topRightPoint()).x()
+        self._height = abs(transform.map(self._topShapeItem.bottomRightPoint()).y())
+        self._recalculateControlPoints()
+
+        self._calculateConnectionPoint()
 
     @overrides
     def _recalculateControlPoints(self):
@@ -447,7 +468,7 @@ class FallingOutlineItem(RisingOutlineItem):
     @overrides
     def _drawEnding(self, painter: QPainter):
         painter.save()
-        painter.translate(self._topShapePos + QPointF(self._timelineHeight // 2, -self._timelineHeight))
+        painter.translate(self._topShapeItem.pos())
         painter.rotate(-self._beat.angle)
         painter.drawConvexPolygon(self._topShapeItem.polygon())
         painter.setPen(QPen(QColor('black'), 1))
@@ -477,6 +498,14 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         # item = self.addNewItem(SceneBeat('3'), item)
         # item = self.addNewItem(SceneBeat(text='Curved 2', angle=-180), item)
         item = self.addNewItem(SceneBeat(text='Falling', angle=-45, color='green'), item)
+        item = self.addNewItem(SceneBeat('3'), item)
+
+        self._globalAngle = 0
+        item = StraightOutlineItem(SceneBeat(text='Other item', width=50, spacing=17), self._globalAngle)
+        item.setPos(0, -100)
+        self.addItem(item)
+        item = self.addNewItem(SceneBeat(text='2', width=135, color='blue'), item)
+        item = self.addNewItem(SceneBeat(text='Rising', angle=45, color='green'), item)
         # item = self.addNewItem(SceneBeat('4'), item)
         # item = self.addNewItem(SceneBeat('4'), item)
         # item = self.addNewItem(SceneBeat('4'), item)
