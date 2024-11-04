@@ -250,7 +250,13 @@ class UTurnOutlineItem(OutlineItemBase):
         draw_rect(painter, self._arcRect)
 
         painter.setPen(QPen(QColor('black'), 1))
-        painter.drawText(0, y, self._beat.width, self._timelineHeight, Qt.AlignmentFlag.AlignCenter, self._beat.text)
+        if self._globalAngle >= 0:
+            painter.drawText(self.OFFSET, y, self._beat.width, self._timelineHeight, Qt.AlignmentFlag.AlignCenter,
+                             self._beat.text)
+        else:
+            painter.drawText(int(self._arcRect.x() + self._arcRect.width() - self.OFFSET), y, self._beat.width,
+                             self._timelineHeight,
+                             Qt.AlignmentFlag.AlignCenter, self._beat.text)
 
 
 class _BaseShapeItem(QGraphicsPolygonItem):
@@ -514,7 +520,7 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         item = self.addNewItem(SceneBeat(text='Falling', angle=-45, color='green'), item)
         item = self.addNewItem(SceneBeat('3/a'), item)
         item = self.addNewItem(SceneBeat('3/b'), item)
-        item = self.addNewItem(SceneBeat(text='Rising', angle=45, color='green'), item)
+        # item = self.addNewItem(SceneBeat(text='Rising', angle=45, color='green'), item)
         # item = self.addNewItem(SceneBeat(text='Falling', angle=-45, color='green'), item)
 
         self._drawBottom()
