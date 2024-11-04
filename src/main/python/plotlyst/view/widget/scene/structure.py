@@ -61,6 +61,8 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
 
         if self._globalAngle >= -45:
             self.setRotation(-self._globalAngle)
+        elif self._globalAngle == -135:
+            self.setRotation(-45)
 
     def item(self) -> SceneBeat:
         return self._beat
@@ -118,6 +120,11 @@ class StraightOutlineItem(OutlineItemBase):
         elif self._globalAngle == -45:
             transform = QTransform().rotate(-self._globalAngle)
             diff = transform.map(diff)
+        elif self._globalAngle == -135:
+            diff.setX(self._width - diff.x())
+            diff.setY(self._timelineHeight)
+            transform = QTransform().rotate(-45)
+            diff = transform.map(diff)
         elif self._globalAngle < 0:
             diff.setX(self._width - diff.x())
 
@@ -132,6 +139,8 @@ class StraightOutlineItem(OutlineItemBase):
             self._localCpPoint = QPointF(self._width, 0)
         elif self._globalAngle == -45:
             self._localCpPoint = QPointF(self._width, 0)
+        elif self._globalAngle == -135:
+            self._localCpPoint = QPointF(0, self._height)
         else:
             self._localCpPoint = QPointF(0, 0)
 
@@ -144,7 +153,7 @@ class StraightOutlineItem(OutlineItemBase):
             QPointF(self._width - self.OFFSET, 0)  # Top right point
         ]
 
-        if self._globalAngle == -180:
+        if self._globalAngle == -180 or self._globalAngle == -135:
             shape = [QPointF(self._width - point.x(), point.y()) for point in base_shape]
         else:
             shape = base_shape
@@ -185,8 +194,10 @@ class UTurnOutlineItem(OutlineItemBase):
         arcWidth = 200
         self._width = self._beat.width + arcWidth + self._timelineHeight
 
-        if self._globalAngle >= 0:
+        if self._globalAngle == 0:
             self._localCpPoint = QPointF(0, self._height - self._timelineHeight)
+        elif self._globalAngle == 45:
+            self._localCpPoint = QPointF(0, self._height)
         else:
             self._localCpPoint = QPointF(self._width, self._height - self._timelineHeight)
 
@@ -533,9 +544,10 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         item = self.addNewItem(SceneBeat(text='2', width=135, color='blue'), item)
         item = self.addNewItem(SceneBeat(text='Rising', angle=45, color='green'), item)
         item = self.addNewItem(SceneBeat('3'), item)
-        item = self.addNewItem(SceneBeat(text='Falling', angle=-45, color='green'), item)
-        item = self.addNewItem(SceneBeat('4'), item)
-        item = self.addNewItem(SceneBeat('5'), item)
+        # item = self.addNewItem(SceneBeat(text='Falling', angle=-45, color='green'), item)
+        # item = self.addNewItem(SceneBeat(text='Falling', angle=-45, color='green'), item)
+        # item = self.addNewItem(SceneBeat('4'), item)
+        # item = self.addNewItem(SceneBeat('5'), item)
         item = self.addNewItem(SceneBeat(text='Curved', width=100, angle=-180, color='green'), item)
         item = self.addNewItem(SceneBeat('6', width=30), item)
         item = self.addNewItem(SceneBeat(text='Curved 2', width=100, angle=-180, color='green'), item)
