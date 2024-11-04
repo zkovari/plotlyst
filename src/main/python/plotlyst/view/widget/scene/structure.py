@@ -118,7 +118,7 @@ class StraightOutlineItem(OutlineItemBase):
         elif self._globalAngle == -45:
             transform = QTransform().rotate(-self._globalAngle)
             diff = transform.map(diff)
-        else:
+        elif self._globalAngle < 0:
             diff.setX(self._width - diff.x())
 
         self.setPos(previous.connectionPoint() - diff)
