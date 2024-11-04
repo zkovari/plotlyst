@@ -559,6 +559,8 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         item = self.addNewItem(SceneBeat(text='Curved', width=100, angle=-180, color='green'), item)
         item = self.addNewItem(SceneBeat('6', width=30), item)
         item = self.addNewItem(SceneBeat(text='Curved 2', width=100, angle=-180, color='green'), item)
+        item = self.addNewItem(SceneBeat('7', width=30), item)
+        item = self.addNewItem(SceneBeat(text='Curved 3', width=100, angle=-180, color='green'), item)
 
     def addNewItem(self, beat: SceneBeat, previous: OutlineItemBase) -> OutlineItemBase:
         if beat.angle == 0:
