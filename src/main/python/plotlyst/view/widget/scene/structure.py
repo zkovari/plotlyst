@@ -130,6 +130,8 @@ class StraightOutlineItem(OutlineItemBase):
 
         if self._globalAngle >= 0:
             self._localCpPoint = QPointF(self._width, 0)
+        elif self._globalAngle == -45:
+            self._localCpPoint = QPointF(self._width, 0)
         else:
             self._localCpPoint = QPointF(0, 0)
 
@@ -504,8 +506,8 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         # item = self.addNewItem(SceneBeat('3'), item)
         # item = self.addNewItem(SceneBeat(text='Curved 2', angle=-180), item)
         item = self.addNewItem(SceneBeat(text='Falling', angle=-45, color='green'), item)
-        item = self.addNewItem(SceneBeat('3'), item)
-        item = self.addNewItem(SceneBeat('3'), item)
+        item = self.addNewItem(SceneBeat('3/a'), item)
+        item = self.addNewItem(SceneBeat('3/b'), item)
         item = self.addNewItem(SceneBeat(text='Rising', angle=45, color='green'), item)
 
         self._globalAngle = 0
