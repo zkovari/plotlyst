@@ -28,7 +28,6 @@ from overrides import overrides
 
 from plotlyst.common import PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.domain import Novel
-from plotlyst.view.common import spawn
 from plotlyst.view.widget.graphics import BaseGraphicsView
 from plotlyst.view.widget.graphics.editor import ZoomBar
 from plotlyst.view.widget.graphics.items import draw_bounding_rect, draw_point, draw_rect
