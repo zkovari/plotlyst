@@ -282,7 +282,8 @@ class _BaseShapeItem(QGraphicsPolygonItem):
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
             print(f'shape pos {value}')
-            self.parentItem().update()
+            if self.parentItem():
+                self.parentItem().update()
         return super().itemChange(change, value)
 
 
