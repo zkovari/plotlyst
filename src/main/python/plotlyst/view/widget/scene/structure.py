@@ -573,6 +573,8 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         self._globalAngle += beat.angle
         if self._globalAngle == -360:
             self._globalAngle = 0
+        elif self._globalAngle == -315:
+            self._globalAngle = 45
 
         return item
 
