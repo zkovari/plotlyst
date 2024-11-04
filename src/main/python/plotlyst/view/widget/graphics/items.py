@@ -46,9 +46,16 @@ def v_center(ref_height: int, item_height: int) -> int:
     return (ref_height - item_height) // 2
 
 
-def draw_rect(painter: QPainter, item: QAbstractGraphicsShapeItem):
-    painter.setPen(QPen(Qt.GlobalColor.red, 1, Qt.PenStyle.DashLine))
+def draw_bounding_rect(painter: QPainter, item: QAbstractGraphicsShapeItem, color=Qt.GlobalColor.red):
+    painter.setPen(QPen(QColor(color), 1, Qt.PenStyle.DashLine))
+    painter.setBrush(Qt.BrushStyle.NoBrush)
     painter.drawRoundedRect(item.boundingRect(), 2, 2)
+
+
+def draw_rect(painter: QPainter, rect: QRectF, color=Qt.GlobalColor.darkCyan):
+    painter.setPen(QPen(QColor(color), 1, Qt.PenStyle.DashLine))
+    painter.setBrush(Qt.BrushStyle.NoBrush)
+    painter.drawRect(rect)
 
 
 def draw_center(painter: QPainter, item: QAbstractGraphicsShapeItem):
@@ -61,8 +68,13 @@ def draw_zero(painter: QPainter):
     painter.drawEllipse(QPointF(0, 0), 1, 1)
 
 
+def draw_point(painter: QPainter, point: QPointF, color=Qt.GlobalColor.blue, size: int = 1):
+    painter.setPen(QPen(QColor(color), size, Qt.PenStyle.DashLine))
+    painter.drawEllipse(point, 1, 1)
+
+
 def draw_helpers(painter: QPainter, item: QAbstractGraphicsShapeItem):
-    draw_rect(painter, item)
+    draw_bounding_rect(painter, item)
     draw_center(painter, item)
     draw_zero(painter)
 
@@ -382,10 +394,11 @@ class ConnectorType(Enum):
     Curved = 1
 
 
-class ConnectorCPSocket(QAbstractGraphicsShapeItem):
-    def __init__(self, size: int = 16, parent=None):
+class BezierCPSocket(QAbstractGraphicsShapeItem):
+    def __init__(self, size: int = 16, parent=None, index: int = 0):
         super().__init__(parent)
         self._size = size
+        self._index = index
         self._active = True
         self.setCursor(Qt.CursorShape.SizeAllCursor)
         self.setFlag(
@@ -410,7 +423,12 @@ class ConnectorCPSocket(QAbstractGraphicsShapeItem):
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged and self._active:
-            self.parentItem().rearrangeCP(value)
+            if self._index == 0:
+                self.parentItem().rearrangeCP(value)
+            elif self._index == 1:
+                self.parentItem().rearrangeCP1(value)
+            else:
+                self.parentItem().rearrangeCP2(value)
         return super().itemChange(change, value)
 
     def activate(self):
@@ -433,7 +451,7 @@ class ConnectorItem(QGraphicsPathItem):
         self._relation: Optional[Relation] = None
         self._icon: Optional[str] = None
         self._defaultLineType: ConnectorType = ConnectorType.Curved
-        self._cp = ConnectorCPSocket(parent=self)
+        self._cp = BezierCPSocket(parent=self)
         self._cp.setVisible(False)
         if pen:
             self.setPen(pen)
