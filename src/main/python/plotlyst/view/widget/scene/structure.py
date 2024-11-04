@@ -26,10 +26,10 @@ from PyQt6.QtGui import QColor, QResizeEvent, QPainter, QPainterPath, QPen, QTra
 from PyQt6.QtWidgets import QGraphicsScene, QAbstractGraphicsShapeItem, QWidget, QGraphicsItem, QGraphicsPolygonItem
 from overrides import overrides
 
-from plotlyst.common import PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR
+from plotlyst.common import PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel
-from plotlyst.view.common import spawn, shadow
-from plotlyst.view.style.theme import BG_SECONDARY_COLOR, BG_MUTED_COLOR
+from plotlyst.view.common import spawn, shadow, stronger_color
+from plotlyst.view.style.theme import BG_MUTED_COLOR
 from plotlyst.view.widget.graphics import BaseGraphicsView
 from plotlyst.view.widget.graphics.editor import ZoomBar
 
@@ -53,12 +53,17 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
         self._width = 0
         self._height = 0
         self._timelineHeight = 86
-        self._bgColor = BG_SECONDARY_COLOR
+        self._bgColor = QColor(RELAXED_WHITE_COLOR)
+        self._hoveredBgColor = QColor(stronger_color(RELAXED_WHITE_COLOR, factor=0.99))
+        self._selectedColor = QColor(PLOTLYST_TERTIARY_COLOR)
+        self._hoveredSelectedColor = QColor(stronger_color(PLOTLYST_TERTIARY_COLOR, factor=0.99))
+        self._hovered: bool = False
 
         self._localCpPoint = QPointF(0, 0)
         self._calculateShape()
 
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
+        self.setAcceptHoverEvents(True)
 
         if self._globalAngle >= -45:
             self.setRotation(-self._globalAngle)
@@ -77,15 +82,25 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
         if self.isSelected():
-            painter.setPen(QPen(QColor(PLOTLYST_TERTIARY_COLOR), 0))
-            painter.setBrush(QColor(PLOTLYST_TERTIARY_COLOR))
+            qcolor = self._hoveredSelectedColor if self._hovered else self._selectedColor
         else:
-            painter.setPen(QPen(QColor(self._bgColor), 0))
-            painter.setBrush(QColor(self._bgColor))
+            qcolor = self._hoveredBgColor if self._hovered else self._bgColor
+        painter.setPen(QPen(qcolor, 0))
+        painter.setBrush(qcolor)
 
         self._draw(painter)
         # draw_bounding_rect(painter, self, self._beat.color)
         # draw_point(painter, self._localCpPoint, self._beat.color, 12)
+
+    @overrides
+    def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        self._hovered = True
+        self.update()
+
+    @overrides
+    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        self._hovered = False
+        self.update()
 
     def connectionPoint(self) -> QPointF:
         return self.mapToScene(self._localCpPoint)

@@ -96,7 +96,7 @@ def _text_color_with_rgb(r: int, g: int, b: int) -> str:
     return 'black' if hsp > 171.5 else WHITE_COLOR
 
 
-def stronger_color(hex_color: str, factor: float = 1.5) -> str:
+def stronger_color(hex_color: str, factor: float = 1.01) -> str:
     color = QColor(hex_color)
     h, s, v, a = color.getHsv()
     s = min(255, int(s * factor))  # Scale up the saturation but cap at 255
