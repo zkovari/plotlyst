@@ -28,6 +28,7 @@ from overrides import overrides
 
 from plotlyst.common import PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.domain import Novel
+from plotlyst.view.common import spawn
 from plotlyst.view.widget.graphics import BaseGraphicsView
 from plotlyst.view.widget.graphics.editor import ZoomBar
 from plotlyst.view.widget.graphics.items import draw_bounding_rect, draw_point, draw_rect
@@ -58,7 +59,7 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
 
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
 
-        if self._globalAngle > 0:
+        if self._globalAngle >= -45:
             self.setRotation(-self._globalAngle)
 
     def item(self) -> SceneBeat:
@@ -114,7 +115,10 @@ class StraightOutlineItem(OutlineItemBase):
         if self._globalAngle > 0:
             transform = QTransform().rotate(-self._globalAngle)
             diff = transform.map(diff)
-        elif self._globalAngle < 0:
+        elif self._globalAngle == -45:
+            transform = QTransform().rotate(-self._globalAngle)
+            diff = transform.map(diff)
+        else:
             diff.setX(self._width - diff.x())
 
         self.setPos(previous.connectionPoint() - diff)
@@ -451,7 +455,10 @@ class FallingOutlineItem(RisingOutlineItem):
     @overrides
     def _calculateConnectionPoint(self):
         if self._globalAngle >= 0:
-            self._localCpPoint = QPointF(self._width + self._timelineHeight // 2 - 5, self._height - 24)
+            # self._localCpPoint = QPointF(self._width - self._timelineHeight // 2 + 5, -24)
+
+            # self._localCpPoint = QPointF(self._width + self._timelineHeight // 2 - 5, self._height - 24)
+            self._localCpPoint = QPointF(self._width + 24, self._height - self._timelineHeight // 2 + 5)
 
     @overrides
     def _drawBeginning(self, painter):
@@ -498,6 +505,8 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         # item = self.addNewItem(SceneBeat(text='Curved 2', angle=-180), item)
         item = self.addNewItem(SceneBeat(text='Falling', angle=-45, color='green'), item)
         item = self.addNewItem(SceneBeat('3'), item)
+        item = self.addNewItem(SceneBeat('3'), item)
+        item = self.addNewItem(SceneBeat(text='Rising', angle=45, color='green'), item)
 
         self._globalAngle = 0
         item = StraightOutlineItem(SceneBeat(text='Other item', width=50, spacing=17), self._globalAngle)
@@ -505,10 +514,13 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         self.addItem(item)
         item = self.addNewItem(SceneBeat(text='2', width=135, color='blue'), item)
         item = self.addNewItem(SceneBeat(text='Rising', angle=45, color='green'), item)
-        # item = self.addNewItem(SceneBeat('4'), item)
-        # item = self.addNewItem(SceneBeat('4'), item)
-        # item = self.addNewItem(SceneBeat('4'), item)
-        # item = self.addNewItem(SceneBeat(text='Curved', angle=-180, color='green'), item)
+        item = self.addNewItem(SceneBeat('3'), item)
+        item = self.addNewItem(SceneBeat(text='Falling', angle=-45, color='green'), item)
+        item = self.addNewItem(SceneBeat('4'), item)
+        item = self.addNewItem(SceneBeat('5'), item)
+        item = self.addNewItem(SceneBeat(text='Curved', width=100, angle=-180, color='green'), item)
+        item = self.addNewItem(SceneBeat('6', width=30), item)
+        item = self.addNewItem(SceneBeat(text='Curved 2', width=100, angle=-180, color='green'), item)
 
     def addNewItem(self, beat: SceneBeat, previous: OutlineItemBase) -> OutlineItemBase:
         if beat.angle == 0:
