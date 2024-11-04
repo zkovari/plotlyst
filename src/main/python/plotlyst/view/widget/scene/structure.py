@@ -183,6 +183,11 @@ class UTurnOutlineItem(OutlineItemBase):
         if self._globalAngle > 0:
             transform = QTransform().rotate(-self._globalAngle)
             diff = transform.map(diff)
+        elif self._globalAngle == -135:
+            diff.setX(self._width - diff.x())
+            diff.setY(self._timelineHeight)
+            transform = QTransform().rotate(-45)
+            diff = transform.map(diff)
         elif self._globalAngle < 0:
             diff.setX(self._width - diff.x())
 
