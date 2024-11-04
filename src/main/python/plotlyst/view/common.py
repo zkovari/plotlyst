@@ -311,13 +311,16 @@ def restyle(widget: QWidget):
     widget.style().polish(widget)
 
 
-def shadow(wdg: QWidget, offset: int = 2, radius: int = 0, color=Qt.GlobalColor.lightGray):
+def shadow(wdg: QWidget, offset: int = 2, radius: int = 0, color=Qt.GlobalColor.lightGray, alpha: Optional[int] = None):
     effect = QGraphicsDropShadowEffect()
     if isinstance(wdg, QObject) and not isinstance(wdg, QGraphicsObject):
         effect.setParent(wdg)
     effect.setBlurRadius(radius)
     effect.setOffset(offset, offset)
-    effect.setColor(color)
+    qcolor = QColor(color)
+    if alpha:
+        qcolor.setAlpha(alpha)
+    effect.setColor(qcolor)
     wdg.setGraphicsEffect(effect)
 
 

@@ -26,12 +26,12 @@ from PyQt6.QtGui import QColor, QResizeEvent, QPainter, QPainterPath, QPen, QTra
 from PyQt6.QtWidgets import QGraphicsScene, QAbstractGraphicsShapeItem, QWidget, QGraphicsItem, QGraphicsPolygonItem
 from overrides import overrides
 
-from plotlyst.common import PLOTLYST_TERTIARY_COLOR
+from plotlyst.common import PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Novel
-from plotlyst.view.common import spawn
+from plotlyst.view.common import spawn, shadow
+from plotlyst.view.style.theme import BG_SECONDARY_COLOR, BG_MUTED_COLOR
 from plotlyst.view.widget.graphics import BaseGraphicsView
 from plotlyst.view.widget.graphics.editor import ZoomBar
-from plotlyst.view.widget.graphics.items import draw_bounding_rect, draw_point, draw_rect
 
 
 @dataclass
@@ -53,6 +53,7 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
         self._width = 0
         self._height = 0
         self._timelineHeight = 86
+        self._bgColor = BG_SECONDARY_COLOR
 
         self._localCpPoint = QPointF(0, 0)
         self._calculateShape()
@@ -63,6 +64,8 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
             self.setRotation(-self._globalAngle)
         elif self._globalAngle == -135:
             self.setRotation(-45)
+
+        shadow(self, offset=0, radius=8, color=PLOTLYST_SECONDARY_COLOR, alpha=175)
 
     def item(self) -> SceneBeat:
         return self._beat
@@ -77,12 +80,12 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
             painter.setPen(QPen(QColor(PLOTLYST_TERTIARY_COLOR), 0))
             painter.setBrush(QColor(PLOTLYST_TERTIARY_COLOR))
         else:
-            painter.setPen(QPen(QColor('grey'), 0))
-            painter.setBrush(QColor('grey'))
+            painter.setPen(QPen(QColor(self._bgColor), 0))
+            painter.setBrush(QColor(self._bgColor))
 
         self._draw(painter)
-        draw_bounding_rect(painter, self, self._beat.color)
-        draw_point(painter, self._localCpPoint, self._beat.color, 12)
+        # draw_bounding_rect(painter, self, self._beat.color)
+        # draw_point(painter, self._localCpPoint, self._beat.color, 12)
 
     def connectionPoint(self) -> QPointF:
         return self.mapToScene(self._localCpPoint)
@@ -263,7 +266,7 @@ class UTurnOutlineItem(OutlineItemBase):
             path.arcTo(self._arcRect, 90, 180)
 
         painter.drawPath(path)
-        draw_rect(painter, self._arcRect)
+        # draw_rect(painter, self._arcRect)
 
         painter.setPen(QPen(QColor('black'), 1))
         if self._globalAngle >= 0:
@@ -403,7 +406,7 @@ class RisingOutlineItem(OutlineItemBase):
         painter.setBrush(Qt.BrushStyle.NoBrush)
         self._drawCurve(painter)
 
-        draw_point(painter, self._topShapePos, 'red', 10)
+        # draw_point(painter, self._topShapePos, 'red', 10)
 
     def _drawCurve(self, painter):
         pen_half = self._timelineHeight // 2
@@ -587,7 +590,7 @@ class SceneStructureView(BaseGraphicsView):
         self._wdgZoomBar = ZoomBar(self)
         self._wdgZoomBar.zoomed.connect(self._scale)
 
-        self.setBackgroundBrush(QColor('#F2F2F2'))
+        self.setBackgroundBrush(QColor(BG_MUTED_COLOR))
         self._scene = SceneStructureGraphicsScene(self._novel)
         self.setScene(self._scene)
 
