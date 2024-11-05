@@ -57,13 +57,6 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
         self._height = 0
         self._timelineHeight = 86
 
-        # if self._beat.color:
-        #     default_color = blended_color_with_alpha(self._beat.color, alpha=155)
-        #     self._bgColor = QColor(default_color)
-        #     self._hoveredBgColor = QColor(blended_color_with_alpha(self._beat.color, alpha=175))
-        #     self._selectedColor = QColor(blended_color_with_alpha(self._beat.color, alpha=255))
-        #     self._hoveredSelectedColor = QColor(blended_color_with_alpha(self._beat.color, alpha=235))
-        # else:
         self._bgColor = QColor(RELAXED_WHITE_COLOR)
         self._hoveredBgColor = QColor(stronger_color(RELAXED_WHITE_COLOR, factor=0.99))
         if self._beat.color:
