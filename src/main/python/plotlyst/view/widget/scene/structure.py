@@ -33,7 +33,7 @@ from plotlyst.view.common import spawn, shadow, stronger_color, blended_color_wi
 from plotlyst.view.style.theme import BG_MUTED_COLOR
 from plotlyst.view.widget.graphics import BaseGraphicsView
 from plotlyst.view.widget.graphics.editor import ZoomBar
-from plotlyst.view.widget.graphics.items import AbstractSocketItem, NodeItem, IconItem, draw_bounding_rect, draw_point
+from plotlyst.view.widget.graphics.items import AbstractSocketItem, NodeItem, IconItem
 
 
 @dataclass
@@ -45,6 +45,7 @@ class SceneBeat:
     color: str = ''
     spacing: int = 17
     icon_size: int = 60
+    icon_frame: bool = False
 
 
 class OutlineItemBase(QAbstractGraphicsShapeItem):
@@ -79,10 +80,8 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
             Node(self.OFFSET // 2, -(self._iconRectSize - self._timelineHeight) // 2, GraphicsItemType.ICON,
                  size=self._iconSize,
                  icon=self._beat.icon, color=self._beat.color), self)
-        # self._iconItem = IconBadge(self, size=self._iconSize)
-        # if self._beat.icon:
-        #     self._iconItem.setIcon(IconRegistry.from_name(self._beat.icon, self._beat.color), QColor(self._beat.color))
-        #     self._iconItem.setPos(self.OFFSET // 2, -(self._iconRectSize - self._timelineHeight) // 2)
+        if self._beat.icon_frame:
+            self._iconItem.setFrameEnabled(True)
 
         self._calculateShape()
 
@@ -116,8 +115,8 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
         painter.setBrush(qcolor)
 
         self._draw(painter)
-        draw_bounding_rect(painter, self, self._beat.color)
-        draw_point(painter, self._localCpPoint, self._beat.color, 12)
+        # draw_bounding_rect(painter, self, self._beat.color)
+        # draw_point(painter, self._localCpPoint, self._beat.color, 12)
 
     # @overrides
     # def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
@@ -626,7 +625,7 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         item = self.addNewItem(SceneBeat('6', width=30), item)
         item = self.addNewItem(
             SceneBeat(text='Crisis', width=100, angle=-180, icon='mdi.arrow-decision-outline', color='#ce2d4f',
-                      icon_size=150), item)
+                      icon_size=150, icon_frame=True), item)
         item = self.addNewItem(SceneBeat('7', width=30, icon='fa5s.map-signs', color='#ba6f4d'), item)
         item = self.addNewItem(SceneBeat(text='Rising 3', width=100, angle=-180, color='#08605f'), item)
 
