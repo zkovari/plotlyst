@@ -29,7 +29,7 @@ from overrides import overrides
 
 from plotlyst.common import PLOTLYST_TERTIARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, Node, GraphicsItemType
-from plotlyst.view.common import spawn, shadow, stronger_color, blended_color_with_alpha
+from plotlyst.view.common import shadow, stronger_color, blended_color_with_alpha
 from plotlyst.view.style.theme import BG_MUTED_COLOR
 from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene
 from plotlyst.view.widget.graphics.editor import ConnectorToolbar
@@ -651,13 +651,7 @@ class SceneStructureGraphicsScene(NetworkScene):
         return item
 
 
-    def editItemEvent(self, item: Node):
-        pass
-
-    def itemMovedEvent(self, item: NodeItem):
-        pass
-
-class SceneStructureView(BaseGraphicsView):
+class SceneStructureView(NetworkGraphicsView):
     def __init__(self, parent=None):
         self._novel = Novel('My novel')
         super().__init__(parent)
