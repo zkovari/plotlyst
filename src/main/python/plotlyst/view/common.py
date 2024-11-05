@@ -105,6 +105,19 @@ def stronger_color(hex_color: str, factor: float = 1.01) -> str:
     return color.name()
 
 
+def blended_color_with_alpha(hex_color: str, alpha: int = 255, background_hex: str = '#ffffff') -> str:
+    color = QColor(hex_color)
+    color.setAlpha(alpha)
+    background = QColor(background_hex)
+
+    # Blend the color with the background based on the alpha
+    blended_red = int((color.red() * (alpha / 255)) + (background.red() * (1 - alpha / 255)))
+    blended_green = int((color.green() * (alpha / 255)) + (background.green() * (1 - alpha / 255)))
+    blended_blue = int((color.blue() * (alpha / 255)) + (background.blue() * (1 - alpha / 255)))
+
+    return f"#{blended_red:02x}{blended_green:02x}{blended_blue:02x}"
+
+
 def action(text: str, icon: Optional[QIcon] = None, slot=None, parent=None, checkable: bool = False,
            tooltip: str = '', incr_font_: Optional[int] = None) -> QAction:
     _action = QAction(text)
