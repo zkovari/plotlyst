@@ -44,6 +44,7 @@ class SceneBeat:
     icon: str = ''
     color: str = ''
     spacing: int = 17
+    icon_size: int = 60
 
 
 class OutlineItemBase(QAbstractGraphicsShapeItem):
@@ -71,12 +72,17 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
         self._font.setPointSize(18)
 
         self._localCpPoint = QPointF(0, 0)
-        self._iconSize = 60
+        self._iconSize = self._beat.icon_size
         self._iconRectSize = self._iconSize + 2 * IconItem.Margin
+        # self._iconRectSize = self._iconSize
         self._iconItem = IconItem(
             Node(self.OFFSET // 2, -(self._iconRectSize - self._timelineHeight) // 2, GraphicsItemType.ICON,
                  size=self._iconSize,
                  icon=self._beat.icon, color=self._beat.color), self)
+        # self._iconItem = IconBadge(self, size=self._iconSize)
+        # if self._beat.icon:
+        #     self._iconItem.setIcon(IconRegistry.from_name(self._beat.icon, self._beat.color), QColor(self._beat.color))
+        #     self._iconItem.setPos(self.OFFSET // 2, -(self._iconRectSize - self._timelineHeight) // 2)
 
         self._calculateShape()
 
@@ -268,6 +274,10 @@ class UTurnOutlineItem(OutlineItemBase):
             self._arcRect = QRectF(arc_x_start, pen_half, arcWidth, self._height - self._timelineHeight)
 
         self._topStartX = self._width - self._arcRect.width() - self.OFFSET - self._timelineHeight - arc_margin
+
+        self._iconItem.setPos(
+            self._width - self._timelineHeight - arc_margin - (self._iconRectSize - self._timelineHeight) // 2,
+            (self._height - self._iconRectSize) // 2)
 
     @overrides
     def _draw(self, painter: QPainter):
@@ -591,9 +601,9 @@ class SceneStructureGraphicsScene(QGraphicsScene):
 
         item = self.addNewItem(SceneBeat(text='2', width=135), item)
         item = self.addNewItem(SceneBeat(text='Setback', angle=-45, color='#FD4D21'), item)
-        item = self.addNewItem(SceneBeat('3/a'), item)
-        item = self.addNewItem(SceneBeat('Falling action'), item)
-        # item = self.addNewItem(SceneBeat(text='Rising', angle=45, color='green'), item)
+        # item = self.addNewItem(SceneBeat('3/a'), item)
+        item = self.addNewItem(SceneBeat('Progress', angle=45), item)
+        item = self.addNewItem(SceneBeat(text='U-turn', angle=-180), item)
         # item = self.addNewItem(SceneBeat(text='Falling', angle=-45, color='green'), item)
 
         self._drawBottom()
@@ -606,14 +616,12 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         item = self.addNewItem(SceneBeat(text='Conflict', width=135, icon='mdi.sword-cross', color='#f3a712'), item)
         item = self.addNewItem(SceneBeat(text='Rising', angle=45, color='#08605f'), item)
         item = self.addNewItem(SceneBeat('3'), item)
-        # item = self.addNewItem(SceneBeat(text='Falling', angle=-45, color='green'), item)
-        # item = self.addNewItem(SceneBeat(text='Falling', angle=-45, color='green'), item)
-        # item = self.addNewItem(SceneBeat('4'), item)
-        # item = self.addNewItem(SceneBeat('5'), item)
         item = self.addNewItem(
             SceneBeat(text='Inciting', width=100, icon='mdi.bell-alert-outline', color='#a2ad59'), item)
         item = self.addNewItem(SceneBeat('6', width=30), item)
-        item = self.addNewItem(SceneBeat(text='Rising 2', width=100, angle=-180, color='#08605f'), item)
+        item = self.addNewItem(
+            SceneBeat(text='Crisis', width=100, angle=-180, icon='mdi.arrow-decision-outline', color='#ce2d4f',
+                      icon_size=150), item)
         item = self.addNewItem(SceneBeat('7', width=30, icon='fa5s.map-signs', color='#ba6f4d'), item)
         item = self.addNewItem(SceneBeat(text='Rising 3', width=100, angle=-180, color='#08605f'), item)
 

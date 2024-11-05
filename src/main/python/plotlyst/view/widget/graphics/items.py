@@ -823,7 +823,8 @@ class NodeItem(QAbstractGraphicsShapeItem):
 
     def _onPosChanged(self):
         self.rearrangeConnectors()
-        self.networkScene().itemMovedEvent(self)
+        if self.networkScene():
+            self.networkScene().itemMovedEvent(self)
 
     def _onSelection(self, selected: bool):
         pass
