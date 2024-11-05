@@ -442,6 +442,9 @@ class RisingOutlineItem(OutlineItemBase):
 
         self._calculateConnectionPoint()
 
+        self._iconItem.setPos(self.OFFSET,
+                              self._height - self._timelineHeight - (self._iconRectSize - self._timelineHeight) // 2)
+
     def _recalculateControlPoints(self):
         # these numbers were found by manually moving BezierCPSocket points
         self._cp1Pos.setY(self._height - 44)
@@ -600,10 +603,10 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         self.addItem(item)
 
         item = self.addNewItem(SceneBeat(text='2', width=135), item)
-        item = self.addNewItem(SceneBeat(text='Setback', angle=-45, color='#FD4D21'), item)
+        item = self.addNewItem(SceneBeat(text='Setback', angle=-45, color='#FD4D21', icon='mdi.chemical-weapon'), item)
         # item = self.addNewItem(SceneBeat('3/a'), item)
-        item = self.addNewItem(SceneBeat('Progress', angle=45), item)
-        item = self.addNewItem(SceneBeat(text='U-turn', angle=-180), item)
+        item = self.addNewItem(SceneBeat('Progress', angle=45, icon='mdi6.progress-upload'), item)
+        # item = self.addNewItem(SceneBeat(text='U-turn', angle=-180), item)
         # item = self.addNewItem(SceneBeat(text='Falling', angle=-45, color='green'), item)
 
         self._drawBottom()
@@ -614,7 +617,7 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         item.setPos(0, 100)
         self.addItem(item)
         item = self.addNewItem(SceneBeat(text='Conflict', width=135, icon='mdi.sword-cross', color='#f3a712'), item)
-        item = self.addNewItem(SceneBeat(text='Rising', angle=45, color='#08605f'), item)
+        item = self.addNewItem(SceneBeat(text='Rising', angle=45, color='#08605f', icon='mdi6.progress-upload'), item)
         item = self.addNewItem(SceneBeat('3'), item)
         item = self.addNewItem(
             SceneBeat(text='Inciting', width=100, icon='mdi.bell-alert-outline', color='#a2ad59'), item)
