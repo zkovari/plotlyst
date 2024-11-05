@@ -22,8 +22,8 @@ from dataclasses import dataclass
 from typing import Optional, Any
 
 from PyQt6.QtCore import QRectF, QPointF, Qt
-from PyQt6.QtGui import QColor, QResizeEvent, QPainter, QPainterPath, QPen, QTransform, QPolygonF
-from PyQt6.QtWidgets import QGraphicsScene, QAbstractGraphicsShapeItem, QWidget, QGraphicsItem, QGraphicsPolygonItem, \
+from PyQt6.QtGui import QColor, QPainter, QPainterPath, QPen, QTransform, QPolygonF
+from PyQt6.QtWidgets import QAbstractGraphicsShapeItem, QWidget, QGraphicsItem, QGraphicsPolygonItem, \
     QApplication
 from overrides import overrides
 
@@ -31,9 +31,9 @@ from plotlyst.common import PLOTLYST_TERTIARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, Node, GraphicsItemType
 from plotlyst.view.common import spawn, shadow, stronger_color, blended_color_with_alpha
 from plotlyst.view.style.theme import BG_MUTED_COLOR
-from plotlyst.view.widget.graphics import BaseGraphicsView
-from plotlyst.view.widget.graphics.editor import ZoomBar
-from plotlyst.view.widget.graphics.items import AbstractSocketItem, NodeItem, IconItem
+from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene
+from plotlyst.view.widget.graphics.editor import ConnectorToolbar
+from plotlyst.view.widget.graphics.items import IconItem
 
 
 @dataclass
@@ -590,7 +590,7 @@ class FallingOutlineItem(RisingOutlineItem):
         painter.drawPath(path)
 
 
-class SceneStructureGraphicsScene(QGraphicsScene):
+class SceneStructureGraphicsScene(NetworkScene):
     DEFAULT_ANGLE = 0
 
     def __init__(self, novel: Novel, parent=None):
@@ -650,11 +650,6 @@ class SceneStructureGraphicsScene(QGraphicsScene):
 
         return item
 
-    def linkMode(self) -> bool:
-        return False
-
-    def startLink(self, source: AbstractSocketItem):
-        pass
 
     def editItemEvent(self, item: Node):
         pass
@@ -664,30 +659,16 @@ class SceneStructureGraphicsScene(QGraphicsScene):
 
 class SceneStructureView(BaseGraphicsView):
     def __init__(self, parent=None):
-        super().__init__(parent)
         self._novel = Novel('My novel')
-
-        self._wdgZoomBar = ZoomBar(self)
-        self._wdgZoomBar.zoomed.connect(self._scale)
-
+        super().__init__(parent)
         self.setBackgroundBrush(QColor(BG_MUTED_COLOR))
-        self._scene = SceneStructureGraphicsScene(self._novel)
-        self.setScene(self._scene)
+
+        self._connectorEditor = ConnectorToolbar(self.undoStack, self)
+        self._connectorEditor.setVisible(False)
 
         # TODO remove later
         self.setMinimumSize(1600, 800)
 
     @overrides
-    def resizeEvent(self, event: QResizeEvent) -> None:
-        super().resizeEvent(event)
-        self._arrangeSideBars()
-
-    @overrides
-    def _scale(self, scale: float):
-        super()._scale(scale)
-        self._wdgZoomBar.updateScaledFactor(self.scaledFactor())
-
-    def _arrangeSideBars(self):
-        self._wdgZoomBar.setGeometry(10, self.height() - self._wdgZoomBar.sizeHint().height() - 10,
-                                     self._wdgZoomBar.sizeHint().width(),
-                                     self._wdgZoomBar.sizeHint().height())
+    def _initScene(self) -> NetworkScene:
+        return SceneStructureGraphicsScene(self._novel)
