@@ -19,17 +19,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Optional, Any
+from typing import Optional, Any, List
 
 from PyQt6.QtCore import QRectF, QPointF, Qt
 from PyQt6.QtGui import QColor, QPainter, QPainterPath, QPen, QTransform, QPolygonF
 from PyQt6.QtWidgets import QAbstractGraphicsShapeItem, QWidget, QGraphicsItem, QGraphicsPolygonItem, \
-    QApplication
+    QApplication, QGraphicsSceneMouseEvent
 from overrides import overrides
+from qthandy import pointy
 
 from plotlyst.common import PLOTLYST_TERTIARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, Node, GraphicsItemType
-from plotlyst.view.common import shadow, stronger_color, blended_color_with_alpha
+from plotlyst.view.common import spawn, shadow, stronger_color, blended_color_with_alpha
 from plotlyst.view.style.theme import BG_MUTED_COLOR
 from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene
 from plotlyst.view.widget.graphics.editor import ConnectorToolbar
@@ -51,10 +52,11 @@ class SceneBeat:
 class OutlineItemBase(QAbstractGraphicsShapeItem):
     OFFSET: int = 35
 
-    def __init__(self, beat: SceneBeat, globalAngle: int, parent=None):
+    def __init__(self, beat: SceneBeat, globalAngle: int, parent=None, placeholder: bool = False):
         super().__init__(parent)
         self._beat = beat
         self._globalAngle = globalAngle
+        self._placeholder = placeholder
         self._width = 0
         self._height = 0
         self._timelineHeight = 86
@@ -85,7 +87,11 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
 
         self._calculateShape()
 
-        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
+        if self._placeholder:
+            pointy(self)
+            self.setOpacity(0.05)
+        else:
+            self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
         self.setAcceptHoverEvents(True)
 
         if not self._beat.icon:
@@ -101,13 +107,19 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
     def item(self) -> SceneBeat:
         return self._beat
 
+    def structureScene(self) -> 'SceneStructureGraphicsScene':
+        return self.scene()
+
     @overrides
     def boundingRect(self) -> QRectF:
         return QRectF(0, 0, self._width, self._height)
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
-        if self.isSelected():
+        if self._placeholder:
+            color = 'grey' if self._hovered else 'lightgrey'
+            qcolor = QColor(blended_color_with_alpha(color, alpha=115))
+        elif self.isSelected():
             qcolor = self._hoveredSelectedColor if self._hovered else self._selectedColor
         else:
             qcolor = self._hoveredBgColor if self._hovered else self._bgColor
@@ -129,12 +141,23 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
         self._hovered = True
         self.update()
         self._shadow(10)
+        if self._placeholder:
+            self.setOpacity(1.0)
 
     @overrides
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         self._hovered = False
         self.update()
         self._shadow()
+        if self._placeholder:
+            self.setOpacity(0.05)
+
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        event.accept()
+
+    def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        super().mouseReleaseEvent(event)
+        self.structureScene().placeholderClickedEvent(self)
 
     def connectionPoint(self) -> QPointF:
         return self.mapToScene(self._localCpPoint)
@@ -152,14 +175,15 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
         pass
 
     def _shadow(self, radius: int = 25):
-        shadow(self, offset=0, radius=radius, color=self._beat.color)
+        if not self._placeholder:
+            shadow(self, offset=0, radius=radius, color=self._beat.color)
 
 
 class StraightOutlineItem(OutlineItemBase):
 
-    def __init__(self, beat: SceneBeat, globalAngle: int, parent=None):
+    def __init__(self, beat: SceneBeat, globalAngle: int, parent=None, placeholder: bool = False):
         self._path = QPainterPath()
-        super().__init__(beat, globalAngle, parent)
+        super().__init__(beat, globalAngle, parent, placeholder)
 
     @overrides
     def shape(self) -> QPainterPath:
@@ -227,10 +251,10 @@ class StraightOutlineItem(OutlineItemBase):
 
 class UTurnOutlineItem(OutlineItemBase):
 
-    def __init__(self, beat: SceneBeat, globalAngle: int, parent=None):
+    def __init__(self, beat: SceneBeat, globalAngle: int, parent=None, placeholder: bool = False):
         self._arcRect = QRectF()
         self._topStartX = 0
-        super().__init__(beat, globalAngle, parent)
+        super().__init__(beat, globalAngle, parent, placeholder)
 
     @overrides
     def adjustTo(self, previous: 'OutlineItemBase'):
@@ -376,14 +400,14 @@ class _BaseShapeItem(QGraphicsPolygonItem):
 
 
 class RisingOutlineItem(OutlineItemBase):
-    def __init__(self, beat: SceneBeat, globalAngle: int, parent=None):
+    def __init__(self, beat: SceneBeat, globalAngle: int, parent=None, placeholder: bool = False):
         # y calculated later for these points
         self._cp1Pos = QPointF(169, 0)
         self._cp2Pos = QPointF(218, 0)
         self._quadStartPoint = QPointF(0, 0)
         self._topShapePos = QPointF(236, 0)
         self._topShapeItem = _BaseShapeItem(beat)
-        super().__init__(beat, globalAngle, parent)
+        super().__init__(beat, globalAngle, parent, placeholder)
         # self.setFlag(self.flags() | QGraphicsItem.GraphicsItemFlag.ItemClipsToShape)
         # self._cp1 = BezierCPSocket(10, self, index=1)
         # self._cp1.setPos(self._cp1Pos)
@@ -503,12 +527,10 @@ class RisingOutlineItem(OutlineItemBase):
 
 class FallingOutlineItem(RisingOutlineItem):
 
-    def __init__(self, beat: SceneBeat, globalAngle: int, parent=None):
-        super().__init__(beat, globalAngle, parent)
+    def __init__(self, beat: SceneBeat, globalAngle: int, parent=None, placeholder: bool = False):
+        super().__init__(beat, globalAngle, parent, placeholder)
         self._topShapeItem.setParentItem(self)
         self._topShapeItem.setRotation(-self._beat.angle)
-        # self._topShapeItem.setPos(QPointF(294, 164))
-        # self._topShapeItem.setVisible(True)
 
     @overrides
     def adjustTo(self, previous: 'OutlineItemBase'):
@@ -610,6 +632,9 @@ class SceneStructureGraphicsScene(NetworkScene):
         item = self.addNewItem(SceneBeat(text='U-turn', angle=-180), item)
         # item = self.addNewItem(SceneBeat(text='Falling', angle=-45, color='green'), item)
 
+        self._lastItem = item
+        self._placeholders: List[OutlineItemBase] = []
+
         self._drawBottom()
 
     def _drawBottom(self):
@@ -629,16 +654,12 @@ class SceneStructureGraphicsScene(NetworkScene):
         item = self.addNewItem(SceneBeat('7', width=30, icon='fa5s.map-signs', color='#ba6f4d'), item)
         item = self.addNewItem(SceneBeat(text='Rising 3', width=100, angle=-180, color='#08605f'), item)
 
-    def addNewItem(self, beat: SceneBeat, previous: OutlineItemBase) -> OutlineItemBase:
-        if beat.angle == 0:
-            item = StraightOutlineItem(beat, self._globalAngle)
-        elif beat.angle == 45:
-            item = RisingOutlineItem(beat, self._globalAngle)
-        elif beat.angle == -45:
-            item = FallingOutlineItem(beat, self._globalAngle)
-        else:
-            item = UTurnOutlineItem(beat, self._globalAngle)
+        self._lastItem = item
 
+        self._addPlaceholders(item)
+
+    def addNewItem(self, beat: SceneBeat, previous: OutlineItemBase) -> OutlineItemBase:
+        item = self._initOutlineItem(beat)
         item.adjustTo(previous)
         self.addItem(item)
 
@@ -650,7 +671,40 @@ class SceneStructureGraphicsScene(NetworkScene):
 
         return item
 
+    def placeholderClickedEvent(self, placeholder: OutlineItemBase):
+        newItem = self.addNewItem(SceneBeat('Beat', angle=placeholder.item().angle), self._lastItem)
+        self._lastItem = newItem
 
+        for placeholderItem in self._placeholders:
+            placeholderItem.adjustTo(newItem)
+
+    def _addPlaceholders(self, last: OutlineItemBase):
+        placeholders = [
+            SceneBeat('Add new turning item', angle=-180),
+            SceneBeat('Add new rising item', angle=45),
+            SceneBeat('Add new falling item', angle=-45),
+            SceneBeat('Add new straight item'),
+        ]
+
+        for placeholder in placeholders:
+            item = self._initOutlineItem(placeholder, placeholder=True)
+            self._placeholders.append(item)
+            item.adjustTo(last)
+            self.addItem(item)
+
+    def _initOutlineItem(self, beat: SceneBeat, placeholder: bool = False):
+        if beat.angle == 0:
+            item = StraightOutlineItem(beat, self._globalAngle, placeholder=placeholder)
+        elif beat.angle == 45:
+            item = RisingOutlineItem(beat, self._globalAngle, placeholder=placeholder)
+        elif beat.angle == -45:
+            item = FallingOutlineItem(beat, self._globalAngle, placeholder=placeholder)
+        else:
+            item = UTurnOutlineItem(beat, self._globalAngle, placeholder=placeholder)
+        return item
+
+
+@spawn
 class SceneStructureView(NetworkGraphicsView):
     def __init__(self, parent=None):
         self._novel = Novel('My novel')
