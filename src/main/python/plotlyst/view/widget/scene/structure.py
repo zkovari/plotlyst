@@ -27,12 +27,14 @@ from PyQt6.QtWidgets import QGraphicsScene, QAbstractGraphicsShapeItem, QWidget,
     QApplication
 from overrides import overrides
 
-from plotlyst.common import PLOTLYST_TERTIARY_COLOR, RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
-from plotlyst.core.domain import Novel
-from plotlyst.view.common import spawn, shadow, stronger_color
+from plotlyst.common import PLOTLYST_TERTIARY_COLOR, RELAXED_WHITE_COLOR
+from plotlyst.core.domain import Novel, Node
+from plotlyst.view.common import spawn, shadow, stronger_color, blended_color_with_alpha
+from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.theme import BG_MUTED_COLOR
 from plotlyst.view.widget.graphics import BaseGraphicsView
 from plotlyst.view.widget.graphics.editor import ZoomBar
+from plotlyst.view.widget.graphics.items import AbstractSocketItem, NodeItem, IconBadge
 
 
 @dataclass
@@ -40,7 +42,8 @@ class SceneBeat:
     text: str = ''
     angle: int = 0
     width: int = 180
-    color: str = 'red'
+    icon: str = ''
+    color: str = ''
     spacing: int = 17
 
 
@@ -54,10 +57,22 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
         self._width = 0
         self._height = 0
         self._timelineHeight = 86
+
+        # if self._beat.color:
+        #     default_color = blended_color_with_alpha(self._beat.color, alpha=155)
+        #     self._bgColor = QColor(default_color)
+        #     self._hoveredBgColor = QColor(blended_color_with_alpha(self._beat.color, alpha=175))
+        #     self._selectedColor = QColor(blended_color_with_alpha(self._beat.color, alpha=255))
+        #     self._hoveredSelectedColor = QColor(blended_color_with_alpha(self._beat.color, alpha=235))
+        # else:
         self._bgColor = QColor(RELAXED_WHITE_COLOR)
         self._hoveredBgColor = QColor(stronger_color(RELAXED_WHITE_COLOR, factor=0.99))
-        self._selectedColor = QColor(PLOTLYST_TERTIARY_COLOR)
-        self._hoveredSelectedColor = QColor(stronger_color(PLOTLYST_TERTIARY_COLOR, factor=0.99))
+        if self._beat.color:
+            self._selectedColor = QColor(blended_color_with_alpha(self._beat.color, alpha=155))
+            self._hoveredSelectedColor = QColor(blended_color_with_alpha(self._beat.color, alpha=175))
+        else:
+            self._selectedColor = QColor(PLOTLYST_TERTIARY_COLOR)
+            self._hoveredSelectedColor = QColor(stronger_color(PLOTLYST_TERTIARY_COLOR, factor=0.99))
         self._hovered: bool = False
 
         self._font = QApplication.font()
@@ -68,6 +83,22 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
 
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
         self.setAcceptHoverEvents(True)
+
+        self._iconSize = 80
+        # self._iconRectSize = self._iconSize + 2 * IconItem.Margin
+        self._iconRectSize = self._iconSize
+        self._iconItem = IconBadge(self, self._iconSize)
+        self._iconItem.setFlag(self._iconItem.flags() | QGraphicsItem.GraphicsItemFlag.ItemIsMovable)
+        if self._beat.icon:
+            self._iconItem.setIcon(IconRegistry.from_name(self._beat.icon, self._beat.color), QColor(self._beat.color))
+            self._iconItem.setPos(self.OFFSET // 2, -(self._iconRectSize - self._timelineHeight) // 2)
+        # self._iconItem = IconItem(
+        #     Node(self.OFFSET // 2, -(self._iconRectSize - self._timelineHeight) // 2, GraphicsItemType.ICON,
+        #          size=self._iconSize,
+        #          icon=self._beat.icon, color=RELAXED_WHITE_COLOR), self)
+
+        if not self._beat.icon:
+            self._iconItem.setVisible(False)
 
         if self._globalAngle >= -45:
             self.setRotation(-self._globalAngle)
@@ -96,11 +127,11 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
         # draw_bounding_rect(painter, self, self._beat.color)
         # draw_point(painter, self._localCpPoint, self._beat.color, 12)
 
-    @overrides
-    def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
-        if change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
-            self._onSelection(value)
-        return super().itemChange(change, value)
+    # @overrides
+    # def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
+    #     if change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
+    #         self._onSelection(value)
+    #     return super().itemChange(change, value)
 
     @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
@@ -129,17 +160,8 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
     def _draw(self, painter: QPainter):
         pass
 
-    def _onSelection(self, selected: bool):
-        if selected:
-            shadow(self, offset=0, radius=10, color=PLOTLYST_SECONDARY_COLOR, alpha=175)
-        else:
-            shadow(self, offset=0, radius=8, color='black', alpha=175)
-
-    def _shadow(self, radius: int = 8, alpha=175):
-        if self.isSelected():
-            shadow(self, offset=0, radius=radius, color=PLOTLYST_SECONDARY_COLOR, alpha=alpha)
-        else:
-            shadow(self, offset=0, radius=radius, color='black', alpha=alpha)
+    def _shadow(self, radius: int = 25):
+        shadow(self, offset=0, radius=radius, color=self._beat.color, alpha=225)
 
 
 class StraightOutlineItem(OutlineItemBase):
@@ -576,12 +598,13 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         self._novel = novel
         self._globalAngle = self.DEFAULT_ANGLE
 
-        item = StraightOutlineItem(SceneBeat(text='1', width=50, spacing=17), self._globalAngle)
+        item = StraightOutlineItem(SceneBeat(text='Goal', width=150, spacing=17, icon='mdi.target', color='darkBlue'),
+                                   self._globalAngle)
         item.setPos(0, -100)
         self.addItem(item)
 
-        item = self.addNewItem(SceneBeat(text='2', width=135, color='blue'), item)
-        item = self.addNewItem(SceneBeat(text='Falling', angle=-45, color='green'), item)
+        item = self.addNewItem(SceneBeat(text='2', width=135), item)
+        item = self.addNewItem(SceneBeat(text='Setback', angle=-45, color='#FD4D21'), item)
         item = self.addNewItem(SceneBeat('3/a'), item)
         item = self.addNewItem(SceneBeat('Falling action'), item)
         # item = self.addNewItem(SceneBeat(text='Rising', angle=45, color='green'), item)
@@ -594,18 +617,19 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         item = StraightOutlineItem(SceneBeat(text='Other item', width=50, spacing=17), self._globalAngle)
         item.setPos(0, 100)
         self.addItem(item)
-        item = self.addNewItem(SceneBeat(text='2', width=135, color='blue'), item)
-        item = self.addNewItem(SceneBeat(text='Rising', angle=45, color='green'), item)
+        item = self.addNewItem(SceneBeat(text='Conflict', width=135, icon='mdi.sword-cross', color='#f3a712'), item)
+        item = self.addNewItem(SceneBeat(text='Rising', angle=45, color='#08605f'), item)
         item = self.addNewItem(SceneBeat('3'), item)
         # item = self.addNewItem(SceneBeat(text='Falling', angle=-45, color='green'), item)
         # item = self.addNewItem(SceneBeat(text='Falling', angle=-45, color='green'), item)
         # item = self.addNewItem(SceneBeat('4'), item)
         # item = self.addNewItem(SceneBeat('5'), item)
-        item = self.addNewItem(SceneBeat(text='Curved', width=100, angle=-180, color='green'), item)
+        item = self.addNewItem(
+            SceneBeat(text='Inciting', width=100, icon='mdi.bell-alert-outline', color='#a2ad59'), item)
         item = self.addNewItem(SceneBeat('6', width=30), item)
-        item = self.addNewItem(SceneBeat(text='Curved 2', width=100, angle=-180, color='green'), item)
+        item = self.addNewItem(SceneBeat(text='Rising 2', width=100, angle=-180, color='#08605f'), item)
         item = self.addNewItem(SceneBeat('7', width=30), item)
-        item = self.addNewItem(SceneBeat(text='Curved 3', width=100, angle=-180, color='green'), item)
+        item = self.addNewItem(SceneBeat(text='Rising 3', width=100, angle=-180, color='#08605f'), item)
 
     def addNewItem(self, beat: SceneBeat, previous: OutlineItemBase) -> OutlineItemBase:
         if beat.angle == 0:
@@ -628,6 +652,17 @@ class SceneStructureGraphicsScene(QGraphicsScene):
 
         return item
 
+    def linkMode(self) -> bool:
+        return False
+
+    def startLink(self, source: AbstractSocketItem):
+        pass
+
+    def editItemEvent(self, item: Node):
+        pass
+
+    def itemMovedEvent(self, item: NodeItem):
+        pass
 
 class SceneStructureView(BaseGraphicsView):
     def __init__(self, parent=None):
