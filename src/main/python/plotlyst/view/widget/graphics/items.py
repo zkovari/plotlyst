@@ -227,9 +227,9 @@ class LabelItem(QAbstractGraphicsShapeItem):
 
 
 class IconBadge(QAbstractGraphicsShapeItem):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, size: int = 32):
         super().__init__(parent)
-        self._size: int = 32
+        self._size: int = size
         self._icon: Optional[QIcon] = None
         self._color: QColor = QColor('black')
 
