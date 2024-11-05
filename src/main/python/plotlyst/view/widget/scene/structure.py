@@ -28,13 +28,12 @@ from PyQt6.QtWidgets import QGraphicsScene, QAbstractGraphicsShapeItem, QWidget,
 from overrides import overrides
 
 from plotlyst.common import PLOTLYST_TERTIARY_COLOR, RELAXED_WHITE_COLOR
-from plotlyst.core.domain import Novel, Node
+from plotlyst.core.domain import Novel, Node, GraphicsItemType
 from plotlyst.view.common import spawn, shadow, stronger_color, blended_color_with_alpha
-from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.theme import BG_MUTED_COLOR
 from plotlyst.view.widget.graphics import BaseGraphicsView
 from plotlyst.view.widget.graphics.editor import ZoomBar
-from plotlyst.view.widget.graphics.items import AbstractSocketItem, NodeItem, IconBadge
+from plotlyst.view.widget.graphics.items import AbstractSocketItem, NodeItem, IconItem
 
 
 @dataclass
@@ -76,26 +75,20 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
         self._hovered: bool = False
 
         self._font = QApplication.font()
-        self._font.setPointSize(16)
+        self._font.setPointSize(18)
 
         self._localCpPoint = QPointF(0, 0)
+        self._iconSize = 60
+        self._iconRectSize = self._iconSize + 2 * IconItem.Margin
+        self._iconItem = IconItem(
+            Node(self.OFFSET // 2, -(self._iconRectSize - self._timelineHeight) // 2, GraphicsItemType.ICON,
+                 size=self._iconSize,
+                 icon=self._beat.icon, color=self._beat.color), self)
+
         self._calculateShape()
 
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
         self.setAcceptHoverEvents(True)
-
-        self._iconSize = 80
-        # self._iconRectSize = self._iconSize + 2 * IconItem.Margin
-        self._iconRectSize = self._iconSize
-        self._iconItem = IconBadge(self, self._iconSize)
-        self._iconItem.setFlag(self._iconItem.flags() | QGraphicsItem.GraphicsItemFlag.ItemIsMovable)
-        if self._beat.icon:
-            self._iconItem.setIcon(IconRegistry.from_name(self._beat.icon, self._beat.color), QColor(self._beat.color))
-            self._iconItem.setPos(self.OFFSET // 2, -(self._iconRectSize - self._timelineHeight) // 2)
-        # self._iconItem = IconItem(
-        #     Node(self.OFFSET // 2, -(self._iconRectSize - self._timelineHeight) // 2, GraphicsItemType.ICON,
-        #          size=self._iconSize,
-        #          icon=self._beat.icon, color=RELAXED_WHITE_COLOR), self)
 
         if not self._beat.icon:
             self._iconItem.setVisible(False)
@@ -161,7 +154,7 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
         pass
 
     def _shadow(self, radius: int = 25):
-        shadow(self, offset=0, radius=radius, color=self._beat.color, alpha=225)
+        shadow(self, offset=0, radius=radius, color=self._beat.color)
 
 
 class StraightOutlineItem(OutlineItemBase):
@@ -196,7 +189,7 @@ class StraightOutlineItem(OutlineItemBase):
 
     @overrides
     def _calculateShape(self):
-        self._width = self._beat.width + self.OFFSET * 2
+        self._width = self._beat.width + self.OFFSET * 2 + self._iconRectSize
         self._height = self._timelineHeight
 
         if self._globalAngle >= 0:
@@ -598,7 +591,7 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         self._novel = novel
         self._globalAngle = self.DEFAULT_ANGLE
 
-        item = StraightOutlineItem(SceneBeat(text='Goal', width=150, spacing=17, icon='mdi.target', color='darkBlue'),
+        item = StraightOutlineItem(SceneBeat(text='Goal', width=120, spacing=17, icon='mdi.target', color='darkBlue'),
                                    self._globalAngle)
         item.setPos(0, -100)
         self.addItem(item)
@@ -628,7 +621,7 @@ class SceneStructureGraphicsScene(QGraphicsScene):
             SceneBeat(text='Inciting', width=100, icon='mdi.bell-alert-outline', color='#a2ad59'), item)
         item = self.addNewItem(SceneBeat('6', width=30), item)
         item = self.addNewItem(SceneBeat(text='Rising 2', width=100, angle=-180, color='#08605f'), item)
-        item = self.addNewItem(SceneBeat('7', width=30), item)
+        item = self.addNewItem(SceneBeat('7', width=30, icon='fa5s.map-signs', color='#ba6f4d'), item)
         item = self.addNewItem(SceneBeat(text='Rising 3', width=100, angle=-180, color='#08605f'), item)
 
     def addNewItem(self, beat: SceneBeat, previous: OutlineItemBase) -> OutlineItemBase:
