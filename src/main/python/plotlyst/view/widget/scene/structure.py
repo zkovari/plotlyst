@@ -33,7 +33,7 @@ from plotlyst.view.common import spawn, shadow, stronger_color, blended_color_wi
 from plotlyst.view.style.theme import BG_MUTED_COLOR
 from plotlyst.view.widget.graphics import BaseGraphicsView
 from plotlyst.view.widget.graphics.editor import ZoomBar
-from plotlyst.view.widget.graphics.items import AbstractSocketItem, NodeItem, IconItem
+from plotlyst.view.widget.graphics.items import AbstractSocketItem, NodeItem, IconItem, draw_bounding_rect, draw_point
 
 
 @dataclass
@@ -116,8 +116,8 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
         painter.setBrush(qcolor)
 
         self._draw(painter)
-        # draw_bounding_rect(painter, self, self._beat.color)
-        # draw_point(painter, self._localCpPoint, self._beat.color, 12)
+        draw_bounding_rect(painter, self, self._beat.color)
+        draw_point(painter, self._localCpPoint, self._beat.color, 12)
 
     # @overrides
     # def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
@@ -456,6 +456,8 @@ class RisingOutlineItem(OutlineItemBase):
     def _calculateConnectionPoint(self):
         if self._globalAngle >= 0:
             self._localCpPoint = QPointF(self._width - self._timelineHeight // 2 + 5, -24)
+        else:
+            self._localCpPoint = QPointF(self._width - 34, -self._timelineHeight // 2 + 15)
 
     @overrides
     def _draw(self, painter: QPainter):
@@ -606,7 +608,7 @@ class SceneStructureGraphicsScene(QGraphicsScene):
         item = self.addNewItem(SceneBeat(text='Setback', angle=-45, color='#FD4D21', icon='mdi.chemical-weapon'), item)
         # item = self.addNewItem(SceneBeat('3/a'), item)
         item = self.addNewItem(SceneBeat('Progress', angle=45, icon='mdi6.progress-upload'), item)
-        # item = self.addNewItem(SceneBeat(text='U-turn', angle=-180), item)
+        item = self.addNewItem(SceneBeat(text='U-turn', angle=-180), item)
         # item = self.addNewItem(SceneBeat(text='Falling', angle=-45, color='green'), item)
 
         self._drawBottom()
