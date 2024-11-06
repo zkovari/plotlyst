@@ -486,14 +486,16 @@ class RisingOutlineItem(OutlineItemBase):
     @overrides
     def _draw(self, painter: QPainter):
         self._drawBeginning(painter)
-        self._drawEnding(painter)
 
+        painter.save()
         pen = painter.pen()
         pen.setWidth(self._timelineHeight)
         painter.setPen(pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
         self._drawCurve(painter)
+        painter.restore()
 
+        self._drawEnding(painter)
         # draw_point(painter, self._topShapePos, 'red', 10)
 
     def _drawCurve(self, painter):
@@ -719,6 +721,7 @@ class SceneStructureView(NetworkGraphicsView):
 
         # TODO remove later
         self.setMinimumSize(1600, 800)
+        self._scale(-0.4)
 
     @overrides
     def _initScene(self) -> NetworkScene:
