@@ -656,8 +656,7 @@ class SceneStructureGraphicsScene(NetworkScene):
         item = self.addNewItem(SceneBeat(text='Rising 3', width=100, angle=-180, color='#08605f'), item)
 
         self._lastItem = item
-
-        self._addPlaceholders(item)
+        self._addPlaceholders(self._lastItem)
 
     def addNewItem(self, beat: SceneBeat, previous: OutlineItemBase) -> OutlineItemBase:
         item = self._initOutlineItem(beat)
@@ -676,10 +675,14 @@ class SceneStructureGraphicsScene(NetworkScene):
         newItem = self.addNewItem(SceneBeat('Beat', angle=placeholder.item().angle), self._lastItem)
         self._lastItem = newItem
 
-        for placeholderItem in self._placeholders:
-            placeholderItem.adjustTo(newItem)
+        self._addPlaceholders(self._lastItem)
 
     def _addPlaceholders(self, last: OutlineItemBase):
+        for placeholder in self._placeholders:
+            self.removeItem(placeholder)
+
+        self._placeholders.clear()
+
         placeholders = [
             SceneBeat('Add new turning item', angle=-180),
             SceneBeat('Add new rising item', angle=45),
