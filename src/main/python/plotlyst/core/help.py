@@ -183,28 +183,27 @@ Not every tool needs to be used right away. Several features prove most benefici
 character_roles_description: Dict[Role, str] = {
     protagonist_role: """
     The central character around whom the story revolves.
-    <br>They typically undergo personal growth, development, or transformation by the story's conclusion.
     <p>Protagonists often drive the narrative and face significant challenges, having the most at stake.
+    <br>They may undergo personal growth, development, or transformation by the end of the story.
     <p>Note that the protagonist may not always have a point of view.
     """,
     antagonist_role: """
-    The character who opposes the protagonist most, creating a central conflict in the story.
-    <p>While often referred to as the villain, the antagonist is not necessarily an evil character.
-    <p>Their opposition serves as a catalyst for the story's conflict, and they may have complex motives or goals that drive their actions.
+    The character who opposes the protagonist most, often creating the central conflict in the story.
+    <p>While often referred to as the villain, the antagonist is not necessarily an evil or immoral character. They may have complex motives or goals that drive their actions.
     """,
     major_role: """
-    Central character who plays a significant role in impacting the story.<br>They might undergo character development and changes themselves.
+    Central character who plays a significant role in impacting the story.<br>They might undergo character development and growth themselves.
     <p>For major but more specific roles see protagonist and antagonist.
     """,
-    secondary_role: """Important characters contributing to the story and major character development.
-    <br>They may have their own subplots and character development but aren't the primary focus.
+    secondary_role: """An important character who contributes to the story and possibly to the protagonist's character development.
+    <br>They may have their own subplots and character arcs but they are not the primary focus.
     <p>Subcategories include sidekick, love interest, guide, supporter/adversary, and contagonist.
     <p>If promoted, they become the deuteragonist - the second most important character role.
     """,
     tertiary_role: """
     Minor characters with limited appearance and impact in the story.
-    <br>They may still serve specific functions such as providing information, kickstarting a plot, acting as red herrings, or enhancing the setting and atmosphere.
-    <p>For special, antagonistic tertiary characters, see hecklers.
+    <br>They may still serve specific functions such as providing information, setting the plot in motion, acting as red herrings, or enhancing the setting and atmosphere.
+    <p>For special, adversary tertiary characters, see hecklers.
     """,
 
     love_interest_role: """
@@ -216,11 +215,11 @@ character_roles_description: Dict[Role, str] = {
     adversary_role: """
     Characters who oppose the protagonist. While not as central as the antagonist, they still present challenges and tension to the protagonist.
     <p>For a more formidable opposition, see contagonist.
-    <p>For lesser, minor, adversaries, consider hecklers.
+    <p>For lesser, minor adversaries, consider hecklers.
     """,
 
     supporter_role: """
-    A secondary character type providing support to the protagonist in their journey. They may not fit into more specialized roles like guide, sidekick, or confidant, but they are considered allies.
+    A secondary character type who provides support to the protagonist in their journey. They may not fit into more specialized roles like guide, sidekick, or confidant, but they are considered allies.
     <p>Subcategories: Sidekick, Confidant, Guide
     """,
     guide_role: """
@@ -234,23 +233,23 @@ character_roles_description: Dict[Role, str] = {
     """,
     sidekick_role: """
     A loyal companion and supporter to the protagonist, actively participating in their adventures.
-    <p>May have a strong, dynamic relationship with the protagonist, often bringing unique skills or qualities that complement the protagonist's abilities.
+    <p>They may have a strong, dynamic relationship with the protagonist, often bringing unique skills or qualities that complement the protagonist's abilities.
     """,
 
     contagonist_role: """
     An adversary role who works against the protagonist. Unlike the antagonist, the contagonist may have a more ambiguous or conflicted role.
     <p>Contagonists often possess a mix of qualities aligning with both the protagonist and antagonist.
     <p>They may, at times, assist the protagonist and, at other times, hinder their progress. This ambivalence adds complexity to their character, challenging the protagonist in unexpected ways.
-    <p>They might unite with the antagonist, even if their goals differ.
+    <p>They may be willing to unite with the antagonist, even if their goals differ.
     """,
 
     foil_role: """
     A mirror character who contrasts with the protagonist, highlighting specific traits, values, or beliefs.
     <br>The foil serves to emphasize differences, offering a profound understanding of the main character's qualities.
-    <p>It contributes to character development, thematic exploration, and enhances the overall complexity of the narrative.
+    <p>It can contribute to character development or thematic exploration.
     """,
     henchmen_role: """
-    Minor adversary characters who subtly obstruct or challenge the protagonist without being the primary focus.
+    Minor adversary characters who subtly obstruct or challenge the protagonist.
     <p>Their role is to introduce layers of opposition and complexity to the story, providing the protagonist with smaller challenges to overcome.
     """
 }
