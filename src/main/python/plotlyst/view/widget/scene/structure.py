@@ -30,7 +30,7 @@ from qthandy import pointy
 
 from plotlyst.common import PLOTLYST_TERTIARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, Node, GraphicsItemType
-from plotlyst.view.common import shadow, stronger_color, blended_color_with_alpha
+from plotlyst.view.common import shadow, stronger_color, blended_color_with_alpha, spawn
 from plotlyst.view.style.theme import BG_MUTED_COLOR
 from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene
 from plotlyst.view.widget.graphics.editor import ConnectorToolbar
@@ -630,10 +630,8 @@ class SceneStructureGraphicsScene(NetworkScene):
 
         item = self.addNewItem(SceneBeat(text='2', width=135), item)
         item = self.addNewItem(SceneBeat(text='Setback', angle=-45, color='#FD4D21', icon='mdi.chemical-weapon'), item)
-        # item = self.addNewItem(SceneBeat('3/a'), item)
         item = self.addNewItem(SceneBeat('Progress', angle=45, icon='mdi6.progress-upload'), item)
         item = self.addNewItem(SceneBeat(text='U-turn', angle=-180), item)
-        # item = self.addNewItem(SceneBeat(text='Falling', angle=-45, color='green'), item)
 
         self._lastItem = item
         self._placeholders: List[OutlineItemBase] = []
@@ -697,6 +695,12 @@ class SceneStructureGraphicsScene(NetworkScene):
             self._placeholders.append(item)
             item.adjustTo(last)
             self.addItem(item)
+
+    @overrides
+    def _removeItem(self, item: QGraphicsItem):
+        if isinstance(item, OutlineItemBase):
+            self.removeItem(item)
+            item.update()
 
     def _initOutlineItem(self, beat: SceneBeat, placeholder: bool = False):
         if beat.angle == 0:
