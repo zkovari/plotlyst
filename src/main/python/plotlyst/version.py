@@ -18,5 +18,5 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-plotlyst_product_version = '0.1.2'
+plotlyst_product_version = '0.1.3'
 plotlyst_display_version = '2024.11'

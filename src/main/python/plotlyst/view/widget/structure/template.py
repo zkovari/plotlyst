@@ -599,34 +599,33 @@ class _TwistsAndTurnsStructureEditor(_AbstractStructureEditor):
 
         self.wdgButtons = QWidget()
         hbox(self.wdgButtons, spacing=10)
-        self.btnTwist = self.__initButton(twist_beat, 'Add a new Twist')
-        self.btnTurn = self.__initButton(turn_beat, 'Add a new Turn')
-        self.btnDanger = self.__initButton(danger_beat, 'Add a new Danger moment')
-        # self.btnTurn = push_btn(IconRegistry.from_name('mdi.sign-direction', '#8338ec'), 'Add a new Turn',
-        #                         transparent_=True)
-        # self.btnTurn.installEventFilter(OpacityEventFilter(self.btnTurn, leaveOpacity=0.7))
-        # self.btnDanger = push_btn(IconRegistry.from_name('ei.fire', '#f4a261'), 'Add a new Danger moment',
-        #                           transparent_=True)
-        # self.btnDanger.installEventFilter(OpacityEventFilter(self.btnDanger, leaveOpacity=0.7))
+        self.btnTwist = self.__initButton(twist_beat, 'Track twists')
+        self.btnTurn = self.__initButton(turn_beat, 'Turning points')
+        self.btnDanger = self.__initButton(danger_beat, 'And danger moments')
+        if not structure.beats:
+            self._addBeat(turn_beat, 10)
+            self._addBeat(danger_beat, 33)
+            self._addBeat(twist_beat, 50)
+
         self.wdgButtons.layout().addWidget(self.btnTwist)
         self.wdgButtons.layout().addWidget(self.btnTurn)
         self.wdgButtons.layout().addWidget(self.btnDanger)
         self.wdgCustom.layout().addWidget(self.wdgButtons, alignment=Qt.AlignmentFlag.AlignCenter)
 
-    def _clicked(self, beat: StoryBeat):
+    def _addBeat(self, beat: StoryBeat, percentage: float):
         copied_beat = copy_beat(beat)
+        copied_beat.percentage = percentage
         self._structure.beats.append(copied_beat)
         self.wdgPreview.setStructure(self._novel, self._structure)
         self.beatsPreview.setStructure(self._structure)
 
     def __initButton(self, beat: StoryBeat, text: str) -> QPushButton:
-        btn = push_btn(IconRegistry.from_name(beat.icon, beat.icon_color), text,
-                       transparent_=True)
+        btn = push_btn(IconRegistry.from_name(beat.icon, beat.icon_color), text, transparent_=True, pointy_=False,
+                       icon_resize=False)
         btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.7))
         bold(btn)
         incr_icon(btn, 6)
         incr_font(btn, 2)
-        btn.clicked.connect(partial(self._clicked, beat))
 
         return btn
 
