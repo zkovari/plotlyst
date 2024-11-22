@@ -21,18 +21,22 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Optional, Any, List
 
-from PyQt6.QtCore import QRectF, QPointF, Qt
-from PyQt6.QtGui import QColor, QPainter, QPainterPath, QPen, QTransform, QPolygonF, QUndoStack
+import qtanim
+from PyQt6.QtCore import QRectF, QPointF, Qt, pyqtSignal
+from PyQt6.QtGui import QColor, QPainter, QPainterPath, QPen, QTransform, QPolygonF, QUndoStack, QAction
 from PyQt6.QtWidgets import QAbstractGraphicsShapeItem, QWidget, QGraphicsItem, QGraphicsPolygonItem, \
-    QApplication, QGraphicsSceneMouseEvent
+    QApplication, QGraphicsSceneMouseEvent, QLineEdit
 from overrides import overrides
-from qthandy import pointy
+from qthandy import pointy, vline
+from qtmenu import MenuWidget, GridMenuWidget, ActionTooltipDisplayMode
 
 from plotlyst.common import PLOTLYST_TERTIARY_COLOR, RELAXED_WHITE_COLOR
-from plotlyst.core.domain import Novel, Node, GraphicsItemType
-from plotlyst.view.common import shadow, stronger_color, blended_color_with_alpha, spawn
+from plotlyst.core.domain import Novel, Node, GraphicsItemType, StoryElementType
+from plotlyst.view.common import shadow, stronger_color, blended_color_with_alpha, spawn, tool_btn, action
+from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.theme import BG_MUTED_COLOR
 from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene
+from plotlyst.view.widget.graphics.commands import TextEditingCommand, GraphicsItemCommand
 from plotlyst.view.widget.graphics.editor import ConnectorToolbar, PaintedItemBasedToolbar
 from plotlyst.view.widget.graphics.items import IconItem
 
@@ -60,6 +64,7 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
         self._width = 0
         self._height = 0
         self._timelineHeight = 86
+        self._glowAnim = None
 
         self._bgColor = QColor(RELAXED_WHITE_COLOR)
         self._hoveredBgColor = QColor(stronger_color(RELAXED_WHITE_COLOR, factor=0.99))
@@ -119,6 +124,21 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
 
     def color(self) -> QColor:
         return QColor(self._beat.color)
+
+    def setType(self, type_: StoryElementType):
+        self._beat.text = type_.displayed_name()
+        self._beat.icon = type_.icon()
+        self._beat.color = type_.color()
+
+        self._selectedColor = QColor(blended_color_with_alpha(self._beat.color, alpha=155))
+        self._hoveredSelectedColor = QColor(blended_color_with_alpha(self._beat.color, alpha=175))
+
+        self._iconItem.setIcon(self._beat.icon)
+        self._iconItem.setColor(QColor(self._beat.color))
+        self._iconItem.setVisible(True)
+
+        self.update()
+        self._glowAnim = qtanim.glow(self, color=QColor(self._beat.color), radius=15, teardown=self._shadow)
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
@@ -708,6 +728,10 @@ class SceneStructureGraphicsScene(NetworkScene):
             self.removeItem(item)
             item.update()
 
+    @overrides
+    def _addNewDefaultItem(self, pos: QPointF):
+        pass
+
     def _initOutlineItem(self, beat: SceneBeat, placeholder: bool = False):
         if beat.angle == 0:
             item = StraightOutlineItem(beat, self._globalAngle, placeholder=placeholder)
@@ -720,17 +744,111 @@ class SceneStructureGraphicsScene(NetworkScene):
         return item
 
 
+class BeatSelectorMenu(GridMenuWidget):
+    selected = pyqtSignal(StoryElementType)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+
+        # self._actions: Dict[SceneStructureItemType, QAction] = {}
+        # self._outcomeEnabled: bool = True
+
+        # self._tabDrive = self.addTab('Drive', IconRegistry.action_scene_icon())
+        self.addSection('Drive', 0, 0, colSpan=3, icon=IconRegistry.action_scene_icon())
+        self.addSeparator(1, 0, colSpan=3)
+        self.addSeparator(2, 1, rowSpan=4, vertical=True)
+        self._addAction(StoryElementType.Goal, 'Character takes an action to achieve their goal', 2, 0)
+        self._addAction(StoryElementType.Conflict, "Conflict hinders the character's goals", 3, 0)
+        self._addAction(StoryElementType.Choice, "Impossible choice between two equally good or bad outcomes", 4, 0)
+        self._addAction(StoryElementType.False_victory,
+                        'A deceptive false victory moment that leads to a disaster outcome', 5, 0)
+        self._addAction(StoryElementType.Climax, 'Outcome of the scene, typically ending with disaster', 6, 0)
+
+        self._addAction(StoryElementType.Hook, "Initial hook to raise readers' curiosity", 2, 2)
+        self._addAction(StoryElementType.Disturbance, "Introduces conflict or tension that sets the scene in motion", 3,
+                        2)
+        self._addAction(StoryElementType.Inciting_incident, "Triggers events in this scene", 4, 2)
+        self._addAction(StoryElementType.Buildup, "Escalates tension or anticipation leading toward a climactic moment",
+                        5, 2)
+
+        self.addSection('Reaction', 7, 0, colSpan=3, icon=IconRegistry.reaction_scene_icon())
+        self.addSeparator(8, 0, colSpan=3)
+        self._addAction(StoryElementType.Reaction, "Initial reaction to a prior scene's outcome", 9, 0)
+        self._addAction(StoryElementType.Dilemma, "Dilemma throughout the scene. What to do next?", 9, 2)
+        self._addAction(StoryElementType.Decision, "Character makes a decision and may act right away", 10, 0)
+        # self.addSection(self._tabReaction, 'Common reaction beats', 0, 0)
+        # self.addSeparator(self._tabReaction, 1, 0)
+        # self._addAction(self._tabReaction, 'Reaction', SceneStructureItemType.REACTION, 2, 0)
+        # actionEmotion = self._addAction(self._tabReaction, 'Emotion', SceneStructureItemType.EMOTION, 3, 0)
+        # actionEmotion.setDisabled(True)
+        # actionEmotion.setToolTip('This feature is not available yet')
+        # self._addAction(self._tabReaction, 'Dilemma', SceneStructureItemType.DILEMMA, 4, 0)
+        # self._addAction(self._tabReaction, 'Decision', SceneStructureItemType.DECISION, 5, 0)
+        # self.addWidget(self._tabReaction, vspacer(), 6, 0)
+
+        # self.addSection(self._tabGeneral, 'General beats', 0, 0)
+        # self.addSeparator(self._tabGeneral, 1, 0, colSpan=2)
+        # self._addAction(self._tabGeneral, 'Beat', SceneStructureItemType.BEAT, 2, 0)
+        # self._addAction(self._tabGeneral, 'Exposition', SceneStructureItemType.EXPOSITION, 3, 0)
+        # self._addAction(self._tabGeneral, 'Summary', SceneStructureItemType.SUMMARY, 4, 0)
+        # self._addAction(self._tabGeneral, 'Setup', SceneStructureItemType.SETUP, 5, 0)
+        # self._addAction(self._tabGeneral, 'Resolution', SceneStructureItemType.RESOLUTION, 2, 1)
+        # self.addWidget(self._tabGeneral, vspacer(), 6, 0)
+
+    def _addAction(self, beat_type: StoryElementType, description: str, row: int, column: int) -> QAction:
+        action_ = action(beat_type.displayed_name(), IconRegistry.from_name(beat_type.icon(), beat_type.color()),
+                         slot=lambda: self.selected.emit(beat_type), tooltip=description)
+        self.addAction(action_, row, column)
+
+        return action_
+
+    # def setOutcomeEnabled(self, enabled: bool):
+    #     self._outcomeEnabled = enabled
+    #     self._actions[SceneStructureItemType.CLIMAX].setEnabled(enabled)
+
+
 class OutlineItemToolbar(PaintedItemBasedToolbar):
     def __init__(self, undoStack: QUndoStack, parent=None):
         super().__init__(undoStack, parent)
 
+        self._btnType = tool_btn(IconRegistry.action_scene_icon(), 'Change beat type', transparent_=True)
+        menu = BeatSelectorMenu(self._btnType)
+        menu.selected.connect(self._typeChanged)
+
+        self._btnText = tool_btn(IconRegistry.from_name('mdi.format-text'), 'Change displayed text', transparent_=True)
+        self._menuText = MenuWidget(self._btnText)
+        self._textLineEdit = QLineEdit()
+        self._textLineEdit.setPlaceholderText('Beat')
+        self._textLineEdit.setClearButtonEnabled(True)
+        self._textLineEdit.textEdited.connect(self._textEdited)
+        self._menuText.addWidget(self._textLineEdit)
+        self._menuText.aboutToShow.connect(self._textLineEdit.setFocus)
+
+        self._toolbar.layout().addWidget(self._btnType)
+        self._toolbar.layout().addWidget(vline())
         self._toolbar.layout().addWidget(self._btnColor)
         self._toolbar.layout().addWidget(self._btnIcon)
+        self._toolbar.layout().addWidget(self._btnText)
 
     @overrides
     def setItem(self, item: OutlineItemBase):
         super().setItem(item)
         self._item = None
+
+        self._textLineEdit.setText(item.item().text)
+
+        self._item = item
+
+    def _textEdited(self):
+        if self._item:
+            self.undoStack.push(TextEditingCommand(self._item, self._textLineEdit.text()))
+
+    def _typeChanged(self, type_: StoryElementType):
+        if self._item:
+            command = GraphicsItemCommand(self._item, self._item.setType,
+                                          self._item.type(), type_)
+            self.undoStack.push(command)
 
 
 @spawn

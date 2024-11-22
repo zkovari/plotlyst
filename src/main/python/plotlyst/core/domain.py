@@ -1797,6 +1797,14 @@ class StoryElementType(Enum):
     Delayed_effect = 'delayed_effect'
     Thematic_effect = 'thematic_effect'
 
+    Hook = 'hook'
+    Disturbance = 'disturbance'
+    Inciting_incident = 'inciting_incident'
+    Buildup = 'buildup'
+    Climax = 'climax'
+    False_victory = 'false_victory'
+    Reaction = 'reaction'
+
     def displayed_name(self) -> str:
         if self == StoryElementType.Character_state:
             return 'External state'
@@ -1806,6 +1814,8 @@ class StoryElementType(Enum):
             return 'External change'
         if self == StoryElementType.Character_internal_state_change:
             return 'Internal change'
+        if self == StoryElementType.Buildup:
+            return 'Build-up'
         return self.value.capitalize().replace('_', ' ')
 
     def icon(self) -> str:
@@ -1841,6 +1851,28 @@ class StoryElementType(Enum):
             return 'fa5.lightbulb'
         elif self == StoryElementType.Motivation:
             return 'fa5s.fist-raised'
+        elif self == StoryElementType.Hook:
+            return 'mdi.hook'
+        elif self == StoryElementType.Disturbance:
+            return 'mdi.chemical-weapon'
+        elif self == StoryElementType.Inciting_incident:
+            return 'mdi.bell-alert-outline'
+        elif self == StoryElementType.Buildup:
+            return 'mdi6.progress-upload'
+        elif self == StoryElementType.Climax:
+            return 'fa5s.bomb'
+        elif self == StoryElementType.False_victory:
+            return 'mdi.trophy-broken'
+        elif self == StoryElementType.Reaction:
+            return 'fa5s.shield-alt'
+
+        return 'mdi.lightning-bolt-outline'
+
+    def color(self) -> str:
+        if self == StoryElementType.Goal:
+            return 'darkBlue'
+
+        return 'black'
 
     def placeholder(self) -> str:
         if self == StoryElementType.Goal:
