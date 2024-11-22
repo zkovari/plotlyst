@@ -133,6 +133,7 @@ class DocumentsView(AbstractNovelView):
         self._clear_text_editor()
 
         self.textEditor = DocumentTextEditor(self.ui.docEditorPage)
+        self.textEditor.textEdit.setBlockPlaceholderEnabled(True)
         margins(self.textEditor, top=50, right=10)
         self.ui.docEditorPage.layout().addWidget(self.textEditor)
 
