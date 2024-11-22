@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from typing import Optional, Any, List
 
 from PyQt6.QtCore import QRectF, QPointF, Qt
-from PyQt6.QtGui import QColor, QPainter, QPainterPath, QPen, QTransform, QPolygonF
+from PyQt6.QtGui import QColor, QPainter, QPainterPath, QPen, QTransform, QPolygonF, QUndoStack
 from PyQt6.QtWidgets import QAbstractGraphicsShapeItem, QWidget, QGraphicsItem, QGraphicsPolygonItem, \
     QApplication, QGraphicsSceneMouseEvent
 from overrides import overrides
@@ -33,7 +33,7 @@ from plotlyst.core.domain import Novel, Node, GraphicsItemType
 from plotlyst.view.common import shadow, stronger_color, blended_color_with_alpha, spawn
 from plotlyst.view.style.theme import BG_MUTED_COLOR
 from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene
-from plotlyst.view.widget.graphics.editor import ConnectorToolbar
+from plotlyst.view.widget.graphics.editor import ConnectorToolbar, PaintedItemBasedToolbar
 from plotlyst.view.widget.graphics.items import IconItem
 
 
@@ -113,6 +113,12 @@ class OutlineItemBase(QAbstractGraphicsShapeItem):
     @overrides
     def boundingRect(self) -> QRectF:
         return QRectF(0, 0, self._width, self._height)
+
+    def icon(self) -> Optional[str]:
+        return self._beat.icon
+
+    def color(self) -> QColor:
+        return QColor(self._beat.color)
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
@@ -714,6 +720,20 @@ class SceneStructureGraphicsScene(NetworkScene):
         return item
 
 
+class OutlineItemToolbar(PaintedItemBasedToolbar):
+    def __init__(self, undoStack: QUndoStack, parent=None):
+        super().__init__(undoStack, parent)
+
+        self._toolbar.layout().addWidget(self._btnColor)
+        self._toolbar.layout().addWidget(self._btnIcon)
+
+    @overrides
+    def setItem(self, item: OutlineItemBase):
+        super().setItem(item)
+        self._item = None
+
+
+@spawn
 class SceneStructureView(NetworkGraphicsView):
     def __init__(self, parent=None):
         self._novel = Novel('My novel')
@@ -722,6 +742,8 @@ class SceneStructureView(NetworkGraphicsView):
 
         self._connectorEditor = ConnectorToolbar(self.undoStack, self)
         self._connectorEditor.setVisible(False)
+        self._outlineItemEditor = OutlineItemToolbar(self.undoStack, self)
+        self._outlineItemEditor.setVisible(False)
 
         # TODO remove later
         self.setMinimumSize(1600, 800)
@@ -730,3 +752,19 @@ class SceneStructureView(NetworkGraphicsView):
     @overrides
     def _initScene(self) -> NetworkScene:
         return SceneStructureGraphicsScene(self._novel)
+
+    @overrides
+    def _showItemToolbar(self, item: QAbstractGraphicsShapeItem):
+        if isinstance(item, OutlineItemBase):
+            self._showOutlineItemToolbar(item)
+        else:
+            super()._showItemToolbar(item)
+
+    @overrides
+    def _hideItemToolbar(self):
+        super()._hideItemToolbar()
+        self._outlineItemEditor.setVisible(False)
+
+    def _showOutlineItemToolbar(self, item: OutlineItemBase):
+        self._outlineItemEditor.setItem(item)
+        self._popupAbove(self._outlineItemEditor, item)
