@@ -24,7 +24,7 @@ from PyQt6.QtCore import Qt, pyqtSignal, QPointF
 from PyQt6.QtGui import QIcon, QEnterEvent, QPaintEvent, QPainter, QBrush, QColor
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import vbox, incr_icon, bold, spacer, retain_when_hidden, margins, transparent
+from qthandy import vbox, incr_icon, bold, spacer, retain_when_hidden, margins, transparent, hbox
 from qthandy.filter import VisibilityToggleEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
@@ -45,6 +45,7 @@ from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.display import IconText
 from plotlyst.view.widget.input import RemovalButton
 from plotlyst.view.widget.outline import OutlineItemWidget, OutlineTimelineWidget
+from plotlyst.view.widget.plot.allies import AlliesGraphicsView
 
 storyline_progression_steps_descriptions = {
     PlotType.Main: {
@@ -455,6 +456,19 @@ class DynamicPlotPrinciplesGroupWidget(QWidget):
         self._wdgPrinciples.refreshCharacters()
 
 
+class AlliesPrinciplesGroupWidget(QWidget):
+    remove = pyqtSignal()
+
+    def __init__(self, novel: Novel, principleGroup: DynamicPlotPrincipleGroup, parent=None):
+        super().__init__(parent)
+        self.novel = novel
+        self.group = principleGroup
+
+        hbox(self)
+        self.view = AlliesGraphicsView()
+        self.layout().addWidget(self.view)
+
+
 class DynamicPlotPrinciplesEditor(QWidget):
     def __init__(self, novel: Novel, plot: Plot, parent=None):
         super().__init__(parent)
@@ -473,7 +487,7 @@ class DynamicPlotPrinciplesEditor(QWidget):
             if item.widget() and isinstance(item.widget(), DynamicPlotPrinciplesGroupWidget):
                 item.widget().refreshCharacters()
 
-    def addGroup(self, groupType: DynamicPlotPrincipleGroupType) -> DynamicPlotPrinciplesGroupWidget:
+    def addNewGroup(self, groupType: DynamicPlotPrincipleGroupType) -> DynamicPlotPrinciplesGroupWidget:
         group = DynamicPlotPrincipleGroup(groupType)
         if groupType == DynamicPlotPrincipleGroupType.ELEMENTS_OF_WONDER:
             group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.WONDER))
@@ -497,7 +511,10 @@ class DynamicPlotPrinciplesEditor(QWidget):
         return wdg
 
     def _addGroup(self, group: DynamicPlotPrincipleGroup) -> DynamicPlotPrinciplesGroupWidget:
-        wdg = DynamicPlotPrinciplesGroupWidget(self.novel, group)
+        if group.type == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
+            wdg = AlliesPrinciplesGroupWidget(self.novel, group)
+        else:
+            wdg = DynamicPlotPrinciplesGroupWidget(self.novel, group)
         wdg.remove.connect(partial(self._removeGroup, wdg))
         self.layout().addWidget(wdg)
 

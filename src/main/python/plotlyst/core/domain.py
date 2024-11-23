@@ -1133,6 +1133,7 @@ class DynamicPlotPrinciple(OutlineItem):
     type: DynamicPlotPrincipleType = DynamicPlotPrincipleType.TWIST
     elements: List['DynamicPlotPrinciple'] = field(default_factory=list)
     character_id: str = ''
+    node: Optional['Node'] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
 
 class DynamicPlotPrincipleGroupType(Enum):
