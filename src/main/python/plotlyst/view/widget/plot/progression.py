@@ -45,7 +45,6 @@ from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.display import IconText
 from plotlyst.view.widget.input import RemovalButton
 from plotlyst.view.widget.outline import OutlineItemWidget, OutlineTimelineWidget
-from plotlyst.view.widget.plot.allies import AlliesGraphicsView
 
 storyline_progression_steps_descriptions = {
     PlotType.Main: {
@@ -465,8 +464,8 @@ class AlliesPrinciplesGroupWidget(QWidget):
         self.group = principleGroup
 
         hbox(self)
-        self.view = AlliesGraphicsView()
-        self.layout().addWidget(self.view)
+        # self.view = AlliesGraphicsView()
+        # self.layout().addWidget(self.view)
 
 
 class DynamicPlotPrinciplesEditor(QWidget):

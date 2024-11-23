@@ -17,14 +17,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from PyQt6.QtCore import QPointF, Qt
-from PyQt6.QtWidgets import QGraphicsView
+from PyQt6.QtCore import QPointF, Qt, QRectF
+from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem
 from overrides import overrides
 
 from plotlyst.core.domain import GraphicsItemType, Diagram, DiagramData, Novel
 from plotlyst.view.common import spawn
 from plotlyst.view.widget.characters import CharacterSelectorMenu
-from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene
+from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, NodeItem
 
 
 class AlliesGraphicsScene(NetworkScene):
@@ -37,6 +37,18 @@ class AlliesGraphicsScene(NetworkScene):
     @overrides
     def _addNewDefaultItem(self, pos: QPointF):
         self._addNewItem(pos, GraphicsItemType.CHARACTER)
+
+    @overrides
+    def _addNewItem(self, scenePos: QPointF, itemType: GraphicsItemType, subType: str = '') -> NodeItem:
+        item = super()._addNewItem(scenePos, itemType, subType)
+        item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
+        item.setConfinedRect(QRectF(-20, -20, 340, 340))
+
+        return item
+
+    @overrides
+    def _save(self):
+        pass
 
 
 @spawn

@@ -764,6 +764,7 @@ class NodeItem(QAbstractGraphicsShapeItem):
     def __init__(self, node: Node, parent=None):
         super().__init__(parent)
         self._node = node
+        self._confinedRect: Optional[QRectF] = None
 
         self.setPos(node.x, node.y)
         self._sockets: List[AbstractSocketItem] = []
@@ -805,9 +806,19 @@ class NodeItem(QAbstractGraphicsShapeItem):
     def setPosCommandEnabled(self, enabled: bool):
         self._posCommandEnabled = enabled
 
+    def setConfinedRect(self, rect: QRectF):
+        self._confinedRect = rect
+
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
+            if self._confinedRect is not None:
+                new_pos = value
+                new_pos.setX(max(self._confinedRect.left(), min(self._confinedRect.right(), new_pos.x())))
+                new_pos.setY(max(self._confinedRect.top(), min(self._confinedRect.bottom(), new_pos.y())))
+                self.setPos(new_pos)
+                return new_pos
+
             self._onPosChanged()
         elif change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
             self._onSelection(value)
