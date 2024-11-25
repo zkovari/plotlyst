@@ -3857,6 +3857,12 @@ class Novel(NovelDescriptor):
         scene.chapter = chapter
         novel.scenes.append(scene)
 
+        plot = Plot('Main plot', icon='fa5s.theater-masks', icon_color='#03396c',
+                    progression=[PlotProgressionItem(type=PlotProgressionItemType.BEGINNING),
+                                 PlotProgressionItem(type=PlotProgressionItemType.MIDDLE),
+                                 PlotProgressionItem(type=PlotProgressionItemType.ENDING)])
+        novel.plots.append(plot)
+
         return novel
 
     def insert_scene_after(self, scene: Scene, chapter: Optional[Chapter] = None) -> Scene:
