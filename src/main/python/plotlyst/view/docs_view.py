@@ -26,7 +26,7 @@ from PyQt6.QtPdf import QPdfDocument
 from PyQt6.QtPdfWidgets import QPdfView
 from overrides import overrides
 from qthandy import clear_layout, margins, bold, italic
-from qttextedit.ops import TextEditorSettingsSection, FontSectionSettingWidget
+from qttextedit.ops import TextEditorSettingsSection, FontSectionSettingWidget, FontSizeSectionSettingWidget
 
 from plotlyst.core.client import json_client
 from plotlyst.core.domain import Novel, Document, DocumentType, FontSettings
@@ -127,8 +127,14 @@ class DocumentsView(AbstractNovelView):
 
     def _init_text_editor(self):
         def settings_ready():
-            section: FontSectionSettingWidget = self.textEditor.settingsWidget().section(TextEditorSettingsSection.FONT)
-            section.fontSelected.connect(self._fontChanged)
+            self.textEditor.settingsWidget().setSectionVisible(TextEditorSettingsSection.PAGE_WIDTH, False)
+            fontSection: FontSectionSettingWidget = self.textEditor.settingsWidget().section(
+                TextEditorSettingsSection.FONT)
+            fontSection.fontSelected.connect(self._fontChanged)
+
+            sizeSection: FontSizeSectionSettingWidget = self.textEditor.settingsWidget().section(
+                TextEditorSettingsSection.FONT_SIZE)
+            sizeSection.sizeChanged.connect(self._fontSizeChanged)
 
         self._clear_text_editor()
 
@@ -137,11 +143,16 @@ class DocumentsView(AbstractNovelView):
         margins(self.textEditor, top=50, right=10)
         self.ui.docEditorPage.layout().addWidget(self.textEditor)
 
-        if self.novel.prefs.docs.font.get(app_env.platform(), ''):
+        if app_env.platform() in self.novel.prefs.docs.font.keys():
             font_: QFont = self.textEditor.textEdit.font()
-            font_.setFamily(self.novel.prefs.docs.font[app_env.platform()].family)
+            fontSettings = self._getFontSettings()
+            if fontSettings.family:
+                font_.setFamily(fontSettings.family)
+            if fontSettings.font_size:
+                font_.setPointSize(fontSettings.font_size)
+
             self.textEditor.textEdit.setFont(font_)
-            self.textEditor.textTitle.setPlaceholderText('Untitled')
+        self.textEditor.textTitle.setPlaceholderText('Untitled')
         self.textEditor.textEdit.textChanged.connect(self._save)
         self.textEditor.titleChanged.connect(self._title_changed_in_editor)
         self.textEditor.iconChanged.connect(self._icon_changed_in_editor)
@@ -241,11 +252,19 @@ class DocumentsView(AbstractNovelView):
                 self.repo.update_novel(self.novel)
 
     def _fontChanged(self, family: str):
-        if app_env.platform() not in self.novel.prefs.docs.font.keys():
-            self.novel.prefs.docs.font[app_env.platform()] = FontSettings()
-        fontSettings = self.novel.prefs.docs.font[app_env.platform()]
+        fontSettings = self._getFontSettings()
         fontSettings.family = family
         self.repo.update_novel(self.novel)
+
+    def _fontSizeChanged(self, size: int):
+        fontSettings = self._getFontSettings()
+        fontSettings.font_size = size
+        self.repo.update_novel(self.novel)
+
+    def _getFontSettings(self) -> FontSettings:
+        if app_env.platform() not in self.novel.prefs.manuscript.font.keys():
+            self.novel.prefs.manuscript.font[app_env.platform()] = FontSettings()
+        return self.novel.prefs.manuscript.font[app_env.platform()]
 
     def _hide_sidebar(self):
         qtanim.toggle_expansion(self.ui.wdgDocs, False, teardown=lambda: qtanim.fade_in(self.ui.btnTreeToggleSecondary))
