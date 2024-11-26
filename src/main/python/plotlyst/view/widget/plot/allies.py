@@ -18,11 +18,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from PyQt6.QtCore import QPointF, Qt, QRectF
-from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem
+from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QGraphicsOpacityEffect
 from overrides import overrides
 
 from plotlyst.core.domain import GraphicsItemType, Diagram, DiagramData, Novel, Node
-from plotlyst.view.common import spawn
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, NodeItem, CharacterItem, \
     PlaceholderSocketItem, ConnectorItem
@@ -61,25 +60,10 @@ class AlliesGraphicsScene(NetworkScene):
         self.addItem(socket2)
         self.addItem(vline)
 
-        icon = IconItem(Node(mid - 7, -18, GraphicsItemType.ICON, icon='fa5s.thumbs-up', color='#266dd3', size=20))
-        icon.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
-        icon.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
-        self.addItem(icon)
-
-        icon = IconItem(Node(mid - 7, 360, GraphicsItemType.ICON, icon='fa5s.thumbs-down', color='#9e1946', size=20))
-        icon.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
-        icon.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
-        self.addItem(icon)
-
-        icon = IconItem(Node(355, 195, GraphicsItemType.ICON, icon='mdi.emoticon-happy', color='#00ca94', size=20))
-        icon.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
-        icon.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
-        self.addItem(icon)
-
-        icon = IconItem(Node(-17, 195, GraphicsItemType.ICON, icon='fa5s.angry', color='#ef0000', size=20))
-        icon.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
-        icon.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
-        self.addItem(icon)
+        self.__addIcon(Node(mid - 7, -18, GraphicsItemType.ICON, icon='fa5s.thumbs-up', color='#266dd3', size=20))
+        self.__addIcon(Node(mid - 7, 360, GraphicsItemType.ICON, icon='fa5s.thumbs-down', color='#9e1946', size=20))
+        self.__addIcon(Node(355, 195, GraphicsItemType.ICON, icon='mdi.emoticon-happy', color='#00ca94', size=20))
+        self.__addIcon(Node(-17, 195, GraphicsItemType.ICON, icon='fa5s.angry', color='#ef0000', size=20))
 
     @overrides
     def _addNewDefaultItem(self, pos: QPointF):
@@ -99,8 +83,16 @@ class AlliesGraphicsScene(NetworkScene):
     def _save(self):
         pass
 
+    def __addIcon(self, node: Node):
+        icon = IconItem(node)
+        icon.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
+        icon.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
+        effect = QGraphicsOpacityEffect()
+        effect.setOpacity(0.5)
+        icon.setGraphicsEffect(effect)
+        self.addItem(icon)
 
-@spawn
+
 class AlliesGraphicsView(NetworkGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
