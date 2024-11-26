@@ -262,9 +262,9 @@ class DocumentsView(AbstractNovelView):
         self.repo.update_novel(self.novel)
 
     def _getFontSettings(self) -> FontSettings:
-        if app_env.platform() not in self.novel.prefs.manuscript.font.keys():
-            self.novel.prefs.manuscript.font[app_env.platform()] = FontSettings()
-        return self.novel.prefs.manuscript.font[app_env.platform()]
+        if app_env.platform() not in self.novel.prefs.docs.font.keys():
+            self.novel.prefs.docs.font[app_env.platform()] = FontSettings()
+        return self.novel.prefs.docs.font[app_env.platform()]
 
     def _hide_sidebar(self):
         qtanim.toggle_expansion(self.ui.wdgDocs, False, teardown=lambda: qtanim.fade_in(self.ui.btnTreeToggleSecondary))
