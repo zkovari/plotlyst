@@ -24,7 +24,7 @@ from overrides import overrides
 from plotlyst.core.domain import GraphicsItemType, Diagram, DiagramData, Novel
 from plotlyst.view.common import spawn
 from plotlyst.view.widget.characters import CharacterSelectorMenu
-from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, NodeItem
+from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, NodeItem, CharacterItem
 
 
 class AlliesGraphicsScene(NetworkScene):
@@ -40,9 +40,10 @@ class AlliesGraphicsScene(NetworkScene):
 
     @overrides
     def _addNewItem(self, scenePos: QPointF, itemType: GraphicsItemType, subType: str = '') -> NodeItem:
-        item = super()._addNewItem(scenePos, itemType, subType)
+        item: CharacterItem = super()._addNewItem(scenePos, itemType, subType)
         item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
         item.setConfinedRect(QRectF(-20, -20, 340, 340))
+        item.setLabelVisible(False)
 
         return item
 

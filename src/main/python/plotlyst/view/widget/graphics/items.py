@@ -967,6 +967,7 @@ class CharacterItem(CircleShapedNodeItem):
     def __init__(self, character: Character, node: Node, parent=None):
         super(CharacterItem, self).__init__(node, parent)
         self._character = character
+        self._labelEnabled: bool = True
 
         self._label = QGraphicsTextItem(self._character.name, self)
         font = self._label.font()
@@ -993,6 +994,9 @@ class CharacterItem(CircleShapedNodeItem):
         self._node.text = text
         self._refreshLabel()
         self.networkScene().nodeChangedEvent(self._node)
+
+    def setLabelVisible(self, visible: bool):
+        self._label.setVisible(visible)
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
