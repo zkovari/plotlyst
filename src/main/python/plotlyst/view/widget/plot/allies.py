@@ -21,10 +21,12 @@ from PyQt6.QtCore import QPointF, Qt, QRectF
 from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem
 from overrides import overrides
 
-from plotlyst.core.domain import GraphicsItemType, Diagram, DiagramData, Novel
+from plotlyst.core.domain import GraphicsItemType, Diagram, DiagramData, Novel, Node
 from plotlyst.view.common import spawn
 from plotlyst.view.widget.characters import CharacterSelectorMenu
-from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, NodeItem, CharacterItem
+from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, NodeItem, CharacterItem, \
+    PlaceholderSocketItem, ConnectorItem
+from plotlyst.view.widget.graphics.items import IconItem
 
 
 class AlliesGraphicsScene(NetworkScene):
@@ -34,6 +36,51 @@ class AlliesGraphicsScene(NetworkScene):
         diagram.data = DiagramData()
         self.setDiagram(diagram)
 
+        socket1 = PlaceholderSocketItem()
+        socket1.setPos(0, 200)
+        socket2 = PlaceholderSocketItem()
+        socket2.setPos(375, 200)
+        hline = ConnectorItem(socket1, socket2)
+        hline.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
+        hline.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
+
+        self.addItem(socket1)
+        self.addItem(socket2)
+        self.addItem(hline)
+
+        mid = 375 // 2
+        socket1 = PlaceholderSocketItem()
+        socket1.setPos(mid, 385)
+        socket2 = PlaceholderSocketItem()
+        socket2.setPos(mid, 5)
+        vline = ConnectorItem(socket1, socket2)
+        vline.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
+        vline.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
+
+        self.addItem(socket1)
+        self.addItem(socket2)
+        self.addItem(vline)
+
+        icon = IconItem(Node(mid - 7, -18, GraphicsItemType.ICON, icon='fa5s.thumbs-up', color='#266dd3', size=20))
+        icon.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
+        icon.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
+        self.addItem(icon)
+
+        icon = IconItem(Node(mid - 7, 360, GraphicsItemType.ICON, icon='fa5s.thumbs-down', color='#9e1946', size=20))
+        icon.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
+        icon.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
+        self.addItem(icon)
+
+        icon = IconItem(Node(355, 195, GraphicsItemType.ICON, icon='mdi.emoticon-happy', color='#00ca94', size=20))
+        icon.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
+        icon.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
+        self.addItem(icon)
+
+        icon = IconItem(Node(-17, 195, GraphicsItemType.ICON, icon='fa5s.angry', color='#ef0000', size=20))
+        icon.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
+        icon.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
+        self.addItem(icon)
+
     @overrides
     def _addNewDefaultItem(self, pos: QPointF):
         self._addNewItem(pos, GraphicsItemType.CHARACTER)
@@ -42,8 +89,9 @@ class AlliesGraphicsScene(NetworkScene):
     def _addNewItem(self, scenePos: QPointF, itemType: GraphicsItemType, subType: str = '') -> NodeItem:
         item: CharacterItem = super()._addNewItem(scenePos, itemType, subType)
         item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
-        item.setConfinedRect(QRectF(-20, -20, 340, 340))
+        item.setConfinedRect(QRectF(-10, -10, 320, 330))
         item.setLabelVisible(False)
+        item.setSize(40)
 
         return item
 
