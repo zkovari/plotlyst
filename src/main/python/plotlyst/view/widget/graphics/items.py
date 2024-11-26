@@ -227,9 +227,9 @@ class LabelItem(QAbstractGraphicsShapeItem):
 
 
 class IconBadge(QAbstractGraphicsShapeItem):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, size: int = 32):
         super().__init__(parent)
-        self._size: int = 32
+        self._size: int = size
         self._icon: Optional[QIcon] = None
         self._color: QColor = QColor('black')
 
@@ -823,7 +823,8 @@ class NodeItem(QAbstractGraphicsShapeItem):
 
     def _onPosChanged(self):
         self.rearrangeConnectors()
-        self.networkScene().itemMovedEvent(self)
+        if self.networkScene():
+            self.networkScene().itemMovedEvent(self)
 
     def _onSelection(self, selected: bool):
         pass
@@ -1028,6 +1029,8 @@ class IconItem(CircleShapedNodeItem):
         self._icon = IconRegistry.from_name(node.icon if node.icon else 'fa5s.icons', color_str)
         self._color: QColor = QColor(color_str)
 
+        self._frameEnabled: bool = False
+
         self._recalculate()
 
     def setIcon(self, icon: str):
@@ -1047,9 +1050,21 @@ class IconItem(CircleShapedNodeItem):
         for socket in self._sockets:
             socket.parentColorChangedEvent(self)
 
+    def setFrameEnabled(self, enabled: bool):
+        self._frameEnabled = enabled
+        self.update()
+
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
         super().paint(painter, option, widget)
+
+        if self._frameEnabled:
+            painter.setPen(QPen(self._color, 2))
+            painter.setBrush(QColor(RELAXED_WHITE_COLOR))
+            padding = 2
+            painter.drawEllipse(self.Margin - padding, self.Margin - padding, self._size + padding * 2,
+                                self._size + padding * 2)
+
         self._icon.paint(painter, self.Margin, self.Margin, self._size, self._size)
 
     @overrides

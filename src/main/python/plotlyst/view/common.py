@@ -96,13 +96,26 @@ def _text_color_with_rgb(r: int, g: int, b: int) -> str:
     return 'black' if hsp > 171.5 else WHITE_COLOR
 
 
-def stronger_color(hex_color: str, factor: float = 1.5) -> str:
+def stronger_color(hex_color: str, factor: float = 1.01) -> str:
     color = QColor(hex_color)
     h, s, v, a = color.getHsv()
     s = min(255, int(s * factor))  # Scale up the saturation but cap at 255
     v = max(0, int(v / factor))  # Darken the color
     color.setHsv(h, s, v, a)
     return color.name()
+
+
+def blended_color_with_alpha(hex_color: str, alpha: int = 255, background_hex: str = '#ffffff') -> str:
+    color = QColor(hex_color)
+    color.setAlpha(alpha)
+    background = QColor(background_hex)
+
+    # Blend the color with the background based on the alpha
+    blended_red = int((color.red() * (alpha / 255)) + (background.red() * (1 - alpha / 255)))
+    blended_green = int((color.green() * (alpha / 255)) + (background.green() * (1 - alpha / 255)))
+    blended_blue = int((color.blue() * (alpha / 255)) + (background.blue() * (1 - alpha / 255)))
+
+    return f"#{blended_red:02x}{blended_green:02x}{blended_blue:02x}"
 
 
 def action(text: str, icon: Optional[QIcon] = None, slot=None, parent=None, checkable: bool = False,
@@ -311,13 +324,16 @@ def restyle(widget: QWidget):
     widget.style().polish(widget)
 
 
-def shadow(wdg: QWidget, offset: int = 2, radius: int = 0, color=Qt.GlobalColor.lightGray):
+def shadow(wdg: QWidget, offset: int = 2, radius: int = 0, color=Qt.GlobalColor.lightGray, alpha: Optional[int] = None):
     effect = QGraphicsDropShadowEffect()
     if isinstance(wdg, QObject) and not isinstance(wdg, QGraphicsObject):
         effect.setParent(wdg)
     effect.setBlurRadius(radius)
     effect.setOffset(offset, offset)
-    effect.setColor(color)
+    qcolor = QColor(color)
+    if alpha:
+        qcolor.setAlpha(alpha)
+    effect.setColor(qcolor)
     wdg.setGraphicsEffect(effect)
 
 

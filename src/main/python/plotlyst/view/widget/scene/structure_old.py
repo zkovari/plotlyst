@@ -31,7 +31,7 @@ from qtmenu import ScrollableMenuWidget, ActionTooltipDisplayMode, MenuWidget, T
 
 from plotlyst.core.domain import Novel, Scene, SceneStructureItemType, SceneStructureItem, SceneOutcome, \
     ScenePurposeType
-from plotlyst.view.common import action, ButtonPressResizeEventFilter
+from plotlyst.view.common import action, ButtonPressResizeEventFilter, spawn
 from plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from plotlyst.view.generated.scene_structure_template_selector_dialog_ui import \
     Ui_SceneStructuteTemplateSelector
@@ -193,11 +193,12 @@ class EmotionSelectorButton(QToolButton):
         self.installEventFilter(ButtonPressResizeEventFilter(self))
 
 
+@spawn
 class BeatSelectorMenu(TabularGridMenuWidget):
     selected = pyqtSignal(SceneStructureItemType)
 
     def __init__(self, parent=None):
-        super(BeatSelectorMenu, self).__init__(parent)
+        super().__init__(parent)
 
         self._actions: Dict[SceneStructureItemType, QAction] = {}
         self._outcomeEnabled: bool = True
