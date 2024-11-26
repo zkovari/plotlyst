@@ -41,7 +41,8 @@ from qtmenu import MenuWidget
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
 from qttextedit.api import AutoCapitalizationMode, PopupBase, TextEditorToolbar
 from qttextedit.ops import BoldOperation, ItalicOperation, UnderlineOperation, StrikethroughOperation, \
-    AlignLeftOperation, AlignCenterOperation, AlignRightOperation, InsertListOperation, InsertNumberedListOperation
+    AlignLeftOperation, AlignCenterOperation, AlignRightOperation, InsertListOperation, InsertNumberedListOperation, \
+    FormatOperation, ColorOperation, InsertLinkOperation, TextEditingSettingsOperation
 
 from plotlyst.common import IGNORE_CAPITALIZATION_PROPERTY, RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, RED_COLOR
 from plotlyst.core.domain import TextStatistics, Character, Label
@@ -399,9 +400,22 @@ class ReplacementInfo:
 class BasePopupTextEditorToolbar(TextEditorToolbar, PopupBase):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._frozen = False
         self.setProperty('rounded', True)
         self.setProperty('relaxed-white-bg', True)
         margins(self, 5, 5, 5, 5)
+
+    @overrides
+    def freeze(self):
+        self._frozen = True
+
+    @overrides
+    def unfreeze(self):
+        self._frozen = False
+
+    @overrides
+    def isFrozen(self):
+        return self._frozen
 
     @overrides
     def beforeShown(self):
@@ -434,10 +448,18 @@ class HtmlPopupTextEditorToolbar(BasePopupTextEditorToolbar):
         self.setProperty('rounded', True)
         self.setProperty('relaxed-white-bg', True)
         margins(self, 5, 5, 5, 5)
+        btn = self.addTextEditorOperation(FormatOperation)
+        btn.menu().aboutToShow.connect(self.freeze)
+        btn.menu().aboutToHide.connect(self.unfreeze)
+        self.addSeparator()
         self.addTextEditorOperation(BoldOperation)
         self.addTextEditorOperation(ItalicOperation)
         self.addTextEditorOperation(UnderlineOperation)
         self.addTextEditorOperation(StrikethroughOperation)
+        self.addSeparator()
+        btn = self.addTextEditorOperation(ColorOperation)
+        btn.menu().aboutToShow.connect(self.freeze)
+        btn.menu().aboutToHide.connect(self.unfreeze)
         self.addSeparator()
         self.addTextEditorOperation(AlignLeftOperation)
         self.addTextEditorOperation(AlignCenterOperation)
@@ -445,6 +467,8 @@ class HtmlPopupTextEditorToolbar(BasePopupTextEditorToolbar):
         self.addSeparator()
         self.addTextEditorOperation(InsertListOperation)
         self.addTextEditorOperation(InsertNumberedListOperation)
+        self.addSeparator()
+        self.addTextEditorOperation(InsertLinkOperation)
 
 
 class TextEditBase(EnhancedTextEdit):
@@ -642,6 +666,14 @@ class CapitalizationEventFilter(QObject):
         return False
 
 
+class DocumentTextEditorToolbar(TextEditorToolbar):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.addSpacer()
+        btn = self.addTextEditorOperation(TextEditingSettingsOperation)
+        btn.installEventFilter(OpacityEventFilter(btn))
+
+
 class DocumentTextEditor(TextEditorBase):
     titleChanged = pyqtSignal(str)
     iconChanged = pyqtSignal(str, str)
@@ -677,6 +709,10 @@ class DocumentTextEditor(TextEditorBase):
 
         self.textEdit.setViewportMargins(5, 5, 5, 5)
 
+        toolbar = HtmlPopupTextEditorToolbar()
+        toolbar.activate(self.textEdit)
+        self.textEdit.setPopupWidget(toolbar)
+
         self.highlighter = self._initHighlighter()
 
         self.textEdit.setFont(QFont(app_env.sans_serif_font(), 16))
@@ -695,6 +731,10 @@ class DocumentTextEditor(TextEditorBase):
     @property
     def textTitle(self):
         return self._textTitle
+
+    @overrides
+    def _initToolbar(self) -> TextEditorToolbar:
+        return DocumentTextEditorToolbar(self)
 
     @overrides
     def _initTextEdit(self) -> EnhancedTextEdit:

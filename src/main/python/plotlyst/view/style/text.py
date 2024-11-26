@@ -180,9 +180,6 @@ def apply_texteditor_toolbar_style(widget: QWidget):
                             QToolButton:checked {{
                                 background-color: #ced4da;
                             }}
-                            QToolButton:hover:!checked {{
-                                background-color: #e5e5e5;
-                            }}
                         ''')
 
 

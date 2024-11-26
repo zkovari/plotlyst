@@ -41,7 +41,8 @@ from qtmenu import MenuWidget, group
 from qttextedit import TextBlockState, remove_font, OBJECT_REPLACEMENT_CHARACTER, DashInsertionMode
 from qttextedit.api import AutoCapitalizationMode
 from qttextedit.ops import Heading2Operation, Heading3Operation, InsertListOperation, InsertNumberedListOperation, \
-    Heading1Operation
+    Heading1Operation, BoldOperation, ItalicOperation, UnderlineOperation, StrikethroughOperation, \
+    AlignLeftOperation, AlignCenterOperation, AlignRightOperation
 from qttextedit.util import EN_DASH, EM_DASH
 from textstat import textstat
 
@@ -68,7 +69,7 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.display import WordsDisplay, IconText
 from plotlyst.view.widget.input import TextEditBase, GrammarHighlighter, GrammarHighlightStyle, Toggle, TextEditorBase, \
-    HtmlPopupTextEditorToolbar
+    BasePopupTextEditorToolbar
 
 
 class TimerSetupWidget(QWidget, Ui_TimerSetupWidget):
@@ -471,6 +472,26 @@ class WordTagHighlighter(QSyntaxHighlighter):
                     self.setFormat(spans[i][0], spans[i][1] - spans[i][0], self._adverbFormat)
 
 
+class ManuscriptPopupTextEditorToolbar(BasePopupTextEditorToolbar):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setProperty('rounded', True)
+        self.setProperty('relaxed-white-bg', True)
+        margins(self, 5, 5, 5, 5)
+
+        self.addTextEditorOperation(BoldOperation)
+        self.addTextEditorOperation(ItalicOperation)
+        self.addTextEditorOperation(UnderlineOperation)
+        self.addTextEditorOperation(StrikethroughOperation)
+        self.addSeparator()
+        self.addTextEditorOperation(AlignLeftOperation)
+        self.addTextEditorOperation(AlignCenterOperation)
+        self.addTextEditorOperation(AlignRightOperation)
+        self.addSeparator()
+        self.addTextEditorOperation(InsertListOperation)
+        self.addTextEditorOperation(InsertNumberedListOperation)
+
+
 class ManuscriptTextEdit(TextEditBase):
     sceneSeparatorClicked = pyqtSignal(Scene)
 
@@ -484,7 +505,7 @@ class ManuscriptTextEdit(TextEditBase):
         self._nightModeHighlighter: Optional[NightModeHighlighter] = None
         self._wordTagHighlighter: Optional[WordTagHighlighter] = None
 
-        toolbar = HtmlPopupTextEditorToolbar()
+        toolbar = ManuscriptPopupTextEditorToolbar()
         toolbar.activate(self)
         self.setPopupWidget(toolbar)
 
