@@ -42,6 +42,7 @@ class AlliesGraphicsScene(NetworkScene):
         socket2 = PlaceholderSocketItem()
         socket2.setPos(375, 200)
         hline = ConnectorItem(socket1, socket2)
+        hline.setColor(QColor('grey'))
         hline.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
         hline.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
 
@@ -55,6 +56,7 @@ class AlliesGraphicsScene(NetworkScene):
         socket2 = PlaceholderSocketItem()
         socket2.setPos(mid, 5)
         vline = ConnectorItem(socket1, socket2)
+        vline.setColor(QColor('grey'))
         vline.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
         vline.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
 
@@ -69,7 +71,7 @@ class AlliesGraphicsScene(NetworkScene):
 
     @overrides
     def _addNewDefaultItem(self, pos: QPointF):
-        self._addNewItem(pos, GraphicsItemType.CHARACTER)
+        pass
 
     @overrides
     def _addNewItem(self, scenePos: QPointF, itemType: GraphicsItemType, subType: str = '') -> NodeItem:

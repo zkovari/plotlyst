@@ -24,7 +24,7 @@ from PyQt6.QtCore import Qt, pyqtSignal, QPointF
 from PyQt6.QtGui import QIcon, QEnterEvent, QPaintEvent, QPainter, QBrush, QColor
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import vbox, incr_icon, bold, spacer, retain_when_hidden, margins, transparent
+from qthandy import vbox, incr_icon, bold, spacer, retain_when_hidden, margins, transparent, hbox
 from qthandy.filter import VisibilityToggleEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
@@ -423,7 +423,7 @@ class BasePlotPrinciplesGroupWidget(QWidget):
         self.group = principleGroup
         self.frame = frame()
         self.frame.setObjectName('frame')
-        vbox(self.frame, 0, 0)
+        hbox(self.frame, 0, 0)
         self.setStyleSheet(f'''
                                    #frame {{
                                         border: 1px solid lightgrey;
@@ -468,9 +468,13 @@ class AlliesPrinciplesGroupWidget(BasePlotPrinciplesGroupWidget):
         super().__init__(principleGroup, parent)
         self.novel = novel
 
+        self._wdgPrinciples = DynamicPlotPrinciplesWidget(novel, self.group)
+        self._wdgPrinciples.setStructure(self.group.principles)
+
         self.view = AlliesGraphicsView(self.novel)
         margins(self.frame, 35, 20, 20, 20)
-        self.frame.layout().addWidget(self.view)
+        self.frame.layout().addWidget(self.view, alignment=Qt.AlignmentFlag.AlignTop)
+        self.frame.layout().addWidget(self._wdgPrinciples)
 
 
 class DynamicPlotPrinciplesEditor(QWidget):
