@@ -18,9 +18,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from PyQt6.QtCore import QPointF, Qt, QRectF
+from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QGraphicsOpacityEffect
 from overrides import overrides
 
+from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import GraphicsItemType, Diagram, DiagramData, Novel, Node
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, NodeItem, CharacterItem, \
@@ -94,9 +96,10 @@ class AlliesGraphicsScene(NetworkScene):
 
 
 class AlliesGraphicsView(NetworkGraphicsView):
-    def __init__(self, parent=None):
+    def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
-        self._novel = Novel('My novel')
+        self._novel = novel
+        self.setBackgroundBrush(QColor(RELAXED_WHITE_COLOR))
         self.setRubberBandEnabled(False)
         self.setScalingEnabled(False)
         self.setResizeAnchor(QGraphicsView.ViewportAnchor.NoAnchor)

@@ -24,7 +24,7 @@ from PyQt6.QtCore import Qt, pyqtSignal, QPointF
 from PyQt6.QtGui import QIcon, QEnterEvent, QPaintEvent, QPainter, QBrush, QColor
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import vbox, incr_icon, bold, spacer, retain_when_hidden, margins, transparent, hbox
+from qthandy import vbox, incr_icon, bold, spacer, retain_when_hidden, margins, transparent
 from qthandy.filter import VisibilityToggleEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
@@ -415,26 +415,24 @@ class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
         self._insertWidget(item, widget)
 
 
-class DynamicPlotPrinciplesGroupWidget(QWidget):
+class BasePlotPrinciplesGroupWidget(QWidget):
     remove = pyqtSignal()
 
-    def __init__(self, novel: Novel, principleGroup: DynamicPlotPrincipleGroup, parent=None):
+    def __init__(self, principleGroup: DynamicPlotPrincipleGroup, parent=None):
         super().__init__(parent)
         self.group = principleGroup
         self.frame = frame()
         self.frame.setObjectName('frame')
         vbox(self.frame, 0, 0)
         self.setStyleSheet(f'''
-                           #frame {{
-                                border: 1px solid lightgrey;
-                                border-radius: 8px;
-                                background: {BG_MUTED_COLOR};
-                           }}
-                           ''')
+                                   #frame {{
+                                        border: 1px solid lightgrey;
+                                        border-radius: 8px;
+                                        background: {BG_MUTED_COLOR};
+                                   }}
+                                   ''')
 
         vbox(self)
-        self._wdgPrinciples = DynamicPlotPrinciplesWidget(novel, self.group)
-        self._wdgPrinciples.setStructure(self.group.principles)
 
         self._title = IconText()
         self._title.setText(self.group.type.display_name())
@@ -448,25 +446,31 @@ class DynamicPlotPrinciplesGroupWidget(QWidget):
         self.installEventFilter(VisibilityToggleEventFilter(self.btnRemove, self))
         self.btnRemove.clicked.connect(self.remove)
 
-        self.frame.layout().addWidget(self._wdgPrinciples)
         self.layout().addWidget(group(self._title, spacer(), self.btnRemove))
         self.layout().addWidget(self.frame)
+
+
+class DynamicPlotPrinciplesGroupWidget(BasePlotPrinciplesGroupWidget):
+
+    def __init__(self, novel: Novel, principleGroup: DynamicPlotPrincipleGroup, parent=None):
+        super().__init__(principleGroup, parent)
+        self._wdgPrinciples = DynamicPlotPrinciplesWidget(novel, self.group)
+        self._wdgPrinciples.setStructure(self.group.principles)
+        self.frame.layout().addWidget(self._wdgPrinciples)
 
     def refreshCharacters(self):
         self._wdgPrinciples.refreshCharacters()
 
 
-class AlliesPrinciplesGroupWidget(QWidget):
-    remove = pyqtSignal()
+class AlliesPrinciplesGroupWidget(BasePlotPrinciplesGroupWidget):
 
     def __init__(self, novel: Novel, principleGroup: DynamicPlotPrincipleGroup, parent=None):
-        super().__init__(parent)
+        super().__init__(principleGroup, parent)
         self.novel = novel
-        self.group = principleGroup
 
-        hbox(self)
-        self.view = AlliesGraphicsView()
-        self.layout().addWidget(self.view)
+        self.view = AlliesGraphicsView(self.novel)
+        margins(self.frame, 35, 20, 20, 20)
+        self.frame.layout().addWidget(self.view)
 
 
 class DynamicPlotPrinciplesEditor(QWidget):
