@@ -496,9 +496,6 @@ class DynamicPlotPrinciplesEditor(QWidget):
             group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.MONSTER))
         elif groupType == DynamicPlotPrincipleGroupType.ESCALATION:
             group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.TURN))
-        elif groupType == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
-            group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.ALLY))
-            group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.ENEMY))
         elif groupType == DynamicPlotPrincipleGroupType.SUSPECTS:
             group.principles.append(DynamicPlotPrinciple(type=DynamicPlotPrincipleType.SUSPECT))
         elif groupType == DynamicPlotPrincipleGroupType.CAST:
