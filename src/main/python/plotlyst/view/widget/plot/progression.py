@@ -175,6 +175,8 @@ class PlotEventsTimeline(OutlineTimelineWidget):
 
 
 class DynamicPlotPrincipleWidget(OutlineItemWidget):
+    characterChanged = pyqtSignal(Character)
+
     def __init__(self, novel: Novel, principle: DynamicPlotPrinciple, parent=None,
                  nameAlignment=Qt.AlignmentFlag.AlignCenter):
         self.novel = novel
@@ -225,6 +227,7 @@ class DynamicPlotPrincipleWidget(OutlineItemWidget):
 
     def _characterSelected(self, character: Character):
         self.principle.character_id = str(character.id)
+        self.characterChanged.emit(character)
         RepositoryPersistenceManager.instance().update_novel(self.novel)
 
 
@@ -340,6 +343,7 @@ class DynamicPlotPrincipleSelectorMenu(MenuWidget):
 class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
     principleAdded = pyqtSignal(DynamicPlotPrinciple)
     principleRemoved = pyqtSignal(DynamicPlotPrinciple)
+    characterChanged = pyqtSignal(DynamicPlotPrinciple, Character)
 
     def __init__(self, novel: Novel, group: DynamicPlotPrincipleGroup, parent=None):
         super().__init__(parent, paintTimeline=False, layout=LayoutType.FLOW)
@@ -385,6 +389,7 @@ class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
             wdg = DynamicPlotMultiPrincipleWidget(self.novel, item, self.group.type)
         elif self.group.type == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
             wdg = AllyPlotPrincipleWidget(self.novel, item)
+            wdg.characterChanged.connect(partial(self.characterChanged.emit, item))
         else:
             wdg = DynamicPlotPrincipleWidget(self.novel, item)
         wdg.removed.connect(self._beatRemoved)
@@ -503,6 +508,7 @@ class AlliesPrinciplesGroupWidget(BasePlotPrinciplesGroupWidget):
 
         self._wdgPrinciples.principleAdded.connect(self.view.addNewAlly)
         self._wdgPrinciples.principleRemoved.connect(self.view.removeAlly)
+        self._wdgPrinciples.characterChanged.connect(self.view.updateAlly)
 
 
 class DynamicPlotPrinciplesEditor(QWidget):

@@ -17,6 +17,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import Optional
+
 import qtanim
 from PyQt6.QtCore import QPointF, Qt, QRectF
 from PyQt6.QtGui import QColor
@@ -25,7 +27,7 @@ from overrides import overrides
 
 from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import GraphicsItemType, Diagram, DiagramData, Novel, Node, DynamicPlotPrincipleGroup, \
-    DynamicPlotPrinciple
+    DynamicPlotPrinciple, Character
 from plotlyst.service.cache import entities_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.widget.characters import CharacterSelectorMenu
@@ -94,11 +96,14 @@ class AlliesGraphicsScene(NetworkScene):
         self._anim = qtanim.fade_in(item)
 
     def removeAlly(self, principle: DynamicPlotPrinciple):
-        for item in self.items():
-            if isinstance(item, CharacterItem):
-                if item.node() == principle.node:
-                    self._removeItem(item)
-                    break
+        item = self.__findItem(principle)
+        if item:
+            self._removeItem(item)
+
+    def updateAlly(self, principle: DynamicPlotPrinciple, character: Character):
+        item = self.__findItem(principle)
+        if item:
+            item.setCharacter(character)
 
     @overrides
     def _addNewDefaultItem(self, pos: QPointF):
@@ -115,17 +120,6 @@ class AlliesGraphicsScene(NetworkScene):
             # item.setLabelVisible(False)
 
         return item
-
-    # @overrides
-    # def _addNewItem(self, scenePos: QPointF, itemType: GraphicsItemType, subType: str = '') -> NodeItem:
-    #     print('add new item')
-    #     item: CharacterItem = super()._addNewItem(scenePos, itemType, subType)
-    #     item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
-    #     item.setConfinedRect(QRectF(-10, -10, 320, 330))
-    #     item.setLabelVisible(False)
-    #     item.setSize(40)
-    #
-    #     return item
 
     @overrides
     def _save(self):
@@ -149,6 +143,12 @@ class AlliesGraphicsScene(NetworkScene):
         effect.setOpacity(0.5)
         icon.setGraphicsEffect(effect)
         self.addItem(icon)
+
+    def __findItem(self, principle: DynamicPlotPrinciple) -> Optional[CharacterItem]:
+        for item in self.items():
+            if isinstance(item, CharacterItem):
+                if item.node() == principle.node:
+                    return item
 
 
 class AlliesGraphicsView(NetworkGraphicsView):
@@ -175,6 +175,9 @@ class AlliesGraphicsView(NetworkGraphicsView):
 
     def removeAlly(self, item: DynamicPlotPrinciple):
         self._scene.removeAlly(item)
+
+    def updateAlly(self, item: DynamicPlotPrinciple, character: Character):
+        self._scene.updateAlly(item, character)
 
     @overrides
     def _initScene(self) -> NetworkScene:
