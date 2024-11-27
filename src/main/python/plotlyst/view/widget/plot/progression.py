@@ -228,6 +228,17 @@ class DynamicPlotPrincipleWidget(OutlineItemWidget):
         RepositoryPersistenceManager.instance().update_novel(self.novel)
 
 
+class AllyPlotPrincipleWidget(DynamicPlotPrincipleWidget):
+    def __init__(self, novel: Novel, principle: DynamicPlotPrinciple, parent=None,
+                 nameAlignment=Qt.AlignmentFlag.AlignCenter):
+        super().__init__(novel, principle, parent, nameAlignment)
+        self._btnName.setText('Neutral')
+
+    @overrides
+    def _color(self) -> str:
+        return 'grey'
+
+
 class DynamicPlotMultiPrincipleWidget(DynamicPlotPrincipleWidget):
     def __init__(self, novel: Novel, principle: DynamicPlotPrinciple, groupType: DynamicPlotPrincipleGroupType,
                  parent=None):
@@ -369,6 +380,8 @@ class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
     def _newBeatWidget(self, item: DynamicPlotPrinciple) -> OutlineItemWidget:
         if self.group.type in [DynamicPlotPrincipleGroupType.SUSPECTS, DynamicPlotPrincipleGroupType.CAST]:
             wdg = DynamicPlotMultiPrincipleWidget(self.novel, item, self.group.type)
+        elif self.group.type == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
+            wdg = AllyPlotPrincipleWidget(self.novel, item)
         else:
             wdg = DynamicPlotPrincipleWidget(self.novel, item)
         wdg.removed.connect(self._beatRemoved)
