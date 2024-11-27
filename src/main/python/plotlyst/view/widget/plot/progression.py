@@ -332,8 +332,7 @@ class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
         self.layout().setSpacing(1)
         self.novel = novel
         self.group = group
-        self._hasMenu = self.group.type in [DynamicPlotPrincipleGroupType.ESCALATION,
-                                            DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES]
+        self._hasMenu = self.group.type in [DynamicPlotPrincipleGroupType.ESCALATION]
         if self._hasMenu:
             self._menu = DynamicPlotPrincipleSelectorMenu(self.group.type)
             self._menu.selected.connect(self._insertPrinciple)
@@ -407,6 +406,8 @@ class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
             self._insertPrinciple(DynamicPlotPrincipleType.SUSPECT)
         elif self.group.type == DynamicPlotPrincipleGroupType.CAST:
             self._insertPrinciple(DynamicPlotPrincipleType.CREW_MEMBER)
+        elif self.group.type == DynamicPlotPrincipleGroupType.ALLIES_AND_ENEMIES:
+            self._insertPrinciple(DynamicPlotPrincipleType.ALLY)
 
     def _insertPrinciple(self, principleType: DynamicPlotPrincipleType):
         item = DynamicPlotPrinciple(type=principleType)
