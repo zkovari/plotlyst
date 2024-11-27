@@ -339,6 +339,7 @@ class DynamicPlotPrincipleSelectorMenu(MenuWidget):
 
 class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
     principleAdded = pyqtSignal(DynamicPlotPrinciple)
+    principleRemoved = pyqtSignal(DynamicPlotPrinciple)
 
     def __init__(self, novel: Novel, group: DynamicPlotPrincipleGroup, parent=None):
         super().__init__(parent, paintTimeline=False, layout=LayoutType.FLOW)
@@ -432,6 +433,12 @@ class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
 
         self.principleAdded.emit(item)
 
+    def _beatRemoved(self, wdg: OutlineItemWidget, teardownFunction=None):
+        principle = wdg.item
+        super()._beatRemoved(wdg, teardownFunction)
+
+        self.principleRemoved.emit(principle)
+
 
 class BasePlotPrinciplesGroupWidget(QWidget):
     remove = pyqtSignal()
@@ -487,7 +494,6 @@ class AlliesPrinciplesGroupWidget(BasePlotPrinciplesGroupWidget):
         self.novel = novel
 
         self._wdgPrinciples = DynamicPlotPrinciplesWidget(novel, self.group)
-        self._wdgPrinciples.principleAdded.connect(self._allyAdded)
         self._wdgPrinciples.setStructure(self.group.principles)
 
         self.view = AlliesGraphicsView(self.novel, self.group)
@@ -495,8 +501,8 @@ class AlliesPrinciplesGroupWidget(BasePlotPrinciplesGroupWidget):
         self.frame.layout().addWidget(self.view, alignment=Qt.AlignmentFlag.AlignTop)
         self.frame.layout().addWidget(self._wdgPrinciples)
 
-    def _allyAdded(self, item: DynamicPlotPrinciple):
-        self.view.addNewAlly(item)
+        self._wdgPrinciples.principleAdded.connect(self.view.addNewAlly)
+        self._wdgPrinciples.principleRemoved.connect(self.view.removeAlly)
 
 
 class DynamicPlotPrinciplesEditor(QWidget):

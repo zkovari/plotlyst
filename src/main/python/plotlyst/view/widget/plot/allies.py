@@ -93,6 +93,13 @@ class AlliesGraphicsScene(NetworkScene):
 
         self._anim = qtanim.fade_in(item)
 
+    def removeAlly(self, principle: DynamicPlotPrinciple):
+        for item in self.items():
+            if isinstance(item, CharacterItem):
+                if item.node() == principle.node:
+                    self._removeItem(item)
+                    break
+
     @overrides
     def _addNewDefaultItem(self, pos: QPointF):
         pass
@@ -165,6 +172,9 @@ class AlliesGraphicsView(NetworkGraphicsView):
 
     def addNewAlly(self, item: DynamicPlotPrinciple):
         self._scene.addNewAlly(item)
+
+    def removeAlly(self, item: DynamicPlotPrinciple):
+        self._scene.removeAlly(item)
 
     @overrides
     def _initScene(self) -> NetworkScene:
