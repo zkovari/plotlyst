@@ -23,7 +23,9 @@ from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QGraphicsOpacityEffect
 from overrides import overrides
 
 from plotlyst.common import RELAXED_WHITE_COLOR
-from plotlyst.core.domain import GraphicsItemType, Diagram, DiagramData, Novel, Node
+from plotlyst.core.domain import GraphicsItemType, Diagram, DiagramData, Novel, Node, DynamicPlotPrincipleGroup
+from plotlyst.service.cache import entities_registry
+from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, NodeItem, CharacterItem, \
     PlaceholderSocketItem, ConnectorItem
@@ -31,10 +33,26 @@ from plotlyst.view.widget.graphics.items import IconItem
 
 
 class AlliesGraphicsScene(NetworkScene):
-    def __init__(self, parent=None):
+    def __init__(self, novel: Novel, principleGroup: DynamicPlotPrincipleGroup, parent=None):
         super().__init__(parent)
+        self._novel = novel
+        self._group = principleGroup
         diagram = Diagram('Allies')
         diagram.data = DiagramData()
+
+        for principle in self._group.principles:
+            if principle.node is None:
+                print('princ node is None')
+                character_id = None
+                if principle.character_id:
+                    character = entities_registry.character(principle.character_id)
+                    if character:
+                        print(f'set char id{character.id}')
+                        character_id = character.id
+                principle.node = Node(0, 0, type=GraphicsItemType.CHARACTER, size=40, character_id=character_id)
+
+            diagram.data.nodes.append(principle.node)
+
         self.setDiagram(diagram)
 
         socket1 = PlaceholderSocketItem()
@@ -69,12 +87,26 @@ class AlliesGraphicsScene(NetworkScene):
         self.__addIcon(Node(355, 195, GraphicsItemType.ICON, icon='mdi.emoticon-happy', color='#00ca94', size=20))
         self.__addIcon(Node(-17, 195, GraphicsItemType.ICON, icon='fa5s.angry', color='#ef0000', size=20))
 
+        self.repo = RepositoryPersistenceManager.instance()
+
     @overrides
     def _addNewDefaultItem(self, pos: QPointF):
         pass
 
     @overrides
+    def _addNode(self, node: Node) -> NodeItem:
+        item = super()._addNode(node)
+
+        if isinstance(item, CharacterItem):
+            item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
+            item.setConfinedRect(QRectF(-10, -10, 320, 330))
+            # item.setLabelVisible(False)
+
+        return item
+
+    @overrides
     def _addNewItem(self, scenePos: QPointF, itemType: GraphicsItemType, subType: str = '') -> NodeItem:
+        print('add new item')
         item: CharacterItem = super()._addNewItem(scenePos, itemType, subType)
         item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
         item.setConfinedRect(QRectF(-10, -10, 320, 330))
@@ -85,7 +117,8 @@ class AlliesGraphicsScene(NetworkScene):
 
     @overrides
     def _save(self):
-        pass
+        print('save')
+        self.repo.update_novel(self._novel)
 
     def __addIcon(self, node: Node):
         icon = IconItem(node)
@@ -99,9 +132,10 @@ class AlliesGraphicsScene(NetworkScene):
 
 
 class AlliesGraphicsView(NetworkGraphicsView):
-    def __init__(self, novel: Novel, parent=None):
-        super().__init__(parent)
+    def __init__(self, novel: Novel, principleGroup: DynamicPlotPrincipleGroup, parent=None):
         self._novel = novel
+        self._group = principleGroup
+        super().__init__(parent)
         self.setBackgroundBrush(QColor(RELAXED_WHITE_COLOR))
         self.setRubberBandEnabled(False)
         self.setScalingEnabled(False)
@@ -118,7 +152,7 @@ class AlliesGraphicsView(NetworkGraphicsView):
 
     @overrides
     def _initScene(self) -> NetworkScene:
-        return AlliesGraphicsScene()
+        return AlliesGraphicsScene(self._novel, self._group)
 
     @overrides
     def _characterSelectorMenu(self) -> CharacterSelectorMenu:
