@@ -765,6 +765,7 @@ class NodeItem(QAbstractGraphicsShapeItem):
         super().__init__(parent)
         self._node = node
         self._confinedRect: Optional[QRectF] = None
+        self._editOnDoubleClickEnabled: bool = True
 
         self.setPos(node.x, node.y)
         self._sockets: List[AbstractSocketItem] = []
@@ -805,6 +806,9 @@ class NodeItem(QAbstractGraphicsShapeItem):
 
     def setPosCommandEnabled(self, enabled: bool):
         self._posCommandEnabled = enabled
+
+    def setDoubleClickEditEnabled(self, enabled: bool):
+        self._editOnDoubleClickEnabled = enabled
 
     def setConfinedRect(self, rect: QRectF):
         self._confinedRect = rect
@@ -1011,7 +1015,8 @@ class CharacterItem(CircleShapedNodeItem):
 
     @overrides
     def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
-        self.networkScene().editItemEvent(self)
+        if self._editOnDoubleClickEnabled:
+            self.networkScene().editItemEvent(self)
 
     @overrides
     def _recalculate(self):
@@ -1043,12 +1048,8 @@ class IconItem(CircleShapedNodeItem):
         color_str = node.color if node.icon else 'grey'
         self._icon = IconRegistry.from_name(node.icon if node.icon else 'fa5s.icons', color_str)
         self._color: QColor = QColor(color_str)
-        self._editOnDoubleClickEnabled: bool = True
 
         self._recalculate()
-
-    def setDoubleClickEditEnabled(self, enabled: bool):
-        self._editOnDoubleClickEnabled = enabled
 
     def setIcon(self, icon: str):
         self._node.icon = icon

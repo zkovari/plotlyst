@@ -117,6 +117,7 @@ class AlliesGraphicsScene(NetworkScene):
             item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
             item.setConfinedRect(QRectF(-10, -10, 320, 330))
             item.setZValue(1)
+            item.setDoubleClickEditEnabled(False)
             # item.setLabelVisible(False)
 
         return item
