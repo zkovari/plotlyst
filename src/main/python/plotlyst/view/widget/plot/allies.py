@@ -91,6 +91,7 @@ class AlliesGraphicsScene(NetworkScene):
         icon = IconItem(node)
         icon.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
         icon.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
+        icon.setDoubleClickEditEnabled(False)
         effect = QGraphicsOpacityEffect()
         effect.setOpacity(0.5)
         icon.setGraphicsEffect(effect)

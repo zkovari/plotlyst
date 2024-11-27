@@ -1042,8 +1042,12 @@ class IconItem(CircleShapedNodeItem):
         color_str = node.color if node.icon else 'grey'
         self._icon = IconRegistry.from_name(node.icon if node.icon else 'fa5s.icons', color_str)
         self._color: QColor = QColor(color_str)
+        self._editOnDoubleClickEnabled: bool = True
 
         self._recalculate()
+
+    def setDoubleClickEditEnabled(self, enabled: bool):
+        self._editOnDoubleClickEnabled = enabled
 
     def setIcon(self, icon: str):
         self._node.icon = icon
@@ -1069,7 +1073,8 @@ class IconItem(CircleShapedNodeItem):
 
     @overrides
     def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
-        self.networkScene().editItemEvent(self)
+        if self._editOnDoubleClickEnabled:
+            self.networkScene().editItemEvent(self)
 
 
 class EventItem(NodeItem):
