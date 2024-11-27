@@ -817,6 +817,7 @@ class NodeItem(QAbstractGraphicsShapeItem):
                 new_pos.setX(max(self._confinedRect.left(), min(self._confinedRect.right(), new_pos.x())))
                 new_pos.setY(max(self._confinedRect.top(), min(self._confinedRect.bottom(), new_pos.y())))
                 self.setPos(new_pos)
+                self._onPosChanged()
                 return new_pos
 
             self._onPosChanged()
