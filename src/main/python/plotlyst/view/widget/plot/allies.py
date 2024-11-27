@@ -17,13 +17,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import qtanim
 from PyQt6.QtCore import QPointF, Qt, QRectF
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QGraphicsOpacityEffect
 from overrides import overrides
 
 from plotlyst.common import RELAXED_WHITE_COLOR
-from plotlyst.core.domain import GraphicsItemType, Diagram, DiagramData, Novel, Node, DynamicPlotPrincipleGroup
+from plotlyst.core.domain import GraphicsItemType, Diagram, DiagramData, Novel, Node, DynamicPlotPrincipleGroup, \
+    DynamicPlotPrinciple
 from plotlyst.service.cache import entities_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.widget.characters import CharacterSelectorMenu
@@ -37,6 +39,7 @@ class AlliesGraphicsScene(NetworkScene):
         super().__init__(parent)
         self._novel = novel
         self._group = principleGroup
+        self._anim = None
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -45,15 +48,7 @@ class AlliesGraphicsScene(NetworkScene):
 
         for principle in self._group.principles:
             if principle.node is None:
-                print('princ node is None')
-                character_id = None
-                if principle.character_id:
-                    character = entities_registry.character(principle.character_id)
-                    if character:
-                        print(f'set char id{character.id}')
-                        character_id = character.id
-                principle.node = Node(0, 0, type=GraphicsItemType.CHARACTER, size=40, character_id=character_id)
-                self._save()
+                self.__initNode(principle)
 
             diagram.data.nodes.append(principle.node)
 
@@ -91,6 +86,13 @@ class AlliesGraphicsScene(NetworkScene):
         self.__addIcon(Node(355, 195, GraphicsItemType.ICON, icon='mdi.emoticon-happy', color='#00ca94', size=20))
         self.__addIcon(Node(-17, 195, GraphicsItemType.ICON, icon='fa5s.angry', color='#ef0000', size=20))
 
+    def addNewAlly(self, principle: DynamicPlotPrinciple):
+        self.__initNode(principle)
+        self._diagram.data.nodes.append(principle.node)
+        item = self._addNode(principle.node)
+
+        self._anim = qtanim.fade_in(item)
+
     @overrides
     def _addNewDefaultItem(self, pos: QPointF):
         pass
@@ -107,20 +109,29 @@ class AlliesGraphicsScene(NetworkScene):
 
         return item
 
-    @overrides
-    def _addNewItem(self, scenePos: QPointF, itemType: GraphicsItemType, subType: str = '') -> NodeItem:
-        print('add new item')
-        item: CharacterItem = super()._addNewItem(scenePos, itemType, subType)
-        item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
-        item.setConfinedRect(QRectF(-10, -10, 320, 330))
-        item.setLabelVisible(False)
-        item.setSize(40)
-
-        return item
+    # @overrides
+    # def _addNewItem(self, scenePos: QPointF, itemType: GraphicsItemType, subType: str = '') -> NodeItem:
+    #     print('add new item')
+    #     item: CharacterItem = super()._addNewItem(scenePos, itemType, subType)
+    #     item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
+    #     item.setConfinedRect(QRectF(-10, -10, 320, 330))
+    #     item.setLabelVisible(False)
+    #     item.setSize(40)
+    #
+    #     return item
 
     @overrides
     def _save(self):
         self.repo.update_novel(self._novel)
+
+    def __initNode(self, principle: DynamicPlotPrinciple):
+        character_id = None
+        if principle.character_id:
+            character = entities_registry.character(principle.character_id)
+            if character:
+                character_id = character.id
+        principle.node = Node(0, 0, type=GraphicsItemType.CHARACTER, size=40, character_id=character_id)
+        self._save()
 
     def __addIcon(self, node: Node):
         icon = IconItem(node)
@@ -151,6 +162,9 @@ class AlliesGraphicsView(NetworkGraphicsView):
 
         self._controlsNavBar.setHidden(True)
         self._wdgZoomBar.setHidden(True)
+
+    def addNewAlly(self, item: DynamicPlotPrinciple):
+        self._scene.addNewAlly(item)
 
     @overrides
     def _initScene(self) -> NetworkScene:
