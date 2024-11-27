@@ -37,6 +37,9 @@ class AlliesGraphicsScene(NetworkScene):
         super().__init__(parent)
         self._novel = novel
         self._group = principleGroup
+
+        self.repo = RepositoryPersistenceManager.instance()
+
         diagram = Diagram('Allies')
         diagram.data = DiagramData()
 
@@ -50,6 +53,7 @@ class AlliesGraphicsScene(NetworkScene):
                         print(f'set char id{character.id}')
                         character_id = character.id
                 principle.node = Node(0, 0, type=GraphicsItemType.CHARACTER, size=40, character_id=character_id)
+                self._save()
 
             diagram.data.nodes.append(principle.node)
 
@@ -87,8 +91,6 @@ class AlliesGraphicsScene(NetworkScene):
         self.__addIcon(Node(355, 195, GraphicsItemType.ICON, icon='mdi.emoticon-happy', color='#00ca94', size=20))
         self.__addIcon(Node(-17, 195, GraphicsItemType.ICON, icon='fa5s.angry', color='#ef0000', size=20))
 
-        self.repo = RepositoryPersistenceManager.instance()
-
     @overrides
     def _addNewDefaultItem(self, pos: QPointF):
         pass
@@ -100,6 +102,7 @@ class AlliesGraphicsScene(NetworkScene):
         if isinstance(item, CharacterItem):
             item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
             item.setConfinedRect(QRectF(-10, -10, 320, 330))
+            item.setZValue(1)
             # item.setLabelVisible(False)
 
         return item
@@ -117,7 +120,6 @@ class AlliesGraphicsScene(NetworkScene):
 
     @overrides
     def _save(self):
-        print('save')
         self.repo.update_novel(self._novel)
 
     def __addIcon(self, node: Node):
