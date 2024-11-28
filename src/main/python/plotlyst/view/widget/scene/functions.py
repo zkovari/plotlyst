@@ -366,7 +366,7 @@ class SceneFunctionsWidget(QWidget):
         self.btnPrimaryPlus.installEventFilter(OpacityEventFilter(self.btnPrimaryPlus, leaveOpacity=0.7))
         self.menuPrimary = MenuWidget(self.btnPrimaryPlus)
         self.menuPrimary.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
-        self.menuPrimary.addSection('Select a primary function that this scene fulfils')
+        self.menuPrimary.addSection('Select a primary function that this scene fulfills')
         self.menuPrimary.addSeparator()
         self.menuPrimary.addAction(action('Advance story', IconRegistry.storylines_icon(),
                                           slot=partial(self._addPrimary, StoryElementType.Plot),
@@ -396,7 +396,7 @@ class SceneFunctionsWidget(QWidget):
         self.btnSecondaryPlus.installEventFilter(OpacityEventFilter(self.btnPrimaryPlus, leaveOpacity=0.7))
         self.menuSecondary = MenuWidget(self.btnSecondaryPlus)
         self.menuSecondary.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
-        self.menuSecondary.addSection('Select a secondary function that this scene also fulfils')
+        self.menuSecondary.addSection('Select a secondary function that this scene also fulfills')
         self.menuSecondary.addSeparator()
         self.menuSecondary.addAction(
             action('Setup', IconRegistry.setup_scene_icon('black'),
