@@ -55,7 +55,19 @@ class AlliesSupportingSlider(QWidget):
         self.layout().addWidget(self.slider)
 
     def setPrinciples(self, principles: List[DynamicPlotPrinciple]):
-        pass
+        ally = 0
+        enemy = 0
+        for principle in principles:
+            if principle.node is None:
+                continue
+            y = principle.node.y - ALLY_SEPARATOR
+            if y > 0:
+                enemy += y
+            else:
+                ally += y
+
+        self.slider.setMaximum(int(abs(ally) + enemy))
+        self.slider.setValue(int(abs(ally)))
 
 
 class AlliesEmotionalSlider(QWidget):
@@ -75,6 +87,9 @@ class AlliesEmotionalSlider(QWidget):
 
     def setPrinciples(self, principles: List[DynamicPlotPrinciple]):
         pass
+
+
+ALLY_SEPARATOR: int = 175
 
 
 class AlliesGraphicsScene(NetworkScene):
@@ -160,7 +175,7 @@ class AlliesGraphicsScene(NetworkScene):
         principle.node.x = item.pos().x()
         principle.node.y = item.pos().y()
 
-        new_type = DynamicPlotPrincipleType.ENEMY if item.pos().y() > 175 else DynamicPlotPrincipleType.ALLY
+        new_type = DynamicPlotPrincipleType.ENEMY if item.pos().y() > ALLY_SEPARATOR else DynamicPlotPrincipleType.ALLY
 
         if principle.type != new_type:
             principle.type = new_type
@@ -181,6 +196,7 @@ class AlliesGraphicsScene(NetworkScene):
             item.setConfinedRect(QRectF(-10, -10, 320, 330))
             item.setZValue(1)
             item.setDoubleClickEditEnabled(False)
+            item.setCursor(Qt.CursorShape.OpenHandCursor)
             decr_font(item.labelItem(), 3)
             item.updateLabel()
 

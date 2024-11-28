@@ -547,6 +547,9 @@ class AlliesPrinciplesGroupWidget(BasePlotPrinciplesGroupWidget):
         self.view.alliesScene().posChanged.connect(self._posChanged)
         self.view.alliesScene().allyChanged.connect(self._allyChanged)
 
+        self._supporterSlider.setPrinciples(self.group.principles)
+        self._emotionSlider.setPrinciples(self.group.principles)
+
     def _posChanged(self, _: DynamicPlotPrinciple):
         self._supporterSlider.setPrinciples(self.group.principles)
         self._emotionSlider.setPrinciples(self.group.principles)
