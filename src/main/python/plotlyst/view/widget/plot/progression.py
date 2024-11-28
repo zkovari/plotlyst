@@ -24,7 +24,7 @@ from PyQt6.QtCore import Qt, pyqtSignal, QPointF
 from PyQt6.QtGui import QIcon, QEnterEvent, QPaintEvent, QPainter, QBrush, QColor
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import vbox, incr_icon, bold, spacer, retain_when_hidden, margins, transparent, hbox
+from qthandy import vbox, incr_icon, bold, spacer, retain_when_hidden, margins, transparent, hbox, sp
 from qthandy.filter import VisibilityToggleEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
@@ -45,7 +45,7 @@ from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.display import IconText
 from plotlyst.view.widget.input import RemovalButton
 from plotlyst.view.widget.outline import OutlineItemWidget, OutlineTimelineWidget
-from plotlyst.view.widget.plot.allies import AlliesGraphicsView
+from plotlyst.view.widget.plot.allies import AlliesGraphicsView, AlliesSupportingSlider, AlliesEmotionalSlider
 
 storyline_progression_steps_descriptions = {
     PlotType.Main: {
@@ -518,16 +518,38 @@ class AlliesPrinciplesGroupWidget(BasePlotPrinciplesGroupWidget):
         self._wdgPrinciples = DynamicPlotPrinciplesWidget(novel, self.group)
         self._wdgPrinciples.setStructure(self.group.principles)
 
+        self._supporterSlider = AlliesSupportingSlider()
+        self._emotionSlider = AlliesEmotionalSlider()
+
+        self._leftEditor = QWidget()
+        sp(self._leftEditor).h_max()
+        vbox(self._leftEditor, spacing=0)
+        self._toolbar = frame()
+        self._toolbar.setProperty('relaxed-white-bg', True)
+        self._toolbar.setProperty('rounded-on-top', True)
+        hbox(self._toolbar)
+        self._toolbar.layout().addWidget(self._supporterSlider)
+        self._toolbar.layout().addWidget(self._emotionSlider)
+
         self.view = AlliesGraphicsView(self.novel, self.group)
-        margins(self.frame, 15, 20, 20, 20)
-        self.frame.layout().addWidget(self.view, alignment=Qt.AlignmentFlag.AlignTop)
+
+        self._leftEditor.layout().addWidget(self._toolbar)
+        self._leftEditor.layout().addWidget(self.view)
+
+        margins(self.frame, 15, 5, 20, 20)
+        self.frame.layout().addWidget(self._leftEditor, alignment=Qt.AlignmentFlag.AlignTop)
         self.frame.layout().addWidget(self._wdgPrinciples)
 
         self._wdgPrinciples.principleAdded.connect(self.view.addNewAlly)
         self._wdgPrinciples.principleRemoved.connect(self.view.removeAlly)
         self._wdgPrinciples.characterChanged.connect(self.view.updateAlly)
 
-        self.view.alliesScene().posChanged.connect(self._allyChanged)
+        self.view.alliesScene().posChanged.connect(self._posChanged)
+        self.view.alliesScene().allyChanged.connect(self._allyChanged)
+
+    def _posChanged(self, _: DynamicPlotPrinciple):
+        self._supporterSlider.setPrinciples(self.group.principles)
+        self._emotionSlider.setPrinciples(self.group.principles)
 
     def _allyChanged(self, principle: DynamicPlotPrinciple):
         self._wdgPrinciples.updatePrinciple(principle)

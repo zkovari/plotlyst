@@ -17,28 +17,69 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
 import qtanim
 from PyQt6.QtCore import QPointF, Qt, QRectF, pyqtSignal
 from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QGraphicsOpacityEffect
+from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QGraphicsOpacityEffect, QSlider, QWidget
 from overrides import overrides
-from qthandy import decr_font
+from qthandy import decr_font, vbox
 
 from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import GraphicsItemType, Diagram, DiagramData, Novel, Node, DynamicPlotPrincipleGroup, \
     DynamicPlotPrinciple, Character, DynamicPlotPrincipleType
 from plotlyst.service.cache import entities_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.characters import CharacterSelectorMenu
+from plotlyst.view.widget.display import IconText
 from plotlyst.view.widget.graphics import NetworkGraphicsView, NetworkScene, NodeItem, CharacterItem, \
     PlaceholderSocketItem, ConnectorItem
 from plotlyst.view.widget.graphics.items import IconItem
 
 
+class AlliesSupportingSlider(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.slider = QSlider()
+        self.slider.setOrientation(Qt.Orientation.Horizontal)
+        self.slider.setEnabled(False)
+
+        vbox(self)
+        self.label = IconText()
+        self.label.setText('Support')
+        self.label.setIcon(IconRegistry.from_name('fa5s.thumbs-up'))
+        self.layout().addWidget(self.label, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self.slider)
+
+    def setPrinciples(self, principles: List[DynamicPlotPrinciple]):
+        pass
+
+
+class AlliesEmotionalSlider(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.slider = QSlider()
+        self.slider.setOrientation(Qt.Orientation.Horizontal)
+        self.slider.setEnabled(False)
+
+        vbox(self)
+        self.label = IconText()
+        self.label.setText('Relationship')
+        self.label.setIcon(IconRegistry.from_name('mdi.emoticon-happy'))
+        self.layout().addWidget(self.label, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self.slider)
+
+    def setPrinciples(self, principles: List[DynamicPlotPrinciple]):
+        pass
+
+
 class AlliesGraphicsScene(NetworkScene):
     posChanged = pyqtSignal(DynamicPlotPrinciple)
+    allyChanged = pyqtSignal(DynamicPlotPrinciple)
 
     def __init__(self, novel: Novel, principleGroup: DynamicPlotPrincipleGroup, parent=None):
         super().__init__(parent)
@@ -116,12 +157,16 @@ class AlliesGraphicsScene(NetworkScene):
     def itemMovedEvent(self, item: NodeItem):
         super().itemMovedEvent(item)
         principle = self._principles[item.node()]
+        principle.node.x = item.pos().x()
+        principle.node.y = item.pos().y()
 
         new_type = DynamicPlotPrincipleType.ENEMY if item.pos().y() > 175 else DynamicPlotPrincipleType.ALLY
 
         if principle.type != new_type:
             principle.type = new_type
-            self.posChanged.emit(principle)
+            self.allyChanged.emit(principle)
+
+        self.posChanged.emit(principle)
 
     @overrides
     def _addNewDefaultItem(self, pos: QPointF):
