@@ -35,7 +35,7 @@ from plotlyst.core.domain import Novel, PlotType, PlotProgressionItem, \
 from plotlyst.core.template import antagonist_role
 from plotlyst.service.cache import entities_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import frame, fade_out_and_gc, action
+from plotlyst.view.common import frame, fade_out_and_gc, action, shadow
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.button import apply_button_palette_color
@@ -235,11 +235,21 @@ class AllyPlotPrincipleWidget(DynamicPlotPrincipleWidget):
     def __init__(self, novel: Novel, principle: DynamicPlotPrinciple, parent=None,
                  nameAlignment=Qt.AlignmentFlag.AlignCenter):
         super().__init__(novel, principle, parent, nameAlignment)
-        self._btnName.setText('Neutral')
+        if self.principle.node is None:
+            self._btnName.setText('Ally/Enemy')
+
+    def updateAlly(self):
+        self._btnName.setIcon(IconRegistry.from_name(self.principle.type.icon(), self._color()))
+        self._initStyle(name=self.principle.type.display_name(), desc=self.principle.type.placeholder())
+        qcolor = QColor(self._color())
+        qcolor.setAlpha(125)
+        shadow(self._text, color=qcolor)
 
     @overrides
     def _color(self) -> str:
-        return 'grey'
+        if self.principle.node is None:
+            return 'grey'
+        return super()._color()
 
 
 class DynamicPlotMultiPrincipleWidget(DynamicPlotPrincipleWidget):
@@ -383,6 +393,13 @@ class DynamicPlotPrinciplesWidget(OutlineTimelineWidget):
             if isinstance(wdg, DynamicPlotPrincipleWidget):
                 wdg.refreshCharacters()
 
+    def updatePrinciple(self, principle: DynamicPlotPrinciple):
+        for wdg in self._beatWidgets:
+            if isinstance(wdg, AllyPlotPrincipleWidget):
+                if wdg.principle == principle:
+                    wdg.updateAlly()
+                    return
+
     @overrides
     def _newBeatWidget(self, item: DynamicPlotPrinciple) -> OutlineItemWidget:
         if self.group.type in [DynamicPlotPrincipleGroupType.SUSPECTS, DynamicPlotPrincipleGroupType.CAST]:
@@ -509,6 +526,11 @@ class AlliesPrinciplesGroupWidget(BasePlotPrinciplesGroupWidget):
         self._wdgPrinciples.principleAdded.connect(self.view.addNewAlly)
         self._wdgPrinciples.principleRemoved.connect(self.view.removeAlly)
         self._wdgPrinciples.characterChanged.connect(self.view.updateAlly)
+
+        self.view.alliesScene().posChanged.connect(self._allyChanged)
+
+    def _allyChanged(self, principle: DynamicPlotPrinciple):
+        self._wdgPrinciples.updatePrinciple(principle)
 
 
 class DynamicPlotPrinciplesEditor(QWidget):

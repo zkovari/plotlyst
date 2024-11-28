@@ -3557,6 +3557,16 @@ class Node(CharacterBased):
     def __post_init__(self):
         self._character: Optional[Character] = None
 
+    @overrides
+    def __eq__(self, other: 'Node'):
+        if isinstance(other, Node):
+            return self.id == other.id
+        return False
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
 
 def to_node(x: float, y: float, type: GraphicsItemType, subtype: str = '', default_size: int = 12) -> Node:
     node = Node(x, y, type=type, subtype=subtype)

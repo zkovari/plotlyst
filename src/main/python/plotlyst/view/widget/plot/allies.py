@@ -17,17 +17,17 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional
+from typing import Optional, Dict
 
 import qtanim
-from PyQt6.QtCore import QPointF, Qt, QRectF
+from PyQt6.QtCore import QPointF, Qt, QRectF, pyqtSignal
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QGraphicsOpacityEffect
 from overrides import overrides
 
 from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import GraphicsItemType, Diagram, DiagramData, Novel, Node, DynamicPlotPrincipleGroup, \
-    DynamicPlotPrinciple, Character
+    DynamicPlotPrinciple, Character, DynamicPlotPrincipleType
 from plotlyst.service.cache import entities_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.widget.characters import CharacterSelectorMenu
@@ -37,11 +37,14 @@ from plotlyst.view.widget.graphics.items import IconItem
 
 
 class AlliesGraphicsScene(NetworkScene):
+    posChanged = pyqtSignal(DynamicPlotPrinciple)
+
     def __init__(self, novel: Novel, principleGroup: DynamicPlotPrincipleGroup, parent=None):
         super().__init__(parent)
         self._novel = novel
         self._group = principleGroup
         self._anim = None
+        self._principles: Dict[Node, DynamicPlotPrinciple] = {}
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -51,6 +54,7 @@ class AlliesGraphicsScene(NetworkScene):
         for principle in self._group.principles:
             if principle.node is None:
                 self.__initNode(principle)
+            self._principles[principle.node] = principle
 
             diagram.data.nodes.append(principle.node)
 
@@ -90,6 +94,7 @@ class AlliesGraphicsScene(NetworkScene):
 
     def addNewAlly(self, principle: DynamicPlotPrinciple):
         self.__initNode(principle)
+        self._principles[principle.node] = principle
         self._diagram.data.nodes.append(principle.node)
         item = self._addNode(principle.node)
 
@@ -98,12 +103,24 @@ class AlliesGraphicsScene(NetworkScene):
     def removeAlly(self, principle: DynamicPlotPrinciple):
         item = self.__findItem(principle)
         if item:
+            self._principles.pop(item.node())
             self._removeItem(item)
 
     def updateAlly(self, principle: DynamicPlotPrinciple, character: Character):
         item = self.__findItem(principle)
         if item:
             item.setCharacter(character)
+
+    @overrides
+    def itemMovedEvent(self, item: NodeItem):
+        super().itemMovedEvent(item)
+        principle = self._principles[item.node()]
+
+        new_type = DynamicPlotPrincipleType.ENEMY if item.pos().y() > 175 else DynamicPlotPrincipleType.ALLY
+
+        if principle.type != new_type:
+            principle.type = new_type
+            self.posChanged.emit(principle)
 
     @overrides
     def _addNewDefaultItem(self, pos: QPointF):
@@ -170,6 +187,9 @@ class AlliesGraphicsView(NetworkGraphicsView):
 
         self._controlsNavBar.setHidden(True)
         self._wdgZoomBar.setHidden(True)
+
+    def alliesScene(self) -> AlliesGraphicsScene:
+        return self._scene
 
     def addNewAlly(self, item: DynamicPlotPrinciple):
         self._scene.addNewAlly(item)
