@@ -86,10 +86,23 @@ class AlliesEmotionalSlider(QWidget):
         self.layout().addWidget(self.slider)
 
     def setPrinciples(self, principles: List[DynamicPlotPrinciple]):
-        pass
+        pos = 0
+        neg = 0
+        for principle in principles:
+            if principle.node is None:
+                continue
+            x = principle.node.x - POSITIVE_RELATION_SEPARATOR
+            if x > 0:
+                pos += x
+            else:
+                neg += x
+
+        self.slider.setMaximum(int(abs(neg) + pos))
+        self.slider.setValue(int(pos))
 
 
 ALLY_SEPARATOR: int = 175
+POSITIVE_RELATION_SEPARATOR: int = 155
 
 
 class AlliesGraphicsScene(NetworkScene):
