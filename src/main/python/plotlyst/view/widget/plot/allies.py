@@ -24,7 +24,7 @@ from PyQt6.QtCore import QPointF, Qt, QRectF, pyqtSignal
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QGraphicsOpacityEffect, QSlider, QWidget
 from overrides import overrides
-from qthandy import decr_font, vbox
+from qthandy import decr_font, vbox, translucent
 
 from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import GraphicsItemType, Diagram, DiagramData, Novel, Node, DynamicPlotPrincipleGroup, \
@@ -45,11 +45,14 @@ class AlliesSupportingSlider(QWidget):
 
         self.slider = QSlider()
         self.slider.setOrientation(Qt.Orientation.Horizontal)
+        self.slider.setProperty('ally-enemy', True)
         self.slider.setEnabled(False)
 
         vbox(self)
         self.label = IconText()
         self.label.setText('Support')
+        translucent(self.label, 0.7)
+        translucent(self.slider, 0.7)
         self.label.setIcon(IconRegistry.from_name('fa5s.thumbs-up'))
         self.layout().addWidget(self.label, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self.slider)
@@ -69,6 +72,11 @@ class AlliesSupportingSlider(QWidget):
         self.slider.setMaximum(int(abs(ally) + enemy))
         self.slider.setValue(int(abs(ally)))
 
+        if abs(ally) > enemy:
+            self.label.setIcon(IconRegistry.from_name('fa5s.thumbs-up', '#266dd3'))
+        else:
+            self.label.setIcon(IconRegistry.from_name('fa5s.thumbs-down', '#9e1946'))
+
 
 class AlliesEmotionalSlider(QWidget):
     def __init__(self, parent=None):
@@ -76,11 +84,14 @@ class AlliesEmotionalSlider(QWidget):
 
         self.slider = QSlider()
         self.slider.setOrientation(Qt.Orientation.Horizontal)
+        self.slider.setProperty('relationship', True)
         self.slider.setEnabled(False)
 
         vbox(self)
         self.label = IconText()
         self.label.setText('Relationship')
+        translucent(self.label, 0.7)
+        translucent(self.slider, 0.7)
         self.label.setIcon(IconRegistry.from_name('mdi.emoticon-happy'))
         self.layout().addWidget(self.label, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self.slider)
@@ -99,6 +110,11 @@ class AlliesEmotionalSlider(QWidget):
 
         self.slider.setMaximum(int(abs(neg) + pos))
         self.slider.setValue(int(pos))
+
+        if pos > abs(neg):
+            self.label.setIcon(IconRegistry.from_name('mdi.emoticon-happy', '#00ca94'))
+        else:
+            self.label.setIcon(IconRegistry.from_name('fa5s.angry', '#ef0000'))
 
 
 ALLY_SEPARATOR: int = 175
