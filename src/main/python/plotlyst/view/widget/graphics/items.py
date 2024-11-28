@@ -1000,8 +1000,14 @@ class CharacterItem(CircleShapedNodeItem):
         self._refreshLabel()
         self.networkScene().nodeChangedEvent(self._node)
 
+    def labelItem(self) -> QGraphicsTextItem:
+        return self._label
+
     def setLabelVisible(self, visible: bool):
         self._label.setVisible(visible)
+
+    def updateLabel(self):
+        self._refreshLabel()
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:

@@ -24,6 +24,7 @@ from PyQt6.QtCore import QPointF, Qt, QRectF, pyqtSignal
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QGraphicsOpacityEffect
 from overrides import overrides
+from qthandy import decr_font
 
 from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import GraphicsItemType, Diagram, DiagramData, Novel, Node, DynamicPlotPrincipleGroup, \
@@ -135,7 +136,8 @@ class AlliesGraphicsScene(NetworkScene):
             item.setConfinedRect(QRectF(-10, -10, 320, 330))
             item.setZValue(1)
             item.setDoubleClickEditEnabled(False)
-            # item.setLabelVisible(False)
+            decr_font(item.labelItem(), 3)
+            item.updateLabel()
 
         return item
 

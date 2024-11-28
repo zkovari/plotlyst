@@ -519,7 +519,7 @@ class AlliesPrinciplesGroupWidget(BasePlotPrinciplesGroupWidget):
         self._wdgPrinciples.setStructure(self.group.principles)
 
         self.view = AlliesGraphicsView(self.novel, self.group)
-        margins(self.frame, 35, 20, 20, 20)
+        margins(self.frame, 15, 20, 20, 20)
         self.frame.layout().addWidget(self.view, alignment=Qt.AlignmentFlag.AlignTop)
         self.frame.layout().addWidget(self._wdgPrinciples)
 
