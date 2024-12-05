@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
+from functools import partial
 from typing import Optional, Any, Tuple, List
 
 import emoji
@@ -526,4 +527,4 @@ class ReferencesButton(QPushButton):
 
     def addRefs(self, refs: List[Tuple[str, str]]):
         for ref in refs:
-            self._menu.addAction(action(ref[0], slot=lambda: open_url(ref[1])))
+            self._menu.addAction(action(ref[0], slot=partial(open_url, ref[1])))
