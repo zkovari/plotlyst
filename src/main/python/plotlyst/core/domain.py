@@ -2355,6 +2355,8 @@ class Location:
     summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
     children: List['Location'] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     sensory_detail: SensoryDetail = field(default_factory=SensoryDetail)
+    icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    icon_color: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
     @overrides
     def __eq__(self, other: 'Location'):
