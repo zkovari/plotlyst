@@ -370,7 +370,9 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
 
     @overrides
     def event_received(self, event: Event):
-        if isinstance(event, CharacterDeletedEvent):
+        if self.plot.plot_type == PlotType.Global:
+            pass
+        elif isinstance(event, CharacterDeletedEvent):
             if self._characterSelector.character() and self._characterSelector.character().id == event.character.id:
                 self._characterSelector.reset()
             if self._characterRelationSelector and self._characterRelationSelector.character() and self._characterRelationSelector.character().id == event.character.id:
