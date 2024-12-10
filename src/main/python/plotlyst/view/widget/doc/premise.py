@@ -424,6 +424,7 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
 
         self.premiseArchiveModel = PremiseArchiveTableModel(self._premise)
         self.tblPremiseArchive.setModel(self.premiseArchiveModel)
+        self.tblPremiseArchive.setStyleSheet('padding: 5px;')
         stretch_col(self.tblPremiseArchive, 0)
         self.tblPremiseArchive.selectionModel().selectionChanged.connect(self._archiveSelectionChanged)
         self.tblPremiseArchive.doubleClicked.connect(self._restoreFromArchive)

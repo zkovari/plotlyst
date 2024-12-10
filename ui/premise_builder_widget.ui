@@ -667,6 +667,9 @@
                 </item>
                 <item>
                  <widget class="QTableView" name="tblPremiseArchive">
+                  <property name="showGrid">
+                   <bool>false</bool>
+                  </property>
                   <attribute name="horizontalHeaderVisible">
                    <bool>false</bool>
                   </attribute>
