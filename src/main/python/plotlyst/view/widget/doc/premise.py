@@ -22,7 +22,7 @@ from functools import partial
 from typing import Any, Optional
 
 import qtanim
-from PyQt6.QtCore import Qt, pyqtSignal, QAbstractListModel, QModelIndex, QRegularExpression, QAbstractTableModel
+from PyQt6.QtCore import Qt, pyqtSignal, QModelIndex, QRegularExpression, QAbstractTableModel
 from PyQt6.QtGui import QFont, QMouseEvent, QResizeEvent, QTextCursor, QColor, QSyntaxHighlighter, QTextCharFormat, \
     QTextDocument
 from PyQt6.QtWidgets import QWidget, QApplication, QLineEdit
@@ -39,7 +39,6 @@ from plotlyst.core.domain import Document, PremiseBuilder, PremiseIdea, BoxParam
     PremiseReview
 from plotlyst.core.text import wc
 from plotlyst.env import app_env
-from plotlyst.model.common import proxy
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, frame, action, fade_out_and_gc, \
     tool_btn, insert_after, wrap, stretch_col, TooltipPositionEventFilter
 from plotlyst.view.generated.premise_builder_widget_ui import Ui_PremiseBuilderWidget
@@ -136,56 +135,6 @@ class IdeaWidget(QWidget):
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
         self.btnMenu.setGeometry(self.frame.width() - 25, 10, 20, 20)
-
-
-# class SelectedIdeasListModel(QAbstractListModel):
-#     SelectionRole = Qt.ItemDataRole.UserRole + 1
-#
-#     def __init__(self, premise: PremiseBuilder, parent=None):
-#         super().__init__(parent)
-#         self._premise = premise
-#
-#     @overrides
-#     def rowCount(self, parent: QModelIndex = ...) -> int:
-#         return len(self._premise.ideas)
-#
-#     @overrides
-#     def data(self, index: QModelIndex, role: int) -> Any:
-#         if role == self.SelectionRole:
-#             return str(self._premise.ideas[index.row()].selected)
-#         elif role == Qt.ItemDataRole.DisplayRole:
-#             return self._premise.ideas[index.row()].text
-#         elif role == Qt.ItemDataRole.DecorationRole:
-#             return IconRegistry.from_name('mdi.seed', 'grey')
-#         elif role == Qt.ItemDataRole.FontRole:
-#             font = QApplication.font()
-#             font.setPointSize(15)
-#             return font
-
-
-class SelectedQuestionsListModel(QAbstractListModel):
-    SelectionRole = Qt.ItemDataRole.UserRole + 1
-
-    def __init__(self, premise: PremiseBuilder, parent=None):
-        super().__init__(parent)
-        self._premise = premise
-
-    @overrides
-    def rowCount(self, parent: QModelIndex = ...) -> int:
-        return len(self._premise.questions)
-
-    @overrides
-    def data(self, index: QModelIndex, role: int) -> Any:
-        if role == self.SelectionRole:
-            return str(self._premise.questions[index.row()].selected)
-        elif role == Qt.ItemDataRole.DisplayRole:
-            return self._premise.questions[index.row()].text
-        elif role == Qt.ItemDataRole.DecorationRole:
-            return IconRegistry.from_name('fa5.question-circle', 'grey')
-        elif role == Qt.ItemDataRole.FontRole:
-            font = QApplication.font()
-            font.setPointSize(13)
-            return font
 
 
 class QuestionListItemWidget(ListItemWidget):
@@ -408,16 +357,6 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.btnNextToPremise.setIcon(IconRegistry.from_name('fa5s.arrow-alt-circle-right', RELAXED_WHITE_COLOR))
         self.btnNextToPremise.installEventFilter(ButtonPressResizeEventFilter(self.btnNextToPremise))
 
-        self.questionsModel = SelectedQuestionsListModel(self._premise)
-        self._proxyQuestions = proxy(self.questionsModel)
-        self._proxyQuestions.setFilterRole(SelectedQuestionsListModel.SelectionRole)
-        self.listSelectedQuestions.setModel(self._proxyQuestions)
-        self.listSelectedQuestions.setViewportMargins(20, 3, 3, 3)
-        self._proxyQuestions.setFilterFixedString('True')
-
-        self.listSelectedQuestions.setHidden(True)
-        self.subtitleConcept2.setHidden(True)
-
         self.btnPremiseIcon.setIcon(IconRegistry.from_name('mdi.label-variant'))
 
         self.keywordsEditor = LabelsEditor('Keywords')
@@ -499,15 +438,8 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
 
         if self._premise.current or self._premise.saved_premises:
             self.btnPremise.setChecked(True)
-        # elif self._premise.questions:
-        #     self.btnConcept.setChecked(True)
         else:
             self.btnSeed.setChecked(True)
-
-    # @overrides
-    # def resizeEvent(self, event: QResizeEvent) -> None:
-    #     self.listSelectedIdeas.model().modelReset.emit()
-    #     self.listSelectedIdeas.update()
 
     def _addNewIdea(self):
         text = TextAreaInputDialog.edit('Add a new idea', self.IDEA_EDIT_PLACEHOLDER, self.IDEA_EDIT_DESC)
@@ -524,24 +456,20 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
             wdg = self.__initIdeaWidget(idea)
             qtanim.fade_in(wdg)
             self.changed.emit()
-            # self._proxyIdeas.invalidate()
 
     def _editIdea(self, wdg: IdeaWidget):
         text = TextAreaInputDialog.edit('Edit idea', self.IDEA_EDIT_PLACEHOLDER, self.IDEA_EDIT_DESC, wdg.text())
         if text:
             wdg.setText(text)
             self.changed.emit()
-            # self._proxyIdeas.invalidate()
 
     def _removeIdea(self, wdg: IdeaWidget):
         idea = wdg.idea()
         self._premise.ideas.remove(idea)
         fade_out_and_gc(self.wdgIdeasEditor, wdg)
         self.changed.emit()
-        # self._proxyIdeas.invalidate()
 
     def _ideaToggled(self):
-        # self._proxyIdeas.invalidate()
         self.changed.emit()
 
     def _addNewConcept(self):
@@ -554,18 +482,15 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         wdg = self.__initConceptQuestionWidget(question)
         qtanim.fade_in(wdg, teardown=finish)
         self.changed.emit()
-        self._proxyQuestions.invalidate()
 
     def _removeConceptQuestion(self, wdg: ConceptQuestionWidget):
         question = wdg.question()
         fade_out_and_gc(self.wdgConceptEditor, wdg)
         self._premise.questions.remove(question)
         self.changed.emit()
-        self._proxyQuestions.invalidate()
 
     def _conceptQuestionChanged(self):
         self.changed.emit()
-        self._proxyQuestions.invalidate()
 
     def _keywordAdded(self, label: Label):
         self._premise.keywords.append(label)

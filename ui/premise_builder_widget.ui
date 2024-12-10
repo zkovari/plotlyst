@@ -140,7 +140,7 @@
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="pageSeed">
       <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -295,8 +295,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>544</width>
-            <height>457</height>
+            <width>558</width>
+            <height>355</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -324,50 +324,6 @@
            <property name="bottomMargin">
             <number>0</number>
            </property>
-           <item>
-            <widget class="Subtitle" name="subtitleConcept2" native="true">
-             <property name="title" stdset="0">
-              <string>Concept</string>
-             </property>
-             <property name="description" stdset="0">
-              <string>Your selected questions that you wish to express in a premise</string>
-             </property>
-             <property name="icon" stdset="0">
-              <string>fa5s.question-circle</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QListView" name="listSelectedQuestions">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>150</height>
-              </size>
-             </property>
-             <property name="frameShape">
-              <enum>QFrame::NoFrame</enum>
-             </property>
-             <property name="selectionMode">
-              <enum>QAbstractItemView::NoSelection</enum>
-             </property>
-             <property name="isWrapping" stdset="0">
-              <bool>false</bool>
-             </property>
-             <property name="viewMode">
-              <enum>QListView::ListMode</enum>
-             </property>
-             <property name="selectionRectVisible">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
            <item>
             <widget class="Subtitle" name="subtitlePremise" native="true">
              <property name="title" stdset="0">
