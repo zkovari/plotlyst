@@ -223,7 +223,7 @@ class DocumentsView(AbstractNovelView):
         self.ui.stackedEditor.setCurrentWidget(self.ui.customEditorPage)
 
     def _icon_changed(self, doc: Document):
-        if doc is self._current_doc:
+        if doc is self._current_doc and self._current_doc.type == DocumentType.DOCUMENT:
             self.textEditor.setTitleIcon(IconRegistry.from_name(doc.icon, doc.icon_color))
 
     def _icon_changed_in_editor(self, name: str, color: str):
