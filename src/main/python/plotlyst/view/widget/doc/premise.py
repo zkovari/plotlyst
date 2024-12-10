@@ -326,7 +326,9 @@ class PremiseArchiveTableModel(QAbstractTableModel):
         elif role == self.PremiseRole:
             return self.premise.saved_premises[index.row()]
         elif role == Qt.ItemDataRole.FontRole:
-            return QApplication.font()
+            font = QApplication.font()
+            font.setPointSize(font.pointSize() + 1)
+            return font
 
 
 class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
@@ -360,6 +362,7 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.btnPremiseIcon.setIcon(IconRegistry.from_name('mdi.label-variant'))
 
         self.keywordsEditor = LabelsEditor('Keywords')
+        self.keywordsEditor.setMaximumWidth(1000)
         insert_after(self.scrollAreaWidgetContents_3, wrap(self.keywordsEditor, margin_left=20),
                      self.subtitlePremise)
         for label in self._premise.keywords:
@@ -409,6 +412,7 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.btnDeletePremiseArchive.clicked.connect(self._removeFromArchive)
 
         self.btnCollapseArchive = CollapseButton()
+        self.btnCollapseArchive.setText(f'Archive ({len(self._premise.saved_premises)})')
         translucent(self.btnCollapseArchive, 0.4)
         self.wdgArchiveTop.layout().insertWidget(0, self.btnCollapseArchive)
         self.btnCollapseArchive.toggled.connect(self._toggleArchives)
@@ -417,7 +421,6 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.btnSavePremise.installEventFilter(ButtonPressResizeEventFilter(self.btnSavePremise))
         self.btnSavePremise.installEventFilter(OpacityEventFilter(self.btnSavePremise))
         self.btnSavePremise.clicked.connect(self._savePremise)
-        self.lblArchive.setText(f'Archive ({len(self._premise.saved_premises)})')
 
         self.premiseArchiveModel = PremiseArchiveTableModel(self._premise)
         self.tblPremiseArchive.setModel(self.premiseArchiveModel)
@@ -549,7 +552,7 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.textPremise.clear()
         self.premiseArchiveModel.modelReset.emit()
         self._archiveSelectionChanged()
-        self.lblArchive.setText(f'Archive ({len(self._premise.saved_premises)})')
+        self.btnCollapseArchive.setText(f'Archive ({len(self._premise.saved_premises)})')
         self.changed.emit()
 
     def _archiveSelectionChanged(self):
@@ -584,7 +587,7 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
             self._premise.saved_premises.remove(premise)
             self.premiseArchiveModel.modelReset.emit()
             self._archiveSelectionChanged()
-            self.lblArchive.setText(f'Archive ({len(self._premise.saved_premises)})')
+            self.btnCollapseArchive.setText(f'Archive ({len(self._premise.saved_premises)})')
             self.changed.emit()
 
     def __initIdeaWidget(self, idea: PremiseIdea) -> IdeaWidget:
