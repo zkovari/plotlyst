@@ -204,7 +204,7 @@
               <string>Ideas</string>
              </property>
              <property name="description" stdset="0">
-              <string>Throw ideas on the board, and toggle them on-and-off to narrow them down into developing your concept</string>
+              <string>Throw your ideas onto the board and toggle them on or off to narrow them down, developing your concept.</string>
              </property>
              <property name="icon" stdset="0">
               <string>fa5s.seedling</string>
@@ -295,7 +295,7 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>584</width>
+            <width>544</width>
             <height>457</height>
            </rect>
           </property>
@@ -758,7 +758,24 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>btnNextToPremise</sender>
+   <signal>clicked()</signal>
+   <receiver>btnPremise</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>530</x>
+     <y>415</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>379</x>
+     <y>45</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
  <buttongroups>
   <buttongroup name="buttonGroup"/>
  </buttongroups>
