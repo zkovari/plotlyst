@@ -138,29 +138,29 @@ class IdeaWidget(QWidget):
         self.btnMenu.setGeometry(self.frame.width() - 25, 10, 20, 20)
 
 
-class SelectedIdeasListModel(QAbstractListModel):
-    SelectionRole = Qt.ItemDataRole.UserRole + 1
-
-    def __init__(self, premise: PremiseBuilder, parent=None):
-        super().__init__(parent)
-        self._premise = premise
-
-    @overrides
-    def rowCount(self, parent: QModelIndex = ...) -> int:
-        return len(self._premise.ideas)
-
-    @overrides
-    def data(self, index: QModelIndex, role: int) -> Any:
-        if role == self.SelectionRole:
-            return str(self._premise.ideas[index.row()].selected)
-        elif role == Qt.ItemDataRole.DisplayRole:
-            return self._premise.ideas[index.row()].text
-        elif role == Qt.ItemDataRole.DecorationRole:
-            return IconRegistry.from_name('mdi.seed', 'grey')
-        elif role == Qt.ItemDataRole.FontRole:
-            font = QApplication.font()
-            font.setPointSize(15)
-            return font
+# class SelectedIdeasListModel(QAbstractListModel):
+#     SelectionRole = Qt.ItemDataRole.UserRole + 1
+#
+#     def __init__(self, premise: PremiseBuilder, parent=None):
+#         super().__init__(parent)
+#         self._premise = premise
+#
+#     @overrides
+#     def rowCount(self, parent: QModelIndex = ...) -> int:
+#         return len(self._premise.ideas)
+#
+#     @overrides
+#     def data(self, index: QModelIndex, role: int) -> Any:
+#         if role == self.SelectionRole:
+#             return str(self._premise.ideas[index.row()].selected)
+#         elif role == Qt.ItemDataRole.DisplayRole:
+#             return self._premise.ideas[index.row()].text
+#         elif role == Qt.ItemDataRole.DecorationRole:
+#             return IconRegistry.from_name('mdi.seed', 'grey')
+#         elif role == Qt.ItemDataRole.FontRole:
+#             font = QApplication.font()
+#             font.setPointSize(15)
+#             return font
 
 
 class SelectedQuestionsListModel(QAbstractListModel):
@@ -392,30 +392,20 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self._premise = premise
 
         self.btnSeed.setIcon(IconRegistry.from_name('fa5s.seedling', color_on=PLOTLYST_MAIN_COLOR))
-        self.btnConcept.setIcon(IconRegistry.from_name('fa5s.question-circle', color_on=PLOTLYST_MAIN_COLOR))
-        self.btnPremise.setIcon(IconRegistry.from_name('fa5s.scroll', color_on=PLOTLYST_MAIN_COLOR))
+        self.btnPremise.setIcon(IconRegistry.from_name('mdi.flower', color_on=PLOTLYST_MAIN_COLOR))
 
         incr_font(self.btnSeed, 2)
-        incr_font(self.btnConcept, 2)
         incr_font(self.btnPremise, 2)
 
-        self.btnNewIdea.setIcon(IconRegistry.plus_icon(RELAXED_WHITE_COLOR))
-        self.btnNewIdea.installEventFilter(ButtonPressResizeEventFilter(self.btnNewIdea))
+        self.btnNewIdea = tool_btn(IconRegistry.plus_icon(PLOTLYST_SECONDARY_COLOR), transparent_=True)
+        self.btnNewConcept = tool_btn(IconRegistry.plus_icon(PLOTLYST_SECONDARY_COLOR), transparent_=True)
+        self.subtitleIdeas.addWidget(self.btnNewIdea)
+        self.subtitleConcept.addWidget(self.btnNewConcept)
+
         self.btnNewIdea.clicked.connect(self._addNewIdea)
-        self.btnNewConcept.setIcon(IconRegistry.plus_icon(RELAXED_WHITE_COLOR))
-        self.btnNewConcept.installEventFilter(ButtonPressResizeEventFilter(self.btnNewConcept))
         self.btnNewConcept.clicked.connect(self._addNewConcept)
-        self.btnNextToConcept.setIcon(IconRegistry.from_name('fa5s.arrow-alt-circle-right', RELAXED_WHITE_COLOR))
-        self.btnNextToConcept.installEventFilter(ButtonPressResizeEventFilter(self.btnNextToConcept))
         self.btnNextToPremise.setIcon(IconRegistry.from_name('fa5s.arrow-alt-circle-right', RELAXED_WHITE_COLOR))
         self.btnNextToPremise.installEventFilter(ButtonPressResizeEventFilter(self.btnNextToPremise))
-
-        self.ideasModel = SelectedIdeasListModel(self._premise)
-        self._proxyIdeas = proxy(self.ideasModel)
-        self._proxyIdeas.setFilterRole(SelectedIdeasListModel.SelectionRole)
-        self.listSelectedIdeas.setModel(self._proxyIdeas)
-        self.listSelectedIdeas.setSpacing(20)
-        self._proxyIdeas.setFilterFixedString('True')
 
         self.questionsModel = SelectedQuestionsListModel(self._premise)
         self._proxyQuestions = proxy(self.questionsModel)
@@ -453,8 +443,7 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.textPremise.setText(self._premise.current)
         self.textPremise.textChanged.connect(self._premiseEdited)
 
-        link_buttons_to_pages(self.stackedWidget, [(self.btnSeed, self.pageSeed), (self.btnConcept, self.pageConcept),
-                                                   (self.btnPremise, self.pagePremise)])
+        link_buttons_to_pages(self.stackedWidget, [(self.btnSeed, self.pageSeed), (self.btnPremise, self.pagePremise)])
 
         self.btnPremiseHighlight.setIcon(IconRegistry.from_name('fa5s.highlighter', 'grey', PLOTLYST_SECONDARY_COLOR))
         self.btnPremiseHighlight.installEventFilter(ButtonPressResizeEventFilter(self.btnPremiseHighlight))
@@ -509,15 +498,15 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
 
         if self._premise.current or self._premise.saved_premises:
             self.btnPremise.setChecked(True)
-        elif self._premise.questions:
-            self.btnConcept.setChecked(True)
+        # elif self._premise.questions:
+        #     self.btnConcept.setChecked(True)
         else:
             self.btnSeed.setChecked(True)
 
-    @overrides
-    def resizeEvent(self, event: QResizeEvent) -> None:
-        self.listSelectedIdeas.model().modelReset.emit()
-        self.listSelectedIdeas.update()
+    # @overrides
+    # def resizeEvent(self, event: QResizeEvent) -> None:
+    #     self.listSelectedIdeas.model().modelReset.emit()
+    #     self.listSelectedIdeas.update()
 
     def _addNewIdea(self):
         text = TextAreaInputDialog.edit('Add a new idea', self.IDEA_EDIT_PLACEHOLDER, self.IDEA_EDIT_DESC)
@@ -534,24 +523,24 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
             wdg = self.__initIdeaWidget(idea)
             qtanim.fade_in(wdg)
             self.changed.emit()
-            self._proxyIdeas.invalidate()
+            # self._proxyIdeas.invalidate()
 
     def _editIdea(self, wdg: IdeaWidget):
         text = TextAreaInputDialog.edit('Edit idea', self.IDEA_EDIT_PLACEHOLDER, self.IDEA_EDIT_DESC, wdg.text())
         if text:
             wdg.setText(text)
             self.changed.emit()
-            self._proxyIdeas.invalidate()
+            # self._proxyIdeas.invalidate()
 
     def _removeIdea(self, wdg: IdeaWidget):
         idea = wdg.idea()
         self._premise.ideas.remove(idea)
         fade_out_and_gc(self.wdgIdeasEditor, wdg)
         self.changed.emit()
-        self._proxyIdeas.invalidate()
+        # self._proxyIdeas.invalidate()
 
     def _ideaToggled(self):
-        self._proxyIdeas.invalidate()
+        # self._proxyIdeas.invalidate()
         self.changed.emit()
 
     def _addNewConcept(self):
