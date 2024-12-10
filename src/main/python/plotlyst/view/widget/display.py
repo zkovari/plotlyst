@@ -36,6 +36,7 @@ from plotlyst.common import PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.help import mid_revision_scene_structure_help
 from plotlyst.core.template import Role
 from plotlyst.core.text import wc
+from plotlyst.env import app_env
 from plotlyst.view.common import emoji_font, insert_before_the_end, \
     ButtonPressResizeEventFilter, restyle, label, frame, shadow, tool_btn, push_btn, action, open_url
 from plotlyst.view.icons import IconRegistry
@@ -67,6 +68,8 @@ class Subtitle(QWidget):
         self.lblDescription.setProperty('description', True)
         self.lblDescription.setWordWrap(True)
         self.lblDescription.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        if app_env.is_mac():
+            incr_font(self.lblDescription, 2)
         self._top = group(self.icon, self.lblTitle, spacer(), parent=self)
         self.layout().addWidget(self._top)
         self.layout().addWidget(group(self._descSpacer, self.lblDescription, parent=self))

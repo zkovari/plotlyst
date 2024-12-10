@@ -1224,6 +1224,8 @@ class LabelWidget(QFrame):
         decr_icon(self.btnMenu, 2)
         hbox(self, 5)
         margins(self, left=7)
+        if not app_env.is_linux():
+            incr_font(self.lblWidget, 2)
         self.layout().addWidget(self.lblWidget)
         self.layout().addWidget(self.btnMenu)
         self.btnMenu.setHidden(True)
@@ -1312,6 +1314,8 @@ class LabelsEditor(QFrame):
             self.lblTitle.setHidden(True)
 
         self.linePlaceholder = QLineEdit()
+        if not app_env.is_linux():
+            incr_font(self.linePlaceholder, 2)
         self.linePlaceholder.setObjectName('labelPlaceholder')
         self.linePlaceholder.setProperty('transparent', True)
         self.linePlaceholder.setProperty(IGNORE_CAPITALIZATION_PROPERTY, True)
