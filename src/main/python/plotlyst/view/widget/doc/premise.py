@@ -257,13 +257,14 @@ class ConceptQuestionWidget(QWidget):
         self.children.changed.connect(self.changed)
 
         self.btnCollapse = CollapseButton()
+        translucent(self.btnCollapse, 0.6)
+        decr_icon(self.btnCollapse)
         self.btnCollapse.toggled.connect(self.container.setHidden)
         self.btnCollapse.setChecked(True)
 
         self.btnSelect = tool_btn(IconRegistry.from_name('fa5.question-circle', 'lightgrey', PLOTLYST_SECONDARY_COLOR),
                                   checkable=True, transparent_=True)
-        self.btnSelect.installEventFilter(
-            OpacityEventFilter(self.btnSelect, leaveOpacity=0.5, ignoreCheckedButton=True))
+        translucent(self.btnSelect, 0.7)
         self.btnSelect.setChecked(self._question.selected)
         incr_icon(self.btnSelect, 12)
         self.btnSelect.toggled.connect(self._toggled)

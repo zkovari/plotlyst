@@ -61,7 +61,7 @@ class DocumentAdditionMenu(MenuWidget):
         self._otherMenu = MenuWidget()
         self._otherMenu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         self._otherMenu.setTitle('Other')
-        self._otherMenu.addAction(action('Premise builder', IconRegistry.from_name('fa5s.scroll', '#0077b6'),
+        self._otherMenu.addAction(action('Premise builder', IconRegistry.from_name('mdi.flower'),
                                          lambda: self._premiseSelected(),
                                          tooltip="Turn ideas into concepts, and develop a final premise"))
 
@@ -83,7 +83,7 @@ class DocumentAdditionMenu(MenuWidget):
         self.documentTriggered.emit(doc)
 
     def _premiseSelected(self):
-        doc = Document('Premise', type=DocumentType.PREMISE, icon='fa5s.scroll', icon_color='#0077b6')
+        doc = Document('Premise', type=DocumentType.PREMISE, icon='mdi.flower')
         doc.data = PremiseBuilder()
         doc.data_id = doc.data.id
         doc.loaded = True
