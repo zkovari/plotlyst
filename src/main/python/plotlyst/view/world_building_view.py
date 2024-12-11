@@ -82,14 +82,6 @@ class WorldBuildingView(AbstractNovelView):
         apply_bg_image(self.ui.scrollAreaWidgetContents, resource_registry.paper_bg)
         self._palette = WorldBuildingPalette(bg_color='#ede0d4', primary_color='#510442', secondary_color='#DABFA7',
                                              tertiary_color='#E3D0BD')
-        # background: #F2F2F2;
-        # 692345;
-        # self.ui.wdgCenterEditor.setStyleSheet(f'''
-        # #wdgCenterEditor {{
-        #     background: {self._palette.bg_color};
-        #     border-radius: 12px;
-        # }}
-        # ''')
         self._separator = WorldBuildingSeparatorWidget(self._palette)
         self.ui.wdgNameHeader.layout().addWidget(self._separator)
 
@@ -124,7 +116,6 @@ class WorldBuildingView(AbstractNovelView):
 
         width = settings.worldbuilding_editor_max_width()
         self.ui.wdgCenterEditor.setMaximumWidth(width)
-        # self.ui.wdgSideBar.setStyleSheet(f'#wdgSideBar {{background: {self._palette.bg_color};}}')
         self._wdgSettings = WorldBuildingEditorSettingsWidget(width, self._palette)
         self._wdgSettings.setMaximumWidth(150)
         self.ui.wdgSideBar.layout().addWidget(self._wdgSettings, alignment=Qt.AlignmentFlag.AlignRight)
@@ -158,12 +149,6 @@ class WorldBuildingView(AbstractNovelView):
         font.setFamily(app_env.serif_font())
         self.ui.lineName.setFont(font)
         self.ui.lineName.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        # self.ui.lineName.setStyleSheet(f'''
-        # QLineEdit {{
-        #     border: 0px;
-        #     background-color: rgba(0, 0, 0, 0);
-        #     color: {self._palette.primary_color};
-        # }}''')
 
         self.ui.lineName.textEdited.connect(self._name_edited)
 
@@ -185,7 +170,6 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.pageMap.layout().addWidget(self.map)
 
         self.glossaryEditor = WorldBuildingGlossaryEditor(self.novel, self._palette)
-        # self.ui.wdgGlossaryParent.setStyleSheet(f'QWidget {{background: {self._palette.bg_color};}}')
         self.ui.wdgGlossaryParent.layout().addWidget(self.glossaryEditor)
 
         link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnMilieuView, self.ui.pageMilieu),
