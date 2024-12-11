@@ -1134,7 +1134,7 @@ class WorldBuildingEntityEditor(QWidget):
             element.title = topic.text
             header.title = topic.text
             header.icon = topic.icon
-        wdg = self.__initElementWidget(element, True)
+        wdg = self.__initElementWidget(element, True, self._palette)
         insert_before_the_end(self.wdgEditorMiddle, wdg, 2)
         qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
 
@@ -1154,7 +1154,7 @@ class WorldBuildingEntityEditor(QWidget):
 
     def _addNewSideBlock(self, type_: WorldBuildingEntityElementType):
         element = WorldBuildingEntityElement(type_)
-        wdg = self.__initElementWidget(element, False)
+        wdg = self.__initElementWidget(element, False, self._palette)
 
         insert_before_the_end(self.wdgEditorSide, wdg, 2)
         qtanim.fade_in(wdg, teardown=lambda: wdg.setGraphicsEffect(None))
@@ -1259,7 +1259,7 @@ class WorldBuildingEntityEditor(QWidget):
         else:
             self._entity.elements.insert(new_index, ref)
 
-        wdg = self.__initElementWidget(ref, True)
+        wdg = self.__initElementWidget(ref, True, self._palette)
         self.wdgEditorMiddle.layout().insertWidget(new_index, wdg)
 
     def __initElementWidget(self, element: WorldBuildingEntityElement, middle: bool,
