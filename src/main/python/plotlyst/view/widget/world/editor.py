@@ -26,7 +26,7 @@ from PyQt6.QtCore import pyqtSignal, Qt, QSize, QMimeData, QPointF, QEvent
 from PyQt6.QtGui import QFont, QResizeEvent, QMouseEvent, QColor, QIcon, QImage, \
     QShowEvent, QPixmap, QCursor, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QDialog, QGridLayout, QSlider, QToolButton, QButtonGroup, \
-    QLabel, QToolTip, QSpacerItem, QSizePolicy
+    QLabel, QToolTip, QSpacerItem, QSizePolicy, QFontComboBox
 from overrides import overrides
 from qthandy import vspacer, clear_layout, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy, \
     grid, flow, spacer, line, gc, translucent, incr_font, vline, bold
@@ -964,7 +964,7 @@ class SectionElementEditor(WorldBuildingEntityElementWidget):
 class MainSectionElementEditor(SectionElementEditor):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, palette: WorldBuildingPalette, parent=None,
                  editor=None):
-        super().__init__(novel, element, parent, editor)
+        super().__init__(novel, element, palette, parent, editor)
         self._palette = palette
         item = self.layout().itemAt(0)
         if item and item.widget():
