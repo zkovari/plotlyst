@@ -121,7 +121,7 @@ class WorldBuildingView(AbstractNovelView):
         width = settings.worldbuilding_editor_max_width()
         self.ui.wdgCenterEditor.setMaximumWidth(width)
         self.ui.wdgSideBar.setStyleSheet(f'#wdgSideBar {{background: {self._palette.bg_color};}}')
-        self._wdgSettings = WorldBuildingEditorSettingsWidget(width)
+        self._wdgSettings = WorldBuildingEditorSettingsWidget(width, self._palette)
         self._wdgSettings.setMaximumWidth(150)
         self.ui.wdgSideBar.layout().addWidget(self._wdgSettings, alignment=Qt.AlignmentFlag.AlignRight)
         self._wdgSettings.widthChanged.connect(self._editor_max_width_changed)

@@ -52,7 +52,7 @@ from plotlyst.view.widget.display import Icon, PopupDialog, DotsDragIcon
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, MarkdownPopupTextEditorToolbar
 from plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
 from plotlyst.view.widget.topic import TopicSelectionDialog
-from plotlyst.view.widget.utility import IconSelectorDialog
+from plotlyst.view.widget.utility import IconSelectorDialog, ColorSelectorButton
 from plotlyst.view.widget.world._topics import ecological_topics, cultural_topics, historical_topics, \
     linguistic_topics, technological_topics, economic_topics, infrastructural_topics, religious_topics, \
     fantastic_topics, nefarious_topics, environmental_topics, ecology_topic, culture_topic, history_topic, \
@@ -61,6 +61,7 @@ from plotlyst.view.widget.world._topics import ecological_topics, cultural_topic
 from plotlyst.view.widget.world.conceit import ConceitsTreeView, ConceitBubble
 from plotlyst.view.widget.world.glossary import GlossaryTextBlockHighlighter, GlossaryTextBlockData
 from plotlyst.view.widget.world.milieu import LocationsTreeView
+from plotlyst.view.widget.world.theme import WorldBuildingPalette
 
 
 class WorldBuildingTextEdit(AutoAdjustableTextEdit):
@@ -1313,12 +1314,55 @@ class EntityLayoutSettings(QWidget):
         return btn
 
 
+class PaletteSettings(QWidget):
+    paletteChanged = pyqtSignal()
+
+    def __init__(self, palette: WorldBuildingPalette, parent=None):
+        super().__init__(parent)
+        self.palette = palette
+        flow(self)
+
+        self.btnBgColor = ColorSelectorButton(self.palette.bg_color)
+        self.btnBgColor.colorChanged.connect(self._updateBgColor)
+
+        self.btnPrimaryColor = ColorSelectorButton(self.palette.primary_color)
+        self.btnPrimaryColor.colorChanged.connect(self._updatePrimaryColor)
+
+        self.btnSecondaryColor = ColorSelectorButton(self.palette.secondary_color)
+        self.btnSecondaryColor.colorChanged.connect(self._updateSecondaryColor)
+
+        self.btnTertiaryColor = ColorSelectorButton(self.palette.tertiary_color)
+        self.btnTertiaryColor.colorChanged.connect(self._updateTertiaryColor)
+
+        self.layout().addWidget(self.btnBgColor)
+        self.layout().addWidget(self.btnPrimaryColor)
+        self.layout().addWidget(self.btnSecondaryColor)
+        self.layout().addWidget(self.btnTertiaryColor)
+
+    def _updateBgColor(self, color: str):
+        self.palette.bg_color = color
+        self.paletteChanged.emit()
+
+    def _updatePrimaryColor(self, color: str):
+        self.palette.primary_color = color
+        self.paletteChanged.emit()
+
+    def _updateSecondaryColor(self, color: str):
+        self.palette.secondary_color = color
+        self.paletteChanged.emit()
+
+    def _updateTertiaryColor(self, color: str):
+        self.palette.tertiary_color = color
+        self.paletteChanged.emit()
+
+
 class WorldBuildingEditorSettingsWidget(QWidget):
     widthChanged = pyqtSignal(int)
     layoutChanged = pyqtSignal(EntityLayoutType)
 
-    def __init__(self, defaultWidth: int, parent=None):
+    def __init__(self, defaultWidth: int, palette: WorldBuildingPalette, parent=None):
         super().__init__(parent)
+        self._palette = palette
         vbox(self)
         margins(self, top=15, left=5, right=15)
         self.layout().addWidget(label('Entity settings', bold=True, underline=True))
@@ -1337,6 +1381,10 @@ class WorldBuildingEditorSettingsWidget(QWidget):
         self._widthSlider.setValue(defaultWidth)
         self._widthSlider.valueChanged.connect(self.widthChanged)
         self.layout().addWidget(wrap(self._widthSlider, margin_left=15))
+
+        self.palette = PaletteSettings(self._palette)
+        self.layout().addWidget(line())
+        self.layout().addWidget(self.palette)
 
         self.layout().addWidget(vspacer())
 
