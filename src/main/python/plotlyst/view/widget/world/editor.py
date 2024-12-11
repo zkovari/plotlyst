@@ -65,7 +65,7 @@ from plotlyst.view.widget.world.theme import WorldBuildingPalette
 
 
 class WorldBuildingTextEdit(AutoAdjustableTextEdit):
-    def __init__(self, novel: Novel, parent=None):
+    def __init__(self, novel: Novel, palette: WorldBuildingPalette, parent=None):
         super().__init__(parent)
         self.setProperty('transparent', True)
         self.setCommandsEnabled(True)
@@ -73,7 +73,7 @@ class WorldBuildingTextEdit(AutoAdjustableTextEdit):
         self.setCommandOperations([Heading2Operation, Heading3Operation, InsertListOperation,
                                    InsertNumberedListOperation, InsertDividerOperation])
 
-        self._glossaryHighlighter = GlossaryTextBlockHighlighter(novel.world.glossary, self.document())
+        self._glossaryHighlighter = GlossaryTextBlockHighlighter(novel.world.glossary, self.document(), palette)
         toolbar = MarkdownPopupTextEditorToolbar()
         toolbar.activate(self)
         self.setPopupWidget(toolbar)
@@ -168,28 +168,29 @@ class WorldBuildingEntityElementWidget(QWidget):
         pass
 
     @staticmethod
-    def newWidget(novel: Novel, element: WorldBuildingEntityElement, parent: Optional[QWidget] = None,
+    def newWidget(novel: Novel, element: WorldBuildingEntityElement, palette: WorldBuildingPalette,
+                  parent: Optional[QWidget] = None,
                   editor: Optional['WorldBuildingEntityEditor'] = None) -> 'WorldBuildingEntityElementWidget':
         if element.type == WorldBuildingEntityElementType.Text:
-            return TextElementEditor(novel, element, parent)
+            return TextElementEditor(novel, element, palette, parent)
         elif element.type == WorldBuildingEntityElementType.Section:
-            return SectionElementEditor(novel, element, parent, editor)
+            return SectionElementEditor(novel, element, palette, parent, editor)
         elif element.type == WorldBuildingEntityElementType.Main_Section:
-            return MainSectionElementEditor(novel, element, parent, editor)
+            return MainSectionElementEditor(novel, element, palette, parent, editor)
         elif element.type == WorldBuildingEntityElementType.Header:
-            return HeaderElementEditor(novel, element, parent)
+            return HeaderElementEditor(novel, element, palette, parent)
         elif element.type == WorldBuildingEntityElementType.Quote:
-            return QuoteElementEditor(novel, element, parent)
+            return QuoteElementEditor(novel, element, palette, parent)
         elif element.type == WorldBuildingEntityElementType.Image:
-            return ImageElementEditor(novel, element, parent)
+            return ImageElementEditor(novel, element, palette, parent)
         elif element.type == WorldBuildingEntityElementType.Variables:
-            return VariablesElementEditor(novel, element, parent)
+            return VariablesElementEditor(novel, element, palette, parent)
         elif element.type == WorldBuildingEntityElementType.Highlight:
-            return HighlightedTextElementEditor(novel, element, parent)
+            return HighlightedTextElementEditor(novel, element, palette, parent)
         elif element.type == WorldBuildingEntityElementType.Timeline:
-            return TimelineElementEditor(novel, element, parent)
+            return TimelineElementEditor(novel, element, palette, parent)
         elif element.type == WorldBuildingEntityElementType.Conceits:
-            return ConceitsElementEditor(novel, element, parent)
+            return ConceitsElementEditor(novel, element, palette, parent)
         else:
             raise ValueError(f'Unsupported WorldBuildingEntityElement type {element.type}')
 
@@ -201,12 +202,13 @@ class WorldBuildingEntityElementWidget(QWidget):
 
 
 class TextElementEditor(WorldBuildingEntityElementWidget):
-    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, palette: WorldBuildingPalette, parent=None):
         super().__init__(novel, element, parent)
+        self._palette = palette
         self._capitalizedChecked = False
         self._isProcessingTextChanged = False
 
-        self.textEdit = WorldBuildingTextEdit(novel)
+        self.textEdit = WorldBuildingTextEdit(novel, self._palette)
         if self._underSection():
             margins(self, left=0)
             self.textEdit.setViewportMargins(20, 0, 0, 0)
@@ -293,9 +295,10 @@ class TextElementEditor(WorldBuildingEntityElementWidget):
 
 
 class HeaderElementEditor(WorldBuildingEntityElementWidget):
-    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, palette: WorldBuildingPalette, parent=None):
         super().__init__(novel, element, parent,
                          cornerBtnEnabled=False if isinstance(parent, MainSectionElementEditor) else True)
+        self._palette = palette
 
         if isinstance(parent, MainSectionElementEditor):
             self.layout().setSpacing(0)
@@ -303,7 +306,7 @@ class HeaderElementEditor(WorldBuildingEntityElementWidget):
         self.icon = Icon()
         self.icon.setIconSize(QSize(32, 32))
         if self.element.icon:
-            self.icon.setIcon(IconRegistry.from_name(self.element.icon, '#510442'))
+            self.icon.setIcon(IconRegistry.from_name(self.element.icon, self._palette.primary_color))
         self.lineTitle = AutoAdjustableLineEdit(defaultWidth=50)
         self.lineTitle.setProperty('transparent', True)
         self.lineTitle.setPlaceholderText('New section')
@@ -312,20 +315,20 @@ class HeaderElementEditor(WorldBuildingEntityElementWidget):
         font.setFamily(app_env.serif_font())
         self.lineTitle.setFont(font)
 
-        apply_text_color(self.lineTitle, QColor('#510442'))
+        apply_text_color(self.lineTitle, QColor(self._palette.primary_color))
         self.lineTitle.setText(self.element.title)
         self.lineTitle.textEdited.connect(self._titleEdited)
 
         self.frame = frame()
         vbox(self.frame).addWidget(group(spacer(), self.icon, self.lineTitle, spacer(), margin=0, spacing=0))
         self.layout().addWidget(self.frame)
-        self.frame.setStyleSheet('''
-        .QFrame {
-            border-top: 1px outset #510442;
-            border-bottom: 1px outset #510442;
+        self.frame.setStyleSheet(f'''
+        .QFrame {{
+            border-top: 1px outset {self._palette.primary_color};
+            border-bottom: 1px outset {self._palette.primary_color};
             border-radius: 6px;
-            background: #DABFA7;
-        }''')
+            background: {self._palette.secondary_color};
+        }}''')
 
         self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
         self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
@@ -346,14 +349,15 @@ class HeaderElementEditor(WorldBuildingEntityElementWidget):
     def _changeIcon(self):
         result = IconSelectorDialog.popup(pickColor=False)
         if result:
-            self.icon.setIcon(IconRegistry.from_name(result[0], '#510442'))
+            self.icon.setIcon(IconRegistry.from_name(result[0], self._palette.primary_color))
             self.element.icon = result[0]
             self.save()
 
 
 class QuoteElementEditor(WorldBuildingEntityElementWidget):
-    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, palette: WorldBuildingPalette, parent=None):
         super().__init__(novel, element, parent)
+        self._palette = palette
 
         if self._underSection():
             margins(self, left=15, right=15, top=5, bottom=5)
@@ -378,7 +382,7 @@ class QuoteElementEditor(WorldBuildingEntityElementWidget):
                 QLineEdit {{
                     border: 0px;
                     background-color: rgba(0, 0, 0, 0);
-                    color: #510442;
+                    color: {self._palette.primary_color};
                 }}''')
         self.lineEditRef.setPlaceholderText('Source')
         self.lineEditRef.setText(self.element.ref)
@@ -386,7 +390,7 @@ class QuoteElementEditor(WorldBuildingEntityElementWidget):
         self.wdgQuoteRef = QWidget()
         hbox(self.wdgQuoteRef, 2, 0)
         iconDash = Icon()
-        iconDash.setIcon(IconRegistry.from_name('msc.dash', '#510442', scale=2.0))
+        iconDash.setIcon(IconRegistry.from_name('msc.dash', self._palette.primary_color, scale=2.0))
         self.wdgQuoteRef.layout().addWidget(iconDash)
         self.wdgQuoteRef.layout().addWidget(self.lineEditRef)
 
@@ -396,12 +400,12 @@ class QuoteElementEditor(WorldBuildingEntityElementWidget):
         self.frame.layout().addWidget(self.textEdit)
         self.frame.layout().addWidget(self.wdgQuoteRef, alignment=Qt.AlignmentFlag.AlignRight)
         self.layout().addWidget(self.frame)
-        self.frame.setStyleSheet('''
-                .QFrame {
-                    border-left: 3px outset #510442;
+        self.frame.setStyleSheet(f'''
+                .QFrame {{
+                    border-left: 3px outset {self._palette.primary_color};
                     border-radius: 2px;
-                    background: #E3D0BD;
-                }''')
+                    background: {self._palette.tertiary_color};
+                }}''')
 
         self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
         self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
@@ -418,9 +422,10 @@ class QuoteElementEditor(WorldBuildingEntityElementWidget):
 
 
 class ImageElementEditor(WorldBuildingEntityElementWidget):
-    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, palette: WorldBuildingPalette, parent=None):
         super().__init__(novel, element, parent)
         margins(self, left=10, right=10)
+        self._palette = palette
 
         self.lblImage = QLabel('')
         self.lblImage.setScaledContents(True)
@@ -570,20 +575,21 @@ class VariableWidget(QWidget):
 
 
 class VariablesElementEditor(WorldBuildingEntityElementWidget):
-    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, palette: WorldBuildingPalette, parent=None):
         super().__init__(novel, element, parent)
         margins(self, right=15)
+        self._palette = palette
 
         self._btnCornerButtonOffsetY = 7
 
         self.frame = frame()
         vbox(self.frame, 10)
-        self.frame.setStyleSheet('''
-        .QFrame {
-            border: 1px outset #510442;
+        self.frame.setStyleSheet(f'''
+        .QFrame {{
+            border: 1px outset {self._palette.primary_color};
             border-radius: 6px;
-            background: #DABFA7;
-        }
+            background: {self._palette.secondary_color};
+        }}
         ''')
 
         self.btnAdd = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True)
@@ -643,21 +649,22 @@ class VariablesElementEditor(WorldBuildingEntityElementWidget):
 
 
 class HighlightedTextElementEditor(WorldBuildingEntityElementWidget):
-    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, palette: WorldBuildingPalette, parent=None):
         super().__init__(novel, element, parent)
         margins(self, right=15)
+        self._palette = palette
 
         self.frame = frame()
         sp(self.frame).v_max()
-        self.frame.setStyleSheet('''
-                        .QFrame {
-                            border: 1px outset #510442;
-                            border-left: 3px outset #510442;
+        self.frame.setStyleSheet(f'''
+                        .QFrame {{
+                            border: 1px outset {self._palette.primary_color};
+                            border-left: 3px outset {self._palette.primary_color};
                             border-radius: 4px;
-                            background: #E3D0BD;
-                        }''')
+                            background: {self._palette.tertiary_color};
+                        }}''')
 
-        self.textEdit = WorldBuildingTextEdit(novel)
+        self.textEdit = WorldBuildingTextEdit(novel, self._palette)
         font: QFont = self.textEdit.font()
         font.setPointSize(14)
         self.textEdit.setFont(font)
@@ -688,8 +695,10 @@ class EntityTimelineCard(BackstoryCard):
 
 
 class EntityTimelineWidget(TimelineWidget):
-    def __init__(self, element: WorldBuildingEntityElement, parent=None):
-        super().__init__(TimelineTheme(timeline_color='#510442', card_bg_color='#E3D0BD'), parent, compact=False)
+    def __init__(self, element: WorldBuildingEntityElement, palette: WorldBuildingPalette, parent=None):
+        super().__init__(TimelineTheme(timeline_color=palette.primary_color, card_bg_color=palette.tertiary_color),
+                         parent,
+                         compact=False)
         self.element = element
         self.refresh()
 
@@ -703,10 +712,11 @@ class EntityTimelineWidget(TimelineWidget):
 
 
 class TimelineElementEditor(WorldBuildingEntityElementWidget):
-    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, palette: WorldBuildingPalette, parent=None):
         super().__init__(novel, element, parent)
+        self._palette = palette
 
-        self.timeline = EntityTimelineWidget(element)
+        self.timeline = EntityTimelineWidget(element, self._palette)
         self.layout().addWidget(self.timeline)
         self.timeline.changed.connect(self.save)
 
@@ -717,8 +727,9 @@ class TimelineElementEditor(WorldBuildingEntityElementWidget):
 
 
 class ConceitsElementEditor(WorldBuildingEntityElementWidget):
-    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, palette: WorldBuildingPalette, parent=None):
         super().__init__(novel, element, parent)
+        self._palette = palette
 
         self._wdgToolbar = QWidget()
         hbox(self._wdgToolbar)
@@ -731,7 +742,7 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
         self._splitter.setSizes([100, 500])
         self._wdgEditor.layout().addWidget(self._splitter)
 
-        self._wdgTree = ConceitsTreeView(novel)
+        self._wdgTree = ConceitsTreeView(novel, self._palette)
         self._wdgTree.rootSelected.connect(self.refresh)
         self._wdgTree.conceitSelected.connect(self._conceitSelected)
         self._wdgTree.conceitTypeSelected.connect(self._conceitTypeSelected)
@@ -741,12 +752,14 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
         self._splitter.addWidget(self._wdgTree)
         self._splitter.addWidget(self._wdgDisplay)
 
-        self._btnToggleTree = tool_btn(IconRegistry.from_name('mdi.file-tree-outline', '#510442'), transparent_=True,
+        self._btnToggleTree = tool_btn(IconRegistry.from_name('mdi.file-tree-outline', self._palette.primary_color),
+                                       transparent_=True,
                                        checkable=True)
         self._btnToggleTree.installEventFilter(
             OpacityEventFilter(self._btnToggleTree, enterOpacity=0.6, ignoreCheckedButton=True))
         self._btnToggleTree.clicked.connect(lambda x: qtanim.toggle_expansion(self._wdgTree, x))
-        self._btnAddConceit = tool_btn(IconRegistry.plus_icon('#510442'), tooltip='Add conceit', transparent_=True)
+        self._btnAddConceit = tool_btn(IconRegistry.plus_icon(self._palette.primary_color), tooltip='Add conceit',
+                                       transparent_=True)
         self._btnAddConceit.clicked.connect(self._showMenu)
         self._btnTitle = push_btn(text='Fantasy conceits', pointy_=False, icon_resize=False)
         self._btnTitle.setStyleSheet(
@@ -766,19 +779,19 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
         self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
         self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
 
-        self._wdgToolbar.setStyleSheet('''
-                        .QWidget {
+        self._wdgToolbar.setStyleSheet(f'''
+                        .QWidget {{
                             border: 0px;
-                            background: #dabfa7;
-                        }''')
-        self._wdgEditor.setStyleSheet('''
-                        .QFrame {
-                            border: 1px solid #E3D0BD;
+                            background: {self._palette.secondary_color};
+                        }}''')
+        self._wdgEditor.setStyleSheet(f'''
+                        .QFrame {{
+                            border: 1px solid {self._palette.tertiary_color};
                             border-top-left-radius: 0px;
                             border-top-right-radius: 0px;
                             border-bottom-left-radius: 15px;
                             border-bottom-right-radius: 15px;
-                        }''')
+                        }}''')
 
         self.btnDrag.raise_()
         self._wdgTree.setVisible(self._btnToggleTree.isChecked())
@@ -817,7 +830,7 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
         self._wdgTree.refresh()
 
     def _initBubble(self, conceit: WorldConceit) -> ConceitBubble:
-        bubble = ConceitBubble(conceit)
+        bubble = ConceitBubble(conceit, self._palette)
         bubble.nameEdited.connect(partial(self._conceitChanged, conceit))
         bubble.iconChanged.connect(partial(self._conceitChanged, conceit))
         bubble.textChanged.connect(self.save)
@@ -872,9 +885,11 @@ class SectionElementEditor(WorldBuildingEntityElementWidget):
     WORLD_SECTION_MIMETYPE = 'application/world-section'
     removed = pyqtSignal()
 
-    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent, editor: 'WorldBuildingEntityEditor'):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, palette: WorldBuildingPalette, parent,
+                 editor: 'WorldBuildingEntityEditor'):
         super().__init__(novel, element, parent, cornerBtnEnabled=False)
         self._editor = editor
+        self._palette = palette
         for element in self.element.blocks:
             wdg = self.__initBlockWidget(element)
             self.layout().addWidget(wdg)
@@ -922,7 +937,7 @@ class SectionElementEditor(WorldBuildingEntityElementWidget):
         fade_out_and_gc(self, widget)
 
     def __initBlockWidget(self, element: WorldBuildingEntityElement) -> WorldBuildingEntityElementWidget:
-        wdg = WorldBuildingEntityElementWidget.newWidget(self.novel, element, self)
+        wdg = WorldBuildingEntityElementWidget.newWidget(self.novel, element, self._palette, self)
         wdg.btnAdd.clicked.connect(partial(self._addClicked, wdg))
         wdg.removed.connect(partial(self._removeBlock, wdg))
 
@@ -947,8 +962,10 @@ class SectionElementEditor(WorldBuildingEntityElementWidget):
 
 
 class MainSectionElementEditor(SectionElementEditor):
-    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, parent=None, editor=None):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, palette: WorldBuildingPalette, parent=None,
+                 editor=None):
         super().__init__(novel, element, parent, editor)
+        self._palette = palette
         item = self.layout().itemAt(0)
         if item and item.widget():
             item.widget().frame.setHidden(True)
@@ -1031,9 +1048,10 @@ class WorldBuildingEntityEditor(QWidget):
     WORLD_BLOCK_MIMETYPE = 'application/world-block'
     WORLD_SECTION_MIMETYPE = 'application/world-section'
 
-    def __init__(self, novel: Novel, parent=None):
+    def __init__(self, novel: Novel, palette: WorldBuildingPalette, parent=None):
         super().__init__(parent)
         self._novel = novel
+        self._palette = palette
         self._entity: Optional[WorldBuildingEntity] = None
 
         self.wdgEditorMiddle = QWidget()
@@ -1098,7 +1116,7 @@ class WorldBuildingEntityEditor(QWidget):
             self.wdgEditorSide.layout().addWidget(wdg, alignment=Qt.AlignmentFlag.AlignCenter)
 
     def _addElement(self, element: WorldBuildingEntityElement, middle: bool = True):
-        wdg = self.__initElementWidget(element, middle)
+        wdg = self.__initElementWidget(element, middle, self._palette)
 
         if middle:
             self.wdgEditorMiddle.layout().addWidget(wdg)
@@ -1155,7 +1173,7 @@ class WorldBuildingEntityEditor(QWidget):
             self._dragged = wdg.parent()
         else:
             self._dragged = wdg
-        self._placeholderWidget = line(parent=self, color='#510442')
+        self._placeholderWidget = line(parent=self, color=self._palette.primary_color)
         self._placeholderWidget.setHidden(True)
         self._placeholderWidget.setAcceptDrops(True)
         self._placeholderWidget.installEventFilter(
@@ -1244,9 +1262,9 @@ class WorldBuildingEntityEditor(QWidget):
         wdg = self.__initElementWidget(ref, True)
         self.wdgEditorMiddle.layout().insertWidget(new_index, wdg)
 
-    def __initElementWidget(self, element: WorldBuildingEntityElement,
-                            middle: bool) -> WorldBuildingEntityElementWidget:
-        wdg = WorldBuildingEntityElementWidget.newWidget(self._novel, element, self, editor=self)
+    def __initElementWidget(self, element: WorldBuildingEntityElement, middle: bool,
+                            palette: WorldBuildingPalette) -> WorldBuildingEntityElementWidget:
+        wdg = WorldBuildingEntityElementWidget.newWidget(self._novel, element, palette, self, editor=self)
         if middle and isinstance(wdg, SectionElementEditor):
             wdg.removed.connect(partial(self._removeSection, wdg))
         elif not middle:

@@ -162,7 +162,7 @@ class WorldBuildingView(AbstractNovelView):
 
         self.ui.lineName.textEdited.connect(self._name_edited)
 
-        self._editor = WorldBuildingEntityEditor(self.novel)
+        self._editor = WorldBuildingEntityEditor(self.novel, self._palette)
         insert_before_the_end(self.ui.wdgCenterEditor, self._editor)
 
         self.ui.treeWorld.setSettings(TreeSettings(font_incr=2, bg_color=self._palette.bg_color,
@@ -179,8 +179,8 @@ class WorldBuildingView(AbstractNovelView):
         self.map = WorldBuildingMapView(self.novel)
         self.ui.pageMap.layout().addWidget(self.map)
 
-        self.glossaryEditor = WorldBuildingGlossaryEditor(self.novel)
-        self.ui.wdgGlossaryParent.setStyleSheet('QWidget {background: #ede0d4;}')
+        self.glossaryEditor = WorldBuildingGlossaryEditor(self.novel, self._palette)
+        self.ui.wdgGlossaryParent.setStyleSheet(f'QWidget {{background: {self._palette.bg_color};}}')
         self.ui.wdgGlossaryParent.layout().addWidget(self.glossaryEditor)
 
         link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnMilieuView, self.ui.pageMilieu),
