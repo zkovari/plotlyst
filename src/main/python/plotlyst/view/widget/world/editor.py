@@ -1377,6 +1377,7 @@ class PaletteSettings(QWidget):
 class WorldBuildingEditorSettingsWidget(QWidget):
     widthChanged = pyqtSignal(int)
     layoutChanged = pyqtSignal(EntityLayoutType)
+    paletteChanged = pyqtSignal()
 
     def __init__(self, defaultWidth: int, palette: WorldBuildingPalette, parent=None):
         super().__init__(parent)
@@ -1401,6 +1402,7 @@ class WorldBuildingEditorSettingsWidget(QWidget):
         self.layout().addWidget(wrap(self._widthSlider, margin_left=15))
 
         self.palette = PaletteSettings(self._palette)
+        self.palette.paletteChanged.connect(self.paletteChanged)
         self.layout().addWidget(line())
         self.layout().addWidget(self.palette)
 
