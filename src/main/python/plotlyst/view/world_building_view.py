@@ -36,7 +36,7 @@ from plotlyst.service.cache import try_location
 from plotlyst.settings import settings
 from plotlyst.view._view import AbstractNovelView
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, shadow, \
-    insert_before_the_end
+    insert_before_the_end, to_rgba_str
 from plotlyst.view.generated.world_building_view_ui import Ui_WorldBuildingView
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_bg_image
@@ -188,9 +188,10 @@ class WorldBuildingView(AbstractNovelView):
         pass
 
     def _update_style(self):
+        trans_bg_color = to_rgba_str(QColor(self._palette.bg_color), 225)
         self.ui.wdgCenterEditor.setStyleSheet(f'''
                 #wdgCenterEditor {{
-                    background: {self._palette.bg_color};
+                    background: {trans_bg_color};
                     border-radius: 12px;
                 }}
                 ''')
