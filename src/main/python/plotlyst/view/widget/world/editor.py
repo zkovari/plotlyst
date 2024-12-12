@@ -26,7 +26,7 @@ from PyQt6.QtCore import pyqtSignal, Qt, QSize, QMimeData, QPointF, QEvent
 from PyQt6.QtGui import QFont, QResizeEvent, QMouseEvent, QColor, QIcon, QImage, \
     QShowEvent, QPixmap, QCursor, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QDialog, QGridLayout, QSlider, QToolButton, QButtonGroup, \
-    QLabel, QToolTip, QSpacerItem, QSizePolicy, QFontComboBox
+    QLabel, QToolTip, QSpacerItem, QSizePolicy
 from overrides import overrides
 from qthandy import vspacer, clear_layout, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy, \
     grid, flow, spacer, line, gc, translucent, incr_font, vline, bold
@@ -1401,10 +1401,10 @@ class WorldBuildingEditorSettingsWidget(QWidget):
         self._widthSlider.valueChanged.connect(self.widthChanged)
         self.layout().addWidget(wrap(self._widthSlider, margin_left=15))
 
-        self.palette = PaletteSettings(self._palette)
-        self.palette.paletteChanged.connect(self.paletteChanged)
-        self.layout().addWidget(line())
-        self.layout().addWidget(self.palette)
+        # self.palette = PaletteSettings(self._palette)
+        # self.palette.paletteChanged.connect(self.paletteChanged)
+        # self.layout().addWidget(line())
+        # self.layout().addWidget(self.palette)
 
         self.layout().addWidget(vspacer())
 
