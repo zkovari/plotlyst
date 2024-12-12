@@ -27,7 +27,7 @@ from qthandy import flow, transparent, pointy, grid, vline
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.model.common import proxy
-from plotlyst.view.common import ButtonPressResizeEventFilter, tool_btn, push_btn
+from plotlyst.view.common import ButtonPressResizeEventFilter, tool_btn, push_btn, shadow
 from plotlyst.view.generated.icon_selector_widget_ui import Ui_IconsSelectorWidget
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget._icons import icons_registry
@@ -103,6 +103,29 @@ class ColorPicker(QWidget):
         color = QColorDialog.getColor()
         if color.isValid():
             self.colorPicked.emit(color)
+
+
+class ColorSelectorButton(QToolButton):
+    colorChanged = pyqtSignal(str)
+
+    def __init__(self, color: str, parent=None):
+        super().__init__(parent)
+        self.color = color
+        pointy(self)
+        self.setIcon(IconRegistry.from_name('fa5s.square', color=color))
+        transparent(self)
+        self.setIconSize(QSize(24, 24))
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
+        shadow(self)
+
+        self.clicked.connect(self._clicked)
+
+    def _clicked(self):
+        qcolor = QColorDialog.getColor(options=QColorDialog.ColorDialogOption.DontUseNativeDialog)
+        if qcolor.isValid():
+            color = qcolor.name()
+            self.setIcon(IconRegistry.from_name('fa5s.square', color=color))
+            self.colorChanged.emit(color)
 
 
 class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):

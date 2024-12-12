@@ -36,7 +36,7 @@ from plotlyst.service.cache import try_location
 from plotlyst.settings import settings
 from plotlyst.view._view import AbstractNovelView
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, shadow, \
-    insert_before_the_end
+    insert_before_the_end, to_rgba_str
 from plotlyst.view.generated.world_building_view_ui import Ui_WorldBuildingView
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_bg_image
@@ -53,11 +53,15 @@ from plotlyst.view.widget.world.tree import EntityAdditionMenu
 class WorldBuildingSeparatorWidget(QWidget):
     def __init__(self, palette: WorldBuildingPalette):
         super().__init__()
+        self._palette = palette
         self.svg_renderer = QSvgRenderer(resource_registry.divider1)
         self.setMinimumSize(400, 55)
 
+        self.refreshColor()
+
+    def refreshColor(self):
         effect = QGraphicsColorizeEffect(self)
-        effect.setColor(QColor(palette.primary_color))
+        effect.setColor(QColor(self._palette.primary_color))
         self.setGraphicsEffect(effect)
 
     @overrides
@@ -78,16 +82,8 @@ class WorldBuildingView(AbstractNovelView):
         apply_bg_image(self.ui.scrollAreaWidgetContents, resource_registry.paper_bg)
         self._palette = WorldBuildingPalette(bg_color='#ede0d4', primary_color='#510442', secondary_color='#DABFA7',
                                              tertiary_color='#E3D0BD')
-        # background: #F2F2F2;
-        # 692345;
-        self.ui.wdgCenterEditor.setStyleSheet(f'''
-        #wdgCenterEditor {{
-            background: {self._palette.bg_color};
-            border-radius: 12px;
-        }}
-        ''')
-        separator = WorldBuildingSeparatorWidget(self._palette)
-        self.ui.wdgNameHeader.layout().addWidget(separator)
+        self._separator = WorldBuildingSeparatorWidget(self._palette)
+        self.ui.wdgNameHeader.layout().addWidget(self._separator)
 
         self._entity: Optional[WorldBuildingEntity] = None
 
@@ -120,12 +116,12 @@ class WorldBuildingView(AbstractNovelView):
 
         width = settings.worldbuilding_editor_max_width()
         self.ui.wdgCenterEditor.setMaximumWidth(width)
-        self.ui.wdgSideBar.setStyleSheet(f'#wdgSideBar {{background: {self._palette.bg_color};}}')
-        self._wdgSettings = WorldBuildingEditorSettingsWidget(width)
+        self._wdgSettings = WorldBuildingEditorSettingsWidget(width, self._palette)
         self._wdgSettings.setMaximumWidth(150)
         self.ui.wdgSideBar.layout().addWidget(self._wdgSettings, alignment=Qt.AlignmentFlag.AlignRight)
         self._wdgSettings.widthChanged.connect(self._editor_max_width_changed)
         self._wdgSettings.layoutChanged.connect(self._layout_changed)
+        self._wdgSettings.paletteChanged.connect(self._palette_changed)
         self.ui.btnSettings.clicked.connect(lambda x: qtanim.toggle_expansion(self.ui.wdgSideBar, x))
         self.ui.wdgSideBar.setHidden(True)
 
@@ -153,16 +149,10 @@ class WorldBuildingView(AbstractNovelView):
         font.setFamily(app_env.serif_font())
         self.ui.lineName.setFont(font)
         self.ui.lineName.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.ui.lineName.setStyleSheet(f'''
-        QLineEdit {{
-            border: 0px;
-            background-color: rgba(0, 0, 0, 0);
-            color: {self._palette.primary_color}; 
-        }}''')
 
         self.ui.lineName.textEdited.connect(self._name_edited)
 
-        self._editor = WorldBuildingEntityEditor(self.novel)
+        self._editor = WorldBuildingEntityEditor(self.novel, self._palette)
         insert_before_the_end(self.ui.wdgCenterEditor, self._editor)
 
         self.ui.treeWorld.setSettings(TreeSettings(font_incr=2, bg_color=self._palette.bg_color,
@@ -179,8 +169,7 @@ class WorldBuildingView(AbstractNovelView):
         self.map = WorldBuildingMapView(self.novel)
         self.ui.pageMap.layout().addWidget(self.map)
 
-        self.glossaryEditor = WorldBuildingGlossaryEditor(self.novel)
-        self.ui.wdgGlossaryParent.setStyleSheet('QWidget {background: #ede0d4;}')
+        self.glossaryEditor = WorldBuildingGlossaryEditor(self.novel, self._palette)
         self.ui.wdgGlossaryParent.layout().addWidget(self.glossaryEditor)
 
         link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnMilieuView, self.ui.pageMilieu),
@@ -192,9 +181,28 @@ class WorldBuildingView(AbstractNovelView):
 
         self.ui.btnHistoryView.setHidden(True)
 
+        self._update_style()
+
     @overrides
     def refresh(self):
         pass
+
+    def _update_style(self):
+        trans_bg_color = to_rgba_str(QColor(self._palette.bg_color), 235)
+        self.ui.wdgCenterEditor.setStyleSheet(f'''
+                #wdgCenterEditor {{
+                    background: {trans_bg_color};
+                    border-radius: 12px;
+                }}
+                ''')
+        self.ui.wdgSideBar.setStyleSheet(f'#wdgSideBar {{background: {self._palette.bg_color};}}')
+        self.ui.lineName.setStyleSheet(f'''
+                QLineEdit {{
+                    border: 0px;
+                    background-color: rgba(0, 0, 0, 0);
+                    color: {self._palette.primary_color}; 
+                }}''')
+        self.ui.wdgGlossaryParent.setStyleSheet(f'QWidget {{background: {self._palette.bg_color};}}')
 
     def _selection_changed(self, entity: WorldBuildingEntity):
         self._entity = entity
@@ -238,6 +246,10 @@ class WorldBuildingView(AbstractNovelView):
 
             self.repo.update_world(self.novel)
             self._editor.layoutChangedEvent()
+
+    def _palette_changed(self):
+        self._update_style()
+        self._separator.refreshColor()
 
     def _update_world_building_entity(self, entity: WorldBuildingEntity):
         self.ui.treeWorld.updateEntity(entity)

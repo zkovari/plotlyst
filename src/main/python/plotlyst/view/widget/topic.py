@@ -154,7 +154,6 @@ class TopicSelectionDialog(PopupDialog):
         self._scrollarea.setProperty('transparent', True)
         transparent(self._wdgCenter)
         vbox(self._wdgCenter, 10)
-        # self._wdgCenter.setStyleSheet('QWidget {background: #ede0d4;}')
         self.setMinimumWidth(550)
 
         self._sections: Dict[str, TopicGroupSelector] = {}
