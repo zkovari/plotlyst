@@ -21,10 +21,10 @@ from typing import Optional
 
 from PyQt6.QtGui import QPixmap, QIcon
 from PyQt6.QtWidgets import QDialog, QFileDialog
-from qthandy import incr_font
+from qthandy import incr_font, underline
 from qthandy.filter import OpacityEventFilter
 
-from plotlyst.common import MAXIMUM_SIZE, RELAXED_WHITE_COLOR
+from plotlyst.common import MAXIMUM_SIZE, RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR
 from plotlyst.core.domain import Novel
 from plotlyst.core.scrivener import ScrivenerParser
 from plotlyst.env import app_env
@@ -71,6 +71,15 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         self.btnLoadDocx.setIcon(IconRegistry.from_name('mdi6.application-import', color=RELAXED_WHITE_COLOR))
         self.btnLoadDocx.clicked.connect(self._loadFromDocx)
         self.btnLoadDocx.installEventFilter(ButtonPressResizeEventFilter(self.btnLoadDocx))
+
+        underline(self.lblChapterHeading)
+        self.chapterH1.setIcon(IconRegistry.from_name('mdi.format-header-1', color_on=PLOTLYST_MAIN_COLOR))
+        self.chapterH2.setIcon(IconRegistry.from_name('mdi.format-header-2', color_on=PLOTLYST_MAIN_COLOR))
+        self.chapterH3.setIcon(IconRegistry.from_name('mdi.format-header-3', color_on=PLOTLYST_MAIN_COLOR))
+        self.chapterH2.setChecked(True)
+        for btn in self.buttonGroupDocxHeadings.buttons():
+            btn.installEventFilter(OpacityEventFilter(btn, ignoreCheckedButton=True))
+            btn.installEventFilter(ButtonPressResizeEventFilter(btn))
 
         self.btnCancel.setIcon(IconRegistry.close_icon())
         self.btnCancel.installEventFilter(ButtonPressResizeEventFilter(self.btnCancel))
@@ -214,7 +223,13 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         if not docxpath:
             return
 
-        self._importedNovel = import_docx(docxpath[0])
+        if self.chapterH1.isChecked():
+            heading = 1
+        elif self.chapterH2.isChecked():
+            heading = 2
+        else:
+            heading = 3
+        self._importedNovel = import_docx(docxpath[0], chapter_heading_level=heading)
 
         self.wdgImportDetails.wdgScrivenerTop.setHidden(True)
         self._showImportedPreview()

@@ -190,7 +190,7 @@
      <item>
       <widget class="QStackedWidget" name="stackedWidget">
        <property name="currentIndex">
-        <number>4</number>
+        <number>3</number>
        </property>
        <widget class="QWidget" name="pageNewStory">
         <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -387,6 +387,107 @@
            </property>
           </widget>
          </item>
+         <item>
+          <widget class="QWidget" name="widget_2" native="true">
+           <layout class="QVBoxLayout" name="verticalLayout_9">
+            <property name="spacing">
+             <number>3</number>
+            </property>
+            <property name="leftMargin">
+             <number>20</number>
+            </property>
+            <property name="topMargin">
+             <number>5</number>
+            </property>
+            <property name="rightMargin">
+             <number>15</number>
+            </property>
+            <property name="bottomMargin">
+             <number>5</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="lblChapterHeading">
+              <property name="text">
+               <string>Chapter heading</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_2">
+              <property name="text">
+               <string>Chapter titles are expected to be under the following heading</string>
+              </property>
+              <property name="description" stdset="0">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item alignment="Qt::AlignHCenter">
+             <widget class="QWidget" name="widget_3" native="true">
+              <layout class="QHBoxLayout" name="horizontalLayout_4">
+               <item>
+                <widget class="QToolButton" name="chapterH1">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                 <property name="transparent" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                 <attribute name="buttonGroup">
+                  <string notr="true">buttonGroupDocxHeadings</string>
+                 </attribute>
+                </widget>
+               </item>
+               <item>
+                <widget class="QToolButton" name="chapterH2">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                 <property name="transparent" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                 <attribute name="buttonGroup">
+                  <string notr="true">buttonGroupDocxHeadings</string>
+                 </attribute>
+                </widget>
+               </item>
+               <item>
+                <widget class="QToolButton" name="chapterH3">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                 <property name="transparent" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                 <attribute name="buttonGroup">
+                  <string notr="true">buttonGroupDocxHeadings</string>
+                 </attribute>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
          <item alignment="Qt::AlignRight">
           <widget class="QPushButton" name="btnLoadDocx">
            <property name="cursor">
@@ -411,7 +512,7 @@
            <property name="sizeHint" stdset="0">
             <size>
              <width>20</width>
-             <height>304</height>
+             <height>213</height>
             </size>
            </property>
           </spacer>
@@ -573,5 +674,6 @@
  <connections/>
  <buttongroups>
   <buttongroup name="buttonGroup"/>
+  <buttongroup name="buttonGroupDocxHeadings"/>
  </buttongroups>
 </ui>
