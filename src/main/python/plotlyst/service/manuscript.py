@@ -18,12 +18,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import datetime
+from pathlib import Path
 from typing import Optional
 
 import pypandoc
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QTextDocument, QTextCursor, QTextCharFormat, QFont, QTextBlockFormat, QTextFormat, QTextBlock
 from PyQt6.QtWidgets import QFileDialog
+from qthandy import busy
 from slugify import slugify
 
 from plotlyst.core.client import json_client
@@ -31,8 +33,8 @@ from plotlyst.core.domain import Novel, Document, DocumentProgress, Scene, Docum
 from plotlyst.env import open_location, app_env
 from plotlyst.resources import resource_registry, ResourceType
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.widget.confirm import asked
 from plotlyst.service.resource import ask_for_resource
+from plotlyst.view.widget.confirm import asked
 
 
 def prepare_content_for_convert(html: str) -> str:
@@ -191,3 +193,13 @@ def daily_progress(scene: Scene) -> DocumentProgress:
         RepositoryPersistenceManager.instance().update_scene(scene)
 
     return progress
+
+
+@busy
+def import_docx(path: str):
+    title = Path(path).stem
+    novel = Novel.new_novel(title)
+
+    md_text = pypandoc.convert_file(path, to='md', format='docx')
+
+    return novel

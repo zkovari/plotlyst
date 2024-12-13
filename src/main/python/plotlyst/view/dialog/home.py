@@ -31,6 +31,7 @@ from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, Event
 from plotlyst.event.handler import global_event_dispatcher
 from plotlyst.resources import resource_registry, ResourceType
+from plotlyst.service.manuscript import import_docx
 from plotlyst.service.resource import ask_for_resource
 from plotlyst.service.tour import TourService
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter
@@ -49,7 +50,7 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         super(StoryCreationDialog, self).__init__(parent)
         self.setupUi(self)
 
-        self._scrivenerNovel: Optional[Novel] = None
+        self._importedNovel: Optional[Novel] = None
         self._wizardNovel: Optional[Novel] = None
 
         self._wizard: Optional[NovelCustomizationWizard] = None
@@ -102,7 +103,7 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         overlay = OverlayWidget.getActiveWindowOverlay()
         overlay.show()
 
-        self._scrivenerNovel = None
+        self._importedNovel = None
 
         try:
             result = self.exec()
@@ -116,8 +117,8 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
             return self.__newNovel()
         elif self.stackedWidget.currentWidget() == self.pageWizard:
             return self._wizardNovel
-        elif self._scrivenerNovel is not None:
-            return self._scrivenerNovel
+        elif self._importedNovel is not None:
+            return self._importedNovel
 
         return None
 
@@ -198,18 +199,29 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
             return
 
         parser = ScrivenerParser()
-        self._scrivenerNovel = parser.parse_project(project)
+        self._importedNovel = parser.parse_project(project)
 
         self.stackedWidget.setCurrentWidget(self.pageScrivenerPreview)
         self.wdgBanner.setHidden(True)
         self.wdgTypesContainer.setHidden(True)
         self.setMaximumWidth(MAXIMUM_SIZE)
         self.wdgScrivenerImportDetails.setVisible(True)
-        self.wdgScrivenerImportDetails.setNovel(self._scrivenerNovel)
+        self.wdgScrivenerImportDetails.setNovel(self._importedNovel)
 
     def _loadFromDocx(self):
         if not ask_for_resource(ResourceType.PANDOC):
             return
-        
+
+        docxpath = QFileDialog.getOpenFileName(self, 'Open a docx file')
+        if not docxpath:
+            return
+
+        self._importedNovel = import_docx(docxpath[0])
+
+        self.stackedWidget.setCurrentWidget(self.pageScrivenerPreview)
+        self.wdgBanner.setHidden(True)
+        self.wdgTypesContainer.setHidden(True)
+        self.setMaximumWidth(MAXIMUM_SIZE)
+
     def __newNovel(self) -> Novel:
         return Novel.new_novel(self.lineTitle.text() if self.lineTitle.text() else 'My new novel')
