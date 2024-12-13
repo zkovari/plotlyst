@@ -60,7 +60,7 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
                                (self.btnDocx, self.pageDocx)])
         self.lineTitle.setFocus()
         incr_font(self.lineTitle, 2)
-        self.wdgScrivenerImportDetails.setHidden(True)
+        self.wdgImportDetails.setHidden(True)
         self.lblBanner.setPixmap(QPixmap(resource_registry.banner))
         self.btnNewStory.setIcon(IconRegistry.book_icon(color_on=RELAXED_WHITE_COLOR))
         self.btnScrivener.setIcon(IconRegistry.from_name('mdi.alpha-s-circle-outline', color_on=RELAXED_WHITE_COLOR))
@@ -145,7 +145,10 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         elif self.stackedWidget.currentWidget() == self.pageScrivener:
             self.btnNext.setVisible(False)
             self.btnFinish.setVisible(False)
-        elif self.stackedWidget.currentWidget() == self.pageScrivenerPreview:
+        elif self.stackedWidget.currentWidget() == self.pageDocx:
+            self.btnNext.setVisible(False)
+            self.btnFinish.setVisible(False)
+        elif self.stackedWidget.currentWidget() == self.pageImportedPreview:
             self.btnNext.setVisible(False)
             self.btnFinish.setVisible(True)
 
@@ -201,12 +204,7 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         parser = ScrivenerParser()
         self._importedNovel = parser.parse_project(project)
 
-        self.stackedWidget.setCurrentWidget(self.pageScrivenerPreview)
-        self.wdgBanner.setHidden(True)
-        self.wdgTypesContainer.setHidden(True)
-        self.setMaximumWidth(MAXIMUM_SIZE)
-        self.wdgScrivenerImportDetails.setVisible(True)
-        self.wdgScrivenerImportDetails.setNovel(self._importedNovel)
+        self._showImportedPreview()
 
     def _loadFromDocx(self):
         if not ask_for_resource(ResourceType.PANDOC):
@@ -218,10 +216,16 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
 
         self._importedNovel = import_docx(docxpath[0])
 
-        self.stackedWidget.setCurrentWidget(self.pageScrivenerPreview)
+        self.wdgImportDetails.wdgScrivenerTop.setHidden(True)
+        self._showImportedPreview()
+
+    def _showImportedPreview(self):
+        self.stackedWidget.setCurrentWidget(self.pageImportedPreview)
         self.wdgBanner.setHidden(True)
         self.wdgTypesContainer.setHidden(True)
         self.setMaximumWidth(MAXIMUM_SIZE)
+        self.wdgImportDetails.setVisible(True)
+        self.wdgImportDetails.setNovel(self._importedNovel)
 
     def __newNovel(self) -> Novel:
         return Novel.new_novel(self.lineTitle.text() if self.lineTitle.text() else 'My new novel')
