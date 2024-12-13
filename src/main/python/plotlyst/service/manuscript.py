@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 import pypandoc
 from PyQt6.QtCore import Qt
@@ -28,8 +28,10 @@ from PyQt6.QtWidgets import QFileDialog
 from qthandy import busy
 from slugify import slugify
 
+from plotlyst.common import DEFAULT_MANUSCRIPT_INDENT, DEFAULT_MANUSCRIPT_LINE_SPACE
 from plotlyst.core.client import json_client
-from plotlyst.core.domain import Novel, Document, DocumentProgress, Scene, DocumentStatistics
+from plotlyst.core.domain import Novel, Document, DocumentProgress, Scene, DocumentStatistics, Chapter
+from plotlyst.core.text import wc
 from plotlyst.env import open_location, app_env
 from plotlyst.resources import resource_registry, ResourceType
 from plotlyst.service.persistence import RepositoryPersistenceManager
@@ -196,10 +198,78 @@ def daily_progress(scene: Scene) -> DocumentProgress:
 
 
 @busy
-def import_docx(path: str):
+def import_docx(path: str, chapter_heading_level: int = 2, infer_scene_titles: bool = False):
     title = Path(path).stem
     novel = Novel.new_novel(title)
+    novel.scenes.clear()
+    novel.chapters.clear()
 
     md_text = pypandoc.convert_file(path, to='md', format='docx')
 
+    current_chapter = None
+    novel_title_set = False
+
+    chapter_prefix = '#' * chapter_heading_level
+    scene_content = []
+
+    lines = md_text.splitlines()
+    for i, line in enumerate(lines):
+        if chapter_heading_level > 1 and not novel_title_set and line.startswith("# "):
+            novel.title = line[2:].strip()
+            novel_title_set = True
+
+        elif line.startswith(f"{chapter_prefix} "):  # Chapter heading
+            if current_chapter and scene_content:
+                _add_scene_to_novel(novel, current_chapter, scene_content, infer_scene_titles)
+                scene_content = []
+
+            chapter_title = line[len(chapter_prefix):].strip()
+            current_chapter = Chapter(chapter_title)
+            novel.chapters.append(current_chapter)
+
+        else:
+            if current_chapter:
+                scene_content.append(line)
+
+    if current_chapter and scene_content:
+        _add_scene_to_novel(novel, current_chapter, scene_content, infer_scene_titles)
+
+    novel.update_chapter_titles()
+    _apply_manuscript_format(novel)
+
     return novel
+
+
+def _add_scene_to_novel(novel: Novel, chapter: Chapter, scene_content: List[str], infer_scene_titles: bool):
+    markdown_text = "\n".join(scene_content)
+    qt_doc = QTextDocument()
+    qt_doc.setMarkdown(markdown_text)
+    html_content = qt_doc.toHtml()
+
+    document = Document('')
+    document.content = html_content
+    scene = Scene(title=chapter.title if infer_scene_titles else '', chapter=chapter, manuscript=document)
+
+    novel.scenes.append(scene)
+
+
+def _apply_manuscript_format(novel: Novel):
+    blockFmt = QTextBlockFormat()
+    blockFmt.setTextIndent(DEFAULT_MANUSCRIPT_INDENT)
+    blockFmt.setLineHeight(DEFAULT_MANUSCRIPT_LINE_SPACE, 1)
+    blockFmt.setLeftMargin(0)
+    blockFmt.setTopMargin(0)
+    blockFmt.setRightMargin(0)
+    blockFmt.setBottomMargin(0)
+
+    for scene in novel.scenes:
+        if scene.manuscript:
+            document = QTextDocument()
+            document.setHtml(scene.manuscript.content)
+            cursor = QTextCursor(document)
+            cursor.clearSelection()
+            cursor.select(QTextCursor.SelectionType.Document)
+            cursor.setBlockFormat(blockFmt)
+
+            scene.manuscript.content = document.toHtml()
+            scene.manuscript.statistics = DocumentStatistics(wc(document.toPlainText()))
