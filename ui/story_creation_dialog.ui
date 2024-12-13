@@ -383,7 +383,7 @@
             <string>fa5.file-word</string>
            </property>
            <property name="description" stdset="0">
-            <string>Select a docx file to import your manuscript into Plotlyst.</string>
+            <string/>
            </property>
           </widget>
          </item>
@@ -403,15 +403,8 @@
              <number>15</number>
             </property>
             <property name="bottomMargin">
-             <number>5</number>
+             <number>20</number>
             </property>
-            <item>
-             <widget class="QLabel" name="lblChapterHeading">
-              <property name="text">
-               <string>Chapter heading</string>
-              </property>
-             </widget>
-            </item>
             <item>
              <widget class="QLabel" name="label_2">
               <property name="text">
@@ -485,6 +478,40 @@
               </layout>
              </widget>
             </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_5">
+              <item>
+               <widget class="QLabel" name="label_3">
+                <property name="text">
+                 <string>Scene titles will inherit chapter titles</string>
+                </property>
+                <property name="description" stdset="0">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="Toggle" name="btnInheritSceneTitle">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_3">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
            </layout>
           </widget>
          </item>
@@ -512,7 +539,7 @@
            <property name="sizeHint" stdset="0">
             <size>
              <width>20</width>
-             <height>213</height>
+             <height>190</height>
             </size>
            </property>
           </spacer>
@@ -663,6 +690,11 @@
    <extends>QWidget</extends>
    <header>plotlyst.view.widget.novel</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>Toggle</class>
+   <extends>QCheckBox</extends>
+   <header>plotlyst.view.widget.input</header>
   </customwidget>
  </customwidgets>
  <tabstops>

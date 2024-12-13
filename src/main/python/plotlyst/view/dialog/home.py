@@ -21,7 +21,7 @@ from typing import Optional
 
 from PyQt6.QtGui import QPixmap, QIcon
 from PyQt6.QtWidgets import QDialog, QFileDialog
-from qthandy import incr_font, underline
+from qthandy import incr_font
 from qthandy.filter import OpacityEventFilter
 
 from plotlyst.common import MAXIMUM_SIZE, RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR
@@ -72,7 +72,6 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         self.btnLoadDocx.clicked.connect(self._loadFromDocx)
         self.btnLoadDocx.installEventFilter(ButtonPressResizeEventFilter(self.btnLoadDocx))
 
-        underline(self.lblChapterHeading)
         self.chapterH1.setIcon(IconRegistry.from_name('mdi.format-header-1', color_on=PLOTLYST_MAIN_COLOR))
         self.chapterH2.setIcon(IconRegistry.from_name('mdi.format-header-2', color_on=PLOTLYST_MAIN_COLOR))
         self.chapterH3.setIcon(IconRegistry.from_name('mdi.format-header-3', color_on=PLOTLYST_MAIN_COLOR))
@@ -229,7 +228,8 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
             heading = 2
         else:
             heading = 3
-        self._importedNovel = import_docx(docxpath[0], chapter_heading_level=heading)
+        self._importedNovel = import_docx(docxpath[0], chapter_heading_level=heading,
+                                          infer_scene_titles=self.btnInheritSceneTitle.isChecked())
 
         self.wdgImportDetails.wdgScrivenerTop.setHidden(True)
         self._showImportedPreview()
