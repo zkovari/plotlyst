@@ -24,13 +24,14 @@ from PyQt6.QtWidgets import QDialog, QFileDialog
 from qthandy import incr_font
 from qthandy.filter import OpacityEventFilter
 
-from plotlyst.common import MAXIMUM_SIZE
+from plotlyst.common import MAXIMUM_SIZE, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel
 from plotlyst.core.scrivener import ScrivenerParser
 from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, Event
 from plotlyst.event.handler import global_event_dispatcher
 from plotlyst.resources import resource_registry, ResourceType
+from plotlyst.service.resource import ask_for_resource
 from plotlyst.service.tour import TourService
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter
 from plotlyst.view.generated.story_creation_dialog_ui import Ui_StoryCreationDialog
@@ -40,7 +41,6 @@ from plotlyst.view.widget.input import Toggle
 from plotlyst.view.widget.novel import NovelCustomizationWizard
 from plotlyst.view.widget.tour.core import NewStoryTitleInDialogTourEvent, \
     NewStoryTitleFillInDialogTourEvent, NewStoryDialogOkayButtonTourEvent, NewStoryDialogWizardCustomizationTourEvent
-from plotlyst.service.resource import ask_for_resource
 
 
 class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
@@ -55,18 +55,21 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         self._wizard: Optional[NovelCustomizationWizard] = None
 
         link_buttons_to_pages(self.stackedWidget,
-                              [(self.btnNewStory, self.pageNewStory), (self.btnScrivener, self.pageScrivener)])
+                              [(self.btnNewStory, self.pageNewStory), (self.btnScrivener, self.pageScrivener),
+                               (self.btnDocx, self.pageDocx)])
         self.lineTitle.setFocus()
         incr_font(self.lineTitle, 2)
         self.wdgScrivenerImportDetails.setHidden(True)
         self.lblBanner.setPixmap(QPixmap(resource_registry.banner))
-        self.btnNewStory.setIcon(IconRegistry.book_icon(color_on='white'))
-        self.btnScrivener.setIcon(IconRegistry.from_name('mdi.alpha-s-circle-outline', color_on='white'))
-        self.btnLoadScrivener.setIcon(IconRegistry.from_name('mdi6.application-import', color='white'))
+        self.btnNewStory.setIcon(IconRegistry.book_icon(color_on=RELAXED_WHITE_COLOR))
+        self.btnScrivener.setIcon(IconRegistry.from_name('mdi.alpha-s-circle-outline', color_on=RELAXED_WHITE_COLOR))
+        self.btnDocx.setIcon(IconRegistry.from_name('fa5.file-word', color_on=RELAXED_WHITE_COLOR))
+        self.btnLoadScrivener.setIcon(IconRegistry.from_name('mdi6.application-import', color=RELAXED_WHITE_COLOR))
         self.btnLoadScrivener.clicked.connect(self._loadFromScrivener)
         self.btnLoadScrivener.installEventFilter(ButtonPressResizeEventFilter(self.btnLoadScrivener))
-        incr_font(self.btnNewStory)
-        incr_font(self.btnScrivener)
+        self.btnLoadDocx.setIcon(IconRegistry.from_name('mdi6.application-import', color=RELAXED_WHITE_COLOR))
+        self.btnLoadDocx.clicked.connect(self._loadFromDocx)
+        self.btnLoadDocx.installEventFilter(ButtonPressResizeEventFilter(self.btnLoadDocx))
 
         self.btnCancel.setIcon(IconRegistry.close_icon())
         self.btnCancel.installEventFilter(ButtonPressResizeEventFilter(self.btnCancel))
@@ -81,7 +84,8 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         self.toggleWizard.setChecked(True)
         self.wdgWizardSubtitle.addWidget(self.toggleWizard)
 
-        for btn in [self.btnNewStory, self.btnScrivener]:
+        for btn in self.buttonGroup.buttons():
+            incr_font(btn)
             btn.installEventFilter(OpacityEventFilter(parent=btn, ignoreCheckedButton=True))
         self.stackedWidget.currentChanged.connect(self._pageChanged)
         self.stackedWidget.setCurrentWidget(self.pageNewStory)
@@ -203,5 +207,9 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         self.wdgScrivenerImportDetails.setVisible(True)
         self.wdgScrivenerImportDetails.setNovel(self._scrivenerNovel)
 
+    def _loadFromDocx(self):
+        if not ask_for_resource(ResourceType.PANDOC):
+            return
+        
     def __newNovel(self) -> Novel:
         return Novel.new_novel(self.lineTitle.text() if self.lineTitle.text() else 'My new novel')
