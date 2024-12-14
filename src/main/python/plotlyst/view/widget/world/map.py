@@ -276,6 +276,8 @@ class BaseMapItem:
         self._marker.ref = location.id
         if location.icon:
             self.setIcon(location.icon)
+        else:
+            self.resetIcon()
         self.mapScene().markerChangedEvent(self)
 
     def setColor(self, color: str):
@@ -286,6 +288,9 @@ class BaseMapItem:
     def setIcon(self, icon: str):
         self._marker.icon = icon
         self.refresh()
+
+    def resetIcon(self):
+        pass
 
     def refresh(self):
         self.update()
@@ -394,6 +399,12 @@ class MarkerItem(QAbstractGraphicsShapeItem, BaseMapItem):
         self.update()
         self.mapScene().markerChangedEvent(self)
 
+    @overrides
+    def resetIcon(self):
+        self._marker.icon = 'mdi.circle'
+        self.refresh()
+
+    @overrides
     def refresh(self):
         self._iconMarker = IconRegistry.from_name('fa5s.map-marker', self._marker.color)
         self._iconMarkerSelected = IconRegistry.from_name('fa5s.map-marker', self._marker.color_selected)
@@ -453,8 +464,26 @@ class BaseMapAreaItem(BaseMapItem):
         color = QColor(marker.color)
         color.setAlpha(125)
         self.setBrush(color)
+        if self._marker.icon:
+            self._initIconItem()
+            self._iconItem.setIcon(IconRegistry.from_name(self._marker.icon, RELAXED_WHITE_COLOR))
 
         self._checkRef()
+
+    @overrides
+    def setIcon(self, icon: str):
+        self._marker.icon = icon
+        if self._iconItem is None:
+            self._initIconItem()
+
+        self._iconItem.setIcon(IconRegistry.from_name(self._marker.icon, RELAXED_WHITE_COLOR))
+        self._iconItem.setVisible(True)
+        self.refresh()
+
+    @overrides
+    def resetIcon(self):
+        if self._iconItem:
+            self._iconItem.setVisible(False)
 
     @overrides
     def refresh(self):
@@ -463,11 +492,6 @@ class BaseMapAreaItem(BaseMapItem):
         self.setBrush(color)
 
         if self._marker.icon:
-            if self._iconItem is None:
-                self._iconItem = IconBadge(self, borderEnabled=False)
-                self._iconItem.setVisible(True)
-                self._iconItem.setPos(self.boundingRect().center().x() - 16,
-                                      self.boundingRect().center().y() - 16)
             self._iconItem.setIcon(IconRegistry.from_name(self._marker.icon, RELAXED_WHITE_COLOR))
         super().refresh()
 
@@ -476,6 +500,12 @@ class BaseMapAreaItem(BaseMapItem):
         effect = QGraphicsOpacityEffect()
         effect.setOpacity(0.7)
         return effect
+
+    def _initIconItem(self):
+        self._iconItem = IconBadge(self, borderEnabled=False)
+        self._iconItem.setVisible(True)
+        self._iconItem.setPos(self.boundingRect().center().x() - 16,
+                              self.boundingRect().center().y() - 16)
 
 
 class AreaSquareItem(QGraphicsRectItem, BaseMapAreaItem):
@@ -817,7 +847,7 @@ class WorldBuildingMapScene(QGraphicsScene):
     def _addArea(self, pos: QPointF):
         self._area_start_point = pos
         marker = WorldBuildingMarker(self._area_start_point.x(), self._area_start_point.y(),
-                                     type=self._additionDescriptor)
+                                     type=self._additionDescriptor, icon='')
         self._map.markers.append(marker)
         if self._additionDescriptor == GraphicsItemType.MAP_AREA_SQUARE:
             self._current_area_item = AreaSquareItem(marker, QRectF(self._area_start_point, self._area_start_point))
@@ -1079,7 +1109,7 @@ class WorldBuildingMapView(BaseGraphicsView):
 
     def _fillUpEditMenu(self):
         self._menuEdit.clear()
-        addAction = action('Add map', IconRegistry.plus_icon(), tooltip="Upload am image for your map",
+        addAction = action('Add map', IconRegistry.plus_icon(), tooltip="Upload an image for your map",
                            slot=self._addNewMap)
         if self._scene.map() and self._scene.map().ref:
             addAction.setText('Replace map')
