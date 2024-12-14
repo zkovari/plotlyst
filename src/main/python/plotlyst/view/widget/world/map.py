@@ -186,19 +186,19 @@ class MarkerItemToolbar(BaseItemToolbar):
         self.addSecondaryWidget(self._btnIcon, self._iconSecondaryWidget)
         self._iconPicker.iconSelected.connect(self._iconChanged)
 
-        self._sbSize = QSlider()
-        self._sbSize.setMinimum(30)
-        self._sbSize.setMaximum(90)
-        self._sbSize.setValue(50)
-        self._sbSize.setOrientation(Qt.Orientation.Horizontal)
-        self._sbSize.valueChanged.connect(self._sizeChanged)
+        self._sbRange = QSlider()
+        # self._sbRange.setMinimum(30)
+        # self._sbRange.setMaximum(90)
+        # self._sbRange.setValue(50)
+        self._sbRange.setOrientation(Qt.Orientation.Horizontal)
+        self._sbRange.valueChanged.connect(self._sizeChanged)
 
         self._toolbar.layout().addWidget(self._btnMilieuLink)
         self._toolbar.layout().addWidget(vline())
         self._toolbar.layout().addWidget(self._btnColor)
         self._toolbar.layout().addWidget(self._btnIcon)
         self._toolbar.layout().addWidget(vline())
-        self._toolbar.layout().addWidget(self._sbSize)
+        self._toolbar.layout().addWidget(self._sbRange)
 
         self._iconPicker.setFixedWidth(self.sizeHint().width())
 
@@ -213,9 +213,16 @@ class MarkerItemToolbar(BaseItemToolbar):
             self._btnMilieuLink.setIcon(IconRegistry.world_building_icon())
 
         self._btnColor.setIcon(IconRegistry.from_name('fa5s.map-marker', color=marker.color))
-        self._sbSize.setValue(marker.size if marker.size else 50)
 
-        self._sbSize.setVisible(marker.type == GraphicsItemType.MAP_MARKER)
+        if marker.type == GraphicsItemType.MAP_MARKER:
+            self._sbRange.setMinimum(30)
+            self._sbRange.setMaximum(90)
+            self._sbRange.setValue(50)
+            self._sbRange.setValue(marker.size if marker.size else 50)
+        else:
+            self._sbRange.setMinimum(-70 if marker.ref else -40)
+            self._sbRange.setMaximum(20)
+            self._sbRange.setValue(marker.opacity)
         self._toolbar.updateGeometry()
 
         self._item = item
@@ -242,7 +249,10 @@ class MarkerItemToolbar(BaseItemToolbar):
 
     def _sizeChanged(self, value: int):
         if self._item:
-            self._item.setSize(value)
+            if self._item.marker().type == GraphicsItemType.MAP_MARKER:
+                self._item.setSize(value)
+            else:
+                self._item.setOpacityDiff(value)
 
 
 class BaseMapItem:
@@ -348,7 +358,7 @@ class BaseMapItem:
 
     def _effectWithoutRef(self) -> QGraphicsEffect:
         effect = QGraphicsOpacityEffect()
-        effect.setOpacity(0.5)
+        effect.setOpacity(0.5 + self._marker.opacity / 100)
         return effect
 
     def _posChangedOnTimeout(self):
@@ -485,6 +495,12 @@ class BaseMapAreaItem(BaseMapItem):
         if self._iconItem:
             self._iconItem.setVisible(False)
 
+    def setOpacityDiff(self, diff: int):
+        self._marker.opacity = diff
+        self._checkRef()
+
+        self.mapScene().markerChangedEvent(self)
+
     @overrides
     def refresh(self):
         color = QColor(self._marker.color)
@@ -498,7 +514,7 @@ class BaseMapAreaItem(BaseMapItem):
     @overrides
     def _effectWithRef(self) -> Optional[QGraphicsEffect]:
         effect = QGraphicsOpacityEffect()
-        effect.setOpacity(0.7)
+        effect.setOpacity(0.7 + self._marker.opacity / 100)
         return effect
 
     def _initIconItem(self):
