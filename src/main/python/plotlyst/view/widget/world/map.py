@@ -48,6 +48,7 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.graphics import BaseGraphicsView
 from plotlyst.view.widget.graphics.editor import ZoomBar, BaseItemToolbar, \
     SecondarySelectorWidget
+from plotlyst.view.widget.graphics.items import IconBadge
 from plotlyst.view.widget.input import AutoAdjustableTextEdit
 from plotlyst.view.widget.utility import IconSelectorDialog
 from plotlyst.view.widget.world.editor import MilieuSelectorPopup
@@ -214,7 +215,6 @@ class MarkerItemToolbar(BaseItemToolbar):
         self._btnColor.setIcon(IconRegistry.from_name('fa5s.map-marker', color=marker.color))
         self._sbSize.setValue(marker.size if marker.size else 50)
 
-        self._btnIcon.setEnabled(marker.type == GraphicsItemType.MAP_MARKER)
         self._sbSize.setVisible(marker.type == GraphicsItemType.MAP_MARKER)
         self._toolbar.updateGeometry()
 
@@ -274,11 +274,17 @@ class BaseMapItem:
 
     def setLocation(self, location: Location):
         self._marker.ref = location.id
+        if location.icon:
+            self.setIcon(location.icon)
         self.mapScene().markerChangedEvent(self)
 
     def setColor(self, color: str):
         self._marker.color = color
         self._marker.color_selected = marker_selected_colors[color]
+        self.refresh()
+
+    def setIcon(self, icon: str):
+        self._marker.icon = icon
         self.refresh()
 
     def refresh(self):
@@ -376,10 +382,6 @@ class MarkerItem(QAbstractGraphicsShapeItem, BaseMapItem):
 
         self._checkRef()
 
-    def setIcon(self, icon: str):
-        self._marker.icon = icon
-        self.refresh()
-
     def setSize(self, size: int):
         self._width = size
         self._height = int(size * (self.DEFAULT_MARKER_HEIGHT / self.DEFAULT_MARKER_WIDTH))
@@ -440,6 +442,11 @@ class MarkerItem(QAbstractGraphicsShapeItem, BaseMapItem):
 
 
 class BaseMapAreaItem(BaseMapItem):
+
+    def __init__(self):
+        super().__init__()
+        self._iconItem: Optional[IconBadge] = None
+
     def setMarker(self, marker: WorldBuildingMarker):
         self._marker = marker
         self.setPen(QPen(Qt.GlobalColor.black, 1))
@@ -454,6 +461,14 @@ class BaseMapAreaItem(BaseMapItem):
         color = QColor(self._marker.color)
         color.setAlpha(125)
         self.setBrush(color)
+
+        if self._marker.icon:
+            if self._iconItem is None:
+                self._iconItem = IconBadge(self, borderEnabled=False)
+                self._iconItem.setVisible(True)
+                self._iconItem.setPos(self.boundingRect().center().x() - 16,
+                                      self.boundingRect().center().y() - 16)
+            self._iconItem.setIcon(IconRegistry.from_name(self._marker.icon, RELAXED_WHITE_COLOR))
         super().refresh()
 
     @overrides
