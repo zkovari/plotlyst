@@ -187,9 +187,6 @@ class MarkerItemToolbar(BaseItemToolbar):
         self._iconPicker.iconSelected.connect(self._iconChanged)
 
         self._sbRange = QSlider()
-        # self._sbRange.setMinimum(30)
-        # self._sbRange.setMaximum(90)
-        # self._sbRange.setValue(50)
         self._sbRange.setOrientation(Qt.Orientation.Horizontal)
         self._sbRange.valueChanged.connect(self._sizeChanged)
 
@@ -198,6 +195,7 @@ class MarkerItemToolbar(BaseItemToolbar):
         self._toolbar.layout().addWidget(self._btnColor)
         self._toolbar.layout().addWidget(self._btnIcon)
         self._toolbar.layout().addWidget(vline())
+        self._toolbar.layout().addWidget(self._rangeIcon)
         self._toolbar.layout().addWidget(self._sbRange)
 
         self._iconPicker.setFixedWidth(self.sizeHint().width())
