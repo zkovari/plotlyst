@@ -195,7 +195,6 @@ class MarkerItemToolbar(BaseItemToolbar):
         self._toolbar.layout().addWidget(self._btnColor)
         self._toolbar.layout().addWidget(self._btnIcon)
         self._toolbar.layout().addWidget(vline())
-        self._toolbar.layout().addWidget(self._rangeIcon)
         self._toolbar.layout().addWidget(self._sbRange)
 
         self._iconPicker.setFixedWidth(self.sizeHint().width())
