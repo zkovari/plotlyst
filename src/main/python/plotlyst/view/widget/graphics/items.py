@@ -227,11 +227,12 @@ class LabelItem(QAbstractGraphicsShapeItem):
 
 
 class IconBadge(QAbstractGraphicsShapeItem):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, borderEnabled: bool = True):
         super().__init__(parent)
         self._size: int = 32
         self._icon: Optional[QIcon] = None
         self._color: QColor = QColor('black')
+        self._borderEnabled: bool = borderEnabled
 
     def setIcon(self, icon: QIcon, borderColor: Optional[QColor] = None):
         self._icon = icon
@@ -247,7 +248,8 @@ class IconBadge(QAbstractGraphicsShapeItem):
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
         painter.setPen(QPen(self._color, 2))
         painter.setBrush(QColor(RELAXED_WHITE_COLOR))
-        painter.drawEllipse(0, 0, self._size, self._size)
+        if self._borderEnabled:
+            painter.drawEllipse(0, 0, self._size, self._size)
 
         if self._icon:
             self._icon.paint(painter, 3, 3, self._size - 5, self._size - 5)
