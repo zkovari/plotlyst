@@ -32,6 +32,7 @@ from qthandy import incr_font, flow, margins, vbox, hbox, pointy, sp, retain_whe
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter, \
     ObjectReferenceMimeData
 from qtmenu import MenuWidget
+from qttextedit import DashInsertionMode
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR, \
     RED_COLOR
@@ -378,6 +379,7 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         font.setFamily(app_env.cursive_font())
         font.setPointSize(20)
         self.textPremise.setFont(font)
+        self.textPremise.setDashInsertionMode(DashInsertionMode.INSERT_EM_DASH)
         self.textPremise.setPlaceholderText("Encapsulate your story's core idea in 1-2 sentences")
         sp(self.textPremise).h_exp()
         self.wdgPremiseParent.layout().addWidget(self.textPremise)
@@ -385,6 +387,7 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self.keywordHighlighter: Optional[PremiseKeywordHighlighter] = None
         self.textPremise.setText(self._premise.current)
         self.textPremise.textChanged.connect(self._premiseEdited)
+        self.textPremise.selectionChanged.connect(self._premiseSelectionChanged)
 
         link_buttons_to_pages(self.stackedWidget, [(self.btnSeed, self.pageSeed), (self.btnPremise, self.pagePremise)])
 
@@ -521,6 +524,13 @@ class PremiseBuilderWidget(QWidget, Ui_PremiseBuilderWidget):
         self._premise.current = self.textPremise.toPlainText()
         self.lblWordCount.setWordCount(wc(self._premise.current))
         self.changed.emit()
+
+    def _premiseSelectionChanged(self):
+        if self.textPremise.textCursor().hasSelection():
+            fragment = self.textPremise.textCursor().selection()
+            self.lblWordCount.calculateSecondaryWordCount(fragment.toPlainText())
+        else:
+            self.lblWordCount.clearSecondaryWordCount()
 
     def _toggleArchives(self, toggled: bool):
         self.tblPremiseArchive.setHidden(toggled)
