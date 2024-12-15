@@ -1430,6 +1430,7 @@ class MilieuSelectorPopup(PopupDialog):
         self.btnClose.clicked.connect(self.reject)
 
         self.frame.layout().addWidget(self.btnReset, alignment=Qt.AlignmentFlag.AlignRight)
+        self.frame.layout().addWidget(label('Select a location', h4=True), alignment=Qt.AlignmentFlag.AlignCenter)
         self.frame.layout().addWidget(self.treeView)
         self.frame.layout().addWidget(group(self.btnClose, self.btnSelect), alignment=Qt.AlignmentFlag.AlignRight)
 
