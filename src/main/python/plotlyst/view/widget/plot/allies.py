@@ -66,13 +66,16 @@ class AlliesSupportingSlider(QWidget):
             y = principle.node.y - ALLY_SEPARATOR
             if y > 0:
                 enemy += y
+            elif y == 0:
+                ally += 1
+                enemy += 1
             else:
                 ally += y
 
         self.slider.setMaximum(int(abs(ally) + enemy))
         self.slider.setValue(int(abs(ally)))
 
-        if abs(ally) > enemy:
+        if abs(ally) >= enemy:
             self.label.setIcon(IconRegistry.from_name('fa5s.thumbs-up', '#266dd3'))
         else:
             self.label.setIcon(IconRegistry.from_name('fa5s.thumbs-down', '#9e1946'))
@@ -117,7 +120,7 @@ class AlliesEmotionalSlider(QWidget):
             self.label.setIcon(IconRegistry.from_name('fa5s.angry', '#ef0000'))
 
 
-ALLY_SEPARATOR: int = 175
+ALLY_SEPARATOR: int = 165
 POSITIVE_RELATION_SEPARATOR: int = 155
 
 
@@ -204,7 +207,12 @@ class AlliesGraphicsScene(NetworkScene):
         principle.node.x = item.pos().x()
         principle.node.y = item.pos().y()
 
-        new_type = DynamicPlotPrincipleType.ENEMY if item.pos().y() > ALLY_SEPARATOR else DynamicPlotPrincipleType.ALLY
+        if item.pos().y() > ALLY_SEPARATOR:
+            new_type = DynamicPlotPrincipleType.ENEMY
+        elif item.pos().y() == ALLY_SEPARATOR:
+            new_type = DynamicPlotPrincipleType.NEUTRAL
+        else:
+            new_type = DynamicPlotPrincipleType.ALLY
 
         if principle.type != new_type:
             principle.type = new_type
@@ -223,6 +231,7 @@ class AlliesGraphicsScene(NetworkScene):
         if isinstance(item, CharacterItem):
             item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)
             item.setConfinedRect(QRectF(-10, -10, 320, 330))
+            item.setStickPoint(QPointF(0, ALLY_SEPARATOR), 15)
             item.setZValue(1)
             item.setDoubleClickEditEnabled(False)
             item.setCursor(Qt.CursorShape.OpenHandCursor)

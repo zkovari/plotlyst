@@ -767,6 +767,9 @@ class NodeItem(QAbstractGraphicsShapeItem):
         self._confinedRect: Optional[QRectF] = None
         self._editOnDoubleClickEnabled: bool = True
 
+        self._stickyPoint: Optional[QPointF] = None
+        self._stickyRange: int = 0
+
         self.setPos(node.x, node.y)
         self._sockets: List[AbstractSocketItem] = []
 
@@ -813,6 +816,10 @@ class NodeItem(QAbstractGraphicsShapeItem):
     def setConfinedRect(self, rect: QRectF):
         self._confinedRect = rect
 
+    def setStickPoint(self, point: QPointF, range: int):
+        self._stickyPoint = point
+        self._stickyRange = range
+
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
@@ -820,6 +827,11 @@ class NodeItem(QAbstractGraphicsShapeItem):
                 new_pos = value
                 new_pos.setX(max(self._confinedRect.left(), min(self._confinedRect.right(), new_pos.x())))
                 new_pos.setY(max(self._confinedRect.top(), min(self._confinedRect.bottom(), new_pos.y())))
+
+                if self._stickyPoint:
+                    if self._stickyPoint.y() - self._stickyRange < new_pos.y() < self._stickyPoint.y() + self._stickyRange:
+                        new_pos.setY(self._stickyPoint.y())
+
                 self.setPos(new_pos)
                 self._onPosChanged()
                 return new_pos
