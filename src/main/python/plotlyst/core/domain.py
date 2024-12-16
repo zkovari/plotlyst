@@ -916,6 +916,7 @@ class DynamicPlotPrincipleType(Enum):
     MONSTER = 'monster'
     ALLY = 'ally'
     ENEMY = 'enemy'
+    NEUTRAL = 'neutral'
     SUSPECT = 'suspect'
     CREW_MEMBER = 'crew'
 
@@ -956,6 +957,8 @@ class DynamicPlotPrincipleType(Enum):
             return 'fa5s.thumbs-up'
         elif self == DynamicPlotPrincipleType.ENEMY:
             return 'fa5s.thumbs-down'
+        elif self == DynamicPlotPrincipleType.NEUTRAL:
+            return 'fa5.hand-rock'
         elif self == DynamicPlotPrincipleType.SUSPECT:
             return 'ri.criminal-fill'
         elif self == DynamicPlotPrincipleType.CREW_MEMBER:
@@ -1011,6 +1014,8 @@ class DynamicPlotPrincipleType(Enum):
             return '#266dd3'
         elif self == DynamicPlotPrincipleType.ENEMY:
             return '#9e1946'
+        elif self == DynamicPlotPrincipleType.NEUTRAL:
+            return 'grey'
         elif self == DynamicPlotPrincipleType.SUSPECT:
             return '#9e2a2b'
         elif self == DynamicPlotPrincipleType.CREW_MEMBER:
@@ -1034,6 +1039,8 @@ class DynamicPlotPrincipleType(Enum):
             return "A character forming alliance with the storyline's focal character"
         elif self == DynamicPlotPrincipleType.ENEMY:
             return "An adversary character who opposes the storyline's focal character"
+        elif self == DynamicPlotPrincipleType.NEUTRAL:
+            return "A character who remains neutral towards the storyline's focal character"
 
         elif self == DynamicPlotPrincipleType.DESCRIPTION:
             return "The suspect's physical appearance and distinguishing features"
@@ -1088,6 +1095,8 @@ class DynamicPlotPrincipleType(Enum):
             return "Describe who and how forms an alliance with the character"
         elif self == DynamicPlotPrincipleType.ENEMY:
             return "Describe who and how opposes the focal character"
+        elif self == DynamicPlotPrincipleType.NEUTRAL:
+            return "Describe who and why remains neutral towards the focal character"
 
         elif self == DynamicPlotPrincipleType.DESCRIPTION:
             return "Describe the suspect's physical appearance or any distinguishing features"
@@ -1133,6 +1142,7 @@ class DynamicPlotPrinciple(OutlineItem):
     type: DynamicPlotPrincipleType = DynamicPlotPrincipleType.TWIST
     elements: List['DynamicPlotPrinciple'] = field(default_factory=list)
     character_id: str = ''
+    node: Optional['Node'] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
 
 class DynamicPlotPrincipleGroupType(Enum):
@@ -3558,6 +3568,16 @@ class Node(CharacterBased):
 
     def __post_init__(self):
         self._character: Optional[Character] = None
+
+    @overrides
+    def __eq__(self, other: 'Node'):
+        if isinstance(other, Node):
+            return self.id == other.id
+        return False
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
 
 
 def to_node(x: float, y: float, type: GraphicsItemType, subtype: str = '', default_size: int = 12) -> Node:
