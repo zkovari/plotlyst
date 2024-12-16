@@ -152,14 +152,14 @@ QSlider::handle:horizontal[ally-enemy=true] {
 }
 
 QSlider::add-page:horizontal[relationship=true] {
-    background: #ef0000;
+    background: lightgrey;
 }
 QSlider::sub-page:horizontal[relationship=true] {
-    background: #00ca94;
+    background: #f25c54;
 }
 QSlider::handle:horizontal[relationship=true] {
-    background: #00ca94;
-    border: 1px solid #00ca94;
+    background: #f25c54;
+    border: 1px solid #f25c54;
 }
 
 '''

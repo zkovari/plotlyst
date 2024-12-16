@@ -95,7 +95,7 @@ class AlliesEmotionalSlider(QWidget):
         self.label.setText('Relationship')
         translucent(self.label, 0.7)
         translucent(self.slider, 0.7)
-        self.label.setIcon(IconRegistry.from_name('mdi.emoticon-happy'))
+        self.label.setIcon(IconRegistry.from_name('fa5s.heart', '#f25c54'))
         self.layout().addWidget(self.label, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self.slider)
 
@@ -113,11 +113,6 @@ class AlliesEmotionalSlider(QWidget):
 
         self.slider.setMaximum(int(abs(neg) + pos))
         self.slider.setValue(int(pos))
-
-        if pos > abs(neg):
-            self.label.setIcon(IconRegistry.from_name('mdi.emoticon-happy', '#00ca94'))
-        else:
-            self.label.setIcon(IconRegistry.from_name('fa5s.angry', '#ef0000'))
 
 
 ALLY_SEPARATOR: int = 165
@@ -178,8 +173,8 @@ class AlliesGraphicsScene(NetworkScene):
 
         self.__addIcon(Node(mid - 7, -18, GraphicsItemType.ICON, icon='fa5s.thumbs-up', color='#266dd3', size=20))
         self.__addIcon(Node(mid - 7, 360, GraphicsItemType.ICON, icon='fa5s.thumbs-down', color='#9e1946', size=20))
-        self.__addIcon(Node(355, 195, GraphicsItemType.ICON, icon='mdi.emoticon-happy', color='#00ca94', size=20))
-        self.__addIcon(Node(-17, 195, GraphicsItemType.ICON, icon='fa5s.angry', color='#ef0000', size=20))
+        self.__addIcon(Node(355, 195, GraphicsItemType.ICON, icon='fa5s.heart', color='#f25c54', size=20))
+        # self.__addIcon(Node(-17, 195, GraphicsItemType.ICON, icon='fa5s.angry', color='#ef0000', size=20))
 
     def addNewAlly(self, principle: DynamicPlotPrinciple):
         self.__initNode(principle)
