@@ -219,7 +219,7 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
             return
 
         docxpath = QFileDialog.getOpenFileName(self, 'Open a docx file')
-        if not docxpath:
+        if not docxpath or not docxpath[0]:
             return
 
         if self.chapterH1.isChecked():
