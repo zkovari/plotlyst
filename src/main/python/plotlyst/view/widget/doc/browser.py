@@ -46,7 +46,8 @@ class DocumentAdditionMenu(MenuWidget):
         super(DocumentAdditionMenu, self).__init__(parent)
         self._novel = novel
 
-        self.addAction(action('Document', IconRegistry.document_edition_icon(), lambda: self._documentSelected()))
+        self.addAction(action('Document', IconRegistry.document_edition_icon(), self._documentSelected))
+        self.addAction(action('Mind map', IconRegistry.from_name('ri.mind-map'), self._mindmapSelected))
         self.addAction(action('Link PDF', IconRegistry.from_name('fa5.file-pdf'), self._openPdf))
 
         self.addSeparator()
@@ -73,13 +74,18 @@ class DocumentAdditionMenu(MenuWidget):
         self._documentSelected(character=character)
         self._character_menu.close()
 
-    def _documentSelected(self, docType=DocumentType.DOCUMENT, character: Optional[Character] = None):
-        doc = Document('', type=docType, icon='mdi.file-document')
+    def _documentSelected(self, character: Optional[Character] = None):
+        doc = Document('', type=DocumentType.DOCUMENT, icon='mdi.file-document')
         if character:
             doc.title = ''
             doc.character_id = character.id
         doc.loaded = True
 
+        self.documentTriggered.emit(doc)
+
+    def _mindmapSelected(self):
+        doc = Document('', type=DocumentType.MIND_MAP, icon='ri.mind-map')
+        doc.loaded = True
         self.documentTriggered.emit(doc)
 
     def _premiseSelected(self):

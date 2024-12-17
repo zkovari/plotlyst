@@ -3322,12 +3322,12 @@ class DocumentType(Enum):
     CHARACTER_BACKSTORY = 1
     CAUSE_AND_EFFECT = 2
     REVERSED_CAUSE_AND_EFFECT = 3
-    SNOWFLAKE = 4
     CHARACTER_ARC = 5
     STORY_STRUCTURE = 6
     MICE = 7
     PDF = 8
     PREMISE = 9
+    MIND_MAP = 10
 
 
 @dataclass
