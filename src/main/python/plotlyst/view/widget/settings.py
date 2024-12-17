@@ -34,7 +34,7 @@ from plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.domain import Novel, NovelSetting
 from plotlyst.event.core import emit_event, EventListener, Event
 from plotlyst.event.handler import event_dispatchers
-from plotlyst.events import NovelMindmapToggleEvent, NovelPanelCustomizationEvent, \
+from plotlyst.events import NovelPanelCustomizationEvent, \
     NovelStructureToggleEvent, NovelStorylinesToggleEvent, NovelCharactersToggleEvent, NovelScenesToggleEvent, \
     NovelWorldBuildingToggleEvent, NovelManuscriptToggleEvent, NovelDocumentsToggleEvent, NovelManagementToggleEvent, \
     NovelEmotionTrackingToggleEvent, NovelMotivationTrackingToggleEvent, NovelConflictTrackingToggleEvent, \
@@ -68,7 +68,6 @@ setting_titles: Dict[NovelSetting, str] = {
 }
 setting_descriptions: Dict[NovelSetting, str] = {
     NovelSetting.Structure: "Follow a story structure to help you with your story's pacing and escalation",
-    NovelSetting.Mindmap: "Visualize your story in a mindmap. Ideal for brainstorming or any other stage in writing",
     NovelSetting.Storylines: "Create separate storylines for plot, character's change, subplots, or relationship plots",
     NovelSetting.Characters: "Create a cast of characters with different roles, personalities, backstories, goals, and relationships among them",
     NovelSetting.Scenes: "Create scene cards for early outlining or later revision purposes to have characters, conflicts, or storylines associated to the scenes",
@@ -86,7 +85,7 @@ setting_descriptions: Dict[NovelSetting, str] = {
     NovelSetting.Character_work_style: "Consider the characters' most typical working style",
 }
 
-panel_events = [NovelMindmapToggleEvent, NovelCharactersToggleEvent,
+panel_events = [NovelCharactersToggleEvent,
                 NovelManuscriptToggleEvent, NovelScenesToggleEvent,
                 NovelDocumentsToggleEvent, NovelStructureToggleEvent,
                 NovelStorylinesToggleEvent, NovelWorldBuildingToggleEvent,
@@ -94,7 +93,6 @@ panel_events = [NovelMindmapToggleEvent, NovelCharactersToggleEvent,
 
 setting_events: Dict[NovelSetting, NovelPanelCustomizationEvent] = {
     NovelSetting.Structure: NovelStructureToggleEvent,
-    NovelSetting.Mindmap: NovelMindmapToggleEvent,
     NovelSetting.Storylines: NovelStorylinesToggleEvent,
     NovelSetting.Characters: NovelCharactersToggleEvent,
     NovelSetting.Character_enneagram: NovelCharacterEnneagramToggleEvent,
@@ -116,8 +114,6 @@ setting_events: Dict[NovelSetting, NovelPanelCustomizationEvent] = {
 def setting_icon(setting: NovelSetting, color=PLOTLYST_SECONDARY_COLOR, color_on=PLOTLYST_SECONDARY_COLOR) -> QIcon:
     if setting == NovelSetting.Structure:
         return IconRegistry.story_structure_icon(color=color, color_on=color_on)
-    elif setting == NovelSetting.Mindmap:
-        return IconRegistry.from_name('ri.mind-map', color, color_on=color_on)
     elif setting == NovelSetting.Storylines:
         return IconRegistry.storylines_icon(color=color, color_on=color_on)
     elif setting == NovelSetting.Characters:
@@ -314,7 +310,6 @@ class NovelPanelSettingsWidget(QWidget):
         self._addSetting(NovelSetting.Characters, 0, 1)
         self._addSetting(NovelSetting.Scenes, 0, 2)
 
-        self._addSetting(NovelSetting.Mindmap, 1, 0)
         self._addSetting(NovelSetting.Storylines, 1, 1)
         self._addSetting(NovelSetting.Structure, 1, 2)
 
@@ -417,7 +412,6 @@ class NovelSettingsWidget(QWidget, EventListener):
         self._settings: Dict[NovelSetting, NovelSettingToggle] = {}
         self._addSettingToggle(NovelSetting.Storylines)
         self._addSettingToggle(NovelSetting.Structure)
-        self._addSettingToggle(NovelSetting.Mindmap)
         wdgCharacters = self._addSettingToggle(NovelSetting.Characters)
         self._addSettingToggle(NovelSetting.Character_enneagram, wdgCharacters)
         self._addSettingToggle(NovelSetting.Character_mbti, wdgCharacters)

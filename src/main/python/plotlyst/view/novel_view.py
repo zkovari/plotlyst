@@ -30,8 +30,7 @@ from plotlyst.core.domain import Novel, Document, NovelSetting
 from plotlyst.core.help import synopsis_editor_placeholder
 from plotlyst.event.core import emit_global_event, Event
 from plotlyst.events import NovelUpdatedEvent, \
-    SceneChangedEvent, NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelMindmapToggleEvent, \
-    NovelPanelCustomizationEvent
+    SceneChangedEvent, NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelPanelCustomizationEvent
 from plotlyst.resources import resource_registry
 from plotlyst.view._view import AbstractNovelView
 from plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon, set_tab_visible
@@ -48,7 +47,7 @@ from plotlyst.view.widget.story_map import EventsMindMapView
 class NovelView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        super().__init__(novel, [SceneChangedEvent, NovelMindmapToggleEvent, NovelStorylinesToggleEvent,
+        super().__init__(novel, [SceneChangedEvent, NovelStorylinesToggleEvent,
                                  NovelStructureToggleEvent], global_event_types=[NovelUpdatedEvent])
         self.ui = Ui_NovelView()
         self.ui.setupUi(self.widget)
@@ -63,7 +62,6 @@ class NovelView(AbstractNovelView):
         set_tab_icon(self.ui.tabWidget, self.ui.tabTags, IconRegistry.tags_icon(color_on=PLOTLYST_MAIN_COLOR))
         set_tab_icon(self.ui.tabWidget, self.ui.tabSettings, IconRegistry.cog_icon(color_on=PLOTLYST_MAIN_COLOR))
 
-        set_tab_visible(self.ui.tabWidget, self.ui.tabEvents, self.novel.prefs.toggled(NovelSetting.Mindmap))
         set_tab_visible(self.ui.tabWidget, self.ui.tabPlot, self.novel.prefs.toggled(NovelSetting.Storylines))
         set_tab_visible(self.ui.tabWidget, self.ui.tabStructure, self.novel.prefs.toggled(NovelSetting.Structure))
         set_tab_visible(self.ui.tabWidget, self.ui.tabTags, False)
@@ -134,9 +132,7 @@ class NovelView(AbstractNovelView):
     @overrides
     def event_received(self, event: Event):
         if isinstance(event, NovelPanelCustomizationEvent):
-            if isinstance(event, NovelMindmapToggleEvent):
-                set_tab_visible(self.ui.tabWidget, self.ui.tabEvents, event.toggled)
-            elif isinstance(event, NovelStorylinesToggleEvent):
+            if isinstance(event, NovelStorylinesToggleEvent):
                 set_tab_visible(self.ui.tabWidget, self.ui.tabPlot, event.toggled)
             elif isinstance(event, NovelStructureToggleEvent):
                 set_tab_visible(self.ui.tabWidget, self.ui.tabStructure, event.toggled)

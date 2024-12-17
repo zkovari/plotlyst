@@ -282,12 +282,12 @@ class NovelCustomizationWizard(QWidget):
 
     def _recommend(self, writerType: WriterType):
         if writerType == WriterType.Architect:
-            self.wdgPanelSettings.checkSettings([NovelSetting.Mindmap], False)
+            self.wdgPanelSettings.checkAllSettings(True)
         elif writerType == WriterType.Planner:
             self.wdgPanelSettings.checkSettings([NovelSetting.Management], False)
         elif writerType == WriterType.Explorer:
             self.wdgPanelSettings.checkSettings(
-                [NovelSetting.Manuscript, NovelSetting.Characters, NovelSetting.Documents, NovelSetting.Mindmap,
+                [NovelSetting.Manuscript, NovelSetting.Characters, NovelSetting.Documents,
                  NovelSetting.Storylines])
         elif writerType == WriterType.Intuitive:
             self.wdgPanelSettings.checkSettings(
