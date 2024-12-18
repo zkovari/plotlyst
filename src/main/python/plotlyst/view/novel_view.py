@@ -41,7 +41,6 @@ from plotlyst.view.style.base import apply_border_image
 from plotlyst.view.widget.input import HtmlPopupTextEditorToolbar
 from plotlyst.view.widget.plot.editor import PlotEditor
 from plotlyst.view.widget.settings import NovelSettingsWidget
-from plotlyst.view.widget.story_map import EventsMindMapView
 
 
 class NovelView(AbstractNovelView):
@@ -52,8 +51,6 @@ class NovelView(AbstractNovelView):
         self.ui = Ui_NovelView()
         self.ui.setupUi(self.widget)
 
-        set_tab_icon(self.ui.tabWidget, self.ui.tabEvents,
-                     IconRegistry.from_name('ri.mind-map', color_on=PLOTLYST_MAIN_COLOR))
         set_tab_icon(self.ui.tabWidget, self.ui.tabStructure,
                      IconRegistry.story_structure_icon(color_on=PLOTLYST_MAIN_COLOR))
         set_tab_icon(self.ui.tabWidget, self.ui.tabPlot, IconRegistry.storylines_icon(color_on=PLOTLYST_MAIN_COLOR))
@@ -111,9 +108,6 @@ class NovelView(AbstractNovelView):
             self.ui.textSynopsis.setText(self.novel.synopsis.content)
             self.ui.lblSynopsisWords.setWordCount(self.ui.textSynopsis.textEdit.statistics().word_count)
         self.ui.textSynopsis.textEdit.textChanged.connect(self._synopsis_changed)
-
-        self._eventsMap = EventsMindMapView(self.novel)
-        self.ui.wdgEventsMapParent.layout().addWidget(self._eventsMap)
 
         self.ui.wdgStructure.setNovel(self.novel)
         self.ui.wdgTitle.setFixedHeight(150)

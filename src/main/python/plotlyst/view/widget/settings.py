@@ -76,7 +76,7 @@ setting_descriptions: Dict[NovelSetting, str] = {
     NovelSetting.Track_conflict: 'Track the frequency and the type of conflicts the characters face',
     NovelSetting.World_building: "Develop your story's world by creating fictional settings and lore",
     NovelSetting.Manuscript: "Write your story in Plotlyst using the manuscript panel",
-    NovelSetting.Documents: "Add documents for your planning or research",
+    NovelSetting.Documents: "Create documents and mind maps for your planning or research",
     NovelSetting.Management: "Stay organized by tracking your tasks in a simple Kanban board",
     NovelSetting.Track_pov: "Track the point of view characters of your story",
     NovelSetting.Character_enneagram: 'Consider enneagram personality type for characters',
