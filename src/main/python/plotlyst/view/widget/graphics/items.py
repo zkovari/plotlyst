@@ -466,9 +466,10 @@ class ConnectorItem(QGraphicsPathItem):
             self.setPen(QPen(self._color, 2))
 
         self._arrowhead = QPolygonF([
-            QPointF(0, -4),
-            QPointF(8, 0),
-            QPointF(0, 4),
+            QPointF(-4, -6),  # Top point of the arrowhead
+            QPointF(8, 0),  # Far tip of the arrowhead
+            QPointF(-4, 6),  # Bottom point of the arrowhead
+            QPointF(1, 0),  # Inner point for a sharper look
         ])
         self._endArrowheadItem = QGraphicsPolygonItem(self._arrowhead, self)
         self._endArrowheadItem.setPen(QPen(self._color, 1))
