@@ -249,7 +249,7 @@ class DocumentsView(AbstractNovelView):
         self.repo.update_doc(self.novel, self._current_doc)
 
     def _title_changed(self, doc: Document):
-        if doc is self._current_doc:
+        if doc is self._current_doc and doc.type == DocumentType.DOCUMENT:
             self.textEditor.setTitle(doc.title)
 
     def _title_changed_in_editor(self, title: str):
