@@ -48,6 +48,12 @@ class ChartView(QChartView):
         super(ChartView, self).__init__(parent)
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
 
+    @overrides
+    def wheelEvent(self, event: 'QGraphicsSceneWheelEvent') -> None:
+        event.ignore()
+
+        return super(ChartView, self).wheelEvent(event)
+
 
 class Subtitle(QWidget):
     def __init__(self, parent=None):
