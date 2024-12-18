@@ -290,7 +290,7 @@ class AbstractSocketItem(QAbstractGraphicsShapeItem):
     @overrides
     def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent) -> None:
         self._hovered = True
-        if self.networkScene().linkMode() and self.networkScene().linkSource().parentItem() == self.parentItem():
+        if self.networkScene() and self.networkScene().linkMode() and self.networkScene().linkSource().parentItem() == self.parentItem():
             self._linkAvailable = False
         else:
             self._linkAvailable = True
@@ -1206,12 +1206,12 @@ class EventItem(NodeItem):
 
     @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        if self.networkScene().linkMode() or alt_modifier(event):
+        if self.networkScene() and self.networkScene().linkMode() or alt_modifier(event):
             self._setSocketsVisible()
 
     @overrides
     def hoverMoveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        if not self.networkScene().linkMode() and alt_modifier(event):
+        if self.networkScene() and not self.networkScene().linkMode() and alt_modifier(event):
             self._setSocketsVisible()
 
     @overrides
@@ -1413,6 +1413,9 @@ class NoteItem(NodeItem):
 
     def height(self) -> int:
         return self._node.height
+
+    def setColor(self, color: QColor):
+        pass
 
     def setText(self, text: str, height: int):
         self._node.text = text
