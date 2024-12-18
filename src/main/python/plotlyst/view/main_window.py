@@ -51,6 +51,7 @@ from plotlyst.service.common import try_shutdown_to_apply_change
 from plotlyst.service.dir import select_new_project_directory
 from plotlyst.service.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
 from plotlyst.service.importer import ScrivenerSyncImporter
+from plotlyst.service.migration import migrate_novel
 from plotlyst.service.persistence import RepositoryPersistenceManager, flush_or_fail
 from plotlyst.service.resource import download_resource, download_nltk_resources, ResourceManagerDialog
 from plotlyst.service.tour import TourService
@@ -120,6 +121,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
                 self.novel = client.fetch_novel(last_novel_id)
 
         if self.novel:
+            migrate_novel(self.novel)
+
             acts_registry.set_novel(self.novel)
             entities_registry.set_novel(self.novel)
             dictionary.set_novel(self.novel)
@@ -610,6 +613,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         else:
             self.novel = client.fetch_novel(novel.id)
         self.repo.set_persistence_enabled(not novel.tutorial)
+
+        migrate_novel(self.novel)
+
         acts_registry.set_novel(self.novel)
         entities_registry.set_novel(self.novel)
         dictionary.set_novel(self.novel)

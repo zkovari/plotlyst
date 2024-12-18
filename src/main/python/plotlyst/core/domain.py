@@ -3322,12 +3322,12 @@ class DocumentType(Enum):
     CHARACTER_BACKSTORY = 1
     CAUSE_AND_EFFECT = 2
     REVERSED_CAUSE_AND_EFFECT = 3
-    SNOWFLAKE = 4
     CHARACTER_ARC = 5
     STORY_STRUCTURE = 6
     MICE = 7
     PDF = 8
     PREMISE = 9
+    MIND_MAP = 10
 
 
 @dataclass
@@ -3360,6 +3360,7 @@ class Document(CharacterBased, SceneBased):
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
     statistics: Optional[DocumentStatistics] = field(default=None, metadata=config(exclude=exclude_if_empty))
     file: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    diagram: Optional['Diagram'] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
     def display_name(self) -> str:
         if self.title:
@@ -3637,7 +3638,7 @@ class DiagramData:
 
 @dataclass
 class Diagram:
-    title: str
+    title: str = field(default='', metadata=config(exclude=exclude_if_empty))
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
@@ -3655,10 +3656,6 @@ class Diagram:
     @overrides
     def __hash__(self):
         return hash(str(self.id))
-
-
-def default_events_map() -> Diagram:
-    return Diagram('Events', id=uuid.UUID('6c74e40f-d3de-4c83-bcd2-0ca5e626081d'))
 
 
 def default_character_networks() -> List[Diagram]:
@@ -3805,7 +3802,7 @@ class Novel(NovelDescriptor):
     locations: List[Location] = field(default_factory=default_locations)
     board: Board = field(default_factory=Board)
     manuscript_goals: ManuscriptGoals = field(default_factory=ManuscriptGoals)
-    events_map: Diagram = field(default_factory=default_events_map)
+    events_map: Diagram = field(default=None, metadata=config(exclude=exclude_if_empty))
     character_networks: List[Diagram] = field(default_factory=default_character_networks)
     manuscript_progress: Dict[str, DocumentProgress] = field(default_factory=dict,
                                                              metadata=config(exclude=exclude_if_empty))

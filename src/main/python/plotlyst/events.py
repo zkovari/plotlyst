@@ -191,11 +191,6 @@ class NovelPanelCustomizationEvent(Event):
 
 
 @dataclass
-class NovelMindmapToggleEvent(NovelPanelCustomizationEvent):
-    pass
-
-
-@dataclass
 class NovelManuscriptToggleEvent(NovelPanelCustomizationEvent):
     pass
 

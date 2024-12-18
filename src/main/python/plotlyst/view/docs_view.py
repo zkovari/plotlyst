@@ -41,6 +41,7 @@ from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.widget.doc.browser import DocumentAdditionMenu
 from plotlyst.view.widget.doc.premise import PremiseBuilderWidget
 from plotlyst.view.widget.input import DocumentTextEditor
+from plotlyst.view.widget.story_map import EventsMindMapView
 from plotlyst.view.widget.tree import TreeSettings
 
 
@@ -65,6 +66,9 @@ class DocumentsView(AbstractNovelView):
         self.ui.btnTreeToggleSecondary.setHidden(True)
         self.ui.btnTreeToggle.clicked.connect(self._hide_sidebar)
         self.ui.btnTreeToggleSecondary.clicked.connect(self._show_sidebar)
+
+        self._mindmapView = EventsMindMapView(self.novel)
+        self.ui.mindmapPage.layout().addWidget(self._mindmapView)
 
         self.ui.splitter.setSizes([150, 500])
 
@@ -168,16 +172,12 @@ class DocumentsView(AbstractNovelView):
 
         if self._current_doc.type in [DocumentType.DOCUMENT, DocumentType.STORY_STRUCTURE]:
             self._edit_document()
-        else:
-            # self.ui.stackedEditor.setCurrentWidget(self.ui.customEditorPage)
-            # clear_layout(self.ui.customEditorPage)
-            # if self._current_doc.type == DocumentType.MICE:
-            #     widget = MiceQuotientDoc(self._current_doc, self._current_doc.data)
-            #     widget.changed.connect(self._save)
-            if self._current_doc.type == DocumentType.PDF:
-                self._edit_pdf()
-            elif self._current_doc.type == DocumentType.PREMISE:
-                self._edit_premise()
+        elif self._current_doc.type == DocumentType.MIND_MAP:
+            self._edit_mindmap()
+        elif self._current_doc.type == DocumentType.PDF:
+            self._edit_pdf()
+        elif self._current_doc.type == DocumentType.PREMISE:
+            self._edit_premise()
 
     def _edit_document(self):
         self._init_text_editor()
@@ -222,6 +222,14 @@ class DocumentsView(AbstractNovelView):
 
         self.ui.stackedEditor.setCurrentWidget(self.ui.customEditorPage)
 
+    def _edit_mindmap(self):
+        clear_layout(self.ui.customEditorPage)
+
+        self._mindmapView.resetZoom()
+        self._mindmapView.setDiagram(self._current_doc.diagram)
+
+        self.ui.stackedEditor.setCurrentWidget(self.ui.mindmapPage)
+
     def _icon_changed(self, doc: Document):
         if doc is self._current_doc and self._current_doc.type == DocumentType.DOCUMENT:
             self.textEditor.setTitleIcon(IconRegistry.from_name(doc.icon, doc.icon_color))
@@ -241,7 +249,7 @@ class DocumentsView(AbstractNovelView):
         self.repo.update_doc(self.novel, self._current_doc)
 
     def _title_changed(self, doc: Document):
-        if doc is self._current_doc:
+        if doc is self._current_doc and doc.type == DocumentType.DOCUMENT:
             self.textEditor.setTitle(doc.title)
 
     def _title_changed_in_editor(self, title: str):

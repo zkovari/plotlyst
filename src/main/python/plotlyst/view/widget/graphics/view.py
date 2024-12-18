@@ -72,6 +72,11 @@ class BaseGraphicsView(QGraphicsView):
     def setScalingEnabled(self, enabled: bool):
         self._scalingEnabled = enabled
 
+    def resetZoom(self):
+        if self._scalingEnabled:
+            self.resetTransform()
+            self._scaledFactor = 1.0
+
     @overrides
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if event.button() == Qt.MouseButton.MiddleButton or event.button() == Qt.MouseButton.RightButton:
@@ -197,6 +202,7 @@ class NetworkGraphicsView(BaseGraphicsView):
 
     def setDiagram(self, diagram: Diagram):
         self._diagram = diagram
+        self.undoStack.clear()
         self._scene.setDiagram(diagram)
         self.centerOn(0, 0)
 
@@ -204,6 +210,11 @@ class NetworkGraphicsView(BaseGraphicsView):
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
         self._arrangeSideBars()
+
+    @overrides
+    def resetZoom(self):
+        super().resetZoom()
+        self._wdgZoomBar.updateScaledFactor(self.scaledFactor())
 
     @overrides
     def _scale(self, scale: float):
