@@ -851,6 +851,9 @@ class NodeItem(QAbstractGraphicsShapeItem):
         for socket in self._sockets:
             socket.rearrangeConnectors()
 
+    def activate(self):
+        pass
+
     def _onPosChanged(self):
         self.rearrangeConnectors()
         self.networkScene().itemMovedEvent(self)
@@ -1146,6 +1149,8 @@ class EventItem(NodeItem):
 
         self._recalculateRect()
 
+        self.activate()
+
     def text(self) -> str:
         return self._text
 
@@ -1266,6 +1271,10 @@ class EventItem(NodeItem):
 
     def textSceneRect(self) -> QRectF:
         return self.mapRectToScene(self._textRect.toRectF())
+
+    @overrides
+    def activate(self):
+        shadow(self)
 
     @overrides
     def boundingRect(self) -> QRectF:

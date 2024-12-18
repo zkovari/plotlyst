@@ -424,7 +424,7 @@ class NetworkScene(QGraphicsScene):
             item = EventItem(self.toEventNode(scenePos, itemType, subType))
 
         self.addItem(item)
-        anim = qtanim.fade_in(item)
+        anim = qtanim.fade_in(item, teardown=item.activate)
         anim.setParent(self._animParent)
         self.itemAdded.emit(itemType, item)
         self.endAdditionMode()
