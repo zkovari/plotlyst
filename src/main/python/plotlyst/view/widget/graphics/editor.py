@@ -36,6 +36,7 @@ from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import GraphicsItemType, NODE_SUBTYPE_DISTURBANCE, NODE_SUBTYPE_CONFLICT, \
     NODE_SUBTYPE_GOAL, NODE_SUBTYPE_BACKSTORY, \
     NODE_SUBTYPE_INTERNAL_CONFLICT, Node
+from plotlyst.env import app_env
 from plotlyst.view.common import shadow, tool_btn, ExclusiveOptionalButtonGroup
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -545,15 +546,15 @@ class EventItemToolbar(PaintedItemBasedToolbar):
         self._sbFont.fontChanged.connect(self._fontChanged)
         self._btnBold = tool_btn(IconRegistry.from_name('fa5s.bold'), 'Bold', checkable=True, icon_resize=False,
                                  properties=['transparent-rounded-bg-on-hover', 'top-selector'])
-        decr_icon(self._btnBold)
+        decr_icon(self._btnBold, 3 if app_env.is_mac() else 1)
         self._btnItalic = tool_btn(IconRegistry.from_name('fa5s.italic'), 'Italic',
                                    checkable=True, icon_resize=False,
                                    properties=['transparent-rounded-bg-on-hover', 'top-selector'])
-        decr_icon(self._btnItalic)
+        decr_icon(self._btnItalic, 3 if app_env.is_mac() else 1)
         self._btnUnderline = tool_btn(IconRegistry.from_name('fa5s.underline'), 'Underline',
                                       checkable=True, icon_resize=False,
                                       properties=['transparent-rounded-bg-on-hover', 'top-selector'])
-        decr_icon(self._btnUnderline)
+        decr_icon(self._btnUnderline, 3 if app_env.is_mac() else 1)
         self._btnBold.clicked.connect(self._boldChanged)
         self._btnItalic.clicked.connect(self._italicChanged)
         self._btnUnderline.clicked.connect(self._underlineChanged)

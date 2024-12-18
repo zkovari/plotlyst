@@ -290,7 +290,7 @@ class AbstractSocketItem(QAbstractGraphicsShapeItem):
     @overrides
     def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent) -> None:
         self._hovered = True
-        if self.networkScene().linkMode() and self.networkScene().linkSource().parentItem() == self.parentItem():
+        if self.networkScene() and self.networkScene().linkMode() and self.networkScene().linkSource().parentItem() == self.parentItem():
             self._linkAvailable = False
         else:
             self._linkAvailable = True
@@ -370,7 +370,12 @@ class DotCircleSocketItem(AbstractSocketItem):
     @overrides
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
         if self._linkAvailable:
-            painter.setPen(QPen(QColor(PLOTLYST_SECONDARY_COLOR), 2))
+            if self.parentItem():
+                color = self.parentItem().color()
+            else:
+                color = QColor(PLOTLYST_SECONDARY_COLOR)
+            painter.setPen(QPen(color, 2))
+            painter.setOpacity(0.7)
         else:
             painter.setPen(QPen(QColor('lightgrey'), 2))
 
@@ -449,7 +454,7 @@ class ConnectorItem(QGraphicsPathItem):
         self._source = source
         self._target = target
         self._connector: Optional[Connector] = None
-        self._color: QColor = QColor('black')
+        self._color: QColor = QColor('#212529')
         self._relation: Optional[Relation] = None
         self._icon: Optional[str] = None
         self._defaultLineType: ConnectorType = ConnectorType.Curved
@@ -461,9 +466,10 @@ class ConnectorItem(QGraphicsPathItem):
             self.setPen(QPen(self._color, 2))
 
         self._arrowhead = QPolygonF([
-            QPointF(0, -4),
-            QPointF(8, 0),
-            QPointF(0, 4),
+            QPointF(-4, -6),  # Top point of the arrowhead
+            QPointF(8, 0),  # Far tip of the arrowhead
+            QPointF(-4, 6),  # Bottom point of the arrowhead
+            QPointF(1, 0),  # Inner point for a sharper look
         ])
         self._endArrowheadItem = QGraphicsPolygonItem(self._arrowhead, self)
         self._endArrowheadItem.setPen(QPen(self._color, 1))
@@ -851,6 +857,9 @@ class NodeItem(QAbstractGraphicsShapeItem):
         for socket in self._sockets:
             socket.rearrangeConnectors()
 
+    def activate(self):
+        pass
+
     def _onPosChanged(self):
         self.rearrangeConnectors()
         self.networkScene().itemMovedEvent(self)
@@ -1146,6 +1155,8 @@ class EventItem(NodeItem):
 
         self._recalculateRect()
 
+        self.activate()
+
     def text(self) -> str:
         return self._text
 
@@ -1196,12 +1207,12 @@ class EventItem(NodeItem):
 
     @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        if self.networkScene().linkMode() or alt_modifier(event):
+        if self.networkScene() and self.networkScene().linkMode() or alt_modifier(event):
             self._setSocketsVisible()
 
     @overrides
     def hoverMoveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        if not self.networkScene().linkMode() and alt_modifier(event):
+        if self.networkScene() and not self.networkScene().linkMode() and alt_modifier(event):
             self._setSocketsVisible()
 
     @overrides
@@ -1268,6 +1279,10 @@ class EventItem(NodeItem):
         return self.mapRectToScene(self._textRect.toRectF())
 
     @overrides
+    def activate(self):
+        shadow(self)
+
+    @overrides
     def boundingRect(self) -> QRectF:
         return QRectF(0, 0, self._width, self._height)
 
@@ -1279,7 +1294,7 @@ class EventItem(NodeItem):
 
         painter.setPen(QPen(QColor(self._node.color), 1))
         painter.setBrush(QColor(WHITE_COLOR))
-        painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 24, 24)
+        painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 16, 16)
         painter.setFont(self._font)
         painter.drawText(self._textRect, Qt.AlignmentFlag.AlignCenter,
                          self._text if self._text else self._placeholderText)
@@ -1399,6 +1414,9 @@ class NoteItem(NodeItem):
 
     def height(self) -> int:
         return self._node.height
+
+    def setColor(self, color: QColor):
+        pass
 
     def setText(self, text: str, height: int):
         self._node.text = text

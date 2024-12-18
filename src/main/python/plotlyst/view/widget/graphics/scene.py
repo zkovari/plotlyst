@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
 from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Optional, Dict, Set, Union
@@ -25,13 +24,13 @@ from typing import Optional, Dict, Set, Union
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QPointF, QPoint, QObject
 from PyQt6.QtGui import QTransform, \
-    QKeyEvent, QKeySequence, QCursor, QImage, QUndoStack
+    QKeyEvent, QKeySequence, QCursor, QImage, QUndoStack, QColor
 from PyQt6.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QApplication, \
     QGraphicsSceneDragDropEvent
 from overrides import overrides
 
 from plotlyst.core.domain import Node, Diagram, GraphicsItemType, Connector, PlaceholderCharacter, \
-    to_node
+    to_node, Character
 from plotlyst.service.cache import entities_registry
 from plotlyst.service.image import LoadedImage
 from plotlyst.view.widget.graphics import NodeItem, CharacterItem, PlaceholderSocketItem, ConnectorItem, \
@@ -44,6 +43,17 @@ from plotlyst.view.widget.graphics.items import NoteItem, ImageItem, IconItem, C
 class ItemDescriptor:
     mode: GraphicsItemType
     subType: str = ''
+    icon: str = ''
+    color: Optional[QColor] = None
+    size: int = 0
+    font_size: int = 0
+    height: int = 0
+    text: str = ''
+    character: Optional[Character] = None
+    bold: bool = False
+    italic: bool = False
+    underline: bool = False
+    transparent: bool = False
 
 
 class NetworkScene(QGraphicsScene):
@@ -367,6 +377,7 @@ class NetworkScene(QGraphicsScene):
 
         if item.scene():
             self.removeItem(item)
+            item.update()
         self._save()
 
     def _clearUpConnectorItem(self, item: ConnectorItem):
@@ -392,12 +403,49 @@ class NetworkScene(QGraphicsScene):
 
     def _copy(self, item: NodeItem):
         self._copyDescriptor = ItemDescriptor(item.node().type, item.node().subtype)
+        self._copyDescriptor.icon = item.icon()
+        self._copyDescriptor.color = item.color()
+        if isinstance(item, IconItem):
+            self._copyDescriptor.size = item.size()
+        elif isinstance(item, CharacterItem):
+            self._copyDescriptor.size = item.size()
+            self._copyDescriptor.character = item.character()
+        elif isinstance(item, EventItem):
+            self._copyDescriptor.text = item.text()
+            self._copyDescriptor.font_size = item.fontSize()
+            self._copyDescriptor.bold = item.bold()
+            self._copyDescriptor.italic = item.italic()
+            self._copyDescriptor.underline = item.underline()
+        elif isinstance(item, NoteItem):
+            self._copyDescriptor.text = item.text()
+            self._copyDescriptor.height = item.height()
+            self._copyDescriptor.transparent = item.transparent()
 
     def _paste(self):
-        if self._copyDescriptor:
-            pos = self._cursorScenePos()
-            if pos:
-                self._addNewItem(pos, self._copyDescriptor.mode, self._copyDescriptor.subType)
+        if not self._copyDescriptor:
+            return
+        pos = self._cursorScenePos()
+        if not pos:
+            return
+
+        item = self._addNewItem(pos, self._copyDescriptor.mode, self._copyDescriptor.subType)
+        if self._copyDescriptor.icon:
+            item.setIcon(self._copyDescriptor.icon)
+        if self._copyDescriptor.color:
+            item.setColor(self._copyDescriptor.color)
+        if self._copyDescriptor.size:
+            item.setSize(self._copyDescriptor.size)
+        if self._copyDescriptor.character:
+            item.setCharacter(self._copyDescriptor.character)
+        if self._copyDescriptor.text:
+            if isinstance(item, NoteItem):
+                item.setText(self._copyDescriptor.text, self._copyDescriptor.height)
+                item.setTransparent(self._copyDescriptor.transparent)
+            else:
+                item.setText(self._copyDescriptor.text)
+        if isinstance(item, EventItem):
+            item.setFontSettings(self._copyDescriptor.font_size, self._copyDescriptor.bold, self._copyDescriptor.italic,
+                                 self._copyDescriptor.underline)
 
     def _cursorScenePos(self) -> Optional[QPointF]:
         view = self.views()[0]
@@ -424,7 +472,7 @@ class NetworkScene(QGraphicsScene):
             item = EventItem(self.toEventNode(scenePos, itemType, subType))
 
         self.addItem(item)
-        anim = qtanim.fade_in(item)
+        anim = qtanim.fade_in(item, teardown=item.activate)
         anim.setParent(self._animParent)
         self.itemAdded.emit(itemType, item)
         self.endAdditionMode()
