@@ -38,7 +38,7 @@
       <number>10</number>
      </property>
      <property name="childrenCollapsible">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <property name="framed" stdset="0">
       <bool>true</bool>
@@ -183,12 +183,6 @@
               </item>
               <item>
                <widget class="QLineEdit" name="lineTitle">
-                <property name="minimumSize">
-                 <size>
-                  <width>300</width>
-                  <height>0</height>
-                 </size>
-                </property>
                 <property name="maximumSize">
                  <size>
                   <width>1232323</width>
@@ -205,22 +199,6 @@
                  <bool>true</bool>
                 </property>
                </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeType">
-                 <enum>QSizePolicy::MinimumExpanding</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
               </item>
              </layout>
             </item>
@@ -243,12 +221,6 @@
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>350</width>
-                  <height>75</height>
-                 </size>
                 </property>
                 <property name="maximumSize">
                  <size>
@@ -418,7 +390,7 @@
                   <string>Select which characters are active in this scene</string>
                  </property>
                  <property name="text">
-                  <string>Present characters</string>
+                  <string/>
                  </property>
                  <property name="transparent" stdset="0">
                   <bool>true</bool>
@@ -443,19 +415,6 @@
                   <bool>true</bool>
                  </property>
                 </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacer_6">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
                </item>
               </layout>
              </widget>
@@ -487,22 +446,6 @@
              </spacer>
             </item>
            </layout>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer_9">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeType">
-             <enum>QSizePolicy::Expanding</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>10</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
           </item>
          </layout>
         </widget>
@@ -620,8 +563,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>100</width>
-                    <height>30</height>
+                    <width>477</width>
+                    <height>343</height>
                    </rect>
                   </property>
                   <property name="relaxed-white-bg" stdset="0">
@@ -731,7 +674,7 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>540</width>
+                        <width>473</width>
                         <height>315</height>
                        </rect>
                       </property>

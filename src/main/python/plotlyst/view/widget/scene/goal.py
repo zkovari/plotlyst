@@ -72,7 +72,7 @@ class SceneGoalSelector(QWidget):
         menu = ScrollableMenuWidget(self.btnLinkGoal)
         self._goalSelector = CharacterPlansSelectorWidget(self.novel, self.scene.agendas[0].character(self.novel))
         menu.addWidget(self._goalSelector)
-        self._goalSelector.setMinimumWidth(600)
+        # self._goalSelector.setMinimumWidth(600)
 
         self._goalSelector.goalSelected.connect(self._goalSelected)
 

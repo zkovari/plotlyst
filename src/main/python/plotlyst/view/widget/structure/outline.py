@@ -171,7 +171,7 @@ class _StoryBeatSection(QWidget):
         self.desc = label(beat.description, description=True, wordWrap=True)
         self.layout().addWidget(wrap(self.desc, margin_left=20))
 
-        self.setMinimumWidth(450)
+        # self.setMinimumWidth(450)
 
         self.wdgHeader.installEventFilter(self)
         self.desc.installEventFilter(self)

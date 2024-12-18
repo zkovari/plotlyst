@@ -977,7 +977,7 @@ class CharacterRoleSelector(QWidget):
         self.textBrowser = QTextBrowser()
         incr_font(self.textBrowser)
         self.textBrowser.setProperty('rounded', True)
-        self.textBrowser.setMinimumSize(400, 300)
+        # self.textBrowser.setMinimumSize(400, 300)
 
         self.buttonGroup = QButtonGroup()
 
@@ -1043,8 +1043,8 @@ class CharacterRoleSelector(QWidget):
         self.wdgExamples.setProperty('relaxed-white-bg', True)
         self.examplesScrollArea = scroll_area(False, False, True)
         self.examplesScrollArea.setWidget(self.wdgExamples)
-        self.wdgExamples.setMinimumSize(400, 150)
-        self.examplesScrollArea.setMinimumSize(400, 150)
+        # self.wdgExamples.setMinimumSize(400, 150)
+        # self.examplesScrollArea.setMinimumSize(400, 150)
         flow(self.wdgExamples, 8, 8)
 
         self.wdgDisplay.layout().addWidget(self.wdgDisplayHeader)
