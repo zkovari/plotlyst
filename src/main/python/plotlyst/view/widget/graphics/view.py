@@ -202,6 +202,7 @@ class NetworkGraphicsView(BaseGraphicsView):
 
     def setDiagram(self, diagram: Diagram):
         self._diagram = diagram
+        self.undoStack.clear()
         self._scene.setDiagram(diagram)
         self.centerOn(0, 0)
 
