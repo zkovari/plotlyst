@@ -1279,7 +1279,7 @@ class EventItem(NodeItem):
 
         painter.setPen(QPen(QColor(self._node.color), 1))
         painter.setBrush(QColor(WHITE_COLOR))
-        painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 24, 24)
+        painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 16, 16)
         painter.setFont(self._font)
         painter.drawText(self._textRect, Qt.AlignmentFlag.AlignCenter,
                          self._text if self._text else self._placeholderText)
