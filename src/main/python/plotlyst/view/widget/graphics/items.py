@@ -370,7 +370,12 @@ class DotCircleSocketItem(AbstractSocketItem):
     @overrides
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
         if self._linkAvailable:
-            painter.setPen(QPen(QColor(PLOTLYST_SECONDARY_COLOR), 2))
+            if self.parentItem():
+                color = self.parentItem().color()
+            else:
+                color = QColor(PLOTLYST_SECONDARY_COLOR)
+            painter.setPen(QPen(color, 2))
+            painter.setOpacity(0.7)
         else:
             painter.setPen(QPen(QColor('lightgrey'), 2))
 
