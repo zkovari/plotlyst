@@ -33,7 +33,7 @@ from qthandy import vspacer, clear_layout, vbox, margins, hbox, sp, retain_when_
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DisabledClickEventFilter, DragEventFilter, \
     DropEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
-from qttextedit.ops import Heading2Operation, Heading3Operation, InsertListOperation, InsertNumberedListOperation, \
+from qttextedit.ops import Heading3Operation, InsertListOperation, InsertNumberedListOperation, \
     InsertDividerOperation
 
 from plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityElement, WorldBuildingEntityElementType, \
@@ -70,7 +70,7 @@ class WorldBuildingTextEdit(AutoAdjustableTextEdit):
         self.setProperty('transparent', True)
         self.setCommandsEnabled(True)
         self.setAcceptRichText(True)
-        self.setCommandOperations([Heading2Operation, Heading3Operation, InsertListOperation,
+        self.setCommandOperations([Heading3Operation, InsertListOperation,
                                    InsertNumberedListOperation, InsertDividerOperation])
 
         self._glossaryHighlighter = GlossaryTextBlockHighlighter(novel.world.glossary, self.document(), palette)
