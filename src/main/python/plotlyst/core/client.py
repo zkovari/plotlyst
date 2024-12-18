@@ -826,6 +826,9 @@ class JsonClient:
         if os.path.exists(doc_file_path):
             os.remove(doc_file_path)
 
+        if doc.diagram is not None:
+            self.__delete_info(self.diagrams_dir(novel), doc.diagram.id)
+
         recursive(doc, lambda parent: parent.children, lambda p, child: self.__delete_doc(novel, child))
 
 
