@@ -29,7 +29,7 @@ from qthandy.filter import DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from plotlyst.common import recursive
-from plotlyst.core.domain import Document, Novel, DocumentType, Character, PremiseBuilder
+from plotlyst.core.domain import Document, Novel, DocumentType, Character, PremiseBuilder, Diagram, DiagramData
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import fade_out_and_gc, action
 from plotlyst.view.icons import IconRegistry, avatars
@@ -48,8 +48,8 @@ class DocumentAdditionMenu(MenuWidget):
 
         self.addAction(action('Document', IconRegistry.document_edition_icon(), self._documentSelected))
         self.addAction(action('Mind map', IconRegistry.from_name('ri.mind-map'), self._mindmapSelected))
+        self.addSeparator()
         self.addAction(action('Link PDF', IconRegistry.from_name('fa5.file-pdf'), self._openPdf))
-
         self.addSeparator()
 
         self._character_menu = CharacterSelectorMenu(self._novel)
@@ -84,8 +84,9 @@ class DocumentAdditionMenu(MenuWidget):
         self.documentTriggered.emit(doc)
 
     def _mindmapSelected(self):
-        doc = Document('', type=DocumentType.MIND_MAP, icon='ri.mind-map')
-        doc.loaded = True
+        doc = Document('Mindmap', type=DocumentType.MIND_MAP, icon='ri.mind-map', diagram=Diagram(''))
+        doc.diagram.data = DiagramData()
+        doc.diagram.loaded = True
         self.documentTriggered.emit(doc)
 
     def _premiseSelected(self):

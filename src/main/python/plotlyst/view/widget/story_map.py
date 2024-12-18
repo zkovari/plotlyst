@@ -127,11 +127,6 @@ class EventsMindMapView(NetworkGraphicsView):
         return EventsMindMapScene(self._novel)
 
     @overrides
-    def showEvent(self, event: QShowEvent) -> None:
-        if self._diagram is None:
-            self.setDiagram(self._novel.events_map)
-
-    @overrides
     def _startAddition(self, itemType: GraphicsItemType, subType: str = ''):
         super()._startAddition(itemType, subType)
 
