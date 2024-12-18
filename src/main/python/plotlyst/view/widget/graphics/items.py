@@ -454,7 +454,7 @@ class ConnectorItem(QGraphicsPathItem):
         self._source = source
         self._target = target
         self._connector: Optional[Connector] = None
-        self._color: QColor = QColor('black')
+        self._color: QColor = QColor('#212529')
         self._relation: Optional[Relation] = None
         self._icon: Optional[str] = None
         self._defaultLineType: ConnectorType = ConnectorType.Curved
