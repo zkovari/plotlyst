@@ -81,7 +81,6 @@ class Card(QFrame):
         color.setAlpha(175)
         qtanim.glow(self, color=color, radius=0, startRadius=12, reverseAnimation=False,
                     teardown=lambda: self.setGraphicsEffect(None))
-        super().leaveEvent(event)
 
     @overrides
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
@@ -297,13 +296,12 @@ class SceneCard(Ui_SceneCard, Card):
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
+        super().leaveEvent(event)
         self.wdgCharacters.setEnabled(False)
         if not self._stageVisible:
             self.btnStage.setHidden(True)
         elif not self.btnStage.stageOk() and not self.btnStage.menu().isVisible():
             self.btnStage.setHidden(True)
-
-        super().leaveEvent(event)
 
     @overrides
     def showEvent(self, event: QtGui.QShowEvent) -> None:
