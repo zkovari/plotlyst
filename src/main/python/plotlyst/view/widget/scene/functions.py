@@ -57,6 +57,8 @@ class PrimarySceneFunctionWidget(TextEditBubbleWidget):
 
         margins(self, top=16)
 
+        shadow(self._textedit)
+
     @overrides
     def _textChanged(self):
         self.function.text = self._textedit.toPlainText()
@@ -178,8 +180,6 @@ class PlotPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
         self._textedit.setPlaceholderText("How does the story move forward")
         self._resetPlotStyle()
 
-        shadow(self._textedit)
-
     @overrides
     def _setPlotStyle(self, plot: Plot):
         super()._setPlotStyle(plot)
@@ -221,7 +221,6 @@ class CharacterPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
         wdgHeader.layout().addWidget(label('Character insight', bold=True), alignment=Qt.AlignmentFlag.AlignBottom)
         self.layout().insertWidget(0, wdgHeader, alignment=Qt.AlignmentFlag.AlignCenter)
         margins(self, top=1)
-        shadow(self._textedit)
 
         if self.function.character_id:
             character = entities_registry.character(str(self.function.character_id))
