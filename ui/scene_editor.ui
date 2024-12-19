@@ -185,7 +185,7 @@
                <widget class="QLineEdit" name="lineTitle">
                 <property name="minimumSize">
                  <size>
-                  <width>300</width>
+                  <width>200</width>
                   <height>0</height>
                  </size>
                 </property>
@@ -216,7 +216,7 @@
                 </property>
                 <property name="sizeHint" stdset="0">
                  <size>
-                  <width>40</width>
+                  <width>20</width>
                   <height>20</height>
                  </size>
                 </property>
@@ -246,7 +246,7 @@
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>350</width>
+                  <width>200</width>
                   <height>75</height>
                  </size>
                 </property>
@@ -261,6 +261,12 @@
                   <width>0</width>
                   <height>0</height>
                  </size>
+                </property>
+                <property name="verticalScrollBarPolicy">
+                 <enum>Qt::ScrollBarAlwaysOff</enum>
+                </property>
+                <property name="horizontalScrollBarPolicy">
+                 <enum>Qt::ScrollBarAlwaysOff</enum>
                 </property>
                 <property name="autoFormatting">
                  <set>QTextEdit::AutoBulletList</set>
@@ -418,7 +424,7 @@
                   <string>Select which characters are active in this scene</string>
                  </property>
                  <property name="text">
-                  <string>Present characters</string>
+                  <string>Characters</string>
                  </property>
                  <property name="transparent" stdset="0">
                   <bool>true</bool>
@@ -620,8 +626,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>100</width>
-                    <height>30</height>
+                    <width>477</width>
+                    <height>343</height>
                    </rect>
                   </property>
                   <property name="relaxed-white-bg" stdset="0">
@@ -731,7 +737,7 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>540</width>
+                        <width>473</width>
                         <height>315</height>
                        </rect>
                       </property>
