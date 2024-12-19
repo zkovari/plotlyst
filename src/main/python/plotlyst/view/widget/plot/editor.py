@@ -569,7 +569,7 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         self.btnImpactMatrix.setIcon(IconRegistry.from_name('mdi6.camera-metering-matrix'))
         self.btnImpactMatrix.clicked.connect(self._displayImpactMatrix)
 
-        menu = MenuWidget(self.btnAdd)
+        menu = MenuWidget(self.btnAdd, largeIcons=True)
         menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         menu.addAction(
             action('Main plot', IconRegistry.storylines_icon(), slot=lambda: self.newPlot(PlotType.Main),
@@ -581,7 +581,7 @@ class PlotEditor(QWidget, Ui_PlotEditor):
             action('Subplot', IconRegistry.subplot_icon(), lambda: self.newPlot(PlotType.Subplot),
                    tooltip="A secondary storyline to complement the main plot", incr_font_=1))
 
-        submenu = MenuWidget()
+        submenu = MenuWidget(largeIcons=True)
         submenu.setTitle('Other')
         submenu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         submenu.addAction(action('Relationship plot', IconRegistry.from_name('fa5s.people-arrows'),
