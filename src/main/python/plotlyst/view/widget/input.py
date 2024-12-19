@@ -55,7 +55,8 @@ from plotlyst.model.characters_model import CharactersTableModel
 from plotlyst.model.common import proxy
 from plotlyst.service.grammar import language_tool_proxy, dictionary
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import action, label, push_btn, tool_btn, insert_before, fade_out_and_gc, shadow, emoji_font
+from plotlyst.view.common import action, label, push_btn, tool_btn, insert_before, fade_out_and_gc, shadow, emoji_font, \
+    fade_in
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_color
@@ -1447,7 +1448,7 @@ class TextEditBubbleWidget(QFrame):
     @overrides
     def enterEvent(self, event: QtGui.QEnterEvent) -> None:
         if self._removalEnabled:
-            self._btnRemove.setVisible(True)
+            fade_in(self._btnRemove)
             self._btnRemove.raise_()
 
     @overrides

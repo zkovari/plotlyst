@@ -21,15 +21,15 @@ from abc import abstractmethod
 from functools import partial
 from typing import Optional, Any, List
 
+import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QObject, QPoint
 from PyQt6.QtWidgets import QFrame, QLineEdit
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qtanim import fade_in
 from qthandy import vbox, vspacer, hbox, clear_layout, retain_when_hidden, margins, gc, translucent, decr_font, sp
 from qthandy.filter import DragEventFilter, DropEventFilter, ObjectReferenceMimeData
 
-from plotlyst.view.common import fade_out_and_gc, wrap
+from plotlyst.view.common import fade_out_and_gc, wrap, fade_in
 from plotlyst.view.widget.button import SecondaryActionPushButton
 from plotlyst.view.widget.display import DragIcon
 from plotlyst.view.widget.input import RemovalButton
@@ -80,8 +80,8 @@ class ListItemWidget(QWidget):
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if event.type() == QEvent.Type.Enter:
-            self._btnDrag.setVisible(True)
-            self._btnRemoval.setVisible(True)
+            fade_in(self._btnDrag)
+            fade_in(self._btnRemoval)
         elif event.type() == QEvent.Type.Leave:
             self._btnDrag.setHidden(True)
             self._btnRemoval.setHidden(True)
@@ -126,7 +126,7 @@ class ListView(QFrame):
 
         self.layout().insertWidget(self.layout().count() - 2, wdg)
         if self.isVisible():
-            fade_in(wdg, 150, teardown=teardown)
+            qtanim.fade_in(wdg, 150, teardown=teardown)
 
         return wdg
 
