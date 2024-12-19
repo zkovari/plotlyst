@@ -30,7 +30,7 @@ from overrides import overrides
 from qthandy import clear_layout, retain_when_hidden, transparent, flow, translucent, gc
 from qthandy.filter import DragEventFilter, DropEventFilter
 
-from plotlyst.common import act_color, PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR
+from plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Character, Scene, Novel, NovelSetting, CardSizeRatio
 from plotlyst.core.help import enneagram_help, mbti_help
 from plotlyst.service.cache import acts_registry
@@ -69,8 +69,19 @@ class Card(QFrame):
 
     @overrides
     def enterEvent(self, event: QEvent) -> None:
-        qtanim.glow(self, color=QColor(PLOTLYST_TERTIARY_COLOR))
+        color = QColor(PLOTLYST_SECONDARY_COLOR)
+        color.setAlpha(175)
+        qtanim.glow(self, color=color, radius=12, reverseAnimation=False)
+
         self.cursorEntered.emit()
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        color = QColor(PLOTLYST_SECONDARY_COLOR)
+        color.setAlpha(175)
+        qtanim.glow(self, color=color, radius=0, startRadius=12, reverseAnimation=False,
+                    teardown=lambda: self.setGraphicsEffect(None))
+        super().leaveEvent(event)
 
     @overrides
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
@@ -291,6 +302,8 @@ class SceneCard(Ui_SceneCard, Card):
             self.btnStage.setHidden(True)
         elif not self.btnStage.stageOk() and not self.btnStage.menu().isVisible():
             self.btnStage.setHidden(True)
+
+        super().leaveEvent(event)
 
     @overrides
     def showEvent(self, event: QtGui.QShowEvent) -> None:
