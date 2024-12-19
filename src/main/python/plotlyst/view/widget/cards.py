@@ -77,10 +77,11 @@ class Card(QFrame):
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
-        color = QColor(PLOTLYST_SECONDARY_COLOR)
-        color.setAlpha(175)
-        qtanim.glow(self, color=color, radius=0, startRadius=12, reverseAnimation=False,
-                    teardown=lambda: self.setGraphicsEffect(None))
+        if self.isEnabled() and self.isVisible():  # protect against deletion
+            color = QColor(PLOTLYST_SECONDARY_COLOR)
+            color.setAlpha(175)
+            qtanim.glow(self, color=color, radius=0, startRadius=12, reverseAnimation=False,
+                        teardown=lambda: self.setGraphicsEffect(None))
 
     @overrides
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
