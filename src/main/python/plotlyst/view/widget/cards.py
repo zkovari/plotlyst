@@ -35,6 +35,7 @@ from plotlyst.core.domain import Character, Scene, Novel, NovelSetting, CardSize
 from plotlyst.core.help import enneagram_help, mbti_help
 from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import fade, fade_in, fade_out
 from plotlyst.view.generated.character_card_ui import Ui_CharacterCard
 from plotlyst.view.generated.scene_card_ui import Ui_SceneCard
 from plotlyst.view.icons import IconRegistry, set_avatar, avatars
@@ -277,21 +278,21 @@ class SceneCard(Ui_SceneCard, Card):
 
     def setSetting(self, setting: NovelSetting, value: Any):
         if setting == NovelSetting.SCENE_CARD_POV:
-            self.btnPov.setVisible(value)
+            # self.btnPov.setVisible(value)
+            fade(self.btnPov, value)
         elif setting == NovelSetting.SCENE_CARD_PURPOSE:
-            self.lblType.setVisible(value)
+            fade(self.lblType, value)
         elif setting == NovelSetting.SCENE_CARD_STAGE:
             self._stageVisible = value
             if self._stageVisible:
                 if self.btnStage.stageOk():
-                    self.btnStage.setVisible(True)
+                    fade_in(self.btnStage)
             else:
-                self.btnStage.setHidden(True)
+                fade_out(self.btnStage)
 
     @overrides
     def enterEvent(self, event: QEvent) -> None:
         super(SceneCard, self).enterEvent(event)
-        self.wdgCharacters.setEnabled(True)
         if self._stageVisible:
             self.btnStage.setVisible(True)
 
