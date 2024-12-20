@@ -38,11 +38,11 @@ from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, emit_event
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
-    SceneSelectedEvent, SceneSelectionClearedEvent, ActiveSceneStageChanged, \
-    AvailableSceneStagesChanged, CharacterChangedEvent, CharacterDeletedEvent, \
+    SceneSelectedEvent, SceneSelectionClearedEvent, AvailableSceneStagesChanged, CharacterChangedEvent, \
+    CharacterDeletedEvent, \
     NovelAboutToSyncEvent, NovelSyncEvent, NovelStoryStructureActivationRequest, NovelPanelCustomizationEvent, \
     NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelPovTrackingToggleEvent, SceneAddedEvent, \
-    SceneStoryBeatChangedEvent
+    SceneStoryBeatChangedEvent, ActiveSceneStageChanged
 from plotlyst.events import SceneOrderChangedEvent
 from plotlyst.model.common import SelectionItemsModel
 from plotlyst.model.novel import NovelStagesModel
@@ -620,7 +620,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.stagesModel.setHighlightedStage(stage)
             self.novel.prefs.active_stage_id = stage.id
             self.repo.update_novel(self.novel)
-            emit_event(self.novel, ActiveSceneStageChanged(self, stage))
+            emit_event(self.novel, ActiveSceneStageChanged(self, stage), delay=10)
 
         def header_clicked(col: int):
             if col > 1:
