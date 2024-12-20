@@ -90,13 +90,13 @@ class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
         super().enterEvent(event)
-        if self._plotRef:
+        if self._plotRef and not self._plotRef.data.charge:
             fade_in(self._btnProgress)
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
         super().leaveEvent(event)
-        if not self._plotRef or not self._plotRef.data.charge:
+        if not self._plotRef or not self._plotRef.data.charge and not self._progressMenu.isVisible():
             self._btnProgress.setVisible(False)
 
     def plot(self) -> Optional[Plot]:
