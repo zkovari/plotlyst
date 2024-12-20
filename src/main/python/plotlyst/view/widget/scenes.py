@@ -331,6 +331,7 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.btnTableStorylines.setIcon(IconRegistry.storylines_icon())
         self.btnTableCharacters.setIcon(IconRegistry.character_icon())
         self.btnTablePurpose.setIcon(IconRegistry.from_name('fa5s.yin-yang'))
+        self.btnTablePlotProgress.setIcon(IconRegistry.from_name('mdi.chevron-double-up'))
 
         self.tabCards.layout().insertWidget(1, line(color='lightgrey'))
         self.tabCards.layout().insertWidget(5, wrap(line(color='lightgrey'), margin_left=10))
@@ -349,6 +350,7 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.cbTableStorylines.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_STORYLINES))
         self.cbTableCharacters.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_CHARACTERS))
         self.cbTablePurpose.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_PURPOSE))
+        self.cbTablePlotProgress.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_PLOT_PROGRESS))
 
         self.cbPov.clicked.connect(self._cardPovClicked)
         self.cbPurpose.clicked.connect(self._cardPurposeClicked)
@@ -359,6 +361,8 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.cbTableStorylines.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_TABLE_STORYLINES))
         self.cbTableCharacters.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_TABLE_CHARACTERS))
         self.cbTablePurpose.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_TABLE_PURPOSE))
+        self.cbTablePlotProgress.clicked.connect(
+            partial(self.settingToggled.emit, NovelSetting.SCENE_TABLE_PLOT_PROGRESS))
 
         self.sliderCards.setValue(self.novel.prefs.setting(NovelSetting.SCENE_CARD_WIDTH, self.DEFAULT_CARD_WIDTH))
         self.sliderCards.valueChanged.connect(self.cardWidthChanged)

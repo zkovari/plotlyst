@@ -155,6 +155,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColCharacters, 170)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColType, 55)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColPov, 60)
+        self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColProgress, 55)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColSynopsis, 400)
         self.ui.tblScenes.setItemDelegate(ScenesViewDelegate())
         self.ui.tblScenes.hideColumn(ScenesTableModel.ColTime)
@@ -845,6 +846,8 @@ class ScenesOutlineView(AbstractNovelView):
             default_columns.append(ScenesTableModel.ColCharacters)
         if self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_PURPOSE):
             default_columns.append(ScenesTableModel.ColType)
+        if self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_PLOT_PROGRESS):
+            default_columns.append(ScenesTableModel.ColProgress)
 
         default_columns.append(ScenesTableModel.ColSynopsis)
 
