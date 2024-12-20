@@ -3732,6 +3732,7 @@ class NovelSetting(Enum):
     Management = 'management'
     SCENE_CARD_POV = 'scene_card_pov'
     SCENE_CARD_PURPOSE = 'scene_card_purpose'
+    SCENE_CARD_PLOT_PROGRESS = 'scene_card_plot_progress'
     SCENE_CARD_STAGE = 'scene_card_stage'
     SCENE_CARD_MIDDLE = 'scene_card_middle_display'
     SCENE_CARD_WIDTH = 'scene_card_width'

@@ -52,7 +52,7 @@ from plotlyst.model.novel import NovelTagsTreeModel, TagNode
 from plotlyst.model.scenes_model import ScenesTableModel
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import action, stretch_col, \
-    tool_btn, label, ExclusiveOptionalButtonGroup, set_tab_icon
+    tool_btn, label, ExclusiveOptionalButtonGroup, set_tab_icon, wrap
 from plotlyst.view.generated.scene_drive_editor_ui import Ui_SceneDriveTrackingEditor
 from plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from plotlyst.view.generated.scenes_view_preferences_widget_ui import Ui_ScenesViewPreferences
@@ -318,9 +318,14 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.btnCardsWidth.setIcon(IconRegistry.from_name('ei.resize-horizontal'))
         self.btnPov.setIcon(IconRegistry.eye_open_icon())
         self.btnPurpose.setIcon(IconRegistry.from_name('fa5s.yin-yang'))
+        self.btnPlotProgress.setIcon(IconRegistry.from_name('mdi.chevron-double-up'))
         self.btnCharacters.setIcon(IconRegistry.character_icon())
         self.btnStorylines.setIcon(IconRegistry.storylines_icon())
         self.btnStage.setIcon(IconRegistry.progress_check_icon())
+
+        self.bottomLeftButtonGroup = ExclusiveOptionalButtonGroup()
+        self.bottomLeftButtonGroup.addButton(self.cbPurpose)
+        self.bottomLeftButtonGroup.addButton(self.cbPlotProgress)
 
         self.btnTablePov.setIcon(IconRegistry.eye_open_icon())
         self.btnTableStorylines.setIcon(IconRegistry.storylines_icon())
@@ -328,8 +333,8 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.btnTablePurpose.setIcon(IconRegistry.from_name('fa5s.yin-yang'))
 
         self.tabCards.layout().insertWidget(1, line(color='lightgrey'))
+        self.tabCards.layout().insertWidget(5, wrap(line(color='lightgrey'), margin_left=10))
         self.tabTable.layout().insertWidget(1, line(color='lightgrey'))
-        # self.tabCards.layout().insertWidget(6, wrap(line(color='lightgrey'), margin_left=10))
 
         self.btnGroup = ExclusiveOptionalButtonGroup()
         self.btnGroup.addButton(self.cbCharacters)
@@ -337,6 +342,7 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
 
         self.cbPov.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_POV))
         self.cbPurpose.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_PURPOSE))
+        self.cbPlotProgress.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_PLOT_PROGRESS))
         self.cbStage.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_STAGE))
 
         self.cbTablePov.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_POV))
@@ -345,7 +351,8 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.cbTablePurpose.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_PURPOSE))
 
         self.cbPov.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_CARD_POV))
-        self.cbPurpose.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_CARD_PURPOSE))
+        self.cbPurpose.clicked.connect(self._cardPurposeClicked)
+        self.cbPlotProgress.clicked.connect(self._cardPlotProgressClicked)
         self.cbStage.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_CARD_STAGE))
 
         self.cbTablePov.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_TABLE_POV))
@@ -374,6 +381,16 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
 
     def showTableTab(self):
         self.tabWidget.setCurrentWidget(self.tabTable)
+
+    def _cardPurposeClicked(self, checked: bool):
+        if checked:
+            self.settingToggled.emit(NovelSetting.SCENE_CARD_PLOT_PROGRESS, False)
+        self.settingToggled.emit(NovelSetting.SCENE_CARD_PURPOSE, checked)
+
+    def _cardPlotProgressClicked(self, checked: bool):
+        if checked:
+            self.settingToggled.emit(NovelSetting.SCENE_CARD_PURPOSE, False)
+        self.settingToggled.emit(NovelSetting.SCENE_CARD_PLOT_PROGRESS, checked)
 
     def _tabChanged(self, index: int):
         if self.tabWidget.widget(index) is self.tabCards:
@@ -417,6 +434,7 @@ class SceneStageButton(QToolButton, EventListener):
         self._scene: Optional[Scene] = None
         self._novel: Optional[Novel] = None
         self._stageOk: bool = False
+        self._activeColor: str = PLOTLYST_SECONDARY_COLOR
 
         transparent(self)
         self.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
@@ -430,6 +448,9 @@ class SceneStageButton(QToolButton, EventListener):
             self.updateStage()
         elif isinstance(event, SceneStatusChangedEvent) and event.scene == self._scene:
             self.updateStage()
+
+    def setActiveColor(self, color: str):
+        self._activeColor = color
 
     def setScene(self, scene: Scene, novel: Novel):
         self._scene = scene
@@ -457,7 +478,7 @@ class SceneStageButton(QToolButton, EventListener):
 
         if self._scene.stage:
             if self._stageOk:
-                self.setIcon(IconRegistry.ok_icon(PLOTLYST_SECONDARY_COLOR))
+                self.setIcon(IconRegistry.ok_icon(self._activeColor))
             else:
                 self.setIcon(IconRegistry.progress_check_icon(PLOTLYST_TERTIARY_COLOR))
         else:

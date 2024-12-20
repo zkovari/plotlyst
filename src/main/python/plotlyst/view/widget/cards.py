@@ -27,7 +27,7 @@ from PyQt6.QtCore import pyqtSignal, QSize, Qt, QEvent, QPoint, QMimeData, QTime
 from PyQt6.QtGui import QDragEnterEvent, QDragMoveEvent, QColor, QAction, QIcon
 from PyQt6.QtWidgets import QFrame, QApplication, QToolButton
 from overrides import overrides
-from qthandy import clear_layout, retain_when_hidden, transparent, flow, translucent, gc
+from qthandy import clear_layout, retain_when_hidden, transparent, flow, translucent, gc, incr_icon
 from qthandy.filter import DragEventFilter, DropEventFilter
 
 from plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR
@@ -204,12 +204,11 @@ class SceneCard(Ui_SceneCard, Card):
 
         self.btnPov.clicked.connect(self.select)
         self.btnStage.clicked.connect(self.select)
+        self.btnStage.setActiveColor('grey')
 
         self.btnBeat = QToolButton(self)
         self.btnBeat.setIconSize(QSize(28, 28))
         transparent(self.btnBeat)
-
-        retain_when_hidden(self.lblType)
 
         self._setStyleSheet()
         self.refresh()
@@ -217,6 +216,9 @@ class SceneCard(Ui_SceneCard, Card):
         self._stageVisible = self.novel.prefs.toggled(NovelSetting.SCENE_CARD_STAGE)
         self.btnPov.setVisible(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_POV))
         self.lblType.setVisible(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_PURPOSE))
+        self.btnPlotProgress.setVisible(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_PLOT_PROGRESS))
+
+        incr_icon(self.btnPlotProgress, 2)
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -230,6 +232,7 @@ class SceneCard(Ui_SceneCard, Card):
         self.textSynopsis.setText(self.scene.synopsis)
 
         self.refreshPov()
+        self.wdgCharacters.setEnabled(False)
         self.refreshCharacters()
         self.refreshBeat()
 
@@ -238,6 +241,9 @@ class SceneCard(Ui_SceneCard, Card):
             self.lblType.setPixmap(icon.pixmap(QSize(24, 24)))
         else:
             self.lblType.clear()
+
+        if self.scene.progress != 0:
+            self.btnPlotProgress.setIcon(IconRegistry.charge_icon(self.scene.progress))
 
         self.btnStage.setScene(self.scene, self.novel)
 
@@ -282,6 +288,8 @@ class SceneCard(Ui_SceneCard, Card):
             fade(self.btnPov, value)
         elif setting == NovelSetting.SCENE_CARD_PURPOSE:
             fade(self.lblType, value)
+        elif setting == NovelSetting.SCENE_CARD_PLOT_PROGRESS:
+            fade(self.btnPlotProgress, value)
         elif setting == NovelSetting.SCENE_CARD_STAGE:
             self._stageVisible = value
             if self._stageVisible:
@@ -299,7 +307,6 @@ class SceneCard(Ui_SceneCard, Card):
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
         super().leaveEvent(event)
-        self.wdgCharacters.setEnabled(False)
         if not self._stageVisible:
             self.btnStage.setHidden(True)
         elif not self.btnStage.stageOk() and not self.btnStage.menu().isVisible():
