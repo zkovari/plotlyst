@@ -39,9 +39,9 @@ from plotlyst.common import RELAXED_WHITE_COLOR, WHITE_COLOR, PLOTLYST_TERTIARY_
 from plotlyst.common import truncate_string
 from plotlyst.core.domain import Scene, Novel, Plot, \
     ScenePlotReference, SceneFunction, StoryElementType
-from plotlyst.event.core import Event, EventListener
+from plotlyst.event.core import Event, EventListener, emit_event
 from plotlyst.event.handler import event_dispatchers
-from plotlyst.events import SceneOrderChangedEvent
+from plotlyst.events import SceneOrderChangedEvent, SceneChangedEvent
 from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import hmax, action, tool_btn, ButtonPressResizeEventFilter, fade_out_and_gc
@@ -274,11 +274,13 @@ class StoryLinesMapWidget(QWidget):
                 (func for func in self._clicked_scene.functions.primary if func.ref == plot.id), None)
             if ref_to_be_removed:
                 self._clicked_scene.plot_values.remove(ref_to_be_removed)
+                self._clicked_scene.calculate_plot_progress()
             if function_to_be_removed:
                 self._clicked_scene.functions.primary.remove(function_to_be_removed)
         RepositoryPersistenceManager.instance().update_scene(self._clicked_scene)
 
         self.update()
+        emit_event(self.novel, SceneChangedEvent(self, self._clicked_scene))
 
 
 GRID_ITEM_WIDTH: int = 190
