@@ -628,6 +628,16 @@ class IconRegistry:
             return IconRegistry.from_name('mdi.chevron-triple-down', '#9d0208')
 
     @staticmethod
+    def plot_charge_icon(pos_charge: int, neg_charge: int) -> QIcon:
+        if pos_charge and pos_charge == abs(neg_charge):
+            return IconRegistry.trade_off_charge_icon(pos_charge)
+
+        if pos_charge > abs(neg_charge):
+            return IconRegistry.charge_icon(pos_charge)
+        else:
+            return IconRegistry.charge_icon(neg_charge)
+
+    @staticmethod
     def trade_off_charge_icon(charge: int = 1) -> QIcon:
         color = '#832161'
         if charge == 0:

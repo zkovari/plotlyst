@@ -23,7 +23,7 @@ from typing import List
 from typing import Optional
 
 import qtanim
-from PyQt6.QtCore import Qt, QSize, pyqtSignal, QModelIndex, QItemSelection
+from PyQt6.QtCore import Qt, QSize, pyqtSignal, QModelIndex, QItemSelection, QTimer
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QFrame, QToolButton, QTreeView, QLabel, QTableView, \
     QAbstractItemView, QButtonGroup
@@ -350,7 +350,7 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.cbTableCharacters.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_CHARACTERS))
         self.cbTablePurpose.setChecked(self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_PURPOSE))
 
-        self.cbPov.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_CARD_POV))
+        self.cbPov.clicked.connect(self._cardPovClicked)
         self.cbPurpose.clicked.connect(self._cardPurposeClicked)
         self.cbPlotProgress.clicked.connect(self._cardPlotProgressClicked)
         self.cbStage.clicked.connect(partial(self.settingToggled.emit, NovelSetting.SCENE_CARD_STAGE))
@@ -382,15 +382,27 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
     def showTableTab(self):
         self.tabWidget.setCurrentWidget(self.tabTable)
 
+    def _cardPovClicked(self, checked: bool):
+        def handle():
+            self.settingToggled.emit(NovelSetting.SCENE_CARD_POV, checked)
+
+        QTimer.singleShot(150, handle)
+
     def _cardPurposeClicked(self, checked: bool):
-        if checked:
-            self.settingToggled.emit(NovelSetting.SCENE_CARD_PLOT_PROGRESS, False)
-        self.settingToggled.emit(NovelSetting.SCENE_CARD_PURPOSE, checked)
+        def handle():
+            if checked:
+                self.settingToggled.emit(NovelSetting.SCENE_CARD_PLOT_PROGRESS, False)
+            self.settingToggled.emit(NovelSetting.SCENE_CARD_PURPOSE, checked)
+
+        QTimer.singleShot(150, handle)
 
     def _cardPlotProgressClicked(self, checked: bool):
-        if checked:
-            self.settingToggled.emit(NovelSetting.SCENE_CARD_PURPOSE, False)
-        self.settingToggled.emit(NovelSetting.SCENE_CARD_PLOT_PROGRESS, checked)
+        def handle():
+            if checked:
+                self.settingToggled.emit(NovelSetting.SCENE_CARD_PURPOSE, False)
+            self.settingToggled.emit(NovelSetting.SCENE_CARD_PLOT_PROGRESS, checked)
+
+        QTimer.singleShot(150, handle)
 
     def _tabChanged(self, index: int):
         if self.tabWidget.widget(index) is self.tabCards:

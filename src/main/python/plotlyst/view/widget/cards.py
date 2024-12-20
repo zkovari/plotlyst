@@ -218,7 +218,7 @@ class SceneCard(Ui_SceneCard, Card):
         self.lblType.setVisible(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_PURPOSE))
         self.btnPlotProgress.setVisible(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_PLOT_PROGRESS))
 
-        incr_icon(self.btnPlotProgress, 2)
+        incr_icon(self.btnPlotProgress, 4)
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -242,8 +242,13 @@ class SceneCard(Ui_SceneCard, Card):
         else:
             self.lblType.clear()
 
-        if self.scene.progress != 0:
+        if self.scene.plot_pos_progress or self.scene.plot_neg_progress:
+            self.btnPlotProgress.setIcon(
+                IconRegistry.plot_charge_icon(self.scene.plot_pos_progress, self.scene.plot_neg_progress))
+        elif self.scene.progress:
             self.btnPlotProgress.setIcon(IconRegistry.charge_icon(self.scene.progress))
+        else:
+            self.btnPlotProgress.setIcon(QIcon())
 
         self.btnStage.setScene(self.scene, self.novel)
 
