@@ -191,6 +191,8 @@ class WorldBuildingEntityElementWidget(QWidget):
             return TimelineElementEditor(novel, element, palette, parent)
         elif element.type == WorldBuildingEntityElementType.Conceits:
             return ConceitsElementEditor(novel, element, palette, parent)
+        elif element.type == WorldBuildingEntityElementType.Mindmap:
+            return MindmapElementEditor(novel, element, palette, parent)
         else:
             raise ValueError(f'Unsupported WorldBuildingEntityElement type {element.type}')
 
@@ -880,6 +882,17 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
                     return
 
 
+class MindmapElementEditor(WorldBuildingEntityElementWidget):
+    def __init__(self, novel: Novel, element: WorldBuildingEntityElement, palette: WorldBuildingPalette, parent=None):
+        super().__init__(novel, element, parent)
+        self._palette = palette
+
+        self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
+
+        self.btnDrag.raise_()
+
+
 class SectionElementEditor(WorldBuildingEntityElementWidget):
     WORLD_BLOCK_MIMETYPE = 'application/world-block'
     WORLD_SECTION_MIMETYPE = 'application/world-section'
@@ -997,6 +1010,8 @@ class MainBlockAdditionMenu(MenuWidget):
                               slot=lambda: self.newBlockSelected.emit(WorldBuildingEntityElementType.Image)))
         self.addAction(action('Timeline', IconRegistry.from_name('mdi.timeline'),
                               slot=lambda: self.newBlockSelected.emit(WorldBuildingEntityElementType.Timeline)))
+        self.addAction(action('Mind map', IconRegistry.from_name('ri.mind-map'),
+                              slot=lambda: self.newBlockSelected.emit(WorldBuildingEntityElementType.Mindmap)))
 
         if app_env.is_plus():
             otherMenu = MenuWidget()
