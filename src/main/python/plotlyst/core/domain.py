@@ -1985,7 +1985,9 @@ class Scene:
     structure: List[SceneStructureItem] = field(default_factory=list)
     questions: List[SceneReaderQuestion] = field(default_factory=list)
     info: List[SceneReaderInformation] = field(default_factory=list)
-    progress: int = 0
+    progress: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    plot_pos_progress: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    plot_neg_progress: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     functions: SceneFunctions = field(default_factory=SceneFunctions)
 
     def beat(self, novel: 'Novel') -> Optional[StoryBeat]:
@@ -2044,6 +2046,16 @@ class Scene:
 
     def title_or_index(self, novel: 'Novel') -> str:
         return self.title if self.title else f'Scene {novel.scenes.index(self) + 1}'
+
+    def calculate_plot_progress(self):
+        self.plot_pos_progress = 0
+        self.plot_neg_progress = 0
+        for ref in self.plot_values:
+            if ref.data.charge:
+                if ref.data.charge > 0:
+                    self.plot_pos_progress = max(self.plot_pos_progress, ref.data.charge)
+                else:
+                    self.plot_neg_progress = min(self.plot_neg_progress, ref.data.charge)
 
     def __is_outcome(self, expected) -> bool:
         if self.outcome and self.outcome == expected:
@@ -3732,6 +3744,7 @@ class NovelSetting(Enum):
     Management = 'management'
     SCENE_CARD_POV = 'scene_card_pov'
     SCENE_CARD_PURPOSE = 'scene_card_purpose'
+    SCENE_CARD_PLOT_PROGRESS = 'scene_card_plot_progress'
     SCENE_CARD_STAGE = 'scene_card_stage'
     SCENE_CARD_MIDDLE = 'scene_card_middle_display'
     SCENE_CARD_WIDTH = 'scene_card_width'
@@ -3739,6 +3752,7 @@ class NovelSetting(Enum):
     SCENE_TABLE_PURPOSE = 'scene_table_purpose'
     SCENE_TABLE_CHARACTERS = 'scene_table_characters'
     SCENE_TABLE_STORYLINES = 'scene_table_storylines'
+    SCENE_TABLE_PLOT_PROGRESS = 'scene_table_plot_progress'
     Character_enneagram = 'character_enneagram'
     Character_mbti = 'character_mbti'
     Character_love_style = 'character_love_style'

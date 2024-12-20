@@ -62,11 +62,12 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
     ColType = 4
     ColTime = 5
     ColArc = 6
-    ColSynopsis = 7
+    ColProgress = 7
+    ColSynopsis = 8
 
     def __init__(self, novel: Novel, parent=None):
         self.novel = novel
-        _headers = [''] * 8
+        _headers = [''] * 9
         _headers[self.ColTitle] = 'Title'
         _headers[self.ColType] = 'Type'
         _headers[self.ColPov] = 'POV'
@@ -74,6 +75,7 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
         _headers[self.ColCharacters] = 'Characters'
         _headers[self.ColTime] = 'Day'
         _headers[self.ColArc] = 'Arc'
+        _headers[self.ColProgress] = ''
         _headers[self.ColSynopsis] = 'Synopsis'
         super().__init__(_headers, parent)
         self._relax_colors = False
@@ -136,6 +138,11 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
                     return self._character_insight_icon
                 elif scene.purpose == ScenePurposeType.Exposition:
                     return self._exposition_icon
+            elif index.column() == self.ColProgress:
+                if scene.plot_pos_progress or scene.plot_neg_progress:
+                    return IconRegistry.plot_charge_icon(scene.plot_pos_progress, scene.plot_neg_progress)
+                elif scene.progress:
+                    return IconRegistry.charge_icon(scene.progress)
             elif index.column() == self.ColPov:
                 if scene.pov:
                     return avatars.avatar(scene.pov)

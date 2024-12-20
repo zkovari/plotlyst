@@ -65,7 +65,7 @@ from plotlyst.view.widget.novel import StoryStructureSelectorMenu
 from plotlyst.view.widget.progress import SceneStageProgressCharts
 from plotlyst.view.widget.scene.story_map import StoryMap, StoryMapDisplayMode
 from plotlyst.view.widget.scenes import SceneFilterWidget, \
-    ScenesPreferencesWidget, ScenesDistributionWidget
+    ScenesPreferencesWidget, ScenesDistributionWidget, ScenePreferencesTabType
 from plotlyst.view.widget.structure.selector import ActSelectorButtons
 from plotlyst.view.widget.structure.timeline import StoryStructureTimelineWidget
 from plotlyst.view.widget.tree import TreeSettings
@@ -155,6 +155,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColCharacters, 170)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColType, 55)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColPov, 60)
+        self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColProgress, 55)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColSynopsis, 400)
         self.ui.tblScenes.setItemDelegate(ScenesViewDelegate())
         self.ui.tblScenes.hideColumn(ScenesTableModel.ColTime)
@@ -235,6 +236,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnPreferences.setIcon(IconRegistry.preferences_icon())
         self.prefs_widget = ScenesPreferencesWidget(self.novel)
         self.prefs_widget.settingToggled.connect(self._scene_prefs_toggled)
+        self.prefs_widget.tabChanged.connect(self._scene_prefs_tab_changed)
         self.prefs_widget.cardWidthChanged.connect(self._scene_card_width_changed)
         self.prefs_widget.cardRatioChanged.connect(self._scene_card_ratio_changed)
         self.ui.cards.setCardsWidth(
@@ -818,6 +820,12 @@ class ScenesOutlineView(AbstractNovelView):
         elif setting.scene_table_setting():
             self._toggle_table_columns(self._default_columns())
 
+    def _scene_prefs_tab_changed(self, tab_type: ScenePreferencesTabType):
+        if tab_type == ScenePreferencesTabType.CARDS:
+            self.ui.btnCardsView.setChecked(True)
+        elif tab_type == ScenePreferencesTabType.TABLE:
+            self.ui.btnTableView.setChecked(True)
+
     def _scene_card_width_changed(self, width: int):
         self.novel.prefs.settings[NovelSetting.SCENE_CARD_WIDTH.value] = width
         self.repo.update_novel(self.novel)
@@ -838,6 +846,8 @@ class ScenesOutlineView(AbstractNovelView):
             default_columns.append(ScenesTableModel.ColCharacters)
         if self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_PURPOSE):
             default_columns.append(ScenesTableModel.ColType)
+        if self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_PLOT_PROGRESS):
+            default_columns.append(ScenesTableModel.ColProgress)
 
         default_columns.append(ScenesTableModel.ColSynopsis)
 
