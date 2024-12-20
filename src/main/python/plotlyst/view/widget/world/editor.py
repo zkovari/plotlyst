@@ -50,6 +50,7 @@ from plotlyst.view.style.text import apply_text_color
 from plotlyst.view.widget.button import DotsMenuButton
 from plotlyst.view.widget.display import Icon, PopupDialog, DotsDragIcon
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, MarkdownPopupTextEditorToolbar
+from plotlyst.view.widget.story_map import EventsMindMapView
 from plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
 from plotlyst.view.widget.topic import TopicSelectionDialog
 from plotlyst.view.widget.utility import IconSelectorDialog, ColorSelectorButton
@@ -886,6 +887,10 @@ class MindmapElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, palette: WorldBuildingPalette, parent=None):
         super().__init__(novel, element, parent)
         self._palette = palette
+
+        self._mindmapView = EventsMindMapView(self.novel)
+        self._mindmapView.setMinimumHeight(600)
+        self.layout().addWidget(self._mindmapView)
 
         self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
         self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
