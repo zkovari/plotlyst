@@ -38,7 +38,7 @@ from plotlyst.core.template import Role
 from plotlyst.core.text import wc
 from plotlyst.env import app_env
 from plotlyst.view.common import emoji_font, insert_before_the_end, \
-    ButtonPressResizeEventFilter, restyle, label, frame, shadow, tool_btn, push_btn, action, open_url
+    ButtonPressResizeEventFilter, restyle, label, frame, tool_btn, push_btn, action, open_url
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 
@@ -361,7 +361,6 @@ class PopupDialog(QDialog):
         # margins(self.frame, bottom=15)
         self.layout().addWidget(self.frame)
         self.setMinimumSize(200, 150)
-        shadow(self.frame)
 
         self.btnReset = tool_btn(IconRegistry.close_icon('grey'), tooltip='Cancel', transparent_=True)
         self.btnReset.setFocusPolicy(Qt.FocusPolicy.NoFocus)
