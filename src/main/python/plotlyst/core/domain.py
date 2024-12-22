@@ -282,8 +282,8 @@ GENDERLESS = 'genderless'
 
 @dataclass
 class AvatarPreferences:
-    use_image: bool = True
-    use_initial: bool = False
+    use_image: bool = False
+    use_initial: bool = True
     use_role: bool = False
     use_custom_icon: bool = False
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
