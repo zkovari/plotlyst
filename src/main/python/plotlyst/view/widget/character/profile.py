@@ -55,7 +55,8 @@ from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.style.slider import apply_slider_color
-from plotlyst.view.widget.button import CollapseButton, SecondaryActionPushButton, DotsMenuButton, SelectorToggleButton
+from plotlyst.view.widget.button import CollapseButton, SecondaryActionPushButton, DotsMenuButton, SelectorToggleButton, \
+    MajorRoleFilterButton, SecondaryRoleFilterButton, MinorRoleFilterButton
 from plotlyst.view.widget.character.editor import StrengthWeaknessEditor, DiscSelector, EnneagramSelector, MbtiSelector, \
     LoveStyleSelector
 from plotlyst.view.widget.display import Icon, Emoji, dash_icon, PopupDialog
@@ -2024,7 +2025,7 @@ class CharacterOnboardingPopup(PopupDialog):
         self.personalityFrame.layout().addWidget(self.btnLoveStyle, 1, 0)
         self.personalityFrame.layout().addWidget(self.btnWorkStyle, 1, 1)
 
-        self.frame.layout().addWidget(label('Personality', description=True),
+        self.frame.layout().addWidget(label('Personality', description=True, decr_font_diff=1),
                                       alignment=Qt.AlignmentFlag.AlignCenter)
         self.frame.layout().addWidget(self.personalityFrame, alignment=Qt.AlignmentFlag.AlignCenter)
 
@@ -2055,7 +2056,19 @@ class CharacterOnboardingPopup(PopupDialog):
         self.primarySelectors.layout().addWidget(self.btnGoal, 3, 1)
         self.primarySelectors.layout().addWidget(self.btnLack, 3, 2)
 
-        self.frame.layout().addWidget(label('Primary attributes', description=True),
+        filters = QWidget()
+        hbox(filters, margin=0)
+        filters.layout().addWidget(label('Primary attributes', description=True, decr_font_diff=1))
+        btnMajor = MajorRoleFilterButton()
+        btnMajor.clicked.connect(self._toggleMajorAttributes)
+        btnSecondary = SecondaryRoleFilterButton()
+        btnSecondary.clicked.connect(self._toggleSecondaryAttributes)
+        btnMinor = MinorRoleFilterButton()
+        btnMinor.clicked.connect(self._toggleMinorAttributes)
+        filters.layout().addWidget(btnMajor)
+        filters.layout().addWidget(btnSecondary)
+        filters.layout().addWidget(btnMinor)
+        self.frame.layout().addWidget(filters,
                                       alignment=Qt.AlignmentFlag.AlignCenter)
         self.frame.layout().addWidget(self.primarySelectors, alignment=Qt.AlignmentFlag.AlignCenter)
 
@@ -2090,6 +2103,35 @@ class CharacterOnboardingPopup(PopupDialog):
 
     def _personalityToggled(self, setting: NovelSetting, toggled: bool):
         self._character.prefs.settings[setting.value] = toggled
+
+    def _toggleMajorAttributes(self):
+        self.btnFaculties.setChecked(True)
+        self.btnStrengths.setChecked(True)
+        self.btnPhilosophy.setChecked(True)
+        self.btnGoal.setChecked(True)
+        self.btnFlaws.setChecked(True)
+        self.btnLack.setChecked(True)
+        self.btnBaggage.setChecked(True)
+
+    def _toggleSecondaryAttributes(self):
+        self.btnFaculties.setChecked(True)
+        self.btnStrengths.setChecked(True)
+        self.btnPhilosophy.setChecked(True)
+        self.btnGoal.setChecked(True)
+
+        self.btnFlaws.setChecked(False)
+        self.btnLack.setChecked(False)
+        self.btnBaggage.setChecked(False)
+
+    def _toggleMinorAttributes(self):
+        self.btnFaculties.setChecked(False)
+        self.btnStrengths.setChecked(False)
+        self.btnPhilosophy.setChecked(False)
+        self.btnGoal.setChecked(False)
+
+        self.btnFlaws.setChecked(False)
+        self.btnLack.setChecked(False)
+        self.btnBaggage.setChecked(False)
 
     def __selectorButton(self, text: str, icon: str, small: bool = False,
                          sectionType: Optional[CharacterProfileSectionType] = None,

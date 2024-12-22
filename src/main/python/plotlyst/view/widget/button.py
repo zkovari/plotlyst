@@ -657,3 +657,33 @@ class SelectorToggleButton(QToolButton):
         else:
             qtanim.glow(self, radius=0, startRadius=8, color=QColor('grey'), reverseAnimation=False,
                         teardown=lambda: self.setGraphicsEffect(None))
+
+
+class _RoleFilterButton(QToolButton):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        transparent(self)
+        pointy(self)
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
+        self.installEventFilter(OpacityEventFilter(self))
+
+
+class MajorRoleFilterButton(_RoleFilterButton):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setIcon(IconRegistry.major_character_icon())
+        self.setToolTip('Filter for Major characters')
+
+
+class SecondaryRoleFilterButton(_RoleFilterButton):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setIcon(IconRegistry.secondary_character_icon())
+        self.setToolTip('Filter for Secondary characters')
+
+
+class MinorRoleFilterButton(_RoleFilterButton):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setIcon(IconRegistry.minor_character_icon())
+        self.setToolTip('Filter for Minor characters')
