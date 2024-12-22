@@ -28,7 +28,7 @@ from PyQt6.QtGui import QResizeEvent, QWheelEvent, QColor
 from PyQt6.QtWidgets import QWidget, QLabel, QSizePolicy, QSlider, QToolButton, QVBoxLayout, QGridLayout, QApplication, \
     QFrame, QLineEdit, QDialog, QCompleter
 from overrides import overrides
-from qthandy import vbox, clear_layout, hbox, bold, underline, spacer, vspacer, margins, pointy, retain_when_hidden, \
+from qthandy import vbox, clear_layout, hbox, bold, spacer, vspacer, margins, pointy, retain_when_hidden, \
     transparent, sp, gc, decr_font, grid, incr_font, line, busy, decr_icon
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
@@ -55,7 +55,7 @@ from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.style.slider import apply_slider_color
-from plotlyst.view.widget.button import CollapseButton, SecondaryActionPushButton, DotsMenuButton, SelectorToggleButton, \
+from plotlyst.view.widget.button import CollapseButton, DotsMenuButton, SelectorToggleButton, \
     MajorRoleFilterButton, SecondaryRoleFilterButton, MinorRoleFilterButton
 from plotlyst.view.widget.character.editor import StrengthWeaknessEditor, DiscSelector, EnneagramSelector, MbtiSelector, \
     LoveStyleSelector
@@ -319,8 +319,7 @@ class ProfileSectionWidget(ProfileFieldWidget):
         vbox(self)
         self.btnHeader = CollapseButton(Qt.Edge.BottomEdge, Qt.Edge.RightEdge)
         self.btnHeader.setIconSize(QSize(16, 16))
-        bold(self.btnHeader)
-        underline(self.btnHeader)
+        incr_font(self.btnHeader, 3)
         self.btnHeader.setText(section.type.name)
         self.btnHeader.setToolTip(section.type.name)
 
@@ -356,10 +355,11 @@ class ProfileSectionWidget(ProfileFieldWidget):
         self.layout().addWidget(self.wdgBottom)
 
         if self.context.has_addition():
-            self._btnPrimary = SecondaryActionPushButton()
-            self._btnPrimary.setText(self.context.primaryButtonText())
-            self._btnPrimary.setIcon(IconRegistry.plus_icon('grey'))
+            self._btnPrimary = push_btn(IconRegistry.plus_icon('grey'), self.context.primaryButtonText(),
+                                        properties=['no-menu', 'transparent'])
             decr_font(self._btnPrimary)
+            decr_icon(self._btnPrimary, 4)
+            self._btnPrimary.installEventFilter(OpacityEventFilter(self._btnPrimary))
             fields = self.context.primaryFields()
 
             if self.context.has_menu():
@@ -374,7 +374,7 @@ class ProfileSectionWidget(ProfileFieldWidget):
             else:
                 self._btnPrimary.clicked.connect(self._initNewPrimaryField)
 
-            self.wdgContainer.layout().addWidget(self._btnPrimary)
+            self.wdgContainer.layout().addWidget(self._btnPrimary, alignment=Qt.AlignmentFlag.AlignLeft)
 
         self.children: List[ProfileFieldWidget] = []
         # self.progressStatuses: Dict[ProfileFieldWidget, float] = {}
@@ -1030,6 +1030,13 @@ class FacultiesSectionContext(SectionContext):
         return True
 
 
+class PersonalitySectionContext(SectionContext):
+
+    @overrides
+    def has_muted_bg(self) -> bool:
+        return True
+
+
 class MultiAttributeSectionContext(SectionContext):
 
     @overrides
@@ -1310,11 +1317,12 @@ class StrengthsWeaknessesFieldWidget(TemplateFieldWidgetBase):
         self._centerlayout.addWidget(group(self.emojiWeakness, self.lblWeakness), 0, 2,
                                      alignment=Qt.AlignmentFlag.AlignCenter)
 
-        self._btnPrimary = SecondaryActionPushButton()
-        self._btnPrimary.setText('Add new attribute')
-        self._btnPrimary.setIcon(IconRegistry.plus_icon('grey'))
-        self._btnPrimary.clicked.connect(self._addNewAttribute)
+        self._btnPrimary = push_btn(IconRegistry.plus_icon('grey'), 'Add new attribute',
+                                    properties=['no-menu', 'transparent'])
         decr_font(self._btnPrimary)
+        decr_icon(self._btnPrimary, 4)
+        self._btnPrimary.installEventFilter(OpacityEventFilter(self._btnPrimary))
+        self._btnPrimary.clicked.connect(self._addNewAttribute)
 
         self.layout().addWidget(self._center)
         self.layout().addWidget(wrap(self._btnPrimary, margin_left=5), alignment=Qt.AlignmentFlag.AlignLeft)
@@ -1820,6 +1828,7 @@ class CharacterProfileEditor(QWidget):
         self._sections: Dict[CharacterProfileSectionType, ProfileSectionWidget] = {}
 
         vbox(self)
+        margins(self, bottom=75)
 
     def setCharacter(self, character: Character):
         self._character = character
@@ -1850,6 +1859,8 @@ class CharacterProfileEditor(QWidget):
                 sc = StrengthsSectionContext()
             elif section.type == CharacterProfileSectionType.Faculties:
                 sc = FacultiesSectionContext()
+            elif section.type == CharacterProfileSectionType.Personality:
+                sc = PersonalitySectionContext()
             else:
                 sc = SectionContext()
 

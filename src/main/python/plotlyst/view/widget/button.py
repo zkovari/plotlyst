@@ -86,20 +86,20 @@ class _SecondaryActionButton(QAbstractButton):
         self._iconName: str = ''
         self._iconColor: str = 'black'
         self._checkedColor: str = 'black'
-        self._padding: int = 2
+        self._padding: int = 4
         self.initStyleSheet()
         pointy(self)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum)
-        self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.7))
+        self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.7, ignoreCheckedButton=True))
 
-    def initStyleSheet(self, border_color: str = 'grey', border_style: str = 'dashed', color: str = 'grey',
+    def initStyleSheet(self, border_color: str = 'grey', border_style: str = 'solid', color: str = 'grey',
                        bg_color: Optional[str] = None, border_radius: int = 6):
         bg_style = ''
         if bg_color:
             bg_style = f'background: {bg_color};'
         self.setStyleSheet(f'''
                 {self.__class__.__name__} {{
-                    border: 2px {border_style} {border_color};
+                    border: 1px {border_style} {border_color};
                     border-radius: {border_radius}px;
                     color: {color};
                     {bg_style}
