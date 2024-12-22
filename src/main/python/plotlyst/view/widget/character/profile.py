@@ -1973,7 +1973,7 @@ class CharacterOnboardingPopup(PopupDialog):
         self.lineDisplayName.setProperty('rounded', True)
         incr_font(self.lineDisplayName)
         self.lineDisplayName.setDisabled(True)
-        self.lineDisplayName.textEdited.connect(self._aliasEdited)
+        self.lineDisplayName.textChanged.connect(self._aliasChanged)
 
         self.nameIcon = Icon()
         self.nameIcon.setIcon(IconRegistry.character_icon('grey'))
@@ -2093,7 +2093,7 @@ class CharacterOnboardingPopup(PopupDialog):
         completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.lineDisplayName.setCompleter(completer)
 
-    def _aliasEdited(self, alias: str):
+    def _aliasChanged(self, alias: str):
         self._character.alias = alias
 
     def _sectionToggled(self, setting: CharacterProfileSectionType, toggled: bool):
