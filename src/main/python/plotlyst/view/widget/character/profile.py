@@ -26,7 +26,7 @@ import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QObject, QEvent, QPoint, QTimer
 from PyQt6.QtGui import QResizeEvent, QWheelEvent, QColor
 from PyQt6.QtWidgets import QWidget, QLabel, QSizePolicy, QSlider, QToolButton, QVBoxLayout, QGridLayout, QApplication, \
-    QFrame, QLineEdit, QDialog
+    QFrame, QLineEdit, QDialog, QCompleter
 from overrides import overrides
 from qthandy import vbox, clear_layout, hbox, bold, underline, spacer, vspacer, margins, pointy, retain_when_hidden, \
     transparent, sp, gc, decr_font, grid, incr_font, line, busy, decr_icon
@@ -1972,6 +1972,7 @@ class CharacterOnboardingPopup(PopupDialog):
         self.lineDisplayName.setProperty('rounded', True)
         incr_font(self.lineDisplayName)
         self.lineDisplayName.setDisabled(True)
+        self.lineDisplayName.textEdited.connect(self._aliasEdited)
 
         self.nameIcon = Icon()
         self.nameIcon.setIcon(IconRegistry.character_icon('grey'))
@@ -2007,10 +2008,14 @@ class CharacterOnboardingPopup(PopupDialog):
         self.personalityFrame.setProperty('large-rounded', True)
         grid(self.personalityFrame, margin=8)
 
-        self.btnEnneagram = self.__selectorButton('Enneagram', 'mdi.numeric-9-circle', small=True)
-        self.btnMbti = self.__selectorButton('MBTI', 'mdi.head-question-outline', small=True)
-        self.btnLoveStyle = self.__selectorButton('Love style', 'fa5s.heart', small=True)
-        self.btnWorkStyle = self.__selectorButton('Work style', 'fa5s.briefcase', small=True)
+        self.btnEnneagram = self.__selectorButton('Enneagram', 'mdi.numeric-9-circle', small=True,
+                                                  personalityType=NovelSetting.Character_enneagram)
+        self.btnMbti = self.__selectorButton('MBTI', 'mdi.head-question-outline', small=True,
+                                             personalityType=NovelSetting.Character_mbti)
+        self.btnLoveStyle = self.__selectorButton('Love style', 'fa5s.heart', small=True,
+                                                  personalityType=NovelSetting.Character_love_style)
+        self.btnWorkStyle = self.__selectorButton('Work style', 'fa5s.briefcase', small=True,
+                                                  personalityType=NovelSetting.Character_work_style)
         self.btnMbti.setMinimumWidth(self.btnEnneagram.sizeHint().width())
         self.btnLoveStyle.setMinimumWidth(self.btnEnneagram.sizeHint().width())
         self.btnWorkStyle.setMinimumWidth(self.btnEnneagram.sizeHint().width())
@@ -2027,14 +2032,20 @@ class CharacterOnboardingPopup(PopupDialog):
         self.primarySelectors.setProperty('large-rounded', True)
         grid(self.primarySelectors, margin=6)
 
-        self.btnFaculties = self.__selectorButton('Faculties', 'mdi6.head-lightbulb')
-        self.btnPhilosophy = self.__selectorButton('Philosophy', 'mdi.infinity')
-        self.btnStrengths = self.__selectorButton('Strengths and Weaknesses', 'mdi.arm-flex')
-        self.btnFlaws = self.__selectorButton('Flaws', 'fa5s.virus')
-        self.btnBaggage = self.__selectorButton('Baggage', 'fa5s.heart-broken')
-        self.btnGoal = self.__selectorButton('Goals', 'mdi.target')
-        self.btnGoal.setIcon(IconRegistry.from_name('mdi.target'))
-        self.btnLack = self.__selectorButton('Lack', 'ri.key-fill')
+        self.btnFaculties = self.__selectorButton('Faculties', 'mdi6.head-lightbulb',
+                                                  sectionType=CharacterProfileSectionType.Faculties)
+        self.btnPhilosophy = self.__selectorButton('Philosophy', 'mdi.infinity',
+                                                   sectionType=CharacterProfileSectionType.Philosophy)
+        self.btnStrengths = self.__selectorButton('Strengths and Weaknesses', 'mdi.arm-flex',
+                                                  sectionType=CharacterProfileSectionType.Strengths)
+        self.btnFlaws = self.__selectorButton('Flaws', 'fa5s.virus',
+                                              sectionType=CharacterProfileSectionType.Flaws)
+        self.btnBaggage = self.__selectorButton('Baggage', 'fa5s.heart-broken',
+                                                sectionType=CharacterProfileSectionType.Baggage)
+        self.btnGoal = self.__selectorButton('Goals', 'mdi.target',
+                                             sectionType=CharacterProfileSectionType.Goals)
+        self.btnLack = self.__selectorButton('Lack', 'ri.key-fill',
+                                             sectionType=CharacterProfileSectionType.Lack)
         self.btnFaculties.setMinimumWidth(self.btnPhilosophy.sizeHint().width())
         self.primarySelectors.layout().addWidget(self.btnFaculties, 0, 0)
         self.primarySelectors.layout().addWidget(self.btnPhilosophy, 0, 2)
@@ -2063,11 +2074,30 @@ class CharacterOnboardingPopup(PopupDialog):
     def _nameEdited(self, name: str):
         self.lineDisplayName.setEnabled(True)
         self.lineDisplayName.setPlaceholderText(name)
+        self._character.name = name
 
-    def __selectorButton(self, text: str, icon: str, small: bool = False) -> SelectorToggleButton:
+        completer = QCompleter(name.split(), self.lineDisplayName)
+        completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.lineDisplayName.setCompleter(completer)
+
+    def _aliasEdited(self, alias: str):
+        self._character.alias = alias
+
+    def _sectionToggled(self, setting: CharacterProfileSectionType, toggled: bool):
+        for ref in self._character.profile:
+            if ref.type == setting:
+                ref.enabled = toggled
+
+    def _personalityToggled(self, setting: NovelSetting, toggled: bool):
+        self._character.prefs.settings[setting.value] = toggled
+
+    def __selectorButton(self, text: str, icon: str, small: bool = False,
+                         sectionType: Optional[CharacterProfileSectionType] = None,
+                         personalityType: Optional[NovelSetting] = None) -> SelectorToggleButton:
         btn = SelectorToggleButton()
         btn.setText(text)
         btn.setIcon(IconRegistry.from_name(icon))
+        btn.setChecked(True)
 
         if small:
             btn.setMinimumWidth(50)
@@ -2076,5 +2106,10 @@ class CharacterOnboardingPopup(PopupDialog):
 
         decr_font(btn, 2)
         decr_icon(btn, 2)
+
+        if sectionType:
+            btn.toggled.connect(partial(self._sectionToggled, sectionType))
+        elif personalityType:
+            btn.toggled.connect(partial(self._personalityToggled, personalityType))
 
         return btn
