@@ -104,6 +104,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         palette.setColor(QPalette.ColorRole.Window, QColor(BG_PRIMARY_COLOR))
         QApplication.setPalette(palette)
 
+        self.toolBar.setHidden(True)
+
         if app_env.is_mac():
             DEFAULT_FONT_FAMILIES.insert(0, 'Palatino')
         elif app_env.is_linux():

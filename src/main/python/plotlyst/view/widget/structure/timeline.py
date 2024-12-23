@@ -28,7 +28,7 @@ from PyQt6.QtCore import Qt, QEvent, pyqtSignal, QObject, QSize
 from PyQt6.QtGui import QColor, QDragEnterEvent, QDropEvent, QResizeEvent, QCursor, QPainter, QPaintEvent, QPen
 from PyQt6.QtWidgets import QWidget, QToolButton, QSizePolicy, QPushButton, QSplitter, QAbstractButton, QToolTip
 from overrides import overrides
-from qthandy import hbox, transparent, italic, translucent, gc, clear_layout, vbox, margins, decr_font
+from qthandy import hbox, transparent, italic, translucent, gc, clear_layout, vbox, margins, decr_font, incr_font
 from qthandy.filter import InstantTooltipEventFilter, DragEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, act_color, RELAXED_WHITE_COLOR
@@ -152,6 +152,7 @@ class _ActButton(QPushButton):
         self.act = act
         self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
         self.setMinimumWidth(10)
+        incr_font(self, 2)
         if act == 0:
             self.setText('Structure')
         else:

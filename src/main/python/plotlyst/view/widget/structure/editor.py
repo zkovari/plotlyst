@@ -320,6 +320,8 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         super(StoryStructureEditor, self).__init__(parent)
         self.setupUi(self)
         flow(self.wdgTemplates)
+        margins(self.wdgTemplates, left=50)
+        margins(self.layoutPreview, left=50, right=45)
 
         self.btnNew.setIcon(IconRegistry.plus_icon('white'))
         self.btnNew.installEventFilter(ButtonPressResizeEventFilter(self.btnNew))
@@ -369,6 +371,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.wdgStructureOutline.timelineChanged.connect(self._timelineChanged)
         self.wdgStructureOutline.beatChanged.connect(self._save)
         self.wdgOutline.layout().addWidget(self.wdgStructureOutline)
+        margins(self.wdgOutline, right=75)
 
         # self._structureNotes = StoryStructureNotes()
         # hbox(self.notes).addWidget(self._structureNotes)

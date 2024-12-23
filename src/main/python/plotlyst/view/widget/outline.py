@@ -27,14 +27,14 @@ from PyQt6.QtGui import QPainterPath, QColor, QPen, QPainter, QPaintEvent, QResi
 from PyQt6.QtWidgets import QWidget, QPushButton, QToolButton, QTextEdit, QFrame
 from overrides import overrides
 from qtanim import fade_in
-from qthandy import sp, curved_flow, clear_layout, vbox, bold, decr_font, gc, pointy, margins, translucent, transparent, \
-    hbox, flow
+from qthandy import sp, curved_flow, clear_layout, vbox, bold, gc, pointy, margins, translucent, transparent, \
+    hbox, flow, incr_font
 from qthandy.filter import DragEventFilter, DropEventFilter
 
 from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, OutlineItem, LayoutType
 from plotlyst.env import app_env
-from plotlyst.view.common import fade_out_and_gc, shadow
+from plotlyst.view.common import fade_out_and_gc, shadow, label
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.input import RemovalButton
 
@@ -54,10 +54,11 @@ class OutlineItemWidget(QWidget):
         vbox(self, 5, 2)
         self._colorAlpha: int = 175
 
-        self._btnName = QPushButton(self)
+        self._btnName = label(parent=self)
         bold(self._btnName)
         if app_env.is_mac():
-            self._btnName.setFixedHeight(max(self._btnName.sizeHint().height() - 8, 24))
+            # self._btnName.setFixedHeight(max(self._btnName.sizeHint().height(), 32))
+            incr_font(self._btnName, 4)
         transparent(self._btnName)
         translucent(self._btnName, 0.7)
 
@@ -66,8 +67,8 @@ class OutlineItemWidget(QWidget):
         self._btnIcon.setFixedSize(self.iconFixedSize, self.iconFixedSize)
 
         self._text = QTextEdit(self)
-        if not app_env.is_mac():
-            decr_font(self._text)
+        if app_env.is_mac():
+            incr_font(self._text)
         self._text.setProperty('rounded', True)
         self._text.setProperty('white-bg', True)
         self._text.setReadOnly(self._readOnly)
@@ -152,9 +153,9 @@ class OutlineItemWidget(QWidget):
         self._text.setPlaceholderText(desc)
         if tooltip is None:
             tooltip = desc
-        self._btnName.setToolTip(tooltip)
-        self._text.setToolTip(tooltip)
-        self._btnIcon.setToolTip(tooltip)
+        # self._btnName.setToolTip(tooltip)
+        # self._text.setToolTip(tooltip)
+        # self._btnIcon.setToolTip(tooltip)
 
         if name is None:
             name = self.item.type.name
@@ -235,6 +236,7 @@ class OutlineTimelineWidget(QFrame):
         self._layoutType = layout
         if layout == LayoutType.CURVED_FLOW:
             curved_flow(self, margin=10, spacing=4)
+            margins(self, right=0)
         elif layout == LayoutType.FLOW:
             flow(self, 10, 4)
         elif layout == LayoutType.HORIZONTAL:
@@ -306,10 +308,10 @@ class OutlineTimelineWidget(QFrame):
                 else:
                     if pos.y() > y:
                         if forward:
-                            path.arcTo(QRectF(pos.x() + wdg.width(), y, 60, pos.y() - y),
+                            path.arcTo(QRectF(pos.x() + wdg.width(), y, 40, pos.y() - y),
                                        90, -180)
                         else:
-                            path.arcTo(QRectF(pos.x(), y, 60, pos.y() - y), -270, 180)
+                            path.arcTo(QRectF(pos.x(), y, 40, pos.y() - y), -270, 180)
                         forward = not forward
                         y = pos.y()
 
