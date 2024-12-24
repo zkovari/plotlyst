@@ -3561,6 +3561,14 @@ def default_tags() -> Dict[TagType, List[Tag]]:
 
 
 @dataclass
+class Palette:
+    bg_color: str
+    primary_color: str
+    secondary_color: str
+    tertiary_color: str
+
+
+@dataclass
 class Node(CharacterBased):
     x: float
     y: float

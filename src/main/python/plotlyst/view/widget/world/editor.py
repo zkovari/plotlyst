@@ -888,7 +888,7 @@ class MindmapElementEditor(WorldBuildingEntityElementWidget):
         super().__init__(novel, element, parent)
         self._palette = palette
 
-        self._mindmapView = EventsMindMapView(self.novel)
+        self._mindmapView = EventsMindMapView(self.novel, palette=palette)
         self._mindmapView.setMinimumHeight(600)
         self.layout().addWidget(self._mindmapView)
 
