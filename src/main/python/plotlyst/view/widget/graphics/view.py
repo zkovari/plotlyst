@@ -132,7 +132,7 @@ class BaseGraphicsView(QGraphicsView):
         frame_ = frame(self)
         if self._palette:
             frame_.setStyleSheet(f'''QFrame {{
-                background: {self._palette.bg_color};
+                background: {self._palette.tertiary_color};
                 border: 1px solid lightgrey;
                 border-radius: 6px;
             }}''')
@@ -179,7 +179,7 @@ class NetworkGraphicsView(BaseGraphicsView):
 
         self._controlsNavBar = self._roundedFrame()
         sp(self._controlsNavBar).h_max()
-        shadow(self._controlsNavBar, color=QColor(palette.tertiary_color) if palette else Qt.GlobalColor.lightGray)
+        shadow(self._controlsNavBar, color=QColor(palette.secondary_color) if palette else Qt.GlobalColor.lightGray)
         vbox(self._controlsNavBar, 5, 6)
 
         self._btnUndo = tool_btn(IconRegistry.from_name('mdi.undo', BLACK_COLOR), transparent_=True, tooltip='Undo')

@@ -47,6 +47,19 @@ from plotlyst.view.widget.input import FontSizeSpinBox, AutoAdjustableLineEdit, 
 from plotlyst.view.widget.utility import ColorPicker, IconSelectorDialog
 
 
+def _apply_palette(wdg: QFrame, palette: Optional[Palette]):
+    if palette:
+        wdg.setStyleSheet(f'''QFrame {{
+                        background: {palette.tertiary_color};
+                        border: 1px solid lightgrey;
+                        border-radius: 6px;
+                    }}''')
+    else:
+        wdg.setProperty('relaxed-white-bg', True)
+        wdg.setProperty('rounded', True)
+    shadow(wdg, color=QColor(palette.secondary_color) if palette else Qt.GlobalColor.lightGray)
+
+
 class ZoomBar(QFrame):
     zoomed = pyqtSignal(float)
     reset = pyqtSignal()
@@ -54,16 +67,7 @@ class ZoomBar(QFrame):
     def __init__(self, parent=None, palette: Optional[Palette] = None):
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.StyledPanel)
-        if palette:
-            self.setStyleSheet(f'''QFrame {{
-                            background: {palette.bg_color};
-                            border: 1px solid lightgrey;
-                            border-radius: 6px;
-                        }}''')
-        else:
-            self.setProperty('relaxed-white-bg', True)
-            self.setProperty('rounded', True)
-        shadow(self, color=QColor(palette.tertiary_color) if palette else Qt.GlobalColor.lightGray)
+        _apply_palette(self, palette)
 
         hbox(self, 2, spacing=6)
         margins(self, left=10, right=10)
@@ -98,16 +102,7 @@ class SecondarySelectorWidget(QFrame):
 
     def __init__(self, parent=None, optional: bool = False, palette: Optional[Palette] = None):
         super().__init__(parent)
-        if palette:
-            self.setStyleSheet(f'''QFrame {{
-                            background: {palette.bg_color};
-                            border: 1px solid lightgrey;
-                            border-radius: 6px;
-                        }}''')
-        else:
-            self.setProperty('relaxed-white-bg', True)
-            self.setProperty('rounded', True)
-        shadow(self, color=QColor(palette.tertiary_color) if palette else Qt.GlobalColor.lightGray)
+        _apply_palette(self, palette)
         self._grid = grid(self, h_spacing=5, v_spacing=3)
         margins(self, left=5, right=5)
 
@@ -148,16 +143,7 @@ class BaseItemToolbar(QWidget):
         self.undoStack = undoStack
         vbox(self, spacing=5)
         self._toolbar = QFrame(self)
-        if palette:
-            self._toolbar.setStyleSheet(f'''QFrame {{
-                            background: {palette.bg_color};
-                            border: 1px solid lightgrey;
-                            border-radius: 6px;
-                        }}''')
-        else:
-            self._toolbar.setProperty('relaxed-white-bg', True)
-            self._toolbar.setProperty('rounded', True)
-        shadow(self._toolbar, color=QColor(palette.tertiary_color) if palette else Qt.GlobalColor.lightGray)
+        _apply_palette(self._toolbar, palette)
 
         hbox(self._toolbar, 5, spacing=6)
         self.layout().addWidget(self._toolbar)
