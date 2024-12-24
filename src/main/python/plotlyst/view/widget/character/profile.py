@@ -356,10 +356,12 @@ class ProfileSectionWidget(ProfileFieldWidget):
 
         if self.context.has_addition():
             self._btnPrimary = push_btn(IconRegistry.plus_icon('grey'), self.context.primaryButtonText(),
-                                        properties=['no-menu', 'transparent'])
+                                        properties=['no-menu', 'plain'])
+            if not app_env.is_mac():
+                decr_font(self._btnPrimary)
             decr_font(self._btnPrimary)
             decr_icon(self._btnPrimary, 4)
-            self._btnPrimary.installEventFilter(OpacityEventFilter(self._btnPrimary))
+            self._btnPrimary.installEventFilter(OpacityEventFilter(self._btnPrimary, leaveOpacity=0.7))
             fields = self.context.primaryFields()
 
             if self.context.has_menu():
@@ -444,6 +446,7 @@ class ProfileSectionWidget(ProfileFieldWidget):
 
         fieldWdg = field_widget(field, self.character)
         self.attachWidget(fieldWdg)
+        fade_in(fieldWdg)
 
     def _removePrimaryField(self, wdg: 'MultiAttributesTemplateWidgetBase', fieldRef: CharacterProfileFieldReference):
         self.section.fields.remove(fieldRef)
@@ -846,7 +849,7 @@ class _SecondaryFieldSelectorButton(QToolButton):
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         transparent(self)
         pointy(self)
-        self.setIconSize(QSize(22, 22))
+        decr_icon(self, 2)
         self.setIcon(IconRegistry.plus_edit_icon())
 
         menu = MenuWidget(self)
@@ -956,6 +959,7 @@ class _PrimaryFieldWidget(QWidget):
             icon.setIcon(IconRegistry.from_name('msc.dash', 'grey'))
             wdg.layout().insertWidget(0, icon)
             self._secondaryWdgContainer.layout().replaceWidget(item.widget(), wdg)
+            fade_in(wdg)
         else:
             self._secondaryWdgContainer.layout().replaceWidget(self._secondaryFieldWidgets[secondary], spacer())
             gc(self._secondaryFieldWidgets[secondary])
@@ -1318,10 +1322,11 @@ class StrengthsWeaknessesFieldWidget(TemplateFieldWidgetBase):
                                      alignment=Qt.AlignmentFlag.AlignCenter)
 
         self._btnPrimary = push_btn(IconRegistry.plus_icon('grey'), 'Add new attribute',
-                                    properties=['no-menu', 'transparent'])
-        decr_font(self._btnPrimary)
+                                    properties=['no-menu', 'plain'])
+        if not app_env.is_mac():
+            decr_font(self._btnPrimary)
         decr_icon(self._btnPrimary, 4)
-        self._btnPrimary.installEventFilter(OpacityEventFilter(self._btnPrimary))
+        self._btnPrimary.installEventFilter(OpacityEventFilter(self._btnPrimary, leaveOpacity=0.7))
         self._btnPrimary.clicked.connect(self._addNewAttribute)
 
         self.layout().addWidget(self._center)
