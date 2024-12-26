@@ -57,7 +57,7 @@ class LocationNode(ItemBasedNode):
         self.setPlusButtonEnabled(not readOnly)
         self.setMenuEnabled(not readOnly)
         self.setTranslucentIconEnabled(True)
-        self._actionChangeIcon.setVisible(False)
+        self._actionChangeIcon.setVisible(True)
         self._btnAdd.clicked.connect(self.added)
         self.refresh()
 
@@ -68,17 +68,16 @@ class LocationNode(ItemBasedNode):
     @overrides
     def refresh(self):
         self._lblTitle.setText(self._location.name if self._location.name else 'Location')
-        # if self._novel.icon:
-        #     self._icon.setIcon(IconRegistry.from_name(self._novel.icon, self._novel.icon_color))
-        # else:
-        self._icon.setIcon(IconRegistry.location_icon('black'))
+        if self._location.icon:
+            self._icon.setIcon(IconRegistry.from_name(self._location.icon, self._location.icon_color))
+        else:
+            self._icon.setIcon(IconRegistry.location_icon('black'))
         self._icon.setVisible(True)
 
     @overrides
     def _iconChanged(self, iconName: str, iconColor: str):
-        pass
-        # self._novel.icon = iconName
-        # self._novel.icon_color = iconColor
+        self._location.icon = iconName
+        self._location.icon_color = iconColor
 
 
 class LocationsTreeView(ItemBasedTreeView):
@@ -205,6 +204,7 @@ class LocationsTreeView(ItemBasedTreeView):
         node.selectionChanged.connect(partial(self._selectionChanged, node))
         node.added.connect(partial(self._addLocationUnder, node))
         node.deleted.connect(partial(self._deleteLocation, node))
+        node.iconChanged.connect(self._save)
 
         if not self._readOnly:
             self._enhanceWithDnd(node)

@@ -227,11 +227,12 @@ class LabelItem(QAbstractGraphicsShapeItem):
 
 
 class IconBadge(QAbstractGraphicsShapeItem):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, borderEnabled: bool = True):
         super().__init__(parent)
         self._size: int = 32
         self._icon: Optional[QIcon] = None
         self._color: QColor = QColor('black')
+        self._borderEnabled: bool = borderEnabled
 
     def setIcon(self, icon: QIcon, borderColor: Optional[QColor] = None):
         self._icon = icon
@@ -247,7 +248,8 @@ class IconBadge(QAbstractGraphicsShapeItem):
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
         painter.setPen(QPen(self._color, 2))
         painter.setBrush(QColor(RELAXED_WHITE_COLOR))
-        painter.drawEllipse(0, 0, self._size, self._size)
+        if self._borderEnabled:
+            painter.drawEllipse(0, 0, self._size, self._size)
 
         if self._icon:
             self._icon.paint(painter, 3, 3, self._size - 5, self._size - 5)
@@ -288,7 +290,7 @@ class AbstractSocketItem(QAbstractGraphicsShapeItem):
     @overrides
     def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent) -> None:
         self._hovered = True
-        if self.networkScene().linkMode() and self.networkScene().linkSource().parentItem() == self.parentItem():
+        if self.networkScene() and self.networkScene().linkMode() and self.networkScene().linkSource().parentItem() == self.parentItem():
             self._linkAvailable = False
         else:
             self._linkAvailable = True
@@ -368,7 +370,12 @@ class DotCircleSocketItem(AbstractSocketItem):
     @overrides
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
         if self._linkAvailable:
-            painter.setPen(QPen(QColor(PLOTLYST_SECONDARY_COLOR), 2))
+            if self.parentItem():
+                color = self.parentItem().color()
+            else:
+                color = QColor(PLOTLYST_SECONDARY_COLOR)
+            painter.setPen(QPen(color, 2))
+            painter.setOpacity(0.7)
         else:
             painter.setPen(QPen(QColor('lightgrey'), 2))
 
@@ -447,7 +454,7 @@ class ConnectorItem(QGraphicsPathItem):
         self._source = source
         self._target = target
         self._connector: Optional[Connector] = None
-        self._color: QColor = QColor('black')
+        self._color: QColor = QColor('#212529')
         self._relation: Optional[Relation] = None
         self._icon: Optional[str] = None
         self._defaultLineType: ConnectorType = ConnectorType.Curved
@@ -459,9 +466,10 @@ class ConnectorItem(QGraphicsPathItem):
             self.setPen(QPen(self._color, 2))
 
         self._arrowhead = QPolygonF([
-            QPointF(0, -4),
-            QPointF(8, 0),
-            QPointF(0, 4),
+            QPointF(-4, -6),  # Top point of the arrowhead
+            QPointF(8, 0),  # Far tip of the arrowhead
+            QPointF(-4, 6),  # Bottom point of the arrowhead
+            QPointF(1, 0),  # Inner point for a sharper look
         ])
         self._endArrowheadItem = QGraphicsPolygonItem(self._arrowhead, self)
         self._endArrowheadItem.setPen(QPen(self._color, 1))
@@ -764,6 +772,11 @@ class NodeItem(QAbstractGraphicsShapeItem):
     def __init__(self, node: Node, parent=None):
         super().__init__(parent)
         self._node = node
+        self._confinedRect: Optional[QRectF] = None
+        self._editOnDoubleClickEnabled: bool = True
+
+        self._stickyPoint: Optional[QPointF] = None
+        self._stickyRange: int = 0
 
         self.setPos(node.x, node.y)
         self._sockets: List[AbstractSocketItem] = []
@@ -805,9 +818,32 @@ class NodeItem(QAbstractGraphicsShapeItem):
     def setPosCommandEnabled(self, enabled: bool):
         self._posCommandEnabled = enabled
 
+    def setDoubleClickEditEnabled(self, enabled: bool):
+        self._editOnDoubleClickEnabled = enabled
+
+    def setConfinedRect(self, rect: QRectF):
+        self._confinedRect = rect
+
+    def setStickPoint(self, point: QPointF, range: int):
+        self._stickyPoint = point
+        self._stickyRange = range
+
     @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
+            if self._confinedRect is not None:
+                new_pos = value
+                new_pos.setX(max(self._confinedRect.left(), min(self._confinedRect.right(), new_pos.x())))
+                new_pos.setY(max(self._confinedRect.top(), min(self._confinedRect.bottom(), new_pos.y())))
+
+                if self._stickyPoint:
+                    if self._stickyPoint.y() - self._stickyRange < new_pos.y() < self._stickyPoint.y() + self._stickyRange:
+                        new_pos.setY(self._stickyPoint.y())
+
+                self.setPos(new_pos)
+                self._onPosChanged()
+                return new_pos
+
             self._onPosChanged()
         elif change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
             self._onSelection(value)
@@ -820,6 +856,9 @@ class NodeItem(QAbstractGraphicsShapeItem):
     def rearrangeConnectors(self):
         for socket in self._sockets:
             socket.rearrangeConnectors()
+
+    def activate(self):
+        pass
 
     def _onPosChanged(self):
         self.rearrangeConnectors()
@@ -956,6 +995,7 @@ class CharacterItem(CircleShapedNodeItem):
     def __init__(self, character: Character, node: Node, parent=None):
         super(CharacterItem, self).__init__(node, parent)
         self._character = character
+        self._labelEnabled: bool = True
 
         self._label = QGraphicsTextItem(self._character.name, self)
         font = self._label.font()
@@ -983,6 +1023,15 @@ class CharacterItem(CircleShapedNodeItem):
         self._refreshLabel()
         self.networkScene().nodeChangedEvent(self._node)
 
+    def labelItem(self) -> QGraphicsTextItem:
+        return self._label
+
+    def setLabelVisible(self, visible: bool):
+        self._label.setVisible(visible)
+
+    def updateLabel(self):
+        self._refreshLabel()
+
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
         super().paint(painter, option, widget)
@@ -995,7 +1044,8 @@ class CharacterItem(CircleShapedNodeItem):
 
     @overrides
     def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
-        self.networkScene().editItemEvent(self)
+        if self._editOnDoubleClickEnabled:
+            self.networkScene().editItemEvent(self)
 
     @overrides
     def _recalculate(self):
@@ -1054,7 +1104,8 @@ class IconItem(CircleShapedNodeItem):
 
     @overrides
     def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
-        self.networkScene().editItemEvent(self)
+        if self._editOnDoubleClickEnabled:
+            self.networkScene().editItemEvent(self)
 
 
 class EventItem(NodeItem):
@@ -1103,6 +1154,8 @@ class EventItem(NodeItem):
         self._metrics = QFontMetrics(self._font)
 
         self._recalculateRect()
+
+        self.activate()
 
     def text(self) -> str:
         return self._text
@@ -1154,12 +1207,12 @@ class EventItem(NodeItem):
 
     @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        if self.networkScene().linkMode() or alt_modifier(event):
+        if self.networkScene() and self.networkScene().linkMode() or alt_modifier(event):
             self._setSocketsVisible()
 
     @overrides
     def hoverMoveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        if not self.networkScene().linkMode() and alt_modifier(event):
+        if self.networkScene() and not self.networkScene().linkMode() and alt_modifier(event):
             self._setSocketsVisible()
 
     @overrides
@@ -1226,6 +1279,10 @@ class EventItem(NodeItem):
         return self.mapRectToScene(self._textRect.toRectF())
 
     @overrides
+    def activate(self):
+        shadow(self)
+
+    @overrides
     def boundingRect(self) -> QRectF:
         return QRectF(0, 0, self._width, self._height)
 
@@ -1237,7 +1294,7 @@ class EventItem(NodeItem):
 
         painter.setPen(QPen(QColor(self._node.color), 1))
         painter.setBrush(QColor(WHITE_COLOR))
-        painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 24, 24)
+        painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 16, 16)
         painter.setFont(self._font)
         painter.drawText(self._textRect, Qt.AlignmentFlag.AlignCenter,
                          self._text if self._text else self._placeholderText)
@@ -1357,6 +1414,9 @@ class NoteItem(NodeItem):
 
     def height(self) -> int:
         return self._node.height
+
+    def setColor(self, color: QColor):
+        pass
 
     def setText(self, text: str, height: int):
         self._node.text = text

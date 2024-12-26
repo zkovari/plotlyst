@@ -1670,22 +1670,16 @@ class SceneProgressEditor(ProgressEditor):
         self._chargeEnabled = True
         self._charge = 0
         self._altCharge = 0
-        posCharge = 0
-        negCharge = 0
-        for ref in self._scene.plot_values:
-            if ref.data.charge:
-                self._chargeEnabled = False
-                if ref.data.charge > 0:
-                    posCharge = max(posCharge, ref.data.charge)
-                else:
-                    negCharge = min(negCharge, ref.data.charge)
+        self._scene.calculate_plot_progress()
+        if self._scene.plot_pos_progress or self._scene.plot_neg_progress:
+            self._chargeEnabled = False
 
-        if abs(negCharge) > posCharge:
-            self._charge = negCharge
-            self._altCharge = posCharge
+        if abs(self._scene.plot_neg_progress) > self._scene.plot_pos_progress:
+            self._charge = self._scene.plot_neg_progress
+            self._altCharge = self._scene.plot_pos_progress
         else:
-            self._charge = posCharge
-            self._altCharge = negCharge
+            self._charge = self._scene.plot_pos_progress
+            self._altCharge = self._scene.plot_neg_progress
 
         super().refresh()
 

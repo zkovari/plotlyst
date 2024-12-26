@@ -36,7 +36,6 @@ from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemVie
     QLabel, QGraphicsObject, QTextEdit
 from fbs_runtime import platform
 from overrides import overrides
-from qtanim import fade_out
 from qthandy import hbox, vbox, margins, gc, transparent, spacer, sp, pointy, incr_font
 from qthandy.filter import DisabledClickEventFilter
 
@@ -403,7 +402,7 @@ def fade_out_and_gc(parent: QWidget, widget: QWidget, duration: int = 200, teard
             teardown()
 
     widget.setDisabled((True))
-    anim = fade_out(widget, duration)
+    anim = qtanim.fade_out(widget, duration)
     anim.finished.connect(destroy)
 
 
@@ -486,7 +485,8 @@ def frame(parent=None):
 
 def label(text: str = '', bold: Optional[bool] = None, italic: Optional[bool] = None, underline: Optional[bool] = None,
           description: Optional[bool] = None, wordWrap: Optional[bool] = None, h1: Optional[bool] = None,
-          h2: Optional[bool] = None, h3: Optional[bool] = None, h4: Optional[bool] = None, color=None,
+          h2: Optional[bool] = None, h3: Optional[bool] = None, h4: Optional[bool] = None, h5: Optional[bool] = None,
+          color=None,
           parent=None) -> QLabel:
     lbl = QLabel(text, parent)
     font = lbl.font()
@@ -508,6 +508,8 @@ def label(text: str = '', bold: Optional[bool] = None, italic: Optional[bool] = 
         lbl.setProperty('h3', h3)
     elif h4:
         lbl.setProperty('h4', h4)
+    elif h5:
+        lbl.setProperty('h5', h5)
 
     if color:
         lbl.setStyleSheet(f'color: {color};')
@@ -633,6 +635,17 @@ def calculate_resized_dimensions(width: int, height: int, max_size: int = 512):
 
 def fade_in(wdg: QWidget):
     qtanim.fade_in(wdg, duration=150, teardown=lambda: wdg.setGraphicsEffect(None))
+
+
+def fade_out(wdg: QWidget):
+    qtanim.fade_out(wdg, duration=150, teardown=lambda: wdg.setGraphicsEffect(None))
+
+
+def fade(wdg: QWidget, visible: bool):
+    if visible:
+        fade_in(wdg)
+    else:
+        fade_out(wdg)
 
 
 def dominant_color(pixmap: QPixmap) -> QColor:

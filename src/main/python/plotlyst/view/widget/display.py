@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
+from functools import partial
 from typing import Optional, Any, Tuple, List
 
 import emoji
@@ -35,8 +36,9 @@ from plotlyst.common import PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.help import mid_revision_scene_structure_help
 from plotlyst.core.template import Role
 from plotlyst.core.text import wc
+from plotlyst.env import app_env
 from plotlyst.view.common import emoji_font, insert_before_the_end, \
-    ButtonPressResizeEventFilter, restyle, label, frame, shadow, tool_btn, push_btn, action, open_url
+    ButtonPressResizeEventFilter, restyle, label, frame, tool_btn, push_btn, action, open_url
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 
@@ -45,6 +47,12 @@ class ChartView(QChartView):
     def __init__(self, parent=None):
         super(ChartView, self).__init__(parent)
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+    @overrides
+    def wheelEvent(self, event: 'QGraphicsSceneWheelEvent') -> None:
+        event.ignore()
+
+        return super(ChartView, self).wheelEvent(event)
 
 
 class Subtitle(QWidget):
@@ -66,6 +74,8 @@ class Subtitle(QWidget):
         self.lblDescription.setProperty('description', True)
         self.lblDescription.setWordWrap(True)
         self.lblDescription.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        if app_env.is_mac():
+            incr_font(self.lblDescription, 2)
         self._top = group(self.icon, self.lblTitle, spacer(), parent=self)
         self.layout().addWidget(self._top)
         self.layout().addWidget(group(self._descSpacer, self.lblDescription, parent=self))
@@ -351,7 +361,6 @@ class PopupDialog(QDialog):
         # margins(self.frame, bottom=15)
         self.layout().addWidget(self.frame)
         self.setMinimumSize(200, 150)
-        shadow(self.frame)
 
         self.btnReset = tool_btn(IconRegistry.close_icon('grey'), tooltip='Cancel', transparent_=True)
         self.btnReset.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -526,4 +535,4 @@ class ReferencesButton(QPushButton):
 
     def addRefs(self, refs: List[Tuple[str, str]]):
         for ref in refs:
-            self._menu.addAction(action(ref[0], slot=lambda: open_url(ref[1])))
+            self._menu.addAction(action(ref[0], slot=partial(open_url, ref[1])))

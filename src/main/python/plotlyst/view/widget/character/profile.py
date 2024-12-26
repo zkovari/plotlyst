@@ -362,7 +362,7 @@ class ProfileSectionWidget(ProfileFieldWidget):
             fields = self.context.primaryFields()
 
             if self.context.has_menu():
-                self._menu = MenuWidget(self._btnPrimary)
+                self._menu = MenuWidget(self._btnPrimary, largeIcons=True)
                 self._menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
                 apply_white_menu(self._menu)
                 for field in fields:

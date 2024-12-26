@@ -439,14 +439,6 @@ class ManuscriptView(AbstractNovelView):
 
         self._wdgReadability.checkTextDocument(self.ui.textEdit.document())
 
-    def _adverb_highlight_toggled(self, toggled: bool):
-        if toggled:
-            if self._cbSpellCheck.isChecked():
-                self._cbSpellCheck.setChecked(False)
-                self.ui.textEdit.setGrammarCheckEnabled(False)
-                self.ui.textEdit.checkGrammar()
-        self.ui.textEdit.setWordTagHighlighterEnabled(toggled)
-
     def _scene_separator_clicked(self, scene: Scene):
         if not self.ui.btnSceneInfo.isChecked():
             self.ui.btnSceneInfo.setChecked(True)

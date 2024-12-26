@@ -30,8 +30,7 @@ from plotlyst.core.domain import Novel, Document, NovelSetting
 from plotlyst.core.help import synopsis_editor_placeholder
 from plotlyst.event.core import emit_global_event, Event
 from plotlyst.events import NovelUpdatedEvent, \
-    SceneChangedEvent, NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelMindmapToggleEvent, \
-    NovelPanelCustomizationEvent
+    SceneChangedEvent, NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelPanelCustomizationEvent
 from plotlyst.resources import resource_registry
 from plotlyst.view._view import AbstractNovelView
 from plotlyst.view.common import ButtonPressResizeEventFilter, set_tab_icon, set_tab_visible
@@ -42,19 +41,16 @@ from plotlyst.view.style.base import apply_border_image
 from plotlyst.view.widget.input import HtmlPopupTextEditorToolbar
 from plotlyst.view.widget.plot.editor import PlotEditor
 from plotlyst.view.widget.settings import NovelSettingsWidget
-from plotlyst.view.widget.story_map import EventsMindMapView
 
 
 class NovelView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        super().__init__(novel, [SceneChangedEvent, NovelMindmapToggleEvent, NovelStorylinesToggleEvent,
+        super().__init__(novel, [SceneChangedEvent, NovelStorylinesToggleEvent,
                                  NovelStructureToggleEvent], global_event_types=[NovelUpdatedEvent])
         self.ui = Ui_NovelView()
         self.ui.setupUi(self.widget)
 
-        set_tab_icon(self.ui.tabWidget, self.ui.tabEvents,
-                     IconRegistry.from_name('ri.mind-map', color_on=PLOTLYST_MAIN_COLOR))
         set_tab_icon(self.ui.tabWidget, self.ui.tabStructure,
                      IconRegistry.story_structure_icon(color_on=PLOTLYST_MAIN_COLOR))
         set_tab_icon(self.ui.tabWidget, self.ui.tabPlot, IconRegistry.storylines_icon(color_on=PLOTLYST_MAIN_COLOR))
@@ -63,7 +59,6 @@ class NovelView(AbstractNovelView):
         set_tab_icon(self.ui.tabWidget, self.ui.tabTags, IconRegistry.tags_icon(color_on=PLOTLYST_MAIN_COLOR))
         set_tab_icon(self.ui.tabWidget, self.ui.tabSettings, IconRegistry.cog_icon(color_on=PLOTLYST_MAIN_COLOR))
 
-        set_tab_visible(self.ui.tabWidget, self.ui.tabEvents, self.novel.prefs.toggled(NovelSetting.Mindmap))
         set_tab_visible(self.ui.tabWidget, self.ui.tabPlot, self.novel.prefs.toggled(NovelSetting.Storylines))
         set_tab_visible(self.ui.tabWidget, self.ui.tabStructure, self.novel.prefs.toggled(NovelSetting.Structure))
         set_tab_visible(self.ui.tabWidget, self.ui.tabTags, False)
@@ -114,9 +109,6 @@ class NovelView(AbstractNovelView):
             self.ui.lblSynopsisWords.setWordCount(self.ui.textSynopsis.textEdit.statistics().word_count)
         self.ui.textSynopsis.textEdit.textChanged.connect(self._synopsis_changed)
 
-        self._eventsMap = EventsMindMapView(self.novel)
-        self.ui.wdgEventsMapParent.layout().addWidget(self._eventsMap)
-
         self.ui.wdgStructure.setNovel(self.novel)
         self.ui.wdgTitle.setFixedHeight(150)
         apply_border_image(self.ui.wdgTitle, resource_registry.frame1)
@@ -134,9 +126,7 @@ class NovelView(AbstractNovelView):
     @overrides
     def event_received(self, event: Event):
         if isinstance(event, NovelPanelCustomizationEvent):
-            if isinstance(event, NovelMindmapToggleEvent):
-                set_tab_visible(self.ui.tabWidget, self.ui.tabEvents, event.toggled)
-            elif isinstance(event, NovelStorylinesToggleEvent):
+            if isinstance(event, NovelStorylinesToggleEvent):
                 set_tab_visible(self.ui.tabWidget, self.ui.tabPlot, event.toggled)
             elif isinstance(event, NovelStructureToggleEvent):
                 set_tab_visible(self.ui.tabWidget, self.ui.tabStructure, event.toggled)

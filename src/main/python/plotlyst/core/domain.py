@@ -916,6 +916,7 @@ class DynamicPlotPrincipleType(Enum):
     MONSTER = 'monster'
     ALLY = 'ally'
     ENEMY = 'enemy'
+    NEUTRAL = 'neutral'
     SUSPECT = 'suspect'
     CREW_MEMBER = 'crew'
 
@@ -956,6 +957,8 @@ class DynamicPlotPrincipleType(Enum):
             return 'fa5s.thumbs-up'
         elif self == DynamicPlotPrincipleType.ENEMY:
             return 'fa5s.thumbs-down'
+        elif self == DynamicPlotPrincipleType.NEUTRAL:
+            return 'fa5.hand-rock'
         elif self == DynamicPlotPrincipleType.SUSPECT:
             return 'ri.criminal-fill'
         elif self == DynamicPlotPrincipleType.CREW_MEMBER:
@@ -1011,6 +1014,8 @@ class DynamicPlotPrincipleType(Enum):
             return '#266dd3'
         elif self == DynamicPlotPrincipleType.ENEMY:
             return '#9e1946'
+        elif self == DynamicPlotPrincipleType.NEUTRAL:
+            return 'grey'
         elif self == DynamicPlotPrincipleType.SUSPECT:
             return '#9e2a2b'
         elif self == DynamicPlotPrincipleType.CREW_MEMBER:
@@ -1034,6 +1039,8 @@ class DynamicPlotPrincipleType(Enum):
             return "A character forming alliance with the storyline's focal character"
         elif self == DynamicPlotPrincipleType.ENEMY:
             return "An adversary character who opposes the storyline's focal character"
+        elif self == DynamicPlotPrincipleType.NEUTRAL:
+            return "A character who remains neutral towards the storyline's focal character"
 
         elif self == DynamicPlotPrincipleType.DESCRIPTION:
             return "The suspect's physical appearance and distinguishing features"
@@ -1088,6 +1095,8 @@ class DynamicPlotPrincipleType(Enum):
             return "Describe who and how forms an alliance with the character"
         elif self == DynamicPlotPrincipleType.ENEMY:
             return "Describe who and how opposes the focal character"
+        elif self == DynamicPlotPrincipleType.NEUTRAL:
+            return "Describe who and why remains neutral towards the focal character"
 
         elif self == DynamicPlotPrincipleType.DESCRIPTION:
             return "Describe the suspect's physical appearance or any distinguishing features"
@@ -1133,6 +1142,7 @@ class DynamicPlotPrinciple(OutlineItem):
     type: DynamicPlotPrincipleType = DynamicPlotPrincipleType.TWIST
     elements: List['DynamicPlotPrinciple'] = field(default_factory=list)
     character_id: str = ''
+    node: Optional['Node'] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
 
 class DynamicPlotPrincipleGroupType(Enum):
@@ -1975,7 +1985,9 @@ class Scene:
     structure: List[SceneStructureItem] = field(default_factory=list)
     questions: List[SceneReaderQuestion] = field(default_factory=list)
     info: List[SceneReaderInformation] = field(default_factory=list)
-    progress: int = 0
+    progress: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    plot_pos_progress: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    plot_neg_progress: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     functions: SceneFunctions = field(default_factory=SceneFunctions)
 
     def beat(self, novel: 'Novel') -> Optional[StoryBeat]:
@@ -2034,6 +2046,16 @@ class Scene:
 
     def title_or_index(self, novel: 'Novel') -> str:
         return self.title if self.title else f'Scene {novel.scenes.index(self) + 1}'
+
+    def calculate_plot_progress(self):
+        self.plot_pos_progress = 0
+        self.plot_neg_progress = 0
+        for ref in self.plot_values:
+            if ref.data.charge:
+                if ref.data.charge > 0:
+                    self.plot_pos_progress = max(self.plot_pos_progress, ref.data.charge)
+                else:
+                    self.plot_neg_progress = min(self.plot_neg_progress, ref.data.charge)
 
     def __is_outcome(self, expected) -> bool:
         if self.outcome and self.outcome == expected:
@@ -2273,6 +2295,7 @@ class WorldBuildingMarker:
     width: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     ref: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
     points: List[Point] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
+    opacity: int = field(default=0, metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass
@@ -2355,6 +2378,8 @@ class Location:
     summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
     children: List['Location'] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     sensory_detail: SensoryDetail = field(default_factory=SensoryDetail)
+    icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    icon_color: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
     @overrides
     def __eq__(self, other: 'Location'):
@@ -3309,12 +3334,12 @@ class DocumentType(Enum):
     CHARACTER_BACKSTORY = 1
     CAUSE_AND_EFFECT = 2
     REVERSED_CAUSE_AND_EFFECT = 3
-    SNOWFLAKE = 4
     CHARACTER_ARC = 5
     STORY_STRUCTURE = 6
     MICE = 7
     PDF = 8
     PREMISE = 9
+    MIND_MAP = 10
 
 
 @dataclass
@@ -3347,6 +3372,7 @@ class Document(CharacterBased, SceneBased):
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
     statistics: Optional[DocumentStatistics] = field(default=None, metadata=config(exclude=exclude_if_empty))
     file: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    diagram: Optional['Diagram'] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
     def display_name(self) -> str:
         if self.title:
@@ -3556,6 +3582,16 @@ class Node(CharacterBased):
     def __post_init__(self):
         self._character: Optional[Character] = None
 
+    @overrides
+    def __eq__(self, other: 'Node'):
+        if isinstance(other, Node):
+            return self.id == other.id
+        return False
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
 
 def to_node(x: float, y: float, type: GraphicsItemType, subtype: str = '', default_size: int = 12) -> Node:
     node = Node(x, y, type=type, subtype=subtype)
@@ -3614,7 +3650,7 @@ class DiagramData:
 
 @dataclass
 class Diagram:
-    title: str
+    title: str = field(default='', metadata=config(exclude=exclude_if_empty))
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
@@ -3632,10 +3668,6 @@ class Diagram:
     @overrides
     def __hash__(self):
         return hash(str(self.id))
-
-
-def default_events_map() -> Diagram:
-    return Diagram('Events', id=uuid.UUID('6c74e40f-d3de-4c83-bcd2-0ca5e626081d'))
 
 
 def default_character_networks() -> List[Diagram]:
@@ -3712,6 +3744,7 @@ class NovelSetting(Enum):
     Management = 'management'
     SCENE_CARD_POV = 'scene_card_pov'
     SCENE_CARD_PURPOSE = 'scene_card_purpose'
+    SCENE_CARD_PLOT_PROGRESS = 'scene_card_plot_progress'
     SCENE_CARD_STAGE = 'scene_card_stage'
     SCENE_CARD_MIDDLE = 'scene_card_middle_display'
     SCENE_CARD_WIDTH = 'scene_card_width'
@@ -3719,6 +3752,7 @@ class NovelSetting(Enum):
     SCENE_TABLE_PURPOSE = 'scene_table_purpose'
     SCENE_TABLE_CHARACTERS = 'scene_table_characters'
     SCENE_TABLE_STORYLINES = 'scene_table_storylines'
+    SCENE_TABLE_PLOT_PROGRESS = 'scene_table_plot_progress'
     Character_enneagram = 'character_enneagram'
     Character_mbti = 'character_mbti'
     Character_love_style = 'character_love_style'
@@ -3782,7 +3816,7 @@ class Novel(NovelDescriptor):
     locations: List[Location] = field(default_factory=default_locations)
     board: Board = field(default_factory=Board)
     manuscript_goals: ManuscriptGoals = field(default_factory=ManuscriptGoals)
-    events_map: Diagram = field(default_factory=default_events_map)
+    events_map: Diagram = field(default=None, metadata=config(exclude=exclude_if_empty))
     character_networks: List[Diagram] = field(default_factory=default_character_networks)
     manuscript_progress: Dict[str, DocumentProgress] = field(default_factory=dict,
                                                              metadata=config(exclude=exclude_if_empty))
@@ -3856,6 +3890,12 @@ class Novel(NovelDescriptor):
         scene = Novel.new_scene('My first scene')
         scene.chapter = chapter
         novel.scenes.append(scene)
+
+        plot = Plot('Main plot', icon='fa5s.theater-masks', icon_color='#03396c',
+                    progression=[PlotProgressionItem(type=PlotProgressionItemType.BEGINNING),
+                                 PlotProgressionItem(type=PlotProgressionItemType.MIDDLE),
+                                 PlotProgressionItem(type=PlotProgressionItemType.ENDING)])
+        novel.plots.append(plot)
 
         return novel
 

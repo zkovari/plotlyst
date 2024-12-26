@@ -17,6 +17,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from plotlyst.core.domain import Novel, Document, DocumentType
+from plotlyst.service.persistence import RepositoryPersistenceManager
 
-plotlyst_product_version = '0.4.0'
-plotlyst_display_version = '2024.12'
+
+def migrate_novel(novel: Novel):
+    if novel.events_map is not None:
+        doc = Document('Mindmap', type=DocumentType.MIND_MAP, icon='ri.mind-map', diagram=novel.events_map)
+        novel.documents.append(doc)
+        novel.events_map = None
+        RepositoryPersistenceManager.instance().update_novel(novel)

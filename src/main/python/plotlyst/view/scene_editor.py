@@ -128,6 +128,7 @@ class SceneEditor(QObject, EventListener):
         self.ui.wdgTop.layout().addWidget(self.wdgProgression)
 
         self.ui.textNotes.setTitleVisible(False)
+        self.ui.textNotes.textEdit.setBlockPlaceholderEnabled(True)
 
         self.tblCharacters = QTableView()
         self.tblCharacters.setShowGrid(False)

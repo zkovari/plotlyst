@@ -22,7 +22,7 @@ from typing import Optional, Set
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, pyqtProperty, QTimer, QEvent
-from PyQt6.QtGui import QIcon, QMouseEvent, QEnterEvent, QAction
+from PyQt6.QtGui import QIcon, QMouseEvent, QEnterEvent, QAction, QColor
 from PyQt6.QtWidgets import QPushButton, QSizePolicy, QToolButton, QAbstractButton, QLabel, QButtonGroup, QMenu, QWidget
 from overrides import overrides
 from qtanim import fade_in
@@ -31,10 +31,11 @@ from qthandy import hbox, translucent, bold, incr_font, transparent, retain_when
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, GridMenuWidget
 
-from plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR, PLOTLYST_MAIN_COLOR
 from plotlyst.core.domain import SelectionItem, Novel, tag_characterization, tag_worldbuilding, \
     tag_brainstorming, tag_research, tag_writing, tag_plotting, tag_theme, tag_outlining, tag_revision, tag_drafting, \
     tag_editing, tag_collect_feedback, tag_publishing, tag_marketing, tag_book_cover_design, tag_formatting
+from plotlyst.env import app_env
 from plotlyst.service.importer import SyncImporter
 from plotlyst.view.common import ButtonPressResizeEventFilter, tool_btn, spin, action
 from plotlyst.view.icons import IconRegistry
@@ -607,3 +608,52 @@ class ChargeButton(SecondaryActionToolButton):
             self.setIcon(IconRegistry.minus_icon('grey'))
         decr_icon(self, 4)
         retain_when_hidden(self)
+
+
+class SelectorToggleButton(QToolButton):
+    def __init__(self, button_style: Qt.ToolButtonStyle = Qt.ToolButtonStyle.ToolButtonTextUnderIcon):
+        super().__init__()
+
+        self.setMinimumWidth(100)
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
+        self.setCheckable(True)
+        self.setToolButtonStyle(button_style)
+
+        pointy(self)
+        incr_icon(self, 4)
+        if app_env.is_mac() and button_style == Qt.ToolButtonStyle.ToolButtonTextUnderIcon:
+            incr_font(self)
+
+        # Configure style based on button_style
+        if button_style == Qt.ToolButtonStyle.ToolButtonTextBesideIcon:
+            radius = 6
+            padding = 6
+        else:  # Default for ToolButtonTextUnderIcon
+            radius = 10
+            padding = 2
+
+        self.setStyleSheet(f'''
+                    QToolButton {{
+                        border: 1px hidden lightgrey;
+                        border-radius: {radius}px;
+                        padding: {padding}px;
+                    }}
+                    QToolButton:hover:!checked {{
+                        background: #FCF5FE;
+                    }}
+                    QToolButton:checked {{
+                        background: #D4B8E0;
+                    }}
+                    ''')
+
+        self.toggled.connect(self._toggled)
+
+    def _toggled(self, toggled: bool):
+        if toggled:
+            color = QColor(PLOTLYST_MAIN_COLOR)
+            color.setAlpha(175)
+            qtanim.glow(self, radius=8, color=color, reverseAnimation=False,
+                        teardown=lambda: self.setGraphicsEffect(None))
+        else:
+            qtanim.glow(self, radius=0, startRadius=8, color=QColor('grey'), reverseAnimation=False,
+                        teardown=lambda: self.setGraphicsEffect(None))

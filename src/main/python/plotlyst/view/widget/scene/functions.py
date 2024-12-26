@@ -32,7 +32,7 @@ from qtmenu import MenuWidget, ActionTooltipDisplayMode
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RED_COLOR
 from plotlyst.core.domain import Scene, Novel, StoryElementType, Character, SceneFunction, Plot, ScenePlotReference
 from plotlyst.service.cache import entities_registry
-from plotlyst.view.common import push_btn, tool_btn, action, shadow, label, fade_out_and_gc
+from plotlyst.view.common import push_btn, tool_btn, action, shadow, label, fade_out_and_gc, fade_in
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.characters import CharacterSelectorButton
@@ -56,6 +56,8 @@ class PrimarySceneFunctionWidget(TextEditBubbleWidget):
         self._textedit.setText(self.function.text)
 
         margins(self, top=16)
+
+        shadow(self._textedit)
 
     @overrides
     def _textChanged(self):
@@ -88,13 +90,13 @@ class _StorylineAssociatedFunctionWidget(PrimarySceneFunctionWidget):
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
         super().enterEvent(event)
-        if self._plotRef:
-            self._btnProgress.setVisible(True)
+        if self._plotRef and not self._plotRef.data.charge:
+            fade_in(self._btnProgress)
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
         super().leaveEvent(event)
-        if not self._plotRef or not self._plotRef.data.charge:
+        if not self._plotRef or not self._plotRef.data.charge and not self._progressMenu.isVisible():
             self._btnProgress.setVisible(False)
 
     def plot(self) -> Optional[Plot]:
@@ -178,8 +180,6 @@ class PlotPrimarySceneFunctionWidget(_StorylineAssociatedFunctionWidget):
         self._textedit.setPlaceholderText("How does the story move forward")
         self._resetPlotStyle()
 
-        shadow(self._textedit)
-
     @overrides
     def _setPlotStyle(self, plot: Plot):
         super()._setPlotStyle(plot)
@@ -221,7 +221,6 @@ class CharacterPrimarySceneFunctionWidget(PrimarySceneFunctionWidget):
         wdgHeader.layout().addWidget(label('Character insight', bold=True), alignment=Qt.AlignmentFlag.AlignBottom)
         self.layout().insertWidget(0, wdgHeader, alignment=Qt.AlignmentFlag.AlignCenter)
         margins(self, top=1)
-        shadow(self._textedit)
 
         if self.function.character_id:
             character = entities_registry.character(str(self.function.character_id))
@@ -357,16 +356,16 @@ class SceneFunctionsWidget(QWidget):
 
         vbox(self)
         margins(self, left=15)
-        self.btnPrimary = push_btn(IconRegistry.from_name('mdi6.note-text-outline', 'grey'), 'Primary',
+        self.btnPrimary = push_btn(IconRegistry.from_name('mdi6.note-text-outline', 'grey'), 'Primary functions',
                                    transparent_=True)
         incr_icon(self.btnPrimary, 1)
         incr_font(self.btnPrimary, 1)
         self.btnPrimary.installEventFilter(OpacityEventFilter(self.btnPrimary, leaveOpacity=0.7))
         self.btnPrimaryPlus = tool_btn(IconRegistry.plus_icon('grey'), transparent_=True)
         self.btnPrimaryPlus.installEventFilter(OpacityEventFilter(self.btnPrimaryPlus, leaveOpacity=0.7))
-        self.menuPrimary = MenuWidget(self.btnPrimaryPlus)
+        self.menuPrimary = MenuWidget(self.btnPrimaryPlus, largeIcons=True)
         self.menuPrimary.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
-        self.menuPrimary.addSection('Select a primary function that this scene fulfils')
+        self.menuPrimary.addSection('Select a primary function that this scene fulfills')
         self.menuPrimary.addSeparator()
         self.menuPrimary.addAction(action('Advance story', IconRegistry.storylines_icon(),
                                           slot=partial(self._addPrimary, StoryElementType.Plot),
@@ -387,7 +386,7 @@ class SceneFunctionsWidget(QWidget):
                                           incr_font_=2))
         self.btnPrimary.clicked.connect(self.btnPrimaryPlus.click)
 
-        self.btnSecondary = push_btn(IconRegistry.from_name('fa5s.list', 'grey'), 'Secondary',
+        self.btnSecondary = push_btn(IconRegistry.from_name('fa5s.list', 'grey'), 'Secondary functions',
                                      transparent_=True)
         self.btnSecondary.installEventFilter(OpacityEventFilter(self.btnSecondary, leaveOpacity=0.7))
         incr_icon(self.btnSecondary, 1)
@@ -396,7 +395,7 @@ class SceneFunctionsWidget(QWidget):
         self.btnSecondaryPlus.installEventFilter(OpacityEventFilter(self.btnPrimaryPlus, leaveOpacity=0.7))
         self.menuSecondary = MenuWidget(self.btnSecondaryPlus)
         self.menuSecondary.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
-        self.menuSecondary.addSection('Select a secondary function that this scene also fulfils')
+        self.menuSecondary.addSection('Select a secondary function that this scene also fulfills')
         self.menuSecondary.addSeparator()
         self.menuSecondary.addAction(
             action('Setup', IconRegistry.setup_scene_icon('black'),

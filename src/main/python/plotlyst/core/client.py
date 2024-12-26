@@ -43,8 +43,8 @@ from plotlyst.core.domain import Novel, Character, Scene, Chapter, SceneStage, \
     three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
     default_tag_types, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterPreferences, TagReference, \
     ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding, Board, \
-    default_big_five_values, CharacterPlan, ManuscriptGoals, Diagram, DiagramData, default_events_map, \
-    default_character_networks, ScenePurposeType, StoryElement, SceneOutcome, ChapterType, SceneStructureItem, \
+    default_big_five_values, CharacterPlan, ManuscriptGoals, Diagram, DiagramData, default_character_networks, \
+    ScenePurposeType, StoryElement, SceneOutcome, ChapterType, SceneStructureItem, \
     DocumentProgress, ReaderQuestion, SceneReaderQuestion, ImageRef, SceneReaderInformation, \
     CharacterProfileSectionReference, CharacterMultiAttribute, default_character_profile, CharacterPersonality, \
     StrengthWeaknessAttribute, PremiseBuilder, SceneFunctions, Location, default_locations, TopicElement
@@ -190,7 +190,9 @@ class SceneInfo:
     structure: List[SceneStructureItem] = field(default_factory=list)
     questions: List[SceneReaderQuestion] = field(default_factory=list)
     info: List[SceneReaderInformation] = field(default_factory=list)
-    progress: int = 0
+    progress: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    plot_pos_progress: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    plot_neg_progress: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     functions: SceneFunctions = field(default_factory=SceneFunctions)
 
 
@@ -225,7 +227,7 @@ class NovelInfo:
     locations: List[Location] = field(default_factory=default_locations)
     board: Board = field(default_factory=Board)
     manuscript_goals: ManuscriptGoals = field(default_factory=ManuscriptGoals)
-    events_map: Diagram = field(default_factory=default_events_map)
+    events_map: Optional[Diagram] = field(default=None, metadata=config(exclude=exclude_if_empty))
     character_networks: List[Diagram] = field(default_factory=default_character_networks)
     manuscript_progress: Dict[str, DocumentProgress] = field(default_factory=dict,
                                                              metadata=config(exclude=exclude_if_empty))
@@ -590,7 +592,8 @@ class JsonClient:
                               document=info.document, manuscript=info.manuscript, drive=info.drive,
                               purpose=info.purpose, outcome=info.outcome, story_elements=info.story_elements,
                               structure=info.structure, questions=info.questions, info=info.info,
-                              progress=info.progress, functions=info.functions)
+                              progress=info.progress, plot_pos_progress=info.plot_pos_progress,
+                              plot_neg_progress=info.plot_neg_progress, functions=info.functions)
                 scenes.append(scene)
 
         tag_types = novel_info.tag_types
@@ -722,6 +725,7 @@ class JsonClient:
                          drive=scene.drive, purpose=scene.purpose, outcome=scene.outcome,
                          story_elements=scene.story_elements,
                          structure=scene.structure, questions=scene.questions, info=scene.info, progress=scene.progress,
+                         plot_pos_progress=scene.plot_pos_progress, plot_neg_progress=scene.plot_neg_progress,
                          functions=scene.functions)
         self.__persist_info(self.scenes_dir(novel), info)
 
@@ -825,6 +829,9 @@ class JsonClient:
         doc_file_path = novel_doc_dir.joinpath(self.__doc_file(doc.id))
         if os.path.exists(doc_file_path):
             os.remove(doc_file_path)
+
+        if doc.diagram is not None:
+            self.__delete_info(self.diagrams_dir(novel), doc.diagram.id)
 
         recursive(doc, lambda parent: parent.children, lambda p, child: self.__delete_doc(novel, child))
 

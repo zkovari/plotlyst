@@ -21,7 +21,6 @@ import datetime
 from functools import partial
 from typing import Optional, List, Dict
 
-import nltk
 import qtanim
 from PyQt6 import QtGui
 from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent, QSize, QSizeF, QRectF, \
@@ -32,7 +31,6 @@ from PyQt6.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyn
 from PyQt6.QtMultimedia import QSoundEffect
 from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit, QButtonGroup, QCalendarWidget, QTableView, \
     QPushButton, QToolButton, QWidgetItem
-from nltk import WhitespaceTokenizer
 from overrides import overrides
 from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins, vbox, line, bold, vline, decr_font, \
     underline, transparent, italic, decr_icon, pointy, vspacer
@@ -41,7 +39,8 @@ from qtmenu import MenuWidget, group
 from qttextedit import TextBlockState, remove_font, OBJECT_REPLACEMENT_CHARACTER, DashInsertionMode
 from qttextedit.api import AutoCapitalizationMode
 from qttextedit.ops import Heading2Operation, Heading3Operation, InsertListOperation, InsertNumberedListOperation, \
-    Heading1Operation
+    Heading1Operation, BoldOperation, ItalicOperation, UnderlineOperation, StrikethroughOperation, \
+    AlignLeftOperation, AlignCenterOperation, AlignRightOperation
 from qttextedit.util import EN_DASH, EM_DASH
 from textstat import textstat
 
@@ -68,7 +67,7 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.display import WordsDisplay, IconText
 from plotlyst.view.widget.input import TextEditBase, GrammarHighlighter, GrammarHighlightStyle, Toggle, TextEditorBase, \
-    HtmlPopupTextEditorToolbar
+    BasePopupTextEditorToolbar
 
 
 class TimerSetupWidget(QWidget, Ui_TimerSetupWidget):
@@ -408,24 +407,31 @@ class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
 
 
 class SentenceHighlighter(QSyntaxHighlighter):
+    DEFAULT_FOREGROUND_COLOR = '#dee2e6'
 
     def __init__(self, textedit: QTextEdit):
         super(SentenceHighlighter, self).__init__(textedit.document())
         self._editor = textedit
+        self._sentenceEnabled: bool = False
 
         self._hidden_format = QTextCharFormat()
-        self._hidden_format.setForeground(QColor('#dee2e6'))
+        self._hidden_format.setForeground(QColor(self.DEFAULT_FOREGROUND_COLOR))
 
         self._visible_format = QTextCharFormat()
-        self._visible_format.setForeground(Qt.GlobalColor.black)
+        self._visible_format.setForeground(QColor(RELAXED_WHITE_COLOR))
 
         self._prevBlock: Optional[QTextBlock] = None
         self._editor.cursorPositionChanged.connect(self.rehighlight)
 
+    def setSentenceHighlightEnabled(self, enabled: bool):
+        self._sentenceEnabled = enabled
+        self._hidden_format.setForeground(QColor('#38414A' if enabled else self.DEFAULT_FOREGROUND_COLOR))
+        self.rehighlight()
+
     @overrides
     def highlightBlock(self, text: str) -> None:
         self.setFormat(0, len(text), self._hidden_format)
-        if self._editor.textCursor().block() == self.currentBlock():
+        if self._sentenceEnabled and self._editor.textCursor().block() == self.currentBlock():
             text = self._editor.textCursor().block().text()
             finder = QTextBoundaryFinder(QTextBoundaryFinder.BoundaryType.Sentence, text)
             pos = self._editor.textCursor().positionInBlock()
@@ -438,37 +444,57 @@ class SentenceHighlighter(QSyntaxHighlighter):
             self.setFormat(prev_boundary, boundary - prev_boundary, self._visible_format)
 
 
-class NightModeHighlighter(QSyntaxHighlighter):
-    def __init__(self, textedit: QTextEdit):
-        super(NightModeHighlighter, self).__init__(textedit.document())
+# class NightModeHighlighter(QSyntaxHighlighter):
+#     def __init__(self, textedit: QTextEdit):
+#         super().__init__(textedit.document())
+#
+#         self._nightFormat = QTextCharFormat()
+#         self._nightFormat.setForeground(QColor(RELAXED_WHITE_COLOR))
+#
+#     @overrides
+#     def highlightBlock(self, text: str) -> None:
+#         self.setFormat(0, len(text), self._nightFormat)
 
-        self._nightFormat = QTextCharFormat()
-        self._nightFormat.setForeground(QColor(RELAXED_WHITE_COLOR))
 
-    @overrides
-    def highlightBlock(self, text: str) -> None:
-        self.setFormat(0, len(text), self._nightFormat)
+# class WordTagHighlighter(QSyntaxHighlighter):
+#     def __init__(self, textedit: QTextEdit):
+#         super().__init__(textedit.document())
+#
+#         self._adverbFormat = QTextCharFormat()
+#         self._adverbFormat.setBackground(QColor('#0a9396'))
+#         self.tokenizer = WhitespaceTokenizer()
+#
+#     @overrides
+#     def highlightBlock(self, text: str) -> None:
+#         span_generator = self.tokenizer.span_tokenize(text)
+#         spans = [x for x in span_generator]
+#         tokens = self.tokenizer.tokenize(text)
+#         tags = nltk.pos_tag(tokens)
+#
+#         for i, pos_tag in enumerate(tags):
+#             if pos_tag[1] == 'RB':
+#                 if len(spans) > i:
+#                     self.setFormat(spans[i][0], spans[i][1] - spans[i][0], self._adverbFormat)
 
 
-class WordTagHighlighter(QSyntaxHighlighter):
-    def __init__(self, textedit: QTextEdit):
-        super(WordTagHighlighter, self).__init__(textedit.document())
+class ManuscriptPopupTextEditorToolbar(BasePopupTextEditorToolbar):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setProperty('rounded', True)
+        self.setProperty('relaxed-white-bg', True)
+        margins(self, 5, 5, 5, 5)
 
-        self._adverbFormat = QTextCharFormat()
-        self._adverbFormat.setBackground(QColor('#0a9396'))
-        self.tokenizer = WhitespaceTokenizer()
-
-    @overrides
-    def highlightBlock(self, text: str) -> None:
-        span_generator = self.tokenizer.span_tokenize(text)
-        spans = [x for x in span_generator]
-        tokens = self.tokenizer.tokenize(text)
-        tags = nltk.pos_tag(tokens)
-
-        for i, pos_tag in enumerate(tags):
-            if pos_tag[1] == 'RB':
-                if len(spans) > i:
-                    self.setFormat(spans[i][0], spans[i][1] - spans[i][0], self._adverbFormat)
+        self.addTextEditorOperation(BoldOperation)
+        self.addTextEditorOperation(ItalicOperation)
+        self.addTextEditorOperation(UnderlineOperation)
+        self.addTextEditorOperation(StrikethroughOperation)
+        self.addSeparator()
+        self.addTextEditorOperation(AlignLeftOperation)
+        self.addTextEditorOperation(AlignCenterOperation)
+        self.addTextEditorOperation(AlignRightOperation)
+        self.addSeparator()
+        self.addTextEditorOperation(InsertListOperation)
+        self.addTextEditorOperation(InsertNumberedListOperation)
 
 
 class ManuscriptTextEdit(TextEditBase):
@@ -481,10 +507,8 @@ class ManuscriptTextEdit(TextEditBase):
                                               highlightStyle=GrammarHighlightStyle.BACKGOUND)
 
         self._sentenceHighlighter: Optional[SentenceHighlighter] = None
-        self._nightModeHighlighter: Optional[NightModeHighlighter] = None
-        self._wordTagHighlighter: Optional[WordTagHighlighter] = None
 
-        toolbar = HtmlPopupTextEditorToolbar()
+        toolbar = ManuscriptPopupTextEditorToolbar()
         toolbar.activate(self)
         self.setPopupWidget(toolbar)
 
@@ -551,38 +575,19 @@ class ManuscriptTextEdit(TextEditBase):
     def asyncCheckGrammar(self):
         self.highlighter.asyncRehighlight()
 
-    def clearHighlights(self):
+    def initSentenceHighlighter(self):
+        transparent(self)
+        self._sentenceHighlighter = SentenceHighlighter(self)
+
+    def clearSentenceHighlighter(self):
         if self._sentenceHighlighter is not None:
             gc(self._sentenceHighlighter)
             self._sentenceHighlighter = None
-        if self._nightModeHighlighter is not None:
-            gc(self._nightModeHighlighter)
-            self._nightModeHighlighter = None
-            self._setDefaultStyleSheet()
-        if self._wordTagHighlighter is not None:
-            gc(self._wordTagHighlighter)
-            self._wordTagHighlighter = None
 
-    def setNightModeEnabled(self, enabled: bool):
-        if enabled:
-            self._transparent()
-            self._nightModeHighlighter = NightModeHighlighter(self)
-        elif self._nightModeHighlighter is not None:
-            gc(self._nightModeHighlighter)
-            self._nightModeHighlighter = None
-            self._setDefaultStyleSheet()
+        self._setDefaultStyleSheet()
 
     def setSentenceHighlighterEnabled(self, enabled: bool):
-        if enabled:
-            self._sentenceHighlighter = SentenceHighlighter(self)
-        elif self._sentenceHighlighter is not None:
-            gc(self._sentenceHighlighter)
-            self._sentenceHighlighter = None
-
-    def setWordTagHighlighterEnabled(self, enabled: bool):
-        self.clearHighlights()
-        if enabled:
-            self._wordTagHighlighter = WordTagHighlighter(self)
+        self._sentenceHighlighter.setSentenceHighlightEnabled(enabled)
 
     def setScene(self, scene: Scene):
         self._sceneTextObject.setScenes([scene])
@@ -790,14 +795,14 @@ class ManuscriptTextEditor(TextEditorBase):
     def setMargins(self, left: int, top: int, right: int, bottom: int):
         self.textEdit.setViewportMargins(left, top, right, bottom)
 
-    def setNightModeEnabled(self, enabled: bool):
-        self.textEdit.setNightModeEnabled(enabled)
+    def initSentenceHighlighter(self):
+        self.textEdit.initSentenceHighlighter()
+
+    def clearSentenceHighlighter(self):
+        self.textEdit.clearSentenceHighlighter()
 
     def setSentenceHighlighterEnabled(self, enabled: bool):
         self.textEdit.setSentenceHighlighterEnabled(enabled)
-
-    def setWordTagHighlighterEnabled(self, enabled: bool):
-        self.textEdit.setWordTagHighlighterEnabled(enabled)
 
     @overrides
     def setFocus(self):
@@ -989,15 +994,11 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         self.btnTypewriterMode.setIcon(
             IconRegistry.from_name('mdi.typewriter', 'lightgrey', color_on=PLOTLYST_TERTIARY_COLOR))
         self.btnTypewriterMode.toggled.connect(self._toggle_typewriter_mode)
-        self.btnNightMode.setIcon(
-            IconRegistry.from_name('mdi.weather-night', 'lightgrey', color_on=PLOTLYST_TERTIARY_COLOR))
-        self.btnNightMode.toggled.connect(self._toggle_manuscript_night_mode)
         self.btnWordCount.setIcon(IconRegistry.from_name('mdi6.counter', 'lightgrey', color_on=PLOTLYST_TERTIARY_COLOR))
         self.btnWordCount.clicked.connect(self._wordCountClicked)
 
         decr_font(self.btnFocus, 2)
         decr_font(self.btnTypewriterMode, 2)
-        decr_font(self.btnNightMode, 2)
         decr_font(self.btnWordCount, 2)
 
     def activate(self, editor: ManuscriptTextEditor, timer: Optional[TimerModel] = None):
@@ -1015,13 +1016,12 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         self.editor.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
         self.wdgBottom.setVisible(True)
+        self.editor.initSentenceHighlighter()
         if self._firstInit:
-            self.btnNightMode.setChecked(True)
             self.btnTypewriterMode.setChecked(True)
             self._firstInit = False
         else:
             self._toggle_manuscript_focus(self.btnFocus.isChecked())
-            self._toggle_manuscript_night_mode(self.btnNightMode.isChecked())
             self._toggle_typewriter_mode(self.btnTypewriterMode.isChecked())
 
         self._wordCountClicked(self.btnWordCount.isChecked())
@@ -1034,8 +1034,7 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         self.editor.setTitleVisible(True)
         self.editor.removeEventFilterFromEditors(self)
         self.editor.setMargins(30, 30, 30, 30)
-        self._toggle_manuscript_focus(False)
-        self._toggle_manuscript_night_mode(False)
+        self.editor.clearSentenceHighlighter()
         self.editor = None
         self.setMouseTracking(False)
         self.wdgDistractionFreeEditor.setMouseTracking(False)
@@ -1077,16 +1076,7 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
                 qtanim.fade_out(self.lblWords, 150, teardown=lambda: self.lblWords.setGraphicsEffect(None))
 
     def _toggle_manuscript_focus(self, toggled: bool):
-        if toggled:
-            if self.btnNightMode.isChecked():
-                self.btnNightMode.setChecked(False)
         self.editor.setSentenceHighlighterEnabled(toggled)
-
-    def _toggle_manuscript_night_mode(self, toggled: bool):
-        if toggled:
-            if self.btnFocus.isChecked():
-                self.btnFocus.setChecked(False)
-        self.editor.setNightModeEnabled(toggled)
 
     def _toggle_typewriter_mode(self, toggled: bool):
         viewportMargins = self.editor.textEdit.viewportMargins()

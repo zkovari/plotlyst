@@ -73,6 +73,7 @@ class CharacterEditor(QObject, EventListener):
         self.ui.tabAttributes.currentChanged.connect(self._tab_changed)
         self.ui.textEdit.setTitleVisible(False)
         self.ui.textEdit.setWidthPercentage(95)
+        self.ui.textEdit.textEdit.setBlockPlaceholderEnabled(True)
 
         self.ui.btnMale.setIcon(IconRegistry.male_gender_icon())
         self.ui.btnMale.installEventFilter(OpacityEventFilter(parent=self.ui.btnMale, ignoreCheckedButton=True))

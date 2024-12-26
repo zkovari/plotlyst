@@ -370,7 +370,9 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
 
     @overrides
     def event_received(self, event: Event):
-        if isinstance(event, CharacterDeletedEvent):
+        if self.plot.plot_type == PlotType.Global:
+            pass
+        elif isinstance(event, CharacterDeletedEvent):
             if self._characterSelector.character() and self._characterSelector.character().id == event.character.id:
                 self._characterSelector.reset()
             if self._characterRelationSelector and self._characterRelationSelector.character() and self._characterRelationSelector.character().id == event.character.id:
@@ -459,7 +461,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         GenrePrincipleSelectorDialog.popup(self.plot, object)
 
     def _addDynamicGroup(self, groupType: DynamicPlotPrincipleGroupType):
-        wdg = self._dynamicPrinciplesEditor.addGroup(groupType)
+        wdg = self._dynamicPrinciplesEditor.addNewGroup(groupType)
         wdg.show()
         self.scrollArea.ensureWidgetVisible(wdg, 50, 150)
 
@@ -567,7 +569,7 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         self.btnImpactMatrix.setIcon(IconRegistry.from_name('mdi6.camera-metering-matrix'))
         self.btnImpactMatrix.clicked.connect(self._displayImpactMatrix)
 
-        menu = MenuWidget(self.btnAdd)
+        menu = MenuWidget(self.btnAdd, largeIcons=True)
         menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         menu.addAction(
             action('Main plot', IconRegistry.storylines_icon(), slot=lambda: self.newPlot(PlotType.Main),
@@ -579,7 +581,7 @@ class PlotEditor(QWidget, Ui_PlotEditor):
             action('Subplot', IconRegistry.subplot_icon(), lambda: self.newPlot(PlotType.Subplot),
                    tooltip="A secondary storyline to complement the main plot", incr_font_=1))
 
-        submenu = MenuWidget()
+        submenu = MenuWidget(largeIcons=True)
         submenu.setTitle('Other')
         submenu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         submenu.addAction(action('Relationship plot', IconRegistry.from_name('fa5s.people-arrows'),
