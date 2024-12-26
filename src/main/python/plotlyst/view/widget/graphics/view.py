@@ -162,13 +162,14 @@ class NetworkGraphicsView(BaseGraphicsView):
     def __init__(self, parent=None, palette: Optional[Palette] = None):
         super().__init__(parent, palette)
         if palette:
-            self.setBackgroundBrush(QColor(palette.bg_color))
+            # widget.setStyleSheet(f'{widget.__class__.__name__} {{border: 0px; background-color: rgba(0, 0, 0, 0);}}')
+            self.setStyleSheet('NetworkGraphicsView {border: 1px solid lightgrey; background-color: rgba(0, 0, 0, 0);}')
         else:
-            self.setBackgroundBrush(QColor('#F2F2F2'))
+            self.setFrameShape(QFrame.Shape.NoFrame)
+
         self._diagram: Optional[Diagram] = None
         self._scene = self._initScene()
         self.setScene(self._scene)
-        self.setFrameShape(QFrame.Shape.NoFrame)
 
         self._wdgZoomBar = ZoomBar(self, palette)
         self._wdgZoomBar.zoomed.connect(self._scale)

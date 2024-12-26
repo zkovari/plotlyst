@@ -189,6 +189,7 @@ class WorldBuildingView(AbstractNovelView):
 
     def _update_style(self):
         trans_bg_color = to_rgba_str(QColor(self._palette.bg_color), 235)
+        print(trans_bg_color)
         self.ui.wdgCenterEditor.setStyleSheet(f'''
                 #wdgCenterEditor {{
                     background: {trans_bg_color};

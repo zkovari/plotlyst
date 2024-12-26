@@ -38,7 +38,7 @@ from qttextedit.ops import Heading3Operation, InsertListOperation, InsertNumbere
 
 from plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityElement, WorldBuildingEntityElementType, \
     BackstoryEvent, Variable, VariableType, \
-    Topic, Location, WorldConceitType, WorldConceit
+    Topic, Location, WorldConceitType, WorldConceit, Diagram, DiagramData
 from plotlyst.env import app_env
 from plotlyst.service.image import upload_image, load_image
 from plotlyst.service.persistence import RepositoryPersistenceManager
@@ -891,6 +891,7 @@ class MindmapElementEditor(WorldBuildingEntityElementWidget):
         self._mindmapView = EventsMindMapView(self.novel, palette=palette)
         self._mindmapView.setMinimumHeight(600)
         self.layout().addWidget(self._mindmapView)
+        self._mindmapView.setDiagram(element.diagram)
 
         self.layout().addWidget(self.btnAdd, alignment=Qt.AlignmentFlag.AlignCenter)
         self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
@@ -934,6 +935,10 @@ class SectionElementEditor(WorldBuildingEntityElementWidget):
 
     def _addBlock(self, wdg: WorldBuildingEntityElementWidget, type_: WorldBuildingEntityElementType):
         element = WorldBuildingEntityElement(type_)
+        if type_ == WorldBuildingEntityElementType.Mindmap:
+            element.diagram = Diagram()
+            element.diagram.data = DiagramData()
+            element.diagram.loaded = True
         newBlockWdg = self.__initBlockWidget(element)
 
         index = self.element.blocks.index(wdg.element)
