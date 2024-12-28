@@ -26,7 +26,7 @@ from PyQt6.QtCore import pyqtSignal, Qt, QSize, QMimeData, QPointF, QEvent
 from PyQt6.QtGui import QFont, QResizeEvent, QMouseEvent, QColor, QIcon, QImage, \
     QShowEvent, QPixmap, QCursor, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QDialog, QGridLayout, QSlider, QToolButton, QButtonGroup, \
-    QLabel, QToolTip, QSpacerItem, QSizePolicy
+    QLabel, QToolTip, QSpacerItem, QSizePolicy, QGraphicsView
 from overrides import overrides
 from qthandy import vspacer, clear_layout, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy, \
     grid, flow, spacer, line, gc, translucent, incr_font, vline, bold
@@ -49,8 +49,9 @@ from plotlyst.view.layout import group
 from plotlyst.view.style.text import apply_text_color
 from plotlyst.view.widget.button import DotsMenuButton
 from plotlyst.view.widget.display import Icon, PopupDialog, DotsDragIcon
+from plotlyst.view.widget.graphics import NetworkScene
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit, MarkdownPopupTextEditorToolbar
-from plotlyst.view.widget.story_map import EventsMindMapView
+from plotlyst.view.widget.story_map import EventsMindMapView, EventsMindMapScene
 from plotlyst.view.widget.timeline import TimelineWidget, BackstoryCard, TimelineTheme
 from plotlyst.view.widget.topic import TopicSelectionDialog
 from plotlyst.view.widget.utility import IconSelectorDialog, ColorSelectorButton
@@ -883,12 +884,32 @@ class ConceitsElementEditor(WorldBuildingEntityElementWidget):
                     return
 
 
+class WorldBuildingMindmapScene(EventsMindMapScene):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(novel, parent)
+
+
+class WorldBuildingMindMapView(EventsMindMapView):
+    def __init__(self, novel: Novel, palette: WorldBuildingPalette, parent=None):
+        super().__init__(novel, parent, palette)
+        self.setScalingEnabled(False)
+        self.setResizeAnchor(QGraphicsView.ViewportAnchor.NoAnchor)
+        self.setTransformationAnchor(QGraphicsView.ViewportAnchor.NoAnchor)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._wdgZoomBar.setHidden(True)
+
+    @overrides
+    def _initScene(self) -> NetworkScene:
+        return WorldBuildingMindmapScene(self._novel)
+
+
 class MindmapElementEditor(WorldBuildingEntityElementWidget):
     def __init__(self, novel: Novel, element: WorldBuildingEntityElement, palette: WorldBuildingPalette, parent=None):
         super().__init__(novel, element, parent)
         self._palette = palette
 
-        self._mindmapView = EventsMindMapView(self.novel, palette=palette)
+        self._mindmapView = WorldBuildingMindMapView(self.novel, palette=palette)
         self._mindmapView.setMinimumHeight(600)
         self.layout().addWidget(self._mindmapView)
         self._mindmapView.setDiagram(element.diagram)
