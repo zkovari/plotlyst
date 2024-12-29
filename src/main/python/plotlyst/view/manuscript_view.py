@@ -82,6 +82,8 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnExport.setIcon(IconRegistry.from_name('mdi.file-export-outline', 'black', PLOTLYST_MAIN_COLOR))
         self.ui.btnSettings.setIcon(IconRegistry.cog_icon(color_on=PLOTLYST_MAIN_COLOR))
 
+        self.ui.btnReadability.setHidden(True)
+
         self.ui.btnTreeToggle.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
         self.ui.btnTreeToggleSecondary.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
         self.ui.btnTreeToggleSecondary.setHidden(True)
@@ -91,7 +93,7 @@ class ManuscriptView(AbstractNovelView):
         self._btnGroupSideBar = ExclusiveOptionalButtonGroup()
         self._btnGroupSideBar.addButton(self.ui.btnSceneInfo)
         self._btnGroupSideBar.addButton(self.ui.btnGoals)
-        self._btnGroupSideBar.addButton(self.ui.btnReadability)
+        # self._btnGroupSideBar.addButton(self.ui.btnReadability)
         self._btnGroupSideBar.addButton(self.ui.btnProgress)
         self._btnGroupSideBar.addButton(self.ui.btnExport)
         self._btnGroupSideBar.addButton(self.ui.btnSettings)
@@ -104,7 +106,7 @@ class ManuscriptView(AbstractNovelView):
                               [(self.ui.btnSceneInfo, self.ui.pageInfo), (self.ui.btnGoals, self.ui.pageGoal),
                                (self.ui.btnExport, self.ui.pageExport),
                                (self.ui.btnProgress, self.ui.pageProgress),
-                               (self.ui.btnReadability, self.ui.pageReadability),
+                               # (self.ui.btnReadability, self.ui.pageReadability),
                                (self.ui.btnSettings, self.ui.pageSettings)])
 
         bold(self.ui.lblWordCount)
@@ -159,9 +161,9 @@ class ManuscriptView(AbstractNovelView):
         self.ui.pageGoal.layout().addWidget(self._chartProgressView, alignment=Qt.AlignmentFlag.AlignTop)
         self.ui.pageGoal.layout().addWidget(vspacer())
 
-        self._wdgReadability = ReadabilityWidget()
-        self.ui.pageReadability.layout().addWidget(self._wdgReadability, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.ui.pageReadability.layout().addWidget(vspacer())
+        # self._wdgReadability = ReadabilityWidget()
+        # self.ui.pageReadability.layout().addWidget(self._wdgReadability, alignment=Qt.AlignmentFlag.AlignCenter)
+        # self.ui.pageReadability.layout().addWidget(vspacer())
 
         self._exportWidget = ManuscriptExportWidget(self.novel)
         self.ui.pageExport.layout().addWidget(self._exportWidget)
@@ -360,14 +362,14 @@ class ManuscriptView(AbstractNovelView):
             if self._cbSpellCheck.isChecked():
                 self.ui.textEdit.setGrammarCheckEnabled(True)
                 self.ui.textEdit.asyncCheckGrammar()
-            if self.ui.btnReadability.isChecked():
-                self._wdgReadability.checkTextDocument(self.ui.textEdit.document())
+            # if self.ui.btnReadability.isChecked():
+            #     self._wdgReadability.checkTextDocument(self.ui.textEdit.document())
 
     def _text_changed(self):
         wc = self.ui.textEdit.statistics().word_count
         self.ui.lblWordCount.setWordCount(wc)
         self._update_story_goal()
-        self._wdgReadability.setTextDocumentUpdated(self.ui.textEdit.document())
+        # self._wdgReadability.setTextDocumentUpdated(self.ui.textEdit.document())
 
     def _text_selection_changed(self):
         if self.ui.textEdit.textEdit.textCursor().hasSelection():
@@ -437,7 +439,7 @@ class ManuscriptView(AbstractNovelView):
             self.ui.btnReadability.setChecked(False)
             return
 
-        self._wdgReadability.checkTextDocument(self.ui.textEdit.document())
+        # self._wdgReadability.checkTextDocument(self.ui.textEdit.document())
 
     def _scene_separator_clicked(self, scene: Scene):
         if not self.ui.btnSceneInfo.isChecked():
