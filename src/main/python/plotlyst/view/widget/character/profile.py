@@ -1966,22 +1966,22 @@ class CharacterProfileEditor(QWidget):
                 wdgTraits.save()
 
 
-# @spawn
-class CharacterOnboardingPopup(PopupDialog):
+class CharacterNameEditorPopup(PopupDialog):
     def __init__(self, character: Character, parent=None):
         super().__init__(parent)
         self._character = character
 
         self.frame.layout().setSpacing(5)
+        self.frame.layout().setContentsMargins(20, 15, 20, 10)
 
-        self.title = label('Create a new character', h4=True)
+        self.title = label('Edit character', h4=True)
 
         self.lineName = QLineEdit()
         self.lineName.setPlaceholderText('Character name')
         self.lineName.setProperty('white-bg', True)
         self.lineName.setProperty('rounded', True)
         incr_font(self.lineName, 2)
-        self.lineName.textEdited.connect(self._nameEdited)
+        self.lineName.textChanged.connect(self._nameEdited)
 
         self.lineName.installEventFilter(self)
 
@@ -1989,9 +1989,13 @@ class CharacterOnboardingPopup(PopupDialog):
         self.lineDisplayName.setProperty('muted-bg', True)
         self.lineDisplayName.setProperty('rounded', True)
         incr_font(self.lineDisplayName)
-        self.lineDisplayName.setDisabled(True)
+        if not self._character.alias:
+            self.lineDisplayName.setDisabled(True)
+        self.lineDisplayName.setText(self._character.alias)
         self.lineDisplayName.textChanged.connect(self._aliasChanged)
         self.lineDisplayName.installEventFilter(self)
+
+        self.lineName.setText(self._character.name)
 
         self.nameIcon = Icon()
         self.nameIcon.setIcon(IconRegistry.character_icon('grey'))
@@ -2021,7 +2025,49 @@ class CharacterOnboardingPopup(PopupDialog):
                 vertical=False, margin=0, spacing=0
             )
         )
-        self.frame.layout().addWidget(line(color='lightgrey'))
+
+        self.btnConfirm.setHidden(True)
+
+        self.frame.layout().addWidget(group(self.btnCancel, self.btnConfirm, margin_top=20),
+                                      alignment=Qt.AlignmentFlag.AlignRight)
+
+    def display(self) -> bool:
+        # self.lineName.setFocus()
+        result = self.exec()
+
+        if result == QDialog.DialogCode.Accepted:
+            return True
+        return False
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.KeyPress and event.key() == Qt.Key.Key_Return:
+            QTimer.singleShot(10, self.btnConfirm.click)
+            return True
+        return super().eventFilter(watched, event)
+
+    def _nameEdited(self, name: str):
+        self.lineDisplayName.setEnabled(True)
+        self.lineDisplayName.setPlaceholderText(name)
+        self._character.name = name
+        if not self._character.prefs.avatar.use_initial:
+            self._character.prefs.avatar.allow_initial()
+
+        completer = QCompleter(name.split(), self.lineDisplayName)
+        completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.lineDisplayName.setCompleter(completer)
+
+    def _aliasChanged(self, alias: str):
+        self._character.alias = alias
+
+
+class CharacterOnboardingPopup(CharacterNameEditorPopup):
+    def __init__(self, character: Character, parent=None):
+        super().__init__(character, parent)
+
+        self.title.setText('Create a new character')
+        insert_before_the_end(self.frame, line(color='lightgrey'))
+        self.btnConfirm.setVisible(True)
 
         self.personalityFrame = frame()
         self.personalityFrame.setProperty('large-rounded', True)
@@ -2053,9 +2099,9 @@ class CharacterOnboardingPopup(PopupDialog):
         self.personalityFrame.layout().addWidget(self.btnLoveStyle, 1, 0)
         self.personalityFrame.layout().addWidget(self.btnWorkStyle, 1, 1)
 
-        self.frame.layout().addWidget(label('Personality', description=True, decr_font_diff=1),
+        insert_before_the_end(self.frame, label('Personality', description=True, decr_font_diff=1),
                                       alignment=Qt.AlignmentFlag.AlignCenter)
-        self.frame.layout().addWidget(self.personalityFrame, alignment=Qt.AlignmentFlag.AlignCenter)
+        insert_before_the_end(self.frame, self.personalityFrame, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self.primarySelectors = frame()
         self.primarySelectors.setProperty('large-rounded', True)
@@ -2103,44 +2149,15 @@ class CharacterOnboardingPopup(PopupDialog):
         filters.layout().addWidget(btnMajor)
         filters.layout().addWidget(btnSecondary)
         filters.layout().addWidget(btnMinor)
-        self.frame.layout().addWidget(filters,
-                                      alignment=Qt.AlignmentFlag.AlignCenter)
-        self.frame.layout().addWidget(self.primarySelectors, alignment=Qt.AlignmentFlag.AlignCenter)
+        insert_before_the_end(self.frame, filters,
+                              alignment=Qt.AlignmentFlag.AlignCenter)
+        insert_before_the_end(self.frame, self.primarySelectors, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        self.frame.layout().addWidget(label('You can customize these later', description=True, decr_font_diff=2), alignment=Qt.AlignmentFlag.AlignRight)
+        insert_before_the_end(self.frame, label('You can customize these later', description=True, decr_font_diff=2),
+                              alignment=Qt.AlignmentFlag.AlignRight)
 
-        self.frame.layout().addWidget(group(self.btnCancel, self.btnConfirm, margin_top=20),
-                                      alignment=Qt.AlignmentFlag.AlignRight)
-        self.frame.layout().setContentsMargins(20, 15, 20, 10)
-
-    def display(self) -> bool:
-        self.lineName.setFocus()
-        result = self.exec()
-
-        if result == QDialog.DialogCode.Accepted:
-            return True
-        return False
-
-    @overrides
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Type.KeyPress and event.key() == Qt.Key.Key_Return:
-            QTimer.singleShot(10, self.btnConfirm.click)
-            return True
-        return super().eventFilter(watched, event)
-
-    def _nameEdited(self, name: str):
-        self.lineDisplayName.setEnabled(True)
-        self.lineDisplayName.setPlaceholderText(name)
-        self._character.name = name
-        if not self._character.prefs.avatar.use_initial:
-            self._character.prefs.avatar.allow_initial()
-
-        completer = QCompleter(name.split(), self.lineDisplayName)
-        completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        self.lineDisplayName.setCompleter(completer)
-
-    def _aliasChanged(self, alias: str):
-        self._character.alias = alias
+        # self.frame.layout().addWidget(group(self.btnCancel, self.btnConfirm, margin_top=20),
+        #                               alignment=Qt.AlignmentFlag.AlignRight)
 
     def _sectionToggled(self, setting: CharacterProfileSectionType, toggled: bool):
         for ref in self._character.profile:

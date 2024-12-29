@@ -48,23 +48,44 @@
        <property name="topMargin">
         <number>5</number>
        </property>
-       <item alignment="Qt::AlignLeft">
-        <widget class="ReturnButton" name="btnClose">
-         <property name="cursor">
-          <cursorShape>PointingHandCursor</cursorShape>
-         </property>
-         <property name="focusPolicy">
-          <enum>Qt::ClickFocus</enum>
-         </property>
-         <property name="text">
-          <string>Back</string>
-         </property>
-         <property name="shortcut">
-          <string>Return</string>
-         </property>
-         <property name="return" stdset="0">
-          <bool>true</bool>
-         </property>
+       <item>
+        <widget class="QWidget" name="wdgToolbar" native="true">
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item alignment="Qt::AlignLeft">
+           <widget class="ReturnButton" name="btnClose">
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="focusPolicy">
+             <enum>Qt::ClickFocus</enum>
+            </property>
+            <property name="text">
+             <string>Back</string>
+            </property>
+            <property name="shortcut">
+             <string>Return</string>
+            </property>
+            <property name="return" stdset="0">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
        <item>
@@ -451,8 +472,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>703</width>
-            <height>485</height>
+            <width>858</width>
+            <height>477</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -609,8 +630,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>467</width>
-             <height>545</height>
+             <width>327</width>
+             <height>550</height>
             </rect>
            </property>
            <property name="sizePolicy">
@@ -693,8 +714,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>100</width>
-             <height>30</height>
+             <width>96</width>
+             <height>26</height>
             </rect>
            </property>
            <property name="relaxed-white-bg" stdset="0">

@@ -53,7 +53,7 @@ from plotlyst.view.widget.character.comp import CharacterComparisonWidget, \
 from plotlyst.view.widget.character.comp import CharactersTreeView
 from plotlyst.view.widget.character.network import CharacterNetworkView
 from plotlyst.view.widget.character.prefs import CharactersPreferencesWidget
-from plotlyst.view.widget.character.profile import CharacterOnboardingPopup
+from plotlyst.view.widget.character.profile import CharacterOnboardingPopup, CharacterNameEditorPopup
 from plotlyst.view.widget.characters import CharactersProgressWidget
 from plotlyst.view.widget.tour.core import CharacterNewButtonTourEvent, TourEvent, \
     CharacterCardTourEvent, CharacterPerspectivesTourEvent, CharacterPerspectiveCardsTourEvent, \
@@ -250,7 +250,9 @@ class CharactersView(AbstractNovelView):
 
     def _show_card_menu(self, card: CharacterCard, pos: QPoint):
         menu = MenuWidget()
-        menu.addAction(action('Edit', IconRegistry.edit_icon(), self._on_edit))
+        menu.addAction(action('Edit profile', IconRegistry.edit_icon(), self._on_edit))
+        menu.addAction(
+            action('Edit displayed name', IconRegistry.from_name('mdi.badge-account-outline'), self._on_edit_name))
         menu.addSeparator()
         action_ = action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
         action_.setDisabled(self.novel.is_readonly())
@@ -318,6 +320,15 @@ class CharactersView(AbstractNovelView):
 
         if character:
             self._edit_character(character)
+
+    def _on_edit_name(self):
+        character = self.selected_card.character
+        CharacterNameEditorPopup.popup(character)
+        self.repo.update_character(character)
+        self.selected_card.refresh()
+
+        emit_event(self.novel, CharacterChangedEvent(self, character))
+        self.refresh()
 
     @busy
     def _edit_character(self, character: Character):
