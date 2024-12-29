@@ -348,8 +348,13 @@ class CharactersView(AbstractNovelView):
         self.repo.insert_character(self.novel, character)
         card = self.__init_card_widget(character)
         self.ui.cards.addCard(card)
+
         if CharacterOnboardingPopup.popup(character):
             self._edit_character(character)
+        else:
+            card.refresh()
+
+            emit_event(self.novel, CharacterChangedEvent(self, character))
 
     @busy
     def _on_delete(self, checked: bool):

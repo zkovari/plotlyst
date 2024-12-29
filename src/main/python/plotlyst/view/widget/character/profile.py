@@ -2033,6 +2033,12 @@ class CharacterOnboardingPopup(PopupDialog):
                                                   personalityType=NovelSetting.Character_love_style)
         self.btnWorkStyle = self.__selectorButton('Work style', 'fa5s.briefcase', small=True,
                                                   personalityType=NovelSetting.Character_work_style)
+
+        self.btnEnneagram.setChecked(self._character.prefs.toggled(NovelSetting.Character_enneagram))
+        self.btnMbti.setChecked(self._character.prefs.toggled(NovelSetting.Character_mbti))
+        self.btnLoveStyle.setChecked(self._character.prefs.toggled(NovelSetting.Character_love_style))
+        self.btnWorkStyle.setChecked(self._character.prefs.toggled(NovelSetting.Character_work_style))
+
         self.btnMbti.setMinimumWidth(self.btnEnneagram.sizeHint().width())
         self.btnLoveStyle.setMinimumWidth(self.btnEnneagram.sizeHint().width())
         self.btnWorkStyle.setMinimumWidth(self.btnEnneagram.sizeHint().width())
@@ -2104,6 +2110,8 @@ class CharacterOnboardingPopup(PopupDialog):
         self.lineDisplayName.setEnabled(True)
         self.lineDisplayName.setPlaceholderText(name)
         self._character.name = name
+        if not self._character.prefs.avatar.use_initial:
+            self._character.prefs.avatar.allow_initial()
 
         completer = QCompleter(name.split(), self.lineDisplayName)
         completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
