@@ -359,7 +359,6 @@ class ProfileSectionWidget(ProfileFieldWidget):
                                         properties=['no-menu', 'plain'])
             if not app_env.is_mac():
                 decr_font(self._btnPrimary)
-            decr_font(self._btnPrimary)
             decr_icon(self._btnPrimary, 4)
             self._btnPrimary.installEventFilter(OpacityEventFilter(self._btnPrimary, leaveOpacity=0.7))
             fields = self.context.primaryFields()
