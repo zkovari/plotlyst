@@ -1984,12 +1984,15 @@ class CharacterOnboardingPopup(PopupDialog):
         incr_font(self.lineName, 2)
         self.lineName.textEdited.connect(self._nameEdited)
 
+        self.lineName.installEventFilter(self)
+
         self.lineDisplayName = QLineEdit()
         self.lineDisplayName.setProperty('muted-bg', True)
         self.lineDisplayName.setProperty('rounded', True)
         incr_font(self.lineDisplayName)
         self.lineDisplayName.setDisabled(True)
         self.lineDisplayName.textChanged.connect(self._aliasChanged)
+        self.lineDisplayName.installEventFilter(self)
 
         self.nameIcon = Icon()
         self.nameIcon.setIcon(IconRegistry.character_icon('grey'))
@@ -2026,12 +2029,16 @@ class CharacterOnboardingPopup(PopupDialog):
         grid(self.personalityFrame, margin=8)
 
         self.btnEnneagram = self.__selectorButton('Enneagram', 'mdi.numeric-9-circle', small=True,
+                                                  tooltip='Consider enneagram personality type for this character',
                                                   personalityType=NovelSetting.Character_enneagram)
         self.btnMbti = self.__selectorButton('MBTI', 'mdi.head-question-outline', small=True,
+                                             tooltip='Consider MBTI personality type for this character',
                                              personalityType=NovelSetting.Character_mbti)
         self.btnLoveStyle = self.__selectorButton('Love style', 'fa5s.heart', small=True,
+                                                  tooltip="Consider the character's preferred love style",
                                                   personalityType=NovelSetting.Character_love_style)
         self.btnWorkStyle = self.__selectorButton('Work style', 'fa5s.briefcase', small=True,
+                                                  tooltip="Consider the character's most typical working style",
                                                   personalityType=NovelSetting.Character_work_style)
 
         self.btnEnneagram.setChecked(self._character.prefs.toggled(NovelSetting.Character_enneagram))
@@ -2056,18 +2063,25 @@ class CharacterOnboardingPopup(PopupDialog):
         grid(self.primarySelectors, margin=6)
 
         self.btnFaculties = self.__selectorButton('Faculties', 'mdi6.head-lightbulb',
+                                                  tooltip="IQ, emotional intelligence, rationality, willpower, creativity",
                                                   sectionType=CharacterProfileSectionType.Faculties)
         self.btnPhilosophy = self.__selectorButton('Philosophy', 'mdi.infinity',
+                                                   tooltip="Consider the character's values",
                                                    sectionType=CharacterProfileSectionType.Philosophy)
         self.btnStrengths = self.__selectorButton('Strengths and Weaknesses', 'mdi.arm-flex',
+                                                  tooltip="Consider the character's strengths and weaknesses",
                                                   sectionType=CharacterProfileSectionType.Strengths)
         self.btnFlaws = self.__selectorButton('Flaws', 'fa5s.virus',
+                                              tooltip="Consider the character's significant flaws",
                                               sectionType=CharacterProfileSectionType.Flaws)
         self.btnBaggage = self.__selectorButton('Baggage', 'fa5s.heart-broken',
+                                                tooltip="Consider the character's ghosts, wounds, misbeliefs, demons, or fears",
                                                 sectionType=CharacterProfileSectionType.Baggage)
         self.btnGoal = self.__selectorButton('Goals', 'mdi.target',
+                                             tooltip="Goal, conflict, motivation, stakes, and methods",
                                              sectionType=CharacterProfileSectionType.Goals)
         self.btnLack = self.__selectorButton('Lack', 'ri.key-fill',
+                                             tooltip="An emptiness or absence the character feels in their life",
                                              sectionType=CharacterProfileSectionType.Lack)
         self.btnFaculties.setMinimumWidth(self.btnPhilosophy.sizeHint().width())
         self.primarySelectors.layout().addWidget(self.btnFaculties, 0, 0)
@@ -2094,6 +2108,8 @@ class CharacterOnboardingPopup(PopupDialog):
                                       alignment=Qt.AlignmentFlag.AlignCenter)
         self.frame.layout().addWidget(self.primarySelectors, alignment=Qt.AlignmentFlag.AlignCenter)
 
+        self.frame.layout().addWidget(label('You can customize these later', description=True, decr_font_diff=2), alignment=Qt.AlignmentFlag.AlignRight)
+
         self.frame.layout().addWidget(group(self.btnCancel, self.btnConfirm, margin_top=20),
                                       alignment=Qt.AlignmentFlag.AlignRight)
         self.frame.layout().setContentsMargins(20, 15, 20, 10)
@@ -2105,6 +2121,13 @@ class CharacterOnboardingPopup(PopupDialog):
         if result == QDialog.DialogCode.Accepted:
             return True
         return False
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.KeyPress and event.key() == Qt.Key.Key_Return:
+            QTimer.singleShot(10, self.btnConfirm.click)
+            return True
+        return super().eventFilter(watched, event)
 
     def _nameEdited(self, name: str):
         self.lineDisplayName.setEnabled(True)
@@ -2157,12 +2180,13 @@ class CharacterOnboardingPopup(PopupDialog):
         self.btnLack.setChecked(False)
         self.btnBaggage.setChecked(False)
 
-    def __selectorButton(self, text: str, icon: str, small: bool = False,
+    def __selectorButton(self, text: str, icon: str, small: bool = False, tooltip: str = '',
                          sectionType: Optional[CharacterProfileSectionType] = None,
                          personalityType: Optional[NovelSetting] = None) -> SelectorToggleButton:
         btn = SelectorToggleButton()
         btn.setText(text)
         btn.setIcon(IconRegistry.from_name(icon))
+        btn.setToolTip(tooltip)
         btn.setChecked(True)
 
         if small:
