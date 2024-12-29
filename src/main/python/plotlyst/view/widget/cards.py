@@ -101,7 +101,7 @@ class Card(QFrame):
         self._setStyleSheet()
 
     def refresh(self):
-        pass
+        self.setGraphicsEffect(None)
 
     def quickRefresh(self):
         pass
@@ -168,7 +168,8 @@ class CharacterCard(Ui_CharacterCard, Card):
 
     @overrides
     def refresh(self):
-        self.textName.setText(self.character.name)
+        super().refresh()
+        self.textName.setText(self.character.displayed_name())
         self.textName.setAlignment(Qt.AlignmentFlag.AlignCenter)
         set_avatar(self.lblPic, self.character, size=118)
 
@@ -228,6 +229,7 @@ class SceneCard(Ui_SceneCard, Card):
 
     @overrides
     def refresh(self):
+        super().refresh()
         self.quickRefresh()
         self.textSynopsis.setText(self.scene.synopsis)
 

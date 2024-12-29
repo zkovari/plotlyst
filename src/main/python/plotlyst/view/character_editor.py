@@ -22,7 +22,7 @@ from functools import partial
 from typing import Optional
 
 import qtanim
-from PyQt6.QtCore import pyqtSignal, QObject, QTimer
+from PyQt6.QtCore import pyqtSignal, QObject, QTimer, Qt
 from PyQt6.QtWidgets import QWidget, QAbstractButton, QLineEdit, QCompleter
 from overrides import overrides
 from qthandy import translucent, bold, italic, incr_font
@@ -39,14 +39,14 @@ from plotlyst.events import NovelAboutToSyncEvent
 from plotlyst.resources import resource_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.service.tour import TourService
-from plotlyst.view.common import emoji_font, set_tab_icon, ButtonPressResizeEventFilter, set_tab_visible
+from plotlyst.view.common import emoji_font, set_tab_icon, ButtonPressResizeEventFilter, set_tab_visible, action
 from plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_bg_image, apply_white_menu
-from plotlyst.view.widget.button import FadeOutButtonGroup
+from plotlyst.view.widget.button import FadeOutButtonGroup, DotsMenuButton
 from plotlyst.view.widget.character.editor import CharacterAgeEditor
 from plotlyst.view.widget.character.editor import CharacterRoleSelector
-from plotlyst.view.widget.character.profile import CharacterProfileEditor
+from plotlyst.view.widget.character.profile import CharacterProfileEditor, CharacterNameEditorPopup
 from plotlyst.view.widget.character.topic import CharacterTopicsEditor
 from plotlyst.view.widget.confirm import asked
 from plotlyst.view.widget.tour.core import CharacterEditorTourEvent, \
@@ -66,7 +66,12 @@ class CharacterEditor(QObject, EventListener):
         self.novel = novel
         self.character: Optional[Character] = None
 
-        self._emoji_font = emoji_font()
+        self._btnMenu = DotsMenuButton()
+        self._btnMenu.installEventFilter(OpacityEventFilter(self._btnMenu))
+        menu = MenuWidget(self._btnMenu)
+        menu.addAction(action('Edit displayed name', IconRegistry.from_name('mdi.badge-account-outline'), self._edit_displayed_name))
+        self.ui.wdgToolbar.layout().addWidget(self._btnMenu, alignment=Qt.AlignmentFlag.AlignRight)
+
         self.ui.btnNewBackstory.setIcon(IconRegistry.plus_icon('white'))
         self.ui.btnNewBackstory.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnNewBackstory))
         self.ui.btnNewBackstory.clicked.connect(lambda: self.ui.wdgBackstory.add())
@@ -133,8 +138,8 @@ class CharacterEditor(QObject, EventListener):
         menu.aboutToShow.connect(self._lineOccupation.setFocus)
         self._lineOccupation.editingFinished.connect(menu.hide)
 
-        incr_font(self.ui.btnAge, 2)
-        incr_font(self.ui.btnOccupation, 2)
+        incr_font(self.ui.btnAge)
+        incr_font(self.ui.btnOccupation)
 
         set_tab_icon(self.ui.tabAttributes, self.ui.tabBackstory,
                      IconRegistry.backstory_icon('black', PLOTLYST_SECONDARY_COLOR))
@@ -144,7 +149,6 @@ class CharacterEditor(QObject, EventListener):
         set_tab_icon(self.ui.tabAttributes, self.ui.tabNotes, IconRegistry.document_edition_icon())
         set_tab_icon(self.ui.tabAttributes, self.ui.tabGoals, IconRegistry.goal_icon('black', PLOTLYST_SECONDARY_COLOR))
 
-        # set_tab_visible(self.ui.tabAttributes, self.ui.tabTopics, False)
         set_tab_visible(self.ui.tabAttributes, self.ui.tabBigFive, False)
         set_tab_visible(self.ui.tabAttributes, self.ui.tabGoals, False)
 
@@ -375,6 +379,12 @@ class CharacterEditor(QObject, EventListener):
         self.ui.wdgBackstory.refreshCharacter()
         if self.character.prefs.avatar.use_role and self.character.role is None:
             qtanim.shake(self.ui.btnRole)
+
+    def _edit_displayed_name(self):
+        CharacterNameEditorPopup.popup(self.character)
+        self.ui.lineName.setText(self.character.name)
+        if self.character.prefs.avatar.use_initial:
+            self.ui.wdgAvatar.updateAvatar()
 
     def _save(self):
         if self.character.role and self.character.role.text == protagonist_role.text:
