@@ -68,6 +68,10 @@ class ShelveNode(ContainerNode):
         self._btnAdd.clicked.connect(self.newNovelRequested.emit)
 
 
+class SeriesNode(ContainerNode):
+    pass
+
+
 class ShelvesTreeView(TreeView):
     novelSelected = pyqtSignal(NovelDescriptor)
     novelChanged = pyqtSignal(NovelDescriptor)
