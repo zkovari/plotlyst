@@ -92,6 +92,10 @@ QFrame[rounded=true] {{
     border-radius: 6px;
 }}
 
+QFrame[banner-bg=true] {{
+    background-color: #2B0548;
+}}
+
 QFrame[rounded-on-top=true] {{
     border: 1px solid lightgrey;
     border-top-left-radius: 6px;
