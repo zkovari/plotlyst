@@ -33,7 +33,7 @@ def group(*widgets, vertical: bool = True, margin: int = 2, spacing: int = 3, ma
     if margin_top:
         margins(container, top=margin_top)
     if margin_left:
-        margins(container, top=margin_left)
+        margins(container, left=margin_left)
 
     for w in widgets:
         container.layout().addWidget(w)

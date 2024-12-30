@@ -24,7 +24,8 @@ from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtGui import QIcon, QPixmap
 from PyQt6.QtWidgets import QFileDialog, QDialog, QWidget, QStackedWidget, QButtonGroup, QLineEdit, QLabel
 from overrides import overrides
-from qthandy import vspacer, sp, hbox, vbox, line, incr_font
+from qthandy import vspacer, sp, hbox, vbox, line, incr_font, spacer
+from qthandy.filter import OpacityEventFilter
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR, MAXIMUM_SIZE, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import NovelDescriptor, Novel
@@ -33,12 +34,12 @@ from plotlyst.env import app_env
 from plotlyst.resources import ResourceType, resource_registry
 from plotlyst.service.manuscript import import_docx
 from plotlyst.service.resource import ask_for_resource
-from plotlyst.view.common import push_btn, link_buttons_to_pages
+from plotlyst.view.common import push_btn, link_buttons_to_pages, tool_btn, label
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.display import PopupDialog, Subtitle
 from plotlyst.view.widget.input import Toggle
-from plotlyst.view.widget.novel import NovelCustomizationWizard
+from plotlyst.view.widget.novel import NovelCustomizationWizard, ImportedNovelOverview
 from plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
 
@@ -208,6 +209,9 @@ class StoryCreationDialog(PopupDialog):
         self.buttonGroup.addButton(self.btnNewStory)
         self.buttonGroup.addButton(self.btnScrivener)
         self.buttonGroup.addButton(self.btnDocx)
+        for btn in self.buttonGroup.buttons():
+            incr_font(btn)
+            btn.installEventFilter(OpacityEventFilter(parent=btn, leaveOpacity=0.7, ignoreCheckedButton=True))
 
         self.wdgTypesContainer.layout().addWidget(self.btnNewStory)
         self.wdgTypesContainer.layout().addWidget(line())
@@ -224,7 +228,9 @@ class StoryCreationDialog(PopupDialog):
         self.pageNewStory = QWidget()
         vbox(self.pageNewStory, margin=25, spacing=8)
         self.pageScrivener = QWidget()
+        vbox(self.pageScrivener, margin=25, spacing=8)
         self.pageDocx = QWidget()
+        vbox(self.pageDocx, margin=25, spacing=8)
         self.pageWizard = QWidget()
         vbox(self.pageWizard)
         self.pageImportedPreview = QWidget()
@@ -237,7 +243,6 @@ class StoryCreationDialog(PopupDialog):
         link_buttons_to_pages(self.stackedWidget,
                               [(self.btnNewStory, self.pageNewStory), (self.btnScrivener, self.pageScrivener),
                                (self.btnDocx, self.pageDocx)])
-
         self.stackedWidget.currentChanged.connect(self._pageChanged)
         self.stackedWidget.setCurrentWidget(self.pageNewStory)
 
@@ -258,25 +263,49 @@ class StoryCreationDialog(PopupDialog):
         self.pageNewStory.layout().addWidget(self.lineTitle)
         self.pageNewStory.layout().addWidget(self.wdgWizardSubtitle)
         self.pageNewStory.layout().addWidget(vspacer())
-        # self.wdgImportDetails.setHidden(True)
-        # self.btnLoadScrivener.setIcon(IconRegistry.from_name('mdi6.application-import', color=RELAXED_WHITE_COLOR))
-        # self.btnLoadScrivener.clicked.connect(self._loadFromScrivener)
-        # self.btnLoadScrivener.installEventFilter(ButtonPressResizeEventFilter(self.btnLoadScrivener))
-        # self.btnLoadDocx.setIcon(IconRegistry.from_name('mdi6.application-import', color=RELAXED_WHITE_COLOR))
-        # self.btnLoadDocx.clicked.connect(self._loadFromDocx)
-        # self.btnLoadDocx.installEventFilter(ButtonPressResizeEventFilter(self.btnLoadDocx))
-        #
-        # self.chapterH1.setIcon(IconRegistry.from_name('mdi.format-header-1', color_on=PLOTLYST_MAIN_COLOR))
-        # self.chapterH2.setIcon(IconRegistry.from_name('mdi.format-header-2', color_on=PLOTLYST_MAIN_COLOR))
-        # self.chapterH3.setIcon(IconRegistry.from_name('mdi.format-header-3', color_on=PLOTLYST_MAIN_COLOR))
-        # self.chapterH2.setChecked(True)
-        # for btn in self.buttonGroupDocxHeadings.buttons():
-        #     btn.installEventFilter(OpacityEventFilter(btn, ignoreCheckedButton=True))
-        #     btn.installEventFilter(ButtonPressResizeEventFilter(btn))
-        #
-        # for btn in self.buttonGroup.buttons():
-        #     incr_font(btn)
-        #     btn.installEventFilter(OpacityEventFilter(parent=btn, ignoreCheckedButton=True))
+
+        self.wdgImportDetails = ImportedNovelOverview(self.pageImportedPreview)
+        self.wdgImportDetails.setHidden(True)
+
+        self.btnLoadScrivener = push_btn(IconRegistry.from_name('mdi6.application-import', color=RELAXED_WHITE_COLOR),
+                                         text='Select a Scrivener project', properties=['positive', 'confirm'])
+        self.btnLoadScrivener.clicked.connect(self._loadFromScrivener)
+        self.pageScrivener.layout().addWidget(Subtitle(title='Import project from Scrivener',
+                                                       description="Select your Scrivener project to import your binder's content into Plotlyst.",
+                                                       icon='mdi6.application-import'))
+        self.pageScrivener.layout().addWidget(self.btnLoadScrivener, alignment=Qt.AlignmentFlag.AlignRight)
+        self.pageScrivener.layout().addWidget(vspacer())
+
+        self.btnLoadDocx = push_btn(IconRegistry.from_name('mdi6.application-import', color=RELAXED_WHITE_COLOR),
+                                    text='Select a docx file', properties=['positive', 'confirm'])
+        self.btnLoadDocx.clicked.connect(self._loadFromDocx)
+
+        self.chapterH1 = tool_btn(IconRegistry.from_name('mdi.format-header-1', color_on=PLOTLYST_MAIN_COLOR),
+                                  transparent_=True, checkable=True)
+        self.chapterH2 = tool_btn(IconRegistry.from_name('mdi.format-header-2', color_on=PLOTLYST_MAIN_COLOR),
+                                  transparent_=True, checkable=True)
+        self.chapterH3 = tool_btn(IconRegistry.from_name('mdi.format-header-3', color_on=PLOTLYST_MAIN_COLOR),
+                                  transparent_=True, checkable=True)
+        self.chapterH2.setChecked(True)
+        self.buttonGroupDocxHeadings = QButtonGroup()
+        self.buttonGroupDocxHeadings.addButton(self.chapterH1)
+        self.buttonGroupDocxHeadings.addButton(self.chapterH2)
+        self.buttonGroupDocxHeadings.addButton(self.chapterH3)
+        for btn in self.buttonGroupDocxHeadings.buttons():
+            btn.installEventFilter(OpacityEventFilter(btn, ignoreCheckedButton=True))
+
+        self.btnInheritSceneTitle = Toggle()
+
+        self.pageDocx.layout().addWidget(Subtitle(title="Import manuscript from docx",
+                                                  description='Chapter titles are expected to be under the following heading',
+                                                  icon='fa5.file-word'))
+        self.pageDocx.layout().addWidget(group(self.chapterH1, self.chapterH2, self.chapterH3, margin=0),
+                                         alignment=Qt.AlignmentFlag.AlignCenter)
+        self.pageDocx.layout().addWidget(
+            group(label('Scene titles will inherit chapter titles', description=True), self.btnInheritSceneTitle,
+                  spacer(), margin_left=23))
+        self.pageDocx.layout().addWidget(self.btnLoadDocx, alignment=Qt.AlignmentFlag.AlignRight)
+        self.pageDocx.layout().addWidget(vspacer())
 
         self.frame.layout().addWidget(self.wdgBanner)
         self.frame.layout().addWidget(self.wdgCenter)
