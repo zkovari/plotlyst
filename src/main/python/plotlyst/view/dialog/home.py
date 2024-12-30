@@ -63,6 +63,7 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         self.wdgImportDetails.setHidden(True)
         self.lblBanner.setPixmap(QPixmap(resource_registry.banner))
         self.btnNewStory.setIcon(IconRegistry.book_icon(color_on=RELAXED_WHITE_COLOR))
+        self.btnNewSeries.setIcon(IconRegistry.series_icon(color_on=RELAXED_WHITE_COLOR))
         self.btnScrivener.setIcon(IconRegistry.from_name('mdi.alpha-s-circle-outline', color_on=RELAXED_WHITE_COLOR))
         self.btnDocx.setIcon(IconRegistry.from_name('fa5.file-word', color_on=RELAXED_WHITE_COLOR))
         self.btnLoadScrivener.setIcon(IconRegistry.from_name('mdi6.application-import', color=RELAXED_WHITE_COLOR))
