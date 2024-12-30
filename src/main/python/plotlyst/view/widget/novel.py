@@ -273,7 +273,7 @@ class NovelCustomizationWizard(QWidget):
 
     def _updateCounter(self):
         toggledSettings = self.wdgPanelSettings.toggledSettings()
-        self.lblCounter.setText(f'<html><i>Selected features: <b>{len(toggledSettings)}/9')
+        self.lblCounter.setText(f'<html><i>Selected features: <b>{len(toggledSettings)}/8')
 
         self._novel.prefs.panels.scenes_view = None
         if len(toggledSettings) == 1:
