@@ -47,7 +47,7 @@ from plotlyst.view.widget.tour.core import NewStoryTitleInDialogTourEvent, \
 class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
 
     def __init__(self, parent=None):
-        super(StoryCreationDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
 
         self._importedNovel: Optional[Novel] = None
@@ -132,7 +132,7 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
 
     def hideEvent(self, event):
         global_event_dispatcher.deregister(self, *self._eventTypes)
-        super(StoryCreationDialog, self).hideEvent(event)
+        super().hideEvent(event)
 
     def event_received(self, event: Event):
         if isinstance(event, NewStoryTitleInDialogTourEvent):

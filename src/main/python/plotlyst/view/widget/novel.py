@@ -229,7 +229,7 @@ class NovelCustomizationWizard(QWidget):
         self.pagePanels.layout().addWidget(line())
         self.pagePanels.layout().addWidget(self.wdgPanelSettings)
         self.pagePanels.layout().addWidget(vspacer())
-        self.pagePanels.layout().addWidget(label('You can always change these settings later', description=True),
+        self.pagePanels.layout().addWidget(label('You can always change these settings later', description=True, decr_font_diff=1),
                                            alignment=Qt.AlignmentFlag.AlignRight)
         self.pagePersonality = QWidget()
         self.pagePersonality.setProperty('relaxed-white-bg', True)
