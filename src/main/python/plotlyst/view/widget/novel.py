@@ -27,6 +27,7 @@ from overrides import overrides
 from qthandy import vspacer, spacer, transparent, bold, vbox, hbox, line, margins
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
+from plotlyst.common import MAXIMUM_SIZE
 from plotlyst.core.domain import StoryStructure, Novel, TagType, SelectionItem, Tag, NovelSetting, ScenesView
 from plotlyst.model.characters_model import CharactersTableModel
 from plotlyst.model.common import SelectionItemsModel
@@ -39,6 +40,7 @@ from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.display import Subtitle
 from plotlyst.view.widget.items_editor import ItemsEditorWidget
 from plotlyst.view.widget.labels import LabelsEditorWidget
+from plotlyst.view.widget.manuscript import ManuscriptLanguageSettingWidget
 from plotlyst.view.widget.settings import NovelPanelSettingsWidget, NovelSettingToggle
 
 
@@ -189,6 +191,15 @@ class NovelCustomizationWizard(QWidget):
         hbox(self).addWidget(self.stack)
 
         self.pagePanels = QWidget()
+        vbox(self.pagePanels)
+        self.pagePersonality = QWidget()
+        vbox(self.pagePersonality, spacing=5)
+        self.pageManuscript = QWidget()
+        vbox(self.pageManuscript)
+        self.stack.addWidget(self.pagePanels)
+        self.stack.addWidget(self.pagePersonality)
+        self.stack.addWidget(self.pageManuscript)
+
         self.wdgPanelSettings = NovelPanelSettingsWidget()
         self.wdgPanelSettings.setNovel(self._novel)
         self.lblCounter = label('')
@@ -220,7 +231,6 @@ class NovelCustomizationWizard(QWidget):
                    tooltip='Someone who enjoys the spontaneity of writing without constraints',
                    slot=lambda: self._recommend(WriterType.Free_spirit)))
 
-        vbox(self.pagePanels)
         self.wdgTop = QWidget()
         hbox(self.wdgTop)
         self.wdgTop.layout().addWidget(self.lblCounter, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -229,11 +239,9 @@ class NovelCustomizationWizard(QWidget):
         self.pagePanels.layout().addWidget(line())
         self.pagePanels.layout().addWidget(self.wdgPanelSettings)
         self.pagePanels.layout().addWidget(vspacer())
-        self.pagePanels.layout().addWidget(label('You can always change these settings later', description=True, decr_font_diff=1),
-                                           alignment=Qt.AlignmentFlag.AlignRight)
-        self.pagePersonality = QWidget()
-        self.pagePersonality.setProperty('relaxed-white-bg', True)
-        vbox(self.pagePersonality, spacing=5)
+        self.pagePanels.layout().addWidget(
+            label('You can always change these settings later', description=True, decr_font_diff=1),
+            alignment=Qt.AlignmentFlag.AlignRight)
 
         self.pagePersonality.layout().addWidget(label('Character personality types', h3=True),
                                                 alignment=Qt.AlignmentFlag.AlignCenter)
@@ -248,8 +256,18 @@ class NovelCustomizationWizard(QWidget):
         self._addPersonalitySetting(NovelSetting.Character_love_style)
         self.pagePersonality.layout().addWidget(vspacer())
 
-        self.stack.addWidget(self.pagePanels)
-        self.stack.addWidget(self.pagePersonality)
+        self.langSetting = ManuscriptLanguageSettingWidget(self._novel)
+        self.langSetting.setMaximumWidth(MAXIMUM_SIZE)
+        self.pageManuscript.layout().addWidget(label('Manuscript language', h3=True),
+                                               alignment=Qt.AlignmentFlag.AlignCenter)
+        self.pageManuscript.layout().addWidget(line())
+        self.pageManuscript.layout().addWidget(label(
+            "Choose your manuscript's language for spellcheck (optional and can be changed later)",
+            description=True, wordWrap=True))
+        self.pageManuscript.layout().addWidget(self.langSetting, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.pageManuscript.layout().addWidget(label(
+            "If your language isn't listed, ignore this step and press Finish",
+            description=True, decr_font_diff=1), alignment=Qt.AlignmentFlag.AlignRight)
 
     def next(self):
         i = self.stack.currentIndex()
@@ -258,7 +276,7 @@ class NovelCustomizationWizard(QWidget):
 
         if self.stack.currentWidget() is self.pagePersonality and not self._novel.prefs.toggled(
                 NovelSetting.Characters):
-            self.finished.emit()
+            self.next()
 
     def hasMore(self) -> bool:
         return self.stack.currentIndex() < self.stack.count() - 1
