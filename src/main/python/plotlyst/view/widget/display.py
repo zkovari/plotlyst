@@ -56,19 +56,19 @@ class ChartView(QChartView):
 
 
 class Subtitle(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, title: str = '', description: str = '', icon: str = '', iconColor: str = 'black'):
         super(Subtitle, self).__init__(parent)
         vbox(self, margin=0, spacing=0)
-        self.lblTitle = QLabel(self)
+        self.lblTitle = QLabel(title, self)
         self.icon = QToolButton(self)
         transparent(self.icon)
-        self.lblDescription = QLabel(self)
+        self.lblDescription = QLabel(description, self)
         bold(self.lblTitle)
         incr_font(self.lblTitle)
         self._btnHint: Optional[HintButton] = None
 
-        self._iconName: str = ''
-        self._iconColor: str = 'black'
+        self._iconName: str = icon
+        self._iconColor: str = iconColor
         self._descSpacer = spacer(20)
 
         self.lblDescription.setProperty('description', True)

@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List, Optional
 
-from PyQt6.QtCore import pyqtSignal, QSize, Qt, QTimer
+from PyQt6.QtCore import pyqtSignal, QSize, Qt
 from PyQt6.QtGui import QPixmap, QColor
 from overrides import overrides
 from qthandy import transparent, incr_font, italic, busy, retain_when_hidden, incr_icon
@@ -40,14 +40,13 @@ from plotlyst.service.tour import TourService
 from plotlyst.view._view import AbstractView
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, action, \
     TooltipPositionEventFilter, open_url, push_btn, wrap
-from plotlyst.view.dialog.home import StoryCreationDialog
 from plotlyst.view.generated.home_view_ui import Ui_HomeView
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.roadmap_view import RoadmapView
 from plotlyst.view.style.base import apply_border_image
 from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.confirm import confirmed
-from plotlyst.view.widget.library import ShelvesTreeView
+from plotlyst.view.widget.library import ShelvesTreeView, StoryCreationDialog
 from plotlyst.view.widget.tour import Tutorial
 from plotlyst.view.widget.tour.content import tutorial_titles, tutorial_descriptions
 from plotlyst.view.widget.tour.core import LibraryTourEvent, NewStoryButtonTourEvent, \
@@ -238,10 +237,10 @@ class HomeView(AbstractView):
         elif isinstance(event, NewStoryButtonTourEvent):
             self.ui.stackWdgNovels.setCurrentWidget(self.ui.pageEmpty)
             self._tour_service.addWidget(self.ui.btnAddNewStoryMain, event)
-        elif isinstance(event, NewStoryDialogOpenTourEvent):
-            dialog = StoryCreationDialog(self.widget.window())
-            dialog.show()
-            QTimer.singleShot(100, self._tour_service.next)
+        # elif isinstance(event, NewStoryDialogOpenTourEvent):
+        #     dialog = StoryCreationDialog(self.widget.window())
+        #     dialog.show()
+        #     QTimer.singleShot(100, self._tour_service.next)
         elif isinstance(event, TutorialNovelSelectTourEvent):
             self._novel_selected(tutorial_novel)
             self._tour_service.next()
@@ -282,7 +281,7 @@ class HomeView(AbstractView):
         def flush():
             flush_or_fail()
 
-        novel = StoryCreationDialog(self.widget).display()
+        novel = StoryCreationDialog.popup()
         if novel:
             self.repo.insert_novel(novel)
             self._novels.append(novel)

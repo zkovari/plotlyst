@@ -60,6 +60,7 @@ from plotlyst.view.common import scroll_to_top, spin, ButtonPressResizeEventFilt
 from plotlyst.view.generated.distraction_free_manuscript_editor_ui import \
     Ui_DistractionFreeManuscriptEditor
 from plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget
+from plotlyst.view.generated.manuscript_lang_setting_ui import Ui_ManuscriptLangSettingWidget
 from plotlyst.view.generated.readability_widget_ui import Ui_ReadabilityWidget
 from plotlyst.view.generated.sprint_widget_ui import Ui_SprintWidget
 from plotlyst.view.generated.timer_setup_widget_ui import Ui_TimerSetupWidget
@@ -250,6 +251,56 @@ class ManuscriptFormattingWidget(QWidget):
             self.capitalizationChanged.emit(AutoCapitalizationMode.PARAGRAPH)
         elif btn is self.toggleSentenceCapital:
             self.capitalizationChanged.emit(AutoCapitalizationMode.SENTENCE)
+
+
+class ManuscriptLanguageSettingWidget(QWidget, Ui_ManuscriptLangSettingWidget):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self.setupUi(self)
+        self.novel = novel
+
+        self.btnArabicIcon.setIcon(IconRegistry.from_name('mdi.abjad-arabic'))
+
+        self.cbEnglish.clicked.connect(partial(self._changed, 'en-US'))
+        self.cbEnglish.setChecked(True)
+        self.cbEnglishBritish.clicked.connect(partial(self._changed, 'en-GB'))
+        self.cbEnglishCanadian.clicked.connect(partial(self._changed, 'en-CA'))
+        self.cbEnglishAustralian.clicked.connect(partial(self._changed, 'en-AU'))
+        self.cbEnglishNewZealand.clicked.connect(partial(self._changed, 'en-NZ'))
+        self.cbEnglishSouthAfrican.clicked.connect(partial(self._changed, 'en-ZA'))
+        self.cbSpanish.clicked.connect(partial(self._changed, 'es'))
+        self.cbPortugese.clicked.connect(partial(self._changed, 'pt-PT'))
+        self.cbPortugeseBrazil.clicked.connect(partial(self._changed, 'pt-BR'))
+        self.cbPortugeseAngola.clicked.connect(partial(self._changed, 'pt-AO'))
+        self.cbPortugeseMozambique.clicked.connect(partial(self._changed, 'pt-MZ'))
+        self.cbFrench.clicked.connect(partial(self._changed, 'fr'))
+        self.cbGerman.clicked.connect(partial(self._changed, 'de-DE'))
+        self.cbGermanAustrian.clicked.connect(partial(self._changed, 'de-AT'))
+        self.cbGermanSwiss.clicked.connect(partial(self._changed, 'de-CH'))
+        self.cbChinese.clicked.connect(partial(self._changed, 'zh-CN'))
+        self.cbArabic.clicked.connect(partial(self._changed, 'ar'))
+        self.cbDanish.clicked.connect(partial(self._changed, 'da-DK'))
+        self.cbDutch.clicked.connect(partial(self._changed, 'nl'))
+        self.cbDutchBelgian.clicked.connect(partial(self._changed, 'nl-BE'))
+        self.cbGreek.clicked.connect(partial(self._changed, 'el-GR'))
+        self.cbIrish.clicked.connect(partial(self._changed, 'ga-IE'))
+        self.cbItalian.clicked.connect(partial(self._changed, 'it'))
+        self.cbJapanese.clicked.connect(partial(self._changed, 'ja-JP'))
+        self.cbNorwegian.clicked.connect(partial(self._changed, 'no'))
+        self.cbPersian.clicked.connect(partial(self._changed, 'fa'))
+        self.cbPolish.clicked.connect(partial(self._changed, 'pl-PL'))
+        self.cbRomanian.clicked.connect(partial(self._changed, 'ro-RO'))
+        self.cbRussian.clicked.connect(partial(self._changed, 'ru-RU'))
+        self.cbSlovak.clicked.connect(partial(self._changed, 'sk-SK'))
+        self.cbSlovenian.clicked.connect(partial(self._changed, 'sl-SI'))
+        self.cbSwedish.clicked.connect(partial(self._changed, 'sv'))
+        self.cbTagalog.clicked.connect(partial(self._changed, 'tl-PH'))
+        self.cbUkrainian.clicked.connect(partial(self._changed, 'uk-UA'))
+
+    def _changed(self, lang: str, checked: bool):
+        if not checked:
+            return
+        self.novel.lang_settings.lang = lang
 
 
 class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
