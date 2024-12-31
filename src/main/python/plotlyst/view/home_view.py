@@ -29,7 +29,7 @@ from qtmenu import MenuWidget
 from plotlyst.common import NAV_BAR_BUTTON_DEFAULT_COLOR, \
     NAV_BAR_BUTTON_CHECKED_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.client import client
-from plotlyst.core.domain import NovelDescriptor
+from plotlyst.core.domain import NovelDescriptor, StoryType
 from plotlyst.core.help import home_page_welcome_text
 from plotlyst.event.core import emit_global_event, Event
 from plotlyst.event.handler import global_event_dispatcher
@@ -297,7 +297,7 @@ class HomeView(AbstractView):
 
             self.refresh()
             self._shelvesTreeView.selectNovel(novel)
-            if len(self._novels) == 1:
+            if len(self._novels) == 1 and self._novels[0].story_type == StoryType.Novel:
                 self.loadNovel.emit(novel)
 
     def _title_edited(self, title: str):

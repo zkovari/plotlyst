@@ -28,7 +28,7 @@ from qthandy import vspacer, sp, hbox, vbox, line, incr_font, spacer
 from qthandy.filter import OpacityEventFilter
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR, MAXIMUM_SIZE, RELAXED_WHITE_COLOR
-from plotlyst.core.domain import NovelDescriptor, Novel
+from plotlyst.core.domain import NovelDescriptor, Novel, StoryType
 from plotlyst.core.scrivener import ScrivenerParser
 from plotlyst.env import app_env
 from plotlyst.resources import ResourceType, resource_registry
@@ -136,7 +136,7 @@ class ShelvesTreeView(TreeView):
             node.selectionChanged.connect(partial(self._novelSelectionChanged, node))
             node.iconChanged.connect(partial(self.novelChanged.emit, novel))
             node.deleted.connect(partial(self.novelDeletionRequested.emit, novel))
-            node.doubleClicked.connect(partial(self.novelOpenRequested.emit, novel))
+            node.doubleClicked.connect(partial(self._novelDoubleClicked, novel))
 
     def updateNovel(self, novel: NovelDescriptor):
         self._novels[novel].refresh()
@@ -164,6 +164,9 @@ class ShelvesTreeView(TreeView):
             self.clearSelection()
             self.novelsShelveSelected.emit()
 
+    def _novelDoubleClicked(self, novel: Novel):
+        if novel.story_type == StoryType.Novel:
+            self.novelOpenRequested.emit(novel)
 
 class StoryCreationDialog(PopupDialog):
 
@@ -199,18 +202,18 @@ class StoryCreationDialog(PopupDialog):
         self.wdgTypesContainer.setProperty('bg', True)
         vbox(self.wdgTypesContainer)
         self.btnNewStory = push_btn(IconRegistry.book_icon(color_on=RELAXED_WHITE_COLOR), 'Create a new story',
-                                    checkable=True)
+                                    checkable=True, properties=['main-side-nav'])
         self.btnNewStory.setChecked(True)
-        self.btnNewStory.setProperty("main-side-nav", True)
+        self.btnNewSeries = push_btn(IconRegistry.series_icon(color_on=RELAXED_WHITE_COLOR), 'Create a series',
+                                     checkable=True, properties=['main-side-nav'])
         self.btnScrivener = push_btn(IconRegistry.from_name('mdi.alpha-s-circle-outline', color_on=RELAXED_WHITE_COLOR),
-                                     'Import from Scrivener', checkable=True)
-        self.btnScrivener.setProperty("main-side-nav", True)
+                                     'Import from Scrivener', checkable=True, properties=['main-side-nav'])
         self.btnDocx = push_btn(IconRegistry.from_name('fa5.file-word', color_on=RELAXED_WHITE_COLOR),
-                                'Import from docx', checkable=True)
-        self.btnDocx.setProperty("main-side-nav", True)
+                                'Import from docx', checkable=True, properties=['main-side-nav'])
 
         self.buttonGroup = QButtonGroup()
         self.buttonGroup.addButton(self.btnNewStory)
+        self.buttonGroup.addButton(self.btnNewSeries)
         self.buttonGroup.addButton(self.btnScrivener)
         self.buttonGroup.addButton(self.btnDocx)
         for btn in self.buttonGroup.buttons():
@@ -218,6 +221,7 @@ class StoryCreationDialog(PopupDialog):
             btn.installEventFilter(OpacityEventFilter(parent=btn, leaveOpacity=0.7, ignoreCheckedButton=True))
 
         self.wdgTypesContainer.layout().addWidget(self.btnNewStory)
+        self.wdgTypesContainer.layout().addWidget(self.btnNewSeries)
         self.wdgTypesContainer.layout().addWidget(line())
         self.wdgTypesContainer.layout().addWidget(self.btnScrivener)
         self.wdgTypesContainer.layout().addWidget(self.btnDocx)
@@ -231,6 +235,8 @@ class StoryCreationDialog(PopupDialog):
 
         self.pageNewStory = QWidget()
         vbox(self.pageNewStory, margin=25, spacing=8)
+        self.pageNewSeries = QWidget()
+        vbox(self.pageNewSeries, margin=25, spacing=8)
         self.pageScrivener = QWidget()
         vbox(self.pageScrivener, margin=25, spacing=8)
         self.pageDocx = QWidget()
@@ -239,13 +245,15 @@ class StoryCreationDialog(PopupDialog):
         vbox(self.pageWizard)
         self.pageImportedPreview = QWidget()
         self.stackedWidget.addWidget(self.pageNewStory)
+        self.stackedWidget.addWidget(self.pageNewSeries)
         self.stackedWidget.addWidget(self.pageScrivener)
         self.stackedWidget.addWidget(self.pageDocx)
         self.stackedWidget.addWidget(self.pageImportedPreview)
         self.stackedWidget.addWidget(self.pageWizard)
 
         link_buttons_to_pages(self.stackedWidget,
-                              [(self.btnNewStory, self.pageNewStory), (self.btnScrivener, self.pageScrivener),
+                              [(self.btnNewStory, self.pageNewStory), (self.btnNewSeries, self.pageNewSeries),
+                               (self.btnScrivener, self.pageScrivener),
                                (self.btnDocx, self.pageDocx)])
         self.stackedWidget.currentChanged.connect(self._pageChanged)
         self.stackedWidget.setCurrentWidget(self.pageNewStory)
@@ -267,6 +275,18 @@ class StoryCreationDialog(PopupDialog):
         self.pageNewStory.layout().addWidget(self.lineTitle)
         self.pageNewStory.layout().addWidget(self.wdgWizardSubtitle)
         self.pageNewStory.layout().addWidget(vspacer())
+
+        self.lineSeriesTitle = QLineEdit()
+        self.lineSeriesTitle.setPlaceholderText("Series Title (Default: 'My new series')")
+        self.lineSeriesTitle.setProperty('rounded', True)
+        self.lineSeriesTitle.setProperty('white-bg', True)
+        incr_font(self.lineSeriesTitle, 2)
+        self.pageNewSeries.layout().addWidget(Subtitle(title="What's the title of your new series?", icon='ph.books'))
+        self.pageNewSeries.layout().addWidget(self.lineSeriesTitle)
+        self.pageNewSeries.layout().addWidget(
+            label("You can link novels to this series later and easily share characters or locations across them",
+                  description=True, wordWrap=True, decr_font_diff=1))
+        self.pageNewSeries.layout().addWidget(vspacer())
 
         self.wdgImportDetails = ImportedNovelOverview(self.pageImportedPreview)
         self.wdgImportDetails.setHidden(True)
@@ -332,6 +352,8 @@ class StoryCreationDialog(PopupDialog):
             return self.__newNovel()
         elif self.stackedWidget.currentWidget() == self.pageWizard:
             return self._wizardNovel
+        elif self.stackedWidget.currentWidget() == self.pageNewSeries:
+            return self.__newSeries()
         elif self._importedNovel is not None:
             return self._importedNovel
 
@@ -342,6 +364,10 @@ class StoryCreationDialog(PopupDialog):
             self.lineTitle.setFocus()
             self.btnNext.setVisible(True)
             self.btnFinish.setVisible(False)
+        elif self.stackedWidget.currentWidget() == self.pageNewSeries:
+            self.lineSeriesTitle.setFocus()
+            self.btnNext.setVisible(False)
+            self.btnFinish.setVisible(True)
         elif self.stackedWidget.currentWidget() == self.pageScrivener:
             self.btnNext.setVisible(False)
             self.btnFinish.setVisible(False)
@@ -435,3 +461,6 @@ class StoryCreationDialog(PopupDialog):
 
     def __newNovel(self) -> Novel:
         return Novel.new_novel(self.lineTitle.text() if self.lineTitle.text() else 'My new novel')
+
+    def __newSeries(self) -> NovelDescriptor:
+        return Novel.new_series(self.lineSeriesTitle.text() if self.lineSeriesTitle.text() else 'My new series')

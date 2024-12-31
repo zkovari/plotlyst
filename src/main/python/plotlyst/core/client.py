@@ -47,7 +47,7 @@ from plotlyst.core.domain import Novel, Character, Scene, Chapter, SceneStage, \
     ScenePurposeType, StoryElement, SceneOutcome, ChapterType, SceneStructureItem, \
     DocumentProgress, ReaderQuestion, SceneReaderQuestion, ImageRef, SceneReaderInformation, \
     CharacterProfileSectionReference, CharacterMultiAttribute, default_character_profile, CharacterPersonality, \
-    StrengthWeaknessAttribute, PremiseBuilder, SceneFunctions, Location, default_locations, TopicElement
+    StrengthWeaknessAttribute, PremiseBuilder, SceneFunctions, Location, default_locations, TopicElement, StoryType
 from plotlyst.core.template import Role, exclude_if_empty, exclude_if_black, exclude_if_false
 from plotlyst.env import app_env
 
@@ -245,6 +245,7 @@ class ProjectNovelInfo:
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
     creation_date: Optional[datetime] = None
+    story_type: StoryType = field(default=StoryType.Novel)
 
 
 def _default_story_structures():
