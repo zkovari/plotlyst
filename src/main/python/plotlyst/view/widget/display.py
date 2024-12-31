@@ -359,7 +359,6 @@ class PopupDialog(QDialog):
         self.frame.setProperty('white-bg', True)
         self.frame.setProperty('large-rounded', True)
         vbox(self.frame, 15, 10)
-        # margins(self.frame, bottom=15)
         self.layout().addWidget(self.frame)
         self.setMinimumSize(200, 150)
 

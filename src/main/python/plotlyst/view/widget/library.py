@@ -24,7 +24,7 @@ from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtGui import QIcon, QPixmap
 from PyQt6.QtWidgets import QFileDialog, QDialog, QWidget, QStackedWidget, QButtonGroup, QLineEdit, QLabel
 from overrides import overrides
-from qthandy import vspacer, sp, hbox, vbox, line, incr_font, spacer
+from qthandy import vspacer, sp, hbox, vbox, line, incr_font, spacer, margins
 from qthandy.filter import OpacityEventFilter
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR, MAXIMUM_SIZE, RELAXED_WHITE_COLOR
@@ -168,6 +168,7 @@ class ShelvesTreeView(TreeView):
         if novel.story_type == StoryType.Novel:
             self.novelOpenRequested.emit(novel)
 
+
 class StoryCreationDialog(PopupDialog):
 
     def __init__(self, parent=None):
@@ -177,9 +178,11 @@ class StoryCreationDialog(PopupDialog):
         self._wizard: Optional[NovelCustomizationWizard] = None
 
         self.frame.layout().setSpacing(0)
+        margins(self.frame, 0, 0, 0)
 
         self.wdgBanner = QWidget()
         self.wdgBanner.setProperty('banner-bg', True)
+        self.wdgBanner.setProperty('large-rounded-on-top', True)
         self.lblBanner = QLabel()
         hbox(self.wdgBanner, 0, 0).addWidget(self.lblBanner, alignment=Qt.AlignmentFlag.AlignCenter)
         self.lblBanner.setPixmap(QPixmap(resource_registry.banner))
@@ -197,10 +200,12 @@ class StoryCreationDialog(PopupDialog):
 
         self.wdgCenter = QWidget()
         hbox(self.wdgCenter)
+        margins(self.wdgCenter, right=15)
 
         self.wdgTypesContainer = QWidget()
         self.wdgTypesContainer.setProperty('bg', True)
         vbox(self.wdgTypesContainer)
+        margins(self.wdgTypesContainer, left=10)
         self.btnNewStory = push_btn(IconRegistry.book_icon(color_on=RELAXED_WHITE_COLOR), 'Create a new story',
                                     checkable=True, properties=['main-side-nav'])
         self.btnNewStory.setChecked(True)
@@ -243,7 +248,9 @@ class StoryCreationDialog(PopupDialog):
         vbox(self.pageDocx, margin=25, spacing=8)
         self.pageWizard = QWidget()
         vbox(self.pageWizard)
+        margins(self.pageWizard, left=15, top=15)
         self.pageImportedPreview = QWidget()
+        vbox(self.pageImportedPreview, margin=15)
         self.stackedWidget.addWidget(self.pageNewStory)
         self.stackedWidget.addWidget(self.pageNewSeries)
         self.stackedWidget.addWidget(self.pageScrivener)
@@ -289,6 +296,7 @@ class StoryCreationDialog(PopupDialog):
         self.pageNewSeries.layout().addWidget(vspacer())
 
         self.wdgImportDetails = ImportedNovelOverview(self.pageImportedPreview)
+        self.pageImportedPreview.layout().addWidget(self.wdgImportDetails)
         self.wdgImportDetails.setHidden(True)
 
         self.btnLoadScrivener = push_btn(IconRegistry.from_name('mdi6.application-import', color=RELAXED_WHITE_COLOR),

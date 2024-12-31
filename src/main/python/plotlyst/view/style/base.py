@@ -66,6 +66,11 @@ QWidget[banner-bg=true] {{
     background-color: #2B0548;
 }}
 
+QWidget[large-rounded-on-top=true] {{
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+}}
+
 QWidget[transparent=true] {{
     border: 0px;
     background-color: rgba(0, 0, 0, 0);
