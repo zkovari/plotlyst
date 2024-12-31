@@ -34,7 +34,7 @@ from plotlyst.env import app_env
 from plotlyst.resources import ResourceType, resource_registry
 from plotlyst.service.manuscript import import_docx
 from plotlyst.service.resource import ask_for_resource
-from plotlyst.view.common import push_btn, link_buttons_to_pages, tool_btn, label
+from plotlyst.view.common import push_btn, link_buttons_to_pages, tool_btn, label, frame
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.display import PopupDialog, Subtitle
@@ -167,6 +167,19 @@ class ShelvesTreeView(TreeView):
     def _novelDoubleClicked(self, novel: Novel):
         if novel.story_type == StoryType.Novel:
             self.novelOpenRequested.emit(novel)
+
+
+class NovelDisplayCard(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.card = frame()
+        self.card.setProperty('large-rounded', True)
+        vbox(self)
+
+        self.layout().addWidget(self.card)
+
+    def setNovel(self, novel: Novel):
+        pass
 
 
 class StoryCreationDialog(PopupDialog):

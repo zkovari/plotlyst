@@ -46,7 +46,7 @@ from plotlyst.view.roadmap_view import RoadmapView
 from plotlyst.view.style.base import apply_border_image
 from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.confirm import confirmed
-from plotlyst.view.widget.library import ShelvesTreeView, StoryCreationDialog
+from plotlyst.view.widget.library import ShelvesTreeView, StoryCreationDialog, NovelDisplayCard
 from plotlyst.view.widget.tour import Tutorial
 from plotlyst.view.widget.tour.content import tutorial_titles, tutorial_descriptions
 from plotlyst.view.widget.tour.core import LibraryTourEvent, NewStoryButtonTourEvent, \
@@ -123,6 +123,9 @@ class HomeView(AbstractView):
         self.ui.btnFirstStory.setIcon(IconRegistry.book_icon())
         self.ui.btnFirstStory.installEventFilter(OpacityEventFilter(self.ui.btnFirstStory, leaveOpacity=0.7))
         self.ui.btnFirstStory.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnFirstStory))
+
+        self.novelDisplayCard = NovelDisplayCard()
+        self.ui.pageNovelDisplay.layout().addWidget(self.novelDisplayCard)
 
         self.ui.btnActivate.setIcon(IconRegistry.book_icon(color='white', color_on='white'))
         self.ui.btnActivate.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnActivate))
