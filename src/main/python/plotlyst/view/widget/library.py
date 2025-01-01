@@ -22,7 +22,7 @@ from typing import List, Set, Dict, Optional
 
 from PyQt6.QtCore import pyqtSignal, Qt, QSize
 from PyQt6.QtGui import QIcon, QPixmap
-from PyQt6.QtWidgets import QFileDialog, QDialog, QWidget, QStackedWidget, QButtonGroup, QLineEdit, QLabel
+from PyQt6.QtWidgets import QFileDialog, QDialog, QWidget, QStackedWidget, QButtonGroup, QLineEdit, QLabel, QTextEdit
 from overrides import overrides
 from qthandy import vspacer, sp, hbox, vbox, line, incr_font, spacer, margins, incr_icon, transparent, \
     retain_when_hidden, italic, decr_icon, translucent
@@ -35,7 +35,7 @@ from plotlyst.env import app_env
 from plotlyst.resources import ResourceType, resource_registry
 from plotlyst.service.manuscript import import_docx
 from plotlyst.service.resource import ask_for_resource
-from plotlyst.view.common import push_btn, link_buttons_to_pages, tool_btn, label, frame
+from plotlyst.view.common import push_btn, link_buttons_to_pages, tool_btn, label, frame, wrap
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_border_image
@@ -181,8 +181,8 @@ class NovelDisplayCard(QWidget):
         self.card.setProperty('relaxed-white-bg', True)
         self.card.setMaximumWidth(1000)
         hbox(self).addWidget(self.card)
-        vbox(self.card, spacing=8)
-        margins(self.card, left=25, right=25, bottom=15)
+        vbox(self.card, 2, spacing=8)
+        margins(self.card, bottom=40)
 
         self.wdgTitle = QWidget()
         self.wdgTitle.setProperty('border-image', True)
@@ -191,11 +191,16 @@ class NovelDisplayCard(QWidget):
         self.wdgTitle.setMaximumWidth(1000)
         apply_border_image(self.wdgTitle, resource_registry.frame1)
 
-        self.lineNovelTitle = QLineEdit()
+        self.lineNovelTitle = AutoAdjustableLineEdit(defaultWidth=70)
         transparent(self.lineNovelTitle)
         self.lineNovelTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         incr_font(self.lineNovelTitle, 10)
-        self.wdgTitle.layout().addWidget(self.lineNovelTitle)
+
+        self.iconSelector = IconSelectorButton()
+        self.wdgTitle.layout().addWidget(spacer())
+        self.wdgTitle.layout().addWidget(self.iconSelector, alignment=Qt.AlignmentFlag.AlignVCenter)
+        self.wdgTitle.layout().addWidget(self.lineNovelTitle, alignment=Qt.AlignmentFlag.AlignVCenter)
+        self.wdgTitle.layout().addWidget(spacer())
 
         self.btnNovelSettings = DotsMenuButton()
         retain_when_hidden(self.btnNovelSettings)
@@ -209,8 +214,6 @@ class NovelDisplayCard(QWidget):
         self.iconSubtitle.setIcon(IconRegistry.from_name('mdi.send', 'grey'))
         decr_icon(self.iconSubtitle, 4)
 
-        self.iconSelector = IconSelectorButton()
-
         self.iconImportOrigin = Icon()
         self.iconImportOrigin.setIcon(IconRegistry.from_name('mdi.alpha-s-circle-outline', color='#410253'))
         self.iconImportOrigin.setToolTip('Synced from Scrivener')
@@ -218,14 +221,29 @@ class NovelDisplayCard(QWidget):
         translucent(self.iconImportOrigin, 0.7)
         incr_icon(self.iconImportOrigin, 8)
 
+        self.wdgSynopsis = QWidget()
+        hbox(self.wdgSynopsis, spacing=0)
+        margins(self.wdgSynopsis, left=100, right=100)
+        self.iconSynopsis = Icon()
+        self.iconSynopsis.setIcon(IconRegistry.from_name('mdi.text-short', 'grey'))
+        self.textSynopsis = QTextEdit()
+        self.textSynopsis.setMinimumSize(500, 100)
+        self.textSynopsis.setMaximumSize(750, 150)
+        self.textSynopsis.setPlaceholderText('Short synopsis')
+        transparent(self.textSynopsis)
+        self.wdgSynopsis.layout().addWidget(wrap(self.iconSynopsis, margin_top=5), alignment=Qt.AlignmentFlag.AlignTop)
+        self.wdgSynopsis.layout().addWidget(self.textSynopsis)
+
         self.btnActivate = push_btn(IconRegistry.book_icon(color='white', color_on='white'), 'Open story',
                                     properties=['confirm', 'positive', 'large'])
         self.btnActivate.setIconSize(QSize(28, 28))
 
-        self.card.layout().addWidget(self.btnNovelSettings, alignment=Qt.AlignmentFlag.AlignRight)
+        self.card.layout().addWidget(group(self.iconImportOrigin, spacer(), self.btnNovelSettings, margin_left=15))
         self.card.layout().addWidget(self.wdgTitle)
-        self.card.layout().addWidget(group(self.iconImportOrigin, spacer(), self.iconSubtitle, self.lineSubtitle))
-        self.card.layout().addWidget(self.iconSelector, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.card.layout().addWidget(
+            group(spacer(), self.iconSubtitle, self.lineSubtitle, margin_left=25,
+                  margin_right=25))
+        self.card.layout().addWidget(self.wdgSynopsis)
         self.card.layout().addWidget(vspacer())
         self.card.layout().addWidget(self.btnActivate, alignment=Qt.AlignmentFlag.AlignCenter)
 
@@ -235,7 +253,7 @@ class NovelDisplayCard(QWidget):
         if novel.icon:
             self.iconSelector.selectIcon(novel.icon, novel.icon_color)
         else:
-            self.iconSelector.reset()
+            self.iconSelector.selectIcon('fa5s.book-open', 'black')
 
         self.iconImportOrigin.setVisible(novel.is_scrivener_sync())
 
