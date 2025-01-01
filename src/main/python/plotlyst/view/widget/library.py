@@ -256,6 +256,7 @@ class NovelDisplayCard(QWidget):
             self.iconSelector.selectIcon('fa5s.book-open', 'black')
 
         self.iconImportOrigin.setVisible(novel.is_scrivener_sync())
+        self.textSynopsis.setText(novel.short_synopsis)
 
 
 class StoryCreationDialog(PopupDialog):

@@ -129,6 +129,7 @@ class HomeView(AbstractView):
         self.novelDisplayCard.btnActivate.clicked.connect(lambda: self.loadNovel.emit(self._selected_novel))
         self.novelDisplayCard.lineNovelTitle.textEdited.connect(self._title_edited)
         self.novelDisplayCard.lineSubtitle.textEdited.connect(self._subtitle_edited)
+        self.novelDisplayCard.textSynopsis.textChanged.connect(self._short_synopsis_edited)
         self.novelDisplayCard.iconSelector.iconSelected.connect(self._icon_changed)
 
         self.ui.btnAddNewStoryMain.setIcon(IconRegistry.plus_icon(color='white'))
@@ -236,10 +237,11 @@ class HomeView(AbstractView):
         self._shelvesTreeView.setNovels(self._novels)
 
     def _novel_selected(self, novel: NovelDescriptor):
-        self._selected_novel = novel
+        self._selected_novel = None
 
         self.ui.stackWdgNovels.setCurrentWidget(self.ui.pageNovelDisplay)
-        self.novelDisplayCard.setNovel(self._selected_novel)
+        self.novelDisplayCard.setNovel(novel)
+        self._selected_novel = novel
 
     def _add_new_novel(self):
         @busy
@@ -275,6 +277,11 @@ class HomeView(AbstractView):
     def _subtitle_edited(self, subtitle: str):
         self._selected_novel.subtitle = subtitle
         self.repo.update_project_novel(self._selected_novel)
+
+    def _short_synopsis_edited(self):
+        if self._selected_novel:
+            self._selected_novel.short_synopsis = self.novelDisplayCard.textSynopsis.toPlainText()
+            self.repo.update_project_novel(self._selected_novel)
 
     def _icon_changed(self, icon: str, color: QColor):
         self._selected_novel.icon = icon
