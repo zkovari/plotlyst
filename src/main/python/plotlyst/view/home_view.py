@@ -23,7 +23,7 @@ from PyQt6.QtCore import pyqtSignal, QSize, Qt
 from PyQt6.QtGui import QPixmap, QColor
 from overrides import overrides
 from qthandy import italic, busy, vspacer
-from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
+from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.common import NAV_BAR_BUTTON_DEFAULT_COLOR, \
@@ -45,7 +45,7 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.roadmap_view import RoadmapView
 from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.confirm import confirmed
-from plotlyst.view.widget.library import ShelvesTreeView, StoryCreationDialog, NovelDisplayCard
+from plotlyst.view.widget.library import ShelvesTreeView, StoryCreationDialog, NovelDisplayCard, SeriesDisplayCard
 from plotlyst.view.widget.tour import Tutorial
 from plotlyst.view.widget.tour.content import tutorial_titles, tutorial_descriptions
 from plotlyst.view.widget.tour.core import LibraryTourEvent, NewStoryButtonTourEvent, \
@@ -125,12 +125,17 @@ class HomeView(AbstractView):
         self.novelDisplayCard = NovelDisplayCard()
         self.ui.pageNovelDisplay.layout().addWidget(self.novelDisplayCard)
         self.ui.pageNovelDisplay.layout().addWidget(vspacer())
-
         self.novelDisplayCard.btnActivate.clicked.connect(lambda: self.loadNovel.emit(self._selected_novel))
         self.novelDisplayCard.lineNovelTitle.textEdited.connect(self._title_edited)
         self.novelDisplayCard.lineSubtitle.textEdited.connect(self._subtitle_edited)
         self.novelDisplayCard.textSynopsis.textChanged.connect(self._short_synopsis_edited)
         self.novelDisplayCard.iconSelector.iconSelected.connect(self._icon_changed)
+
+        self.seriesDisplayCard = SeriesDisplayCard()
+        self.ui.pageSeriesDisplay.layout().addWidget(self.seriesDisplayCard)
+        self.ui.pageSeriesDisplay.layout().addWidget(vspacer())
+        self.seriesDisplayCard.lineNovelTitle.textEdited.connect(self._title_edited)
+        self.seriesDisplayCard.iconSelector.iconSelected.connect(self._icon_changed)
 
         self.ui.btnAddNewStoryMain.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnAddNewStoryMain.clicked.connect(self._add_new_novel)
@@ -153,9 +158,6 @@ class HomeView(AbstractView):
         self._shelvesTreeView.newNovelRequested.connect(self._add_new_novel)
         self._shelvesTreeView.novelDeletionRequested.connect(self._on_delete)
         self._shelvesTreeView.novelOpenRequested.connect(self.loadNovel)
-
-        self.ui.pageNovelDisplay.installEventFilter(
-            VisibilityToggleEventFilter(self.novelDisplayCard.btnNovelSettings, self.ui.pageNovelDisplay))
 
         self.ui.btnAddNewStoryMain.setIconSize(QSize(24, 24))
 
@@ -239,8 +241,14 @@ class HomeView(AbstractView):
     def _novel_selected(self, novel: NovelDescriptor):
         self._selected_novel = None
 
-        self.ui.stackWdgNovels.setCurrentWidget(self.ui.pageNovelDisplay)
-        self.novelDisplayCard.setNovel(novel)
+        if novel.story_type == StoryType.Novel:
+            self.ui.stackWdgNovels.setCurrentWidget(self.ui.pageNovelDisplay)
+            self.novelDisplayCard.setNovel(novel)
+            self._selected_novel = novel
+        elif novel.story_type == StoryType.Series:
+            self.ui.stackWdgNovels.setCurrentWidget(self.ui.pageSeriesDisplay)
+            self.seriesDisplayCard.setNovel(novel)
+
         self._selected_novel = novel
 
     def _add_new_novel(self):

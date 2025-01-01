@@ -724,6 +724,22 @@ It offers a range of tools to support various stages of novel writing, including
                  </property>
                 </layout>
                </widget>
+               <widget class="QWidget" name="pageSeriesDisplay">
+                <layout class="QVBoxLayout" name="verticalLayout_16">
+                 <property name="leftMargin">
+                  <number>20</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>20</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>20</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>20</number>
+                 </property>
+                </layout>
+               </widget>
               </widget>
              </item>
             </layout>

@@ -26,7 +26,7 @@ from PyQt6.QtWidgets import QFileDialog, QDialog, QWidget, QStackedWidget, QButt
 from overrides import overrides
 from qthandy import vspacer, sp, hbox, vbox, line, incr_font, spacer, margins, incr_icon, transparent, \
     retain_when_hidden, italic, decr_icon, translucent
-from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
+from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter, VisibilityToggleEventFilter
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR, MAXIMUM_SIZE, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import NovelDescriptor, Novel, StoryType
@@ -40,7 +40,7 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_border_image
 from plotlyst.view.widget.button import DotsMenuButton
-from plotlyst.view.widget.display import PopupDialog, Subtitle, Icon
+from plotlyst.view.widget.display import PopupDialog, Subtitle, Icon, DividerWidget
 from plotlyst.view.widget.input import Toggle, AutoAdjustableLineEdit
 from plotlyst.view.widget.novel import NovelCustomizationWizard, ImportedNovelOverview
 from plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
@@ -193,12 +193,11 @@ class NovelDisplayCard(QWidget):
 
         self.lineNovelTitle = AutoAdjustableLineEdit(defaultWidth=70)
         transparent(self.lineNovelTitle)
-        self.lineNovelTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         incr_font(self.lineNovelTitle, 10)
 
         self.iconSelector = IconSelectorButton()
         self.wdgTitle.layout().addWidget(spacer())
-        self.wdgTitle.layout().addWidget(self.iconSelector, alignment=Qt.AlignmentFlag.AlignVCenter)
+        self.wdgTitle.layout().addWidget(wrap(self.iconSelector, margin_top=2), alignment=Qt.AlignmentFlag.AlignVCenter)
         self.wdgTitle.layout().addWidget(self.lineNovelTitle, alignment=Qt.AlignmentFlag.AlignVCenter)
         self.wdgTitle.layout().addWidget(spacer())
 
@@ -247,6 +246,8 @@ class NovelDisplayCard(QWidget):
         self.card.layout().addWidget(vspacer())
         self.card.layout().addWidget(self.btnActivate, alignment=Qt.AlignmentFlag.AlignCenter)
 
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnNovelSettings, self))
+
     def setNovel(self, novel: NovelDescriptor):
         self.lineNovelTitle.setText(novel.title)
         self.lineSubtitle.setText(novel.subtitle)
@@ -257,6 +258,45 @@ class NovelDisplayCard(QWidget):
 
         self.iconImportOrigin.setVisible(novel.is_scrivener_sync())
         self.textSynopsis.setText(novel.short_synopsis)
+
+
+class SeriesDisplayCard(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.card = frame()
+        self.card.setProperty('large-rounded', True)
+        self.card.setProperty('relaxed-white-bg', True)
+        self.card.setMaximumWidth(1000)
+        hbox(self).addWidget(self.card)
+        vbox(self.card, 5, spacing=8)
+        margins(self.card, bottom=40, top=15)
+
+        self.wdgTitle = QWidget()
+        hbox(self.wdgTitle)
+        self.wdgTitle.setMaximumWidth(1000)
+
+        self.lineNovelTitle = AutoAdjustableLineEdit(defaultWidth=70)
+        transparent(self.lineNovelTitle)
+        incr_font(self.lineNovelTitle, 16)
+
+        self.iconSelector = IconSelectorButton(selectedIconSize=36)
+        self.wdgTitle.layout().addWidget(spacer())
+        self.wdgTitle.layout().addWidget(wrap(self.iconSelector, margin_top=2), alignment=Qt.AlignmentFlag.AlignVCenter)
+        self.wdgTitle.layout().addWidget(self.lineNovelTitle, alignment=Qt.AlignmentFlag.AlignVCenter)
+        self.wdgTitle.layout().addWidget(spacer())
+
+        self.divider = DividerWidget()
+
+        self.card.layout().addWidget(self.wdgTitle)
+        self.card.layout().addWidget(self.divider)
+        self.card.layout().addWidget(vspacer())
+
+    def setNovel(self, novel: NovelDescriptor):
+        self.lineNovelTitle.setText(novel.title)
+        if novel.icon:
+            self.iconSelector.selectIcon(novel.icon, novel.icon_color)
+        else:
+            self.iconSelector.selectIcon('ph.books', 'black')
 
 
 class StoryCreationDialog(PopupDialog):
