@@ -25,7 +25,7 @@ from PyQt6.QtGui import QIcon, QPixmap
 from PyQt6.QtWidgets import QFileDialog, QDialog, QWidget, QStackedWidget, QButtonGroup, QLineEdit, QLabel
 from overrides import overrides
 from qthandy import vspacer, sp, hbox, vbox, line, incr_font, spacer, margins, incr_icon, transparent, \
-    retain_when_hidden, italic, decr_icon
+    retain_when_hidden, italic, decr_icon, translucent
 from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR, MAXIMUM_SIZE, RELAXED_WHITE_COLOR
@@ -215,6 +215,7 @@ class NovelDisplayCard(QWidget):
         self.iconImportOrigin.setIcon(IconRegistry.from_name('mdi.alpha-s-circle-outline', color='#410253'))
         self.iconImportOrigin.setToolTip('Synced from Scrivener')
         self.iconImportOrigin.installEventFilter(InstantTooltipEventFilter(self.iconImportOrigin))
+        translucent(self.iconImportOrigin, 0.7)
         incr_icon(self.iconImportOrigin, 8)
 
         self.btnActivate = push_btn(IconRegistry.book_icon(color='white', color_on='white'), 'Open story',
