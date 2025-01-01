@@ -27,15 +27,15 @@ from PyQt6.QtCore import pyqtSignal, QSize, Qt, QEvent, QPoint, QMimeData, QTime
 from PyQt6.QtGui import QDragEnterEvent, QDragMoveEvent, QColor, QAction, QIcon
 from PyQt6.QtWidgets import QFrame, QApplication, QToolButton, QTextBrowser
 from overrides import overrides
-from qthandy import clear_layout, retain_when_hidden, transparent, flow, translucent, gc, incr_icon, vbox
-from qthandy.filter import DragEventFilter, DropEventFilter
+from qthandy import clear_layout, retain_when_hidden, transparent, flow, translucent, gc, incr_icon, vbox, pointy
+from qthandy.filter import DragEventFilter, DropEventFilter, OpacityEventFilter
 
 from plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Character, Scene, Novel, NovelSetting, CardSizeRatio, NovelDescriptor
 from plotlyst.core.help import enneagram_help, mbti_help
 from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import fade, fade_in, fade_out
+from plotlyst.view.common import fade, fade_in, fade_out, tool_btn
 from plotlyst.view.generated.character_card_ui import Ui_CharacterCard
 from plotlyst.view.generated.scene_card_ui import Ui_SceneCard
 from plotlyst.view.icons import IconRegistry, set_avatar, avatars
@@ -381,6 +381,39 @@ class NovelCard(Card):
         super().refresh()
         self.textTitle.setText(self.novel.title)
         self.textTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+
+class PlaceholderCard(Card):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setAcceptDrops(False)
+        self._dragEnabled = False
+        vbox(self)
+        pointy(self)
+
+        self.btnPlus = tool_btn(IconRegistry.plus_icon('lightgrey'), transparent_=True)
+        self.btnPlus.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        self.btnPlus.setIconSize(QSize(124, 124))
+
+        self.layout().addWidget(self.btnPlus, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.3, enterOpacity=0.6))
+
+        self._setStyleSheet()
+
+    @overrides
+    def enterEvent(self, event: QEvent) -> None:
+        pass
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        pass
+
+    def _setStyleSheet(self, selected: bool = False):
+        self.setStyleSheet('''
+                   Card {
+                       border: 2px dotted grey;
+                       border-radius: 15px;
+                   }''')
 
 
 class CardFilter:

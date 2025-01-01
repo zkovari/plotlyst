@@ -40,7 +40,7 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_border_image
 from plotlyst.view.widget.button import DotsMenuButton
-from plotlyst.view.widget.cards import CardsView, NovelCard
+from plotlyst.view.widget.cards import CardsView, NovelCard, PlaceholderCard
 from plotlyst.view.widget.display import PopupDialog, Subtitle, Icon, DividerWidget
 from plotlyst.view.widget.input import Toggle, AutoAdjustableLineEdit
 from plotlyst.view.widget.novel import NovelCustomizationWizard, ImportedNovelOverview
@@ -292,7 +292,10 @@ class SeriesDisplayCard(QWidget):
 
         self.cards = CardsView()
         card1 = NovelCard(NovelDescriptor('The Fellowship of the Ring'))
+        self.placeholderCard = PlaceholderCard()
+        self.placeholderCard.btnPlus.setText('Attach a novel')
         self.cards.addCard(card1)
+        self.cards.addCard(self.placeholderCard)
 
         self.card.layout().addWidget(self.wdgTitle)
         self.card.layout().addWidget(self.divider)
