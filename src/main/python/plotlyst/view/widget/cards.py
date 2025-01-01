@@ -25,13 +25,13 @@ import qtanim
 from PyQt6 import QtGui
 from PyQt6.QtCore import pyqtSignal, QSize, Qt, QEvent, QPoint, QMimeData, QTimer
 from PyQt6.QtGui import QDragEnterEvent, QDragMoveEvent, QColor, QAction, QIcon
-from PyQt6.QtWidgets import QFrame, QApplication, QToolButton
+from PyQt6.QtWidgets import QFrame, QApplication, QToolButton, QTextBrowser
 from overrides import overrides
-from qthandy import clear_layout, retain_when_hidden, transparent, flow, translucent, gc, incr_icon
+from qthandy import clear_layout, retain_when_hidden, transparent, flow, translucent, gc, incr_icon, vbox
 from qthandy.filter import DragEventFilter, DropEventFilter
 
 from plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR
-from plotlyst.core.domain import Character, Scene, Novel, NovelSetting, CardSizeRatio
+from plotlyst.core.domain import Character, Scene, Novel, NovelSetting, CardSizeRatio, NovelDescriptor
 from plotlyst.core.help import enneagram_help, mbti_help
 from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
@@ -123,7 +123,7 @@ class Card(QFrame):
         border_size = self._borderSize(selected)
         background_color = self._bgColor(selected)
         self.setStyleSheet(f'''
-           QFrame[mainFrame=true] {{
+           Card {{
                border: {border_size}px solid {border_color};
                border-radius: 15px;
                background-color: {background_color};
@@ -343,6 +343,44 @@ class SceneCard(Ui_SceneCard, Card):
 
         self.btnBeat.setGeometry(w - self.btnBeat.sizeHint().width(), 0, self.btnBeat.sizeHint().width(),
                                  self.btnBeat.sizeHint().height() + 5)
+
+
+class NovelCard(Card):
+    def __init__(self, novel: NovelDescriptor, parent=None):
+        super().__init__(parent)
+        self.novel = novel
+
+        self.textTitle = QTextBrowser()
+        transparent(self.textTitle)
+        self.textTitle.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.textTitle.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.textTitle.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
+        self.textTitle.setContentsMargins(0, 0, 0, 0)
+        self.textTitle.document().setDocumentMargin(0)
+
+        vbox(self, margin=5)
+        self.layout().addWidget(self.textTitle)
+
+        self._setStyleSheet()
+        self.refresh()
+
+    @overrides
+    def mimeType(self) -> str:
+        return 'application/novel-card'
+
+    @overrides
+    def data(self) -> Any:
+        return self.novel
+
+    @overrides
+    def copy(self) -> 'Card':
+        return NovelCard(self.novel)
+
+    @overrides
+    def refresh(self):
+        super().refresh()
+        self.textTitle.setText(self.novel.title)
+        self.textTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
 
 class CardFilter:

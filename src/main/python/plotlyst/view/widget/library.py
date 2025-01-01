@@ -40,6 +40,7 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_border_image
 from plotlyst.view.widget.button import DotsMenuButton
+from plotlyst.view.widget.cards import CardsView, NovelCard
 from plotlyst.view.widget.display import PopupDialog, Subtitle, Icon, DividerWidget
 from plotlyst.view.widget.input import Toggle, AutoAdjustableLineEdit
 from plotlyst.view.widget.novel import NovelCustomizationWizard, ImportedNovelOverview
@@ -192,6 +193,7 @@ class NovelDisplayCard(QWidget):
         apply_border_image(self.wdgTitle, resource_registry.frame1)
 
         self.lineNovelTitle = AutoAdjustableLineEdit(defaultWidth=70)
+        self.lineNovelTitle.setPlaceholderText('Title')
         transparent(self.lineNovelTitle)
         incr_font(self.lineNovelTitle, 10)
 
@@ -276,19 +278,25 @@ class SeriesDisplayCard(QWidget):
         self.wdgTitle.setMaximumWidth(1000)
 
         self.lineNovelTitle = AutoAdjustableLineEdit(defaultWidth=70)
+        self.lineNovelTitle.setPlaceholderText('Title')
         transparent(self.lineNovelTitle)
         incr_font(self.lineNovelTitle, 16)
 
         self.iconSelector = IconSelectorButton(selectedIconSize=36)
         self.wdgTitle.layout().addWidget(spacer())
         self.wdgTitle.layout().addWidget(wrap(self.iconSelector, margin_top=2), alignment=Qt.AlignmentFlag.AlignVCenter)
-        self.wdgTitle.layout().addWidget(self.lineNovelTitle, alignment=Qt.AlignmentFlag.AlignVCenter)
+        self.wdgTitle.layout().addWidget(self.lineNovelTitle)
         self.wdgTitle.layout().addWidget(spacer())
 
         self.divider = DividerWidget()
 
+        self.cards = CardsView()
+        card1 = NovelCard(NovelDescriptor('The Fellowship of the Ring'))
+        self.cards.addCard(card1)
+
         self.card.layout().addWidget(self.wdgTitle)
         self.card.layout().addWidget(self.divider)
+        self.card.layout().addWidget(self.cards)
         self.card.layout().addWidget(vspacer())
 
     def setNovel(self, novel: NovelDescriptor):
