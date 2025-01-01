@@ -50,6 +50,10 @@ QWidget[bg=true] {{
     background-color: {BG_PRIMARY_COLOR};
 }}
 
+QWidget[muted-bg=true] {{
+    background-color: {BG_MUTED_COLOR};
+}}
+
 QWidget[darker-bg=true] {{
     background-color: {BG_MUTED_COLOR};
 }}

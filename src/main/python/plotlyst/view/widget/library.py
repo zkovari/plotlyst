@@ -20,12 +20,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import List, Set, Dict, Optional
 
-from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtCore import pyqtSignal, Qt, QSize
 from PyQt6.QtGui import QIcon, QPixmap
 from PyQt6.QtWidgets import QFileDialog, QDialog, QWidget, QStackedWidget, QButtonGroup, QLineEdit, QLabel
 from overrides import overrides
-from qthandy import vspacer, sp, hbox, vbox, line, incr_font, spacer, margins
-from qthandy.filter import OpacityEventFilter
+from qthandy import vspacer, sp, hbox, vbox, line, incr_font, spacer, margins, incr_icon, transparent, \
+    retain_when_hidden, italic, decr_icon
+from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR, MAXIMUM_SIZE, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import NovelDescriptor, Novel, StoryType
@@ -37,10 +38,13 @@ from plotlyst.service.resource import ask_for_resource
 from plotlyst.view.common import push_btn, link_buttons_to_pages, tool_btn, label, frame
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
-from plotlyst.view.widget.display import PopupDialog, Subtitle
-from plotlyst.view.widget.input import Toggle
+from plotlyst.view.style.base import apply_border_image
+from plotlyst.view.widget.button import DotsMenuButton
+from plotlyst.view.widget.display import PopupDialog, Subtitle, Icon
+from plotlyst.view.widget.input import Toggle, AutoAdjustableLineEdit
 from plotlyst.view.widget.novel import NovelCustomizationWizard, ImportedNovelOverview
 from plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
+from plotlyst.view.widget.utility import IconSelectorButton
 
 
 class NovelNode(ContainerNode):
@@ -174,12 +178,65 @@ class NovelDisplayCard(QWidget):
         super().__init__(parent)
         self.card = frame()
         self.card.setProperty('large-rounded', True)
-        vbox(self)
+        self.card.setProperty('relaxed-white-bg', True)
+        self.card.setMaximumWidth(1000)
+        hbox(self).addWidget(self.card)
+        vbox(self.card, spacing=8)
+        margins(self.card, left=25, right=25, bottom=15)
 
-        self.layout().addWidget(self.card)
+        self.wdgTitle = QWidget()
+        self.wdgTitle.setProperty('border-image', True)
+        hbox(self.wdgTitle)
+        self.wdgTitle.setFixedHeight(150)
+        self.wdgTitle.setMaximumWidth(1000)
+        apply_border_image(self.wdgTitle, resource_registry.frame1)
 
-    def setNovel(self, novel: Novel):
-        pass
+        self.lineNovelTitle = QLineEdit()
+        transparent(self.lineNovelTitle)
+        self.lineNovelTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        incr_font(self.lineNovelTitle, 10)
+        self.wdgTitle.layout().addWidget(self.lineNovelTitle)
+
+        self.btnNovelSettings = DotsMenuButton()
+        retain_when_hidden(self.btnNovelSettings)
+        self.btnNovelSettings.setHidden(True)
+
+        self.lineSubtitle = AutoAdjustableLineEdit()
+        self.lineSubtitle.setPlaceholderText('Subtitle')
+        transparent(self.lineSubtitle)
+        italic(self.lineSubtitle)
+        self.iconSubtitle = Icon()
+        self.iconSubtitle.setIcon(IconRegistry.from_name('mdi.send', 'grey'))
+        decr_icon(self.iconSubtitle, 4)
+
+        self.iconSelector = IconSelectorButton()
+
+        self.iconImportOrigin = Icon()
+        self.iconImportOrigin.setIcon(IconRegistry.from_name('mdi.alpha-s-circle-outline', color='#410253'))
+        self.iconImportOrigin.setToolTip('Synced from Scrivener')
+        self.iconImportOrigin.installEventFilter(InstantTooltipEventFilter(self.iconImportOrigin))
+        incr_icon(self.iconImportOrigin, 8)
+
+        self.btnActivate = push_btn(IconRegistry.book_icon(color='white', color_on='white'), 'Open story',
+                                    properties=['confirm', 'positive', 'large'])
+        self.btnActivate.setIconSize(QSize(28, 28))
+
+        self.card.layout().addWidget(self.btnNovelSettings, alignment=Qt.AlignmentFlag.AlignRight)
+        self.card.layout().addWidget(self.wdgTitle)
+        self.card.layout().addWidget(group(self.iconImportOrigin, spacer(), self.iconSubtitle, self.lineSubtitle))
+        self.card.layout().addWidget(self.iconSelector, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.card.layout().addWidget(vspacer())
+        self.card.layout().addWidget(self.btnActivate, alignment=Qt.AlignmentFlag.AlignCenter)
+
+    def setNovel(self, novel: NovelDescriptor):
+        self.lineNovelTitle.setText(novel.title)
+        self.lineSubtitle.setText(novel.subtitle)
+        if novel.icon:
+            self.iconSelector.selectIcon(novel.icon, novel.icon_color)
+        else:
+            self.iconSelector.reset()
+
+        self.iconImportOrigin.setVisible(novel.is_scrivener_sync())
 
 
 class StoryCreationDialog(PopupDialog):

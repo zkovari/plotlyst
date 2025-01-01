@@ -701,8 +701,28 @@ It offers a range of tools to support various stages of novel writing, including
                </widget>
                <widget class="QWidget" name="pageNovelDisplay">
                 <property name="white-bg" stdset="0">
-                 <bool>true</bool>
+                 <bool>false</bool>
                 </property>
+                <property name="muted-bg" stdset="0">
+                 <bool>false</bool>
+                </property>
+                <property name="bg" stdset="0">
+                 <bool>false</bool>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_13">
+                 <property name="leftMargin">
+                  <number>20</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>20</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>20</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>20</number>
+                 </property>
+                </layout>
                </widget>
               </widget>
              </item>
