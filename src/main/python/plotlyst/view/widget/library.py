@@ -44,13 +44,14 @@ from plotlyst.view.widget.cards import CardsView, NovelCard, PlaceholderCard
 from plotlyst.view.widget.display import PopupDialog, Subtitle, Icon, DividerWidget
 from plotlyst.view.widget.input import Toggle, AutoAdjustableLineEdit
 from plotlyst.view.widget.novel import NovelCustomizationWizard, ImportedNovelOverview
-from plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
+from plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings, ItemBasedTreeSelectorPopup
 from plotlyst.view.widget.utility import IconSelectorButton
 
 
 class NovelNode(ContainerNode):
-    def __init__(self, novel: NovelDescriptor, parent=None, settings: Optional[TreeSettings] = None):
-        super(NovelNode, self).__init__(novel.title, parent=parent, settings=settings)
+    def __init__(self, novel: NovelDescriptor, parent=None, settings: Optional[TreeSettings] = None,
+                 readOnly: bool = False):
+        super(NovelNode, self).__init__(novel.title, parent=parent, settings=settings, readOnly=readOnly)
         self._novel = novel
         self.setPlusButtonEnabled(False)
         self.setTranslucentIconEnabled(True)
@@ -77,8 +78,9 @@ class NovelNode(ContainerNode):
 class ShelveNode(ContainerNode):
     newNovelRequested = pyqtSignal()
 
-    def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None, settings: Optional[TreeSettings] = None):
-        super(ShelveNode, self).__init__(title, icon, parent, settings=settings)
+    def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None, settings: Optional[TreeSettings] = None,
+                 readOnly: bool = False):
+        super(ShelveNode, self).__init__(title, icon, parent, settings=settings, readOnly=readOnly)
         self.setMenuEnabled(False)
         sp(self._lblTitle).h_min()
         self._btnAdd.setIcon(IconRegistry.plus_icon(PLOTLYST_MAIN_COLOR))
@@ -97,15 +99,17 @@ class ShelvesTreeView(TreeView):
     novelsShelveSelected = pyqtSignal()
     newNovelRequested = pyqtSignal()
 
-    def __init__(self, parent=None, settings: Optional[TreeSettings] = None):
+    def __init__(self, parent=None, settings: Optional[TreeSettings] = None, readOnly: bool = False):
         super(ShelvesTreeView, self).__init__(parent)
         self._settings = settings
+        self._readOnly = readOnly
         self._centralWidget.setProperty('bg', True)
 
         self._selectedNovels: Set[NovelDescriptor] = set()
         self._novels: Dict[NovelDescriptor, NovelNode] = {}
 
-        self._wdgNovels = ShelveNode('Novels', IconRegistry.from_name('mdi.bookshelf'), settings=self._settings)
+        self._wdgNovels = ShelveNode('Novels', IconRegistry.from_name('mdi.bookshelf'), settings=self._settings,
+                                     readOnly=self._readOnly)
         self._wdgNovels.selectionChanged.connect(self._novelsShelveSelectionChanged)
         self._wdgNovels.newNovelRequested.connect(self.newNovelRequested)
         # self._wdgShortStories = ShelveNode('Short stories', IconRegistry.from_name('ph.file-text'),
@@ -135,7 +139,7 @@ class ShelvesTreeView(TreeView):
 
         self._wdgNovels.clearChildren()
         for novel in novels:
-            node = NovelNode(novel, settings=self._settings)
+            node = NovelNode(novel, settings=self._settings, readOnly=self._readOnly)
             self._wdgNovels.addChild(node)
             self._novels[novel] = node
             node.selectionChanged.connect(partial(self._novelSelectionChanged, node))
@@ -172,6 +176,20 @@ class ShelvesTreeView(TreeView):
     def _novelDoubleClicked(self, novel: Novel):
         if novel.story_type == StoryType.Novel:
             self.novelOpenRequested.emit(novel)
+
+
+class NovelSelectorPopup(ItemBasedTreeSelectorPopup):
+    def __init__(self, novels: List[NovelDescriptor], parent=None):
+        self.novels = novels
+        super().__init__(parent)
+
+    @overrides
+    def _initTreeView(self) -> TreeView:
+        tree = ShelvesTreeView(readOnly=True)
+        tree.setNovels(self.novels)
+        tree.novelSelected.connect(self._selected)
+
+        return tree
 
 
 class NovelDisplayCard(QWidget):

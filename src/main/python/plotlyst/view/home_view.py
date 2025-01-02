@@ -45,7 +45,8 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.roadmap_view import RoadmapView
 from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.confirm import confirmed
-from plotlyst.view.widget.library import ShelvesTreeView, StoryCreationDialog, NovelDisplayCard, SeriesDisplayCard
+from plotlyst.view.widget.library import ShelvesTreeView, StoryCreationDialog, NovelDisplayCard, SeriesDisplayCard, \
+    NovelSelectorPopup
 from plotlyst.view.widget.tour import Tutorial
 from plotlyst.view.widget.tour.content import tutorial_titles, tutorial_descriptions
 from plotlyst.view.widget.tour.core import LibraryTourEvent, NewStoryButtonTourEvent, \
@@ -136,6 +137,7 @@ class HomeView(AbstractView):
         self.ui.pageSeriesDisplay.layout().addWidget(vspacer())
         self.seriesDisplayCard.lineNovelTitle.textEdited.connect(self._title_edited)
         self.seriesDisplayCard.iconSelector.iconSelected.connect(self._icon_changed)
+        self.seriesDisplayCard.placeholderCard.selected.connect(self._attach_novel_to_series)
 
         self.ui.btnAddNewStoryMain.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnAddNewStoryMain.clicked.connect(self._add_new_novel)
@@ -323,6 +325,12 @@ class HomeView(AbstractView):
                 self._selected_novel = None
                 self.reset()
             self.refresh()
+
+    def _attach_novel_to_series(self):
+        if self._selected_novel and self._selected_novel.story_type == StoryType.Series:
+            novel = NovelSelectorPopup.popup(self._novels)
+            if novel:
+                print(novel.title)
 
     def _tutorial_selected(self, tutorial: Tutorial):
         if tutorial.is_container():

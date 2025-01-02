@@ -394,6 +394,7 @@ class PlaceholderCard(Card):
         self.btnPlus = tool_btn(IconRegistry.plus_icon('lightgrey'), transparent_=True)
         self.btnPlus.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         self.btnPlus.setIconSize(QSize(124, 124))
+        self.btnPlus.clicked.connect(self.selected)
 
         self.layout().addWidget(self.btnPlus, alignment=Qt.AlignmentFlag.AlignCenter)
         self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.3, enterOpacity=0.6))
@@ -408,6 +409,19 @@ class PlaceholderCard(Card):
     def leaveEvent(self, event: QEvent) -> None:
         pass
 
+    @overrides
+    def mimeType(self) -> str:
+        pass
+
+    @overrides
+    def data(self) -> Any:
+        pass
+
+    @overrides
+    def copy(self) -> 'Card':
+        pass
+
+    @overrides
     def _setStyleSheet(self, selected: bool = False):
         self.setStyleSheet('''
                    Card {
