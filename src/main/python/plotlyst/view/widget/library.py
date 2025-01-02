@@ -87,10 +87,6 @@ class ShelveNode(ContainerNode):
         self._btnAdd.clicked.connect(self.newNovelRequested.emit)
 
 
-class SeriesNode(ContainerNode):
-    pass
-
-
 class ShelvesTreeView(TreeView):
     novelSelected = pyqtSignal(NovelDescriptor)
     novelChanged = pyqtSignal(NovelDescriptor)
@@ -107,6 +103,7 @@ class ShelvesTreeView(TreeView):
 
         self._selectedNovels: Set[NovelDescriptor] = set()
         self._novels: Dict[NovelDescriptor, NovelNode] = {}
+        self._series: Dict[str, NovelNode] = {}
 
         self._wdgNovels = ShelveNode('Novels', IconRegistry.from_name('mdi.bookshelf'), settings=self._settings,
                                      readOnly=self._readOnly)
@@ -136,16 +133,25 @@ class ShelvesTreeView(TreeView):
     def setNovels(self, novels: List[NovelDescriptor]):
         self.clearSelection()
         self._novels.clear()
+        self._series.clear()
+
+        novels_under_series: List[NovelDescriptor] = []
 
         self._wdgNovels.clearChildren()
         for novel in novels:
-            node = NovelNode(novel, settings=self._settings, readOnly=self._readOnly)
+            if novel.parent:
+                novels_under_series.append(novel)
+                continue
+            node = self.__initNode(novel)
             self._wdgNovels.addChild(node)
-            self._novels[novel] = node
-            node.selectionChanged.connect(partial(self._novelSelectionChanged, node))
-            node.iconChanged.connect(partial(self.novelChanged.emit, novel))
-            node.deleted.connect(partial(self.novelDeletionRequested.emit, novel))
-            node.doubleClicked.connect(partial(self._novelDoubleClicked, novel))
+
+        for novel in novels_under_series:
+            node = self.__initNode(novel)
+            series = self._series.get(str(novel.parent))
+            if series:
+                series.addChild(node)
+            else:
+                self._wdgNovels.addChild(node)
 
     def updateNovel(self, novel: NovelDescriptor):
         self._novels[novel].refresh()
@@ -155,6 +161,10 @@ class ShelvesTreeView(TreeView):
         self._novels[novel].select()
         self._selectedNovels.add(novel)
         self.novelSelected.emit(novel)
+
+    def childrenNovels(self, novel: NovelDescriptor) -> List[NovelDescriptor]:
+        node = self._novels[novel]
+        return [x.novel() for x in node.childrenWidgets()]
 
     def clearSelection(self):
         for novel in self._selectedNovels:
@@ -173,9 +183,20 @@ class ShelvesTreeView(TreeView):
             self.clearSelection()
             self.novelsShelveSelected.emit()
 
-    def _novelDoubleClicked(self, novel: Novel):
+    def _novelDoubleClicked(self, novel: NovelDescriptor):
         if novel.story_type == StoryType.Novel:
             self.novelOpenRequested.emit(novel)
+
+    def __initNode(self, novel: NovelDescriptor) -> NovelNode:
+        node = NovelNode(novel, settings=self._settings, readOnly=self._readOnly)
+        node.selectionChanged.connect(partial(self._novelSelectionChanged, node))
+        node.iconChanged.connect(partial(self.novelChanged.emit, novel))
+        node.deleted.connect(partial(self.novelDeletionRequested.emit, novel))
+        node.doubleClicked.connect(partial(self._novelDoubleClicked, novel))
+        self._novels[novel] = node
+        if novel.story_type == StoryType.Series:
+            self._series[str(novel.id)] = node
+        return node
 
 
 class NovelSelectorPopup(ItemBasedTreeSelectorPopup):
@@ -191,6 +212,9 @@ class NovelSelectorPopup(ItemBasedTreeSelectorPopup):
 
         return tree
 
+    @overrides
+    def _title(self) -> str:
+        return 'Select a novel'
 
 class NovelDisplayCard(QWidget):
     def __init__(self, parent=None):
@@ -281,6 +305,8 @@ class NovelDisplayCard(QWidget):
 
 
 class SeriesDisplayCard(QWidget):
+    attachNovel = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.card = frame()
@@ -309,11 +335,8 @@ class SeriesDisplayCard(QWidget):
         self.divider = DividerWidget()
 
         self.cards = CardsView()
-        card1 = NovelCard(NovelDescriptor('The Fellowship of the Ring'))
-        self.placeholderCard = PlaceholderCard()
-        self.placeholderCard.btnPlus.setText('Attach a novel')
-        self.cards.addCard(card1)
-        self.cards.addCard(self.placeholderCard)
+        margins(self.cards, left=25, right=25, top=25)
+        self.cards.setCardsWidth(160)
 
         self.card.layout().addWidget(self.wdgTitle)
         self.card.layout().addWidget(self.divider)
@@ -326,6 +349,20 @@ class SeriesDisplayCard(QWidget):
             self.iconSelector.selectIcon(novel.icon, novel.icon_color)
         else:
             self.iconSelector.selectIcon('ph.books', 'black')
+
+    def setChildren(self, novels: List[NovelDescriptor]):
+        self.cards.clear()
+        for novel in novels:
+            card = NovelCard(novel)
+            self.cards.addCard(card)
+
+        self._addPlaceholder()
+
+    def _addPlaceholder(self):
+        placeholderCard = PlaceholderCard()
+        placeholderCard.btnPlus.setText('Attach a novel')
+        placeholderCard.selected.connect(self.attachNovel)
+        self.cards.addCard(placeholderCard)
 
 
 class StoryCreationDialog(PopupDialog):

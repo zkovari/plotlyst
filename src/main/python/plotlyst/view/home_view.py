@@ -137,7 +137,7 @@ class HomeView(AbstractView):
         self.ui.pageSeriesDisplay.layout().addWidget(vspacer())
         self.seriesDisplayCard.lineNovelTitle.textEdited.connect(self._title_edited)
         self.seriesDisplayCard.iconSelector.iconSelected.connect(self._icon_changed)
-        self.seriesDisplayCard.placeholderCard.selected.connect(self._attach_novel_to_series)
+        self.seriesDisplayCard.attachNovel.connect(self._attach_novel_to_series)
 
         self.ui.btnAddNewStoryMain.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnAddNewStoryMain.clicked.connect(self._add_new_novel)
@@ -250,6 +250,7 @@ class HomeView(AbstractView):
         elif novel.story_type == StoryType.Series:
             self.ui.stackWdgNovels.setCurrentWidget(self.ui.pageSeriesDisplay)
             self.seriesDisplayCard.setNovel(novel)
+            self.seriesDisplayCard.setChildren(self._shelvesTreeView.childrenNovels(novel))
 
         self._selected_novel = novel
 
@@ -330,7 +331,10 @@ class HomeView(AbstractView):
         if self._selected_novel and self._selected_novel.story_type == StoryType.Series:
             novel = NovelSelectorPopup.popup(self._novels)
             if novel:
-                print(novel.title)
+                novel.parent = self._selected_novel.id
+                self.repo.update_project_novel(novel)
+                self.refresh()
+                self._shelvesTreeView.selectNovel(self._selected_novel)
 
     def _tutorial_selected(self, tutorial: Tutorial):
         if tutorial.is_container():

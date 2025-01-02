@@ -3203,6 +3203,7 @@ class NovelDescriptor:
     creation_date: Optional[datetime] = None
     story_type: StoryType = field(default=StoryType.Novel)
     short_synopsis: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    parent: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
     def __post_init__(self):
         if self.creation_date is None:
