@@ -216,6 +216,17 @@ class NovelSelectorPopup(ItemBasedTreeSelectorPopup):
     def _title(self) -> str:
         return 'Select a novel'
 
+    @overrides
+    def _selected(self, item: NovelDescriptor):
+        if item.story_type == StoryType.Novel:
+            self._selectedElement = item
+            self.btnSelect.setEnabled(True)
+        else:
+            self._selectedElement = None
+            self.btnSelect.setEnabled(False)
+
+
+
 class NovelDisplayCard(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)

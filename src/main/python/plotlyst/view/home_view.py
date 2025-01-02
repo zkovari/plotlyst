@@ -330,7 +330,7 @@ class HomeView(AbstractView):
     def _attach_novel_to_series(self):
         if self._selected_novel and self._selected_novel.story_type == StoryType.Series:
             novel = NovelSelectorPopup.popup(self._novels)
-            if novel:
+            if novel and novel.parent != self._selected_novel.id:
                 novel.parent = self._selected_novel.id
                 self.repo.update_project_novel(novel)
                 self.refresh()
