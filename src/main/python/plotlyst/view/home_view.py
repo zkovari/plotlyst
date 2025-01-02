@@ -139,6 +139,7 @@ class HomeView(AbstractView):
         self.seriesDisplayCard.lineNovelTitle.textEdited.connect(self._title_edited)
         self.seriesDisplayCard.iconSelector.iconSelected.connect(self._icon_changed)
         self.seriesDisplayCard.attachNovel.connect(self._attach_novel_to_series)
+        self.seriesDisplayCard.openNovel.connect(self.loadNovel)
 
         self.ui.btnAddNewStoryMain.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnAddNewStoryMain.clicked.connect(self._add_new_novel)

@@ -329,6 +329,7 @@ class NovelDisplayCard(QWidget):
 
 class SeriesDisplayCard(QWidget):
     attachNovel = pyqtSignal()
+    openNovel = pyqtSignal(NovelDescriptor)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -380,6 +381,7 @@ class SeriesDisplayCard(QWidget):
         self.cards.clear()
         for novel in novels:
             card = NovelCard(novel)
+            card.btnOpen.clicked.connect(partial(self.openNovel.emit, novel))
             self.cards.addCard(card)
 
         self._addPlaceholder()

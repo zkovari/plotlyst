@@ -30,16 +30,17 @@ from overrides import overrides
 from qthandy import clear_layout, retain_when_hidden, transparent, flow, translucent, gc, incr_icon, vbox, pointy
 from qthandy.filter import DragEventFilter, DropEventFilter, OpacityEventFilter
 
-from plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR
+from plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Character, Scene, Novel, NovelSetting, CardSizeRatio, NovelDescriptor
 from plotlyst.core.help import enneagram_help, mbti_help
 from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import fade, fade_in, fade_out, tool_btn
+from plotlyst.view.common import fade, fade_in, fade_out, tool_btn, push_btn
 from plotlyst.view.generated.character_card_ui import Ui_CharacterCard
 from plotlyst.view.generated.scene_card_ui import Ui_SceneCard
 from plotlyst.view.icons import IconRegistry, set_avatar, avatars
 from plotlyst.view.style.button import apply_button_palette_color
+from plotlyst.view.widget.button import DotsMenuButton
 from plotlyst.view.widget.labels import CharacterAvatarLabel
 
 
@@ -350,6 +351,8 @@ class NovelCard(Card):
         super().__init__(parent)
         self.novel = novel
 
+        self.btnSettings = DotsMenuButton()
+
         self.textTitle = QTextBrowser()
         transparent(self.textTitle)
         self.textTitle.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -358,12 +361,32 @@ class NovelCard(Card):
         self.textTitle.setContentsMargins(0, 0, 0, 0)
         self.textTitle.document().setDocumentMargin(0)
 
+        self.btnOpen = push_btn(IconRegistry.book_icon(RELAXED_WHITE_COLOR, RELAXED_WHITE_COLOR), 'Open',
+                                properties=['positive', 'confirm'])
+
         vbox(self, margin=5)
+        self.layout().addWidget(self.btnSettings, alignment=Qt.AlignmentFlag.AlignRight)
         self.layout().addWidget(self.textTitle)
+        self.layout().addWidget(self.btnOpen, alignment=Qt.AlignmentFlag.AlignRight)
+        
+        self.btnSettings.setHidden(True)
+        self.btnOpen.setHidden(True)
 
         self._setStyleSheet()
         self.refresh()
-
+    
+    @overrides
+    def enterEvent(self, event: QEvent) -> None:
+        super().enterEvent(event)
+        fade_in(self.btnSettings)
+        fade_in(self.btnOpen)
+    
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        super().leaveEvent(event)
+        self.btnSettings.setHidden(True)
+        self.btnOpen.setHidden(True)
+    
     @overrides
     def mimeType(self) -> str:
         return 'application/novel-card'
