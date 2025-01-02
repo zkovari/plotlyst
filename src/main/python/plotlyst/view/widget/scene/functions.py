@@ -369,16 +369,16 @@ class SceneFunctionsWidget(QWidget):
         self.menuPrimary.addSeparator()
         self.menuPrimary.addAction(action('Advance story', IconRegistry.storylines_icon(),
                                           slot=partial(self._addPrimary, StoryElementType.Plot),
-                                          tooltip="This scene primarily advances or complicates the story by affecting the plot, character development, or relationships",
+                                          tooltip="This scene primarily advances or complicates the story \nby affecting the plot, character development, or relationships",
                                           incr_font_=2))
         self.menuPrimary.addAction(
             action('Character insight', IconRegistry.character_icon(),
                    slot=partial(self._addPrimary, StoryElementType.Character),
-                   tooltip="This scene primarily provides new information, layers, or development about a character",
+                   tooltip="This scene primarily provides new information, layers, \nor development about a character",
                    incr_font_=2))
         self.menuPrimary.addAction(action('Mystery', IconRegistry.from_name('ei.question-sign'),
                                           slot=partial(self._addPrimary, StoryElementType.Mystery),
-                                          tooltip="This scene primarily introduces or deepens a mystery that drives the narrative forward",
+                                          tooltip="This scene primarily introduces or deepens a mystery \nthat drives the narrative forward",
                                           incr_font_=2))
         self.menuPrimary.addAction(action('Resonance', IconRegistry.theme_icon('black'),
                                           slot=partial(self._addPrimary, StoryElementType.Resonance),
