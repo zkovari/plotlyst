@@ -133,8 +133,8 @@ class HomeView(AbstractView):
         self.novelDisplayCard.iconSelector.iconSelected.connect(self._icon_changed)
 
         self.seriesDisplayCard = SeriesDisplayCard()
-        self.ui.pageSeriesDisplay.layout().addWidget(self.seriesDisplayCard)
-        self.ui.pageSeriesDisplay.layout().addWidget(vspacer())
+        self.ui.scrollAreaSeries.layout().addWidget(self.seriesDisplayCard)
+        self.ui.scrollAreaSeries.layout().addWidget(vspacer())
         self.seriesDisplayCard.lineNovelTitle.textEdited.connect(self._title_edited)
         self.seriesDisplayCard.iconSelector.iconSelected.connect(self._icon_changed)
         self.seriesDisplayCard.attachNovel.connect(self._attach_novel_to_series)
