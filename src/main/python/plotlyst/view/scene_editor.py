@@ -143,10 +143,10 @@ class SceneEditor(QObject, EventListener):
         self.tblCharacters.clicked.connect(self._characters_model.toggleSelection)
 
         self.ui.btnEditCharacters.setIcon(IconRegistry.plus_edit_icon())
-        menu = MenuWidget(self.ui.btnEditCharacters)
+        menu = MenuWidget(self.ui.btnStageCharacterLabel)
         menu.addWidget(self.tblCharacters)
         self.ui.btnEditCharacters.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnEditCharacters))
-        self.ui.btnStageCharacterLabel.clicked.connect(lambda: menu.exec())
+        self.ui.btnEditCharacters.clicked.connect(lambda: menu.exec())
 
         # self.tag_selector = SceneTagSelector(self.novel, self.scene)
         # self.ui.wdgTags.layout().addWidget(self.tag_selector)
