@@ -25,7 +25,7 @@ from PyQt6.QtGui import QIcon, QPixmap
 from PyQt6.QtWidgets import QFileDialog, QDialog, QWidget, QStackedWidget, QButtonGroup, QLineEdit, QLabel, QTextEdit
 from overrides import overrides
 from qthandy import vspacer, sp, hbox, vbox, line, incr_font, spacer, margins, incr_icon, transparent, \
-    retain_when_hidden, italic, decr_icon, translucent
+    retain_when_hidden, italic, decr_icon, translucent, pointy
 from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter, VisibilityToggleEventFilter
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR, MAXIMUM_SIZE, RELAXED_WHITE_COLOR
@@ -33,6 +33,7 @@ from plotlyst.core.domain import NovelDescriptor, Novel, StoryType
 from plotlyst.core.scrivener import ScrivenerParser
 from plotlyst.env import app_env
 from plotlyst.resources import ResourceType, resource_registry
+from plotlyst.service.cache import entities_registry
 from plotlyst.service.manuscript import import_docx
 from plotlyst.service.resource import ask_for_resource
 from plotlyst.view.common import push_btn, link_buttons_to_pages, tool_btn, label, frame, wrap
@@ -43,6 +44,7 @@ from plotlyst.view.widget.button import DotsMenuButton
 from plotlyst.view.widget.cards import CardsView, NovelCard, PlaceholderCard
 from plotlyst.view.widget.display import PopupDialog, Subtitle, Icon, DividerWidget
 from plotlyst.view.widget.input import Toggle, AutoAdjustableLineEdit
+from plotlyst.view.widget.labels import SeriesLabel
 from plotlyst.view.widget.novel import NovelCustomizationWizard, ImportedNovelOverview
 from plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings, ItemBasedTreeSelectorPopup
 from plotlyst.view.widget.utility import IconSelectorButton
@@ -275,6 +277,9 @@ class NovelDisplayCard(QWidget):
         translucent(self.iconImportOrigin, 0.7)
         incr_icon(self.iconImportOrigin, 8)
 
+        self.seriesLabel = SeriesLabel()
+        pointy(self.seriesLabel)
+
         self.wdgSynopsis = QWidget()
         hbox(self.wdgSynopsis, spacing=0)
         margins(self.wdgSynopsis, left=100, right=100)
@@ -292,7 +297,7 @@ class NovelDisplayCard(QWidget):
                                     properties=['confirm', 'positive', 'large'])
         self.btnActivate.setIconSize(QSize(28, 28))
 
-        self.card.layout().addWidget(group(self.iconImportOrigin, spacer(), self.btnNovelSettings, margin_left=15))
+        self.card.layout().addWidget(group(self.iconImportOrigin, self.seriesLabel, spacer(), self.btnNovelSettings, margin_left=15))
         self.card.layout().addWidget(self.wdgTitle)
         self.card.layout().addWidget(
             group(spacer(), self.iconSubtitle, self.lineSubtitle, margin_left=25,
@@ -310,6 +315,13 @@ class NovelDisplayCard(QWidget):
             self.iconSelector.selectIcon(novel.icon, novel.icon_color)
         else:
             self.iconSelector.selectIcon('fa5s.book-open', 'black')
+
+        series = entities_registry.series(novel)
+        if series:
+            self.seriesLabel.setSeries(series)
+            self.seriesLabel.setVisible(True)
+        else:
+            self.seriesLabel.setVisible(False)
 
         self.iconImportOrigin.setVisible(novel.is_scrivener_sync())
         self.textSynopsis.setText(novel.short_synopsis)

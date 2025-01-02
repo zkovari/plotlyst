@@ -22,7 +22,7 @@ from typing import List, Optional
 from PyQt6.QtCore import pyqtSignal, QSize, Qt
 from PyQt6.QtGui import QPixmap, QColor
 from overrides import overrides
-from qthandy import italic, busy, vspacer
+from qthandy import italic, busy, vspacer, margins
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -35,6 +35,7 @@ from plotlyst.event.core import emit_global_event, Event
 from plotlyst.event.handler import global_event_dispatcher
 from plotlyst.events import NovelDeletedEvent, NovelUpdatedEvent
 from plotlyst.resources import resource_registry
+from plotlyst.service.cache import entities_registry
 from plotlyst.service.persistence import flush_or_fail
 from plotlyst.service.tour import TourService
 from plotlyst.view._view import AbstractView
@@ -150,6 +151,7 @@ class HomeView(AbstractView):
                                    properties=['base', 'positive'])
         self._btnAddNew.clicked.connect(self._add_new_novel)
         self._shelvesTreeView = ShelvesTreeView(settings=TreeSettings(font_incr=2))
+        margins(self._shelvesTreeView.centralWidget(), bottom=45)
         self.ui.splitterLibrary.setSizes([150, 500])
         self.ui.wdgShelvesParent.layout().addWidget(wrap(self._btnAddNew, margin_left=10, margin_top=10),
                                                     alignment=Qt.AlignmentFlag.AlignLeft)
@@ -239,6 +241,9 @@ class HomeView(AbstractView):
     @overrides
     def refresh(self):
         self._shelvesTreeView.setNovels(self._novels)
+
+        series = [x for x in self._novels if x.story_type == StoryType.Series]
+        entities_registry.set_series(series)
 
     def _novel_selected(self, novel: NovelDescriptor):
         self._selected_novel = None
