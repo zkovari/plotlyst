@@ -228,7 +228,6 @@ class NovelSelectorPopup(ItemBasedTreeSelectorPopup):
             self.btnSelect.setEnabled(False)
 
 
-
 class NovelDisplayCard(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -297,7 +296,8 @@ class NovelDisplayCard(QWidget):
                                     properties=['confirm', 'positive', 'large'])
         self.btnActivate.setIconSize(QSize(28, 28))
 
-        self.card.layout().addWidget(group(self.iconImportOrigin, self.seriesLabel, spacer(), self.btnNovelSettings, margin_left=15))
+        self.card.layout().addWidget(
+            group(self.iconImportOrigin, self.seriesLabel, spacer(), self.btnNovelSettings, margin_left=15))
         self.card.layout().addWidget(self.wdgTitle)
         self.card.layout().addWidget(
             group(spacer(), self.iconSubtitle, self.lineSubtitle, margin_left=25,
@@ -357,9 +357,11 @@ class SeriesDisplayCard(QWidget):
 
         self.divider = DividerWidget()
 
+        self.selected_card: Optional[NovelCard] = None
         self.cards = CardsView()
         margins(self.cards, left=25, right=25, top=25)
         self.cards.setCardsWidth(160)
+        self.cards.cardSelected.connect(self._cardSelected)
 
         self.card.layout().addWidget(self.wdgTitle)
         self.card.layout().addWidget(self.divider)
@@ -374,12 +376,18 @@ class SeriesDisplayCard(QWidget):
             self.iconSelector.selectIcon('ph.books', 'black')
 
     def setChildren(self, novels: List[NovelDescriptor]):
+        self.selected_card = None
         self.cards.clear()
         for novel in novels:
             card = NovelCard(novel)
             self.cards.addCard(card)
 
         self._addPlaceholder()
+
+    def _cardSelected(self, card: NovelCard):
+        if self.selected_card and self.selected_card is not card:
+            self.selected_card.clearSelection()
+        self.selected_card = card
 
     def _addPlaceholder(self):
         placeholderCard = PlaceholderCard()
