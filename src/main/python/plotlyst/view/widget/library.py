@@ -268,6 +268,8 @@ class NovelDisplayCard(QWidget):
         self.iconSubtitle = Icon()
         self.iconSubtitle.setIcon(IconRegistry.from_name('mdi.send', 'grey'))
         decr_icon(self.iconSubtitle, 4)
+        if app_env.is_mac():
+            incr_font(self.lineSubtitle)
 
         self.iconImportOrigin = Icon()
         self.iconImportOrigin.setIcon(IconRegistry.from_name('mdi.alpha-s-circle-outline', color='#410253'))
@@ -285,11 +287,12 @@ class NovelDisplayCard(QWidget):
         self.iconSynopsis = Icon()
         self.iconSynopsis.setIcon(IconRegistry.from_name('mdi.text-short', 'grey'))
         self.textSynopsis = QTextEdit()
-        self.textSynopsis.setMinimumSize(500, 100)
+        # self.textSynopsis.setMinimumSize(500, 100)
         self.textSynopsis.setMaximumSize(750, 150)
+        incr_font(self.textSynopsis, 5)
         self.textSynopsis.setPlaceholderText('Short synopsis')
         transparent(self.textSynopsis)
-        self.wdgSynopsis.layout().addWidget(wrap(self.iconSynopsis, margin_top=5), alignment=Qt.AlignmentFlag.AlignTop)
+        self.wdgSynopsis.layout().addWidget(wrap(self.iconSynopsis, margin_top=4), alignment=Qt.AlignmentFlag.AlignTop)
         self.wdgSynopsis.layout().addWidget(self.textSynopsis)
 
         self.btnActivate = push_btn(IconRegistry.book_icon(color='white', color_on='white'), 'Open story',
@@ -300,7 +303,7 @@ class NovelDisplayCard(QWidget):
             group(self.iconImportOrigin, self.seriesLabel, spacer(), self.btnNovelSettings, margin_left=15))
         self.card.layout().addWidget(self.wdgTitle)
         self.card.layout().addWidget(
-            group(spacer(), self.iconSubtitle, self.lineSubtitle, margin_left=25,
+            group(spacer(), wrap(self.iconSubtitle, margin_top=2), self.lineSubtitle, margin_left=25,
                   margin_right=25))
         self.card.layout().addWidget(self.wdgSynopsis)
         self.card.layout().addWidget(vspacer())
