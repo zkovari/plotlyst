@@ -27,7 +27,8 @@ from PyQt6.QtCore import pyqtSignal, QSize, Qt, QEvent, QPoint, QMimeData, QTime
 from PyQt6.QtGui import QDragEnterEvent, QDragMoveEvent, QColor, QAction, QIcon
 from PyQt6.QtWidgets import QFrame, QApplication, QToolButton, QTextBrowser
 from overrides import overrides
-from qthandy import clear_layout, retain_when_hidden, transparent, flow, translucent, gc, incr_icon, vbox, pointy
+from qthandy import clear_layout, retain_when_hidden, transparent, flow, translucent, gc, incr_icon, vbox, pointy, \
+    incr_font
 from qthandy.filter import DragEventFilter, DropEventFilter, OpacityEventFilter
 
 from plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
@@ -41,6 +42,7 @@ from plotlyst.view.generated.scene_card_ui import Ui_SceneCard
 from plotlyst.view.icons import IconRegistry, set_avatar, avatars
 from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.button import DotsMenuButton
+from plotlyst.view.widget.display import Icon
 from plotlyst.view.widget.labels import CharacterAvatarLabel
 
 
@@ -351,42 +353,49 @@ class NovelCard(Card):
         super().__init__(parent)
         self.novel = novel
 
-        self.btnSettings = DotsMenuButton()
+        self.btnSettings = DotsMenuButton(self)
+        self.btnSettings.setGeometry(135, 5, 20, 20)
 
         self.textTitle = QTextBrowser()
         transparent(self.textTitle)
+        incr_font(self.textTitle, 4)
         self.textTitle.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.textTitle.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.textTitle.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
         self.textTitle.setContentsMargins(0, 0, 0, 0)
         self.textTitle.document().setDocumentMargin(0)
 
+        self.icon = Icon()
+        self.icon.setIconSize(QSize(32, 32))
+        translucent(self.icon, 0.8)
+
         self.btnOpen = push_btn(IconRegistry.book_icon(RELAXED_WHITE_COLOR, RELAXED_WHITE_COLOR), 'Open',
                                 properties=['positive', 'confirm'])
 
         vbox(self, margin=5)
-        self.layout().addWidget(self.btnSettings, alignment=Qt.AlignmentFlag.AlignRight)
+        # self.layout().addWidget(self.btnSettings, alignment=Qt.AlignmentFlag.AlignRight)
+        self.layout().addWidget(self.icon, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self.textTitle)
         self.layout().addWidget(self.btnOpen, alignment=Qt.AlignmentFlag.AlignRight)
-        
+
         self.btnSettings.setHidden(True)
         self.btnOpen.setHidden(True)
 
         self._setStyleSheet()
         self.refresh()
-    
+
     @overrides
     def enterEvent(self, event: QEvent) -> None:
         super().enterEvent(event)
         fade_in(self.btnSettings)
         fade_in(self.btnOpen)
-    
+
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
         super().leaveEvent(event)
         self.btnSettings.setHidden(True)
         self.btnOpen.setHidden(True)
-    
+
     @overrides
     def mimeType(self) -> str:
         return 'application/novel-card'
@@ -404,6 +413,10 @@ class NovelCard(Card):
         super().refresh()
         self.textTitle.setText(self.novel.title)
         self.textTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        if self.novel.icon:
+            self.icon.setIcon(IconRegistry.from_name(self.novel.icon))
+        else:
+            self.icon.setIcon(IconRegistry.book_icon())
 
 
 class PlaceholderCard(Card):
@@ -420,7 +433,7 @@ class PlaceholderCard(Card):
         self.btnPlus.clicked.connect(self.selected)
 
         self.layout().addWidget(self.btnPlus, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.3, enterOpacity=0.6))
+        self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.5, enterOpacity=0.6))
 
         self._setStyleSheet()
 
