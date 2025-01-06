@@ -30,13 +30,14 @@ from overrides import overrides
 from qthandy import clear_layout, retain_when_hidden, transparent, flow, translucent, gc, incr_icon, vbox, pointy, \
     incr_font
 from qthandy.filter import DragEventFilter, DropEventFilter, OpacityEventFilter
+from qtmenu import MenuWidget
 
 from plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Character, Scene, Novel, NovelSetting, CardSizeRatio, NovelDescriptor
 from plotlyst.core.help import enneagram_help, mbti_help
 from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import fade, fade_in, fade_out, tool_btn, push_btn
+from plotlyst.view.common import fade, fade_in, fade_out, tool_btn, push_btn, action
 from plotlyst.view.generated.character_card_ui import Ui_CharacterCard
 from plotlyst.view.generated.scene_card_ui import Ui_SceneCard
 from plotlyst.view.icons import IconRegistry, set_avatar, avatars
@@ -349,12 +350,17 @@ class SceneCard(Ui_SceneCard, Card):
 
 
 class NovelCard(Card):
+    detach = pyqtSignal()
+
     def __init__(self, novel: NovelDescriptor, parent=None):
         super().__init__(parent)
         self.novel = novel
 
         self.btnSettings = DotsMenuButton(self)
         self.btnSettings.setGeometry(135, 5, 20, 20)
+
+        menu = MenuWidget(self.btnSettings)
+        menu.addAction(action('Detach novel from series', IconRegistry.from_name('fa5s.unlink'), slot=self.detach))
 
         self.textTitle = QTextBrowser()
         transparent(self.textTitle)

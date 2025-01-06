@@ -139,6 +139,7 @@ class HomeView(AbstractView):
         self.seriesDisplayCard.lineNovelTitle.textEdited.connect(self._title_edited)
         self.seriesDisplayCard.iconSelector.iconSelected.connect(self._icon_changed)
         self.seriesDisplayCard.attachNovel.connect(self._attach_novel_to_series)
+        self.seriesDisplayCard.detachNovel.connect(self._detach_novel_from_series)
         self.seriesDisplayCard.openNovel.connect(self.loadNovel)
 
         self.ui.btnAddNewStoryMain.setIcon(IconRegistry.plus_icon(color='white'))
@@ -343,6 +344,13 @@ class HomeView(AbstractView):
                 self.repo.update_project_novel(novel)
                 self.refresh()
                 self._shelvesTreeView.selectNovel(self._selected_novel)
+
+    @busy
+    def _detach_novel_from_series(self, novel: NovelDescriptor):
+        novel.parent = None
+        self.repo.update_project_novel(novel)
+        self.refresh()
+        self._shelvesTreeView.selectNovel(self._selected_novel)
 
     def _tutorial_selected(self, tutorial: Tutorial):
         if tutorial.is_container():
