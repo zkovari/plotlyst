@@ -159,6 +159,7 @@ class ShelvesTreeView(TreeView):
         self._novels[novel].refresh()
 
     def selectNovel(self, novel: NovelDescriptor):
+        self.clearSelection()
         self._wdgNovels.deselect()
         self._novels[novel].select()
         self._selectedNovels.add(novel)
@@ -229,8 +230,12 @@ class NovelSelectorPopup(ItemBasedTreeSelectorPopup):
 
 
 class NovelDisplayCard(QWidget):
+    displaySeries = pyqtSignal(NovelDescriptor)
+
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._series: Optional[NovelDescriptor] = None
+
         self.card = frame()
         self.card.setProperty('large-rounded', True)
         self.card.setProperty('relaxed-white-bg', True)
@@ -280,6 +285,7 @@ class NovelDisplayCard(QWidget):
 
         self.seriesLabel = SeriesLabel()
         pointy(self.seriesLabel)
+        self.seriesLabel.clicked.connect(self._displaySeries)
 
         self.wdgSynopsis = QWidget()
         hbox(self.wdgSynopsis, spacing=0)
@@ -321,18 +327,25 @@ class NovelDisplayCard(QWidget):
 
         series = entities_registry.series(novel)
         if series:
+            self._series = series
             self.seriesLabel.setSeries(series)
             self.seriesLabel.setVisible(True)
         else:
+            self._series = None
             self.seriesLabel.setVisible(False)
 
         self.iconImportOrigin.setVisible(novel.is_scrivener_sync())
         self.textSynopsis.setText(novel.short_synopsis)
 
+    def _displaySeries(self):
+        if self._series:
+            self.displaySeries.emit(self._series)
+
 
 class SeriesDisplayCard(QWidget):
     attachNovel = pyqtSignal()
     openNovel = pyqtSignal(NovelDescriptor)
+    displayNovel = pyqtSignal(NovelDescriptor)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -385,6 +398,7 @@ class SeriesDisplayCard(QWidget):
         for novel in novels:
             card = NovelCard(novel)
             card.btnOpen.clicked.connect(partial(self.openNovel.emit, novel))
+            card.doubleClicked.connect(partial(self.displayNovel.emit, novel))
             self.cards.addCard(card)
 
         self._addPlaceholder()

@@ -163,6 +163,8 @@ class HomeView(AbstractView):
         self._shelvesTreeView.newNovelRequested.connect(self._add_new_novel)
         self._shelvesTreeView.novelDeletionRequested.connect(self._on_delete)
         self._shelvesTreeView.novelOpenRequested.connect(self.loadNovel)
+        self.seriesDisplayCard.displayNovel.connect(self._shelvesTreeView.selectNovel)
+        self.novelDisplayCard.displaySeries.connect(self._shelvesTreeView.selectNovel)
 
         self.ui.btnAddNewStoryMain.setIconSize(QSize(24, 24))
 
