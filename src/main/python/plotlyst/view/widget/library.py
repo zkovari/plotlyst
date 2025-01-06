@@ -390,6 +390,8 @@ class SeriesDisplayCard(QWidget):
         self._addPlaceholder()
 
     def _cardSelected(self, card: NovelCard):
+        if not isinstance(card, NovelCard):
+            return
         if self.selected_card and self.selected_card is not card:
             self.selected_card.clearSelection()
         self.selected_card = card
