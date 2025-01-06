@@ -26,7 +26,7 @@ from PyQt6.QtCore import pyqtSignal, Qt, QSize, QMimeData, QPointF, QEvent
 from PyQt6.QtGui import QFont, QResizeEvent, QMouseEvent, QColor, QIcon, QImage, \
     QShowEvent, QPixmap, QCursor, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QSplitter, QLineEdit, QDialog, QGridLayout, QSlider, QToolButton, QButtonGroup, \
-    QLabel, QToolTip, QSpacerItem, QSizePolicy
+    QLabel, QToolTip, QSpacerItem, QSizePolicy, QTextEdit
 from overrides import overrides
 from qthandy import vspacer, clear_layout, vbox, margins, hbox, sp, retain_when_hidden, decr_icon, pointy, \
     grid, flow, spacer, line, gc, translucent, incr_font, vline, bold
@@ -72,6 +72,8 @@ class WorldBuildingTextEdit(AutoAdjustableTextEdit):
         self.setAcceptRichText(True)
         self.setCommandOperations([Heading3Operation, InsertListOperation,
                                    InsertNumberedListOperation, InsertDividerOperation])
+        self.setBlockPlaceholderEnabled(True)
+        self.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
 
         self._glossaryHighlighter = GlossaryTextBlockHighlighter(novel.world.glossary, self.document(), palette)
         toolbar = MarkdownPopupTextEditorToolbar()
@@ -212,13 +214,7 @@ class TextElementEditor(WorldBuildingEntityElementWidget):
         if self._underSection():
             margins(self, left=0)
             self.textEdit.setViewportMargins(20, 0, 0, 0)
-            self.textEdit.setSidebarEnabled(True)
-            self.textEdit.setSidebarMenuEnabled(False)
 
-        if self._underSection():
-            self.textEdit.setPlaceholderText("Describe this section, or press '/' for commands...")
-        else:
-            self.textEdit.setPlaceholderText('Describe this entity...')
         font = self.textEdit.font()
         if app_env.is_mac():
             self._fontPointSize = 18
@@ -668,6 +664,7 @@ class HighlightedTextElementEditor(WorldBuildingEntityElementWidget):
         font: QFont = self.textEdit.font()
         font.setPointSize(14)
         self.textEdit.setFont(font)
+        self.textEdit.setBlockPlaceholderEnabled(False)
         self.textEdit.setPlaceholderText('Begin writing...')
         self.textEdit.setMarkdown(self.element.text)
         self.textEdit.textChanged.connect(self._textChanged)
