@@ -325,16 +325,28 @@ class HomeView(AbstractView):
     def _on_delete(self, novel: Optional[NovelDescriptor] = None):
         if novel is None:
             novel = self._selected_novel
-        title = f'Are you sure you want to delete the novel "{novel.title}"?'
-        msg = '<html><ul><li>This action cannot be undone.</li><li>All characters and scenes will be lost.</li>'
+        if novel.story_type == StoryType.Series:
+            title = f'Are you sure you want to delete the series "{novel.title}"?'
+            msg = "<html>The attached novels <b>won't</b> be deleted."
+        else:
+            title = f'Are you sure you want to delete the novel "{novel.title}"?'
+            msg = '<html><ul><li>This action cannot be undone.</li><li>All characters and scenes will be lost.</li>'
         if confirmed(msg, title):
+            if novel.story_type == StoryType.Series:
+                series_novels = self._shelvesTreeView.childrenNovels(novel)
+                for sn in series_novels:
+                    sn.parent = None
+                    self.repo.update_project_novel(sn)
+
             self.repo.delete_novel(novel)
             self._novels.remove(novel)
             emit_global_event(NovelDeletedEvent(self, novel))
             if self._selected_novel and novel.id == self._selected_novel.id:
-                self._selected_novel = None
                 self.reset()
             self.refresh()
+
+            if self._selected_novel:
+                self._shelvesTreeView.selectNovel(self._selected_novel)
 
     def _attach_novel_to_series(self):
         if self._selected_novel and self._selected_novel.story_type == StoryType.Series:

@@ -112,7 +112,7 @@ class EntitiesRegistry(EventListener):
 
     def series(self, novel: NovelDescriptor) -> Optional[NovelDescriptor]:
         if novel.parent:
-            return self._series[str(novel.parent)]
+            return self._series.get(str(novel.parent))
 
     def character(self, s_id: str) -> Optional[Character]:
         return self._characters.get(s_id, None)
