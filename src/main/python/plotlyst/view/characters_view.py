@@ -246,7 +246,6 @@ class CharactersView(AbstractNovelView):
             self._series_menu.addSeparator()
             self._series_menu.addAction(action('Import from series...', IconRegistry.series_icon()))
         else:
-            self.ui.btnNew.setMenu(None)
             if self._series_menu:
                 gc(self._series_menu)
                 self._series_menu = None
