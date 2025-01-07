@@ -295,9 +295,11 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
                     self.seriesLabel.setSeries(series)
                     self._actionSeries.setVisible(True)
                     self.characters_view.set_series_enabled(True)
+                    self.world_building_view.set_series_enabled(True)
                 else:
                     self._actionSeries.setVisible(False)
                     self.characters_view.set_series_enabled(False)
+                    self.world_building_view.set_series_enabled(False)
             elif self.novel and self.novel.parent == event.novel.id:
                 self.seriesLabel.setSeries(event.novel)
 

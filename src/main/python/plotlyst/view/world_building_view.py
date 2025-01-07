@@ -20,13 +20,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 import qtanim
-from PyQt6.QtCore import Qt, QRectF
+from PyQt6.QtCore import Qt, QRectF, QPoint
 from PyQt6.QtGui import QColor, QPainter
 from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtWidgets import QWidget, QGraphicsColorizeEffect
 from overrides import overrides
-from qthandy import incr_icon, incr_font
+from qthandy import incr_icon, incr_font, gc
 from qthandy.filter import OpacityEventFilter
+from qtmenu import MenuWidget
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, WorldBuildingEntity
@@ -36,7 +37,7 @@ from plotlyst.service.cache import try_location
 from plotlyst.settings import settings
 from plotlyst.view._view import AbstractNovelView
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, shadow, \
-    insert_before_the_end, to_rgba_str
+    insert_before_the_end, to_rgba_str, action
 from plotlyst.view.generated.world_building_view_ui import Ui_WorldBuildingView
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_bg_image
@@ -86,6 +87,7 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.wdgNameHeader.layout().addWidget(self._separator)
 
         self._entity: Optional[WorldBuildingEntity] = None
+        self._location_series_menu: Optional[MenuWidget] = None
 
         self.ui.btnNew.setIcon(IconRegistry.plus_icon(color=RELAXED_WHITE_COLOR))
         self.ui.btnNew.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnNew))
@@ -111,8 +113,11 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.treeLocations.unlinkWorldBuildingEntity.connect(self._unlink_world_building_entity)
         self.ui.treeLocations.setNovel(self.novel)
         self.locationEditor.locationNameChanged.connect(self.ui.treeLocations.updateItem)
-        self.ui.btnAddLocation.clicked.connect(self.ui.treeLocations.addNewLocation)
+        self.ui.btnAddLocation.clicked.connect(self._add_new_location_clicked)
         self.ui.splitterMilieuNav.setSizes([175, 500])
+
+        if self.novel.parent:
+            self.set_series_enabled(True)
 
         width = settings.worldbuilding_editor_max_width()
         self.ui.wdgCenterEditor.setMaximumWidth(width)
@@ -186,6 +191,18 @@ class WorldBuildingView(AbstractNovelView):
     @overrides
     def refresh(self):
         pass
+
+    def set_series_enabled(self, enabled: bool):
+        if enabled:
+            self._location_series_menu = MenuWidget()
+            self._location_series_menu.addAction(
+                action('Add new location', IconRegistry.location_icon(), slot=self.ui.treeLocations.addNewLocation))
+            self._location_series_menu.addSeparator()
+            self._location_series_menu.addAction(action('Import from series...', IconRegistry.series_icon()))
+        else:
+            if self._location_series_menu:
+                gc(self._location_series_menu)
+                self._location_series_menu = None
 
     def _update_style(self):
         trans_bg_color = to_rgba_str(QColor(self._palette.bg_color), 235)
@@ -271,3 +288,10 @@ class WorldBuildingView(AbstractNovelView):
             self._update_name()
 
         self.repo.update_world(self.novel)
+
+    def _add_new_location_clicked(self):
+        if self._location_series_menu:
+            self._location_series_menu.exec(
+                self.ui.btnAddLocation.mapToGlobal(QPoint(0, self.ui.btnNew.sizeHint().height())))
+        else:
+            self.ui.treeLocations.addNewLocation()
