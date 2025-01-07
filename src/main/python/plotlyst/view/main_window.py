@@ -26,7 +26,7 @@ from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QText
     QProgressDialog, QAbstractButton
 from fbs_runtime import platform
 from overrides import overrides
-from qthandy import spacer, busy, gc
+from qthandy import spacer, busy, gc, pointy, decr_icon
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qttextedit.ops import DEFAULT_FONT_FAMILIES
 from textstat import textstat
@@ -74,6 +74,7 @@ from plotlyst.view.style.theme import BG_PRIMARY_COLOR
 from plotlyst.view.widget.button import ToolbarButton, NovelSyncButton
 from plotlyst.view.widget.confirm import asked
 from plotlyst.view.widget.input import CapitalizationEventFilter
+from plotlyst.view.widget.labels import SeriesLabel
 from plotlyst.view.widget.log import LogsPopup
 from plotlyst.view.widget.settings import NovelQuickPanelCustomizationButton
 from plotlyst.view.widget.tour.core import TutorialNovelOpenTourEvent, tutorial_novel, \
@@ -113,6 +114,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self._current_text_widget = None
         self._actionNovelEditor: Optional[QAction] = None
         self._actionScrivener: Optional[QAction] = None
+        self._actionSeries: Optional[QAction] = None
         self._actionSettings: Optional[QAction] = None
         last_novel_id = settings.last_novel_id()
         if last_novel_id is not None:
@@ -353,6 +355,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
                 btn.setHidden(True)
             self._actionSettings.setVisible(False)
             self._actionScrivener.setVisible(False)
+            self._actionSeries.setVisible(False)
             self.actionQuickCustomization.setDisabled(True)
             return
 
@@ -377,6 +380,15 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         else:
             self._actionScrivener.setVisible(False)
             self.btnScrivener.clear()
+
+        series = entities_registry.series(self.novel)
+        if series:
+            self.seriesLabel.setSeries(series)
+            self._actionSeries.setVisible(True)
+        else:
+            self._actionSeries.setVisible(False)
+
+
 
         self._current_view: Optional[AbstractView] = None
         self.novel_view = NovelView(self.novel)
@@ -545,6 +557,11 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.btnComments.installEventFilter(InstantTooltipEventFilter(self.btnComments))
         self.btnComments.setHidden(True)
 
+        self.seriesLabel = SeriesLabel(transparent=True)
+        pointy(self.seriesLabel)
+        decr_icon(self.seriesLabel, 2)
+        # self.seriesLabel.clicked.connect(self._displaySeries)
+
         self.btnScrivener = NovelSyncButton()
 
         self.toolBar.addWidget(spacer(5))
@@ -555,6 +572,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self._actionNovelEditor = self.toolBar.addWidget(self.outline_mode)
         self.toolBar.addWidget(spacer())
         self._actionScrivener = self.toolBar.addWidget(self.btnScrivener)
+        self._actionSeries = self.toolBar.addWidget(self.seriesLabel)
         self._actionSettings = self.toolBar.addWidget(self.btnSettings)
         self._actionSettings.setVisible(settings.toolbar_quick_settings())
         # self.toolBar.addWidget(self.btnComments)

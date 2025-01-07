@@ -303,10 +303,11 @@ class SceneLabel(Label):
 
 
 class SeriesLabel(QPushButton):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, transparent: bool = False):
         super().__init__(parent)
+        border_type = 'hidden' if transparent else 'solid'
         self.setStyleSheet(f'''SeriesLabel {{
-                    border: 1px solid {PLOTLYST_MAIN_COLOR};
+                    border: 1px {border_type} {PLOTLYST_MAIN_COLOR};
                     border-radius: 14px;
                     padding-left: 8px;
                     padding-right: 8px;
