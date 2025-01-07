@@ -249,6 +249,9 @@ class HomeView(AbstractView):
         series = [x for x in self._novels if x.story_type == StoryType.Series]
         entities_registry.set_series(series)
 
+    def selectSeries(self, series: NovelDescriptor):
+        self._shelvesTreeView.selectNovel(series)
+
     def _novel_selected(self, novel: NovelDescriptor):
         self._selected_novel = None
 

@@ -560,7 +560,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.seriesLabel = SeriesLabel(transparent=True)
         pointy(self.seriesLabel)
         decr_icon(self.seriesLabel, 2)
-        # self.seriesLabel.clicked.connect(self._displaySeries)
+        self.seriesLabel.clicked.connect(self._select_series)
 
         self.btnScrivener = NovelSyncButton()
 
@@ -788,3 +788,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
     def _settings_link_clicked(self):
         self.btnNovel.setChecked(True)
         self.novel_view.show_settings()
+
+    def _select_series(self):
+        series = entities_registry.series(self.novel)
+        if series:
+            self.home_mode.setChecked(True)
+            self.home_view.selectSeries(series)
