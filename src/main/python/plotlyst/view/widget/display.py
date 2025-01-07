@@ -29,11 +29,12 @@ from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy, QTextBrowser, QFrame, QDialog, \
     QApplication
 from overrides import overrides
-from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon, pointy, hbox, busy, italic, decr_font
+from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon, pointy, hbox, busy, italic, decr_font, \
+    translucent
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
-from plotlyst.common import PLOTLYST_TERTIARY_COLOR
+from plotlyst.common import PLOTLYST_TERTIARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.help import mid_revision_scene_structure_help
 from plotlyst.core.template import Role
 from plotlyst.core.text import wc
@@ -552,3 +553,22 @@ class DividerWidget(QWidget):
         painter.setOpacity(0.8)
         rect = QRectF(0, 0, self.width(), self.height())
         self.svg_renderer.render(painter, rect)
+
+
+class ShortcutLabel(QPushButton):
+    def __init__(self, shortcut: str, parent=None):
+        super().__init__(parent)
+
+        if app_env.is_mac():
+            shortcut = shortcut.replace('+', ' ⌃ ')
+
+        self.setText(shortcut)
+        self.setStyleSheet(f'''
+            background: {RELAXED_WHITE_COLOR};
+            border: 1px solid grey;
+            padding: 4px;
+            border-radius: 12px;
+            font-family: {app_env.serif_font()};
+        ''')
+        translucent(self, 0.7)
+        decr_font(self)

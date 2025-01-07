@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import math
+import re
 from dataclasses import dataclass
 from enum import Enum
 from functools import partial
@@ -44,7 +45,8 @@ from qttextedit.ops import BoldOperation, ItalicOperation, UnderlineOperation, S
     AlignLeftOperation, AlignCenterOperation, AlignRightOperation, InsertListOperation, InsertNumberedListOperation, \
     FormatOperation, ColorOperation, InsertLinkOperation, TextEditingSettingsOperation
 
-from plotlyst.common import IGNORE_CAPITALIZATION_PROPERTY, RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, RED_COLOR
+from plotlyst.common import IGNORE_CAPITALIZATION_PROPERTY, RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, RED_COLOR, \
+    PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.domain import TextStatistics, Character, Label
 from plotlyst.core.text import wc
 from plotlyst.env import app_env
@@ -187,6 +189,14 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
         super(GrammarHighlighter, self).__init__(document)
         self._checkEnabled: bool = checkEnabled
 
+        self._todo_pattern = r'\[TODO[^\]]*\]'
+
+        self._todo_format = QTextCharFormat()
+        self._todo_format.setBackground(QColor(PLOTLYST_TERTIARY_COLOR))
+        self._todo_format.setForeground(QColor('grey'))
+        self._todo_format.setFontWeight(75)
+        self._todo_format.setFontItalic(True)
+
         self._misspelling_format = QTextCharFormat()
         self._misspelling_format.setUnderlineColor(QColor('#d90429'))
         if highlightStyle == GrammarHighlightStyle.BACKGOUND:
@@ -253,6 +263,8 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
         else:
             data.misspellings.clear()
 
+        self._highlightTodos(text)
+
     def asyncRehighlight(self):
         if self._checkEnabled and self._language_tool:
             self._currentAsyncBlock = 0
@@ -266,6 +278,11 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
         self.rehighlightBlock(block)
         self._currentAsyncBlock += 1
 
+    def _highlightTodos(self, text: str):
+        for match in re.finditer(self._todo_pattern, text):
+            start = match.start()
+            length = match.end() - match.start()
+            self.setFormat(start, length, self._todo_format)
 
 class BlockStatistics(AbstractTextBlockHighlighter):
 
