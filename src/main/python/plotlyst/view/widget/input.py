@@ -193,7 +193,7 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
 
         self._todo_format = QTextCharFormat()
         self._todo_format.setBackground(QColor(PLOTLYST_TERTIARY_COLOR))
-        self._todo_format.setForeground(QColor('grey'))
+        # self._todo_format.setForeground(QColor('black'))
         self._todo_format.setFontWeight(75)
         self._todo_format.setFontItalic(True)
 
@@ -283,6 +283,7 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
             start = match.start()
             length = match.end() - match.start()
             self.setFormat(start, length, self._todo_format)
+
 
 class BlockStatistics(AbstractTextBlockHighlighter):
 

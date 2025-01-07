@@ -34,7 +34,7 @@ from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon, point
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
-from plotlyst.common import PLOTLYST_TERTIARY_COLOR, RELAXED_WHITE_COLOR
+from plotlyst.common import PLOTLYST_TERTIARY_COLOR, WHITE_COLOR
 from plotlyst.core.help import mid_revision_scene_structure_help
 from plotlyst.core.template import Role
 from plotlyst.core.text import wc
@@ -564,10 +564,10 @@ class ShortcutLabel(QPushButton):
 
         self.setText(shortcut)
         self.setStyleSheet(f'''
-            background: {RELAXED_WHITE_COLOR};
-            border: 1px solid grey;
+            background: {WHITE_COLOR};
+            border: 1px solid black;
             padding: 4px;
-            border-radius: 12px;
+            border-radius: 4px;
             font-family: {app_env.serif_font()};
         ''')
         translucent(self, 0.7)
