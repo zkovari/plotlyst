@@ -30,7 +30,7 @@ from PyQt6.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyn
     QFontMetrics, QTextOption, QShowEvent, QIcon
 from PyQt6.QtMultimedia import QSoundEffect
 from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit, QButtonGroup, QCalendarWidget, QTableView, \
-    QPushButton, QToolButton, QWidgetItem
+    QPushButton, QToolButton, QWidgetItem, QScrollArea, QFrame
 from overrides import overrides
 from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins, vbox, line, bold, vline, decr_font, \
     underline, transparent, italic, decr_icon, pointy, vspacer
@@ -66,7 +66,7 @@ from plotlyst.view.generated.sprint_widget_ui import Ui_SprintWidget
 from plotlyst.view.generated.timer_setup_widget_ui import Ui_TimerSetupWidget
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.button import apply_button_palette_color
-from plotlyst.view.widget.display import WordsDisplay, IconText
+from plotlyst.view.widget.display import WordsDisplay, IconText, ShortcutLabel
 from plotlyst.view.widget.input import TextEditBase, GrammarHighlighter, GrammarHighlightStyle, Toggle, TextEditorBase, \
     BasePopupTextEditorToolbar
 
@@ -169,7 +169,7 @@ class SprintWidget(QWidget, Ui_SprintWidget):
         self._effect.play()
 
 
-class ManuscriptFormattingWidget(QWidget):
+class ManuscriptFormattingWidget(QScrollArea):
     dashChanged = pyqtSignal(DashInsertionMode)
     capitalizationChanged = pyqtSignal(AutoCapitalizationMode)
 
@@ -177,13 +177,21 @@ class ManuscriptFormattingWidget(QWidget):
         super().__init__(parent)
         self.novel = novel
 
-        vbox(self)
-        self.layout().addWidget(label('Dash', bold=True), alignment=Qt.AlignmentFlag.AlignLeft)
+        self._centralWidget = QWidget(self)
+        vbox(self._centralWidget)
+        self.setWidget(self._centralWidget)
+        transparent(self._centralWidget)
+        transparent(self)
+        self.setWidgetResizable(True)
+        self.setFrameShape(QFrame.Shape.NoFrame)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
         self.wdgDashSettings = QWidget()
         vbox(self.wdgDashSettings, 0)
-        margins(self.wdgDashSettings, left=10)
+        margins(self.wdgDashSettings, left=10, bottom=5)
         self.wdgDashSettings.layout().addWidget(
             label("Insert a dash automatically when typing double hyphens (--)", description=True,
+                  decr_font_diff=1,
                   wordWrap=True),
             alignment=Qt.AlignmentFlag.AlignLeft)
         self.toggleEn = Toggle()
@@ -203,14 +211,12 @@ class ManuscriptFormattingWidget(QWidget):
         self.wdgDashSettings.layout().addWidget(group(label(f'Em dash ({EM_DASH})'), self.toggleEm, spacing=0),
                                                 alignment=Qt.AlignmentFlag.AlignRight)
 
-        self.layout().addWidget(self.wdgDashSettings)
-        self.layout().addWidget(label('Auto-capitalization', bold=True), alignment=Qt.AlignmentFlag.AlignLeft)
-
         self.wdgCapitalizationSettings = QWidget()
         vbox(self.wdgCapitalizationSettings, 0)
-        margins(self.wdgCapitalizationSettings, left=10)
+        margins(self.wdgCapitalizationSettings, left=10, bottom=5)
         self.wdgCapitalizationSettings.layout().addWidget(
             label("Auto-capitalize the first letter at paragraph or sentence level (experimental)", description=True,
+                  decr_font_diff=1,
                   wordWrap=True), alignment=Qt.AlignmentFlag.AlignLeft)
         self.toggleParagraphCapital = Toggle()
         self.toggleSentenceCapital = Toggle()
@@ -231,8 +237,36 @@ class ManuscriptFormattingWidget(QWidget):
             group(label('Sentence'), self.toggleSentenceCapital, spacing=0),
             alignment=Qt.AlignmentFlag.AlignRight)
 
-        self.layout().addWidget(self.wdgCapitalizationSettings)
-        self.layout().addWidget(vspacer())
+        self.wdgTodoSettings = QWidget()
+        vbox(self.wdgTodoSettings, 0)
+        margins(self.wdgTodoSettings, left=10)
+        self.wdgTodoSettings.layout().addWidget(
+            label("Insert inline TODO comments for sections you want to revisit later (ideal for drafting)",
+                  description=True, decr_font_diff=1,
+                  wordWrap=True), alignment=Qt.AlignmentFlag.AlignLeft)
+        self.toggleTodoFormatting = Toggle()
+        self.toggleTodoShortcut = Toggle()
+        self.btnGroupTodo = ExclusiveOptionalButtonGroup()
+        self.btnGroupTodo.addButton(self.toggleTodoFormatting)
+        self.btnGroupTodo.addButton(self.toggleTodoShortcut)
+        self.wdgTodoSettings.layout().addWidget(
+            group(ShortcutLabel('Ctrl+T'), self.toggleTodoFormatting, spacing=0),
+            alignment=Qt.AlignmentFlag.AlignRight)
+        # self.wdgTodoSettings.layout().addWidget(
+        #     group(label("<html>Typing '<i>[]</i>'"), self.toggleTodoFormatting, spacing=0),
+        #     alignment=Qt.AlignmentFlag.AlignRight)
+        # self.wdgTodoSettings.layout().addWidget(
+        #     group(label("<html>Typing '<i>TODO</i>'"), self.toggleTodoShortcut, spacing=0),
+        #     alignment=Qt.AlignmentFlag.AlignRight)
+
+        self._centralWidget.layout().addWidget(label('Dash', bold=True), alignment=Qt.AlignmentFlag.AlignLeft)
+        self._centralWidget.layout().addWidget(self.wdgDashSettings)
+        self._centralWidget.layout().addWidget(label('Auto-capitalization', bold=True),
+                                               alignment=Qt.AlignmentFlag.AlignLeft)
+        self._centralWidget.layout().addWidget(self.wdgCapitalizationSettings)
+        self._centralWidget.layout().addWidget(label('Inline todo', bold=True), alignment=Qt.AlignmentFlag.AlignLeft)
+        self._centralWidget.layout().addWidget(self.wdgTodoSettings)
+        self._centralWidget.layout().addWidget(vspacer())
 
     def _dashToggled(self):
         btn = self.btnGroupDash.checkedButton()
