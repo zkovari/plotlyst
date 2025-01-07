@@ -38,6 +38,7 @@ from plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent, NovelS
 from plotlyst.model.characters_model import CharactersTableModel
 from plotlyst.model.common import proxy
 from plotlyst.resources import resource_registry
+from plotlyst.service.cache import entities_registry
 from plotlyst.service.persistence import delete_character
 from plotlyst.view._view import AbstractNovelView
 from plotlyst.view.character_editor import CharacterEditor
@@ -55,6 +56,7 @@ from plotlyst.view.widget.character.network import CharacterNetworkView
 from plotlyst.view.widget.character.prefs import CharactersPreferencesWidget
 from plotlyst.view.widget.character.profile import CharacterOnboardingPopup, CharacterNameEditorPopup
 from plotlyst.view.widget.characters import CharactersProgressWidget
+from plotlyst.view.widget.importing import ImportCharacterPopup
 from plotlyst.view.widget.tour.core import CharacterNewButtonTourEvent, TourEvent, \
     CharacterCardTourEvent, CharacterPerspectivesTourEvent, CharacterPerspectiveCardsTourEvent, \
     CharacterPerspectiveTableTourEvent, CharacterPerspectiveNetworkTourEvent, CharacterPerspectiveComparisonTourEvent, \
@@ -90,10 +92,11 @@ class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
 
 class CharactersView(AbstractNovelView):
 
-    def __init__(self, novel: Novel):
+    def __init__(self, novel: Novel, main_window = None):
         super().__init__(novel)
         self.ui = Ui_CharactersView()
         self.ui.setupUi(self.widget)
+        self.main_window = main_window
         self.editor = CharacterEditor(self.novel)
         self.ui.pageEditor.layout().addWidget(self.editor.widget)
         self.editor.close.connect(self._on_close_editor)
@@ -244,7 +247,8 @@ class CharactersView(AbstractNovelView):
             self._series_menu = MenuWidget()
             self._series_menu.addAction(action('Add new character', IconRegistry.character_icon(), slot=self._on_new))
             self._series_menu.addSeparator()
-            self._series_menu.addAction(action('Import from series...', IconRegistry.series_icon()))
+            self._series_menu.addAction(
+                action('Import from series...', IconRegistry.series_icon(), slot=self._import_from_series))
         else:
             if self._series_menu:
                 gc(self._series_menu)
@@ -369,6 +373,11 @@ class CharactersView(AbstractNovelView):
             self._series_menu.exec(self.ui.btnNew.mapToGlobal(QPoint(0, self.ui.btnNew.sizeHint().height())))
         else:
             self._on_new()
+
+    def _import_from_series(self):
+        series = entities_registry.series(self.novel)
+        if series:
+            characters = ImportCharacterPopup.popup(series, self.main_window.seriesNovels(series))
 
     def _on_new(self):
 

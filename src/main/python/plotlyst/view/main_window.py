@@ -34,7 +34,7 @@ from textstat import textstat
 from plotlyst.common import NAV_BAR_BUTTON_DEFAULT_COLOR, \
     NAV_BAR_BUTTON_CHECKED_COLOR, PLOTLYST_MAIN_COLOR
 from plotlyst.core.client import client
-from plotlyst.core.domain import Novel, NovelPanel, ScenesView, NovelSetting
+from plotlyst.core.domain import Novel, NovelPanel, ScenesView, NovelSetting, NovelDescriptor
 from plotlyst.core.text import sentence_count
 from plotlyst.env import app_env, open_location
 from plotlyst.event.core import event_log_reporter, EventListener, Event, global_event_sender, \
@@ -344,6 +344,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         elif isinstance(event, BoardViewTourEvent):
             handle_novel_navbar_tour_event(event, self.btnBoard)
 
+    def seriesNovels(self, series: NovelDescriptor):
+        return self.home_view.seriesNovels(series)
+
     def close_novel(self):
         self.novel = None
         self._clear_novel()
@@ -403,13 +406,11 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         else:
             self._actionSeries.setVisible(False)
 
-
-
         self._current_view: Optional[AbstractView] = None
         self.novel_view = NovelView(self.novel)
-        self.characters_view = CharactersView(self.novel)
+        self.characters_view = CharactersView(self.novel, main_window=self)
         self.scenes_outline_view = ScenesOutlineView(self.novel)
-        self.world_building_view = WorldBuildingView(self.novel)
+        self.world_building_view = WorldBuildingView(self.novel, main_window=self)
         self.notes_view = DocumentsView(self.novel)
         self.board_view = BoardView(self.novel)
         self.manuscript_view = ManuscriptView(self.novel)

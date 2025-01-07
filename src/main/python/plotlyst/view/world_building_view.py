@@ -33,7 +33,7 @@ from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, WorldBuildingEntity
 from plotlyst.env import app_env
 from plotlyst.resources import resource_registry
-from plotlyst.service.cache import try_location
+from plotlyst.service.cache import try_location, entities_registry
 from plotlyst.settings import settings
 from plotlyst.view._view import AbstractNovelView
 from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, shadow, \
@@ -41,6 +41,7 @@ from plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFi
 from plotlyst.view.generated.world_building_view_ui import Ui_WorldBuildingView
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_bg_image
+from plotlyst.view.widget.importing import ImportLocationPopup
 from plotlyst.view.widget.tree import TreeSettings
 from plotlyst.view.widget.world.editor import WorldBuildingEntityEditor, WorldBuildingEditorSettingsWidget, \
     EntityLayoutType
@@ -74,10 +75,11 @@ class WorldBuildingSeparatorWidget(QWidget):
 
 class WorldBuildingView(AbstractNovelView):
 
-    def __init__(self, novel: Novel):
+    def __init__(self, novel: Novel, main_window = None):
         super().__init__(novel)
         self.ui = Ui_WorldBuildingView()
         self.ui.setupUi(self.widget)
+        self.main_window = main_window
         apply_bg_image(self.ui.pageEntity, resource_registry.paper_bg)
         apply_bg_image(self.ui.pageGlossary, resource_registry.paper_bg)
         apply_bg_image(self.ui.scrollAreaWidgetContents, resource_registry.paper_bg)
@@ -198,7 +200,8 @@ class WorldBuildingView(AbstractNovelView):
             self._location_series_menu.addAction(
                 action('Add new location', IconRegistry.location_icon(), slot=self.ui.treeLocations.addNewLocation))
             self._location_series_menu.addSeparator()
-            self._location_series_menu.addAction(action('Import from series...', IconRegistry.series_icon()))
+            self._location_series_menu.addAction(
+                action('Import from series...', IconRegistry.series_icon(), slot=self._import_from_series))
         else:
             if self._location_series_menu:
                 gc(self._location_series_menu)
@@ -295,3 +298,8 @@ class WorldBuildingView(AbstractNovelView):
                 self.ui.btnAddLocation.mapToGlobal(QPoint(0, self.ui.btnNew.sizeHint().height())))
         else:
             self.ui.treeLocations.addNewLocation()
+
+    def _import_from_series(self):
+        series = entities_registry.series(self.novel)
+        if series:
+            characters = ImportLocationPopup.popup(series, self.main_window.seriesNovels(series))

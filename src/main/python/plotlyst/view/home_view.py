@@ -252,6 +252,9 @@ class HomeView(AbstractView):
     def selectSeries(self, series: NovelDescriptor):
         self._shelvesTreeView.selectNovel(series)
 
+    def seriesNovels(self, series: NovelDescriptor) -> List[NovelDescriptor]:
+        return self._shelvesTreeView.childrenNovels(series)
+
     def _novel_selected(self, novel: NovelDescriptor):
         self._selected_novel = None
 
