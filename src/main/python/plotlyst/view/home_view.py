@@ -334,12 +334,14 @@ class HomeView(AbstractView):
         else:
             title = f'Are you sure you want to delete the novel "{novel.title}"?'
             msg = '<html><ul><li>This action cannot be undone.</li><li>All characters and scenes will be lost.</li>'
+
         if confirmed(msg, title):
             if novel.story_type == StoryType.Series:
                 series_novels = self._shelvesTreeView.childrenNovels(novel)
                 for sn in series_novels:
                     sn.parent = None
                     self.repo.update_project_novel(sn)
+                    emit_global_event(NovelUpdatedEvent(self, sn))
 
             self.repo.delete_novel(novel)
             self._novels.remove(novel)
