@@ -1206,7 +1206,7 @@ class ManuscriptDailyProgress(QWidget):
         decr_font(self.btnJumpToToday, 3)
         self.btnJumpToToday.clicked.connect(self.jumpToToday)
 
-        self.lblAdded = label('', color='darkgreen', h3=True)
+        self.lblAdded = label('', color=PLOTLYST_SECONDARY_COLOR, h3=True)
         self.lblRemoved = label('', color='grey', h3=True)
 
         self.layout().addWidget(group(self.btnDay, self.btnJumpToToday))
