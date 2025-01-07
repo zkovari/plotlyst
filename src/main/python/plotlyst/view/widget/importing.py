@@ -140,4 +140,4 @@ class ImportLocationPopup(SeriesImportBase):
 
     @overrides
     def _novelFetched(self, novel: Novel):
-        self.locationsTree.setNovel(novel, readOnly=True)
+        self.locationsTree.setNovel(novel, readOnly=True, checkable=True)

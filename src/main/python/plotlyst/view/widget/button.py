@@ -21,7 +21,7 @@ from functools import partial
 from typing import Optional, Set
 
 import qtanim
-from PyQt6.QtCore import pyqtSignal, Qt, pyqtProperty, QTimer, QEvent
+from PyQt6.QtCore import pyqtSignal, Qt, pyqtProperty, QTimer, QEvent, QSize
 from PyQt6.QtGui import QIcon, QMouseEvent, QEnterEvent, QAction, QColor
 from PyQt6.QtWidgets import QPushButton, QSizePolicy, QToolButton, QAbstractButton, QLabel, QButtonGroup, QMenu, QWidget
 from overrides import overrides
@@ -687,3 +687,24 @@ class MinorRoleFilterButton(_RoleFilterButton):
         super().__init__(parent)
         self.setIcon(IconRegistry.minor_character_icon())
         self.setToolTip('Filter for Minor characters')
+
+
+class SmallToggleButton(QToolButton):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setIcon(IconRegistry.from_name('ph.toggle-left-thin'))
+        self.setCheckable(True)
+        pointy(self)
+        transparent(self)
+        self.setIconSize(QSize(24, 24))
+
+        self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.7, ignoreCheckedButton=True))
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
+
+        self.toggled.connect(self._toggled)
+
+    def _toggled(self, toggled: bool):
+        if toggled:
+            self.setIcon(IconRegistry.from_name('ph.toggle-right-fill', PLOTLYST_SECONDARY_COLOR, PLOTLYST_SECONDARY_COLOR))
+        else:
+            self.setIcon(IconRegistry.from_name('ph.toggle-left-thin'))

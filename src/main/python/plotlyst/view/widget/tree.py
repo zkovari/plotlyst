@@ -36,7 +36,7 @@ from plotlyst.common import ALT_BACKGROUND_COLOR, PLOTLYST_TERTIARY_COLOR
 from plotlyst.view.common import ButtonPressResizeEventFilter, action, fade_out_and_gc, push_btn, label
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
-from plotlyst.view.widget.button import EyeToggle
+from plotlyst.view.widget.button import EyeToggle, SmallToggleButton
 from plotlyst.view.widget.display import Icon, PopupDialog
 from plotlyst.view.widget.input import TextInputDialog
 from plotlyst.view.widget.utility import IconSelectorDialog
@@ -58,22 +58,24 @@ class BaseTreeWidget(QWidget):
     iconChanged = pyqtSignal()
     titleChanged = pyqtSignal()
 
-    def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None, settings: Optional[TreeSettings] = None, readOnly: bool = False):
+    def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None, settings: Optional[TreeSettings] = None,
+                 readOnly: bool = False, checkable: bool = False):
         super(BaseTreeWidget, self).__init__(parent)
         self._menuEnabled: bool = True
         self._plusEnabled: bool = True
         self._translucentIcon: bool = False
+        self._checkable = checkable
 
         if settings is None:
             self._settings = TreeSettings()
         else:
             self._settings = settings
 
-        self._selectionEnabled: bool = True
+        self._selectionEnabled: bool = not self._checkable
         self._selected: bool = False
         self._wdgTitle = QWidget(self)
         self._wdgTitle.setObjectName('wdgTitle')
-        hbox(self._wdgTitle)
+        hbox(self._wdgTitle, spacing=0)
 
         self._lblTitle = QLabel(title)
         self._lblTitle.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
@@ -82,6 +84,10 @@ class BaseTreeWidget(QWidget):
             self._icon.setIcon(icon)
         else:
             self._icon.setHidden(True)
+
+        if self._checkable:
+            self._toggleButton = SmallToggleButton()
+            self._toggleButton.toggled.connect(self._checked)
 
         self._btnMenu = QToolButton(self._wdgTitle)
         transparent(self._btnMenu)
@@ -102,6 +108,9 @@ class BaseTreeWidget(QWidget):
         self._actionDelete = action('Delete', IconRegistry.trash_can_icon(), self.deleted.emit)
         if not readOnly:
             self._initMenu()
+
+        if self._checkable:
+            self._wdgTitle.layout().addWidget(self._toggleButton)
 
         self._wdgTitle.layout().addWidget(self._icon)
         self._wdgTitle.layout().addWidget(self._lblTitle)
@@ -164,6 +173,12 @@ class BaseTreeWidget(QWidget):
         self._btnAddPressFilter = ButtonPressResizeEventFilter(self._btnAdd)
         self._btnAdd.installEventFilter(self._btnAddPressFilter)
 
+    def checked(self) -> bool:
+        return self._toggleButton.isChecked()
+
+    def setChecked(self, checked: bool):
+        self._toggleButton.setChecked(checked)
+
     def _toggleSelection(self, selected: bool):
         if not self._selectionEnabled:
             return
@@ -201,6 +216,10 @@ class BaseTreeWidget(QWidget):
         self._btnMenu.setHidden(True)
         self._btnAdd.setHidden(True)
 
+    def _checked(self, checked: bool):
+        self._lblTitle.setEnabled(checked)
+        self._icon.setEnabled(checked)
+
     def _reStyle(self):
         if self._selected:
             self._wdgTitle.setStyleSheet(f'''
@@ -216,8 +235,8 @@ class ContainerNode(BaseTreeWidget):
     doubleClicked = pyqtSignal()
 
     def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None, settings: Optional[TreeSettings] = None,
-                 readOnly: bool = False):
-        super(ContainerNode, self).__init__(title, icon, parent, settings, readOnly)
+                 readOnly: bool = False, checkable: bool = False):
+        super(ContainerNode, self).__init__(title, icon, parent, settings, readOnly, checkable)
         vbox(self, 0, 0)
 
         self._container = QWidget(self)
@@ -301,6 +320,12 @@ class ContainerNode(BaseTreeWidget):
             widgets.append(item.widget())
 
         return widgets
+
+    @overrides
+    def _checked(self, checked: bool):
+        super()._checked(checked)
+        self._container.setEnabled(checked)
+        self._container.setVisible(checked)
 
 
 class EyeToggleNode(ContainerNode):

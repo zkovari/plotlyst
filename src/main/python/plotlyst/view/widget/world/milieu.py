@@ -50,9 +50,9 @@ from plotlyst.view.widget.tree import TreeSettings, ItemBasedTreeView, ItemBased
 class LocationNode(ItemBasedNode):
     added = pyqtSignal()
 
-    def __init__(self, location: Location, parent=None, readOnly: bool = False,
+    def __init__(self, location: Location, parent=None, readOnly: bool = False, checkable: bool = False,
                  settings: Optional[TreeSettings] = None):
-        super().__init__(location.name, parent=parent, settings=settings)
+        super().__init__(location.name, parent=parent, settings=settings, checkable=checkable)
         self._location = location
         self.setPlusButtonEnabled(not readOnly)
         self.setMenuEnabled(not readOnly)
@@ -91,17 +91,19 @@ class LocationsTreeView(ItemBasedTreeView):
         super().__init__(parent)
         self._novel: Optional[Novel] = None
         self._readOnly = False
+        self._checkable = False
         self._settings = TreeSettings(font_incr=2)
 
         self.repo = RepositoryPersistenceManager.instance()
 
-    def setNovel(self, novel: Novel, readOnly: bool = False):
+    def setNovel(self, novel: Novel, readOnly: bool = False, checkable: bool = False):
         def addChildWdg(parent: Location, child: Location):
             childWdg = self._initNode(child)
             self._nodes[parent].addChild(childWdg)
 
         self._novel = novel
         self._readOnly = readOnly
+        self._checkable = checkable
 
         self.clearSelection()
         self._nodes.clear()
@@ -199,7 +201,9 @@ class LocationsTreeView(ItemBasedTreeView):
 
     @overrides
     def _initNode(self, location: Location) -> LocationNode:
-        node = LocationNode(location, readOnly=self._readOnly, settings=self._settings)
+        node = LocationNode(location, readOnly=self._readOnly, checkable=self._checkable, settings=self._settings)
+        if self._checkable:
+            node.setChecked(True)
         self._nodes[location] = node
         node.selectionChanged.connect(partial(self._selectionChanged, node))
         node.added.connect(partial(self._addLocationUnder, node))
