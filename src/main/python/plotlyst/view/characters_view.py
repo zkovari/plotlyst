@@ -25,7 +25,7 @@ from PyQt6.QtCore import QItemSelection, QPoint
 from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import busy, incr_font, bold
+from qthandy import busy, incr_font, bold, gc
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -135,7 +135,7 @@ class CharactersView(AbstractNovelView):
         self.ui.btnEdit.clicked.connect(self._on_edit)
         self.ui.btnNew.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnNew.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnNew))
-        self.ui.btnNew.clicked.connect(self._on_new)
+        self.ui.btnNew.clicked.connect(self._on_new_clicked)
         if app_env.is_mac():
             self.ui.btnDelete.setShortcut(QKeySequence('Ctrl+Backspace'))
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
@@ -153,6 +153,10 @@ class CharactersView(AbstractNovelView):
                 btn.setDisabled(True)
                 btn.setToolTip('Option disabled in Scrivener synchronization mode')
                 btn.installEventFilter(InstantTooltipEventFilter(btn))
+
+        self._series_menu: Optional[MenuWidget] = None
+        if self.novel.parent:
+            self.set_series_enabled(True)
 
         self.selected_card: Optional[CharacterCard] = None
         self.ui.cards.selectionCleared.connect(lambda: self._enable_action_buttons(False))
@@ -234,6 +238,18 @@ class CharactersView(AbstractNovelView):
     def close_event(self):
         if self.ui.stackedWidget.currentWidget() == self.ui.pageEditor:
             self.editor.close_event()
+
+    def set_series_enabled(self, enabled: bool):
+        if enabled:
+            self._series_menu = MenuWidget()
+            self._series_menu.addAction(action('Add new character', IconRegistry.character_icon(), slot=self._on_new))
+            self._series_menu.addSeparator()
+            self._series_menu.addAction(action('Import from series...', IconRegistry.series_icon()))
+        else:
+            self.ui.btnNew.setMenu(None)
+            if self._series_menu:
+                gc(self._series_menu)
+                self._series_menu = None
 
     @overrides
     def refresh(self):
@@ -349,7 +365,14 @@ class CharactersView(AbstractNovelView):
         emit_event(self.novel, CharacterChangedEvent(self, character))
         self.refresh()
 
+    def _on_new_clicked(self):
+        if self._series_menu:
+            self._series_menu.exec(self.ui.btnNew.mapToGlobal(QPoint(0, self.ui.btnNew.sizeHint().height())))
+        else:
+            self._on_new()
+
     def _on_new(self):
+
         character = Character('')
         for personality in [NovelSetting.Character_enneagram, NovelSetting.Character_mbti,
                             NovelSetting.Character_love_style, NovelSetting.Character_work_style]:
