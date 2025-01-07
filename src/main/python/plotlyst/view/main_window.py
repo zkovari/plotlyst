@@ -289,6 +289,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
                 self.outline_mode.setText(self.novel.title)
                 if self.novel.icon:
                     self.outline_mode.setIcon(IconRegistry.from_name(self.novel.icon, self.novel.icon_color))
+            elif self.novel and self.novel.parent == event.novel.id:
+                self.seriesLabel.setSeries(event.novel)
+
+
         elif isinstance(event, OpenDistractionFreeMode):
             self.btnComments.setChecked(False)
             self._toggle_fullscreen(on=True)
