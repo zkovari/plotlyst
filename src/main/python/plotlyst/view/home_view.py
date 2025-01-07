@@ -360,12 +360,16 @@ class HomeView(AbstractView):
                 self.refresh()
                 self._shelvesTreeView.selectNovel(self._selected_novel)
 
+                emit_global_event(NovelUpdatedEvent(self, novel))
+
     @busy
     def _detach_novel_from_series(self, novel: NovelDescriptor):
         novel.parent = None
         self.repo.update_project_novel(novel)
         self.refresh()
         self._shelvesTreeView.selectNovel(self._selected_novel)
+
+        emit_global_event(NovelUpdatedEvent(self, novel))
 
     def _tutorial_selected(self, tutorial: Tutorial):
         if tutorial.is_container():

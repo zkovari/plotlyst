@@ -286,9 +286,16 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
                 self.novel.title = event.novel.title
                 self.novel.icon = event.novel.icon
                 self.novel.icon_color = event.novel.icon_color
+                self.novel.parent = event.novel.parent
                 self.outline_mode.setText(self.novel.title)
                 if self.novel.icon:
                     self.outline_mode.setIcon(IconRegistry.from_name(self.novel.icon, self.novel.icon_color))
+                series = entities_registry.series(self.novel)
+                if series:
+                    self.seriesLabel.setSeries(series)
+                    self._actionSeries.setVisible(True)
+                else:
+                    self._actionSeries.setVisible(False)
             elif self.novel and self.novel.parent == event.novel.id:
                 self.seriesLabel.setSeries(event.novel)
 
