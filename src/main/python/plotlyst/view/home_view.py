@@ -110,6 +110,8 @@ class HomeView(AbstractView):
             IconRegistry.from_name('fa5s.chart-line', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
         self.ui.btnRoadmap.setIcon(
             IconRegistry.from_name('fa5s.road', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
+        self.ui.btnSurvey.setIcon(
+            IconRegistry.from_name('msc.organization', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
 
         for btn in self.ui.buttonGroup.buttons():
             btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.7, ignoreCheckedButton=True))
@@ -172,7 +174,9 @@ class HomeView(AbstractView):
         link_buttons_to_pages(self.ui.stackedWidget,
                               [(self.ui.btnLibrary, self.ui.pageLibrary), (self.ui.btnTutorials, self.ui.pageTutorials),
                                (self.ui.btnProgress, self.ui.pageProgress),
-                               (self.ui.btnRoadmap, self.ui.pageRoadmap)])
+                               (self.ui.btnRoadmap, self.ui.pageRoadmap),
+                               (self.ui.btnSurvey, self.ui.pageSurvey),
+                               ])
 
         self._roadmapView = RoadmapView()
         self.ui.pageRoadmap.layout().addWidget(self._roadmapView)
