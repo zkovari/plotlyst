@@ -26,7 +26,7 @@ from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QText
     QProgressDialog, QAbstractButton
 from fbs_runtime import platform
 from overrides import overrides
-from qthandy import spacer, busy, gc, pointy, decr_icon
+from qthandy import spacer, busy, gc, pointy, decr_icon, translucent
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qttextedit.ops import DEFAULT_FONT_FAMILIES
 from textstat import textstat
@@ -559,6 +559,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self._mode_btn_group.buttonToggled.connect(self._panel_toggled)
 
         self.btnSettings = NovelQuickPanelCustomizationButton()
+        translucent(self.btnSettings, 0.7)
 
         self.btnComments = QToolButton(self.toolBar)
         self.btnComments.setIcon(IconRegistry.from_name('mdi.comment-outline', color='#2e86ab'))
