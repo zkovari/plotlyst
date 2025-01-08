@@ -20,12 +20,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import List
 
 from PyQt6.QtCore import Qt, QTimer, QSize, QThreadPool
-from PyQt6.QtWidgets import QSplitter, QWidget
+from PyQt6.QtWidgets import QSplitter, QWidget, QDialog
 from overrides import overrides
 from qthandy import sp, vbox, line, vspacer, hbox, clear_layout, transparent, margins
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
-from plotlyst.core.domain import NovelDescriptor, StoryType, Novel
+from plotlyst.core.domain import NovelDescriptor, StoryType, Novel, Location
 from plotlyst.service.importer import NovelLoaderWorker, NovelLoadingResult
 from plotlyst.view.common import push_btn, label, spin
 from plotlyst.view.icons import IconRegistry
@@ -71,6 +71,7 @@ class SeriesImportBase(PopupDialog):
                                    text='Import',
                                    properties=['confirm', 'positive'])
         sp(self.btnConfirm).h_exp()
+        self.btnConfirm.setEnabled(False)
         self.btnConfirm.clicked.connect(self.accept)
         self.btnCancel = push_btn(text='Cancel', properties=['confirm', 'cancel'])
         self.btnCancel.clicked.connect(self.reject)
@@ -100,6 +101,8 @@ class SeriesImportBase(PopupDialog):
     def _novelLoadingFinished(self, novel: Novel):
         self.wdgLoading.setVisible(False)
         clear_layout(self.wdgLoading)
+        self.btnConfirm.setEnabled(True)
+
         self._novelFetched(novel)
 
     def _novelFetched(self, novel: Novel):
@@ -135,8 +138,11 @@ class ImportLocationPopup(SeriesImportBase):
 
         self.wdgCenter.layout().insertWidget(0, self.locationsTree)
 
-    def display(self):
+    def display(self) -> List[Location]:
         result = self.exec()
+
+        if result == QDialog.DialogCode.Accepted:
+            return self.locationsTree.checkedLocations()
 
     @overrides
     def _novelFetched(self, novel: Novel):

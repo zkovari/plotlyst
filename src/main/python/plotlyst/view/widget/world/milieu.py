@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from copy import deepcopy
 from functools import partial
 from typing import Optional, List
 
@@ -138,6 +139,23 @@ class LocationsTreeView(ItemBasedTreeView):
         self._save()
 
         emit_event(self._novel, LocationAddedEvent(self, location))
+
+    def checkedLocations(self) -> List[Location]:
+        def filterCheckedChildren(location: Location):
+            location.children[:] = [
+                child for child in location.children if self._nodes[child].checked()
+            ]
+            for child in location.children:
+                filterCheckedChildren(child)
+
+        checked_locations = []
+        for location in self._novel.locations:
+            if self._nodes[location].checked():
+                copied_location = deepcopy(location)
+                filterCheckedChildren(copied_location)
+                checked_locations.append(copied_location)
+
+        return checked_locations
 
     def _addLocationUnder(self, node: LocationNode):
         location = Location()

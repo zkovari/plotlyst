@@ -174,7 +174,7 @@ class BaseTreeWidget(QWidget):
         self._btnAdd.installEventFilter(self._btnAddPressFilter)
 
     def checked(self) -> bool:
-        return self._toggleButton.isChecked()
+        return self._checkable and self._toggleButton.isChecked()
 
     def setChecked(self, checked: bool):
         self._toggleButton.setChecked(checked)

@@ -302,4 +302,5 @@ class WorldBuildingView(AbstractNovelView):
     def _import_from_series(self):
         series = entities_registry.series(self.novel)
         if series:
-            characters = ImportLocationPopup.popup(series, self.main_window.seriesNovels(series))
+            locations = ImportLocationPopup.popup(series, self.main_window.seriesNovels(series))
+            print(locations)
