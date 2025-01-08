@@ -17,7 +17,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional
+from functools import partial
+from typing import Optional, List
 
 import qtanim
 from PyQt6.QtCore import Qt, QThreadPool, QEvent, QMimeData, QTimer
@@ -62,6 +63,7 @@ from plotlyst.view.characters_view import CharactersView
 from plotlyst.view.comments_view import CommentsView
 from plotlyst.view.common import TooltipPositionEventFilter, ButtonPressResizeEventFilter, open_url
 from plotlyst.view.dialog.about import AboutDialog
+from plotlyst.view.dialog.novel import DetachedWindow
 from plotlyst.view.docs_view import DocumentsView
 from plotlyst.view.generated.main_window_ui import Ui_MainWindow
 from plotlyst.view.home_view import HomeView
@@ -94,6 +96,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.resize(1200, 830)
         if app_env.is_prod():
             self.setWindowState(Qt.WindowState.WindowMaximized)
+
+        self._detached_windows: List[DetachedWindow] = []
 
         palette = QApplication.palette()
         palette.setColor(QPalette.ColorGroup.Active, QPalette.ColorRole.WindowText, QColor('#040406'))
@@ -354,6 +358,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self._actionSettings.setVisible(False)
             self._actionScrivener.setVisible(False)
             self.actionQuickCustomization.setDisabled(True)
+            self.actionDetachCurrentPanel.setDisabled(True)
             return
 
         sender: EventSender = event_senders.instance(self.novel)
@@ -367,6 +372,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self._actionSettings.setVisible(settings.toolbar_quick_settings())
         self.actionQuickCustomization.setEnabled(True)
+        self.actionDetachCurrentPanel.setEnabled(True)
         self.btnSettings.setNovel(self.novel)
         self.outline_mode.setEnabled(True)
         self.outline_mode.setVisible(True)
@@ -458,6 +464,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self._current_view = self.manuscript_view
         elif self.btnReports.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageAnalysis)
+            self._current_view = self.reports_view
         else:
             self._current_view = None
 
@@ -481,6 +488,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionOpenProjectDir.triggered.connect(lambda: open_location(settings.workspace()))
         self.actionChangeDir.setIcon(IconRegistry.from_name('fa5s.folder-open'))
         self.actionChangeDir.triggered.connect(self._change_project_dir)
+
+        self.actionDetachCurrentPanel.setIcon(IconRegistry.from_name('mdi.dock-window'))
+        self.actionDetachCurrentPanel.triggered.connect(self._detach_panel)
 
         self.actionLogs.setIcon(IconRegistry.from_name('fa5.file-code'))
         self.actionLogs.triggered.connect(lambda: LogsPopup.popup())
@@ -690,6 +700,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self._actionSettings.setVisible(False)
         self.actionQuickCustomization.setDisabled(True)
+        self.actionDetachCurrentPanel.setDisabled(True)
 
         self.outline_mode.setDisabled(True)
         self._actionNovelEditor.setVisible(False)
@@ -770,3 +781,17 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
     def _settings_link_clicked(self):
         self.btnNovel.setChecked(True)
         self.novel_view.show_settings()
+
+    def _detach_panel(self):
+        if self._current_view:
+            parent: QWidget = self._current_view.widget.parent()
+            parent.layout().removeWidget(self._current_view.widget)
+            window = DetachedWindow(self._current_view.widget)
+            window.accepted.connect(partial(self._restore_panel_window, window))
+            window.rejected.connect(partial(self._restore_panel_window, window))
+            self._detached_windows.append(window)
+            window.show()
+
+    def _restore_panel_window(self, window: DetachedWindow):
+        self._detached_windows.remove(window)
+        gc(window)

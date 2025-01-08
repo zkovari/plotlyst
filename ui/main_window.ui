@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>754</width>
-    <height>617</height>
+    <height>633</height>
    </rect>
   </property>
   <property name="mouseTracking">
@@ -941,9 +941,16 @@
     <addaction name="actionCopy"/>
     <addaction name="actionPaste"/>
    </widget>
+   <widget class="QMenu" name="menuWindow">
+    <property name="title">
+     <string>Window</string>
+    </property>
+    <addaction name="actionDetachCurrentPanel"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuView"/>
+   <addaction name="menuWindow"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
@@ -1136,6 +1143,11 @@
   <action name="actionSocialDiscord">
    <property name="text">
     <string>Discord</string>
+   </property>
+  </action>
+  <action name="actionDetachCurrentPanel">
+   <property name="text">
+    <string>Detach current panel</string>
    </property>
   </action>
  </widget>

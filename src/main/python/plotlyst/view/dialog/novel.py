@@ -23,9 +23,9 @@ from typing import Optional, List, Any
 import qtanim
 from PyQt6.QtCore import QAbstractListModel, QModelIndex, Qt, QVariant, pyqtSignal
 from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QDialog, QPushButton, QDialogButtonBox, QApplication, QCompleter
+from PyQt6.QtWidgets import QDialog, QPushButton, QDialogButtonBox, QApplication, QCompleter, QWidget
 from overrides import overrides
-from qthandy import flow, decr_font, decr_icon, pointy
+from qthandy import flow, decr_font, decr_icon, pointy, vbox
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
@@ -360,3 +360,22 @@ class SynopsisEditorDialog(QDialog, Ui_SynopsisEditorDialog):
     #     dialog.show()
     #
     #     return dialog.textSynopsis.textEdit.toHtml()
+
+
+class DetachedWindow(QDialog):
+    def __init__(self, widget: QWidget, parent=None):
+        super().__init__(parent)
+        self.setWindowFlags(Qt.WindowType.Window)
+
+        vbox(self)
+        self.layout().addWidget(widget)
+
+    @overrides
+    def show(self) -> None:
+        # screen = QApplication.screenAt(self.pos())
+        self.setWindowState(Qt.WindowState.WindowMaximized)
+        # if screen:
+        #     self.resize(screen.size().width(), screen.size().height())
+        # else:
+        #     self.resize(600, 500)
+        super().show()
