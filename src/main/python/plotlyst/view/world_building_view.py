@@ -303,4 +303,7 @@ class WorldBuildingView(AbstractNovelView):
         series = entities_registry.series(self.novel)
         if series:
             locations = ImportLocationPopup.popup(series, self.main_window.seriesNovels(series))
-            print(locations)
+            if locations:
+                self.novel.locations.extend(locations)
+                self.ui.treeLocations.setNovel(self.novel)
+                self.repo.update_novel(self.novel)

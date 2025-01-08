@@ -32,7 +32,6 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.display import PopupDialog
 from plotlyst.view.widget.library import ShelvesTreeView
-from plotlyst.view.widget.tree import TreeSettings
 from plotlyst.view.widget.world.milieu import LocationsTreeView
 
 
@@ -57,8 +56,8 @@ class SeriesImportBase(PopupDialog):
         sp(self.wdgLoading).v_exp().h_exp()
         self.wdgCenter.setMinimumSize(350, 400)
 
-        self.treeView = ShelvesTreeView(settings=TreeSettings(font_incr=1), readOnly=True)
-        self.treeView.setMinimumWidth(200)
+        self.treeView = ShelvesTreeView(readOnly=True)
+        self.treeView.setMinimumWidth(250)
         self.treeView.novelSelected.connect(self._novelSelected)
         self.wdgSplitter.addWidget(self.treeView)
         self.wdgSplitter.addWidget(self.wdgCenter)

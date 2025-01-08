@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import uuid
 from copy import deepcopy
 from functools import partial
 from typing import Optional, List
@@ -141,6 +142,8 @@ class LocationsTreeView(ItemBasedTreeView):
         emit_event(self._novel, LocationAddedEvent(self, location))
 
     def checkedLocations(self) -> List[Location]:
+        """Returns a list of new Location objects with new ID"""
+
         def filterCheckedChildren(location: Location):
             location.children[:] = [
                 child for child in location.children if self._nodes[child].checked()
@@ -152,6 +155,7 @@ class LocationsTreeView(ItemBasedTreeView):
         for location in self._novel.locations:
             if self._nodes[location].checked():
                 copied_location = deepcopy(location)
+                copied_location.id = uuid.uuid4()
                 filterCheckedChildren(copied_location)
                 checked_locations.append(copied_location)
 
