@@ -415,8 +415,7 @@ class ItemBasedTreeView(TreeView):
             self._emitSelectionChanged(node.item())
 
     def _deleteNode(self, node: ItemBasedNode):
-        if node.item() in self._selectedItems:
-            self._selectedItems.remove(node.item())
+        self.clearSelection()
         self._nodes.pop(node.item())
 
         fade_out_and_gc(node.parent(), node)
