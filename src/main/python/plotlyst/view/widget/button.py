@@ -27,7 +27,7 @@ from PyQt6.QtWidgets import QPushButton, QSizePolicy, QToolButton, QAbstractButt
 from overrides import overrides
 from qtanim import fade_in
 from qthandy import hbox, translucent, bold, incr_font, transparent, retain_when_hidden, underline, vbox, decr_icon, \
-    incr_icon, italic, pointy
+    incr_icon, italic, pointy, sp
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, GridMenuWidget
 
@@ -37,7 +37,7 @@ from plotlyst.core.domain import SelectionItem, Novel, tag_characterization, tag
     tag_editing, tag_collect_feedback, tag_publishing, tag_marketing, tag_book_cover_design, tag_formatting
 from plotlyst.env import app_env
 from plotlyst.service.importer import SyncImporter
-from plotlyst.view.common import ButtonPressResizeEventFilter, tool_btn, spin, action
+from plotlyst.view.common import ButtonPressResizeEventFilter, tool_btn, spin, action, label
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_white_menu
 
@@ -705,6 +705,33 @@ class SmallToggleButton(QToolButton):
 
     def _toggled(self, toggled: bool):
         if toggled:
-            self.setIcon(IconRegistry.from_name('ph.toggle-right-fill', PLOTLYST_SECONDARY_COLOR, PLOTLYST_SECONDARY_COLOR))
+            self.setIcon(
+                IconRegistry.from_name('ph.toggle-right-fill', PLOTLYST_SECONDARY_COLOR, PLOTLYST_SECONDARY_COLOR))
         else:
             self.setIcon(IconRegistry.from_name('ph.toggle-left-thin'))
+
+
+class ToggleAllOnAndOff(QWidget):
+    on = pyqtSignal()
+    off = pyqtSignal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        hbox(self, 0, 0)
+
+        sp(self).h_max()
+        self.btnOn = tool_btn(IconRegistry.from_name('mdi6.check-all'), transparent_=True)
+        self.btnOn.installEventFilter(OpacityEventFilter(self.btnOn))
+        self.btnOff = tool_btn(IconRegistry.from_name('ei.remove'), transparent_=True)
+        self.btnOff.installEventFilter(OpacityEventFilter(self.btnOff))
+        decr_icon(self.btnOn, 4)
+        decr_icon(self.btnOff, 4)
+
+        self.btnOn.clicked.connect(self.on)
+        self.btnOff.clicked.connect(self.off)
+
+        self.layout().addWidget(label('Toggle all:', color='grey', decr_font_diff=1))
+        self.layout().addWidget(self.btnOn)
+        self.layout().addWidget(label('/'))
+        self.layout().addWidget(self.btnOff)

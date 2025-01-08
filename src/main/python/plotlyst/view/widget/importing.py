@@ -32,7 +32,7 @@ from plotlyst.service.importer import NovelLoaderWorker, NovelLoadingResult
 from plotlyst.view.common import push_btn, label, spin, scroll_area
 from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.layout import group
-from plotlyst.view.widget.button import SmallToggleButton
+from plotlyst.view.widget.button import SmallToggleButton, ToggleAllOnAndOff
 from plotlyst.view.widget.display import PopupDialog, Icon
 from plotlyst.view.widget.library import ShelvesTreeView
 from plotlyst.view.widget.list import ListView, ListItemWidget
@@ -70,6 +70,9 @@ class SeriesImportBase(PopupDialog):
         items.extend(novels)
         self.treeView.setNovels(items)
 
+        self.toggleOnAndOff = ToggleAllOnAndOff()
+        self.toggleOnAndOff.setHidden(True)
+
         self.btnConfirm = push_btn(icon=IconRegistry.from_name('mdi.application-import', RELAXED_WHITE_COLOR),
                                    text='Import',
                                    properties=['confirm', 'positive'])
@@ -82,6 +85,7 @@ class SeriesImportBase(PopupDialog):
         self.frame.layout().addWidget(self.lblTitle, alignment=Qt.AlignmentFlag.AlignCenter)
         self.frame.layout().addWidget(line(color='lightgrey'))
         self.frame.layout().addWidget(self.wdgSplitter)
+        self.wdgCenter.layout().addWidget(self.toggleOnAndOff, alignment=Qt.AlignmentFlag.AlignRight)
         self.wdgCenter.layout().addWidget(group(self.btnCancel, self.btnConfirm, margin_top=20),
                                           alignment=Qt.AlignmentFlag.AlignRight)
 
@@ -147,6 +151,12 @@ class ImportedCharactersList(ListView):
         for character in novel.characters:
             self.addItem(character)
 
+    def setAllChecked(self, checked: bool):
+        for i in range(self.layout().count()):
+            wdg = self.layout().itemAt(i).widget()
+            if isinstance(wdg, CharacterListItemWidget):
+                wdg.toggle.setChecked(checked)
+
     def checkedCharacters(self) -> List[Character]:
         characters = []
         for i in range(self.layout().count()):
@@ -184,7 +194,10 @@ class ImportCharacterPopup(SeriesImportBase):
         self.listCharacters = ImportedCharactersList()
         self._scrollWidget.layout().addWidget(self.listCharacters)
 
-        self.wdgCenter.layout().insertWidget(0, self._scroll)
+        self.toggleOnAndOff.on.connect(self._toggleAllOn)
+        self.toggleOnAndOff.off.connect(self._toggleAllOff)
+
+        self.wdgCenter.layout().insertWidget(2, self._scroll)
 
     def display(self)-> List[Character]:
         result = self.exec()
@@ -194,8 +207,14 @@ class ImportCharacterPopup(SeriesImportBase):
 
     @overrides
     def _novelFetched(self, novel: Novel):
+        self.toggleOnAndOff.setVisible(True)
         self.listCharacters.setNovel(novel)
 
+    def _toggleAllOn(self):
+        self.listCharacters.setAllChecked(True)
+
+    def _toggleAllOff(self):
+        self.listCharacters.setAllChecked(False)
 
 class ImportLocationPopup(SeriesImportBase):
     def __init__(self, series: NovelDescriptor, novels: List[NovelDescriptor], parent=None):
@@ -208,7 +227,7 @@ class ImportLocationPopup(SeriesImportBase):
         transparent(self.locationsTree)
         transparent(self.locationsTree.centralWidget())
 
-        self.wdgCenter.layout().insertWidget(0, self.locationsTree)
+        self.wdgCenter.layout().insertWidget(1, self.locationsTree)
 
     def display(self) -> List[Location]:
         result = self.exec()

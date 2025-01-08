@@ -92,7 +92,7 @@ class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
 
 class CharactersView(AbstractNovelView):
 
-    def __init__(self, novel: Novel, main_window = None):
+    def __init__(self, novel: Novel, main_window=None):
         super().__init__(novel)
         self.ui = Ui_CharactersView()
         self.ui.setupUi(self.widget)
@@ -380,6 +380,14 @@ class CharactersView(AbstractNovelView):
             novels: List[NovelDescriptor] = self.main_window.seriesNovels(series)
             novels[:] = [x for x in novels if x.id != self.novel.id]
             characters = ImportCharacterPopup.popup(series, novels)
+            if characters:
+                for character in characters:
+                    self.novel.characters.append(character)
+                    self.repo.insert_character(self.novel, character)
+                    card = self.__init_card_widget(character)
+                    self.ui.cards.addCard(card)
+
+                emit_event(self.novel, CharacterChangedEvent(self, characters[0]))
 
     def _on_new(self):
 
