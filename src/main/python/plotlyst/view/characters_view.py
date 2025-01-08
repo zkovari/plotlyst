@@ -30,7 +30,7 @@ from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
-from plotlyst.core.domain import Novel, Character, CardSizeRatio, NovelSetting
+from plotlyst.core.domain import Novel, Character, CardSizeRatio, NovelSetting, NovelDescriptor
 from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, Event, emit_event
 from plotlyst.event.handler import event_dispatchers, global_event_dispatcher
@@ -377,7 +377,9 @@ class CharactersView(AbstractNovelView):
     def _import_from_series(self):
         series = entities_registry.series(self.novel)
         if series:
-            characters = ImportCharacterPopup.popup(series, self.main_window.seriesNovels(series))
+            novels: List[NovelDescriptor] = self.main_window.seriesNovels(series)
+            novels[:] = [x for x in novels if x.id != self.novel.id]
+            characters = ImportCharacterPopup.popup(series, novels)
 
     def _on_new(self):
 

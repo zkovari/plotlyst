@@ -626,6 +626,7 @@ class Character:
     strengths: List[StrengthWeaknessAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     personality: CharacterPersonality = field(default_factory=CharacterPersonality)
     alias: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    origin_id: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
     def enneagram(self) -> Optional[SelectionItem]:
         if self.prefs.toggled(NovelSetting.Character_enneagram):
@@ -2386,6 +2387,7 @@ class Location:
     sensory_detail: SensoryDetail = field(default_factory=SensoryDetail)
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon_color: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    origin_id: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
     @overrides
     def __eq__(self, other: 'Location'):

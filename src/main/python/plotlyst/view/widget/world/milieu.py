@@ -156,6 +156,7 @@ class LocationsTreeView(ItemBasedTreeView):
             if self._nodes[location].checked():
                 copied_location = deepcopy(location)
                 copied_location.id = uuid.uuid4()
+                copied_location.origin_id = location.id
                 filterCheckedChildren(copied_location)
                 checked_locations.append(copied_location)
 

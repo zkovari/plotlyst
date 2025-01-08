@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional
+from typing import Optional, List
 
 import qtanim
 from PyQt6.QtCore import Qt, QRectF, QPoint
@@ -30,7 +30,7 @@ from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
-from plotlyst.core.domain import Novel, WorldBuildingEntity
+from plotlyst.core.domain import Novel, WorldBuildingEntity, NovelDescriptor
 from plotlyst.env import app_env
 from plotlyst.resources import resource_registry
 from plotlyst.service.cache import try_location, entities_registry
@@ -302,7 +302,9 @@ class WorldBuildingView(AbstractNovelView):
     def _import_from_series(self):
         series = entities_registry.series(self.novel)
         if series:
-            locations = ImportLocationPopup.popup(series, self.main_window.seriesNovels(series))
+            novels: List[NovelDescriptor] = self.main_window.seriesNovels(series)
+            novels[:] = [x for x in novels if x.id != self.novel.id]
+            locations = ImportLocationPopup.popup(series, novels)
             if locations:
                 self.novel.locations.extend(locations)
                 self.ui.treeLocations.setNovel(self.novel)

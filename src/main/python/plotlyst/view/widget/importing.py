@@ -30,6 +30,7 @@ from plotlyst.service.importer import NovelLoaderWorker, NovelLoadingResult
 from plotlyst.view.common import push_btn, label, spin, scroll_area
 from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.layout import group
+from plotlyst.view.widget.button import SmallToggleButton
 from plotlyst.view.widget.display import PopupDialog, Icon
 from plotlyst.view.widget.library import ShelvesTreeView
 from plotlyst.view.widget.list import ListView, ListItemWidget
@@ -111,13 +112,18 @@ class SeriesImportBase(PopupDialog):
 
 class CharacterListItemWidget(ListItemWidget):
     def __init__(self, character: Character, parent=None):
-        super().__init__(character, parent)
+        super().__init__(character, parent, readOnly=True)
         self._icon = Icon()
         self._icon.setIcon(avatars.avatar(character))
-        self._lineEdit.setText(character.name)
+        self._lineEdit.setText(character.name if character.name else 'Character')
         self._lineEdit.setReadOnly(True)
         transparent(self._lineEdit)
+
+        self.toggle = SmallToggleButton()
+        self.toggle.setChecked(True)
+
         self.layout().insertWidget(1, self._icon)
+        self.layout().insertWidget(0, self.toggle)
 
 
 class ImportedCharactersList(ListView):
