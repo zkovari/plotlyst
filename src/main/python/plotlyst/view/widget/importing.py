@@ -17,6 +17,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import uuid
+from copy import deepcopy
 from typing import List
 
 from PyQt6.QtCore import Qt, QTimer, QSize, QThreadPool
@@ -121,9 +123,17 @@ class CharacterListItemWidget(ListItemWidget):
 
         self.toggle = SmallToggleButton()
         self.toggle.setChecked(True)
+        self.toggle.toggled.connect(self._toggled)
 
         self.layout().insertWidget(1, self._icon)
         self.layout().insertWidget(0, self.toggle)
+
+    def checked(self) -> bool:
+        return self.toggle.isChecked()
+
+    def _toggled(self, toggled: bool):
+        self._icon.setEnabled(toggled)
+        self._lineEdit.setEnabled(toggled)
 
 
 class ImportedCharactersList(ListView):
@@ -136,6 +146,19 @@ class ImportedCharactersList(ListView):
         self.clear()
         for character in novel.characters:
             self.addItem(character)
+
+    def checkedCharacters(self) -> List[Character]:
+        characters = []
+        for i in range(self.layout().count()):
+            wdg = self.layout().itemAt(i).widget()
+            if isinstance(wdg, CharacterListItemWidget):
+                if wdg.checked():
+                    imported_character = deepcopy(wdg.item())
+                    imported_character.id = uuid.uuid4()
+                    imported_character.origin_id = wdg.item().id
+                    characters.append(imported_character)
+
+        return characters
 
     @overrides
     def _listItemWidgetClass(self):
@@ -163,8 +186,11 @@ class ImportCharacterPopup(SeriesImportBase):
 
         self.wdgCenter.layout().insertWidget(0, self._scroll)
 
-    def display(self):
+    def display(self)-> List[Character]:
         result = self.exec()
+
+        if result == QDialog.DialogCode.Accepted:
+            return self.listCharacters.checkedCharacters()
 
     @overrides
     def _novelFetched(self, novel: Novel):
