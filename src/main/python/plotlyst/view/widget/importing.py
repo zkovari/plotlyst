@@ -22,16 +22,17 @@ from typing import List
 from PyQt6.QtCore import Qt, QTimer, QSize, QThreadPool
 from PyQt6.QtWidgets import QSplitter, QWidget, QDialog
 from overrides import overrides
-from qthandy import sp, vbox, line, vspacer, hbox, clear_layout, transparent, margins
+from qthandy import sp, vbox, line, hbox, clear_layout, transparent, margins
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
-from plotlyst.core.domain import NovelDescriptor, StoryType, Novel, Location
+from plotlyst.core.domain import NovelDescriptor, StoryType, Novel, Location, Character
 from plotlyst.service.importer import NovelLoaderWorker, NovelLoadingResult
-from plotlyst.view.common import push_btn, label, spin
-from plotlyst.view.icons import IconRegistry
+from plotlyst.view.common import push_btn, label, spin, scroll_area
+from plotlyst.view.icons import IconRegistry, avatars
 from plotlyst.view.layout import group
-from plotlyst.view.widget.display import PopupDialog
+from plotlyst.view.widget.display import PopupDialog, Icon
 from plotlyst.view.widget.library import ShelvesTreeView
+from plotlyst.view.widget.list import ListView, ListItemWidget
 from plotlyst.view.widget.world.milieu import LocationsTreeView
 
 
@@ -108,20 +109,60 @@ class SeriesImportBase(PopupDialog):
         pass
 
 
+class CharacterListItemWidget(ListItemWidget):
+    def __init__(self, character: Character, parent=None):
+        super().__init__(character, parent)
+        self._icon = Icon()
+        self._icon.setIcon(avatars.avatar(character))
+        self._lineEdit.setText(character.name)
+        self._lineEdit.setReadOnly(True)
+        transparent(self._lineEdit)
+        self.layout().insertWidget(1, self._icon)
+
+
+class ImportedCharactersList(ListView):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        margins(self, left=20)
+        self._btnAdd.setHidden(True)
+
+    def setNovel(self, novel: Novel):
+        self.clear()
+        for character in novel.characters:
+            self.addItem(character)
+
+    @overrides
+    def _listItemWidgetClass(self):
+        return CharacterListItemWidget
+
+    @overrides
+    def _addNewItem(self):
+        pass
+
+
 class ImportCharacterPopup(SeriesImportBase):
     def __init__(self, series: NovelDescriptor, novels: List[NovelDescriptor], parent=None):
         super().__init__(series, novels, parent)
         self.lblTitle.setText('Import characters from series')
         self.btnConfirm.setText('Import characters')
-        self.wdgCenter.layout().insertWidget(0, vspacer())
+        self._scroll = scroll_area(h_on=False, frameless=True)
+        self._scrollWidget = QWidget()
+        hbox(self._scrollWidget, 0, 0)
+        self._scroll.setWidget(self._scrollWidget)
+        transparent(self._scroll)
+        transparent(self._scrollWidget)
+
+        self.listCharacters = ImportedCharactersList()
+        self._scrollWidget.layout().addWidget(self.listCharacters)
+
+        self.wdgCenter.layout().insertWidget(0, self._scroll)
 
     def display(self):
         result = self.exec()
 
     @overrides
     def _novelFetched(self, novel: Novel):
-        for character in novel.characters:
-            self.wdgCenter.layout().addWidget(label(character.name))
+        self.listCharacters.setNovel(novel)
 
 
 class ImportLocationPopup(SeriesImportBase):
