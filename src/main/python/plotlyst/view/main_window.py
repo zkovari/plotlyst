@@ -17,7 +17,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional
+from functools import partial
+from typing import Optional, List
 
 import qtanim
 from PyQt6.QtCore import Qt, QThreadPool, QEvent, QMimeData, QTimer
@@ -63,6 +64,7 @@ from plotlyst.view.characters_view import CharactersView
 from plotlyst.view.comments_view import CommentsView
 from plotlyst.view.common import TooltipPositionEventFilter, ButtonPressResizeEventFilter, open_url, action
 from plotlyst.view.dialog.about import AboutDialog
+from plotlyst.view.dialog.novel import DetachedWindow
 from plotlyst.view.docs_view import DocumentsView
 from plotlyst.view.generated.main_window_ui import Ui_MainWindow
 from plotlyst.view.home_view import HomeView
@@ -96,6 +98,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.resize(1200, 830)
         if app_env.is_prod():
             self.setWindowState(Qt.WindowState.WindowMaximized)
+
+        self._detached_windows: List[DetachedWindow] = []
 
         palette = QApplication.palette()
         palette.setColor(QPalette.ColorGroup.Active, QPalette.ColorRole.WindowText, QColor('#040406'))
@@ -203,6 +207,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
     def closeEvent(self, event: QCloseEvent) -> None:
         if language_tool_proxy.is_set():
             language_tool_proxy.tool.close()
+
+        self._restore_all_windows()
 
         if self.novel:
             if self.characters_view:
@@ -349,8 +355,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         return self.home_view.seriesNovels(series)
 
     def close_novel(self):
-        self.novel = None
         self._clear_novel()
+        self.novel = None
         self.home_mode.setChecked(True)
 
     def _toggle_fullscreen(self, on: bool):
@@ -376,6 +382,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self._actionScrivener.setVisible(False)
             self._actionSeries.setVisible(False)
             self.actionQuickCustomization.setDisabled(True)
+            self.menuDetachPanels.setDisabled(True)
             return
 
         sender: EventSender = event_senders.instance(self.novel)
@@ -389,6 +396,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self._actionSettings.setVisible(settings.toolbar_quick_settings())
         self.actionQuickCustomization.setEnabled(True)
+        self.menuDetachPanels.setEnabled(True)
         self.btnSettings.setNovel(self.novel)
         self.outline_mode.setEnabled(True)
         self.outline_mode.setVisible(True)
@@ -449,11 +457,16 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.btnNovel.setChecked(True)
 
         self.btnCharacters.setVisible(self.novel.prefs.toggled(NovelSetting.Characters))
+        self.actionDetachCharacters.setEnabled(self.novel.prefs.toggled(NovelSetting.Characters))
         self.btnScenes.setVisible(self.novel.prefs.toggled(NovelSetting.Scenes))
+        self.actionDetachScenes.setEnabled(self.novel.prefs.toggled(NovelSetting.Scenes))
         self.btnWorld.setVisible(self.novel.prefs.toggled(NovelSetting.World_building))
+        self.actionDetachWorldbuilding.setEnabled(self.novel.prefs.toggled(NovelSetting.World_building))
         self.btnNotes.setVisible(self.novel.prefs.toggled(NovelSetting.Documents))
+        self.actionDetachDocuments.setEnabled(self.novel.prefs.toggled(NovelSetting.Documents))
         self.btnManuscript.setVisible(self.novel.prefs.toggled(NovelSetting.Manuscript))
         self.btnBoard.setVisible(self.novel.prefs.toggled(NovelSetting.Management))
+        self.actionDetachTask.setEnabled(self.novel.prefs.toggled(NovelSetting.Management))
 
     def _on_view_changed(self, btn=None, checked: bool = True):
         if not checked:
@@ -487,6 +500,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self._current_view = self.manuscript_view
         elif self.btnReports.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageAnalysis)
+            self._current_view = self.reports_view
         else:
             self._current_view = None
 
@@ -510,6 +524,20 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionOpenProjectDir.triggered.connect(lambda: open_location(settings.workspace()))
         self.actionChangeDir.setIcon(IconRegistry.from_name('fa5s.folder-open'))
         self.actionChangeDir.triggered.connect(self._change_project_dir)
+
+        self.menuDetachPanels.setIcon(IconRegistry.from_name('mdi.dock-window'))
+        self.actionDetachCharacters.setIcon(IconRegistry.character_icon())
+        self.actionDetachCharacters.triggered.connect(partial(self._detach_panel, NovelSetting.Characters))
+        self.actionDetachScenes.setIcon(IconRegistry.scene_icon())
+        self.actionDetachScenes.triggered.connect(partial(self._detach_panel, NovelSetting.Scenes))
+        self.actionDetachWorldbuilding.setIcon(IconRegistry.world_building_icon())
+        self.actionDetachWorldbuilding.triggered.connect(partial(self._detach_panel, NovelSetting.World_building))
+        self.actionDetachDocuments.setIcon(IconRegistry.document_edition_icon())
+        self.actionDetachDocuments.triggered.connect(partial(self._detach_panel, NovelSetting.Documents))
+        self.actionDetachTask.setIcon(IconRegistry.board_icon())
+        self.actionDetachTask.triggered.connect(partial(self._detach_panel, NovelSetting.Management))
+        self.actionDetachReports.setIcon(IconRegistry.reports_icon())
+        self.actionDetachReports.triggered.connect(partial(self._detach_panel, NovelSetting.Reports))
 
         self.actionLogs.setIcon(IconRegistry.from_name('fa5.file-code'))
         self.actionLogs.triggered.connect(lambda: LogsPopup.popup())
@@ -681,6 +709,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionPreview.setEnabled(True)
 
     def _clear_novel(self):
+        self._restore_all_windows()
+
         event_senders.pop(self.novel)
         event_dispatchers.pop(self.novel)
 
@@ -731,6 +761,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self._actionSettings.setVisible(False)
         self.actionQuickCustomization.setDisabled(True)
+        self.menuDetachPanels.setDisabled(True)
 
         self.outline_mode.setDisabled(True)
         self._actionNovelEditor.setVisible(False)
@@ -797,20 +828,71 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         func = qtanim.fade_in if event.toggled else qtanim.fade_out
         if isinstance(event, NovelWorldBuildingToggleEvent):
             func(self.btnWorld, teardown=teardown)
+            self.actionDetachWorldbuilding.setEnabled(event.toggled)
         elif isinstance(event, NovelCharactersToggleEvent):
             func(self.btnCharacters, teardown=teardown)
+            self.actionDetachCharacters.setEnabled(event.toggled)
         elif isinstance(event, NovelScenesToggleEvent):
             func(self.btnScenes, teardown=teardown)
+            self.actionDetachScenes.setEnabled(event.toggled)
         elif isinstance(event, NovelDocumentsToggleEvent):
             func(self.btnNotes, teardown=teardown)
+            self.actionDetachDocuments.setEnabled(event.toggled)
         elif isinstance(event, NovelManuscriptToggleEvent):
             func(self.btnManuscript, teardown=teardown)
         elif isinstance(event, NovelManagementToggleEvent):
             func(self.btnBoard, teardown=teardown)
+            self.actionDetachTask.setEnabled(event.toggled)
 
     def _settings_link_clicked(self):
         self.btnNovel.setChecked(True)
         self.novel_view.show_settings()
+
+    def _detach_panel(self, panel: NovelSetting):
+        if panel == NovelSetting.Characters:
+            view = self.characters_view
+            btn = self.btnCharacters
+        elif panel == NovelSetting.Scenes:
+            view = self.scenes_outline_view
+            btn = self.btnScenes
+        elif panel == NovelSetting.Documents:
+            view = self.notes_view
+            btn = self.btnNotes
+        elif panel == NovelSetting.World_building:
+            view = self.world_building_view
+            btn = self.btnWorld
+        elif panel == NovelSetting.Management:
+            view = self.board_view
+            btn = self.btnBoard
+        elif panel == NovelSetting.Reports:
+            view = self.reports_view
+            btn = self.btnReports
+        else:
+            return
+
+        if view.isDetached():
+            return
+
+        window = view.detach()
+        window.accepted.connect(partial(self._restore_panel_window, view, window, btn))
+        window.rejected.connect(partial(self._restore_panel_window, view, window, btn))
+        self._detached_windows.append(window)
+        window.show()
+        self.btnNovel.setChecked(True)
+        btn.setDisabled(True)
+
+    def _restore_panel_window(self, view: NovelView, window: DetachedWindow, btn: QToolButton):
+        view.restore()
+        self._detached_windows.remove(window)
+        gc(window)
+        btn.setEnabled(True)
+
+    def _restore_all_windows(self):
+        if self._detached_windows:
+            windows = []
+            windows.extend(self._detached_windows)
+            for window in windows:
+                window.accept()
 
     def _select_series(self):
         series = entities_registry.series(self.novel)

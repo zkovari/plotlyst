@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>754</width>
-    <height>617</height>
+    <height>633</height>
    </rect>
   </property>
   <property name="mouseTracking">
@@ -941,9 +941,30 @@
     <addaction name="actionCopy"/>
     <addaction name="actionPaste"/>
    </widget>
+   <widget class="QMenu" name="menuWindow">
+    <property name="title">
+     <string>Window</string>
+    </property>
+    <widget class="QMenu" name="menuDetachPanels">
+     <property name="toolTip">
+      <string>Detach panels to separate windows</string>
+     </property>
+     <property name="title">
+      <string>Detach panels</string>
+     </property>
+     <addaction name="actionDetachCharacters"/>
+     <addaction name="actionDetachScenes"/>
+     <addaction name="actionDetachWorldbuilding"/>
+     <addaction name="actionDetachDocuments"/>
+     <addaction name="actionDetachTask"/>
+     <addaction name="actionDetachReports"/>
+    </widget>
+    <addaction name="menuDetachPanels"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuView"/>
+   <addaction name="menuWindow"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
@@ -1136,6 +1157,36 @@
   <action name="actionSocialDiscord">
    <property name="text">
     <string>Discord</string>
+   </property>
+  </action>
+  <action name="actionDetachCharacters">
+   <property name="text">
+    <string>Detach characters</string>
+   </property>
+  </action>
+  <action name="actionDetachScenes">
+   <property name="text">
+    <string>Detach scenes</string>
+   </property>
+  </action>
+  <action name="actionDetachWorldbuilding">
+   <property name="text">
+    <string>Detach world-building</string>
+   </property>
+  </action>
+  <action name="actionDetachDocuments">
+   <property name="text">
+    <string>Detach documents</string>
+   </property>
+  </action>
+  <action name="actionDetachTask">
+   <property name="text">
+    <string>Detach task management</string>
+   </property>
+  </action>
+  <action name="actionDetachReports">
+   <property name="text">
+    <string>Detach reports</string>
    </property>
   </action>
  </widget>
