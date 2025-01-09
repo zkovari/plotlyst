@@ -372,10 +372,5 @@ class DetachedWindow(QDialog):
 
     @overrides
     def show(self) -> None:
-        # screen = QApplication.screenAt(self.pos())
         self.setWindowState(Qt.WindowState.WindowMaximized)
-        # if screen:
-        #     self.resize(screen.size().width(), screen.size().height())
-        # else:
-        #     self.resize(600, 500)
         super().show()
