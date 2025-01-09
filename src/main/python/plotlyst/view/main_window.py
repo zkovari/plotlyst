@@ -845,20 +845,43 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.novel_view.show_settings()
 
     def _detach_panel(self, panel: NovelSetting):
-        print(panel)
-        return
-        if self._current_view:
-            parent: QWidget = self._current_view.widget.parent()
-            parent.layout().removeWidget(self._current_view.widget)
-            window = DetachedWindow(self._current_view.widget)
-            window.accepted.connect(partial(self._restore_panel_window, window))
-            window.rejected.connect(partial(self._restore_panel_window, window))
-            self._detached_windows.append(window)
-            window.show()
+        if panel == NovelSetting.Characters:
+            view = self.characters_view
+            btn = self.btnCharacters
+        elif panel == NovelSetting.Scenes:
+            view = self.scenes_outline_view
+            btn = self.btnScenes
+        elif panel == NovelSetting.Documents:
+            view = self.notes_view
+            btn = self.btnNotes
+        elif panel == NovelSetting.World_building:
+            view = self.world_building_view
+            btn = self.btnWorld
+        elif panel == NovelSetting.Management:
+            view = self.board_view
+            btn = self.btnBoard
+        elif panel == NovelSetting.Reports:
+            view = self.reports_view
+            btn = self.btnReports
+        else:
+            return
 
-    def _restore_panel_window(self, window: DetachedWindow):
+        if view.isDetached():
+            return
+
+        window = view.detach()
+        window.accepted.connect(partial(self._restore_panel_window, view, window, btn))
+        window.rejected.connect(partial(self._restore_panel_window, view, window, btn))
+        self._detached_windows.append(window)
+        window.show()
+        self.btnNovel.setChecked(True)
+        btn.setDisabled(True)
+
+    def _restore_panel_window(self, view: NovelView, window: DetachedWindow, btn: QToolButton):
+        view.restore()
         self._detached_windows.remove(window)
         gc(window)
+        btn.setEnabled(True)
 
     def _select_series(self):
         series = entities_registry.series(self.novel)
