@@ -388,9 +388,9 @@ class CharactersView(AbstractNovelView):
                     self.ui.cards.addCard(card)
 
                 emit_event(self.novel, CharacterChangedEvent(self, characters[0]))
+                self.refresh()
 
     def _on_new(self):
-
         character = Character('')
         for personality in [NovelSetting.Character_enneagram, NovelSetting.Character_mbti,
                             NovelSetting.Character_love_style, NovelSetting.Character_work_style]:
@@ -405,8 +405,8 @@ class CharactersView(AbstractNovelView):
             self._edit_character(character)
         else:
             card.refresh()
-
             emit_event(self.novel, CharacterChangedEvent(self, character))
+            self.refresh()
 
     @busy
     def _on_delete(self, checked: bool):
