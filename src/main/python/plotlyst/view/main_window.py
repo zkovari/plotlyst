@@ -26,15 +26,16 @@ from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QText
     QProgressDialog, QAbstractButton
 from fbs_runtime import platform
 from overrides import overrides
-from qthandy import spacer, busy, gc
+from qthandy import spacer, busy, gc, pointy, decr_icon, translucent
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
+from qtmenu import MenuWidget
 from qttextedit.ops import DEFAULT_FONT_FAMILIES
 from textstat import textstat
 
 from plotlyst.common import NAV_BAR_BUTTON_DEFAULT_COLOR, \
     NAV_BAR_BUTTON_CHECKED_COLOR, PLOTLYST_MAIN_COLOR
 from plotlyst.core.client import client
-from plotlyst.core.domain import Novel, NovelPanel, ScenesView, NovelSetting
+from plotlyst.core.domain import Novel, NovelPanel, ScenesView, NovelSetting, NovelDescriptor
 from plotlyst.core.text import sentence_count
 from plotlyst.env import app_env, open_location
 from plotlyst.event.core import event_log_reporter, EventListener, Event, global_event_sender, \
@@ -60,7 +61,7 @@ from plotlyst.view._view import AbstractView
 from plotlyst.view.board_view import BoardView
 from plotlyst.view.characters_view import CharactersView
 from plotlyst.view.comments_view import CommentsView
-from plotlyst.view.common import TooltipPositionEventFilter, ButtonPressResizeEventFilter, open_url
+from plotlyst.view.common import TooltipPositionEventFilter, ButtonPressResizeEventFilter, open_url, action
 from plotlyst.view.dialog.about import AboutDialog
 from plotlyst.view.docs_view import DocumentsView
 from plotlyst.view.generated.main_window_ui import Ui_MainWindow
@@ -74,6 +75,7 @@ from plotlyst.view.style.theme import BG_PRIMARY_COLOR
 from plotlyst.view.widget.button import ToolbarButton, NovelSyncButton
 from plotlyst.view.widget.confirm import asked
 from plotlyst.view.widget.input import CapitalizationEventFilter
+from plotlyst.view.widget.labels import SeriesLabel
 from plotlyst.view.widget.log import LogsPopup
 from plotlyst.view.widget.settings import NovelQuickPanelCustomizationButton
 from plotlyst.view.widget.tour.core import TutorialNovelOpenTourEvent, tutorial_novel, \
@@ -113,6 +115,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self._current_text_widget = None
         self._actionNovelEditor: Optional[QAction] = None
         self._actionScrivener: Optional[QAction] = None
+        self._actionSeries: Optional[QAction] = None
         self._actionSettings: Optional[QAction] = None
         last_novel_id = settings.last_novel_id()
         if last_novel_id is not None:
@@ -284,9 +287,24 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
                 self.novel.title = event.novel.title
                 self.novel.icon = event.novel.icon
                 self.novel.icon_color = event.novel.icon_color
+                self.novel.parent = event.novel.parent
                 self.outline_mode.setText(self.novel.title)
                 if self.novel.icon:
                     self.outline_mode.setIcon(IconRegistry.from_name(self.novel.icon, self.novel.icon_color))
+                series = entities_registry.series(self.novel)
+                if series:
+                    self.seriesLabel.setSeries(series)
+                    self._actionSeries.setVisible(True)
+                    self.characters_view.set_series_enabled(True)
+                    self.world_building_view.set_series_enabled(True)
+                else:
+                    self._actionSeries.setVisible(False)
+                    self.characters_view.set_series_enabled(False)
+                    self.world_building_view.set_series_enabled(False)
+            elif self.novel and self.novel.parent == event.novel.id:
+                self.seriesLabel.setSeries(event.novel)
+
+
         elif isinstance(event, OpenDistractionFreeMode):
             self.btnComments.setChecked(False)
             self._toggle_fullscreen(on=True)
@@ -327,6 +345,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         elif isinstance(event, BoardViewTourEvent):
             handle_novel_navbar_tour_event(event, self.btnBoard)
 
+    def seriesNovels(self, series: NovelDescriptor):
+        return self.home_view.seriesNovels(series)
+
     def close_novel(self):
         self.novel = None
         self._clear_novel()
@@ -353,6 +374,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
                 btn.setHidden(True)
             self._actionSettings.setVisible(False)
             self._actionScrivener.setVisible(False)
+            self._actionSeries.setVisible(False)
             self.actionQuickCustomization.setDisabled(True)
             return
 
@@ -378,11 +400,18 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self._actionScrivener.setVisible(False)
             self.btnScrivener.clear()
 
+        series = entities_registry.series(self.novel)
+        if series:
+            self.seriesLabel.setSeries(series)
+            self._actionSeries.setVisible(True)
+        else:
+            self._actionSeries.setVisible(False)
+
         self._current_view: Optional[AbstractView] = None
         self.novel_view = NovelView(self.novel)
-        self.characters_view = CharactersView(self.novel)
+        self.characters_view = CharactersView(self.novel, main_window=self)
         self.scenes_outline_view = ScenesOutlineView(self.novel)
-        self.world_building_view = WorldBuildingView(self.novel)
+        self.world_building_view = WorldBuildingView(self.novel, main_window=self)
         self.notes_view = DocumentsView(self.novel)
         self.board_view = BoardView(self.novel)
         self.manuscript_view = ManuscriptView(self.novel)
@@ -534,6 +563,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self._mode_btn_group.buttonToggled.connect(self._panel_toggled)
 
         self.btnSettings = NovelQuickPanelCustomizationButton()
+        translucent(self.btnSettings, 0.7)
 
         self.btnComments = QToolButton(self.toolBar)
         self.btnComments.setIcon(IconRegistry.from_name('mdi.comment-outline', color='#2e86ab'))
@@ -545,6 +575,16 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.btnComments.installEventFilter(InstantTooltipEventFilter(self.btnComments))
         self.btnComments.setHidden(True)
 
+        self.seriesLabel = SeriesLabel(transparent=True)
+        self.menu = MenuWidget(self.seriesLabel)
+        self.menu.addAction(action('Visit series page', icon=IconRegistry.series_icon(), slot=self._select_series))
+        self.menu.addSeparator()
+        self.menu.addAction(
+            action('Import characters', icon=IconRegistry.character_icon(), slot=self._import_characters))
+        self.menu.addAction(action('Import locations', icon=IconRegistry.location_icon(), slot=self._import_locations))
+        pointy(self.seriesLabel)
+        decr_icon(self.seriesLabel, 2)
+
         self.btnScrivener = NovelSyncButton()
 
         self.toolBar.addWidget(spacer(5))
@@ -555,6 +595,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self._actionNovelEditor = self.toolBar.addWidget(self.outline_mode)
         self.toolBar.addWidget(spacer())
         self._actionScrivener = self.toolBar.addWidget(self.btnScrivener)
+        self._actionSeries = self.toolBar.addWidget(self.seriesLabel)
         self._actionSettings = self.toolBar.addWidget(self.btnSettings)
         self._actionSettings.setVisible(settings.toolbar_quick_settings())
         # self.toolBar.addWidget(self.btnComments)
@@ -770,3 +811,17 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
     def _settings_link_clicked(self):
         self.btnNovel.setChecked(True)
         self.novel_view.show_settings()
+
+    def _select_series(self):
+        series = entities_registry.series(self.novel)
+        if series:
+            self.home_mode.setChecked(True)
+            self.home_view.selectSeries(series)
+
+    def _import_characters(self):
+        if self.novel and self.characters_view:
+            self.characters_view.import_from_series()
+
+    def _import_locations(self):
+        if self.novel and self.world_building_view:
+            self.world_building_view.import_from_series()

@@ -30,7 +30,7 @@ from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
-from plotlyst.core.domain import Novel, Character, CardSizeRatio, NovelSetting
+from plotlyst.core.domain import Novel, Character, CardSizeRatio, NovelSetting, NovelDescriptor
 from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, Event, emit_event
 from plotlyst.event.handler import event_dispatchers, global_event_dispatcher
@@ -38,6 +38,7 @@ from plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent, NovelS
 from plotlyst.model.characters_model import CharactersTableModel
 from plotlyst.model.common import proxy
 from plotlyst.resources import resource_registry
+from plotlyst.service.cache import entities_registry
 from plotlyst.service.persistence import delete_character
 from plotlyst.view._view import AbstractNovelView
 from plotlyst.view.character_editor import CharacterEditor
@@ -55,6 +56,7 @@ from plotlyst.view.widget.character.network import CharacterNetworkView
 from plotlyst.view.widget.character.prefs import CharactersPreferencesWidget
 from plotlyst.view.widget.character.profile import CharacterOnboardingPopup, CharacterNameEditorPopup
 from plotlyst.view.widget.characters import CharactersProgressWidget
+from plotlyst.view.widget.importing import ImportCharacterPopup
 from plotlyst.view.widget.tour.core import CharacterNewButtonTourEvent, TourEvent, \
     CharacterCardTourEvent, CharacterPerspectivesTourEvent, CharacterPerspectiveCardsTourEvent, \
     CharacterPerspectiveTableTourEvent, CharacterPerspectiveNetworkTourEvent, CharacterPerspectiveComparisonTourEvent, \
@@ -90,10 +92,11 @@ class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
 
 class CharactersView(AbstractNovelView):
 
-    def __init__(self, novel: Novel):
+    def __init__(self, novel: Novel, main_window=None):
         super().__init__(novel)
         self.ui = Ui_CharactersView()
         self.ui.setupUi(self.widget)
+        self.main_window = main_window
         self.editor = CharacterEditor(self.novel)
         self.ui.pageEditor.layout().addWidget(self.editor.widget)
         self.editor.close.connect(self._on_close_editor)
@@ -153,6 +156,9 @@ class CharactersView(AbstractNovelView):
                 btn.setDisabled(True)
                 btn.setToolTip('Option disabled in Scrivener synchronization mode')
                 btn.installEventFilter(InstantTooltipEventFilter(btn))
+
+        if self.novel.parent:
+            self.set_series_enabled(True)
 
         self.selected_card: Optional[CharacterCard] = None
         self.ui.cards.selectionCleared.connect(lambda: self._enable_action_buttons(False))
@@ -234,6 +240,19 @@ class CharactersView(AbstractNovelView):
     def close_event(self):
         if self.ui.stackedWidget.currentWidget() == self.ui.pageEditor:
             self.editor.close_event()
+
+    def set_series_enabled(self, enabled: bool):
+        pass
+        # if enabled:
+        #     self._series_menu = MenuWidget()
+        #     self._series_menu.addAction(action('Add new character', IconRegistry.character_icon(), slot=self._on_new))
+        #     self._series_menu.addSeparator()
+        #     self._series_menu.addAction(
+        #         action('Import from series...', IconRegistry.series_icon(), slot=self.import_from_series))
+        # else:
+        #     if self._series_menu:
+        #         gc(self._series_menu)
+        #         self._series_menu = None
 
     @overrides
     def refresh(self):
@@ -349,6 +368,23 @@ class CharactersView(AbstractNovelView):
         emit_event(self.novel, CharacterChangedEvent(self, character))
         self.refresh()
 
+    def import_from_series(self):
+        series = entities_registry.series(self.novel)
+        if series:
+            novels: List[NovelDescriptor] = self.main_window.seriesNovels(series)
+            novels[:] = [x for x in novels if x.id != self.novel.id]
+            characters = ImportCharacterPopup.popup(series, novels)
+            if characters:
+                for character in characters:
+                    self.novel.characters.append(character)
+                    self.repo.insert_character(self.novel, character)
+                    self.repo.update_doc(self.novel, character.document)
+                    card = self.__init_card_widget(character)
+                    self.ui.cards.addCard(card)
+
+                emit_event(self.novel, CharacterChangedEvent(self, characters[0]))
+                self.refresh()
+
     def _on_new(self):
         character = Character('')
         for personality in [NovelSetting.Character_enneagram, NovelSetting.Character_mbti,
@@ -364,8 +400,8 @@ class CharactersView(AbstractNovelView):
             self._edit_character(character)
         else:
             card.refresh()
-
             emit_event(self.novel, CharacterChangedEvent(self, character))
+            self.refresh()
 
     @busy
     def _on_delete(self, checked: bool):

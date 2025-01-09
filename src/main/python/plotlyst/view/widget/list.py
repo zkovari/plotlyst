@@ -43,7 +43,7 @@ class ListItemWidget(QWidget):
     dragStarted = pyqtSignal()
     dragFinished = pyqtSignal()
 
-    def __init__(self, item: Any, parent=None):
+    def __init__(self, item: Any, parent=None, readOnly: bool = False):
         super(ListItemWidget, self).__init__(parent)
         hbox(self, spacing=1)
         margins(self, left=0)
@@ -67,12 +67,14 @@ class ListItemWidget(QWidget):
         self._btnDrag.setHidden(True)
         self._btnRemoval.setHidden(True)
 
-        self._btnDrag.installEventFilter(
-            DragEventFilter(self, LIST_ITEM_MIME_TYPE, dataFunc=lambda x: self.item(),
-                            grabbed=self._lineEdit, startedSlot=self.dragStarted.emit,
-                            finishedSlot=self.dragFinished.emit))
+        if not readOnly:
+            self._btnDrag.installEventFilter(
+                DragEventFilter(self, LIST_ITEM_MIME_TYPE, dataFunc=lambda x: self.item(),
+                                grabbed=self._lineEdit, startedSlot=self.dragStarted.emit,
+                                finishedSlot=self.dragFinished.emit))
 
-        self.installEventFilter(self)
+        if not readOnly:
+            self.installEventFilter(self)
 
         sp(self._lineEdit).h_exp()
         self.setMaximumWidth(700)

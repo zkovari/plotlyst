@@ -17,6 +17,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import uuid
+from copy import deepcopy
 from functools import partial
 from typing import Optional, List
 
@@ -50,9 +52,9 @@ from plotlyst.view.widget.tree import TreeSettings, ItemBasedTreeView, ItemBased
 class LocationNode(ItemBasedNode):
     added = pyqtSignal()
 
-    def __init__(self, location: Location, parent=None, readOnly: bool = False,
+    def __init__(self, location: Location, parent=None, readOnly: bool = False, checkable: bool = False,
                  settings: Optional[TreeSettings] = None):
-        super().__init__(location.name, parent=parent, settings=settings)
+        super().__init__(location.name, parent=parent, settings=settings, checkable=checkable)
         self._location = location
         self.setPlusButtonEnabled(not readOnly)
         self.setMenuEnabled(not readOnly)
@@ -91,17 +93,19 @@ class LocationsTreeView(ItemBasedTreeView):
         super().__init__(parent)
         self._novel: Optional[Novel] = None
         self._readOnly = False
+        self._checkable = False
         self._settings = TreeSettings(font_incr=2)
 
         self.repo = RepositoryPersistenceManager.instance()
 
-    def setNovel(self, novel: Novel, readOnly: bool = False):
+    def setNovel(self, novel: Novel, readOnly: bool = False, checkable: bool = False):
         def addChildWdg(parent: Location, child: Location):
             childWdg = self._initNode(child)
             self._nodes[parent].addChild(childWdg)
 
         self._novel = novel
         self._readOnly = readOnly
+        self._checkable = checkable
 
         self.clearSelection()
         self._nodes.clear()
@@ -136,6 +140,27 @@ class LocationsTreeView(ItemBasedTreeView):
         self._save()
 
         emit_event(self._novel, LocationAddedEvent(self, location))
+
+    def checkedLocations(self) -> List[Location]:
+        """Returns a list of new Location objects with new ID"""
+
+        def filterCheckedChildren(location: Location):
+            location.children[:] = [
+                child for child in location.children if self._nodes[child].checked()
+            ]
+            for child in location.children:
+                filterCheckedChildren(child)
+
+        checked_locations = []
+        for location in self._novel.locations:
+            if self._nodes[location].checked():
+                copied_location = deepcopy(location)
+                copied_location.id = uuid.uuid4()
+                copied_location.origin_id = location.id
+                filterCheckedChildren(copied_location)
+                checked_locations.append(copied_location)
+
+        return checked_locations
 
     def _addLocationUnder(self, node: LocationNode):
         location = Location()
@@ -199,7 +224,9 @@ class LocationsTreeView(ItemBasedTreeView):
 
     @overrides
     def _initNode(self, location: Location) -> LocationNode:
-        node = LocationNode(location, readOnly=self._readOnly, settings=self._settings)
+        node = LocationNode(location, readOnly=self._readOnly, checkable=self._checkable, settings=self._settings)
+        if self._checkable:
+            node.setChecked(True)
         self._nodes[location] = node
         node.selectionChanged.connect(partial(self._selectionChanged, node))
         node.added.connect(partial(self._addLocationUnder, node))
