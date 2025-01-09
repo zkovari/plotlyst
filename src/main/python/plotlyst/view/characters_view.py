@@ -25,7 +25,7 @@ from PyQt6.QtCore import QItemSelection, QPoint
 from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import busy, incr_font, bold, gc
+from qthandy import busy, incr_font, bold
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -138,7 +138,7 @@ class CharactersView(AbstractNovelView):
         self.ui.btnEdit.clicked.connect(self._on_edit)
         self.ui.btnNew.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnNew.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnNew))
-        self.ui.btnNew.clicked.connect(self._on_new_clicked)
+        self.ui.btnNew.clicked.connect(self._on_new)
         if app_env.is_mac():
             self.ui.btnDelete.setShortcut(QKeySequence('Ctrl+Backspace'))
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
@@ -157,7 +157,6 @@ class CharactersView(AbstractNovelView):
                 btn.setToolTip('Option disabled in Scrivener synchronization mode')
                 btn.installEventFilter(InstantTooltipEventFilter(btn))
 
-        self._series_menu: Optional[MenuWidget] = None
         if self.novel.parent:
             self.set_series_enabled(True)
 
@@ -243,16 +242,17 @@ class CharactersView(AbstractNovelView):
             self.editor.close_event()
 
     def set_series_enabled(self, enabled: bool):
-        if enabled:
-            self._series_menu = MenuWidget()
-            self._series_menu.addAction(action('Add new character', IconRegistry.character_icon(), slot=self._on_new))
-            self._series_menu.addSeparator()
-            self._series_menu.addAction(
-                action('Import from series...', IconRegistry.series_icon(), slot=self.import_from_series))
-        else:
-            if self._series_menu:
-                gc(self._series_menu)
-                self._series_menu = None
+        pass
+        # if enabled:
+        #     self._series_menu = MenuWidget()
+        #     self._series_menu.addAction(action('Add new character', IconRegistry.character_icon(), slot=self._on_new))
+        #     self._series_menu.addSeparator()
+        #     self._series_menu.addAction(
+        #         action('Import from series...', IconRegistry.series_icon(), slot=self.import_from_series))
+        # else:
+        #     if self._series_menu:
+        #         gc(self._series_menu)
+        #         self._series_menu = None
 
     @overrides
     def refresh(self):
@@ -367,12 +367,6 @@ class CharactersView(AbstractNovelView):
 
         emit_event(self.novel, CharacterChangedEvent(self, character))
         self.refresh()
-
-    def _on_new_clicked(self):
-        if self._series_menu:
-            self._series_menu.exec(self.ui.btnNew.mapToGlobal(QPoint(0, self.ui.btnNew.sizeHint().height())))
-        else:
-            self._on_new()
 
     def import_from_series(self):
         series = entities_registry.series(self.novel)
