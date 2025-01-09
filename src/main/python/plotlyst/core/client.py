@@ -151,6 +151,7 @@ class CharacterInfo:
     strengths: List[StrengthWeaknessAttribute] = field(default_factory=list, metadata=config(exclude=exclude_if_empty))
     personality: CharacterPersonality = field(default_factory=CharacterPersonality)
     alias: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    origin_id: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass
@@ -530,7 +531,8 @@ class JsonClient:
                                       baggage=info.baggage,
                                       flaws=info.flaws,
                                       strengths=info.strengths,
-                                      personality=info.personality, alias=info.alias
+                                      personality=info.personality, alias=info.alias,
+                                      origin_id=info.origin_id
                                       )
                 if info.avatar_id:
                     bytes = self._load_image(self.__image_file(info.avatar_id))
@@ -718,7 +720,8 @@ class JsonClient:
                                   flaws=char.flaws,
                                   strengths=char.strengths,
                                   personality=char.personality,
-                                  alias=char.alias
+                                  alias=char.alias,
+                                  origin_id=char.origin_id
                                   )
         self.__persist_info(self.characters_dir(novel), char_info)
 

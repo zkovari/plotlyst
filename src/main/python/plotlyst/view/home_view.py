@@ -159,7 +159,7 @@ class HomeView(AbstractView):
                                                     alignment=Qt.AlignmentFlag.AlignLeft)
         self.ui.wdgShelvesParent.layout().addWidget(self._shelvesTreeView)
         self._shelvesTreeView.novelSelected.connect(self._novel_selected)
-        self._shelvesTreeView.novelChanged.connect(self._novel_changed_in_browser)
+        self._shelvesTreeView.novelChanged.connect(self._novel_changed_in_tree)
         self._shelvesTreeView.novelsShelveSelected.connect(self.reset)
         self._shelvesTreeView.newNovelRequested.connect(self._add_new_novel)
         self._shelvesTreeView.novelDeletionRequested.connect(self._on_delete)
@@ -249,6 +249,12 @@ class HomeView(AbstractView):
         series = [x for x in self._novels if x.story_type == StoryType.Series]
         entities_registry.set_series(series)
 
+    def selectSeries(self, series: NovelDescriptor):
+        self._shelvesTreeView.selectNovel(series)
+
+    def seriesNovels(self, series: NovelDescriptor) -> List[NovelDescriptor]:
+        return self._shelvesTreeView.childrenNovels(series)
+
     def _novel_selected(self, novel: NovelDescriptor):
         self._selected_novel = None
 
@@ -311,7 +317,7 @@ class HomeView(AbstractView):
 
         emit_global_event(NovelUpdatedEvent(self, self._selected_novel))
 
-    def _novel_changed_in_browser(self, novel: NovelDescriptor):
+    def _novel_changed_in_tree(self, novel: NovelDescriptor):
         if self._selected_novel and self._selected_novel.id == novel.id:
             self.novelDisplayCard.lineNovelTitle.setText(self._selected_novel.title)
             if novel.icon:
@@ -331,12 +337,14 @@ class HomeView(AbstractView):
         else:
             title = f'Are you sure you want to delete the novel "{novel.title}"?'
             msg = '<html><ul><li>This action cannot be undone.</li><li>All characters and scenes will be lost.</li>'
+
         if confirmed(msg, title):
             if novel.story_type == StoryType.Series:
                 series_novels = self._shelvesTreeView.childrenNovels(novel)
                 for sn in series_novels:
                     sn.parent = None
                     self.repo.update_project_novel(sn)
+                    emit_global_event(NovelUpdatedEvent(self, sn))
 
             self.repo.delete_novel(novel)
             self._novels.remove(novel)
@@ -357,12 +365,16 @@ class HomeView(AbstractView):
                 self.refresh()
                 self._shelvesTreeView.selectNovel(self._selected_novel)
 
+                emit_global_event(NovelUpdatedEvent(self, novel))
+
     @busy
     def _detach_novel_from_series(self, novel: NovelDescriptor):
         novel.parent = None
         self.repo.update_project_novel(novel)
         self.refresh()
         self._shelvesTreeView.selectNovel(self._selected_novel)
+
+        emit_global_event(NovelUpdatedEvent(self, novel))
 
     def _tutorial_selected(self, tutorial: Tutorial):
         if tutorial.is_container():

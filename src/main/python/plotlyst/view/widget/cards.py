@@ -646,7 +646,8 @@ class CardsView(QFrame):
         card.setFixedSize(self._cardsWidth, int(height))
 
     def _cardSelected(self, card: Card):
-        self._selected = card
+        if not isinstance(card, PlaceholderCard):
+            self._selected = card
         self.cardSelected.emit(card)
 
     def _dragStarted(self, card: Card):
