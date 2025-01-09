@@ -380,7 +380,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self._actionScrivener.setVisible(False)
             self._actionSeries.setVisible(False)
             self.actionQuickCustomization.setDisabled(True)
-            self.actionDetachCurrentPanel.setDisabled(True)
+            self.menuDetachPanels.setDisabled(True)
             return
 
         sender: EventSender = event_senders.instance(self.novel)
@@ -394,7 +394,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self._actionSettings.setVisible(settings.toolbar_quick_settings())
         self.actionQuickCustomization.setEnabled(True)
-        self.actionDetachCurrentPanel.setEnabled(True)
+        self.menuDetachPanels.setEnabled(True)
         self.btnSettings.setNovel(self.novel)
         self.outline_mode.setEnabled(True)
         self.outline_mode.setVisible(True)
@@ -455,11 +455,16 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.btnNovel.setChecked(True)
 
         self.btnCharacters.setVisible(self.novel.prefs.toggled(NovelSetting.Characters))
+        self.actionDetachCharacters.setEnabled(self.novel.prefs.toggled(NovelSetting.Characters))
         self.btnScenes.setVisible(self.novel.prefs.toggled(NovelSetting.Scenes))
+        self.actionDetachScenes.setEnabled(self.novel.prefs.toggled(NovelSetting.Scenes))
         self.btnWorld.setVisible(self.novel.prefs.toggled(NovelSetting.World_building))
+        self.actionDetachWorldbuilding.setEnabled(self.novel.prefs.toggled(NovelSetting.World_building))
         self.btnNotes.setVisible(self.novel.prefs.toggled(NovelSetting.Documents))
+        self.actionDetachDocuments.setEnabled(self.novel.prefs.toggled(NovelSetting.Documents))
         self.btnManuscript.setVisible(self.novel.prefs.toggled(NovelSetting.Manuscript))
         self.btnBoard.setVisible(self.novel.prefs.toggled(NovelSetting.Management))
+        self.actionDetachTask.setEnabled(self.novel.prefs.toggled(NovelSetting.Management))
 
     def _on_view_changed(self, btn=None, checked: bool = True):
         if not checked:
@@ -518,8 +523,19 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionChangeDir.setIcon(IconRegistry.from_name('fa5s.folder-open'))
         self.actionChangeDir.triggered.connect(self._change_project_dir)
 
-        self.actionDetachCurrentPanel.setIcon(IconRegistry.from_name('mdi.dock-window'))
-        self.actionDetachCurrentPanel.triggered.connect(self._detach_panel)
+        self.menuDetachPanels.setIcon(IconRegistry.from_name('mdi.dock-window'))
+        self.actionDetachCharacters.setIcon(IconRegistry.character_icon())
+        self.actionDetachCharacters.triggered.connect(partial(self._detach_panel, NovelSetting.Characters))
+        self.actionDetachScenes.setIcon(IconRegistry.scene_icon())
+        self.actionDetachScenes.triggered.connect(partial(self._detach_panel, NovelSetting.Scenes))
+        self.actionDetachWorldbuilding.setIcon(IconRegistry.world_building_icon())
+        self.actionDetachWorldbuilding.triggered.connect(partial(self._detach_panel, NovelSetting.World_building))
+        self.actionDetachDocuments.setIcon(IconRegistry.document_edition_icon())
+        self.actionDetachDocuments.triggered.connect(partial(self._detach_panel, NovelSetting.Documents))
+        self.actionDetachTask.setIcon(IconRegistry.board_icon())
+        self.actionDetachTask.triggered.connect(partial(self._detach_panel, NovelSetting.Management))
+        self.actionDetachReports.setIcon(IconRegistry.reports_icon())
+        self.actionDetachReports.triggered.connect(partial(self._detach_panel, NovelSetting.Reports))
 
         self.actionLogs.setIcon(IconRegistry.from_name('fa5.file-code'))
         self.actionLogs.triggered.connect(lambda: LogsPopup.popup())
@@ -741,7 +757,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self._actionSettings.setVisible(False)
         self.actionQuickCustomization.setDisabled(True)
-        self.actionDetachCurrentPanel.setDisabled(True)
+        self.menuDetachPanels.setDisabled(True)
 
         self.outline_mode.setDisabled(True)
         self._actionNovelEditor.setVisible(False)
@@ -808,23 +824,29 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         func = qtanim.fade_in if event.toggled else qtanim.fade_out
         if isinstance(event, NovelWorldBuildingToggleEvent):
             func(self.btnWorld, teardown=teardown)
+            self.actionDetachWorldbuilding.setEnabled(event.toggled)
         elif isinstance(event, NovelCharactersToggleEvent):
             func(self.btnCharacters, teardown=teardown)
+            self.actionDetachCharacters.setEnabled(event.toggled)
         elif isinstance(event, NovelScenesToggleEvent):
             func(self.btnScenes, teardown=teardown)
+            self.actionDetachScenes.setEnabled(event.toggled)
         elif isinstance(event, NovelDocumentsToggleEvent):
             func(self.btnNotes, teardown=teardown)
+            self.actionDetachDocuments.setEnabled(event.toggled)
         elif isinstance(event, NovelManuscriptToggleEvent):
             func(self.btnManuscript, teardown=teardown)
         elif isinstance(event, NovelManagementToggleEvent):
             func(self.btnBoard, teardown=teardown)
+            self.actionDetachTask.setEnabled(event.toggled)
 
     def _settings_link_clicked(self):
         self.btnNovel.setChecked(True)
         self.novel_view.show_settings()
 
-
-    def _detach_panel(self):
+    def _detach_panel(self, panel: NovelSetting):
+        print(panel)
+        return
         if self._current_view:
             parent: QWidget = self._current_view.widget.parent()
             parent.layout().removeWidget(self._current_view.widget)

@@ -3757,6 +3757,7 @@ class NovelSetting(Enum):
     Manuscript = 'manuscript'
     World_building = 'world_building'
     Management = 'management'
+    Reports = 'reports'
     SCENE_CARD_POV = 'scene_card_pov'
     SCENE_CARD_PURPOSE = 'scene_card_purpose'
     SCENE_CARD_PLOT_PROGRESS = 'scene_card_plot_progress'
