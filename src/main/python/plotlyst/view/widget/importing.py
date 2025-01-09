@@ -100,7 +100,11 @@ class SeriesImportBase(PopupDialog):
         self.wdgLoading.layout().addWidget(btn,
                                            alignment=Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
         spin(btn, PLOTLYST_SECONDARY_COLOR)
+        self._loadingStarted()
         QTimer.singleShot(25, lambda: self._fetchNovel(novel))
+
+    def _loadingStarted(self):
+        pass
 
     def _fetchNovel(self, novel: NovelDescriptor):
         runnable = NovelLoaderWorker(novel.id, self._loadingResult)
@@ -202,11 +206,11 @@ class ImportCharacterPopup(SeriesImportBase):
 
         self.wdgCenter.layout().insertWidget(2, self._scroll)
 
-    def display(self)-> List[Character]:
+    def display(self) -> List[Character]:
         result = self.exec()
 
         if result == QDialog.DialogCode.Accepted:
-            characters =  self.listCharacters.checkedCharacters()
+            characters = self.listCharacters.checkedCharacters()
 
             for character in characters:
                 if character.document:
@@ -215,8 +219,14 @@ class ImportCharacterPopup(SeriesImportBase):
             return characters
 
     @overrides
+    def _loadingStarted(self):
+        self.toggleOnAndOff.setHidden(True)
+        self.listCharacters.setHidden(True)
+
+    @overrides
     def _novelFetched(self, novel: Novel):
         self.toggleOnAndOff.setVisible(True)
+        self.listCharacters.setVisible(True)
         self.listCharacters.setNovel(novel)
 
     def _toggleAllOn(self):
@@ -224,6 +234,7 @@ class ImportCharacterPopup(SeriesImportBase):
 
     def _toggleAllOff(self):
         self.listCharacters.setAllChecked(False)
+
 
 class ImportLocationPopup(SeriesImportBase):
     def __init__(self, series: NovelDescriptor, novels: List[NovelDescriptor], parent=None):
@@ -245,5 +256,10 @@ class ImportLocationPopup(SeriesImportBase):
             return self.locationsTree.checkedLocations()
 
     @overrides
+    def _loadingStarted(self):
+        self.locationsTree.setHidden(True)
+
+    @overrides
     def _novelFetched(self, novel: Novel):
+        self.locationsTree.setVisible(True)
         self.locationsTree.setNovel(novel, readOnly=True, checkable=True)
