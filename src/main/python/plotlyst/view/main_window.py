@@ -208,6 +208,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if language_tool_proxy.is_set():
             language_tool_proxy.tool.close()
 
+        self._restore_all_windows()
+
         if self.novel:
             if self.characters_view:
                 self.characters_view.close_event()
@@ -353,8 +355,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         return self.home_view.seriesNovels(series)
 
     def close_novel(self):
-        self.novel = None
         self._clear_novel()
+        self.novel = None
         self.home_mode.setChecked(True)
 
     def _toggle_fullscreen(self, on: bool):
@@ -707,6 +709,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionPreview.setEnabled(True)
 
     def _clear_novel(self):
+        self._restore_all_windows()
+
         event_senders.pop(self.novel)
         event_dispatchers.pop(self.novel)
 
@@ -882,6 +886,13 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self._detached_windows.remove(window)
         gc(window)
         btn.setEnabled(True)
+
+    def _restore_all_windows(self):
+        if self._detached_windows:
+            windows = []
+            windows.extend(self._detached_windows)
+            for window in windows:
+                window.accept()
 
     def _select_series(self):
         series = entities_registry.series(self.novel)
