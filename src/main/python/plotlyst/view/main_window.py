@@ -28,6 +28,7 @@ from fbs_runtime import platform
 from overrides import overrides
 from qthandy import spacer, busy, gc, pointy, decr_icon, translucent
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
+from qtmenu import MenuWidget
 from qttextedit.ops import DEFAULT_FONT_FAMILIES
 from textstat import textstat
 
@@ -60,7 +61,7 @@ from plotlyst.view._view import AbstractView
 from plotlyst.view.board_view import BoardView
 from plotlyst.view.characters_view import CharactersView
 from plotlyst.view.comments_view import CommentsView
-from plotlyst.view.common import TooltipPositionEventFilter, ButtonPressResizeEventFilter, open_url
+from plotlyst.view.common import TooltipPositionEventFilter, ButtonPressResizeEventFilter, open_url, action
 from plotlyst.view.dialog.about import AboutDialog
 from plotlyst.view.docs_view import DocumentsView
 from plotlyst.view.generated.main_window_ui import Ui_MainWindow
@@ -575,9 +576,14 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.btnComments.setHidden(True)
 
         self.seriesLabel = SeriesLabel(transparent=True)
+        self.menu = MenuWidget(self.seriesLabel)
+        self.menu.addAction(action('Visit series page', icon=IconRegistry.series_icon(), slot=self._select_series))
+        self.menu.addSeparator()
+        self.menu.addAction(
+            action('Import characters', icon=IconRegistry.character_icon(), slot=self._import_characters))
+        self.menu.addAction(action('Import locations', icon=IconRegistry.location_icon(), slot=self._import_locations))
         pointy(self.seriesLabel)
         decr_icon(self.seriesLabel, 2)
-        self.seriesLabel.clicked.connect(self._select_series)
 
         self.btnScrivener = NovelSyncButton()
 
@@ -811,3 +817,11 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if series:
             self.home_mode.setChecked(True)
             self.home_view.selectSeries(series)
+
+    def _import_characters(self):
+        if self.novel and self.characters_view:
+            self.characters_view.import_from_series()
+
+    def _import_locations(self):
+        if self.novel and self.world_building_view:
+            self.world_building_view.import_from_series()

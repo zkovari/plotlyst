@@ -248,7 +248,7 @@ class CharactersView(AbstractNovelView):
             self._series_menu.addAction(action('Add new character', IconRegistry.character_icon(), slot=self._on_new))
             self._series_menu.addSeparator()
             self._series_menu.addAction(
-                action('Import from series...', IconRegistry.series_icon(), slot=self._import_from_series))
+                action('Import from series...', IconRegistry.series_icon(), slot=self.import_from_series))
         else:
             if self._series_menu:
                 gc(self._series_menu)
@@ -374,7 +374,7 @@ class CharactersView(AbstractNovelView):
         else:
             self._on_new()
 
-    def _import_from_series(self):
+    def import_from_series(self):
         series = entities_registry.series(self.novel)
         if series:
             novels: List[NovelDescriptor] = self.main_window.seriesNovels(series)

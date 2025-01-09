@@ -75,7 +75,7 @@ class WorldBuildingSeparatorWidget(QWidget):
 
 class WorldBuildingView(AbstractNovelView):
 
-    def __init__(self, novel: Novel, main_window = None):
+    def __init__(self, novel: Novel, main_window=None):
         super().__init__(novel)
         self.ui = Ui_WorldBuildingView()
         self.ui.setupUi(self.widget)
@@ -201,11 +201,22 @@ class WorldBuildingView(AbstractNovelView):
                 action('Add new location', IconRegistry.location_icon(), slot=self.ui.treeLocations.addNewLocation))
             self._location_series_menu.addSeparator()
             self._location_series_menu.addAction(
-                action('Import from series...', IconRegistry.series_icon(), slot=self._import_from_series))
+                action('Import from series...', IconRegistry.series_icon(), slot=self.import_from_series))
         else:
             if self._location_series_menu:
                 gc(self._location_series_menu)
                 self._location_series_menu = None
+
+    def import_from_series(self):
+        series = entities_registry.series(self.novel)
+        if series:
+            novels: List[NovelDescriptor] = self.main_window.seriesNovels(series)
+            novels[:] = [x for x in novels if x.id != self.novel.id]
+            locations = ImportLocationPopup.popup(series, novels)
+            if locations:
+                self.novel.locations.extend(locations)
+                self.ui.treeLocations.setNovel(self.novel)
+                self.repo.update_novel(self.novel)
 
     def _update_style(self):
         trans_bg_color = to_rgba_str(QColor(self._palette.bg_color), 235)
@@ -298,14 +309,3 @@ class WorldBuildingView(AbstractNovelView):
                 self.ui.btnAddLocation.mapToGlobal(QPoint(0, self.ui.btnNew.sizeHint().height())))
         else:
             self.ui.treeLocations.addNewLocation()
-
-    def _import_from_series(self):
-        series = entities_registry.series(self.novel)
-        if series:
-            novels: List[NovelDescriptor] = self.main_window.seriesNovels(series)
-            novels[:] = [x for x in novels if x.id != self.novel.id]
-            locations = ImportLocationPopup.popup(series, novels)
-            if locations:
-                self.novel.locations.extend(locations)
-                self.ui.treeLocations.setNovel(self.novel)
-                self.repo.update_novel(self.novel)
