@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import uuid
 from copy import deepcopy
-from typing import List
+from typing import List, Optional
 
 from PyQt6.QtCore import Qt, QTimer, QSize, QThreadPool
 from PyQt6.QtWidgets import QSplitter, QWidget, QDialog
@@ -27,6 +27,7 @@ from overrides import overrides
 from qthandy import sp, vbox, line, hbox, clear_layout, transparent, margins
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
+from plotlyst.core.client import json_client
 from plotlyst.core.domain import NovelDescriptor, StoryType, Novel, Location, Character
 from plotlyst.service.importer import NovelLoaderWorker, NovelLoadingResult
 from plotlyst.view.common import push_btn, label, spin, scroll_area
@@ -143,10 +144,12 @@ class CharacterListItemWidget(ListItemWidget):
 class ImportedCharactersList(ListView):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.novel: Optional[Novel] = None
         margins(self, left=20)
         self._btnAdd.setHidden(True)
 
     def setNovel(self, novel: Novel):
+        self.novel = novel
         self.clear()
         for character in novel.characters:
             self.addItem(character)
@@ -203,7 +206,13 @@ class ImportCharacterPopup(SeriesImportBase):
         result = self.exec()
 
         if result == QDialog.DialogCode.Accepted:
-            return self.listCharacters.checkedCharacters()
+            characters =  self.listCharacters.checkedCharacters()
+
+            for character in characters:
+                if character.document:
+                    json_client.load_document(self.listCharacters.novel, character.document)
+
+            return characters
 
     @overrides
     def _novelFetched(self, novel: Novel):
