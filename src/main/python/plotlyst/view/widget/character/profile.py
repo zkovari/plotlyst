@@ -2065,6 +2065,8 @@ class CharacterOnboardingPopup(CharacterNameEditorPopup):
     def __init__(self, character: Character, parent=None):
         super().__init__(character, parent)
 
+        self.resize(330, 620)
+
         self.title.setText('Create a new character')
         insert_before_the_end(self.frame, line(color='lightgrey'))
         self.btnConfirm.setVisible(True)
@@ -2100,7 +2102,7 @@ class CharacterOnboardingPopup(CharacterNameEditorPopup):
         self.personalityFrame.layout().addWidget(self.btnWorkStyle, 1, 1)
 
         insert_before_the_end(self.frame, label('Personality', description=True, decr_font_diff=1),
-                                      alignment=Qt.AlignmentFlag.AlignCenter)
+                              alignment=Qt.AlignmentFlag.AlignCenter)
         insert_before_the_end(self.frame, self.personalityFrame, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self.primarySelectors = frame()
