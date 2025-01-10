@@ -140,6 +140,7 @@ class HomeView(AbstractView):
         self.seriesDisplayCard.iconSelector.iconSelected.connect(self._icon_changed)
         self.seriesDisplayCard.attachNovel.connect(self._attach_novel_to_series)
         self.seriesDisplayCard.detachNovel.connect(self._detach_novel_from_series)
+        self.seriesDisplayCard.orderChanged.connect(self._series_novels_order_changed)
         self.seriesDisplayCard.openNovel.connect(self.loadNovel)
 
         self.ui.btnAddNewStoryMain.setIcon(IconRegistry.plus_icon(color='white'))
@@ -343,6 +344,7 @@ class HomeView(AbstractView):
                 series_novels = self._shelvesTreeView.childrenNovels(novel)
                 for sn in series_novels:
                     sn.parent = None
+                    sn.sequence = 0
                     self.repo.update_project_novel(sn)
                     emit_global_event(NovelUpdatedEvent(self, sn))
 
@@ -361,6 +363,7 @@ class HomeView(AbstractView):
             novel = NovelSelectorPopup.popup(self._novels)
             if novel and novel.parent != self._selected_novel.id:
                 novel.parent = self._selected_novel.id
+                novel.sequence = self.seriesDisplayCard.novelCount()
                 self.repo.update_project_novel(novel)
                 self.refresh()
                 self._shelvesTreeView.selectNovel(self._selected_novel)
@@ -370,11 +373,17 @@ class HomeView(AbstractView):
     @busy
     def _detach_novel_from_series(self, novel: NovelDescriptor):
         novel.parent = None
+        novel.sequence = 0
         self.repo.update_project_novel(novel)
         self.refresh()
         self._shelvesTreeView.selectNovel(self._selected_novel)
 
         emit_global_event(NovelUpdatedEvent(self, novel))
+
+    def _series_novels_order_changed(self, novels: List[NovelDescriptor]):
+        for novel in novels:
+            self.repo.update_project_novel(novel)
+        self.refresh()
 
     def _tutorial_selected(self, tutorial: Tutorial):
         if tutorial.is_container():

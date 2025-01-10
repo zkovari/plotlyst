@@ -147,6 +147,7 @@ class ShelvesTreeView(TreeView):
             node = self.__initNode(novel)
             self._wdgNovels.addChild(node)
 
+        novels_under_series.sort(key=lambda x: x.sequence)
         for novel in novels_under_series:
             node = self.__initNode(novel)
             series = self._series.get(str(novel.parent))
@@ -347,6 +348,7 @@ class SeriesDisplayCard(QWidget):
     openNovel = pyqtSignal(NovelDescriptor)
     displayNovel = pyqtSignal(NovelDescriptor)
     detachNovel = pyqtSignal(NovelDescriptor)
+    orderChanged = pyqtSignal(list)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -406,6 +408,9 @@ class SeriesDisplayCard(QWidget):
 
         self._addPlaceholder()
 
+    def novelCount(self) -> int:
+        return len(self.cards.cards()) - 1
+
     def _cardSelected(self, card: NovelCard):
         if not isinstance(card, NovelCard):
             return
@@ -414,7 +419,9 @@ class SeriesDisplayCard(QWidget):
         self.selected_card = card
 
     def _orderChanged(self, novels: List[NovelDescriptor]):
-        print(novels)
+        for i, novel in enumerate(novels):
+            novel.sequence = i
+        self.orderChanged.emit(novels)
 
     def _addPlaceholder(self):
         placeholderCard = PlaceholderCard()
