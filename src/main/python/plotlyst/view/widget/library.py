@@ -380,6 +380,7 @@ class SeriesDisplayCard(QWidget):
         margins(self.cards, left=25, right=25, top=25)
         self.cards.setCardsWidth(160)
         self.cards.cardSelected.connect(self._cardSelected)
+        self.cards.orderChanged.connect(self._orderChanged)
 
         self.card.layout().addWidget(self.wdgTitle)
         self.card.layout().addWidget(self.divider)
@@ -411,6 +412,9 @@ class SeriesDisplayCard(QWidget):
         if self.selected_card and self.selected_card is not card:
             self.selected_card.clearSelection()
         self.selected_card = card
+
+    def _orderChanged(self, novels: List[NovelDescriptor]):
+        print(novels)
 
     def _addPlaceholder(self):
         placeholderCard = PlaceholderCard()
