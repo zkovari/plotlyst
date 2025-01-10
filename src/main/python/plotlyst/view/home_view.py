@@ -46,10 +46,10 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.roadmap_view import RoadmapView
 from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.confirm import confirmed
+from plotlyst.view.widget.kb.browser import KnowledgeBaseWidget
 from plotlyst.view.widget.library import ShelvesTreeView, StoryCreationDialog, NovelDisplayCard, SeriesDisplayCard, \
     NovelSelectorPopup
-from plotlyst.view.widget.tour import Tutorial
-from plotlyst.view.widget.tour.content import tutorial_titles, tutorial_descriptions
+from plotlyst.view.widget.patron import PatronsWidget, PlotlystPlusWidget
 from plotlyst.view.widget.tour.core import LibraryTourEvent, NewStoryButtonTourEvent, \
     NewStoryDialogOpenTourEvent, TutorialNovelSelectTourEvent, NovelDisplayTourEvent, tutorial_novel, \
     NovelOpenButtonTourEvent, TutorialNovelCloseTourEvent
@@ -104,21 +104,18 @@ class HomeView(AbstractView):
 
         self.ui.btnLibrary.setIcon(
             IconRegistry.from_name('mdi.bookshelf', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
-        self.ui.btnTutorials.setIcon(
-            IconRegistry.from_name('mdi6.school-outline', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
-        self.ui.btnProgress.setIcon(
-            IconRegistry.from_name('fa5s.chart-line', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
         self.ui.btnRoadmap.setIcon(
             IconRegistry.from_name('fa5s.road', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
-        self.ui.btnSurvey.setIcon(
+        self.ui.btnPlotlystPlus.setIcon(
+            IconRegistry.from_name('mdi.certificate', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
+        self.ui.btnPatrons.setIcon(
             IconRegistry.from_name('msc.organization', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
+        self.ui.btnKnowledgeBase.setIcon(
+            IconRegistry.from_name('fa5s.graduation-cap', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
 
         for btn in self.ui.buttonGroup.buttons():
             btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.7, ignoreCheckedButton=True))
             btn.installEventFilter(TooltipPositionEventFilter(btn))
-
-        self.ui.btnTutorials.setHidden(True)
-        self.ui.btnProgress.setHidden(True)
 
         self.ui.lblWelcomeMain.setText(home_page_welcome_text)
 
@@ -172,34 +169,24 @@ class HomeView(AbstractView):
         self.ui.btnAddNewStoryMain.setIconSize(QSize(24, 24))
 
         link_buttons_to_pages(self.ui.stackedWidget,
-                              [(self.ui.btnLibrary, self.ui.pageLibrary), (self.ui.btnTutorials, self.ui.pageTutorials),
-                               (self.ui.btnProgress, self.ui.pageProgress),
+                              [(self.ui.btnLibrary, self.ui.pageLibrary),
                                (self.ui.btnRoadmap, self.ui.pageRoadmap),
-                               (self.ui.btnSurvey, self.ui.pageSurvey),
+                               (self.ui.btnPlotlystPlus, self.ui.pagePlotlystPlus),
+                               (self.ui.btnPatrons, self.ui.pagePatrons),
+                               (self.ui.btnKnowledgeBase, self.ui.pageKnowledgeBase),
                                ])
 
         self._roadmapView = RoadmapView()
         self.ui.pageRoadmap.layout().addWidget(self._roadmapView)
 
-        # self._tutorialsTreeView = TutorialsTreeView(settings=TreeSettings(font_incr=2))
-        # self._tutorialsTreeView.tutorialSelected.connect(self._tutorial_selected)
-        # self.ui.splitterTutorials.setSizes([150, 500])
-        # self.ui.btnStartTutorial.setIcon(IconRegistry.from_name('fa5s.play-circle', 'white'))
-        # self.ui.btnStartTutorial.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnStartTutorial))
-        # self.ui.btnStartTutorial.clicked.connect(self._start_tutorial)
-        # self.ui.wdgTutorialsParent.layout().addWidget(self._tutorialsTreeView)
-        # self.ui.stackTutorial.setCurrentWidget(self.ui.pageTutorialsEmpty)
+        self._knowledgeBase = KnowledgeBaseWidget()
+        self.ui.pageKnowledgeBase.layout().addWidget(self._knowledgeBase)
 
-        # self.ui.textTutorial.setViewportMargins(20, 20, 20, 20)
-        # document: QTextDocument = self.ui.textTutorial.document()
-        # font = self.ui.textTutorial.font()
-        # font.setPointSize(font.pointSize() + 2)
-        # document.setDefaultFont(font)
-        #
-        # transparent(self.ui.lineTutorialTitle)
-        # self.ui.lineTutorialTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        # incr_font(self.ui.lineTutorialTitle, 10)
-        # bold(self.ui.lineTutorialTitle)
+        self._plotlystPlus = PlotlystPlusWidget()
+        self.ui.pagePlotlystPlus.layout().addWidget(self._plotlystPlus)
+
+        self._patronsWidget = PatronsWidget()
+        self.ui.pagePatrons.layout().addWidget(self._patronsWidget)
 
         self.ui.btnLibrary.setChecked(True)
         self.ui.stackWdgNovels.setCurrentWidget(self.ui.pageEmpty)
@@ -379,15 +366,3 @@ class HomeView(AbstractView):
         self._shelvesTreeView.selectNovel(self._selected_novel)
 
         emit_global_event(NovelUpdatedEvent(self, novel))
-
-    def _tutorial_selected(self, tutorial: Tutorial):
-        if tutorial.is_container():
-            self.ui.stackTutorial.setCurrentWidget(self.ui.pageTutorialsEmpty)
-        else:
-            self._tour_service.setTutorial(tutorial)
-            self.ui.stackTutorial.setCurrentWidget(self.ui.pageTutorialDisplay)
-            self.ui.lineTutorialTitle.setText(tutorial_titles[tutorial])
-            self.ui.textTutorial.setMarkdown(tutorial_descriptions.get(tutorial, 'Click Start to learn this tutorial.'))
-
-    def _start_tutorial(self):
-        self._tour_service.start()
