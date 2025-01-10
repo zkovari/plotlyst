@@ -683,6 +683,8 @@ class CardsView(QFrame):
             card: Card = self._layout.itemAt(i).widget()
             if card is self._dragPlaceholder or card is self._dragged:
                 continue
+            if isinstance(card, PlaceholderCard):
+                continue
             data.append(card.data())
 
         QTimer.singleShot(10, lambda: self.orderChanged.emit(data, droppedCard))
