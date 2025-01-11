@@ -3192,6 +3192,7 @@ class StoryType(Enum):
     Novel = 0
     Series = 1
 
+
 @dataclass
 class NovelDescriptor:
     title: str
@@ -3206,6 +3207,7 @@ class NovelDescriptor:
     story_type: StoryType = field(default=StoryType.Novel)
     short_synopsis: str = field(default='', metadata=config(exclude=exclude_if_empty))
     parent: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
+    sequence: int = field(default=0, metadata=config(exclude=exclude_if_empty))
 
     def __post_init__(self):
         if self.creation_date is None:

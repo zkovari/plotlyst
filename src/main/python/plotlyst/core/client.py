@@ -249,6 +249,7 @@ class ProjectNovelInfo:
     story_type: StoryType = field(default=StoryType.Novel)
     short_synopsis: str = field(default='', metadata=config(exclude=exclude_if_empty))
     parent: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
+    sequence: int = field(default=0, metadata=config(exclude=exclude_if_empty))
 
 
 def _default_story_structures():
@@ -299,7 +300,8 @@ class JsonClient:
     def novels(self) -> List[NovelDescriptor]:
         return [NovelDescriptor(title=x.title, id=x.id, import_origin=x.import_origin, lang_settings=x.lang_settings,
                                 subtitle=x.subtitle, icon=x.icon, icon_color=x.icon_color,
-                                creation_date=x.creation_date, story_type=x.story_type, short_synopsis=x.short_synopsis, parent=x.parent)
+                                creation_date=x.creation_date, story_type=x.story_type, short_synopsis=x.short_synopsis, parent=x.parent,
+                                sequence=x.sequence)
                 for x in self.project.novels]
 
     def has_novel(self, id: uuid.UUID):
@@ -353,6 +355,7 @@ class JsonClient:
         novel_info.story_type = novel.story_type
         novel_info.short_synopsis = novel.short_synopsis
         novel_info.parent = novel.parent
+        novel_info.sequence = novel.sequence
         self._persist_project()
 
     def insert_novel(self, novel: Novel):
@@ -360,7 +363,7 @@ class JsonClient:
                                               import_origin=novel.import_origin,
                                               subtitle=novel.subtitle, icon=novel.icon, icon_color=novel.icon_color,
                                               creation_date=novel.creation_date, story_type=novel.story_type,
-                                              short_synopsis=novel.short_synopsis, parent=novel.parent)
+                                              short_synopsis=novel.short_synopsis, parent=novel.parent, sequence=novel.sequence)
         self.project.novels.append(project_novel_info)
         self._persist_project()
         self._persist_novel(novel)
@@ -629,6 +632,7 @@ class JsonClient:
                       icon_color=project_novel_info.icon_color, creation_date=project_novel_info.creation_date,
                       story_type=project_novel_info.story_type, short_synopsis=project_novel_info.short_synopsis,
                       parent=project_novel_info.parent,
+                      sequence=project_novel_info.sequence,
                       plots=novel_info.plots, characters=characters,
                       scenes=scenes, chapters=chapters, custom_chapters=novel_info.custom_chapters,
                       stages=novel_info.stages,
