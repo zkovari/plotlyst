@@ -31,6 +31,12 @@
    </property>
    <item>
     <widget class="QWidget" name="wdgTop" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="banner-bg" stdset="0">
       <bool>true</bool>
      </property>
@@ -48,7 +54,7 @@
        <number>10</number>
       </property>
       <property name="bottomMargin">
-       <number>10</number>
+       <number>5</number>
       </property>
       <item>
        <widget class="QLabel" name="lblBanner">
@@ -66,7 +72,7 @@
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <property name="spacing">
-         <number>10</number>
+         <number>0</number>
         </property>
         <property name="leftMargin">
          <number>0</number>
@@ -89,6 +95,22 @@
            <bool>true</bool>
           </property>
          </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Expanding</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>10</height>
+           </size>
+          </property>
+         </spacer>
         </item>
         <item alignment="Qt::AlignRight|Qt::AlignBottom">
          <widget class="QWidget" name="wdgSocials" native="true">
