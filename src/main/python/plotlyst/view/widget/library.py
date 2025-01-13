@@ -433,6 +433,7 @@ class SeriesDisplayCard(QWidget):
     def _orderChanged(self, novels: List[NovelDescriptor]):
         for i, novel in enumerate(novels):
             novel.sequence = i
+        self.selected_card = None
         self.orderChanged.emit(novels)
 
     def _addPlaceholder(self):
