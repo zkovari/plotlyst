@@ -29,7 +29,8 @@ from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy, QTextBrowser, QFrame, QDialog, \
     QApplication
 from overrides import overrides
-from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon, pointy, hbox, busy, italic, decr_font
+from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon, pointy, hbox, busy, italic, decr_font, \
+    margins
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -381,6 +382,11 @@ class PopupDialog(QDialog):
             QApplication.restoreOverrideCursor()
         dialog = cls(*args, **kwargs)
         window = QApplication.activeWindow()
+
+        if window and window.size().height() < 768:
+            dialog.frame.layout().setSpacing(3)
+            margins(dialog.frame, bottom=5, top=5)
+
         if window:
             overlay = OverlayWidget(window)
             overlay.show()
