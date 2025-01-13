@@ -362,7 +362,6 @@ class PopupDialog(QDialog):
         self.frame.setProperty('large-rounded', True)
         vbox(self.frame, 15, 10)
         self.layout().addWidget(self.frame)
-        self.setMinimumSize(200, 150)
 
         self.btnReset = tool_btn(IconRegistry.close_icon('grey'), tooltip='Cancel', transparent_=True)
         self.btnReset.setFocusPolicy(Qt.FocusPolicy.NoFocus)
