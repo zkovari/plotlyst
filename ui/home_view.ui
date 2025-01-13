@@ -130,7 +130,7 @@
            <property name="bottomMargin">
             <number>0</number>
            </property>
-           <item>
+           <item alignment="Qt::AlignBottom">
             <widget class="QToolButton" name="btnInstagram">
              <property name="cursor">
               <cursorShape>PointingHandCursor</cursorShape>
@@ -146,7 +146,7 @@
              </property>
             </widget>
            </item>
-           <item>
+           <item alignment="Qt::AlignBottom">
             <widget class="QToolButton" name="btnTwitter">
              <property name="cursor">
               <cursorShape>PointingHandCursor</cursorShape>
@@ -162,7 +162,7 @@
              </property>
             </widget>
            </item>
-           <item>
+           <item alignment="Qt::AlignBottom">
             <widget class="QToolButton" name="btnFacebook">
              <property name="cursor">
               <cursorShape>PointingHandCursor</cursorShape>
@@ -178,7 +178,7 @@
              </property>
             </widget>
            </item>
-           <item>
+           <item alignment="Qt::AlignBottom">
             <widget class="QToolButton" name="btnYoutube">
              <property name="cursor">
               <cursorShape>PointingHandCursor</cursorShape>
@@ -194,7 +194,7 @@
              </property>
             </widget>
            </item>
-           <item>
+           <item alignment="Qt::AlignBottom">
             <widget class="QToolButton" name="btnPinterest">
              <property name="cursor">
               <cursorShape>PointingHandCursor</cursorShape>
@@ -217,7 +217,7 @@
              </property>
             </widget>
            </item>
-           <item>
+           <item alignment="Qt::AlignBottom">
             <widget class="QPushButton" name="btnJoinDiscord">
              <property name="cursor">
               <cursorShape>PointingHandCursor</cursorShape>
