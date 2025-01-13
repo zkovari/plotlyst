@@ -69,7 +69,9 @@ class HomeView(AbstractView):
         self._novels: List[NovelDescriptor] = []
         self._tour_service = TourService.instance()
 
-        self.ui.lblBanner.setPixmap(QPixmap(resource_registry.banner))
+        self.ui.lblBanner.setPixmap(
+            QPixmap(resource_registry.banner).scaled(180, 60, Qt.AspectRatioMode.KeepAspectRatio,
+                                                     Qt.TransformationMode.SmoothTransformation))
         self.ui.btnJoinDiscord.setIcon(IconRegistry.from_name('fa5b.discord', RELAXED_WHITE_COLOR))
         self.ui.btnTwitter.setIcon(IconRegistry.from_name('fa5b.twitter', RELAXED_WHITE_COLOR))
         self.ui.btnInstagram.setIcon(IconRegistry.from_name('fa5b.instagram', RELAXED_WHITE_COLOR))
@@ -95,6 +97,9 @@ class HomeView(AbstractView):
             lambda: open_url('https://www.facebook.com/people/Plotlyst/61557773998679/'))
         self.ui.btnYoutube.clicked.connect(lambda: open_url('https://www.youtube.com/@Plotlyst'))
         self.ui.btnPinterest.clicked.connect(lambda: open_url('https://pinterest.com/Plotlyst'))
+
+        self.ui.btnYoutube.setHidden(True)
+        self.ui.btnPinterest.setHidden(True)
 
         apply_button_palette_color(self.ui.btnJoinDiscord, RELAXED_WHITE_COLOR)
         apply_button_palette_color(self.ui.btnWebsite, RELAXED_WHITE_COLOR)
