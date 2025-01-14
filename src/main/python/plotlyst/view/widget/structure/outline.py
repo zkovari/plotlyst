@@ -248,7 +248,6 @@ class StoryBeatSelectorPopup(PopupDialog):
         self.frame.layout().addWidget(self.wdgEditor)
         self._scrollarea, self.wdgCenter = scrolled(self.wdgEditor, frameless=True, h_on=False)
         self._scrollarea.setProperty('transparent', True)
-        self._scrollarea.setMinimumHeight(425)
         transparent(self.wdgCenter)
         vbox(self.wdgCenter, 10, spacing=8)
         margins(self.wdgCenter, bottom=20)

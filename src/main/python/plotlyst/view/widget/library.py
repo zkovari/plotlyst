@@ -41,7 +41,7 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_border_image
 from plotlyst.view.widget.button import DotsMenuButton
-from plotlyst.view.widget.cards import CardsView, NovelCard, PlaceholderCard
+from plotlyst.view.widget.cards import CardsView, NovelCard, PlaceholderCard, Card
 from plotlyst.view.widget.display import PopupDialog, Subtitle, Icon, DividerWidget
 from plotlyst.view.widget.input import Toggle, AutoAdjustableLineEdit
 from plotlyst.view.widget.labels import SeriesLabel
@@ -343,6 +343,18 @@ class NovelDisplayCard(QWidget):
             self.displaySeries.emit(self._series)
 
 
+class SeriesNovelCardsView(CardsView):
+    cardOpen = pyqtSignal(NovelCard)
+    cardDetach = pyqtSignal(NovelCard)
+
+    @overrides
+    def _initCardWidget(self, card: Card):
+        super()._initCardWidget(card)
+        if isinstance(card, NovelCard):
+            card.btnOpen.clicked.connect(lambda: self.cardOpen.emit(card))
+            card.detach.connect(partial(self.cardDetach.emit, card))
+
+
 class SeriesDisplayCard(QWidget):
     attachNovel = pyqtSignal()
     openNovel = pyqtSignal(NovelDescriptor)
@@ -378,7 +390,10 @@ class SeriesDisplayCard(QWidget):
         self.divider = DividerWidget()
 
         self.selected_card: Optional[NovelCard] = None
-        self.cards = CardsView()
+        self.cards = SeriesNovelCardsView()
+        self.cards.cardDoubleClicked.connect(self._cardDoubleClicked)
+        self.cards.cardOpen.connect(self._cardOpenClicked)
+        self.cards.cardDetach.connect(self._cardDetachClicked)
         margins(self.cards, left=25, right=25, top=25)
         self.cards.setCardsWidth(160)
         self.cards.cardSelected.connect(self._cardSelected)
@@ -401,9 +416,6 @@ class SeriesDisplayCard(QWidget):
         self.cards.clear()
         for novel in novels:
             card = NovelCard(novel)
-            card.btnOpen.clicked.connect(partial(self.openNovel.emit, novel))
-            card.doubleClicked.connect(partial(self.displayNovel.emit, novel))
-            card.detach.connect(partial(self.detachNovel.emit, novel))
             self.cards.addCard(card)
 
         self._addPlaceholder()
@@ -421,6 +433,7 @@ class SeriesDisplayCard(QWidget):
     def _orderChanged(self, novels: List[NovelDescriptor]):
         for i, novel in enumerate(novels):
             novel.sequence = i
+        self.selected_card = None
         self.orderChanged.emit(novels)
 
     def _addPlaceholder(self):
@@ -428,6 +441,15 @@ class SeriesDisplayCard(QWidget):
         placeholderCard.btnPlus.setText('Attach a novel')
         placeholderCard.selected.connect(self.attachNovel)
         self.cards.addCard(placeholderCard)
+
+    def _cardDoubleClicked(self, card: NovelCard):
+        self.displayNovel.emit(card.novel)
+
+    def _cardDetachClicked(self, card: NovelCard):
+        self.detachNovel.emit(card.novel)
+
+    def _cardOpenClicked(self, card: NovelCard):
+        self.openNovel.emit(card.novel)
 
 
 class StoryCreationDialog(PopupDialog):

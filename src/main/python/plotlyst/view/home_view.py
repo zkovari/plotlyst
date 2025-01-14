@@ -19,10 +19,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List, Optional
 
-from PyQt6.QtCore import pyqtSignal, QSize, Qt
+from PyQt6.QtCore import pyqtSignal, QSize, Qt, QEvent, QObject
 from PyQt6.QtGui import QPixmap, QColor
 from overrides import overrides
-from qthandy import italic, busy, vspacer, margins
+from qthandy import busy, vspacer, margins, pointy
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -69,7 +69,9 @@ class HomeView(AbstractView):
         self._novels: List[NovelDescriptor] = []
         self._tour_service = TourService.instance()
 
-        self.ui.lblBanner.setPixmap(QPixmap(resource_registry.banner))
+        self.ui.lblBanner.setPixmap(
+            QPixmap(resource_registry.banner).scaled(180, 60, Qt.AspectRatioMode.KeepAspectRatio,
+                                                     Qt.TransformationMode.SmoothTransformation))
         self.ui.btnJoinDiscord.setIcon(IconRegistry.from_name('fa5b.discord', RELAXED_WHITE_COLOR))
         self.ui.btnTwitter.setIcon(IconRegistry.from_name('fa5b.twitter', RELAXED_WHITE_COLOR))
         self.ui.btnInstagram.setIcon(IconRegistry.from_name('fa5b.instagram', RELAXED_WHITE_COLOR))
@@ -96,11 +98,13 @@ class HomeView(AbstractView):
         self.ui.btnYoutube.clicked.connect(lambda: open_url('https://www.youtube.com/@Plotlyst'))
         self.ui.btnPinterest.clicked.connect(lambda: open_url('https://pinterest.com/Plotlyst'))
 
+        self.ui.btnYoutube.setHidden(True)
+        self.ui.btnPinterest.setHidden(True)
+
         apply_button_palette_color(self.ui.btnJoinDiscord, RELAXED_WHITE_COLOR)
-        apply_button_palette_color(self.ui.btnWebsite, RELAXED_WHITE_COLOR)
-        italic(self.ui.btnWebsite)
-        self.ui.btnWebsite.installEventFilter(OpacityEventFilter(self.ui.btnWebsite, leaveOpacity=0.8))
-        self.ui.btnWebsite.clicked.connect(lambda: open_url('https://www.plotlyst.com'))
+        pointy(self.ui.lblBanner)
+        self.ui.lblBanner.installEventFilter(OpacityEventFilter(self.ui.lblBanner, leaveOpacity=1.0, enterOpacity=0.8))
+        self.ui.lblBanner.installEventFilter(self)
 
         self.ui.btnLibrary.setIcon(
             IconRegistry.from_name('mdi.bookshelf', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
@@ -202,6 +206,12 @@ class HomeView(AbstractView):
 
     def shelves(self) -> ShelvesTreeView:
         return self._shelvesTreeView
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.MouseButtonRelease:
+            open_url('https://www.plotlyst.com')
+        return super().eventFilter(watched, event)
 
     @overrides
     def event_received(self, event: Event):

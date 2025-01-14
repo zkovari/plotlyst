@@ -521,6 +521,7 @@ class VariableEditorDialog(PopupDialog):
 
         if self._variable:
             self.lineKey.setText(self._variable.key)
+            self.lineValue.setText(self._variable.value)
 
         self.frame.layout().addWidget(self.wdgTitle)
         self.frame.layout().addWidget(self.lineKey)

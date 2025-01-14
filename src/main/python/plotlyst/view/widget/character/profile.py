@@ -2065,8 +2065,6 @@ class CharacterOnboardingPopup(CharacterNameEditorPopup):
     def __init__(self, character: Character, parent=None):
         super().__init__(character, parent)
 
-        self.resize(330, 620)
-
         self.title.setText('Create a new character')
         insert_before_the_end(self.frame, line(color='lightgrey'))
         self.btnConfirm.setVisible(True)
