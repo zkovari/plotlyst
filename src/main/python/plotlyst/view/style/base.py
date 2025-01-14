@@ -84,6 +84,11 @@ QWidget[navbar=true] {{
     background-color: #622675;
 }}
 
+QWidget[rounded=true] {{
+    border: 1px solid lightgrey;
+    border-radius: 6px;
+}}
+
 QFrame[bottom-bar=true] {{
     background-color: {BG_PRIMARY_COLOR};
 }}
