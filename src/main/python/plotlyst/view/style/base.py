@@ -97,6 +97,14 @@ QFrame[relaxed-white-bg=true] {{
     background-color: {BG_SECONDARY_COLOR};
 }}
 
+QFrame[muted-bg=true] {{
+    background-color: {BG_MUTED_COLOR};
+}}
+
+QFrame[highlighted-bg=true] {{
+    background-color: rgba(75, 7, 99, 25);
+}}
+
 QFrame[white-bg=true] {{
     background-color: #f8f9fa;
 }}

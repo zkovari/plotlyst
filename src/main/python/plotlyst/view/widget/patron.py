@@ -23,15 +23,18 @@ from typing import List, Dict, Optional
 
 from PyQt6.QtCore import QThreadPool, QSize, Qt
 from PyQt6.QtGui import QShowEvent
-from PyQt6.QtWidgets import QWidget, QTabWidget
+from PyQt6.QtWidgets import QWidget, QTabWidget, QPushButton
 from dataclasses_json import dataclass_json, Undefined
 from overrides import overrides
-from qthandy import vbox, hbox, clear_layout
+from qthandy import vbox, hbox, clear_layout, line, vspacer, spacer, translucent, margins, transparent, incr_font
 
-from plotlyst.common import PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR
+from plotlyst.common import PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
+from plotlyst.env import app_env
 from plotlyst.service.resource import JsonDownloadResult, JsonDownloadWorker
-from plotlyst.view.common import label, set_tab_enabled, push_btn, spin
+from plotlyst.view.common import label, set_tab_enabled, push_btn, spin, scroll_area, wrap, frame
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.layout import group
+from plotlyst.view.widget.input import AutoAdjustableTextEdit
 
 
 @dataclass
@@ -65,8 +68,93 @@ class Patreon:
 class SurveyResultsWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        vbox(self)
 
-        vbox(self).addWidget(label('Survey'))
+        self._scroll = scroll_area(frameless=True)
+        self._scroll.setProperty('relaxed-white-bg', True)
+        self.centerWdg = QWidget()
+        self.centerWdg.setProperty('relaxed-white-bg', True)
+        vbox(self.centerWdg)
+        self._scroll.setWidget(self.centerWdg)
+        self.layout().addWidget(self._scroll)
+
+    def setPatreon(self, patreon: Patreon):
+        clear_layout(self.centerWdg)
+
+        for k, v in patreon.survey.new.items():
+            self.centerWdg.layout().addWidget(label(f'{k}: {v}'))
+
+        self.centerWdg.layout().addWidget(vspacer())
+
+
+class PriceLabel(QPushButton):
+    def __init__(self, price: str, parent=None):
+        super().__init__(parent)
+
+        self.setText(f'{price}$')
+        self.setStyleSheet(f'''
+            background: {PLOTLYST_TERTIARY_COLOR};
+            border: 1px solid {PLOTLYST_SECONDARY_COLOR};
+            padding: 8px;
+            border-radius: 4px;
+            font-family: {app_env.serif_font()};
+        ''')
+        translucent(self, 0.7)
+
+
+class PatreonTierSection(QWidget):
+    def __init__(self, tier: PatreonTier, parent=None):
+        super().__init__(parent)
+        self.tier = tier
+        self.lblHeader = label(self.tier.name, h3=True)
+        self.lblDesc = label(self.tier.description, wordWrap=True, description=True)
+        incr_font(self.lblDesc, 2)
+        self.wdgPerks = frame()
+        self.wdgPerks.setProperty('large-rounded', True)
+        self.wdgPerks.setProperty('highlighted-bg', True)
+        vbox(self.wdgPerks, margin=8)
+        self.textPerks = AutoAdjustableTextEdit()
+        incr_font(self.textPerks, 3)
+        self.textPerks.setReadOnly(True)
+        self.textPerks.setAcceptRichText(True)
+        transparent(self.textPerks)
+        html = '<html><ul>'
+        for perk in self.tier.perks:
+            html += f'<li>{perk}</li>'
+        self.textPerks.setHtml(html)
+        self.wdgPerks.layout().addWidget(self.textPerks)
+
+        vbox(self)
+        margins(self, top=13, bottom=13)
+        self.layout().addWidget(group(self.lblHeader, spacer(), PriceLabel(self.tier.price)))
+        self.layout().addWidget(line())
+        self.layout().addWidget(wrap(self.lblDesc, margin_left=20))
+        self.layout().addWidget(wrap(self.wdgPerks, margin_left=20))
+
+
+class PatreonTiersWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        vbox(self)
+        margins(self, bottom=45)
+
+        self._scroll = scroll_area(frameless=True)
+        self._scroll.setProperty('relaxed-white-bg', True)
+        self.centerWdg = QWidget()
+        self.centerWdg.setProperty('relaxed-white-bg', True)
+        vbox(self.centerWdg)
+        self._scroll.setWidget(self.centerWdg)
+        self.layout().addWidget(self._scroll)
+
+    def setPatreon(self, patreon: Patreon):
+        clear_layout(self.centerWdg)
+
+        for tier in patreon.tiers:
+            section = PatreonTierSection(tier)
+            self.centerWdg.layout().addWidget(section)
+            # self.centerWdg.layout().addWidget(line())
+
+        self.centerWdg.layout().addWidget(vspacer())
 
 
 class PatronsWidget(QWidget):
@@ -82,8 +170,9 @@ class PlotlystPlusWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         hbox(self)
-
         self._patreon: Optional[Patreon] = None
+        self._last_fetched = None
+        self._downloading = False
 
         self.tabWidget = QTabWidget()
         self.tabWidget.setProperty('centered', True)
@@ -93,8 +182,11 @@ class PlotlystPlusWidget(QWidget):
         self.tabReport = QWidget()
         vbox(self.tabReport, 10, 5)
         self.tabPatreon = QWidget()
+        vbox(self.tabPatreon, 10, 5)
         self.tabPlus = QWidget()
+        vbox(self.tabPlus, 10, 5)
         self.tabPatrons = QWidget()
+        vbox(self.tabPatrons, 10, 5)
 
         self.tabWidget.addTab(self.tabReport, IconRegistry.from_name('mdi.crystal-ball', color_on=PLOTLYST_MAIN_COLOR),
                               'Vision')
@@ -106,18 +198,18 @@ class PlotlystPlusWidget(QWidget):
                               'Community')
         self.layout().addWidget(self.tabWidget)
 
-        self._last_fetched = None
-        self._downloading = False
-
         self.lblVisionLastUpdated = label('', description=True, decr_font_diff=1)
-        self.lblPatreonLastUpdated = label('', description=True, decr_font_diff=1)
-
         self.wdgLoading = QWidget()
         vbox(self.wdgLoading, 0, 0)
+        self._patreonWdg = PatreonTiersWidget()
+        self._surveyWdg = SurveyResultsWidget()
 
         self.tabReport.layout().addWidget(self.lblVisionLastUpdated, alignment=Qt.AlignmentFlag.AlignRight)
+        self.tabReport.layout().addWidget(self._surveyWdg)
         self.tabReport.layout().addWidget(self.wdgLoading)
         self.wdgLoading.setHidden(True)
+
+        self.tabPatreon.layout().addWidget(self._patreonWdg)
 
         self._thread_pool = QThreadPool()
 
@@ -145,12 +237,16 @@ class PlotlystPlusWidget(QWidget):
         self._handle_downloading_patreon_status(False)
 
         self._patreon = Patreon.from_dict(data)
+        self._surveyWdg.setPatreon(self._patreon)
+        self._patreonWdg.setPatreon(self._patreon)
 
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
         self.lblVisionLastUpdated.setText(f"Last updated: {now}")
         self._last_fetched = datetime.datetime.now()
 
     def _handle_download_patreon_failure(self, status_code: int, message: str):
+        if self._patreon is None:
+            self.lblVisionLastUpdated.setText("Failed to update data.")
         self._handle_downloading_patreon_status(False)
 
     def _handle_downloading_patreon_status(self, loading: bool):
