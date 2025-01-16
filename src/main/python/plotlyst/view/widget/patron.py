@@ -18,17 +18,48 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import datetime
+from dataclasses import dataclass
+from typing import List, Dict, Optional
 
-from PyQt6.QtCore import QThreadPool
+from PyQt6.QtCore import QThreadPool, QSize, Qt
 from PyQt6.QtGui import QShowEvent
 from PyQt6.QtWidgets import QWidget, QTabWidget
+from dataclasses_json import dataclass_json, Undefined
 from overrides import overrides
-from qthandy import vbox, hbox
+from qthandy import vbox, hbox, clear_layout
 
-from plotlyst.common import PLOTLYST_MAIN_COLOR
+from plotlyst.common import PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.service.resource import JsonDownloadResult, JsonDownloadWorker
-from plotlyst.view.common import label
+from plotlyst.view.common import label, set_tab_enabled, push_btn, spin
 from plotlyst.view.icons import IconRegistry
+
+
+@dataclass
+class PatreonTier:
+    name: str
+    description: str
+    perks: List[str]
+    price: str
+    has_roadmap_form: bool = False
+    has_plotlyst_plus: bool = False
+    has_early_access: bool = False
+    has_premium_recognition: bool = False
+
+
+@dataclass
+class PatreonSurvey:
+    stage: Dict[str, int]
+    panels: Dict[str, int]
+    genres: Dict[str, int]
+    new: Dict[str, int]
+    secondary: Dict[str, int]
+
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class Patreon:
+    tiers: List[PatreonTier]
+    survey: PatreonSurvey
 
 
 class SurveyResultsWidget(QWidget):
@@ -52,12 +83,15 @@ class PlotlystPlusWidget(QWidget):
         super().__init__(parent)
         hbox(self)
 
+        self._patreon: Optional[Patreon] = None
+
         self.tabWidget = QTabWidget()
         self.tabWidget.setProperty('centered', True)
         self.tabWidget.setProperty('large-rounded', True)
         self.tabWidget.setProperty('relaxed-white-bg', True)
         self.tabWidget.setMaximumWidth(1000)
         self.tabReport = QWidget()
+        vbox(self.tabReport, 10, 5)
         self.tabPatreon = QWidget()
         self.tabPlus = QWidget()
         self.tabPatrons = QWidget()
@@ -70,11 +104,20 @@ class PlotlystPlusWidget(QWidget):
                               'Plotlyst Plus')
         self.tabWidget.addTab(self.tabPatrons, IconRegistry.from_name('msc.organization', color_on=PLOTLYST_MAIN_COLOR),
                               'Community')
-
         self.layout().addWidget(self.tabWidget)
 
         self._last_fetched = None
         self._downloading = False
+
+        self.lblVisionLastUpdated = label('', description=True, decr_font_diff=1)
+        self.lblPatreonLastUpdated = label('', description=True, decr_font_diff=1)
+
+        self.wdgLoading = QWidget()
+        vbox(self.wdgLoading, 0, 0)
+
+        self.tabReport.layout().addWidget(self.lblVisionLastUpdated, alignment=Qt.AlignmentFlag.AlignRight)
+        self.tabReport.layout().addWidget(self.wdgLoading)
+        self.wdgLoading.setHidden(True)
 
         self._thread_pool = QThreadPool()
 
@@ -87,19 +130,38 @@ class PlotlystPlusWidget(QWidget):
 
         if self._last_fetched is None or (
                 datetime.datetime.now() - self._last_fetched).total_seconds() > self.DOWNLOAD_THRESHOLD_SECONDS:
-            self._handle_downloading_status(True)
+            self._handle_downloading_patreon_status(True)
             self._download_data()
 
     def _download_data(self):
         result = JsonDownloadResult()
-        runnable = JsonDownloadWorker("https://raw.githubusercontent.com/plotlyst/feed/refs/heads/main/posts.json",
+        runnable = JsonDownloadWorker("https://raw.githubusercontent.com/plotlyst/feed/refs/heads/main/patreon.json",
                                       result)
         result.finished.connect(self._handle_downloaded_patreon_data)
-        result.failed.connect(self._handle_download_failure)
+        result.failed.connect(self._handle_download_patreon_failure)
         self._thread_pool.start(runnable)
 
     def _handle_downloaded_patreon_data(self, data):
-        print(data)
+        self._handle_downloading_patreon_status(False)
 
-    def _handle_downloading_status(self, loading: bool):
-        pass
+        self._patreon = Patreon.from_dict(data)
+
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        self.lblVisionLastUpdated.setText(f"Last updated: {now}")
+        self._last_fetched = datetime.datetime.now()
+
+    def _handle_download_patreon_failure(self, status_code: int, message: str):
+        self._handle_downloading_patreon_status(False)
+
+    def _handle_downloading_patreon_status(self, loading: bool):
+        self._downloading = loading
+        set_tab_enabled(self.tabWidget, self.tabPatreon, not loading)
+        self.wdgLoading.setVisible(loading)
+        if loading:
+            btn = push_btn(transparent_=True)
+            btn.setIconSize(QSize(128, 128))
+            self.wdgLoading.layout().addWidget(btn,
+                                               alignment=Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
+            spin(btn, PLOTLYST_SECONDARY_COLOR)
+        else:
+            clear_layout(self.wdgLoading)
