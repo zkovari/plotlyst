@@ -2470,6 +2470,7 @@ class Task(CharacterBased):
     web_link: str = field(default='', metadata=config(exclude=exclude_if_empty))
     version: str = field(default='', metadata=config(exclude=exclude_if_empty))
     beta: bool = field(default=False, metadata=config(exclude=exclude_if_false))
+    icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
     def __post_init__(self):
         if self.creation_date is None:

@@ -29,11 +29,13 @@ from overrides import overrides
 from qthandy import vbox, hbox, clear_layout, line, vspacer, spacer, translucent, margins, transparent, incr_font
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
+from plotlyst.core.domain import Board, Task, TaskStatus
 from plotlyst.env import app_env
 from plotlyst.service.resource import JsonDownloadResult, JsonDownloadWorker
 from plotlyst.view.common import label, set_tab_enabled, push_btn, spin, scroll_area, wrap, frame
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
+from plotlyst.view.widget.display import IconText
 from plotlyst.view.widget.input import AutoAdjustableTextEdit
 
 
@@ -63,6 +65,124 @@ class PatreonSurvey:
 class Patreon:
     tiers: List[PatreonTier]
     survey: PatreonSurvey
+
+
+class PlusTaskWidget(QWidget):
+    def __init__(self, task: Task, status: TaskStatus, parent=None):
+        super().__init__(parent)
+        self.task = task
+        self.status = status
+        vbox(self, 10, spacing=5)
+
+        self.lblStatus = label(self.status.text)
+        self.lblStatus.setStyleSheet(f'''
+            color: {self.status.color_hexa};
+        ''')
+
+        self.lblName = IconText()
+        incr_font(self.lblName, 4)
+        self.lblName.setText(self.task.title)
+        if self.task.icon:
+            self.lblName.setIcon(IconRegistry.from_name(self.task.icon))
+        self.lblDescription = label(self.task.summary, description=True, wordWrap=True)
+        incr_font(self.lblDescription)
+
+        self.layout().addWidget(self.lblStatus, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self.lblName, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self.lblDescription)
+
+
+class PlusFeaturesWidget(QWidget):
+    DOWNLOAD_THRESHOLD_SECONDS = 60 * 60 * 8  # 8 hours in seconds
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._last_fetched = None
+        self._downloading = False
+        self._board: Optional[Board] = None
+        self._thread_pool = QThreadPool()
+
+        vbox(self)
+
+        self._scroll = scroll_area(frameless=True)
+        self._scroll.setProperty('relaxed-white-bg', True)
+        self.centerWdg = QWidget()
+        self.centerWdg.setProperty('relaxed-white-bg', True)
+        vbox(self.centerWdg, spacing=15)
+        self._scroll.setWidget(self.centerWdg)
+        self.layout().addWidget(self._scroll)
+
+        self.lblLastUpdated = label('', description=True, decr_font_diff=1)
+
+        self.wdgTasks = QWidget()
+        vbox(self.wdgTasks)
+
+        self.wdgLoading = QWidget()
+        vbox(self.wdgLoading, 0, 0)
+        self.centerWdg.layout().addWidget(self.lblLastUpdated, alignment=Qt.AlignmentFlag.AlignRight)
+        self.centerWdg.layout().addWidget(self.wdgLoading)
+        self.centerWdg.layout().addWidget(self.wdgTasks)
+        self.centerWdg.layout().addWidget(vspacer())
+        self.wdgLoading.setHidden(True)
+
+    @overrides
+    def showEvent(self, event: QShowEvent):
+        super().showEvent(event)
+
+        if self._downloading:
+            return
+
+        if self._last_fetched is None or (
+                datetime.datetime.now() - self._last_fetched).total_seconds() > self.DOWNLOAD_THRESHOLD_SECONDS:
+            self._handle_downloading_status(True)
+            self._download_data()
+
+    def _download_data(self):
+        result = JsonDownloadResult()
+        runnable = JsonDownloadWorker("https://raw.githubusercontent.com/plotlyst/feed/refs/heads/main/plus.json",
+                                      result)
+        result.finished.connect(self._handle_downloaded_data)
+        result.failed.connect(self._handle_download_failure)
+        self._thread_pool.start(runnable)
+
+    def _handle_downloaded_data(self, data):
+        self._board: Board = Board.from_dict(data)
+        clear_layout(self.wdgTasks)
+
+        statuses = {}
+        for status in self._board.statuses:
+            statuses[str(status.id)] = status
+
+        for task in self._board.tasks:
+            wdg = PlusTaskWidget(task, statuses[str(task.status_ref)])
+            self.wdgTasks.layout().addWidget(wdg)
+            self.wdgTasks.layout().addWidget(line())
+
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        self.lblLastUpdated.setText(f"Last updated: {now}")
+        self._last_fetched = datetime.datetime.now()
+
+        self._handle_downloading_status(False)
+
+    def _handle_download_failure(self, status_code: int, message: str):
+        if self._board is None:
+            self.lblLastUpdated.setText("Failed to update data.")
+        self._handle_downloading_status(False)
+
+    def _handle_downloading_status(self, loading: bool):
+        self._downloading = loading
+        # self.scrollAreaWidgetContents.setDisabled(loading)
+        # self.splitter.setHidden(loading)
+        # self.wdgTopSelectors.setHidden(loading)
+        self.wdgLoading.setVisible(loading)
+        if loading:
+            btn = push_btn(transparent_=True)
+            btn.setIconSize(QSize(128, 128))
+            self.wdgLoading.layout().addWidget(btn,
+                                               alignment=Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
+            spin(btn, PLOTLYST_SECONDARY_COLOR)
+        else:
+            clear_layout(self.wdgLoading)
 
 
 class SurveyResultsWidget(QWidget):
@@ -193,7 +313,7 @@ class PlotlystPlusWidget(QWidget):
         self.tabWidget.addTab(self.tabPatreon, IconRegistry.from_name('fa5b.patreon', color_on=PLOTLYST_MAIN_COLOR),
                               'Patreon')
         self.tabWidget.addTab(self.tabPlus, IconRegistry.from_name('mdi.certificate', color_on=PLOTLYST_MAIN_COLOR),
-                              'Plotlyst Plus')
+                              'Plus Features')
         self.tabWidget.addTab(self.tabPatrons, IconRegistry.from_name('msc.organization', color_on=PLOTLYST_MAIN_COLOR),
                               'Community')
         self.layout().addWidget(self.tabWidget)
@@ -203,6 +323,7 @@ class PlotlystPlusWidget(QWidget):
         vbox(self.wdgLoading, 0, 0)
         self._patreonWdg = PatreonTiersWidget()
         self._surveyWdg = SurveyResultsWidget()
+        self._plusWdg = PlusFeaturesWidget()
 
         self.tabReport.layout().addWidget(self.lblVisionLastUpdated, alignment=Qt.AlignmentFlag.AlignRight)
         self.tabReport.layout().addWidget(self._surveyWdg)
@@ -210,6 +331,7 @@ class PlotlystPlusWidget(QWidget):
         self.wdgLoading.setHidden(True)
 
         self.tabPatreon.layout().addWidget(self._patreonWdg)
+        self.tabPlus.layout().addWidget(self._plusWdg)
 
         self._thread_pool = QThreadPool()
 
