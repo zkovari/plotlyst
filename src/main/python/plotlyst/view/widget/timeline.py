@@ -318,3 +318,8 @@ class TimelineWidget(QWidget):
         control = _ControlButtons(self._theme, self)
         control.btnPlus.clicked.connect(partial(self.add, pos))
         self._layout.addWidget(control, alignment=Qt.AlignmentFlag.AlignHCenter)
+
+
+class TimelineGridWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
