@@ -23,7 +23,7 @@ from functools import partial
 from typing import List, Optional
 
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QObject, QEvent
-from PyQt6.QtGui import QIcon, QColor, QPainter, QPaintEvent, QBrush, QResizeEvent
+from PyQt6.QtGui import QIcon, QColor, QPainter, QPaintEvent, QBrush, QResizeEvent, QShowEvent
 from PyQt6.QtWidgets import QWidget, QSizePolicy, \
     QLineEdit, QToolButton
 from overrides import overrides
@@ -333,7 +333,6 @@ class TimelineGridWidget(QWidget):
         self.scrollColumns = scroll_area(False, False, frameless=True)
         self.scrollColumns.setWidget(self.wdgColumns)
         self.scrollColumns.setFixedHeight(self._headerHeight)
-        # sp(self.scrollColumns).v_max()
 
         self.wdgRows = rows(0, 0)
         margins(self.wdgRows, top=self._headerHeight)
@@ -345,9 +344,10 @@ class TimelineGridWidget(QWidget):
         sp(self.wdgEditor).v_exp().h_exp()
         self.scrollEditor = scroll_area(frameless=True)
         self.scrollEditor.setWidget(self.wdgEditor)
+        self.scrollEditor.horizontalScrollBar().valueChanged.connect(self._horizontalScrolled)
+        self.scrollEditor.verticalScrollBar().valueChanged.connect(self._verticalScrolled)
+        self.scrollEditor.verticalScrollBar().rangeChanged.connect(self._editorRangeChanged)
 
-        # self.scrollCenter = scroll_area(frameless=True)
-        # self.scrollCenter.setWidget()
         self.wdgCenter = rows(0, 0)
         self.wdgCenter.layout().addWidget(self.scrollColumns)
         self.wdgCenter.layout().addWidget(self.scrollEditor)
@@ -356,14 +356,17 @@ class TimelineGridWidget(QWidget):
 
         for i in range(size):
             lblColumn = label(f'column {i}')
+            lblColumn.setStyleSheet('background: green;')
             lblColumn.setFixedSize(self._columnWidth, self._headerHeight)
             self.wdgColumns.layout().addWidget(lblColumn)
             lblRow = label(f'row {i}')
+            lblRow.setStyleSheet('background: red;')
             lblRow.setFixedHeight(self._rowHeight)
             self.wdgRows.layout().addWidget(lblRow, alignment=Qt.AlignmentFlag.AlignVCenter)
             items = []
             for j in range(size):
                 lblItem = label(f'item {i}/{j}')
+                lblItem.setStyleSheet('background: blue;')
                 lblItem.setFixedSize(self._columnWidth, self._rowHeight)
                 items.append(lblItem)
             self.wdgEditor.layout().addWidget(group(*items, vspacer(), margin=0, spacing=0, vertical=False))
@@ -375,3 +378,25 @@ class TimelineGridWidget(QWidget):
         hbox(self, 0, 0)
         self.layout().addWidget(self.scrollRows)
         self.layout().addWidget(self.wdgCenter)
+
+    @overrides
+    def showEvent(self, event: QShowEvent) -> None:
+        super().showEvent(event)
+        self._editorRangeChanged()
+
+    def _horizontalScrolled(self, value: int):
+        self.scrollColumns.horizontalScrollBar().setValue(value)
+
+    def _verticalScrolled(self, value: int):
+        self.scrollRows.verticalScrollBar().setValue(value)
+
+    def _editorRangeChanged(self):
+        if self.scrollEditor.verticalScrollBar().isVisible():
+            margins(self.wdgRows, bottom=self.scrollEditor.verticalScrollBar().sizeHint().height())
+        else:
+            margins(self.wdgRows, bottom=0)
+
+        if self.scrollEditor.horizontalScrollBar().isVisible():
+            margins(self.wdgColumns, right=self.scrollEditor.horizontalScrollBar().sizeHint().width())
+        else:
+            margins(self.wdgColumns, right=0)
