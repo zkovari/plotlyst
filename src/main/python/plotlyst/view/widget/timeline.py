@@ -321,6 +321,25 @@ class TimelineWidget(QWidget):
         self._layout.addWidget(control, alignment=Qt.AlignmentFlag.AlignHCenter)
 
 
+class TimelineGridColumn(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        vbox(self, 0, 0)
+
+    @overrides
+    def paintEvent(self, event: QPaintEvent) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(QColor('lightgrey'))
+        painter.setBrush(QColor('lightgrey'))
+        painter.setOpacity(0.4)
+
+        # if self._vertical:
+        painter.drawRect(self.rect().width() // 2 - 4, 5, 8, self.rect().height())
+        # else:
+        #     painter.drawRect(5, 50, self.rect().width(), 8)
+
+@spawn
 class TimelineGridWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -376,7 +395,10 @@ class TimelineGridWidget(QWidget):
                 # lblItem.setStyleSheet('background: blue;')
                 lblItem.setFixedSize(self._columnWidth, self._rowHeight)
                 items.append(lblItem)
-            self.wdgEditor.layout().addWidget(group(*items, vspacer(), margin=0, spacing=0, vertical=False))
+
+            column = TimelineGridColumn()
+            column.layout().addWidget(group(*items, vspacer(), margin=0, spacing=0, vertical=False))
+            self.wdgEditor.layout().addWidget(column)
 
         self.wdgRows.layout().addWidget(vspacer())
         self.wdgColumns.layout().addWidget(spacer())
