@@ -34,8 +34,9 @@ from qthandy.filter import VisibilityToggleEventFilter
 from plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, \
     EMOTION_COLORS, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import BackstoryEvent
-from plotlyst.view.common import tool_btn, frame
+from plotlyst.view.common import tool_btn, frame, spawn, label, columns, rows
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.layout import group
 from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.input import RemovalButton, AutoAdjustableTextEdit
 
@@ -323,3 +324,40 @@ class TimelineWidget(QWidget):
 class TimelineGridWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+
+        self._columnWidth: int = 80
+        self._rowHeight: int = 30
+        self._headerHeight: int = 40
+
+        self.wdgColumns = columns(0, 0)
+        self.wdgRows = rows(0, 0)
+        margins(self.wdgRows, top=self._headerHeight)
+        self.wdgEditor = rows(0, 0)
+        sp(self.wdgEditor).v_max().h_max()
+        self.wdgCenter = rows(0, 0)
+        self.wdgCenter.layout().addWidget(self.wdgColumns)
+        self.wdgCenter.layout().addWidget(self.wdgEditor)
+
+        size = 15
+
+        for i in range(size):
+            lblColumn = label(f'column {i}')
+            lblColumn.setFixedSize(self._columnWidth, self._headerHeight)
+            self.wdgColumns.layout().addWidget(lblColumn)
+            lblRow = label(f'row {i}')
+            lblRow.setFixedHeight(self._rowHeight)
+            self.wdgRows.layout().addWidget(lblRow)
+            items = []
+            for j in range(size):
+                lblItem = label(f'item {i}/{j}')
+                lblItem.setFixedSize(self._columnWidth, self._rowHeight)
+                items.append(lblItem)
+            self.wdgEditor.layout().addWidget(group(*items, margin=0, spacing=0))
+
+        self.wdgRows.layout().addWidget(vspacer())
+        self.wdgColumns.layout().addWidget(spacer())
+        self.wdgCenter.layout().addWidget(vspacer())
+
+        hbox(self)
+        self.layout().addWidget(self.wdgRows)
+        self.layout().addWidget(self.wdgCenter)
