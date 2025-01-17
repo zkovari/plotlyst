@@ -333,12 +333,14 @@ class TimelineGridWidget(QWidget):
         self.scrollColumns = scroll_area(False, False, frameless=True)
         self.scrollColumns.setWidget(self.wdgColumns)
         self.scrollColumns.setFixedHeight(self._headerHeight)
+        self.scrollColumns.horizontalScrollBar().setEnabled(False)
 
         self.wdgRows = rows(0, 0)
         margins(self.wdgRows, top=self._headerHeight)
         self.scrollRows = scroll_area(False, False, frameless=True)
         self.scrollRows.setWidget(self.wdgRows)
         sp(self.scrollRows).h_max()
+        self.scrollRows.verticalScrollBar().setEnabled(False)
 
         self.wdgEditor = columns(0, 0)
         sp(self.wdgEditor).v_exp().h_exp()
@@ -352,21 +354,26 @@ class TimelineGridWidget(QWidget):
         self.wdgCenter.layout().addWidget(self.scrollColumns)
         self.wdgCenter.layout().addWidget(self.scrollEditor)
 
-        size = 25
+        self.wdgRows.setProperty('relaxed-white-bg', True)
+        self.wdgColumns.setProperty('relaxed-white-bg', True)
+        self.wdgEditor.setProperty('relaxed-white-bg', True)
 
+        size = 25
         for i in range(size):
             lblColumn = label(f'column {i}')
-            lblColumn.setStyleSheet('background: green;')
             lblColumn.setFixedSize(self._columnWidth, self._headerHeight)
             self.wdgColumns.layout().addWidget(lblColumn)
             lblRow = label(f'row {i}')
-            lblRow.setStyleSheet('background: red;')
             lblRow.setFixedHeight(self._rowHeight)
             self.wdgRows.layout().addWidget(lblRow, alignment=Qt.AlignmentFlag.AlignVCenter)
+
+            # lblColumn.setStyleSheet('background: green;')
+            # lblRow.setStyleSheet('background: red;')
+
             items = []
             for j in range(size):
                 lblItem = label(f'item {i}/{j}')
-                lblItem.setStyleSheet('background: blue;')
+                # lblItem.setStyleSheet('background: blue;')
                 lblItem.setFixedSize(self._columnWidth, self._rowHeight)
                 items.append(lblItem)
             self.wdgEditor.layout().addWidget(group(*items, vspacer(), margin=0, spacing=0, vertical=False))
@@ -378,6 +385,10 @@ class TimelineGridWidget(QWidget):
         hbox(self, 0, 0)
         self.layout().addWidget(self.scrollRows)
         self.layout().addWidget(self.wdgCenter)
+
+        emptyPlaceholder = QWidget(self)
+        emptyPlaceholder.setProperty('relaxed-white-bg', True)
+        emptyPlaceholder.setGeometry(0, 0, self.wdgRows.sizeHint().width(), self._headerHeight)
 
     @overrides
     def showEvent(self, event: QShowEvent) -> None:
