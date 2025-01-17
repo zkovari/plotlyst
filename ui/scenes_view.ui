@@ -135,6 +135,34 @@
            </widget>
           </item>
           <item>
+           <widget class="QToolButton" name="btnTimelineView">
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="toolTip">
+             <string>Story grid view</string>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="shortcut">
+             <string>1</string>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="base" stdset="0">
+             <bool>true</bool>
+            </property>
+            <attribute name="buttonGroup">
+             <string notr="true">btnGroupViews</string>
+            </attribute>
+           </widget>
+          </item>
+          <item>
            <widget class="QToolButton" name="btnTableView">
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
@@ -677,7 +705,7 @@
            <item>
             <widget class="QStackedWidget" name="stackScenes">
              <property name="currentIndex">
-              <number>1</number>
+              <number>3</number>
              </property>
              <widget class="QWidget" name="pageCards">
               <property name="relaxed-white-bg" stdset="0">
@@ -709,8 +737,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>98</width>
-                    <height>28</height>
+                    <width>506</width>
+                    <height>580</height>
                    </rect>
                   </property>
                   <layout class="QHBoxLayout" name="horizontalLayout_8">
@@ -939,6 +967,25 @@
                  </item>
                 </layout>
                </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="pageStoryGrid">
+              <layout class="QVBoxLayout" name="verticalLayout_11">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
               </layout>
              </widget>
              <widget class="QWidget" name="pageCharactersDistribution">
