@@ -34,7 +34,7 @@ from qthandy.filter import VisibilityToggleEventFilter
 from plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, \
     EMOTION_COLORS, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import BackstoryEvent
-from plotlyst.view.common import tool_btn, frame, spawn, label, columns, rows
+from plotlyst.view.common import tool_btn, frame, spawn, label, columns, rows, scroll_area
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.confirm import confirmed
@@ -326,19 +326,33 @@ class TimelineGridWidget(QWidget):
         super().__init__(parent)
 
         self._columnWidth: int = 80
-        self._rowHeight: int = 30
+        self._rowHeight: int = 50
         self._headerHeight: int = 40
 
         self.wdgColumns = columns(0, 0)
+        self.scrollColumns = scroll_area(False, False, frameless=True)
+        self.scrollColumns.setWidget(self.wdgColumns)
+        self.scrollColumns.setFixedHeight(self._headerHeight)
+        # sp(self.scrollColumns).v_max()
+
         self.wdgRows = rows(0, 0)
         margins(self.wdgRows, top=self._headerHeight)
-        self.wdgEditor = rows(0, 0)
-        sp(self.wdgEditor).v_max().h_max()
-        self.wdgCenter = rows(0, 0)
-        self.wdgCenter.layout().addWidget(self.wdgColumns)
-        self.wdgCenter.layout().addWidget(self.wdgEditor)
+        self.scrollRows = scroll_area(False, False, frameless=True)
+        self.scrollRows.setWidget(self.wdgRows)
+        sp(self.scrollRows).h_max()
 
-        size = 15
+        self.wdgEditor = columns(0, 0)
+        sp(self.wdgEditor).v_exp().h_exp()
+        self.scrollEditor = scroll_area(frameless=True)
+        self.scrollEditor.setWidget(self.wdgEditor)
+
+        # self.scrollCenter = scroll_area(frameless=True)
+        # self.scrollCenter.setWidget()
+        self.wdgCenter = rows(0, 0)
+        self.wdgCenter.layout().addWidget(self.scrollColumns)
+        self.wdgCenter.layout().addWidget(self.scrollEditor)
+
+        size = 25
 
         for i in range(size):
             lblColumn = label(f'column {i}')
@@ -346,18 +360,18 @@ class TimelineGridWidget(QWidget):
             self.wdgColumns.layout().addWidget(lblColumn)
             lblRow = label(f'row {i}')
             lblRow.setFixedHeight(self._rowHeight)
-            self.wdgRows.layout().addWidget(lblRow)
+            self.wdgRows.layout().addWidget(lblRow, alignment=Qt.AlignmentFlag.AlignVCenter)
             items = []
             for j in range(size):
                 lblItem = label(f'item {i}/{j}')
                 lblItem.setFixedSize(self._columnWidth, self._rowHeight)
                 items.append(lblItem)
-            self.wdgEditor.layout().addWidget(group(*items, margin=0, spacing=0))
+            self.wdgEditor.layout().addWidget(group(*items, vspacer(), margin=0, spacing=0, vertical=False))
 
         self.wdgRows.layout().addWidget(vspacer())
         self.wdgColumns.layout().addWidget(spacer())
-        self.wdgCenter.layout().addWidget(vspacer())
+        self.wdgEditor.layout().addWidget(spacer())
 
-        hbox(self)
-        self.layout().addWidget(self.wdgRows)
+        hbox(self, 0, 0)
+        self.layout().addWidget(self.scrollRows)
         self.layout().addWidget(self.wdgCenter)
