@@ -34,7 +34,7 @@ from qthandy.filter import VisibilityToggleEventFilter
 from plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, \
     EMOTION_COLORS, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import BackstoryEvent
-from plotlyst.view.common import tool_btn, frame, label, columns, rows, scroll_area, spawn, push_btn, fade_in
+from plotlyst.view.common import tool_btn, frame, columns, rows, scroll_area, spawn, push_btn, fade_in
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.confirm import confirmed
@@ -396,10 +396,12 @@ class TimelineGridWidget(QWidget):
 
         size = 25
         for i in range(size):
-            lblColumn = push_btn(text=f'column {i}', transparent_=True)
+            lblColumn = push_btn(text=f'Column {i}', transparent_=True)
+            incr_font(lblColumn, 2)
             lblColumn.setFixedSize(self._columnWidth, self._headerHeight)
             self.wdgColumns.layout().addWidget(lblColumn, alignment=Qt.AlignmentFlag.AlignCenter)
-            lblRow = label(f'row {i}')
+            lblRow = push_btn(text=f'Row {i}', transparent_=True)
+            incr_font(lblRow, 2)
             lblRow.setFixedHeight(self._rowHeight)
             self.wdgRows.layout().addWidget(lblRow, alignment=Qt.AlignmentFlag.AlignVCenter)
 
