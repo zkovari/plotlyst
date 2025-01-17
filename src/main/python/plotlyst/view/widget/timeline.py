@@ -23,7 +23,7 @@ from functools import partial
 from typing import List, Optional
 
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QObject, QEvent
-from PyQt6.QtGui import QIcon, QColor, QPainter, QPaintEvent, QBrush, QResizeEvent, QShowEvent
+from PyQt6.QtGui import QIcon, QColor, QPainter, QPaintEvent, QBrush, QResizeEvent, QShowEvent, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QSizePolicy, \
     QLineEdit, QToolButton
 from overrides import overrides
@@ -34,7 +34,7 @@ from qthandy.filter import VisibilityToggleEventFilter
 from plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, \
     EMOTION_COLORS, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import BackstoryEvent
-from plotlyst.view.common import tool_btn, frame, label, columns, rows, scroll_area, spawn, push_btn
+from plotlyst.view.common import tool_btn, frame, label, columns, rows, scroll_area, spawn, push_btn, fade_in
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.confirm import confirmed
@@ -321,6 +321,23 @@ class TimelineWidget(QWidget):
         self._layout.addWidget(control, alignment=Qt.AlignmentFlag.AlignHCenter)
 
 
+class TimelineGridPlaceholder(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        vbox(self, 0, 0)
+        self.btn = tool_btn(IconRegistry.from_name('ei.plus-sign', 'lightgrey'), transparent_=True)
+        self.btn.setIconSize(QSize(32, 32))
+        self.layout().addWidget(self.btn, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.btn.setHidden(True)
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        fade_in(self.btn)
+
+    @overrides
+    def leaveEvent(self, a0: QEvent) -> None:
+        self.btn.setHidden(True)
+
 class TimelineGridColumn(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -391,10 +408,12 @@ class TimelineGridWidget(QWidget):
 
             items = []
             for j in range(size):
-                lblItem = label(f'item {i}/{j}')
+                # lblItem = label(f'item {i}/{j}')
                 # lblItem.setStyleSheet('background: blue;')
-                lblItem.setFixedSize(self._columnWidth, self._rowHeight)
-                items.append(lblItem)
+                # lblItem.setFixedSize(self._columnWidth, self._rowHeight)
+                placeholder = TimelineGridPlaceholder()
+                placeholder.setFixedSize(self._columnWidth, self._rowHeight)
+                items.append(placeholder)
 
             column = TimelineGridColumn()
             column.layout().addWidget(group(*items, vspacer(), margin=0, spacing=0, vertical=False))
