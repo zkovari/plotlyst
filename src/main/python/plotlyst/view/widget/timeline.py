@@ -34,7 +34,7 @@ from qthandy.filter import VisibilityToggleEventFilter
 from plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, \
     EMOTION_COLORS, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import BackstoryEvent
-from plotlyst.view.common import tool_btn, frame, spawn, label, columns, rows, scroll_area
+from plotlyst.view.common import tool_btn, frame, label, columns, rows, scroll_area
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.confirm import confirmed
@@ -339,7 +339,7 @@ class TimelineGridColumn(QWidget):
         # else:
         #     painter.drawRect(5, 50, self.rect().width(), 8)
 
-@spawn
+# @spawn
 class TimelineGridWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
