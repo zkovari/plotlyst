@@ -37,6 +37,7 @@ from plotlyst.view.common import hmax, tool_btn, ButtonPressResizeEventFilter, f
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.display import Icon
 from plotlyst.view.widget.input import RotatedButton, RotatedButtonOrientation, RemovalButton
+from plotlyst.view.widget.timeline import TimelineGridWidget
 
 GRID_ITEM_WIDTH: int = 190
 GRID_ITEM_HEIGHT: int = 120
@@ -252,22 +253,27 @@ class _ScenePlotAssociationsWidget(QWidget):
         return wdg
 
 
-  # wdgScenePlotParent = QWidget(self)
-        # if self._orientation == Qt.Orientation.Horizontal:
-        #     vbox(wdgScenePlotParent, spacing=0)
-        # else:
-        #     hbox(wdgScenePlotParent, spacing=0)
-        #
-        # wdgScenes = _ScenesLineWidget(self.novel, vertical=self._orientation == Qt.Orientation.Vertical)
-        # wdgScenePlotParent.layout().addWidget(wdgScenes)
-        #
-        # for plot in self.novel.plots:
-        #     wdg = _ScenePlotAssociationsWidget(self.novel, plot, parent=self,
-        #                                        vertical=self._orientation == Qt.Orientation.Vertical)
-        #     wdgScenePlotParent.layout().addWidget(wdg)
-        #
-        # if self._orientation == Qt.Orientation.Horizontal:
-        #     wdgScenePlotParent.layout().addWidget(vspacer())
-        # else:
-        #     wdgScenePlotParent.layout().addWidget(spacer())
-        # self.layout().addWidget(wdgScenePlotParent)
+# wdgScenePlotParent = QWidget(self)
+# if self._orientation == Qt.Orientation.Horizontal:
+#     vbox(wdgScenePlotParent, spacing=0)
+# else:
+#     hbox(wdgScenePlotParent, spacing=0)
+#
+# wdgScenes = _ScenesLineWidget(self.novel, vertical=self._orientation == Qt.Orientation.Vertical)
+# wdgScenePlotParent.layout().addWidget(wdgScenes)
+#
+# for plot in self.novel.plots:
+#     wdg = _ScenePlotAssociationsWidget(self.novel, plot, parent=self,
+#                                        vertical=self._orientation == Qt.Orientation.Vertical)
+#     wdgScenePlotParent.layout().addWidget(wdg)
+#
+# if self._orientation == Qt.Orientation.Horizontal:
+#     wdgScenePlotParent.layout().addWidget(vspacer())
+# else:
+#     wdgScenePlotParent.layout().addWidget(spacer())
+# self.layout().addWidget(wdgScenePlotParent)
+
+
+class ScenesGridWidget(TimelineGridWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)

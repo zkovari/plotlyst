@@ -63,6 +63,7 @@ from plotlyst.view.widget.display import ChartView
 from plotlyst.view.widget.input import RotatedButtonOrientation
 from plotlyst.view.widget.novel import StoryStructureSelectorMenu
 from plotlyst.view.widget.progress import SceneStageProgressCharts
+from plotlyst.view.widget.scene.story_grid import ScenesGridWidget
 from plotlyst.view.widget.scene.story_map import StoryMap, StoryMapDisplayMode
 from plotlyst.view.widget.scenes import SceneFilterWidget, \
     ScenesPreferencesWidget, ScenesDistributionWidget, ScenePreferencesTabType
@@ -186,6 +187,7 @@ class ScenesOutlineView(AbstractNovelView):
         self._actFilter.reset.connect(self._proxy.resetActsFilter)
 
         self.ui.btnCardsView.setIcon(IconRegistry.cards_icon())
+        self.ui.btnTimelineView.setIcon(IconRegistry.from_name('mdi.timeline', color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
         self.ui.btnStoryStructure.setIcon(IconRegistry.story_structure_icon(color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnStoryStructureSelector.setIcon(IconRegistry.from_name('mdi.chevron-down'))
@@ -232,6 +234,9 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.cards.cardDoubleClicked.connect(self._on_edit)
         self.ui.cards.cardEntered.connect(lambda x: self.ui.wdgStoryStructure.highlightScene(x.scene))
         self.ui.cards.cardCustomContextMenuRequested.connect(self._show_card_menu)
+
+        self._storyGrid = ScenesGridWidget()
+        self.ui.pageStoryGrid.layout().addWidget(self._storyGrid)
 
         self.ui.btnPreferences.setIcon(IconRegistry.preferences_icon())
         self.prefs_widget = ScenesPreferencesWidget(self.novel)
@@ -387,6 +392,9 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.stackScenes.setCurrentWidget(self.ui.pageCards)
             self.ui.tblScenes.clearSelection()
             self.prefs_widget.showCardsTab()
+        elif self.ui.btnTimelineView.isChecked():
+            self.ui.stackScenes.setCurrentWidget(self.ui.pageStoryGrid)
+            self.ui.tblScenes.clearSelection()
         elif self.ui.btnStorymap.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageStorymap)
             self.ui.tblScenes.clearSelection()
