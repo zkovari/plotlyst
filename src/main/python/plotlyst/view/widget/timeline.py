@@ -338,9 +338,11 @@ class TimelineGridPlaceholder(QWidget):
     def leaveEvent(self, a0: QEvent) -> None:
         self.btn.setHidden(True)
 
+
 class TimelineGridColumn(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, vertical: bool = False):
         super().__init__(parent)
+        self._vertical = vertical
         vbox(self, 0, 0)
 
     @overrides
@@ -351,15 +353,16 @@ class TimelineGridColumn(QWidget):
         painter.setBrush(QColor('lightgrey'))
         painter.setOpacity(0.4)
 
-        # if self._vertical:
-        painter.drawRect(self.rect().width() // 2 - 4, 5, 8, self.rect().height())
-        # else:
-        #     painter.drawRect(5, 50, self.rect().width(), 8)
+        if self._vertical:
+            painter.drawRect(5, self.rect().height() // 2 - 4, self.rect().width(), 8)
+        else:
+            painter.drawRect(self.rect().width() // 2 - 4, 5, 8, self.rect().height())
 
 # @spawn
 class TimelineGridWidget(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, vertical: bool = False):
         super().__init__(parent)
+        self._vertical = vertical
 
         self._columnWidth: int = 120
         self._rowHeight: int = 50
@@ -378,7 +381,11 @@ class TimelineGridWidget(QWidget):
         sp(self.scrollRows).h_max()
         self.scrollRows.verticalScrollBar().setEnabled(False)
 
-        self.wdgEditor = columns(0, 0)
+        if self._vertical:
+            self.wdgEditor = rows(0, 0)
+        else:
+            self.wdgEditor = columns(0, 0)
+
         sp(self.wdgEditor).v_exp().h_exp()
         self.scrollEditor = scroll_area(frameless=True)
         self.scrollEditor.setWidget(self.wdgEditor)
@@ -394,7 +401,7 @@ class TimelineGridWidget(QWidget):
         self.wdgColumns.setProperty('relaxed-white-bg', True)
         self.wdgEditor.setProperty('relaxed-white-bg', True)
 
-        size = 25
+        size = 5
         for i in range(size):
             lblColumn = push_btn(text=f'Column {i}', transparent_=True)
             incr_font(lblColumn, 2)
@@ -410,20 +417,22 @@ class TimelineGridWidget(QWidget):
 
             items = []
             for j in range(size):
-                # lblItem = label(f'item {i}/{j}')
-                # lblItem.setStyleSheet('background: blue;')
-                # lblItem.setFixedSize(self._columnWidth, self._rowHeight)
                 placeholder = TimelineGridPlaceholder()
                 placeholder.setFixedSize(self._columnWidth, self._rowHeight)
                 items.append(placeholder)
 
-            column = TimelineGridColumn()
-            column.layout().addWidget(group(*items, vspacer(), margin=0, spacing=0, vertical=False))
+            column = TimelineGridColumn(vertical=self._vertical)
+            spacer_wdg = spacer() if self._vertical else vspacer()
+            spacer_wdg.setProperty('relaxed-white-bg', True)
+            column.layout().addWidget(group(*items, spacer_wdg, margin=0, spacing=0, vertical=self._vertical))
             self.wdgEditor.layout().addWidget(column)
 
         self.wdgRows.layout().addWidget(vspacer())
         self.wdgColumns.layout().addWidget(spacer())
-        self.wdgEditor.layout().addWidget(spacer())
+        if self._vertical:
+            self.wdgEditor.layout().addWidget(vspacer())
+        else:
+            self.wdgEditor.layout().addWidget(spacer())
 
         hbox(self, 0, 0)
         self.layout().addWidget(self.scrollRows)
