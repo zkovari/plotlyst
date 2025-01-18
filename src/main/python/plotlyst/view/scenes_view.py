@@ -235,7 +235,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.cards.cardEntered.connect(lambda x: self.ui.wdgStoryStructure.highlightScene(x.scene))
         self.ui.cards.cardCustomContextMenuRequested.connect(self._show_card_menu)
 
-        self._storyGrid = ScenesGridWidget()
+        self._storyGrid = ScenesGridWidget(self.novel)
         self.ui.pageStoryGrid.layout().addWidget(self._storyGrid)
 
         self.ui.btnPreferences.setIcon(IconRegistry.preferences_icon())

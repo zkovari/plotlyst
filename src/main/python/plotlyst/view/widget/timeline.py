@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from abc import abstractmethod
 from dataclasses import dataclass
 from functools import partial
-from typing import List, Optional
+from typing import List, Optional, Any
 
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QObject, QEvent
 from PyQt6.QtGui import QIcon, QColor, QPainter, QPaintEvent, QBrush, QResizeEvent, QShowEvent, QEnterEvent
@@ -34,7 +34,7 @@ from qthandy.filter import VisibilityToggleEventFilter
 from plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, \
     EMOTION_COLORS, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import BackstoryEvent
-from plotlyst.view.common import tool_btn, frame, columns, rows, scroll_area, push_btn, fade_in
+from plotlyst.view.common import tool_btn, frame, columns, rows, scroll_area, push_btn, fade_in, insert_before_the_end
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.confirm import confirmed
@@ -364,7 +364,7 @@ class TimelineGridWidget(QWidget):
         super().__init__(parent)
         self._vertical = vertical
 
-        self._columnWidth: int = 120
+        self._columnWidth: int = 150
         self._rowHeight: int = 50
         self._headerHeight: int = 40
 
@@ -401,7 +401,7 @@ class TimelineGridWidget(QWidget):
         self.wdgColumns.setProperty('relaxed-white-bg', True)
         self.wdgEditor.setProperty('relaxed-white-bg', True)
 
-        size = 5
+        size = 0
         for i in range(size):
             lblColumn = push_btn(text=f'Column {i}', transparent_=True)
             incr_font(lblColumn, 2)
@@ -441,6 +441,39 @@ class TimelineGridWidget(QWidget):
         emptyPlaceholder = QWidget(self)
         emptyPlaceholder.setProperty('relaxed-white-bg', True)
         emptyPlaceholder.setGeometry(0, 0, self.wdgRows.sizeHint().width(), self._headerHeight)
+
+    def setColumnWidth(self, width: int):
+        self._columnWidth = width
+
+    def setRowHeight(self, height: int):
+        self._rowHeight = height
+
+    def addColumn(self, ref: Any, title: str = '', icon: Optional[QIcon] = None):
+        lblColumn = push_btn(text=title, transparent_=True)
+        if icon:
+            lblColumn.setIcon(icon)
+        incr_font(lblColumn, 1)
+        lblColumn.setFixedSize(self._columnWidth, self._headerHeight)
+        insert_before_the_end(self.wdgColumns, lblColumn, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        items = []
+        for j in range(self.wdgRows.layout().count() - 1):
+            placeholder = TimelineGridPlaceholder()
+            placeholder.setFixedSize(self._columnWidth, self._rowHeight)
+            items.append(placeholder)
+        column = TimelineGridColumn(vertical=self._vertical)
+        spacer_wdg = spacer() if self._vertical else vspacer()
+        spacer_wdg.setProperty('relaxed-white-bg', True)
+        column.layout().addWidget(group(*items, spacer_wdg, margin=0, spacing=0, vertical=self._vertical))
+        insert_before_the_end(self.wdgEditor, column)
+
+    def addRow(self, ref: Any, title: str = '', icon: Optional[QIcon] = None):
+        lblRow = push_btn(text=title, transparent_=True)
+        if icon:
+            lblRow.setIcon(icon)
+        incr_font(lblRow, 2)
+        lblRow.setFixedHeight(self._rowHeight)
+        insert_before_the_end(self.wdgRows, lblRow, alignment=Qt.AlignmentFlag.AlignCenter)
 
     @overrides
     def showEvent(self, event: QShowEvent) -> None:
