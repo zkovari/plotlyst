@@ -282,8 +282,11 @@ class ScenesGridWidget(TimelineGridWidget):
         self.setColumnWidth(200)
         self.setRowHeight(80)
 
-        for scene in self._novel.scenes:
-            self.addRow(scene, scene.title_or_index(self._novel))
-
         for plot in self._novel.plots:
             self.addColumn(plot, plot.text, IconRegistry.from_name(plot.icon, plot.icon_color))
+
+        for i, scene in enumerate(self._novel.scenes):
+            self.addRow(scene, scene.title_or_index(self._novel))
+            for plot_ref in scene.plot_values:
+                self.addItem(plot_ref.plot, i, plot_ref.data.comment)
+
