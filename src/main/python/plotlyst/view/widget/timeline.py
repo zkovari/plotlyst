@@ -322,10 +322,12 @@ class TimelineWidget(QWidget):
 
 
 class TimelineGridPlaceholder(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, color: str = 'lightgrey', parent=None):
         super().__init__(parent)
         vbox(self, 0, 0)
-        self.btn = tool_btn(IconRegistry.from_name('ei.plus-sign', 'lightgrey'), transparent_=True)
+        qcolor = QColor(color)
+        qcolor.setAlpha(125)
+        self.btn = tool_btn(IconRegistry.plus_circle_icon(color, RELAXED_WHITE_COLOR), transparent_=True)
         self.btn.setIconSize(QSize(32, 32))
         self.layout().addWidget(self.btn, alignment=Qt.AlignmentFlag.AlignCenter)
         self.btn.setHidden(True)
@@ -355,7 +357,7 @@ class TimelineGridLine(QWidget):
         color = self.ref.icon_color if self.ref.icon_color else 'lightgrey'
         painter.setPen(QColor(color))
         painter.setBrush(QColor(color))
-        painter.setOpacity(0.25)
+        painter.setOpacity(0.35)
 
         if self._vertical:
             painter.drawRect(5, self.rect().height() // 2 - 4, self.rect().width(), 8)
@@ -523,7 +525,7 @@ class TimelineGridWidget(QWidget):
         self._editorRangeChanged()
 
     def _addPlaceholders(self, line: TimelineGridLine):
-        placeholder = TimelineGridPlaceholder()
+        placeholder = TimelineGridPlaceholder(line.ref.icon_color)
         placeholder.setFixedSize(self._columnWidth, self._rowHeight)
 
         insert_before_the_end(line, placeholder)
