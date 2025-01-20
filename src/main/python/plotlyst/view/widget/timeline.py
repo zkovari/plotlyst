@@ -344,7 +344,7 @@ class TimelineGridLine(QWidget):
         super().__init__()
         self.ref = ref
         self._vertical = vertical
-        vbox(self, 0, 10)
+        vbox(self, 0, 0)
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
@@ -369,27 +369,28 @@ class TimelineGridWidget(QWidget):
         self._columnWidth: int = 150
         self._rowHeight: int = 50
         self._headerHeight: int = 40
+        self._spacing: int = 10
 
         self._rows: Dict[Any, QWidget] = {}
         self._columns: Dict[Any, TimelineGridLine] = {}
 
-        self.wdgColumns = columns(0, 10)
+        self.wdgColumns = columns(0, self._spacing)
         self.scrollColumns = scroll_area(False, False, frameless=True)
         self.scrollColumns.setWidget(self.wdgColumns)
         self.scrollColumns.setFixedHeight(self._headerHeight)
         self.scrollColumns.horizontalScrollBar().setEnabled(False)
 
-        self.wdgRows = rows(0, 10)
-        margins(self.wdgRows, top=self._headerHeight)
+        self.wdgRows = rows(0, self._spacing)
+        margins(self.wdgRows, top=self._headerHeight, right=self._spacing)
         self.scrollRows = scroll_area(False, False, frameless=True)
         self.scrollRows.setWidget(self.wdgRows)
         sp(self.scrollRows).h_max()
         self.scrollRows.verticalScrollBar().setEnabled(False)
 
         if self._vertical:
-            self.wdgEditor = rows(0, 10)
+            self.wdgEditor = rows(0, self._spacing)
         else:
-            self.wdgEditor = columns(0, 10)
+            self.wdgEditor = columns(0, self._spacing)
 
         sp(self.wdgEditor).v_exp().h_exp()
         self.scrollEditor = scroll_area(frameless=True)
@@ -402,9 +403,9 @@ class TimelineGridWidget(QWidget):
         self.wdgCenter.layout().addWidget(self.scrollColumns)
         self.wdgCenter.layout().addWidget(self.scrollEditor)
 
-        self.wdgRows.setProperty('relaxed-white-bg', True)
-        self.wdgColumns.setProperty('relaxed-white-bg', True)
-        self.wdgEditor.setProperty('relaxed-white-bg', True)
+        # self.wdgRows.setProperty('relaxed-white-bg', True)
+        # self.wdgColumns.setProperty('relaxed-white-bg', True)
+        # self.wdgEditor.setProperty('relaxed-white-bg', True)
 
         # size = 0
         # for i in range(size):
@@ -440,6 +441,7 @@ class TimelineGridWidget(QWidget):
             self.wdgEditor.layout().addWidget(spacer())
 
         hbox(self, 0, 0)
+        margins(self, left=35, top=25)
         self.layout().addWidget(self.scrollRows)
         self.layout().addWidget(self.wdgCenter)
 
@@ -462,6 +464,7 @@ class TimelineGridWidget(QWidget):
         insert_before_the_end(self.wdgColumns, lblColumn, alignment=Qt.AlignmentFlag.AlignCenter)
 
         column = TimelineGridLine(ref, vertical=self._vertical)
+        column.layout().setSpacing(self._spacing)
         spacer_wdg = spacer() if self._vertical else vspacer()
         spacer_wdg.setProperty('relaxed-white-bg', True)
         column.layout().addWidget(spacer_wdg)
@@ -486,15 +489,28 @@ class TimelineGridWidget(QWidget):
 
     def addItem(self, source: Any, index: int, ref: Any, text: str):
         wdg = QTextEdit()
-        wdg.setProperty('rounded', True)
-        wdg.setProperty('relaxed-white-bg', True)
+        wdg.setTabChangesFocus(True)
+        wdg.setPlaceholderText('How does this storyline move forward')
+        wdg.setStyleSheet(f'''
+         QTextEdit {{
+            border-radius: 6px;
+            padding: 4px;
+            background-color: {RELAXED_WHITE_COLOR};
+            border: 1px solid lightgrey;
+        }}
+    
+        QTextEdit:focus {{
+            border: 1px solid {source.icon_color};
+        }}
+        ''')
         shadow(wdg, color=QColor(source.icon_color))
-        wdg.setFixedSize(self._columnWidth - 20, self._rowHeight)
+        wdg.setFixedSize(self._columnWidth - 2 * self._spacing, self._rowHeight)
         wdg.setText(text)
         wdg.setAlignment(Qt.AlignmentFlag.AlignCenter)
         line = self._columns[source]
         placeholder = line.layout().itemAt(index).widget()
         line.layout().replaceWidget(placeholder, wdg)
+        # item.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     @overrides
     def showEvent(self, event: QShowEvent) -> None:
