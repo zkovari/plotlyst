@@ -34,7 +34,8 @@ from qthandy.filter import VisibilityToggleEventFilter
 from plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, \
     EMOTION_COLORS, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import BackstoryEvent
-from plotlyst.view.common import tool_btn, frame, columns, rows, scroll_area, push_btn, fade_in, insert_before_the_end
+from plotlyst.view.common import tool_btn, frame, columns, rows, scroll_area, push_btn, fade_in, insert_before_the_end, \
+    shadow
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.input import RemovalButton, AutoAdjustableTextEdit
@@ -343,15 +344,16 @@ class TimelineGridLine(QWidget):
         super().__init__()
         self.ref = ref
         self._vertical = vertical
-        vbox(self, 0, 0)
+        vbox(self, 0, 10)
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setPen(QColor('lightgrey'))
-        painter.setBrush(QColor('lightgrey'))
-        painter.setOpacity(0.4)
+        color = self.ref.icon_color if self.ref.icon_color else 'lightgrey'
+        painter.setPen(QColor(color))
+        painter.setBrush(QColor(color))
+        painter.setOpacity(0.25)
 
         if self._vertical:
             painter.drawRect(5, self.rect().height() // 2 - 4, self.rect().width(), 8)
@@ -371,13 +373,13 @@ class TimelineGridWidget(QWidget):
         self._rows: Dict[Any, QWidget] = {}
         self._columns: Dict[Any, TimelineGridLine] = {}
 
-        self.wdgColumns = columns(0, 0)
+        self.wdgColumns = columns(0, 10)
         self.scrollColumns = scroll_area(False, False, frameless=True)
         self.scrollColumns.setWidget(self.wdgColumns)
         self.scrollColumns.setFixedHeight(self._headerHeight)
         self.scrollColumns.horizontalScrollBar().setEnabled(False)
 
-        self.wdgRows = rows(0, 0)
+        self.wdgRows = rows(0, 10)
         margins(self.wdgRows, top=self._headerHeight)
         self.scrollRows = scroll_area(False, False, frameless=True)
         self.scrollRows.setWidget(self.wdgRows)
@@ -385,9 +387,9 @@ class TimelineGridWidget(QWidget):
         self.scrollRows.verticalScrollBar().setEnabled(False)
 
         if self._vertical:
-            self.wdgEditor = rows(0, 0)
+            self.wdgEditor = rows(0, 10)
         else:
-            self.wdgEditor = columns(0, 0)
+            self.wdgEditor = columns(0, 10)
 
         sp(self.wdgEditor).v_exp().h_exp()
         self.scrollEditor = scroll_area(frameless=True)
@@ -482,10 +484,14 @@ class TimelineGridWidget(QWidget):
         for line in self._columns.values():
             self._addPlaceholders(line)
 
-    def addItem(self, source: Any, index: int, ref: Any):
+    def addItem(self, source: Any, index: int, ref: Any, text: str):
         wdg = QTextEdit()
-        wdg.setFixedSize(self._columnWidth, self._rowHeight)
-        wdg.setText(ref)
+        wdg.setProperty('rounded', True)
+        wdg.setProperty('relaxed-white-bg', True)
+        shadow(wdg, color=QColor(source.icon_color))
+        wdg.setFixedSize(self._columnWidth - 20, self._rowHeight)
+        wdg.setText(text)
+        wdg.setAlignment(Qt.AlignmentFlag.AlignCenter)
         line = self._columns[source]
         placeholder = line.layout().itemAt(index).widget()
         line.layout().replaceWidget(placeholder, wdg)

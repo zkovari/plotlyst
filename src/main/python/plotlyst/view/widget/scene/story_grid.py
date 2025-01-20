@@ -288,5 +288,5 @@ class ScenesGridWidget(TimelineGridWidget):
         for i, scene in enumerate(self._novel.scenes):
             self.addRow(scene, scene.title_or_index(self._novel))
             for plot_ref in scene.plot_values:
-                self.addItem(plot_ref.plot, i, plot_ref.data.comment)
+                self.addItem(plot_ref.plot, i, plot_ref, plot_ref.data.comment)
 
