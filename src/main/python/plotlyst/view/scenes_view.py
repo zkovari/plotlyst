@@ -27,7 +27,8 @@ from PyQt6.QtCore import Qt, QModelIndex, \
 from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget, QHeaderView
 from overrides import overrides
-from qthandy import incr_font, translucent, clear_layout, busy, bold, sp, transparent, incr_icon, retain_when_hidden
+from qthandy import incr_font, translucent, clear_layout, busy, bold, sp, transparent, incr_icon, retain_when_hidden, \
+    margins
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -237,6 +238,7 @@ class ScenesOutlineView(AbstractNovelView):
 
         self._storyGrid = ScenesGridWidget(self.novel)
         self.ui.pageStoryGrid.layout().addWidget(self._storyGrid)
+        margins(self.ui.pageStoryGrid, left=35, top=25)
 
         self.ui.btnPreferences.setIcon(IconRegistry.preferences_icon())
         self.prefs_widget = ScenesPreferencesWidget(self.novel)

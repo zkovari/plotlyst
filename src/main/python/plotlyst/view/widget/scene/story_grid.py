@@ -31,10 +31,11 @@ from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 
 from plotlyst.common import WHITE_COLOR
 from plotlyst.core.domain import Scene, Novel, Plot, \
-    ScenePlotReference
+    ScenePlotReference, NovelSetting
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import hmax, tool_btn, ButtonPressResizeEventFilter, fade_out_and_gc
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.cards import SceneCard
 from plotlyst.view.widget.display import Icon
 from plotlyst.view.widget.input import RotatedButton, RotatedButtonOrientation, RemovalButton
 from plotlyst.view.widget.timeline import TimelineGridWidget
@@ -274,18 +275,33 @@ class _ScenePlotAssociationsWidget(QWidget):
 # self.layout().addWidget(wdgScenePlotParent)
 
 
+class SceneGridCard(SceneCard):
+    def __init__(self, scene: Scene, novel: Novel, parent=None):
+        super().__init__(scene, novel, parent)
+        self.wdgCharacters.setHidden(True)
+        self.setSetting(NovelSetting.SCENE_CARD_PLOT_PROGRESS, True)
+        self.setSetting(NovelSetting.SCENE_CARD_PURPOSE, False)
+        self.setSetting(NovelSetting.SCENE_CARD_STAGE, False)
+
+        self.textTitle.setFontPointSize(self.textTitle.font().pointSize() - 1)
+
+        self.setFixedWidth(170)
+
+
 class ScenesGridWidget(TimelineGridWidget):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
 
         self.setColumnWidth(200)
-        self.setRowHeight(80)
+        self.setRowHeight(120)
 
         for plot in self._novel.plots:
             self.addColumn(plot, plot.text, IconRegistry.from_name(plot.icon, plot.icon_color))
 
         for i, scene in enumerate(self._novel.scenes):
-            self.addRow(scene, scene.title_or_index(self._novel))
+            # self.addRow(scene, scene.title_or_index(self._novel))
+            card = SceneGridCard(scene, self._novel)
+            self.addRowWidget(scene, card)
             for plot_ref in scene.plot_values:
                 self.addItem(plot_ref.plot, i, plot_ref, plot_ref.data.comment)

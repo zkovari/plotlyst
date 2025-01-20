@@ -445,12 +445,12 @@ class TimelineGridWidget(QWidget):
             self.wdgEditor.layout().addWidget(spacer())
 
         hbox(self, 0, 0)
-        margins(self, left=35, top=25)
+        # margins(self, left=35, top=25)
         self.layout().addWidget(self.scrollRows)
         self.layout().addWidget(self.wdgCenter)
 
         emptyPlaceholder = QWidget(self)
-        emptyPlaceholder.setProperty('relaxed-white-bg', True)
+        emptyPlaceholder.setProperty('bg', True)
         emptyPlaceholder.setGeometry(0, 0, self.wdgRows.sizeHint().width(), self._headerHeight)
 
     def setColumnWidth(self, width: int):
@@ -484,13 +484,20 @@ class TimelineGridWidget(QWidget):
 
     def addRow(self, ref: Any, title: str = '', icon: Optional[QIcon] = None):
         lblRow = push_btn(text=title, transparent_=True)
-        self._rows[ref] = lblRow
         if icon:
             lblRow.setIcon(icon)
         incr_font(lblRow, 2)
-        lblRow.setFixedHeight(self._rowHeight)
-        # lblRow.setStyleSheet('background: red;')
-        insert_before_the_end(self.wdgRows, lblRow, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.addRowWidget(ref, lblRow)
+        # lblRow.setFixedHeight(self._rowHeight)
+        # insert_before_the_end(self.wdgRows, lblRow, alignment=Qt.AlignmentFlag.AlignCenter)
+        #
+        # for line in self._columns.values():
+        #     self._addPlaceholders(line)
+
+    def addRowWidget(self, ref: Any, wdg: QWidget):
+        self._rows[ref] = wdg
+        wdg.setFixedHeight(self._rowHeight)
+        insert_before_the_end(self.wdgRows, wdg, alignment=Qt.AlignmentFlag.AlignCenter)
 
         for line in self._columns.values():
             self._addPlaceholders(line)
@@ -498,7 +505,7 @@ class TimelineGridWidget(QWidget):
     def addItem(self, source: Any, index: int, ref: Any, text: str):
         wdg = QTextEdit()
         wdg.setTabChangesFocus(True)
-        wdg.setPlaceholderText('How does this storyline move forward')
+        wdg.setPlaceholderText('How does the story move forward')
         wdg.setStyleSheet(f'''
          QTextEdit {{
             border-radius: 6px;
