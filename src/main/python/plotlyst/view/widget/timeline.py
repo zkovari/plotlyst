@@ -346,6 +346,8 @@ class TimelineGridLine(QWidget):
         self._vertical = vertical
         vbox(self, 0, 0)
 
+        sp(self).h_max()
+
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
         painter = QPainter(self)
@@ -461,9 +463,12 @@ class TimelineGridWidget(QWidget):
             lblColumn.setIcon(icon)
         incr_font(lblColumn, 1)
         lblColumn.setFixedSize(self._columnWidth, self._headerHeight)
+        # lblColumn.setStyleSheet('background: green;')
         insert_before_the_end(self.wdgColumns, lblColumn, alignment=Qt.AlignmentFlag.AlignCenter)
 
         column = TimelineGridLine(ref, vertical=self._vertical)
+        if not self._vertical:
+            column.setFixedWidth(self._columnWidth)
         column.layout().setSpacing(self._spacing)
         spacer_wdg = spacer() if self._vertical else vspacer()
         spacer_wdg.setProperty('relaxed-white-bg', True)
@@ -482,6 +487,7 @@ class TimelineGridWidget(QWidget):
             lblRow.setIcon(icon)
         incr_font(lblRow, 2)
         lblRow.setFixedHeight(self._rowHeight)
+        # lblRow.setStyleSheet('background: red;')
         insert_before_the_end(self.wdgRows, lblRow, alignment=Qt.AlignmentFlag.AlignCenter)
 
         for line in self._columns.values():
@@ -510,7 +516,6 @@ class TimelineGridWidget(QWidget):
         line = self._columns[source]
         placeholder = line.layout().itemAt(index).widget()
         line.layout().replaceWidget(placeholder, wdg)
-        # item.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     @overrides
     def showEvent(self, event: QShowEvent) -> None:
