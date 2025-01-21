@@ -348,7 +348,10 @@ class TimelineGridLine(QWidget):
         self._vertical = vertical
         vbox(self, 0, 0)
 
-        sp(self).h_max()
+        if vertical:
+            sp(self).v_max()
+        else:
+            sp(self).h_max()
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
@@ -407,36 +410,6 @@ class TimelineGridWidget(QWidget):
         self.wdgCenter.layout().addWidget(self.scrollColumns)
         self.wdgCenter.layout().addWidget(self.scrollEditor)
 
-        # self.wdgRows.setProperty('relaxed-white-bg', True)
-        # self.wdgColumns.setProperty('relaxed-white-bg', True)
-        # self.wdgEditor.setProperty('relaxed-white-bg', True)
-
-        # size = 0
-        # for i in range(size):
-        #     lblColumn = push_btn(text=f'Column {i}', transparent_=True)
-        #     incr_font(lblColumn, 2)
-        #     lblColumn.setFixedSize(self._columnWidth, self._headerHeight)
-        #     self.wdgColumns.layout().addWidget(lblColumn, alignment=Qt.AlignmentFlag.AlignCenter)
-        #     lblRow = push_btn(text=f'Row {i}', transparent_=True)
-        #     incr_font(lblRow, 2)
-        #     lblRow.setFixedHeight(self._rowHeight)
-        #     self.wdgRows.layout().addWidget(lblRow, alignment=Qt.AlignmentFlag.AlignVCenter)
-        #
-        #     # lblColumn.setStyleSheet('background: green;')
-        #     # lblRow.setStyleSheet('background: red;')
-        #
-        #     items = []
-        #     for j in range(size):
-        #         placeholder = TimelineGridPlaceholder()
-        #         placeholder.setFixedSize(self._columnWidth, self._rowHeight)
-        #         items.append(placeholder)
-        #
-        #     column = TimelineGridLine(vertical=self._vertical)
-        #     spacer_wdg = spacer() if self._vertical else vspacer()
-        #     spacer_wdg.setProperty('relaxed-white-bg', True)
-        #     column.layout().addWidget(group(*items, spacer_wdg, margin=0, spacing=0, vertical=self._vertical))
-        #     self.wdgEditor.layout().addWidget(column)
-
         self.wdgRows.layout().addWidget(vspacer())
         self.wdgColumns.layout().addWidget(spacer())
         if self._vertical:
@@ -445,7 +418,6 @@ class TimelineGridWidget(QWidget):
             self.wdgEditor.layout().addWidget(spacer())
 
         hbox(self, 0, 0)
-        # margins(self, left=35, top=25)
         self.layout().addWidget(self.scrollRows)
         self.layout().addWidget(self.wdgCenter)
 
@@ -473,7 +445,7 @@ class TimelineGridWidget(QWidget):
             column.setFixedWidth(self._columnWidth)
         column.layout().setSpacing(self._spacing)
         spacer_wdg = spacer() if self._vertical else vspacer()
-        spacer_wdg.setProperty('relaxed-white-bg', True)
+        # spacer_wdg.setProperty('relaxed-white-bg', True)
         column.layout().addWidget(spacer_wdg)
 
         self._columns[ref] = column
@@ -482,23 +454,27 @@ class TimelineGridWidget(QWidget):
 
         insert_before_the_end(self.wdgEditor, column)
 
+    def setColumnWidget(self, ref: Any, wdg: QWidget):
+        pass
+
     def addRow(self, ref: Any, title: str = '', icon: Optional[QIcon] = None):
         lblRow = push_btn(text=title, transparent_=True)
         if icon:
             lblRow.setIcon(icon)
         incr_font(lblRow, 2)
         self.addRowWidget(ref, lblRow)
-        # lblRow.setFixedHeight(self._rowHeight)
-        # insert_before_the_end(self.wdgRows, lblRow, alignment=Qt.AlignmentFlag.AlignCenter)
-        #
-        # for line in self._columns.values():
-        #     self._addPlaceholders(line)
 
     def addRowWidget(self, ref: Any, wdg: QWidget):
         self._rows[ref] = wdg
         wdg.setFixedHeight(self._rowHeight)
         insert_before_the_end(self.wdgRows, wdg, alignment=Qt.AlignmentFlag.AlignCenter)
 
+        for line in self._columns.values():
+            self._addPlaceholders(line)
+
+    def setRowWidget(self, ref: Any, wdg: QWidget):
+        self._rows[ref] = wdg
+        wdg.setFixedHeight(self._rowHeight)
         for line in self._columns.values():
             self._addPlaceholders(line)
 
@@ -522,7 +498,10 @@ class TimelineGridWidget(QWidget):
         wdg.setFixedSize(self._columnWidth - 2 * self._spacing, self._rowHeight)
         wdg.setText(text)
         wdg.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        line = self._columns[source]
+        if self._vertical:
+            line = self._rows[source]
+        else:
+            line = self._columns[source]
         placeholder = line.layout().itemAt(index).widget()
         line.layout().replaceWidget(placeholder, wdg)
 

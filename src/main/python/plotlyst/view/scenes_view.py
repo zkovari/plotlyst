@@ -64,7 +64,7 @@ from plotlyst.view.widget.display import ChartView
 from plotlyst.view.widget.input import RotatedButtonOrientation
 from plotlyst.view.widget.novel import StoryStructureSelectorMenu
 from plotlyst.view.widget.progress import SceneStageProgressCharts
-from plotlyst.view.widget.scene.story_grid import ScenesGridWidget
+from plotlyst.view.widget.scene.story_grid import ScenesGridWidget, ScenesGridToolbar
 from plotlyst.view.widget.scene.story_map import StoryMap, StoryMapDisplayMode
 from plotlyst.view.widget.scenes import SceneFilterWidget, \
     ScenesPreferencesWidget, ScenesDistributionWidget, ScenePreferencesTabType
@@ -237,8 +237,12 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.cards.cardCustomContextMenuRequested.connect(self._show_card_menu)
 
         self._storyGrid = ScenesGridWidget(self.novel)
+        self._storyGridToolbar  = ScenesGridToolbar()
+        self._storyGridToolbar.orientationChanged.connect(self._storyGrid.setOrientation)
+        self.ui.pageStoryGrid.layout().addWidget(self._storyGridToolbar, alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
         self.ui.pageStoryGrid.layout().addWidget(self._storyGrid)
-        margins(self.ui.pageStoryGrid, left=35, top=25)
+        margins(self.ui.pageStoryGrid, left=35)
+        margins(self._storyGridToolbar, top=15, bottom=10)
 
         self.ui.btnPreferences.setIcon(IconRegistry.preferences_icon())
         self.prefs_widget = ScenesPreferencesWidget(self.novel)

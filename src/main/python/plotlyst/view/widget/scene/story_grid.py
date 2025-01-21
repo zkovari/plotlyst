@@ -18,27 +18,29 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
+from typing import Dict
 
 import qtanim
-from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QTimer, pyqtSignal
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QColor, QPaintEvent, QPainter
-from PyQt6.QtWidgets import QWidget, QTextEdit, QLabel, QPushButton
+from PyQt6.QtWidgets import QWidget, QTextEdit, QLabel, QPushButton, QButtonGroup, QVBoxLayout, QHBoxLayout
 from overrides import overrides
-from qthandy import margins, vspacer, line, incr_font, sp
+from qthandy import margins, vspacer, line, incr_font, sp, clear_layout
 from qthandy import transparent, hbox, spacer, vbox
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 
-from plotlyst.common import WHITE_COLOR
+from plotlyst.common import WHITE_COLOR, PLOTLYST_MAIN_COLOR
 from plotlyst.core.domain import Scene, Novel, Plot, \
-    ScenePlotReference, NovelSetting
+    ScenePlotReference, NovelSetting, LayoutType
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import hmax, tool_btn, ButtonPressResizeEventFilter, fade_out_and_gc
+from plotlyst.view.common import hmax, tool_btn, ButtonPressResizeEventFilter, fade_out_and_gc, insert_before_the_end, \
+    label, push_btn
 from plotlyst.view.icons import IconRegistry
-from plotlyst.view.widget.cards import SceneCard
+from plotlyst.view.widget.cards import SceneCard, CardsView
 from plotlyst.view.widget.display import Icon
 from plotlyst.view.widget.input import RotatedButton, RotatedButtonOrientation, RemovalButton
-from plotlyst.view.widget.timeline import TimelineGridWidget
+from plotlyst.view.widget.timeline import TimelineGridWidget, TimelineGridLine
 
 GRID_ITEM_WIDTH: int = 190
 GRID_ITEM_HEIGHT: int = 120
@@ -275,6 +277,16 @@ class _ScenePlotAssociationsWidget(QWidget):
 # self.layout().addWidget(wdgScenePlotParent)
 
 
+class ScenesGridPlotHeader(QWidget):
+    def __init__(self, plot: Plot, parent=None):
+        super().__init__(parent)
+        lblPlot = push_btn(text=plot.text, transparent_=True)
+        if plot.icon:
+            lblPlot.setIcon(IconRegistry.from_name(plot.icon, plot.icon_color))
+        incr_font(lblPlot, 1)
+        vbox(self, 0, 0).addWidget(lblPlot)
+
+
 class SceneGridCard(SceneCard):
     def __init__(self, scene: Scene, novel: Novel, parent=None):
         super().__init__(scene, novel, parent)
@@ -282,26 +294,145 @@ class SceneGridCard(SceneCard):
         self.setSetting(NovelSetting.SCENE_CARD_PLOT_PROGRESS, True)
         self.setSetting(NovelSetting.SCENE_CARD_PURPOSE, False)
         self.setSetting(NovelSetting.SCENE_CARD_STAGE, False)
+        self.layout().setSpacing(0)
+        margins(self, 0, 0, 0, 0)
 
         self.textTitle.setFontPointSize(self.textTitle.font().pointSize() - 1)
 
         self.setFixedWidth(170)
 
 
+class ScenesGridToolbar(QWidget):
+    orientationChanged = pyqtSignal(Qt.Orientation)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        hbox(self, 0, 0)
+
+        self.lblScenes = label('Orientation:', description=True)
+        self.btnRows = tool_btn(IconRegistry.from_name('ph.rows-fill', color_on=PLOTLYST_MAIN_COLOR), transparent_=True,
+                                checkable=True)
+        self.btnRows.installEventFilter(OpacityEventFilter(self.btnRows))
+        self.btnColumns = tool_btn(IconRegistry.from_name('ph.columns-fill', color_on=PLOTLYST_MAIN_COLOR),
+                                   transparent_=True, checkable=True)
+        self.btnColumns.installEventFilter(OpacityEventFilter(self.btnColumns))
+        self.btnGroup = QButtonGroup()
+        self.btnGroup.addButton(self.btnRows)
+        self.btnGroup.addButton(self.btnColumns)
+        self.btnGroup.buttonClicked.connect(self._orientationClicked)
+        self.btnColumns.setChecked(True)
+
+        # self.layout().addWidget(spacer())
+        self.layout().addWidget(self.lblScenes, alignment=Qt.AlignmentFlag.AlignVCenter)
+        self.layout().addWidget(self.btnRows)
+        self.layout().addWidget(self.btnColumns)
+
+    def _orientationClicked(self):
+        if self.btnRows.isChecked():
+            self.orientationChanged.emit(Qt.Orientation.Vertical)
+        else:
+            self.orientationChanged.emit(Qt.Orientation.Horizontal)
+
+
 class ScenesGridWidget(TimelineGridWidget):
     def __init__(self, novel: Novel, parent=None):
-        super().__init__(parent)
+        super().__init__(parent, vertical=True)
         self._novel = novel
 
         self.setColumnWidth(200)
         self.setRowHeight(120)
 
-        for plot in self._novel.plots:
-            self.addColumn(plot, plot.text, IconRegistry.from_name(plot.icon, plot.icon_color))
+        self._plots: Dict[Plot, TimelineGridLine] = {}
 
-        for i, scene in enumerate(self._novel.scenes):
-            # self.addRow(scene, scene.title_or_index(self._novel))
-            card = SceneGridCard(scene, self._novel)
-            self.addRowWidget(scene, card)
-            for plot_ref in scene.plot_values:
-                self.addItem(plot_ref.plot, i, plot_ref, plot_ref.data.comment)
+        self.cardsView = CardsView(layoutType=LayoutType.VERTICAL, margin=0, spacing=self._spacing)
+        self.refresh()
+        # if self._vertical:
+        #     insert_before_the_end(self.wdgColumns, self.cardsView)
+        #     self.wdgColumns.layout().setSpacing(0)
+        # else:
+        #     insert_before_the_end(self.wdgRows, self.cardsView)
+        #     self.wdgRows.layout().setSpacing(0)
+        #
+        # for i, scene in enumerate(self._novel.scenes):
+        #     # self.addRow(scene, scene.title_or_index(self._novel))
+        #     card = SceneGridCard(scene, self._novel)
+        #     self.cardsView.addCard(card)
+        #     if self._vertical:
+        #         self.setColumnWidget(scene, card)
+        #     else:
+        #         self.setRowWidget(scene, card)
+        #     for plot_ref in scene.plot_values:
+        #         self.addItem(plot_ref.plot, i, plot_ref, plot_ref.data.comment)
+
+    def refresh(self):
+        for plot in self._novel.plots:
+            self.addPlot(plot)
+
+        # if self._vertical:
+        #     insert_before_the_end(self.wdgColumns, self.cardsView)
+        #     self.wdgColumns.layout().setSpacing(0)
+        # else:
+        #     insert_before_the_end(self.wdgRows, self.cardsView)
+        #     self.wdgRows.layout().setSpacing(0)
+        #
+        # for i, scene in enumerate(self._novel.scenes):
+        #     # self.addRow(scene, scene.title_or_index(self._novel))
+        #     card = SceneGridCard(scene, self._novel)
+        #     self.cardsView.addCard(card)
+        #     if self._vertical:
+        #         self.setColumnWidget(scene, card)
+        #     else:
+        #         self.setRowWidget(scene, card)
+        #     for plot_ref in scene.plot_values:
+        #         self.addItem(plot_ref.plot, i, plot_ref, plot_ref.data.comment)
+
+    def setOrientation(self, orientation: Qt.Orientation):
+        clear_layout(self.wdgRows)
+        clear_layout(self.wdgColumns)
+        clear_layout(self.wdgEditor)
+        self.cardsView.clear()
+        self._plots.clear()
+
+        self._vertical = True if orientation == Qt.Orientation.Vertical else False
+
+        self.wdgRows.layout().addWidget(vspacer())
+        self.wdgColumns.layout().addWidget(spacer())
+
+        QWidget().setLayout(self.wdgEditor.layout())
+        self.wdgEditor.setLayout(QVBoxLayout() if self._vertical else QHBoxLayout())
+        if self._vertical:
+            self.wdgEditor.layout().addWidget(vspacer())
+        else:
+            self.wdgEditor.layout().addWidget(spacer())
+
+        self.refresh()
+
+    def addPlot(self, plot: Plot):
+        # header = ScenesGridPlotHeader(plot)
+        header = push_btn(text=plot.text, transparent_=True)
+        if plot.icon:
+            header.setIcon(IconRegistry.from_name(plot.icon, plot.icon_color))
+        incr_font(header, 1)
+        if self._vertical:
+            header.setFixedSize(self._columnWidth, self._rowHeight)
+        else:
+            header.setFixedSize(self._columnWidth, self._headerHeight)
+        if self._vertical:
+            insert_before_the_end(self.wdgRows, header, alignment=Qt.AlignmentFlag.AlignLeft)
+        else:
+            insert_before_the_end(self.wdgColumns, header, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        line = TimelineGridLine(plot, vertical=self._vertical)
+        if self._vertical:
+            line.setFixedHeight(self._rowHeight)
+        else:
+            line.setFixedWidth(self._columnWidth)
+        line.layout().setSpacing(self._spacing)
+        spacer_wdg = spacer() if self._vertical else vspacer()
+        line.layout().addWidget(spacer_wdg)
+
+        self._plots[plot] = line
+        for j in range(self.wdgRows.layout().count() - 1):
+            self._addPlaceholders(line)
+
+        insert_before_the_end(self.wdgEditor, line)

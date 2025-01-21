@@ -33,7 +33,7 @@ from qthandy.filter import DragEventFilter, DropEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
-from plotlyst.core.domain import Character, Scene, Novel, NovelSetting, CardSizeRatio, NovelDescriptor
+from plotlyst.core.domain import Character, Scene, Novel, NovelSetting, CardSizeRatio, NovelDescriptor, LayoutType
 from plotlyst.core.help import enneagram_help, mbti_help
 from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
@@ -514,10 +514,13 @@ class CardsView(QFrame):
     orderChanged = pyqtSignal(list, Card)  # dropped Card
     selectionCleared = pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, layoutType: LayoutType = LayoutType.FLOW, margin: int = 9, spacing: int = 15):
         super().__init__(parent)
         self._cards: Dict[Any, Card] = {}
-        self._layout = flow(self, 9, 15)
+        if layoutType:
+            self._layout = flow(self, margin, spacing)
+        elif layoutType == LayoutType.VERTICAL:
+            self._layout = vbox(self, margin, spacing)
         self.setAcceptDrops(True)
         self._droppedTo: Optional[Card] = None
         self._selected: Optional[Card] = None
