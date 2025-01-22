@@ -501,9 +501,9 @@ class TimelineGridWidget(QWidget):
         }}
         ''')
         shadow(wdg, color=QColor(source.icon_color))
-        wdg.setFixedSize(self._columnWidth - 2 * self._spacing, self._rowHeight)
         wdg.setText(text)
         wdg.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        wdg.setFixedSize(self._columnWidth - 2 * self._spacing, self._rowHeight)
         if self._vertical:
             line = self._rows[source]
         else:

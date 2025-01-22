@@ -30,12 +30,12 @@ from qthandy import margins, vspacer, line, incr_font, sp, clear_layout
 from qthandy import transparent, hbox, spacer, vbox
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 
-from plotlyst.common import WHITE_COLOR, PLOTLYST_MAIN_COLOR
+from plotlyst.common import WHITE_COLOR, PLOTLYST_MAIN_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Scene, Novel, Plot, \
     ScenePlotReference, NovelSetting, LayoutType
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import hmax, tool_btn, ButtonPressResizeEventFilter, fade_out_and_gc, insert_before_the_end, \
-    label, push_btn
+    label, push_btn, shadow
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.cards import SceneCard, CardsView
 from plotlyst.view.widget.display import Icon
@@ -287,6 +287,32 @@ class ScenesGridPlotHeader(QWidget):
         vbox(self, 0, 0).addWidget(lblPlot)
 
 
+class SceneStorylineAssociation(QWidget):
+    def __init__(self, plot: Plot, parent=None):
+        super().__init__(parent)
+        self.plot = plot
+        wdg = QTextEdit()
+        wdg.setTabChangesFocus(True)
+        wdg.setPlaceholderText('How does the story move forward')
+        wdg.setStyleSheet(f'''
+                 QTextEdit {{
+                    border-radius: 6px;
+                    padding: 4px;
+                    background-color: {RELAXED_WHITE_COLOR};
+                    border: 1px solid lightgrey;
+                }}
+
+                QTextEdit:focus {{
+                    border: 1px solid {self.plot.icon_color};
+                }}
+                ''')
+        shadow(wdg, color=QColor(self.plot.icon_color))
+        # wdg.setText(text)
+        wdg.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        vbox(self, 2, 0).addWidget(wdg)
+
+
 class SceneGridCard(SceneCard):
     def __init__(self, scene: Scene, novel: Novel, parent=None):
         super().__init__(scene, novel, parent)
@@ -388,7 +414,15 @@ class ScenesGridWidget(TimelineGridWidget):
             insert_before_the_end(self.wdgColumns, self.cardsView)
         else:
             insert_before_the_end(self.wdgRows, self.cardsView)
-        self.cardsView.setVisible(True)
+
+        for i, scene in enumerate(self._novel.scenes):
+            for plot_ref in scene.plot_values:
+                wdg = SceneStorylineAssociation(plot_ref.plot)
+                wdg.setFixedSize(self._columnWidth, self._rowHeight)
+
+                line = self._plots[plot_ref.plot]
+                placeholder = line.layout().itemAt(i).widget()
+                line.layout().replaceWidget(placeholder, wdg)
 
     def addPlot(self, plot: Plot):
         header = ScenesGridPlotHeader(plot)
