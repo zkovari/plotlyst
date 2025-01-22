@@ -384,10 +384,13 @@ class TimelineGridWidget(QWidget):
         self.wdgColumns = columns(0, self._spacing)
         self.scrollColumns = scroll_area(False, False, frameless=True)
         self.scrollColumns.setWidget(self.wdgColumns)
+        # sp(self.scrollColumns).v_max()
+        # self.scrollColumns.setFixedHeight(self._headerHeight)
         self.scrollColumns.setFixedHeight(self._headerHeight)
         self.scrollColumns.horizontalScrollBar().setEnabled(False)
 
         self.wdgRows = rows(0, self._spacing)
+        # self.wdgRows.setStyleSheet('background: green;')
         margins(self.wdgRows, top=self._headerHeight, right=self._spacing)
         self.scrollRows = scroll_area(False, False, frameless=True)
         self.scrollRows.setWidget(self.wdgRows)
