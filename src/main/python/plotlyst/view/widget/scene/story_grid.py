@@ -288,14 +288,16 @@ class ScenesGridPlotHeader(QWidget):
 
 
 class SceneStorylineAssociation(QWidget):
+    textChanged = pyqtSignal()
+
     def __init__(self, plot: Plot, ref: ScenePlotReference, parent=None):
         super().__init__(parent)
         self.plot = plot
         self.ref = ref
-        wdg = QTextEdit()
-        wdg.setTabChangesFocus(True)
-        wdg.setPlaceholderText('How does the story move forward')
-        wdg.setStyleSheet(f'''
+        self.textedit = QTextEdit()
+        self.textedit.setTabChangesFocus(True)
+        self.textedit.setPlaceholderText('How does the story move forward')
+        self.textedit.setStyleSheet(f'''
                  QTextEdit {{
                     border-radius: 6px;
                     padding: 4px;
@@ -307,11 +309,17 @@ class SceneStorylineAssociation(QWidget):
                     border: 1px solid {self.plot.icon_color};
                 }}
                 ''')
-        shadow(wdg, color=QColor(self.plot.icon_color))
-        wdg.setText(self.ref.data.comment)
-        wdg.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        shadow(self.textedit, color=QColor(self.plot.icon_color))
+        self.textedit.setText(self.ref.data.comment)
+        self.textedit.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        vbox(self, 2, 0).addWidget(wdg)
+        vbox(self, 2, 0).addWidget(self.textedit)
+
+        self.textedit.textChanged.connect(self._textChanged)
+
+    def _textChanged(self):
+        self.ref.data.comment = self.textedit.toPlainText()
+        self.textChanged.emit()
 
 
 class SceneGridCard(SceneCard):
@@ -379,6 +387,7 @@ class ScenesGridWidget(TimelineGridWidget):
             self.cardsView.addCard(sceneCard)
             sceneCard.setFixedSize(self._columnWidth, self._rowHeight)
 
+        self.repo = RepositoryPersistenceManager.instance()
         self.refresh()
 
     def setOrientation(self, orientation: Qt.Orientation):
@@ -418,9 +427,7 @@ class ScenesGridWidget(TimelineGridWidget):
 
         for i, scene in enumerate(self._novel.scenes):
             for plot_ref in scene.plot_values:
-                wdg = SceneStorylineAssociation(plot_ref.plot, plot_ref)
-                wdg.setFixedSize(self._columnWidth, self._rowHeight)
-
+                wdg = self.__initRefWidget(scene, plot_ref)
                 line = self._plots[plot_ref.plot]
                 placeholder = line.layout().itemAt(i).widget()
                 line.layout().replaceWidget(placeholder, wdg)
@@ -446,3 +453,13 @@ class ScenesGridWidget(TimelineGridWidget):
             self._addPlaceholder(line)
 
         insert_before_the_end(self.wdgEditor, line)
+
+    def save(self, scene: Scene):
+        self.repo.update_scene(scene)
+
+    def __initRefWidget(self, scene: Scene, plot_ref: ScenePlotReference) -> SceneStorylineAssociation:
+        wdg = SceneStorylineAssociation(plot_ref.plot, plot_ref)
+        wdg.textChanged.connect(partial(self.save, scene))
+        wdg.setFixedSize(self._columnWidth, self._rowHeight)
+
+        return wdg
