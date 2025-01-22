@@ -259,19 +259,8 @@ class StoryLinesMapWidget(QWidget):
     def _plot_changed(self, plot: Plot, checked: bool):
         if checked:
             self._clicked_scene.link_plot(plot)
-            # function = SceneFunction(StoryElementType.Plot)
-            # function.ref = plot.id
-            # self._clicked_scene.functions.primary.append(function)
         else:
-            ref_to_be_removed = next((plot_v for plot_v in self._clicked_scene.plot_values if plot_v.plot is plot),
-                                     None)
-            function_to_be_removed = next(
-                (func for func in self._clicked_scene.functions.primary if func.ref == plot.id), None)
-            if ref_to_be_removed:
-                self._clicked_scene.plot_values.remove(ref_to_be_removed)
-                self._clicked_scene.calculate_plot_progress()
-            if function_to_be_removed:
-                self._clicked_scene.functions.primary.remove(function_to_be_removed)
+            self._clicked_scene.unlink_plot(plot)
         RepositoryPersistenceManager.instance().update_scene(self._clicked_scene)
 
         self.update()

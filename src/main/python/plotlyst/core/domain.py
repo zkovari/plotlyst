@@ -2063,6 +2063,17 @@ class Scene:
 
         return ref
 
+    def unlink_plot(self, plot: Plot):
+        ref_to_be_removed = next((plot_v for plot_v in self.plot_values if plot_v.plot is plot),
+                                 None)
+        function_to_be_removed = next(
+            (func for func in self.functions.primary if func.ref == plot.id), None)
+        if ref_to_be_removed:
+            self.plot_values.remove(ref_to_be_removed)
+            self.calculate_plot_progress()
+        if function_to_be_removed:
+            self.functions.primary.remove(function_to_be_removed)
+
     def calculate_plot_progress(self):
         self.plot_pos_progress = 0
         self.plot_neg_progress = 0

@@ -513,9 +513,7 @@ class TimelineGridWidget(QWidget):
         self._editorRangeChanged()
 
     def _addPlaceholder(self, line: TimelineGridLine, ref: Any):
-        placeholder = TimelineGridPlaceholder(ref, color=line.ref.icon_color)
-        placeholder.btn.clicked.connect(partial(self._placeholderClicked, line, placeholder))
-        placeholder.setFixedSize(self._columnWidth, self._rowHeight)
+        placeholder = self._initPlaceholder(line, ref)
 
         insert_before_the_end(line, placeholder)
 
@@ -535,6 +533,13 @@ class TimelineGridWidget(QWidget):
             margins(self.wdgColumns, right=self.scrollEditor.horizontalScrollBar().sizeHint().width())
         else:
             margins(self.wdgColumns, right=0)
+
+    def _initPlaceholder(self, line: TimelineGridLine, ref: Any) -> TimelineGridPlaceholder:
+        placeholder = TimelineGridPlaceholder(ref, color=line.ref.icon_color)
+        placeholder.btn.clicked.connect(partial(self._placeholderClicked, line, placeholder))
+        placeholder.setFixedSize(self._columnWidth, self._rowHeight)
+
+        return placeholder
 
     def _placeholderClicked(self, line: TimelineGridLine, placeholder: TimelineGridPlaceholder):
         pass

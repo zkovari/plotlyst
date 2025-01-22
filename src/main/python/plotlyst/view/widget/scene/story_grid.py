@@ -21,7 +21,8 @@ from functools import partial
 from typing import Dict
 
 import qtanim
-from PyQt6.QtCore import QTimer, pyqtSignal
+from PyQt6 import QtGui
+from PyQt6.QtCore import QTimer, pyqtSignal, QEvent
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QColor, QPaintEvent, QPainter
 from PyQt6.QtWidgets import QWidget, QTextEdit, QLabel, QPushButton, QButtonGroup, QVBoxLayout, QHBoxLayout
@@ -291,6 +292,7 @@ class ScenesGridPlotHeader(QWidget):
 
 class SceneStorylineAssociation(QWidget):
     textChanged = pyqtSignal()
+    removed = pyqtSignal()
 
     def __init__(self, plot: Plot, ref: ScenePlotReference, parent=None):
         super().__init__(parent)
@@ -319,7 +321,24 @@ class SceneStorylineAssociation(QWidget):
 
         vbox(self, 2, 0).addWidget(self.textedit)
 
+        self._btnRemove = RemovalButton(self)
+        self._btnRemove.setHidden(True)
+        self._btnRemove.clicked.connect(self.removed)
+
         self.textedit.textChanged.connect(self._textChanged)
+
+    @overrides
+    def enterEvent(self, event: QtGui.QEnterEvent) -> None:
+        fade_in(self._btnRemove)
+        self._btnRemove.raise_()
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self._btnRemove.setHidden(True)
+
+    @overrides
+    def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
+        self._btnRemove.setGeometry(self.width() - 20, 5, 20, 20)
 
     def _textChanged(self):
         self.ref.data.comment = self.textedit.toPlainText()
@@ -482,14 +501,30 @@ class ScenesGridWidget(TimelineGridWidget):
         plot: Plot = line.ref
 
         ref = scene.link_plot(plot)
-        self.save(scene)
         wdg = self.addRef(self._novel.scenes.index(scene), scene, ref)
         fade_in(wdg)
 
+        self.save(scene)
         emit_event(self._novel, SceneChangedEvent(self, scene))
+
+    def _remove(self, widget: SceneStorylineAssociation, scene: Scene):
+        def addPlaceholder():
+            scene.unlink_plot(plot)
+            placeholder = self._initPlaceholder(line, scene)
+            line.layout().insertWidget(i, placeholder)
+
+            self.save(scene)
+            emit_event(self._novel, SceneChangedEvent(self, scene))
+
+        plot = widget.plot
+        line: TimelineGridLine = widget.parent()
+        i = widget.parent().layout().indexOf(widget)
+
+        fade_out_and_gc(line, widget, teardown=addPlaceholder)
 
     def __initRefWidget(self, scene: Scene, plot_ref: ScenePlotReference) -> SceneStorylineAssociation:
         wdg = SceneStorylineAssociation(plot_ref.plot, plot_ref)
+        wdg.removed.connect(partial(self._remove, wdg, scene))
         wdg.textChanged.connect(partial(self.save, scene))
         wdg.setFixedSize(self._columnWidth, self._rowHeight)
 
