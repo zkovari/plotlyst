@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import datetime
+import random
 from dataclasses import dataclass
 from typing import List, Dict, Optional
 
@@ -26,7 +27,7 @@ from PyQt6.QtGui import QShowEvent
 from PyQt6.QtWidgets import QWidget, QTabWidget, QPushButton
 from dataclasses_json import dataclass_json, Undefined
 from overrides import overrides
-from qthandy import vbox, hbox, clear_layout, line, vspacer, spacer, translucent, margins, transparent, incr_font
+from qthandy import vbox, hbox, clear_layout, line, vspacer, spacer, translucent, margins, transparent, incr_font, flow
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.domain import Board, Task, TaskStatus
@@ -67,6 +68,21 @@ class Patreon:
     survey: PatreonSurvey
 
 
+@dataclass
+class Patron:
+    name: str
+    web: str = ''
+    description: str = ''
+    genre: str = ''
+    vip: bool = False
+
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class Community:
+    patrons: List[Patron]
+
+
 class PlusTaskWidget(QWidget):
     def __init__(self, task: Task, status: TaskStatus, parent=None):
         super().__init__(parent)
@@ -85,6 +101,7 @@ class PlusTaskWidget(QWidget):
         if self.task.icon:
             self.lblName.setIcon(IconRegistry.from_name(self.task.icon))
         self.lblDescription = label(self.task.summary, description=True, wordWrap=True)
+        self.lblDescription.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         incr_font(self.lblDescription)
 
         self.layout().addWidget(self.lblStatus, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -277,11 +294,109 @@ class PatreonTiersWidget(QWidget):
         self.centerWdg.layout().addWidget(vspacer())
 
 
+class PatronLabel(QWidget):
+    def __init__(self, patron: Patron, parent=None):
+        super().__init__(parent)
+        vbox(self, 0, 0)
+        margins(self, left=self.__randomMargin(), right=self.__randomMargin(), top=self.__randomMargin(),
+                bottom=self.__randomMargin())
+
+        if patron.vip:
+            self.lbl = QPushButton(patron.name)
+        else:
+            self.lbl = label(patron.name)
+
+        self.layout().addWidget(self.lbl)
+
+    def __randomMargin(self) -> int:
+        return random.randint(3, 10)
+
+
 class PatronsWidget(QWidget):
+    DOWNLOAD_THRESHOLD_SECONDS = 60 * 60 * 8  # 8 hours in seconds
+
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._last_fetched = None
+        self._downloading = False
+        self._community: Optional[Community] = None
+        self._thread_pool = QThreadPool()
 
-        vbox(self).addWidget(label('Patrons'))
+        vbox(self)
+
+        self._scroll = scroll_area(frameless=True)
+        self._scroll.setProperty('relaxed-white-bg', True)
+        self.centerWdg = QWidget()
+        self.centerWdg.setProperty('relaxed-white-bg', True)
+        vbox(self.centerWdg, spacing=15)
+        self._scroll.setWidget(self.centerWdg)
+        self.layout().addWidget(self._scroll)
+
+        self.lblLastUpdated = label('', description=True, decr_font_diff=1)
+
+        self.wdgPatrons = QWidget()
+        flow(self.wdgPatrons, 0, spacing=5)
+
+        self.wdgLoading = QWidget()
+        vbox(self.wdgLoading, 0, 0)
+        self.centerWdg.layout().addWidget(self.lblLastUpdated, alignment=Qt.AlignmentFlag.AlignRight)
+        self.centerWdg.layout().addWidget(self.wdgLoading)
+        self.centerWdg.layout().addWidget(self.wdgPatrons)
+        self.centerWdg.layout().addWidget(vspacer())
+        self.wdgLoading.setHidden(True)
+
+    @overrides
+    def showEvent(self, event: QShowEvent):
+        super().showEvent(event)
+
+        if self._downloading:
+            return
+
+        if self._last_fetched is None or (
+                datetime.datetime.now() - self._last_fetched).total_seconds() > self.DOWNLOAD_THRESHOLD_SECONDS:
+            self._handle_downloading_status(True)
+            self._download_data()
+
+    def _download_data(self):
+        result = JsonDownloadResult()
+        runnable = JsonDownloadWorker(
+            "https://raw.githubusercontent.com/plotlyst/feed/refs/heads/main/patrons_dev.json",
+            result)
+        result.finished.connect(self._handle_downloaded_data)
+        result.failed.connect(self._handle_download_failure)
+        self._thread_pool.start(runnable)
+
+    def _handle_downloaded_data(self, data):
+        self._community: Community = Community.from_dict(data)
+        clear_layout(self.wdgPatrons)
+
+        print(len(self._community.patrons))
+        for patron in self._community.patrons:
+            lbl = PatronLabel(patron)
+            self.wdgPatrons.layout().addWidget(lbl)
+
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        self.lblLastUpdated.setText(f"Last updated: {now}")
+        self._last_fetched = datetime.datetime.now()
+
+        self._handle_downloading_status(False)
+
+    def _handle_download_failure(self, status_code: int, message: str):
+        if self._community is None:
+            self.lblLastUpdated.setText("Failed to update data.")
+        self._handle_downloading_status(False)
+
+    def _handle_downloading_status(self, loading: bool):
+        self._downloading = loading
+        self.wdgLoading.setVisible(loading)
+        if loading:
+            btn = push_btn(transparent_=True)
+            btn.setIconSize(QSize(128, 128))
+            self.wdgLoading.layout().addWidget(btn,
+                                               alignment=Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
+            spin(btn, PLOTLYST_SECONDARY_COLOR)
+        else:
+            clear_layout(self.wdgLoading)
 
 
 class PlotlystPlusWidget(QWidget):
@@ -324,6 +439,7 @@ class PlotlystPlusWidget(QWidget):
         self._patreonWdg = PatreonTiersWidget()
         self._surveyWdg = SurveyResultsWidget()
         self._plusWdg = PlusFeaturesWidget()
+        self._patronsWdg = PatronsWidget()
 
         self.tabReport.layout().addWidget(self.lblVisionLastUpdated, alignment=Qt.AlignmentFlag.AlignRight)
         self.tabReport.layout().addWidget(self._surveyWdg)
@@ -332,6 +448,7 @@ class PlotlystPlusWidget(QWidget):
 
         self.tabPatreon.layout().addWidget(self._patreonWdg)
         self.tabPlus.layout().addWidget(self._plusWdg)
+        self.tabPatrons.layout().addWidget(self._patronsWdg)
 
         self._thread_pool = QThreadPool()
 
