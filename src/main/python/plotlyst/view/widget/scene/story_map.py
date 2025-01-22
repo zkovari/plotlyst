@@ -35,8 +35,7 @@ from qtmenu import MenuWidget
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.common import truncate_string
-from plotlyst.core.domain import Scene, Novel, Plot, \
-    ScenePlotReference, SceneFunction, StoryElementType
+from plotlyst.core.domain import Scene, Novel, Plot
 from plotlyst.event.core import Event, EventListener, emit_event
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import SceneOrderChangedEvent, SceneChangedEvent
@@ -259,10 +258,10 @@ class StoryLinesMapWidget(QWidget):
     @busy
     def _plot_changed(self, plot: Plot, checked: bool):
         if checked:
-            self._clicked_scene.plot_values.append(ScenePlotReference(plot))
-            function = SceneFunction(StoryElementType.Plot)
-            function.ref = plot.id
-            self._clicked_scene.functions.primary.append(function)
+            self._clicked_scene.link_plot(plot)
+            # function = SceneFunction(StoryElementType.Plot)
+            # function.ref = plot.id
+            # self._clicked_scene.functions.primary.append(function)
         else:
             ref_to_be_removed = next((plot_v for plot_v in self._clicked_scene.plot_values if plot_v.plot is plot),
                                      None)

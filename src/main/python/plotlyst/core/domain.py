@@ -2054,6 +2054,15 @@ class Scene:
     def title_or_index(self, novel: 'Novel') -> str:
         return self.title if self.title else f'Scene {novel.scenes.index(self) + 1}'
 
+    def link_plot(self, plot: Plot) -> ScenePlotReference:
+        ref = ScenePlotReference(plot)
+        self.plot_values.append(ref)
+        function = SceneFunction(StoryElementType.Plot)
+        function.ref = plot.id
+        self.functions.primary.append(function)
+
+        return ref
+
     def calculate_plot_progress(self):
         self.plot_pos_progress = 0
         self.plot_neg_progress = 0

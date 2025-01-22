@@ -26,21 +26,23 @@ from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QColor, QPaintEvent, QPainter
 from PyQt6.QtWidgets import QWidget, QTextEdit, QLabel, QPushButton, QButtonGroup, QVBoxLayout, QHBoxLayout
 from overrides import overrides
-from qthandy import margins, vspacer, line, incr_font, sp, clear_layout
+from qthandy import margins, vspacer, line, incr_font, sp, clear_layout, gc
 from qthandy import transparent, hbox, spacer, vbox
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 
 from plotlyst.common import WHITE_COLOR, PLOTLYST_MAIN_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Scene, Novel, Plot, \
     ScenePlotReference, NovelSetting, LayoutType
+from plotlyst.event.core import emit_event
+from plotlyst.events import SceneChangedEvent
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import hmax, tool_btn, ButtonPressResizeEventFilter, fade_out_and_gc, insert_before_the_end, \
-    label, push_btn, shadow
+    label, push_btn, shadow, fade_in, to_rgba_str
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.cards import SceneCard, CardsView
 from plotlyst.view.widget.display import Icon
 from plotlyst.view.widget.input import RotatedButton, RotatedButtonOrientation, RemovalButton
-from plotlyst.view.widget.timeline import TimelineGridWidget, TimelineGridLine
+from plotlyst.view.widget.timeline import TimelineGridWidget, TimelineGridLine, TimelineGridPlaceholder
 
 GRID_ITEM_WIDTH: int = 190
 GRID_ITEM_HEIGHT: int = 120
@@ -306,10 +308,12 @@ class SceneStorylineAssociation(QWidget):
                 }}
 
                 QTextEdit:focus {{
-                    border: 1px solid {self.plot.icon_color};
+                    border: 1px inset {to_rgba_str(QColor(self.plot.icon_color), 155)};
                 }}
                 ''')
-        shadow(self.textedit, color=QColor(self.plot.icon_color))
+        qcolor = QColor(self.plot.icon_color)
+        qcolor.setAlpha(125)
+        shadow(self.textedit, color=qcolor)
         self.textedit.setText(self.ref.data.comment)
         self.textedit.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -427,10 +431,25 @@ class ScenesGridWidget(TimelineGridWidget):
 
         for i, scene in enumerate(self._novel.scenes):
             for plot_ref in scene.plot_values:
-                wdg = self.__initRefWidget(scene, plot_ref)
-                line = self._plots[plot_ref.plot]
-                placeholder = line.layout().itemAt(i).widget()
-                line.layout().replaceWidget(placeholder, wdg)
+                self.addRef(i, scene, plot_ref)
+                # wdg = self.__initRefWidget(scene, plot_ref)
+                # line = self._plots[plot_ref.plot]
+                # placeholder = line.layout().itemAt(i).widget()
+                # if isinstance(placeholder, TimelineGridPlaceholder):
+                #     line.layout().insertWidget(i, wdg)
+                #     line.layout().removeWidget(placeholder)
+                #     gc(placeholder)
+
+    def addRef(self, i: int, scene: Scene, plot_ref: ScenePlotReference) -> SceneStorylineAssociation:
+        wdg = self.__initRefWidget(scene, plot_ref)
+        line = self._plots[plot_ref.plot]
+        placeholder = line.layout().itemAt(i).widget()
+        if isinstance(placeholder, TimelineGridPlaceholder):
+            line.layout().insertWidget(i, wdg)
+            line.layout().removeWidget(placeholder)
+            gc(placeholder)
+
+        return wdg
 
     def addPlot(self, plot: Plot):
         header = ScenesGridPlotHeader(plot)
@@ -449,13 +468,25 @@ class ScenesGridWidget(TimelineGridWidget):
         line.layout().addWidget(spacer_wdg)
 
         self._plots[plot] = line
-        for j in range(self.cardsView.layout().count()):
-            self._addPlaceholder(line)
+        for scene in self._novel.scenes:
+            self._addPlaceholder(line, scene)
 
         insert_before_the_end(self.wdgEditor, line)
 
     def save(self, scene: Scene):
         self.repo.update_scene(scene)
+
+    @overrides
+    def _placeholderClicked(self, line: TimelineGridLine, placeholder: TimelineGridPlaceholder):
+        scene: Scene = placeholder.ref
+        plot: Plot = line.ref
+
+        ref = scene.link_plot(plot)
+        self.save(scene)
+        wdg = self.addRef(self._novel.scenes.index(scene), scene, ref)
+        fade_in(wdg)
+
+        emit_event(self._novel, SceneChangedEvent(self, scene))
 
     def __initRefWidget(self, scene: Scene, plot_ref: ScenePlotReference) -> SceneStorylineAssociation:
         wdg = SceneStorylineAssociation(plot_ref.plot, plot_ref)
