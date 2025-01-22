@@ -25,7 +25,7 @@ from typing import List, Optional, Any, Dict
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QObject, QEvent
 from PyQt6.QtGui import QIcon, QColor, QPainter, QPaintEvent, QBrush, QResizeEvent, QShowEvent, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QSizePolicy, \
-    QLineEdit, QToolButton, QTextEdit
+    QLineEdit, QToolButton
 from overrides import overrides
 from qthandy import vbox, hbox, sp, vspacer, clear_layout, spacer, incr_font, bold, \
     margins
@@ -34,8 +34,7 @@ from qthandy.filter import VisibilityToggleEventFilter
 from plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, \
     EMOTION_COLORS, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import BackstoryEvent
-from plotlyst.view.common import tool_btn, frame, columns, rows, scroll_area, push_btn, fade_in, insert_before_the_end, \
-    shadow
+from plotlyst.view.common import tool_btn, frame, columns, rows, scroll_area, fade_in, insert_before_the_end
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.input import RemovalButton, AutoAdjustableTextEdit
@@ -437,86 +436,82 @@ class TimelineGridWidget(QWidget):
     def setRowHeight(self, height: int):
         self._rowHeight = height
 
-    def addColumn(self, ref: Any, title: str = '', icon: Optional[QIcon] = None):
-        lblColumn = push_btn(text=title, transparent_=True)
-        if icon:
-            lblColumn.setIcon(icon)
-        incr_font(lblColumn, 1)
-        lblColumn.setFixedSize(self._columnWidth, self._headerHeight)
-        # lblColumn.setStyleSheet('background: green;')
-        insert_before_the_end(self.wdgColumns, lblColumn, alignment=Qt.AlignmentFlag.AlignCenter)
+    # def addColumn(self, ref: Any, title: str = '', icon: Optional[QIcon] = None):
+    #     lblColumn = push_btn(text=title, transparent_=True)
+    #     if icon:
+    #         lblColumn.setIcon(icon)
+    #     incr_font(lblColumn, 1)
+    #     lblColumn.setFixedSize(self._columnWidth, self._headerHeight)
+    #     insert_before_the_end(self.wdgColumns, lblColumn, alignment=Qt.AlignmentFlag.AlignCenter)
+    #
+    #     column = TimelineGridLine(ref, vertical=self._vertical)
+    #     if not self._vertical:
+    #         column.setFixedWidth(self._columnWidth)
+    #     column.layout().setSpacing(self._spacing)
+    #     spacer_wdg = spacer() if self._vertical else vspacer()
+    #     # spacer_wdg.setProperty('relaxed-white-bg', True)
+    #     column.layout().addWidget(spacer_wdg)
+    #
+    #     self._columns[ref] = column
+    #     for j in range(self.wdgRows.layout().count() - 1):
+    #         self._addPlaceholders(column)
+    #
+    #     insert_before_the_end(self.wdgEditor, column)
 
-        column = TimelineGridLine(ref, vertical=self._vertical)
-        if not self._vertical:
-            column.setFixedWidth(self._columnWidth)
-        column.layout().setSpacing(self._spacing)
-        spacer_wdg = spacer() if self._vertical else vspacer()
-        # spacer_wdg.setProperty('relaxed-white-bg', True)
-        column.layout().addWidget(spacer_wdg)
+    # def addRow(self, ref: Any, title: str = '', icon: Optional[QIcon] = None):
+    #     lblRow = push_btn(text=title, transparent_=True)
+    #     if icon:
+    #         lblRow.setIcon(icon)
+    #     incr_font(lblRow, 2)
+    #     self.addRowWidget(ref, lblRow)
 
-        self._columns[ref] = column
-        for j in range(self.wdgRows.layout().count() - 1):
-            self._addPlaceholders(column)
+    # def addRowWidget(self, ref: Any, wdg: QWidget):
+    #     self._rows[ref] = wdg
+    #     wdg.setFixedHeight(self._rowHeight)
+    #     insert_before_the_end(self.wdgRows, wdg, alignment=Qt.AlignmentFlag.AlignCenter)
+    #
+    #     for line in self._columns.values():
+    #         self._addPlaceholders(line)
 
-        insert_before_the_end(self.wdgEditor, column)
+    # def setRowWidget(self, ref: Any, wdg: QWidget):
+    #     self._rows[ref] = wdg
+    #     wdg.setFixedHeight(self._rowHeight)
+    #     for line in self._columns.values():
+    #         self._addPlaceholders(line)
 
-    def setColumnWidget(self, ref: Any, wdg: QWidget):
-        pass
-
-    def addRow(self, ref: Any, title: str = '', icon: Optional[QIcon] = None):
-        lblRow = push_btn(text=title, transparent_=True)
-        if icon:
-            lblRow.setIcon(icon)
-        incr_font(lblRow, 2)
-        self.addRowWidget(ref, lblRow)
-
-    def addRowWidget(self, ref: Any, wdg: QWidget):
-        self._rows[ref] = wdg
-        wdg.setFixedHeight(self._rowHeight)
-        insert_before_the_end(self.wdgRows, wdg, alignment=Qt.AlignmentFlag.AlignCenter)
-
-        for line in self._columns.values():
-            self._addPlaceholders(line)
-
-    def setRowWidget(self, ref: Any, wdg: QWidget):
-        self._rows[ref] = wdg
-        wdg.setFixedHeight(self._rowHeight)
-        for line in self._columns.values():
-            self._addPlaceholders(line)
-
-    def addItem(self, source: Any, index: int, ref: Any, text: str):
-        wdg = QTextEdit()
-        wdg.setTabChangesFocus(True)
-        wdg.setPlaceholderText('How does the story move forward')
-        wdg.setStyleSheet(f'''
-         QTextEdit {{
-            border-radius: 6px;
-            padding: 4px;
-            background-color: {RELAXED_WHITE_COLOR};
-            border: 1px solid lightgrey;
-        }}
-    
-        QTextEdit:focus {{
-            border: 1px solid {source.icon_color};
-        }}
-        ''')
-        shadow(wdg, color=QColor(source.icon_color))
-        wdg.setText(text)
-        wdg.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        wdg.setFixedSize(self._columnWidth - 2 * self._spacing, self._rowHeight)
-        if self._vertical:
-            line = self._rows[source]
-        else:
-            line = self._columns[source]
-        placeholder = line.layout().itemAt(index).widget()
-        line.layout().replaceWidget(placeholder, wdg)
+    # def addItem(self, source: Any, index: int, ref: Any, text: str):
+    #     wdg = QTextEdit()
+    #     wdg.setTabChangesFocus(True)
+    #     wdg.setPlaceholderText('How does the story move forward')
+    #     wdg.setStyleSheet(f'''
+    #      QTextEdit {{
+    #         border-radius: 6px;
+    #         padding: 4px;
+    #         background-color: {RELAXED_WHITE_COLOR};
+    #         border: 1px solid lightgrey;
+    #     }}
+    #
+    #     QTextEdit:focus {{
+    #         border: 1px solid {source.icon_color};
+    #     }}
+    #     ''')
+    #     shadow(wdg, color=QColor(source.icon_color))
+    #     wdg.setText(text)
+    #     wdg.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    #     wdg.setFixedSize(self._columnWidth - 2 * self._spacing, self._rowHeight)
+    #     if self._vertical:
+    #         line = self._rows[source]
+    #     else:
+    #         line = self._columns[source]
+    #     placeholder = line.layout().itemAt(index).widget()
+    #     line.layout().replaceWidget(placeholder, wdg)
 
     @overrides
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
         self._editorRangeChanged()
 
-    def _addPlaceholders(self, line: TimelineGridLine):
+    def _addPlaceholder(self, line: TimelineGridLine):
         placeholder = TimelineGridPlaceholder(line.ref.icon_color)
         placeholder.setFixedSize(self._columnWidth, self._rowHeight)
 

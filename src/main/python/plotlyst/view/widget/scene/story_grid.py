@@ -442,6 +442,6 @@ class ScenesGridWidget(TimelineGridWidget):
 
         self._plots[plot] = line
         for j in range(self.cardsView.layout().count()):
-            self._addPlaceholders(line)
+            self._addPlaceholder(line)
 
         insert_before_the_end(self.wdgEditor, line)
