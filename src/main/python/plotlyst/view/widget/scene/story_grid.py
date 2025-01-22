@@ -336,103 +336,78 @@ class ScenesGridToolbar(QWidget):
 
 class ScenesGridWidget(TimelineGridWidget):
     def __init__(self, novel: Novel, parent=None):
-        super().__init__(parent, vertical=True)
+        self._scenesInColumns = False
+        super().__init__(parent, vertical=self._scenesInColumns)
         self._novel = novel
+        self._plots: Dict[Plot, TimelineGridLine] = {}
+        self._scenes: Dict[Scene, SceneGridCard] = {}
 
-        self.setColumnWidth(200)
+        self.setColumnWidth(170)
         self.setRowHeight(120)
 
-        self._plots: Dict[Plot, TimelineGridLine] = {}
-
         self.cardsView = CardsView(layoutType=LayoutType.VERTICAL, margin=0, spacing=self._spacing)
+
+        for i, scene in enumerate(self._novel.scenes):
+            sceneCard = SceneGridCard(scene, self._novel)
+            self.cardsView.addCard(sceneCard)
+            sceneCard.setFixedSize(self._columnWidth, self._rowHeight)
+
         self.refresh()
-        # if self._vertical:
-        #     insert_before_the_end(self.wdgColumns, self.cardsView)
-        #     self.wdgColumns.layout().setSpacing(0)
-        # else:
-        #     insert_before_the_end(self.wdgRows, self.cardsView)
-        #     self.wdgRows.layout().setSpacing(0)
-        #
-        # for i, scene in enumerate(self._novel.scenes):
-        #     # self.addRow(scene, scene.title_or_index(self._novel))
-        #     card = SceneGridCard(scene, self._novel)
-        #     self.cardsView.addCard(card)
-        #     if self._vertical:
-        #         self.setColumnWidget(scene, card)
-        #     else:
-        #         self.setRowWidget(scene, card)
-        #     for plot_ref in scene.plot_values:
-        #         self.addItem(plot_ref.plot, i, plot_ref, plot_ref.data.comment)
+
+    def setOrientation(self, orientation: Qt.Orientation):
+        clear_layout(self.wdgRows, auto_delete=self._scenesInColumns)  # delete plots
+        clear_layout(self.wdgColumns, auto_delete=not self._scenesInColumns)  # delete plots
+        clear_layout(self.wdgEditor)
+        self._plots.clear()
+
+        self._scenesInColumns = True if orientation == Qt.Orientation.Vertical else False
+        self.wdgRows.layout().addWidget(vspacer())
+        self.wdgColumns.layout().addWidget(spacer())
+
+        self.cardsView.swapLayout(LayoutType.HORIZONTAL if self._scenesInColumns else LayoutType.VERTICAL)
+
+        QWidget().setLayout(self.wdgEditor.layout())
+        self.wdgEditor.setLayout(QVBoxLayout() if self._scenesInColumns else QHBoxLayout())
+        if self._scenesInColumns:
+            self._headerHeight = 150
+            self.wdgEditor.layout().addWidget(vspacer())
+        else:
+            self._headerHeight = 40
+            self.wdgEditor.layout().addWidget(spacer())
+
+        self.scrollColumns.setFixedHeight(self._headerHeight)
+        margins(self.wdgRows, top=self._headerHeight, right=self._spacing)
+
+        self.refresh()
 
     def refresh(self):
         for plot in self._novel.plots:
             self.addPlot(plot)
 
-        # if self._vertical:
-        #     insert_before_the_end(self.wdgColumns, self.cardsView)
-        #     self.wdgColumns.layout().setSpacing(0)
-        # else:
-        #     insert_before_the_end(self.wdgRows, self.cardsView)
-        #     self.wdgRows.layout().setSpacing(0)
-        #
-        # for i, scene in enumerate(self._novel.scenes):
-        #     # self.addRow(scene, scene.title_or_index(self._novel))
-        #     card = SceneGridCard(scene, self._novel)
-        #     self.cardsView.addCard(card)
-        #     if self._vertical:
-        #         self.setColumnWidget(scene, card)
-        #     else:
-        #         self.setRowWidget(scene, card)
-        #     for plot_ref in scene.plot_values:
-        #         self.addItem(plot_ref.plot, i, plot_ref, plot_ref.data.comment)
-
-    def setOrientation(self, orientation: Qt.Orientation):
-        clear_layout(self.wdgRows)
-        clear_layout(self.wdgColumns)
-        clear_layout(self.wdgEditor)
-        self.cardsView.clear()
-        self._plots.clear()
-
-        self._vertical = True if orientation == Qt.Orientation.Vertical else False
-
-        self.wdgRows.layout().addWidget(vspacer())
-        self.wdgColumns.layout().addWidget(spacer())
-
-        QWidget().setLayout(self.wdgEditor.layout())
-        self.wdgEditor.setLayout(QVBoxLayout() if self._vertical else QHBoxLayout())
-        if self._vertical:
-            self.wdgEditor.layout().addWidget(vspacer())
+        if self._scenesInColumns:
+            insert_before_the_end(self.wdgColumns, self.cardsView)
         else:
-            self.wdgEditor.layout().addWidget(spacer())
-
-        self.refresh()
+            insert_before_the_end(self.wdgRows, self.cardsView)
+        self.cardsView.setVisible(True)
 
     def addPlot(self, plot: Plot):
-        # header = ScenesGridPlotHeader(plot)
-        header = push_btn(text=plot.text, transparent_=True)
-        if plot.icon:
-            header.setIcon(IconRegistry.from_name(plot.icon, plot.icon_color))
-        incr_font(header, 1)
-        if self._vertical:
+        header = ScenesGridPlotHeader(plot)
+        line = TimelineGridLine(plot, vertical=self._scenesInColumns)
+        if self._scenesInColumns:
             header.setFixedSize(self._columnWidth, self._rowHeight)
-        else:
-            header.setFixedSize(self._columnWidth, self._headerHeight)
-        if self._vertical:
-            insert_before_the_end(self.wdgRows, header, alignment=Qt.AlignmentFlag.AlignLeft)
-        else:
-            insert_before_the_end(self.wdgColumns, header, alignment=Qt.AlignmentFlag.AlignCenter)
-
-        line = TimelineGridLine(plot, vertical=self._vertical)
-        if self._vertical:
+            insert_before_the_end(self.wdgRows, header)
             line.setFixedHeight(self._rowHeight)
         else:
+            header.setFixedSize(self._columnWidth, self._headerHeight)
+            insert_before_the_end(self.wdgColumns, header, alignment=Qt.AlignmentFlag.AlignCenter)
             line.setFixedWidth(self._columnWidth)
+
         line.layout().setSpacing(self._spacing)
-        spacer_wdg = spacer() if self._vertical else vspacer()
+        spacer_wdg = spacer() if self._scenesInColumns else vspacer()
         line.layout().addWidget(spacer_wdg)
 
         self._plots[plot] = line
-        for j in range(self.wdgRows.layout().count() - 1):
+        for j in range(self.cardsView.layout().count()):
             self._addPlaceholders(line)
 
         insert_before_the_end(self.wdgEditor, line)

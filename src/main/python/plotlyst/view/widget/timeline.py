@@ -346,7 +346,10 @@ class TimelineGridLine(QWidget):
         super().__init__()
         self.ref = ref
         self._vertical = vertical
-        vbox(self, 0, 0)
+        if vertical:
+            hbox(self, 0, 0)
+        else:
+            vbox(self, 0, 0)
 
         if vertical:
             sp(self).v_max()
