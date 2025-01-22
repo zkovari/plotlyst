@@ -288,9 +288,10 @@ class ScenesGridPlotHeader(QWidget):
 
 
 class SceneStorylineAssociation(QWidget):
-    def __init__(self, plot: Plot, parent=None):
+    def __init__(self, plot: Plot, ref: ScenePlotReference, parent=None):
         super().__init__(parent)
         self.plot = plot
+        self.ref = ref
         wdg = QTextEdit()
         wdg.setTabChangesFocus(True)
         wdg.setPlaceholderText('How does the story move forward')
@@ -307,7 +308,7 @@ class SceneStorylineAssociation(QWidget):
                 }}
                 ''')
         shadow(wdg, color=QColor(self.plot.icon_color))
-        # wdg.setText(text)
+        wdg.setText(self.ref.data.comment)
         wdg.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         vbox(self, 2, 0).addWidget(wdg)
@@ -417,7 +418,7 @@ class ScenesGridWidget(TimelineGridWidget):
 
         for i, scene in enumerate(self._novel.scenes):
             for plot_ref in scene.plot_values:
-                wdg = SceneStorylineAssociation(plot_ref.plot)
+                wdg = SceneStorylineAssociation(plot_ref.plot, plot_ref)
                 wdg.setFixedSize(self._columnWidth, self._rowHeight)
 
                 line = self._plots[plot_ref.plot]
