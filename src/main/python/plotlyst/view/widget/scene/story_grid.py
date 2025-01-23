@@ -421,6 +421,7 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
     def event_received(self, event: Event):
         if isinstance(event, SceneChangedEvent):
             self.cardsView.card(event.scene).refresh()
+            self._updateSceneReferences(event.scene)
 
     def setOrientation(self, orientation: Qt.Orientation):
         clear_layout(self.wdgRows, auto_delete=self._scenesInColumns)  # delete plots
@@ -460,22 +461,15 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
         for i, scene in enumerate(self._novel.scenes):
             for plot_ref in scene.plot_values:
                 self.addRef(i, scene, plot_ref)
-                # wdg = self.__initRefWidget(scene, plot_ref)
-                # line = self._plots[plot_ref.plot]
-                # placeholder = line.layout().itemAt(i).widget()
-                # if isinstance(placeholder, TimelineGridPlaceholder):
-                #     line.layout().insertWidget(i, wdg)
-                #     line.layout().removeWidget(placeholder)
-                #     gc(placeholder)
 
     def addRef(self, i: int, scene: Scene, plot_ref: ScenePlotReference) -> SceneStorylineAssociation:
         wdg = self.__initRefWidget(scene, plot_ref)
         line = self._plots[plot_ref.plot]
         placeholder = line.layout().itemAt(i).widget()
-        if isinstance(placeholder, TimelineGridPlaceholder):
-            line.layout().insertWidget(i, wdg)
-            line.layout().removeWidget(placeholder)
-            gc(placeholder)
+        # if isinstance(placeholder, TimelineGridPlaceholder):
+        line.layout().insertWidget(i, wdg)
+        line.layout().removeWidget(placeholder)
+        gc(placeholder)
 
         return wdg
 
@@ -530,6 +524,17 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
         i = widget.parent().layout().indexOf(widget)
 
         fade_out_and_gc(line, widget, teardown=addPlaceholder)
+
+    def _updateSceneReferences(self, scene: Scene):
+        index = self._novel.scenes.index(scene)
+
+        for plot_ref in scene.plot_values:
+            self.addRef(index, scene, plot_ref)
+
+        scene_plots = scene.plots()
+        for plot, line in self._plots.items():
+            if plot not in scene_plots:
+                self._insertPlaceholder(index, line, scene)
 
     def __initRefWidget(self, scene: Scene, plot_ref: ScenePlotReference) -> SceneStorylineAssociation:
         wdg = SceneStorylineAssociation(plot_ref.plot, plot_ref)

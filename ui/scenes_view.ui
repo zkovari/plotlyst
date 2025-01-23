@@ -135,18 +135,18 @@
            </widget>
           </item>
           <item>
-           <widget class="QToolButton" name="btnTimelineView">
+           <widget class="QToolButton" name="btnTableView">
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
             <property name="toolTip">
-             <string>Story grid view</string>
+             <string>Table view</string>
             </property>
             <property name="text">
              <string/>
             </property>
             <property name="shortcut">
-             <string>1</string>
+             <string>2</string>
             </property>
             <property name="checkable">
              <bool>true</bool>
@@ -163,18 +163,18 @@
            </widget>
           </item>
           <item>
-           <widget class="QToolButton" name="btnTableView">
+           <widget class="QToolButton" name="btnTimelineView">
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
             <property name="toolTip">
-             <string>Table view</string>
+             <string>Story grid view</string>
             </property>
             <property name="text">
              <string/>
             </property>
             <property name="shortcut">
-             <string>2</string>
+             <string>1</string>
             </property>
             <property name="checkable">
              <bool>true</bool>
@@ -737,8 +737,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>506</width>
-                    <height>580</height>
+                    <width>98</width>
+                    <height>28</height>
                    </rect>
                   </property>
                   <layout class="QHBoxLayout" name="horizontalLayout_8">
@@ -1246,8 +1246,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>506</width>
-                    <height>513</height>
+                    <width>98</width>
+                    <height>16</height>
                    </rect>
                   </property>
                   <property name="sizePolicy">

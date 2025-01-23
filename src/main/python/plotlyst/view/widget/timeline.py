@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QSizePolicy, \
     QLineEdit, QToolButton
 from overrides import overrides
 from qthandy import vbox, hbox, sp, vspacer, clear_layout, spacer, incr_font, bold, \
-    margins
+    margins, gc
 from qthandy.filter import VisibilityToggleEventFilter
 
 from plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, \
@@ -516,6 +516,14 @@ class TimelineGridWidget(QWidget):
         placeholder = self._initPlaceholder(line, ref)
 
         insert_before_the_end(line, placeholder)
+
+    def _insertPlaceholder(self, index: int, line: TimelineGridLine, ref: Any):
+        placeholder = self._initPlaceholder(line, ref)
+
+        wdg = line.layout().itemAt(index).widget()
+        line.layout().removeWidget(wdg)
+        gc(wdg)
+        line.layout().insertWidget(index, placeholder)
 
     def _horizontalScrolled(self, value: int):
         self.scrollColumns.horizontalScrollBar().setValue(value)
