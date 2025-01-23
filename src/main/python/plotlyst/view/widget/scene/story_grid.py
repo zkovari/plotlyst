@@ -36,7 +36,7 @@ from plotlyst.core.domain import Scene, Novel, Plot, \
     ScenePlotReference, NovelSetting, LayoutType
 from plotlyst.event.core import emit_event, EventListener, Event
 from plotlyst.event.handler import event_dispatchers
-from plotlyst.events import SceneChangedEvent, StorylineCreatedEvent
+from plotlyst.events import SceneChangedEvent, StorylineCreatedEvent, SceneAddedEvent
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import hmax, tool_btn, ButtonPressResizeEventFilter, fade_out_and_gc, insert_before_the_end, \
     label, push_btn, shadow, fade_in, to_rgba_str
@@ -415,13 +415,27 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
         self.refresh()
 
         dispatcher = event_dispatchers.instance(self._novel)
-        dispatcher.register(self, SceneChangedEvent, StorylineCreatedEvent)
+        dispatcher.register(self, SceneChangedEvent, SceneAddedEvent, StorylineCreatedEvent)
 
     @overrides
     def event_received(self, event: Event):
         if isinstance(event, SceneChangedEvent):
-            self.cardsView.card(event.scene).refresh()
-            self._updateSceneReferences(event.scene)
+            card = self.cardsView.card(event.scene)
+            if card:
+                card.refresh()
+                self._updateSceneReferences(event.scene)
+        elif isinstance(event, SceneAddedEvent):
+            index = self._novel.scenes.index(event.scene)
+            sceneCard = SceneGridCard(event.scene, self._novel)
+            if index == len(self._novel.scenes) - 1:  # last one
+                self.cardsView.addCard(sceneCard)
+            else:
+                self.cardsView.insertAt(index, sceneCard)
+            sceneCard.setFixedSize(self._columnWidth, self._rowHeight)
+
+            self._addSceneReferences(event.scene)
+            for card in self.cardsView.cards():
+                card.quickRefresh()
 
     def setOrientation(self, orientation: Qt.Orientation):
         clear_layout(self.wdgRows, auto_delete=self._scenesInColumns)  # delete plots
@@ -462,14 +476,15 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
             for plot_ref in scene.plot_values:
                 self.addRef(i, scene, plot_ref)
 
-    def addRef(self, i: int, scene: Scene, plot_ref: ScenePlotReference) -> SceneStorylineAssociation:
+    def addRef(self, i: int, scene: Scene, plot_ref: ScenePlotReference,
+               removeOld: bool = True) -> SceneStorylineAssociation:
         wdg = self.__initRefWidget(scene, plot_ref)
         line = self._plots[plot_ref.plot]
         placeholder = line.layout().itemAt(i).widget()
-        # if isinstance(placeholder, TimelineGridPlaceholder):
         line.layout().insertWidget(i, wdg)
-        line.layout().removeWidget(placeholder)
-        gc(placeholder)
+        if removeOld:
+            line.layout().removeWidget(placeholder)
+            gc(placeholder)
 
         return wdg
 
@@ -525,6 +540,17 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
 
         fade_out_and_gc(line, widget, teardown=addPlaceholder)
 
+    def _addSceneReferences(self, scene: Scene):
+        index = self._novel.scenes.index(scene)
+
+        for plot_ref in scene.plot_values:
+            self.addRef(index, scene, plot_ref, removeOld=False)
+
+        scene_plots = scene.plots()
+        for plot, line in self._plots.items():
+            if plot not in scene_plots:
+                self._insertPlaceholder(index, line, scene)
+
     def _updateSceneReferences(self, scene: Scene):
         index = self._novel.scenes.index(scene)
 
@@ -534,7 +560,7 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
         scene_plots = scene.plots()
         for plot, line in self._plots.items():
             if plot not in scene_plots:
-                self._insertPlaceholder(index, line, scene)
+                self._replaceWithPlaceholder(index, line, scene)
 
     def __initRefWidget(self, scene: Scene, plot_ref: ScenePlotReference) -> SceneStorylineAssociation:
         wdg = SceneStorylineAssociation(plot_ref.plot, plot_ref)

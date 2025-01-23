@@ -519,6 +519,10 @@ class TimelineGridWidget(QWidget):
 
     def _insertPlaceholder(self, index: int, line: TimelineGridLine, ref: Any):
         placeholder = self._initPlaceholder(line, ref)
+        line.layout().insertWidget(index, placeholder)
+
+    def _replaceWithPlaceholder(self, index: int, line: TimelineGridLine, ref: Any):
+        placeholder = self._initPlaceholder(line, ref)
 
         wdg = line.layout().itemAt(index).widget()
         line.layout().removeWidget(wdg)
