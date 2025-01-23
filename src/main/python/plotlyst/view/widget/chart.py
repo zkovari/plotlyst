@@ -17,13 +17,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import math
 from dataclasses import dataclass
 from functools import partial
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
-from PyQt6.QtCharts import QChart, QPieSeries, QBarSet, QBarCategoryAxis, QValueAxis, QBarSeries, QPolarChart, QPieSlice
+from PyQt6.QtCharts import QChart, QPieSeries, QBarSet, QBarCategoryAxis, QValueAxis, QBarSeries, QPolarChart, \
+    QPieSlice, QCategoryAxis, QLineSeries, QAreaSeries
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QCursor, QIcon, QFont
+from PyQt6.QtGui import QColor, QCursor, QIcon, QFont, QPen
 from PyQt6.QtWidgets import QToolTip, QApplication
 from overrides import overrides
 
@@ -88,8 +90,10 @@ class PolarBaseChart(QPolarChart, _AbstractChart):
 
 
 @dataclass
-class PieSliceItem:
+class ChartItem:
     value: int
+    text: str = ''
+    description: str = ''
     icon: str = ''
     color: str = ''
     icon_color: str = 'black'
@@ -103,7 +107,7 @@ class PieChart(BaseChart):
     def setHoleSize(self, size: float):
         self._holeSize = size
 
-    def setItems(self, items: Dict[str, PieSliceItem]):
+    def setItems(self, items: Dict[str, ChartItem]):
         series = QPieSeries()
         series.setHoleSize(self._holeSize)
 
@@ -121,6 +125,59 @@ class PieChart(BaseChart):
         if self.series():
             self.removeAllSeries()
         self.addSeries(series)
+
+
+class PolarChart(PolarBaseChart):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._logarithmicScale: bool = False
+        self._rad_axis = QValueAxis()
+        self._rad_axis.setLabelsVisible(False)
+        self._angular_axis = QCategoryAxis()
+
+    def setAngularRange(self, min: int, max: int):
+        self._angular_axis.setRange(min, max)
+
+    def setAngularLabels(self, labels: List[Tuple[str, float]]):
+        for label in labels:
+            self._angular_axis.append(label[0], label[1])
+
+    def setLogarithmicScaleEnabled(self, enabled: bool):
+        self._logarithmicScale = enabled
+
+    def setItems(self, items: List[ChartItem]):
+        self.reset()
+
+        self.addAxis(self._rad_axis, QPolarChart.PolarOrientation.PolarOrientationRadial)
+        self.addAxis(self._angular_axis, QPolarChart.PolarOrientation.PolarOrientationAngular)
+
+        pen = QPen()
+        pen.setWidth(2)
+        pen.setColor(QColor(PLOTLYST_SECONDARY_COLOR))
+
+        upper_series = QLineSeries()
+        upper_series.setPen(pen)
+        lower_series = QLineSeries()
+        lower_series.setPen(pen)
+
+        for i, item in enumerate(items):
+            value = math.log1p(item.value) if self._logarithmicScale else item.value
+            upper_series.append(i, value / 3)
+            upper_series.append(i + 0.5, value)
+            if item.value > 1:
+                upper_series.append(i + 1, value / 3)
+            lower_series.append(i, 0.0)
+
+        self.addSeries(upper_series)
+        self.addSeries(lower_series)
+
+        series = QAreaSeries(upper_series, lower_series)
+        series.setColor(QColor(PLOTLYST_SECONDARY_COLOR))
+        series.setPen(pen)
+
+        self.addSeries(series)
+        series.attachAxis(self._rad_axis)
+        series.attachAxis(self._angular_axis)
 
 
 class GenderCharacterChart(BaseChart):

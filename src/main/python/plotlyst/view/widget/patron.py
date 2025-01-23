@@ -36,7 +36,7 @@ from plotlyst.service.resource import JsonDownloadResult, JsonDownloadWorker
 from plotlyst.view.common import label, set_tab_enabled, push_btn, spin, scroll_area, wrap, frame
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
-from plotlyst.view.widget.chart import PieChart, PieSliceItem
+from plotlyst.view.widget.chart import ChartItem, PolarChart
 from plotlyst.view.widget.display import IconText, ChartView
 from plotlyst.view.widget.input import AutoAdjustableTextEdit
 
@@ -219,17 +219,40 @@ class SurveyResultsWidget(QWidget):
     def setPatreon(self, patreon: Patreon):
         clear_layout(self.centerWdg)
 
+        # patreon.survey.stage['Brainstorming'] = 16
+        # patreon.survey.stage['Outlining and planning'] = 160
+        # patreon.survey.stage['Drafting'] = 54
+        # patreon.survey.stage['Developmental editing'] = 5
+        # patreon.survey.stage['Line and copy-editing'] = 0
+
         stages = ChartView()
-        stagesPie = PieChart()
-        items = {}
-        for k, v in patreon.survey.stage.items():
-            items[k] = PieSliceItem(v if v else 0.1)
-        stagesPie.setItems(items)
-        stages.setChart(stagesPie)
+        stagesChart = self._polarChart(patreon.survey.stage)
+        stages.setChart(stagesChart)
+
+        panels = ChartView()
+        panelsChart = self._polarChart(patreon.survey.panels)
+        panels.setChart(panelsChart)
 
         self.centerWdg.layout().addWidget(stages)
-
+        self.centerWdg.layout().addWidget(panels)
         self.centerWdg.layout().addWidget(vspacer())
+
+    def _polarChart(self, values: Dict[str, int]) -> PolarChart:
+        stagesChart = PolarChart()
+        stagesChart.setMinimumSize(400, 400)
+        stagesChart.setAngularRange(0, len(values.keys()))
+        stagesChart.setLogarithmicScaleEnabled(True)
+        items = []
+        labels = []
+        i = 0
+        for k, v in values.items():
+            i += 1
+            labels.append((k, float(i)))
+            items.append(ChartItem(v if v else 0.1, text=k))
+        stagesChart.setAngularLabels(labels)
+        stagesChart.setItems(items)
+
+        return stagesChart
 
 
 class PriceLabel(QPushButton):
