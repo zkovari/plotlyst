@@ -22,8 +22,8 @@ import random
 from dataclasses import dataclass
 from typing import List, Dict, Optional
 
-from PyQt6.QtCore import QThreadPool, QSize, Qt
-from PyQt6.QtGui import QShowEvent
+from PyQt6.QtCore import QThreadPool, QSize, Qt, QEvent
+from PyQt6.QtGui import QShowEvent, QMouseEvent
 from PyQt6.QtWidgets import QWidget, QTabWidget, QPushButton, QProgressBar
 from dataclasses_json import dataclass_json, Undefined
 from overrides import overrides
@@ -33,9 +33,10 @@ from plotlyst.common import PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTL
 from plotlyst.core.domain import Board, Task, TaskStatus
 from plotlyst.env import app_env
 from plotlyst.service.resource import JsonDownloadResult, JsonDownloadWorker
-from plotlyst.view.common import label, set_tab_enabled, push_btn, spin, scroll_area, wrap, frame
+from plotlyst.view.common import label, set_tab_enabled, push_btn, spin, scroll_area, wrap, frame, shadow
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
+from plotlyst.view.widget.cards import Card
 from plotlyst.view.widget.chart import ChartItem, PolarChart, PieChart
 from plotlyst.view.widget.display import IconText, ChartView
 from plotlyst.view.widget.input import AutoAdjustableTextEdit
@@ -211,6 +212,58 @@ class PlusFeaturesWidget(QWidget):
             clear_layout(self.wdgLoading)
 
 
+class GenreCard(Card):
+    def __init__(self, item: ChartItem, parent=None):
+        super().__init__(parent)
+        self.item = item
+        self.setFixedSize(200, 80)
+        vbox(self)
+
+        title = IconText()
+        title.setText(item.text)
+        if item.icon:
+            title.setIcon(IconRegistry.from_name(item.icon, PLOTLYST_SECONDARY_COLOR))
+
+        bar = QProgressBar()
+        bar.setMinimum(0)
+        bar.setMaximum(100)
+        bar.setValue(item.value)
+        bar.setTextVisible(True)
+        bar.setMaximumHeight(30)
+        bar.setStyleSheet(f'''
+                        QProgressBar {{
+                            border: 1px solid lightgrey;
+                            border-radius: 8px;
+                            text-align: center;
+                        }}
+
+                        QProgressBar::chunk {{
+                            background-color: {PLOTLYST_TERTIARY_COLOR};
+                            width: 10px;
+                        }}
+                    }}''')
+        shadow(bar)
+
+        self.layout().addWidget(title, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(bar)
+
+    @overrides
+    def enterEvent(self, event: QEvent) -> None:
+        pass
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        pass
+
+    @overrides
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        pass
+
+    @overrides
+    def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
+        pass
+
+
 class SurveyResultsWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -243,6 +296,15 @@ class SurveyResultsWidget(QWidget):
         self._addTitle(patreon.survey.panels)
         self.centerWdg.layout().addWidget(panels)
         self._addTitle(patreon.survey.genres)
+
+        wdgGenres = QWidget()
+        flow(wdgGenres)
+        for k, item in patreon.survey.genres.items.items():
+            item.text = k
+            card = GenreCard(item)
+            wdgGenres.layout().addWidget(card)
+        self.centerWdg.layout().addWidget(wdgGenres)
+
         self._addTitle(patreon.survey.new)
         self.centerWdg.layout().addWidget(newVsOld)
         self._addTitle(patreon.survey.personalization)
@@ -252,7 +314,7 @@ class SurveyResultsWidget(QWidget):
         for k, item in patreon.survey.secondary.items.items():
             wdg = QWidget()
             vbox(wdg)
-            margins(wdg, left=35, bottom=15)
+            margins(wdg, left=35, bottom=15, right=35)
             wdg.layout().addWidget(label(k, h5=True))
             wdg.layout().addWidget(label(item.description, description=True))
 
@@ -263,7 +325,7 @@ class SurveyResultsWidget(QWidget):
             bar.setTextVisible(True)
             bar.setStyleSheet(f'''
                 QProgressBar {{
-                    border: 2px solid grey;
+                    border: 1px solid lightgrey;
                     border-radius: 8px;
                     text-align: center;
                 }}
@@ -273,6 +335,7 @@ class SurveyResultsWidget(QWidget):
                     width: 20px;
                 }}
             }}''')
+            shadow(bar)
             wdg.layout().addWidget(bar)
             self.centerWdg.layout().addWidget(wdg)
 
