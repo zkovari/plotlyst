@@ -239,7 +239,6 @@ class GenreCard(Card):
 
                         QProgressBar::chunk {{
                             background-color: {PLOTLYST_TERTIARY_COLOR};
-                            width: 10px;
                         }}
                     }}''')
         shadow(bar)
@@ -314,9 +313,15 @@ class SurveyResultsWidget(QWidget):
         for k, item in patreon.survey.secondary.items.items():
             wdg = QWidget()
             vbox(wdg)
-            margins(wdg, left=35, bottom=15, right=35)
-            wdg.layout().addWidget(label(k, h5=True))
-            wdg.layout().addWidget(label(item.description, description=True))
+            margins(wdg, left=35, bottom=5, right=35)
+            title = IconText()
+            incr_font(title, 2)
+            title.setText(k)
+            if item.icon:
+                title.setIcon(IconRegistry.from_name(item.icon))
+            wdg.layout().addWidget(title, alignment=Qt.AlignmentFlag.AlignLeft)
+            if item.description:
+                wdg.layout().addWidget(label(item.description, description=True))
 
             bar = QProgressBar()
             bar.setMinimum(0)
@@ -332,7 +337,6 @@ class SurveyResultsWidget(QWidget):
 
                 QProgressBar::chunk {{
                     background-color: {PLOTLYST_TERTIARY_COLOR};
-                    width: 20px;
                 }}
             }}''')
             shadow(bar)
@@ -348,16 +352,13 @@ class SurveyResultsWidget(QWidget):
         chart.setAngularRange(0, len(values.keys()))
         chart.setLogarithmicScaleEnabled(True)
         items = []
-        labels = []
         i = 0
         for k, v in values.items():
             i += 1
-            labels.append((k, float(i)))
             if not v.value:
                 v.value = 0.1
             v.text = k
             items.append(v)
-        chart.setAngularLabels(labels)
         chart.setItems(items)
         view.setChart(chart)
 

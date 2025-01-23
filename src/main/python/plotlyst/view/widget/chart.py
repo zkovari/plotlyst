@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import math
 from dataclasses import dataclass
 from functools import partial
-from typing import List, Dict, Tuple
+from typing import List, Dict
 
 from PyQt6.QtCharts import QChart, QPieSeries, QBarSet, QBarCategoryAxis, QValueAxis, QBarSeries, QPolarChart, \
     QPieSlice, QCategoryAxis, QLineSeries, QAreaSeries
@@ -138,9 +138,9 @@ class PolarChart(PolarBaseChart):
     def setAngularRange(self, min: int, max: int):
         self._angular_axis.setRange(min, max)
 
-    def setAngularLabels(self, labels: List[Tuple[str, float]]):
-        for label in labels:
-            self._angular_axis.append(label[0], label[1])
+    # def setAngularLabels(self, labels: List[Tuple[str, float]]):
+    #     for label in labels:
+    #         self._angular_axis.append(f'{icon_to_html_img(IconRegistry.character_icon())}{label[0]}', label[1])
 
     def setLogarithmicScaleEnabled(self, enabled: bool):
         self._logarithmicScale = enabled
@@ -161,11 +161,16 @@ class PolarChart(PolarBaseChart):
         lower_series.setPen(pen)
 
         for i, item in enumerate(items):
+            if item.icon:
+                self._angular_axis.append(f'{icon_to_html_img(IconRegistry.from_name(item.icon))}{item.text}', i+1)
+            else:
+                self._angular_axis.append(item.text, i+1)
+
             value = math.log1p(item.value) if self._logarithmicScale else item.value
-            upper_series.append(i, value / 3)
+            # upper_series.append(i, value / 3)
             upper_series.append(i + 0.5, value)
-            if item.value > 1:
-                upper_series.append(i + 1, value / 3)
+            # if item.value > 1:
+            #     upper_series.append(i + 1, value / 3)
             lower_series.append(i, 0.0)
 
         self.addSeries(upper_series)
