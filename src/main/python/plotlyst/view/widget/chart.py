@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from dataclasses import dataclass
 from functools import partial
 from typing import List, Dict
 
@@ -84,6 +85,42 @@ class PolarBaseChart(QPolarChart, _AbstractChart):
         if a_axis:
             for ax in a_axis:
                 self.removeAxis(ax)
+
+
+@dataclass
+class PieSliceItem:
+    value: int
+    icon: str = ''
+    color: str = ''
+    icon_color: str = 'black'
+
+
+class PieChart(BaseChart):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._holeSize: float = 0.45
+
+    def setHoleSize(self, size: float):
+        self._holeSize = size
+
+    def setItems(self, items: Dict[str, PieSliceItem]):
+        series = QPieSeries()
+        series.setHoleSize(self._holeSize)
+
+        for text, item in items.items():
+            slice_ = series.append(text, item.value)
+            slice_.setLabelVisible()
+            if item.icon:
+                slice_.setLabel(icon_to_html_img(IconRegistry.from_name(item.icon, item.icon_color)))
+
+            slice_.setLabelArmLengthFactor(0.2)
+            if item.color:
+                slice_.setColor(QColor(item.color))
+            # slice_.hovered.connect(partial(self._hovered, item))
+
+        if self.series():
+            self.removeAllSeries()
+        self.addSeries(series)
 
 
 class GenderCharacterChart(BaseChart):

@@ -36,7 +36,8 @@ from plotlyst.service.resource import JsonDownloadResult, JsonDownloadWorker
 from plotlyst.view.common import label, set_tab_enabled, push_btn, spin, scroll_area, wrap, frame
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
-from plotlyst.view.widget.display import IconText
+from plotlyst.view.widget.chart import PieChart, PieSliceItem
+from plotlyst.view.widget.display import IconText, ChartView
 from plotlyst.view.widget.input import AutoAdjustableTextEdit
 
 
@@ -218,8 +219,15 @@ class SurveyResultsWidget(QWidget):
     def setPatreon(self, patreon: Patreon):
         clear_layout(self.centerWdg)
 
-        for k, v in patreon.survey.new.items():
-            self.centerWdg.layout().addWidget(label(f'{k}: {v}'))
+        stages = ChartView()
+        stagesPie = PieChart()
+        items = {}
+        for k, v in patreon.survey.stage.items():
+            items[k] = PieSliceItem(v if v else 0.1)
+        stagesPie.setItems(items)
+        stages.setChart(stagesPie)
+
+        self.centerWdg.layout().addWidget(stages)
 
         self.centerWdg.layout().addWidget(vspacer())
 
