@@ -36,7 +36,7 @@ from plotlyst.service.resource import JsonDownloadResult, JsonDownloadWorker
 from plotlyst.view.common import label, set_tab_enabled, push_btn, spin, scroll_area, wrap, frame
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
-from plotlyst.view.widget.chart import ChartItem, PolarChart
+from plotlyst.view.widget.chart import ChartItem, PolarChart, PieChart
 from plotlyst.view.widget.display import IconText, ChartView
 from plotlyst.view.widget.input import AutoAdjustableTextEdit
 
@@ -54,12 +54,20 @@ class PatreonTier:
 
 
 @dataclass
+class SurveyResults:
+    title: str
+    description: str
+    items: Dict[str, ChartItem]
+
+
+@dataclass
 class PatreonSurvey:
-    stage: Dict[str, int]
-    panels: Dict[str, int]
-    genres: Dict[str, int]
-    new: Dict[str, int]
-    secondary: Dict[str, int]
+    stage: SurveyResults
+    panels: SurveyResults
+    genres: SurveyResults
+    new: SurveyResults
+    secondary: SurveyResults
+    personalization: SurveyResults
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -226,33 +234,70 @@ class SurveyResultsWidget(QWidget):
         # patreon.survey.stage['Line and copy-editing'] = 0
 
         stages = ChartView()
-        stagesChart = self._polarChart(patreon.survey.stage)
+        stagesChart = self._polarChart(patreon.survey.stage.items)
         stages.setChart(stagesChart)
 
         panels = ChartView()
-        panelsChart = self._polarChart(patreon.survey.panels)
+        panelsChart = self._polarChart(patreon.survey.panels.items)
         panels.setChart(panelsChart)
 
+        newVsOld = ChartView()
+        newVsOldChart = self._pieChart(patreon.survey.new.items)
+        newVsOld.setChart(newVsOldChart)
+        personalization = ChartView()
+        personalizationChart = self._pieChart(patreon.survey.personalization.items)
+        personalization.setChart(personalizationChart)
+
+        self._addTitle(patreon.survey.stage)
         self.centerWdg.layout().addWidget(stages)
+        self._addTitle(patreon.survey.panels)
         self.centerWdg.layout().addWidget(panels)
+        self._addTitle(patreon.survey.genres)
+        self._addTitle(patreon.survey.new)
+        self.centerWdg.layout().addWidget(newVsOld)
+        self._addTitle(patreon.survey.personalization)
+        self.centerWdg.layout().addWidget(personalization)
+        self._addTitle(patreon.survey.secondary)
         self.centerWdg.layout().addWidget(vspacer())
 
-    def _polarChart(self, values: Dict[str, int]) -> PolarChart:
-        stagesChart = PolarChart()
-        stagesChart.setMinimumSize(400, 400)
-        stagesChart.setAngularRange(0, len(values.keys()))
-        stagesChart.setLogarithmicScaleEnabled(True)
+    def _polarChart(self, values: Dict[str, ChartItem]) -> PolarChart:
+        chart = PolarChart()
+        chart.setMinimumSize(400, 400)
+        chart.setAngularRange(0, len(values.keys()))
+        chart.setLogarithmicScaleEnabled(True)
         items = []
         labels = []
         i = 0
         for k, v in values.items():
             i += 1
             labels.append((k, float(i)))
-            items.append(ChartItem(v if v else 0.1, text=k))
-        stagesChart.setAngularLabels(labels)
-        stagesChart.setItems(items)
+            if not v.value:
+                v.value = 0.1
+            v.text = k
+            items.append(v)
+        chart.setAngularLabels(labels)
+        chart.setItems(items)
 
-        return stagesChart
+        return chart
+
+    def _pieChart(self, values: Dict[str, ChartItem]) -> PieChart:
+        chart = PieChart()
+
+        items = []
+        for k, v in values.items():
+            if not v.value:
+                v.value = 0.1
+            v.text = k
+            items.append(v)
+
+        chart.setItems(items)
+
+        return chart
+
+    def _addTitle(self, result: SurveyResults):
+        self.centerWdg.layout().addWidget(wrap(label(result.title, h4=True), margin_top=20))
+        self.centerWdg.layout().addWidget(line())
+        self.centerWdg.layout().addWidget(label(result.description, description=True, wordWrap=True))
 
 
 class PriceLabel(QPushButton):

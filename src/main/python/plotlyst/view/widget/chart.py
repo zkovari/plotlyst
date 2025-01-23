@@ -107,12 +107,12 @@ class PieChart(BaseChart):
     def setHoleSize(self, size: float):
         self._holeSize = size
 
-    def setItems(self, items: Dict[str, ChartItem]):
+    def setItems(self, items: List[ChartItem]):
         series = QPieSeries()
         series.setHoleSize(self._holeSize)
 
-        for text, item in items.items():
-            slice_ = series.append(text, item.value)
+        for item in items:
+            slice_ = series.append(item.text, item.value)
             slice_.setLabelVisible()
             if item.icon:
                 slice_.setLabel(icon_to_html_img(IconRegistry.from_name(item.icon, item.icon_color)))
