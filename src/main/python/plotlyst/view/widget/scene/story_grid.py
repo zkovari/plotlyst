@@ -36,7 +36,7 @@ from plotlyst.core.domain import Scene, Novel, Plot, \
     ScenePlotReference, NovelSetting, LayoutType
 from plotlyst.event.core import emit_event, EventListener, Event
 from plotlyst.event.handler import event_dispatchers
-from plotlyst.events import SceneChangedEvent, StorylineCreatedEvent, SceneAddedEvent
+from plotlyst.events import SceneChangedEvent, StorylineCreatedEvent, SceneAddedEvent, SceneDeletedEvent
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import hmax, tool_btn, ButtonPressResizeEventFilter, fade_out_and_gc, insert_before_the_end, \
     label, push_btn, shadow, fade_in, to_rgba_str
@@ -415,7 +415,7 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
         self.refresh()
 
         dispatcher = event_dispatchers.instance(self._novel)
-        dispatcher.register(self, SceneChangedEvent, SceneAddedEvent, StorylineCreatedEvent)
+        dispatcher.register(self, SceneChangedEvent, SceneAddedEvent, SceneDeletedEvent, StorylineCreatedEvent)
 
     @overrides
     def event_received(self, event: Event):
@@ -436,6 +436,11 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
             self._addSceneReferences(event.scene)
             for card in self.cardsView.cards():
                 card.quickRefresh()
+        elif isinstance(event, SceneDeletedEvent):
+            card = self.cardsView.card(event.scene)
+            index = self.cardsView.layout().indexOf(card)
+            self._removeSceneReferences(index)
+            self.cardsView.remove(event.scene)
 
     def setOrientation(self, orientation: Qt.Orientation):
         clear_layout(self.wdgRows, auto_delete=self._scenesInColumns)  # delete plots
@@ -561,6 +566,10 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
         for plot, line in self._plots.items():
             if plot not in scene_plots:
                 self._replaceWithPlaceholder(index, line, scene)
+
+    def _removeSceneReferences(self, index: int):
+        for line in self._plots.values():
+            self._removeWidget(line, index)
 
     def __initRefWidget(self, scene: Scene, plot_ref: ScenePlotReference) -> SceneStorylineAssociation:
         wdg = SceneStorylineAssociation(plot_ref.plot, plot_ref)

@@ -529,6 +529,11 @@ class TimelineGridWidget(QWidget):
         gc(wdg)
         line.layout().insertWidget(index, placeholder)
 
+    def _removeWidget(self, line: TimelineGridLine, index: int):
+        wdg = line.layout().itemAt(index).widget()
+        line.layout().removeWidget(wdg)
+        gc(wdg)
+
     def _horizontalScrolled(self, value: int):
         self.scrollColumns.horizontalScrollBar().setValue(value)
 
