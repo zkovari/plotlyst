@@ -34,8 +34,9 @@ from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 from plotlyst.common import WHITE_COLOR, PLOTLYST_MAIN_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Scene, Novel, Plot, \
     ScenePlotReference, NovelSetting, LayoutType
-from plotlyst.event.core import emit_event
-from plotlyst.events import SceneChangedEvent
+from plotlyst.event.core import emit_event, EventListener, Event
+from plotlyst.event.handler import event_dispatchers
+from plotlyst.events import SceneChangedEvent, StorylineCreatedEvent
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import hmax, tool_btn, ButtonPressResizeEventFilter, fade_out_and_gc, insert_before_the_end, \
     label, push_btn, shadow, fade_in, to_rgba_str
@@ -392,7 +393,7 @@ class ScenesGridToolbar(QWidget):
             self.orientationChanged.emit(Qt.Orientation.Horizontal)
 
 
-class ScenesGridWidget(TimelineGridWidget):
+class ScenesGridWidget(TimelineGridWidget, EventListener):
     def __init__(self, novel: Novel, parent=None):
         self._scenesInColumns = False
         super().__init__(parent, vertical=self._scenesInColumns)
@@ -412,6 +413,14 @@ class ScenesGridWidget(TimelineGridWidget):
 
         self.repo = RepositoryPersistenceManager.instance()
         self.refresh()
+
+        dispatcher = event_dispatchers.instance(self._novel)
+        dispatcher.register(self, SceneChangedEvent, StorylineCreatedEvent)
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, SceneChangedEvent):
+            self.cardsView.card(event.scene).refresh()
 
     def setOrientation(self, orientation: Qt.Orientation):
         clear_layout(self.wdgRows, auto_delete=self._scenesInColumns)  # delete plots
