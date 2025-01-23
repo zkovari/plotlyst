@@ -24,7 +24,7 @@ from typing import List, Dict, Optional
 
 from PyQt6.QtCore import QThreadPool, QSize, Qt
 from PyQt6.QtGui import QShowEvent
-from PyQt6.QtWidgets import QWidget, QTabWidget, QPushButton
+from PyQt6.QtWidgets import QWidget, QTabWidget, QPushButton, QProgressBar
 from dataclasses_json import dataclass_json, Undefined
 from overrides import overrides
 from qthandy import vbox, hbox, clear_layout, line, vspacer, spacer, translucent, margins, transparent, incr_font, flow
@@ -233,20 +233,10 @@ class SurveyResultsWidget(QWidget):
         # patreon.survey.stage['Developmental editing'] = 5
         # patreon.survey.stage['Line and copy-editing'] = 0
 
-        stages = ChartView()
-        stagesChart = self._polarChart(patreon.survey.stage.items)
-        stages.setChart(stagesChart)
-
-        panels = ChartView()
-        panelsChart = self._polarChart(patreon.survey.panels.items)
-        panels.setChart(panelsChart)
-
-        newVsOld = ChartView()
-        newVsOldChart = self._pieChart(patreon.survey.new.items)
-        newVsOld.setChart(newVsOldChart)
-        personalization = ChartView()
-        personalizationChart = self._pieChart(patreon.survey.personalization.items)
-        personalization.setChart(personalizationChart)
+        stages = self._polarChart(patreon.survey.stage.items)
+        panels = self._polarChart(patreon.survey.panels.items)
+        newVsOld = self._pieChart(patreon.survey.new.items)
+        personalization = self._pieChart(patreon.survey.personalization.items)
 
         self._addTitle(patreon.survey.stage)
         self.centerWdg.layout().addWidget(stages)
@@ -258,9 +248,38 @@ class SurveyResultsWidget(QWidget):
         self._addTitle(patreon.survey.personalization)
         self.centerWdg.layout().addWidget(personalization)
         self._addTitle(patreon.survey.secondary)
+
+        for k, item in patreon.survey.secondary.items.items():
+            wdg = QWidget()
+            vbox(wdg)
+            margins(wdg, left=35, bottom=15)
+            wdg.layout().addWidget(label(k, h5=True))
+            wdg.layout().addWidget(label(item.description, description=True))
+
+            bar = QProgressBar()
+            bar.setMinimum(0)
+            bar.setMaximum(100)
+            bar.setValue(item.value)
+            bar.setTextVisible(True)
+            bar.setStyleSheet(f'''
+                QProgressBar {{
+                    border: 2px solid grey;
+                    border-radius: 8px;
+                    text-align: center;
+                }}
+
+                QProgressBar::chunk {{
+                    background-color: {PLOTLYST_TERTIARY_COLOR};
+                    width: 20px;
+                }}
+            }}''')
+            wdg.layout().addWidget(bar)
+            self.centerWdg.layout().addWidget(wdg)
+
         self.centerWdg.layout().addWidget(vspacer())
 
-    def _polarChart(self, values: Dict[str, ChartItem]) -> PolarChart:
+    def _polarChart(self, values: Dict[str, ChartItem]) -> ChartView:
+        view = ChartView()
         chart = PolarChart()
         chart.setMinimumSize(400, 400)
         chart.setAngularRange(0, len(values.keys()))
@@ -277,10 +296,12 @@ class SurveyResultsWidget(QWidget):
             items.append(v)
         chart.setAngularLabels(labels)
         chart.setItems(items)
+        view.setChart(chart)
 
-        return chart
+        return view
 
-    def _pieChart(self, values: Dict[str, ChartItem]) -> PieChart:
+    def _pieChart(self, values: Dict[str, ChartItem]) -> ChartView:
+        view = ChartView()
         chart = PieChart()
 
         items = []
@@ -291,8 +312,9 @@ class SurveyResultsWidget(QWidget):
             items.append(v)
 
         chart.setItems(items)
+        view.setChart(chart)
 
-        return chart
+        return view
 
     def _addTitle(self, result: SurveyResults):
         self.centerWdg.layout().addWidget(wrap(label(result.title, h4=True), margin_top=20))
