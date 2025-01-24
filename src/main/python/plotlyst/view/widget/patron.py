@@ -23,18 +23,20 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Optional
 
 from PyQt6.QtCore import QThreadPool, QSize, Qt, QEvent
-from PyQt6.QtGui import QShowEvent, QMouseEvent
+from PyQt6.QtGui import QShowEvent, QMouseEvent, QCursor
 from PyQt6.QtWidgets import QWidget, QTabWidget, QPushButton, QProgressBar, QButtonGroup
 from dataclasses_json import dataclass_json, Undefined
 from overrides import overrides
 from qthandy import vbox, hbox, clear_layout, line, vspacer, spacer, translucent, margins, transparent, incr_font, flow, \
-    vline, pointy
+    vline, pointy, decr_icon
+from qtmenu import MenuWidget
 
-from plotlyst.common import PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
+from plotlyst.common import PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR, truncate_string
 from plotlyst.core.domain import Board, Task, TaskStatus
 from plotlyst.env import app_env
 from plotlyst.service.resource import JsonDownloadResult, JsonDownloadWorker
-from plotlyst.view.common import label, set_tab_enabled, push_btn, spin, scroll_area, wrap, frame, shadow
+from plotlyst.view.common import label, set_tab_enabled, push_btn, spin, scroll_area, wrap, frame, shadow, tool_btn, \
+    action, open_url
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.cards import Card
@@ -519,6 +521,29 @@ class PatreonTiersWidget(QWidget):
         self.centerWdg.layout().addWidget(vspacer())
 
 
+social_icons = {
+    "ig": "fa5b.instagram",
+    "x": "fa5b.twitter",
+    "twitch": "fa5b.twitch",
+    "threads": "mdi.at",
+    "snapchat": "fa5b.snapchat",
+    "facebook": "fa5b.facebook",
+    "tiktok": "fa5b.tiktok",
+    "youtube": "fa5b.youtube",
+    "reddit": "fa5b.reddit",
+    "linkedin": "fa5b.linkedin",
+    "pinterest": "fa5b.pinterest",
+    "amazon": "fa5b.amazon",
+    "discord": "fa5b.discord",
+    "goodreads": "fa5b.goodreads-g",
+    "medium": "fa5b.medium-m",
+    "patreon": "fa5b.patreon",
+    "quora": "fa5b.quora",
+    "steam": "fa5b.steam",
+    "tumblr": "fa5b.tumblr",
+}
+
+
 class VipPatronCard(Card):
     def __init__(self, patron: Patron, parent=None):
         super().__init__(parent)
@@ -531,7 +556,22 @@ class VipPatronCard(Card):
                 self.lblName.setIcon(IconRegistry.from_name(patron.icon, PLOTLYST_SECONDARY_COLOR))
             except:  # if a new icon is not supported yet in an older version of the app
                 pass
-        self.layout().addWidget(self.lblName, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        if patron.socials:
+            socialButtons = []
+            for k, social in patron.socials.items():
+                icon = social_icons.get(k)
+                if icon:
+                    btn = tool_btn(IconRegistry.from_name(icon, 'grey'), transparent_=True)
+                    decr_icon(btn, 6)
+                    socialButtons.append(btn)
+
+                if len(socialButtons) > 2:
+                    break
+            self.layout().addWidget(group(self.lblName, spacer(), *socialButtons, margin=0, spacing=0),
+                                    alignment=Qt.AlignmentFlag.AlignLeft)
+        else:
+            self.layout().addWidget(self.lblName, alignment=Qt.AlignmentFlag.AlignLeft)
         if patron.bio:
             self.layout().addWidget(label(patron.bio, description=True, wordWrap=True, decr_font_diff=2))
 
@@ -549,23 +589,34 @@ class VipPatronCard(Card):
 class PatronLabel(QWidget):
     def __init__(self, patron: Patron, parent=None):
         super().__init__(parent)
+        self.patron = patron
         vbox(self, 0, 0)
         margins(self, left=self.__randomMargin(), right=self.__randomMargin(), top=self.__randomMargin(),
                 bottom=self.__randomMargin())
 
         if patron.vip:
             self.lbl = VipPatronCard(patron)
+            pointy(self.lbl)
         else:
-            self.lbl = push_btn(text=patron.name, transparent_=True)
+            self.lbl = push_btn(text=patron.name, transparent_=True, pointy_=False)
             if patron.icon:
                 try:
                     self.lbl.setIcon(IconRegistry.from_name(patron.icon, PLOTLYST_SECONDARY_COLOR))
                 except:  # if a new icon is not supported yet in an older version of the app
                     pass
 
-        pointy(self.lbl)
+            if self.patron.web:
+                self.lbl.clicked.connect(self._labelClicked)
+                pointy(self.lbl)
 
         self.layout().addWidget(self.lbl)
+
+    def _labelClicked(self):
+        menu = MenuWidget()
+        menu.addSection('Visit website')
+        menu.addAction(action(truncate_string(self.patron.web, 50), icon=IconRegistry.from_name('mdi.web'),
+                              slot=lambda: open_url(self.patron.web)))
+        menu.exec(QCursor.pos())
 
     def __randomMargin(self) -> int:
         return random.randint(3, 10)
@@ -633,6 +684,7 @@ class PatronsWidget(QWidget):
 
         self._community.patrons[14].vip = True
         self._community.patrons[15].icon = "ph.ghost"
+        self._community.patrons[15].web = "https://plotlyst.com"
 
         # print(len(self._community.patrons))
         for patron in self._community.patrons:
