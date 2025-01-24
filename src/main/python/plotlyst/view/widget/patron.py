@@ -128,8 +128,13 @@ class PlusTaskWidget(QWidget):
         self.lblDescription.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         incr_font(self.lblDescription)
 
+        self._btnOpenInExternal = tool_btn(IconRegistry.from_name('fa5s.external-link-alt', 'grey'), transparent_=True,
+                                           tooltip='Open in browser')
+        decr_icon(self._btnOpenInExternal, 4)
+        self._btnOpenInExternal.clicked.connect(lambda: open_url(self.task.web_link))
+
         self.layout().addWidget(self.lblStatus, alignment=Qt.AlignmentFlag.AlignLeft)
-        self.layout().addWidget(self.lblName, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(group(self.lblName, self._btnOpenInExternal), alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(self.lblDescription)
         if appendLine:
             self.layout().addWidget(line())
