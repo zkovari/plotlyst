@@ -240,7 +240,7 @@ class GenreCard(Card):
                         QProgressBar::chunk {{
                             background-color: {PLOTLYST_TERTIARY_COLOR};
                         }}
-                    }}''')
+                    ''')
         shadow(bar)
 
         self.layout().addWidget(title, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -338,7 +338,7 @@ class SurveyResultsWidget(QWidget):
                 QProgressBar::chunk {{
                     background-color: {PLOTLYST_TERTIARY_COLOR};
                 }}
-            }}''')
+            ''')
             shadow(bar)
             wdg.layout().addWidget(bar)
             self.centerWdg.layout().addWidget(wdg)
