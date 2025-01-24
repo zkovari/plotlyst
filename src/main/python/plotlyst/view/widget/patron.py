@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import datetime
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Dict, Optional
 
 from PyQt6.QtCore import QThreadPool, QSize, Qt, QEvent
@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QTabWidget, QPushButton, QProgressBar, QBut
 from dataclasses_json import dataclass_json, Undefined
 from overrides import overrides
 from qthandy import vbox, hbox, clear_layout, line, vspacer, spacer, translucent, margins, transparent, incr_font, flow, \
-    vline
+    vline, pointy
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.domain import Board, Task, TaskStatus
@@ -80,12 +80,23 @@ class Patreon:
 
 
 @dataclass
+class PatronNovelInfo:
+    title: str
+    premise: str = ''
+    web: str = ''
+
+
+@dataclass
 class Patron:
     name: str
     web: str = ''
+    icon: str = ''
+    bio: str = ''
     description: str = ''
     genre: str = ''
     vip: bool = False
+    novels: List[PatronNovelInfo] = field(default_factory=list)
+    socials: Dict[str, str] = field(default_factory=dict)
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -508,6 +519,33 @@ class PatreonTiersWidget(QWidget):
         self.centerWdg.layout().addWidget(vspacer())
 
 
+class VipPatronCard(Card):
+    def __init__(self, patron: Patron, parent=None):
+        super().__init__(parent)
+        vbox(self, margin=5)
+
+        self.lblName = push_btn(text=patron.name, transparent_=True, icon_resize=False)
+        incr_font(self.lblName)
+        if patron.icon:
+            try:
+                self.lblName.setIcon(IconRegistry.from_name(patron.icon, PLOTLYST_SECONDARY_COLOR))
+            except:  # if a new icon is not supported yet in an older version of the app
+                pass
+        self.layout().addWidget(self.lblName, alignment=Qt.AlignmentFlag.AlignLeft)
+        if patron.bio:
+            self.layout().addWidget(label(patron.bio, description=True, wordWrap=True, decr_font_diff=2))
+
+        self._setStyleSheet()
+
+    @overrides
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        pass
+
+    @overrides
+    def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
+        pass
+
+
 class PatronLabel(QWidget):
     def __init__(self, patron: Patron, parent=None):
         super().__init__(parent)
@@ -516,9 +554,16 @@ class PatronLabel(QWidget):
                 bottom=self.__randomMargin())
 
         if patron.vip:
-            self.lbl = QPushButton(patron.name)
+            self.lbl = VipPatronCard(patron)
         else:
-            self.lbl = label(patron.name)
+            self.lbl = push_btn(text=patron.name, transparent_=True)
+            if patron.icon:
+                try:
+                    self.lbl.setIcon(IconRegistry.from_name(patron.icon, PLOTLYST_SECONDARY_COLOR))
+                except:  # if a new icon is not supported yet in an older version of the app
+                    pass
+
+        pointy(self.lbl)
 
         self.layout().addWidget(self.lbl)
 
@@ -572,6 +617,8 @@ class PatronsWidget(QWidget):
             self._download_data()
 
     def _download_data(self):
+        clear_layout(self.wdgPatrons)
+
         result = JsonDownloadResult()
         runnable = JsonDownloadWorker(
             "https://raw.githubusercontent.com/plotlyst/feed/refs/heads/main/patrons_dev.json",
@@ -582,9 +629,12 @@ class PatronsWidget(QWidget):
 
     def _handle_downloaded_data(self, data):
         self._community: Community = Community.from_dict(data)
-        clear_layout(self.wdgPatrons)
+        random.shuffle(self._community.patrons)
 
-        print(len(self._community.patrons))
+        self._community.patrons[14].vip = True
+        self._community.patrons[15].icon = "ph.ghost"
+
+        # print(len(self._community.patrons))
         for patron in self._community.patrons:
             lbl = PatronLabel(patron)
             self.wdgPatrons.layout().addWidget(lbl)
