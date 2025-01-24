@@ -24,10 +24,11 @@ from typing import List, Dict, Optional
 
 from PyQt6.QtCore import QThreadPool, QSize, Qt, QEvent
 from PyQt6.QtGui import QShowEvent, QMouseEvent
-from PyQt6.QtWidgets import QWidget, QTabWidget, QPushButton, QProgressBar
+from PyQt6.QtWidgets import QWidget, QTabWidget, QPushButton, QProgressBar, QButtonGroup
 from dataclasses_json import dataclass_json, Undefined
 from overrides import overrides
-from qthandy import vbox, hbox, clear_layout, line, vspacer, spacer, translucent, margins, transparent, incr_font, flow
+from qthandy import vbox, hbox, clear_layout, line, vspacer, spacer, translucent, margins, transparent, incr_font, flow, \
+    vline
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.domain import Board, Task, TaskStatus
@@ -94,7 +95,7 @@ class Community:
 
 
 class PlusTaskWidget(QWidget):
-    def __init__(self, task: Task, status: TaskStatus, parent=None):
+    def __init__(self, task: Task, status: TaskStatus, parent=None, appendLine: bool = True):
         super().__init__(parent)
         self.task = task
         self.status = status
@@ -117,6 +118,8 @@ class PlusTaskWidget(QWidget):
         self.layout().addWidget(self.lblStatus, alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(self.lblName, alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(self.lblDescription)
+        if appendLine:
+            self.layout().addWidget(line())
 
 
 class PlusFeaturesWidget(QWidget):
@@ -165,6 +168,7 @@ class PlusFeaturesWidget(QWidget):
             self._download_data()
 
     def _download_data(self):
+        clear_layout(self.wdgTasks)
         result = JsonDownloadResult()
         runnable = JsonDownloadWorker("https://raw.githubusercontent.com/plotlyst/feed/refs/heads/main/plus.json",
                                       result)
@@ -174,16 +178,49 @@ class PlusFeaturesWidget(QWidget):
 
     def _handle_downloaded_data(self, data):
         self._board: Board = Board.from_dict(data)
-        clear_layout(self.wdgTasks)
 
         statuses = {}
         for status in self._board.statuses:
             statuses[str(status.id)] = status
 
-        for task in self._board.tasks:
-            wdg = PlusTaskWidget(task, statuses[str(task.status_ref)])
+        toolbar = QWidget()
+        hbox(toolbar)
+        btnAll = push_btn(IconRegistry.from_name('msc.debug-stackframe-dot'), text='All',
+                          properties=['secondary-selector', 'transparent-rounded-bg-on-hover'], checkable=True)
+        btnAll.clicked.connect(self._displayAll)
+        btnAll.setChecked(True)
+        btnPlanned = push_btn(IconRegistry.from_name('fa5.calendar-alt'), text='Planned',
+                              properties=['secondary-selector', 'transparent-rounded-bg-on-hover'], checkable=True)
+        btnPlanned.clicked.connect(self._displayPlanned)
+        btnCompleted = push_btn(IconRegistry.from_name('fa5s.check'), text='Completed',
+                                properties=['secondary-selector', 'transparent-rounded-bg-on-hover'], checkable=True)
+        btnCompleted.clicked.connect(self._displayCompleted)
+        btnGroup = QButtonGroup(self)
+        btnGroup.addButton(btnAll)
+        btnGroup.addButton(btnPlanned)
+        btnGroup.addButton(btnCompleted)
+
+        self.wdgTasks.layout().addWidget(group(btnAll, vline(), btnPlanned, btnCompleted),
+                                         alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgTasks.layout().addWidget(line())
+
+        allCounter = 0
+        plannedCounter = 0
+        completedCounter = 0
+        for i, task in enumerate(self._board.tasks):
+            status = statuses[str(task.status_ref)]
+            wdg = PlusTaskWidget(task, status, appendLine=i < len(self._board.tasks) - 1)
             self.wdgTasks.layout().addWidget(wdg)
-            self.wdgTasks.layout().addWidget(line())
+
+            allCounter += 1
+            if status.text == 'Completed':
+                completedCounter += 1
+            else:
+                plannedCounter += 1
+
+        btnAll.setText(btnAll.text() + f' ({allCounter})')
+        btnPlanned.setText(btnPlanned.text() + f' ({plannedCounter})')
+        btnCompleted.setText(btnCompleted.text() + f' ({completedCounter})')
 
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
         self.lblLastUpdated.setText(f"Last updated: {now}")
@@ -198,9 +235,6 @@ class PlusFeaturesWidget(QWidget):
 
     def _handle_downloading_status(self, loading: bool):
         self._downloading = loading
-        # self.scrollAreaWidgetContents.setDisabled(loading)
-        # self.splitter.setHidden(loading)
-        # self.wdgTopSelectors.setHidden(loading)
         self.wdgLoading.setVisible(loading)
         if loading:
             btn = push_btn(transparent_=True)
@@ -210,6 +244,24 @@ class PlusFeaturesWidget(QWidget):
             spin(btn, PLOTLYST_SECONDARY_COLOR)
         else:
             clear_layout(self.wdgLoading)
+
+    def _displayAll(self):
+        for i in range(self.wdgTasks.layout().count()):
+            wdg = self.wdgTasks.layout().itemAt(i).widget()
+            if isinstance(wdg, PlusTaskWidget):
+                wdg.setVisible(True)
+
+    def _displayPlanned(self):
+        for i in range(self.wdgTasks.layout().count()):
+            wdg = self.wdgTasks.layout().itemAt(i).widget()
+            if isinstance(wdg, PlusTaskWidget):
+                wdg.setVisible(wdg.status.text == 'Planned')
+
+    def _displayCompleted(self):
+        for i in range(self.wdgTasks.layout().count()):
+            wdg = self.wdgTasks.layout().itemAt(i).widget()
+            if isinstance(wdg, PlusTaskWidget):
+                wdg.setVisible(wdg.status.text == 'Completed')
 
 
 class GenreCard(Card):
