@@ -342,6 +342,8 @@ class GenreCard(Card):
 
 
 class SurveyResultsWidget(QWidget):
+    showTiers = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
         vbox(self)
@@ -362,6 +364,22 @@ class SurveyResultsWidget(QWidget):
         # patreon.survey.stage['Drafting'] = 54
         # patreon.survey.stage['Developmental editing'] = 5
         # patreon.survey.stage['Line and copy-editing'] = 0
+
+        title = label('Plotlyst Roadmap Form Results', h2=True)
+        desc_text = 'Patrons can share their preferences and become an integral part of Plotlyst’s roadmap. Their answers will help shape the future direction of Plotlyst and influence upcoming releases.'
+        desc_text += '\n\nThe collective results are displayed anonymously on this panel. These results depict the community-driven direction of Plotlyst.'
+        desc_text += '\n\nPatrons can update their preferences at any time.'
+        desc = label(
+            desc_text,
+            description=True, incr_font_diff=1, wordWrap=True)
+
+        btnTiers = push_btn(IconRegistry.from_name('fa5b.patreon'), 'See Patreon tiers', transparent_=True)
+        btnTiers.installEventFilter(OpacityEventFilter(btnTiers, leaveOpacity=0.7))
+        btnTiers.clicked.connect(self.showTiers)
+
+        self.centerWdg.layout().addWidget(title, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.centerWdg.layout().addWidget(desc)
+        self.centerWdg.layout().addWidget(btnTiers, alignment=Qt.AlignmentFlag.AlignRight)
 
         stages = self._polarChart(patreon.survey.stage.items)
         panels = self._polarChart(patreon.survey.panels.items)
@@ -796,6 +814,7 @@ class PlotlystPlusWidget(QWidget):
         self._patreonWdg.showResults.connect(lambda: self.tabWidget.setCurrentWidget(self.tabReport))
         self._patreonWdg.showPlus.connect(lambda: self.tabWidget.setCurrentWidget(self.tabPlus))
         self._surveyWdg = SurveyResultsWidget()
+        self._surveyWdg.showTiers.connect(lambda: self.tabWidget.setCurrentWidget(self.tabPatreon))
         self._plusWdg = PlusFeaturesWidget()
         self._patronsWdg = PatronsWidget()
 
