@@ -22,13 +22,14 @@ import random
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional
 
-from PyQt6.QtCore import QThreadPool, QSize, Qt, QEvent
+from PyQt6.QtCore import QThreadPool, QSize, Qt, QEvent, pyqtSignal
 from PyQt6.QtGui import QShowEvent, QMouseEvent, QCursor
 from PyQt6.QtWidgets import QWidget, QTabWidget, QPushButton, QProgressBar, QButtonGroup
 from dataclasses_json import dataclass_json, Undefined
 from overrides import overrides
 from qthandy import vbox, hbox, clear_layout, line, vspacer, spacer, translucent, margins, transparent, incr_font, flow, \
     vline, pointy, decr_icon
+from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR, truncate_string, \
@@ -162,13 +163,19 @@ class PlusFeaturesWidget(QWidget):
         self.layout().addWidget(self._scroll)
 
         self.lblLastUpdated = label('', description=True, decr_font_diff=1)
+        self.btnVisitRoadmap = push_btn(IconRegistry.from_name('fa5s.external-link-alt', 'grey'), transparent_=True,
+                                        text='Visit online roadmap')
+        self.btnVisitRoadmap.clicked.connect(lambda: open_url(
+            'https://plotlyst.featurebase.app/?s=66cd8ba9b3152ae64e027821%2C66cd8ba9b3152ae64e02781f%2C66cd8ba9b3152ae64e027820%2C66cd8ba9b3152ae64e027822&t=66db16cff80243b72d39bcdd'))
+        self.btnVisitRoadmap.installEventFilter(OpacityEventFilter(self.btnVisitRoadmap, enterOpacity=0.7))
 
         self.wdgTasks = QWidget()
         vbox(self.wdgTasks)
 
         self.wdgLoading = QWidget()
         vbox(self.wdgLoading, 0, 0)
-        self.centerWdg.layout().addWidget(self.lblLastUpdated, alignment=Qt.AlignmentFlag.AlignRight)
+        self.centerWdg.layout().addWidget(group(self.lblLastUpdated, self.btnVisitRoadmap),
+                                          alignment=Qt.AlignmentFlag.AlignRight)
         self.centerWdg.layout().addWidget(self.wdgLoading)
         self.centerWdg.layout().addWidget(self.wdgTasks)
         self.centerWdg.layout().addWidget(vspacer())
@@ -500,9 +507,21 @@ class PatreonTierSection(QWidget):
         self.layout().addWidget(line())
         self.layout().addWidget(wrap(self.lblDesc, margin_left=20))
         self.layout().addWidget(wrap(self.wdgPerks, margin_left=20, margin_right=20))
+        if tier.has_roadmap_form:
+            self.btnResults = push_btn(IconRegistry.from_name('fa5s.chart-pie'), 'See results', transparent_=True)
+            self.btnResults.installEventFilter(OpacityEventFilter(self.btnResults, leaveOpacity=0.7))
+            self.layout().addWidget(wrap(self.btnResults, margin_left=20), alignment=Qt.AlignmentFlag.AlignLeft)
+        if tier.has_plotlyst_plus:
+            self.btnPlus = push_btn(IconRegistry.from_name('mdi.certificate'), 'See Plotlyst Plus features',
+                                    transparent_=True)
+            self.btnPlus.installEventFilter(OpacityEventFilter(self.btnPlus, leaveOpacity=0.7))
+            self.layout().addWidget(wrap(self.btnPlus, margin_left=20), alignment=Qt.AlignmentFlag.AlignLeft)
 
 
 class PatreonTiersWidget(QWidget):
+    showResults = pyqtSignal()
+    showPlus = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
         vbox(self)
@@ -534,6 +553,10 @@ class PatreonTiersWidget(QWidget):
         for tier in patreon.tiers:
             section = PatreonTierSection(tier)
             self.centerWdg.layout().addWidget(section)
+            if tier.has_roadmap_form:
+                section.btnResults.clicked.connect(self.showResults)
+            if tier.has_plotlyst_plus:
+                section.btnPlus.clicked.connect(self.showPlus)
 
         self.centerWdg.layout().addWidget(vspacer())
 
@@ -770,6 +793,8 @@ class PlotlystPlusWidget(QWidget):
         self.wdgLoading = QWidget()
         vbox(self.wdgLoading, 0, 0)
         self._patreonWdg = PatreonTiersWidget()
+        self._patreonWdg.showResults.connect(lambda: self.tabWidget.setCurrentWidget(self.tabReport))
+        self._patreonWdg.showPlus.connect(lambda: self.tabWidget.setCurrentWidget(self.tabPlus))
         self._surveyWdg = SurveyResultsWidget()
         self._plusWdg = PlusFeaturesWidget()
         self._patronsWdg = PatronsWidget()
