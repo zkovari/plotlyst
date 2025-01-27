@@ -31,7 +31,8 @@ from qthandy import vbox, hbox, clear_layout, line, vspacer, spacer, translucent
     vline, pointy, decr_icon
 from qtmenu import MenuWidget
 
-from plotlyst.common import PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR, truncate_string
+from plotlyst.common import PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR, truncate_string, \
+    RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Board, Task, TaskStatus
 from plotlyst.env import app_env
 from plotlyst.service.resource import JsonDownloadResult, JsonDownloadWorker
@@ -475,15 +476,15 @@ class PatreonTierSection(QWidget):
     def __init__(self, tier: PatreonTier, parent=None):
         super().__init__(parent)
         self.tier = tier
-        self.lblHeader = label(self.tier.name, h3=True)
+        self.lblHeader = label(self.tier.name, h4=True)
         self.lblDesc = label(self.tier.description, wordWrap=True, description=True)
-        incr_font(self.lblDesc, 2)
+        incr_font(self.lblDesc, 1)
         self.wdgPerks = frame()
         self.wdgPerks.setProperty('large-rounded', True)
         self.wdgPerks.setProperty('highlighted-bg', True)
         vbox(self.wdgPerks, margin=8)
         self.textPerks = AutoAdjustableTextEdit()
-        incr_font(self.textPerks, 3)
+        incr_font(self.textPerks, 2)
         self.textPerks.setReadOnly(True)
         self.textPerks.setAcceptRichText(True)
         transparent(self.textPerks)
@@ -498,7 +499,7 @@ class PatreonTierSection(QWidget):
         self.layout().addWidget(group(self.lblHeader, spacer(), PriceLabel(self.tier.price)))
         self.layout().addWidget(line())
         self.layout().addWidget(wrap(self.lblDesc, margin_left=20))
-        self.layout().addWidget(wrap(self.wdgPerks, margin_left=20))
+        self.layout().addWidget(wrap(self.wdgPerks, margin_left=20, margin_right=20))
 
 
 class PatreonTiersWidget(QWidget):
@@ -507,12 +508,24 @@ class PatreonTiersWidget(QWidget):
         vbox(self)
         margins(self, bottom=45)
 
+        self.title = label('Patreon Tiers', h2=True)
+        self.desc = label(
+            'Plotlyst is an indie project created by a solo developer with a passion for writing and storytelling. Your support makes it possible to keep improving the software and keep it free for everyone. Every tier helps fund future development and allows you to play a key role in shaping the future of Plotlyst.',
+            description=True, incr_font_diff=1, wordWrap=True)
+        self.btnPatreon = push_btn(IconRegistry.from_name('fa5b.patreon', RELAXED_WHITE_COLOR), text='Join Patreon',
+                                   properties=['positive', 'confirm'])
+        self.btnPatreon.clicked.connect(lambda: open_url(
+            'https://patreon.com/user?u=24283978&utm_medium=unknown&utm_source=join_link&utm_campaign=creatorshare_creator&utm_content=copyLink'))
+
         self._scroll = scroll_area(frameless=True)
         self._scroll.setProperty('relaxed-white-bg', True)
         self.centerWdg = QWidget()
         self.centerWdg.setProperty('relaxed-white-bg', True)
         vbox(self.centerWdg)
         self._scroll.setWidget(self.centerWdg)
+        self.layout().addWidget(self.title, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self.desc)
+        self.layout().addWidget(self.btnPatreon, alignment=Qt.AlignmentFlag.AlignRight)
         self.layout().addWidget(self._scroll)
 
     def setPatreon(self, patreon: Patreon):
@@ -521,7 +534,6 @@ class PatreonTiersWidget(QWidget):
         for tier in patreon.tiers:
             section = PatreonTierSection(tier)
             self.centerWdg.layout().addWidget(section)
-            # self.centerWdg.layout().addWidget(line())
 
         self.centerWdg.layout().addWidget(vspacer())
 
