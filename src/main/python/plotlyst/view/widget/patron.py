@@ -306,6 +306,9 @@ class GenreCard(Card):
         bar.setMinimum(0)
         bar.setMaximum(100)
         bar.setValue(item.value)
+        if item.value == 0:
+            bar.setDisabled(True)
+            translucent(title, 0.5)
         bar.setTextVisible(True)
         bar.setMaximumHeight(30)
         bar.setStyleSheet(f'''
