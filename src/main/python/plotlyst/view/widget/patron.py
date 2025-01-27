@@ -602,6 +602,7 @@ social_icons = {
     "quora": "fa5b.quora",
     "steam": "fa5b.steam",
     "tumblr": "fa5b.tumblr",
+    'coffee': "mdi.coffee",
 }
 
 
