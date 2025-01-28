@@ -64,7 +64,7 @@
        </widget>
       </item>
       <item alignment="Qt::AlignRight">
-       <widget class="QWidget" name="" native="true">
+       <widget class="QWidget" name="widget" native="true">
         <layout class="QVBoxLayout" name="verticalLayout_2">
          <property name="spacing">
           <number>0</number>
@@ -112,6 +112,22 @@
             <property name="bottomMargin">
              <number>0</number>
             </property>
+            <item>
+             <widget class="QToolButton" name="btnPatreon">
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="toolTip">
+               <string>Patreon</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="transparent" stdset="0">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
             <item alignment="Qt::AlignBottom">
              <widget class="QToolButton" name="btnInstagram">
               <property name="cursor">
@@ -119,6 +135,22 @@
               </property>
               <property name="toolTip">
                <string>Instagram</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="transparent" stdset="0">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="btnThreads">
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="toolTip">
+               <string>Threads</string>
               </property>
               <property name="text">
                <string/>
@@ -203,6 +235,9 @@
              <widget class="QPushButton" name="btnJoinDiscord">
               <property name="cursor">
                <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="toolTip">
+               <string/>
               </property>
               <property name="text">
                <string>Join Discord</string>
@@ -844,7 +879,7 @@ It offers a range of tools to support various stages of novel writing, including
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>98</width>
+                      <width>86</width>
                       <height>40</height>
                      </rect>
                     </property>

@@ -912,12 +912,15 @@
      <property name="title">
       <string>Socials</string>
      </property>
+     <addaction name="actionSocialDiscord"/>
+     <addaction name="separator"/>
+     <addaction name="actionInstagram"/>
+     <addaction name="actionThreads"/>
+     <addaction name="actionPatreon"/>
      <addaction name="actionFacebook"/>
      <addaction name="actionYoutube"/>
-     <addaction name="actionInstagram"/>
      <addaction name="actionXTwitter"/>
      <addaction name="actionPinterest"/>
-     <addaction name="actionSocialDiscord"/>
     </widget>
     <addaction name="separator"/>
     <addaction name="actionLogs"/>
@@ -1187,6 +1190,16 @@
   <action name="actionDetachReports">
    <property name="text">
     <string>Detach reports</string>
+   </property>
+  </action>
+  <action name="actionThreads">
+   <property name="text">
+    <string>Threads</string>
+   </property>
+  </action>
+  <action name="actionPatreon">
+   <property name="text">
+    <string>Patreon</string>
    </property>
   </action>
  </widget>

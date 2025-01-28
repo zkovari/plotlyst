@@ -834,7 +834,7 @@ class PatronsWidget(QWidget):
 
         result = JsonDownloadResult()
         runnable = JsonDownloadWorker(
-            "https://raw.githubusercontent.com/plotlyst/feed/refs/heads/main/patrons_dev.json",
+            "https://raw.githubusercontent.com/plotlyst/feed/refs/heads/main/patrons.json",
             result)
         result.finished.connect(self._handle_downloaded_data)
         result.failed.connect(self._handle_download_failure)
@@ -844,11 +844,6 @@ class PatronsWidget(QWidget):
         self._community: Community = Community.from_dict(data)
         random.shuffle(self._community.patrons)
 
-        self._community.patrons[14].vip = True
-        self._community.patrons[15].icon = "ph.ghost"
-        self._community.patrons[15].web = "https://plotlyst.com"
-
-        # print(len(self._community.patrons))
         for patron in self._community.patrons:
             lbl = PatronLabel(patron)
             self.wdgPatrons.layout().addWidget(lbl)
