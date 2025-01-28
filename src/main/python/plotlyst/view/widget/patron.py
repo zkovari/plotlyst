@@ -549,28 +549,26 @@ class PatreonTiersWidget(QWidget):
         vbox(self)
         margins(self, bottom=45)
 
-        self.title = label('Patreon Tiers', h2=True)
-        self.desc = label(
-            'Plotlyst is an indie project created by a solo developer with a passion for writing and storytelling. Your support makes it possible to keep improving the software and keep it free for everyone. Every tier helps fund future development and allows you to play a key role in shaping the future of Plotlyst.',
-            description=True, incr_font_diff=1, wordWrap=True)
-        self.btnPatreon = push_btn(IconRegistry.from_name('fa5b.patreon', RELAXED_WHITE_COLOR), text='Join Patreon',
-                                   properties=['positive', 'confirm'])
-        self.btnPatreon.clicked.connect(lambda: open_url(
-            'https://patreon.com/user?u=24283978&utm_medium=unknown&utm_source=join_link&utm_campaign=creatorshare_creator&utm_content=copyLink'))
-
         self._scroll = scroll_area(frameless=True)
         self._scroll.setProperty('relaxed-white-bg', True)
         self.centerWdg = QWidget()
         self.centerWdg.setProperty('relaxed-white-bg', True)
         vbox(self.centerWdg)
         self._scroll.setWidget(self.centerWdg)
-        self.layout().addWidget(self.title, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.layout().addWidget(self.desc)
-        self.layout().addWidget(self.btnPatreon, alignment=Qt.AlignmentFlag.AlignRight)
         self.layout().addWidget(self._scroll)
 
     def setPatreon(self, patreon: Patreon):
         clear_layout(self.centerWdg)
+
+        title = label('Patreon Tiers', h2=True)
+        desc = label(
+            'Plotlyst is an indie project created by a solo developer with a passion for writing and storytelling. Your support makes it possible to keep improving the software and keep it free for everyone. Every tier helps fund future development and allows you to play a key role in shaping the future of Plotlyst.',
+            description=True, incr_font_diff=1, wordWrap=True)
+        btnPatreon = self._joinButton()
+
+        self.centerWdg.layout().addWidget(title, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.centerWdg.layout().addWidget(desc)
+        self.centerWdg.layout().addWidget(btnPatreon, alignment=Qt.AlignmentFlag.AlignRight)
 
         for tier in patreon.tiers:
             section = PatreonTierSection(tier)
@@ -580,7 +578,17 @@ class PatreonTiersWidget(QWidget):
             if tier.has_plotlyst_plus:
                 section.btnPlus.clicked.connect(self.showPlus)
 
+        btnPatreon = self._joinButton()
+        self.centerWdg.layout().addWidget(vspacer(max_height=40))
+        self.centerWdg.layout().addWidget(btnPatreon, alignment=Qt.AlignmentFlag.AlignCenter)
         self.centerWdg.layout().addWidget(vspacer())
+
+    def _joinButton(self) -> QPushButton:
+        btnPatreon = push_btn(IconRegistry.from_name('fa5b.patreon', RELAXED_WHITE_COLOR), text='Join Patreon',
+                              properties=['positive', 'confirm'])
+        btnPatreon.clicked.connect(lambda: open_url(
+            'https://patreon.com/user?u=24283978&utm_medium=unknown&utm_source=join_link&utm_campaign=creatorshare_creator&utm_content=copyLink'))
+        return btnPatreon
 
 
 social_icons = {
