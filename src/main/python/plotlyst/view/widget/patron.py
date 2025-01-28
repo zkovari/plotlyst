@@ -20,11 +20,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import datetime
 import random
 from dataclasses import dataclass, field
+from functools import partial
 from typing import List, Dict, Optional
 
 from PyQt6.QtCore import QThreadPool, QSize, Qt, QEvent, pyqtSignal
 from PyQt6.QtGui import QShowEvent, QMouseEvent, QCursor
-from PyQt6.QtWidgets import QWidget, QTabWidget, QPushButton, QProgressBar, QButtonGroup
+from PyQt6.QtWidgets import QWidget, QTabWidget, QPushButton, QProgressBar, QButtonGroup, QFrame
 from dataclasses_json import dataclass_json, Undefined
 from overrides import overrides
 from qthandy import vbox, hbox, clear_layout, line, vspacer, spacer, translucent, margins, transparent, incr_font, flow, \
@@ -606,13 +607,70 @@ social_icons = {
 }
 
 
+class VipPatronProfile(QFrame):
+    def __init__(self, patron: Patron, parent=None):
+        super().__init__(parent)
+
+        self.name = label(patron.name, h4=True)
+        self.bio = label(patron.bio, description=True)
+
+        self.setStyleSheet(f'''
+                   VipPatronProfile {{
+                       border: 1px solid lightgrey;
+                       border-radius: 16px;
+                       background-color: #f3e8e8;
+                   }}''')
+
+        vbox(self, 10, 8)
+        self.layout().addWidget(self.name, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self.bio, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        wdgSocials = QWidget()
+        hbox(wdgSocials)
+        if patron.web:
+            btn = tool_btn(IconRegistry.from_name('mdi.web', 'grey'), transparent_=True)
+            btn.clicked.connect(partial(open_url, patron.web))
+            wdgSocials.layout().addWidget(btn)
+            if patron.socials:
+                wdgSocials.layout().addWidget(vline(color='grey'))
+        for k, social in patron.socials.items():
+            icon = social_icons.get(k)
+            if icon:
+                btn = tool_btn(IconRegistry.from_name(icon, 'grey'), transparent_=True)
+                btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.7))
+                btn.clicked.connect(partial(open_url, social))
+                decr_icon(btn, 3)
+                wdgSocials.layout().addWidget(btn)
+
+        self.layout().addWidget(wdgSocials, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self.layout().addWidget(line(color=PLOTLYST_SECONDARY_COLOR))
+        if patron.description:
+            self.layout().addWidget(label(patron.description, description=True, wordWrap=True))
+        if patron.novels:
+            self.layout().addWidget(label('My published books:'))
+            wdg = QWidget()
+            vbox(wdg)
+            margins(wdg, left=20)
+            for novel in patron.novels:
+                btn = push_btn(IconRegistry.book_icon(), novel.title, transparent_=True)
+                btn.installEventFilter(OpacityEventFilter(btn, 0.7))
+                btn.clicked.connect(partial(open_url, novel.web))
+                wdg.layout().addWidget(btn, alignment=Qt.AlignmentFlag.AlignLeft)
+
+            self.layout().addWidget(wdg)
+            self.layout().addWidget(vspacer())
+
+
 class VipPatronCard(Card):
     def __init__(self, patron: Patron, parent=None):
         super().__init__(parent)
+        self.patron = patron
         vbox(self, margin=5)
 
         self.lblName = push_btn(text=patron.name, transparent_=True, icon_resize=False)
         incr_font(self.lblName)
+        self.lblName.clicked.connect(self._displayProfile)
         if patron.icon:
             try:
                 self.lblName.setIcon(IconRegistry.from_name(patron.icon, PLOTLYST_SECONDARY_COLOR))
@@ -624,7 +682,8 @@ class VipPatronCard(Card):
             for k, social in patron.socials.items():
                 icon = social_icons.get(k)
                 if icon:
-                    btn = tool_btn(IconRegistry.from_name(icon, 'grey'), transparent_=True)
+                    btn = tool_btn(IconRegistry.from_name(icon, 'grey'), transparent_=True, icon_resize=False)
+                    btn.clicked.connect(self._displayProfile)
                     decr_icon(btn, 6)
                     socialButtons.append(btn)
 
@@ -641,11 +700,18 @@ class VipPatronCard(Card):
 
     @overrides
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
-        pass
+        self._displayProfile()
 
     @overrides
     def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
         pass
+
+    def _displayProfile(self):
+        menu = MenuWidget()
+        menu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        wdg = VipPatronProfile(self.patron)
+        menu.addWidget(wdg)
+        menu.exec(QCursor.pos())
 
 
 class PatronLabel(QWidget):
@@ -675,7 +741,8 @@ class PatronLabel(QWidget):
 
     def _labelClicked(self):
         menu = MenuWidget()
-        menu.addSection('Visit website')
+        menu.addSection(f'Visit website of {self.patron.name}')
+        menu.addSeparator()
         menu.addAction(action(truncate_string(self.patron.web, 50), icon=IconRegistry.from_name('mdi.web'),
                               slot=lambda: open_url(self.patron.web)))
         menu.exec(QCursor.pos())
