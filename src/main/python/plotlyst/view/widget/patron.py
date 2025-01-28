@@ -102,6 +102,7 @@ class Patron:
     vip: bool = False
     novels: List[PatronNovelInfo] = field(default_factory=list)
     socials: Dict[str, str] = field(default_factory=dict)
+    favourites: List[str] = field(default_factory=list)
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -626,7 +627,7 @@ class VipPatronProfile(QFrame):
                    VipPatronProfile {{
                        border: 1px solid lightgrey;
                        border-radius: 16px;
-                       background-color: #f3e8e8;
+                       background-color: #F7F0F0;
                    }}''')
 
         vbox(self, 10, 8)
@@ -655,8 +656,24 @@ class VipPatronProfile(QFrame):
         self.layout().addWidget(line(color=PLOTLYST_SECONDARY_COLOR))
         if patron.description:
             self.layout().addWidget(label(patron.description, description=True, wordWrap=True))
+
+        if patron.favourites:
+            favourite = IconText()
+            favourite.setText('My favourite stories:')
+            favourite.setIcon(IconRegistry.from_name('ei.heart', '#F18989'))
+            self.layout().addWidget(favourite, alignment=Qt.AlignmentFlag.AlignLeft)
+            wdg = QWidget()
+            vbox(wdg)
+            margins(wdg, left=20)
+            lblFavourite = label(' | '.join(patron.favourites), wordWrap=True, description=True)
+            wdg.layout().addWidget(lblFavourite)
+            self.layout().addWidget(wdg)
+
         if patron.novels:
-            self.layout().addWidget(label('My published books:'))
+            published = IconText()
+            published.setText('My published books:')
+            published.setIcon(IconRegistry.book_icon(PLOTLYST_SECONDARY_COLOR))
+            self.layout().addWidget(published, alignment=Qt.AlignmentFlag.AlignLeft)
             wdg = QWidget()
             vbox(wdg)
             margins(wdg, left=20)
@@ -713,6 +730,10 @@ class VipPatronCard(Card):
     @overrides
     def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
         pass
+
+    @overrides
+    def _bgColor(self, selected: bool = False) -> str:
+        return '#F7F0F0'
 
     def _displayProfile(self):
         menu = MenuWidget()
