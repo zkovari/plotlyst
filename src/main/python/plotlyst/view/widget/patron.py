@@ -810,7 +810,7 @@ class PatronsWidget(QWidget):
         self.centerWdg.layout().addWidget(self.lblLastUpdated, alignment=Qt.AlignmentFlag.AlignRight)
         self.centerWdg.layout().addWidget(label('Plotlyst Supporters', h2=True), alignment=Qt.AlignmentFlag.AlignCenter)
         self.centerWdg.layout().addWidget(
-            label('The following writers support the development of Plotlyst', description=True, incr_font_diff=1),
+            label('The following writers support the development of Plotlyst.', description=True, incr_font_diff=1),
             alignment=Qt.AlignmentFlag.AlignCenter)
         self.centerWdg.layout().addWidget(self.wdgLoading)
         self.centerWdg.layout().addWidget(self.wdgPatrons)
@@ -902,8 +902,6 @@ class PlotlystPlusWidget(QWidget):
                               'Patreon')
         self.tabWidget.addTab(self.tabPlus, IconRegistry.from_name('mdi.certificate', color_on=PLOTLYST_MAIN_COLOR),
                               'Plus Features')
-        # self.tabWidget.addTab(self.tabPatrons, IconRegistry.from_name('msc.organization', color_on=PLOTLYST_MAIN_COLOR),
-        #                       'Community')
         self.layout().addWidget(self.tabWidget)
 
         self.lblVisionLastUpdated = label('', description=True, decr_font_diff=1)
@@ -915,7 +913,6 @@ class PlotlystPlusWidget(QWidget):
         self._surveyWdg = SurveyResultsWidget()
         self._surveyWdg.showTiers.connect(lambda: self.tabWidget.setCurrentWidget(self.tabPatreon))
         self._plusWdg = PlusFeaturesWidget()
-        # self._patronsWdg = PatronsWidget()
 
         self.tabReport.layout().addWidget(self.lblVisionLastUpdated, alignment=Qt.AlignmentFlag.AlignRight)
         self.tabReport.layout().addWidget(self._surveyWdg)
@@ -924,7 +921,6 @@ class PlotlystPlusWidget(QWidget):
 
         self.tabPatreon.layout().addWidget(self._patreonWdg)
         self.tabPlus.layout().addWidget(self._plusWdg)
-        # self.tabPatrons.layout().addWidget(self._patronsWdg)
 
         self._thread_pool = QThreadPool()
 
