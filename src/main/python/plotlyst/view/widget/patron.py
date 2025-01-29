@@ -110,7 +110,8 @@ example_patron = Patron('Zsolt', web='https://plotlyst.com', bio='Fantasy Writer
                         icon='fa5s.gem', vip=True, socials={"ig": "https://instagram.com/plotlyst",
                                                             "threads": "https://threads.net/@plotlyst",
                                                             "patreon": "https://patreon.com/user?u=24283978"},
-                        favourites=["Rebecca", "The Picture of Dorian Gray", "Anna Karenina", "Jane Eyre", "Malazan"])
+                        favourites=["Rebecca", "The Picture of Dorian Gray", "Anna Karenina", "Jane Eyre", "Malazan"],
+                        description="I write adult High Fantasy with magical gemstones, artifacts, golems, and titans.")
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -555,7 +556,7 @@ class PatreonTierSection(QWidget):
             vbox(wdgRecognition, 10, 10)
 
             wdgRecognition.layout().addWidget(
-                label('Recognition preview, displayed under Community and Knowledge Base:',
+                label('Recognition preview, displayed under Patrons and Knowledge Base panels:',
                       description=True),
                 alignment=Qt.AlignmentFlag.AlignCenter)
 
