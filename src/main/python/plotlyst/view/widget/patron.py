@@ -29,7 +29,7 @@ from PyQt6.QtWidgets import QWidget, QTabWidget, QPushButton, QProgressBar, QBut
 from dataclasses_json import dataclass_json, Undefined
 from overrides import overrides
 from qthandy import vbox, hbox, clear_layout, line, vspacer, spacer, translucent, margins, transparent, incr_font, flow, \
-    vline, pointy, decr_icon
+    vline, pointy, decr_icon, sp
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -57,6 +57,7 @@ class PatreonTier:
     has_roadmap_form: bool = False
     has_plotlyst_plus: bool = False
     has_early_access: bool = False
+    has_recognition: bool = False
     has_premium_recognition: bool = False
 
 
@@ -103,6 +104,13 @@ class Patron:
     novels: List[PatronNovelInfo] = field(default_factory=list)
     socials: Dict[str, str] = field(default_factory=dict)
     favourites: List[str] = field(default_factory=list)
+
+
+example_patron = Patron('Zsolt', web='https://plotlyst.com', bio='Fantasy Writer | Developer of Plotlyst',
+                        icon='fa5s.gem', vip=True, socials={"ig": "https://instagram.com/plotlyst",
+                                                            "threads": "https://threads.net/@plotlyst",
+                                                            "patreon": "https://patreon.com/user?u=24283978"},
+                        favourites=["Rebecca", "The Picture of Dorian Gray", "Anna Karenina", "Jane Eyre", "Malazan"])
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -540,6 +548,36 @@ class PatreonTierSection(QWidget):
             self.btnPlus.installEventFilter(OpacityEventFilter(self.btnPlus, leaveOpacity=0.7))
             self.layout().addWidget(wrap(self.btnPlus, margin_left=20), alignment=Qt.AlignmentFlag.AlignLeft)
 
+        if tier.has_recognition or tier.has_premium_recognition:
+            wdgRecognition = frame()
+            wdgRecognition.setProperty('large-rounded', True)
+            wdgRecognition.setProperty('muted-bg', True)
+            vbox(wdgRecognition, 10, 10)
+
+            wdgRecognition.layout().addWidget(
+                label('Recognition preview, displayed under Community and Knowledge Base:',
+                      description=True),
+                alignment=Qt.AlignmentFlag.AlignCenter)
+
+            if tier.has_recognition:
+                lbl = push_btn(text='Zsolt', transparent_=True, pointy_=False)
+                lbl.setIcon(IconRegistry.from_name('fa5s.gem', PLOTLYST_SECONDARY_COLOR))
+                lbl.clicked.connect(self._labelPreviewClicked)
+            else:
+                lbl = VipPatronCard(example_patron)
+                lbl.setMinimumHeight(75)
+            pointy(lbl)
+            wdgRecognition.layout().addWidget(lbl, alignment=Qt.AlignmentFlag.AlignCenter)
+            self.layout().addWidget(wdgRecognition, alignment=Qt.AlignmentFlag.AlignCenter)
+
+    def _labelPreviewClicked(self):
+        menu = MenuWidget()
+        menu.addSection('Visit website of Zsolt')
+        menu.addSeparator()
+        menu.addAction(action('https://plotlyst.com', icon=IconRegistry.from_name('mdi.web'),
+                              slot=lambda: open_url('https://plotlyst.com')))
+        menu.exec(QCursor.pos())
+
 
 class PatreonTiersWidget(QWidget):
     showResults = pyqtSignal()
@@ -692,6 +730,7 @@ class VipPatronCard(Card):
         super().__init__(parent)
         self.patron = patron
         vbox(self, margin=5)
+        sp(self).v_max()
 
         self.lblName = push_btn(text=patron.name, transparent_=True, icon_resize=False)
         incr_font(self.lblName)
@@ -719,7 +758,9 @@ class VipPatronCard(Card):
         else:
             self.layout().addWidget(self.lblName, alignment=Qt.AlignmentFlag.AlignLeft)
         if patron.bio:
-            self.layout().addWidget(label(patron.bio, description=True, wordWrap=True, decr_font_diff=2))
+            bio = label(patron.bio, description=True, decr_font_diff=2, wordWrap=True)
+            sp(bio).v_max()
+            self.layout().addWidget(bio)
 
         self._setStyleSheet()
 
@@ -743,7 +784,7 @@ class VipPatronCard(Card):
         menu.exec(QCursor.pos())
 
 
-class PatronLabel(QWidget):
+class PatronRecognitionWidget(QWidget):
     def __init__(self, patron: Patron, parent=None):
         super().__init__(parent)
         self.patron = patron
@@ -845,7 +886,7 @@ class PatronsWidget(QWidget):
         random.shuffle(self._community.patrons)
 
         for patron in self._community.patrons:
-            lbl = PatronLabel(patron)
+            lbl = PatronRecognitionWidget(patron)
             self.wdgPatrons.layout().addWidget(lbl)
 
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
