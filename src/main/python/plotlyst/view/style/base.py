@@ -84,12 +84,25 @@ QWidget[navbar=true] {{
     background-color: #622675;
 }}
 
+QWidget[rounded=true] {{
+    border: 1px solid lightgrey;
+    border-radius: 6px;
+}}
+
 QFrame[bottom-bar=true] {{
     background-color: {BG_PRIMARY_COLOR};
 }}
 
 QFrame[relaxed-white-bg=true] {{
     background-color: {BG_SECONDARY_COLOR};
+}}
+
+QFrame[muted-bg=true] {{
+    background-color: {BG_MUTED_COLOR};
+}}
+
+QFrame[highlighted-bg=true] {{
+    background-color: rgba(75, 7, 99, 25);
 }}
 
 QFrame[white-bg=true] {{
