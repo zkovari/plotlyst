@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>754</width>
-    <height>633</height>
+    <height>684</height>
    </rect>
   </property>
   <property name="mouseTracking">
@@ -60,6 +60,18 @@
         </property>
         <item>
          <widget class="QWidget" name="wdgNavBar" native="true">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>55</width>
+            <height>16777215</height>
+           </size>
+          </property>
           <property name="navbar" stdset="0">
            <bool>true</bool>
           </property>
@@ -97,10 +109,16 @@
            </item>
            <item>
             <widget class="QToolButton" name="btnNovel">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="minimumSize">
               <size>
-               <width>50</width>
-               <height>50</height>
+               <width>35</width>
+               <height>35</height>
               </size>
              </property>
              <property name="maximumSize">
@@ -143,10 +161,16 @@
            </item>
            <item>
             <widget class="QToolButton" name="btnCharacters">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="minimumSize">
               <size>
-               <width>50</width>
-               <height>50</height>
+               <width>35</width>
+               <height>35</height>
               </size>
              </property>
              <property name="maximumSize">
@@ -186,10 +210,16 @@
            </item>
            <item>
             <widget class="QToolButton" name="btnScenes">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="minimumSize">
               <size>
-               <width>50</width>
-               <height>50</height>
+               <width>35</width>
+               <height>35</height>
               </size>
              </property>
              <property name="maximumSize">
@@ -232,10 +262,16 @@
              <property name="enabled">
               <bool>true</bool>
              </property>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="minimumSize">
               <size>
-               <width>50</width>
-               <height>50</height>
+               <width>35</width>
+               <height>35</height>
               </size>
              </property>
              <property name="maximumSize">
@@ -278,10 +314,16 @@
              <property name="enabled">
               <bool>true</bool>
              </property>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="minimumSize">
               <size>
-               <width>50</width>
-               <height>50</height>
+               <width>35</width>
+               <height>35</height>
               </size>
              </property>
              <property name="maximumSize">
@@ -353,10 +395,16 @@
            </item>
            <item>
             <widget class="QToolButton" name="btnNotes">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="minimumSize">
               <size>
-               <width>50</width>
-               <height>50</height>
+               <width>35</width>
+               <height>35</height>
               </size>
              </property>
              <property name="maximumSize">
@@ -412,10 +460,16 @@
            </item>
            <item>
             <widget class="QToolButton" name="btnBoard">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="minimumSize">
               <size>
-               <width>50</width>
-               <height>50</height>
+               <width>35</width>
+               <height>35</height>
               </size>
              </property>
              <property name="maximumSize">
@@ -487,10 +541,16 @@
            </item>
            <item>
             <widget class="QToolButton" name="btnReports">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="minimumSize">
               <size>
-               <width>50</width>
-               <height>50</height>
+               <width>35</width>
+               <height>35</height>
               </size>
              </property>
              <property name="maximumSize">
@@ -558,11 +618,63 @@
             </spacer>
            </item>
            <item>
-            <widget class="QToolButton" name="btnSettingsLink">
+            <widget class="QToolButton" name="btnKbLink">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="minimumSize">
+              <size>
+               <width>35</width>
+               <height>35</height>
+              </size>
+             </property>
+             <property name="maximumSize">
               <size>
                <width>50</width>
                <height>50</height>
+              </size>
+             </property>
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
+             <property name="toolTip">
+              <string>Jump to Knowledge Base</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>32</width>
+               <height>32</height>
+              </size>
+             </property>
+             <property name="checkable">
+              <bool>false</bool>
+             </property>
+             <property name="base" stdset="0">
+              <bool>false</bool>
+             </property>
+             <property name="main-navbar" stdset="0">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="btnSettingsLink">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>35</width>
+               <height>35</height>
               </size>
              </property>
              <property name="maximumSize">

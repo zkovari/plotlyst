@@ -123,7 +123,7 @@ You can also change this location under the same menu, `Change project directory
         )
         self.addSubheading("Is there any AI in the app?", 'mdi.robot-angry')
         self.addText(
-            "No, there isn't, and I plan to keep it that way. An AI-based spellchecker could be an argument later, but otherwise there won't be any AI assistance or anything of the sort for writing.")
+            "No, there isn't, and I plan to keep it that way. An AI-based spellchecker could be an argument later on, but otherwise there won't be any AI support for writing.")
         self.finish()
 
     @overrides

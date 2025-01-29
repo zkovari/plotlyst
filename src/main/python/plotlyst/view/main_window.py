@@ -160,8 +160,12 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.btnReports.setIcon(IconRegistry.reports_icon(NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
         self.btnSettingsLink.setIcon(IconRegistry.cog_icon(color=NAV_BAR_BUTTON_DEFAULT_COLOR))
         self.btnSettingsLink.installEventFilter(ButtonPressResizeEventFilter(self.btnSettingsLink))
-        self.btnSettingsLink.installEventFilter(OpacityEventFilter(self.btnSettingsLink))
+        self.btnSettingsLink.installEventFilter(OpacityEventFilter(self.btnSettingsLink, leaveOpacity=0.6))
         self.btnSettingsLink.clicked.connect(self._settings_link_clicked)
+        self.btnKbLink.setIcon(IconRegistry.from_name('fa5s.graduation-cap', color=NAV_BAR_BUTTON_DEFAULT_COLOR))
+        self.btnKbLink.installEventFilter(ButtonPressResizeEventFilter(self.btnKbLink))
+        self.btnKbLink.installEventFilter(OpacityEventFilter(self.btnKbLink, leaveOpacity=0.6))
+        self.btnKbLink.clicked.connect(self._kb_link_clicked)
 
         for btn in self.buttonGroup.buttons():
             btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.7, ignoreCheckedButton=True))
@@ -851,6 +855,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
     def _settings_link_clicked(self):
         self.btnNovel.setChecked(True)
         self.novel_view.show_settings()
+
+    def _kb_link_clicked(self):
+        self.home_mode.setChecked(True)
+        self.home_view.showKnowledgeBase()
 
     def _detach_panel(self, panel: NovelSetting):
         if panel == NovelSetting.Characters:

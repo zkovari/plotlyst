@@ -259,6 +259,9 @@ class HomeView(AbstractView):
         series = [x for x in self._novels if x.story_type == StoryType.Series]
         entities_registry.set_series(series)
 
+    def showKnowledgeBase(self):
+        self.ui.btnKnowledgeBase.setChecked(True)
+
     def selectSeries(self, series: NovelDescriptor):
         self._shelvesTreeView.selectNovel(series)
 
