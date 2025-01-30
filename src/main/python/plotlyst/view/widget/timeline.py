@@ -321,19 +321,19 @@ class TimelineWidget(QWidget):
 
 
 class TimelineGridPlaceholder(QWidget):
-    def __init__(self, ref: Any, color: str = 'lightgrey', parent=None):
+    def __init__(self, ref: Any, parent: 'TimelineGridLine'):
         super().__init__(parent)
         self.ref = ref
         vbox(self, 0, 0)
-        qcolor = QColor(color)
-        qcolor.setAlpha(125)
-        self.btn = tool_btn(IconRegistry.plus_circle_icon(color, RELAXED_WHITE_COLOR), transparent_=True)
+        self.btn = tool_btn(IconRegistry.plus_circle_icon(parent.ref.icon_color, RELAXED_WHITE_COLOR),
+                            transparent_=True)
         self.btn.setIconSize(QSize(32, 32))
         self.layout().addWidget(self.btn, alignment=Qt.AlignmentFlag.AlignCenter)
         self.btn.setHidden(True)
 
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
+        self.btn.setIcon(IconRegistry.plus_circle_icon(self.parent().ref.icon_color, RELAXED_WHITE_COLOR))
         fade_in(self.btn)
 
     @overrides
@@ -552,7 +552,7 @@ class TimelineGridWidget(QWidget):
             margins(self.wdgColumns, right=0)
 
     def _initPlaceholder(self, line: TimelineGridLine, ref: Any) -> TimelineGridPlaceholder:
-        placeholder = TimelineGridPlaceholder(ref, color=line.ref.icon_color)
+        placeholder = TimelineGridPlaceholder(ref, parent=line)
         placeholder.btn.clicked.connect(partial(self._placeholderClicked, line, placeholder))
         placeholder.setFixedSize(self._columnWidth, self._rowHeight)
 

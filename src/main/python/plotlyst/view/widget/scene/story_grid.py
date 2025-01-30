@@ -18,247 +18,245 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Dict
+from typing import Dict, Optional
 
-import qtanim
 from PyQt6 import QtGui
-from PyQt6.QtCore import QTimer, pyqtSignal, QEvent
-from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtGui import QColor, QPaintEvent, QPainter
-from PyQt6.QtWidgets import QWidget, QTextEdit, QLabel, QPushButton, QButtonGroup, QVBoxLayout, QHBoxLayout
+from PyQt6.QtCore import Qt
+from PyQt6.QtCore import pyqtSignal, QEvent
+from PyQt6.QtGui import QColor
+from PyQt6.QtWidgets import QWidget, QTextEdit, QButtonGroup, QVBoxLayout, QHBoxLayout
 from overrides import overrides
-from qthandy import margins, vspacer, line, incr_font, sp, clear_layout, gc
-from qthandy import transparent, hbox, spacer, vbox
-from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
+from qthandy import hbox, spacer, vbox
+from qthandy import margins, vspacer, line, incr_font, clear_layout, gc
+from qthandy.filter import OpacityEventFilter
 
-from plotlyst.common import WHITE_COLOR, PLOTLYST_MAIN_COLOR, RELAXED_WHITE_COLOR
+from plotlyst.common import PLOTLYST_MAIN_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Scene, Novel, Plot, \
     ScenePlotReference, NovelSetting, LayoutType
 from plotlyst.event.core import emit_event, EventListener, Event
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import SceneChangedEvent, StorylineCreatedEvent, SceneAddedEvent, SceneDeletedEvent, \
-    SceneOrderChangedEvent
+    SceneOrderChangedEvent, StorylineRemovedEvent, StorylineChangedEvent
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import hmax, tool_btn, ButtonPressResizeEventFilter, fade_out_and_gc, insert_before_the_end, \
+from plotlyst.view.common import tool_btn, fade_out_and_gc, insert_before_the_end, \
     label, push_btn, shadow, fade_in, to_rgba_str
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.cards import SceneCard, CardsView
-from plotlyst.view.widget.display import Icon
-from plotlyst.view.widget.input import RotatedButton, RotatedButtonOrientation, RemovalButton
+from plotlyst.view.widget.input import RemovalButton
 from plotlyst.view.widget.timeline import TimelineGridWidget, TimelineGridLine, TimelineGridPlaceholder
 
 GRID_ITEM_WIDTH: int = 190
 GRID_ITEM_HEIGHT: int = 120
 
 
-class _SceneGridItem(QWidget):
-    def __init__(self, novel: Novel, scene: Scene, parent=None):
-        super(_SceneGridItem, self).__init__(parent)
-        self.novel = novel
-        self.scene = scene
-
-        vbox(self, spacing=1)
-
-        icon = Icon()
-        beat = self.scene.beat(self.novel)
-        if beat and beat.icon:
-            icon.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
-
-        self.label = QLabel(self)
-        self.label.setWordWrap(True)
-        self.label.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
-        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.label.setText(scene.title_or_index(self.novel))
-
-        self.wdgTop = QWidget()
-        hbox(self.wdgTop, 0, 1)
-        self.wdgTop.layout().addWidget(spacer())
-        self.wdgTop.layout().addWidget(icon)
-        self.wdgTop.layout().addWidget(self.label, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.wdgTop.layout().addWidget(spacer())
-
-        self.textSynopsis = QTextEdit()
-        self.textSynopsis.setFontPointSize(self.label.font().pointSize())
-        self.textSynopsis.setPlaceholderText('Scene synopsis...')
-        self.textSynopsis.setTabChangesFocus(True)
-        self.textSynopsis.verticalScrollBar().setVisible(False)
-        transparent(self.textSynopsis)
-        self.textSynopsis.setAcceptRichText(False)
-        self.textSynopsis.setText(self.scene.synopsis)
-        self.textSynopsis.textChanged.connect(self._synopsisChanged)
-
-        self.layout().addWidget(self.wdgTop)
-        self.layout().addWidget(line())
-        self.layout().addWidget(self.textSynopsis)
-
-        self.repo = RepositoryPersistenceManager.instance()
-
-    def _synopsisChanged(self):
-        self.scene.synopsis = self.textSynopsis.toPlainText()
-        self.repo.update_scene(self.scene)
-
-
-class _ScenesLineWidget(QWidget):
-    def __init__(self, novel: Novel, parent=None, vertical: bool = False):
-        super(_ScenesLineWidget, self).__init__(parent)
-        self.novel = novel
-
-        if vertical:
-            vbox(self, margin=0, spacing=5)
-        else:
-            hbox(self, margin=0, spacing=12)
-
-        wdgEmpty = QWidget()
-        wdgEmpty.setFixedSize(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT)
-        self.layout().addWidget(wdgEmpty)
-
-        if vertical:
-            hmax(self)
-
-        for scene in self.novel.scenes:
-            wdg = _SceneGridItem(self.novel, scene)
-            wdg.setFixedSize(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT)
-            self.layout().addWidget(wdg)
-
-        if vertical:
-            self.layout().addWidget(vspacer())
-        else:
-            self.layout().addWidget(spacer())
-
-        sp(self).v_max()
+# class _SceneGridItem(QWidget):
+#     def __init__(self, novel: Novel, scene: Scene, parent=None):
+#         super(_SceneGridItem, self).__init__(parent)
+#         self.novel = novel
+#         self.scene = scene
+#
+#         vbox(self, spacing=1)
+#
+#         icon = Icon()
+#         beat = self.scene.beat(self.novel)
+#         if beat and beat.icon:
+#             icon.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
+#
+#         self.label = QLabel(self)
+#         self.label.setWordWrap(True)
+#         self.label.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
+#         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+#         self.label.setText(scene.title_or_index(self.novel))
+#
+#         self.wdgTop = QWidget()
+#         hbox(self.wdgTop, 0, 1)
+#         self.wdgTop.layout().addWidget(spacer())
+#         self.wdgTop.layout().addWidget(icon)
+#         self.wdgTop.layout().addWidget(self.label, alignment=Qt.AlignmentFlag.AlignCenter)
+#         self.wdgTop.layout().addWidget(spacer())
+#
+#         self.textSynopsis = QTextEdit()
+#         self.textSynopsis.setFontPointSize(self.label.font().pointSize())
+#         self.textSynopsis.setPlaceholderText('Scene synopsis...')
+#         self.textSynopsis.setTabChangesFocus(True)
+#         self.textSynopsis.verticalScrollBar().setVisible(False)
+#         transparent(self.textSynopsis)
+#         self.textSynopsis.setAcceptRichText(False)
+#         self.textSynopsis.setText(self.scene.synopsis)
+#         self.textSynopsis.textChanged.connect(self._synopsisChanged)
+#
+#         self.layout().addWidget(self.wdgTop)
+#         self.layout().addWidget(line())
+#         self.layout().addWidget(self.textSynopsis)
+#
+#         self.repo = RepositoryPersistenceManager.instance()
+#
+#     def _synopsisChanged(self):
+#         self.scene.synopsis = self.textSynopsis.toPlainText()
+#         self.repo.update_scene(self.scene)
 
 
-class _ScenePlotAssociationsWidget(QWidget):
-    LineSize: int = 15
+# class _ScenesLineWidget(QWidget):
+#     def __init__(self, novel: Novel, parent=None, vertical: bool = False):
+#         super(_ScenesLineWidget, self).__init__(parent)
+#         self.novel = novel
+#
+#         if vertical:
+#             vbox(self, margin=0, spacing=5)
+#         else:
+#             hbox(self, margin=0, spacing=12)
+#
+#         wdgEmpty = QWidget()
+#         wdgEmpty.setFixedSize(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT)
+#         self.layout().addWidget(wdgEmpty)
+#
+#         if vertical:
+#             hmax(self)
+#
+#         for scene in self.novel.scenes:
+#             wdg = _SceneGridItem(self.novel, scene)
+#             wdg.setFixedSize(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT)
+#             self.layout().addWidget(wdg)
+#
+#         if vertical:
+#             self.layout().addWidget(vspacer())
+#         else:
+#             self.layout().addWidget(spacer())
+#
+#         sp(self).v_max()
 
-    def __init__(self, novel: Novel, plot: Plot, parent=None, vertical: bool = False):
-        super(_ScenePlotAssociationsWidget, self).__init__(parent)
-        self.novel = novel
-        self.plot = plot
-        self._vertical = vertical
 
-        self.setProperty('relaxed-white-bg', True)
-
-        self.wdgReferences = QWidget()
-        self.wdgReferences.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-
-        if vertical:
-            hbox(self, 0, 0)
-            vbox(self.wdgReferences, margin=0, spacing=5)
-            margins(self.wdgReferences, top=GRID_ITEM_HEIGHT)
-            btnPlot = RotatedButton()
-            btnPlot.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
-            hmax(btnPlot)
-            self.layout().addWidget(btnPlot, alignment=Qt.AlignmentFlag.AlignTop)
-
-            hmax(self)
-        else:
-            vbox(self, 0, 0)
-            hbox(self.wdgReferences, margin=0, spacing=12)
-            margins(self.wdgReferences, left=GRID_ITEM_WIDTH)
-            btnPlot = QPushButton()
-            self.layout().addWidget(btnPlot, alignment=Qt.AlignmentFlag.AlignLeft)
-
-        btnPlot.setText(self.plot.text)
-        incr_font(btnPlot)
-        if self.plot.icon:
-            btnPlot.setIcon(IconRegistry.from_name(self.plot.icon, self.plot.icon_color))
-        transparent(btnPlot)
-
-        self.layout().addWidget(self.wdgReferences)
-
-        for scene in self.novel.scenes:
-            pv = next((x for x in scene.plot_values if x.plot.id == self.plot.id), None)
-            if pv:
-                wdg = self.__initCommentWidget(scene, pv)
-            else:
-                wdg = self.__initPlusWidget(scene)
-            self.wdgReferences.layout().addWidget(wdg)
-
-        if vertical:
-            self.wdgReferences.layout().addWidget(vspacer())
-        else:
-            self.wdgReferences.layout().addWidget(spacer())
-
-        self.repo = RepositoryPersistenceManager.instance()
-        sp(self).v_max()
-
-    @overrides
-    def paintEvent(self, event: QPaintEvent) -> None:
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setPen(QColor(self.plot.icon_color))
-        painter.setBrush(QColor(self.plot.icon_color))
-        painter.setOpacity(0.7)
-
-        if self._vertical:
-            painter.drawRect(self.rect().width() // 2 - 4, 5, 8, self.rect().height())
-        else:
-            painter.drawRect(5, 50, self.rect().width(), 8)
-
-    def _commentChanged(self, editor: QTextEdit, scene: Scene, scenePlotRef: ScenePlotReference):
-        scenePlotRef.data.comment = editor.toPlainText()
-        self.repo.update_scene(scene)
-
-    def _linkToPlot(self, placeholder: QWidget, scene: Scene):
-        ref = ScenePlotReference(self.plot)
-        scene.plot_values.append(ref)
-
-        wdg = self.__initCommentWidget(scene, ref)
-        self.wdgReferences.layout().replaceWidget(placeholder, wdg)
-        qtanim.fade_in(wdg)
-        wdg.setFocus()
-
-        self.repo.update_scene(scene)
-
-    def _removePlotLink(self, editor: QTextEdit, scene: Scene, ref: ScenePlotReference):
-        i = self.wdgReferences.layout().indexOf(editor)
-        fade_out_and_gc(self.wdgReferences, editor)
-        wdg = self.__initPlusWidget(scene)
-        QTimer.singleShot(200, lambda: self.wdgReferences.layout().insertWidget(i, wdg))
-
-        scene.plot_values.remove(ref)
-        self.repo.update_scene(scene)
-
-    def __initCommentWidget(self, scene: Scene, ref: ScenePlotReference) -> QWidget:
-        wdg = QTextEdit()
-        wdg.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        wdg.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        wdg.setPlaceholderText('How is the scene related to this storyline?')
-        wdg.setTabChangesFocus(True)
-        wdg.setStyleSheet(f'''
-                            border:1px solid {self.plot.icon_color};
-                            background: {WHITE_COLOR};
-                            padding: 4px;
-                            border-radius: 6px;
-                        ''')
-        wdg.setText(ref.data.comment)
-        wdg.textChanged.connect(partial(self._commentChanged, wdg, scene, ref))
-
-        btn = RemovalButton(wdg, ref.plot.icon_color, ref.plot.icon_color, colorHover='lightgrey')
-        btn.installEventFilter(ButtonPressResizeEventFilter(btn))
-        btn.setGeometry(GRID_ITEM_WIDTH - 20, 1, 20, 20)
-        btn.setVisible(True)
-        btn.clicked.connect(lambda: self._removePlotLink(wdg, scene, ref))
-
-        wdg.installEventFilter(VisibilityToggleEventFilter(btn, wdg))
-        wdg.setFixedSize(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT)
-
-        return wdg
-
-    def __initPlusWidget(self, scene: Scene) -> QWidget:
-        wdg = QWidget()
-        transparent(wdg)
-        wdg.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        btnPlus = tool_btn(IconRegistry.plus_circle_icon('grey'), 'Associate to storyline', transparent_=True)
-        btnPlus.setIconSize(QSize(32, 32))
-        btnPlus.installEventFilter(OpacityEventFilter(btnPlus, enterOpacity=0.7, leaveOpacity=0.1))
-        btnPlus.clicked.connect(partial(self._linkToPlot, wdg, scene))
-        vbox(wdg).addWidget(btnPlus, alignment=Qt.AlignmentFlag.AlignCenter)
-        wdg.setFixedSize(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT)
-        wdg.installEventFilter(VisibilityToggleEventFilter(btnPlus, wdg))
-
-        return wdg
+# class _ScenePlotAssociationsWidget(QWidget):
+#     LineSize: int = 15
+#
+#     def __init__(self, novel: Novel, plot: Plot, parent=None, vertical: bool = False):
+#         super(_ScenePlotAssociationsWidget, self).__init__(parent)
+#         self.novel = novel
+#         self.plot = plot
+#         self._vertical = vertical
+#
+#         self.setProperty('relaxed-white-bg', True)
+#
+#         self.wdgReferences = QWidget()
+#         self.wdgReferences.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+#
+#         if vertical:
+#             hbox(self, 0, 0)
+#             vbox(self.wdgReferences, margin=0, spacing=5)
+#             margins(self.wdgReferences, top=GRID_ITEM_HEIGHT)
+#             btnPlot = RotatedButton()
+#             btnPlot.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
+#             hmax(btnPlot)
+#             self.layout().addWidget(btnPlot, alignment=Qt.AlignmentFlag.AlignTop)
+#
+#             hmax(self)
+#         else:
+#             vbox(self, 0, 0)
+#             hbox(self.wdgReferences, margin=0, spacing=12)
+#             margins(self.wdgReferences, left=GRID_ITEM_WIDTH)
+#             btnPlot = QPushButton()
+#             self.layout().addWidget(btnPlot, alignment=Qt.AlignmentFlag.AlignLeft)
+#
+#         btnPlot.setText(self.plot.text)
+#         incr_font(btnPlot)
+#         if self.plot.icon:
+#             btnPlot.setIcon(IconRegistry.from_name(self.plot.icon, self.plot.icon_color))
+#         transparent(btnPlot)
+#
+#         self.layout().addWidget(self.wdgReferences)
+#
+#         for scene in self.novel.scenes:
+#             pv = next((x for x in scene.plot_values if x.plot.id == self.plot.id), None)
+#             if pv:
+#                 wdg = self.__initCommentWidget(scene, pv)
+#             else:
+#                 wdg = self.__initPlusWidget(scene)
+#             self.wdgReferences.layout().addWidget(wdg)
+#
+#         if vertical:
+#             self.wdgReferences.layout().addWidget(vspacer())
+#         else:
+#             self.wdgReferences.layout().addWidget(spacer())
+#
+#         self.repo = RepositoryPersistenceManager.instance()
+#         sp(self).v_max()
+#
+#     @overrides
+#     def paintEvent(self, event: QPaintEvent) -> None:
+#         painter = QPainter(self)
+#         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+#         painter.setPen(QColor(self.plot.icon_color))
+#         painter.setBrush(QColor(self.plot.icon_color))
+#         painter.setOpacity(0.7)
+#
+#         if self._vertical:
+#             painter.drawRect(self.rect().width() // 2 - 4, 5, 8, self.rect().height())
+#         else:
+#             painter.drawRect(5, 50, self.rect().width(), 8)
+#
+#     def _commentChanged(self, editor: QTextEdit, scene: Scene, scenePlotRef: ScenePlotReference):
+#         scenePlotRef.data.comment = editor.toPlainText()
+#         self.repo.update_scene(scene)
+#
+#     def _linkToPlot(self, placeholder: QWidget, scene: Scene):
+#         ref = ScenePlotReference(self.plot)
+#         scene.plot_values.append(ref)
+#
+#         wdg = self.__initCommentWidget(scene, ref)
+#         self.wdgReferences.layout().replaceWidget(placeholder, wdg)
+#         qtanim.fade_in(wdg)
+#         wdg.setFocus()
+#
+#         self.repo.update_scene(scene)
+#
+#     def _removePlotLink(self, editor: QTextEdit, scene: Scene, ref: ScenePlotReference):
+#         i = self.wdgReferences.layout().indexOf(editor)
+#         fade_out_and_gc(self.wdgReferences, editor)
+#         wdg = self.__initPlusWidget(scene)
+#         QTimer.singleShot(200, lambda: self.wdgReferences.layout().insertWidget(i, wdg))
+#
+#         scene.plot_values.remove(ref)
+#         self.repo.update_scene(scene)
+#
+#     def __initCommentWidget(self, scene: Scene, ref: ScenePlotReference) -> QWidget:
+#         wdg = QTextEdit()
+#         wdg.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+#         wdg.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+#         wdg.setPlaceholderText('How is the scene related to this storyline?')
+#         wdg.setTabChangesFocus(True)
+#         wdg.setStyleSheet(f'''
+#                             border:1px solid {self.plot.icon_color};
+#                             background: {WHITE_COLOR};
+#                             padding: 4px;
+#                             border-radius: 6px;
+#                         ''')
+#         wdg.setText(ref.data.comment)
+#         wdg.textChanged.connect(partial(self._commentChanged, wdg, scene, ref))
+#
+#         btn = RemovalButton(wdg, ref.plot.icon_color, ref.plot.icon_color, colorHover='lightgrey')
+#         btn.installEventFilter(ButtonPressResizeEventFilter(btn))
+#         btn.setGeometry(GRID_ITEM_WIDTH - 20, 1, 20, 20)
+#         btn.setVisible(True)
+#         btn.clicked.connect(lambda: self._removePlotLink(wdg, scene, ref))
+#
+#         wdg.installEventFilter(VisibilityToggleEventFilter(btn, wdg))
+#         wdg.setFixedSize(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT)
+#
+#         return wdg
+#
+#     def __initPlusWidget(self, scene: Scene) -> QWidget:
+#         wdg = QWidget()
+#         transparent(wdg)
+#         wdg.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+#         btnPlus = tool_btn(IconRegistry.plus_circle_icon('grey'), 'Associate to storyline', transparent_=True)
+#         btnPlus.setIconSize(QSize(32, 32))
+#         btnPlus.installEventFilter(OpacityEventFilter(btnPlus, enterOpacity=0.7, leaveOpacity=0.1))
+#         btnPlus.clicked.connect(partial(self._linkToPlot, wdg, scene))
+#         vbox(wdg).addWidget(btnPlus, alignment=Qt.AlignmentFlag.AlignCenter)
+#         wdg.setFixedSize(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT)
+#         wdg.installEventFilter(VisibilityToggleEventFilter(btnPlus, wdg))
+#
+#         return wdg
 
 
 # wdgScenePlotParent = QWidget(self)
@@ -285,11 +283,16 @@ class _ScenePlotAssociationsWidget(QWidget):
 class ScenesGridPlotHeader(QWidget):
     def __init__(self, plot: Plot, parent=None):
         super().__init__(parent)
-        lblPlot = push_btn(text=plot.text, transparent_=True)
+        self.plot = plot
+        self.lblPlot = push_btn(text=plot.text, transparent_=True)
         if plot.icon:
-            lblPlot.setIcon(IconRegistry.from_name(plot.icon, plot.icon_color))
-        incr_font(lblPlot, 1)
-        vbox(self, 0, 0).addWidget(lblPlot)
+            self.lblPlot.setIcon(IconRegistry.from_name(plot.icon, plot.icon_color))
+        incr_font(self.lblPlot, 1)
+        vbox(self, 0, 0).addWidget(self.lblPlot)
+
+    def refresh(self):
+        self.lblPlot.setText(self.plot.text)
+        self.lblPlot.setIcon(IconRegistry.from_name(self.plot.icon, self.plot.icon_color))
 
 
 class SceneStorylineAssociation(QWidget):
@@ -416,8 +419,9 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
         self.refresh()
 
         dispatcher = event_dispatchers.instance(self._novel)
-        dispatcher.register(self, SceneChangedEvent, SceneAddedEvent, SceneDeletedEvent, StorylineCreatedEvent,
-                            SceneOrderChangedEvent)
+        dispatcher.register(self, SceneChangedEvent, SceneAddedEvent, SceneDeletedEvent, SceneOrderChangedEvent,
+                            StorylineChangedEvent, StorylineCreatedEvent,
+                            StorylineRemovedEvent)
 
     @overrides
     def event_received(self, event: Event):
@@ -452,6 +456,12 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
                     self._addPlaceholder(line, scene)
             self.initRefs()
             self.cardsView.reorderCards(self._novel.scenes)
+        elif isinstance(event, StorylineChangedEvent):
+            self._handleStorylineChanged(event.storyline)
+        elif isinstance(event, StorylineCreatedEvent):
+            self._handleStorylineCreated(event.storyline)
+        elif isinstance(event, StorylineRemovedEvent):
+            self._handleStorylineRemoved(event.storyline)
 
     def setOrientation(self, orientation: Qt.Orientation):
         clear_layout(self.wdgRows, auto_delete=self._scenesInColumns)  # delete plots
@@ -584,6 +594,30 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
     def _removeSceneReferences(self, index: int):
         for line in self._plots.values():
             self._removeWidget(line, index)
+
+    def _handleStorylineRemoved(self, plot: Plot):
+        line = self._plots.pop(plot)
+        self.wdgEditor.layout().removeWidget(line)
+        gc(line)
+
+        header = self.__plotHeader(plot)
+        fade_out_and_gc(header.parent(), header)
+
+    def _handleStorylineChanged(self, plot: Plot):
+        header = self.__plotHeader(plot)
+        header.refresh()
+
+    def _handleStorylineCreated(self, plot: Plot):
+        self.addPlot(plot)
+
+    def __plotHeader(self, plot: Plot) -> Optional[ScenesGridPlotHeader]:
+        wdg = self.wdgRows if self._scenesInColumns else self.wdgColumns
+
+        for i in range(wdg.layout().count()):
+            header = wdg.layout().itemAt(i).widget()
+            if isinstance(header, ScenesGridPlotHeader):
+                if header.plot.id == plot.id:
+                    return header
 
     def __initRefWidget(self, scene: Scene, plot_ref: ScenePlotReference) -> SceneStorylineAssociation:
         wdg = SceneStorylineAssociation(plot_ref.plot, plot_ref)
