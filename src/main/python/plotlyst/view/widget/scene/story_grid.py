@@ -36,7 +36,8 @@ from plotlyst.core.domain import Scene, Novel, Plot, \
     ScenePlotReference, NovelSetting, LayoutType
 from plotlyst.event.core import emit_event, EventListener, Event
 from plotlyst.event.handler import event_dispatchers
-from plotlyst.events import SceneChangedEvent, StorylineCreatedEvent, SceneAddedEvent, SceneDeletedEvent
+from plotlyst.events import SceneChangedEvent, StorylineCreatedEvent, SceneAddedEvent, SceneDeletedEvent, \
+    SceneOrderChangedEvent
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import hmax, tool_btn, ButtonPressResizeEventFilter, fade_out_and_gc, insert_before_the_end, \
     label, push_btn, shadow, fade_in, to_rgba_str
@@ -415,7 +416,8 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
         self.refresh()
 
         dispatcher = event_dispatchers.instance(self._novel)
-        dispatcher.register(self, SceneChangedEvent, SceneAddedEvent, SceneDeletedEvent, StorylineCreatedEvent)
+        dispatcher.register(self, SceneChangedEvent, SceneAddedEvent, SceneDeletedEvent, StorylineCreatedEvent,
+                            SceneOrderChangedEvent)
 
     @overrides
     def event_received(self, event: Event):
@@ -441,6 +443,15 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
             index = self.cardsView.layout().indexOf(card)
             self._removeSceneReferences(index)
             self.cardsView.remove(event.scene)
+        elif isinstance(event, SceneOrderChangedEvent):
+            for line in self._plots.values():
+                clear_layout(line)
+                spacer_wdg = spacer() if self._scenesInColumns else vspacer()
+                line.layout().addWidget(spacer_wdg)
+                for scene in self._novel.scenes:
+                    self._addPlaceholder(line, scene)
+            self.initRefs()
+            self.cardsView.reorderCards(self._novel.scenes)
 
     def setOrientation(self, orientation: Qt.Orientation):
         clear_layout(self.wdgRows, auto_delete=self._scenesInColumns)  # delete plots
@@ -477,6 +488,9 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
         else:
             insert_before_the_end(self.wdgRows, self.cardsView)
 
+        self.initRefs()
+
+    def initRefs(self):
         for i, scene in enumerate(self._novel.scenes):
             for plot_ref in scene.plot_values:
                 self.addRef(i, scene, plot_ref)
