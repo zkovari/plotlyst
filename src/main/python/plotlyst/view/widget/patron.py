@@ -830,6 +830,10 @@ class PatronRecognitionWidget(QWidget):
     def refresh(self):
         if self.patron.vip:
             self.lbl.refresh()
+        else:
+            self.lbl.setText(self.patron.name)
+            if self.patron.icon:
+                self.lbl.setIcon(IconRegistry.from_name(self.patron.icon, PLOTLYST_SECONDARY_COLOR))
 
     def _labelClicked(self):
         menu = MenuWidget()
@@ -939,8 +943,8 @@ class PatronsWidget(QWidget):
 class PatronRecognitionBuilderPopup(PopupDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.patron = Patron('My name')
-        self.patronVip = Patron('My name', vip=True)
+        self.patron = Patron('My name', web='https://plotlyst.com')
+        self.patronVip = Patron('My name', vip=True, web='https://plotlyst.com')
 
         desc = 'Patrons can gain recognition in Plotlyst.'
         desc += ' If you subscribed to my page, you should have received a form to upload your information. To make the process easier, you can edit your info here and export.'
@@ -965,6 +969,7 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.lineName = self._lineedit('Name', iconEditable=True)
         self.lineName.setIcon(IconRegistry.icons_icon('grey'))
         self.lineName.lineEdit.textEdited.connect(self._nameEdited)
+        self.lineName.iconChanged.connect(self._iconChanged)
         self.nameFrame = self._framed(self.lineName)
 
         self.lineWebsite = self._lineedit('Website (https://...)')
@@ -1014,6 +1019,14 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.patron.name = name
         self.patronVip.name = name
 
+        self.patronLbl.refresh()
+        self.patronCard.refresh()
+
+    def _iconChanged(self, name: str):
+        self.patron.icon = name
+        self.patronVip.icon = name
+
+        self.patronLbl.refresh()
         self.patronCard.refresh()
 
     def _websiteEdited(self, web: str):
