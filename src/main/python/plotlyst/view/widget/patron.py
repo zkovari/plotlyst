@@ -25,7 +25,7 @@ from typing import List, Dict, Optional
 
 from PyQt6.QtCore import QThreadPool, QSize, Qt, QEvent, pyqtSignal
 from PyQt6.QtGui import QShowEvent, QMouseEvent, QCursor
-from PyQt6.QtWidgets import QWidget, QTabWidget, QPushButton, QProgressBar, QButtonGroup, QFrame
+from PyQt6.QtWidgets import QWidget, QTabWidget, QPushButton, QProgressBar, QButtonGroup, QFrame, QComboBox
 from dataclasses_json import dataclass_json, Undefined
 from overrides import overrides
 from qthandy import vbox, hbox, clear_layout, line, vspacer, spacer, translucent, margins, transparent, incr_font, flow, \
@@ -39,12 +39,13 @@ from plotlyst.core.domain import Board, Task, TaskStatus
 from plotlyst.env import app_env
 from plotlyst.service.resource import JsonDownloadResult, JsonDownloadWorker
 from plotlyst.view.common import label, set_tab_enabled, push_btn, spin, scroll_area, wrap, frame, shadow, tool_btn, \
-    action, open_url, spawn
+    action, open_url, ExclusiveOptionalButtonGroup
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
+from plotlyst.view.widget.button import SmallToggleButton
 from plotlyst.view.widget.cards import Card
 from plotlyst.view.widget.chart import ChartItem, PolarChart, PieChart
-from plotlyst.view.widget.display import IconText, ChartView, PopupDialog, HintButton
+from plotlyst.view.widget.display import IconText, ChartView, PopupDialog, HintButton, icon_text
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, DecoratedLineEdit
 
 
@@ -102,6 +103,7 @@ class Patron:
     description: str = ''
     genre: str = ''
     vip: bool = False
+    profession: str = ''
     novels: List[PatronNovelInfo] = field(default_factory=list)
     socials: Dict[str, str] = field(default_factory=dict)
     favourites: List[str] = field(default_factory=list)
@@ -939,7 +941,7 @@ class PatronsWidget(QWidget):
             clear_layout(self.wdgLoading)
 
 
-@spawn
+# @spawn
 class PatronRecognitionBuilderPopup(PopupDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -966,11 +968,65 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.tabWidget.addTab(self.tabProfile, IconRegistry.from_name('ri.vip-diamond-fill'), 'VIP Profile')
         self.tabWidget.addTab(self.tabExport, IconRegistry.from_name('mdi6.export-variant'), 'Export')
 
+        self.btnArtist = SmallToggleButton()
+        self.btnEditor = SmallToggleButton()
+        self.btnContentCreator = SmallToggleButton()
+        self.btnTypeGroup = ExclusiveOptionalButtonGroup()
+        self.btnTypeGroup.addButton(self.btnArtist)
+        self.btnTypeGroup.addButton(self.btnEditor)
+        self.btnTypeGroup.addButton(self.btnContentCreator)
+        self.btnTypeGroup.buttonClicked.connect(self._typeChanged)
+
+        self.wdgType = QWidget()
+        hbox(self.wdgType, 0, 0)
+        self.wdgType.layout().addWidget(spacer())
+        self.wdgType.layout().addWidget(icon_text('fa5s.palette', "I'm an Artist"))
+        self.wdgType.layout().addWidget(self.btnArtist)
+        self.wdgType.layout().addWidget(spacer())
+        self.wdgType.layout().addWidget(icon_text('fa5s.pen-fancy', "I'm an Editor"))
+        self.wdgType.layout().addWidget(self.btnEditor)
+        self.wdgType.layout().addWidget(spacer())
+        self.wdgType.layout().addWidget(icon_text('mdi6.laptop-account', "I'm a Content Creator"))
+        self.wdgType.layout().addWidget(self.btnContentCreator)
+        self.wdgType.layout().addWidget(spacer())
+
         self.lineName = self._lineedit('Name', iconEditable=True)
         self.lineName.setIcon(IconRegistry.icons_icon('grey'))
         self.lineName.lineEdit.textEdited.connect(self._nameEdited)
         self.lineName.iconChanged.connect(self._iconChanged)
         self.nameFrame = self._framed(self.lineName)
+
+        self.wdgGenre = QWidget()
+        hbox(self.wdgGenre)
+        self.cbGenre = QComboBox()
+        self.cbGenre.currentTextChanged.connect(self._genreChanged)
+        self.cbGenre.addItem('')
+        self.cbGenre.addItem('Fantasy')
+        self.cbGenre.addItem('Sci-Fi')
+        self.cbGenre.addItem("Romance")
+        self.cbGenre.addItem("Mystery")
+        self.cbGenre.addItem("Action or Adventure")
+        self.cbGenre.addItem("Thriller/Suspense")
+        self.cbGenre.addItem("Horror")
+        self.cbGenre.addItem("Crime")
+        self.cbGenre.addItem("Caper")
+        self.cbGenre.addItem("Coming of Age")
+        self.cbGenre.addItem("Cozy")
+        self.cbGenre.addItem("Historical Fiction")
+        self.cbGenre.addItem("War")
+        self.cbGenre.addItem("Western")
+        self.cbGenre.addItem("Upmarket")
+        self.cbGenre.addItem("Literary Fiction")
+        self.cbGenre.addItem("Society")
+        self.cbGenre.addItem("Memoir")
+        self.cbGenre.addItem("Children's Books")
+        self.cbGenre.addItem("Slice of Life")
+        self.cbGenre.addItem("Comedy")
+        self.cbGenre.addItem("Contemporary")
+
+        self.wdgGenre.layout().addWidget(label('Genre:'))
+        self.wdgGenre.layout().addWidget(self.cbGenre)
+        self.wdgGenre.layout().addWidget(spacer())
 
         self.lineWebsite = self._lineedit('Website (https://...)')
         self.lineWebsite.lineEdit.textEdited.connect(self._websiteEdited)
@@ -999,7 +1055,9 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.wdgPreview.layout().addWidget(self.frameVipPatron)
         self.wdgPreview.layout().addWidget(spacer())
 
+        self.tabMain.layout().addWidget(self.wdgType)
         self.tabMain.layout().addWidget(self.nameFrame)
+        self.tabMain.layout().addWidget(self.wdgGenre)
         self.tabMain.layout().addWidget(self.websiteFrame)
         self.tabMain.layout().addWidget(self.bioFrame)
         self.tabMain.layout().addWidget(vspacer())
@@ -1021,6 +1079,25 @@ class PatronRecognitionBuilderPopup(PopupDialog):
 
         self.patronLbl.refresh()
         self.patronCard.refresh()
+
+    def _genreChanged(self, genre: str):
+        self.patron.genre = genre
+        self.patronVip.genre = genre
+
+    def _typeChanged(self):
+        if self.btnTypeGroup.checkedButton() is None:
+            profession = ''
+        elif self.btnTypeGroup.checkedButton() is self.btnArtist:
+            profession = 'artist'
+        elif self.btnTypeGroup.checkedButton() is self.btnEditor:
+            profession = 'editor'
+        elif self.btnTypeGroup.checkedButton() is self.btnContentCreator:
+            profession = 'content'
+        else:
+            return
+
+        self.patron.profession = profession
+        self.patronVip.profession = profession
 
     def _iconChanged(self, name: str):
         self.patron.icon = name

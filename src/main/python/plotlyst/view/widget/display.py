@@ -30,7 +30,7 @@ from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePoli
     QApplication
 from overrides import overrides
 from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon, pointy, hbox, busy, italic, decr_font, \
-    margins
+    margins, translucent
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -558,3 +558,13 @@ class DividerWidget(QWidget):
         painter.setOpacity(0.8)
         rect = QRectF(0, 0, self.width(), self.height())
         self.svg_renderer.render(painter, rect)
+
+
+def icon_text(icon: str, text: str, icon_color: str = 'black', opacity: Optional[float] = None) -> IconText:
+    wdg = IconText()
+    wdg.setText(text)
+    wdg.setIcon(IconRegistry.from_name(icon, icon_color))
+    if opacity:
+        translucent(wdg, opacity)
+
+    return wdg
