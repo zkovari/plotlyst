@@ -309,6 +309,7 @@ class HintButton(QToolButton):
         if self._menu.isEmpty():
             textedit = QTextBrowser()
             textedit.setText(self._hint)
+            incr_font(textedit, 4)
             self._menu.addWidget(textedit)
 
 

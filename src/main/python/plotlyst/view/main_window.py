@@ -79,6 +79,7 @@ from plotlyst.view.widget.confirm import asked
 from plotlyst.view.widget.input import CapitalizationEventFilter
 from plotlyst.view.widget.labels import SeriesLabel
 from plotlyst.view.widget.log import LogsPopup
+from plotlyst.view.widget.patron import PatronRecognitionBuilderPopup
 from plotlyst.view.widget.settings import NovelQuickPanelCustomizationButton
 from plotlyst.view.widget.tour.core import TutorialNovelOpenTourEvent, tutorial_novel, \
     TutorialNovelCloseTourEvent, NovelTopLevelButtonTourEvent, HomeTopLevelButtonTourEvent, NovelEditorDisplayTourEvent, \
@@ -542,6 +543,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionDetachTask.triggered.connect(partial(self._detach_panel, NovelSetting.Management))
         self.actionDetachReports.setIcon(IconRegistry.reports_icon())
         self.actionDetachReports.triggered.connect(partial(self._detach_panel, NovelSetting.Reports))
+
+        self.actionPatronRecognitionBuilder.setIcon(IconRegistry.from_name('fa5s.hand-holding-heart'))
+        self.actionPatronRecognitionBuilder.triggered.connect(lambda: PatronRecognitionBuilderPopup.popup())
 
         self.actionLogs.setIcon(IconRegistry.from_name('fa5.file-code'))
         self.actionLogs.triggered.connect(lambda: LogsPopup.popup())

@@ -1076,10 +1076,17 @@
     </widget>
     <addaction name="menuDetachPanels"/>
    </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionPatronRecognitionBuilder"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuView"/>
    <addaction name="menuWindow"/>
+   <addaction name="menuTools"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
@@ -1312,6 +1319,11 @@
   <action name="actionPatreon">
    <property name="text">
     <string>Patreon</string>
+   </property>
+  </action>
+  <action name="actionPatronRecognitionBuilder">
+   <property name="text">
+    <string>Patron Recognition Builder</string>
    </property>
   </action>
  </widget>

@@ -39,13 +39,13 @@ from plotlyst.core.domain import Board, Task, TaskStatus
 from plotlyst.env import app_env
 from plotlyst.service.resource import JsonDownloadResult, JsonDownloadWorker
 from plotlyst.view.common import label, set_tab_enabled, push_btn, spin, scroll_area, wrap, frame, shadow, tool_btn, \
-    action, open_url
+    action, open_url, spawn
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.cards import Card
 from plotlyst.view.widget.chart import ChartItem, PolarChart, PieChart
-from plotlyst.view.widget.display import IconText, ChartView
-from plotlyst.view.widget.input import AutoAdjustableTextEdit
+from plotlyst.view.widget.display import IconText, ChartView, PopupDialog, HintButton
+from plotlyst.view.widget.input import AutoAdjustableTextEdit, DecoratedLineEdit
 
 
 @dataclass
@@ -764,10 +764,11 @@ class VipPatronCard(Card):
                                     alignment=Qt.AlignmentFlag.AlignLeft)
         else:
             self.layout().addWidget(self.lblName, alignment=Qt.AlignmentFlag.AlignLeft)
-        if patron.bio:
-            bio = label(patron.bio, description=True, decr_font_diff=2, wordWrap=True)
-            sp(bio).v_max()
-            self.layout().addWidget(bio)
+        self.bio = label(patron.bio, description=True, decr_font_diff=2, wordWrap=True)
+        sp(self.bio).v_max()
+        self.layout().addWidget(self.bio)
+        if not patron.bio:
+            self.bio.setHidden(True)
 
         self._setStyleSheet()
 
@@ -778,6 +779,16 @@ class VipPatronCard(Card):
     @overrides
     def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
         pass
+
+    def refresh(self):
+        self.lblName.setText(self.patron.name)
+        if self.patron.icon:
+            self.lblName.setIcon(IconRegistry.from_name(self.patron.icon, PLOTLYST_SECONDARY_COLOR))
+        if self.patron.bio:
+            self.bio.setText(self.patron.bio)
+            self.bio.setVisible(True)
+        else:
+            self.bio.setVisible(False)
 
     @overrides
     def _bgColor(self, selected: bool = False) -> str:
@@ -815,6 +826,10 @@ class PatronRecognitionWidget(QWidget):
                 pointy(self.lbl)
 
         self.layout().addWidget(self.lbl)
+
+    def refresh(self):
+        if self.patron.vip:
+            self.lbl.refresh()
 
     def _labelClicked(self):
         menu = MenuWidget()
@@ -918,6 +933,116 @@ class PatronsWidget(QWidget):
             spin(btn, PLOTLYST_SECONDARY_COLOR)
         else:
             clear_layout(self.wdgLoading)
+
+
+@spawn
+class PatronRecognitionBuilderPopup(PopupDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.patron = Patron('My name')
+        self.patronVip = Patron('My name', vip=True)
+
+        desc = 'Patrons can gain recognition in Plotlyst.'
+        desc += ' If you subscribed to my page, you should have received a form to upload your information. To make the process easier, you can edit your info here and export.'
+        self.lblDesc = label(
+            desc,
+            description=True, wordWrap=True)
+        sp(self.lblDesc).v_max()
+
+        self.tabWidget = QTabWidget()
+        self.tabWidget.setProperty('relaxed-white-bg', True)
+        self.tabWidget.setProperty('centered', True)
+        self.tabMain = QWidget()
+        vbox(self.tabMain, 10, 10)
+        self.tabProfile = QWidget()
+        self.tabExport = QWidget()
+
+        self.tabWidget.addTab(self.tabMain, IconRegistry.from_name('fa5s.hand-holding-heart'),
+                              'Basic info')
+        self.tabWidget.addTab(self.tabProfile, IconRegistry.from_name('ri.vip-diamond-fill'), 'VIP Profile')
+        self.tabWidget.addTab(self.tabExport, IconRegistry.from_name('mdi6.export-variant'), 'Export')
+
+        self.lineName = self._lineedit('Name', iconEditable=True)
+        self.lineName.setIcon(IconRegistry.icons_icon('grey'))
+        self.lineName.lineEdit.textEdited.connect(self._nameEdited)
+        self.nameFrame = self._framed(self.lineName)
+
+        self.lineWebsite = self._lineedit('Website (https://...)')
+        self.lineWebsite.lineEdit.textEdited.connect(self._websiteEdited)
+        self.websiteFrame = self._framed(self.lineWebsite)
+        hintWebsite = HintButton()
+        hintWebsite.setHint(
+            'Users will be able to click on your Patron label and visit your website.')
+        self.websiteFrame.layout().addWidget(hintWebsite, alignment=Qt.AlignmentFlag.AlignRight)
+
+        self.lineBio = self._lineedit('Bio (for VIP patrons only)', iconEditable=False)
+        self.lineBio.lineEdit.textEdited.connect(self._bioEdited)
+        self.bioFrame = self._framed(self.lineBio)
+
+        self.wdgPreview = QWidget()
+        hbox(self.wdgPreview)
+        self.patronLbl = PatronRecognitionWidget(self.patron)
+        self.framePatron = self._framed(self.patronLbl, margin=5)
+        self.patronCard = PatronRecognitionWidget(self.patronVip)
+        self.frameVipPatron = self._framed(self.patronCard, margin=5)
+
+        self.wdgPreview.layout().addWidget(spacer())
+        self.wdgPreview.layout().addWidget(label('Preview:'))
+        self.wdgPreview.layout().addWidget(self.framePatron)
+        self.wdgPreview.layout().addWidget(spacer())
+        self.wdgPreview.layout().addWidget(label('VIP Preview:'))
+        self.wdgPreview.layout().addWidget(self.frameVipPatron)
+        self.wdgPreview.layout().addWidget(spacer())
+
+        self.tabMain.layout().addWidget(self.nameFrame)
+        self.tabMain.layout().addWidget(self.websiteFrame)
+        self.tabMain.layout().addWidget(self.bioFrame)
+        self.tabMain.layout().addWidget(vspacer())
+
+        self.btnCancel = push_btn(text='Close', properties=['confirm', 'cancel'])
+        self.btnCancel.clicked.connect(self.reject)
+
+        self.frame.layout().addWidget(self.lblDesc)
+        self.frame.layout().addWidget(self.wdgPreview)
+        self.frame.layout().addWidget(self.tabWidget)
+        self.frame.layout().addWidget(self.btnCancel, alignment=Qt.AlignmentFlag.AlignRight)
+
+    def display(self):
+        self.exec()
+
+    def _nameEdited(self, name: str):
+        self.patron.name = name
+        self.patronVip.name = name
+
+        self.patronCard.refresh()
+
+    def _websiteEdited(self, web: str):
+        self.patron.web = web
+        self.patronVip.web = web
+
+        self.patronCard.refresh()
+
+    def _bioEdited(self, bio: str):
+        self.patron.bio = bio
+        self.patronVip.bio = bio
+
+        self.patronCard.refresh()
+
+    def _lineedit(self, placeholder: str, iconEditable=False) -> DecoratedLineEdit:
+        editor = DecoratedLineEdit(iconEditable=iconEditable, autoAdjustable=False)
+        editor.lineEdit.setPlaceholderText(placeholder)
+        editor.lineEdit.setMinimumWidth(500)
+        incr_font(editor.lineEdit, 3)
+
+        return editor
+
+    def _framed(self, editor: QWidget, margin: int = 10) -> QFrame:
+        _frame = frame()
+        hbox(_frame, margin, 10).addWidget(editor, alignment=Qt.AlignmentFlag.AlignLeft)
+        _frame.setProperty('muted-bg', True)
+        _frame.setProperty('large-rounded', True)
+
+        return _frame
 
 
 class PlotlystPlusWidget(QWidget):
