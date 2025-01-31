@@ -22,8 +22,9 @@ from functools import partial
 from typing import Optional, Any, Tuple, List
 
 import emoji
+import qtanim
 from PyQt6.QtCharts import QChartView
-from PyQt6.QtCore import pyqtProperty, QSize, Qt, QPoint, pyqtSignal, QRectF
+from PyQt6.QtCore import pyqtProperty, QSize, Qt, QPoint, pyqtSignal, QRectF, QTimer
 from PyQt6.QtGui import QPainter, QShowEvent, QColor, QPaintEvent, QBrush, QKeyEvent
 from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy, QTextBrowser, QFrame, QDialog, \
@@ -558,6 +559,19 @@ class DividerWidget(QWidget):
         painter.setOpacity(0.8)
         rect = QRectF(0, 0, self.width(), self.height())
         self.svg_renderer.render(painter, rect)
+
+
+class CopiedTextMessage(QLabel):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setText('Copied')
+        self.setHidden(True)
+
+    def trigger(self):
+        def finish():
+            QTimer.singleShot(250, lambda: qtanim.fade_out(self))
+
+        qtanim.fade_in(self, 150, teardown=finish)
 
 
 def icon_text(icon: str, text: str, icon_color: str = 'black', opacity: Optional[float] = None) -> IconText:

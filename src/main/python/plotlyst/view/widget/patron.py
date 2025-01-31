@@ -24,8 +24,9 @@ from functools import partial
 from typing import List, Dict, Optional
 
 from PyQt6.QtCore import QThreadPool, QSize, Qt, QEvent, pyqtSignal
-from PyQt6.QtGui import QShowEvent, QMouseEvent, QCursor
-from PyQt6.QtWidgets import QWidget, QTabWidget, QPushButton, QProgressBar, QButtonGroup, QFrame, QComboBox
+from PyQt6.QtGui import QShowEvent, QMouseEvent, QCursor, QGuiApplication
+from PyQt6.QtWidgets import QWidget, QTabWidget, QPushButton, QProgressBar, QButtonGroup, QFrame, QComboBox, \
+    QTextBrowser
 from dataclasses_json import dataclass_json, Undefined
 from overrides import overrides
 from qthandy import vbox, hbox, clear_layout, line, vspacer, spacer, translucent, margins, transparent, incr_font, flow, \
@@ -39,13 +40,13 @@ from plotlyst.core.domain import Board, Task, TaskStatus
 from plotlyst.env import app_env
 from plotlyst.service.resource import JsonDownloadResult, JsonDownloadWorker
 from plotlyst.view.common import label, set_tab_enabled, push_btn, spin, scroll_area, wrap, frame, shadow, tool_btn, \
-    action, open_url, ExclusiveOptionalButtonGroup
+    action, open_url, ExclusiveOptionalButtonGroup, spawn
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.button import SmallToggleButton
 from plotlyst.view.widget.cards import Card
 from plotlyst.view.widget.chart import ChartItem, PolarChart, PieChart
-from plotlyst.view.widget.display import IconText, ChartView, PopupDialog, HintButton, icon_text
+from plotlyst.view.widget.display import IconText, ChartView, PopupDialog, HintButton, icon_text, CopiedTextMessage
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, DecoratedLineEdit
 
 
@@ -94,6 +95,7 @@ class PatronNovelInfo:
     web: str = ''
 
 
+@dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class Patron:
     name: str
@@ -941,7 +943,7 @@ class PatronsWidget(QWidget):
             clear_layout(self.wdgLoading)
 
 
-# @spawn
+@spawn
 class PatronRecognitionBuilderPopup(PopupDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -961,12 +963,23 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.tabMain = QWidget()
         vbox(self.tabMain, 10, 10)
         self.tabProfile = QWidget()
+        vbox(self.tabProfile, 10, 10)
         self.tabExport = QWidget()
+        vbox(self.tabExport, 10, 10)
 
         self.tabWidget.addTab(self.tabMain, IconRegistry.from_name('fa5s.hand-holding-heart'),
                               'Basic info')
         self.tabWidget.addTab(self.tabProfile, IconRegistry.from_name('ri.vip-diamond-fill'), 'VIP Profile')
         self.tabWidget.addTab(self.tabExport, IconRegistry.from_name('mdi6.export-variant'), 'Export')
+
+        self.textJson = QTextBrowser()
+        self.btnCopy = push_btn(IconRegistry.from_name('fa5.copy', RELAXED_WHITE_COLOR), 'Copy to clipboard',
+                                properties=['positive', 'confirm'])
+        self.btnCopy.clicked.connect(self._copyJson)
+        self.lblCopied = CopiedTextMessage()
+        self.tabExport.layout().addWidget(group(self.lblCopied, self.btnCopy, margin=0),
+                                          alignment=Qt.AlignmentFlag.AlignRight)
+        self.tabExport.layout().addWidget(self.textJson)
 
         self.btnArtist = SmallToggleButton()
         self.btnEditor = SmallToggleButton()
@@ -1080,9 +1093,13 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.patronLbl.refresh()
         self.patronCard.refresh()
 
+        self._updateJson()
+
     def _genreChanged(self, genre: str):
         self.patron.genre = genre
         self.patronVip.genre = genre
+
+        self._updateJson()
 
     def _typeChanged(self):
         if self.btnTypeGroup.checkedButton() is None:
@@ -1099,6 +1116,8 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.patron.profession = profession
         self.patronVip.profession = profession
 
+        self._updateJson()
+
     def _iconChanged(self, name: str):
         self.patron.icon = name
         self.patronVip.icon = name
@@ -1106,17 +1125,30 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.patronLbl.refresh()
         self.patronCard.refresh()
 
+        self._updateJson()
+
     def _websiteEdited(self, web: str):
         self.patron.web = web
         self.patronVip.web = web
 
         self.patronCard.refresh()
 
+        self._updateJson()
+
     def _bioEdited(self, bio: str):
         self.patron.bio = bio
         self.patronVip.bio = bio
 
         self.patronCard.refresh()
+
+        self._updateJson()
+
+    def _updateJson(self):
+        self.textJson.setText(self.patronVip.to_json())
+
+    def _copyJson(self):
+        QGuiApplication.clipboard().setText(self.textJson.toPlainText())
+        self.lblCopied.trigger()
 
     def _lineedit(self, placeholder: str, iconEditable=False) -> DecoratedLineEdit:
         editor = DecoratedLineEdit(iconEditable=iconEditable, autoAdjustable=False)
