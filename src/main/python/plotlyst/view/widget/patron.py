@@ -682,7 +682,7 @@ class VipPatronProfile(QFrame):
         wdgSocials = QWidget()
         hbox(wdgSocials)
         if patron.web:
-            btn = tool_btn(IconRegistry.from_name('mdi.web', 'grey'), transparent_=True)
+            btn = tool_btn(IconRegistry.from_name('mdi.web', 'grey'), transparent_=True, tooltip=patron.web)
             btn.clicked.connect(partial(open_url, patron.web))
             wdgSocials.layout().addWidget(btn)
             if patron.socials:
@@ -690,10 +690,10 @@ class VipPatronProfile(QFrame):
         for k, social in patron.socials.items():
             icon = social_icons.get(k)
             if icon:
-                btn = tool_btn(IconRegistry.from_name(icon, 'grey'), transparent_=True)
+                btn = tool_btn(IconRegistry.from_name(icon, 'grey'), transparent_=True, tooltip=social)
                 btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.7))
                 btn.clicked.connect(partial(open_url, social))
-                decr_icon(btn, 3)
+                decr_icon(btn, 2)
                 wdgSocials.layout().addWidget(btn)
 
         self.layout().addWidget(wdgSocials, alignment=Qt.AlignmentFlag.AlignCenter)
