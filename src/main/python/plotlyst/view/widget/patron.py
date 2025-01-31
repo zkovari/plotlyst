@@ -48,6 +48,7 @@ from plotlyst.view.widget.cards import Card
 from plotlyst.view.widget.chart import ChartItem, PolarChart, PieChart
 from plotlyst.view.widget.display import IconText, ChartView, PopupDialog, HintButton, icon_text, CopiedTextMessage
 from plotlyst.view.widget.input import AutoAdjustableTextEdit, DecoratedLineEdit
+from plotlyst.view.widget.list import ListView, ListItemWidget
 
 
 @dataclass
@@ -943,6 +944,56 @@ class PatronsWidget(QWidget):
             clear_layout(self.wdgLoading)
 
 
+@dataclass
+class FavouriteNovelReference:
+    novel: str = ''
+
+
+class NovelListItemWidget(ListItemWidget):
+    def __init__(self, ref: FavouriteNovelReference, parent=None):
+        super().__init__(ref, parent)
+        self.ref = ref
+
+    @overrides
+    def _textChanged(self, text: str):
+        self.ref.novel = text
+        super()._textChanged(text)
+
+
+class FavouriteNovelsListView(ListView):
+    changed = pyqtSignal()
+
+    def __init__(self, patron: Patron, parent=None):
+        super().__init__(parent)
+        self.patron = patron
+        self.refs: List[FavouriteNovelReference] = []
+        self._btnAdd.setText('Add new story')
+
+    @overrides
+    def _addNewItem(self):
+        ref = FavouriteNovelReference()
+        self.refs.append(ref)
+        wdg = self.addItem(ref)
+        wdg.changed.connect(self._changed)
+
+    @overrides
+    def _listItemWidgetClass(self):
+        return NovelListItemWidget
+
+    @overrides
+    def _deleteItemWidget(self, widget: NovelListItemWidget):
+        super()._deleteItemWidget(widget)
+        self.refs.remove(widget.ref)
+        self._changed()
+
+    def _changed(self):
+        self.patron.favourites.clear()
+        for ref in self.refs:
+            self.patron.favourites.append(ref.novel)
+
+        self.changed.emit()
+
+
 @spawn
 class PatronRecognitionBuilderPopup(PopupDialog):
     def __init__(self, parent=None):
@@ -961,10 +1012,13 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.tabWidget.setProperty('relaxed-white-bg', True)
         self.tabWidget.setProperty('centered', True)
         self.tabMain = QWidget()
+        self.tabMain.setProperty('muted-bg', True)
         vbox(self.tabMain, 10, 10)
         self.tabProfile = QWidget()
+        self.tabProfile.setProperty('muted-bg', True)
         vbox(self.tabProfile, 10, 10)
         self.tabExport = QWidget()
+        self.tabExport.setProperty('muted-bg', True)
         vbox(self.tabExport, 10, 10)
 
         self.tabWidget.addTab(self.tabMain, IconRegistry.from_name('fa5s.hand-holding-heart'),
@@ -1003,11 +1057,11 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.wdgType.layout().addWidget(self.btnContentCreator)
         self.wdgType.layout().addWidget(spacer())
 
-        self.lineName = self._lineedit('Name', iconEditable=True)
+        self.lineName = self.__lineedit('Name and icon', iconEditable=True)
         self.lineName.setIcon(IconRegistry.icons_icon('grey'))
         self.lineName.lineEdit.textEdited.connect(self._nameEdited)
         self.lineName.iconChanged.connect(self._iconChanged)
-        self.nameFrame = self._framed(self.lineName)
+        self.nameFrame = self.__framed(self.lineName)
 
         self.wdgGenre = QWidget()
         hbox(self.wdgGenre)
@@ -1041,24 +1095,24 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.wdgGenre.layout().addWidget(self.cbGenre)
         self.wdgGenre.layout().addWidget(spacer())
 
-        self.lineWebsite = self._lineedit('Website (https://...)')
+        self.lineWebsite = self.__lineedit('Website (https://...)')
         self.lineWebsite.lineEdit.textEdited.connect(self._websiteEdited)
-        self.websiteFrame = self._framed(self.lineWebsite)
+        self.websiteFrame = self.__framed(self.lineWebsite)
         hintWebsite = HintButton()
         hintWebsite.setHint(
             'Users will be able to click on your Patron label and visit your website.')
         self.websiteFrame.layout().addWidget(hintWebsite, alignment=Qt.AlignmentFlag.AlignRight)
 
-        self.lineBio = self._lineedit('Bio (for VIP patrons only)', iconEditable=False)
+        self.lineBio = self.__lineedit('Bio (for VIP patrons only)', iconEditable=False)
         self.lineBio.lineEdit.textEdited.connect(self._bioEdited)
-        self.bioFrame = self._framed(self.lineBio)
+        self.bioFrame = self.__framed(self.lineBio)
 
         self.wdgPreview = QWidget()
         hbox(self.wdgPreview)
         self.patronLbl = PatronRecognitionWidget(self.patron)
-        self.framePatron = self._framed(self.patronLbl, margin=5)
+        self.framePatron = self.__framed(self.patronLbl, margin=5)
         self.patronCard = PatronRecognitionWidget(self.patronVip)
-        self.frameVipPatron = self._framed(self.patronCard, margin=5)
+        self.frameVipPatron = self.__framed(self.patronCard, margin=5)
 
         self.wdgPreview.layout().addWidget(spacer())
         self.wdgPreview.layout().addWidget(label('Preview:'))
@@ -1074,6 +1128,28 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.tabMain.layout().addWidget(self.websiteFrame)
         self.tabMain.layout().addWidget(self.bioFrame)
         self.tabMain.layout().addWidget(vspacer())
+
+        self.lineDescription = self.__lineedit('More detailed description (for VIP patrons only)', iconEditable=False)
+        self.lineDescription.lineEdit.textEdited.connect(self._descEdited)
+        self.descFrame = self.__framed(self.lineDescription)
+
+        self.listFavouriteNovels = FavouriteNovelsListView(self.patronVip)
+        self.listFavouriteNovels.setProperty('relaxed-white-bg', True)
+        self.listFavouriteNovels.changed.connect(self._updateJson)
+
+        self.profileScroll = scroll_area(frameless=True)
+        self.profileScroll.setProperty('muted-bg', True)
+        self.wdgProfile = QWidget()
+        self.profileScroll.setWidget(self.wdgProfile)
+        self.wdgProfile.setProperty('muted-bg', True)
+        vbox(self.wdgProfile, 0, 5)
+
+        self.wdgProfile.layout().addWidget(self.descFrame)
+        self.wdgProfile.layout().addWidget(icon_text('fa5s.heart', 'Favourite stories'),
+                                           alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgProfile.layout().addWidget(self.listFavouriteNovels)
+        self.wdgProfile.layout().addWidget(vspacer())
+        self.tabProfile.layout().addWidget(self.profileScroll)
 
         self.btnCancel = push_btn(text='Close', properties=['confirm', 'cancel'])
         self.btnCancel.clicked.connect(self.reject)
@@ -1143,6 +1219,12 @@ class PatronRecognitionBuilderPopup(PopupDialog):
 
         self._updateJson()
 
+    def _descEdited(self, desc: str):
+        self.patron.description = desc
+        self.patronVip.description = desc
+
+        self._updateJson()
+
     def _updateJson(self):
         self.textJson.setText(self.patronVip.to_json())
 
@@ -1150,7 +1232,7 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         QGuiApplication.clipboard().setText(self.textJson.toPlainText())
         self.lblCopied.trigger()
 
-    def _lineedit(self, placeholder: str, iconEditable=False) -> DecoratedLineEdit:
+    def __lineedit(self, placeholder: str, iconEditable=False) -> DecoratedLineEdit:
         editor = DecoratedLineEdit(iconEditable=iconEditable, autoAdjustable=False)
         editor.lineEdit.setPlaceholderText(placeholder)
         editor.lineEdit.setMinimumWidth(500)
@@ -1158,10 +1240,10 @@ class PatronRecognitionBuilderPopup(PopupDialog):
 
         return editor
 
-    def _framed(self, editor: QWidget, margin: int = 10) -> QFrame:
+    def __framed(self, editor: QWidget, margin: int = 10) -> QFrame:
         _frame = frame()
         hbox(_frame, margin, 10).addWidget(editor, alignment=Qt.AlignmentFlag.AlignLeft)
-        _frame.setProperty('muted-bg', True)
+        _frame.setProperty('relaxed-white-bg', True)
         _frame.setProperty('large-rounded', True)
 
         return _frame
