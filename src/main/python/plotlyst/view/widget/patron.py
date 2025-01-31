@@ -31,7 +31,7 @@ from dataclasses_json import dataclass_json, Undefined
 from overrides import overrides
 from qthandy import vbox, hbox, clear_layout, line, vspacer, spacer, translucent, margins, transparent, incr_font, flow, \
     vline, pointy, decr_icon, sp, incr_icon
-from qthandy.filter import OpacityEventFilter
+from qthandy.filter import OpacityEventFilter, ObjectReferenceMimeData
 from qtmenu import MenuWidget
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR, truncate_string, \
@@ -40,7 +40,7 @@ from plotlyst.core.domain import Board, Task, TaskStatus
 from plotlyst.env import app_env
 from plotlyst.service.resource import JsonDownloadResult, JsonDownloadWorker
 from plotlyst.view.common import label, set_tab_enabled, push_btn, spin, scroll_area, wrap, frame, shadow, tool_btn, \
-    action, open_url, ExclusiveOptionalButtonGroup
+    action, open_url, ExclusiveOptionalButtonGroup, spawn
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.button import SmallToggleButton
@@ -953,6 +953,8 @@ class NovelListItemWidget(ListItemWidget):
     def __init__(self, ref: FavouriteNovelReference, parent=None):
         super().__init__(ref, parent)
         self.ref = ref
+        self._lineEdit.setText(ref.novel)
+        self._lineEdit.setPlaceholderText('My favourite story')
 
     @overrides
     def _textChanged(self, text: str):
@@ -986,6 +988,17 @@ class FavouriteNovelsListView(ListView):
         self.refs.remove(widget.ref)
         self._changed()
 
+    @overrides
+    def _dropped(self, mimeData: ObjectReferenceMimeData):
+        wdg = super()._dropped(mimeData)
+        wdg.changed.connect(self._changed)
+        items = []
+        for wdg in self.widgets():
+            items.append(wdg.item())
+        self.refs[:] = items
+
+        self._changed()
+
     def _changed(self):
         self.patron.favourites.clear()
         for ref in self.refs:
@@ -994,7 +1007,7 @@ class FavouriteNovelsListView(ListView):
         self.changed.emit()
 
 
-# @spawn
+@spawn
 class PatronRecognitionBuilderPopup(PopupDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
