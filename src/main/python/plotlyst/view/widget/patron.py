@@ -29,7 +29,7 @@ from PyQt6.QtWidgets import QWidget, QTabWidget, QPushButton, QProgressBar, QBut
 from dataclasses_json import dataclass_json, Undefined
 from overrides import overrides
 from qthandy import vbox, hbox, clear_layout, line, vspacer, spacer, translucent, margins, transparent, incr_font, flow, \
-    vline, pointy, decr_icon, sp
+    vline, pointy, decr_icon, sp, incr_icon
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -54,6 +54,7 @@ class PatreonTier:
     description: str
     perks: List[str]
     price: str
+    icon: str = ''
     has_roadmap_form: bool = False
     has_plotlyst_plus: bool = False
     has_early_access: bool = False
@@ -515,7 +516,12 @@ class PatreonTierSection(QWidget):
     def __init__(self, tier: PatreonTier, parent=None):
         super().__init__(parent)
         self.tier = tier
-        self.lblHeader = label(self.tier.name, h4=True)
+        self.lblHeader = IconText()
+        self.lblHeader.setText(self.tier.name)
+        if self.tier.icon:
+            self.lblHeader.setIcon(IconRegistry.from_name(self.tier.icon, PLOTLYST_SECONDARY_COLOR))
+        incr_font(self.lblHeader, 4)
+        incr_icon(self.lblHeader, 2)
         self.lblDesc = label(self.tier.description, wordWrap=True, description=True)
         incr_font(self.lblDesc, 1)
         self.wdgPerks = frame()
