@@ -665,6 +665,29 @@ social_icons = {
     'coffee': "mdi.coffee",
 }
 
+social_descriptions = {
+    "ig": "Instagram",
+    "x": "X (Twitter)",
+    "twitch": "Twitch",
+    "threads": "Threads.net",
+    "snapchat": "Snapchat",
+    "facebook": "Facebook",
+    "tiktok": "TikTok",
+    "youtube": "Youtube",
+    "reddit": "Reddit",
+    "linkedin": "Linkedin",
+    "pinterest": "Pinterest",
+    "amazon": "Amazon",
+    "discord": "Discord",
+    "goodreads": "Goodreads",
+    "medium": "Medium",
+    "patreon": "Patreon",
+    "quora": "Quora",
+    "steam": "Steam",
+    "tumblr": "Tumblr",
+    'coffee': "Buy me coffee",
+}
+
 
 class VipPatronProfile(QFrame):
     def __init__(self, patron: Patron, parent=None):
@@ -952,6 +975,13 @@ class FavouriteNovelReference:
     novel: str = ''
 
 
+@dataclass
+class SocialReference:
+    patron: Patron
+    social: str
+    link: str = ''
+
+
 class NovelListItemWidget(ListItemWidget):
     def __init__(self, ref: FavouriteNovelReference, parent=None):
         super().__init__(ref, parent)
@@ -965,13 +995,76 @@ class NovelListItemWidget(ListItemWidget):
         super()._textChanged(text)
 
 
+class SocialListItemWidget(ListItemWidget):
+    def __init__(self, ref: SocialReference, parent=None):
+        super().__init__(ref, parent)
+        self.ref = ref
+        self._lineEdit.setText(self.ref.link)
+        self._lineEdit.setPlaceholderText(social_descriptions.get(self.ref.social, 'Social link'))
+
+    @overrides
+    def _textChanged(self, text: str):
+        self.ref.link = text
+        self.ref.patron.socials[self.ref.social] = text
+        super()._textChanged(text)
+
+
 class SocialsListView(ListView):
     changed = pyqtSignal()
 
     def __init__(self, patron: Patron, parent=None):
         super().__init__(parent)
         self.patron = patron
-        self._btnAdd.setHidden(True)
+        menu = MenuWidget(self._btnAdd)
+        self.setAcceptDrops(False)
+
+        wdgSocials = QWidget()
+        wdgSocials.setMinimumWidth(200)
+        wdgSocials.setMaximumHeight(150)
+        sp(wdgSocials).v_max()
+        flow(wdgSocials)
+        for k, v in social_icons.items():
+            btn = tool_btn(IconRegistry.from_name(v), transparent_=True, tooltip=social_descriptions.get(k, k))
+            btn.clicked.connect(partial(self._socialSelected, k))
+            incr_icon(btn, 4)
+            wdgSocials.layout().addWidget(btn)
+
+        menu.addWidget(wdgSocials)
+
+    @overrides
+    def _listItemWidgetClass(self):
+        return SocialListItemWidget
+
+    @overrides
+    def _deleteItemWidget(self, widget: SocialListItemWidget):
+        super()._deleteItemWidget(widget)
+        self.patron.socials.pop(widget.ref.social)
+        self._changed()
+
+    @overrides
+    def _dropped(self, mimeData: ObjectReferenceMimeData):
+        wdg = super()._dropped(mimeData)
+        wdg.changed.connect(self._changed)
+        items: List[SocialReference] = []
+        for wdg in self.widgets():
+            items.append(wdg.item())
+        self.patron.socials.clear()
+        for ref in items:
+            self.patron.socials[ref.social] = ref.link
+
+        self._changed()
+
+    def _socialSelected(self, social: str):
+        if social in self.patron.socials.keys():
+            return
+
+        ref = SocialReference(self.patron, social)
+        self.patron.socials[social] = ''
+        wdg = self.addItem(ref)
+        wdg.changed.connect(self._changed)
+
+    def _changed(self):
+        self.changed.emit()
 
 
 class FavouriteNovelsListView(ListView):
@@ -1066,7 +1159,6 @@ class PublishedNovelListWidget(QWidget):
         self.layout().addWidget(self.novel3)
 
 
-# @spawn
 class PatronRecognitionBuilderPopup(PopupDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1076,7 +1168,7 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         ])
 
         desc = 'Patrons can gain recognition in Plotlyst.'
-        desc += ' If you subscribed to my page, you should have received a form to upload your information. To make the process easier, you can edit your info here and export.'
+        desc += ' If you subscribed to my page, you should have received a form to upload your information. To make the process easier, you can edit your info here and then export.'
         self.lblDesc = label(
             desc,
             description=True, wordWrap=True)
@@ -1140,6 +1232,7 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.wdgGenre = QWidget()
         hbox(self.wdgGenre)
         self.cbGenre = QComboBox()
+        self.cbGenre.setMaxVisibleItems(15)
         self.cbGenre.currentTextChanged.connect(self._genreChanged)
         self.cbGenre.addItem('')
         self.cbGenre.addItem('Fantasy')
@@ -1212,6 +1305,8 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.listFavouriteNovels.changed.connect(self._updateJson)
 
         self.socialsListView = SocialsListView(self.patronVip)
+        self.socialsListView.setProperty('relaxed-white-bg', True)
+        self.socialsListView.changed.connect(self._socialsChanged)
 
         self.publishedNovels = PublishedNovelListWidget(self.patronVip)
         self.publishedNovels.novel1.changed.connect(self._updateJson)
@@ -1311,6 +1406,10 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.patronVip.description = desc
 
         self._updateJson()
+
+    def _socialsChanged(self):
+        self._updateJson()
+        self.patronCard.refresh()
 
     def _updateJson(self):
         self.textJson.setText(self.patronVip.to_json())
