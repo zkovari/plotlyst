@@ -894,7 +894,7 @@ class PatronsWidget(QWidget):
         self._scroll.setProperty('relaxed-white-bg', True)
         self.centerWdg = QWidget()
         self.centerWdg.setProperty('relaxed-white-bg', True)
-        vbox(self.centerWdg, spacing=15)
+        vbox(self.centerWdg)
         self._scroll.setWidget(self.centerWdg)
         self.layout().addWidget(self._scroll)
 
@@ -903,17 +903,48 @@ class PatronsWidget(QWidget):
         self.wdgPatrons = QWidget()
         flow(self.wdgPatrons, 10, spacing=5)
 
+        self.wdgTopHeader = QWidget()
+        hbox(self.wdgTopHeader)
+        self.btnAll = push_btn(IconRegistry.from_name('ri.quill-pen-fill'), 'All writers',
+                               properties=['secondary-selector', 'transparent-rounded-bg-on-hover'], checkable=True)
+        self.btnAll.setChecked(True)
+        self.btnArtists = push_btn(IconRegistry.from_name('fa5s.palette'), 'Artists',
+                                   properties=['secondary-selector', 'transparent-rounded-bg-on-hover'], checkable=True)
+        self.btnEditors = push_btn(IconRegistry.from_name('fa5s.pen-fancy'), 'Editors',
+                                   properties=['secondary-selector', 'transparent-rounded-bg-on-hover'], checkable=True)
+        self.btnContentCreators = push_btn(IconRegistry.from_name('mdi6.laptop-account'), 'Content Creators',
+                                           properties=['secondary-selector', 'transparent-rounded-bg-on-hover'],
+                                           checkable=True)
+
+        self.btnGroup = QButtonGroup()
+        self.btnGroup.addButton(self.btnAll)
+        self.btnGroup.addButton(self.btnArtists)
+        self.btnGroup.addButton(self.btnEditors)
+        self.btnGroup.addButton(self.btnContentCreators)
+        self.btnGroup.buttonClicked.connect(self._typeClicked)
+
+        self.wdgTopHeader.layout().addWidget(spacer())
+        self.wdgTopHeader.layout().addWidget(self.btnAll)
+        self.wdgTopHeader.layout().addWidget(line())
+        self.wdgTopHeader.layout().addWidget(self.btnArtists)
+        self.wdgTopHeader.layout().addWidget(self.btnEditors)
+        self.wdgTopHeader.layout().addWidget(self.btnContentCreators)
+        self.wdgTopHeader.layout().addWidget(spacer())
+
         self.wdgLoading = QWidget()
         vbox(self.wdgLoading, 0, 0)
         self.centerWdg.layout().addWidget(self.lblLastUpdated, alignment=Qt.AlignmentFlag.AlignRight)
-        self.centerWdg.layout().addWidget(label('Plotlyst Supporters', h2=True), alignment=Qt.AlignmentFlag.AlignCenter)
-        self.centerWdg.layout().addWidget(
-            label('The following writers support the development of Plotlyst.', description=True, incr_font_diff=1),
-            alignment=Qt.AlignmentFlag.AlignCenter)
+        self.centerWdg.layout().addWidget(label('The following writers support the development of Plotlyst', h4=True),
+                                          alignment=Qt.AlignmentFlag.AlignCenter)
+        self.centerWdg.layout().addWidget(self.wdgTopHeader)
+        # self.centerWdg.layout().addWidget(
+        #     label('The following writers support the development of Plotlyst.', description=True, incr_font_diff=1),
+        #     alignment=Qt.AlignmentFlag.AlignCenter)
         self.centerWdg.layout().addWidget(self.wdgLoading)
         self.centerWdg.layout().addWidget(self.wdgPatrons)
         self.centerWdg.layout().addWidget(vspacer())
         self.wdgLoading.setHidden(True)
+        self.wdgTopHeader.setHidden(True)
 
     @overrides
     def showEvent(self, event: QShowEvent):
@@ -942,9 +973,21 @@ class PatronsWidget(QWidget):
         self._community: Community = Community.from_dict(data)
         random.shuffle(self._community.patrons)
 
+        professions = {
+            'artist': 0,
+            'editor': 0,
+            'content': 0
+        }
         for patron in self._community.patrons:
             lbl = PatronRecognitionWidget(patron)
+            if patron.profession:
+                professions[patron.profession] += 1
             self.wdgPatrons.layout().addWidget(lbl)
+
+        self.btnAll.setText(f'All Writers ({len(self._community.patrons)})')
+        self.btnArtists.setText(f'Artists ({professions["artist"]})')
+        self.btnEditors.setText(f'Editors ({professions["editor"]})')
+        self.btnContentCreators.setText(f'Content Creators ({professions["content"]})')
 
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
         self.lblLastUpdated.setText(f"Last updated: {now}")
@@ -960,6 +1003,7 @@ class PatronsWidget(QWidget):
     def _handle_downloading_status(self, loading: bool):
         self._downloading = loading
         self.wdgLoading.setVisible(loading)
+        self.wdgTopHeader.setVisible(not loading)
         if loading:
             btn = push_btn(transparent_=True)
             btn.setIconSize(QSize(128, 128))
@@ -968,6 +1012,21 @@ class PatronsWidget(QWidget):
             spin(btn, PLOTLYST_SECONDARY_COLOR)
         else:
             clear_layout(self.wdgLoading)
+
+    def _typeClicked(self):
+        if self.btnArtists.isChecked():
+            profession = 'artist'
+        elif self.btnEditors.isChecked():
+            profession = 'editor'
+        elif self.btnContentCreators.isChecked():
+            profession = 'content'
+        else:
+            profession = ''
+
+        for i in range(self.wdgPatrons.layout().count()):
+            wdg = self.wdgPatrons.layout().itemAt(i).widget()
+            if isinstance(wdg, PatronRecognitionWidget):
+                wdg.setVisible(wdg.patron.profession == profession)
 
 
 @dataclass
