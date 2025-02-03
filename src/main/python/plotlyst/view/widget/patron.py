@@ -24,13 +24,14 @@ from functools import partial
 from typing import List, Dict, Optional
 
 from PyQt6.QtCore import QThreadPool, QSize, Qt, QEvent, pyqtSignal
-from PyQt6.QtGui import QShowEvent, QMouseEvent, QCursor
-from PyQt6.QtWidgets import QWidget, QTabWidget, QPushButton, QProgressBar, QButtonGroup, QFrame
+from PyQt6.QtGui import QShowEvent, QMouseEvent, QCursor, QGuiApplication
+from PyQt6.QtWidgets import QWidget, QTabWidget, QPushButton, QProgressBar, QButtonGroup, QFrame, QComboBox, \
+    QTextBrowser, QLineEdit
 from dataclasses_json import dataclass_json, Undefined
 from overrides import overrides
 from qthandy import vbox, hbox, clear_layout, line, vspacer, spacer, translucent, margins, transparent, incr_font, flow, \
     vline, pointy, decr_icon, sp, incr_icon
-from qthandy.filter import OpacityEventFilter
+from qthandy.filter import OpacityEventFilter, ObjectReferenceMimeData
 from qtmenu import MenuWidget
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR, truncate_string, \
@@ -39,13 +40,15 @@ from plotlyst.core.domain import Board, Task, TaskStatus
 from plotlyst.env import app_env
 from plotlyst.service.resource import JsonDownloadResult, JsonDownloadWorker
 from plotlyst.view.common import label, set_tab_enabled, push_btn, spin, scroll_area, wrap, frame, shadow, tool_btn, \
-    action, open_url
+    action, open_url, ExclusiveOptionalButtonGroup
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
+from plotlyst.view.widget.button import SmallToggleButton
 from plotlyst.view.widget.cards import Card
 from plotlyst.view.widget.chart import ChartItem, PolarChart, PieChart
-from plotlyst.view.widget.display import IconText, ChartView
-from plotlyst.view.widget.input import AutoAdjustableTextEdit
+from plotlyst.view.widget.display import IconText, ChartView, PopupDialog, HintButton, icon_text, CopiedTextMessage
+from plotlyst.view.widget.input import AutoAdjustableTextEdit, DecoratedLineEdit
+from plotlyst.view.widget.list import ListView, ListItemWidget
 
 
 @dataclass
@@ -93,6 +96,7 @@ class PatronNovelInfo:
     web: str = ''
 
 
+@dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class Patron:
     name: str
@@ -102,6 +106,7 @@ class Patron:
     description: str = ''
     genre: str = ''
     vip: bool = False
+    profession: str = ''
     novels: List[PatronNovelInfo] = field(default_factory=list)
     socials: Dict[str, str] = field(default_factory=dict)
     favourites: List[str] = field(default_factory=list)
@@ -660,6 +665,29 @@ social_icons = {
     'coffee': "mdi.coffee",
 }
 
+social_descriptions = {
+    "ig": "Instagram",
+    "x": "X (Twitter)",
+    "twitch": "Twitch",
+    "threads": "Threads.net",
+    "snapchat": "Snapchat",
+    "facebook": "Facebook",
+    "tiktok": "TikTok",
+    "youtube": "Youtube",
+    "reddit": "Reddit",
+    "linkedin": "LinkedIn",
+    "pinterest": "Pinterest",
+    "amazon": "Amazon",
+    "discord": "Discord",
+    "goodreads": "Goodreads",
+    "medium": "Medium",
+    "patreon": "Patreon",
+    "quora": "Quora",
+    "steam": "Steam",
+    "tumblr": "Tumblr",
+    'coffee': "Buy me coffee",
+}
+
 
 class VipPatronProfile(QFrame):
     def __init__(self, patron: Patron, parent=None):
@@ -714,7 +742,7 @@ class VipPatronProfile(QFrame):
             wdg.layout().addWidget(lblFavourite)
             self.layout().addWidget(wdg)
 
-        if patron.novels:
+        if patron.novels and any([x.title for x in patron.novels]):
             published = IconText()
             published.setText('My published books:')
             published.setIcon(IconRegistry.book_icon(PLOTLYST_SECONDARY_COLOR))
@@ -723,9 +751,12 @@ class VipPatronProfile(QFrame):
             vbox(wdg)
             margins(wdg, left=20)
             for novel in patron.novels:
-                btn = push_btn(IconRegistry.book_icon(), novel.title, transparent_=True)
+                if not novel.title:
+                    continue
+                btn = push_btn(IconRegistry.book_icon(), novel.title, transparent_=True, tooltip=novel.web)
                 btn.installEventFilter(OpacityEventFilter(btn, 0.7))
-                btn.clicked.connect(partial(open_url, novel.web))
+                if novel.web:
+                    btn.clicked.connect(partial(open_url, novel.web))
                 wdg.layout().addWidget(btn, alignment=Qt.AlignmentFlag.AlignLeft)
 
             self.layout().addWidget(wdg)
@@ -764,10 +795,11 @@ class VipPatronCard(Card):
                                     alignment=Qt.AlignmentFlag.AlignLeft)
         else:
             self.layout().addWidget(self.lblName, alignment=Qt.AlignmentFlag.AlignLeft)
-        if patron.bio:
-            bio = label(patron.bio, description=True, decr_font_diff=2, wordWrap=True)
-            sp(bio).v_max()
-            self.layout().addWidget(bio)
+        self.bio = label(patron.bio, description=True, decr_font_diff=2, wordWrap=True)
+        sp(self.bio).v_max()
+        self.layout().addWidget(self.bio)
+        if not patron.bio:
+            self.bio.setHidden(True)
 
         self._setStyleSheet()
 
@@ -778,6 +810,16 @@ class VipPatronCard(Card):
     @overrides
     def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
         pass
+
+    def refresh(self):
+        self.lblName.setText(self.patron.name)
+        if self.patron.icon:
+            self.lblName.setIcon(IconRegistry.from_name(self.patron.icon, PLOTLYST_SECONDARY_COLOR))
+        if self.patron.bio:
+            self.bio.setText(self.patron.bio)
+            self.bio.setVisible(True)
+        else:
+            self.bio.setVisible(False)
 
     @overrides
     def _bgColor(self, selected: bool = False) -> str:
@@ -815,6 +857,14 @@ class PatronRecognitionWidget(QWidget):
                 pointy(self.lbl)
 
         self.layout().addWidget(self.lbl)
+
+    def refresh(self):
+        if self.patron.vip:
+            self.lbl.refresh()
+        else:
+            self.lbl.setText(self.patron.name)
+            if self.patron.icon:
+                self.lbl.setIcon(IconRegistry.from_name(self.patron.icon, PLOTLYST_SECONDARY_COLOR))
 
     def _labelClicked(self):
         menu = MenuWidget()
@@ -918,6 +968,471 @@ class PatronsWidget(QWidget):
             spin(btn, PLOTLYST_SECONDARY_COLOR)
         else:
             clear_layout(self.wdgLoading)
+
+
+@dataclass
+class FavouriteNovelReference:
+    novel: str = ''
+
+
+@dataclass
+class SocialReference:
+    patron: Patron
+    social: str
+    link: str = ''
+
+
+class NovelListItemWidget(ListItemWidget):
+    def __init__(self, ref: FavouriteNovelReference, parent=None):
+        super().__init__(ref, parent)
+        self.ref = ref
+        self._lineEdit.setText(ref.novel)
+        self._lineEdit.setPlaceholderText('My favourite story')
+
+    @overrides
+    def _textChanged(self, text: str):
+        self.ref.novel = text
+        super()._textChanged(text)
+
+
+class SocialListItemWidget(ListItemWidget):
+    def __init__(self, ref: SocialReference, parent=None):
+        super().__init__(ref, parent)
+        self.ref = ref
+        self._lineEdit.setText(self.ref.link)
+        self._lineEdit.setPlaceholderText(social_descriptions.get(self.ref.social, 'Social link'))
+
+    @overrides
+    def _textChanged(self, text: str):
+        self.ref.link = text
+        self.ref.patron.socials[self.ref.social] = text
+        super()._textChanged(text)
+
+
+class SocialsListView(ListView):
+    changed = pyqtSignal()
+
+    def __init__(self, patron: Patron, parent=None):
+        super().__init__(parent)
+        self.patron = patron
+        menu = MenuWidget(self._btnAdd)
+        self.setAcceptDrops(False)
+
+        wdgSocials = QWidget()
+        wdgSocials.setMinimumWidth(200)
+        wdgSocials.setMaximumHeight(150)
+        sp(wdgSocials).v_max()
+        flow(wdgSocials)
+        for k, v in social_icons.items():
+            btn = tool_btn(IconRegistry.from_name(v), transparent_=True, tooltip=social_descriptions.get(k, k))
+            btn.clicked.connect(partial(self._socialSelected, k))
+            incr_icon(btn, 4)
+            wdgSocials.layout().addWidget(btn)
+
+        menu.addWidget(wdgSocials)
+
+    @overrides
+    def _listItemWidgetClass(self):
+        return SocialListItemWidget
+
+    @overrides
+    def _deleteItemWidget(self, widget: SocialListItemWidget):
+        super()._deleteItemWidget(widget)
+        self.patron.socials.pop(widget.ref.social)
+        self._changed()
+
+    @overrides
+    def _dropped(self, mimeData: ObjectReferenceMimeData):
+        wdg = super()._dropped(mimeData)
+        wdg.changed.connect(self._changed)
+        items: List[SocialReference] = []
+        for wdg in self.widgets():
+            items.append(wdg.item())
+        self.patron.socials.clear()
+        for ref in items:
+            self.patron.socials[ref.social] = ref.link
+
+        self._changed()
+
+    def _socialSelected(self, social: str):
+        if social in self.patron.socials.keys():
+            return
+
+        ref = SocialReference(self.patron, social)
+        self.patron.socials[social] = ''
+        wdg = self.addItem(ref)
+        wdg.changed.connect(self._changed)
+
+    def _changed(self):
+        self.changed.emit()
+
+
+class FavouriteNovelsListView(ListView):
+    changed = pyqtSignal()
+
+    def __init__(self, patron: Patron, parent=None):
+        super().__init__(parent)
+        self.patron = patron
+        self.refs: List[FavouriteNovelReference] = []
+        self._btnAdd.setText('Add new story')
+
+    @overrides
+    def _addNewItem(self):
+        ref = FavouriteNovelReference()
+        self.refs.append(ref)
+        wdg = self.addItem(ref)
+        wdg.changed.connect(self._changed)
+
+    @overrides
+    def _listItemWidgetClass(self):
+        return NovelListItemWidget
+
+    @overrides
+    def _deleteItemWidget(self, widget: NovelListItemWidget):
+        super()._deleteItemWidget(widget)
+        self.refs.remove(widget.ref)
+        self._changed()
+
+    @overrides
+    def _dropped(self, mimeData: ObjectReferenceMimeData):
+        wdg = super()._dropped(mimeData)
+        wdg.changed.connect(self._changed)
+        items = []
+        for wdg in self.widgets():
+            items.append(wdg.item())
+        self.refs[:] = items
+
+        self._changed()
+
+    def _changed(self):
+        self.patron.favourites.clear()
+        for ref in self.refs:
+            self.patron.favourites.append(ref.novel)
+
+        self.changed.emit()
+
+
+class PublishedNovelWidget(QWidget):
+    changed = pyqtSignal()
+
+    def __init__(self, info: PatronNovelInfo, parent=None):
+        super().__init__(parent)
+        self.info = info
+        self.title = QLineEdit()
+        self.title.setPlaceholderText('Book title')
+        self.title.textEdited.connect(self._titleEdited)
+        self.url = QLineEdit()
+        self.url.setPlaceholderText('Link (https://...)')
+        self.url.textEdited.connect(self._linkEdited)
+        vbox(self)
+        margins(self, left=20)
+        self.layout().addWidget(self.title)
+        self.layout().addWidget(self.url)
+
+    def _titleEdited(self, title: str):
+        self.info.title = title
+
+        self.changed.emit()
+
+    def _linkEdited(self, link: str):
+        self.info.web = link
+
+        self.changed.emit()
+
+
+class PublishedNovelListWidget(QWidget):
+    def __init__(self, patron: Patron, parent=None):
+        super().__init__(parent)
+        self.patron = patron
+
+        self.novel1 = PublishedNovelWidget(self.patron.novels[0])
+        self.novel2 = PublishedNovelWidget(self.patron.novels[1])
+        self.novel3 = PublishedNovelWidget(self.patron.novels[2])
+
+        vbox(self, spacing=8)
+        margins(self, left=10)
+        self.layout().addWidget(label('Book 1:'))
+        self.layout().addWidget(self.novel1)
+        self.layout().addWidget(label('Book 2:'))
+        self.layout().addWidget(self.novel2)
+        self.layout().addWidget(label('Book 3:'))
+        self.layout().addWidget(self.novel3)
+
+
+class PatronRecognitionBuilderPopup(PopupDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.patron = Patron('My name', web='https://plotlyst.com')
+        self.patronVip = Patron('My name', vip=True, web='https://plotlyst.com', novels=[
+            PatronNovelInfo(''), PatronNovelInfo(''), PatronNovelInfo('')
+        ])
+
+        desc = 'Patrons can gain recognition in Plotlyst.'
+        desc += ' If you subscribed to my page, you should have received a form to upload your information. To make the process easier, you can edit your info here and then export.'
+        self.lblDesc = label(
+            desc,
+            description=True, wordWrap=True)
+        sp(self.lblDesc).v_max()
+
+        self.tabWidget = QTabWidget()
+        self.tabWidget.setProperty('relaxed-white-bg', True)
+        self.tabWidget.setProperty('centered', True)
+        self.tabMain = QWidget()
+        self.tabMain.setProperty('muted-bg', True)
+        vbox(self.tabMain, 10, 10)
+        self.tabProfile = QWidget()
+        self.tabProfile.setProperty('muted-bg', True)
+        vbox(self.tabProfile, 10, 10)
+        self.tabExport = QWidget()
+        self.tabExport.setProperty('muted-bg', True)
+        vbox(self.tabExport, 10, 10)
+
+        self.tabWidget.addTab(self.tabMain, IconRegistry.from_name('fa5s.hand-holding-heart'),
+                              'Basic info')
+        self.tabWidget.addTab(self.tabProfile, IconRegistry.from_name('ri.vip-diamond-fill'), 'VIP Profile')
+        self.tabWidget.addTab(self.tabExport, IconRegistry.from_name('mdi6.export-variant'), 'Export')
+
+        self.textJson = QTextBrowser()
+        self.btnCopy = push_btn(IconRegistry.from_name('fa5.copy', RELAXED_WHITE_COLOR), 'Copy to clipboard',
+                                properties=['positive', 'confirm'])
+        self.btnCopy.clicked.connect(self._copyJson)
+        self.lblCopied = CopiedTextMessage()
+        self.tabExport.layout().addWidget(group(self.lblCopied, self.btnCopy, margin=0),
+                                          alignment=Qt.AlignmentFlag.AlignRight)
+        self.tabExport.layout().addWidget(self.textJson)
+
+        self.btnArtist = SmallToggleButton()
+        self.btnEditor = SmallToggleButton()
+        self.btnContentCreator = SmallToggleButton()
+        self.btnTypeGroup = ExclusiveOptionalButtonGroup()
+        self.btnTypeGroup.addButton(self.btnArtist)
+        self.btnTypeGroup.addButton(self.btnEditor)
+        self.btnTypeGroup.addButton(self.btnContentCreator)
+        self.btnTypeGroup.buttonClicked.connect(self._typeChanged)
+
+        self.wdgType = QWidget()
+        hbox(self.wdgType, 0, 0)
+        self.wdgType.layout().addWidget(spacer())
+        self.wdgType.layout().addWidget(icon_text('fa5s.palette', "I'm an Artist"))
+        self.wdgType.layout().addWidget(self.btnArtist)
+        self.wdgType.layout().addWidget(spacer())
+        self.wdgType.layout().addWidget(icon_text('fa5s.pen-fancy', "I'm an Editor"))
+        self.wdgType.layout().addWidget(self.btnEditor)
+        self.wdgType.layout().addWidget(spacer())
+        self.wdgType.layout().addWidget(icon_text('mdi6.laptop-account', "I'm a Content Creator"))
+        self.wdgType.layout().addWidget(self.btnContentCreator)
+        self.wdgType.layout().addWidget(spacer())
+
+        self.lineName = self.__lineedit('Name and icon', iconEditable=True)
+        self.lineName.setIcon(IconRegistry.icons_icon('grey'))
+        self.lineName.lineEdit.textEdited.connect(self._nameEdited)
+        self.lineName.iconChanged.connect(self._iconChanged)
+        self.nameFrame = self.__framed(self.lineName)
+
+        self.wdgGenre = QWidget()
+        hbox(self.wdgGenre)
+        self.cbGenre = QComboBox()
+        self.cbGenre.setMaxVisibleItems(15)
+        self.cbGenre.currentTextChanged.connect(self._genreChanged)
+        self.cbGenre.addItem('')
+        self.cbGenre.addItem('Fantasy')
+        self.cbGenre.addItem('Sci-Fi')
+        self.cbGenre.addItem("Romance")
+        self.cbGenre.addItem("Mystery")
+        self.cbGenre.addItem("Action or Adventure")
+        self.cbGenre.addItem("Thriller/Suspense")
+        self.cbGenre.addItem("Horror")
+        self.cbGenre.addItem("Crime")
+        self.cbGenre.addItem("Caper")
+        self.cbGenre.addItem("Coming of Age")
+        self.cbGenre.addItem("Cozy")
+        self.cbGenre.addItem("Historical Fiction")
+        self.cbGenre.addItem("War")
+        self.cbGenre.addItem("Western")
+        self.cbGenre.addItem("Upmarket")
+        self.cbGenre.addItem("Literary Fiction")
+        self.cbGenre.addItem("Society")
+        self.cbGenre.addItem("Memoir")
+        self.cbGenre.addItem("Children's Books")
+        self.cbGenre.addItem("Slice of Life")
+        self.cbGenre.addItem("Comedy")
+        self.cbGenre.addItem("Contemporary")
+
+        self.wdgGenre.layout().addWidget(label('Genre:'))
+        self.wdgGenre.layout().addWidget(self.cbGenre)
+        self.wdgGenre.layout().addWidget(spacer())
+
+        self.lineWebsite = self.__lineedit('Website (https://...)')
+        self.lineWebsite.lineEdit.textEdited.connect(self._websiteEdited)
+        self.websiteFrame = self.__framed(self.lineWebsite)
+        hintWebsite = HintButton()
+        hintWebsite.setHint(
+            'Users will be able to click on your Patron label and visit your website.')
+        self.websiteFrame.layout().addWidget(hintWebsite, alignment=Qt.AlignmentFlag.AlignRight)
+
+        self.lineBio = self.__lineedit('Bio (for VIP patrons only)', iconEditable=False)
+        self.lineBio.lineEdit.textEdited.connect(self._bioEdited)
+        self.bioFrame = self.__framed(self.lineBio)
+
+        self.wdgPreview = QWidget()
+        hbox(self.wdgPreview)
+        self.patronLbl = PatronRecognitionWidget(self.patron)
+        self.framePatron = self.__framed(self.patronLbl, margin=5)
+        self.patronCard = PatronRecognitionWidget(self.patronVip)
+        self.frameVipPatron = self.__framed(self.patronCard, margin=5)
+
+        self.wdgPreview.layout().addWidget(spacer())
+        self.wdgPreview.layout().addWidget(label('Preview:'))
+        self.wdgPreview.layout().addWidget(self.framePatron)
+        self.wdgPreview.layout().addWidget(spacer())
+        self.wdgPreview.layout().addWidget(label('VIP Preview:'))
+        self.wdgPreview.layout().addWidget(self.frameVipPatron)
+        self.wdgPreview.layout().addWidget(spacer())
+
+        self.tabMain.layout().addWidget(self.wdgType)
+        self.tabMain.layout().addWidget(self.nameFrame)
+        self.tabMain.layout().addWidget(self.wdgGenre)
+        self.tabMain.layout().addWidget(self.websiteFrame)
+        self.tabMain.layout().addWidget(self.bioFrame)
+        self.tabMain.layout().addWidget(vspacer())
+
+        self.lineDescription = self.__lineedit('More detailed description (for VIP patrons only)', iconEditable=False)
+        self.lineDescription.lineEdit.textEdited.connect(self._descEdited)
+        self.descFrame = self.__framed(self.lineDescription)
+
+        self.listFavouriteNovels = FavouriteNovelsListView(self.patronVip)
+        self.listFavouriteNovels.setProperty('relaxed-white-bg', True)
+        self.listFavouriteNovels.changed.connect(self._updateJson)
+
+        self.socialsListView = SocialsListView(self.patronVip)
+        self.socialsListView.setProperty('relaxed-white-bg', True)
+        self.socialsListView.changed.connect(self._socialsChanged)
+
+        self.publishedNovels = PublishedNovelListWidget(self.patronVip)
+        self.publishedNovels.novel1.changed.connect(self._updateJson)
+        self.publishedNovels.novel2.changed.connect(self._updateJson)
+        self.publishedNovels.novel3.changed.connect(self._updateJson)
+
+        self.profileScroll = scroll_area(frameless=True)
+        self.profileScroll.setProperty('muted-bg', True)
+        self.wdgProfile = QWidget()
+        self.profileScroll.setWidget(self.wdgProfile)
+        self.wdgProfile.setProperty('muted-bg', True)
+        vbox(self.wdgProfile, 0, 5)
+
+        self.wdgProfile.layout().addWidget(self.descFrame)
+        self.wdgProfile.layout().addWidget(icon_text('fa5s.heart', 'Favourite stories'),
+                                           alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgProfile.layout().addWidget(self.listFavouriteNovels)
+        self.wdgProfile.layout().addWidget(icon_text('mdi.camera-account', 'Socials'),
+                                           alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgProfile.layout().addWidget(self.socialsListView)
+        self.wdgProfile.layout().addWidget(icon_text('fa5s.book', 'Published novels (max 3)'),
+                                           alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgProfile.layout().addWidget(self.publishedNovels)
+        self.wdgProfile.layout().addWidget(vspacer())
+        self.tabProfile.layout().addWidget(self.profileScroll)
+
+        self.btnCancel = push_btn(text='Close', properties=['confirm', 'cancel'])
+        self.btnCancel.clicked.connect(self.reject)
+
+        self.frame.layout().addWidget(self.lblDesc)
+        self.frame.layout().addWidget(self.wdgPreview)
+        self.frame.layout().addWidget(self.tabWidget)
+        self.frame.layout().addWidget(self.btnCancel, alignment=Qt.AlignmentFlag.AlignRight)
+
+    def display(self):
+        self.exec()
+
+    def _nameEdited(self, name: str):
+        self.patron.name = name
+        self.patronVip.name = name
+
+        self.patronLbl.refresh()
+        self.patronCard.refresh()
+
+        self._updateJson()
+
+    def _genreChanged(self, genre: str):
+        self.patron.genre = genre
+        self.patronVip.genre = genre
+
+        self._updateJson()
+
+    def _typeChanged(self):
+        if self.btnTypeGroup.checkedButton() is None:
+            profession = ''
+        elif self.btnTypeGroup.checkedButton() is self.btnArtist:
+            profession = 'artist'
+        elif self.btnTypeGroup.checkedButton() is self.btnEditor:
+            profession = 'editor'
+        elif self.btnTypeGroup.checkedButton() is self.btnContentCreator:
+            profession = 'content'
+        else:
+            return
+
+        self.patron.profession = profession
+        self.patronVip.profession = profession
+
+        self._updateJson()
+
+    def _iconChanged(self, name: str):
+        self.patron.icon = name
+        self.patronVip.icon = name
+
+        self.patronLbl.refresh()
+        self.patronCard.refresh()
+
+        self._updateJson()
+
+    def _websiteEdited(self, web: str):
+        self.patron.web = web
+        self.patronVip.web = web
+
+        self.patronCard.refresh()
+
+        self._updateJson()
+
+    def _bioEdited(self, bio: str):
+        self.patron.bio = bio
+        self.patronVip.bio = bio
+
+        self.patronCard.refresh()
+
+        self._updateJson()
+
+    def _descEdited(self, desc: str):
+        self.patron.description = desc
+        self.patronVip.description = desc
+
+        self._updateJson()
+
+    def _socialsChanged(self):
+        self._updateJson()
+        self.patronCard.refresh()
+
+    def _updateJson(self):
+        self.textJson.setText(self.patronVip.to_json())
+
+    def _copyJson(self):
+        QGuiApplication.clipboard().setText(self.textJson.toPlainText())
+        self.lblCopied.trigger()
+
+    def __lineedit(self, placeholder: str, iconEditable=False) -> DecoratedLineEdit:
+        editor = DecoratedLineEdit(iconEditable=iconEditable, autoAdjustable=False)
+        editor.lineEdit.setPlaceholderText(placeholder)
+        editor.lineEdit.setMinimumWidth(500)
+        incr_font(editor.lineEdit, 3)
+
+        return editor
+
+    def __framed(self, editor: QWidget, margin: int = 10) -> QFrame:
+        _frame = frame()
+        hbox(_frame, margin, 10).addWidget(editor, alignment=Qt.AlignmentFlag.AlignLeft)
+        _frame.setProperty('relaxed-white-bg', True)
+        _frame.setProperty('large-rounded', True)
+
+        return _frame
 
 
 class PlotlystPlusWidget(QWidget):
