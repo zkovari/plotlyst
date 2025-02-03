@@ -26,7 +26,7 @@ from typing import List, Dict, Optional
 from PyQt6.QtCore import QThreadPool, QSize, Qt, QEvent, pyqtSignal
 from PyQt6.QtGui import QShowEvent, QMouseEvent, QCursor, QGuiApplication
 from PyQt6.QtWidgets import QWidget, QTabWidget, QPushButton, QProgressBar, QButtonGroup, QFrame, QComboBox, \
-    QTextBrowser
+    QTextBrowser, QLineEdit
 from dataclasses_json import dataclass_json, Undefined
 from overrides import overrides
 from qthandy import vbox, hbox, clear_layout, line, vspacer, spacer, translucent, margins, transparent, incr_font, flow, \
@@ -719,7 +719,7 @@ class VipPatronProfile(QFrame):
             wdg.layout().addWidget(lblFavourite)
             self.layout().addWidget(wdg)
 
-        if patron.novels:
+        if patron.novels and any([x.title for x in patron.novels]):
             published = IconText()
             published.setText('My published books:')
             published.setIcon(IconRegistry.book_icon(PLOTLYST_SECONDARY_COLOR))
@@ -728,9 +728,12 @@ class VipPatronProfile(QFrame):
             vbox(wdg)
             margins(wdg, left=20)
             for novel in patron.novels:
-                btn = push_btn(IconRegistry.book_icon(), novel.title, transparent_=True)
+                if not novel.title:
+                    continue
+                btn = push_btn(IconRegistry.book_icon(), novel.title, transparent_=True, tooltip=novel.web)
                 btn.installEventFilter(OpacityEventFilter(btn, 0.7))
-                btn.clicked.connect(partial(open_url, novel.web))
+                if novel.web:
+                    btn.clicked.connect(partial(open_url, novel.web))
                 wdg.layout().addWidget(btn, alignment=Qt.AlignmentFlag.AlignLeft)
 
             self.layout().addWidget(wdg)
@@ -962,6 +965,15 @@ class NovelListItemWidget(ListItemWidget):
         super()._textChanged(text)
 
 
+class SocialsListView(ListView):
+    changed = pyqtSignal()
+
+    def __init__(self, patron: Patron, parent=None):
+        super().__init__(parent)
+        self.patron = patron
+        self._btnAdd.setHidden(True)
+
+
 class FavouriteNovelsListView(ListView):
     changed = pyqtSignal()
 
@@ -1007,12 +1019,61 @@ class FavouriteNovelsListView(ListView):
         self.changed.emit()
 
 
+class PublishedNovelWidget(QWidget):
+    changed = pyqtSignal()
+
+    def __init__(self, info: PatronNovelInfo, parent=None):
+        super().__init__(parent)
+        self.info = info
+        self.title = QLineEdit()
+        self.title.setPlaceholderText('Book title')
+        self.title.textEdited.connect(self._titleEdited)
+        self.url = QLineEdit()
+        self.url.setPlaceholderText('Link (https://...)')
+        self.url.textEdited.connect(self._linkEdited)
+        vbox(self)
+        margins(self, left=20)
+        self.layout().addWidget(self.title)
+        self.layout().addWidget(self.url)
+
+    def _titleEdited(self, title: str):
+        self.info.title = title
+
+        self.changed.emit()
+
+    def _linkEdited(self, link: str):
+        self.info.web = link
+
+        self.changed.emit()
+
+
+class PublishedNovelListWidget(QWidget):
+    def __init__(self, patron: Patron, parent=None):
+        super().__init__(parent)
+        self.patron = patron
+
+        self.novel1 = PublishedNovelWidget(self.patron.novels[0])
+        self.novel2 = PublishedNovelWidget(self.patron.novels[1])
+        self.novel3 = PublishedNovelWidget(self.patron.novels[2])
+
+        vbox(self, spacing=8)
+        margins(self, left=10)
+        self.layout().addWidget(label('Book 1:'))
+        self.layout().addWidget(self.novel1)
+        self.layout().addWidget(label('Book 2:'))
+        self.layout().addWidget(self.novel2)
+        self.layout().addWidget(label('Book 3:'))
+        self.layout().addWidget(self.novel3)
+
+
 @spawn
 class PatronRecognitionBuilderPopup(PopupDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.patron = Patron('My name', web='https://plotlyst.com')
-        self.patronVip = Patron('My name', vip=True, web='https://plotlyst.com')
+        self.patronVip = Patron('My name', vip=True, web='https://plotlyst.com', novels=[
+            PatronNovelInfo(''), PatronNovelInfo(''), PatronNovelInfo('')
+        ])
 
         desc = 'Patrons can gain recognition in Plotlyst.'
         desc += ' If you subscribed to my page, you should have received a form to upload your information. To make the process easier, you can edit your info here and export.'
@@ -1150,6 +1211,13 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.listFavouriteNovels.setProperty('relaxed-white-bg', True)
         self.listFavouriteNovels.changed.connect(self._updateJson)
 
+        self.socialsListView = SocialsListView(self.patronVip)
+
+        self.publishedNovels = PublishedNovelListWidget(self.patronVip)
+        self.publishedNovels.novel1.changed.connect(self._updateJson)
+        self.publishedNovels.novel2.changed.connect(self._updateJson)
+        self.publishedNovels.novel3.changed.connect(self._updateJson)
+
         self.profileScroll = scroll_area(frameless=True)
         self.profileScroll.setProperty('muted-bg', True)
         self.wdgProfile = QWidget()
@@ -1161,6 +1229,12 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.wdgProfile.layout().addWidget(icon_text('fa5s.heart', 'Favourite stories'),
                                            alignment=Qt.AlignmentFlag.AlignLeft)
         self.wdgProfile.layout().addWidget(self.listFavouriteNovels)
+        self.wdgProfile.layout().addWidget(icon_text('mdi.camera-account', 'Socials'),
+                                           alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgProfile.layout().addWidget(self.socialsListView)
+        self.wdgProfile.layout().addWidget(icon_text('fa5s.book', 'Published novels (max 3)'),
+                                           alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgProfile.layout().addWidget(self.publishedNovels)
         self.wdgProfile.layout().addWidget(vspacer())
         self.tabProfile.layout().addWidget(self.profileScroll)
 
