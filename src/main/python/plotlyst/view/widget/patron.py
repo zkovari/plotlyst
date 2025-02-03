@@ -675,7 +675,7 @@ social_descriptions = {
     "tiktok": "TikTok",
     "youtube": "Youtube",
     "reddit": "Reddit",
-    "linkedin": "Linkedin",
+    "linkedin": "LinkedIn",
     "pinterest": "Pinterest",
     "amazon": "Amazon",
     "discord": "Discord",
