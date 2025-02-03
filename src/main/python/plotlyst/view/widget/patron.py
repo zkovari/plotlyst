@@ -40,7 +40,7 @@ from plotlyst.core.domain import Board, Task, TaskStatus
 from plotlyst.env import app_env
 from plotlyst.service.resource import JsonDownloadResult, JsonDownloadWorker
 from plotlyst.view.common import label, set_tab_enabled, push_btn, spin, scroll_area, wrap, frame, shadow, tool_btn, \
-    action, open_url, ExclusiveOptionalButtonGroup, spawn
+    action, open_url, ExclusiveOptionalButtonGroup
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.button import SmallToggleButton
@@ -1066,7 +1066,7 @@ class PublishedNovelListWidget(QWidget):
         self.layout().addWidget(self.novel3)
 
 
-@spawn
+# @spawn
 class PatronRecognitionBuilderPopup(PopupDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
