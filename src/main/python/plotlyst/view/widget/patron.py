@@ -1262,6 +1262,8 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.lblCopied = CopiedTextMessage()
         self.tabExport.layout().addWidget(group(self.lblCopied, self.btnCopy, margin=0),
                                           alignment=Qt.AlignmentFlag.AlignRight)
+        self.tabExport.layout().addWidget(
+            label("Copy this text to the form you've received on Patreon", description=True, decr_font_diff=1))
         self.tabExport.layout().addWidget(self.textJson)
 
         self.btnArtist = SmallToggleButton()
@@ -1359,8 +1361,8 @@ class PatronRecognitionBuilderPopup(PopupDialog):
 
         self.tabMain.layout().addWidget(self.wdgType)
         self.tabMain.layout().addWidget(self.nameFrame)
-        self.tabMain.layout().addWidget(self.wdgGenre)
         self.tabMain.layout().addWidget(self.websiteFrame)
+        self.tabMain.layout().addWidget(self.wdgGenre)
         self.tabMain.layout().addWidget(vspacer())
 
         self.lineDescription = self.__lineedit('More detailed description', iconEditable=False)
