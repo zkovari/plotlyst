@@ -35,7 +35,7 @@ from qthandy.filter import OpacityEventFilter, ObjectReferenceMimeData
 from qtmenu import MenuWidget
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR, truncate_string, \
-    RELAXED_WHITE_COLOR
+    RELAXED_WHITE_COLOR, IGNORE_CAPITALIZATION_PROPERTY
 from plotlyst.core.domain import Board, Task, TaskStatus
 from plotlyst.env import app_env
 from plotlyst.service.resource import JsonDownloadResult, JsonDownloadWorker
@@ -1060,6 +1060,7 @@ class SocialListItemWidget(ListItemWidget):
         self.ref = ref
         self._lineEdit.setText(self.ref.link)
         self._lineEdit.setPlaceholderText(social_descriptions.get(self.ref.social, 'Social link'))
+        self._lineEdit.setProperty(IGNORE_CAPITALIZATION_PROPERTY, True)
 
     @overrides
     def _textChanged(self, text: str):
@@ -1179,9 +1180,12 @@ class PublishedNovelWidget(QWidget):
         self.info = info
         self.title = QLineEdit()
         self.title.setPlaceholderText('Book title')
+        self.title.setProperty('rounded', True)
         self.title.textEdited.connect(self._titleEdited)
         self.url = QLineEdit()
+        self.url.setProperty(IGNORE_CAPITALIZATION_PROPERTY, True)
         self.url.setPlaceholderText('Link (https://...)')
+        self.url.setProperty('rounded', True)
         self.url.textEdited.connect(self._linkEdited)
         vbox(self)
         margins(self, left=20)
@@ -1323,48 +1327,52 @@ class PatronRecognitionBuilderPopup(PopupDialog):
 
         self.lineWebsite = self.__lineedit('Website (https://...)')
         self.lineWebsite.lineEdit.textEdited.connect(self._websiteEdited)
+        self.lineWebsite.lineEdit.setProperty(IGNORE_CAPITALIZATION_PROPERTY, True)
         self.websiteFrame = self.__framed(self.lineWebsite)
         hintWebsite = HintButton()
         hintWebsite.setHint(
             'Users will be able to click on your Patron label and visit your website.')
         self.websiteFrame.layout().addWidget(hintWebsite, alignment=Qt.AlignmentFlag.AlignRight)
 
-        self.lineBio = self.__lineedit('Bio (for VIP patrons only)', iconEditable=False)
+        self.lineBio = self.__lineedit('Bio', iconEditable=False)
         self.lineBio.lineEdit.textEdited.connect(self._bioEdited)
         self.bioFrame = self.__framed(self.lineBio)
 
         self.wdgPreview = QWidget()
         hbox(self.wdgPreview)
-        self.patronLbl = PatronRecognitionWidget(self.patron)
-        self.framePatron = self.__framed(self.patronLbl, margin=5)
-        self.patronCard = PatronRecognitionWidget(self.patronVip)
-        self.frameVipPatron = self.__framed(self.patronCard, margin=5)
+        self.patronRecognition = PatronRecognitionWidget(self.patron)
+        self.framePatron = self.__framed(self.patronRecognition, margin=5)
+        self.patronVipRecognition = PatronRecognitionWidget(self.patronVip)
+        self.frameVipPatron = self.__framed(self.patronVipRecognition, margin=5)
+        self.patronLbl = label('Preview:')
+        self.patronVipLbl = label('VIP Preview:')
 
         self.wdgPreview.layout().addWidget(spacer())
-        self.wdgPreview.layout().addWidget(label('Preview:'))
+        self.wdgPreview.layout().addWidget(self.patronLbl)
         self.wdgPreview.layout().addWidget(self.framePatron)
-        self.wdgPreview.layout().addWidget(spacer())
-        self.wdgPreview.layout().addWidget(label('VIP Preview:'))
+        self.wdgPreview.layout().addWidget(self.patronVipLbl)
         self.wdgPreview.layout().addWidget(self.frameVipPatron)
         self.wdgPreview.layout().addWidget(spacer())
+
+        self.patronVipLbl.setHidden(True)
+        self.frameVipPatron.setHidden(True)
 
         self.tabMain.layout().addWidget(self.wdgType)
         self.tabMain.layout().addWidget(self.nameFrame)
         self.tabMain.layout().addWidget(self.wdgGenre)
         self.tabMain.layout().addWidget(self.websiteFrame)
-        self.tabMain.layout().addWidget(self.bioFrame)
         self.tabMain.layout().addWidget(vspacer())
 
-        self.lineDescription = self.__lineedit('More detailed description (for VIP patrons only)', iconEditable=False)
+        self.lineDescription = self.__lineedit('More detailed description', iconEditable=False)
         self.lineDescription.lineEdit.textEdited.connect(self._descEdited)
         self.descFrame = self.__framed(self.lineDescription)
 
         self.listFavouriteNovels = FavouriteNovelsListView(self.patronVip)
-        self.listFavouriteNovels.setProperty('relaxed-white-bg', True)
+        self.listFavouriteNovels.setProperty('bg', True)
         self.listFavouriteNovels.changed.connect(self._updateJson)
 
         self.socialsListView = SocialsListView(self.patronVip)
-        self.socialsListView.setProperty('relaxed-white-bg', True)
+        self.socialsListView.setProperty('bg', True)
         self.socialsListView.changed.connect(self._socialsChanged)
 
         self.publishedNovels = PublishedNovelListWidget(self.patronVip)
@@ -1379,6 +1387,7 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.wdgProfile.setProperty('muted-bg', True)
         vbox(self.wdgProfile, 0, 5)
 
+        self.wdgProfile.layout().addWidget(self.bioFrame)
         self.wdgProfile.layout().addWidget(self.descFrame)
         self.wdgProfile.layout().addWidget(icon_text('fa5s.heart', 'Favourite stories'),
                                            alignment=Qt.AlignmentFlag.AlignLeft)
@@ -1400,15 +1409,30 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.frame.layout().addWidget(self.tabWidget)
         self.frame.layout().addWidget(self.btnCancel, alignment=Qt.AlignmentFlag.AlignRight)
 
+        self.tabWidget.currentChanged.connect(self._tabChanged)
+
     def display(self):
         self.exec()
+
+    def _tabChanged(self, index: int):
+        wdg = self.tabWidget.currentWidget()
+        if wdg is self.tabMain:
+            self.patronLbl.setVisible(True)
+            self.framePatron.setVisible(True)
+            self.patronVipLbl.setVisible(False)
+            self.frameVipPatron.setVisible(False)
+        elif wdg is self.tabProfile:
+            self.patronLbl.setVisible(False)
+            self.framePatron.setVisible(False)
+            self.patronVipLbl.setVisible(True)
+            self.frameVipPatron.setVisible(True)
 
     def _nameEdited(self, name: str):
         self.patron.name = name
         self.patronVip.name = name
 
-        self.patronLbl.refresh()
-        self.patronCard.refresh()
+        self.patronRecognition.refresh()
+        self.patronVipRecognition.refresh()
 
         self._updateJson()
 
@@ -1439,8 +1463,8 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.patron.icon = name
         self.patronVip.icon = name
 
-        self.patronLbl.refresh()
-        self.patronCard.refresh()
+        self.patronRecognition.refresh()
+        self.patronVipRecognition.refresh()
 
         self._updateJson()
 
@@ -1448,7 +1472,7 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.patron.web = web
         self.patronVip.web = web
 
-        self.patronCard.refresh()
+        self.patronVipRecognition.refresh()
 
         self._updateJson()
 
@@ -1456,7 +1480,7 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.patron.bio = bio
         self.patronVip.bio = bio
 
-        self.patronCard.refresh()
+        self.patronVipRecognition.refresh()
 
         self._updateJson()
 
@@ -1468,7 +1492,7 @@ class PatronRecognitionBuilderPopup(PopupDialog):
 
     def _socialsChanged(self):
         self._updateJson()
-        self.patronCard.refresh()
+        self.patronVipRecognition.refresh()
 
     def _updateJson(self):
         self.textJson.setText(self.patronVip.to_json())
