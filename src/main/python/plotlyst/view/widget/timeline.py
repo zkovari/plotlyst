@@ -379,6 +379,7 @@ class TimelineGridWidget(QWidget):
         self._columnWidth: int = 150
         self._rowHeight: int = 50
         self._headerHeight: int = 40
+        self._verticalHeaderWidth: int = 190
         self._spacing: int = 10
 
         self._rows: Dict[Any, QWidget] = {}
@@ -427,9 +428,9 @@ class TimelineGridWidget(QWidget):
         self.layout().addWidget(self.scrollRows)
         self.layout().addWidget(self.wdgCenter)
 
-        emptyPlaceholder = QWidget(self)
-        emptyPlaceholder.setProperty('bg', True)
-        emptyPlaceholder.setGeometry(0, 0, self.wdgRows.sizeHint().width(), self._headerHeight)
+        self._emptyPlaceholder = QWidget(self)
+        self._emptyPlaceholder.setProperty('bg', True)
+        self._emptyPlaceholder.setGeometry(0, 0, self._verticalHeaderWidth, self._headerHeight)
 
     def setColumnWidth(self, width: int):
         self._columnWidth = width

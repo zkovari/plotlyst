@@ -438,6 +438,7 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
 
         self.setColumnWidth(170)
         self.setRowHeight(120)
+        self.scrollRows.setFixedWidth(self._verticalHeaderWidth)
 
         self.cardsView = SceneGridCardsView(spacing=self._spacing)
         self.cardsView.cardSelected.connect(self.sceneCardSelected)
@@ -445,7 +446,7 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
 
         for i, scene in enumerate(self._novel.scenes):
             sceneCard = SceneGridCard(scene, self._novel)
-            self.cardsView.addCard(sceneCard)
+            self.cardsView.addCard(sceneCard, alignment=Qt.AlignmentFlag.AlignCenter)
             sceneCard.setFixedSize(self._columnWidth, self._rowHeight)
 
         self.repo = RepositoryPersistenceManager.instance()
@@ -467,7 +468,7 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
             index = self._novel.scenes.index(event.scene)
             sceneCard = SceneGridCard(event.scene, self._novel)
             if index == len(self._novel.scenes) - 1:  # last one
-                self.cardsView.addCard(sceneCard)
+                self.cardsView.addCard(sceneCard, alignment=Qt.AlignmentFlag.AlignCenter)
             else:
                 self.cardsView.insertAt(index, sceneCard)
             sceneCard.setFixedSize(self._columnWidth, self._rowHeight)
@@ -508,7 +509,8 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
         self.wdgRows.layout().addWidget(vspacer())
         self.wdgColumns.layout().addWidget(spacer())
 
-        self.cardsView.swapLayout(LayoutType.HORIZONTAL if self._scenesInColumns else LayoutType.VERTICAL)
+        self.cardsView.swapLayout(LayoutType.HORIZONTAL if self._scenesInColumns else LayoutType.VERTICAL,
+                                  alignment=Qt.AlignmentFlag.AlignCenter)
 
         QWidget().setLayout(self.wdgEditor.layout())
         self.wdgEditor.setLayout(QVBoxLayout() if self._scenesInColumns else QHBoxLayout())
@@ -521,6 +523,7 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
 
         self.scrollColumns.setFixedHeight(self._headerHeight)
         margins(self.wdgRows, top=self._headerHeight, right=self._spacing)
+        self._emptyPlaceholder.setGeometry(0, 0, self._verticalHeaderWidth, self._headerHeight)
 
         self.refresh()
 

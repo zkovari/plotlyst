@@ -559,9 +559,12 @@ class CardsView(QFrame):
         self._cards.clear()
         clear_layout(self._layout)
 
-    def addCard(self, card: Card):
+    def addCard(self, card: Card, alignment=None):
         self._initCardWidget(card)
-        self._layout.addWidget(card)
+        if alignment:
+            self._layout.addWidget(card, alignment=alignment)
+        else:
+            self._layout.addWidget(card)
 
     def insertAfter(self, ref: Card, card: Card):
         self._initCardWidget(card)
@@ -618,7 +621,7 @@ class CardsView(QFrame):
         self._cardsRatio = ratio
         self._resizeAllCards()
 
-    def swapLayout(self, layoutType: LayoutType):
+    def swapLayout(self, layoutType: LayoutType, alignment=None):
         cards = []
         for i in range(self._layout.count()):
             item = self._layout.itemAt(i)
@@ -635,8 +638,10 @@ class CardsView(QFrame):
             self._layout = hbox(self, self._margin, self._spacing)
 
         for card in cards:
-            self._layout.addWidget(card)
-
+            if alignment:
+                self._layout.addWidget(card, alignment=alignment)
+            else:
+                self._layout.addWidget(card)
 
     def setSetting(self, setting: NovelSetting, value: Any):
         for card in self._cards.values():
