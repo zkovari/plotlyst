@@ -41,7 +41,7 @@ from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import tool_btn, fade_out_and_gc, insert_before_the_end, \
     label, push_btn, shadow, fade_in, to_rgba_str
 from plotlyst.view.icons import IconRegistry
-from plotlyst.view.widget.cards import SceneCard, CardsView, Card
+from plotlyst.view.widget.cards import SceneCard, CardsView, Card, CardFilter
 from plotlyst.view.widget.input import RemovalButton
 from plotlyst.view.widget.timeline import TimelineGridWidget, TimelineGridLine, TimelineGridPlaceholder
 
@@ -534,6 +534,7 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
             insert_before_the_end(self.wdgRows, self.cardsView)
 
         self.initRefs()
+        self._applyFilterOnLines()
 
     def initRefs(self):
         for i, scene in enumerate(self._novel.scenes):
@@ -573,6 +574,17 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
             self._addPlaceholder(line, scene)
 
         insert_before_the_end(self.wdgEditor, line)
+
+    def applyFilter(self, cardFilter: CardFilter):
+        self.cardsView.applyFilter(cardFilter)
+        self._applyFilterOnLines()
+
+    def _applyFilterOnLines(self):
+        for i, scene in enumerate(self._novel.scenes):
+            card = self.cardsView.card(scene)
+            for line in self._plots.values():
+                wdg = line.layout().itemAt(i).widget()
+                wdg.setHidden(card.isHidden())
 
     def save(self, scene: Scene):
         self.repo.update_scene(scene)

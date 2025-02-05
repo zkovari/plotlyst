@@ -567,6 +567,7 @@ class ScenesOutlineView(AbstractNovelView):
         self._card_filter.setActsFilter(self._actFilter.actFilters())
         self._card_filter.setActivePovs(self._scene_filter.povFilter.characters(all=False))
         self.ui.cards.applyFilter(self._card_filter)
+        self._storyGrid.applyFilter(self._card_filter)
 
     def _story_structure_toggled(self, toggled: bool):
         if toggled:
