@@ -46,10 +46,10 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.roadmap_view import RoadmapView
 from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.confirm import confirmed
+from plotlyst.view.widget.kb.browser import KnowledgeBaseWidget
 from plotlyst.view.widget.library import ShelvesTreeView, StoryCreationDialog, NovelDisplayCard, SeriesDisplayCard, \
     NovelSelectorPopup
-from plotlyst.view.widget.tour import Tutorial
-from plotlyst.view.widget.tour.content import tutorial_titles, tutorial_descriptions
+from plotlyst.view.widget.patron import PatronsWidget, PlotlystPlusWidget
 from plotlyst.view.widget.tour.core import LibraryTourEvent, NewStoryButtonTourEvent, \
     NewStoryDialogOpenTourEvent, TutorialNovelSelectTourEvent, NovelDisplayTourEvent, tutorial_novel, \
     NovelOpenButtonTourEvent, TutorialNovelCloseTourEvent
@@ -75,24 +75,32 @@ class HomeView(AbstractView):
         self.ui.btnJoinDiscord.setIcon(IconRegistry.from_name('fa5b.discord', RELAXED_WHITE_COLOR))
         self.ui.btnTwitter.setIcon(IconRegistry.from_name('fa5b.twitter', RELAXED_WHITE_COLOR))
         self.ui.btnInstagram.setIcon(IconRegistry.from_name('fa5b.instagram', RELAXED_WHITE_COLOR))
+        self.ui.btnThreads.setIcon(IconRegistry.from_name('mdi.at', RELAXED_WHITE_COLOR))
+        self.ui.btnPatreon.setIcon(IconRegistry.from_name('fa5b.patreon', RELAXED_WHITE_COLOR))
         self.ui.btnFacebook.setIcon(IconRegistry.from_name('fa5b.facebook', RELAXED_WHITE_COLOR))
         self.ui.btnYoutube.setIcon(IconRegistry.from_name('fa5b.youtube', RELAXED_WHITE_COLOR))
         self.ui.btnPinterest.setIcon(IconRegistry.from_name('fa5b.pinterest', RELAXED_WHITE_COLOR))
         self.ui.btnJoinDiscord.installEventFilter(OpacityEventFilter(self.ui.btnJoinDiscord, leaveOpacity=0.8))
         self.ui.btnTwitter.installEventFilter(OpacityEventFilter(self.ui.btnTwitter, leaveOpacity=0.8))
         self.ui.btnInstagram.installEventFilter(OpacityEventFilter(self.ui.btnInstagram, leaveOpacity=0.8))
+        self.ui.btnThreads.installEventFilter(OpacityEventFilter(self.ui.btnThreads, leaveOpacity=0.8))
+        self.ui.btnPatreon.installEventFilter(OpacityEventFilter(self.ui.btnPatreon, leaveOpacity=0.8))
         self.ui.btnFacebook.installEventFilter(OpacityEventFilter(self.ui.btnFacebook, leaveOpacity=0.8))
         self.ui.btnYoutube.installEventFilter(OpacityEventFilter(self.ui.btnYoutube, leaveOpacity=0.8))
         self.ui.btnPinterest.installEventFilter(OpacityEventFilter(self.ui.btnPinterest, leaveOpacity=0.8))
         self.ui.btnJoinDiscord.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnJoinDiscord))
         self.ui.btnTwitter.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnTwitter))
         self.ui.btnInstagram.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnInstagram))
+        self.ui.btnThreads.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnThreads))
+        self.ui.btnPatreon.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnPatreon))
         self.ui.btnFacebook.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnFacebook))
         self.ui.btnYoutube.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnYoutube))
         self.ui.btnPinterest.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnPinterest))
         self.ui.btnJoinDiscord.clicked.connect(lambda: open_url('https://discord.com/invite/9HZWnvNzM6'))
         self.ui.btnTwitter.clicked.connect(lambda: open_url('https://twitter.com/plotlyst'))
         self.ui.btnInstagram.clicked.connect(lambda: open_url('https://www.instagram.com/plotlyst'))
+        self.ui.btnThreads.clicked.connect(lambda: open_url('https://threads.net/@plotlyst'))
+        self.ui.btnPatreon.clicked.connect(lambda: open_url('https://patreon.com/user?u=24283978'))
         self.ui.btnFacebook.clicked.connect(
             lambda: open_url('https://www.facebook.com/people/Plotlyst/61557773998679/'))
         self.ui.btnYoutube.clicked.connect(lambda: open_url('https://www.youtube.com/@Plotlyst'))
@@ -108,19 +116,18 @@ class HomeView(AbstractView):
 
         self.ui.btnLibrary.setIcon(
             IconRegistry.from_name('mdi.bookshelf', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
-        self.ui.btnTutorials.setIcon(
-            IconRegistry.from_name('mdi6.school-outline', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
-        self.ui.btnProgress.setIcon(
-            IconRegistry.from_name('fa5s.chart-line', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
         self.ui.btnRoadmap.setIcon(
             IconRegistry.from_name('fa5s.road', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
+        self.ui.btnPlotlystPlus.setIcon(
+            IconRegistry.from_name('mdi.certificate', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
+        self.ui.btnPatrons.setIcon(
+            IconRegistry.from_name('msc.organization', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
+        self.ui.btnKnowledgeBase.setIcon(
+            IconRegistry.from_name('fa5s.graduation-cap', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
 
         for btn in self.ui.buttonGroup.buttons():
             btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.7, ignoreCheckedButton=True))
             btn.installEventFilter(TooltipPositionEventFilter(btn))
-
-        self.ui.btnTutorials.setHidden(True)
-        self.ui.btnProgress.setHidden(True)
 
         self.ui.lblWelcomeMain.setText(home_page_welcome_text)
 
@@ -175,32 +182,24 @@ class HomeView(AbstractView):
         self.ui.btnAddNewStoryMain.setIconSize(QSize(24, 24))
 
         link_buttons_to_pages(self.ui.stackedWidget,
-                              [(self.ui.btnLibrary, self.ui.pageLibrary), (self.ui.btnTutorials, self.ui.pageTutorials),
-                               (self.ui.btnProgress, self.ui.pageProgress),
-                               (self.ui.btnRoadmap, self.ui.pageRoadmap)])
+                              [(self.ui.btnLibrary, self.ui.pageLibrary),
+                               (self.ui.btnRoadmap, self.ui.pageRoadmap),
+                               (self.ui.btnPlotlystPlus, self.ui.pagePlotlystPlus),
+                               (self.ui.btnPatrons, self.ui.pagePatrons),
+                               (self.ui.btnKnowledgeBase, self.ui.pageKnowledgeBase),
+                               ])
 
         self._roadmapView = RoadmapView()
         self.ui.pageRoadmap.layout().addWidget(self._roadmapView)
 
-        # self._tutorialsTreeView = TutorialsTreeView(settings=TreeSettings(font_incr=2))
-        # self._tutorialsTreeView.tutorialSelected.connect(self._tutorial_selected)
-        # self.ui.splitterTutorials.setSizes([150, 500])
-        # self.ui.btnStartTutorial.setIcon(IconRegistry.from_name('fa5s.play-circle', 'white'))
-        # self.ui.btnStartTutorial.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnStartTutorial))
-        # self.ui.btnStartTutorial.clicked.connect(self._start_tutorial)
-        # self.ui.wdgTutorialsParent.layout().addWidget(self._tutorialsTreeView)
-        # self.ui.stackTutorial.setCurrentWidget(self.ui.pageTutorialsEmpty)
+        self._knowledgeBase = KnowledgeBaseWidget()
+        self.ui.pageKnowledgeBase.layout().addWidget(self._knowledgeBase)
 
-        # self.ui.textTutorial.setViewportMargins(20, 20, 20, 20)
-        # document: QTextDocument = self.ui.textTutorial.document()
-        # font = self.ui.textTutorial.font()
-        # font.setPointSize(font.pointSize() + 2)
-        # document.setDefaultFont(font)
-        #
-        # transparent(self.ui.lineTutorialTitle)
-        # self.ui.lineTutorialTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        # incr_font(self.ui.lineTutorialTitle, 10)
-        # bold(self.ui.lineTutorialTitle)
+        self._plotlystPlus = PlotlystPlusWidget()
+        self.ui.pagePlotlystPlus.layout().addWidget(self._plotlystPlus)
+
+        self._patronsWidget = PatronsWidget()
+        self.ui.pagePatrons.layout().addWidget(self._patronsWidget)
 
         self.ui.btnLibrary.setChecked(True)
         self.ui.stackWdgNovels.setCurrentWidget(self.ui.pageEmpty)
@@ -259,6 +258,9 @@ class HomeView(AbstractView):
 
         series = [x for x in self._novels if x.story_type == StoryType.Series]
         entities_registry.set_series(series)
+
+    def showKnowledgeBase(self):
+        self.ui.btnKnowledgeBase.setChecked(True)
 
     def selectSeries(self, series: NovelDescriptor):
         self._shelvesTreeView.selectNovel(series)
@@ -394,15 +396,3 @@ class HomeView(AbstractView):
         for novel in novels:
             self.repo.update_project_novel(novel)
         self.refresh()
-
-    def _tutorial_selected(self, tutorial: Tutorial):
-        if tutorial.is_container():
-            self.ui.stackTutorial.setCurrentWidget(self.ui.pageTutorialsEmpty)
-        else:
-            self._tour_service.setTutorial(tutorial)
-            self.ui.stackTutorial.setCurrentWidget(self.ui.pageTutorialDisplay)
-            self.ui.lineTutorialTitle.setText(tutorial_titles[tutorial])
-            self.ui.textTutorial.setMarkdown(tutorial_descriptions.get(tutorial, 'Click Start to learn this tutorial.'))
-
-    def _start_tutorial(self):
-        self._tour_service.start()

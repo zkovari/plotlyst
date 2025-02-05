@@ -1376,7 +1376,8 @@ class LabelsEditor(QFrame):
 class DecoratedLineEdit(QWidget):
     iconChanged = pyqtSignal(str, str)
 
-    def __init__(self, parent=None, maxWidth: Optional[int] = None, iconEditable: bool = False):
+    def __init__(self, parent=None, maxWidth: Optional[int] = None, iconEditable: bool = False,
+                 autoAdjustable: bool = True):
         super().__init__(parent)
         hbox(self, 0, 0)
         self.icon = QToolButton()
@@ -1385,7 +1386,12 @@ class DecoratedLineEdit(QWidget):
             pointy(self.icon)
             self.icon.installEventFilter(OpacityEventFilter(self.icon, leaveOpacity=1.0, enterOpacity=0.7))
             self.icon.clicked.connect(self._changeIcon)
-        self.lineEdit = AutoAdjustableLineEdit(defaultWidth=50, maxWidth=maxWidth)
+        if autoAdjustable:
+            self.lineEdit = AutoAdjustableLineEdit(defaultWidth=50, maxWidth=maxWidth)
+        else:
+            self.lineEdit = QLineEdit()
+            if maxWidth:
+                self.lineEdit.setMaximumWidth(maxWidth)
         transparent(self.lineEdit)
 
         self.layout().addWidget(self.icon)

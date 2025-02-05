@@ -79,6 +79,7 @@ from plotlyst.view.widget.confirm import asked
 from plotlyst.view.widget.input import CapitalizationEventFilter
 from plotlyst.view.widget.labels import SeriesLabel
 from plotlyst.view.widget.log import LogsPopup
+from plotlyst.view.widget.patron import PatronRecognitionBuilderPopup
 from plotlyst.view.widget.settings import NovelQuickPanelCustomizationButton
 from plotlyst.view.widget.tour.core import TutorialNovelOpenTourEvent, tutorial_novel, \
     TutorialNovelCloseTourEvent, NovelTopLevelButtonTourEvent, HomeTopLevelButtonTourEvent, NovelEditorDisplayTourEvent, \
@@ -160,8 +161,12 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.btnReports.setIcon(IconRegistry.reports_icon(NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
         self.btnSettingsLink.setIcon(IconRegistry.cog_icon(color=NAV_BAR_BUTTON_DEFAULT_COLOR))
         self.btnSettingsLink.installEventFilter(ButtonPressResizeEventFilter(self.btnSettingsLink))
-        self.btnSettingsLink.installEventFilter(OpacityEventFilter(self.btnSettingsLink))
+        self.btnSettingsLink.installEventFilter(OpacityEventFilter(self.btnSettingsLink, leaveOpacity=0.6))
         self.btnSettingsLink.clicked.connect(self._settings_link_clicked)
+        self.btnKbLink.setIcon(IconRegistry.from_name('fa5s.graduation-cap', color=NAV_BAR_BUTTON_DEFAULT_COLOR))
+        self.btnKbLink.installEventFilter(ButtonPressResizeEventFilter(self.btnKbLink))
+        self.btnKbLink.installEventFilter(OpacityEventFilter(self.btnKbLink, leaveOpacity=0.6))
+        self.btnKbLink.clicked.connect(self._kb_link_clicked)
 
         for btn in self.buttonGroup.buttons():
             btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.7, ignoreCheckedButton=True))
@@ -539,6 +544,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionDetachReports.setIcon(IconRegistry.reports_icon())
         self.actionDetachReports.triggered.connect(partial(self._detach_panel, NovelSetting.Reports))
 
+        self.actionPatronRecognitionBuilder.setIcon(IconRegistry.from_name('fa5s.hand-holding-heart'))
+        self.actionPatronRecognitionBuilder.triggered.connect(lambda: PatronRecognitionBuilderPopup.popup())
+
         self.actionLogs.setIcon(IconRegistry.from_name('fa5.file-code'))
         self.actionLogs.triggered.connect(lambda: LogsPopup.popup())
         self.actionPlotlystWebsite.setIcon(IconRegistry.from_name('mdi.web'))
@@ -560,10 +568,14 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionFacebook.setIcon(IconRegistry.from_name('fa5b.facebook'))
         self.actionYoutube.setIcon(IconRegistry.from_name('fa5b.youtube'))
         self.actionInstagram.setIcon(IconRegistry.from_name('fa5b.instagram'))
+        self.actionThreads.setIcon(IconRegistry.from_name('mdi.at'))
+        self.actionPatreon.setIcon(IconRegistry.from_name('fa5b.patreon'))
         self.actionXTwitter.setIcon(IconRegistry.from_name('fa5b.twitter'))
         self.actionPinterest.setIcon(IconRegistry.from_name('fa5b.pinterest'))
         self.actionXTwitter.triggered.connect(lambda: open_url('https://twitter.com/plotlyst'))
         self.actionInstagram.triggered.connect(lambda: open_url('https://www.instagram.com/plotlyst'))
+        self.actionThreads.triggered.connect(lambda: open_url('https://threads.net/@plotlyst'))
+        self.actionPatreon.triggered.connect(lambda: open_url('https://patreon.com/user?u=24283978'))
         self.actionFacebook.triggered.connect(
             lambda: open_url('https://www.facebook.com/people/Plotlyst/61557773998679/'))
         self.actionYoutube.triggered.connect(lambda: open_url('https://www.youtube.com/@Plotlyst'))
@@ -847,6 +859,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
     def _settings_link_clicked(self):
         self.btnNovel.setChecked(True)
         self.novel_view.show_settings()
+
+    def _kb_link_clicked(self):
+        self.home_mode.setChecked(True)
+        self.home_view.showKnowledgeBase()
 
     def _detach_panel(self, panel: NovelSetting):
         if panel == NovelSetting.Characters:

@@ -486,7 +486,7 @@ def frame(parent=None):
 def label(text: str = '', bold: Optional[bool] = None, italic: Optional[bool] = None, underline: Optional[bool] = None,
           description: Optional[bool] = None, wordWrap: Optional[bool] = None, h1: Optional[bool] = None,
           h2: Optional[bool] = None, h3: Optional[bool] = None, h4: Optional[bool] = None, h5: Optional[bool] = None,
-          color=None, decr_font_diff: int = 0,
+          color=None, decr_font_diff: int = 0, incr_font_diff: int = 0,
           parent=None) -> QLabel:
     lbl = QLabel(text, parent)
     font = lbl.font()
@@ -516,6 +516,8 @@ def label(text: str = '', bold: Optional[bool] = None, italic: Optional[bool] = 
 
     if decr_font_diff:
         decr_font(lbl, decr_font_diff)
+    if incr_font_diff:
+        incr_font(lbl, incr_font_diff)
 
     if wordWrap:
         lbl.setWordWrap(wordWrap)
