@@ -36,7 +36,7 @@ from plotlyst.core.domain import Scene, Novel, Plot, \
 from plotlyst.event.core import emit_event, EventListener, Event
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import SceneChangedEvent, StorylineCreatedEvent, SceneAddedEvent, SceneDeletedEvent, \
-    SceneOrderChangedEvent, StorylineRemovedEvent, StorylineChangedEvent
+    SceneOrderChangedEvent, StorylineRemovedEvent, StorylineChangedEvent, SceneEditRequested
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import tool_btn, fade_out_and_gc, insert_before_the_end, \
     label, push_btn, shadow, fade_in, to_rgba_str
@@ -409,6 +409,7 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
         self.setRowHeight(120)
 
         self.cardsView = CardsView(layoutType=LayoutType.VERTICAL, margin=0, spacing=self._spacing)
+        self.cardsView.cardDoubleClicked.connect(self._cardDoubleClicked)
 
         for i, scene in enumerate(self._novel.scenes):
             sceneCard = SceneGridCard(scene, self._novel)
@@ -609,6 +610,9 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
 
     def _handleStorylineCreated(self, plot: Plot):
         self.addPlot(plot)
+
+    def _cardDoubleClicked(self, card: SceneGridCard):
+        emit_event(self._novel, SceneEditRequested(self, scene=card.scene))
 
     def __plotHeader(self, plot: Plot) -> Optional[ScenesGridPlotHeader]:
         wdg = self.wdgRows if self._scenesInColumns else self.wdgColumns

@@ -43,7 +43,7 @@ from plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStru
     CharacterDeletedEvent, \
     NovelAboutToSyncEvent, NovelSyncEvent, NovelStoryStructureActivationRequest, NovelPanelCustomizationEvent, \
     NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelPovTrackingToggleEvent, SceneAddedEvent, \
-    SceneStoryBeatChangedEvent, ActiveSceneStageChanged
+    SceneStoryBeatChangedEvent, ActiveSceneStageChanged, SceneEditRequested
 from plotlyst.events import SceneOrderChangedEvent
 from plotlyst.model.common import SelectionItemsModel
 from plotlyst.model.novel import NovelStagesModel
@@ -119,7 +119,7 @@ class ScenesOutlineView(AbstractNovelView):
         super().__init__(novel,
                          [NovelStoryStructureUpdated, CharacterChangedEvent, SceneAddedEvent, SceneChangedEvent,
                           SceneDeletedEvent,
-                          SceneOrderChangedEvent, NovelAboutToSyncEvent, NovelStorylinesToggleEvent,
+                          SceneOrderChangedEvent, SceneEditRequested, NovelAboutToSyncEvent, NovelStorylinesToggleEvent,
                           NovelStructureToggleEvent, NovelPovTrackingToggleEvent, SceneStoryBeatChangedEvent])
         self.ui = Ui_ScenesView()
         self.ui.setupUi(self.widget)
@@ -237,9 +237,10 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.cards.cardCustomContextMenuRequested.connect(self._show_card_menu)
 
         self._storyGrid = ScenesGridWidget(self.novel)
-        self._storyGridToolbar  = ScenesGridToolbar()
+        self._storyGridToolbar = ScenesGridToolbar()
         self._storyGridToolbar.orientationChanged.connect(self._storyGrid.setOrientation)
-        self.ui.pageStoryGrid.layout().addWidget(self._storyGridToolbar, alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+        self.ui.pageStoryGrid.layout().addWidget(self._storyGridToolbar,
+                                                 alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
         self.ui.pageStoryGrid.layout().addWidget(self._storyGrid)
         margins(self.ui.pageStoryGrid, left=35)
         margins(self._storyGridToolbar, top=15, bottom=10)
@@ -324,6 +325,10 @@ class ScenesOutlineView(AbstractNovelView):
             card = self.__init_card_widget(event.scene)
             self.ui.cards.insertAt(i, card)
             self._handle_scene_added()
+            return
+        elif isinstance(event, SceneEditRequested):
+            if self.ui.stackedWidget.currentWidget() is self.ui.pageView:
+                self._switch_to_editor(event.scene)
             return
         elif isinstance(event, SceneOrderChangedEvent):
             self.ui.cards.reorderCards(self.novel.scenes)

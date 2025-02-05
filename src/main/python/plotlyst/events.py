@@ -90,6 +90,11 @@ class SceneAddedEvent(Event):
 
 
 @dataclass
+class SceneEditRequested(Event):
+    scene: Scene
+
+
+@dataclass
 class SceneChangedEvent(Event):
     scene: Scene
 
