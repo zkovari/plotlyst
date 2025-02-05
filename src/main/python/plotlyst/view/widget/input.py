@@ -1379,8 +1379,9 @@ class DecoratedLineEdit(QWidget):
     iconChanged = pyqtSignal(str, str)
 
     def __init__(self, parent=None, maxWidth: Optional[int] = None, iconEditable: bool = False,
-                 autoAdjustable: bool = True):
+                 autoAdjustable: bool = True, pickIconColor: bool = True):
         super().__init__(parent)
+        self._pickIconColor = pickIconColor
         hbox(self, 0, 0)
         self.icon = QToolButton()
         transparent(self.icon)
@@ -1406,7 +1407,7 @@ class DecoratedLineEdit(QWidget):
         self.lineEdit.setText(text)
 
     def _changeIcon(self):
-        result = IconSelectorDialog.popup()
+        result = IconSelectorDialog.popup(pickColor=self._pickIconColor)
         if result:
             self.icon.setIcon(IconRegistry.from_name(result[0], result[1].name()))
             self.iconChanged.emit(result[0], result[1].name())

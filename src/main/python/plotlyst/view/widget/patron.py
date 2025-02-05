@@ -925,15 +925,22 @@ class PatronsWidget(QWidget):
 
         self.wdgTopHeader.layout().addWidget(spacer())
         self.wdgTopHeader.layout().addWidget(self.btnAll)
-        self.wdgTopHeader.layout().addWidget(line())
+        self.wdgTopHeader.layout().addWidget(vline())
         self.wdgTopHeader.layout().addWidget(self.btnArtists)
         self.wdgTopHeader.layout().addWidget(self.btnEditors)
         self.wdgTopHeader.layout().addWidget(self.btnContentCreators)
         self.wdgTopHeader.layout().addWidget(spacer())
 
+        self.btnVisitPatreon = push_btn(IconRegistry.from_name('fa5s.external-link-alt', 'grey'), transparent_=True,
+                                        text='Visit Patreon')
+        self.btnVisitPatreon.clicked.connect(lambda: open_url(
+            'https://patreon.com/user?u=24283978&utm_medium=unknown&utm_source=join_link&utm_campaign=creatorshare_creator&utm_content=copyLink'))
+        self.btnVisitPatreon.installEventFilter(OpacityEventFilter(self.btnVisitPatreon, enterOpacity=0.7))
+
         self.wdgLoading = QWidget()
         vbox(self.wdgLoading, 0, 0)
-        self.centerWdg.layout().addWidget(self.lblLastUpdated, alignment=Qt.AlignmentFlag.AlignRight)
+        self.centerWdg.layout().addWidget(group(self.lblLastUpdated, self.btnVisitPatreon),
+                                          alignment=Qt.AlignmentFlag.AlignRight)
         self.centerWdg.layout().addWidget(label('The following writers support the development of Plotlyst', h4=True),
                                           alignment=Qt.AlignmentFlag.AlignCenter)
         self.centerWdg.layout().addWidget(self.wdgTopHeader)
@@ -1504,7 +1511,7 @@ class PatronRecognitionBuilderPopup(PopupDialog):
         self.lblCopied.trigger()
 
     def __lineedit(self, placeholder: str, iconEditable=False) -> DecoratedLineEdit:
-        editor = DecoratedLineEdit(iconEditable=iconEditable, autoAdjustable=False)
+        editor = DecoratedLineEdit(iconEditable=iconEditable, autoAdjustable=False, pickIconColor=False)
         editor.lineEdit.setPlaceholderText(placeholder)
         editor.lineEdit.setMinimumWidth(500)
         incr_font(editor.lineEdit, 3)
