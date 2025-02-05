@@ -237,6 +237,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.cards.cardCustomContextMenuRequested.connect(self._show_card_menu)
 
         self._storyGrid = ScenesGridWidget(self.novel)
+        self._storyGrid.sceneCardSelected.connect(self._story_grid_card_selected)
         self._storyGridToolbar = ScenesGridToolbar()
         self._storyGridToolbar.orientationChanged.connect(self._storyGrid.setOrientation)
         self.ui.pageStoryGrid.layout().addWidget(self._storyGridToolbar,
@@ -487,7 +488,7 @@ class ScenesOutlineView(AbstractNovelView):
             self._switch_to_editor(scene)
 
     def _selected_scene(self) -> Optional[Scene]:
-        if self.ui.btnCardsView.isChecked() and self.selected_card:
+        if (self.ui.btnCardsView.isChecked() or self.ui.btnTimelineView.isChecked()) and self.selected_card:
             return self.selected_card.scene
         scenes = self.ui.treeChapters.selectedScenes()
         if scenes:
@@ -598,6 +599,10 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.treeChapters.selectScene(card.scene)
         emit_event(self.novel, SceneSelectedEvent(self, card.scene))
 
+    def _story_grid_card_selected(self, card: SceneCard):
+        real_card = self.ui.cards.card(card.scene)
+        real_card.select()
+
     def _storymap_scene_selected(self, scene: Scene):
         self.ui.wdgStoryStructure.highlightScene(scene)
         if self.ui.treeChapters.isVisible():
@@ -607,6 +612,7 @@ class ScenesOutlineView(AbstractNovelView):
         self._enable_action_buttons(False)
         self.selected_card = None
         self.ui.treeChapters.clearSelection()
+        self._storyGrid.cardsView.clearSelection()
 
     def _enable_action_buttons(self, enabled: bool):
         if not self.novel.is_readonly():

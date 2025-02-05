@@ -36,12 +36,12 @@ from plotlyst.core.domain import Scene, Novel, Plot, \
 from plotlyst.event.core import emit_event, EventListener, Event
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import SceneChangedEvent, StorylineCreatedEvent, SceneAddedEvent, SceneDeletedEvent, \
-    SceneOrderChangedEvent, StorylineRemovedEvent, StorylineChangedEvent, SceneEditRequested
+    SceneOrderChangedEvent, StorylineRemovedEvent, StorylineChangedEvent, SceneEditRequested, SceneSelectedEvent
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import tool_btn, fade_out_and_gc, insert_before_the_end, \
     label, push_btn, shadow, fade_in, to_rgba_str
 from plotlyst.view.icons import IconRegistry
-from plotlyst.view.widget.cards import SceneCard, CardsView
+from plotlyst.view.widget.cards import SceneCard, CardsView, Card
 from plotlyst.view.widget.input import RemovalButton
 from plotlyst.view.widget.timeline import TimelineGridWidget, TimelineGridLine, TimelineGridPlaceholder
 
@@ -364,6 +364,35 @@ class SceneGridCard(SceneCard):
 
         self.setFixedWidth(170)
 
+    def setSelected(self, selected: bool):
+        self._setStyleSheet(selected=selected)
+
+
+class SceneGridCardsView(CardsView):
+    def __init__(self, parent=None, layoutType: LayoutType = LayoutType.VERTICAL, margin: int = 0, spacing: int = 15):
+        super().__init__(parent, layoutType, margin, spacing)
+
+    @overrides
+    def remove(self, obj: Scene):
+        if self._selected:
+            self._selected.clearSelection()
+        super().remove(obj)
+
+    @overrides
+    def selectCard(self, ref: Scene):
+        if self._selected and self._selected.data() is not ref:
+            self._selected.clearSelection()
+        card = self._cards.get(ref, None)
+        if card is not None:
+            card.setSelected(True)
+            self._selected = card
+
+    @overrides
+    def _cardSelected(self, card: Card):
+        if self._selected and self._selected is not card:
+            self._selected.clearSelection()
+        super()._cardSelected(card)
+
 
 class ScenesGridToolbar(QWidget):
     orientationChanged = pyqtSignal(Qt.Orientation)
@@ -398,6 +427,8 @@ class ScenesGridToolbar(QWidget):
 
 
 class ScenesGridWidget(TimelineGridWidget, EventListener):
+    sceneCardSelected = pyqtSignal(Card)
+
     def __init__(self, novel: Novel, parent=None):
         self._scenesInColumns = False
         super().__init__(parent, vertical=self._scenesInColumns)
@@ -408,7 +439,8 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
         self.setColumnWidth(170)
         self.setRowHeight(120)
 
-        self.cardsView = CardsView(layoutType=LayoutType.VERTICAL, margin=0, spacing=self._spacing)
+        self.cardsView = SceneGridCardsView(spacing=self._spacing)
+        self.cardsView.cardSelected.connect(self.sceneCardSelected)
         self.cardsView.cardDoubleClicked.connect(self._cardDoubleClicked)
 
         for i, scene in enumerate(self._novel.scenes):
@@ -421,7 +453,7 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
 
         dispatcher = event_dispatchers.instance(self._novel)
         dispatcher.register(self, SceneChangedEvent, SceneAddedEvent, SceneDeletedEvent, SceneOrderChangedEvent,
-                            StorylineChangedEvent, StorylineCreatedEvent,
+                            SceneSelectedEvent, StorylineChangedEvent, StorylineCreatedEvent,
                             StorylineRemovedEvent)
 
     @overrides
@@ -457,6 +489,8 @@ class ScenesGridWidget(TimelineGridWidget, EventListener):
                     self._addPlaceholder(line, scene)
             self.initRefs()
             self.cardsView.reorderCards(self._novel.scenes)
+        elif isinstance(event, SceneSelectedEvent):
+            self.cardsView.selectCard(event.scene)
         elif isinstance(event, StorylineChangedEvent):
             self._handleStorylineChanged(event.storyline)
         elif isinstance(event, StorylineCreatedEvent):
