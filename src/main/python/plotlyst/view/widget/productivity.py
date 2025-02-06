@@ -24,7 +24,7 @@ from PyQt6.QtCore import QPoint, QSize, Qt
 from PyQt6.QtGui import QMouseEvent, QColor, QMovie
 from PyQt6.QtWidgets import QWidget, QButtonGroup, QToolButton, QFrame, QLabel
 from overrides import overrides
-from qthandy import vbox, hbox, pointy, line, incr_font
+from qthandy import vbox, hbox, pointy, line, incr_font, decr_font, spacer, vspacer, bold, translucent
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -34,9 +34,8 @@ from plotlyst.env import app_env
 from plotlyst.resources import resource_registry
 from plotlyst.view.common import label, frame, ButtonPressResizeEventFilter, to_rgba_str
 from plotlyst.view.icons import IconRegistry
-from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.style.button import apply_button_palette_color
-from plotlyst.view.widget.display import IconText, OverlayWidget
+from plotlyst.view.widget.display import IconText, OverlayWidget, icon_text
 
 
 class ProductivityTypeButton(QToolButton):
@@ -83,11 +82,48 @@ class ProductivityTypeButton(QToolButton):
                         teardown=lambda: self.setGraphicsEffect(None))
 
 
+class DayCircleButton(QToolButton):
+    def __init__(self, day: str, parent=None):
+        super().__init__(parent)
+        self.setIcon(IconRegistry.from_name('fa5.circle', 'lightgrey'))
+        self.setCheckable(True)
+        self.setText(day)
+        self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        self.setIconSize(QSize(32, 32))
+        # self.installEventFilter(ButtonPressResizeEventFilter(self))
+        pointy(self)
+
+        if not app_env.is_mac():
+            decr_font(self)
+
+        self.setStyleSheet(f'''
+                            QToolButton {{
+                                border: 1px hidden lightgrey;
+                                color: grey;
+                            }}
+                            ''')
+
+        self.toggled.connect(self._toggled)
+
+    def setCategory(self, category: ProductivityType):
+        self.setIcon(IconRegistry.from_name('mdi.circle-slice-8', category.icon_color))
+        translucent(self)
+
+
+    def _toggled(self, toggled: bool):
+        bold(self, toggled)
+        if toggled:
+            self.setIcon(IconRegistry.from_name('mdi.record-circle-outline', 'grey'))
+            # color = QColor('grey')
+            # color.setAlpha(175)
+            # qtanim.glow(self, color=color, radius=12, reverseAnimation=False)
+
+
 class ProductivityTrackingWidget(QFrame):
     def __init__(self, productivity: DailyProductivity, parent=None):
         super().__init__(parent)
         vbox(self, 15, 5)
-        self.setProperty('relaxed-white-bg', True)
+        self.setProperty('bg', True)
         self.setProperty('large-rounded', True)
 
         self.wdgTypes = frame()
@@ -104,10 +140,34 @@ class ProductivityTrackingWidget(QFrame):
         self.lblAnimation = QLabel(self)
         self.lblAnimation.setHidden(True)
 
-        self.layout().addWidget(label('Daily productivity tracker', h5=True), alignment=Qt.AlignmentFlag.AlignCenter)
+        self.wdgDays = frame()
+        self.wdgDays.setProperty('white-bg', True)
+        self.wdgDays.setProperty('large-rounded', True)
+        hbox(self.wdgDays)
+        self.wdgDays.layout().addWidget(spacer())
+        for i, day in enumerate(['M', 'T', 'W', 'T', 'F', 'S', 'S']):
+            btn = DayCircleButton(day)
+            if i < 5:
+                btn.setCategory(productivity.categories[i])
+            elif i == 5:
+                btn.setChecked(True)
+
+            # if day == 'F':
+            # elif day == 'M':
+            # elif day == 'S':
+            #     btn.setCategory(productivity.categories[1])
+            self.wdgDays.layout().addWidget(btn)
+        self.wdgDays.layout().addWidget(spacer())
+
+        title = icon_text('mdi6.progress-star-four-points', 'Daily productivity tracker')
+        incr_font(title, 3)
+        # self.layout().addWidget(label('Daily productivity tracker', h5=True), alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(title, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(label('In which category did you make the most progress today?', description=True))
         self.layout().addWidget(line(color='lightgrey'))
         self.layout().addWidget(self.wdgTypes)
+        self.layout().addWidget(vspacer(25))
+        self.layout().addWidget(self.wdgDays)
 
     @overrides
     def mousePressEvent(self, event: QMouseEvent) -> None:
@@ -150,7 +210,10 @@ class ProductivityButton(QWidget):
 
         self._menu = MenuWidget()
         self._menu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        apply_white_menu(self._menu)
+        self._menu.setStyleSheet('''
+        MenuWidget {
+                background-color: rgba(0, 0, 0, 0);
+                }''')
         self._menu.aboutToHide.connect(self._hide)
 
         self.layout().addWidget(self.icon)

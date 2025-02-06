@@ -218,10 +218,10 @@ def apply_border_image(wdg: QWidget, resource_url: str):
 def apply_white_menu(menu: MenuWidget):
     menu.setStyleSheet(f'''
                         MenuWidget {{
-                            background-color: {{RELAXED_WHITE_COLOR}};
+                            background-color: {BG_SECONDARY_COLOR};
                         }}
                         .QFrame {{
-                            background-color: {{RELAXED_WHITE_COLOR}};
+                            background-color: {BG_SECONDARY_COLOR};
                             padding-left: 2px;
                             padding-right: 2px;
                             border-radius: 5px;

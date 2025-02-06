@@ -3441,7 +3441,7 @@ class ProductivityType(SelectionItem):
 def default_productivity_categories() -> List[ProductivityType]:
     return [
         ProductivityType('Writing', icon='fa5s.pen-fancy', icon_color='#9933CC'),
-        ProductivityType('Planning', icon='fa5s.theater-masks', icon_color='#a6808c'),
+        ProductivityType('Planning', icon='fa5s.theater-masks', icon_color='#895F6D'),
         ProductivityType('Research', icon='mdi.library', icon_color='#0066CC'),
         ProductivityType('Character', icon='fa5s.user', icon_color='#219ebc'),
         ProductivityType('Worldbuilding', icon='mdi.globe-model', icon_color='#40916c'),
