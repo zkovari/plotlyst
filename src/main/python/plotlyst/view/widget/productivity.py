@@ -21,7 +21,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 import qtanim
-from PyQt6.QtCore import QPoint, QSize, Qt
+from PyQt6.QtCore import QPoint, QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QMouseEvent, QColor, QMovie
 from PyQt6.QtWidgets import QWidget, QButtonGroup, QToolButton, QFrame, QLabel
 from overrides import overrides
@@ -160,15 +160,14 @@ class DaysDisplayWidget(QWidget):
 
 
 class ProductivityTrackingWidget(QFrame):
+    categorySelected = pyqtSignal()
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self.novel = novel
         vbox(self, 15, 5)
         self.setProperty('bg', True)
         self.setProperty('large-rounded', True)
-
-        self.novel.productivity.progress['2025-02-03'] = self.novel.productivity.categories[0].id
-        self.novel.productivity.progress['2025-02-05'] = self.novel.productivity.categories[1].id
 
         self.wdgTypes = frame()
         self.wdgTypes.setProperty('white-bg', True)
@@ -215,6 +214,8 @@ class ProductivityTrackingWidget(QFrame):
         self.wdgDays.activateCategory(btn.category)
         set_daily_productivity(self.novel, btn.category)
 
+        self.categorySelected.emit()
+
     def _checkAnimation(self, frame_number: int):
         if frame_number == self.movie.frameCount() - 1:
             self.movie.stop()
@@ -257,15 +258,23 @@ class ProductivityButton(QWidget):
 
     def setNovel(self, novel: Novel):
         self._novel = novel
-        self.streak.setText(str(self._novel.productivity.overall_days))
+
+        self._novel.productivity.progress['2025-02-03'] = self._novel.productivity.categories[0].id
+        self._novel.productivity.progress['2025-02-05'] = self._novel.productivity.categories[1].id
+
+        self._updateStreak()
 
     @overrides
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         self._popup()
 
+    def _updateStreak(self):
+        self.streak.setText(str(len(self._novel.productivity.progress.keys())))
+
     def _popup(self):
         self._menu.clear()
         self._trackerWdg = ProductivityTrackingWidget(self._novel)
+        self._trackerWdg.categorySelected.connect(self._updateStreak)
         self._menu.addWidget(self._trackerWdg)
 
         self._overlay = OverlayWidget.getActiveWindowOverlay(alpha=75)
