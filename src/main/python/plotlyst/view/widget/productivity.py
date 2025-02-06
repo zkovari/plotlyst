@@ -21,8 +21,8 @@ from typing import Optional
 
 import qtanim
 from PyQt6.QtCore import QPoint, QSize, Qt
-from PyQt6.QtGui import QMouseEvent, QColor
-from PyQt6.QtWidgets import QWidget, QButtonGroup, QToolButton, QFrame
+from PyQt6.QtGui import QMouseEvent, QColor, QMovie
+from PyQt6.QtWidgets import QWidget, QButtonGroup, QToolButton, QFrame, QLabel
 from overrides import overrides
 from qthandy import vbox, hbox, pointy, line, incr_font
 from qthandy.filter import OpacityEventFilter
@@ -31,6 +31,7 @@ from qtmenu import MenuWidget
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, DailyProductivity, ProductivityType
 from plotlyst.env import app_env
+from plotlyst.resources import resource_registry
 from plotlyst.view.common import label, frame, ButtonPressResizeEventFilter, to_rgba_str
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_white_menu
@@ -94,19 +95,37 @@ class ProductivityTrackingWidget(QFrame):
         self.wdgTypes.setProperty('large-rounded', True)
         hbox(self.wdgTypes, 5, 8)
         self.btnGroup = QButtonGroup()
+        self.btnGroup.buttonClicked.connect(self._categorySelected)
         for category in productivity.categories:
             btn = ProductivityTypeButton(category)
             self.btnGroup.addButton(btn)
             self.wdgTypes.layout().addWidget(btn)
 
+        self.lblAnimation = QLabel(self)
+        self.lblAnimation.setHidden(True)
+
         self.layout().addWidget(label('Daily productivity tracker', h5=True), alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(label('In which category did you make the most progress today?', description=True))
-        self.layout().addWidget(line())
+        self.layout().addWidget(line(color='lightgrey'))
         self.layout().addWidget(self.wdgTypes)
 
     @overrides
     def mousePressEvent(self, event: QMouseEvent) -> None:
         pass
+
+    def _categorySelected(self):
+        btn = self.btnGroup.checkedButton()
+        self.lblAnimation.setGeometry(btn.pos().x(), 0, 200, 100)
+        self.movie = QMovie(resource_registry.confetti_anim)
+        self.movie.frameChanged.connect(self._checkAnimation)
+        self.lblAnimation.setMovie(self.movie)
+        self.lblAnimation.setVisible(True)
+        self.movie.start()
+
+    def _checkAnimation(self, frame_number: int):
+        if frame_number == self.movie.frameCount() - 1:
+            self.movie.stop()
+            self.lblAnimation.setHidden(True)
 
 
 class ProductivityButton(QWidget):
