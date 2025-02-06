@@ -80,6 +80,7 @@ from plotlyst.view.widget.input import CapitalizationEventFilter
 from plotlyst.view.widget.labels import SeriesLabel
 from plotlyst.view.widget.log import LogsPopup
 from plotlyst.view.widget.patron import PatronRecognitionBuilderPopup
+from plotlyst.view.widget.productivity import ProductivityButton
 from plotlyst.view.widget.settings import NovelQuickPanelCustomizationButton
 from plotlyst.view.widget.tour.core import TutorialNovelOpenTourEvent, tutorial_novel, \
     TutorialNovelCloseTourEvent, NovelTopLevelButtonTourEvent, HomeTopLevelButtonTourEvent, NovelEditorDisplayTourEvent, \
@@ -122,6 +123,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self._actionScrivener: Optional[QAction] = None
         self._actionSeries: Optional[QAction] = None
         self._actionSettings: Optional[QAction] = None
+        self._actionProgress: Optional[QAction] = None
         last_novel_id = settings.last_novel_id()
         if last_novel_id is not None:
             has_novel = client.has_novel(last_novel_id)
@@ -384,6 +386,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             for btn in self.buttonGroup.buttons():
                 btn.setHidden(True)
             self._actionSettings.setVisible(False)
+            self._actionProgress.setVisible(False)
             self._actionScrivener.setVisible(False)
             self._actionSeries.setVisible(False)
             self.actionQuickCustomization.setDisabled(True)
@@ -400,6 +403,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             btn.setVisible(True)
 
         self._actionSettings.setVisible(settings.toolbar_quick_settings())
+        self._actionProgress.setVisible(True)
         self.actionQuickCustomization.setEnabled(True)
         self.menuDetachPanels.setEnabled(True)
         self.btnSettings.setNovel(self.novel)
@@ -603,7 +607,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self._mode_btn_group.buttonToggled.connect(self._panel_toggled)
 
         self.btnSettings = NovelQuickPanelCustomizationButton()
-        translucent(self.btnSettings, 0.7)
+        translucent(self.btnSettings, 0.6)
+
+        self.btnProgress = ProductivityButton()
 
         self.btnComments = QToolButton(self.toolBar)
         self.btnComments.setIcon(IconRegistry.from_name('mdi.comment-outline', color='#2e86ab'))
@@ -636,6 +642,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.toolBar.addWidget(spacer())
         self._actionScrivener = self.toolBar.addWidget(self.btnScrivener)
         self._actionSeries = self.toolBar.addWidget(self.seriesLabel)
+        self._actionProgress = self.toolBar.addWidget(self.btnProgress)
         self._actionSettings = self.toolBar.addWidget(self.btnSettings)
         self._actionSettings.setVisible(settings.toolbar_quick_settings())
         # self.toolBar.addWidget(self.btnComments)
