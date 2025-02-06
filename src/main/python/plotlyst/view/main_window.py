@@ -424,6 +424,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         else:
             self._actionSeries.setVisible(False)
 
+        self.btnProgress.setNovel(self.novel)
+
         self._current_view: Optional[AbstractView] = None
         self.novel_view = NovelView(self.novel)
         self.characters_view = CharactersView(self.novel, main_window=self)

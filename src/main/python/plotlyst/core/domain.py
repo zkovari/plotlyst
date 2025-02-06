@@ -3422,6 +3422,39 @@ def default_documents() -> List[Document]:
             ]
 
 
+@dataclass
+class ProductivityType(SelectionItem):
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    enabled: bool = True
+
+    @overrides
+    def __eq__(self, other: 'ProductivityType'):
+        if isinstance(other, ProductivityType):
+            return self.id == other.id
+        return False
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
+
+def default_productivity_categories() -> List[ProductivityType]:
+    return [
+        ProductivityType('Writing', icon='fa5s.pen-fancy', icon_color='#9933CC'),
+        ProductivityType('Planning', icon='fa5s.theater-masks', icon_color='#a6808c'),
+        ProductivityType('Research', icon='mdi.library', icon_color='#0066CC'),
+        ProductivityType('Character', icon='fa5s.user', icon_color='#219ebc'),
+        ProductivityType('Worldbuilding', icon='mdi.globe-model', icon_color='#40916c'),
+        ProductivityType('Editing', icon='fa5s.highlighter', icon_color='#FF6666'),
+    ]
+
+
+@dataclass
+class DailyProductivity:
+    overall_days: int = 0
+    categories: List[ProductivityType] = field(default_factory=default_productivity_categories)
+
+
 class ReaderQuestionType(Enum):
     General = 0
     Character_growth = 1
@@ -3840,6 +3873,7 @@ class Novel(NovelDescriptor):
     manuscript_progress: Dict[str, DocumentProgress] = field(default_factory=dict,
                                                              metadata=config(exclude=exclude_if_empty))
     questions: Dict[str, ReaderQuestion] = field(default_factory=dict)
+    productivity: DailyProductivity = field(default_factory=DailyProductivity)
 
     def pov_characters(self) -> List[Character]:
         pov_ids = set()
