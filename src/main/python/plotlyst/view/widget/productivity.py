@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from datetime import datetime, timedelta
 from typing import Optional
 
 import qtanim
@@ -32,6 +33,7 @@ from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, DailyProductivity, ProductivityType
 from plotlyst.env import app_env
 from plotlyst.resources import resource_registry
+from plotlyst.service.productivity import find_daily_productivity, set_daily_productivity
 from plotlyst.view.common import label, frame, ButtonPressResizeEventFilter, to_rgba_str
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.button import apply_button_palette_color
@@ -72,10 +74,13 @@ class ProductivityTypeButton(QToolButton):
                             ''')
 
         self.toggled.connect(self._toggled)
+        self.clicked.connect(self._clicked)
 
     def _toggled(self, toggled: bool):
         bold(self, toggled)
-        if toggled:
+
+    def _clicked(self, checked: bool):
+        if checked:
             color = QColor(self.category.icon_color)
             color.setAlpha(175)
             qtanim.glow(self, radius=8, color=color, reverseAnimation=False,
@@ -86,11 +91,9 @@ class DayCircleButton(QToolButton):
     def __init__(self, day: str, parent=None):
         super().__init__(parent)
         self.setIcon(IconRegistry.from_name('fa5.circle', 'lightgrey'))
-        # self.setCheckable(True)
         self.setText(day)
         self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         self.setIconSize(QSize(32, 32))
-        pointy(self)
 
         if not app_env.is_mac():
             decr_font(self)
@@ -104,7 +107,6 @@ class DayCircleButton(QToolButton):
 
     def setCategory(self, category: ProductivityType):
         self.setIcon(IconRegistry.from_name('mdi.circle-slice-8', category.icon_color))
-        translucent(self)
 
     def activateCategory(self, category: ProductivityType):
         self.setCategory(category)
@@ -117,7 +119,6 @@ class DayCircleButton(QToolButton):
         self.setIcon(IconRegistry.from_name('mdi.record-circle-outline', 'grey'))
 
 
-
 class DaysDisplayWidget(QWidget):
     def __init__(self, productivity: DailyProductivity, parent=None):
         super().__init__(parent)
@@ -128,32 +129,46 @@ class DaysDisplayWidget(QWidget):
         self.wdgDays.setProperty('white-bg', True)
         self.wdgDays.setProperty('large-rounded', True)
         hbox(self.wdgDays)
-        self._buttons = []
-        self.wdgDays.layout().addWidget(spacer())
-        for i, day in enumerate(['M', 'T', 'W', 'T', 'F', 'S', 'S']):
-            btn = DayCircleButton(day)
-            if i < 5:
-                btn.setCategory(productivity.categories[i])
-            elif i == 5:
-                btn.setActive()
-            else:
-                btn.setDisabled(True)
-            self._buttons.append(btn)
-            self.wdgDays.layout().addWidget(btn)
         self.wdgDays.layout().addWidget(spacer())
 
+        weekday_number = datetime.today().weekday()
+        for i, day in enumerate(['M', 'T', 'W', 'T', 'F', 'S', 'S']):
+            btn = DayCircleButton(day)
+            if weekday_number == i:
+                self._todayBtn = btn
+                btn.setActive()
+
+            if i <= weekday_number:
+                days_ago = weekday_number - i
+                past_date = (datetime.today() - timedelta(days=days_ago)).strftime('%Y-%m-%d')
+
+                category = find_daily_productivity(productivity, past_date)
+                if category:
+                    btn.setCategory(category)
+                if i < weekday_number:
+                    translucent(btn)
+            else:
+                btn.setDisabled(True)
+                translucent(btn)
+
+            self.wdgDays.layout().addWidget(btn)
+        self.wdgDays.layout().addWidget(spacer())
         self.layout().addWidget(self.wdgDays)
 
     def activateCategory(self, category: ProductivityType):
-        self._buttons[5].activateCategory(category)
+        self._todayBtn.activateCategory(category)
 
 
 class ProductivityTrackingWidget(QFrame):
-    def __init__(self, productivity: DailyProductivity, parent=None):
+    def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
+        self.novel = novel
         vbox(self, 15, 5)
         self.setProperty('bg', True)
         self.setProperty('large-rounded', True)
+
+        self.novel.productivity.progress['2025-02-03'] = self.novel.productivity.categories[0].id
+        self.novel.productivity.progress['2025-02-05'] = self.novel.productivity.categories[1].id
 
         self.wdgTypes = frame()
         self.wdgTypes.setProperty('white-bg', True)
@@ -161,15 +176,19 @@ class ProductivityTrackingWidget(QFrame):
         hbox(self.wdgTypes, 5, 8)
         self.btnGroup = QButtonGroup()
         self.btnGroup.buttonClicked.connect(self._categorySelected)
-        for category in productivity.categories:
+
+        today_category = find_daily_productivity(self.novel.productivity)
+        for category in self.novel.productivity.categories:
             btn = ProductivityTypeButton(category)
             self.btnGroup.addButton(btn)
             self.wdgTypes.layout().addWidget(btn)
+            if today_category and today_category is category:
+                btn.setChecked(True)
 
         self.lblAnimation = QLabel(self)
         self.lblAnimation.setHidden(True)
 
-        self.wdgDays = DaysDisplayWidget(productivity)
+        self.wdgDays = DaysDisplayWidget(self.novel.productivity)
 
         title = icon_text('mdi6.progress-star-four-points', 'Daily productivity tracker')
         incr_font(title, 3)
@@ -194,6 +213,7 @@ class ProductivityTrackingWidget(QFrame):
         self.movie.start()
 
         self.wdgDays.activateCategory(btn.category)
+        set_daily_productivity(self.novel, btn.category)
 
     def _checkAnimation(self, frame_number: int):
         if frame_number == self.movie.frameCount() - 1:
@@ -245,7 +265,7 @@ class ProductivityButton(QWidget):
 
     def _popup(self):
         self._menu.clear()
-        self._trackerWdg = ProductivityTrackingWidget(self._novel.productivity)
+        self._trackerWdg = ProductivityTrackingWidget(self._novel)
         self._menu.addWidget(self._trackerWdg)
 
         self._overlay = OverlayWidget.getActiveWindowOverlay(alpha=75)

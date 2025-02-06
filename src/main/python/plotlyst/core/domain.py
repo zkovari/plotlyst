@@ -3453,6 +3453,8 @@ def default_productivity_categories() -> List[ProductivityType]:
 class DailyProductivity:
     overall_days: int = 0
     categories: List[ProductivityType] = field(default_factory=default_productivity_categories)
+    progress: Dict[str, uuid.UUID] = field(default_factory=dict,
+                                           metadata=config(exclude=exclude_if_empty))
 
 
 class ReaderQuestionType(Enum):
