@@ -327,16 +327,16 @@ class IdleWidget(QWidget):
 
 
 class OverlayWidget(QFrame):
-    def __init__(self, parent):
+    def __init__(self, parent, alpha: int = 125):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        self.setStyleSheet("background-color: rgba(0, 0, 0, 125);")
+        self.setStyleSheet(f"background-color: rgba(0, 0, 0, {alpha});")
         self.setFixedSize(self.parent().size())
 
     @staticmethod
-    def getActiveWindowOverlay() -> 'OverlayWidget':
+    def getActiveWindowOverlay(alpha: int = 125) -> 'OverlayWidget':
         window = QApplication.activeWindow()
-        overlay = OverlayWidget(window)
+        overlay = OverlayWidget(window, alpha)
         return overlay
 
 

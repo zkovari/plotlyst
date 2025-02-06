@@ -22,7 +22,7 @@ from typing import Optional
 import qtanim
 from PyQt6.QtCore import QPoint, QSize, Qt
 from PyQt6.QtGui import QMouseEvent, QColor
-from PyQt6.QtWidgets import QWidget, QButtonGroup, QToolButton
+from PyQt6.QtWidgets import QWidget, QButtonGroup, QToolButton, QFrame
 from overrides import overrides
 from qthandy import vbox, hbox, pointy, line, incr_font
 from qthandy.filter import OpacityEventFilter
@@ -35,7 +35,7 @@ from plotlyst.view.common import label, frame, ButtonPressResizeEventFilter, to_
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.style.button import apply_button_palette_color
-from plotlyst.view.widget.display import IconText
+from plotlyst.view.widget.display import IconText, OverlayWidget
 
 
 class ProductivityTypeButton(QToolButton):
@@ -82,23 +82,20 @@ class ProductivityTypeButton(QToolButton):
                         teardown=lambda: self.setGraphicsEffect(None))
 
 
-class ProductivityTrackingWidget(QWidget):
+class ProductivityTrackingWidget(QFrame):
     def __init__(self, productivity: DailyProductivity, parent=None):
         super().__init__(parent)
-        vbox(self)
+        vbox(self, 15, 5)
         self.setProperty('relaxed-white-bg', True)
+        self.setProperty('large-rounded', True)
 
         self.wdgTypes = frame()
-        self.wdgTypes.setProperty('relaxed-white-bg', True)
-        self.wdgTypes.setProperty('rounded', True)
+        self.wdgTypes.setProperty('white-bg', True)
+        self.wdgTypes.setProperty('large-rounded', True)
         hbox(self.wdgTypes, 5, 8)
         self.btnGroup = QButtonGroup()
         for category in productivity.categories:
             btn = ProductivityTypeButton(category)
-            # btn.setText(type_.text)
-            # btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
-            # btn.setIconSize(QSize(28, 28))
-            # btn.installEventFilter(OpacityEventFilter(btn, ignoreCheckedButton=True))
             self.btnGroup.addButton(btn)
             self.wdgTypes.layout().addWidget(btn)
 
@@ -118,7 +115,7 @@ class ProductivityButton(QWidget):
         hbox(self, spacing=0)
         self._novel: Optional[Novel] = None
         self._trackerWdg: Optional[ProductivityTrackingWidget] = None
-        self._menu: Optional[MenuWidget] = None
+        self._overlay: Optional[OverlayWidget] = None
 
         self.icon = IconText()
         self.icon.setIcon(IconRegistry.from_name('mdi6.progress-star-four-points', color=PLOTLYST_SECONDARY_COLOR))
@@ -131,6 +128,11 @@ class ProductivityButton(QWidget):
             color: {PLOTLYST_SECONDARY_COLOR};
             font-family: {app_env.serif_font()};
             ''')
+
+        self._menu = MenuWidget()
+        self._menu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        apply_white_menu(self._menu)
+        self._menu.aboutToHide.connect(self._hide)
 
         self.layout().addWidget(self.icon)
         self.layout().addWidget(self.streak)
@@ -147,8 +149,16 @@ class ProductivityButton(QWidget):
         self._popup()
 
     def _popup(self):
+        self._menu.clear()
         self._trackerWdg = ProductivityTrackingWidget(self._novel.productivity)
-        self._menu = MenuWidget()
-        apply_white_menu(self._menu)
         self._menu.addWidget(self._trackerWdg)
+
+        self._overlay = OverlayWidget.getActiveWindowOverlay(alpha=75)
+        self._overlay.show()
+
         self._menu.exec(self.mapToGlobal(QPoint(0, self.sizeHint().height() + 10)))
+
+    def _hide(self):
+        if self._overlay:
+            self._overlay.hide()
+            self._overlay = None
