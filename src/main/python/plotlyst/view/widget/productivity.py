@@ -24,7 +24,7 @@ from PyQt6.QtCore import QPoint, QSize, Qt
 from PyQt6.QtGui import QMouseEvent, QColor, QMovie
 from PyQt6.QtWidgets import QWidget, QButtonGroup, QToolButton, QFrame, QLabel
 from overrides import overrides
-from qthandy import vbox, hbox, pointy, line, incr_font, decr_font, spacer, vspacer, bold, translucent
+from qthandy import vbox, hbox, pointy, line, incr_font, decr_font, spacer, bold, translucent, margins
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -74,7 +74,7 @@ class ProductivityTypeButton(QToolButton):
         self.toggled.connect(self._toggled)
 
     def _toggled(self, toggled: bool):
-        # bold(self, toggled)
+        bold(self, toggled)
         if toggled:
             color = QColor(self.category.icon_color)
             color.setAlpha(175)
@@ -86,11 +86,10 @@ class DayCircleButton(QToolButton):
     def __init__(self, day: str, parent=None):
         super().__init__(parent)
         self.setIcon(IconRegistry.from_name('fa5.circle', 'lightgrey'))
-        self.setCheckable(True)
+        # self.setCheckable(True)
         self.setText(day)
         self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         self.setIconSize(QSize(32, 32))
-        # self.installEventFilter(ButtonPressResizeEventFilter(self))
         pointy(self)
 
         if not app_env.is_mac():
@@ -103,20 +102,50 @@ class DayCircleButton(QToolButton):
                             }}
                             ''')
 
-        self.toggled.connect(self._toggled)
-
     def setCategory(self, category: ProductivityType):
         self.setIcon(IconRegistry.from_name('mdi.circle-slice-8', category.icon_color))
         translucent(self)
 
+    def activateCategory(self, category: ProductivityType):
+        self.setCategory(category)
+        color = QColor(category.icon_color)
+        color.setAlpha(175)
+        qtanim.glow(self, color=color, radius=12, loop=2, duration=150)
 
-    def _toggled(self, toggled: bool):
-        bold(self, toggled)
-        if toggled:
-            self.setIcon(IconRegistry.from_name('mdi.record-circle-outline', 'grey'))
-            # color = QColor('grey')
-            # color.setAlpha(175)
-            # qtanim.glow(self, color=color, radius=12, reverseAnimation=False)
+    def setActive(self):
+        bold(self)
+        self.setIcon(IconRegistry.from_name('mdi.record-circle-outline', 'grey'))
+
+
+
+class DaysDisplayWidget(QWidget):
+    def __init__(self, productivity: DailyProductivity, parent=None):
+        super().__init__(parent)
+        vbox(self, 0, 0)
+        margins(self, top=40)
+
+        self.wdgDays = frame()
+        self.wdgDays.setProperty('white-bg', True)
+        self.wdgDays.setProperty('large-rounded', True)
+        hbox(self.wdgDays)
+        self._buttons = []
+        self.wdgDays.layout().addWidget(spacer())
+        for i, day in enumerate(['M', 'T', 'W', 'T', 'F', 'S', 'S']):
+            btn = DayCircleButton(day)
+            if i < 5:
+                btn.setCategory(productivity.categories[i])
+            elif i == 5:
+                btn.setActive()
+            else:
+                btn.setDisabled(True)
+            self._buttons.append(btn)
+            self.wdgDays.layout().addWidget(btn)
+        self.wdgDays.layout().addWidget(spacer())
+
+        self.layout().addWidget(self.wdgDays)
+
+    def activateCategory(self, category: ProductivityType):
+        self._buttons[5].activateCategory(category)
 
 
 class ProductivityTrackingWidget(QFrame):
@@ -140,24 +169,7 @@ class ProductivityTrackingWidget(QFrame):
         self.lblAnimation = QLabel(self)
         self.lblAnimation.setHidden(True)
 
-        self.wdgDays = frame()
-        self.wdgDays.setProperty('white-bg', True)
-        self.wdgDays.setProperty('large-rounded', True)
-        hbox(self.wdgDays)
-        self.wdgDays.layout().addWidget(spacer())
-        for i, day in enumerate(['M', 'T', 'W', 'T', 'F', 'S', 'S']):
-            btn = DayCircleButton(day)
-            if i < 5:
-                btn.setCategory(productivity.categories[i])
-            elif i == 5:
-                btn.setChecked(True)
-
-            # if day == 'F':
-            # elif day == 'M':
-            # elif day == 'S':
-            #     btn.setCategory(productivity.categories[1])
-            self.wdgDays.layout().addWidget(btn)
-        self.wdgDays.layout().addWidget(spacer())
+        self.wdgDays = DaysDisplayWidget(productivity)
 
         title = icon_text('mdi6.progress-star-four-points', 'Daily productivity tracker')
         incr_font(title, 3)
@@ -166,7 +178,6 @@ class ProductivityTrackingWidget(QFrame):
         self.layout().addWidget(label('In which category did you make the most progress today?', description=True))
         self.layout().addWidget(line(color='lightgrey'))
         self.layout().addWidget(self.wdgTypes)
-        self.layout().addWidget(vspacer(25))
         self.layout().addWidget(self.wdgDays)
 
     @overrides
@@ -181,6 +192,8 @@ class ProductivityTrackingWidget(QFrame):
         self.lblAnimation.setMovie(self.movie)
         self.lblAnimation.setVisible(True)
         self.movie.start()
+
+        self.wdgDays.activateCategory(btn.category)
 
     def _checkAnimation(self, frame_number: int):
         if frame_number == self.movie.frameCount() - 1:
