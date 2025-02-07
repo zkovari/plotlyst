@@ -32,7 +32,7 @@ from overrides import overrides
 from qttextedit import DashInsertionMode
 from qttextedit.api import AutoCapitalizationMode
 
-from plotlyst.common import act_color, RED_COLOR
+from plotlyst.common import act_color, RED_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_choices, \
     mbti_choices, Role, exclude_if_false, antagonist_role, exclude_if_true
 
@@ -3422,6 +3422,45 @@ def default_documents() -> List[Document]:
             ]
 
 
+@dataclass
+class ProductivityType(SelectionItem):
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    enabled: bool = True
+
+    @overrides
+    def __eq__(self, other: 'ProductivityType'):
+        if isinstance(other, ProductivityType):
+            return self.id == other.id
+        return False
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
+
+class SnapshotType(Enum):
+    Productivity = 0
+
+
+def default_productivity_categories() -> List[ProductivityType]:
+    return [
+        ProductivityType('Writing', icon='fa5s.pen-fancy', icon_color=PLOTLYST_SECONDARY_COLOR),
+        ProductivityType('Planning', icon='fa5s.theater-masks', icon_color='#895F6D'),
+        ProductivityType('Research', icon='mdi.library', icon_color='#0066CC'),
+        ProductivityType('Character', icon='fa5s.user', icon_color='#219ebc'),
+        ProductivityType('Worldbuilding', icon='mdi.globe-model', icon_color='#40916c'),
+        ProductivityType('Editing', icon='fa5s.highlighter', icon_color='#FF7171'),
+    ]
+
+
+@dataclass
+class DailyProductivity:
+    overall_days: int = 0
+    categories: List[ProductivityType] = field(default_factory=default_productivity_categories)
+    progress: Dict[str, str] = field(default_factory=dict,
+                                     metadata=config(exclude=exclude_if_empty))
+
+
 class ReaderQuestionType(Enum):
     General = 0
     Character_growth = 1
@@ -3840,6 +3879,7 @@ class Novel(NovelDescriptor):
     manuscript_progress: Dict[str, DocumentProgress] = field(default_factory=dict,
                                                              metadata=config(exclude=exclude_if_empty))
     questions: Dict[str, ReaderQuestion] = field(default_factory=dict)
+    productivity: DailyProductivity = field(default_factory=DailyProductivity)
 
     def pov_characters(self) -> List[Character]:
         pov_ids = set()

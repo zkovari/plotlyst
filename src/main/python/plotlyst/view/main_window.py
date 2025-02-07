@@ -46,7 +46,7 @@ from plotlyst.event.handler import EventLogHandler, global_event_dispatcher, eve
 from plotlyst.events import NovelDeletedEvent, \
     NovelUpdatedEvent, OpenDistractionFreeMode, ExitDistractionFreeMode, CloseNovelEvent, NovelPanelCustomizationEvent, \
     NovelWorldBuildingToggleEvent, NovelCharactersToggleEvent, NovelScenesToggleEvent, NovelDocumentsToggleEvent, \
-    NovelManagementToggleEvent, NovelManuscriptToggleEvent
+    NovelManagementToggleEvent, NovelManuscriptToggleEvent, SocialSnapshotRequested
 from plotlyst.resources import resource_manager, ResourceType, ResourceDownloadedEvent
 from plotlyst.service.cache import acts_registry, entities_registry
 from plotlyst.service.common import try_shutdown_to_apply_change
@@ -56,6 +56,7 @@ from plotlyst.service.importer import ScrivenerSyncImporter
 from plotlyst.service.migration import migrate_novel
 from plotlyst.service.persistence import RepositoryPersistenceManager, flush_or_fail
 from plotlyst.service.resource import download_resource, download_nltk_resources, ResourceManagerDialog
+from plotlyst.service.snapshot import SocialSnapshotPopup
 from plotlyst.service.tour import TourService
 from plotlyst.settings import settings
 from plotlyst.view._view import AbstractView
@@ -80,6 +81,7 @@ from plotlyst.view.widget.input import CapitalizationEventFilter
 from plotlyst.view.widget.labels import SeriesLabel
 from plotlyst.view.widget.log import LogsPopup
 from plotlyst.view.widget.patron import PatronRecognitionBuilderPopup
+from plotlyst.view.widget.productivity import ProductivityButton
 from plotlyst.view.widget.settings import NovelQuickPanelCustomizationButton
 from plotlyst.view.widget.tour.core import TutorialNovelOpenTourEvent, tutorial_novel, \
     TutorialNovelCloseTourEvent, NovelTopLevelButtonTourEvent, HomeTopLevelButtonTourEvent, NovelEditorDisplayTourEvent, \
@@ -122,6 +124,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self._actionScrivener: Optional[QAction] = None
         self._actionSeries: Optional[QAction] = None
         self._actionSettings: Optional[QAction] = None
+        self._actionProgress: Optional[QAction] = None
         last_novel_id = settings.last_novel_id()
         if last_novel_id is not None:
             has_novel = client.has_novel(last_novel_id)
@@ -315,7 +318,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             elif self.novel and self.novel.parent == event.novel.id:
                 self.seriesLabel.setSeries(event.novel)
 
-
         elif isinstance(event, OpenDistractionFreeMode):
             self.btnComments.setChecked(False)
             self._toggle_fullscreen(on=True)
@@ -331,6 +333,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         elif isinstance(event, TutorialNovelCloseTourEvent):
             if self.novel and self.novel.tutorial:
                 self.close_novel()
+        elif isinstance(event, SocialSnapshotRequested):
+            SocialSnapshotPopup.popup(self.novel, event.snapshotType)
         elif isinstance(event, NovelPanelCustomizationEvent):
             self._handle_customization_event(event)
         elif isinstance(event, NovelEditorDisplayTourEvent):
@@ -384,6 +388,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             for btn in self.buttonGroup.buttons():
                 btn.setHidden(True)
             self._actionSettings.setVisible(False)
+            self._actionProgress.setVisible(False)
             self._actionScrivener.setVisible(False)
             self._actionSeries.setVisible(False)
             self.actionQuickCustomization.setDisabled(True)
@@ -394,12 +399,14 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         dispatcher: EventDispatcher = event_dispatchers.instance(self.novel)
         sender.send.connect(dispatcher.dispatch)
         dispatcher.register(self, NovelCharactersToggleEvent, NovelScenesToggleEvent, NovelWorldBuildingToggleEvent,
-                            NovelDocumentsToggleEvent, NovelManuscriptToggleEvent, NovelManagementToggleEvent)
+                            NovelDocumentsToggleEvent, NovelManuscriptToggleEvent, NovelManagementToggleEvent,
+                            SocialSnapshotRequested)
 
         for btn in self.buttonGroup.buttons():
             btn.setVisible(True)
 
         self._actionSettings.setVisible(settings.toolbar_quick_settings())
+        self._actionProgress.setVisible(True)
         self.actionQuickCustomization.setEnabled(True)
         self.menuDetachPanels.setEnabled(True)
         self.btnSettings.setNovel(self.novel)
@@ -419,6 +426,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self._actionSeries.setVisible(True)
         else:
             self._actionSeries.setVisible(False)
+
+        self.btnProgress.setNovel(self.novel)
 
         self._current_view: Optional[AbstractView] = None
         self.novel_view = NovelView(self.novel)
@@ -603,7 +612,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self._mode_btn_group.buttonToggled.connect(self._panel_toggled)
 
         self.btnSettings = NovelQuickPanelCustomizationButton()
-        translucent(self.btnSettings, 0.7)
+        translucent(self.btnSettings, 0.6)
+
+        self.btnProgress = ProductivityButton()
 
         self.btnComments = QToolButton(self.toolBar)
         self.btnComments.setIcon(IconRegistry.from_name('mdi.comment-outline', color='#2e86ab'))
@@ -636,6 +647,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.toolBar.addWidget(spacer())
         self._actionScrivener = self.toolBar.addWidget(self.btnScrivener)
         self._actionSeries = self.toolBar.addWidget(self.seriesLabel)
+        self._actionProgress = self.toolBar.addWidget(self.btnProgress)
         self._actionSettings = self.toolBar.addWidget(self.btnSettings)
         self._actionSettings.setVisible(settings.toolbar_quick_settings())
         # self.toolBar.addWidget(self.btnComments)

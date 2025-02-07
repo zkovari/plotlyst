@@ -49,6 +49,7 @@ class ResourceRegistry:
         self._circular_frame1 = None
         self._manuscript_docx_template = None
         self._plotlyst_icon = None
+        self._confetti_anim = None
 
     def set_up(self, context: Optional[ApplicationContext] = None):
         self._cork = self.__get_resource('cork.wav', context)
@@ -60,6 +61,7 @@ class ResourceRegistry:
         self._circular_frame1 = self.__get_resource('circular_frame1.png', context)
         self._manuscript_docx_template = self.__get_resource('manuscript-template.docx', context)
         self._plotlyst_icon = self.__get_resource('Icon.ico', context)
+        self._confetti_anim = self.__get_resource('confetti.gif', context)
 
     def __get_resource(self, name: str, context: Optional[ApplicationContext] = None):
         if context:
@@ -110,6 +112,10 @@ class ResourceRegistry:
     @property
     def plotlyst_icon(self) -> str:
         return self._plotlyst_icon
+
+    @property
+    def confetti_anim(self) -> str:
+        return self._confetti_anim
 
 
 resource_registry = ResourceRegistry()

@@ -42,6 +42,7 @@ from plotlyst.view.report.character import CharacterReport
 from plotlyst.view.report.conflict import ConflictReport
 from plotlyst.view.report.manuscript import ManuscriptReport
 from plotlyst.view.report.plot import ArcReport
+from plotlyst.view.report.productivity import ProductivityReport
 from plotlyst.view.report.scene import SceneReport
 
 
@@ -204,6 +205,19 @@ class ManuscriptReportPage(ReportPage):
                 self._wc_cache.append(0)
 
 
+class ProductivityReportPage(ReportPage):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(novel, parent)
+
+    @overrides
+    def _hasFrame(self) -> bool:
+        return True
+
+    @overrides
+    def _initReport(self):
+        return ProductivityReport(self._novel)
+
+
 class ReportsView(AbstractNovelView):
     def __init__(self, novel: Novel):
         super().__init__(novel)
@@ -218,6 +232,8 @@ class ReportsView(AbstractNovelView):
         self.ui.btnConflict.setIcon(IconRegistry.conflict_icon('black', color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnArc.setIcon(IconRegistry.rising_action_icon('black', color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnManuscript.setIcon(IconRegistry.manuscript_icon())
+        self.ui.btnProductivity.setIcon(
+            IconRegistry.from_name('mdi6.progress-star-four-points', color_on=PLOTLYST_SECONDARY_COLOR))
 
         # self.ui.btnCharacters.setHidden(True)
         self.ui.btnConflict.setHidden(True)
@@ -239,11 +255,16 @@ class ReportsView(AbstractNovelView):
         self._page_manuscript = ManuscriptReportPage(self.novel)
         self.ui.stackedWidget.addWidget(self._page_manuscript)
 
+        self._page_productivty = ProductivityReportPage(self.novel)
+        self.ui.stackedWidget.addWidget(self._page_productivty)
+
         link_buttons_to_pages(self.ui.stackedWidget, [
             (self.ui.btnCharacters, self._page_characters),
             (self.ui.btnScenes, self._page_scenes),
             (self.ui.btnArc, self._page_arc),
-            (self.ui.btnManuscript, self._page_manuscript)])
+            (self.ui.btnManuscript, self._page_manuscript),
+            (self.ui.btnProductivity, self._page_productivty)
+        ])
 
         self.ui.btnCharacters.setChecked(True)
 

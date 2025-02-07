@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import datetime
 from pathlib import Path
 from typing import Optional, List
 
@@ -34,6 +33,7 @@ from plotlyst.core.domain import Novel, Document, DocumentProgress, Scene, Docum
 from plotlyst.core.text import wc
 from plotlyst.env import open_location, app_env
 from plotlyst.resources import resource_registry, ResourceType
+from plotlyst.service.common import today_str
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.service.resource import ask_for_resource
 from plotlyst.view.widget.confirm import asked
@@ -148,11 +148,6 @@ def format_document(doc: Document, char_format: QTextCharFormat) -> QTextDocumen
     cursor.clearSelection()
 
     return text_doc
-
-
-def today_str() -> str:
-    today = datetime.date.today()
-    return today.strftime("%Y-%m-%d")
 
 
 def find_daily_overall_progress(novel: Novel, date: Optional[str] = None) -> Optional[DocumentProgress]:

@@ -47,7 +47,8 @@ from plotlyst.core.domain import Novel, Character, Scene, Chapter, SceneStage, \
     ScenePurposeType, StoryElement, SceneOutcome, ChapterType, SceneStructureItem, \
     DocumentProgress, ReaderQuestion, SceneReaderQuestion, ImageRef, SceneReaderInformation, \
     CharacterProfileSectionReference, CharacterMultiAttribute, default_character_profile, CharacterPersonality, \
-    StrengthWeaknessAttribute, PremiseBuilder, SceneFunctions, Location, default_locations, TopicElement, StoryType
+    StrengthWeaknessAttribute, PremiseBuilder, SceneFunctions, Location, default_locations, TopicElement, StoryType, \
+    DailyProductivity
 from plotlyst.core.template import Role, exclude_if_empty, exclude_if_black, exclude_if_false
 from plotlyst.env import app_env
 
@@ -234,6 +235,7 @@ class NovelInfo:
     manuscript_progress: Dict[str, DocumentProgress] = field(default_factory=dict,
                                                              metadata=config(exclude=exclude_if_empty))
     questions: Dict[str, ReaderQuestion] = field(default_factory=dict)
+    productivity: DailyProductivity = field(default_factory=DailyProductivity)
 
 
 @dataclass
@@ -643,7 +645,7 @@ class JsonClient:
                       manuscript_goals=novel_info.manuscript_goals,
                       events_map=novel_info.events_map,
                       character_networks=novel_info.character_networks,
-                      manuscript_progress=novel_info.manuscript_progress, questions=novel_info.questions)
+                      manuscript_progress=novel_info.manuscript_progress, questions=novel_info.questions, productivity=novel_info.productivity)
 
         world_path = self.novels_dir.joinpath(str(novel_info.id)).joinpath('world.json')
         if os.path.exists(world_path):
@@ -684,7 +686,7 @@ class JsonClient:
                                version=LATEST_VERSION, prefs=novel.prefs, locations=novel.locations,
                                manuscript_goals=novel.manuscript_goals,
                                events_map=novel.events_map, character_networks=novel.character_networks,
-                               manuscript_progress=novel.manuscript_progress, questions=novel.questions)
+                               manuscript_progress=novel.manuscript_progress, questions=novel.questions, productivity=novel.productivity)
 
         self.__persist_info(self.novels_dir, novel_info)
         # self._persist_world(novel.id, novel.world)

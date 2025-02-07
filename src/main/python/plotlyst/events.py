@@ -24,7 +24,7 @@ from uuid import UUID
 from language_tool_python import LanguageTool
 
 from plotlyst.core.domain import Character, NovelDescriptor, Scene, SceneStage, Task, NovelSetting, \
-    StoryStructure, Novel, Plot, StoryBeat, Location, WorldBuildingEntity
+    StoryStructure, Novel, Plot, StoryBeat, Location, WorldBuildingEntity, SnapshotType
 from plotlyst.event.core import Event
 
 
@@ -318,3 +318,8 @@ class TaskChangedToWip(Event):
 @dataclass
 class TaskChangedFromWip(Event):
     task: Task
+
+
+@dataclass
+class SocialSnapshotRequested(Event):
+    snapshotType: SnapshotType
