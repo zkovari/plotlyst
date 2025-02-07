@@ -217,6 +217,7 @@ class ProductivityReportPage(ReportPage):
     def _initReport(self):
         return ProductivityReport(self._novel)
 
+
 class ReportsView(AbstractNovelView):
     def __init__(self, novel: Novel):
         super().__init__(novel)
@@ -265,8 +266,7 @@ class ReportsView(AbstractNovelView):
             (self.ui.btnProductivity, self._page_productivty)
         ])
 
-        # self.ui.btnCharacters.setChecked(True)
-        self.ui.btnProductivity.setChecked(True)
+        self.ui.btnCharacters.setChecked(True)
 
     @overrides
     def refresh(self):
