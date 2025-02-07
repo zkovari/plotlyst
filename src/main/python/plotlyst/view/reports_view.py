@@ -265,7 +265,8 @@ class ReportsView(AbstractNovelView):
             (self.ui.btnProductivity, self._page_productivty)
         ])
 
-        self.ui.btnCharacters.setChecked(True)
+        # self.ui.btnCharacters.setChecked(True)
+        self.ui.btnProductivity.setChecked(True)
 
     @overrides
     def refresh(self):

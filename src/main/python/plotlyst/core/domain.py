@@ -3438,6 +3438,10 @@ class ProductivityType(SelectionItem):
         return hash(str(self.id))
 
 
+class SnapshotType(Enum):
+    Productivity = 0
+
+
 def default_productivity_categories() -> List[ProductivityType]:
     return [
         ProductivityType('Writing', icon='fa5s.pen-fancy', icon_color=PLOTLYST_SECONDARY_COLOR),

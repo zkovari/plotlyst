@@ -23,12 +23,16 @@ from PyQt6.QtCore import Qt, QRect, QDate, QPoint
 from PyQt6.QtGui import QPainter, QTextOption, QColor
 from PyQt6.QtWidgets import QWidget, QCalendarWidget, QTableView
 from overrides import overrides
-from qthandy import flow, bold, underline, vbox, margins, hbox, spacer
+from qthandy import flow, bold, underline, vbox, margins, hbox, spacer, incr_icon
+from qthandy.filter import OpacityEventFilter
 
 from plotlyst.common import RELAXED_WHITE_COLOR
-from plotlyst.core.domain import Novel, DailyProductivity
+from plotlyst.core.domain import Novel, DailyProductivity, SnapshotType
+from plotlyst.event.core import emit_event
+from plotlyst.events import SocialSnapshotRequested
 from plotlyst.service.productivity import find_daily_productivity
-from plotlyst.view.common import label, scroll_area
+from plotlyst.view.common import label, scroll_area, tool_btn
+from plotlyst.view.icons import IconRegistry
 from plotlyst.view.report import AbstractReport
 from plotlyst.view.widget.display import icon_text
 
@@ -51,14 +55,22 @@ months = {
 class ProductivityReport(AbstractReport, QWidget):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(novel, parent, setupUi=False)
-        vbox(self, 10, 8)
+        vbox(self, 0, 8)
+        margins(self, bottom=15)
+
+        self.btnSnapshot = tool_btn(IconRegistry.from_name('mdi.camera', 'grey'), 'Take a snapshot for social media',
+                                    transparent_=True)
+        incr_icon(self.btnSnapshot, 6)
+        self.btnSnapshot.installEventFilter(OpacityEventFilter(self.btnSnapshot, leaveOpacity=0.7))
+        self.btnSnapshot.clicked.connect(
+            lambda: emit_event(novel, SocialSnapshotRequested(self, SnapshotType.Productivity)))
+        self.btnSnapshot.setHidden(True)
 
         self.wdgCalendars = QWidget()
         flow(self.wdgCalendars, 5, 10)
-        margins(self.wdgCalendars, top=15)
+        margins(self.wdgCalendars, left=15, right=15, top=15)
 
         self.wdgCategoriesScroll = scroll_area(False, False, True)
-        self.wdgCategoriesScroll.setProperty('relaxed-white-bg', True)
         self.wdgCategories = QWidget()
         self.wdgCategories.setProperty('relaxed-white-bg', True)
         self.wdgCategoriesScroll.setWidget(self.wdgCategories)
@@ -82,9 +94,11 @@ class ProductivityReport(AbstractReport, QWidget):
             wdg.layout().addWidget(calendar)
             self.wdgCalendars.layout().addWidget(wdg)
 
+        self.layout().addWidget(self.btnSnapshot, alignment=Qt.AlignmentFlag.AlignRight)
         self.layout().addWidget(label('Daily Productivity Report', h2=True), alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self.wdgCategoriesScroll)
         self.layout().addWidget(self.wdgCalendars)
+
 
 
 def date_to_str(date: QDate) -> str:
@@ -103,13 +117,6 @@ class ProductivityCalendar(QCalendarWidget):
         self.setFirstDayOfWeek(Qt.DayOfWeek.Monday)
 
         self.installEventFilter(self)
-
-        # item = self.layout().itemAt(0)
-        # item.widget().setStyleSheet(f'.QWidget {{background-color: {PLOTLYST_TERTIARY_COLOR};}}')
-        # item.widget().layout().itemAt(0).widget().setHidden(True)
-        # item.widget().layout().itemAt(2).widget().setDisabled(True)
-        # item.widget().layout().itemAt(4).widget().setHidden(True)
-        # item.widget().layout().itemAt(6).widget().setHidden(True)
 
         widget = self.layout().itemAt(1).widget()
         if isinstance(widget, QTableView):
