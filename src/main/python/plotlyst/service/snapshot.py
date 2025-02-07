@@ -22,6 +22,7 @@ from typing import Optional
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QGuiApplication, QPixmap, QPainter
 from PyQt6.QtWidgets import QWidget
+from overrides import overrides
 from qthandy import vbox, clear_layout, transparent
 
 from plotlyst.common import RELAXED_WHITE_COLOR
@@ -87,48 +88,26 @@ class SocialSnapshotPopup(PopupDialog):
             editor = ProductivitySnapshotEditor(self.novel)
             self.canvasContainer.layout().addWidget(editor.canvas)
 
+    @overrides
     def paintEvent(self, event):
         super().paintEvent(event)
-        scale_factor = 4  # You can adjust this scale factor as needed
+        scale_factor = 4
         pixmap = QPixmap(self.canvasContainer.size() * scale_factor)
 
-        # Create a QPainter for the pixmap
         painter = QPainter(pixmap)
         painter.setRenderHints(QPainter.RenderHint.Antialiasing |
                                QPainter.RenderHint.TextAntialiasing |
                                QPainter.RenderHint.SmoothPixmapTransform)
 
-        # Scale the painter for high-resolution rendering
         painter.scale(scale_factor, scale_factor)
 
-        # Render the widget onto the pixmap
         self.canvasContainer.render(painter)
 
-        # End the painter to finalize rendering
         painter.end()
 
-        # Store the pixmap for later export (e.g., when copying to clipboard)
         self.exported_pixmap = pixmap
 
     def _export(self, scale_factor=3):
-        # original_size = self.canvasContainer.size()
-        # image = QImage(original_size.width() * scale_factor,
-        #                original_size.height() * scale_factor,
-        #                QImage.Format.Format_ARGB32)
-        # self.canvasContainer.render(image)
-        # pixmap = QPixmap(self.canvasContainer.size())
-        # pixmap.setDevicePixelRatio(scale_factor)
-        # self.canvasContainer.render(pixmap)
-        # original_size = self.canvasContainer.size()
-        #
-        # # Create a high-resolution QPixmap with the new scaled size
-        # pixmap = QPixmap(original_size.width() * scale_factor,
-        #                  original_size.height() * scale_factor)
-        # pixmap.setDevicePixelRatio(scale_factor)  # Set the device pixel ratio
-        #
-        # # Render the widget onto the high-resolution pixmap
-        # self.canvasContainer.render(pixmap)
-
         if hasattr(self, 'exported_pixmap'):
             clipboard = QGuiApplication.clipboard()
             clipboard.setPixmap(self.exported_pixmap)

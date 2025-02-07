@@ -1,6 +1,6 @@
 """
 Plotlyst
-Copyright (C) 2021-2024  Zsolt Kovari
+Copyright (C) 2021-2025  Zsolt Kovari
 
 This file is part of Plotlyst.
 
