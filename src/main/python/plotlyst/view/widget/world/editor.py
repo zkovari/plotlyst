@@ -996,7 +996,8 @@ class MainBlockAdditionMenu(MenuWidget):
         self.addAction(action('Timeline', IconRegistry.from_name('mdi.timeline'),
                               slot=lambda: self.newBlockSelected.emit(WorldBuildingEntityElementType.Timeline)))
 
-        if app_env.is_plus():
+        # if app_env.is_plus():
+        if False:
             otherMenu = MenuWidget()
             otherMenu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
             tooltip = "Track fantasy elements that deviate from our world, introducing a sense of wonder into the story"
