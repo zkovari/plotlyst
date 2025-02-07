@@ -30,7 +30,7 @@ def find_daily_productivity(productivity: DailyProductivity, date: Optional[str]
     ref = productivity.progress.get(date, None)
     if ref:
         for category in productivity.categories:
-            if category.id == ref:
+            if str(category.id) == ref:
                 return category
 
 
@@ -39,5 +39,5 @@ def set_daily_productivity(novel: Novel, category: ProductivityType,
     if date is None:
         date = today_str()
 
-    novel.productivity.progress[date] = category.id
+    novel.productivity.progress[date] = str(category.id)
     RepositoryPersistenceManager.instance().update_novel(novel)

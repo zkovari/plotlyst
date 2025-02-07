@@ -258,13 +258,6 @@ class ProductivityButton(QWidget):
 
     def setNovel(self, novel: Novel):
         self._novel = novel
-
-        self._novel.productivity.progress['2025-01-13'] = self._novel.productivity.categories[0].id
-        self._novel.productivity.progress['2025-01-14'] = self._novel.productivity.categories[0].id
-        self._novel.productivity.progress['2025-01-20'] = self._novel.productivity.categories[0].id
-        self._novel.productivity.progress['2025-02-03'] = self._novel.productivity.categories[0].id
-        self._novel.productivity.progress['2025-02-05'] = self._novel.productivity.categories[1].id
-
         self._updateStreak()
 
     @overrides
