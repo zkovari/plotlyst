@@ -32,7 +32,7 @@ from overrides import overrides
 from qttextedit import DashInsertionMode
 from qttextedit.api import AutoCapitalizationMode
 
-from plotlyst.common import act_color, RED_COLOR
+from plotlyst.common import act_color, RED_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_choices, \
     mbti_choices, Role, exclude_if_false, antagonist_role, exclude_if_true
 
@@ -3440,12 +3440,12 @@ class ProductivityType(SelectionItem):
 
 def default_productivity_categories() -> List[ProductivityType]:
     return [
-        ProductivityType('Writing', icon='fa5s.pen-fancy', icon_color='#9933CC'),
+        ProductivityType('Writing', icon='fa5s.pen-fancy', icon_color=PLOTLYST_SECONDARY_COLOR),
         ProductivityType('Planning', icon='fa5s.theater-masks', icon_color='#895F6D'),
         ProductivityType('Research', icon='mdi.library', icon_color='#0066CC'),
         ProductivityType('Character', icon='fa5s.user', icon_color='#219ebc'),
         ProductivityType('Worldbuilding', icon='mdi.globe-model', icon_color='#40916c'),
-        ProductivityType('Editing', icon='fa5s.highlighter', icon_color='#FF6666'),
+        ProductivityType('Editing', icon='fa5s.highlighter', icon_color='#FF7171'),
     ]
 
 

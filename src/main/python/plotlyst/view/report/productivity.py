@@ -19,17 +19,32 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from datetime import datetime
 
-from PyQt6.QtCore import Qt, QRect, QDate
+from PyQt6.QtCore import Qt, QRect, QDate, QPoint
 from PyQt6.QtGui import QPainter, QTextOption, QColor
 from PyQt6.QtWidgets import QWidget, QCalendarWidget, QTableView
 from overrides import overrides
-from qthandy import flow, bold, underline
+from qthandy import flow, bold, underline, vbox
 
-from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_TERTIARY_COLOR
+from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, DailyProductivity
 from plotlyst.service.productivity import find_daily_productivity
-from plotlyst.view.icons import IconRegistry
+from plotlyst.view.common import label
 from plotlyst.view.report import AbstractReport
+
+months = {
+    1: "January",
+    2: "February",
+    3: "March",
+    4: "April",
+    5: "May",
+    6: "June",
+    7: "July",
+    8: "August",
+    9: "September",
+    10: "October",
+    11: "November",
+    12: "December"
+}
 
 
 class ProductivityReport(AbstractReport, QWidget):
@@ -41,9 +56,13 @@ class ProductivityReport(AbstractReport, QWidget):
         current_year = datetime.today().year
 
         for i in range(12):
+            wdg = QWidget()
+            vbox(wdg)
             calendar = ProductivityCalendar(novel.productivity)
             calendar.setCurrentPage(current_year, i + 1)
-            self.layout().addWidget(calendar)
+            wdg.layout().addWidget(label(months[i + 1], h5=True), alignment=Qt.AlignmentFlag.AlignCenter)
+            wdg.layout().addWidget(calendar)
+            self.layout().addWidget(wdg)
 
 
 def date_to_str(date: QDate) -> str:
@@ -57,18 +76,18 @@ class ProductivityCalendar(QCalendarWidget):
 
         self.setVerticalHeaderFormat(QCalendarWidget.VerticalHeaderFormat.NoVerticalHeader)
         self.setHorizontalHeaderFormat(QCalendarWidget.HorizontalHeaderFormat.NoHorizontalHeader)
-        self.setNavigationBarVisible(True)
+        self.setNavigationBarVisible(False)
         self.setSelectionMode(QCalendarWidget.SelectionMode.SingleSelection)
         self.setFirstDayOfWeek(Qt.DayOfWeek.Monday)
 
         self.installEventFilter(self)
 
-        item = self.layout().itemAt(0)
-        item.widget().setStyleSheet(f'.QWidget {{background-color: {PLOTLYST_TERTIARY_COLOR};}}')
-        item.widget().layout().itemAt(0).widget().setHidden(True)
+        # item = self.layout().itemAt(0)
+        # item.widget().setStyleSheet(f'.QWidget {{background-color: {PLOTLYST_TERTIARY_COLOR};}}')
+        # item.widget().layout().itemAt(0).widget().setHidden(True)
         # item.widget().layout().itemAt(2).widget().setDisabled(True)
-        item.widget().layout().itemAt(4).widget().setHidden(True)
-        item.widget().layout().itemAt(6).widget().setHidden(True)
+        # item.widget().layout().itemAt(4).widget().setHidden(True)
+        # item.widget().layout().itemAt(6).widget().setHidden(True)
 
         widget = self.layout().itemAt(1).widget()
         if isinstance(widget, QTableView):
@@ -99,14 +118,14 @@ class ProductivityCalendar(QCalendarWidget):
             if category:
                 painter.setPen(QColor(RELAXED_WHITE_COLOR))
                 color = QColor(category.icon_color)
-                color.setAlpha(125)
+                color.setAlpha(115)
                 painter.setBrush(color)
                 rad = rect.width() // 2 - 1
 
                 painter.setOpacity(125)
 
-                IconRegistry.from_name('mdi.circle-slice-8', category.icon_color).paint(painter, rect)
-                # painter.drawEllipse(rect.center() + QPoint(1, 1), rad, rad)
+                # IconRegistry.from_name('mdi.circle-slice-8', category.icon_color).paint(painter, rect)
+                painter.drawEllipse(rect.center() + QPoint(1, 1), rad, rad)
 
                 return
 
