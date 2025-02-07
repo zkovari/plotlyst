@@ -23,13 +23,14 @@ from PyQt6.QtCore import Qt, QRect, QDate, QPoint
 from PyQt6.QtGui import QPainter, QTextOption, QColor
 from PyQt6.QtWidgets import QWidget, QCalendarWidget, QTableView
 from overrides import overrides
-from qthandy import flow, bold, underline, vbox
+from qthandy import flow, bold, underline, vbox, margins, hbox, spacer
 
 from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel, DailyProductivity
 from plotlyst.service.productivity import find_daily_productivity
-from plotlyst.view.common import label
+from plotlyst.view.common import label, scroll_area
 from plotlyst.view.report import AbstractReport
+from plotlyst.view.widget.display import icon_text
 
 months = {
     1: "January",
@@ -50,11 +51,28 @@ months = {
 class ProductivityReport(AbstractReport, QWidget):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(novel, parent, setupUi=False)
+        vbox(self, 10, 8)
 
-        flow(self, 25, 10)
+        self.wdgCalendars = QWidget()
+        flow(self.wdgCalendars, 5, 10)
+        margins(self.wdgCalendars, top=15)
+
+        self.wdgCategoriesScroll = scroll_area(False, False, True)
+        self.wdgCategoriesScroll.setProperty('relaxed-white-bg', True)
+        self.wdgCategories = QWidget()
+        self.wdgCategories.setProperty('relaxed-white-bg', True)
+        self.wdgCategoriesScroll.setWidget(self.wdgCategories)
+        hbox(self.wdgCategories, spacing=10)
+        margins(self.wdgCategories, left=25, right=25)
+
+        self.wdgCategories.layout().addWidget(spacer())
+        for category in novel.productivity.categories:
+            self.wdgCategories.layout().addWidget(
+                icon_text('fa5s.circle', category.text, category.icon_color, opacity=0.7))
+
+        self.wdgCategories.layout().addWidget(spacer())
 
         current_year = datetime.today().year
-
         for i in range(12):
             wdg = QWidget()
             vbox(wdg)
@@ -62,7 +80,11 @@ class ProductivityReport(AbstractReport, QWidget):
             calendar.setCurrentPage(current_year, i + 1)
             wdg.layout().addWidget(label(months[i + 1], h5=True), alignment=Qt.AlignmentFlag.AlignCenter)
             wdg.layout().addWidget(calendar)
-            self.layout().addWidget(wdg)
+            self.wdgCalendars.layout().addWidget(wdg)
+
+        self.layout().addWidget(label('Daily Productivity Report', h2=True), alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self.wdgCategoriesScroll)
+        self.layout().addWidget(self.wdgCalendars)
 
 
 def date_to_str(date: QDate) -> str:
