@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import copy
+import uuid
 from functools import partial
 from typing import Optional
 
@@ -342,7 +343,6 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.btnCopy.installEventFilter(ButtonPressResizeEventFilter(self.btnCopy))
         self.btnCopy.installEventFilter(OpacityEventFilter(self.btnCopy, leaveOpacity=0.8))
         self.btnCopy.clicked.connect(self._duplicateStructure)
-        self.btnCopy.setHidden(True)
         self.btnEdit.setIcon(IconRegistry.edit_icon())
         self.btnEdit.installEventFilter(ButtonPressResizeEventFilter(self.btnEdit))
         self.btnEdit.installEventFilter(OpacityEventFilter(self.btnEdit, leaveOpacity=0.8))
@@ -448,6 +448,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.novel.story_structures.append(structure)
         self._addStructureWidget(structure)
         self.btnGroupStructure.buttons()[-1].setChecked(True)
+        self._save()
         self._emit()
 
     def _removeStructure(self):
@@ -485,8 +486,11 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
 
     def _duplicateStructure(self):
         structure = copy.deepcopy(self.novel.active_story_structure)
+        structure.active = False
+        for beat in structure.beats:
+            beat.id = uuid.uuid4()
+            beat.notes = ''
         self._addNewStructure(structure)
-        self._editStructure()
 
     def _editStructure(self):
         if self.novel.active_story_structure.custom:

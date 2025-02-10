@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import copy
+import uuid
 from enum import Enum, auto
 from functools import partial
 from typing import Optional, List, Tuple, Set
@@ -656,6 +657,8 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
             self._structureChanged()
 
     def structure(self) -> StoryStructure:
+        for beat in self._structure.beats:
+            beat.id = uuid.uuid4()
         return self._structure
 
     @staticmethod
