@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QPushButton, QDialog, QScrollArea, QLabel, 
     QApplication
 from overrides import overrides
 from qthandy import vspacer, spacer, transparent, bold, vbox, incr_font, \
-    hbox, margins, underline, line, pointy, incr_icon, busy, flow
+    hbox, margins, line, pointy, incr_icon, busy, flow
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -359,10 +359,6 @@ class _ThreeActStructureEditor(_AbstractStructureEditor):
         vbox(self.wdgCustom)
         margins(self.wdgCustom, top=10, left=10)
 
-        self.lblCustomization = QLabel('Customization:')
-        underline(self.lblCustomization)
-        bold(self.lblCustomization)
-
         self.btnBeginning = ActOptionsButton('Beginning', 1)
         self.btnBeginning.setIcon(IconRegistry.cause_icon())
         checked = option_from_beat(structure.beats[0])
@@ -421,7 +417,7 @@ class _ThreeActStructureEditor(_AbstractStructureEditor):
 
         wdgCustomization = QWidget()
         flow(wdgCustomization, spacing=10)
-        wdgCustomization.layout().addWidget(self.lblCustomization)
+        margins(wdgCustomization, left=25, right=25)
         wdgCustomization.layout().addWidget(self.btnBeginning)
         wdgCustomization.layout().addWidget(self.btnFirstPlotPoint)
         wdgCustomization.layout().addWidget(self.btnMidpoint)
@@ -706,6 +702,7 @@ class StoryStructureSelectorDialog(PopupDialog):
             page, clazz = self._pageAndClass(structure)
             self.__initEditor(structure, page, clazz, copyStructure=False)
         else:
+            self.btnThreeAct.setChecked(True)
             self._structureChanged()
 
         self.wdgCenter.layout().addWidget(self.wdgTypesContainer)
