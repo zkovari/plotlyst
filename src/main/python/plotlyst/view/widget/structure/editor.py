@@ -502,7 +502,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
                 self._save()
                 self._emit()
         else:
-            StoryStructureSelectorDialog.display(self.novel, self.novel.active_story_structure)
+            StoryStructureSelectorDialog.popup(self.novel, self.novel.active_story_structure)
             self._activeStructureToggled(self.novel.active_story_structure, True)
             self._emit()
 
@@ -531,7 +531,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self._emit()
 
     def _selectTemplateStructure(self):
-        structure: Optional[StoryStructure] = StoryStructureSelectorDialog.display(self.novel)
+        structure: Optional[StoryStructure] = StoryStructureSelectorDialog.popup(self.novel)
         if structure:
             self._addNewStructure(structure)
 
