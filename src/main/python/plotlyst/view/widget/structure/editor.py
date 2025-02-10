@@ -28,7 +28,7 @@ from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QButtonGroup
 from overrides import overrides
 from qthandy import translucent, gc, flow, hbox, clear_layout, vbox, sp, margins, vspacer, \
-    incr_font, bold, busy, italic, incr_icon, spacer, transparent
+    incr_font, bold, busy, italic, incr_icon, spacer, transparent, pointy
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -50,7 +50,7 @@ from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.characters import CharacterSelectorMenu
 from plotlyst.view.widget.confirm import confirmed
 from plotlyst.view.widget.display import IconText, PopupDialog, Icon
-from plotlyst.view.widget.input import AutoAdjustableTextEdit
+from plotlyst.view.widget.input import AutoAdjustableTextEdit, TextInputDialog
 from plotlyst.view.widget.settings import SettingBaseWidget
 from plotlyst.view.widget.structure.beat import BeatsPreview
 from plotlyst.view.widget.structure.outline import StoryStructureOutline
@@ -65,35 +65,38 @@ class _StoryStructureButton(QPushButton):
         self.novel = novel
         self.setText(structure.title)
         self.setCheckable(True)
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        pointy(self)
         self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Maximum)
 
         self.setStyleSheet('''
             QPushButton {
                 background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 0,
                                       stop: 0 #f8edeb);
-                border: 2px solid #fec89a;
+                border: 1px solid #fec89a;
                 border-radius: 6px;
-                padding: 2px;
+                padding: 3px;
             }
             QPushButton:checked {
                 background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 0,
-                                      stop: 0 #ffd7ba);
-                border: 3px solid #FD9235;
-                padding: 1px;
+                                      stop: 0 #FFCBBA);
+                border: 2px solid #FD9235;
+                padding: 3px;
+
             }
             ''')
-
         self.refresh()
 
         self._toggled(self.isChecked())
         self.installEventFilter(OpacityEventFilter(self, 0.7, 0.5, ignoreCheckedButton=True))
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
         self.toggled.connect(self._toggled)
 
     def structure(self) -> StoryStructure:
         return self._structure
 
     def refresh(self, animated: bool = False):
+        self.setText(self._structure.title)
+
         if self._structure.character_id:
             self.setIcon(avatars.avatar(self._structure.character(self.novel)))
         elif self._structure.icon:
@@ -431,7 +434,6 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.wdgTemplates.layout().addWidget(btn)
         if structure.active:
             btn.setChecked(True)
-            self.btnEdit.setHidden(structure.custom)
             self._refreshStructure(structure)
         btn.toggled.connect(partial(self._activeStructureToggled, structure))
         btn.clicked.connect(partial(self._activeStructureClicked, structure))
@@ -487,9 +489,18 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self._editStructure()
 
     def _editStructure(self):
-        StoryStructureSelectorDialog.display(self.novel, self.novel.active_story_structure)
-        self._activeStructureToggled(self.novel.active_story_structure, True)
-        self._emit()
+        if self.novel.active_story_structure.custom:
+            name = TextInputDialog.edit('Rename story structure', 'Edit structure name',
+                                        value=self.novel.active_story_structure.title)
+            if name:
+                self.novel.active_story_structure.title = name
+                self.btnGroupStructure.checkedButton().refresh(animated=False)
+                self._save()
+                self._emit()
+        else:
+            StoryStructureSelectorDialog.display(self.novel, self.novel.active_story_structure)
+            self._activeStructureToggled(self.novel.active_story_structure, True)
+            self._emit()
 
     def _showCharacterMenu(self):
         if self.novel.active_story_structure.character_id:
@@ -545,7 +556,6 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         for struct in self.novel.story_structures:
             struct.active = False
         structure.active = True
-        self.btnEdit.setHidden(structure.custom)
         acts_registry.refresh()
         QTimer.singleShot(20, lambda: self._refreshStructure(structure))
 

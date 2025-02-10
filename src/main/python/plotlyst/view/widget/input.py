@@ -1104,7 +1104,6 @@ class TextInputDialog(PopupDialog):
         self.btnConfirm.setDisabled(True)
         self.btnConfirm.installEventFilter(
             DisabledClickEventFilter(self.btnConfirm, lambda: qtanim.shake(self.lineKey)))
-        self.lineKey.editingFinished.connect(self.btnConfirm.click)
 
         self.btnCancel = push_btn(text='Cancel', properties=['confirm', 'cancel'])
         self.btnCancel.clicked.connect(self.reject)
