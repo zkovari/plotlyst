@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QPushButton, QDialog, QScrollArea, QLabel, 
     QApplication
 from overrides import overrides
 from qthandy import vspacer, spacer, transparent, bold, vbox, incr_font, \
-    hbox, margins, line, pointy, incr_icon, busy, flow
+    hbox, margins, line, pointy, incr_icon, busy, flow, vline
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -648,6 +648,7 @@ class StoryStructureSelectorDialog(PopupDialog):
         hbox(self.wdgCenter)
 
         self.wdgTypesContainer = QWidget()
+        self.wdgTypesContainer.setProperty('bg', True)
         vbox(self.wdgTypesContainer, 5, 6)
         margins(self.wdgTypesContainer, top=40)
 
@@ -694,11 +695,14 @@ class StoryStructureSelectorDialog(PopupDialog):
         self.buttonGroup.addButton(self.btnStorySpine)
         self.buttonGroup.buttonClicked.connect(self._structureChanged)
 
+        self.lineSeparator = vline()
+
         self._structure: Optional[StoryStructure] = None
         if structure:
             self.btnConfirm.setHidden(True)
             self.btnCancel.setText('Close')
             self.wdgTypesContainer.setHidden(True)
+            self.lineSeparator.setHidden(True)
             page, clazz = self._pageAndClass(structure)
             self.__initEditor(structure, page, clazz, copyStructure=False)
         else:
@@ -706,6 +710,7 @@ class StoryStructureSelectorDialog(PopupDialog):
             self._structureChanged()
 
         self.wdgCenter.layout().addWidget(self.wdgTypesContainer)
+        self.wdgCenter.layout().addWidget(self.lineSeparator)
         self.wdgCenter.layout().addWidget(self.wdgEditor)
 
         self.wdgEditor.layout().addWidget(self.stackedWidget)
