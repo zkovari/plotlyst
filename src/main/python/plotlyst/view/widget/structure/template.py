@@ -643,7 +643,6 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
         self.btnSaveTheCat.setHidden(True)
         self.btnHerosJourney.setIcon(IconRegistry.from_name('fa5s.mask', color_on=WHITE_COLOR))
         self.btnStorySpine.setIcon(IconRegistry.from_name('mdi.alpha-s-circle-outline', color_on=WHITE_COLOR))
-        self.btnTwists.setIcon(IconRegistry.from_name('ph.shuffle-bold', color_on=WHITE_COLOR))
         self.buttonGroup.buttonClicked.connect(self._structureChanged)
 
         self._structure: Optional[StoryStructure] = None
@@ -686,8 +685,6 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
             self.__initEditor(heros_journey, self.pageHerosJourney, _HerosJourneyStructureEditor)
         elif self.btnStorySpine.isChecked():
             self.__initEditor(story_spine, self.pageStorySpine, _StorySpineStructureEditor)
-        elif self.btnTwists.isChecked():
-            self.__initEditor(twists_and_turns, self.pageTwists, _TwistsAndTurnsStructureEditor)
 
     def __initEditor(self, structure: StoryStructure, page: QWidget, clazz, copyStructure: bool = True):
         self.stackedWidget.setCurrentWidget(page)
