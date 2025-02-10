@@ -337,19 +337,19 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
 
         self.btnDelete.setIcon(IconRegistry.trash_can_icon())
         self.btnDelete.installEventFilter(ButtonPressResizeEventFilter(self.btnDelete))
-        self.btnDelete.installEventFilter(OpacityEventFilter(self.btnDelete, leaveOpacity=0.8))
+        self.btnDelete.installEventFilter(OpacityEventFilter(self.btnDelete, leaveOpacity=0.6))
         self.btnDelete.clicked.connect(self._removeStructure)
         self.btnCopy.setIcon(IconRegistry.copy_icon())
         self.btnCopy.installEventFilter(ButtonPressResizeEventFilter(self.btnCopy))
-        self.btnCopy.installEventFilter(OpacityEventFilter(self.btnCopy, leaveOpacity=0.8))
+        self.btnCopy.installEventFilter(OpacityEventFilter(self.btnCopy, leaveOpacity=0.6))
         self.btnCopy.clicked.connect(self._duplicateStructure)
         self.btnEdit.setIcon(IconRegistry.edit_icon())
         self.btnEdit.installEventFilter(ButtonPressResizeEventFilter(self.btnEdit))
-        self.btnEdit.installEventFilter(OpacityEventFilter(self.btnEdit, leaveOpacity=0.8))
+        self.btnEdit.installEventFilter(OpacityEventFilter(self.btnEdit, leaveOpacity=0.6))
         self.btnEdit.clicked.connect(self._editStructure)
         self.btnLinkCharacter.setIcon(IconRegistry.character_icon())
         self.btnLinkCharacter.installEventFilter(ButtonPressResizeEventFilter(self.btnLinkCharacter))
-        self.btnLinkCharacter.installEventFilter(OpacityEventFilter(self.btnLinkCharacter, leaveOpacity=0.8))
+        self.btnLinkCharacter.installEventFilter(OpacityEventFilter(self.btnLinkCharacter, leaveOpacity=0.6))
         self.btnLinkCharacter.clicked.connect(self._showCharacterMenu)
         self.btnConfigure.setIcon(IconRegistry.cog_icon(color='grey'))
         italic(self.btnConfigure)
@@ -488,7 +488,8 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         structure = copy.deepcopy(self.novel.active_story_structure)
         structure.active = False
         for beat in structure.beats:
-            beat.id = uuid.uuid4()
+            if beat.custom:
+                beat.id = uuid.uuid4()
             beat.notes = ''
         self._addNewStructure(structure)
 

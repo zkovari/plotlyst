@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import copy
-import uuid
 from enum import Enum, auto
 from functools import partial
 from typing import Optional, List, Tuple, Set
@@ -357,8 +356,8 @@ class StructureOptionsMenu(MenuWidget):
 class _ThreeActStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
         super().__init__(novel, structure, parent)
-        hbox(self.wdgCustom)
-        margins(self.wdgCustom, top=20)
+        vbox(self.wdgCustom)
+        margins(self.wdgCustom, top=10, left=10)
 
         self.lblCustomization = QLabel('Customization:')
         underline(self.lblCustomization)
@@ -701,8 +700,8 @@ class StoryStructureSelectorDialog(PopupDialog):
 
         self._structure: Optional[StoryStructure] = None
         if structure:
-            self.setWindowTitle('Story structure editor')
-            self.btnCancel.setHidden(True)
+            self.btnConfirm.setHidden(True)
+            self.btnCancel.setText('Close')
             self.wdgTypesContainer.setHidden(True)
             page, clazz = self._pageAndClass(structure)
             self.__initEditor(structure, page, clazz, copyStructure=False)
@@ -737,8 +736,6 @@ class StoryStructureSelectorDialog(PopupDialog):
         return size
 
     def structure(self) -> StoryStructure:
-        for beat in self._structure.beats:
-            beat.id = uuid.uuid4()
         return self._structure
 
     def display(self) -> Optional[StoryStructure]:
@@ -757,6 +754,10 @@ class StoryStructureSelectorDialog(PopupDialog):
             self.__initEditor(heros_journey, self.pageHerosJourney, _HerosJourneyStructureEditor)
         elif self.btnStorySpine.isChecked():
             self.__initEditor(story_spine, self.pageStorySpine, _StorySpineStructureEditor)
+        else:
+            return
+
+        self.btnConfirm.setEnabled(True)
 
     def __initEditor(self, structure: StoryStructure, page: QWidget, clazz, copyStructure: bool = True):
         self.stackedWidget.setCurrentWidget(page)
