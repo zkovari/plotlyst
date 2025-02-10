@@ -150,11 +150,11 @@ class OutlineItemWidget(QWidget):
         if desc is None:
             desc = self._descriptions()[self.item.type]
         self._text.setPlaceholderText(desc)
-        if tooltip is None:
-            tooltip = desc
-        self._btnName.setToolTip(tooltip)
-        self._text.setToolTip(tooltip)
-        self._btnIcon.setToolTip(tooltip)
+        # if tooltip is None:
+        #     tooltip = desc
+        # self._btnName.setToolTip(tooltip)
+        # self._text.setToolTip(tooltip)
+        # self._btnIcon.setToolTip(tooltip)
 
         if name is None:
             name = self.item.type.name

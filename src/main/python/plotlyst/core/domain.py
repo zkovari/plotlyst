@@ -2575,7 +2575,7 @@ class StoryStructure(CharacterBased):
 
 general_beat = StoryBeat(text='Beat',
                          id=uuid.UUID('3dc905df-1a9b-4e04-90f5-199ea908f2d5'),
-                         icon='msc.debug-stackframe-dot',
+                         icon='mdi.lightning-bolt-outline', icon_color='grey',
                          description="A pivotal moment or event that advances the plot or develops a character",
                          act=1, percentage=1)
 
