@@ -3097,7 +3097,7 @@ tension_third_conflict = StoryBeat(text='Third conflict',
                                    description="A major revelation, twist, or dark moment",
                                    percentage=25)
 
-tension_driven_structure = StoryStructure(title="Tension-driven",
+tension_driven_structure = StoryStructure(title="Tension",
                                           id=uuid.UUID('6b01f4e2-2116-4849-be88-85f519d2fbd4'),
                                           icon='fa5s.fire',
                                           display_type=StoryStructureDisplayType.Sequential_timeline,
@@ -3113,13 +3113,41 @@ tension_driven_structure = StoryStructure(title="Tension-driven",
                                           ]
                                           )
 
-transformation_driven_structure = StoryStructure(title="Transformation-driven",
+transformation_need_beat = StoryBeat(text='Need',
+                                     id=uuid.UUID('929de7eb-b7db-44bc-8e9f-7eed5616aadd'),
+                                     icon='ri.key-fill',
+                                     icon_color='#457b9d',
+                                     description="The protagonist lacks something in their life even if they don't realize it",
+                                     percentage=1)
+
+transformation_aha_moment = StoryBeat(text='A-ha moment',
+                                      icon='fa5.lightbulb',
+                                      icon_color='#6a0136',
+                                      description="A choice or realization that changes the protagonist",
+                                      id=uuid.UUID('249d7977-2c8c-4c2f-b66a-1b9f329d8dd1'),
+                                      percentage=80)
+
+transformation_final_test = StoryBeat(text='Final test',
+                                      id=uuid.UUID('7af98db6-c8e2-4929-b90b-b8321882ce6c'),
+                                      icon='fa5s.chevron-up',
+                                      icon_color='#ce2d4f',
+                                      description="The protagonist has to prove their transformation through a final test",
+                                      percentage=95)
+
+transformation_driven_structure = StoryStructure(title="Transformation",
                                                  id=uuid.UUID('b9aa5a84-6c19-4ac3-8589-73523b1fa897'),
                                                  icon='mdi6.butterfly-outline',
                                                  display_type=StoryStructureDisplayType.Sequential_timeline,
                                                  template_type=TemplateStoryStructureType.TRANSFORMATION,
                                                  acts=0,
                                                  beats=[
+                                                     transformation_need_beat,
+                                                     inciting_incident_beat,
+                                                     refusal_beat,
+                                                     midpoint_mirror,
+                                                     transformation_aha_moment,
+                                                     transformation_final_test,
+                                                     contrast_beat
                                                  ]
                                                  )
 
