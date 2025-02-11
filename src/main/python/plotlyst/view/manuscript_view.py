@@ -22,7 +22,7 @@ from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QInputDialog
 from overrides import overrides
-from qthandy import translucent, bold, margins, spacer, transparent, vspacer, decr_icon, vline
+from qthandy import translucent, bold, margins, spacer, transparent, vspacer, decr_icon, vline, incr_icon
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 from qttextedit import DashInsertionMode
@@ -43,14 +43,14 @@ from plotlyst.service.persistence import flush_or_fail
 from plotlyst.service.resource import ask_for_resource
 from plotlyst.view._view import AbstractNovelView
 from plotlyst.view.common import tool_btn, ButtonPressResizeEventFilter, action, \
-    ExclusiveOptionalButtonGroup, link_buttons_to_pages
+    ExclusiveOptionalButtonGroup, link_buttons_to_pages, shadow
 from plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.display import Icon, ChartView
 from plotlyst.view.widget.input import Toggle
 from plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
-    DistractionFreeManuscriptEditor, SprintWidget, ReadabilityWidget, ManuscriptExportWidget, \
+    DistractionFreeManuscriptEditor, SprintWidget, ManuscriptExportWidget, \
     ManuscriptProgressCalendar, ManuscriptDailyProgress, ManuscriptProgressCalendarLegend, ManuscriptFormattingWidget
 from plotlyst.view.widget.progress import ProgressChart
 from plotlyst.view.widget.scene.editor import SceneMiniEditor
@@ -132,7 +132,7 @@ class ManuscriptView(AbstractNovelView):
         self._btnDistractionFree = tool_btn(IconRegistry.expand_icon(), 'Enter distraction-free mode',
                                             transparent_=True)
         decr_icon(self._btnDistractionFree)
-        self._btnDistractionFree.installEventFilter(OpacityEventFilter(self._btnDistractionFree, leaveOpacity=0.5))
+        self._btnDistractionFree.installEventFilter(OpacityEventFilter(self._btnDistractionFree, leaveOpacity=0.5, enterOpacity=0.7))
         self._wdgSprint = SprintWidget()
         transparent(self._wdgSprint.btnTimer)
         decr_icon(self._wdgSprint.btnTimer)
@@ -142,6 +142,13 @@ class ManuscriptView(AbstractNovelView):
         self._spellCheckIcon.setToolTip('Spellcheck')
         self._cbSpellCheck = Toggle()
         self._cbSpellCheck.setToolTip('Toggle spellcheck')
+
+        shadow(self.ui.wdgSide, offset=-3, radius=6)
+        self.ui.btnHideRightBar.setIcon(IconRegistry.from_name('mdi.chevron-double-right', '#adb5bd'))
+        incr_icon(self.ui.btnHideRightBar, 4)
+        transparent(self.ui.btnHideRightBar)
+        self.ui.btnHideRightBar.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnHideRightBar))
+        self.ui.btnHideRightBar.clicked.connect(self._btnGroupSideBar.reset)
 
         self.ui.btnEditGoal.setIcon(IconRegistry.edit_icon())
         transparent(self.ui.btnEditGoal)

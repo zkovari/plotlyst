@@ -1152,7 +1152,7 @@ class ManuscriptExportWidget(QWidget):
         self._novel = novel
 
         vbox(self, spacing=15)
-        self.layout().addWidget(label('Export manuscript', bold=True), alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(label('Export manuscript', h5=True), alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(line())
 
         self._btnDocx = push_btn(IconRegistry.docx_icon(), 'Word (.docx)', checkable=True,
