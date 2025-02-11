@@ -83,7 +83,7 @@ class SceneMiniEditor(QWidget, EventListener):
 
         self._textSynopsis = QTextEdit()
         self._textSynopsis.setProperty('white-bg', True)
-        self._textSynopsis.setProperty('rounded', True)
+        self._textSynopsis.setProperty('large-rounded', True)
         self._textSynopsis.setPlaceholderText('Write a short summary of this scene')
         self._textSynopsis.setMaximumSize(200, 200)
 
@@ -92,7 +92,6 @@ class SceneMiniEditor(QWidget, EventListener):
         self._layout.addWidget(self._btnScenes, alignment=Qt.AlignmentFlag.AlignCenter)
         self._layout.addWidget(self._lblScene, alignment=Qt.AlignmentFlag.AlignCenter)
         self._layout.addWidget(line())
-        self._layout.addWidget(label('Synopsis:', underline=True), alignment=Qt.AlignmentFlag.AlignLeft)
         self._layout.addWidget(self._textSynopsis)
         self._layout.addWidget(vspacer())
 
