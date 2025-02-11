@@ -26,7 +26,8 @@ from PyQt6.QtCore import Qt, QEvent, QTimer, pyqtSignal
 from PyQt6.QtGui import QIcon, QColor, QEnterEvent, QResizeEvent, QDragEnterEvent
 from PyQt6.QtWidgets import QWidget, QDialog, QButtonGroup
 from overrides import overrides
-from qthandy import line, vbox, margins, hbox, spacer, sp, incr_icon, transparent, italic, clear_layout, vspacer
+from qthandy import line, vbox, margins, hbox, spacer, sp, incr_icon, transparent, italic, clear_layout, vspacer, \
+    translucent
 from qthandy.filter import OpacityEventFilter, DropEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR, MAX_NUMBER_OF_ACTS, act_color, ALT_BACKGROUND_COLOR
@@ -60,6 +61,9 @@ class StoryStructureBeatWidget(OutlineItemWidget):
         self._initStyle(name=self.beat.text,
                         desc=self.beat.placeholder if self.beat.placeholder else self.beat.description,
                         tooltip=self.beat.description)
+
+        if self.beat.text == 'Beat':
+            translucent(self._btnName, 0.5)
 
         if self._allowActs:
             self._btnEndsAct = tool_btn(QIcon(),
