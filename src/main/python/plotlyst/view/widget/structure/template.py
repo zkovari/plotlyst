@@ -28,11 +28,11 @@ from PyQt6.QtWidgets import QWidget, QPushButton, QDialog, QScrollArea, QLabel, 
     QApplication
 from overrides import overrides
 from qthandy import vspacer, spacer, transparent, bold, vbox, incr_font, \
-    hbox, margins, line, pointy, incr_icon, busy, flow, vline
+    hbox, margins, pointy, incr_icon, busy, flow, vline
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
-from plotlyst.common import WHITE_COLOR, RELAXED_WHITE_COLOR
+from plotlyst.common import WHITE_COLOR, RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     three_act_structure, heros_journey, hook_beat, motion_beat, \
     disturbance_beat, normal_world_beat, characteristic_moment_beat, midpoint, midpoint_ponr, midpoint_mirror, \
@@ -40,7 +40,8 @@ from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     twists_and_turns, twist_beat, turn_beat, danger_beat, copy_beat, midpoint_false_victory, \
     midpoint_re_dedication, second_plot_points, second_plot_point_aha, second_plot_point, midpoint_hero_ordeal, \
     midpoint_hero_mirror, second_plot_point_hero_road_back, second_plot_point_hero_ordeal, hero_reward, \
-    hero_false_victory
+    hero_false_victory, pace_driven_structure, TemplateStoryStructureType, tension_driven_structure, \
+    transformation_driven_structure
 from plotlyst.view.common import ExclusiveOptionalButtonGroup, push_btn, label
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -52,7 +53,7 @@ from plotlyst.view.widget.structure.outline import StoryStructureTimelineWidget
 
 
 class _AbstractStructureEditor(QWidget):
-    def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
+    def __init__(self, novel: Novel, structure: StoryStructure, parent=None, newStructure: bool = True):
         super(_AbstractStructureEditor, self).__init__(parent)
         self._novel = novel
         self._structure = structure
@@ -81,7 +82,7 @@ class _AbstractStructureEditor(QWidget):
         self.wdgPreview.setStructure(novel, self._structure)
         self.beatsPreview.setStructure(self._structure)
         self.layout().addWidget(self.wdgTitle)
-        self.layout().addWidget(line())
+        # self.layout().addWidget(line())
         self.layout().addWidget(self.wdgCustom)
         self.layout().addWidget(vspacer(20))
         self.layout().addWidget(self.wdgPreview)
@@ -354,8 +355,8 @@ class StructureOptionsMenu(MenuWidget):
 
 
 class _ThreeActStructureEditor(_AbstractStructureEditor):
-    def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
-        super().__init__(novel, structure, parent)
+    def __init__(self, novel: Novel, structure: StoryStructure, parent=None, newStructure: bool = True):
+        super().__init__(novel, structure, parent, newStructure)
         vbox(self.wdgCustom)
         margins(self.wdgCustom, top=10, left=10)
 
@@ -532,18 +533,70 @@ class _ThreeActStructureEditor(_AbstractStructureEditor):
 
 
 class _FiveActStructureEditor(_AbstractStructureEditor):
-    def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
-        super().__init__(novel, structure, parent)
+    def __init__(self, novel: Novel, structure: StoryStructure, parent=None, newStructure: bool = True):
+        super().__init__(novel, structure, parent, newStructure)
 
 
 class _SaveTheCatActStructureEditor(_AbstractStructureEditor):
-    def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
-        super().__init__(novel, structure, parent)
+    def __init__(self, novel: Novel, structure: StoryStructure, parent=None, newStructure: bool = True):
+        super().__init__(novel, structure, parent, newStructure)
+
+
+class _CoreStructureEditor(_AbstractStructureEditor):
+    def __init__(self, novel: Novel, structure: StoryStructure, parent=None, newStructure: bool = True):
+        super().__init__(novel, structure, parent, newStructure)
+        hbox(self.wdgCustom)
+        margins(self.wdgCustom, top=20)
+
+        self.btnPace = push_btn(IconRegistry.from_name('mdi.lightning-bolt-outline', color_on=PLOTLYST_SECONDARY_COLOR),
+                                text='Pace-driven',
+                                properties=['transparent-rounded-bg-on-hover', 'secondary-selector'], checkable=True)
+        self.btnTension = push_btn(
+            IconRegistry.from_name('fa5s.fire', color_on=PLOTLYST_SECONDARY_COLOR),
+            text='Tension-driven',
+            properties=['transparent-rounded-bg-on-hover', 'secondary-selector'], checkable=True)
+        self.btnTransformation = push_btn(
+            IconRegistry.from_name('mdi6.butterfly-outline', color_on=PLOTLYST_SECONDARY_COLOR),
+            text='Transformation-driven',
+            properties=['transparent-rounded-bg-on-hover', 'secondary-selector'],
+            checkable=True)
+
+        self.btnGroup = QButtonGroup()
+        self.btnGroup.addButton(self.btnPace)
+        self.btnGroup.addButton(self.btnTension)
+        self.btnGroup.addButton(self.btnTransformation)
+
+        self.btnGroup.buttonClicked.connect(self._typeChanged)
+
+        self.wdgCustom.layout().addWidget(
+            group(spacer(), self.btnPace, self.btnTension, self.btnTransformation, spacer()))
+
+        self.wdgCustom.setVisible(newStructure)
+
+        if structure.template_type == TemplateStoryStructureType.PACE:
+            self.btnPace.setChecked(True)
+
+    @busy
+    def _typeChanged(self, _):
+        if self.btnTension.isChecked():
+            self._structure = copy.deepcopy(tension_driven_structure)
+        elif self.btnPace.isChecked():
+            self._structure = copy.deepcopy(pace_driven_structure)
+        elif self.btnTransformation.isChecked():
+            self._structure = copy.deepcopy(transformation_driven_structure)
+        else:
+            return
+
+        self.wdgTitle.setText(self._structure.title)
+        self.wdgTitle.setIcon(IconRegistry.from_name(self._structure.icon, self._structure.icon_color))
+
+        self.wdgPreview.setStructure(self._novel, self._structure)
+        self.beatsPreview.setStructure(self._structure)
 
 
 class _HerosJourneyStructureEditor(_AbstractStructureEditor):
-    def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
-        super().__init__(novel, structure, parent)
+    def __init__(self, novel: Novel, structure: StoryStructure, parent=None, newStructure: bool = True):
+        super().__init__(novel, structure, parent, newStructure)
         hbox(self.wdgCustom)
         margins(self.wdgCustom, top=20)
 
@@ -587,8 +640,8 @@ class _HerosJourneyStructureEditor(_AbstractStructureEditor):
 
 
 class _StorySpineStructureEditor(_AbstractStructureEditor):
-    def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
-        super().__init__(novel, structure, parent)
+    def __init__(self, novel: Novel, structure: StoryStructure, parent=None, newStructure: bool = True):
+        super().__init__(novel, structure, parent, newStructure)
 
         vbox(self.wdgCustom, spacing=15)
         margins(self.wdgCustom, top=20)
@@ -598,8 +651,8 @@ class _StorySpineStructureEditor(_AbstractStructureEditor):
 
 
 class _TwistsAndTurnsStructureEditor(_AbstractStructureEditor):
-    def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
-        super().__init__(novel, structure, parent)
+    def __init__(self, novel: Novel, structure: StoryStructure, parent=None, newStructure: bool = True):
+        super().__init__(novel, structure, parent, newStructure)
         vbox(self.wdgCustom, spacing=15)
         margins(self.wdgCustom, top=20)
         self.wdgCustom.layout().addWidget(label(
@@ -664,10 +717,13 @@ class StoryStructureSelectorDialog(PopupDialog):
         vbox(self.pageStorySpine)
         self.pageTwists = QWidget()
         vbox(self.pageTwists)
+        self.pageCore = QWidget()
+        vbox(self.pageCore)
         self.stackedWidget.addWidget(self.pageThreeAct)
         self.stackedWidget.addWidget(self.pageHerosJourney)
         self.stackedWidget.addWidget(self.pageStorySpine)
         self.stackedWidget.addWidget(self.pageTwists)
+        self.stackedWidget.addWidget(self.pageCore)
 
         self.btnConfirm = push_btn(icon=IconRegistry.from_name('fa5s.check', RELAXED_WHITE_COLOR),
                                    text='Add structure',
@@ -683,8 +739,11 @@ class StoryStructureSelectorDialog(PopupDialog):
                                         text='Hero archetype', properties=['main-side-nav'], checkable=True)
         self.btnStorySpine = push_btn(IconRegistry.from_name('mdi.alpha-s-circle-outline', color_on=WHITE_COLOR),
                                       text='Story spine', properties=['main-side-nav'], checkable=True)
+        self.btnCore = push_btn(IconRegistry.from_name('mdi.lightning-bolt-outline', color_on=WHITE_COLOR),
+                                text='Core narrative beats', properties=['main-side-nav'], checkable=True)
         # self.btnFiveAct.setIcon(IconRegistry.from_name('mdi.numeric-5-box-outline', color_on=WHITE_COLOR))
         # self.btnSaveTheCat.setIcon(IconRegistry.from_name('fa5s.cat', color_on=WHITE_COLOR))
+        self.wdgTypesContainer.layout().addWidget(self.btnCore)
         self.wdgTypesContainer.layout().addWidget(self.btnThreeAct)
         self.wdgTypesContainer.layout().addWidget(self.btnHerosJourney)
         self.wdgTypesContainer.layout().addWidget(self.btnStorySpine)
@@ -693,12 +752,15 @@ class StoryStructureSelectorDialog(PopupDialog):
         self.buttonGroup.addButton(self.btnThreeAct)
         self.buttonGroup.addButton(self.btnHerosJourney)
         self.buttonGroup.addButton(self.btnStorySpine)
+        self.buttonGroup.addButton(self.btnCore)
         self.buttonGroup.buttonClicked.connect(self._structureChanged)
 
         self.lineSeparator = vline()
 
         self._structure: Optional[StoryStructure] = None
+        self._newStructure = True
         if structure:
+            self._newStructure = False
             self.btnConfirm.setHidden(True)
             self.btnCancel.setText('Close')
             self.wdgTypesContainer.setHidden(True)
@@ -706,7 +768,7 @@ class StoryStructureSelectorDialog(PopupDialog):
             page, clazz = self._pageAndClass(structure)
             self.__initEditor(structure, page, clazz, copyStructure=False)
         else:
-            self.btnThreeAct.setChecked(True)
+            self.btnCore.setChecked(True)
             self._structureChanged()
 
         self.wdgCenter.layout().addWidget(self.wdgTypesContainer)
@@ -738,6 +800,8 @@ class StoryStructureSelectorDialog(PopupDialog):
         return size
 
     def structure(self) -> StoryStructure:
+        if self.btnCore.isChecked():
+            self._structure = self.pageCore.layout().itemAt(0).widget().structure()
         return self._structure
 
     def display(self) -> Optional[StoryStructure]:
@@ -748,10 +812,8 @@ class StoryStructureSelectorDialog(PopupDialog):
     def _structureChanged(self):
         if self.btnThreeAct.isChecked():
             self.__initEditor(three_act_structure, self.pageThreeAct, _ThreeActStructureEditor)
-        # elif self.btnFiveAct.isChecked():
-        #     self.__initEditor(five_act_structure, self.pageFiveAct, _FiveActStructureEditor)
-        # elif self.btnSaveTheCat.isChecked():
-        #     self.__initEditor(save_the_cat, self.pageSaveTheCat, _SaveTheCatActStructureEditor)
+        elif self.btnCore.isChecked():
+            self.__initEditor(pace_driven_structure, self.pageCore, _CoreStructureEditor)
         elif self.btnHerosJourney.isChecked():
             self.__initEditor(heros_journey, self.pageHerosJourney, _HerosJourneyStructureEditor)
         elif self.btnStorySpine.isChecked():
@@ -775,19 +837,18 @@ class StoryStructureSelectorDialog(PopupDialog):
     @busy
     def __initNewWidget(self, clazz, page: QWidget):
         page.setEnabled(False)
-        page.layout().addWidget(clazz(self._novel, self._structure, self))
+        page.layout().addWidget(clazz(self._novel, self._structure, self, self._newStructure))
         page.setEnabled(True)
 
     def _pageAndClass(self, structure: StoryStructure):
         if structure.title == three_act_structure.title:
             return self.pageThreeAct, _ThreeActStructureEditor
-        # if structure.title == five_act_structure.title:
-        #     return self.pageFiveAct, _FiveActStructureEditor
-        # elif structure.title == save_the_cat.title:
-        #     return self.pageSaveTheCat, _SaveTheCatActStructureEditor
         elif structure.title == heros_journey.title:
             return self.pageHerosJourney, _HerosJourneyStructureEditor
         elif structure.title == story_spine.title:
             return self.pageStorySpine, _StorySpineStructureEditor
         elif structure.title == twists_and_turns.title:
             return self.pageTwists, _TwistsAndTurnsStructureEditor
+        elif structure.template_type in [TemplateStoryStructureType.PACE, TemplateStoryStructureType.TENSION,
+                                         TemplateStoryStructureType.TRANSFORMATION]:
+            return self.pageCore, _CoreStructureEditor

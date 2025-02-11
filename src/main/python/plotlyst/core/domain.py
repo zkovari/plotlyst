@@ -2516,6 +2516,9 @@ class TemplateStoryStructureType(Enum):
     SPINE = 2
     TWISTS = 3
     FIVE_ACT = 4
+    PACE = 5
+    TENSION = 6
+    TRANSFORMATION = 7
 
 
 class StoryStructureDisplayType(Enum):
@@ -3041,6 +3044,84 @@ save_the_cat = StoryStructure(title='Save the Cat',
                                                id=uuid.UUID('12d5ec21-af96-4e51-9c26-06583d830d87'),
                                                act=3, percentage=99),
                                      ])
+
+pace_turn_beat_one = StoryBeat(text='Turn',
+                               id=uuid.UUID('15108852-1959-49ef-9c58-0ce55cb676ed'),
+                               icon='mdi.sign-direction',
+                               icon_color='#2a4494',
+                               description="A shift in the story's direction",
+                               percentage=25)
+
+pace_turn_beat_two = StoryBeat(text='Turn',
+                               id=uuid.UUID('98a8a1ce-43f5-4db7-80a6-ddba7fb17e05'),
+                               icon='mdi.sign-direction',
+                               icon_color='#6a0136',
+                               description="A shift in the story's direction",
+                               percentage=75)
+
+pace_driven_structure = StoryStructure(title="Pace-driven",
+                                       id=uuid.UUID('54f4e296-b281-4dc9-b3be-36a869ee48c3'),
+                                       icon='mdi.lightning-bolt-outline',
+                                       display_type=StoryStructureDisplayType.Sequential_timeline,
+                                       template_type=TemplateStoryStructureType.PACE,
+                                       acts=0,
+                                       beats=[
+                                           hook_beat,
+                                           inciting_incident_beat,
+                                           pace_turn_beat_one,
+                                           midpoint,
+                                           pace_turn_beat_two,
+                                           climax_beat,
+                                           resolution_beat
+                                       ]
+                                       )
+
+tension_first_conflict = StoryBeat(text='First conflict',
+                                   id=uuid.UUID('3610723f-c23e-47a0-9174-f328f6f8ebd6'),
+                                   icon='mdi.sword-cross',
+                                   icon_color='#f3a712',
+                                   description="A complication that forces the character to react",
+                                   percentage=25)
+
+tension_second_conflict = StoryBeat(text='Second conflict',
+                                    id=uuid.UUID('5f520c66-f3a5-4353-884f-cc6055b6952b'),
+                                    icon='mdi.sword-cross',
+                                    icon_color='#B88612',
+                                    description="Tension tightens and the plot complicates",
+                                    percentage=25)
+
+tension_third_conflict = StoryBeat(text='Third conflict',
+                                   id=uuid.UUID('a5172e05-4e08-4c2c-8346-7f05ff5573d3'),
+                                   icon='mdi.sword-cross',
+                                   icon_color='#CD533B',
+                                   description="A major revelation, twist, or dark moment",
+                                   percentage=25)
+
+tension_driven_structure = StoryStructure(title="Tension-driven",
+                                          id=uuid.UUID('6b01f4e2-2116-4849-be88-85f519d2fbd4'),
+                                          icon='fa5s.fire',
+                                          display_type=StoryStructureDisplayType.Sequential_timeline,
+                                          template_type=TemplateStoryStructureType.TENSION,
+                                          acts=0,
+                                          beats=[
+                                              disturbance_beat,
+                                              tension_first_conflict,
+                                              tension_second_conflict,
+                                              tension_third_conflict,
+                                              climax_beat,
+                                              resolution_beat
+                                          ]
+                                          )
+
+transformation_driven_structure = StoryStructure(title="Transformation-driven",
+                                                 id=uuid.UUID('b9aa5a84-6c19-4ac3-8589-73523b1fa897'),
+                                                 icon='mdi6.butterfly-outline',
+                                                 display_type=StoryStructureDisplayType.Sequential_timeline,
+                                                 template_type=TemplateStoryStructureType.TRANSFORMATION,
+                                                 acts=0,
+                                                 beats=[
+                                                 ]
+                                                 )
 
 heros_journey = StoryStructure(title="Hero archetype",
                                id=uuid.UUID('d19e6f28-c6ed-4496-8f6b-064ab4306f17'),
