@@ -849,24 +849,31 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             if not self.buttonGroup.checkedButton().isVisible():
                 self.btnNovel.setChecked(True)
 
+            btn.setGraphicsEffect(None)
+
         func = qtanim.fade_in if event.toggled else qtanim.fade_out
+
+        btn: Optional[QAbstractButton] = None
         if isinstance(event, NovelWorldBuildingToggleEvent):
-            func(self.btnWorld, teardown=teardown)
+            btn = self.btnWorld
             self.actionDetachWorldbuilding.setEnabled(event.toggled)
         elif isinstance(event, NovelCharactersToggleEvent):
-            func(self.btnCharacters, teardown=teardown)
+            btn = self.btnCharacters
             self.actionDetachCharacters.setEnabled(event.toggled)
         elif isinstance(event, NovelScenesToggleEvent):
-            func(self.btnScenes, teardown=teardown)
+            btn = self.btnScenes
             self.actionDetachScenes.setEnabled(event.toggled)
         elif isinstance(event, NovelDocumentsToggleEvent):
-            func(self.btnNotes, teardown=teardown)
+            btn = self.btnNotes
             self.actionDetachDocuments.setEnabled(event.toggled)
         elif isinstance(event, NovelManuscriptToggleEvent):
-            func(self.btnManuscript, teardown=teardown)
+            btn = self.btnManuscript
         elif isinstance(event, NovelManagementToggleEvent):
-            func(self.btnBoard, teardown=teardown)
+            btn = self.btnBoard
             self.actionDetachTask.setEnabled(event.toggled)
+
+        if btn:
+            func(btn, teardown=teardown)
 
     def _settings_link_clicked(self):
         self.btnNovel.setChecked(True)
