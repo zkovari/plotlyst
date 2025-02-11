@@ -27,7 +27,7 @@ from PyQt6.QtGui import QEnterEvent, QIcon, QMouseEvent, QColor, QCursor, QPalet
 from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QLabel, QFrame, QStackedWidget, QGridLayout, \
     QToolButton, QAbstractButton, QScrollArea, QButtonGroup
 from overrides import overrides
-from qthandy import vbox, vspacer, transparent, sp, line, incr_font, hbox, pointy, vline, retain_when_hidden, margins, \
+from qthandy import vbox, vspacer, transparent, sp, line, hbox, pointy, vline, retain_when_hidden, margins, \
     spacer, bold, grid, gc, clear_layout, ask_confirmation, decr_icon, italic, translucent
 from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget, GridMenuWidget
@@ -67,10 +67,8 @@ class SceneMiniEditor(QWidget, EventListener):
         self._currentScene: Optional[Scene] = None
         self._freeze = False
 
-        self._lblScene = QLabel()
-        incr_font(self._lblScene, 2)
+        self._lblScene = label(wordWrap=True)
         self._btnScenes = QPushButton()
-        incr_font(self._btnScenes, 2)
         transparent(self._btnScenes)
         sp(self._btnScenes).h_max()
         sp(self._lblScene).h_max()
@@ -85,12 +83,11 @@ class SceneMiniEditor(QWidget, EventListener):
         self._textSynopsis.setProperty('white-bg', True)
         self._textSynopsis.setProperty('large-rounded', True)
         self._textSynopsis.setPlaceholderText('Write a short summary of this scene')
-        self._textSynopsis.setMaximumSize(200, 200)
+        self._textSynopsis.setMaximumSize(200, 150)
 
         self._layout = vbox(self)
-        self._layout.addWidget(self._charSelector, alignment=Qt.AlignmentFlag.AlignLeft)
-        self._layout.addWidget(self._btnScenes, alignment=Qt.AlignmentFlag.AlignCenter)
-        self._layout.addWidget(self._lblScene, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._layout.addWidget(group(self._charSelector, self._lblScene, self._btnScenes),
+                               alignment=Qt.AlignmentFlag.AlignCenter)
         self._layout.addWidget(line())
         self._layout.addWidget(self._textSynopsis)
         self._layout.addWidget(vspacer())
