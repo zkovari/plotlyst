@@ -150,10 +150,9 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnHideRightBar.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnHideRightBar))
         self.ui.btnHideRightBar.clicked.connect(self._btnGroupSideBar.reset)
 
-        self.ui.btnEditGoal.setIcon(IconRegistry.edit_icon())
+        self.ui.btnEditGoal.setIcon(IconRegistry.edit_icon('grey'))
         transparent(self.ui.btnEditGoal)
         decr_icon(self.ui.btnEditGoal, 2)
-        self.ui.btnEditGoal.installEventFilter(OpacityEventFilter(self.ui.btnEditGoal))
         self.ui.btnEditGoal.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnEditGoal))
         self.ui.btnEditGoal.clicked.connect(self._edit_wc_goal)
 
@@ -165,7 +164,7 @@ class ManuscriptView(AbstractNovelView):
         self._chartProgressView = ChartView()
         self._chartProgressView.setFixedSize(200, 250)
         self._chartProgressView.setChart(self._chartProgress)
-        self.ui.pageGoal.layout().addWidget(self._chartProgressView, alignment=Qt.AlignmentFlag.AlignTop)
+        self.ui.pageGoal.layout().insertWidget(0, self._chartProgressView)
         self.ui.pageGoal.layout().addWidget(vspacer())
 
         # self._wdgReadability = ReadabilityWidget()
