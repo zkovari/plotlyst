@@ -118,9 +118,6 @@
             <height>22</height>
            </size>
           </property>
-          <property name="shortcut">
-           <string>Ctrl+S</string>
-          </property>
           <property name="transparent" stdset="0">
            <bool>true</bool>
           </property>
@@ -142,9 +139,6 @@
             <width>22</width>
             <height>22</height>
            </size>
-          </property>
-          <property name="shortcut">
-           <string>Ctrl+S</string>
           </property>
           <property name="transparent" stdset="0">
            <bool>true</bool>
@@ -175,9 +169,6 @@
             <height>22</height>
            </size>
           </property>
-          <property name="shortcut">
-           <string>Ctrl+S</string>
-          </property>
           <property name="transparent" stdset="0">
            <bool>true</bool>
           </property>
@@ -206,9 +197,6 @@
             <width>22</width>
             <height>22</height>
            </size>
-          </property>
-          <property name="shortcut">
-           <string>Ctrl+S</string>
           </property>
           <property name="transparent" stdset="0">
            <bool>true</bool>
@@ -361,8 +349,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>516</width>
-                <height>245</height>
+                <width>100</width>
+                <height>30</height>
                </rect>
               </property>
               <property name="sizePolicy">
@@ -415,8 +403,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>516</width>
-                <height>225</height>
+                <width>100</width>
+                <height>30</height>
                </rect>
               </property>
               <property name="relaxed-white-bg" stdset="0">
