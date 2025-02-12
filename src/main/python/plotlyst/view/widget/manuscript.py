@@ -23,17 +23,18 @@ from typing import Optional, List, Dict
 
 import qtanim
 from PyQt6 import QtGui
+from PyQt6.QtCharts import QChart
 from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent, QSize, QSizeF, QRectF, \
-    QRect, QDate, QPoint
+    QRect, QDate, QPoint, QVariantAnimation, QEasingCurve
 from PyQt6.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter, QKeyEvent, \
     QMouseEvent, QTextCursor, QFont, QScreen, QTextFormat, QTextObjectInterface, QPainter, QTextBlockFormat, \
     QFontMetrics, QTextOption, QShowEvent, QIcon
 from PyQt6.QtMultimedia import QSoundEffect
 from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit, QButtonGroup, QCalendarWidget, QTableView, \
-    QPushButton, QToolButton, QWidgetItem
+    QPushButton, QToolButton, QWidgetItem, QGraphicsColorizeEffect, QGraphicsTextItem
 from overrides import overrides
-from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins, vbox, line, bold, vline, decr_font, \
-    underline, transparent, italic, decr_icon, pointy, vspacer
+from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins, vbox, bold, vline, decr_font, \
+    underline, transparent, italic, decr_icon, pointy, vspacer, hbox
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, group
 from qttextedit import TextBlockState, remove_font, OBJECT_REPLACEMENT_CHARACTER, DashInsertionMode
@@ -45,7 +46,7 @@ from qttextedit.util import EN_DASH, EM_DASH
 from textstat import textstat
 
 from plotlyst.common import RELAXED_WHITE_COLOR, DEFAULT_MANUSCRIPT_LINE_SPACE, \
-    DEFAULT_MANUSCRIPT_INDENT, PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR
+    DEFAULT_MANUSCRIPT_INDENT, PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR
 from plotlyst.core.client import json_client
 from plotlyst.core.domain import Novel, Scene, TextStatistics, DocumentStatistics, DocumentProgress
 from plotlyst.core.sprint import TimerModel
@@ -56,7 +57,7 @@ from plotlyst.service.manuscript import export_manuscript_to_docx, daily_progres
     daily_overall_progress, find_daily_overall_progress
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import scroll_to_top, spin, ButtonPressResizeEventFilter, label, push_btn, \
-    ExclusiveOptionalButtonGroup
+    ExclusiveOptionalButtonGroup, tool_btn
 from plotlyst.view.generated.distraction_free_manuscript_editor_ui import \
     Ui_DistractionFreeManuscriptEditor
 from plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget
@@ -66,9 +67,10 @@ from plotlyst.view.generated.sprint_widget_ui import Ui_SprintWidget
 from plotlyst.view.generated.timer_setup_widget_ui import Ui_TimerSetupWidget
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.button import apply_button_palette_color
-from plotlyst.view.widget.display import WordsDisplay, IconText
+from plotlyst.view.widget.display import WordsDisplay, IconText, Emoji, ChartView
 from plotlyst.view.widget.input import TextEditBase, GrammarHighlighter, GrammarHighlightStyle, Toggle, TextEditorBase, \
     BasePopupTextEditorToolbar
+from plotlyst.view.widget.progress import ProgressChart
 
 
 class TimerSetupWidget(QWidget, Ui_TimerSetupWidget):
@@ -1146,14 +1148,122 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
             self.wdgBottom.setHidden(True)
 
 
+class ManuscriptProgressChart(ProgressChart):
+    def __init__(self, novel: Novel, parent=None):
+        self.novel = novel
+        super().__init__(maxValue=self.novel.manuscript_goals.target_wc,
+                         color=PLOTLYST_SECONDARY_COLOR,
+                         titleColor=PLOTLYST_SECONDARY_COLOR,
+                         emptySliceColor=RELAXED_WHITE_COLOR, parent=parent)
+
+        self.setAnimationOptions(QChart.AnimationOption.SeriesAnimations)
+        self.setAnimationDuration(700)
+        self.setAnimationEasingCurve(QEasingCurve.Type.InQuad)
+
+        self._holeSize = 0.6
+        self._titleVisible = False
+
+
+class ManuscriptProgressWidget(QWidget):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self.novel = novel
+        vbox(self)
+
+        self._wordCount: int = 0
+
+        self.wdgGoalTitle = QWidget()
+        hbox(self.wdgGoalTitle, 0)
+
+        self.emojiGoal = Emoji(emoji='bullseye')
+        effect = QGraphicsColorizeEffect()
+        effect.setColor(QColor(PLOTLYST_MAIN_COLOR))
+        self.emojiGoal.setGraphicsEffect(effect)
+        self.lblGoal = WordsDisplay()
+        tooltip = 'Manuscript word count target'
+        self.emojiGoal.setToolTip(tooltip)
+        self.lblGoal.setToolTip(tooltip)
+        self.btnEditGoal = tool_btn(IconRegistry.edit_icon('grey'), transparent_=True,
+                                    tooltip="Edit manuscript word count goal")
+        decr_icon(self.btnEditGoal, 2)
+
+        self.chartProgress = ManuscriptProgressChart(self.novel)
+        self.chartProgressView = ChartView()
+        self.chartProgressView.setMaximumSize(200, 200)
+        self.chartProgressView.setChart(self.chartProgress)
+        self.chartProgressView.scale(1.05, 1.05)
+        self.percentageItem = QGraphicsTextItem()
+        font = self.percentageItem.font()
+        font.setBold(True)
+        font.setPointSize(16)
+        self.percentageItem.setFont(font)
+        self.percentageItem.setDefaultTextColor(QColor(PLOTLYST_SECONDARY_COLOR))
+        self.percentageItem.setTextWidth(200)
+        text_option = QTextOption()
+        text_option.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.percentageItem.document().setDefaultTextOption(text_option)
+        self.counterAnimation = QVariantAnimation()
+        self.counterAnimation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        self.counterAnimation.setDuration(500)
+        self.counterAnimation.valueChanged.connect(self._updatePercentageText)
+        self.counterAnimation.finished.connect(self._counterAnimationFinished)
+        self._animation_started = False
+
+        scene = self.chartProgressView.scene()
+        scene.addItem(self.percentageItem)
+
+        self.percentageItem.setPos(0,
+                                   self.chartProgressView.chart().plotArea().center().y() - self.percentageItem.boundingRect().height() / 2)
+
+        self.wdgGoalTitle.layout().addWidget(self.emojiGoal)
+        self.wdgGoalTitle.layout().addWidget(self.lblGoal)
+        self.wdgGoalTitle.layout().addWidget(self.btnEditGoal)
+
+        self.layout().addWidget(self.wdgGoalTitle, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self.chartProgressView)
+
+    def setMaxValue(self, value: int):
+        self.lblGoal.setWordCount(value)
+        self.chartProgress.setMaxValue(value)
+        self.chartProgress.setValue(self._wordCount)
+        self._refresh()
+
+    def setValue(self, value: int):
+        self._wordCount = value
+        self.chartProgress.setValue(value)
+        self._refresh()
+
+    @overrides
+    def showEvent(self, event: QShowEvent):
+        super().showEvent(event)
+        if not self._animation_started:
+            self.counterAnimation.setStartValue(0)
+            self.counterAnimation.setEndValue(self.chartProgress.percentage())
+            QTimer.singleShot(200, self.counterAnimation.start)
+            self.percentageItem.setPlainText('')
+            self._animation_started = True
+
+    def _refresh(self):
+        self.chartProgress.refresh()
+
+        if self.isVisible():
+            self.percentageItem.setPlainText(f'{self.chartProgress.percentage()}%')
+
+    def _updatePercentageText(self, value: int):
+        self.percentageItem.setPlainText(f"{value}%")
+
+    def _counterAnimationFinished(self):
+        self._animation_started = False
+
+
 class ManuscriptExportWidget(QWidget):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
 
         vbox(self, spacing=15)
-        self.layout().addWidget(label('Export manuscript', bold=True), alignment=Qt.AlignmentFlag.AlignCenter)
-        self.layout().addWidget(line())
+        # self.layout().addWidget(label('Export manuscript', h5=True), alignment=Qt.AlignmentFlag.AlignCenter)
+        # self.layout().addWidget(line())
 
         self._btnDocx = push_btn(IconRegistry.docx_icon(), 'Word (.docx)', checkable=True,
                                  properties=['transparent-rounded-bg-on-hover', 'secondary-selector'])

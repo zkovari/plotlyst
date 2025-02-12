@@ -537,6 +537,10 @@ class ExclusiveOptionalButtonGroup(QButtonGroup):
     def setExclusive(self, _: bool) -> None:
         super(ExclusiveOptionalButtonGroup, self).setExclusive(False)
 
+    def reset(self):
+        if self.checkedButton():
+            self.checkedButton().setChecked(False)
+
     def _buttonToggled(self, button: QAbstractButton, toggled: bool):
         if toggled and self._checkedButton and self._checkedButton is not button:
             self._checkedButton.setChecked(False)

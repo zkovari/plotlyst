@@ -22,7 +22,7 @@ from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QInputDialog
 from overrides import overrides
-from qthandy import translucent, bold, margins, spacer, transparent, vspacer, decr_icon, vline
+from qthandy import translucent, bold, margins, spacer, transparent, vspacer, decr_icon, vline, incr_icon
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 from qttextedit import DashInsertionMode
@@ -30,7 +30,7 @@ from qttextedit.api import AutoCapitalizationMode
 from qttextedit.ops import TextEditorSettingsWidget, TextEditorSettingsSection, FontSectionSettingWidget, \
     FontSizeSectionSettingWidget, TextWidthSectionSettingWidget
 
-from plotlyst.common import PLOTLYST_MAIN_COLOR, RELAXED_WHITE_COLOR
+from plotlyst.common import PLOTLYST_MAIN_COLOR
 from plotlyst.core.domain import Novel, Document, Chapter, DocumentProgress, FontSettings
 from plotlyst.core.domain import Scene
 from plotlyst.env import app_env
@@ -43,16 +43,16 @@ from plotlyst.service.persistence import flush_or_fail
 from plotlyst.service.resource import ask_for_resource
 from plotlyst.view._view import AbstractNovelView
 from plotlyst.view.common import tool_btn, ButtonPressResizeEventFilter, action, \
-    ExclusiveOptionalButtonGroup, link_buttons_to_pages
+    ExclusiveOptionalButtonGroup, link_buttons_to_pages, shadow
 from plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
-from plotlyst.view.widget.display import Icon, ChartView
+from plotlyst.view.widget.display import Icon
 from plotlyst.view.widget.input import Toggle
 from plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
-    DistractionFreeManuscriptEditor, SprintWidget, ReadabilityWidget, ManuscriptExportWidget, \
-    ManuscriptProgressCalendar, ManuscriptDailyProgress, ManuscriptProgressCalendarLegend, ManuscriptFormattingWidget
-from plotlyst.view.widget.progress import ProgressChart
+    DistractionFreeManuscriptEditor, SprintWidget, ManuscriptExportWidget, \
+    ManuscriptProgressCalendar, ManuscriptDailyProgress, ManuscriptProgressCalendarLegend, ManuscriptFormattingWidget, \
+    ManuscriptProgressWidget
 from plotlyst.view.widget.scene.editor import SceneMiniEditor
 from plotlyst.view.widget.scenes import SceneNotesEditor
 from plotlyst.view.widget.tree import TreeSettings
@@ -132,7 +132,8 @@ class ManuscriptView(AbstractNovelView):
         self._btnDistractionFree = tool_btn(IconRegistry.expand_icon(), 'Enter distraction-free mode',
                                             transparent_=True)
         decr_icon(self._btnDistractionFree)
-        self._btnDistractionFree.installEventFilter(OpacityEventFilter(self._btnDistractionFree, leaveOpacity=0.5))
+        self._btnDistractionFree.installEventFilter(
+            OpacityEventFilter(self._btnDistractionFree, leaveOpacity=0.5, enterOpacity=0.7))
         self._wdgSprint = SprintWidget()
         transparent(self._wdgSprint.btnTimer)
         decr_icon(self._wdgSprint.btnTimer)
@@ -143,27 +144,17 @@ class ManuscriptView(AbstractNovelView):
         self._cbSpellCheck = Toggle()
         self._cbSpellCheck.setToolTip('Toggle spellcheck')
 
-        self.ui.btnEditGoal.setIcon(IconRegistry.edit_icon())
-        transparent(self.ui.btnEditGoal)
-        decr_icon(self.ui.btnEditGoal, 2)
-        self.ui.btnEditGoal.installEventFilter(OpacityEventFilter(self.ui.btnEditGoal))
-        self.ui.btnEditGoal.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnEditGoal))
-        self.ui.btnEditGoal.clicked.connect(self._edit_wc_goal)
+        shadow(self.ui.wdgSide, offset=-3, radius=6)
+        self.ui.btnHideRightBar.setIcon(IconRegistry.from_name('mdi.chevron-double-right', '#adb5bd'))
+        incr_icon(self.ui.btnHideRightBar, 4)
+        transparent(self.ui.btnHideRightBar)
+        self.ui.btnHideRightBar.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnHideRightBar))
+        self.ui.btnHideRightBar.clicked.connect(self._btnGroupSideBar.reset)
 
-        self._chartProgress = ProgressChart(maxValue=self.novel.manuscript_goals.target_wc,
-                                            title_prefix='Progress:',
-                                            color=PLOTLYST_MAIN_COLOR,
-                                            titleColor=PLOTLYST_MAIN_COLOR,
-                                            emptySliceColor=RELAXED_WHITE_COLOR)
-        self._chartProgressView = ChartView()
-        self._chartProgressView.setFixedSize(200, 250)
-        self._chartProgressView.setChart(self._chartProgress)
-        self.ui.pageGoal.layout().addWidget(self._chartProgressView, alignment=Qt.AlignmentFlag.AlignTop)
+        self._progressWdg = ManuscriptProgressWidget(self.novel)
+        self._progressWdg.btnEditGoal.clicked.connect(self._edit_wc_goal)
+        self.ui.pageGoal.layout().addWidget(self._progressWdg, alignment=Qt.AlignmentFlag.AlignCenter)
         self.ui.pageGoal.layout().addWidget(vspacer())
-
-        # self._wdgReadability = ReadabilityWidget()
-        # self.ui.pageReadability.layout().addWidget(self._wdgReadability, alignment=Qt.AlignmentFlag.AlignCenter)
-        # self.ui.pageReadability.layout().addWidget(vspacer())
 
         self._exportWidget = ManuscriptExportWidget(self.novel)
         self.ui.pageExport.layout().addWidget(self._exportWidget)
@@ -303,9 +294,7 @@ class ManuscriptView(AbstractNovelView):
     def _update_story_goal(self):
         wc = sum([x.manuscript.statistics.wc for x in self.novel.scenes if x.manuscript and x.manuscript.statistics])
         self.ui.lblWc.setText(f'{wc} word{"s" if wc > 1 else ""}')
-        # self.ui.progressStory.setValue(int(wc / 80000 * 100))
-        self._chartProgress.setValue(wc)
-        self._chartProgress.refresh()
+        self._progressWdg.setValue(wc)
 
     def _editScene(self, scene: Scene):
         self.ui.textEdit.setGrammarCheckEnabled(False)
@@ -387,7 +376,7 @@ class ManuscriptView(AbstractNovelView):
             self._manuscriptDailyProgressDisplay.setProgress(progress)
 
     def _edit_wc_goal(self):
-        goal, changed = QInputDialog.getInt(self.ui.btnEditGoal, 'Word count goal', 'Edit word count target',
+        goal, changed = QInputDialog.getInt(self._progressWdg.btnEditGoal, 'Word count goal', 'Edit word count target',
                                             value=self.novel.manuscript_goals.target_wc,
                                             min=1000, max=10000000, step=1000)
         if changed:
@@ -396,9 +385,7 @@ class ManuscriptView(AbstractNovelView):
             self._refresh_target_wc()
 
     def _refresh_target_wc(self):
-        self.ui.lblGoal.setText(f'<html><b>{self.novel.manuscript_goals.target_wc}</b> words')
-        self._chartProgress.setMaxValue(self.novel.manuscript_goals.target_wc)
-        self._chartProgress.refresh()
+        self._progressWdg.setMaxValue(self.novel.manuscript_goals.target_wc)
 
     def _side_bar_toggled(self, _, toggled: bool):
         btn = self._btnGroupSideBar.checkedButton()
