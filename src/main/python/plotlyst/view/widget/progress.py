@@ -180,8 +180,8 @@ class ProgressChart(BaseChart):
     def setMaxValue(self, value: int):
         self._maxValue = value
 
-    def percentageString(self) -> str:
-        return " {:.1f}%".format(100 * self.value() / self.maxValue())
+    def percentage(self) -> int:
+        return min(int(100 * self.value() / self.maxValue()), 100)
 
     def refresh(self):
         self.reset()

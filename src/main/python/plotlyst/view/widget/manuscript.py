@@ -23,8 +23,9 @@ from typing import Optional, List, Dict
 
 import qtanim
 from PyQt6 import QtGui
+from PyQt6.QtCharts import QChart
 from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent, QSize, QSizeF, QRectF, \
-    QRect, QDate, QPoint
+    QRect, QDate, QPoint, QVariantAnimation, QEasingCurve
 from PyQt6.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter, QKeyEvent, \
     QMouseEvent, QTextCursor, QFont, QScreen, QTextFormat, QTextObjectInterface, QPainter, QTextBlockFormat, \
     QFontMetrics, QTextOption, QShowEvent, QIcon
@@ -1155,6 +1156,10 @@ class ManuscriptProgressChart(ProgressChart):
                          titleColor=PLOTLYST_SECONDARY_COLOR,
                          emptySliceColor=RELAXED_WHITE_COLOR, parent=parent)
 
+        self.setAnimationOptions(QChart.AnimationOption.SeriesAnimations)
+        self.setAnimationDuration(700)
+        self.setAnimationEasingCurve(QEasingCurve.Type.InQuad)
+
         self._holeSize = 0.6
         self._titleVisible = False
 
@@ -1164,6 +1169,8 @@ class ManuscriptProgressWidget(QWidget):
         super().__init__(parent)
         self.novel = novel
         vbox(self)
+
+        self._wordCount: int = 0
 
         self.wdgGoalTitle = QWidget()
         hbox(self.wdgGoalTitle, 0)
@@ -1185,7 +1192,7 @@ class ManuscriptProgressWidget(QWidget):
         self.chartProgressView.setMaximumSize(200, 200)
         self.chartProgressView.setChart(self.chartProgress)
         self.chartProgressView.scale(1.05, 1.05)
-        self.percentageItem = QGraphicsTextItem(self.chartProgress.percentageString())
+        self.percentageItem = QGraphicsTextItem()
         font = self.percentageItem.font()
         font.setBold(True)
         font.setPointSize(16)
@@ -1195,6 +1202,12 @@ class ManuscriptProgressWidget(QWidget):
         text_option = QTextOption()
         text_option.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.percentageItem.document().setDefaultTextOption(text_option)
+        self.counterAnimation = QVariantAnimation()
+        self.counterAnimation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        self.counterAnimation.setDuration(500)
+        self.counterAnimation.valueChanged.connect(self._updatePercentageText)
+        self.counterAnimation.finished.connect(self._counterAnimationFinished)
+        self._animation_started = False
 
         scene = self.chartProgressView.scene()
         scene.addItem(self.percentageItem)
@@ -1212,15 +1225,35 @@ class ManuscriptProgressWidget(QWidget):
     def setMaxValue(self, value: int):
         self.lblGoal.setWordCount(value)
         self.chartProgress.setMaxValue(value)
+        self.chartProgress.setValue(self._wordCount)
         self._refresh()
 
     def setValue(self, value: int):
+        self._wordCount = value
         self.chartProgress.setValue(value)
         self._refresh()
 
+    @overrides
+    def showEvent(self, event: QShowEvent):
+        super().showEvent(event)
+        if not self._animation_started:
+            self.counterAnimation.setStartValue(0)
+            self.counterAnimation.setEndValue(self.chartProgress.percentage())
+            QTimer.singleShot(200, self.counterAnimation.start)
+            self.percentageItem.setPlainText('')
+            self._animation_started = True
+
     def _refresh(self):
         self.chartProgress.refresh()
-        self.percentageItem.setPlainText(self.chartProgress.percentageString())
+
+        if self.isVisible():
+            self.percentageItem.setPlainText(f'{self.chartProgress.percentage()}%')
+
+    def _updatePercentageText(self, value: int):
+        self.percentageItem.setPlainText(f"{value}%")
+
+    def _counterAnimationFinished(self):
+        self._animation_started = False
 
 
 class ManuscriptExportWidget(QWidget):
