@@ -157,6 +157,8 @@ class ProgressChart(BaseChart):
         self._empty_slice_border: QColor = QColor(emptySliceBorder)
         self._value = value
         self._maxValue = maxValue
+        self._holeSize: float = 0.45
+        self._titleVisible: bool = True
 
         font = QFont()
         font.setBold(True)
@@ -178,11 +180,14 @@ class ProgressChart(BaseChart):
     def setMaxValue(self, value: int):
         self._maxValue = value
 
+    def percentageString(self) -> str:
+        return " {:.1f}%".format(100 * self.value() / self.maxValue())
+
     def refresh(self):
         self.reset()
 
         series = QPieSeries()
-        series.setHoleSize(0.45)
+        series.setHoleSize(self._holeSize)
         percentage_slice = QPieSlice('Progress', self._value)
         percentage_slice.setColor(self._color)
         percentage_slice.setBorderColor(self._color)
@@ -191,7 +196,8 @@ class ProgressChart(BaseChart):
         empty_slice.setBorderColor(self._empty_slice_border)
         series.append(percentage_slice)
         series.append(empty_slice)
-        self.setTitle(self._title_prefix + " {:.1f}%".format(100 * percentage_slice.percentage()))
+        if self._titleVisible:
+            self.setTitle(self._title_prefix + " {:.1f}%".format(100 * percentage_slice.percentage()))
 
         self.addSeries(series)
 

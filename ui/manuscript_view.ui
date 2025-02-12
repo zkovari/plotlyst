@@ -151,7 +151,7 @@
        <item>
         <widget class="QFrame" name="frame">
          <property name="frameShape">
-          <enum>QFrame::StyledPanel</enum>
+          <enum>QFrame::NoFrame</enum>
          </property>
          <property name="frameShadow">
           <enum>QFrame::Raised</enum>
@@ -494,9 +494,6 @@
                 </layout>
                </widget>
                <widget class="QWidget" name="pageGoal">
-                <property name="cursor">
-                 <cursorShape>UpArrowCursor</cursorShape>
-                </property>
                 <layout class="QVBoxLayout" name="verticalLayout_13">
                  <property name="spacing">
                   <number>0</number>
@@ -513,48 +510,6 @@
                  <property name="bottomMargin">
                   <number>25</number>
                  </property>
-                 <item alignment="Qt::AlignHCenter">
-                  <widget class="QWidget" name="wdgGoalTitle" native="true">
-                   <layout class="QHBoxLayout" name="horizontalLayout_5">
-                    <item>
-                     <widget class="Emoji" name="emojiGoal">
-                      <property name="toolTip">
-                       <string>Manuscript word count target</string>
-                      </property>
-                      <property name="text">
-                       <string/>
-                      </property>
-                      <property name="emoji" stdset="0">
-                       <string>bullseye</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QLabel" name="lblGoal">
-                      <property name="toolTip">
-                       <string>Manuscript word count target</string>
-                      </property>
-                      <property name="text">
-                       <string/>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QToolButton" name="btnEditGoal">
-                      <property name="cursor">
-                       <cursorShape>PointingHandCursor</cursorShape>
-                      </property>
-                      <property name="toolTip">
-                       <string>Edit manuscript word count goal</string>
-                      </property>
-                      <property name="text">
-                       <string/>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </widget>
-                 </item>
                 </layout>
                </widget>
                <widget class="QWidget" name="pageReadability">
@@ -1081,11 +1036,6 @@
    <class>ManuscriptTextEditor</class>
    <extends>QTextEdit</extends>
    <header>plotlyst.view.widget.manuscript</header>
-  </customwidget>
-  <customwidget>
-   <class>Emoji</class>
-   <extends>QLabel</extends>
-   <header>plotlyst.view.widget.display</header>
   </customwidget>
  </customwidgets>
  <resources/>
