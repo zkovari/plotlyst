@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import qtanim
 from PyQt6.QtCore import QTimer, Qt
-from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QInputDialog
 from overrides import overrides
 from qthandy import translucent, bold, margins, spacer, transparent, vspacer, decr_icon, vline, incr_icon
@@ -27,8 +26,7 @@ from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 from qttextedit import DashInsertionMode
 from qttextedit.api import AutoCapitalizationMode
-from qttextedit.ops import TextEditorSettingsWidget, TextEditorSettingsSection, FontSectionSettingWidget, \
-    FontSizeSectionSettingWidget, TextWidthSectionSettingWidget
+from qttextedit.ops import TextEditorSettingsWidget, TextEditorSettingsSection
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR
 from plotlyst.core.domain import Novel, Document, Chapter, DocumentProgress, FontSettings
@@ -52,9 +50,8 @@ from plotlyst.view.widget.input import Toggle
 from plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
     DistractionFreeManuscriptEditor, SprintWidget, ManuscriptExportWidget, \
     ManuscriptProgressCalendar, ManuscriptDailyProgress, ManuscriptProgressCalendarLegend, ManuscriptFormattingWidget, \
-    ManuscriptProgressWidget
+    ManuscriptProgressWidget, ManuscriptEditor
 from plotlyst.view.widget.scene.editor import SceneMiniEditor
-from plotlyst.view.widget.scenes import SceneNotesEditor
 from plotlyst.view.widget.tree import TreeSettings
 
 
@@ -65,7 +62,6 @@ class ManuscriptView(AbstractNovelView):
         self.ui = Ui_ManuscriptView()
         self.ui.setupUi(self.widget)
         self.ui.splitter.setSizes([150, 500])
-        self.ui.splitterEditor.setSizes([400, 150])
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageOverview)
 
         self.ui.lblWc.setAlignment(Qt.AlignmentFlag.AlignRight)
@@ -114,7 +110,9 @@ class ManuscriptView(AbstractNovelView):
         self._miniSceneEditor = SceneMiniEditor(self.novel)
         self.ui.pageInfo.layout().addWidget(self._miniSceneEditor)
         self.ui.pageInfo.layout().addWidget(vspacer())
-        self.ui.textEdit.manuscriptTextEdit().sceneSeparatorClicked.connect(self._scene_separator_clicked)
+        self.textEditor = ManuscriptEditor()
+        self.ui.wdgEditor.layout().addWidget(self.textEditor)
+        # self.ui.textEdit.manuscriptTextEdit().sceneSeparatorClicked.connect(self._scene_separator_clicked)
 
         self._manuscriptDailyProgressDisplay = ManuscriptDailyProgress(self.novel)
         self._manuscriptDailyProgressDisplay.refresh()
@@ -181,19 +179,19 @@ class ManuscriptView(AbstractNovelView):
         self.ui.pageSettings.layout().addWidget(self._contextMenuWidget)
         self._contextMenuWidget.setSectionVisible(TextEditorSettingsSection.PAGE_WIDTH, False)
         self._contextMenuWidget.setSectionVisible(TextEditorSettingsSection.TEXT_WIDTH, True)
-        if app_env.platform() in self.novel.prefs.manuscript.font.keys():
-            fontSettings = self._getFontSettings()
-            font_: QFont = self.ui.textEdit.textEdit.font()
-            if fontSettings.family:
-                font_.setFamily(fontSettings.family)
-            if fontSettings.font_size:
-                font_.setPointSize(fontSettings.font_size)
-            self.ui.textEdit.textEdit.setFont(font_)
-            if fontSettings.text_width:
-                self.ui.textEdit.setCharacterWidth(fontSettings.text_width)
-        self.ui.textEdit.textEdit.setDashInsertionMode(self.novel.prefs.manuscript.dash)
-        self.ui.textEdit.textEdit.setAutoCapitalizationMode(self.novel.prefs.manuscript.capitalization)
-        self.ui.textEdit.attachSettingsWidget(self._contextMenuWidget)
+        # if app_env.platform() in self.novel.prefs.manuscript.font.keys():
+        #     fontSettings = self._getFontSettings()
+        #     font_: QFont = self.ui.textEdit.textEdit.font()
+        #     if fontSettings.family:
+        #         font_.setFamily(fontSettings.family)
+        #     if fontSettings.font_size:
+        #         font_.setPointSize(fontSettings.font_size)
+        #     self.ui.textEdit.textEdit.setFont(font_)
+        #     if fontSettings.text_width:
+        #         self.ui.textEdit.setCharacterWidth(fontSettings.text_width)
+        # self.ui.textEdit.textEdit.setDashInsertionMode(self.novel.prefs.manuscript.dash)
+        # self.ui.textEdit.textEdit.setAutoCapitalizationMode(self.novel.prefs.manuscript.capitalization)
+        # self.ui.textEdit.attachSettingsWidget(self._contextMenuWidget)
 
         self._langSelectionWidget.languageChanged.connect(self._language_changed)
         self._cbSpellCheck.toggled.connect(self._spellcheck_toggled)
@@ -212,34 +210,27 @@ class ManuscriptView(AbstractNovelView):
         self.ui.treeChapters.centralWidget().setProperty('bg', True)
 
         self.ui.wdgSide.setHidden(True)
-        self.ui.wdgAddon.setHidden(True)
 
-        self.notesEditor = SceneNotesEditor()
-        self.ui.wdgAddon.layout().addWidget(self.notesEditor)
-
-        self.ui.btnNotes.setIcon(IconRegistry.document_edition_icon())
-        self.ui.btnNotes.setDisabled(True)
-        self.ui.btnNotes.setHidden(True)
         # self.ui.btnNotes.toggled.connect(self.ui.wdgAddon.setVisible)
 
-        self.ui.textEdit.setNovel(self.novel)
-        self.ui.textEdit.setMargins(30, 30, 30, 30)
-        self.ui.textEdit.textEdit.setPlaceholderText('Write your story...')
-        self.ui.textEdit.textEdit.setSidebarEnabled(False)
-        self.ui.textEdit.textEdit.setReadOnly(self.novel.is_readonly())
-        self.ui.textEdit.textChanged.connect(self._text_changed)
-        self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
-        self.ui.textEdit.sceneTitleChanged.connect(self._scene_title_changed)
-        self.ui.textEdit.progressChanged.connect(self._progress_changed)
-        fontSection: FontSectionSettingWidget = self.ui.textEdit.settingsWidget().section(
-            TextEditorSettingsSection.FONT)
-        fontSection.fontSelected.connect(self._fontChanged)
-        sizeSection: FontSizeSectionSettingWidget = self.ui.textEdit.settingsWidget().section(
-            TextEditorSettingsSection.FONT_SIZE)
-        sizeSection.sizeChanged.connect(self._fontSizeChanged)
-        textWidthSection: TextWidthSectionSettingWidget = self.ui.textEdit.settingsWidget().section(
-            TextEditorSettingsSection.TEXT_WIDTH)
-        textWidthSection.widthChanged.connect(self._textWidthChanged)
+        self.textEditor.setNovel(self.novel)
+        self.textEditor.textChanged.connect(self._text_changed)
+        # self.ui.textEdit.setMargins(30, 30, 30, 30)
+        # self.ui.textEdit.textEdit.setPlaceholderText('Write your story...')
+        # self.ui.textEdit.textEdit.setSidebarEnabled(False)
+        # self.ui.textEdit.textEdit.setReadOnly(self.novel.is_readonly())
+        # self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
+        # self.ui.textEdit.sceneTitleChanged.connect(self._scene_title_changed)
+        # self.ui.textEdit.progressChanged.connect(self._progress_changed)
+        # fontSection: FontSectionSettingWidget = self.ui.textEdit.settingsWidget().section(
+        #     TextEditorSettingsSection.FONT)
+        # fontSection.fontSelected.connect(self._fontChanged)
+        # sizeSection: FontSizeSectionSettingWidget = self.ui.textEdit.settingsWidget().section(
+        #     TextEditorSettingsSection.FONT_SIZE)
+        # sizeSection.sizeChanged.connect(self._fontSizeChanged)
+        # textWidthSection: TextWidthSectionSettingWidget = self.ui.textEdit.settingsWidget().section(
+        #     TextEditorSettingsSection.TEXT_WIDTH)
+        # textWidthSection.widthChanged.connect(self._textWidthChanged)
         self._btnDistractionFree.clicked.connect(self._enter_distraction_free)
 
         if self.novel.chapters:
@@ -276,7 +267,7 @@ class ManuscriptView(AbstractNovelView):
         margins(self.widget, 0, 0, 0, 0)
         self.ui.wdgTitle.setHidden(True)
         self.ui.wdgLeftSide.setHidden(True)
-        self._dist_free_editor.activate(self.ui.textEdit, self._wdgSprint.model())
+        self._dist_free_editor.activate(self.textEditor, self._wdgSprint.model())
         self._dist_free_editor.setWordDisplay(self.ui.lblWordCount)
 
     def _exit_distraction_free(self):
@@ -289,7 +280,7 @@ class ManuscriptView(AbstractNovelView):
 
         self.ui.wdgBottom.layout().insertWidget(1, self.ui.lblWordCount, alignment=Qt.AlignmentFlag.AlignCenter)
         self.ui.lblWordCount.setVisible(True)
-        self.ui.splitterEditor.insertWidget(0, self.ui.textEdit)
+        self.ui.wdgEditor.layout().insertWidget(0, self.textEditor)
 
     def _update_story_goal(self):
         wc = sum([x.manuscript.statistics.wc for x in self.novel.scenes if x.manuscript and x.manuscript.statistics])
@@ -297,27 +288,25 @@ class ManuscriptView(AbstractNovelView):
         self._progressWdg.setValue(wc)
 
     def _editScene(self, scene: Scene):
-        self.ui.textEdit.setGrammarCheckEnabled(False)
+        # self.ui.textEdit.setGrammarCheckEnabled(False)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageText)
 
         if not scene.manuscript:
             scene.manuscript = Document('', scene_id=scene.id)
             self.repo.update_scene(scene)
 
-        self.ui.textEdit.setScene(scene)
+        self.textEditor.setScenes([scene])
         self._miniSceneEditor.setScene(scene)
 
-        self.notesEditor.setScene(scene)
-        self.ui.btnNotes.setEnabled(True)
         self.ui.btnStage.setEnabled(True)
         self.ui.btnStage.setScene(scene, self.novel)
 
         self._recheckDocument()
 
-        self.ui.textEdit.setFocus()
+        # self.ui.textEdit.setFocus()
 
     def _editChapter(self, chapter: Chapter):
-        self.ui.textEdit.setGrammarCheckEnabled(False)
+        # self.ui.textEdit.setGrammarCheckEnabled(False)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageText)
 
         scenes = self.novel.scenes_in_chapter(chapter)
@@ -326,18 +315,16 @@ class ManuscriptView(AbstractNovelView):
                 scene.manuscript = Document('', scene_id=scene.id)
                 self.repo.update_scene(scene)
         if scenes:
-            self.ui.textEdit.setChapterScenes(scenes, chapter.display_name())
+            self.textEditor.setScenes(scenes, chapter.display_name())
             self._miniSceneEditor.setScenes(scenes)
         else:
             self._empty_page('Add a scene to this chapter to start writing')
             self._miniSceneEditor.reset()
 
-        self.ui.btnNotes.setChecked(False)
-        self.ui.btnNotes.setDisabled(True)
         self.ui.btnStage.setDisabled(True)
 
         self._recheckDocument()
-        self.ui.textEdit.setFocus()
+        # self.ui.textEdit.setFocus()
 
     def _scene_added(self, scene: Scene):
         if self._is_empty_page():
@@ -355,7 +342,7 @@ class ManuscriptView(AbstractNovelView):
             #     self._wdgReadability.checkTextDocument(self.ui.textEdit.document())
 
     def _text_changed(self):
-        wc = self.ui.textEdit.statistics().word_count
+        wc = self.textEditor.statistics().word_count
         self.ui.lblWordCount.setWordCount(wc)
         self._update_story_goal()
         # self._wdgReadability.setTextDocumentUpdated(self.ui.textEdit.document())

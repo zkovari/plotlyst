@@ -590,6 +590,8 @@ class ManuscriptTextEdit(TextEditBase):
         self.setCommandOperations([Heading1Operation, Heading2Operation, Heading3Operation, InsertListOperation,
                                    InsertNumberedListOperation])
 
+        self.textChanged.connect(self.resizeToContent)
+
     @overrides
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         cursor: QTextCursor = self.textCursor()
@@ -656,33 +658,33 @@ class ManuscriptTextEdit(TextEditBase):
         self.document().clearUndoRedoStacks()
         self.resizeToContent()
 
-    def setScenes(self, scenes: List[Scene]):
-        def sceneCharFormat(scene: Scene) -> QTextCharFormat:
-            sceneSepCharFormat = QTextCharFormat()
-            sceneSepCharFormat.setObjectType(SceneSeparatorTextFormat)
-            sceneSepCharFormat.setToolTip(scene.synopsis)
-            sceneSepCharFormat.setAnchor(True)
-            sceneSepCharFormat.setAnchorHref(f'{SceneSeparatorTextFormatPrefix}{scene.id}')
+    # def setScenes(self, scenes: List[Scene]):
+    #     def sceneCharFormat(scene: Scene) -> QTextCharFormat:
+    #         sceneSepCharFormat = QTextCharFormat()
+    #         sceneSepCharFormat.setObjectType(SceneSeparatorTextFormat)
+    #         sceneSepCharFormat.setToolTip(scene.synopsis)
+    #         sceneSepCharFormat.setAnchor(True)
+    #         sceneSepCharFormat.setAnchorHref(f'{SceneSeparatorTextFormatPrefix}{scene.id}')
+    #
+    #         return sceneSepCharFormat
+    #
+    #     self.setUneditableBlocksEnabled(True)
+    #     self._sceneTextObject.setScenes(scenes)
+    #
+    #     for i, scene in enumerate(scenes):
+    #         self.textCursor().insertBlock(self._sceneSepBlockFormat)
+    #         self.textCursor().insertText(f'{OBJECT_REPLACEMENT_CHARACTER}', sceneCharFormat(scene))
+    #         self.textCursor().block().setUserState(TextBlockState.UNEDITABLE.value)
+    #         self.insertNewBlock()
+    #         self._addScene(scene)
+    #
+    #     self._deleteBlock(0, force=True)
+    #
+    #     self.document().clearUndoRedoStacks()
+    #     self.resizeToContent()
 
-            return sceneSepCharFormat
-
-        self.setUneditableBlocksEnabled(True)
-        self._sceneTextObject.setScenes(scenes)
-
-        for i, scene in enumerate(scenes):
-            self.textCursor().insertBlock(self._sceneSepBlockFormat)
-            self.textCursor().insertText(f'{OBJECT_REPLACEMENT_CHARACTER}', sceneCharFormat(scene))
-            self.textCursor().block().setUserState(TextBlockState.UNEDITABLE.value)
-            self.insertNewBlock()
-            self._addScene(scene)
-
-        self._deleteBlock(0, force=True)
-
-        self.document().clearUndoRedoStacks()
-        self.resizeToContent()
-
-    def insertNewBlock(self):
-        self.textCursor().insertBlock(self._defaultBlockFormat, QTextCharFormat())
+    # def insertNewBlock(self):
+    #     self.textCursor().insertBlock(self._defaultBlockFormat, QTextCharFormat())
 
     @overrides
     def showEvent(self, event: QShowEvent) -> None:
@@ -774,7 +776,7 @@ class ManuscriptTextEditor(TextEditorBase):
     progressChanged = pyqtSignal(DocumentProgress)
 
     def __init__(self, parent=None):
-        super(ManuscriptTextEditor, self).__init__(parent)
+        super().__init__(parent)
         self._novel: Optional[Novel] = None
         self.toolbar().setHidden(True)
         self._titleVisible: bool = True
@@ -812,9 +814,6 @@ class ManuscriptTextEditor(TextEditorBase):
 
     def manuscriptTextEdit(self) -> ManuscriptTextEdit:
         return self._textedit
-
-    def setNovel(self, novel: Novel):
-        self._novel = novel
 
     def refresh(self):
         if len(self._scenes) == 1:
@@ -970,8 +969,64 @@ class ManuscriptTextEditor(TextEditorBase):
 
 
 class ManuscriptEditor(QWidget):
+    textChanged = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._novel: Optional[Novel] = None
+        self._margins: int = 30
+        self._scenes: List[ManuscriptTextEdit] = []
+
+        # self.editor = QWidget()
+        vbox(self, 0, 0)
+
+        # self.layout().addWidget()
+
+    def setNovel(self, novel: Novel):
+        self._novel = novel
+
+    def setScenes(self, scenes: List[Scene], title: Optional[str] = None):
+        self._scenes.clear()
+        clear_layout(self)
+
+        for scene in scenes:
+            wdg = self._initTextEdit()
+            wdg.setScene(scene)
+            wdg.textChanged.connect(partial(self._textChanged, wdg))
+            self._scenes.append(wdg)
+            self.layout().addWidget(wdg)
+
+        self.layout().addWidget(vspacer())
+
+    def statistics(self) -> TextStatistics:
+        overall_stats = TextStatistics(0)
+        if self.hasScenes():
+            for editor in self._scenes:
+                overall_stats.word_count += editor.statistics().word_count
+
+        return overall_stats
+
+    def hasScenes(self) -> bool:
+        return len(self._scenes) > 0
+
+    def _textChanged(self, textedit: ManuscriptTextEdit):
+        self.textChanged.emit()
+
+    def _initTextEdit(self) -> ManuscriptTextEdit:
+        _textedit = ManuscriptTextEdit()
+        _textedit.zoomIn(int(_textedit.font().pointSize() * 0.25))
+        _textedit.setBlockFormat(DEFAULT_MANUSCRIPT_LINE_SPACE, textIndent=DEFAULT_MANUSCRIPT_INDENT)
+        _textedit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoNone)
+        # _textedit.selectionChanged.connect(self.selectionChanged.emit)
+        _textedit.setProperty('borderless', True)
+
+        _textedit.setPlaceholderText('Write your story...')
+        _textedit.setSidebarEnabled(False)
+        _textedit.setReadOnly(self._novel.is_readonly())
+        _textedit.setViewportMargins(0, 0, 0, 0)
+        _textedit.setDocumentMargin(0)
+
+        return _textedit
 
 
 class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
@@ -1054,7 +1109,7 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
     def __init__(self, parent=None):
         super(DistractionFreeManuscriptEditor, self).__init__(parent)
         self.setupUi(self)
-        self.editor: Optional[ManuscriptTextEditor] = None
+        self.editor: Optional[ManuscriptEditor] = None
         self.lblWords: Optional[WordsDisplay] = None
         self._firstInit: bool = True
 
@@ -1078,7 +1133,7 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         decr_font(self.btnTypewriterMode, 2)
         decr_font(self.btnWordCount, 2)
 
-    def activate(self, editor: ManuscriptTextEditor, timer: Optional[TimerModel] = None):
+    def activate(self, editor: ManuscriptEditor, timer: Optional[TimerModel] = None):
         self.editor = editor
         self.editor.installEventFilterOnEditors(self)
         editor.setTitleVisible(False)
