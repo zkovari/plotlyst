@@ -28,8 +28,8 @@ from PyQt6.QtCharts import QChart
 from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent, QSize, QSizeF, QRectF, \
     QRect, QDate, QPoint, QVariantAnimation, QEasingCurve
 from PyQt6.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter, QKeyEvent, \
-    QMouseEvent, QTextCursor, QFont, QScreen, QTextFormat, QTextObjectInterface, QPainter, QTextBlockFormat, \
-    QFontMetrics, QTextOption, QShowEvent, QIcon, QResizeEvent
+    QMouseEvent, QTextCursor, QFont, QScreen, QTextFormat, QTextObjectInterface, QPainter, QFontMetrics, QTextOption, \
+    QShowEvent, QIcon, QResizeEvent
 from PyQt6.QtMultimedia import QSoundEffect
 from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit, QButtonGroup, QCalendarWidget, QTableView, \
     QPushButton, QToolButton, QWidgetItem, QGraphicsColorizeEffect, QGraphicsTextItem
@@ -49,7 +49,7 @@ from textstat import textstat
 from plotlyst.common import RELAXED_WHITE_COLOR, DEFAULT_MANUSCRIPT_LINE_SPACE, \
     DEFAULT_MANUSCRIPT_INDENT, PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR
 from plotlyst.core.client import json_client
-from plotlyst.core.domain import Novel, Scene, TextStatistics, DocumentStatistics, DocumentProgress
+from plotlyst.core.domain import Novel, Scene, TextStatistics, DocumentStatistics, DocumentProgress, FontSettings
 from plotlyst.core.sprint import TimerModel
 from plotlyst.core.text import wc, sentence_count, clean_text
 from plotlyst.env import app_env
@@ -571,20 +571,13 @@ class ManuscriptTextEdit(TextEditBase):
         toolbar.activate(self)
         self.setPopupWidget(toolbar)
 
-        if app_env.is_linux():
-            self.setFont(QFont('Palatino', 14))
-        elif app_env.is_mac():
-            self.setFont(QFont('Palatino', 16))
-        elif app_env.is_windows():
-            self.setFont(QFont('Georgia', 16))
+        # self._sceneSepBlockFormat = QTextBlockFormat()
+        # self._sceneSepBlockFormat.setTextIndent(40)
+        # self._sceneSepBlockFormat.setTopMargin(20)
+        # self._sceneSepBlockFormat.setBottomMargin(20)
 
-        self._sceneSepBlockFormat = QTextBlockFormat()
-        self._sceneSepBlockFormat.setTextIndent(40)
-        self._sceneSepBlockFormat.setTopMargin(20)
-        self._sceneSepBlockFormat.setBottomMargin(20)
-
-        self._sceneTextObject = SceneSeparatorTextObject(self)
-        self.document().documentLayout().registerHandler(SceneSeparatorTextFormat, self._sceneTextObject)
+        # self._sceneTextObject = SceneSeparatorTextObject(self)
+        # self.document().documentLayout().registerHandler(SceneSeparatorTextFormat, self._sceneTextObject)
 
         self._setDefaultStyleSheet()
         self.setCommandOperations([Heading1Operation, Heading2Operation, Heading3Operation, InsertListOperation,
@@ -602,30 +595,30 @@ class ManuscriptTextEdit(TextEditBase):
                 self.textCursor().insertText('.')
         super(ManuscriptTextEdit, self).keyPressEvent(event)
 
-    @overrides
-    def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
-        anchor = self.anchorAt(event.pos())
-        if anchor and anchor.startswith(SceneSeparatorTextFormatPrefix):
-            if QApplication.overrideCursor() is None:
-                QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
-            synopsis = self._sceneTextObject.sceneSynopsis(anchor.replace(SceneSeparatorTextFormatPrefix, ''))
-            self.setToolTip(synopsis)
-            return
-        else:
-            QApplication.restoreOverrideCursor()
-            self.setToolTip('')
-        super(ManuscriptTextEdit, self).mouseMoveEvent(event)
+    # @overrides
+    # def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
+    #     anchor = self.anchorAt(event.pos())
+    #     if anchor and anchor.startswith(SceneSeparatorTextFormatPrefix):
+    #         if QApplication.overrideCursor() is None:
+    #             QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
+    #         synopsis = self._sceneTextObject.sceneSynopsis(anchor.replace(SceneSeparatorTextFormatPrefix, ''))
+    #         self.setToolTip(synopsis)
+    #         return
+    #     else:
+    #         QApplication.restoreOverrideCursor()
+    #         self.setToolTip('')
+    #     super(ManuscriptTextEdit, self).mouseMoveEvent(event)
 
-    @overrides
-    def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
-        anchor = self.anchorAt(event.pos())
-        if anchor and anchor.startswith(SceneSeparatorTextFormatPrefix):
-            scene = self._sceneTextObject.scene(anchor.replace(SceneSeparatorTextFormatPrefix, ''))
-            if scene:
-                self.sceneSeparatorClicked.emit(scene)
-            return
-
-        super(ManuscriptTextEdit, self).mouseReleaseEvent(event)
+    # @overrides
+    # def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
+    #     anchor = self.anchorAt(event.pos())
+    #     if anchor and anchor.startswith(SceneSeparatorTextFormatPrefix):
+    #         scene = self._sceneTextObject.scene(anchor.replace(SceneSeparatorTextFormatPrefix, ''))
+    #         if scene:
+    #             self.sceneSeparatorClicked.emit(scene)
+    #         return
+    #
+    #     super(ManuscriptTextEdit, self).mouseReleaseEvent(event)
 
     def setGrammarCheckEnabled(self, enabled: bool):
         self.highlighter.setCheckEnabled(enabled)
@@ -651,7 +644,7 @@ class ManuscriptTextEdit(TextEditBase):
         self._sentenceHighlighter.setSentenceHighlightEnabled(enabled)
 
     def setScene(self, scene: Scene):
-        self._sceneTextObject.setScenes([scene])
+        # self._sceneTextObject.setScenes([scene])
 
         self._addScene(scene)
         self.setUneditableBlocksEnabled(False)
@@ -977,13 +970,49 @@ class ManuscriptEditor(QWidget):
         self._novel: Optional[Novel] = None
         self._margins: int = 30
         self._scenes: List[ManuscriptTextEdit] = []
+        self._font = self.defaultFont()
+        self._characterWidth: int = 40
 
         vbox(self, 0, 0)
 
         self.repo = RepositoryPersistenceManager.instance()
 
+    @overrides
+    def resizeEvent(self, a0: QtGui.QResizeEvent) -> None:
+        if self._maxContentWidth > 0:
+            self._resizeToCharacterWidth()
+
+    def defaultFont(self) -> QFont:
+        if app_env.is_linux():
+            return QFont('Palatino', 14)
+        elif app_env.is_mac():
+            return QFont('Palatino', 16)
+        elif app_env.is_windows():
+            return QFont('Georgia', 16)
+        else:
+            font = QApplication.font()
+            font.setPointSize(16)
+            return font
+
     def setNovel(self, novel: Novel):
         self._novel = novel
+
+        if app_env.platform() in self._novel.prefs.manuscript.font.keys():
+            fontSettings = self._getFontSettings()
+            if fontSettings.family:
+                self._font.setFamily(fontSettings.family)
+            if fontSettings.font_size:
+                self._font.setPointSize(fontSettings.font_size)
+            if fontSettings.text_width:
+                self.setCharacterWidth(fontSettings.text_width)
+        else:
+            self.setCharacterWidth(60)
+
+    def setCharacterWidth(self, width: int):
+        self._characterWidth = width
+        metrics = QtGui.QFontMetricsF(self.font())
+        self._maxContentWidth = metrics.boundingRect('M' * self._characterWidth).width()
+        self._resizeToCharacterWidth()
 
     def setScenes(self, scenes: List[Scene], title: Optional[str] = None):
         self._scenes.clear()
@@ -1044,6 +1073,10 @@ class ManuscriptEditor(QWidget):
 
     def _initTextEdit(self) -> ManuscriptTextEdit:
         _textedit = ManuscriptTextEdit()
+        _textedit.setFont(self._font)
+        _textedit.setDashInsertionMode(self._novel.prefs.manuscript.dash)
+        _textedit.setAutoCapitalizationMode(self._novel.prefs.manuscript.capitalization)
+
         _textedit.zoomIn(int(_textedit.font().pointSize() * 0.25))
         _textedit.setBlockFormat(DEFAULT_MANUSCRIPT_LINE_SPACE, textIndent=DEFAULT_MANUSCRIPT_INDENT)
         _textedit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoNone)
@@ -1053,10 +1086,29 @@ class ManuscriptEditor(QWidget):
         _textedit.setPlaceholderText('Write your story...')
         _textedit.setSidebarEnabled(False)
         _textedit.setReadOnly(self._novel.is_readonly())
-        _textedit.setViewportMargins(0, 0, 0, 0)
+        # _textedit.setViewportMargins(0, 0, 0, 0)
         _textedit.setDocumentMargin(0)
 
         return _textedit
+
+    def _getFontSettings(self) -> FontSettings:
+        if app_env.platform() not in self._novel.prefs.manuscript.font.keys():
+            self._novel.prefs.manuscript.font[app_env.platform()] = FontSettings()
+        return self._novel.prefs.manuscript.font[app_env.platform()]
+
+    def _resizeToCharacterWidth(self):
+        print(f'max {self._maxContentWidth} width {self.width()}')
+        if 0 < self._maxContentWidth < self.width():
+            margin = self.width() - self._maxContentWidth
+        else:
+            margin = 0
+
+        margin = int(margin // 2)
+        print(margin)
+        margins(self, left=margin, right=margin)
+        # current_margins: QMargins = self.viewportMargins()
+        # self.setViewportMargins(margin, current_margins.top(), margin, current_margins.bottom())
+        # self.resizeToContent()
 
 
 class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
