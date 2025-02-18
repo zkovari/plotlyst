@@ -179,18 +179,6 @@ class ManuscriptView(AbstractNovelView):
         self.ui.pageSettings.layout().addWidget(self._contextMenuWidget)
         self._contextMenuWidget.setSectionVisible(TextEditorSettingsSection.PAGE_WIDTH, False)
         self._contextMenuWidget.setSectionVisible(TextEditorSettingsSection.TEXT_WIDTH, True)
-        # if app_env.platform() in self.novel.prefs.manuscript.font.keys():
-        #     fontSettings = self._getFontSettings()
-        #     font_: QFont = self.ui.textEdit.textEdit.font()
-        #     if fontSettings.family:
-        #         font_.setFamily(fontSettings.family)
-        #     if fontSettings.font_size:
-        #         font_.setPointSize(fontSettings.font_size)
-        #     self.ui.textEdit.textEdit.setFont(font_)
-        #     if fontSettings.text_width:
-        #         self.ui.textEdit.setCharacterWidth(fontSettings.text_width)
-        # self.ui.textEdit.textEdit.setDashInsertionMode(self.novel.prefs.manuscript.dash)
-        # self.ui.textEdit.textEdit.setAutoCapitalizationMode(self.novel.prefs.manuscript.capitalization)
         # self.ui.textEdit.attachSettingsWidget(self._contextMenuWidget)
 
         self._langSelectionWidget.languageChanged.connect(self._language_changed)
@@ -216,10 +204,6 @@ class ManuscriptView(AbstractNovelView):
         self.textEditor.setNovel(self.novel)
         self.textEditor.textChanged.connect(self._text_changed)
         self.textEditor.progressChanged.connect(self._progress_changed)
-        # self.ui.textEdit.setMargins(30, 30, 30, 30)
-        # self.ui.textEdit.textEdit.setPlaceholderText('Write your story...')
-        # self.ui.textEdit.textEdit.setSidebarEnabled(False)
-        # self.ui.textEdit.textEdit.setReadOnly(self.novel.is_readonly())
         # self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
         # self.ui.textEdit.sceneTitleChanged.connect(self._scene_title_changed)
         # fontSection: FontSectionSettingWidget = self.ui.textEdit.settingsWidget().section(
