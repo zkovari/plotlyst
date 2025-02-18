@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import datetime
+import math
 from functools import partial
 from typing import Optional, List, Dict
 
@@ -28,7 +29,7 @@ from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObj
     QRect, QDate, QPoint, QVariantAnimation, QEasingCurve
 from PyQt6.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter, QKeyEvent, \
     QMouseEvent, QTextCursor, QFont, QScreen, QTextFormat, QTextObjectInterface, QPainter, QTextBlockFormat, \
-    QFontMetrics, QTextOption, QShowEvent, QIcon
+    QFontMetrics, QTextOption, QShowEvent, QIcon, QResizeEvent
 from PyQt6.QtMultimedia import QSoundEffect
 from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit, QButtonGroup, QCalendarWidget, QTableView, \
     QPushButton, QToolButton, QWidgetItem, QGraphicsColorizeEffect, QGraphicsTextItem
@@ -556,6 +557,11 @@ class ManuscriptTextEdit(TextEditBase):
     def __init__(self, parent=None):
         super(ManuscriptTextEdit, self).__init__(parent)
         self._pasteAsOriginalEnabled = False
+        self._resizedOnShow: bool = False
+        self._minHeight = 40
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setTabChangesFocus(True)
+
         self.highlighter = GrammarHighlighter(self.document(), checkEnabled=False,
                                               highlightStyle=GrammarHighlightStyle.BACKGOUND)
 
@@ -648,6 +654,7 @@ class ManuscriptTextEdit(TextEditBase):
         self._addScene(scene)
         self.setUneditableBlocksEnabled(False)
         self.document().clearUndoRedoStacks()
+        self.resizeToContent()
 
     def setScenes(self, scenes: List[Scene]):
         def sceneCharFormat(scene: Scene) -> QTextCharFormat:
@@ -672,9 +679,28 @@ class ManuscriptTextEdit(TextEditBase):
         self._deleteBlock(0, force=True)
 
         self.document().clearUndoRedoStacks()
+        self.resizeToContent()
 
     def insertNewBlock(self):
         self.textCursor().insertBlock(self._defaultBlockFormat, QTextCharFormat())
+
+    @overrides
+    def showEvent(self, event: QShowEvent) -> None:
+        super().showEvent(event)
+        if not self._resizedOnShow:
+            self.resizeToContent()
+            self._resizedOnShow = True
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent):
+        super().resizeEvent(event)
+        if self._resizedOnShow:
+            self.resizeToContent()
+
+    def resizeToContent(self):
+        padding = self.contentsMargins().top() + self.contentsMargins().bottom() + 2 * self.document().documentMargin()
+        size = self.document().size()
+        self.setFixedHeight(max(self._minHeight, math.ceil(size.height() + padding)))
 
     def _addScene(self, scene: Scene):
         if not scene.manuscript.loaded:
@@ -769,10 +795,9 @@ class ManuscriptTextEditor(TextEditorBase):
         self._wdgTitle.setProperty('relaxed-white-bg', True)
         margins(self._wdgTitle, left=20)
 
-        self.layout().insertWidget(1, self._wdgTitle)
+        self.layout().insertWidget(1, self._wdgTitle, alignment=Qt.AlignmentFlag.AlignTop)
 
         self.repo = RepositoryPersistenceManager.instance()
-        self._textedit.verticalScrollBar().valueChanged.connect(self._scrolled)
 
     @overrides
     def _initTextEdit(self) -> ManuscriptTextEdit:
@@ -943,11 +968,10 @@ class ManuscriptTextEditor(TextEditorBase):
             self._scenes[0].title = text
             self.sceneTitleChanged.emit(self._scenes[0])
 
-    def _scrolled(self, value: int):
-        if value > self._wdgTitle.height():
-            self._wdgTitle.setHidden(True)
-        elif self._titleVisible:
-            self._wdgTitle.setVisible(True)
+
+class ManuscriptEditor(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
 
 
 class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
