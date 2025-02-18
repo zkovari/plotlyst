@@ -903,8 +903,8 @@ class ManuscriptTextEditor(TextEditorBase):
                 scene.manuscript.statistics = DocumentStatistics()
 
         if len(self._scenes) == 1:
-            wc = self.textEdit.statistics().word_count
             scene = self._scenes[0]
+            wc = self.textEdit.statistics().word_count
             updated_progress = self._updateProgress(scene, wc)
             scene.manuscript.content = self.textEdit.toHtml()
             self.repo.update_doc(app_env.novel, scene.manuscript)
@@ -970,6 +970,7 @@ class ManuscriptTextEditor(TextEditorBase):
 
 class ManuscriptEditor(QWidget):
     textChanged = pyqtSignal()
+    progressChanged = pyqtSignal(DocumentProgress)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -977,10 +978,9 @@ class ManuscriptEditor(QWidget):
         self._margins: int = 30
         self._scenes: List[ManuscriptTextEdit] = []
 
-        # self.editor = QWidget()
         vbox(self, 0, 0)
 
-        # self.layout().addWidget()
+        self.repo = RepositoryPersistenceManager.instance()
 
     def setNovel(self, novel: Novel):
         self._novel = novel
@@ -992,7 +992,7 @@ class ManuscriptEditor(QWidget):
         for scene in scenes:
             wdg = self._initTextEdit()
             wdg.setScene(scene)
-            wdg.textChanged.connect(partial(self._textChanged, wdg))
+            wdg.textChanged.connect(partial(self._textChanged, wdg, scene))
             self._scenes.append(wdg)
             self.layout().addWidget(wdg)
 
@@ -1009,8 +1009,38 @@ class ManuscriptEditor(QWidget):
     def hasScenes(self) -> bool:
         return len(self._scenes) > 0
 
-    def _textChanged(self, textedit: ManuscriptTextEdit):
+    def _textChanged(self, textedit: ManuscriptTextEdit, scene: Scene):
+        if scene.manuscript.statistics is None:
+            scene.manuscript.statistics = DocumentStatistics()
+
+        wc = textedit.statistics().word_count
+        updated_progress = self._updateProgress(scene, wc)
+
+        scene.manuscript.content = textedit.toHtml()
+        self.repo.update_doc(app_env.novel, scene.manuscript)
+        if updated_progress:
+            self.repo.update_scene(scene)
+            self.repo.update_novel(self._novel)
+
         self.textChanged.emit()
+
+    def _updateProgress(self, scene: Scene, wc: int) -> bool:
+        if scene.manuscript.statistics.wc == wc:
+            return False
+
+        diff = wc - scene.manuscript.statistics.wc
+        progress: DocumentProgress = daily_progress(scene)
+        overall_progress = daily_overall_progress(self._novel)
+        if diff > 0:
+            progress.added += diff
+            overall_progress.added += diff
+        else:
+            progress.removed += abs(diff)
+            overall_progress.removed += abs(diff)
+        self.progressChanged.emit(overall_progress)
+        scene.manuscript.statistics.wc = wc
+
+        return True
 
     def _initTextEdit(self) -> ManuscriptTextEdit:
         _textedit = ManuscriptTextEdit()

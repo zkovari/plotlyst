@@ -215,13 +215,13 @@ class ManuscriptView(AbstractNovelView):
 
         self.textEditor.setNovel(self.novel)
         self.textEditor.textChanged.connect(self._text_changed)
+        self.textEditor.progressChanged.connect(self._progress_changed)
         # self.ui.textEdit.setMargins(30, 30, 30, 30)
         # self.ui.textEdit.textEdit.setPlaceholderText('Write your story...')
         # self.ui.textEdit.textEdit.setSidebarEnabled(False)
         # self.ui.textEdit.textEdit.setReadOnly(self.novel.is_readonly())
         # self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
         # self.ui.textEdit.sceneTitleChanged.connect(self._scene_title_changed)
-        # self.ui.textEdit.progressChanged.connect(self._progress_changed)
         # fontSection: FontSectionSettingWidget = self.ui.textEdit.settingsWidget().section(
         #     TextEditorSettingsSection.FONT)
         # fontSection.fontSelected.connect(self._fontChanged)
