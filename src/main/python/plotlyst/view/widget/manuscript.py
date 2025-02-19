@@ -32,10 +32,10 @@ from PyQt6.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyn
     QShowEvent, QIcon, QResizeEvent
 from PyQt6.QtMultimedia import QSoundEffect
 from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit, QButtonGroup, QCalendarWidget, QTableView, \
-    QPushButton, QToolButton, QWidgetItem, QGraphicsColorizeEffect, QGraphicsTextItem
+    QPushButton, QToolButton, QWidgetItem, QGraphicsColorizeEffect, QGraphicsTextItem, QFrame
 from overrides import overrides
 from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins, vbox, bold, vline, decr_font, \
-    underline, transparent, italic, decr_icon, pointy, vspacer, hbox
+    underline, transparent, italic, decr_icon, pointy, vspacer, hbox, incr_font
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, group
 from qttextedit import TextBlockState, remove_font, OBJECT_REPLACEMENT_CHARACTER, DashInsertionMode
@@ -68,6 +68,7 @@ from plotlyst.view.generated.sprint_widget_ui import Ui_SprintWidget
 from plotlyst.view.generated.timer_setup_widget_ui import Ui_TimerSetupWidget
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.button import apply_button_palette_color
+from plotlyst.view.widget.button import CollapseButton
 from plotlyst.view.widget.display import WordsDisplay, IconText, Emoji, ChartView
 from plotlyst.view.widget.input import TextEditBase, GrammarHighlighter, GrammarHighlightStyle, Toggle, TextEditorBase, \
     BasePopupTextEditorToolbar
@@ -315,7 +316,6 @@ class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
         self.novel = novel
 
         self.wdgShutDown.setHidden(True)
-        self.scrollAreaWidgetContents.layout().insertWidget(1, label('Spellcheck language', bold=True))
 
         self.btnArabicIcon.setIcon(IconRegistry.from_name('mdi.abjad-arabic'))
 
@@ -1097,18 +1097,64 @@ class ManuscriptEditor(QWidget):
         return self._novel.prefs.manuscript.font[app_env.platform()]
 
     def _resizeToCharacterWidth(self):
-        print(f'max {self._maxContentWidth} width {self.width()}')
+        # print(f'max {self._maxContentWidth} width {self.width()}')
         if 0 < self._maxContentWidth < self.width():
             margin = self.width() - self._maxContentWidth
         else:
             margin = 0
 
         margin = int(margin // 2)
-        print(margin)
+        # print(margin)
         margins(self, left=margin, right=margin)
         # current_margins: QMargins = self.viewportMargins()
         # self.setViewportMargins(margin, current_margins.top(), margin, current_margins.bottom())
         # self.resizeToContent()
+
+
+class _EditorSettingsHeader(QFrame):
+    def __init__(self, title: str, icon: str, widget: QWidget, parent=None):
+        super().__init__(parent)
+        self._widget = widget
+        hbox(self, 0, 0)
+        margins(self, 2, 5, 5, 5)
+        self.setProperty('alt-bg', True)
+        pointy(self)
+
+        sectionTitle = push_btn(IconRegistry.from_name(icon), title, transparent_=True)
+        incr_font(sectionTitle)
+
+        self.btnCollapse = CollapseButton(checked=Qt.Edge.TopEdge)
+        decr_icon(self.btnCollapse, 4)
+        sectionTitle.clicked.connect(self.btnCollapse.click)
+
+        self.layout().addWidget(sectionTitle, alignment=Qt.AlignmentFlag.AlignLeft)
+        self._widget.setHidden(True)
+        self.btnCollapse.clicked.connect(self._widget.setVisible)
+        self.layout().addWidget(self.btnCollapse, alignment=Qt.AlignmentFlag.AlignRight)
+
+    @overrides
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        self.btnCollapse.click()
+
+
+class ManuscriptEditorSettingsWidget(QWidget):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        vbox(self)
+
+        self._formattingSettings = ManuscriptFormattingWidget(novel)
+        self._langSelectionWidget = ManuscriptContextMenuWidget(novel)
+
+        self._addSection('Font settings', 'fa5s.font', label('Font settings'))
+        self._addSection('Smart Typing', 'ri.double-quotes-r', self._formattingSettings)
+        self._addSection('Spellchecking', 'fa5s.spell-check', self._langSelectionWidget)
+        self.layout().addWidget(vspacer())
+
+    def _addSection(self, title: str, icon: str, widget: QWidget):
+        header = _EditorSettingsHeader(title, icon, widget)
+
+        self.layout().addWidget(header)
+        self.layout().addWidget(widget)
 
 
 class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):

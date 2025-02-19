@@ -26,7 +26,6 @@ from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 from qttextedit import DashInsertionMode
 from qttextedit.api import AutoCapitalizationMode
-from qttextedit.ops import TextEditorSettingsWidget, TextEditorSettingsSection
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR
 from plotlyst.core.domain import Novel, Document, Chapter, DocumentProgress, FontSettings
@@ -47,10 +46,9 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.display import Icon
 from plotlyst.view.widget.input import Toggle
-from plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
-    DistractionFreeManuscriptEditor, SprintWidget, ManuscriptExportWidget, \
-    ManuscriptProgressCalendar, ManuscriptDailyProgress, ManuscriptProgressCalendarLegend, ManuscriptFormattingWidget, \
-    ManuscriptProgressWidget, ManuscriptEditor
+from plotlyst.view.widget.manuscript import DistractionFreeManuscriptEditor, SprintWidget, ManuscriptExportWidget, \
+    ManuscriptProgressCalendar, ManuscriptDailyProgress, ManuscriptProgressCalendarLegend, ManuscriptProgressWidget, \
+    ManuscriptEditor, ManuscriptEditorSettingsWidget
 from plotlyst.view.widget.scene.editor import SceneMiniEditor
 from plotlyst.view.widget.tree import TreeSettings
 
@@ -168,20 +166,21 @@ class ManuscriptView(AbstractNovelView):
         self._addSceneMenu.addAction(
             action('Add chapter', IconRegistry.chapter_icon(), self.ui.treeChapters.addChapter))
 
-        self._langSelectionWidget = ManuscriptContextMenuWidget(novel, self.widget)
-        self._formattingSettings = ManuscriptFormattingWidget(novel)
-        self._formattingSettings.dashChanged.connect(self._dashInsertionChanged)
-        self._formattingSettings.capitalizationChanged.connect(self._capitalizationChanged)
-        self._contextMenuWidget = TextEditorSettingsWidget()
-        self._contextMenuWidget.setProperty('borderless', True)
-        self._contextMenuWidget.addTab(self._formattingSettings, IconRegistry.from_name('ri.double-quotes-r'), '')
-        self._contextMenuWidget.addTab(self._langSelectionWidget, IconRegistry.from_name('fa5s.spell-check'), '')
-        self.ui.pageSettings.layout().addWidget(self._contextMenuWidget)
-        self._contextMenuWidget.setSectionVisible(TextEditorSettingsSection.PAGE_WIDTH, False)
-        self._contextMenuWidget.setSectionVisible(TextEditorSettingsSection.TEXT_WIDTH, True)
+        # self._langSelectionWidget = ManuscriptContextMenuWidget(novel, self.widget)
+        # self._formattingSettings = ManuscriptFormattingWidget(novel)
+        # self._formattingSettings.dashChanged.connect(self._dashInsertionChanged)
+        # self._formattingSettings.capitalizationChanged.connect(self._capitalizationChanged)
+        # self._contextMenuWidget = TextEditorSettingsWidget()
+        self._settingsWidget = ManuscriptEditorSettingsWidget(novel)
+        # self._contextMenuWidget.setProperty('borderless', True)
+        # self._contextMenuWidget.addItem(self._formattingSettings, IconRegistry.from_name('ri.double-quotes-r'), '')
+        # self._contextMenuWidget.addItem(self._langSelectionWidget, IconRegistry.from_name('fa5s.spell-check'), '')
+        self.ui.scrollSettings.layout().addWidget(self._settingsWidget)
+        # self._contextMenuWidget.setSectionVisible(TextEditorSettingsSection.PAGE_WIDTH, False)
+        # self._contextMenuWidget.setSectionVisible(TextEditorSettingsSection.TEXT_WIDTH, True)
         # self.ui.textEdit.attachSettingsWidget(self._contextMenuWidget)
 
-        self._langSelectionWidget.languageChanged.connect(self._language_changed)
+        # self._langSelectionWidget.languageChanged.connect(self._language_changed)
         self._cbSpellCheck.toggled.connect(self._spellcheck_toggled)
         self._cbSpellCheck.clicked.connect(self._spellcheck_clicked)
         self._spellcheck_toggled(self._cbSpellCheck.isChecked())
