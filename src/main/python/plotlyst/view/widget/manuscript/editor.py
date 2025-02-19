@@ -25,20 +25,22 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import pyqtSignal, QTextBoundaryFinder, Qt
 from PyQt6.QtGui import QFont, QResizeEvent, QShowEvent, QTextCursor, QTextCharFormat, QSyntaxHighlighter, QColor, \
     QTextBlock
-from PyQt6.QtWidgets import QWidget, QApplication, QTextEdit
+from PyQt6.QtWidgets import QWidget, QApplication, QTextEdit, QLineEdit
 from overrides import overrides
-from qthandy import vbox, clear_layout, vspacer, margins, transparent, gc
+from qthandy import vbox, clear_layout, vspacer, margins, transparent, gc, hbox
 from qttextedit import remove_font, TextBlockState, DashInsertionMode, AutoCapitalizationMode
 from qttextedit.ops import Heading1Operation, Heading2Operation, Heading3Operation, InsertListOperation, \
     InsertNumberedListOperation, BoldOperation, ItalicOperation, UnderlineOperation, StrikethroughOperation, \
     AlignLeftOperation, AlignCenterOperation, AlignRightOperation
 
-from plotlyst.common import RELAXED_WHITE_COLOR, DEFAULT_MANUSCRIPT_LINE_SPACE, DEFAULT_MANUSCRIPT_INDENT
+from plotlyst.common import RELAXED_WHITE_COLOR, DEFAULT_MANUSCRIPT_LINE_SPACE, DEFAULT_MANUSCRIPT_INDENT, \
+    PLACEHOLDER_TEXT_COLOR
 from plotlyst.core.client import json_client
 from plotlyst.core.domain import DocumentProgress, Novel, Scene, TextStatistics, DocumentStatistics, FontSettings
 from plotlyst.env import app_env
 from plotlyst.service.manuscript import daily_progress, daily_overall_progress
 from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.style.text import apply_text_color
 from plotlyst.view.widget.input import BasePopupTextEditorToolbar, TextEditBase, GrammarHighlighter, \
     GrammarHighlightStyle
 from plotlyst.view.widget.manuscript.settings import ManuscriptEditorSettingsWidget
@@ -269,17 +271,44 @@ class ManuscriptTextEdit(TextEditBase):
 class ManuscriptEditor(QWidget):
     textChanged = pyqtSignal()
     progressChanged = pyqtSignal(DocumentProgress)
+    sceneTitleChanged = pyqtSignal(Scene)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self._novel: Optional[Novel] = None
         self._margins: int = 30
         self._scenes: List[ManuscriptTextEdit] = []
+        self._scene: Optional[Scene] = None
         self._font = self.defaultFont()
         self._characterWidth: int = 40
         self._settings: Optional[ManuscriptEditorSettingsWidget] = None
 
         vbox(self, 0, 0)
+
+        self.textTitle = QLineEdit()
+        self.textTitle.setProperty('transparent', True)
+        self.textTitle.setFrame(False)
+        self.textTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        apply_text_color(self.textTitle, QColor(PLACEHOLDER_TEXT_COLOR))
+        self.textTitle.textEdited.connect(self._titleEdited)
+
+        self.wdgTitle = QWidget()
+        hbox(self.wdgTitle).addWidget(self.textTitle)
+        margins(self.wdgTitle, bottom=15)
+
+        # self.divider = DividerWidget()
+        # effect = QGraphicsColorizeEffect(self.divider)
+        # effect.setColor(QColor(PLACEHOLDER_TEXT_COLOR))
+        # self.divider.setGraphicsEffect(effect)
+        # self._textTitle.returnPressed.connect(self.textEdit.setFocus)
+        # self._textTitle.textEdited.connect(self._titleChanged)
+
+        self.wdgEditor = QWidget()
+        vbox(self.wdgEditor, 0, 0)
+        margins(self.wdgEditor, left=15, top=40, bottom=40, right=15)
+
+        self.layout().addWidget(self.wdgTitle)
+        self.layout().addWidget(self.wdgEditor)
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -314,6 +343,12 @@ class ManuscriptEditor(QWidget):
         else:
             self.setCharacterWidth(60)
 
+        title_font = self.textTitle.font()
+        title_font.setBold(True)
+        title_font.setPointSize(32)
+        title_font.setFamily(self._font.family())
+        self.textTitle.setFont(title_font)
+
     def manuscriptFont(self) -> QFont:
         return self._font
 
@@ -336,16 +371,26 @@ class ManuscriptEditor(QWidget):
 
     def setScenes(self, scenes: List[Scene], title: Optional[str] = None):
         self._scenes.clear()
-        clear_layout(self)
+        self._scene = None
+        clear_layout(self.wdgEditor)
+        if title:
+            self.textTitle.setText(title)
+            self.textTitle.setPlaceholderText('Chapter')
+            self.textTitle.setReadOnly(True)
+        else:
+            self._scene = scenes[0]
+            self.textTitle.setText(self._scene.title)
+            self.textTitle.setPlaceholderText('Scene title')
+            self.textTitle.setReadOnly(False)
 
         for scene in scenes:
             wdg = self._initTextEdit()
             wdg.setScene(scene)
             wdg.textChanged.connect(partial(self._textChanged, wdg, scene))
             self._scenes.append(wdg)
-            self.layout().addWidget(wdg)
+            self.wdgEditor.layout().addWidget(wdg)
 
-        self.layout().addWidget(vspacer())
+        self.wdgEditor.layout().addWidget(vspacer())
 
     def attachSettingsWidget(self, settings: ManuscriptEditorSettingsWidget):
         self._settings = settings
@@ -473,4 +518,14 @@ class ManuscriptEditor(QWidget):
     def _fontChanged(self, family: str):
         fontSettings = self._getFontSettings()
         fontSettings.family = family
+
+        titleFont = self.textTitle.font()
+        titleFont.setFamily(family)
+        self.textTitle.setFont(titleFont)
+
         self.repo.update_novel(self._novel)
+
+    def _titleEdited(self, title: str):
+        if self._scene:
+            self._scene.title = title
+            self.sceneTitleChanged.emit(self._scene)

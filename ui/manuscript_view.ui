@@ -199,6 +199,9 @@
        <number>0</number>
       </property>
       <widget class="QWidget" name="pageText">
+       <property name="relaxed-white-bg" stdset="0">
+        <bool>true</bool>
+       </property>
        <layout class="QVBoxLayout" name="verticalLayout">
         <property name="spacing">
          <number>0</number>
@@ -345,6 +348,12 @@
           <property name="spacing">
            <number>0</number>
           </property>
+          <property name="topMargin">
+           <number>15</number>
+          </property>
+          <property name="bottomMargin">
+           <number>15</number>
+          </property>
           <item>
            <widget class="QScrollArea" name="scrollArea_2">
             <property name="frameShape">
@@ -359,7 +368,7 @@
                <x>0</x>
                <y>0</y>
                <width>277</width>
-               <height>428</height>
+               <height>400</height>
               </rect>
              </property>
              <property name="relaxed-white-bg" stdset="0">
@@ -533,7 +542,7 @@
                       <x>0</x>
                       <y>0</y>
                       <width>68</width>
-                      <height>376</height>
+                      <height>348</height>
                      </rect>
                     </property>
                     <property name="relaxed-white-bg" stdset="0">

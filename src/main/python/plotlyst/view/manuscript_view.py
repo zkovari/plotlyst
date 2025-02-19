@@ -193,7 +193,7 @@ class ManuscriptView(AbstractNovelView):
         self.textEditor.textChanged.connect(self._text_changed)
         self.textEditor.progressChanged.connect(self._progress_changed)
         # self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
-        # self.ui.textEdit.sceneTitleChanged.connect(self._scene_title_changed)
+        self.textEditor.sceneTitleChanged.connect(self._scene_title_changed)
         self._btnDistractionFree.clicked.connect(self._enter_distraction_free)
 
         if self.novel.chapters:
