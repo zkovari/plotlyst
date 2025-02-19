@@ -278,7 +278,7 @@ class ManuscriptView(AbstractNovelView):
                 scene.manuscript = Document('', scene_id=scene.id)
                 self.repo.update_scene(scene)
         if scenes:
-            self.textEditor.setScenes(scenes, chapter.display_name())
+            self.textEditor.setScenes(scenes, chapter.display_name().replace('Chapter ', ''))
             self._miniSceneEditor.setScenes(scenes)
         else:
             self._empty_page('Add a scene to this chapter to start writing')
