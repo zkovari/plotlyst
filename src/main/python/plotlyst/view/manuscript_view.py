@@ -258,7 +258,7 @@ class ManuscriptView(AbstractNovelView):
             scene.manuscript = Document('', scene_id=scene.id)
             self.repo.update_scene(scene)
 
-        self.textEditor.setChapterScenes([scene])
+        self.textEditor.setScene(scene)
         self._miniSceneEditor.setScene(scene)
 
         self.ui.btnStage.setEnabled(True)

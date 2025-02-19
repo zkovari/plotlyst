@@ -27,7 +27,7 @@ from PyQt6.QtGui import QFont, QResizeEvent, QShowEvent, QTextCursor, QTextCharF
     QTextBlock
 from PyQt6.QtWidgets import QWidget, QApplication, QTextEdit, QLineEdit
 from overrides import overrides
-from qthandy import vbox, clear_layout, vspacer, margins, transparent, gc, hbox
+from qthandy import vbox, clear_layout, vspacer, margins, transparent, gc, hbox, italic, translucent
 from qttextedit import remove_font, TextBlockState, DashInsertionMode, AutoCapitalizationMode
 from qttextedit.ops import Heading1Operation, Heading2Operation, Heading3Operation, InsertListOperation, \
     InsertNumberedListOperation, BoldOperation, ItalicOperation, UnderlineOperation, StrikethroughOperation, \
@@ -40,6 +40,7 @@ from plotlyst.core.domain import DocumentProgress, Novel, Scene, TextStatistics,
 from plotlyst.env import app_env
 from plotlyst.service.manuscript import daily_progress, daily_overall_progress
 from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import push_btn
 from plotlyst.view.style.text import apply_text_color
 from plotlyst.view.widget.input import BasePopupTextEditorToolbar, TextEditBase, GrammarHighlighter, \
     GrammarHighlightStyle
@@ -369,25 +370,35 @@ class ManuscriptEditor(QWidget):
         self._maxContentWidth = metrics.boundingRect('M' * self._characterWidth).width()
         self._resizeToCharacterWidth()
 
-    def setChapterScenes(self, scenes: List[Scene], title: Optional[str] = None):
+    def setScene(self, scene: Scene):
+        self._scenes.clear()
+        self._scene = scene
+        clear_layout(self.wdgEditor)
+
+        self.textTitle.setText(self._scene.title)
+        self.textTitle.setPlaceholderText('Scene title')
+        self.textTitle.setReadOnly(False)
+
+        wdg = self._initTextEdit(scene)
+        self.wdgEditor.layout().addWidget(wdg)
+        self.wdgEditor.layout().addWidget(vspacer())
+
+    def setChapterScenes(self, scenes: List[Scene], title: str):
         self._scenes.clear()
         self._scene = None
         clear_layout(self.wdgEditor)
-        if title:
-            self.textTitle.setText(title)
-            self.textTitle.setPlaceholderText('Chapter')
-            self.textTitle.setReadOnly(True)
-        else:
-            self._scene = scenes[0]
-            self.textTitle.setText(self._scene.title)
-            self.textTitle.setPlaceholderText('Scene title')
-            self.textTitle.setReadOnly(False)
+
+        self.textTitle.setText(title)
+        self.textTitle.setPlaceholderText('Chapter')
+        self.textTitle.setReadOnly(True)
 
         for scene in scenes:
-            wdg = self._initTextEdit()
-            wdg.setScene(scene)
-            wdg.textChanged.connect(partial(self._textChanged, wdg, scene))
-            self._scenes.append(wdg)
+            wdg = self._initTextEdit(scene)
+
+            sceneLbl = push_btn(text=f'~{scene.title if scene.title else "Scene"}~', transparent_=True)
+            italic(sceneLbl)
+            translucent(sceneLbl)
+            self.wdgEditor.layout().addWidget(sceneLbl, alignment=Qt.AlignmentFlag.AlignCenter)
             self.wdgEditor.layout().addWidget(wdg)
 
         self.wdgEditor.layout().addWidget(vspacer())
@@ -449,7 +460,7 @@ class ManuscriptEditor(QWidget):
 
         return True
 
-    def _initTextEdit(self) -> ManuscriptTextEdit:
+    def _initTextEdit(self, scene: Scene) -> ManuscriptTextEdit:
         _textedit = ManuscriptTextEdit()
         _textedit.setFont(self._font)
         _textedit.setDashInsertionMode(self._novel.prefs.manuscript.dash)
@@ -464,8 +475,12 @@ class ManuscriptEditor(QWidget):
         _textedit.setPlaceholderText('Write your story...')
         _textedit.setSidebarEnabled(False)
         _textedit.setReadOnly(self._novel.is_readonly())
-        # _textedit.setViewportMargins(0, 0, 0, 0)
+        # _textedit.setViewportMargins(25, 0, 0, 0)
         _textedit.setDocumentMargin(0)
+
+        _textedit.setScene(scene)
+        _textedit.textChanged.connect(partial(self._textChanged, _textedit, scene))
+        self._scenes.append(_textedit)
 
         return _textedit
 
