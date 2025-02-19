@@ -290,11 +290,11 @@ class ManuscriptEditor(QWidget):
 
     def defaultFont(self) -> QFont:
         if app_env.is_linux():
-            return QFont('Palatino', 14)
-        elif app_env.is_mac():
             return QFont('Palatino', 16)
+        elif app_env.is_mac():
+            return QFont('Palatino', 18)
         elif app_env.is_windows():
-            return QFont('Georgia', 16)
+            return QFont('Georgia', 18)
         else:
             font = QApplication.font()
             font.setPointSize(16)
@@ -313,6 +313,20 @@ class ManuscriptEditor(QWidget):
                 self.setCharacterWidth(fontSettings.text_width)
         else:
             self.setCharacterWidth(60)
+
+    def manuscriptFont(self) -> QFont:
+        return self._font
+
+    def setManuscriptFontPointSize(self, value: int):
+        self._font.setPointSize(value)
+        self._setFontForTextEdits()
+
+    def setManuscriptFontFamily(self, family: str):
+        self._font.setFamily(family)
+        self._setFontForTextEdits()
+
+    def characterWidth(self) -> int:
+        return self._characterWidth
 
     def setCharacterWidth(self, width: int):
         self._characterWidth = width
@@ -337,6 +351,14 @@ class ManuscriptEditor(QWidget):
         self._settings = settings
         self._settings.smartTypingSettings.dashChanged.connect(self._dashInsertionChanged)
         self._settings.smartTypingSettings.capitalizationChanged.connect(self._capitalizationChanged)
+
+        self._settings.fontSettings.sizeSetting.attach(self)
+        self._settings.fontSettings.widthSetting.attach(self)
+        self._settings.fontSettings.fontSetting.attach(self)
+
+        self._settings.fontSettings.sizeSetting.sizeChanged.connect(self._fontSizeChanged)
+        self._settings.fontSettings.widthSetting.widthChanged.connect(self._textWidthChanged)
+        self._settings.fontSettings.fontSetting.fontSelected.connect(self._fontChanged)
 
     def statistics(self) -> TextStatistics:
         overall_stats = TextStatistics(0)
@@ -388,7 +410,7 @@ class ManuscriptEditor(QWidget):
         _textedit.setDashInsertionMode(self._novel.prefs.manuscript.dash)
         _textedit.setAutoCapitalizationMode(self._novel.prefs.manuscript.capitalization)
 
-        _textedit.zoomIn(int(_textedit.font().pointSize() * 0.25))
+        # _textedit.zoomIn(int(_textedit.font().pointSize() * 0.25))
         _textedit.setBlockFormat(DEFAULT_MANUSCRIPT_LINE_SPACE, textIndent=DEFAULT_MANUSCRIPT_INDENT)
         _textedit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoNone)
         # _textedit.selectionChanged.connect(self.selectionChanged.emit)
@@ -401,6 +423,11 @@ class ManuscriptEditor(QWidget):
         _textedit.setDocumentMargin(0)
 
         return _textedit
+
+    def _setFontForTextEdits(self):
+        for textedit in self._scenes:
+            textedit.setFont(self._font)
+            textedit.resizeToContent()
 
     def _getFontSettings(self) -> FontSettings:
         if app_env.platform() not in self._novel.prefs.manuscript.font.keys():
@@ -431,4 +458,19 @@ class ManuscriptEditor(QWidget):
         for textedit in self._scenes:
             textedit.setAutoCapitalizationMode(mode)
         self._novel.prefs.manuscript.capitalization = mode
+        self.repo.update_novel(self._novel)
+
+    def _fontSizeChanged(self, size: int):
+        fontSettings = self._getFontSettings()
+        fontSettings.font_size = size
+        self.repo.update_novel(self._novel)
+
+    def _textWidthChanged(self, width: int):
+        fontSettings = self._getFontSettings()
+        fontSettings.text_width = width
+        self.repo.update_novel(self._novel)
+
+    def _fontChanged(self, family: str):
+        fontSettings = self._getFontSettings()
+        fontSettings.family = family
         self.repo.update_novel(self._novel)

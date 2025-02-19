@@ -24,14 +24,11 @@ from overrides import overrides
 from qthandy import translucent, bold, margins, spacer, transparent, vspacer, decr_icon, vline, incr_icon
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
-from qttextedit import DashInsertionMode
-from qttextedit.api import AutoCapitalizationMode
 from qttextedit.ops import TextEditorSettingsWidget
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR
-from plotlyst.core.domain import Novel, Document, Chapter, DocumentProgress, FontSettings
+from plotlyst.core.domain import Novel, Document, Chapter, DocumentProgress
 from plotlyst.core.domain import Scene
-from plotlyst.env import app_env
 from plotlyst.event.core import emit_global_event, emit_critical, emit_info, Event, emit_event
 from plotlyst.events import SceneChangedEvent, OpenDistractionFreeMode, \
     SceneDeletedEvent, ExitDistractionFreeMode, NovelSyncEvent, CloseNovelEvent
@@ -171,13 +168,7 @@ class ManuscriptView(AbstractNovelView):
 
         self._contextMenuWidget = TextEditorSettingsWidget()
         self._settingsWidget = ManuscriptEditorSettingsWidget(novel)
-        # self._contextMenuWidget.setProperty('borderless', True)
-        # self._contextMenuWidget.addItem(self._formattingSettings, IconRegistry.from_name('ri.double-quotes-r'), '')
-        # self._contextMenuWidget.addItem(self._langSelectionWidget, IconRegistry.from_name('fa5s.spell-check'), '')
         self.ui.scrollSettings.layout().addWidget(self._settingsWidget)
-        # self._contextMenuWidget.setSectionVisible(TextEditorSettingsSection.PAGE_WIDTH, False)
-        # self._contextMenuWidget.setSectionVisible(TextEditorSettingsSection.TEXT_WIDTH, True)
-        self.textEditor.attachSettingsWidget(self._settingsWidget)
 
         # self._langSelectionWidget.languageChanged.connect(self._language_changed)
         self._cbSpellCheck.toggled.connect(self._spellcheck_toggled)
@@ -197,22 +188,12 @@ class ManuscriptView(AbstractNovelView):
 
         self.ui.wdgSide.setHidden(True)
 
-        # self.ui.btnNotes.toggled.connect(self.ui.wdgAddon.setVisible)
-
         self.textEditor.setNovel(self.novel)
+        self.textEditor.attachSettingsWidget(self._settingsWidget)
         self.textEditor.textChanged.connect(self._text_changed)
         self.textEditor.progressChanged.connect(self._progress_changed)
         # self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
         # self.ui.textEdit.sceneTitleChanged.connect(self._scene_title_changed)
-        # fontSection: FontSectionSettingWidget = self.ui.textEdit.settingsWidget().section(
-        #     TextEditorSettingsSection.FONT)
-        # fontSection.fontSelected.connect(self._fontChanged)
-        # sizeSection: FontSizeSectionSettingWidget = self.ui.textEdit.settingsWidget().section(
-        #     TextEditorSettingsSection.FONT_SIZE)
-        # sizeSection.sizeChanged.connect(self._fontSizeChanged)
-        # textWidthSection: TextWidthSectionSettingWidget = self.ui.textEdit.settingsWidget().section(
-        #     TextEditorSettingsSection.TEXT_WIDTH)
-        # textWidthSection.widthChanged.connect(self._textWidthChanged)
         self._btnDistractionFree.clicked.connect(self._enter_distraction_free)
 
         if self.novel.chapters:
@@ -415,36 +396,6 @@ class ManuscriptView(AbstractNovelView):
     def _empty_page(self, message: str = ''):
         self.ui.lblEmptyPage.setText(message)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
-
-    def _fontChanged(self, family: str):
-        fontSettings = self._getFontSettings()
-        fontSettings.family = family
-        self.repo.update_novel(self.novel)
-
-    def _fontSizeChanged(self, size: int):
-        fontSettings = self._getFontSettings()
-        fontSettings.font_size = size
-        self.repo.update_novel(self.novel)
-
-    def _textWidthChanged(self, width: int):
-        fontSettings = self._getFontSettings()
-        fontSettings.text_width = width
-        self.repo.update_novel(self.novel)
-
-    def _getFontSettings(self) -> FontSettings:
-        if app_env.platform() not in self.novel.prefs.manuscript.font.keys():
-            self.novel.prefs.manuscript.font[app_env.platform()] = FontSettings()
-        return self.novel.prefs.manuscript.font[app_env.platform()]
-
-    # def _dashInsertionChanged(self, mode: DashInsertionMode):
-    #     self.ui.textEdit.textEdit.setDashInsertionMode(mode)
-    #     self.novel.prefs.manuscript.dash = mode
-    #     self.repo.update_novel(self.novel)
-    #
-    # def _capitalizationChanged(self, mode: AutoCapitalizationMode):
-    #     self.ui.textEdit.textEdit.setAutoCapitalizationMode(mode)
-    #     self.novel.prefs.manuscript.capitalization = mode
-    #     self.repo.update_novel(self.novel)
 
     def _hide_sidebar(self):
         def finished():

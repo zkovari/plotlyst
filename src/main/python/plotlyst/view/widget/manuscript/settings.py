@@ -29,7 +29,8 @@ from qthandy import margins, vbox, decr_icon, pointy, vspacer, hbox, incr_font
 from qtmenu import group
 from qttextedit import DashInsertionMode
 from qttextedit.api import AutoCapitalizationMode
-from qttextedit.ops import FontSectionSettingWidget, FontSizeSectionSettingWidget, TextWidthSectionSettingWidget
+from qttextedit.ops import FontSectionSettingWidget, FontSizeSectionSettingWidget, TextWidthSectionSettingWidget, \
+    FontRadioButton
 from qttextedit.util import EN_DASH, EM_DASH
 
 from plotlyst.core.domain import Novel
@@ -194,13 +195,47 @@ class ManuscriptSpellcheckingSettingsWidget(QWidget, Ui_ManuscriptContextMenuWid
         self.languageChanged.emit(self.lang)
 
 
+class ManuscriptFontSettingWidget(FontSectionSettingWidget):
+
+    @overrides
+    def _activate(self):
+        font_ = self._editor.manuscriptFont()
+        for btn in self._btnGroupFonts.buttons():
+            if btn.family() == font_.family():
+                btn.setChecked(True)
+
+    @overrides
+    def _changeFont(self, btn: FontRadioButton, toggled):
+        if toggled:
+            self._editor.setManuscriptFontFamily(btn.family())
+
+
+class ManuscriptFontSizeSettingWidget(FontSizeSectionSettingWidget):
+
+    @overrides
+    def _activate(self):
+        size = self._editor.manuscriptFont().pointSize()
+        self._slider.setValue(size)
+        self._slider.valueChanged.connect(self._valueChanged)
+
+    @overrides
+    def _valueChanged(self, value: int):
+        if self._editor is None:
+            return
+        self._editor.setManuscriptFontPointSize(value)
+        if self._editor.characterWidth():
+            self._editor.setCharacterWidth(self._editor.characterWidth())
+
+        self.sizeChanged.emit(value)
+
+
 class ManuscriptFontSettingsWidget(QWidget):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         vbox(self)
 
-        self.fontSetting = FontSectionSettingWidget()
-        self.sizeSetting = FontSizeSectionSettingWidget()
+        self.fontSetting = ManuscriptFontSettingWidget()
+        self.sizeSetting = ManuscriptFontSizeSettingWidget()
         self.widthSetting = TextWidthSectionSettingWidget()
 
         self.layout().addWidget(self.fontSetting)
