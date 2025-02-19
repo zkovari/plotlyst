@@ -140,6 +140,11 @@ class ManuscriptTextEdit(TextEditBase):
         self.textChanged.connect(self.resizeToContent)
 
     @overrides
+    def setFocus(self) -> None:
+        super().setFocus()
+        self.moveCursor(QTextCursor.MoveOperation.Start)
+
+    @overrides
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         cursor: QTextCursor = self.textCursor()
         if cursor.atBlockEnd() and event.key() == Qt.Key.Key_Space:
@@ -383,6 +388,7 @@ class ManuscriptEditor(QWidget):
         wdg = self._initTextEdit(scene)
         self.wdgEditor.layout().addWidget(wdg)
         self.wdgEditor.layout().addWidget(vspacer())
+        wdg.setFocus()
 
     def setChapterScenes(self, scenes: List[Scene], title: str):
         self._scenes.clear()
@@ -404,6 +410,7 @@ class ManuscriptEditor(QWidget):
             self.wdgEditor.layout().addWidget(wdg)
 
         self.wdgEditor.layout().addWidget(vspacer())
+        self._scenes[0].setFocus()
 
     def attachSettingsWidget(self, settings: ManuscriptEditorSettingsWidget):
         self._settings = settings
@@ -474,7 +481,7 @@ class ManuscriptEditor(QWidget):
         # _textedit.selectionChanged.connect(self.selectionChanged.emit)
         _textedit.setProperty('borderless', True)
 
-        _textedit.setPlaceholderText('Write your story...')
+        _textedit.setPlaceholderText('Write this scene...')
         _textedit.setSidebarEnabled(False)
         _textedit.setReadOnly(self._novel.is_readonly())
         # _textedit.setViewportMargins(25, 0, 0, 0)
