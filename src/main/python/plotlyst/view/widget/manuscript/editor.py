@@ -433,6 +433,16 @@ class ManuscriptEditor(QWidget):
 
         return overall_stats
 
+    def asyncCheckGrammar(self):
+        for textedit in self._scenes:
+            textedit.setGrammarCheckEnabled(True)
+            textedit.asyncCheckGrammar()
+
+    def resetGrammarChecking(self):
+        for textedit in self._scenes:
+            textedit.setGrammarCheckEnabled(False)
+            textedit.checkGrammar()
+
     def hasScenes(self) -> bool:
         return len(self._scenes) > 0
 

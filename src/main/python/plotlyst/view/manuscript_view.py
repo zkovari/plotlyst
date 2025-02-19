@@ -251,7 +251,6 @@ class ManuscriptView(AbstractNovelView):
         self._progressWdg.setValue(wc)
 
     def _editScene(self, scene: Scene):
-        # self.ui.textEdit.setGrammarCheckEnabled(False)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageText)
 
         if not scene.manuscript:
@@ -266,10 +265,7 @@ class ManuscriptView(AbstractNovelView):
 
         self._recheckDocument()
 
-        # self.ui.textEdit.setFocus()
-
     def _editChapter(self, chapter: Chapter):
-        # self.ui.textEdit.setGrammarCheckEnabled(False)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageText)
 
         scenes = self.novel.scenes_in_chapter(chapter)
@@ -287,7 +283,6 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnStage.setDisabled(True)
 
         self._recheckDocument()
-        # self.ui.textEdit.setFocus()
 
     def _scene_added(self, scene: Scene):
         if self._is_empty_page():
@@ -299,8 +294,8 @@ class ManuscriptView(AbstractNovelView):
             self._text_changed()
 
             if self._cbSpellCheck.isChecked():
-                self.ui.textEdit.setGrammarCheckEnabled(True)
-                self.ui.textEdit.asyncCheckGrammar()
+                # self.ui.textEdit.setGrammarCheckEnabled(True)
+                self.textEditor.asyncCheckGrammar()
             # if self.ui.btnReadability.isChecked():
             #     self._wdgReadability.checkTextDocument(self.ui.textEdit.document())
 
@@ -362,11 +357,9 @@ class ManuscriptView(AbstractNovelView):
                 self._cbSpellCheck.setChecked(False)
                 emit_critical(language_tool_proxy.error)
             else:
-                self.ui.textEdit.setGrammarCheckEnabled(True)
-                QTimer.singleShot(150, self.ui.textEdit.asyncCheckGrammar)
+                QTimer.singleShot(150, self.textEditor.asyncCheckGrammar)
         else:
-            self.ui.textEdit.setGrammarCheckEnabled(False)
-            self.ui.textEdit.checkGrammar()
+            self.textEditor.resetGrammarChecking()
 
     def _analysis_clicked(self, checked: bool):
         if not checked:
