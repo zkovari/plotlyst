@@ -273,6 +273,7 @@ class ManuscriptEditor(QWidget):
     textChanged = pyqtSignal()
     progressChanged = pyqtSignal(DocumentProgress)
     sceneTitleChanged = pyqtSignal(Scene)
+    sceneSeparatorClicked = pyqtSignal(Scene)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -396,6 +397,7 @@ class ManuscriptEditor(QWidget):
             wdg = self._initTextEdit(scene)
 
             sceneLbl = push_btn(text=f'~{scene.title if scene.title else "Scene"}~', transparent_=True)
+            sceneLbl.clicked.connect(partial(self.sceneSeparatorClicked.emit, scene))
             italic(sceneLbl)
             translucent(sceneLbl)
             self.wdgEditor.layout().addWidget(sceneLbl, alignment=Qt.AlignmentFlag.AlignCenter)

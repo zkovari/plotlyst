@@ -110,7 +110,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.pageInfo.layout().addWidget(vspacer())
         self.textEditor = ManuscriptEditor()
         self.ui.wdgEditor.layout().addWidget(self.textEditor)
-        # self.ui.textEdit.manuscriptTextEdit().sceneSeparatorClicked.connect(self._scene_separator_clicked)
+        self.textEditor.sceneSeparatorClicked.connect(self._scene_separator_clicked)
 
         self._manuscriptDailyProgressDisplay = ManuscriptDailyProgress(self.novel)
         self._manuscriptDailyProgressDisplay.refresh()
