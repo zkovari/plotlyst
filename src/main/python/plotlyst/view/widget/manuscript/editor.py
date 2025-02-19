@@ -28,7 +28,7 @@ from PyQt6.QtGui import QFont, QResizeEvent, QShowEvent, QTextCursor, QTextCharF
 from PyQt6.QtWidgets import QWidget, QApplication, QTextEdit
 from overrides import overrides
 from qthandy import vbox, clear_layout, vspacer, margins, transparent, gc
-from qttextedit import remove_font, TextBlockState
+from qttextedit import remove_font, TextBlockState, DashInsertionMode, AutoCapitalizationMode
 from qttextedit.ops import Heading1Operation, Heading2Operation, Heading3Operation, InsertListOperation, \
     InsertNumberedListOperation, BoldOperation, ItalicOperation, UnderlineOperation, StrikethroughOperation, \
     AlignLeftOperation, AlignCenterOperation, AlignRightOperation
@@ -41,6 +41,7 @@ from plotlyst.service.manuscript import daily_progress, daily_overall_progress
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.widget.input import BasePopupTextEditorToolbar, TextEditBase, GrammarHighlighter, \
     GrammarHighlightStyle
+from plotlyst.view.widget.manuscript.settings import ManuscriptEditorSettingsWidget
 
 
 class SentenceHighlighter(QSyntaxHighlighter):
@@ -276,6 +277,7 @@ class ManuscriptEditor(QWidget):
         self._scenes: List[ManuscriptTextEdit] = []
         self._font = self.defaultFont()
         self._characterWidth: int = 40
+        self._settings: Optional[ManuscriptEditorSettingsWidget] = None
 
         vbox(self, 0, 0)
 
@@ -330,6 +332,11 @@ class ManuscriptEditor(QWidget):
             self.layout().addWidget(wdg)
 
         self.layout().addWidget(vspacer())
+
+    def attachSettingsWidget(self, settings: ManuscriptEditorSettingsWidget):
+        self._settings = settings
+        self._settings.smartTypingSettings.dashChanged.connect(self._dashInsertionChanged)
+        self._settings.smartTypingSettings.capitalizationChanged.connect(self._capitalizationChanged)
 
     def statistics(self) -> TextStatistics:
         overall_stats = TextStatistics(0)
@@ -413,3 +420,15 @@ class ManuscriptEditor(QWidget):
         # current_margins: QMargins = self.viewportMargins()
         # self.setViewportMargins(margin, current_margins.top(), margin, current_margins.bottom())
         # self.resizeToContent()
+
+    def _dashInsertionChanged(self, mode: DashInsertionMode):
+        for textedit in self._scenes:
+            textedit.setDashInsertionMode(mode)
+        self._novel.prefs.manuscript.dash = mode
+        self.repo.update_novel(self._novel)
+
+    def _capitalizationChanged(self, mode: AutoCapitalizationMode):
+        for textedit in self._scenes:
+            textedit.setAutoCapitalizationMode(mode)
+        self._novel.prefs.manuscript.capitalization = mode
+        self.repo.update_novel(self._novel)

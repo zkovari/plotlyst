@@ -29,6 +29,7 @@ from qthandy import margins, vbox, decr_icon, pointy, vspacer, hbox, incr_font
 from qtmenu import group
 from qttextedit import DashInsertionMode
 from qttextedit.api import AutoCapitalizationMode
+from qttextedit.ops import FontSectionSettingWidget, FontSizeSectionSettingWidget, TextWidthSectionSettingWidget
 from qttextedit.util import EN_DASH, EM_DASH
 
 from plotlyst.core.domain import Novel
@@ -40,7 +41,7 @@ from plotlyst.view.widget.button import CollapseButton
 from plotlyst.view.widget.input import Toggle
 
 
-class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
+class ManuscriptSpellcheckingSettingsWidget(QWidget, Ui_ManuscriptContextMenuWidget):
     languageChanged = pyqtSignal(str)
 
     def __init__(self, novel: Novel, parent=None):
@@ -193,6 +194,20 @@ class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
         self.languageChanged.emit(self.lang)
 
 
+class ManuscriptFontSettingsWidget(QWidget):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        vbox(self)
+
+        self.fontSetting = FontSectionSettingWidget()
+        self.sizeSetting = FontSizeSectionSettingWidget()
+        self.widthSetting = TextWidthSectionSettingWidget()
+
+        self.layout().addWidget(self.fontSetting)
+        self.layout().addWidget(self.sizeSetting)
+        self.layout().addWidget(self.widthSetting)
+
+
 class ManuscriptSmartTypingSettingsWidget(QWidget):
     dashChanged = pyqtSignal(DashInsertionMode)
     capitalizationChanged = pyqtSignal(AutoCapitalizationMode)
@@ -301,22 +316,30 @@ class EditorSettingsHeader(QFrame):
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         self.btnCollapse.click()
 
+    def setChecked(self, checked: bool = True):
+        self.btnCollapse.setChecked(checked)
+        self._widget.setVisible(checked)
+
 
 class ManuscriptEditorSettingsWidget(QWidget):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         vbox(self)
 
-        self._formattingSettings = ManuscriptSmartTypingSettingsWidget(novel)
-        self._langSelectionWidget = ManuscriptContextMenuWidget(novel)
+        self.fontSettings = ManuscriptFontSettingsWidget(novel)
+        self.smartTypingSettings = ManuscriptSmartTypingSettingsWidget(novel)
+        self.langSelectionWidget = ManuscriptSpellcheckingSettingsWidget(novel)
 
-        self._addSection('Font settings', 'fa5s.font', label('Font settings'))
-        self._addSection('Smart Typing', 'ri.double-quotes-r', self._formattingSettings)
-        self._addSection('Spellchecking', 'fa5s.spell-check', self._langSelectionWidget)
+        header = self._addSection('Font settings', 'fa5s.font', self.fontSettings)
+        header.setChecked(True)
+        self._addSection('Smart Typing', 'ri.double-quotes-r', self.smartTypingSettings)
+        self._addSection('Spellchecking', 'fa5s.spell-check', self.langSelectionWidget)
         self.layout().addWidget(vspacer())
 
-    def _addSection(self, title: str, icon: str, widget: QWidget):
+    def _addSection(self, title: str, icon: str, widget: QWidget) -> EditorSettingsHeader:
         header = EditorSettingsHeader(title, icon, widget)
 
         self.layout().addWidget(header)
         self.layout().addWidget(widget)
+
+        return header

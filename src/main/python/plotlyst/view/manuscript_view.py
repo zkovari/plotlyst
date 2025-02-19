@@ -169,10 +169,6 @@ class ManuscriptView(AbstractNovelView):
         self._addSceneMenu.addAction(
             action('Add chapter', IconRegistry.chapter_icon(), self.ui.treeChapters.addChapter))
 
-        # self._langSelectionWidget = ManuscriptContextMenuWidget(novel, self.widget)
-        # self._formattingSettings = ManuscriptFormattingWidget(novel)
-        # self._formattingSettings.dashChanged.connect(self._dashInsertionChanged)
-        # self._formattingSettings.capitalizationChanged.connect(self._capitalizationChanged)
         self._contextMenuWidget = TextEditorSettingsWidget()
         self._settingsWidget = ManuscriptEditorSettingsWidget(novel)
         # self._contextMenuWidget.setProperty('borderless', True)
@@ -181,7 +177,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.scrollSettings.layout().addWidget(self._settingsWidget)
         # self._contextMenuWidget.setSectionVisible(TextEditorSettingsSection.PAGE_WIDTH, False)
         # self._contextMenuWidget.setSectionVisible(TextEditorSettingsSection.TEXT_WIDTH, True)
-        # self.ui.textEdit.attachSettingsWidget(self._contextMenuWidget)
+        self.textEditor.attachSettingsWidget(self._settingsWidget)
 
         # self._langSelectionWidget.languageChanged.connect(self._language_changed)
         self._cbSpellCheck.toggled.connect(self._spellcheck_toggled)
@@ -440,15 +436,15 @@ class ManuscriptView(AbstractNovelView):
             self.novel.prefs.manuscript.font[app_env.platform()] = FontSettings()
         return self.novel.prefs.manuscript.font[app_env.platform()]
 
-    def _dashInsertionChanged(self, mode: DashInsertionMode):
-        self.ui.textEdit.textEdit.setDashInsertionMode(mode)
-        self.novel.prefs.manuscript.dash = mode
-        self.repo.update_novel(self.novel)
-
-    def _capitalizationChanged(self, mode: AutoCapitalizationMode):
-        self.ui.textEdit.textEdit.setAutoCapitalizationMode(mode)
-        self.novel.prefs.manuscript.capitalization = mode
-        self.repo.update_novel(self.novel)
+    # def _dashInsertionChanged(self, mode: DashInsertionMode):
+    #     self.ui.textEdit.textEdit.setDashInsertionMode(mode)
+    #     self.novel.prefs.manuscript.dash = mode
+    #     self.repo.update_novel(self.novel)
+    #
+    # def _capitalizationChanged(self, mode: AutoCapitalizationMode):
+    #     self.ui.textEdit.textEdit.setAutoCapitalizationMode(mode)
+    #     self.novel.prefs.manuscript.capitalization = mode
+    #     self.repo.update_novel(self.novel)
 
     def _hide_sidebar(self):
         def finished():
