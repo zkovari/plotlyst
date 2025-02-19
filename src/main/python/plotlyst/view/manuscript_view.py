@@ -26,6 +26,7 @@ from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 from qttextedit import DashInsertionMode
 from qttextedit.api import AutoCapitalizationMode
+from qttextedit.ops import TextEditorSettingsWidget
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR
 from plotlyst.core.domain import Novel, Document, Chapter, DocumentProgress, FontSettings
@@ -46,9 +47,11 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.widget.display import Icon
 from plotlyst.view.widget.input import Toggle
-from plotlyst.view.widget.manuscript import DistractionFreeManuscriptEditor, SprintWidget, ManuscriptExportWidget, \
-    ManuscriptProgressCalendar, ManuscriptDailyProgress, ManuscriptProgressCalendarLegend, ManuscriptProgressWidget, \
-    ManuscriptEditor, ManuscriptEditorSettingsWidget
+from plotlyst.view.widget.manuscript import DistractionFreeManuscriptEditor, SprintWidget, \
+    ManuscriptProgressCalendar, ManuscriptDailyProgress, ManuscriptProgressCalendarLegend, ManuscriptProgressWidget
+from plotlyst.view.widget.manuscript.editor import ManuscriptEditor
+from plotlyst.view.widget.manuscript.export import ManuscriptExportWidget
+from plotlyst.view.widget.manuscript.settings import ManuscriptEditorSettingsWidget
 from plotlyst.view.widget.scene.editor import SceneMiniEditor
 from plotlyst.view.widget.tree import TreeSettings
 
@@ -170,7 +173,7 @@ class ManuscriptView(AbstractNovelView):
         # self._formattingSettings = ManuscriptFormattingWidget(novel)
         # self._formattingSettings.dashChanged.connect(self._dashInsertionChanged)
         # self._formattingSettings.capitalizationChanged.connect(self._capitalizationChanged)
-        # self._contextMenuWidget = TextEditorSettingsWidget()
+        self._contextMenuWidget = TextEditorSettingsWidget()
         self._settingsWidget = ManuscriptEditorSettingsWidget(novel)
         # self._contextMenuWidget.setProperty('borderless', True)
         # self._contextMenuWidget.addItem(self._formattingSettings, IconRegistry.from_name('ri.double-quotes-r'), '')
