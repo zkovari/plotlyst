@@ -369,7 +369,7 @@ class ManuscriptEditor(QWidget):
         self._maxContentWidth = metrics.boundingRect('M' * self._characterWidth).width()
         self._resizeToCharacterWidth()
 
-    def setScenes(self, scenes: List[Scene], title: Optional[str] = None):
+    def setChapterScenes(self, scenes: List[Scene], title: Optional[str] = None):
         self._scenes.clear()
         self._scene = None
         clear_layout(self.wdgEditor)

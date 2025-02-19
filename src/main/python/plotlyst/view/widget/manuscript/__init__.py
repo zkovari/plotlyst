@@ -19,29 +19,28 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import datetime
 from functools import partial
-from typing import Optional, List, Dict
+from typing import Optional, List
 
 import qtanim
 from PyQt6 import QtGui
 from PyQt6.QtCharts import QChart
-from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QObject, QEvent, QSizeF, QRectF, \
-    QRect, QDate, QPoint, QVariantAnimation, QEasingCurve
+from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QObject, QEvent, QRect, QDate, QPoint, QVariantAnimation, \
+    QEasingCurve
 from PyQt6.QtGui import QTextDocument, QColor, QTextBlock, QKeyEvent, \
-    QMouseEvent, QTextCursor, QScreen, QTextFormat, QTextObjectInterface, QPainter, QFontMetrics, QTextOption, \
+    QMouseEvent, QTextCursor, QScreen, QTextFormat, QPainter, QTextOption, \
     QShowEvent, QIcon
 from PyQt6.QtMultimedia import QSoundEffect
-from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit, QCalendarWidget, QTableView, \
+from PyQt6.QtWidgets import QWidget, QApplication, QLineEdit, QCalendarWidget, QTableView, \
     QPushButton, QToolButton, QWidgetItem, QGraphicsColorizeEffect, QGraphicsTextItem
 from overrides import overrides
 from qthandy import retain_when_hidden, translucent, clear_layout, margins, vbox, bold, vline, decr_font, \
     underline, transparent, italic, decr_icon, pointy, hbox
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, group
-from qttextedit import TextBlockState, OBJECT_REPLACEMENT_CHARACTER
+from qttextedit import TextBlockState
 from textstat import textstat
 
-from plotlyst.common import RELAXED_WHITE_COLOR, DEFAULT_MANUSCRIPT_LINE_SPACE, \
-    DEFAULT_MANUSCRIPT_INDENT, PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR
+from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR
 from plotlyst.core.domain import Novel, Scene, TextStatistics, DocumentStatistics, DocumentProgress
 from plotlyst.core.sprint import TimerModel
 from plotlyst.core.text import wc, sentence_count, clean_text
@@ -344,7 +343,7 @@ class ManuscriptTextEditor(TextEditorBase):
         if len(self._scenes) == 1:
             self.setScene(self._scenes[0])
         elif len(self._scenes) > 1:
-            self.setChapterScenes(self._scenes, self._textTitle.text())
+            self.setScenes(self._scenes, self._textTitle.text())
 
     def setTitleVisible(self, visible: bool):
         self._titleVisible = visible
@@ -359,19 +358,7 @@ class ManuscriptTextEditor(TextEditorBase):
     def asyncCheckGrammar(self):
         self.textEdit.asyncCheckGrammar()
 
-    def scenes(self) -> List[Scene]:
-        return self._scenes
-
-    def setScene(self, scene: Scene):
-        self.clear()
-        self._textedit.setScene(scene)
-
-        self._scenes.append(scene)
-        self._textTitle.setPlaceholderText('Scene title')
-        self._textTitle.setText(scene.title)
-        self._textTitle.setReadOnly(False)
-
-    def setChapterScenes(self, scenes: List[Scene], title: str = ''):
+    def setScenes(self, scenes: List[Scene], title: str = ''):
         self.clear()
         self._textedit.setScenes(scenes)
 
