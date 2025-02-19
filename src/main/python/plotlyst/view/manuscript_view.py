@@ -87,7 +87,6 @@ class ManuscriptView(AbstractNovelView):
         self._btnGroupSideBar = ExclusiveOptionalButtonGroup()
         self._btnGroupSideBar.addButton(self.ui.btnSceneInfo)
         self._btnGroupSideBar.addButton(self.ui.btnGoals)
-        # self._btnGroupSideBar.addButton(self.ui.btnReadability)
         self._btnGroupSideBar.addButton(self.ui.btnProgress)
         self._btnGroupSideBar.addButton(self.ui.btnExport)
         self._btnGroupSideBar.addButton(self.ui.btnSettings)
@@ -100,7 +99,6 @@ class ManuscriptView(AbstractNovelView):
                               [(self.ui.btnSceneInfo, self.ui.pageInfo), (self.ui.btnGoals, self.ui.pageGoal),
                                (self.ui.btnExport, self.ui.pageExport),
                                (self.ui.btnProgress, self.ui.pageProgress),
-                               # (self.ui.btnReadability, self.ui.pageReadability),
                                (self.ui.btnSettings, self.ui.pageSettings)])
 
         bold(self.ui.lblWordCount)
@@ -294,16 +292,12 @@ class ManuscriptView(AbstractNovelView):
             self._text_changed()
 
             if self._cbSpellCheck.isChecked():
-                # self.ui.textEdit.setGrammarCheckEnabled(True)
                 self.textEditor.asyncCheckGrammar()
-            # if self.ui.btnReadability.isChecked():
-            #     self._wdgReadability.checkTextDocument(self.ui.textEdit.document())
 
     def _text_changed(self):
         wc = self.textEditor.statistics().word_count
         self.ui.lblWordCount.setWordCount(wc)
         self._update_story_goal()
-        # self._wdgReadability.setTextDocumentUpdated(self.ui.textEdit.document())
 
     def _text_selection_changed(self):
         if self.ui.textEdit.textEdit.textCursor().hasSelection():
@@ -368,8 +362,6 @@ class ManuscriptView(AbstractNovelView):
         if not ask_for_resource(ResourceType.NLTK_PUNKT_TOKENIZER):
             self.ui.btnReadability.setChecked(False)
             return
-
-        # self._wdgReadability.checkTextDocument(self.ui.textEdit.document())
 
     def _scene_separator_clicked(self, scene: Scene):
         if not self.ui.btnSceneInfo.isChecked():
