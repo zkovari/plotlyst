@@ -69,7 +69,7 @@ class ManuscriptView(AbstractNovelView):
         bold(self.ui.lblTitle)
         self.ui.btnManuscript.setIcon(IconRegistry.manuscript_icon())
 
-        self.ui.btnSceneInfo.setIcon(IconRegistry.scene_icon())
+        self.ui.btnSceneInfo.setIcon(IconRegistry.scene_icon(color_on=PLOTLYST_MAIN_COLOR))
         self.ui.btnGoals.setIcon(IconRegistry.goal_icon('black', PLOTLYST_MAIN_COLOR))
         self.ui.btnReadability.setIcon(IconRegistry.from_name('fa5s.glasses', 'black', PLOTLYST_MAIN_COLOR))
         self.ui.btnProgress.setIcon(IconRegistry.from_name('mdi.calendar-month-outline', 'black', PLOTLYST_MAIN_COLOR))
@@ -92,7 +92,7 @@ class ManuscriptView(AbstractNovelView):
         self._btnGroupSideBar.addButton(self.ui.btnExport)
         self._btnGroupSideBar.addButton(self.ui.btnSettings)
         for btn in self._btnGroupSideBar.buttons():
-            btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.5, ignoreCheckedButton=True))
+            btn.installEventFilter(OpacityEventFilter(btn, enterOpacity=0.7, ignoreCheckedButton=True))
             btn.installEventFilter(ButtonPressResizeEventFilter(btn))
 
         self._btnGroupSideBar.buttonToggled.connect(self._side_bar_toggled)
@@ -243,7 +243,7 @@ class ManuscriptView(AbstractNovelView):
 
         self.ui.wdgBottom.layout().insertWidget(1, self.ui.lblWordCount, alignment=Qt.AlignmentFlag.AlignCenter)
         self.ui.lblWordCount.setVisible(True)
-        self.ui.wdgEditor.layout().insertWidget(0, self.textEditor)
+        self.ui.wdgEditor.layout().addWidget(self.textEditor)
 
     def _update_story_goal(self):
         wc = sum([x.manuscript.statistics.wc for x in self.novel.scenes if x.manuscript and x.manuscript.statistics])
