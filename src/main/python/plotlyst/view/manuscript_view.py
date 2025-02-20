@@ -259,10 +259,10 @@ class ManuscriptView(AbstractNovelView):
         self._dist_free_mode = True
         self.textEditor.initSentenceHighlighter()
 
+        self._dist_free_bottom_bar.setWordDisplay(self.ui.lblWordCount)
         self._dist_free_top_bar.activate()
         self._dist_free_bottom_bar.activate()
         # self._dist_free_editor.activate(self.textEditor, self._wdgSprint.model())
-        # self._dist_free_editor.setWordDisplay(self.ui.lblWordCount)
 
     def _exit_distraction_free(self):
         emit_global_event(ExitDistractionFreeMode(self))
@@ -283,9 +283,9 @@ class ManuscriptView(AbstractNovelView):
         self._dist_free_mode = False
         self.textEditor.clearSentenceHighlighter()
 
-        # self.ui.wdgBottom.layout().insertWidget(1, self.ui.lblWordCount, alignment=Qt.AlignmentFlag.AlignCenter)
-        # self.ui.lblWordCount.setVisible(True)
-        # self.ui.wdgEditor.layout().addWidget(self.textEditor)
+        self.ui.wdgBottom.layout().insertWidget(1, self.ui.lblWordCount, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.ui.lblWordCount.setNightModeEnabled(False)
+        self.ui.lblWordCount.setVisible(True)
 
     def _update_story_goal(self):
         wc = sum([x.manuscript.statistics.wc for x in self.novel.scenes if x.manuscript and x.manuscript.statistics])

@@ -168,7 +168,7 @@ class WordsDisplay(QLabel):
         self.setWordCount(count)
 
     def setNightModeEnabled(self, enabled: bool):
-        self.setProperty('night-mode', enabled)
+        self.setProperty('night-mode-secondary', enabled)
         restyle(self)
 
     def setWordCount(self, count: int):

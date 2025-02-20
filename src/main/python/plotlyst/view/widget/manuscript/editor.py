@@ -42,10 +42,11 @@ from plotlyst.core.domain import DocumentProgress, Novel, Scene, TextStatistics,
 from plotlyst.env import app_env
 from plotlyst.service.manuscript import daily_progress, daily_overall_progress
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import push_btn, tool_btn, fade_in
+from plotlyst.view.common import push_btn, tool_btn, fade_in, fade
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.text import apply_text_color
 from plotlyst.view.style.theme import BG_DARK_COLOR
+from plotlyst.view.widget.display import WordsDisplay
 from plotlyst.view.widget.input import BasePopupTextEditorToolbar, TextEditBase, GrammarHighlighter, \
     GrammarHighlightStyle
 from plotlyst.view.widget.manuscript.settings import ManuscriptEditorSettingsWidget
@@ -91,10 +92,12 @@ class DistFreeControlsBar(QFrame):
         margins(self, left=15, right=15)
         self.setStyleSheet(f'QWidget {{background-color: {BG_DARK_COLOR};}}')
         sp(self).v_max()
+        self.lblWords: Optional[WordsDisplay] = None
 
         self.btnFocus = self._initButton('mdi.credit-card', 'Highlight')
         self.btnTypewriterMode = self._initButton('mdi.typewriter', 'Centered')
         self.btnWordCount = self._initButton('mdi6.counter', 'Word count')
+        self.btnWordCount.clicked.connect(self._wordCountClicked)
 
         self.layout().addWidget(self.btnFocus)
         self.layout().addWidget(self.btnTypewriterMode)
@@ -120,11 +123,21 @@ class DistFreeControlsBar(QFrame):
         self.btnTypewriterMode.setHidden(True)
         self.btnWordCount.setHidden(True)
 
+    def setWordDisplay(self, words: WordsDisplay):
+        words.setNightModeEnabled(True)
+        self.lblWords = words
+        self.layout().addWidget(self.lblWords)
+        self.lblWords.setVisible(self.btnWordCount.isChecked())
+
     def _hideItems(self):
         if not self.underMouse():
             self.btnFocus.setHidden(True)
             self.btnTypewriterMode.setHidden(True)
             self.btnWordCount.setHidden(True)
+
+    def _wordCountClicked(self, checked: bool):
+        if self.lblWords:
+            fade(self.lblWords, checked)
 
     def _initButton(self, icon: str, text: str) -> QToolButton:
         btn = tool_btn(
