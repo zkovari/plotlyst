@@ -26,7 +26,7 @@ from PyQt6 import QtGui
 from PyQt6.QtCharts import QChart
 from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QRect, QDate, QPoint, QVariantAnimation, \
     QEasingCurve
-from PyQt6.QtGui import QTextDocument, QColor, QTextBlock, QTextCursor, QTextFormat, QPainter, QTextOption, \
+from PyQt6.QtGui import QTextDocument, QColor, QTextFormat, QPainter, QTextOption, \
     QShowEvent, QIcon
 from PyQt6.QtMultimedia import QSoundEffect
 from PyQt6.QtWidgets import QWidget, QLineEdit, QCalendarWidget, QTableView, \
@@ -40,13 +40,12 @@ from qttextedit import TextBlockState
 from textstat import textstat
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR
-from plotlyst.core.domain import Novel, Scene, TextStatistics, DocumentStatistics, DocumentProgress
+from plotlyst.core.domain import Novel, Scene, DocumentProgress
 from plotlyst.core.sprint import TimerModel
 from plotlyst.core.text import wc, sentence_count, clean_text
 from plotlyst.env import app_env
 from plotlyst.resources import resource_registry
-from plotlyst.service.manuscript import daily_progress, \
-    daily_overall_progress, find_daily_overall_progress
+from plotlyst.service.manuscript import find_daily_overall_progress
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import spin, ButtonPressResizeEventFilter, label, push_btn, \
     tool_btn
@@ -299,9 +298,6 @@ class ManuscriptTextEditor(TextEditorBase):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._novel: Optional[Novel] = None
-        self.toolbar().setHidden(True)
-        self._titleVisible: bool = True
-        self.setCharacterWidth(40)
         self._scenes: List[Scene] = []
 
         self._textTitle = QLineEdit()
@@ -322,159 +318,17 @@ class ManuscriptTextEditor(TextEditorBase):
 
         self.repo = RepositoryPersistenceManager.instance()
 
-    # @overrides
-    # def _initTextEdit(self) -> ManuscriptTextEdit:
-    #     _textedit = ManuscriptTextEdit()
-    #     _textedit.zoomIn(int(_textedit.font().pointSize() * 0.25))
-    #     _textedit.setBlockFormat(DEFAULT_MANUSCRIPT_LINE_SPACE, textIndent=DEFAULT_MANUSCRIPT_INDENT)
-    #     _textedit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoNone)
-    #     _textedit.selectionChanged.connect(self.selectionChanged.emit)
-    #     _textedit.textChanged.connect(self._textChanged)
-    #     _textedit.setProperty('borderless', True)
-    #     return _textedit
-
-    # def manuscriptTextEdit(self) -> ManuscriptTextEdit:
-    #     return self._textedit
-
     def refresh(self):
         if len(self._scenes) == 1:
             self.setScene(self._scenes[0])
         elif len(self._scenes) > 1:
             self.setScenes(self._scenes, self._textTitle.text())
 
-    def setTitleVisible(self, visible: bool):
-        self._titleVisible = visible
-        self._wdgTitle.setVisible(visible)
-
-    def setGrammarCheckEnabled(self, enabled: bool):
-        self.textEdit.setGrammarCheckEnabled(enabled)
-
-    def checkGrammar(self):
-        self.textEdit.checkGrammar()
-
-    def asyncCheckGrammar(self):
-        self.textEdit.asyncCheckGrammar()
-
-    def setScenes(self, scenes: List[Scene], title: str = ''):
-        self.clear()
-        self._textedit.setScenes(scenes)
-
-        self._scenes.extend(scenes)
-        self._textTitle.setPlaceholderText('Chapter')
-        self._textTitle.setText(title)
-        self._textTitle.setReadOnly(True)
-
-    def clear(self):
-        self._scenes.clear()
-        self.textEdit.document().clear()
-        self.textEdit.clear()
-
-    def document(self) -> QTextDocument:
-        return self.textEdit.document()
-
-    def statistics(self) -> TextStatistics:
-        return self.textEdit.statistics()
-
     def setViewportMargins(self, left: int, top: int, right: int, bottom: int):
         self.textEdit.setViewportMargins(left, top, right, bottom)
 
     def setMargins(self, left: int, top: int, right: int, bottom: int):
         self.textEdit.setViewportMargins(left, top, right, bottom)
-
-    def initSentenceHighlighter(self):
-        self.textEdit.initSentenceHighlighter()
-
-    def clearSentenceHighlighter(self):
-        self.textEdit.clearSentenceHighlighter()
-
-    def setSentenceHighlighterEnabled(self, enabled: bool):
-        self.textEdit.setSentenceHighlighterEnabled(enabled)
-
-    @overrides
-    def setFocus(self):
-        self.textEdit.setFocus()
-
-    def setVerticalScrollBarPolicy(self, policy):
-        self.textEdit.setVerticalScrollBarPolicy(policy)
-
-    def installEventFilterOnEditors(self, filter):
-        self.textEdit.installEventFilter(filter)
-
-    def removeEventFilterFromEditors(self, filter):
-        self.textEdit.removeEventFilter(filter)
-
-    def _textChanged(self):
-        if not self._scenes:
-            return
-
-        for scene in self._scenes:
-            if scene.manuscript.statistics is None:
-                scene.manuscript.statistics = DocumentStatistics()
-
-        if len(self._scenes) == 1:
-            scene = self._scenes[0]
-            wc = self.textEdit.statistics().word_count
-            updated_progress = self._updateProgress(scene, wc)
-            scene.manuscript.content = self.textEdit.toHtml()
-            self.repo.update_doc(app_env.novel, scene.manuscript)
-            if updated_progress:
-                self.repo.update_scene(scene)
-                self.repo.update_novel(self._novel)
-        else:
-            scene_i = 0
-            block: QTextBlock = self.textEdit.document().begin()
-            first_scene_block = None
-            while block.isValid():
-                if block.userState() == TextBlockState.UNEDITABLE.value:
-                    if first_scene_block is not None:
-                        scene = self._scenes[scene_i]
-                        self._updateSceneManuscript(scene, first_scene_block, block.blockNumber() - 1)
-                        scene_i += 1
-                    first_scene_block = block.next()
-                block = block.next()
-
-            # update last scene
-            self._updateSceneManuscript(self._scenes[scene_i], first_scene_block, self.textEdit.document().blockCount())
-
-        self.textChanged.emit()
-
-    def _updateSceneManuscript(self, scene: Scene, first_scene_block: QTextBlock, blockNumber: int):
-        cursor = QTextCursor(first_scene_block)
-        cursor.movePosition(QTextCursor.MoveOperation.NextBlock, QTextCursor.MoveMode.KeepAnchor,
-                            blockNumber - first_scene_block.blockNumber())
-        cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
-        scene.manuscript.content = cursor.selection().toHtml()
-        wc_ = wc(cursor.selection().toPlainText())
-        if scene.manuscript.statistics.wc != wc_:
-            self._updateProgress(scene, wc_)
-            scene.manuscript.statistics.wc = wc_
-            self.repo.update_scene(scene)
-            self.repo.update_novel(self._novel)
-
-        self.repo.update_doc(app_env.novel, scene.manuscript)
-
-    def _updateProgress(self, scene, wc) -> bool:
-        if scene.manuscript.statistics.wc == wc:
-            return False
-
-        diff = wc - scene.manuscript.statistics.wc
-        progress: DocumentProgress = daily_progress(scene)
-        overall_progress = daily_overall_progress(self._novel)
-        if diff > 0:
-            progress.added += diff
-            overall_progress.added += diff
-        else:
-            progress.removed += abs(diff)
-            overall_progress.removed += abs(diff)
-        self.progressChanged.emit(overall_progress)
-        scene.manuscript.statistics.wc = wc
-
-        return True
-
-    def _titleChanged(self, text: str):
-        if len(self._scenes) == 1:
-            self._scenes[0].title = text
-            self.sceneTitleChanged.emit(self._scenes[0])
 
 
 class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
