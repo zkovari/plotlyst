@@ -107,6 +107,7 @@ class DistFreeControlsBar(QFrame):
 
         self.btnFocus = self._initButton('mdi.credit-card', 'Highlight')
         self.btnTypewriterMode = self._initButton('mdi.typewriter', 'Centered')
+        self.btnTypewriterMode.setChecked(True)
         self.btnWordCount = self._initButton('mdi6.counter', 'Word count')
         self.btnWordCount.clicked.connect(self._wordCountClicked)
 

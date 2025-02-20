@@ -19,7 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import qtanim
 from PyQt6.QtCore import QTimer, Qt, QObject, QEvent
-from PyQt6.QtWidgets import QInputDialog
+from PyQt6.QtGui import QScreen
+from PyQt6.QtWidgets import QInputDialog, QApplication
 from overrides import overrides
 from qthandy import translucent, bold, margins, spacer, transparent, vspacer, decr_icon, vline, incr_icon
 from qthandy.filter import OpacityEventFilter
@@ -204,6 +205,7 @@ class ManuscriptView(AbstractNovelView):
         # self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
         self.textEditor.sceneTitleChanged.connect(self._scene_title_changed)
         self._dist_free_bottom_bar.btnFocus.toggled.connect(self.textEditor.setSentenceHighlighterEnabled)
+        self._dist_free_bottom_bar.btnTypewriterMode.toggled.connect(self._toggle_typewriter_mode)
 
         if self.novel.chapters:
             self.ui.treeChapters.selectChapter(self.novel.chapters[0])
@@ -263,11 +265,14 @@ class ManuscriptView(AbstractNovelView):
         self._dist_free_bottom_bar.activate()
         self.textEditor.setSentenceHighlighterEnabled(self._dist_free_bottom_bar.btnFocus.isChecked())
 
+        self._toggle_typewriter_mode(self._dist_free_bottom_bar.btnTypewriterMode.isChecked())
+
         self.ui.scrollEditor.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
     def _exit_distraction_free(self):
         emit_global_event(ExitDistractionFreeMode(self))
         margins(self.widget, 4, 2, 2, 2)
+        margins(self.ui.pageText, bottom=0)
         self.ui.pageText.setStyleSheet('')
 
         self.ui.wdgTitle.setVisible(True)
@@ -438,3 +443,10 @@ class ManuscriptView(AbstractNovelView):
         qtanim.toggle_expansion(self.ui.wdgLeftSide, True)
         self.ui.btnTreeToggle.setChecked(True)
         self.ui.btnTreeToggleSecondary.setVisible(False)
+
+    def _toggle_typewriter_mode(self, toggled: bool):
+        if toggled:
+            screen: QScreen = QApplication.screenAt(self.ui.pageText.pos())
+            margins(self.ui.pageText, bottom=screen.size().height() // 3)
+        else:
+            margins(self.ui.pageText, bottom=0)
