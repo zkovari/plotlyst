@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import datetime
 from functools import partial
-from typing import Optional, List
+from typing import Optional
 
 import qtanim
 from PyQt6 import QtGui
@@ -29,7 +29,7 @@ from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QRect, QDate, QPoint, QVa
 from PyQt6.QtGui import QTextDocument, QColor, QTextFormat, QPainter, QTextOption, \
     QShowEvent, QIcon
 from PyQt6.QtMultimedia import QSoundEffect
-from PyQt6.QtWidgets import QWidget, QLineEdit, QCalendarWidget, QTableView, \
+from PyQt6.QtWidgets import QWidget, QCalendarWidget, QTableView, \
     QPushButton, QToolButton, QWidgetItem, QGraphicsColorizeEffect, QGraphicsTextItem
 from overrides import overrides
 from qthandy import retain_when_hidden, translucent, margins, vbox, bold, vline, decr_font, \
@@ -40,13 +40,12 @@ from qttextedit import TextBlockState
 from textstat import textstat
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR
-from plotlyst.core.domain import Novel, Scene, DocumentProgress
+from plotlyst.core.domain import Novel, DocumentProgress
 from plotlyst.core.sprint import TimerModel
 from plotlyst.core.text import wc, sentence_count, clean_text
 from plotlyst.env import app_env
 from plotlyst.resources import resource_registry
 from plotlyst.service.manuscript import find_daily_overall_progress
-from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import spin, ButtonPressResizeEventFilter, label, push_btn, \
     tool_btn
 from plotlyst.view.generated.manuscript_lang_setting_ui import Ui_ManuscriptLangSettingWidget
@@ -56,7 +55,6 @@ from plotlyst.view.generated.timer_setup_widget_ui import Ui_TimerSetupWidget
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.display import WordsDisplay, IconText, Emoji, ChartView
-from plotlyst.view.widget.input import TextEditorBase
 from plotlyst.view.widget.progress import ProgressChart
 
 
@@ -286,48 +284,6 @@ SceneSeparatorTextFormatPrefix = 'scene:/'
 #                 painter.setPen(Qt.GlobalColor.lightGray)
 #                 scene_id = anchor.replace(SceneSeparatorTextFormatPrefix, "")
 #                 painter.drawText(rect, f'~{self.sceneTitle(scene_id)}~')
-
-
-class ManuscriptTextEditor(TextEditorBase):
-    textChanged = pyqtSignal()
-    selectionChanged = pyqtSignal()
-    sceneTitleChanged = pyqtSignal(Scene)
-    progressChanged = pyqtSignal(DocumentProgress)
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._novel: Optional[Novel] = None
-        self._scenes: List[Scene] = []
-
-        self._textTitle = QLineEdit()
-        self._textTitle.setProperty('transparent', True)
-        self._textTitle.setFrame(False)
-        self._textTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title_font = self._textedit.font()
-        title_font.setBold(True)
-        title_font.setPointSize(32)
-        self._textTitle.setFont(title_font)
-        self._textTitle.returnPressed.connect(self.textEdit.setFocus)
-        self._textTitle.textEdited.connect(self._titleChanged)
-        self._wdgTitle = group(self._textTitle, margin=0, spacing=0)
-        self._wdgTitle.setProperty('relaxed-white-bg', True)
-        margins(self._wdgTitle, left=20)
-
-        self.layout().insertWidget(1, self._wdgTitle, alignment=Qt.AlignmentFlag.AlignTop)
-
-        self.repo = RepositoryPersistenceManager.instance()
-
-    def refresh(self):
-        if len(self._scenes) == 1:
-            self.setScene(self._scenes[0])
-        elif len(self._scenes) > 1:
-            self.setScenes(self._scenes, self._textTitle.text())
-
-    def setViewportMargins(self, left: int, top: int, right: int, bottom: int):
-        self.textEdit.setViewportMargins(left, top, right, bottom)
-
-    def setMargins(self, left: int, top: int, right: int, bottom: int):
-        self.textEdit.setViewportMargins(left, top, right, bottom)
 
 
 class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):

@@ -265,14 +265,6 @@ class ManuscriptTextEdit(TextEditBase):
         toolbar.activate(self)
         self.setPopupWidget(toolbar)
 
-        # self._sceneSepBlockFormat = QTextBlockFormat()
-        # self._sceneSepBlockFormat.setTextIndent(40)
-        # self._sceneSepBlockFormat.setTopMargin(20)
-        # self._sceneSepBlockFormat.setBottomMargin(20)
-
-        # self._sceneTextObject = SceneSeparatorTextObject(self)
-        # self.document().documentLayout().registerHandler(SceneSeparatorTextFormat, self._sceneTextObject)
-
         self._setDefaultStyleSheet()
         self.setCommandOperations([Heading1Operation, Heading2Operation, Heading3Operation, InsertListOperation,
                                    InsertNumberedListOperation])
