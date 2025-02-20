@@ -24,7 +24,7 @@ from typing import Optional, List
 from PyQt6 import QtGui
 from PyQt6.QtCore import pyqtSignal, QTextBoundaryFinder, Qt, QSize, QTimer, QEvent
 from PyQt6.QtGui import QFont, QResizeEvent, QShowEvent, QTextCursor, QTextCharFormat, QSyntaxHighlighter, QColor, \
-    QTextBlock, QFocusEvent
+    QTextBlock, QFocusEvent, QTextDocumentFragment
 from PyQt6.QtWidgets import QWidget, QApplication, QTextEdit, QLineEdit, QToolButton, QFrame, QPushButton
 from overrides import overrides
 from qthandy import vbox, clear_layout, vspacer, margins, transparent, gc, hbox, italic, translucent, sp, spacer, \
@@ -281,6 +281,10 @@ class ManuscriptTextEdit(TextEditBase):
         super().focusOutEvent(event)
         if self._sentenceHighlighter and self._sentenceHighlighter.sentenceHighlightEnabled():
             self._sentenceHighlighter.rehighlight()
+        if self.textCursor().hasSelection():
+            cursor = self.textCursor()
+            cursor.clearSelection()
+            self.setTextCursor(cursor)
 
     @overrides
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
@@ -414,6 +418,7 @@ class ManuscriptTextEdit(TextEditBase):
 
 class ManuscriptEditor(QWidget, EventListener):
     textChanged = pyqtSignal()
+    selectionChanged = pyqtSignal()
     progressChanged = pyqtSignal(DocumentProgress)
     sceneTitleChanged = pyqtSignal(Scene)
     sceneSeparatorClicked = pyqtSignal(Scene)
@@ -593,6 +598,7 @@ class ManuscriptEditor(QWidget, EventListener):
                 lbl.setStyleSheet(f'color: {RELAXED_WHITE_COLOR}; border: 0px; background-color: rgba(0, 0, 0, 0);')
             else:
                 transparent(lbl)
+            lbl.setDisabled(mode)
 
     def attachSettingsWidget(self, settings: ManuscriptEditorSettingsWidget):
         self._settings = settings
@@ -640,6 +646,11 @@ class ManuscriptEditor(QWidget, EventListener):
     def hasScenes(self) -> bool:
         return len(self._textedits) > 0
 
+    def selection(self) -> Optional[QTextDocumentFragment]:
+        for textedit in self._textedits:
+            if textedit.textCursor().hasSelection():
+                return textedit.textCursor().selection()
+
     def _textChanged(self, textedit: ManuscriptTextEdit, scene: Scene):
         if scene.manuscript.statistics is None:
             scene.manuscript.statistics = DocumentStatistics()
@@ -683,7 +694,7 @@ class ManuscriptEditor(QWidget, EventListener):
         # _textedit.zoomIn(int(_textedit.font().pointSize() * 0.25))
         _textedit.setBlockFormat(DEFAULT_MANUSCRIPT_LINE_SPACE, textIndent=DEFAULT_MANUSCRIPT_INDENT)
         _textedit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoNone)
-        # _textedit.selectionChanged.connect(self.selectionChanged.emit)
+        _textedit.selectionChanged.connect(self.selectionChanged)
         _textedit.setProperty('borderless', True)
 
         _textedit.setPlaceholderText('Write this scene...')

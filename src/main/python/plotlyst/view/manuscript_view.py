@@ -200,7 +200,7 @@ class ManuscriptView(AbstractNovelView):
         self.textEditor.attachSettingsWidget(self._settingsWidget)
         self.textEditor.textChanged.connect(self._text_changed)
         self.textEditor.progressChanged.connect(self._progress_changed)
-        # self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
+        self.textEditor.selectionChanged.connect(self._text_selection_changed)
         self.textEditor.sceneTitleChanged.connect(self._scene_title_changed)
         self._dist_free_bottom_bar.btnFocus.toggled.connect(self.textEditor.setSentenceHighlighterEnabled)
         self._dist_free_bottom_bar.btnTypewriterMode.toggled.connect(self._toggle_typewriter_mode)
@@ -340,9 +340,9 @@ class ManuscriptView(AbstractNovelView):
         self._update_story_goal()
 
     def _text_selection_changed(self):
-        if self.ui.textEdit.textEdit.textCursor().hasSelection():
-            fragment = self.ui.textEdit.textEdit.textCursor().selection()
-            self.ui.lblWordCount.calculateSecondaryWordCount(fragment.toPlainText())
+        selection = self.textEditor.selection()
+        if selection:
+            self.ui.lblWordCount.calculateSecondaryWordCount(selection.toPlainText())
         else:
             self.ui.lblWordCount.clearSecondaryWordCount()
 
