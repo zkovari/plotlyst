@@ -22,7 +22,7 @@ from functools import partial
 from typing import Optional, List
 
 from PyQt6 import QtGui
-from PyQt6.QtCore import pyqtSignal, QTextBoundaryFinder, Qt, QSize, QTimer, QEvent
+from PyQt6.QtCore import pyqtSignal, QTextBoundaryFinder, Qt, QSize, QTimer, QEvent, QPoint
 from PyQt6.QtGui import QFont, QResizeEvent, QShowEvent, QTextCursor, QTextCharFormat, QSyntaxHighlighter, QColor, \
     QTextBlock, QFocusEvent, QTextDocumentFragment
 from PyQt6.QtWidgets import QWidget, QApplication, QTextEdit, QLineEdit, QToolButton, QFrame, QPushButton
@@ -422,6 +422,7 @@ class ManuscriptEditor(QWidget, EventListener):
     progressChanged = pyqtSignal(DocumentProgress)
     sceneTitleChanged = pyqtSignal(Scene)
     sceneSeparatorClicked = pyqtSignal(Scene)
+    cursorPositionChanged = pyqtSignal(int, int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -457,7 +458,7 @@ class ManuscriptEditor(QWidget, EventListener):
 
         self.wdgEditor = QWidget()
         vbox(self.wdgEditor, 0, 0)
-        margins(self.wdgEditor, left=15, top=40, bottom=40, right=15)
+        margins(self.wdgEditor, left=15, top=40, bottom=50, right=15)
 
         self.layout().addWidget(self.wdgTitle)
         self.layout().addWidget(self.wdgEditor)
@@ -684,6 +685,14 @@ class ManuscriptEditor(QWidget, EventListener):
 
         return True
 
+    def _cursorPositionChanged(self, textedit: ManuscriptTextEdit):
+        rect = textedit.cursorRect(textedit.textCursor())
+        pos = QPoint(rect.x(), rect.y())
+        parent_pos = textedit.mapToParent(pos)
+        parent_pos = self.wdgEditor.mapToParent(parent_pos)
+
+        self.cursorPositionChanged.emit(parent_pos.x(), parent_pos.y())
+
     def _initTextEdit(self, scene: Scene) -> ManuscriptTextEdit:
         _textedit = ManuscriptTextEdit()
         _textedit.setFont(self._font)
@@ -691,7 +700,6 @@ class ManuscriptEditor(QWidget, EventListener):
         _textedit.setAutoCapitalizationMode(self._novel.prefs.manuscript.capitalization)
         transparent(_textedit)
 
-        # _textedit.zoomIn(int(_textedit.font().pointSize() * 0.25))
         _textedit.setBlockFormat(DEFAULT_MANUSCRIPT_LINE_SPACE, textIndent=DEFAULT_MANUSCRIPT_INDENT)
         _textedit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoNone)
         _textedit.selectionChanged.connect(self.selectionChanged)
@@ -700,11 +708,11 @@ class ManuscriptEditor(QWidget, EventListener):
         _textedit.setPlaceholderText('Write this scene...')
         _textedit.setSidebarEnabled(False)
         _textedit.setReadOnly(self._novel.is_readonly())
-        # _textedit.setViewportMargins(25, 0, 0, 0)
         _textedit.setDocumentMargin(0)
 
         _textedit.setScene(scene)
         _textedit.textChanged.connect(partial(self._textChanged, _textedit, scene))
+        _textedit.cursorPositionChanged.connect(partial(self._cursorPositionChanged, _textedit))
         self._textedits.append(_textedit)
 
         return _textedit

@@ -202,6 +202,7 @@ class ManuscriptView(AbstractNovelView):
         self.textEditor.progressChanged.connect(self._progress_changed)
         self.textEditor.selectionChanged.connect(self._text_selection_changed)
         self.textEditor.sceneTitleChanged.connect(self._scene_title_changed)
+        self.textEditor.cursorPositionChanged.connect(self.ui.scrollEditor.ensureVisible)
         self._dist_free_bottom_bar.btnFocus.toggled.connect(self.textEditor.setSentenceHighlighterEnabled)
         self._dist_free_bottom_bar.btnTypewriterMode.toggled.connect(self._toggle_typewriter_mode)
 
