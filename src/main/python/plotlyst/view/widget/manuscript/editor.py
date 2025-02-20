@@ -443,6 +443,14 @@ class ManuscriptEditor(QWidget):
             textedit.setGrammarCheckEnabled(False)
             textedit.checkGrammar()
 
+    def initSentenceHighlighter(self):
+        for textedit in self._scenes:
+            textedit.initSentenceHighlighter()
+
+    def clearSentenceHighlighter(self):
+        for textedit in self._scenes:
+            textedit.clearSentenceHighlighter()
+
     def hasScenes(self) -> bool:
         return len(self._scenes) > 0
 
@@ -484,6 +492,7 @@ class ManuscriptEditor(QWidget):
         _textedit.setFont(self._font)
         _textedit.setDashInsertionMode(self._novel.prefs.manuscript.dash)
         _textedit.setAutoCapitalizationMode(self._novel.prefs.manuscript.capitalization)
+        transparent(_textedit)
 
         # _textedit.zoomIn(int(_textedit.font().pointSize() * 0.25))
         _textedit.setBlockFormat(DEFAULT_MANUSCRIPT_LINE_SPACE, textIndent=DEFAULT_MANUSCRIPT_INDENT)

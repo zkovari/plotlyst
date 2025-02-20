@@ -24,23 +24,22 @@ from typing import Optional, List
 import qtanim
 from PyQt6 import QtGui
 from PyQt6.QtCharts import QChart
-from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QObject, QEvent, QRect, QDate, QPoint, QVariantAnimation, \
+from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QRect, QDate, QPoint, QVariantAnimation, \
     QEasingCurve
-from PyQt6.QtGui import QTextDocument, QColor, QTextBlock, QKeyEvent, \
-    QMouseEvent, QTextCursor, QScreen, QTextFormat, QPainter, QTextOption, \
+from PyQt6.QtGui import QTextDocument, QColor, QTextBlock, QTextCursor, QTextFormat, QPainter, QTextOption, \
     QShowEvent, QIcon
 from PyQt6.QtMultimedia import QSoundEffect
-from PyQt6.QtWidgets import QWidget, QApplication, QLineEdit, QCalendarWidget, QTableView, \
+from PyQt6.QtWidgets import QWidget, QLineEdit, QCalendarWidget, QTableView, \
     QPushButton, QToolButton, QWidgetItem, QGraphicsColorizeEffect, QGraphicsTextItem
 from overrides import overrides
-from qthandy import retain_when_hidden, translucent, clear_layout, margins, vbox, bold, vline, decr_font, \
+from qthandy import retain_when_hidden, translucent, margins, vbox, bold, vline, decr_font, \
     underline, transparent, italic, decr_icon, pointy, hbox
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget, group
 from qttextedit import TextBlockState
 from textstat import textstat
 
-from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR
+from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR
 from plotlyst.core.domain import Novel, Scene, TextStatistics, DocumentStatistics, DocumentProgress
 from plotlyst.core.sprint import TimerModel
 from plotlyst.core.text import wc, sentence_count, clean_text
@@ -51,8 +50,6 @@ from plotlyst.service.manuscript import daily_progress, \
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import spin, ButtonPressResizeEventFilter, label, push_btn, \
     tool_btn
-from plotlyst.view.generated.distraction_free_manuscript_editor_ui import \
-    Ui_DistractionFreeManuscriptEditor
 from plotlyst.view.generated.manuscript_lang_setting_ui import Ui_ManuscriptLangSettingWidget
 from plotlyst.view.generated.readability_widget_ui import Ui_ReadabilityWidget
 from plotlyst.view.generated.sprint_widget_ui import Ui_SprintWidget
@@ -552,130 +549,6 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
         else:
             if self.btnRefresh.isVisible():
                 qtanim.fade_out(self.btnRefresh)
-
-
-class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEditor):
-    exitRequested = pyqtSignal()
-
-    def __init__(self, parent=None):
-        super(DistractionFreeManuscriptEditor, self).__init__(parent)
-        self.setupUi(self)
-        self.editor: Optional[ManuscriptEditor] = None
-        self.lblWords: Optional[WordsDisplay] = None
-        self._firstInit: bool = True
-
-        self.wdgSprint = SprintWidget(self)
-        self.wdgSprint.setCompactMode(True)
-        self.wdgHeader.layout().insertWidget(0, self.wdgSprint, alignment=Qt.AlignmentFlag.AlignLeft)
-
-        self.wdgDistractionFreeEditor.installEventFilter(self)
-        self.wdgBottom.installEventFilter(self)
-        self.btnReturn.setIcon(IconRegistry.from_name('mdi.arrow-collapse', 'white'))
-        self.btnReturn.clicked.connect(self.exitRequested.emit)
-        self.btnFocus.setIcon(IconRegistry.from_name('mdi.credit-card', 'lightgrey', color_on=PLOTLYST_TERTIARY_COLOR))
-        self.btnFocus.toggled.connect(self._toggle_manuscript_focus)
-        self.btnTypewriterMode.setIcon(
-            IconRegistry.from_name('mdi.typewriter', 'lightgrey', color_on=PLOTLYST_TERTIARY_COLOR))
-        self.btnTypewriterMode.toggled.connect(self._toggle_typewriter_mode)
-        self.btnWordCount.setIcon(IconRegistry.from_name('mdi6.counter', 'lightgrey', color_on=PLOTLYST_TERTIARY_COLOR))
-        self.btnWordCount.clicked.connect(self._wordCountClicked)
-
-        decr_font(self.btnFocus, 2)
-        decr_font(self.btnTypewriterMode, 2)
-        decr_font(self.btnWordCount, 2)
-
-    def activate(self, editor: ManuscriptEditor, timer: Optional[TimerModel] = None):
-        self.editor = editor
-        self.editor.installEventFilterOnEditors(self)
-        editor.setTitleVisible(False)
-        clear_layout(self.wdgDistractionFreeEditor.layout())
-        if timer and timer.isActive():
-            self.wdgSprint.setModel(timer)
-            self.wdgSprint.setVisible(True)
-        else:
-            self.wdgSprint.setHidden(True)
-        self.wdgDistractionFreeEditor.layout().addWidget(self.editor)
-        self.editor.setFocus()
-        self.editor.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-
-        self.wdgBottom.setVisible(True)
-        self.editor.initSentenceHighlighter()
-        if self._firstInit:
-            self.btnTypewriterMode.setChecked(True)
-            self._firstInit = False
-        else:
-            self._toggle_manuscript_focus(self.btnFocus.isChecked())
-            self._toggle_typewriter_mode(self.btnTypewriterMode.isChecked())
-
-        self._wordCountClicked(self.btnWordCount.isChecked())
-        self.setMouseTracking(True)
-        self.wdgDistractionFreeEditor.setMouseTracking(True)
-        QTimer.singleShot(5000, self._autoHideBottomBar)
-
-    def deactivate(self):
-        self.editor.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        self.editor.setTitleVisible(True)
-        self.editor.removeEventFilterFromEditors(self)
-        self.editor.setMargins(30, 30, 30, 30)
-        self.editor.clearSentenceHighlighter()
-        self.editor = None
-        self.setMouseTracking(False)
-        self.wdgDistractionFreeEditor.setMouseTracking(False)
-        if self.lblWords:
-            self.lblWords.setNightModeEnabled(False)
-
-    def setWordDisplay(self, words: WordsDisplay):
-        words.setNightModeEnabled(True)
-        self.lblWords = words
-        self.wdgHeader.layout().addWidget(self.lblWords, alignment=Qt.AlignmentFlag.AlignRight)
-        self._wordCountClicked(self.btnWordCount.isChecked())
-
-    @overrides
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if watched is self.wdgBottom and event.type() == QEvent.Type.Leave:
-            self.wdgBottom.setHidden(True)
-        if event.type() == QEvent.Type.MouseMove and isinstance(event, QMouseEvent):
-            if self.wdgBottom.isHidden() and event.pos().y() > self.height() - 25:
-                self.wdgBottom.setVisible(True)
-        return super().eventFilter(watched, event)
-
-    @overrides
-    def keyPressEvent(self, event: QKeyEvent) -> None:
-        if event.key() == Qt.Key.Key_Escape:
-            if self.editor is not None:
-                self.exitRequested.emit()
-        event.accept()
-
-    @overrides
-    def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
-        if self.wdgBottom.isHidden() and event.pos().y() > self.height() - 15:
-            self.wdgBottom.setVisible(True)
-
-    def _wordCountClicked(self, checked: bool):
-        if self.lblWords:
-            if checked:
-                qtanim.fade_in(self.lblWords, 150)
-            else:
-                qtanim.fade_out(self.lblWords, 150, teardown=lambda: self.lblWords.setGraphicsEffect(None))
-
-    def _toggle_manuscript_focus(self, toggled: bool):
-        self.editor.setSentenceHighlighterEnabled(toggled)
-
-    def _toggle_typewriter_mode(self, toggled: bool):
-        viewportMargins = self.editor.textEdit.viewportMargins()
-        if toggled:
-            screen: QScreen = QApplication.screenAt(self.editor.pos())
-            viewportMargins.setBottom(screen.size().height() // 2)
-        else:
-            viewportMargins.setBottom(30)
-
-        self.editor.textEdit.setViewportMargins(viewportMargins.left(), viewportMargins.top(),
-                                                viewportMargins.right(), viewportMargins.bottom())
-        self.editor.textEdit.ensureCursorVisible()
-
-    def _autoHideBottomBar(self):
-        if not self.wdgBottom.underMouse():
-            self.wdgBottom.setHidden(True)
 
 
 class ManuscriptProgressChart(ProgressChart):

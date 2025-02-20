@@ -18,15 +18,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import qtanim
-from PyQt6.QtCore import QTimer, Qt
+from PyQt6.QtCore import QTimer, Qt, QObject, QEvent
 from PyQt6.QtWidgets import QInputDialog
 from overrides import overrides
-from qthandy import translucent, bold, margins, spacer, transparent, vspacer, decr_icon, vline, incr_icon
+from qthandy import translucent, bold, margins, spacer, transparent, vspacer, decr_icon, vline, incr_icon, decr_font
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 from qttextedit.ops import TextEditorSettingsWidget
 
-from plotlyst.common import PLOTLYST_MAIN_COLOR
+from plotlyst.common import PLOTLYST_MAIN_COLOR, PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.domain import Novel, Document, Chapter, DocumentProgress
 from plotlyst.core.domain import Scene
 from plotlyst.event.core import emit_global_event, emit_critical, emit_info, Event, emit_event
@@ -42,10 +42,12 @@ from plotlyst.view.common import tool_btn, ButtonPressResizeEventFilter, action,
 from plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
+from plotlyst.view.style.theme import BG_DARK_COLOR
 from plotlyst.view.widget.display import Icon
 from plotlyst.view.widget.input import Toggle
-from plotlyst.view.widget.manuscript import DistractionFreeManuscriptEditor, SprintWidget, \
+from plotlyst.view.widget.manuscript import SprintWidget, \
     ManuscriptProgressCalendar, ManuscriptDailyProgress, ManuscriptProgressCalendarLegend, ManuscriptProgressWidget
+from plotlyst.view.widget.manuscript.dist_free import DistractionFreeManuscriptEditor
 from plotlyst.view.widget.manuscript.editor import ManuscriptEditor
 from plotlyst.view.widget.manuscript.export import ManuscriptExportWidget
 from plotlyst.view.widget.manuscript.settings import ManuscriptEditorSettingsWidget
@@ -62,6 +64,8 @@ class ManuscriptView(AbstractNovelView):
         self.ui.splitter.setSizes([150, 500])
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageOverview)
 
+        self._dist_free_mode: bool = False
+
         self.ui.lblWc.setAlignment(Qt.AlignmentFlag.AlignRight)
 
         self.ui.btnAdd.setIcon(IconRegistry.plus_icon('white'))
@@ -77,6 +81,24 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnSettings.setIcon(IconRegistry.cog_icon(color_on=PLOTLYST_MAIN_COLOR))
 
         self.ui.btnReadability.setHidden(True)
+        self.ui.wdgDistFreeBottom.setHidden(True)
+        self.ui.wdgDistFreeBottom.setStyleSheet(f'QWidget {{background-color: {BG_DARK_COLOR};}}')
+
+        self.ui.btnReturn.setIcon(IconRegistry.from_name('mdi.arrow-collapse', 'white'))
+        self.ui.btnReturn.clicked.connect(self._exit_distraction_free)
+        self.ui.btnFocus.setIcon(
+            IconRegistry.from_name('mdi.credit-card', 'lightgrey', color_on=PLOTLYST_TERTIARY_COLOR))
+        # self.ui.btnFocus.toggled.connect(self._toggle_manuscript_focus)
+        self.ui.btnTypewriterMode.setIcon(
+            IconRegistry.from_name('mdi.typewriter', 'lightgrey', color_on=PLOTLYST_TERTIARY_COLOR))
+        # self.ui.btnTypewriterMode.toggled.connect(self._toggle_typewriter_mode)
+        self.ui.btnWordCount.setIcon(
+            IconRegistry.from_name('mdi6.counter', 'lightgrey', color_on=PLOTLYST_TERTIARY_COLOR))
+        # self.ui.btnWordCount.clicked.connect(self._wordCountClicked)
+
+        decr_font(self.ui.btnFocus, 2)
+        decr_font(self.ui.btnTypewriterMode, 2)
+        decr_font(self.ui.btnWordCount, 2)
 
         self.ui.btnTreeToggle.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
         self.ui.btnTreeToggleSecondary.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
@@ -203,6 +225,8 @@ class ManuscriptView(AbstractNovelView):
 
         self._update_story_goal()
 
+        self.widget.installEventFilter(self)
+
     @overrides
     def event_received(self, event: Event):
         if isinstance(event, NovelSyncEvent):
@@ -222,26 +246,48 @@ class ManuscriptView(AbstractNovelView):
     def refresh(self):
         self.ui.treeChapters.refresh()
 
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if self._dist_free_mode and event.type() == QEvent.Type.KeyPress and event.key() == Qt.Key.Key_Escape:
+            self._exit_distraction_free()
+        # event.accept()
+        return super().eventFilter(watched, event)
+
     def _enter_distraction_free(self):
         emit_global_event(OpenDistractionFreeMode(self))
-        self.ui.stackedWidget.setCurrentWidget(self.ui.pageDistractionFree)
         margins(self.widget, 0, 0, 0, 0)
+        self.ui.pageText.setStyleSheet(f'background-color: {BG_DARK_COLOR};')
+        # self.ui.wdgTitle.setHidden(True)
+        self._wdgSprint.setCompactMode(True)
         self.ui.wdgTitle.setHidden(True)
         self.ui.wdgLeftSide.setHidden(True)
-        self._dist_free_editor.activate(self.textEditor, self._wdgSprint.model())
-        self._dist_free_editor.setWordDisplay(self.ui.lblWordCount)
+        self.ui.wdgSideBar.setHidden(True)
+        self.ui.wdgBottom.setHidden(True)
+        self.ui.wdgDistFreeBottom.setVisible(True)
+        self._dist_free_mode = True
+        self.textEditor.initSentenceHighlighter()
+        # self._dist_free_editor.activate(self.textEditor, self._wdgSprint.model())
+        # self._dist_free_editor.setWordDisplay(self.ui.lblWordCount)
 
     def _exit_distraction_free(self):
         emit_global_event(ExitDistractionFreeMode(self))
-        self._dist_free_editor.deactivate()
+        # self._dist_free_editor.deactivate()
         margins(self.widget, 4, 2, 2, 2)
-        self.ui.stackedWidget.setCurrentWidget(self.ui.pageText)
+        self.ui.pageText.setStyleSheet('')
+        self._wdgSprint.setCompactMode(False)
+
         self.ui.wdgTitle.setVisible(True)
         self.ui.wdgLeftSide.setVisible(self.ui.btnTreeToggle.isChecked())
+        self.ui.wdgSideBar.setVisible(True)
+        self.ui.wdgBottom.setVisible(True)
+        self.ui.wdgDistFreeBottom.setHidden(True)
 
-        self.ui.wdgBottom.layout().insertWidget(1, self.ui.lblWordCount, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.ui.lblWordCount.setVisible(True)
-        self.ui.wdgEditor.layout().addWidget(self.textEditor)
+        self._dist_free_mode = False
+        self.textEditor.clearSentenceHighlighter()
+
+        # self.ui.wdgBottom.layout().insertWidget(1, self.ui.lblWordCount, alignment=Qt.AlignmentFlag.AlignCenter)
+        # self.ui.lblWordCount.setVisible(True)
+        # self.ui.wdgEditor.layout().addWidget(self.textEditor)
 
     def _update_story_goal(self):
         wc = sum([x.manuscript.statistics.wc for x in self.novel.scenes if x.manuscript and x.manuscript.statistics])
