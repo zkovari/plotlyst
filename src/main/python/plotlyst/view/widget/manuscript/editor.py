@@ -22,29 +22,123 @@ from functools import partial
 from typing import Optional, List
 
 from PyQt6 import QtGui
-from PyQt6.QtCore import pyqtSignal, QTextBoundaryFinder, Qt
+from PyQt6.QtCore import pyqtSignal, QTextBoundaryFinder, Qt, QSize, QTimer, QEvent
 from PyQt6.QtGui import QFont, QResizeEvent, QShowEvent, QTextCursor, QTextCharFormat, QSyntaxHighlighter, QColor, \
     QTextBlock
-from PyQt6.QtWidgets import QWidget, QApplication, QTextEdit, QLineEdit
+from PyQt6.QtWidgets import QWidget, QApplication, QTextEdit, QLineEdit, QToolButton, QFrame
 from overrides import overrides
-from qthandy import vbox, clear_layout, vspacer, margins, transparent, gc, hbox, italic, translucent
+from qthandy import vbox, clear_layout, vspacer, margins, transparent, gc, hbox, italic, translucent, sp, spacer, \
+    decr_font, retain_when_hidden
+from qthandy.filter import OpacityEventFilter
 from qttextedit import remove_font, TextBlockState, DashInsertionMode, AutoCapitalizationMode
 from qttextedit.ops import Heading1Operation, Heading2Operation, Heading3Operation, InsertListOperation, \
     InsertNumberedListOperation, BoldOperation, ItalicOperation, UnderlineOperation, StrikethroughOperation, \
     AlignLeftOperation, AlignCenterOperation, AlignRightOperation
 
 from plotlyst.common import RELAXED_WHITE_COLOR, DEFAULT_MANUSCRIPT_LINE_SPACE, DEFAULT_MANUSCRIPT_INDENT, \
-    PLACEHOLDER_TEXT_COLOR
+    PLACEHOLDER_TEXT_COLOR, PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.client import json_client
 from plotlyst.core.domain import DocumentProgress, Novel, Scene, TextStatistics, DocumentStatistics, FontSettings
 from plotlyst.env import app_env
 from plotlyst.service.manuscript import daily_progress, daily_overall_progress
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import push_btn
+from plotlyst.view.common import push_btn, tool_btn, fade_in
+from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.text import apply_text_color
+from plotlyst.view.style.theme import BG_DARK_COLOR
 from plotlyst.view.widget.input import BasePopupTextEditorToolbar, TextEditBase, GrammarHighlighter, \
     GrammarHighlightStyle
 from plotlyst.view.widget.manuscript.settings import ManuscriptEditorSettingsWidget
+
+
+class DistFreeDisplayBar(QFrame):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        hbox(self, 4, 6)
+        margins(self, left=15, right=15)
+        self.setStyleSheet(f'QWidget {{background-color: {BG_DARK_COLOR};}}')
+        sp(self).v_max()
+
+        self.btnExitDistFreeMode = tool_btn(IconRegistry.from_name('mdi.arrow-collapse', RELAXED_WHITE_COLOR),
+                                            transparent_=True, tooltip='Exit distraction-free mode')
+        self.btnExitDistFreeMode.installEventFilter(OpacityEventFilter(self.btnExitDistFreeMode, leaveOpacity=0.8))
+        retain_when_hidden(self.btnExitDistFreeMode)
+
+        self.layout().addWidget(self.btnExitDistFreeMode, alignment=Qt.AlignmentFlag.AlignRight)
+
+    def activate(self):
+        self.btnExitDistFreeMode.setVisible(True)
+        QTimer.singleShot(5000, self._hideItems)
+
+    @overrides
+    def enterEvent(self, event: QtGui.QEnterEvent) -> None:
+        if not self.btnExitDistFreeMode.isVisible():
+            fade_in(self.btnExitDistFreeMode)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self.btnExitDistFreeMode.setHidden(True)
+
+    def _hideItems(self):
+        if not self.underMouse():
+            self.btnExitDistFreeMode.setHidden(True)
+
+
+class DistFreeControlsBar(QFrame):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        hbox(self, 4, 6)
+        margins(self, left=15, right=15)
+        self.setStyleSheet(f'QWidget {{background-color: {BG_DARK_COLOR};}}')
+        sp(self).v_max()
+
+        self.btnFocus = self._initButton('mdi.credit-card', 'Highlight')
+        self.btnTypewriterMode = self._initButton('mdi.typewriter', 'Centered')
+        self.btnWordCount = self._initButton('mdi6.counter', 'Word count')
+
+        self.layout().addWidget(self.btnFocus)
+        self.layout().addWidget(self.btnTypewriterMode)
+        self.layout().addWidget(self.btnWordCount)
+        self.layout().addWidget(spacer())
+
+    def activate(self):
+        self.btnFocus.setVisible(True)
+        self.btnTypewriterMode.setVisible(True)
+        self.btnWordCount.setVisible(True)
+        QTimer.singleShot(5000, self._hideItems)
+
+    @overrides
+    def enterEvent(self, event: QtGui.QEnterEvent) -> None:
+        if not self.btnFocus.isVisible():
+            fade_in(self.btnFocus)
+            fade_in(self.btnTypewriterMode)
+            fade_in(self.btnWordCount)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self.btnFocus.setHidden(True)
+        self.btnTypewriterMode.setHidden(True)
+        self.btnWordCount.setHidden(True)
+
+    def _hideItems(self):
+        if not self.underMouse():
+            self.btnFocus.setHidden(True)
+            self.btnTypewriterMode.setHidden(True)
+            self.btnWordCount.setHidden(True)
+
+    def _initButton(self, icon: str, text: str) -> QToolButton:
+        btn = tool_btn(
+            IconRegistry.from_name(icon, 'lightgrey', color_on=PLOTLYST_TERTIARY_COLOR), checkable=True,
+            properties=[
+                'base', 'dark-mode-toggle'
+            ])
+        btn.setIconSize(QSize(22, 22))
+        decr_font(btn, 2)
+        btn.setText(text)
+        retain_when_hidden(btn)
+        btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+
+        return btn
 
 
 class SentenceHighlighter(QSyntaxHighlighter):

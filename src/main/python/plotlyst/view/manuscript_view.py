@@ -21,12 +21,12 @@ import qtanim
 from PyQt6.QtCore import QTimer, Qt, QObject, QEvent
 from PyQt6.QtWidgets import QInputDialog
 from overrides import overrides
-from qthandy import translucent, bold, margins, spacer, transparent, vspacer, decr_icon, vline, incr_icon, decr_font
+from qthandy import translucent, bold, margins, spacer, transparent, vspacer, decr_icon, vline, incr_icon
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 from qttextedit.ops import TextEditorSettingsWidget
 
-from plotlyst.common import PLOTLYST_MAIN_COLOR, PLOTLYST_TERTIARY_COLOR
+from plotlyst.common import PLOTLYST_MAIN_COLOR
 from plotlyst.core.domain import Novel, Document, Chapter, DocumentProgress
 from plotlyst.core.domain import Scene
 from plotlyst.event.core import emit_global_event, emit_critical, emit_info, Event, emit_event
@@ -47,8 +47,7 @@ from plotlyst.view.widget.display import Icon
 from plotlyst.view.widget.input import Toggle
 from plotlyst.view.widget.manuscript import SprintWidget, \
     ManuscriptProgressCalendar, ManuscriptDailyProgress, ManuscriptProgressCalendarLegend, ManuscriptProgressWidget
-from plotlyst.view.widget.manuscript.dist_free import DistractionFreeManuscriptEditor
-from plotlyst.view.widget.manuscript.editor import ManuscriptEditor
+from plotlyst.view.widget.manuscript.editor import ManuscriptEditor, DistFreeControlsBar, DistFreeDisplayBar
 from plotlyst.view.widget.manuscript.export import ManuscriptExportWidget
 from plotlyst.view.widget.manuscript.settings import ManuscriptEditorSettingsWidget
 from plotlyst.view.widget.scene.editor import SceneMiniEditor
@@ -63,15 +62,26 @@ class ManuscriptView(AbstractNovelView):
         self.ui.setupUi(self.widget)
         self.ui.splitter.setSizes([150, 500])
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageOverview)
-
         self._dist_free_mode: bool = False
 
         self.ui.lblWc.setAlignment(Qt.AlignmentFlag.AlignRight)
 
         self.ui.btnAdd.setIcon(IconRegistry.plus_icon('white'))
 
-        bold(self.ui.lblTitle)
-        self.ui.btnManuscript.setIcon(IconRegistry.manuscript_icon())
+        self.ui.btnManuscript.setIcon(IconRegistry.manuscript_icon(color_on='black'))
+        bold(self.ui.btnManuscript)
+
+        self._dist_free_top_bar = DistFreeDisplayBar()
+        self._dist_free_top_bar.btnExitDistFreeMode.clicked.connect(self._exit_distraction_free)
+
+        self._dist_free_bottom_bar = DistFreeControlsBar()
+        # self._dist_free_bottom_bar.btnFocus.toggled.connect(self._toggle_manuscript_focus)
+        # self._dist_free_bottom_bar.btnTypewriterMode.toggled.connect(self._toggle_typewriter_mode)
+        # self._dist_free_bottom_bar.btnWordCount.clicked.connect(self._wordCountClicked)
+        self.widget.layout().insertWidget(0, self._dist_free_top_bar)
+        self.widget.layout().addWidget(self._dist_free_bottom_bar)
+        self._dist_free_top_bar.setHidden(True)
+        self._dist_free_bottom_bar.setHidden(True)
 
         self.ui.btnSceneInfo.setIcon(IconRegistry.scene_icon(color_on=PLOTLYST_MAIN_COLOR))
         self.ui.btnGoals.setIcon(IconRegistry.goal_icon('black', PLOTLYST_MAIN_COLOR))
@@ -81,24 +91,6 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnSettings.setIcon(IconRegistry.cog_icon(color_on=PLOTLYST_MAIN_COLOR))
 
         self.ui.btnReadability.setHidden(True)
-        self.ui.wdgDistFreeBottom.setHidden(True)
-        self.ui.wdgDistFreeBottom.setStyleSheet(f'QWidget {{background-color: {BG_DARK_COLOR};}}')
-
-        self.ui.btnReturn.setIcon(IconRegistry.from_name('mdi.arrow-collapse', 'white'))
-        self.ui.btnReturn.clicked.connect(self._exit_distraction_free)
-        self.ui.btnFocus.setIcon(
-            IconRegistry.from_name('mdi.credit-card', 'lightgrey', color_on=PLOTLYST_TERTIARY_COLOR))
-        # self.ui.btnFocus.toggled.connect(self._toggle_manuscript_focus)
-        self.ui.btnTypewriterMode.setIcon(
-            IconRegistry.from_name('mdi.typewriter', 'lightgrey', color_on=PLOTLYST_TERTIARY_COLOR))
-        # self.ui.btnTypewriterMode.toggled.connect(self._toggle_typewriter_mode)
-        self.ui.btnWordCount.setIcon(
-            IconRegistry.from_name('mdi6.counter', 'lightgrey', color_on=PLOTLYST_TERTIARY_COLOR))
-        # self.ui.btnWordCount.clicked.connect(self._wordCountClicked)
-
-        decr_font(self.ui.btnFocus, 2)
-        decr_font(self.ui.btnTypewriterMode, 2)
-        decr_font(self.ui.btnWordCount, 2)
 
         self.ui.btnTreeToggle.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
         self.ui.btnTreeToggleSecondary.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
@@ -150,6 +142,7 @@ class ManuscriptView(AbstractNovelView):
         decr_icon(self._btnDistractionFree)
         self._btnDistractionFree.installEventFilter(
             OpacityEventFilter(self._btnDistractionFree, leaveOpacity=0.5, enterOpacity=0.7))
+
         self._wdgSprint = SprintWidget()
         transparent(self._wdgSprint.btnTimer)
         decr_icon(self._wdgSprint.btnTimer)
@@ -176,7 +169,8 @@ class ManuscriptView(AbstractNovelView):
         self.ui.pageExport.layout().addWidget(self._exportWidget)
         self.ui.pageExport.layout().addWidget(vspacer())
 
-        self._wdgToolbar = group(spacer(), self._wdgSprint, vline(), self._spellCheckIcon,
+        self._toolbarSeparator = vline()
+        self._wdgToolbar = group(spacer(), self._wdgSprint, self._toolbarSeparator, self._spellCheckIcon,
                                  self._cbSpellCheck, self._btnDistractionFree)
         self.ui.wdgTop.layout().addWidget(self._wdgToolbar)
         margins(self._wdgToolbar, right=10)
@@ -194,10 +188,6 @@ class ManuscriptView(AbstractNovelView):
         self._cbSpellCheck.toggled.connect(self._spellcheck_toggled)
         self._cbSpellCheck.clicked.connect(self._spellcheck_clicked)
         self._spellcheck_toggled(self._cbSpellCheck.isChecked())
-
-        self._dist_free_editor = DistractionFreeManuscriptEditor(self.ui.pageDistractionFree)
-        self._dist_free_editor.exitRequested.connect(self._exit_distraction_free)
-        self.ui.pageDistractionFree.layout().addWidget(self._dist_free_editor)
 
         self.ui.treeChapters.setSettings(TreeSettings(font_incr=2))
         self.ui.treeChapters.setNovel(self.novel, readOnly=self.novel.is_readonly())
@@ -256,16 +246,21 @@ class ManuscriptView(AbstractNovelView):
     def _enter_distraction_free(self):
         emit_global_event(OpenDistractionFreeMode(self))
         margins(self.widget, 0, 0, 0, 0)
-        self.ui.pageText.setStyleSheet(f'background-color: {BG_DARK_COLOR};')
-        # self.ui.wdgTitle.setHidden(True)
-        self._wdgSprint.setCompactMode(True)
+        self.ui.pageText.setStyleSheet(f'QWidget {{background-color: {BG_DARK_COLOR};}}')
+        self._wdgToolbar.setHidden(True)
+
+        # self._wdgSprint.setCompactMode(True)
         self.ui.wdgTitle.setHidden(True)
         self.ui.wdgLeftSide.setHidden(True)
         self.ui.wdgSideBar.setHidden(True)
         self.ui.wdgBottom.setHidden(True)
-        self.ui.wdgDistFreeBottom.setVisible(True)
+        self._dist_free_top_bar.setVisible(True)
+        self._dist_free_bottom_bar.setVisible(True)
         self._dist_free_mode = True
         self.textEditor.initSentenceHighlighter()
+
+        self._dist_free_top_bar.activate()
+        self._dist_free_bottom_bar.activate()
         # self._dist_free_editor.activate(self.textEditor, self._wdgSprint.model())
         # self._dist_free_editor.setWordDisplay(self.ui.lblWordCount)
 
@@ -274,13 +269,16 @@ class ManuscriptView(AbstractNovelView):
         # self._dist_free_editor.deactivate()
         margins(self.widget, 4, 2, 2, 2)
         self.ui.pageText.setStyleSheet('')
-        self._wdgSprint.setCompactMode(False)
+
+        # self._wdgSprint.setCompactMode(False)
 
         self.ui.wdgTitle.setVisible(True)
+        self._wdgToolbar.setVisible(True)
         self.ui.wdgLeftSide.setVisible(self.ui.btnTreeToggle.isChecked())
         self.ui.wdgSideBar.setVisible(True)
         self.ui.wdgBottom.setVisible(True)
-        self.ui.wdgDistFreeBottom.setHidden(True)
+        self._dist_free_top_bar.setHidden(True)
+        self._dist_free_bottom_bar.setHidden(True)
 
         self._dist_free_mode = False
         self.textEditor.clearSentenceHighlighter()

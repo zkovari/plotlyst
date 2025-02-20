@@ -20,12 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 import qtanim
-from PyQt6 import QtGui
-from PyQt6.QtCore import pyqtSignal, QTimer, QObject, QEvent, Qt
-from PyQt6.QtGui import QMouseEvent, QScreen
+from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtGui import QScreen
 from PyQt6.QtWidgets import QWidget, QApplication
-from overrides import overrides
-from qthandy import decr_font, clear_layout
 
 from plotlyst.common import PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.sprint import TimerModel
@@ -40,9 +37,7 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
     exitRequested = pyqtSignal()
 
     def __init__(self, parent=None):
-        super(DistractionFreeManuscriptEditor, self).__init__(parent)
-        self.setupUi(self)
-        self.editor: Optional[ManuscriptEditor] = None
+        super().__init__(parent)
         self.lblWords: Optional[WordsDisplay] = None
         self._firstInit: bool = True
 
@@ -52,8 +47,6 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
 
         self.wdgDistractionFreeEditor.installEventFilter(self)
         self.wdgBottom.installEventFilter(self)
-        self.btnReturn.setIcon(IconRegistry.from_name('mdi.arrow-collapse', 'white'))
-        self.btnReturn.clicked.connect(self.exitRequested.emit)
         self.btnFocus.setIcon(IconRegistry.from_name('mdi.credit-card', 'lightgrey', color_on=PLOTLYST_TERTIARY_COLOR))
         self.btnFocus.toggled.connect(self._toggle_manuscript_focus)
         self.btnTypewriterMode.setIcon(
@@ -62,15 +55,10 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         self.btnWordCount.setIcon(IconRegistry.from_name('mdi6.counter', 'lightgrey', color_on=PLOTLYST_TERTIARY_COLOR))
         self.btnWordCount.clicked.connect(self._wordCountClicked)
 
-        decr_font(self.btnFocus, 2)
-        decr_font(self.btnTypewriterMode, 2)
-        decr_font(self.btnWordCount, 2)
-
     def activate(self, editor: ManuscriptEditor, timer: Optional[TimerModel] = None):
         self.editor = editor
         self.editor.installEventFilter(self)
         # editor.setTitleVisible(False)
-        clear_layout(self.wdgDistractionFreeEditor.layout())
         if timer and timer.isActive():
             self.wdgSprint.setModel(timer)
             self.wdgSprint.setVisible(True)
@@ -90,9 +78,7 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
             self._toggle_typewriter_mode(self.btnTypewriterMode.isChecked())
 
         self._wordCountClicked(self.btnWordCount.isChecked())
-        self.setMouseTracking(True)
         self.wdgDistractionFreeEditor.setMouseTracking(True)
-        QTimer.singleShot(5000, self._autoHideBottomBar)
 
     def deactivate(self):
         # self.editor.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -111,20 +97,6 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         self.lblWords = words
         self.wdgHeader.layout().addWidget(self.lblWords, alignment=Qt.AlignmentFlag.AlignRight)
         self._wordCountClicked(self.btnWordCount.isChecked())
-
-    @overrides
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if watched is self.wdgBottom and event.type() == QEvent.Type.Leave:
-            self.wdgBottom.setHidden(True)
-        if event.type() == QEvent.Type.MouseMove and isinstance(event, QMouseEvent):
-            if self.wdgBottom.isHidden() and event.pos().y() > self.height() - 25:
-                self.wdgBottom.setVisible(True)
-        return super().eventFilter(watched, event)
-
-    @overrides
-    def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
-        if self.wdgBottom.isHidden() and event.pos().y() > self.height() - 15:
-            self.wdgBottom.setVisible(True)
 
     def _wordCountClicked(self, checked: bool):
         if self.lblWords:
@@ -149,7 +121,3 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         self.editor.textEdit.setViewportMargins(viewportMargins.left(), viewportMargins.top(),
                                                 viewportMargins.right(), viewportMargins.bottom())
         self.editor.textEdit.ensureCursorVisible()
-
-    def _autoHideBottomBar(self):
-        if not self.wdgBottom.underMouse():
-            self.wdgBottom.setHidden(True)
