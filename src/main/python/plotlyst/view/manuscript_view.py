@@ -32,7 +32,7 @@ from plotlyst.core.domain import Novel, Document, Chapter, DocumentProgress
 from plotlyst.core.domain import Scene
 from plotlyst.event.core import emit_global_event, emit_critical, emit_info, Event, emit_event
 from plotlyst.events import SceneChangedEvent, OpenDistractionFreeMode, \
-    SceneDeletedEvent, ExitDistractionFreeMode, NovelSyncEvent, CloseNovelEvent
+    ExitDistractionFreeMode, NovelSyncEvent, CloseNovelEvent
 from plotlyst.resources import ResourceType
 from plotlyst.service.grammar import language_tool_proxy
 from plotlyst.service.persistence import flush_or_fail
@@ -58,7 +58,7 @@ from plotlyst.view.widget.tree import TreeSettings
 class ManuscriptView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        super().__init__(novel, [SceneDeletedEvent])
+        super().__init__(novel)
         self.ui = Ui_ManuscriptView()
         self.ui.setupUi(self.widget)
         self.ui.splitter.setSizes([150, 500])
@@ -221,16 +221,8 @@ class ManuscriptView(AbstractNovelView):
     @overrides
     def event_received(self, event: Event):
         if isinstance(event, NovelSyncEvent):
-            self.ui.textEdit.refresh()
+            self.textEditor.refresh()
             self._text_changed()
-        elif isinstance(event, SceneDeletedEvent):
-            if event.scene in self.ui.textEdit.scenes():
-                if len(self.ui.textEdit.scenes()) == 1:
-                    self.ui.textEdit.clear()
-                    self._empty_page()
-                else:
-                    self._editChapter(event.scene.chapter)
-            return
         super(ManuscriptView, self).event_received(event)
 
     @overrides

@@ -28,7 +28,7 @@ from PyQt6.QtGui import QFont, QResizeEvent, QShowEvent, QTextCursor, QTextCharF
 from PyQt6.QtWidgets import QWidget, QApplication, QTextEdit, QLineEdit, QToolButton, QFrame, QPushButton
 from overrides import overrides
 from qthandy import vbox, clear_layout, vspacer, margins, transparent, gc, hbox, italic, translucent, sp, spacer, \
-    decr_font, retain_when_hidden
+    decr_font, retain_when_hidden, pointy
 from qthandy.filter import OpacityEventFilter
 from qttextedit import remove_font, TextBlockState, DashInsertionMode, AutoCapitalizationMode
 from qttextedit.ops import Heading1Operation, Heading2Operation, Heading3Operation, InsertListOperation, \
@@ -41,9 +41,12 @@ from plotlyst.core.client import json_client
 from plotlyst.core.domain import DocumentProgress, Novel, Scene, TextStatistics, DocumentStatistics, FontSettings
 from plotlyst.core.sprint import TimerModel
 from plotlyst.env import app_env
+from plotlyst.event.core import Event, EventListener
+from plotlyst.event.handler import event_dispatchers
+from plotlyst.events import SceneDeletedEvent, SceneChangedEvent
 from plotlyst.service.manuscript import daily_progress, daily_overall_progress
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import push_btn, tool_btn, fade_in, fade
+from plotlyst.view.common import tool_btn, fade_in, fade
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.text import apply_text_color
 from plotlyst.view.style.theme import BG_DARK_COLOR
@@ -227,6 +230,21 @@ class ManuscriptPopupTextEditorToolbar(BasePopupTextEditorToolbar):
         self.addTextEditorOperation(InsertNumberedListOperation)
 
 
+class SceneSeparator(QPushButton):
+    def __init__(self, scene: Scene, parent=None):
+        super().__init__(parent)
+        self.scene = scene
+        transparent(self)
+        pointy(self)
+        italic(self)
+        translucent(self)
+
+        self.refresh()
+
+    def refresh(self):
+        self.setText(f'~{self.scene.title if self.scene.title else "Scene"}~')
+
+
 class ManuscriptTextEdit(TextEditBase):
     sceneSeparatorClicked = pyqtSignal(Scene)
 
@@ -402,7 +420,7 @@ class ManuscriptTextEdit(TextEditBase):
             f'ManuscriptTextEdit {{background-color: {RELAXED_WHITE_COLOR};}}')
 
 
-class ManuscriptEditor(QWidget):
+class ManuscriptEditor(QWidget, EventListener):
     textChanged = pyqtSignal()
     progressChanged = pyqtSignal(DocumentProgress)
     sceneTitleChanged = pyqtSignal(Scene)
@@ -413,7 +431,7 @@ class ManuscriptEditor(QWidget):
         self._novel: Optional[Novel] = None
         self._margins: int = 30
         self._scenes: List[ManuscriptTextEdit] = []
-        self._sceneLabels: List[QPushButton] = []
+        self._sceneLabels: List[SceneSeparator] = []
         self._scene: Optional[Scene] = None
         self._font = self.defaultFont()
         self._characterWidth: int = 40
@@ -447,6 +465,23 @@ class ManuscriptEditor(QWidget):
         self.layout().addWidget(self.wdgEditor)
 
         self.repo = RepositoryPersistenceManager.instance()
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, SceneChangedEvent):
+            if self._scene == event.scene:
+                self.textTitle.setText(self._scene.title)
+            for sceneLbl in self._sceneLabels:
+                if sceneLbl.scene == event.scene:
+                    sceneLbl.refresh()
+        elif isinstance(event, SceneDeletedEvent):
+            pass
+            # if event.scene in self.ui.textEdit.scenes():
+            #     if len(self.ui.textEdit.scenes()) == 1:
+            #         self.ui.textEdit.clear()
+            #         self._empty_page()
+            #     else:
+            #         self._editChapter(event.scene.chapter)
 
     @overrides
     def resizeEvent(self, a0: QtGui.QResizeEvent) -> None:
@@ -485,31 +520,7 @@ class ManuscriptEditor(QWidget):
         title_font.setFamily(self._font.family())
         self.textTitle.setFont(title_font)
 
-    def manuscriptFont(self) -> QFont:
-        return self._font
-
-    def setManuscriptFontPointSize(self, value: int):
-        self._font.setPointSize(value)
-        self._setFontForTextEdits()
-
-    def setManuscriptFontFamily(self, family: str):
-        self._font.setFamily(family)
-        self._setFontForTextEdits()
-
-    def characterWidth(self) -> int:
-        return self._characterWidth
-
-    def setCharacterWidth(self, width: int):
-        self._characterWidth = width
-        metrics = QtGui.QFontMetricsF(self.font())
-        self._maxContentWidth = metrics.boundingRect('M' * self._characterWidth).width()
-        self._resizeToCharacterWidth()
-
-    def clear(self):
-        self._scenes.clear()
-        self._sceneLabels.clear()
-        self._scene = None
-        clear_layout(self.wdgEditor)
+        event_dispatchers.instance(self._novel).register(self, SceneDeletedEvent, SceneChangedEvent)
 
     def setScene(self, scene: Scene):
         self.clear()
@@ -534,16 +545,43 @@ class ManuscriptEditor(QWidget):
         for scene in scenes:
             wdg = self._initTextEdit(scene)
 
-            sceneLbl = push_btn(text=f'~{scene.title if scene.title else "Scene"}~', transparent_=True)
+            sceneLbl = SceneSeparator(scene)
             sceneLbl.clicked.connect(partial(self.sceneSeparatorClicked.emit, scene))
             self._sceneLabels.append(sceneLbl)
-            italic(sceneLbl)
-            translucent(sceneLbl)
             self.wdgEditor.layout().addWidget(sceneLbl, alignment=Qt.AlignmentFlag.AlignCenter)
             self.wdgEditor.layout().addWidget(wdg)
 
         self.wdgEditor.layout().addWidget(vspacer())
         self._scenes[0].setFocus()
+
+    def manuscriptFont(self) -> QFont:
+        return self._font
+
+    def setManuscriptFontPointSize(self, value: int):
+        self._font.setPointSize(value)
+        self._setFontForTextEdits()
+
+    def setManuscriptFontFamily(self, family: str):
+        self._font.setFamily(family)
+        self._setFontForTextEdits()
+
+    def characterWidth(self) -> int:
+        return self._characterWidth
+
+    def setCharacterWidth(self, width: int):
+        self._characterWidth = width
+        metrics = QtGui.QFontMetricsF(self.font())
+        self._maxContentWidth = metrics.boundingRect('M' * self._characterWidth).width()
+        self._resizeToCharacterWidth()
+
+    def refresh(self):
+        pass
+
+    def clear(self):
+        self._scenes.clear()
+        self._sceneLabels.clear()
+        self._scene = None
+        clear_layout(self.wdgEditor)
 
     def setNightMode(self, mode: bool):
         for lbl in self._sceneLabels:
