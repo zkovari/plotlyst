@@ -430,8 +430,9 @@ class ManuscriptEditor(QWidget, EventListener):
         super().__init__(parent)
         self._novel: Optional[Novel] = None
         self._margins: int = 30
-        self._scenes: List[ManuscriptTextEdit] = []
+        self._textedits: List[ManuscriptTextEdit] = []
         self._sceneLabels: List[SceneSeparator] = []
+        self._scenes: List[Scene] = []
         self._scene: Optional[Scene] = None
         self._font = self.defaultFont()
         self._characterWidth: int = 40
@@ -541,6 +542,7 @@ class ManuscriptEditor(QWidget, EventListener):
 
     def setChapterScenes(self, scenes: List[Scene], title: str):
         self.clear()
+        self._scenes.extend(scenes)
 
         self.textTitle.setText(title)
         self.textTitle.setPlaceholderText('Chapter')
@@ -556,7 +558,7 @@ class ManuscriptEditor(QWidget, EventListener):
             self.wdgEditor.layout().addWidget(wdg)
 
         self.wdgEditor.layout().addWidget(vspacer())
-        self._scenes[0].setFocus()
+        self._textedits[0].setFocus()
 
     def manuscriptFont(self) -> QFont:
         return self._font
@@ -579,11 +581,17 @@ class ManuscriptEditor(QWidget, EventListener):
         self._resizeToCharacterWidth()
 
     def refresh(self):
-        pass
+        if self._scene:
+            self.setScene(self._scene)
+        elif len(self._textedits) > 1:
+            scenes = []
+            scenes.extend(self._scenes)
+            self.setChapterScenes(scenes, self.textTitle.text())
 
     def clear(self):
-        self._scenes.clear()
+        self._textedits.clear()
         self._sceneLabels.clear()
+        self._scenes.clear()
         self._scene = None
         clear_layout(self.wdgEditor)
 
@@ -610,35 +618,35 @@ class ManuscriptEditor(QWidget, EventListener):
     def statistics(self) -> TextStatistics:
         overall_stats = TextStatistics(0)
         if self.hasScenes():
-            for editor in self._scenes:
+            for editor in self._textedits:
                 overall_stats.word_count += editor.statistics().word_count
 
         return overall_stats
 
     def asyncCheckGrammar(self):
-        for textedit in self._scenes:
+        for textedit in self._textedits:
             textedit.setGrammarCheckEnabled(True)
             textedit.asyncCheckGrammar()
 
     def resetGrammarChecking(self):
-        for textedit in self._scenes:
+        for textedit in self._textedits:
             textedit.setGrammarCheckEnabled(False)
             textedit.checkGrammar()
 
     def initSentenceHighlighter(self):
-        for textedit in self._scenes:
+        for textedit in self._textedits:
             textedit.initSentenceHighlighter()
 
     def setSentenceHighlighterEnabled(self, enabled: bool):
-        for textedit in self._scenes:
+        for textedit in self._textedits:
             textedit.setSentenceHighlighterEnabled(enabled)
 
     def clearSentenceHighlighter(self):
-        for textedit in self._scenes:
+        for textedit in self._textedits:
             textedit.clearSentenceHighlighter()
 
     def hasScenes(self) -> bool:
-        return len(self._scenes) > 0
+        return len(self._textedits) > 0
 
     def _textChanged(self, textedit: ManuscriptTextEdit, scene: Scene):
         if scene.manuscript.statistics is None:
@@ -694,12 +702,12 @@ class ManuscriptEditor(QWidget, EventListener):
 
         _textedit.setScene(scene)
         _textedit.textChanged.connect(partial(self._textChanged, _textedit, scene))
-        self._scenes.append(_textedit)
+        self._textedits.append(_textedit)
 
         return _textedit
 
     def _setFontForTextEdits(self):
-        for textedit in self._scenes:
+        for textedit in self._textedits:
             textedit.setFont(self._font)
             textedit.resizeToContent()
 
@@ -723,13 +731,13 @@ class ManuscriptEditor(QWidget, EventListener):
         # self.resizeToContent()
 
     def _dashInsertionChanged(self, mode: DashInsertionMode):
-        for textedit in self._scenes:
+        for textedit in self._textedits:
             textedit.setDashInsertionMode(mode)
         self._novel.prefs.manuscript.dash = mode
         self.repo.update_novel(self._novel)
 
     def _capitalizationChanged(self, mode: AutoCapitalizationMode):
-        for textedit in self._scenes:
+        for textedit in self._textedits:
             textedit.setAutoCapitalizationMode(mode)
         self._novel.prefs.manuscript.capitalization = mode
         self.repo.update_novel(self._novel)
