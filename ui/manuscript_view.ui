@@ -528,8 +528,8 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>68</width>
-                      <height>348</height>
+                      <width>100</width>
+                      <height>30</height>
                      </rect>
                     </property>
                     <property name="relaxed-white-bg" stdset="0">
@@ -567,25 +567,6 @@
                  </property>
                  <property name="topMargin">
                   <number>25</number>
-                 </property>
-                 <property name="rightMargin">
-                  <number>2</number>
-                 </property>
-                 <property name="bottomMargin">
-                  <number>25</number>
-                 </property>
-                </layout>
-               </widget>
-               <widget class="QWidget" name="pageExport">
-                <layout class="QVBoxLayout" name="verticalLayout_15">
-                 <property name="spacing">
-                  <number>3</number>
-                 </property>
-                 <property name="leftMargin">
-                  <number>5</number>
-                 </property>
-                 <property name="topMargin">
-                  <number>5</number>
                  </property>
                  <property name="rightMargin">
                   <number>2</number>
@@ -760,7 +741,7 @@
                 </size>
                </property>
                <property name="checkable">
-                <bool>true</bool>
+                <bool>false</bool>
                </property>
                <property name="transparent-circle-bg-on-hover" stdset="0">
                 <bool>true</bool>
@@ -900,8 +881,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>391</width>
-             <height>477</height>
+             <width>98</width>
+             <height>70</height>
             </rect>
            </property>
            <property name="sizePolicy">

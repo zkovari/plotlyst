@@ -17,15 +17,22 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QButtonGroup, QWidget
+from functools import partial
+
+from PyQt6.QtCore import Qt, QMarginsF, QSize
+from PyQt6.QtGui import QTextDocument, QPageSize
+from PyQt6.QtPrintSupport import QPrintPreviewWidget, QPrinter
+from PyQt6.QtWidgets import QButtonGroup, QWidget, QApplication
+from overrides import overrides
 from qthandy import vbox
 
 from plotlyst.common import RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Novel
-from plotlyst.service.manuscript import export_manuscript_to_docx
-from plotlyst.view.common import push_btn
+from plotlyst.service.manuscript import export_manuscript_to_docx, format_manuscript
+from plotlyst.view.common import push_btn, label
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.layout import group
+from plotlyst.view.widget.display import PopupDialog
 
 
 class ManuscriptExportWidget(QWidget):
@@ -62,3 +69,51 @@ class ManuscriptExportWidget(QWidget):
     def _export(self):
         if self._btnDocx.isChecked():
             export_manuscript_to_docx(self._novel)
+
+
+class ManuscriptExportPopup(PopupDialog):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self.novel = novel
+
+        self.printView = QPrintPreviewWidget()
+        # self.printView.setZoomMode(QPrintPreviewWidget.ZoomMode.FitToWidth)
+
+        self.layout().addWidget(self.printView)
+
+        self._btnExport = push_btn(IconRegistry.from_name('mdi.file-export-outline', RELAXED_WHITE_COLOR), 'Export',
+                                   tooltip='Export manuscript',
+                                   properties=['base', 'positive'])
+        self.btnCancel = push_btn(text='Close', properties=['confirm', 'cancel'])
+        self.btnCancel.clicked.connect(self.reject)
+
+        self.frame.layout().addWidget(label('Export manuscript', h5=True), alignment=Qt.AlignmentFlag.AlignCenter)
+        self.frame.layout().addWidget(self.printView)
+        self.frame.layout().addWidget(group(self.btnCancel, self._btnExport), alignment=Qt.AlignmentFlag.AlignRight)
+
+    @overrides
+    def sizeHint(self) -> QSize:
+        return self._adjustedSize()
+
+    def _adjustedSize(self) -> QSize:
+        window = QApplication.activeWindow()
+        if window:
+            size = QSize(int(window.size().width() * 0.75), int(window.size().height() * 0.8))
+        else:
+            return QSize(800, 600)
+
+        size.setWidth(max(size.width(), 800))
+        size.setHeight(max(size.height(), 600))
+
+        return size
+
+    def display(self):
+        document: QTextDocument = format_manuscript(self.novel)
+        self.printView.paintRequested.connect(partial(self._print, document))
+        self.printView.fitToWidth()
+        self.exec()
+
+    def _print(self, document: QTextDocument, device: QPrinter):
+        device.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
+        device.setPageMargins(QMarginsF(0, 0, 0, 0))
+        document.print(device)
