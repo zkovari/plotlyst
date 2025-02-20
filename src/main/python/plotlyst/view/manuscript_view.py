@@ -22,10 +22,9 @@ from PyQt6.QtCore import QTimer, Qt, QObject, QEvent
 from PyQt6.QtGui import QScreen
 from PyQt6.QtWidgets import QInputDialog, QApplication
 from overrides import overrides
-from qthandy import translucent, bold, margins, spacer, transparent, vspacer, decr_icon, vline, incr_icon
+from qthandy import translucent, bold, margins, spacer, transparent, vspacer, decr_icon, vline, incr_icon, busy
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
-from qttextedit.ops import TextEditorSettingsWidget
 
 from plotlyst.common import PLOTLYST_MAIN_COLOR
 from plotlyst.core.domain import Novel, Document, Chapter, DocumentProgress
@@ -180,11 +179,10 @@ class ManuscriptView(AbstractNovelView):
         self._addSceneMenu.addAction(
             action('Add chapter', IconRegistry.chapter_icon(), self.ui.treeChapters.addChapter))
 
-        self._contextMenuWidget = TextEditorSettingsWidget()
         self._settingsWidget = ManuscriptEditorSettingsWidget(novel)
+        self._settingsWidget.langSelectionWidget.languageChanged.connect(self._language_changed)
         self.ui.scrollSettings.layout().addWidget(self._settingsWidget)
 
-        # self._langSelectionWidget.languageChanged.connect(self._language_changed)
         self._cbSpellCheck.toggled.connect(self._spellcheck_toggled)
         self._cbSpellCheck.clicked.connect(self._spellcheck_clicked)
         self._spellcheck_toggled(self._cbSpellCheck.isChecked())
@@ -410,6 +408,7 @@ class ManuscriptView(AbstractNovelView):
             self.ui.btnSceneInfo.setChecked(True)
         self._miniSceneEditor.selectScene(scene)
 
+    @busy
     def _language_changed(self, lang: str):
         emit_info('Novel is getting closed. Persist workspace...')
         self.novel.lang_settings.lang = lang

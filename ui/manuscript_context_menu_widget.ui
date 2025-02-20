@@ -57,59 +57,6 @@
        <number>0</number>
       </property>
       <item>
-       <widget class="QWidget" name="wdgShutDown" native="true">
-        <layout class="QVBoxLayout" name="verticalLayout_3">
-         <property name="spacing">
-          <number>1</number>
-         </property>
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>3</number>
-         </property>
-         <property name="bottomMargin">
-          <number>3</number>
-         </property>
-         <item>
-          <widget class="QLabel" name="lblShutdownHint">
-           <property name="text">
-            <string>To apply a new language, please close this novel first.</string>
-           </property>
-           <property name="wordWrap">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item alignment="Qt::AlignHCenter">
-          <widget class="QPushButton" name="btnShutDown">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="cursor">
-            <cursorShape>PointingHandCursor</cursorShape>
-           </property>
-           <property name="text">
-            <string>Close novel</string>
-           </property>
-           <property name="base" stdset="0">
-            <bool>true</bool>
-           </property>
-           <property name="highlighted" stdset="0">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
          <widget class="Emoji" name="label_2">
@@ -133,6 +80,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item>
@@ -179,6 +129,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item row="1" column="3">
@@ -186,6 +139,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item row="1" column="1">
@@ -193,6 +149,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item row="1" column="2">
@@ -230,6 +189,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item row="0" column="0">
@@ -247,6 +209,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item row="0" column="5">
@@ -291,6 +256,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item>
@@ -332,6 +300,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item>
@@ -368,6 +339,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item row="1" column="0">
@@ -405,6 +379,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item row="1" column="1">
@@ -412,6 +389,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item row="0" column="5">
@@ -453,6 +433,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item>
@@ -512,6 +495,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item row="0" column="0">
@@ -529,6 +515,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
        </layout>
@@ -557,6 +546,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item>
@@ -598,6 +590,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item>
@@ -642,6 +637,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item>
@@ -683,6 +681,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item>
@@ -724,6 +725,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item>
@@ -783,6 +787,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
        </layout>
@@ -811,6 +818,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item>
@@ -852,6 +862,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item>
@@ -893,6 +906,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item>
@@ -934,6 +950,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item>
@@ -975,6 +994,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item>
@@ -1016,6 +1038,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item>
@@ -1057,6 +1082,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item>
@@ -1098,6 +1126,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item>
@@ -1139,6 +1170,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item>
@@ -1180,6 +1214,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item>
@@ -1221,6 +1258,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item>
@@ -1262,6 +1302,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item>
@@ -1303,6 +1346,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item>
@@ -1344,6 +1390,9 @@
           <property name="text">
            <string>CheckBox</string>
           </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
          </widget>
         </item>
         <item>
@@ -1394,6 +1443,6 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="btnGroup"/>
+  <buttongroup name="buttonGroup"/>
  </buttongroups>
 </ui>

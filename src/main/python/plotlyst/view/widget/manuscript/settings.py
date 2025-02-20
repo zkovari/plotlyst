@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
 
-import qtanim
 from PyQt6 import QtGui
 from PyQt6.QtCore import pyqtSignal, QTimer, Qt, QSize
 from PyQt6.QtGui import QMouseEvent
@@ -34,11 +33,12 @@ from qttextedit.ops import FontSectionSettingWidget, FontSizeSectionSettingWidge
 from qttextedit.util import EN_DASH, EM_DASH
 
 from plotlyst.core.domain import Novel
-from plotlyst.view.common import scroll_to_top, spin, ButtonPressResizeEventFilter, label, push_btn, \
+from plotlyst.view.common import label, push_btn, \
     ExclusiveOptionalButtonGroup
 from plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.button import CollapseButton
+from plotlyst.view.widget.confirm import asked
 from plotlyst.view.widget.input import Toggle
 
 
@@ -49,8 +49,6 @@ class ManuscriptSpellcheckingSettingsWidget(QWidget, Ui_ManuscriptContextMenuWid
         super().__init__(parent)
         self.setupUi(self)
         self.novel = novel
-
-        self.wdgShutDown.setHidden(True)
 
         self.btnArabicIcon.setIcon(IconRegistry.from_name('mdi.abjad-arabic'))
 
@@ -160,9 +158,6 @@ class ManuscriptSpellcheckingSettingsWidget(QWidget, Ui_ManuscriptContextMenuWid
         elif self.lang == 'uk-UA':
             self.cbUkrainian.setChecked(True)
 
-        self.btnShutDown.clicked.connect(self._languageChanged)
-        self.btnShutDown.installEventFilter(ButtonPressResizeEventFilter(self.btnShutDown))
-
     @overrides
     def mouseReleaseEvent(self, a0: QtGui.QMouseEvent) -> None:
         pass
@@ -175,24 +170,15 @@ class ManuscriptSpellcheckingSettingsWidget(QWidget, Ui_ManuscriptContextMenuWid
         if not checked:
             return
         self.lang = lang
-        if self.wdgShutDown.isHidden():
-            QTimer.singleShot(200, self._showShutdownOption)
-        else:
-            qtanim.glow(self.btnShutDown, loop=2)
+        self._showShutdownOption()
 
     def _showShutdownOption(self):
-        scroll_to_top(self.scrollArea)
-        self.wdgShutDown.setVisible(True)
-        qtanim.fade_in(self.lblShutdownHint, duration=150)
-        qtanim.glow(self.btnShutDown, loop=3)
+        def confirm():
+            if asked('To apply a new language, you have to close this novel.', 'Change language for spellcheck',
+                     btnConfirmText='Shutdown now'):
+                self.languageChanged.emit(self.lang)
 
-    def _languageChanged(self):
-        self.btnShutDown.setText('Closing...')
-        self.lblShutdownHint.setHidden(True)
-        spin(self.btnShutDown, color='white')
-        qtanim.glow(self.btnShutDown, loop=15)
-
-        self.languageChanged.emit(self.lang)
+        QTimer.singleShot(450, confirm)
 
 
 class ManuscriptFontSettingWidget(FontSectionSettingWidget):
