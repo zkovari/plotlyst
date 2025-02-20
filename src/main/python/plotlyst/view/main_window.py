@@ -34,7 +34,7 @@ from qttextedit.ops import DEFAULT_FONT_FAMILIES
 from textstat import textstat
 
 from plotlyst.common import NAV_BAR_BUTTON_DEFAULT_COLOR, \
-    NAV_BAR_BUTTON_CHECKED_COLOR, PLOTLYST_MAIN_COLOR
+    NAV_BAR_BUTTON_CHECKED_COLOR, PLOTLYST_MAIN_COLOR, PLACEHOLDER_TEXT_COLOR, PLOTLYST_TERTIARY_COLOR, BLACK_COLOR
 from plotlyst.core.client import client
 from plotlyst.core.domain import Novel, NovelPanel, ScenesView, NovelSetting, NovelDescriptor
 from plotlyst.core.text import sentence_count
@@ -105,12 +105,15 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self._detached_windows: List[DetachedWindow] = []
 
         palette = QApplication.palette()
-        palette.setColor(QPalette.ColorGroup.Active, QPalette.ColorRole.WindowText, QColor('#040406'))
-        palette.setColor(QPalette.ColorGroup.Active, QPalette.ColorRole.ButtonText, QColor('#040406'))
-        palette.setColor(QPalette.ColorGroup.Active, QPalette.ColorRole.Text, QColor('#040406'))
+        palette.setColor(QPalette.ColorGroup.Active, QPalette.ColorRole.WindowText, QColor(BLACK_COLOR))
+        palette.setColor(QPalette.ColorGroup.Active, QPalette.ColorRole.ButtonText, QColor(BLACK_COLOR))
+        palette.setColor(QPalette.ColorGroup.Active, QPalette.ColorRole.Text, QColor(BLACK_COLOR))
         palette.setColor(QPalette.ColorRole.ToolTipText, QColor(PLOTLYST_MAIN_COLOR))
-        palette.setColor(QPalette.ColorRole.PlaceholderText, QColor('#5E6C84'))
+        palette.setColor(QPalette.ColorRole.PlaceholderText, QColor(PLACEHOLDER_TEXT_COLOR))
         palette.setColor(QPalette.ColorRole.Window, QColor(BG_PRIMARY_COLOR))
+        palette.setColor(QPalette.ColorGroup.Active, QPalette.ColorRole.Highlight, QColor(PLOTLYST_TERTIARY_COLOR))
+        palette.setColor(QPalette.ColorGroup.Active, QPalette.ColorRole.HighlightedText,
+                         QColor(BLACK_COLOR))
         QApplication.setPalette(palette)
 
         if app_env.is_mac():
