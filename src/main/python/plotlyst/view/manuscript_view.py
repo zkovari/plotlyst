@@ -75,9 +75,7 @@ class ManuscriptView(AbstractNovelView):
         self._dist_free_top_bar.btnExitDistFreeMode.clicked.connect(self._exit_distraction_free)
 
         self._dist_free_bottom_bar = DistFreeControlsBar()
-        # self._dist_free_bottom_bar.btnFocus.toggled.connect(self._toggle_manuscript_focus)
         # self._dist_free_bottom_bar.btnTypewriterMode.toggled.connect(self._toggle_typewriter_mode)
-        # self._dist_free_bottom_bar.btnWordCount.clicked.connect(self._wordCountClicked)
         self.widget.layout().insertWidget(0, self._dist_free_top_bar)
         self.widget.layout().addWidget(self._dist_free_bottom_bar)
         self._dist_free_top_bar.setHidden(True)
@@ -142,6 +140,7 @@ class ManuscriptView(AbstractNovelView):
         decr_icon(self._btnDistractionFree)
         self._btnDistractionFree.installEventFilter(
             OpacityEventFilter(self._btnDistractionFree, leaveOpacity=0.5, enterOpacity=0.7))
+        self._btnDistractionFree.clicked.connect(self._enter_distraction_free)
 
         self._wdgSprint = SprintWidget()
         transparent(self._wdgSprint.btnTimer)
@@ -204,7 +203,7 @@ class ManuscriptView(AbstractNovelView):
         self.textEditor.progressChanged.connect(self._progress_changed)
         # self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
         self.textEditor.sceneTitleChanged.connect(self._scene_title_changed)
-        self._btnDistractionFree.clicked.connect(self._enter_distraction_free)
+        self._dist_free_bottom_bar.btnFocus.toggled.connect(self.textEditor.setSentenceHighlighterEnabled)
 
         if self.novel.chapters:
             self.ui.treeChapters.selectChapter(self.novel.chapters[0])
@@ -262,6 +261,7 @@ class ManuscriptView(AbstractNovelView):
         self._dist_free_bottom_bar.setWordDisplay(self.ui.lblWordCount)
         self._dist_free_top_bar.activate()
         self._dist_free_bottom_bar.activate()
+        self.textEditor.setSentenceHighlighterEnabled(self._dist_free_bottom_bar.btnFocus.isChecked())
         # self._dist_free_editor.activate(self.textEditor, self._wdgSprint.model())
 
     def _exit_distraction_free(self):

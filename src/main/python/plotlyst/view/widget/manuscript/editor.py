@@ -24,7 +24,7 @@ from typing import Optional, List
 from PyQt6 import QtGui
 from PyQt6.QtCore import pyqtSignal, QTextBoundaryFinder, Qt, QSize, QTimer, QEvent
 from PyQt6.QtGui import QFont, QResizeEvent, QShowEvent, QTextCursor, QTextCharFormat, QSyntaxHighlighter, QColor, \
-    QTextBlock
+    QTextBlock, QFocusEvent
 from PyQt6.QtWidgets import QWidget, QApplication, QTextEdit, QLineEdit, QToolButton, QFrame
 from overrides import overrides
 from qthandy import vbox, clear_layout, vspacer, margins, transparent, gc, hbox, italic, translucent, sp, spacer, \
@@ -171,6 +171,9 @@ class SentenceHighlighter(QSyntaxHighlighter):
         self._prevBlock: Optional[QTextBlock] = None
         self._editor.cursorPositionChanged.connect(self.rehighlight)
 
+    def sentenceHighlightEnabled(self) -> bool:
+        return self._sentenceEnabled
+
     def setSentenceHighlightEnabled(self, enabled: bool):
         self._sentenceEnabled = enabled
         self._hidden_format.setForeground(QColor('#38414A' if enabled else self.DEFAULT_FOREGROUND_COLOR))
@@ -179,7 +182,7 @@ class SentenceHighlighter(QSyntaxHighlighter):
     @overrides
     def highlightBlock(self, text: str) -> None:
         self.setFormat(0, len(text), self._hidden_format)
-        if self._sentenceEnabled and self._editor.textCursor().block() == self.currentBlock():
+        if self._sentenceEnabled and self._editor.hasFocus() and self._editor.textCursor().block() == self.currentBlock():
             text = self._editor.textCursor().block().text()
             finder = QTextBoundaryFinder(QTextBoundaryFinder.BoundaryType.Sentence, text)
             pos = self._editor.textCursor().positionInBlock()
@@ -250,6 +253,12 @@ class ManuscriptTextEdit(TextEditBase):
     def setFocus(self) -> None:
         super().setFocus()
         self.moveCursor(QTextCursor.MoveOperation.Start)
+
+    @overrides
+    def focusOutEvent(self, event: QFocusEvent):
+        super().focusOutEvent(event)
+        if self._sentenceHighlighter and self._sentenceHighlighter.sentenceHighlightEnabled():
+            self._sentenceHighlighter.rehighlight()
 
     @overrides
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
@@ -553,6 +562,10 @@ class ManuscriptEditor(QWidget):
     def initSentenceHighlighter(self):
         for textedit in self._scenes:
             textedit.initSentenceHighlighter()
+
+    def setSentenceHighlighterEnabled(self, enabled: bool):
+        for textedit in self._scenes:
+            textedit.setSentenceHighlighterEnabled(enabled)
 
     def clearSentenceHighlighter(self):
         for textedit in self._scenes:
