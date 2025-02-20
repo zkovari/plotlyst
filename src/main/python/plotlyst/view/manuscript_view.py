@@ -264,9 +264,10 @@ class ManuscriptView(AbstractNovelView):
         self.textEditor.setSentenceHighlighterEnabled(self._dist_free_bottom_bar.btnFocus.isChecked())
         # self._dist_free_editor.activate(self.textEditor, self._wdgSprint.model())
 
+        self.ui.scrollEditor.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
     def _exit_distraction_free(self):
         emit_global_event(ExitDistractionFreeMode(self))
-        # self._dist_free_editor.deactivate()
         margins(self.widget, 4, 2, 2, 2)
         self.ui.pageText.setStyleSheet('')
 
@@ -286,6 +287,8 @@ class ManuscriptView(AbstractNovelView):
         self.ui.wdgBottom.layout().insertWidget(1, self.ui.lblWordCount, alignment=Qt.AlignmentFlag.AlignCenter)
         self.ui.lblWordCount.setNightModeEnabled(False)
         self.ui.lblWordCount.setVisible(True)
+
+        self.ui.scrollEditor.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
 
     def _update_story_goal(self):
         wc = sum([x.manuscript.statistics.wc for x in self.novel.scenes if x.manuscript and x.manuscript.statistics])

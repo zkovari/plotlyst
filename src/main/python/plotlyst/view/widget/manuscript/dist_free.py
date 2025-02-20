@@ -77,21 +77,6 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
             self._toggle_manuscript_focus(self.btnFocus.isChecked())
             self._toggle_typewriter_mode(self.btnTypewriterMode.isChecked())
 
-        self._wordCountClicked(self.btnWordCount.isChecked())
-        self.wdgDistractionFreeEditor.setMouseTracking(True)
-
-    def deactivate(self):
-        # self.editor.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        # self.editor.setTitleVisible(True)
-        self.editor.removeEventFilter(self)
-        # self.editor.setMargins(30, 30, 30, 30)
-        # self.editor.clearSentenceHighlighter()
-        self.editor = None
-        self.setMouseTracking(False)
-        self.wdgDistractionFreeEditor.setMouseTracking(False)
-        if self.lblWords:
-            self.lblWords.setNightModeEnabled(False)
-
     def setWordDisplay(self, words: WordsDisplay):
         words.setNightModeEnabled(True)
         self.lblWords = words
