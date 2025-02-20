@@ -39,6 +39,7 @@ from plotlyst.common import RELAXED_WHITE_COLOR, DEFAULT_MANUSCRIPT_LINE_SPACE, 
     PLACEHOLDER_TEXT_COLOR, PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.client import json_client
 from plotlyst.core.domain import DocumentProgress, Novel, Scene, TextStatistics, DocumentStatistics, FontSettings
+from plotlyst.core.sprint import TimerModel
 from plotlyst.env import app_env
 from plotlyst.service.manuscript import daily_progress, daily_overall_progress
 from plotlyst.service.persistence import RepositoryPersistenceManager
@@ -49,6 +50,7 @@ from plotlyst.view.style.theme import BG_DARK_COLOR
 from plotlyst.view.widget.display import WordsDisplay
 from plotlyst.view.widget.input import BasePopupTextEditorToolbar, TextEditBase, GrammarHighlighter, \
     GrammarHighlightStyle
+from plotlyst.view.widget.manuscript import SprintWidget
 from plotlyst.view.widget.manuscript.settings import ManuscriptEditorSettingsWidget
 
 
@@ -65,10 +67,19 @@ class DistFreeDisplayBar(QFrame):
         self.btnExitDistFreeMode.installEventFilter(OpacityEventFilter(self.btnExitDistFreeMode, leaveOpacity=0.8))
         retain_when_hidden(self.btnExitDistFreeMode)
 
+        self.wdgSprint = SprintWidget(self)
+        self.wdgSprint.setCompactMode(True)
+
+        self.layout().addWidget(self.wdgSprint, alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(self.btnExitDistFreeMode, alignment=Qt.AlignmentFlag.AlignRight)
 
-    def activate(self):
+    def activate(self, timer: Optional[TimerModel] = None):
         self.btnExitDistFreeMode.setVisible(True)
+        if timer and timer.isActive():
+            self.wdgSprint.setModel(timer)
+            self.wdgSprint.setVisible(True)
+        else:
+            self.wdgSprint.setHidden(True)
         QTimer.singleShot(5000, self._hideItems)
 
     @overrides

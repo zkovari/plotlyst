@@ -248,7 +248,6 @@ class ManuscriptView(AbstractNovelView):
         self.ui.pageText.setStyleSheet(f'QWidget {{background-color: {BG_DARK_COLOR};}}')
         self._wdgToolbar.setHidden(True)
 
-        # self._wdgSprint.setCompactMode(True)
         self.ui.wdgTitle.setHidden(True)
         self.ui.wdgLeftSide.setHidden(True)
         self.ui.wdgSideBar.setHidden(True)
@@ -260,10 +259,9 @@ class ManuscriptView(AbstractNovelView):
         self.textEditor.setNightMode(True)
 
         self._dist_free_bottom_bar.setWordDisplay(self.ui.lblWordCount)
-        self._dist_free_top_bar.activate()
+        self._dist_free_top_bar.activate(self._wdgSprint.model())
         self._dist_free_bottom_bar.activate()
         self.textEditor.setSentenceHighlighterEnabled(self._dist_free_bottom_bar.btnFocus.isChecked())
-        # self._dist_free_editor.activate(self.textEditor, self._wdgSprint.model())
 
         self.ui.scrollEditor.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
@@ -271,8 +269,6 @@ class ManuscriptView(AbstractNovelView):
         emit_global_event(ExitDistractionFreeMode(self))
         margins(self.widget, 4, 2, 2, 2)
         self.ui.pageText.setStyleSheet('')
-
-        # self._wdgSprint.setCompactMode(False)
 
         self.ui.wdgTitle.setVisible(True)
         self._wdgToolbar.setVisible(True)

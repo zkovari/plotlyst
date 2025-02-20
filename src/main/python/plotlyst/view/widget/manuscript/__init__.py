@@ -57,7 +57,6 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.button import apply_button_palette_color
 from plotlyst.view.widget.display import WordsDisplay, IconText, Emoji, ChartView
 from plotlyst.view.widget.input import TextEditorBase
-from plotlyst.view.widget.manuscript.editor import ManuscriptEditor
 from plotlyst.view.widget.progress import ProgressChart
 
 
