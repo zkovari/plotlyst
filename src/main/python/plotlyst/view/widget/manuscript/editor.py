@@ -476,6 +476,10 @@ class ManuscriptEditor(QWidget, EventListener):
                     sceneLbl.refresh()
         elif isinstance(event, SceneDeletedEvent):
             pass
+            # if self._scene and self._scene == event.scene:
+            #     self.clear()
+            # for sceneLbl in self._sceneLabels:
+
             # if event.scene in self.ui.textEdit.scenes():
             #     if len(self.ui.textEdit.scenes()) == 1:
             #         self.ui.textEdit.clear()
