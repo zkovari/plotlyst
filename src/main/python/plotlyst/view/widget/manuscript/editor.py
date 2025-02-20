@@ -25,7 +25,7 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import pyqtSignal, QTextBoundaryFinder, Qt, QSize, QTimer, QEvent
 from PyQt6.QtGui import QFont, QResizeEvent, QShowEvent, QTextCursor, QTextCharFormat, QSyntaxHighlighter, QColor, \
     QTextBlock, QFocusEvent
-from PyQt6.QtWidgets import QWidget, QApplication, QTextEdit, QLineEdit, QToolButton, QFrame
+from PyQt6.QtWidgets import QWidget, QApplication, QTextEdit, QLineEdit, QToolButton, QFrame, QPushButton
 from overrides import overrides
 from qthandy import vbox, clear_layout, vspacer, margins, transparent, gc, hbox, italic, translucent, sp, spacer, \
     decr_font, retain_when_hidden
@@ -401,6 +401,7 @@ class ManuscriptEditor(QWidget):
         self._novel: Optional[Novel] = None
         self._margins: int = 30
         self._scenes: List[ManuscriptTextEdit] = []
+        self._sceneLabels: List[QPushButton] = []
         self._scene: Optional[Scene] = None
         self._font = self.defaultFont()
         self._characterWidth: int = 40
@@ -492,10 +493,15 @@ class ManuscriptEditor(QWidget):
         self._maxContentWidth = metrics.boundingRect('M' * self._characterWidth).width()
         self._resizeToCharacterWidth()
 
-    def setScene(self, scene: Scene):
+    def clear(self):
         self._scenes.clear()
-        self._scene = scene
+        self._sceneLabels.clear()
+        self._scene = None
         clear_layout(self.wdgEditor)
+
+    def setScene(self, scene: Scene):
+        self.clear()
+        self._scene = scene
 
         self.textTitle.setText(self._scene.title)
         self.textTitle.setPlaceholderText('Scene title')
@@ -507,9 +513,7 @@ class ManuscriptEditor(QWidget):
         wdg.setFocus()
 
     def setChapterScenes(self, scenes: List[Scene], title: str):
-        self._scenes.clear()
-        self._scene = None
-        clear_layout(self.wdgEditor)
+        self.clear()
 
         self.textTitle.setText(title)
         self.textTitle.setPlaceholderText('Chapter')
@@ -520,6 +524,7 @@ class ManuscriptEditor(QWidget):
 
             sceneLbl = push_btn(text=f'~{scene.title if scene.title else "Scene"}~', transparent_=True)
             sceneLbl.clicked.connect(partial(self.sceneSeparatorClicked.emit, scene))
+            self._sceneLabels.append(sceneLbl)
             italic(sceneLbl)
             translucent(sceneLbl)
             self.wdgEditor.layout().addWidget(sceneLbl, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -527,6 +532,13 @@ class ManuscriptEditor(QWidget):
 
         self.wdgEditor.layout().addWidget(vspacer())
         self._scenes[0].setFocus()
+
+    def setNightMode(self, mode: bool):
+        for lbl in self._sceneLabels:
+            if mode:
+                lbl.setStyleSheet(f'color: {RELAXED_WHITE_COLOR}; border: 0px; background-color: rgba(0, 0, 0, 0);')
+            else:
+                transparent(lbl)
 
     def attachSettingsWidget(self, settings: ManuscriptEditorSettingsWidget):
         self._settings = settings

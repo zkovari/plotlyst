@@ -257,6 +257,7 @@ class ManuscriptView(AbstractNovelView):
         self._dist_free_bottom_bar.setVisible(True)
         self._dist_free_mode = True
         self.textEditor.initSentenceHighlighter()
+        self.textEditor.setNightMode(True)
 
         self._dist_free_bottom_bar.setWordDisplay(self.ui.lblWordCount)
         self._dist_free_top_bar.activate()
@@ -283,6 +284,7 @@ class ManuscriptView(AbstractNovelView):
 
         self._dist_free_mode = False
         self.textEditor.clearSentenceHighlighter()
+        self.textEditor.setNightMode(False)
 
         self.ui.wdgBottom.layout().insertWidget(1, self.ui.lblWordCount, alignment=Qt.AlignmentFlag.AlignCenter)
         self.ui.lblWordCount.setNightModeEnabled(False)
