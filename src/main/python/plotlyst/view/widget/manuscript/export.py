@@ -90,7 +90,6 @@ class ManuscriptExportPopup(PopupDialog):
         self._btnPdf = self.__selectorButton('fa5.file-pdf', 'PDF')
 
         self.wdgEditor = QWidget()
-        # formLayout = QFormLayout(self.wdgEditor)
         vbox(self.wdgEditor, 10, 6)
         self.wdgCentral = QSplitter()
         self.wdgCentral.setChildrenCollapsible(False)
