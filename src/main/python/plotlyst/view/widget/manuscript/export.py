@@ -22,7 +22,7 @@ from functools import partial
 from PyQt6.QtCore import Qt, QMarginsF, QSize
 from PyQt6.QtGui import QTextDocument, QPageSize
 from PyQt6.QtPrintSupport import QPrintPreviewWidget, QPrinter
-from PyQt6.QtWidgets import QButtonGroup, QWidget, QApplication
+from PyQt6.QtWidgets import QButtonGroup, QWidget, QApplication, QDialog
 from overrides import overrides
 from qthandy import vbox
 
@@ -77,19 +77,19 @@ class ManuscriptExportPopup(PopupDialog):
         self.novel = novel
 
         self.printView = QPrintPreviewWidget()
-        # self.printView.setZoomMode(QPrintPreviewWidget.ZoomMode.FitToWidth)
 
         self.layout().addWidget(self.printView)
 
-        self._btnExport = push_btn(IconRegistry.from_name('mdi.file-export-outline', RELAXED_WHITE_COLOR), 'Export',
-                                   tooltip='Export manuscript',
-                                   properties=['base', 'positive'])
+        self.btnExport = push_btn(IconRegistry.from_name('mdi.file-export-outline', RELAXED_WHITE_COLOR), 'Export',
+                                  tooltip='Export manuscript',
+                                  properties=['base', 'positive'])
+        self.btnExport.clicked.connect(self.accept)
         self.btnCancel = push_btn(text='Close', properties=['confirm', 'cancel'])
         self.btnCancel.clicked.connect(self.reject)
 
         self.frame.layout().addWidget(label('Export manuscript', h5=True), alignment=Qt.AlignmentFlag.AlignCenter)
         self.frame.layout().addWidget(self.printView)
-        self.frame.layout().addWidget(group(self.btnCancel, self._btnExport), alignment=Qt.AlignmentFlag.AlignRight)
+        self.frame.layout().addWidget(group(self.btnCancel, self.btnExport), alignment=Qt.AlignmentFlag.AlignRight)
 
     @overrides
     def sizeHint(self) -> QSize:
@@ -111,9 +111,11 @@ class ManuscriptExportPopup(PopupDialog):
         document: QTextDocument = format_manuscript(self.novel)
         self.printView.paintRequested.connect(partial(self._print, document))
         self.printView.fitToWidth()
-        self.exec()
+        result = self.exec()
+        if result == QDialog.DialogCode.Accepted:
+            export_manuscript_to_docx(self.novel)
 
     def _print(self, document: QTextDocument, device: QPrinter):
-        device.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
+        device.setPageSize(QPageSize(QPageSize.PageSizeId.Letter))
         device.setPageMargins(QMarginsF(0, 0, 0, 0))
         document.print(device)

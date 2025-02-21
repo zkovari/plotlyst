@@ -72,7 +72,7 @@ def export_manuscript_to_docx(novel: Novel):
 
     html: str = ''
     for i, chapter in enumerate(novel.chapters):
-        html += f'<div custom-style="Title">Chapter {i + 1}</div>'
+        html += f'<div custom-style="Heading 1">Chapter {i + 1}</div>'
         for j, scene in enumerate(novel.scenes_in_chapter(chapter)):
             if not scene.manuscript:
                 continue
@@ -95,15 +95,18 @@ def format_manuscript(novel: Novel) -> QTextDocument:
 
     chapter_title_block_format = QTextBlockFormat()
     chapter_title_block_format.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    chapter_title_char_format = QTextCharFormat()
+    chapter_title_char_format.setFont(font)
+    chapter_title_char_format.setFontPointSize(16)
 
     block_format = QTextBlockFormat()
     block_format.setAlignment(Qt.AlignmentFlag.AlignLeft)
-    block_format.setTextIndent(20)
+    block_format.setTextIndent(40)
     block_format.setTopMargin(0)
     block_format.setBottomMargin(0)
     block_format.setLeftMargin(0)
     block_format.setRightMargin(0)
-    block_format.setLineHeight(150, QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
+    block_format.setLineHeight(200, QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
 
     page_break_format = QTextBlockFormat()
     page_break_format.setPageBreakPolicy(QTextFormat.PageBreakFlag.PageBreak_AlwaysAfter)
@@ -118,7 +121,7 @@ def format_manuscript(novel: Novel) -> QTextDocument:
     cursor: QTextCursor = document.rootFrame().firstCursorPosition()
 
     for i, chapter in enumerate(novel.chapters):
-        cursor.insertBlock(chapter_title_block_format)
+        cursor.insertBlock(chapter_title_block_format, chapter_title_char_format)
         cursor.insertText(f'Chapter {i + 1}')
 
         cursor.insertBlock(block_format)
