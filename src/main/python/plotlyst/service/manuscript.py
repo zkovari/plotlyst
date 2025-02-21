@@ -72,7 +72,7 @@ def export_manuscript_to_docx(novel: Novel):
 
     html: str = ''
     for i, chapter in enumerate(novel.chapters):
-        html += f'<div custom-style="Heading 1">Chapter {i + 1}</div>'
+        html += f'<h1>{chapter.display_name()}</h1>'
         for j, scene in enumerate(novel.scenes_in_chapter(chapter)):
             if not scene.manuscript:
                 continue
@@ -122,7 +122,7 @@ def format_manuscript(novel: Novel) -> QTextDocument:
 
     for i, chapter in enumerate(novel.chapters):
         cursor.insertBlock(chapter_title_block_format, chapter_title_char_format)
-        cursor.insertText(f'Chapter {i + 1}')
+        cursor.insertText(chapter.display_name())
 
         cursor.insertBlock(block_format)
 

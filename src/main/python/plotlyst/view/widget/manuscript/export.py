@@ -22,18 +22,19 @@ from functools import partial
 from PyQt6.QtCore import Qt, QMarginsF, QSize
 from PyQt6.QtGui import QTextDocument, QPageSize, QColor
 from PyQt6.QtPrintSupport import QPrintPreviewWidget, QPrinter
-from PyQt6.QtWidgets import QButtonGroup, QWidget, QApplication, QDialog, QGraphicsView, QSplitter
+from PyQt6.QtWidgets import QButtonGroup, QWidget, QApplication, QDialog, QGraphicsView, QSplitter, QPushButton
 from overrides import overrides
-from qthandy import vbox, vspacer, spacer, sp
+from qthandy import vbox, vspacer, sp, incr_icon, incr_font
 
-from plotlyst.common import RELAXED_WHITE_COLOR
+from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Novel
 from plotlyst.service.manuscript import export_manuscript_to_docx, format_manuscript
-from plotlyst.view.common import push_btn, label
+from plotlyst.view.common import push_btn, label, exclusive_buttons
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.theme import BG_MUTED_COLOR
 from plotlyst.view.widget.display import PopupDialog
+from plotlyst.view.widget.settings import Forms
 
 
 class ManuscriptExportWidget(QWidget):
@@ -85,16 +86,12 @@ class ManuscriptExportPopup(PopupDialog):
 
         self.layout().addWidget(self.printView)
 
-        self._btnDocx = push_btn(IconRegistry.docx_icon(), 'Word (.docx)', checkable=True,
-                                 properties=['transparent-rounded-bg-on-hover', 'secondary-selector'])
-        self._btnDocx.setChecked(True)
-        self._btnPdf = push_btn(IconRegistry.from_name('fa5.file-pdf'), 'PDF', checkable=True,
-                                properties=['transparent-rounded-bg-on-hover', 'secondary-selector'])
+        self._btnDocx = self.__selectorButton('mdi.file-word-outline', 'Word (.docx)')
+        self._btnPdf = self.__selectorButton('fa5.file-pdf', 'PDF')
 
         self.wdgEditor = QWidget()
-        vbox(self.wdgEditor)
-        self.wdgEditor.layout().addWidget(group(label('Format:'), self._btnDocx, self._btnPdf, spacer()))
-        self.wdgEditor.layout().addWidget(vspacer())
+        # formLayout = QFormLayout(self.wdgEditor)
+        vbox(self.wdgEditor, 10, 6)
         self.wdgCentral = QSplitter()
         self.wdgCentral.setChildrenCollapsible(False)
         self.wdgCentral.addWidget(self.printView)
@@ -106,6 +103,14 @@ class ManuscriptExportPopup(PopupDialog):
         self._btnGroup.addButton(self._btnDocx)
         self._btnGroup.addButton(self._btnPdf)
 
+        chapterForms = Forms('Chapter titles')
+        self.wdgEditor.layout().addWidget(chapterForms)
+        self.chapterSceneTitle = chapterForms.addSetting("First scene's title")
+        self.chapterScenePov = chapterForms.addSetting("First POV's name")
+        exclusive_buttons(self.wdgEditor, self.chapterSceneTitle, self.chapterScenePov, optional=True)
+
+        self.wdgEditor.layout().addWidget(vspacer())
+
         self.btnExport = push_btn(IconRegistry.from_name('mdi.file-export-outline', RELAXED_WHITE_COLOR),
                                   'Export to docx',
                                   tooltip='Export manuscript',
@@ -114,9 +119,12 @@ class ManuscriptExportPopup(PopupDialog):
         self.btnCancel = push_btn(text='Close', properties=['confirm', 'cancel'])
         self.btnCancel.clicked.connect(self.reject)
 
-        self.frame.layout().addWidget(label('Export manuscript', h5=True), alignment=Qt.AlignmentFlag.AlignCenter)
-        # self.wdgCentral.layout().addWidget(self.printView)
-        # self.wdgCentral.layout().addWidget(self.wdgEditor)
+        self._btnGroup.buttonToggled.connect(self._formatChanged)
+        self._btnDocx.setChecked(True)
+
+        self.frame.layout().addWidget(
+            group(label('Export manuscript to: ', h5=True), self._btnDocx, self._btnPdf, margin=10, spacing=5),
+            alignment=Qt.AlignmentFlag.AlignCenter)
         self.frame.layout().addWidget(self.wdgCentral)
         self.frame.layout().addWidget(group(self.btnCancel, self.btnExport), alignment=Qt.AlignmentFlag.AlignRight)
 
@@ -142,9 +150,26 @@ class ManuscriptExportPopup(PopupDialog):
         self.printView.fitToWidth()
         result = self.exec()
         if result == QDialog.DialogCode.Accepted:
-            export_manuscript_to_docx(self.novel)
+            if self._btnDocx.isChecked():
+                export_manuscript_to_docx(self.novel)
+            elif self._btnPdf.isChecked():
+                print('pdf')
 
     def _print(self, document: QTextDocument, device: QPrinter):
         device.setPageSize(QPageSize(QPageSize.PageSizeId.Letter))
         device.setPageMargins(QMarginsF(0, 0, 0, 0))
         document.print(device)
+
+    def _formatChanged(self):
+        if self._btnDocx.isChecked():
+            self.btnExport.setText('Export to docx')
+        elif self._btnPdf.isChecked():
+            self.btnExport.setText('Export to PDF')
+
+    def __selectorButton(self, icon: str, text: str) -> QPushButton:
+        btn = push_btn(IconRegistry.from_name(icon, color_on=PLOTLYST_SECONDARY_COLOR), text, checkable=True,
+                       properties=['transparent-rounded-bg-on-hover', 'secondary-selector'])
+        incr_icon(btn, 4)
+        incr_font(btn, 2)
+
+        return btn

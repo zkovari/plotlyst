@@ -24,9 +24,9 @@ from typing import Dict, Optional, List
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QEvent
 from PyQt6.QtGui import QIcon, QColor
-from PyQt6.QtWidgets import QWidget, QPushButton, QToolButton, QGridLayout
+from PyQt6.QtWidgets import QWidget, QPushButton, QToolButton, QGridLayout, QFormLayout
 from overrides import overrides
-from qthandy import transparent, sp, vbox, hbox, vspacer, incr_font, pointy, grid, margins, line
+from qthandy import transparent, sp, vbox, hbox, vspacer, incr_font, pointy, grid, margins, line, spacer
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -45,6 +45,7 @@ from plotlyst.view.common import label, ButtonPressResizeEventFilter
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.style.button import apply_button_palette_color
+from plotlyst.view.widget.button import SmallToggleButton
 from plotlyst.view.widget.input import Toggle
 
 setting_titles: Dict[NovelSetting, str] = {
@@ -153,6 +154,39 @@ def toggle_setting(source, novel: Novel, setting: NovelSetting, toggled: bool):
 
     event_clazz = setting_events[setting]
     emit_event(novel, event_clazz(source, setting, toggled))
+
+
+class Forms(QWidget):
+    def __init__(self, title: str, parent=None):
+        super().__init__(parent)
+        vbox(self, 0, 0)
+        self.wdgSettings = QWidget()
+        self._layout = QFormLayout(self.wdgSettings)
+        margins(self.wdgSettings, left=20)
+
+        self.layout().addWidget(label(title, bold=True), alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self.wdgSettings, alignment=Qt.AlignmentFlag.AlignLeft)
+
+    def addSetting(self, text: str) -> SmallToggleButton:
+        toggle = SmallToggleButton()
+        self._layout.addRow(label(text, description=True), toggle)
+        return toggle
+
+
+class SimpleToggleSetting(QWidget):
+    def __init__(self, text: str, parent=None, checked: bool = False, alignLeft: bool = False,
+                 alignRight: bool = False):
+        super().__init__(parent)
+        hbox(self)
+        if alignRight:
+            self.layout().addWidget(spacer())
+        self.layout().addWidget(label(text, description=True))
+        self.toggle = SmallToggleButton()
+        self.toggle.setChecked(checked)
+        self.layout().addWidget(self.toggle)
+
+        if alignLeft:
+            self.layout().addWidget(spacer())
 
 
 class SettingBaseWidget(QWidget):
