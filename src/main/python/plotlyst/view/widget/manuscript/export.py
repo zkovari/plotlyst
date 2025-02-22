@@ -28,7 +28,7 @@ from qthandy import vbox, vspacer, incr_icon, incr_font, sp, gc, busy
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Novel
-from plotlyst.service.manuscript import export_manuscript_to_docx, format_manuscript
+from plotlyst.service.manuscript import export_manuscript_to_docx, format_manuscript, export_manuscript_to_pdf
 from plotlyst.view.common import push_btn, label, exclusive_buttons
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -113,15 +113,11 @@ class ManuscriptExportPopup(PopupDialog):
                 export_manuscript_to_docx(self.novel, sceneTitle=self.chapterSceneTitle.isChecked(),
                                           povTitle=self.chapterScenePov.isChecked())
             elif self._btnPdf.isChecked():
-                printer = QPrinter()
-                printer.setPageSize(QPageSize(QPageSize.PageSizeId.Letter))
-                printer.setPageMargins(QMarginsF(1, 1, 1, 1), QPrinter.Unit.Inch)  # margin is already set it seems
-                self.preview.document().print(printer)
-                print('pdf')
+                export_manuscript_to_pdf(self.novel, self.document)
 
     def _print(self, device: QPrinter):
         device.setPageSize(QPageSize(QPageSize.PageSizeId.Letter))
-        device.setPageMargins(QMarginsF(0, 0, 0, 0), QPageLayout.Unit.Inch)
+        device.setPageMargins(QMarginsF(0, 0, 0, 0), QPageLayout.Unit.Inch)  # margin is already set it seems
         self.document.print(device)
 
     def _formatChanged(self):

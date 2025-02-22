@@ -21,8 +21,10 @@ from pathlib import Path
 from typing import Optional, List
 
 import pypandoc
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QTextDocument, QTextCursor, QTextBlockFormat, QTextFormat, QTextBlock, QFont, QTextCharFormat
+from PyQt6.QtCore import Qt, QMarginsF
+from PyQt6.QtGui import QTextDocument, QTextCursor, QTextBlockFormat, QTextFormat, QTextBlock, QFont, QTextCharFormat, \
+    QPageSize, QPageLayout
+from PyQt6.QtPrintSupport import QPrinter
 from PyQt6.QtWidgets import QFileDialog
 from qthandy import busy
 from slugify import slugify
@@ -100,6 +102,26 @@ def export_manuscript_to_docx(novel: Novel, sceneTitle: bool = False, povTitle: 
     spec_args = ['--reference-doc', resource_registry.manuscript_docx_template]
     pypandoc.convert_text(html, to='docx', format='html', extra_args=spec_args, outputfile=target_path)
 
+    ask_to_open_file(target_path)
+
+
+def export_manuscript_to_pdf(novel: Novel, manuscript: QTextDocument):
+    title = slugify(novel.title if novel.title else 'my-novel')
+    target_path, _ = QFileDialog.getSaveFileName(None, 'Export PDF', f'{title}.pdf',
+                                                 'PDF files (*.pdf);;All Files()')
+    if not target_path:
+        return
+    printer = QPrinter()
+    printer.setPageSize(QPageSize(QPageSize.PageSizeId.Letter))
+    printer.setPageMargins(QMarginsF(0, 0, 0, 0), QPageLayout.Unit.Inch)  # margin is already set it seems
+    printer.setOutputFileName(target_path)
+    printer.setDocName(title)
+    manuscript.print(printer)
+
+    ask_to_open_file(target_path)
+
+
+def ask_to_open_file(target_path: str):
     if asked('The file will be opened in an external editor associated with that file format.',
              'Export was finished. Open file in editor?', btnCancelText='No'):
         open_location(target_path)
