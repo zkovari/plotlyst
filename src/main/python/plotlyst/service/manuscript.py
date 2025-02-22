@@ -39,32 +39,6 @@ from plotlyst.service.resource import ask_for_resource
 from plotlyst.view.widget.confirm import asked
 
 
-def prepare_content_for_convert(html: str) -> str:
-    text_doc = QTextDocument()
-    text_doc.setHtml(html)
-
-    block: QTextBlock = text_doc.begin()
-    md_content: str = ''
-    while block.isValid():
-        text = block.text()
-        if text == '***' or text == '###':
-            block_content = '<div custom-style="Text Aligned Center">***</div>'
-        else:
-            cursor = QTextCursor(block)
-            cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
-            block_content = cursor.selection().toMarkdown()
-            if block.blockFormat().alignment() & Qt.AlignmentFlag.AlignCenter:
-                block_content = f'<div custom-style="Text Aligned Center">{block_content}</div>'
-            elif block.blockFormat().alignment() & Qt.AlignmentFlag.AlignRight:
-                block_content = f'<div custom-style="Text Aligned Right">{block_content}</div>'
-
-        md_content += block_content
-
-        block = block.next()
-
-    return pypandoc.convert_text(md_content, to='html', format='md')
-
-
 def export_manuscript_to_docx(novel: Novel):
     if not ask_for_resource(ResourceType.PANDOC):
         return
@@ -82,11 +56,43 @@ def export_manuscript_to_docx(novel: Novel):
     html: str = ''
     for i, chapter in enumerate(novel.chapters):
         html += f'<h1>{chapter.display_name()}</h1>'
+        first_paragraph = True
         for j, scene in enumerate(novel.scenes_in_chapter(chapter)):
             if not scene.manuscript:
                 continue
 
-            scene_html = prepare_content_for_convert(scene.manuscript.content)
+            text_doc = QTextDocument()
+            text_doc.setHtml(scene.manuscript.content)
+
+            block: QTextBlock = text_doc.begin()
+            md_content: str = ''
+            while block.isValid():
+                text = block.text()
+                if not text:
+                    first_paragraph = True
+                    block_content = ''
+                elif text == '***' or text == '###':
+                    block_content = '<div custom-style="Text Aligned Center">***</div>'
+                    first_paragraph = True
+                else:
+                    cursor = QTextCursor(block)
+                    cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
+                    block_content = cursor.selection().toMarkdown()
+
+                    if block.blockFormat().alignment() & Qt.AlignmentFlag.AlignCenter:
+                        block_content = f'<div custom-style="Text Aligned Center">{block_content}</div>'
+                    elif block.blockFormat().alignment() & Qt.AlignmentFlag.AlignRight:
+                        block_content = f'<div custom-style="Text Aligned Right">{block_content}</div>'
+
+                    if first_paragraph:
+                        block_content = f'<div custom-style="First Paragraph">{block_content}</div>'
+                        first_paragraph = False
+
+                md_content += block_content
+
+                block = block.next()
+
+            scene_html = pypandoc.convert_text(md_content, to='html', format='md')
             html += scene_html
 
     spec_args = ['--reference-doc', resource_registry.manuscript_docx_template]
