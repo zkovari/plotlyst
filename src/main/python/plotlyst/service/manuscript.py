@@ -46,14 +46,23 @@ def prepare_content_for_convert(html: str) -> str:
     block: QTextBlock = text_doc.begin()
     md_content: str = ''
     while block.isValid():
-        cursor = QTextCursor(block)
-        cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
-        md_content += cursor.selection().toMarkdown()
+        text = block.text()
+        if text == '***' or text == '###':
+            block_content = '<div custom-style="Text Aligned Center">***</div>'
+        else:
+            cursor = QTextCursor(block)
+            cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
+            block_content = cursor.selection().toMarkdown()
+            if block.blockFormat().alignment() & Qt.AlignmentFlag.AlignCenter:
+                block_content = f'<div custom-style="Text Aligned Center">{block_content}</div>'
+            elif block.blockFormat().alignment() & Qt.AlignmentFlag.AlignRight:
+                block_content = f'<div custom-style="Text Aligned Right">{block_content}</div>'
+
+        md_content += block_content
 
         block = block.next()
-    content = pypandoc.convert_text(md_content, to='html', format='md')
 
-    return content
+    return pypandoc.convert_text(md_content, to='html', format='md')
 
 
 def export_manuscript_to_docx(novel: Novel):
@@ -115,9 +124,6 @@ def format_manuscript(novel: Novel) -> QTextDocument:
     page_break_format = QTextBlockFormat()
     page_break_format.setPageBreakPolicy(QTextFormat.PageBreakFlag.PageBreak_AlwaysAfter)
 
-    # char_format = QTextCharFormat()
-    # char_format.setFont(font)
-
     document = QTextDocument()
     document.setDefaultFont(font)
     document.setDocumentMargin(0)
@@ -131,14 +137,13 @@ def format_manuscript(novel: Novel) -> QTextDocument:
         cursor.insertBlock(default_block_format)
 
         scenes = novel.scenes_in_chapter(chapter)
+        first_paragraph = True
         for j, scene in enumerate(scenes):
             if not scene.manuscript:
                 continue
 
-            # scene_text_doc = format_scene_document(scene.manuscript)
             scene_text_doc = QTextDocument()
             scene_text_doc.setHtml(scene.manuscript.content)
-            first_paragraph = True
             block = scene_text_doc.begin()
             while block.isValid():
                 if first_paragraph:
