@@ -165,10 +165,6 @@ def format_manuscript(novel: Novel, sceneTitle: bool = False, povTitle: bool = F
 
         scenes = novel.scenes_in_chapter(chapter)
         chapterTitle = chapter_title(chapter, scenes, sceneTitle, povTitle)
-        # if sceneTitle:
-        #     chapterTitle = 'Scene title'
-        # else:
-        #     chapterTitle = chapter.display_name()
         cursor.insertText(chapterTitle)
 
         cursor.insertBlock(default_block_format)
