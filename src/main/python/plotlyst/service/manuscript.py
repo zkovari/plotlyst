@@ -153,7 +153,12 @@ def format_manuscript(novel: Novel) -> QTextDocument:
                 block_cursor = QTextCursor(block)
                 block_cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
 
-                cursor.insertMarkdown(block_cursor.selection().toMarkdown())
+                text = block.text()
+                if not text or text == '###' or text == '***':
+                    first_paragraph = True
+                    cursor.insertText(text)
+                else:
+                    cursor.insertMarkdown(block_cursor.selection().toMarkdown())
 
                 block = block.next()
 
@@ -161,19 +166,6 @@ def format_manuscript(novel: Novel) -> QTextDocument:
                 cursor.insertBlock(page_break_format)
 
     return document
-
-
-def format_scene_document(doc: Document) -> QTextDocument:
-    text_doc = QTextDocument()
-    # text_doc.setDefaultFont(char_format.font())
-    text_doc.setHtml(doc.content)
-
-    # cursor: QTextCursor = text_doc.rootFrame().firstCursorPosition()
-    # cursor.select(QTextCursor.SelectionType.Document)
-    # cursor.mergeCharFormat(char_format)
-    # cursor.clearSelection()
-
-    return text_doc
 
 
 def find_daily_overall_progress(novel: Novel, date: Optional[str] = None) -> Optional[DocumentProgress]:
