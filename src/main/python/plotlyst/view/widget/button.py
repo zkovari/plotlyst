@@ -696,7 +696,7 @@ class SmallToggleButton(QToolButton):
         self.setCheckable(True)
         pointy(self)
         transparent(self)
-        self.setIconSize(QSize(24, 24))
+        self.setIconSize(QSize(28, 28))
 
         self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.7, ignoreCheckedButton=True))
         self.installEventFilter(ButtonPressResizeEventFilter(self))

@@ -673,3 +673,11 @@ def dominant_color(pixmap: QPixmap) -> QColor:
     color_counter = Counter(colors)
     dominant_rgb = color_counter.most_common(1)[0][0]
     return QColor(dominant_rgb)
+
+
+def exclusive_buttons(parent: QObject, *buttons, optional=False) -> QButtonGroup:
+    btnGroup = ExclusiveOptionalButtonGroup(parent) if optional else QButtonGroup(parent)
+    btnGroup.setExclusive(True)
+    for btn in buttons:
+        btnGroup.addButton(btn)
+    return btnGroup

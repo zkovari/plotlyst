@@ -21,8 +21,10 @@ from pathlib import Path
 from typing import Optional, List
 
 import pypandoc
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QTextDocument, QTextCursor, QTextCharFormat, QFont, QTextBlockFormat, QTextFormat, QTextBlock
+from PyQt6.QtCore import Qt, QMarginsF
+from PyQt6.QtGui import QTextDocument, QTextCursor, QTextBlockFormat, QTextFormat, QTextBlock, QFont, QTextCharFormat, \
+    QPageSize, QPageLayout
+from PyQt6.QtPrintSupport import QPrinter
 from PyQt6.QtWidgets import QFileDialog
 from qthandy import busy
 from slugify import slugify
@@ -39,24 +41,7 @@ from plotlyst.service.resource import ask_for_resource
 from plotlyst.view.widget.confirm import asked
 
 
-def prepare_content_for_convert(html: str) -> str:
-    text_doc = QTextDocument()
-    text_doc.setHtml(html)
-
-    block: QTextBlock = text_doc.begin()
-    md_content: str = ''
-    while block.isValid():
-        cursor = QTextCursor(block)
-        cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
-        md_content += cursor.selection().toMarkdown()
-
-        block = block.next()
-    content = pypandoc.convert_text(md_content, to='html', format='md')
-
-    return content
-
-
-def export_manuscript_to_docx(novel: Novel):
+def export_manuscript_to_docx(novel: Novel, sceneTitle: bool = False, povTitle: bool = False):
     if not ask_for_resource(ResourceType.PANDOC):
         return
 
@@ -72,44 +57,102 @@ def export_manuscript_to_docx(novel: Novel):
 
     html: str = ''
     for i, chapter in enumerate(novel.chapters):
-        html += f'<div custom-style="Title">Chapter {i + 1}</div>'
-        for j, scene in enumerate(novel.scenes_in_chapter(chapter)):
+        scenes = novel.scenes_in_chapter(chapter)
+        chapter_heading = chapter_title(chapter, scenes, sceneTitle, povTitle)
+        html += f'<h1>{chapter_heading}</h1>'
+        first_paragraph = True
+        for j, scene in enumerate(scenes):
             if not scene.manuscript:
                 continue
 
-            scene_html = prepare_content_for_convert(scene.manuscript.content)
+            text_doc = QTextDocument()
+            text_doc.setHtml(scene.manuscript.content)
+
+            block: QTextBlock = text_doc.begin()
+            md_content: str = ''
+            while block.isValid():
+                text = block.text()
+                if not text:
+                    first_paragraph = True
+                    block_content = ''
+                elif text == '***' or text == '###':
+                    block_content = '<div custom-style="Text Aligned Center">***</div>'
+                    first_paragraph = True
+                else:
+                    cursor = QTextCursor(block)
+                    cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
+                    block_content = cursor.selection().toMarkdown()
+
+                    if block.blockFormat().alignment() & Qt.AlignmentFlag.AlignCenter:
+                        block_content = f'<div custom-style="Text Aligned Center">{block_content}</div>'
+                    elif block.blockFormat().alignment() & Qt.AlignmentFlag.AlignRight:
+                        block_content = f'<div custom-style="Text Aligned Right">{block_content}</div>'
+
+                    if first_paragraph:
+                        block_content = f'<div custom-style="First Paragraph">{block_content}</div>'
+                        first_paragraph = False
+
+                md_content += block_content
+
+                block = block.next()
+
+            scene_html = pypandoc.convert_text(md_content, to='html', format='md')
             html += scene_html
 
     spec_args = ['--reference-doc', resource_registry.manuscript_docx_template]
     pypandoc.convert_text(html, to='docx', format='html', extra_args=spec_args, outputfile=target_path)
 
+    ask_to_open_file(target_path)
+
+
+def export_manuscript_to_pdf(novel: Novel, manuscript: QTextDocument):
+    title = slugify(novel.title if novel.title else 'my-novel')
+    target_path, _ = QFileDialog.getSaveFileName(None, 'Export PDF', f'{title}.pdf',
+                                                 'PDF files (*.pdf);;All Files()')
+    if not target_path:
+        return
+    printer = QPrinter()
+    printer.setPageSize(QPageSize(QPageSize.PageSizeId.Letter))
+    printer.setPageMargins(QMarginsF(0, 0, 0, 0), QPageLayout.Unit.Inch)  # margin is already set it seems
+    printer.setOutputFileName(target_path)
+    printer.setDocName(title)
+    manuscript.print(printer)
+
+    ask_to_open_file(target_path)
+
+
+def ask_to_open_file(target_path: str):
     if asked('The file will be opened in an external editor associated with that file format.',
              'Export was finished. Open file in editor?', btnCancelText='No'):
         open_location(target_path)
 
 
-def format_manuscript(novel: Novel) -> QTextDocument:
+def format_manuscript(novel: Novel, sceneTitle: bool = False, povTitle: bool = False) -> QTextDocument:
     json_client.load_manuscript(novel)
 
     font = QFont('Times New Roman', 12)
 
     chapter_title_block_format = QTextBlockFormat()
     chapter_title_block_format.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    chapter_title_block_format.setHeadingLevel(1)
+    chapter_title_char_format = QTextCharFormat()
+    chapter_title_char_format.setFont(font)
+    chapter_title_char_format.setFontPointSize(16)
 
-    block_format = QTextBlockFormat()
-    block_format.setAlignment(Qt.AlignmentFlag.AlignLeft)
-    block_format.setTextIndent(20)
-    block_format.setTopMargin(0)
-    block_format.setBottomMargin(0)
-    block_format.setLeftMargin(0)
-    block_format.setRightMargin(0)
-    block_format.setLineHeight(150, QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
+    default_block_format = QTextBlockFormat()
+    default_block_format.setAlignment(Qt.AlignmentFlag.AlignLeft)
+    default_block_format.setTextIndent(40)
+    default_block_format.setTopMargin(0)
+    default_block_format.setBottomMargin(0)
+    default_block_format.setLeftMargin(0)
+    default_block_format.setRightMargin(0)
+    default_block_format.setLineHeight(200, QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
+
+    first_block_format = QTextBlockFormat(default_block_format)
+    first_block_format.setTextIndent(0)
 
     page_break_format = QTextBlockFormat()
     page_break_format.setPageBreakPolicy(QTextFormat.PageBreakFlag.PageBreak_AlwaysAfter)
-
-    char_format = QTextCharFormat()
-    char_format.setFont(font)
 
     document = QTextDocument()
     document.setDefaultFont(font)
@@ -118,19 +161,43 @@ def format_manuscript(novel: Novel) -> QTextDocument:
     cursor: QTextCursor = document.rootFrame().firstCursorPosition()
 
     for i, chapter in enumerate(novel.chapters):
-        cursor.insertBlock(chapter_title_block_format)
-        cursor.insertText(f'Chapter {i + 1}')
-
-        cursor.insertBlock(block_format)
+        cursor.insertBlock(chapter_title_block_format, chapter_title_char_format)
 
         scenes = novel.scenes_in_chapter(chapter)
+        chapterTitle = chapter_title(chapter, scenes, sceneTitle, povTitle)
+        cursor.insertText(chapterTitle)
+
+        cursor.insertBlock(default_block_format)
+
+        first_paragraph = True
         for j, scene in enumerate(scenes):
             if not scene.manuscript:
                 continue
 
-            scene_text_doc = format_document(scene.manuscript, char_format)
-            cursor.insertHtml(scene_text_doc.toHtml())
-            cursor.insertBlock(block_format)
+            scene_text_doc = QTextDocument()
+            scene_text_doc.setHtml(scene.manuscript.content)
+            block = scene_text_doc.begin()
+            while block.isValid():
+                if first_paragraph:
+                    first_paragraph = False
+                    block_format = first_block_format
+                else:
+                    block_format = default_block_format
+
+                block_format.setAlignment(block.blockFormat().alignment())
+                cursor.insertBlock(block_format)
+
+                block_cursor = QTextCursor(block)
+                block_cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
+
+                text = block.text()
+                if not text or text == '###' or text == '***':
+                    first_paragraph = True
+                    cursor.insertText(text)
+                else:
+                    cursor.insertMarkdown(block_cursor.selection().toMarkdown())
+
+                block = block.next()
 
             if j == len(scenes) - 1 and i != len(novel.chapters) - 1:
                 cursor.insertBlock(page_break_format)
@@ -138,16 +205,14 @@ def format_manuscript(novel: Novel) -> QTextDocument:
     return document
 
 
-def format_document(doc: Document, char_format: QTextCharFormat) -> QTextDocument:
-    text_doc = QTextDocument()
-    text_doc.setHtml(doc.content)
+def chapter_title(chapter: Chapter, scenes: List[Scene], sceneTitle: bool = False, povTitle: bool = False) -> str:
+    if scenes and not chapter.type:
+        if sceneTitle and scenes[0].title:
+            return scenes[0].title
+        if povTitle and scenes[0].pov:
+            return scenes[0].pov.displayed_name()
 
-    cursor: QTextCursor = text_doc.rootFrame().firstCursorPosition()
-    cursor.select(QTextCursor.SelectionType.Document)
-    cursor.mergeCharFormat(char_format)
-    cursor.clearSelection()
-
-    return text_doc
+    return chapter.display_name()
 
 
 def find_daily_overall_progress(novel: Novel, date: Optional[str] = None) -> Optional[DocumentProgress]:
