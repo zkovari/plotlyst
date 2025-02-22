@@ -19,12 +19,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt6.QtCore import Qt, QMarginsF, QSize
+from PyQt6.QtCore import Qt, QMarginsF, QSize, QTimer
 from PyQt6.QtGui import QTextDocument, QPageSize, QColor, QPageLayout
 from PyQt6.QtPrintSupport import QPrinter, QPrintPreviewWidget
 from PyQt6.QtWidgets import QButtonGroup, QWidget, QApplication, QDialog, QSplitter, QPushButton, QGraphicsView
 from overrides import overrides
-from qthandy import vbox, vspacer, incr_icon, incr_font, sp
+from qthandy import vbox, vspacer, incr_icon, incr_font, sp, gc, busy
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Novel
@@ -37,39 +37,13 @@ from plotlyst.view.widget.display import PopupDialog
 from plotlyst.view.widget.settings import Forms
 
 
-# class ManuscriptPreview(EnhancedTextEdit):
-#     def __init__(self, novel: Novel, parent=None):
-#         super().__init__(parent)
-#         self.novel = novel
-#         self.setSidebarEnabled(False)
-#         self.setFont(QFont('Times New Roman', 12))
-#
-#         html: str = ''
-#         for i, chapter in enumerate(novel.chapters):
-#             html += f'<h1>{chapter.display_name()}</h1>'
-#             for j, scene in enumerate(novel.scenes_in_chapter(chapter)):
-#                 if not scene.manuscript:
-#                     continue
-#
-#                 scene_html = prepare_content_for_convert(scene.manuscript.content)
-#                 html += scene_html
-#           self.setHtml(html)
-#           self.setBlockFormat(200, 40)
-
-
 class ManuscriptExportPopup(PopupDialog):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self.novel = novel
-
-        # self.preview = ManuscriptPreview(self.novel)
-        self.preview = QPrintPreviewWidget()
+        self.preview = self.__newPreview()
         self.document: Optional[QTextDocument] = None
-        item = self.preview.layout().itemAt(0)
-        if isinstance(item.widget(), QGraphicsView):
-            item.widget().setBackgroundBrush(QColor(BG_MUTED_COLOR))
-        sp(self.preview).h_exp()
-        #
+
         self._btnDocx = self.__selectorButton('mdi.file-word-outline', 'Word (.docx)')
         self._btnPdf = self.__selectorButton('fa5.file-pdf', 'PDF')
 
@@ -92,6 +66,8 @@ class ManuscriptExportPopup(PopupDialog):
         self.chapterSceneTitle = chapterForms.addSetting("First scene's title")
         self.chapterScenePov = chapterForms.addSetting("First POV's name")
         exclusive_buttons(self.wdgEditor, self.chapterSceneTitle, self.chapterScenePov, optional=True)
+        self.chapterSceneTitle.clicked.connect(self._sceneTitleSettingToggled)
+        self.chapterScenePov.clicked.connect(self._sceneTitleSettingToggled)
 
         self.wdgEditor.layout().addWidget(vspacer())
 
@@ -130,26 +106,22 @@ class ManuscriptExportPopup(PopupDialog):
 
     def display(self):
         self.document = format_manuscript(self.novel)
-        # self.preview.setHtml(document.toHtml())
-        self.preview.setContentsMargins(0,0,0,0)
-        self.preview.paintRequested.connect(self._print)
-        self.preview.fitToWidth()
 
         result = self.exec()
         if result == QDialog.DialogCode.Accepted:
             if self._btnDocx.isChecked():
-                export_manuscript_to_docx(self.novel)
+                export_manuscript_to_docx(self.novel, sceneTitle=self.chapterSceneTitle.isChecked(),
+                                          povTitle=self.chapterScenePov.isChecked())
             elif self._btnPdf.isChecked():
                 printer = QPrinter()
                 printer.setPageSize(QPageSize(QPageSize.PageSizeId.Letter))
-                printer.setPageMargins(QMarginsF(1, 1, 1, 1), QPrinter.Unit.Inch)
+                printer.setPageMargins(QMarginsF(1, 1, 1, 1), QPrinter.Unit.Inch)  # margin is already set it seems
                 self.preview.document().print(printer)
                 print('pdf')
 
     def _print(self, device: QPrinter):
         device.setPageSize(QPageSize(QPageSize.PageSizeId.Letter))
         device.setPageMargins(QMarginsF(0, 0, 0, 0), QPageLayout.Unit.Inch)
-        # device.setPageMargins(QMarginsF(1, 1, 1, 1), QPageLayout.Unit.Inch)
         self.document.print(device)
 
     def _formatChanged(self):
@@ -158,6 +130,17 @@ class ManuscriptExportPopup(PopupDialog):
         elif self._btnPdf.isChecked():
             self.btnExport.setText('Export to PDF')
 
+    def _sceneTitleSettingToggled(self):
+        QTimer.singleShot(100, self._refreshPreview)
+
+    @busy
+    def _refreshPreview(self):
+        self.document = format_manuscript(self.novel, sceneTitle=self.chapterSceneTitle.isChecked(),
+                                          povTitle=self.chapterScenePov.isChecked())
+        gc(self.preview)
+        self.preview = self.__newPreview()
+        self.wdgCentral.insertWidget(0, self.preview)
+
     def __selectorButton(self, icon: str, text: str) -> QPushButton:
         btn = push_btn(IconRegistry.from_name(icon, color_on=PLOTLYST_SECONDARY_COLOR), text, checkable=True,
                        properties=['transparent-rounded-bg-on-hover', 'secondary-selector'])
@@ -165,3 +148,16 @@ class ManuscriptExportPopup(PopupDialog):
         incr_font(btn, 2)
 
         return btn
+
+    def __newPreview(self) -> QPrintPreviewWidget:
+        preview = QPrintPreviewWidget()
+        preview.setContentsMargins(0, 0, 0, 0)
+        preview.paintRequested.connect(self._print)
+        preview.fitToWidth()
+
+        item = preview.layout().itemAt(0)
+        if isinstance(item.widget(), QGraphicsView):
+            item.widget().setBackgroundBrush(QColor(BG_MUTED_COLOR))
+        sp(preview).h_exp()
+
+        return preview

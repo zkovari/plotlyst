@@ -39,7 +39,7 @@ from plotlyst.service.resource import ask_for_resource
 from plotlyst.view.widget.confirm import asked
 
 
-def export_manuscript_to_docx(novel: Novel):
+def export_manuscript_to_docx(novel: Novel, sceneTitle: bool = False, povTitle: bool = False):
     if not ask_for_resource(ResourceType.PANDOC):
         return
 
@@ -55,9 +55,11 @@ def export_manuscript_to_docx(novel: Novel):
 
     html: str = ''
     for i, chapter in enumerate(novel.chapters):
-        html += f'<h1>{chapter.display_name()}</h1>'
+        scenes = novel.scenes_in_chapter(chapter)
+        chapter_heading = chapter_title(chapter, scenes, sceneTitle, povTitle)
+        html += f'<h1>{chapter_heading}</h1>'
         first_paragraph = True
-        for j, scene in enumerate(novel.scenes_in_chapter(chapter)):
+        for j, scene in enumerate(scenes):
             if not scene.manuscript:
                 continue
 
@@ -103,7 +105,7 @@ def export_manuscript_to_docx(novel: Novel):
         open_location(target_path)
 
 
-def format_manuscript(novel: Novel) -> QTextDocument:
+def format_manuscript(novel: Novel, sceneTitle: bool = False, povTitle: bool = False) -> QTextDocument:
     json_client.load_manuscript(novel)
 
     font = QFont('Times New Roman', 12)
@@ -138,11 +140,17 @@ def format_manuscript(novel: Novel) -> QTextDocument:
 
     for i, chapter in enumerate(novel.chapters):
         cursor.insertBlock(chapter_title_block_format, chapter_title_char_format)
-        cursor.insertText(chapter.display_name())
+
+        scenes = novel.scenes_in_chapter(chapter)
+        chapterTitle = chapter_title(chapter, scenes, sceneTitle, povTitle)
+        # if sceneTitle:
+        #     chapterTitle = 'Scene title'
+        # else:
+        #     chapterTitle = chapter.display_name()
+        cursor.insertText(chapterTitle)
 
         cursor.insertBlock(default_block_format)
 
-        scenes = novel.scenes_in_chapter(chapter)
         first_paragraph = True
         for j, scene in enumerate(scenes):
             if not scene.manuscript:
@@ -177,6 +185,16 @@ def format_manuscript(novel: Novel) -> QTextDocument:
                 cursor.insertBlock(page_break_format)
 
     return document
+
+
+def chapter_title(chapter: Chapter, scenes: List[Scene], sceneTitle: bool = False, povTitle: bool = False) -> str:
+    if scenes and not chapter.type:
+        if sceneTitle and scenes[0].title:
+            return scenes[0].title
+        if povTitle and scenes[0].pov:
+            return scenes[0].pov.displayed_name()
+
+    return chapter.display_name()
 
 
 def find_daily_overall_progress(novel: Novel, date: Optional[str] = None) -> Optional[DocumentProgress]:
