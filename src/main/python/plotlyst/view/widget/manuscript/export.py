@@ -17,14 +17,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from functools import partial
+from typing import Optional
 
 from PyQt6.QtCore import Qt, QMarginsF, QSize
-from PyQt6.QtGui import QTextDocument, QPageSize, QColor
-from PyQt6.QtPrintSupport import QPrintPreviewWidget, QPrinter
-from PyQt6.QtWidgets import QButtonGroup, QWidget, QApplication, QDialog, QGraphicsView, QSplitter, QPushButton
+from PyQt6.QtGui import QTextDocument, QPageSize, QColor, QPageLayout
+from PyQt6.QtPrintSupport import QPrinter, QPrintPreviewWidget
+from PyQt6.QtWidgets import QButtonGroup, QWidget, QApplication, QDialog, QSplitter, QPushButton, QGraphicsView
 from overrides import overrides
-from qthandy import vbox, vspacer, sp, incr_icon, incr_font
+from qthandy import vbox, vspacer, incr_icon, incr_font, sp
 
 from plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Novel
@@ -37,40 +37,24 @@ from plotlyst.view.widget.display import PopupDialog
 from plotlyst.view.widget.settings import Forms
 
 
-class ManuscriptExportWidget(QWidget):
-    def __init__(self, novel: Novel, parent=None):
-        super().__init__(parent)
-        self._novel = novel
-
-        vbox(self, spacing=15)
-        # self.layout().addWidget(label('Export manuscript', h5=True), alignment=Qt.AlignmentFlag.AlignCenter)
-        # self.layout().addWidget(line())
-
-        self._btnDocx = push_btn(IconRegistry.docx_icon(), 'Word (.docx)', checkable=True,
-                                 properties=['transparent-rounded-bg-on-hover', 'secondary-selector'])
-        self._btnDocx.setChecked(True)
-        self._btnPdf = push_btn(IconRegistry.from_name('fa5.file-pdf'), 'PDF', checkable=True,
-                                tooltip='PDF export not available yet',
-                                properties=['transparent-rounded-bg-on-hover', 'secondary-selector'])
-
-        self._btnGroup = QButtonGroup()
-        self._btnGroup.setExclusive(True)
-        self._btnGroup.addButton(self._btnDocx)
-        self._btnGroup.addButton(self._btnPdf)
-        self._btnPdf.setDisabled(True)
-        self.layout().addWidget(self._btnDocx, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.layout().addWidget(self._btnPdf, alignment=Qt.AlignmentFlag.AlignCenter)
-
-        self._btnExport = push_btn(IconRegistry.from_name('mdi.file-export-outline', RELAXED_WHITE_COLOR), 'Export',
-                                   tooltip='Export manuscript',
-                                   properties=['base', 'positive'])
-        self.layout().addWidget(self._btnExport)
-
-        self._btnExport.clicked.connect(self._export)
-
-    def _export(self):
-        if self._btnDocx.isChecked():
-            export_manuscript_to_docx(self._novel)
+# class ManuscriptPreview(EnhancedTextEdit):
+#     def __init__(self, novel: Novel, parent=None):
+#         super().__init__(parent)
+#         self.novel = novel
+#         self.setSidebarEnabled(False)
+#         self.setFont(QFont('Times New Roman', 12))
+#
+#         html: str = ''
+#         for i, chapter in enumerate(novel.chapters):
+#             html += f'<h1>{chapter.display_name()}</h1>'
+#             for j, scene in enumerate(novel.scenes_in_chapter(chapter)):
+#                 if not scene.manuscript:
+#                     continue
+#
+#                 scene_html = prepare_content_for_convert(scene.manuscript.content)
+#                 html += scene_html
+#           self.setHtml(html)
+#           self.setBlockFormat(200, 40)
 
 
 class ManuscriptExportPopup(PopupDialog):
@@ -78,22 +62,23 @@ class ManuscriptExportPopup(PopupDialog):
         super().__init__(parent)
         self.novel = novel
 
-        self.printView = QPrintPreviewWidget()
-        item = self.printView.layout().itemAt(0)
+        # self.preview = ManuscriptPreview(self.novel)
+        self.preview = QPrintPreviewWidget()
+        self.document: Optional[QTextDocument] = None
+        item = self.preview.layout().itemAt(0)
         if isinstance(item.widget(), QGraphicsView):
             item.widget().setBackgroundBrush(QColor(BG_MUTED_COLOR))
-        sp(self.printView).h_exp()
-
-        self.layout().addWidget(self.printView)
-
+        sp(self.preview).h_exp()
+        #
         self._btnDocx = self.__selectorButton('mdi.file-word-outline', 'Word (.docx)')
         self._btnPdf = self.__selectorButton('fa5.file-pdf', 'PDF')
 
         self.wdgEditor = QWidget()
         vbox(self.wdgEditor, 10, 6)
         self.wdgCentral = QSplitter()
+        sp(self.wdgCentral).v_exp()
         self.wdgCentral.setChildrenCollapsible(False)
-        self.wdgCentral.addWidget(self.printView)
+        self.wdgCentral.addWidget(self.preview)
         self.wdgCentral.addWidget(self.wdgEditor)
         self.wdgCentral.setSizes([550, 150])
 
@@ -144,20 +129,28 @@ class ManuscriptExportPopup(PopupDialog):
         return size
 
     def display(self):
-        document: QTextDocument = format_manuscript(self.novel)
-        self.printView.paintRequested.connect(partial(self._print, document))
-        self.printView.fitToWidth()
+        self.document = format_manuscript(self.novel)
+        # self.preview.setHtml(document.toHtml())
+        self.preview.setContentsMargins(0,0,0,0)
+        self.preview.paintRequested.connect(self._print)
+        self.preview.fitToWidth()
+
         result = self.exec()
         if result == QDialog.DialogCode.Accepted:
             if self._btnDocx.isChecked():
                 export_manuscript_to_docx(self.novel)
             elif self._btnPdf.isChecked():
+                printer = QPrinter()
+                printer.setPageSize(QPageSize(QPageSize.PageSizeId.Letter))
+                printer.setPageMargins(QMarginsF(1, 1, 1, 1), QPrinter.Unit.Inch)
+                self.preview.document().print(printer)
                 print('pdf')
 
-    def _print(self, document: QTextDocument, device: QPrinter):
+    def _print(self, device: QPrinter):
         device.setPageSize(QPageSize(QPageSize.PageSizeId.Letter))
-        device.setPageMargins(QMarginsF(0, 0, 0, 0))
-        document.print(device)
+        device.setPageMargins(QMarginsF(0, 0, 0, 0), QPageLayout.Unit.Inch)
+        # device.setPageMargins(QMarginsF(1, 1, 1, 1), QPageLayout.Unit.Inch)
+        self.document.print(device)
 
     def _formatChanged(self):
         if self._btnDocx.isChecked():

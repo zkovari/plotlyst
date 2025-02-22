@@ -22,7 +22,7 @@ from typing import Optional, List
 
 import pypandoc
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QTextDocument, QTextCursor, QTextCharFormat, QFont, QTextBlockFormat, QTextFormat, QTextBlock
+from PyQt6.QtGui import QTextDocument, QTextCursor, QTextBlockFormat, QTextFormat, QTextBlock, QFont, QTextCharFormat
 from PyQt6.QtWidgets import QFileDialog
 from qthandy import busy
 from slugify import slugify
@@ -95,24 +95,28 @@ def format_manuscript(novel: Novel) -> QTextDocument:
 
     chapter_title_block_format = QTextBlockFormat()
     chapter_title_block_format.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    chapter_title_block_format.setHeadingLevel(1)
     chapter_title_char_format = QTextCharFormat()
     chapter_title_char_format.setFont(font)
     chapter_title_char_format.setFontPointSize(16)
 
-    block_format = QTextBlockFormat()
-    block_format.setAlignment(Qt.AlignmentFlag.AlignLeft)
-    block_format.setTextIndent(40)
-    block_format.setTopMargin(0)
-    block_format.setBottomMargin(0)
-    block_format.setLeftMargin(0)
-    block_format.setRightMargin(0)
-    block_format.setLineHeight(200, QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
+    default_block_format = QTextBlockFormat()
+    default_block_format.setAlignment(Qt.AlignmentFlag.AlignLeft)
+    default_block_format.setTextIndent(40)
+    default_block_format.setTopMargin(0)
+    default_block_format.setBottomMargin(0)
+    default_block_format.setLeftMargin(0)
+    default_block_format.setRightMargin(0)
+    default_block_format.setLineHeight(200, QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
+
+    first_block_format = QTextBlockFormat(default_block_format)
+    first_block_format.setTextIndent(0)
 
     page_break_format = QTextBlockFormat()
     page_break_format.setPageBreakPolicy(QTextFormat.PageBreakFlag.PageBreak_AlwaysAfter)
 
-    char_format = QTextCharFormat()
-    char_format.setFont(font)
+    # char_format = QTextCharFormat()
+    # char_format.setFont(font)
 
     document = QTextDocument()
     document.setDefaultFont(font)
@@ -124,16 +128,34 @@ def format_manuscript(novel: Novel) -> QTextDocument:
         cursor.insertBlock(chapter_title_block_format, chapter_title_char_format)
         cursor.insertText(chapter.display_name())
 
-        cursor.insertBlock(block_format)
+        cursor.insertBlock(default_block_format)
 
         scenes = novel.scenes_in_chapter(chapter)
         for j, scene in enumerate(scenes):
             if not scene.manuscript:
                 continue
 
-            scene_text_doc = format_document(scene.manuscript, char_format)
-            cursor.insertHtml(scene_text_doc.toHtml())
-            cursor.insertBlock(block_format)
+            # scene_text_doc = format_scene_document(scene.manuscript)
+            scene_text_doc = QTextDocument()
+            scene_text_doc.setHtml(scene.manuscript.content)
+            first_paragraph = True
+            block = scene_text_doc.begin()
+            while block.isValid():
+                if first_paragraph:
+                    first_paragraph = False
+                    block_format = first_block_format
+                else:
+                    block_format = default_block_format
+
+                block_format.setAlignment(block.blockFormat().alignment())
+                cursor.insertBlock(block_format)
+
+                block_cursor = QTextCursor(block)
+                block_cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
+
+                cursor.insertMarkdown(block_cursor.selection().toMarkdown())
+
+                block = block.next()
 
             if j == len(scenes) - 1 and i != len(novel.chapters) - 1:
                 cursor.insertBlock(page_break_format)
@@ -141,14 +163,15 @@ def format_manuscript(novel: Novel) -> QTextDocument:
     return document
 
 
-def format_document(doc: Document, char_format: QTextCharFormat) -> QTextDocument:
+def format_scene_document(doc: Document) -> QTextDocument:
     text_doc = QTextDocument()
+    # text_doc.setDefaultFont(char_format.font())
     text_doc.setHtml(doc.content)
 
-    cursor: QTextCursor = text_doc.rootFrame().firstCursorPosition()
-    cursor.select(QTextCursor.SelectionType.Document)
-    cursor.mergeCharFormat(char_format)
-    cursor.clearSelection()
+    # cursor: QTextCursor = text_doc.rootFrame().firstCursorPosition()
+    # cursor.select(QTextCursor.SelectionType.Document)
+    # cursor.mergeCharFormat(char_format)
+    # cursor.clearSelection()
 
     return text_doc
 
