@@ -102,6 +102,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if app_env.is_prod():
             self.setWindowState(Qt.WindowState.WindowMaximized)
 
+        self.setWindowTitle(app_env.profile().get('title', 'Plotlyst'))
         self._detached_windows: List[DetachedWindow] = []
 
         palette = QApplication.palette()

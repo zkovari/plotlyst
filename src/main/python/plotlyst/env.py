@@ -39,6 +39,8 @@ class AppEnvironment:
         nltk.data.path.insert(0, self._nltk_data)
         os.environ['LTP_PATH'] = os.path.join(self._plotlyst_cache_dir, 'language_tool_python')
 
+        self._profile = {}
+
     @property
     def mode(self) -> AppMode:
         return self._mode
@@ -112,6 +114,12 @@ class AppEnvironment:
             return 'Apple Chancery'
         elif self.is_windows():
             return 'Segoe Print'
+
+    def profile(self):
+        return self._profile
+
+    def setProfile(self, profile):
+        self._profile = profile
 
 
 app_env = AppEnvironment()
