@@ -486,6 +486,18 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.btnBoard.setVisible(self.novel.prefs.toggled(NovelSetting.Management))
         self.actionDetachTask.setEnabled(self.novel.prefs.toggled(NovelSetting.Management))
 
+        flag = app_env.profile().get('world-building', False)
+        self.btnWorld.setVisible(flag)
+        self.actionDetachWorldbuilding.setVisible(flag)
+        if self.btnWorld.isChecked():
+            self.btnNovel.setChecked(True)
+
+        flag = app_env.profile().get('tasks', False)
+        self.btnBoard.setVisible(flag)
+        self.actionDetachTask.setVisible(flag)
+        if self.btnBoard.isChecked():
+            self.btnNovel.setChecked(True)
+
     def _on_view_changed(self, btn=None, checked: bool = True):
         if not checked:
             return
