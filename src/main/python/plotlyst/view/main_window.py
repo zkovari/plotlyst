@@ -62,7 +62,6 @@ from plotlyst.settings import settings
 from plotlyst.view._view import AbstractView
 from plotlyst.view.board_view import BoardView
 from plotlyst.view.characters_view import CharactersView
-from plotlyst.view.comments_view import CommentsView
 from plotlyst.view.common import TooltipPositionEventFilter, ButtonPressResizeEventFilter, open_url, action
 from plotlyst.view.dialog.about import AboutDialog
 from plotlyst.view.dialog.novel import DetachedWindow
@@ -442,9 +441,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.board_view = BoardView(self.novel)
         self.manuscript_view = ManuscriptView(self.novel)
         self.reports_view = ReportsView(self.novel)
-        self.comments_view = CommentsView(self.novel)
-        self.pageComments.layout().addWidget(self.comments_view.widget)
-        self.wdgSidebar.setCurrentWidget(self.pageComments)
 
         self.pageNovel.layout().addWidget(self.novel_view.widget)
         self.pageCharacters.layout().addWidget(self.characters_view.widget)
@@ -793,11 +789,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         gc(self.manuscript_view.widget)
         gc(self.manuscript_view)
         self.manuscript_view = None
-
-        self.pageComments.layout().removeWidget(self.comments_view.widget)
-        gc(self.comments_view.widget)
-        gc(self.comments_view)
-        self.comments_view = None
 
         self._actionSettings.setVisible(False)
         self.actionQuickCustomization.setDisabled(True)

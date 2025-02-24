@@ -17,27 +17,18 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import random
 from enum import Enum
-from functools import partial
-from typing import Optional, List
+from typing import Optional
 
 from PyQt6 import QtGui
-from PyQt6.QtCore import Qt, QSize, QObject, QEvent, QPoint, QRect, pyqtSignal, QThreadPool
-from PyQt6.QtGui import QPixmap, QIcon, QPainter, QImage
-from PyQt6.QtNetwork import QNetworkAccessManager
+from PyQt6.QtCore import Qt, QSize, QEvent, QPoint, QRect, pyqtSignal
+from PyQt6.QtGui import QPixmap, QIcon, QPainter
 from PyQt6.QtWidgets import QDialog, QToolButton, QPushButton, QApplication
 from overrides import overrides
-from qthandy import FlowLayout, bold, underline
-from qthandy.filter import InstantTooltipEventFilter
+from qthandy import bold, underline
 
-from plotlyst.env import app_env
-from plotlyst.service.resource import JsonDownloadWorker, JsonDownloadResult, ImageDownloadResult, \
-    ImagesDownloadWorker
-from plotlyst.view.common import rounded_pixmap, open_url, calculate_resized_dimensions
-from plotlyst.view.generated.artbreeder_picker_dialog_ui import Ui_ArtbreederPickerDialog
+from plotlyst.view.common import rounded_pixmap, calculate_resized_dimensions
 from plotlyst.view.generated.image_crop_dialog_ui import Ui_ImageCropDialog
-from plotlyst.view.icons import IconRegistry
 
 
 class _AvatarButton(QToolButton):
@@ -49,101 +40,6 @@ class _AvatarButton(QToolButton):
         self.setIconSize(QSize(self._size, self._size))
         self.setIcon(QIcon(pixmap.scaled(self._size, self._size, Qt.AspectRatioMode.KeepAspectRatio,
                                          Qt.TransformationMode.SmoothTransformation)))
-
-
-class ArtbreederDialog(QDialog, Ui_ArtbreederPickerDialog):
-
-    def __init__(self, parent=None):
-        super(ArtbreederDialog, self).__init__(parent)
-        self.setupUi(self)
-        self.wdgPictures.setLayout(FlowLayout(spacing=4))
-        self.btnLicense.setIcon(IconRegistry.from_name('fa5b.creative-commons'))
-        self.btnLicense.installEventFilter(InstantTooltipEventFilter(self.btnLicense))
-        self._pixmap: Optional[QPixmap] = None
-        self._step = 0
-        self._step_size: int = 10 if app_env.test_env() else 50
-        self.urls = []
-        self.manager = QNetworkAccessManager()
-        self.resize(740, 500)
-        self.setMinimumSize(250, 250)
-        self.scrollArea.verticalScrollBar().valueChanged.connect(self._scrolled)
-        self.btnVisit.setIcon(IconRegistry.from_name('fa5s.external-link-alt', 'white'))
-        self.btnVisit.clicked.connect(lambda: open_url('https://www.artbreeder.com/'))
-
-        self._threadpool = QThreadPool(self)
-        self._runnables: List[ImagesDownloadWorker] = []
-
-    def display(self) -> Optional[QPixmap]:
-        self._step = 0
-        self.fetch()
-        result = self.exec()
-        if self._threadpool.activeThreadCount() > 1:
-            for runnable in self._runnables:
-                runnable.stop()
-        self._threadpool.clear()
-        if result == QDialog.DialogCode.Accepted:
-            return self._pixmap
-
-    def fetch(self):
-        def _listFetched(jsonResult):
-            self.urls = jsonResult
-            random.shuffle(self.urls)
-            self._loadImages()
-
-        result = JsonDownloadResult()
-        result.finished.connect(_listFetched)
-        runner = JsonDownloadWorker(
-            'https://raw.githubusercontent.com/plotlyst/artbreeder-scraper/main/resources/artbreeder/portraits.json',
-            result)
-        runner.setAutoDelete(True)
-        self._threadpool.start(runner)
-
-    @overrides
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if isinstance(watched, QToolButton):
-            if event.type() == QEvent.Type.Enter:
-                watched.setStyleSheet('border: 2px dashed darkBlue;')
-            elif event.type() == QEvent.Type.Leave:
-                watched.setStyleSheet('border: 1px solid black;')
-
-        return super(ArtbreederDialog, self).eventFilter(watched, event)
-
-    def _loadImages(self):
-        def downloadImages(urls_list: List[str]):
-            result = ImageDownloadResult()
-            result.downloaded.connect(self._imageDownloaded)
-            runner = ImagesDownloadWorker(urls_list, result)
-            runner.setAutoDelete(True)
-            self._runnables.append(runner)
-            self._threadpool.start(runner)
-
-        if self._step + self._step_size >= len(self.urls):
-            return
-
-        self._runnables.clear()
-
-        urls = self.urls[self._step:self._step + self._step_size]
-        half = len(urls) // 2
-        downloadImages(urls[:half])
-        downloadImages(urls[half:])
-
-        self._step += self._step_size
-
-    def _imageDownloaded(self, image: QImage):
-        pixmap = QPixmap.fromImage(image)
-        btn = _AvatarButton(pixmap)
-        btn.clicked.connect(partial(self._selected, btn))
-        btn.installEventFilter(self)
-        self.wdgPictures.layout().addWidget(btn)
-
-    def _selected(self, btn: _AvatarButton):
-        self._pixmap = btn.pixmap
-        self.accept()
-
-    def _scrolled(self, value: int):
-        if value == self.scrollArea.verticalScrollBar().maximum():
-            if self._threadpool.activeThreadCount() == 0:
-                self._loadImages()
 
 
 class Corner(Enum):
