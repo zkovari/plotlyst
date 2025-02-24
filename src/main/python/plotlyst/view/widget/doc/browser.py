@@ -30,6 +30,7 @@ from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from plotlyst.common import recursive
 from plotlyst.core.domain import Document, Novel, DocumentType, Character, PremiseBuilder, Diagram, DiagramData
+from plotlyst.env import app_env
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import fade_out_and_gc, action
 from plotlyst.view.icons import IconRegistry, avatars
@@ -47,7 +48,8 @@ class DocumentAdditionMenu(MenuWidget):
         self._novel = novel
 
         self.addAction(action('Document', IconRegistry.document_edition_icon(), self._documentSelected))
-        self.addAction(action('Mind map', IconRegistry.from_name('ri.mind-map'), self._mindmapSelected))
+        if app_env.profile().get('mindmap'):
+            self.addAction(action('Mind map', IconRegistry.from_name('ri.mind-map'), self._mindmapSelected))
         self.addSeparator()
         self.addAction(action('Link PDF', IconRegistry.from_name('fa5.file-pdf'), self._openPdf))
         self.addSeparator()
@@ -120,6 +122,9 @@ class DocumentNode(ContainerNode):
         menu = DocumentAdditionMenu(self._novel, self._btnAdd)
         menu.documentTriggered.connect(self.added)
         self.refresh()
+
+        if doc.type == DocumentType.MIND_MAP and not app_env.profile().get('mindmap'):
+            self.setDisabled(True)
 
     def doc(self) -> Document:
         return self._doc
