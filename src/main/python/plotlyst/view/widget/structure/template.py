@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QPushButton, QDialog, QScrollArea, QLabel, 
     QApplication
 from overrides import overrides
 from qthandy import vspacer, spacer, transparent, bold, vbox, incr_font, \
-    hbox, margins, pointy, incr_icon, busy, flow, vline
+    hbox, margins, pointy, incr_icon, busy, flow, vline, line
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -650,6 +650,11 @@ class _StorySpineStructureEditor(_AbstractStructureEditor):
             description=True, wordWrap=True))
 
 
+class _CustomStoryStructureEditor(_AbstractStructureEditor):
+    def __init__(self, novel: Novel, structure: StoryStructure, parent=None, newStructure: bool = True):
+        super().__init__(novel, structure, parent, newStructure)
+
+
 class _TwistsAndTurnsStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None, newStructure: bool = True):
         super().__init__(novel, structure, parent, newStructure)
@@ -719,11 +724,14 @@ class StoryStructureSelectorDialog(PopupDialog):
         vbox(self.pageTwists)
         self.pageCore = QWidget()
         vbox(self.pageCore)
+        self.pageCustom = QWidget()
+        vbox(self.pageCustom)
         self.stackedWidget.addWidget(self.pageThreeAct)
         self.stackedWidget.addWidget(self.pageHerosJourney)
         self.stackedWidget.addWidget(self.pageStorySpine)
         self.stackedWidget.addWidget(self.pageTwists)
         self.stackedWidget.addWidget(self.pageCore)
+        self.stackedWidget.addWidget(self.pageCustom)
 
         self.btnConfirm = push_btn(icon=IconRegistry.from_name('fa5s.check', RELAXED_WHITE_COLOR),
                                    text='Add structure',
@@ -741,18 +749,24 @@ class StoryStructureSelectorDialog(PopupDialog):
                                       text='Story spine', properties=['main-side-nav'], checkable=True)
         self.btnCore = push_btn(IconRegistry.from_name('mdi.lightning-bolt-outline', color_on=WHITE_COLOR),
                                 text='Core narrative beats', properties=['main-side-nav'], checkable=True)
+
+        self.btnCustom = push_btn(IconRegistry.from_name('mdi6.bridge', color_on=WHITE_COLOR),
+                                  text='Custom structure', properties=['main-side-nav'], checkable=True)
         # self.btnFiveAct.setIcon(IconRegistry.from_name('mdi.numeric-5-box-outline', color_on=WHITE_COLOR))
         # self.btnSaveTheCat.setIcon(IconRegistry.from_name('fa5s.cat', color_on=WHITE_COLOR))
         self.wdgTypesContainer.layout().addWidget(self.btnCore)
         self.wdgTypesContainer.layout().addWidget(self.btnThreeAct)
         self.wdgTypesContainer.layout().addWidget(self.btnHerosJourney)
         self.wdgTypesContainer.layout().addWidget(self.btnStorySpine)
+        self.wdgTypesContainer.layout().addWidget(line())
+        self.wdgTypesContainer.layout().addWidget(self.btnCustom)
         self.wdgTypesContainer.layout().addWidget(vspacer())
         self.buttonGroup = QButtonGroup()
         self.buttonGroup.addButton(self.btnThreeAct)
         self.buttonGroup.addButton(self.btnHerosJourney)
         self.buttonGroup.addButton(self.btnStorySpine)
         self.buttonGroup.addButton(self.btnCore)
+        self.buttonGroup.addButton(self.btnCustom)
         self.buttonGroup.buttonClicked.connect(self._structureChanged)
 
         self.lineSeparator = vline()
@@ -818,6 +832,11 @@ class StoryStructureSelectorDialog(PopupDialog):
             self.__initEditor(heros_journey, self.pageHerosJourney, _HerosJourneyStructureEditor)
         elif self.btnStorySpine.isChecked():
             self.__initEditor(story_spine, self.pageStorySpine, _StorySpineStructureEditor)
+        elif self.btnCustom.isChecked():
+            structure = StoryStructure(title="Story Structure",
+                                       icon='mdi6.bridge',
+                                       template_type=TemplateStoryStructureType.CUSTOM)
+            self.__initEditor(structure, self.pageCustom, _CustomStoryStructureEditor)
         else:
             return
 
@@ -852,3 +871,5 @@ class StoryStructureSelectorDialog(PopupDialog):
         elif structure.template_type in [TemplateStoryStructureType.PACE, TemplateStoryStructureType.TENSION,
                                          TemplateStoryStructureType.TRANSFORMATION]:
             return self.pageCore, _CoreStructureEditor
+        elif structure.template_type == TemplateStoryStructureType.CUSTOM:
+            return self.pageCustom, _CustomStoryStructureEditor
