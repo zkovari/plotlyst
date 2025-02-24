@@ -645,9 +645,10 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
             row += 1
         self._addLine(row)
 
-        row += 1
-        self._backstoryRow = row
-        self._addLabel(row, 'Backstory', IconRegistry.backstory_icon())
+        if app_env.profile().get('backstory', False):
+            row += 1
+            self._backstoryRow = row
+            self._addLabel(row, 'Backstory', IconRegistry.backstory_icon())
 
         row += 1
         self._topicRow = row
@@ -768,7 +769,7 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
         #     self._addWidget(value_progress, h.row, col + 1)
         #     overall_progress.addMaxValue(h.max_value)
         #     overall_progress.addValue(v)
-        if not character.is_minor():
+        if not character.is_minor() and app_env.profile().get('backstory', False):
             backstory_progress = CircularProgressBar(parent=self)
             backstory_progress.setMaxValue(5 if character.is_major() else 3)
             backstory_progress.setValue(len(character.backstory))
