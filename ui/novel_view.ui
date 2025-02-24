@@ -32,7 +32,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <property name="centered" stdset="0">
       <bool>true</bool>
@@ -365,6 +365,31 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="tabStructure">
+      <attribute name="title">
+       <string>Structure</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_13">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>10</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="StoryStructureEditor" name="wdgStructure" native="true"/>
+       </item>
+      </layout>
+     </widget>
      <widget class="QWidget" name="tabPlot">
       <attribute name="title">
        <string>Storylines</string>
@@ -405,31 +430,6 @@
           </property>
          </layout>
         </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tabStructure">
-      <attribute name="title">
-       <string>Structure</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_13">
-       <property name="spacing">
-        <number>0</number>
-       </property>
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>10</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
-        <number>0</number>
-       </property>
-       <item>
-        <widget class="StoryStructureEditor" name="wdgStructure" native="true"/>
        </item>
       </layout>
      </widget>
