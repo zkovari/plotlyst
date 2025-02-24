@@ -60,6 +60,9 @@ class NovelNode(ContainerNode):
         self._actionChangeIcon.setVisible(True)
         self.refresh()
 
+        if novel.story_type == StoryType.Series and not app_env.profile().get('series'):
+            self.setDisabled(True)
+
     def novel(self) -> NovelDescriptor:
         return self._novel
 
@@ -141,7 +144,7 @@ class ShelvesTreeView(TreeView):
 
         self._wdgNovels.clearChildren()
         for novel in novels:
-            if novel.parent:
+            if app_env.profile().get('series') and novel.parent:
                 novels_under_series.append(novel)
                 continue
             node = self.__initNode(novel)
@@ -494,6 +497,7 @@ class StoryCreationDialog(PopupDialog):
         self.btnNewStory.setChecked(True)
         self.btnNewSeries = push_btn(IconRegistry.series_icon(color_on=RELAXED_WHITE_COLOR), 'Create a series',
                                      checkable=True, properties=['main-side-nav'])
+        self.btnNewSeries.setVisible(app_env.profile().get('series', False))
         self.btnScrivener = push_btn(IconRegistry.from_name('mdi.alpha-s-circle-outline', color_on=RELAXED_WHITE_COLOR),
                                      'Import from Scrivener', checkable=True, properties=['main-side-nav'])
         self.btnDocx = push_btn(IconRegistry.from_name('fa5.file-word', color_on=RELAXED_WHITE_COLOR),
