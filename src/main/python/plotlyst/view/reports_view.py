@@ -29,6 +29,7 @@ from qthandy.filter import OpacityEventFilter
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Novel
+from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, Event
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent, \
@@ -234,6 +235,9 @@ class ReportsView(AbstractNovelView):
         self.ui.btnManuscript.setIcon(IconRegistry.manuscript_icon())
         self.ui.btnProductivity.setIcon(
             IconRegistry.from_name('mdi6.progress-star-four-points', color_on=PLOTLYST_SECONDARY_COLOR))
+
+        self.ui.btnArc.setVisible(app_env.profile().get('scene-progression', False))
+        self.ui.btnProductivity.setVisible(app_env.profile().get('productivity', False))
 
         # self.ui.btnCharacters.setHidden(True)
         self.ui.btnConflict.setHidden(True)
