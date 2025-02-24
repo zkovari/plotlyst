@@ -350,16 +350,18 @@ class NovelPanelSettingsWidget(QWidget):
         self._addSetting(NovelSetting.Characters, 0, 1)
         self._addSetting(NovelSetting.Scenes, 0, 2)
 
-        self._addSetting(NovelSetting.Storylines, 1, 1)
+        self._addSetting(NovelSetting.Storylines, 1, 0, enabled=app_env.profile().get('storylines', False))
         self._addSetting(NovelSetting.Structure, 1, 2)
 
         self._addSetting(NovelSetting.Documents, 2, 0)
-        self._addSetting(NovelSetting.World_building, 2, 1)
-        self._addSetting(NovelSetting.Management, 2, 2)
+        self._addSetting(NovelSetting.World_building, 2, 1, enabled=app_env.profile().get('world-building', False))
+        self._addSetting(NovelSetting.Management, 2, 2, enabled=app_env.profile().get('tasks', False))
 
     def setNovel(self, novel: Novel):
         self._novel = novel
         for toggle in self._settings.values():
+            if not  toggle.isEnabled():
+                continue
             toggle.setChecked(self._novel.prefs.toggled(toggle.setting()))
 
     # def reset(self):
@@ -385,9 +387,13 @@ class NovelPanelSettingsWidget(QWidget):
     def toggledSettings(self) -> List[NovelSetting]:
         return [k for k, v in self._settings.items() if v.isChecked()]
 
-    def _addSetting(self, setting: NovelSetting, row: int, col: int):
+    def _addSetting(self, setting: NovelSetting, row: int, col: int, enabled: bool = True):
         toggle = NovelPanelCustomizationToggle(setting)
         self._settings[setting] = toggle
+        if not enabled:
+            toggle.setIcon(IconRegistry.from_name('ei.lock'))
+            toggle.setChecked(False)
+            toggle.setDisabled(True)
         toggle.toggled.connect(partial(self._settingToggled, setting))
         toggle.clicked.connect(partial(self._settingChanged, setting))
         toggle.installEventFilter(self)
