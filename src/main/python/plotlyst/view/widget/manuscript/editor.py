@@ -239,6 +239,7 @@ class SceneSeparator(QPushButton):
         pointy(self)
         italic(self)
         translucent(self)
+        self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
 
         self.refresh()
 
@@ -249,8 +250,10 @@ class SceneSeparator(QPushButton):
 class ManuscriptTextEdit(TextEditBase):
     sceneSeparatorClicked = pyqtSignal(Scene)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, first: bool = False, last: bool = False):
         super(ManuscriptTextEdit, self).__init__(parent)
+        self._first = first
+        self._last = last
         self._pasteAsOriginalEnabled = False
         self._resizedOnShow: bool = False
         self._minHeight = 40
@@ -296,6 +299,34 @@ class ManuscriptTextEdit(TextEditBase):
             if cursor.selectedText() == ' ':
                 self.textCursor().deletePreviousChar()
                 self.textCursor().insertText('.')
+
+        move_up = cursor.block().blockNumber() == 0 and event.key() == Qt.Key.Key_Up
+        move_down = cursor.block().blockNumber() == self.document().blockCount() - 1 and event.key() == Qt.Key.Key_Down
+
+        if move_up or move_down:
+            parent = self.parentWidget()
+            if parent:
+                focus_chain = parent.findChildren(QTextEdit)
+                if focus_chain:
+                    if (self is focus_chain[0] and move_up) or (self is focus_chain[-1] and move_down):
+                        return
+
+                    current_index = focus_chain.index(self)
+                    next_textedit = (
+                        focus_chain[current_index - 1] if move_up else focus_chain[current_index + 1]
+                    )
+
+                    if next_textedit:
+                        next_textedit.setFocus()
+
+                        next_cursor = next_textedit.textCursor()
+                        if move_up:
+                            next_cursor.movePosition(QTextCursor.MoveOperation.End)
+                        else:
+                            next_cursor.movePosition(QTextCursor.MoveOperation.Start)
+                        next_textedit.setTextCursor(next_cursor)
+
+                    return
         super(ManuscriptTextEdit, self).keyPressEvent(event)
 
     # @overrides
