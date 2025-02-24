@@ -102,6 +102,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if app_env.is_prod():
             self.setWindowState(Qt.WindowState.WindowMaximized)
 
+        self.setWindowTitle(app_env.profile().get('title', 'Plotlyst'))
         self._detached_windows: List[DetachedWindow] = []
 
         palette = QApplication.palette()
@@ -409,7 +410,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             btn.setVisible(True)
 
         self._actionSettings.setVisible(settings.toolbar_quick_settings())
-        self._actionProgress.setVisible(True)
+        self._actionProgress.setVisible(app_env.profile().get('productivity', False))
         self.actionQuickCustomization.setEnabled(True)
         self.menuDetachPanels.setEnabled(True)
         self.btnSettings.setNovel(self.novel)
@@ -484,6 +485,18 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.btnManuscript.setVisible(self.novel.prefs.toggled(NovelSetting.Manuscript))
         self.btnBoard.setVisible(self.novel.prefs.toggled(NovelSetting.Management))
         self.actionDetachTask.setEnabled(self.novel.prefs.toggled(NovelSetting.Management))
+
+        flag = app_env.profile().get('world-building', False)
+        self.btnWorld.setVisible(flag)
+        self.actionDetachWorldbuilding.setVisible(flag)
+        if self.btnWorld.isChecked():
+            self.btnNovel.setChecked(True)
+
+        flag = app_env.profile().get('tasks', False)
+        self.btnBoard.setVisible(flag)
+        self.actionDetachTask.setVisible(flag)
+        if self.btnBoard.isChecked():
+            self.btnNovel.setChecked(True)
 
     def _on_view_changed(self, btn=None, checked: bool = True):
         if not checked:

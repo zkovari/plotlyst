@@ -31,6 +31,8 @@ dependencies = [
     "textstat==0.7.2",
     "nltk==3.7",
     "requests==2.32.3",
+    "cbor2==5.6.5",
+    "cryptography==44.0.1",
     "qt-handy",
 ]
 

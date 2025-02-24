@@ -88,6 +88,7 @@ class SceneEditor(QObject, EventListener):
                      IconRegistry.from_name('ei.question-sign', color_on=PLOTLYST_SECONDARY_COLOR))
         set_tab_icon(self.ui.tabWidgetDrive, self.ui.tabInformation,
                      IconRegistry.from_name('fa5s.book-reader', color_on=PLOTLYST_SECONDARY_COLOR))
+        set_tab_visible(self.ui.tabWidget, self.ui.tabFunctions, app_env.profile().get('scene-functions', False))
         set_tab_visible(self.ui.tabWidget, self.ui.tabStructure, False)
         set_tab_visible(self.ui.tabWidget, self.ui.tabDrive, False)
 
@@ -127,6 +128,9 @@ class SceneEditor(QObject, EventListener):
 
         self.ui.wdgTop.layout().addWidget(self.wdgProgression)
 
+        self.wdgProgression.setVisible(app_env.profile().get('scene-progression', False))
+        self.ui.middleLine.setVisible(app_env.profile().get('license_type', 'FREE') != 'FREE')
+
         self.ui.textNotes.setTitleVisible(False)
         self.ui.textNotes.textEdit.setBlockPlaceholderEnabled(True)
 
@@ -164,6 +168,7 @@ class SceneEditor(QObject, EventListener):
         self._btnPurposeType = ScenePurposeTypeButton()
         self._btnPurposeType.reset.connect(self._reset_purpose_editor)
         self.ui.wdgMidbar.layout().insertWidget(0, self._btnPurposeType)
+        self._btnPurposeType.setVisible(app_env.profile().get('scene-purpose', False))
 
         self._btnPlotSelector = push_btn(IconRegistry.storylines_icon(), 'Storylines',
                                          tooltip='Link storylines to this scene', transparent_=True)
@@ -172,6 +177,8 @@ class SceneEditor(QObject, EventListener):
         self._plotSelectorMenu.plotSelected.connect(self._storyline_selected_from_toolbar)
         hbox(self.ui.wdgStorylines)
         self.ui.wdgMidbar.layout().insertWidget(1, self._btnPlotSelector)
+        self._btnPlotSelector.setVisible(app_env.profile().get('storylines', False))
+        self.ui.wdgStorylines.setVisible(app_env.profile().get('storylines', False))
 
         self._functionsEditor = SceneFunctionsWidget(self.novel)
         self._functionsEditor.storylineLinked.connect(self._storyline_linked_from_function)
@@ -195,7 +202,8 @@ class SceneEditor(QObject, EventListener):
 
         # self.ui.wdgSceneStructure.timeline.outcomeChanged.connect(self._btnPurposeType.refresh)
 
-        self.ui.tabWidget.setCurrentWidget(self.ui.tabFunctions)
+        if app_env.profile().get('scene-functions', False):
+            self.ui.tabWidget.setCurrentWidget(self.ui.tabFunctions)
         self.ui.tabWidgetDrive.setCurrentWidget(self.ui.tabAgency)
         self.ui.tabWidget.currentChanged.connect(self._page_toggled)
 
@@ -293,7 +301,7 @@ class SceneEditor(QObject, EventListener):
         emit_event(self.novel, SceneStoryBeatChangedEvent(self, scene, beat, toggled=False))
 
     def _update_notes(self):
-        if self.scene.document:
+        if self.scene and self.scene.document:
             if not self.scene.document.loaded:
                 json_client.load_document(self.novel, self.scene.document)
             if not self.notes_updated:
@@ -394,10 +402,12 @@ class SceneEditor(QObject, EventListener):
 
     def _close_purpose_editor(self):
         self._btnPurposeType.refresh()
-        if not self._btnPurposeType.isVisible():
-            fade_in(self._btnPurposeType)
-        self.ui.wdgStorylines.setVisible(self.novel.prefs.toggled(NovelSetting.Storylines))
-        self._btnPlotSelector.setVisible(self.novel.prefs.toggled(NovelSetting.Storylines))
+        if app_env.profile().get('scene-purpose', False):
+            if not self._btnPurposeType.isVisible():
+                fade_in(self._btnPurposeType)
+        if app_env.profile().get('storylines', False):
+            self.ui.wdgStorylines.setVisible(self.novel.prefs.toggled(NovelSetting.Storylines))
+            self._btnPlotSelector.setVisible(self.novel.prefs.toggled(NovelSetting.Storylines))
         # to avoid segfault for some reason, we disable it first before changing the stack widget
         self._purposeSelector.setDisabled(True)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
@@ -407,7 +417,8 @@ class SceneEditor(QObject, EventListener):
         self._btnPurposeType.setHidden(True)
         self.ui.wdgStorylines.setHidden(True)
         self._btnPlotSelector.setHidden(True)
-        self.ui.stackedWidget.setCurrentWidget(self.ui.pagePurpose)
+        if app_env.profile().get('scene-purpose', False):
+            self.ui.stackedWidget.setCurrentWidget(self.ui.pagePurpose)
         self._purposeSelector.setEnabled(True)
 
     def _save_scene(self):

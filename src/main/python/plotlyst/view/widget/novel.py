@@ -29,6 +29,7 @@ from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from plotlyst.common import MAXIMUM_SIZE
 from plotlyst.core.domain import StoryStructure, Novel, TagType, SelectionItem, Tag, NovelSetting, ScenesView
+from plotlyst.env import app_env
 from plotlyst.model.characters_model import CharactersTableModel
 from plotlyst.model.common import SelectionItemsModel
 from plotlyst.model.novel import NovelTagsModel
@@ -205,38 +206,39 @@ class NovelCustomizationWizard(QWidget):
         self.lblCounter = label('')
         self._updateCounter()
         self.wdgPanelSettings.clicked.connect(self._updateCounter)
-        self.btnRecommend = push_btn(IconRegistry.from_name('mdi.trophy-award'), 'Recommend me', transparent_=True)
-        menuRecommendation = MenuWidget(self.btnRecommend)
-        apply_white_menu(menuRecommendation)
-        menuRecommendation.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
-        menuRecommendation.addSection("Recommend me features if my writing style fits into...")
-        menuRecommendation.addAction(
-            action('Architect', IconRegistry.from_name('fa5s.drafting-compass'),
-                   tooltip='Someone who follows meticulous planning and detailed outlines before writing',
-                   slot=lambda: self._recommend(WriterType.Architect)))
-        menuRecommendation.addAction(
-            action('Planner', IconRegistry.from_name('fa5.calendar-alt'),
-                   tooltip='Someone who enjoys some planning but allows for flexibility',
-                   slot=lambda: self._recommend(WriterType.Planner)))
-        menuRecommendation.addAction(action(
-            'Explorer', IconRegistry.from_name('fa5s.binoculars'),
-            tooltip='Someone who enjoys discovering their story as they write with very little directions or planning beforehand',
-            slot=lambda: self._recommend(WriterType.Explorer)))
-        menuRecommendation.addAction(
-            action('Intuitive', IconRegistry.from_name('fa5.lightbulb'),
-                   tooltip='Someone who writes based on intuition and inspiration with minimal to no planning',
-                   slot=lambda: self._recommend(WriterType.Intuitive)))
-        menuRecommendation.addAction(
-            action('Free spirit', IconRegistry.from_name('mdi.bird'),
-                   tooltip='Someone who enjoys the spontaneity of writing without constraints',
-                   slot=lambda: self._recommend(WriterType.Free_spirit)))
+        if app_env.profile().get('license_type', 'FREE') != 'FREE':
+            self.btnRecommend = push_btn(IconRegistry.from_name('mdi.trophy-award'), 'Recommend me', transparent_=True)
+            menuRecommendation = MenuWidget(self.btnRecommend)
+            apply_white_menu(menuRecommendation)
+            menuRecommendation.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+            menuRecommendation.addSection("Recommend me features if my writing style fits into...")
+            menuRecommendation.addAction(
+                action('Architect', IconRegistry.from_name('fa5s.drafting-compass'),
+                       tooltip='Someone who follows meticulous planning and detailed outlines before writing',
+                       slot=lambda: self._recommend(WriterType.Architect)))
+            menuRecommendation.addAction(
+                action('Planner', IconRegistry.from_name('fa5.calendar-alt'),
+                       tooltip='Someone who enjoys some planning but allows for flexibility',
+                       slot=lambda: self._recommend(WriterType.Planner)))
+            menuRecommendation.addAction(action(
+                'Explorer', IconRegistry.from_name('fa5s.binoculars'),
+                tooltip='Someone who enjoys discovering their story as they write with very little directions or planning beforehand',
+                slot=lambda: self._recommend(WriterType.Explorer)))
+            menuRecommendation.addAction(
+                action('Intuitive', IconRegistry.from_name('fa5.lightbulb'),
+                       tooltip='Someone who writes based on intuition and inspiration with minimal to no planning',
+                       slot=lambda: self._recommend(WriterType.Intuitive)))
+            menuRecommendation.addAction(
+                action('Free spirit', IconRegistry.from_name('mdi.bird'),
+                       tooltip='Someone who enjoys the spontaneity of writing without constraints',
+                       slot=lambda: self._recommend(WriterType.Free_spirit)))
 
-        self.wdgTop = QWidget()
-        hbox(self.wdgTop)
-        self.wdgTop.layout().addWidget(self.lblCounter, alignment=Qt.AlignmentFlag.AlignLeft)
-        self.wdgTop.layout().addWidget(self.btnRecommend, alignment=Qt.AlignmentFlag.AlignRight)
-        self.pagePanels.layout().addWidget(self.wdgTop)
-        self.pagePanels.layout().addWidget(line())
+            self.wdgTop = QWidget()
+            hbox(self.wdgTop)
+            self.wdgTop.layout().addWidget(self.lblCounter, alignment=Qt.AlignmentFlag.AlignLeft)
+            self.wdgTop.layout().addWidget(self.btnRecommend, alignment=Qt.AlignmentFlag.AlignRight)
+            self.pagePanels.layout().addWidget(self.wdgTop)
+            self.pagePanels.layout().addWidget(line())
         self.pagePanels.layout().addWidget(self.wdgPanelSettings)
         self.pagePanels.layout().addWidget(vspacer())
         self.pagePanels.layout().addWidget(
