@@ -410,7 +410,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             btn.setVisible(True)
 
         self._actionSettings.setVisible(settings.toolbar_quick_settings())
-        self._actionProgress.setVisible(True)
+        self._actionProgress.setVisible(app_env.profile().get('productivity', False))
         self.actionQuickCustomization.setEnabled(True)
         self.menuDetachPanels.setEnabled(True)
         self.btnSettings.setNovel(self.novel)
