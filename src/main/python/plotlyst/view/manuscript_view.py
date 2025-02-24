@@ -38,7 +38,7 @@ from plotlyst.service.persistence import flush_or_fail
 from plotlyst.service.resource import ask_for_resource
 from plotlyst.view._view import AbstractNovelView
 from plotlyst.view.common import tool_btn, ButtonPressResizeEventFilter, action, \
-    ExclusiveOptionalButtonGroup, link_buttons_to_pages, shadow
+    ExclusiveOptionalButtonGroup, link_buttons_to_pages, shadow, scroll_to_bottom
 from plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -203,6 +203,7 @@ class ManuscriptView(AbstractNovelView):
         self.textEditor.selectionChanged.connect(self._text_selection_changed)
         self.textEditor.sceneTitleChanged.connect(self._scene_title_changed)
         self.textEditor.cursorPositionChanged.connect(self.ui.scrollEditor.ensureVisible)
+        self.ui.scrollEditor.verticalScrollBar().valueChanged.connect(self._scroll_changed)
         self._dist_free_bottom_bar.btnFocus.toggled.connect(self.textEditor.setSentenceHighlighterEnabled)
         self._dist_free_bottom_bar.btnTypewriterMode.toggled.connect(self._toggle_typewriter_mode)
 
@@ -450,3 +451,8 @@ class ManuscriptView(AbstractNovelView):
             margins(self.ui.pageText, bottom=screen.size().height() // 3)
         else:
             margins(self.ui.pageText, bottom=0)
+
+    def _scroll_changed(self, value: int):
+        diff = self.ui.scrollEditor.verticalScrollBar().maximum() - value
+        if 0 < diff < 40:
+            scroll_to_bottom(self.ui.scrollEditor)
