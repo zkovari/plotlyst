@@ -85,6 +85,10 @@ class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
         translucent(self.btnScene, 0.6)
         translucent(self.btnSequel, 0.6)
 
+        flag = app_env.profile().get('scene-purpose', False)
+        self.btnScene.setVisible(flag)
+        self.btnSequel.setVisible(flag)
+
         self._chartDistribution = ActDistributionChart()
         self._chartDistributionView = ChartView()
         self._chartDistributionView.setFixedSize(356, 356)
@@ -197,12 +201,17 @@ class ScenesOutlineView(AbstractNovelView):
             IconRegistry.from_name('fa5s.chess-board', color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnStorymap.setIcon(
             IconRegistry.from_name('mdi.transit-connection-horizontal', color_on=PLOTLYST_SECONDARY_COLOR))
-        self.setNavigableButtonGroup(self.ui.btnGroupViews)
 
         self.ui.btnStorymap.setVisible(self.novel.prefs.toggled(NovelSetting.Storylines))
         structure_visible = self.novel.prefs.toggled(NovelSetting.Structure)
         self.ui.btnStoryStructure.setVisible(structure_visible)
         self.ui.wdgStoryStructure.setVisible(structure_visible)
+
+        if not app_env.profile().get('storylines', False):
+            self.ui.btnStorymap.setHidden(True)
+            self.ui.btnGroupViews.removeButton(self.ui.btnStorymap)
+
+        self.setNavigableButtonGroup(self.ui.btnGroupViews)
 
         self.ui.wdgOrientation.setHidden(True)
         self.ui.rbHorizontal.setIcon(IconRegistry.from_name('fa5s.grip-lines'))
@@ -840,13 +849,13 @@ class ScenesOutlineView(AbstractNovelView):
 
         if self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_POV):
             default_columns.append(ScenesTableModel.ColPov)
-        if self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_STORYLINES):
+        if app_env.profile().get('storylines') and self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_STORYLINES):
             default_columns.append(ScenesTableModel.ColStorylines)
         if self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_CHARACTERS):
             default_columns.append(ScenesTableModel.ColCharacters)
-        if self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_PURPOSE):
+        if app_env.profile().get('scene-purpose') and self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_PURPOSE):
             default_columns.append(ScenesTableModel.ColType)
-        if self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_PLOT_PROGRESS):
+        if app_env.profile().get('scene-progression') and self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_PLOT_PROGRESS):
             default_columns.append(ScenesTableModel.ColProgress)
 
         default_columns.append(ScenesTableModel.ColSynopsis)

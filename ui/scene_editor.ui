@@ -514,7 +514,7 @@
         </widget>
        </item>
        <item>
-        <widget class="Line" name="line_3">
+        <widget class="Line" name="middleLine">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
@@ -626,8 +626,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>477</width>
-                    <height>343</height>
+                    <width>100</width>
+                    <height>30</height>
                    </rect>
                   </property>
                   <property name="relaxed-white-bg" stdset="0">
@@ -737,8 +737,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>473</width>
-                        <height>315</height>
+                        <width>100</width>
+                        <height>30</height>
                        </rect>
                       </property>
                       <property name="relaxed-white" stdset="0">

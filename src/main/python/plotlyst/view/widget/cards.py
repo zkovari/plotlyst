@@ -35,6 +35,7 @@ from qtmenu import MenuWidget
 from plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Character, Scene, Novel, NovelSetting, CardSizeRatio, NovelDescriptor
 from plotlyst.core.help import enneagram_help, mbti_help
+from plotlyst.env import app_env
 from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import fade, fade_in, fade_out, tool_btn, push_btn, action
@@ -222,6 +223,9 @@ class SceneCard(Ui_SceneCard, Card):
         self.btnPov.setVisible(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_POV))
         self.lblType.setVisible(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_PURPOSE))
         self.btnPlotProgress.setVisible(self.novel.prefs.toggled(NovelSetting.SCENE_CARD_PLOT_PROGRESS))
+
+        self.lblType.setVisible(app_env.profile().get('scene-purpose', False))
+        self.btnPlotProgress.setVisible(app_env.profile().get('scene-progress', False))
 
         incr_icon(self.btnPlotProgress, 4)
 
