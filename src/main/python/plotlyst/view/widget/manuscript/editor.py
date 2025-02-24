@@ -255,6 +255,7 @@ class ManuscriptTextEdit(TextEditBase):
         self._minHeight = 40
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setTabChangesFocus(True)
+        self._scene: Optional[Scene] = None
 
         self.highlighter = GrammarHighlighter(self.document(), checkEnabled=False,
                                               highlightStyle=GrammarHighlightStyle.BACKGOUND)
@@ -344,9 +345,12 @@ class ManuscriptTextEdit(TextEditBase):
     def setSentenceHighlighterEnabled(self, enabled: bool):
         self._sentenceHighlighter.setSentenceHighlightEnabled(enabled)
 
+    def scene(self) -> Optional[Scene]:
+        return self._scene
+
     def setScene(self, scene: Scene):
         # self._sceneTextObject.setScenes([scene])
-
+        self._scene = scene
         self._addScene(scene)
         self.setUneditableBlocksEnabled(False)
         self.document().clearUndoRedoStacks()
@@ -423,6 +427,7 @@ class ManuscriptEditor(QWidget, EventListener):
     sceneTitleChanged = pyqtSignal(Scene)
     sceneSeparatorClicked = pyqtSignal(Scene)
     cursorPositionChanged = pyqtSignal(int, int)
+    cleared = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -474,17 +479,28 @@ class ManuscriptEditor(QWidget, EventListener):
                 if sceneLbl.scene == event.scene:
                     sceneLbl.refresh()
         elif isinstance(event, SceneDeletedEvent):
-            pass
-            # if self._scene and self._scene == event.scene:
-            #     self.clear()
-            # for sceneLbl in self._sceneLabels:
-
-            # if event.scene in self.ui.textEdit.scenes():
-            #     if len(self.ui.textEdit.scenes()) == 1:
-            #         self.ui.textEdit.clear()
-            #         self._empty_page()
-            #     else:
-            #         self._editChapter(event.scene.chapter)
+            if self._scene and self._scene == event.scene:
+                self.clear()
+                self.cleared.emit()
+            elif self._scenes and event.scene in self._scenes:
+                removedLbl = None
+                for lbl in self._sceneLabels:
+                    if lbl.scene == event.scene:
+                        removedLbl = lbl
+                        break
+                removedTextedit = None
+                for textedit in self._textedits:
+                    if textedit.scene() == event.scene:
+                        removedTextedit = textedit
+                        break
+                if removedLbl:
+                    self._sceneLabels.remove(removedLbl)
+                    gc(removedLbl)
+                if removedTextedit:
+                    self._textedits.remove(removedTextedit)
+                    gc(removedTextedit)
+                self._scenes.remove(event.scene)
+                self.textChanged.emit()
 
     @overrides
     def resizeEvent(self, a0: QtGui.QResizeEvent) -> None:

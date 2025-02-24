@@ -120,9 +120,9 @@ class ManuscriptView(AbstractNovelView):
         self._miniSceneEditor = SceneMiniEditor(self.novel)
         self.ui.pageInfo.layout().addWidget(self._miniSceneEditor)
         self.ui.pageInfo.layout().addWidget(vspacer())
+
         self.textEditor = ManuscriptEditor()
         self.ui.wdgEditor.layout().addWidget(self.textEditor)
-        self.textEditor.sceneSeparatorClicked.connect(self._scene_separator_clicked)
 
         self._manuscriptDailyProgressDisplay = ManuscriptDailyProgress(self.novel)
         self._manuscriptDailyProgressDisplay.refresh()
@@ -195,6 +195,8 @@ class ManuscriptView(AbstractNovelView):
         self.ui.wdgSide.setHidden(True)
 
         self.textEditor.setNovel(self.novel)
+        self.textEditor.sceneSeparatorClicked.connect(self._scene_separator_clicked)
+        self.textEditor.cleared.connect(self._empty_page)
         self.textEditor.attachSettingsWidget(self._settingsWidget)
         self.textEditor.textChanged.connect(self._text_changed)
         self.textEditor.progressChanged.connect(self._progress_changed)
