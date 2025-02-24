@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QPushButton, QDialog, QScrollArea, QLabel, 
     QApplication
 from overrides import overrides
 from qthandy import vspacer, spacer, transparent, bold, vbox, incr_font, \
-    hbox, margins, pointy, incr_icon, busy, flow, vline, line, decr_font
+    hbox, margins, pointy, incr_icon, busy, flow, vline, line, decr_font, sp
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -42,7 +42,7 @@ from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     midpoint_hero_mirror, second_plot_point_hero_road_back, second_plot_point_hero_ordeal, hero_reward, \
     hero_false_victory, pace_driven_structure, TemplateStoryStructureType, tension_driven_structure, \
     transformation_driven_structure
-from plotlyst.view.common import ExclusiveOptionalButtonGroup, push_btn, label, scroll_area
+from plotlyst.view.common import ExclusiveOptionalButtonGroup, push_btn, label, scroll_area, frame
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
@@ -663,10 +663,23 @@ class CustomBeatItemWidget(ListItemWidget):
         self._titleEdit.setMaximumWidth(150)
         self._titleEdit.setText(beat.text)
         self._titleEdit.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
+        self._titleEdit.iconChanged.connect(self._iconChanged)
+        self._titleEdit.lineEdit.textEdited.connect(self._nameChanged)
         self.layout().insertWidget(1, self._titleEdit)
 
         self.setMaximumWidth(1000)
-        # self.layout().addWidget(spacer())
+
+    @overrides
+    def _textChanged(self, text: str):
+        super()._textChanged(text)
+        self.beat.description = text
+
+    def _nameChanged(self, text: str):
+        self.beat.text = text
+
+    def _iconChanged(self, icon: str, color: str):
+        self.beat.icon = icon
+        self.beat.icon_color = color
 
 
 class _CustomBeatsList(ListView):
@@ -677,7 +690,11 @@ class _CustomBeatsList(ListView):
         self.structure = structure
         transparent(self)
 
-        self._btnAdd.setText('Add new beat')
+        self._btnAdd.setText('Add a new beat')
+        self._btnAdd.setIcon(IconRegistry.plus_icon('grey'))
+
+        for beat in structure.beats:
+            self.addItem(beat)
 
     @overrides
     def _listItemWidgetClass(self):
@@ -686,9 +703,17 @@ class _CustomBeatsList(ListView):
     @overrides
     def _addNewItem(self):
         beat = StoryBeat('Beat', icon='mdi.lightning-bolt-outline', icon_color='grey',
-                         description="A pivotal moment or event that advances the plot or develops a character", )
+                         custom=True)
+        self.structure.beats.append(beat)
         wdg = self.addItem(beat)
+        self.changed.emit()
         # wdg.changed.connect(self._changed)
+
+    @overrides
+    def _deleteItemWidget(self, widget: ListItemWidget):
+        super()._deleteItemWidget(widget)
+        self.structure.beats.remove(widget.item())
+        self.changed.emit()
 
 
 class _CustomStoryStructureEditor(_AbstractStructureEditor):
@@ -697,26 +722,53 @@ class _CustomStoryStructureEditor(_AbstractStructureEditor):
 
         self._scroll.setHidden(True)
 
-        self.wdgEditor = QWidget()
+        vbox(self.wdgCustom, spacing=15)
+        margins(self.wdgCustom, top=20)
+        self.wdgCustom.layout().addWidget(label(
+            "Create your custom story structure template by defining each beat with a name, icon, and description. If toggled, set each beat's percentage in the narrative.",
+            description=True, wordWrap=True))
+
+        self.wdgEditor = frame()
+        self.wdgEditor.setProperty('bg', True)
+        self.wdgEditor.setProperty('large-rounded', True)
         vbox(self.wdgEditor, spacing=10)
         margins(self.wdgEditor, top=20)
         self.layout().addWidget(self.wdgEditor)
 
-        self._titleEdit = DecoratedLineEdit(iconEditable=True, autoAdjustable=False, pickIconColor=False)
+        self._titleEdit = DecoratedLineEdit(iconEditable=True, autoAdjustable=True, pickIconColor=False)
         self._titleEdit.setText(structure.title)
-        incr_font(self._titleEdit.lineEdit, 4)
-        incr_icon(self._titleEdit.icon, 4)
+        incr_font(self._titleEdit.lineEdit, 2)
+        incr_icon(self._titleEdit.icon, 2)
         self._titleEdit.setIcon(IconRegistry.from_name(structure.icon, structure.icon_color))
         self._titleEdit.lineEdit.textEdited.connect(self._titleEdited)
         self._titleEdit.iconChanged.connect(self._iconChanged)
+
+        self.wdgTitleEdit = frame()
+        self.wdgTitleEdit.setProperty('white-bg', True)
+        self.wdgTitleEdit.setProperty('large-rounded', True)
+        hbox(self.wdgTitleEdit, 10).addWidget(self._titleEdit)
 
         scroll = scroll_area(frameless=True)
         transparent(scroll)
         self._beatsList = _CustomBeatsList(structure)
         scroll.setWidget(self._beatsList)
+        self._beatsList.changed.connect(lambda: self.wdgPreview.setStructure(novel, self._structure))
 
-        self.wdgEditor.layout().addWidget(group(label('Title:', h5=True), self._titleEdit),
-                                          alignment=Qt.AlignmentFlag.AlignLeft)
+        # self.wdgEditor.layout().addWidget(group(label('Title:', h5=True), self._titleEdit), alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgEditor.layout().addWidget(self.wdgTitleEdit, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        lblBeat = label('Name', description=True)
+        sp(lblBeat).h_exp()
+        lblBeat.setMaximumWidth(150)
+        lblBeat.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lblDescription = label('Description', description=True)
+        sp(lblDescription).h_exp()
+        lblDescription.setMaximumWidth(800)
+        lblDescription.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        spacer_ = spacer()
+        sp(spacer_).h_preferred()
+        self.wdgEditor.layout().addWidget(group(lblBeat, lblDescription, spacer_, margin_left=40))
+
         self.wdgEditor.layout().addWidget(scroll)
 
     def _titleEdited(self, title: str):
