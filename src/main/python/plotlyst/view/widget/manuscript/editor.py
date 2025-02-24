@@ -38,7 +38,8 @@ from qttextedit.ops import Heading1Operation, Heading2Operation, Heading3Operati
 from plotlyst.common import RELAXED_WHITE_COLOR, DEFAULT_MANUSCRIPT_LINE_SPACE, DEFAULT_MANUSCRIPT_INDENT, \
     PLACEHOLDER_TEXT_COLOR, PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.client import json_client
-from plotlyst.core.domain import DocumentProgress, Novel, Scene, TextStatistics, DocumentStatistics, FontSettings
+from plotlyst.core.domain import DocumentProgress, Novel, Scene, TextStatistics, DocumentStatistics, FontSettings, \
+    Chapter
 from plotlyst.core.sprint import TimerModel
 from plotlyst.env import app_env
 from plotlyst.event.core import Event, EventListener
@@ -437,6 +438,7 @@ class ManuscriptEditor(QWidget, EventListener):
         self._sceneLabels: List[SceneSeparator] = []
         self._scenes: List[Scene] = []
         self._scene: Optional[Scene] = None
+        self._chapter: Optional[Chapter] = None
         self._font = self.defaultFont()
         self._characterWidth: int = 40
         self._settings: Optional[ManuscriptEditorSettingsWidget] = None
@@ -554,11 +556,15 @@ class ManuscriptEditor(QWidget, EventListener):
         self.wdgEditor.layout().addWidget(vspacer())
         wdg.setFocus()
 
-    def setChapterScenes(self, scenes: List[Scene], title: str):
+    def chapter(self) -> Optional[Chapter]:
+        return self._chapter
+
+    def setChapterScenes(self, chapter: Chapter, scenes: List[Scene]):
         self.clear()
+        self._chapter = chapter
         self._scenes.extend(scenes)
 
-        self.textTitle.setText(title)
+        self.textTitle.setText(chapter.display_name().replace('Chapter ', ''))
         self.textTitle.setPlaceholderText('Chapter')
         self.textTitle.setReadOnly(True)
 
@@ -600,13 +606,14 @@ class ManuscriptEditor(QWidget, EventListener):
         elif len(self._textedits) > 1:
             scenes = []
             scenes.extend(self._scenes)
-            self.setChapterScenes(scenes, self.textTitle.text())
+            self.setChapterScenes(self._chapter, scenes)
 
     def clear(self):
         self._textedits.clear()
         self._sceneLabels.clear()
         self._scenes.clear()
         self._scene = None
+        self._chapter = None
         clear_layout(self.wdgEditor)
 
     def setNightMode(self, mode: bool):

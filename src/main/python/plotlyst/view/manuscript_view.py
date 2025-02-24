@@ -31,7 +31,7 @@ from plotlyst.core.domain import Novel, Document, Chapter, DocumentProgress
 from plotlyst.core.domain import Scene
 from plotlyst.event.core import emit_global_event, emit_critical, emit_info, Event, emit_event
 from plotlyst.events import SceneChangedEvent, OpenDistractionFreeMode, \
-    ExitDistractionFreeMode, NovelSyncEvent, CloseNovelEvent
+    ExitDistractionFreeMode, NovelSyncEvent, CloseNovelEvent, SceneOrderChangedEvent, SceneAddedEvent
 from plotlyst.resources import ResourceType
 from plotlyst.service.grammar import language_tool_proxy
 from plotlyst.service.persistence import flush_or_fail
@@ -57,7 +57,7 @@ from plotlyst.view.widget.tree import TreeSettings
 class ManuscriptView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        super().__init__(novel)
+        super().__init__(novel, event_types=[SceneOrderChangedEvent, SceneAddedEvent])
         self.ui = Ui_ManuscriptView()
         self.ui.setupUi(self.widget)
         self.ui.splitter.setSizes([150, 500])
@@ -222,6 +222,14 @@ class ManuscriptView(AbstractNovelView):
         if isinstance(event, NovelSyncEvent):
             self.textEditor.refresh()
             self._text_changed()
+        elif isinstance(event, SceneOrderChangedEvent):
+            if self.textEditor.chapter():
+                self._editChapter(self.textEditor.chapter())
+            return
+        elif isinstance(event, SceneAddedEvent):
+            if event.scene.chapter and event.scene.chapter == self.textEditor.chapter():
+                self._editChapter(self.textEditor.chapter())
+            return
         super(ManuscriptView, self).event_received(event)
 
     @overrides
@@ -313,7 +321,7 @@ class ManuscriptView(AbstractNovelView):
                 scene.manuscript = Document('', scene_id=scene.id)
                 self.repo.update_scene(scene)
         if scenes:
-            self.textEditor.setChapterScenes(scenes, chapter.display_name().replace('Chapter ', ''))
+            self.textEditor.setChapterScenes(chapter, scenes)
             self._miniSceneEditor.setScenes(scenes)
         else:
             self._empty_page('Add a scene to this chapter to start writing')
