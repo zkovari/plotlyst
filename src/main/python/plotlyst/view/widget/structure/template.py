@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QPushButton, QDialog, QScrollArea, QLabel, 
     QApplication
 from overrides import overrides
 from qthandy import vspacer, spacer, transparent, bold, vbox, incr_font, \
-    hbox, margins, pointy, incr_icon, busy, flow, vline, line
+    hbox, margins, pointy, incr_icon, busy, flow, vline, line, decr_font
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -42,12 +42,13 @@ from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     midpoint_hero_mirror, second_plot_point_hero_road_back, second_plot_point_hero_ordeal, hero_reward, \
     hero_false_victory, pace_driven_structure, TemplateStoryStructureType, tension_driven_structure, \
     transformation_driven_structure
-from plotlyst.view.common import ExclusiveOptionalButtonGroup, push_btn, label
+from plotlyst.view.common import ExclusiveOptionalButtonGroup, push_btn, label, scroll_area
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
 from plotlyst.view.widget.display import IconText, ReferencesButton, PopupDialog
-from plotlyst.view.widget.input import Toggle
+from plotlyst.view.widget.input import Toggle, DecoratedLineEdit
+from plotlyst.view.widget.list import ListView, ListItemWidget
 from plotlyst.view.widget.structure.beat import BeatsPreview
 from plotlyst.view.widget.structure.outline import StoryStructureTimelineWidget
 
@@ -650,9 +651,82 @@ class _StorySpineStructureEditor(_AbstractStructureEditor):
             description=True, wordWrap=True))
 
 
+class CustomBeatItemWidget(ListItemWidget):
+    def __init__(self, beat: StoryBeat, parent=None):
+        super().__init__(beat, parent)
+        self.beat = beat
+        self._lineEdit.setText(beat.description)
+        self._lineEdit.setPlaceholderText('Beat description')
+        decr_font(self._lineEdit)
+
+        self._titleEdit = DecoratedLineEdit(iconEditable=True, autoAdjustable=False)
+        self._titleEdit.setMaximumWidth(150)
+        self._titleEdit.setText(beat.text)
+        self._titleEdit.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
+        self.layout().insertWidget(1, self._titleEdit)
+
+        self.setMaximumWidth(1000)
+        # self.layout().addWidget(spacer())
+
+
+class _CustomBeatsList(ListView):
+    changed = pyqtSignal()
+
+    def __init__(self, structure: StoryStructure, parent=None):
+        super().__init__(parent)
+        self.structure = structure
+        transparent(self)
+
+        self._btnAdd.setText('Add new beat')
+
+    @overrides
+    def _listItemWidgetClass(self):
+        return CustomBeatItemWidget
+
+    @overrides
+    def _addNewItem(self):
+        beat = StoryBeat('Beat', icon='mdi.lightning-bolt-outline', icon_color='grey',
+                         description="A pivotal moment or event that advances the plot or develops a character", )
+        wdg = self.addItem(beat)
+        # wdg.changed.connect(self._changed)
+
+
 class _CustomStoryStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None, newStructure: bool = True):
         super().__init__(novel, structure, parent, newStructure)
+
+        self._scroll.setHidden(True)
+
+        self.wdgEditor = QWidget()
+        vbox(self.wdgEditor, spacing=10)
+        margins(self.wdgEditor, top=20)
+        self.layout().addWidget(self.wdgEditor)
+
+        self._titleEdit = DecoratedLineEdit(iconEditable=True, autoAdjustable=False, pickIconColor=False)
+        self._titleEdit.setText(structure.title)
+        incr_font(self._titleEdit.lineEdit, 4)
+        incr_icon(self._titleEdit.icon, 4)
+        self._titleEdit.setIcon(IconRegistry.from_name(structure.icon, structure.icon_color))
+        self._titleEdit.lineEdit.textEdited.connect(self._titleEdited)
+        self._titleEdit.iconChanged.connect(self._iconChanged)
+
+        scroll = scroll_area(frameless=True)
+        transparent(scroll)
+        self._beatsList = _CustomBeatsList(structure)
+        scroll.setWidget(self._beatsList)
+
+        self.wdgEditor.layout().addWidget(group(label('Title:', h5=True), self._titleEdit),
+                                          alignment=Qt.AlignmentFlag.AlignLeft)
+        self.wdgEditor.layout().addWidget(scroll)
+
+    def _titleEdited(self, title: str):
+        self._structure.title = title
+        self.wdgTitle.setText(title)
+
+    def _iconChanged(self, icon: str, color: str):
+        self._structure.icon = icon
+        self._structure.icon_color = color
+        self.wdgTitle.setIcon(IconRegistry.from_name(icon, color))
 
 
 class _TwistsAndTurnsStructureEditor(_AbstractStructureEditor):

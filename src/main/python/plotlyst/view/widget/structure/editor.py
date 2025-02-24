@@ -35,7 +35,7 @@ from qtmenu import MenuWidget
 
 from plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR, MAX_NUMBER_OF_ACTS
 from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
-    Character, StoryBeatType, StoryStructureDisplayType
+    Character, StoryBeatType, StoryStructureDisplayType, TemplateStoryStructureType
 from plotlyst.event.core import EventListener, Event, emit_event
 from plotlyst.event.handler import event_dispatchers
 from plotlyst.events import NovelStoryStructureUpdated, CharacterChangedEvent, CharacterDeletedEvent, \
@@ -504,6 +504,9 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
                 self._emit()
         else:
             StoryStructureSelectorDialog.popup(self.novel, self.novel.active_story_structure)
+            if self.novel.active_story_structure.template_type == TemplateStoryStructureType.CUSTOM:
+                self.btnGroupStructure.checkedButton().refresh(animated=False)
+
             self._activeStructureToggled(self.novel.active_story_structure, True)
             self._emit()
 
