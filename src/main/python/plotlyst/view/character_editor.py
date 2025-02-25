@@ -80,7 +80,9 @@ class CharacterEditor(QObject, EventListener):
         set_tab_visible(self.ui.tabAttributes, self.ui.tabBackstory, app_env.profile().get('backstory', False))
 
         self.ui.textEdit.setTitleVisible(False)
+        self.ui.textEdit.setToolbarVisible(False)
         self.ui.textEdit.setWidthPercentage(95)
+        self.ui.textEdit.textEdit.setDocumentMargin(20)
         self.ui.textEdit.textEdit.setBlockPlaceholderEnabled(True)
 
         self.ui.tabAttributes.currentChanged.connect(self._tab_changed)
