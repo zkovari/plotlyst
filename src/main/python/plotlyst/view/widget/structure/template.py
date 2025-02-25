@@ -820,8 +820,6 @@ class _CustomStoryStructureEditor(_AbstractStructureEditor):
         self._titleEdit.iconChanged.connect(self._iconChanged)
 
         self.wdgTitleEdit = QWidget()
-        # self.wdgTitleEdit.setProperty('white-bg', True)
-        # self.wdgTitleEdit.setProperty('large-rounded', True)
         hbox(self.wdgTitleEdit, 10).addWidget(self._titleEdit)
 
         scroll = scroll_area(frameless=True)
@@ -830,28 +828,17 @@ class _CustomStoryStructureEditor(_AbstractStructureEditor):
         scroll.setWidget(self._beatsList)
         self._beatsList.changed.connect(lambda: self.wdgPreview.setStructure(novel, self._structure))
 
-        # self.wdgEditor.layout().addWidget(group(label('Title:', h5=True), self._titleEdit), alignment=Qt.AlignmentFlag.AlignLeft)
         self.wdgEditor.layout().addWidget(self.wdgTitleEdit, alignment=Qt.AlignmentFlag.AlignLeft)
 
-        lblBeat = label('Name', description=True)
-        sp(lblBeat).h_exp()
-        lblBeat.setMaximumWidth(150)
-        lblBeat.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.lblPercentage = label('%', description=True)
-        sp(self.lblPercentage).h_exp()
-        self.lblPercentage.setMaximumWidth(40)
-        self.lblPercentage.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lblBeat = self.__labelHeader('Name', 120)
+        self.lblPercentage = self.__labelHeader('%', 56)
         self.lblPercentage.setVisible(self.togglePercentage.isChecked())
-
-        lblDescription = label('Description', description=True)
-        sp(lblDescription).h_exp()
-        lblDescription.setMaximumWidth(800)
-        lblDescription.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lblAct = self.__labelHeader('Act', 50)
+        lblDescription = self.__labelHeader('Description', 800)
 
         spacer_ = spacer()
         sp(spacer_).h_preferred()
-        self.wdgEditor.layout().addWidget(group(lblBeat, self.lblPercentage, lblDescription, spacer_, margin_left=40))
+        self.wdgEditor.layout().addWidget(group(lblBeat, self.lblPercentage, lblAct, lblDescription, spacer_, margin_left=40))
 
         self.wdgEditor.layout().addWidget(scroll)
 
@@ -877,6 +864,13 @@ class _CustomStoryStructureEditor(_AbstractStructureEditor):
         self.wdgPreview.setStructure(self._novel, self._structure)
         self._beatsList.togglePercentage(toggled)
 
+    def __labelHeader(self, text: str, maxWidth: int) -> QLabel:
+        lbl = label(text, description=True)
+        sp(lbl).h_exp()
+        lbl.setMaximumWidth(maxWidth)
+        lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        return lbl
 
 class _TwistsAndTurnsStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None, newStructure: bool = True):
