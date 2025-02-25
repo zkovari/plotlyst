@@ -20,7 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Optional
 
-import emoji
 import qtanim
 from PyQt6.QtCore import QObject, pyqtSignal, QTimer, Qt
 from PyQt6.QtGui import QColor
@@ -92,25 +91,24 @@ class SceneEditor(QObject, EventListener):
         set_tab_visible(self.ui.tabWidget, self.ui.tabStructure, False)
         set_tab_visible(self.ui.tabWidget, self.ui.tabDrive, False)
 
-        self.ui.btnStageCharacterLabel.setIcon(IconRegistry.character_icon(color_on='black'))
-
         if app_env.is_mac():
             incr_font(self.ui.lineTitle)
             incr_font(self.ui.textSynopsis)
         self.ui.lineTitle.setReadOnly(self.novel.is_readonly())
         self.ui.lineTitle.textEdited.connect(self._title_edited)
 
-        self.ui.lblTitleEmoji.setFont(self._emoji_font)
-        self.ui.lblTitleEmoji.setText(emoji.emojize(':clapper_board:'))
-        self.ui.lblSynopsisEmoji.setFont(self._emoji_font)
-        self.ui.lblSynopsisEmoji.setText(emoji.emojize(':scroll:'))
+        self.ui.iconTitle.setIcon(IconRegistry.scene_icon('grey'))
+        self.ui.iconSynopsis.setIcon(IconRegistry.from_name('mdi.text-short', 'grey'))
+        self.ui.iconCharacters.setIcon(IconRegistry.character_icon('grey'))
 
         self._povMenu = CharacterSelectorMenu(self.novel, self.ui.wdgPov.btnAvatar)
         self._povMenu.selected.connect(self._pov_changed)
         self.ui.wdgPov.btnAvatar.setText('POV')
         self.ui.wdgPov.setFixedSize(170, 170)
 
-        margins(self.ui.wdgCharacters, left=20)
+        margins(self.ui.wdgCharacters, 10, 5, 10, 5)
+        self.ui.wdgCharacters.setProperty('relaxed-white-bg', True)
+        self.ui.wdgCharacters.setProperty('rounded', True)
 
         self._progressEditor = SceneProgressEditor()
         retain_when_hidden(self._progressEditor)
@@ -130,7 +128,9 @@ class SceneEditor(QObject, EventListener):
         self.ui.middleLine.setVisible(app_env.profile().get('license_type', 'FREE') != 'FREE')
 
         self.ui.textNotes.setTitleVisible(False)
-        self.ui.textNotes.textEdit.setBlockPlaceholderEnabled(True)
+        self.ui.textNotes.setToolbarVisible(False)
+        self.ui.textNotes.setPlaceholderText('Write some additional notes for this scene')
+        self.ui.textNotes.textEdit.setDocumentMargin(20)
 
         self.tblCharacters = QTableView()
         self.tblCharacters.setShowGrid(False)

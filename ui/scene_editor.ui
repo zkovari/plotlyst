@@ -179,9 +179,12 @@
                 <number>3</number>
                </property>
                <item>
-                <widget class="QLabel" name="lblTitleEmoji">
+                <widget class="QToolButton" name="iconTitle">
                  <property name="text">
-                  <string>emo</string>
+                  <string/>
+                 </property>
+                 <property name="transparent" stdset="0">
+                  <bool>true</bool>
                  </property>
                 </widget>
                </item>
@@ -191,6 +194,12 @@
                   <size>
                    <width>200</width>
                    <height>0</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>250</width>
+                   <height>16777215</height>
                   </size>
                  </property>
                  <property name="placeholderText">
@@ -227,10 +236,13 @@
                <property name="spacing">
                 <number>3</number>
                </property>
-               <item alignment="Qt::AlignLeft|Qt::AlignTop">
-                <widget class="QLabel" name="lblSynopsisEmoji">
+               <item alignment="Qt::AlignTop">
+                <widget class="QToolButton" name="iconSynopsis">
                  <property name="text">
-                  <string>emo</string>
+                  <string/>
+                 </property>
+                 <property name="transparent" stdset="0">
+                  <bool>true</bool>
                  </property>
                 </widget>
                </item>
@@ -250,14 +262,8 @@
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>16777215</width>
+                   <width>260</width>
                    <height>75</height>
-                  </size>
-                 </property>
-                 <property name="baseSize">
-                  <size>
-                   <width>0</width>
-                   <height>0</height>
                   </size>
                  </property>
                  <property name="verticalScrollBarPolicy">
@@ -273,7 +279,7 @@
                   <bool>true</bool>
                  </property>
                  <property name="placeholderText">
-                  <string>Write a short summary of this scene</string>
+                  <string>Briefly summarize this scene</string>
                  </property>
                  <property name="rounded" stdset="0">
                   <bool>true</bool>
@@ -317,17 +323,27 @@
                     <number>3</number>
                    </property>
                    <property name="leftMargin">
-                    <number>2</number>
+                    <number>0</number>
                    </property>
                    <property name="topMargin">
-                    <number>2</number>
+                    <number>0</number>
                    </property>
                    <property name="rightMargin">
-                    <number>2</number>
+                    <number>0</number>
                    </property>
                    <property name="bottomMargin">
-                    <number>2</number>
+                    <number>0</number>
                    </property>
+                   <item>
+                    <widget class="QToolButton" name="iconCharacters">
+                     <property name="text">
+                      <string/>
+                     </property>
+                     <property name="transparent" stdset="0">
+                      <bool>true</bool>
+                     </property>
+                    </widget>
+                   </item>
                    <item alignment="Qt::AlignTop">
                     <widget class="QPushButton" name="btnStageCharacterLabel">
                      <property name="cursor">
@@ -361,13 +377,40 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="LabelsWidget" name="wdgCharacters" native="true">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
+                 <widget class="QWidget" name="widget_2" native="true">
+                  <layout class="QHBoxLayout" name="horizontalLayout_3">
+                   <property name="spacing">
+                    <number>0</number>
+                   </property>
+                   <property name="leftMargin">
+                    <number>24</number>
+                   </property>
+                   <property name="topMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="rightMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="bottomMargin">
+                    <number>0</number>
+                   </property>
+                   <item>
+                    <widget class="LabelsWidget" name="wdgCharacters" native="true">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="minimumSize">
+                      <size>
+                       <width>0</width>
+                       <height>45</height>
+                      </size>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
                  </widget>
                 </item>
                </layout>
@@ -493,7 +536,7 @@
                     <x>0</x>
                     <y>0</y>
                     <width>438</width>
-                    <height>356</height>
+                    <height>309</height>
                    </rect>
                   </property>
                   <property name="relaxed-white-bg" stdset="0">
@@ -604,7 +647,7 @@
                         <x>0</x>
                         <y>0</y>
                         <width>434</width>
-                        <height>328</height>
+                        <height>281</height>
                        </rect>
                       </property>
                       <property name="relaxed-white" stdset="0">
