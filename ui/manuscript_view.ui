@@ -389,12 +389,6 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>0</height>
-             </size>
-            </property>
             <property name="maximumSize">
              <size>
               <width>200</width>
@@ -495,6 +489,25 @@
                  </property>
                 </layout>
                </widget>
+               <widget class="QWidget" name="pageFind">
+                <layout class="QVBoxLayout" name="verticalLayout_4">
+                 <property name="spacing">
+                  <number>0</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>5</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>25</number>
+                 </property>
+                </layout>
+               </widget>
                <widget class="QWidget" name="pageSettings">
                 <layout class="QVBoxLayout" name="verticalLayout_18">
                  <property name="spacing">
@@ -528,8 +541,8 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>98</width>
-                      <height>16</height>
+                      <width>100</width>
+                      <height>30</height>
                      </rect>
                     </property>
                     <property name="relaxed-white-bg" stdset="0">
@@ -741,7 +754,7 @@
                 </size>
                </property>
                <property name="checkable">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <property name="transparent-circle-bg-on-hover" stdset="0">
                 <bool>true</bool>
@@ -909,7 +922,7 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>80</width>
+             <width>98</width>
              <height>70</height>
             </rect>
            </property>
