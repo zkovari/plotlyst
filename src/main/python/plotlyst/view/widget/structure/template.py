@@ -32,7 +32,7 @@ from qthandy import vspacer, spacer, transparent, bold, vbox, incr_font, \
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
-from plotlyst.common import WHITE_COLOR, RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
+from plotlyst.common import WHITE_COLOR, RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, MAX_NUMBER_OF_ACTS
 from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     three_act_structure, heros_journey, hook_beat, motion_beat, \
     disturbance_beat, normal_world_beat, characteristic_moment_beat, midpoint, midpoint_ponr, midpoint_mirror, \
@@ -688,13 +688,13 @@ class CustomBeatItemWidget(ListItemWidget):
     def setStructure(self, structure: StoryStructure):
         self.structure = structure
         self.togglePercentage(self.structure.display_type == StoryStructureDisplayType.Proportional_timeline)
-        self.setActsEnabled(self.structure.acts < 7)
+        self.toggleActsEnabled()
 
     def togglePercentage(self, toggled: bool):
         self.sbPercentage.setVisible(toggled)
 
-    def setActsEnabled(self, enabled: bool):
-        self.actToggle.setEnabled(enabled or self.actToggle.isChecked())
+    def toggleActsEnabled(self):
+        self.actToggle.setEnabled(self.structure.acts < MAX_NUMBER_OF_ACTS or self.actToggle.isChecked())
 
     def updateBeatPercentage(self):
         self._frozen = True
@@ -779,8 +779,14 @@ class _CustomBeatsList(ListView):
 
     def _initListItemWidget(self, wdg: CustomBeatItemWidget):
         wdg.setStructure(self.structure)
-        # wdg.togglePercentage(self.structure.display_type == StoryStructureDisplayType.Proportional_timeline)
-        wdg.changed.connect(self.changed)
+        wdg.changed.connect(self._changed)
+
+    def _changed(self):
+        self.changed.emit()
+        for i in range(self.layout().count()):
+            item = self.layout().itemAt(i)
+            if item.widget() and isinstance(item.widget(), CustomBeatItemWidget):
+                item.widget().toggleActsEnabled()
 
 
 class _CustomStoryStructureEditor(_AbstractStructureEditor):
@@ -838,7 +844,8 @@ class _CustomStoryStructureEditor(_AbstractStructureEditor):
 
         spacer_ = spacer()
         sp(spacer_).h_preferred()
-        self.wdgEditor.layout().addWidget(group(lblBeat, self.lblPercentage, lblAct, lblDescription, spacer_, margin_left=40))
+        self.wdgEditor.layout().addWidget(
+            group(lblBeat, self.lblPercentage, lblAct, lblDescription, spacer_, margin_left=40))
 
         self.wdgEditor.layout().addWidget(scroll)
 
@@ -871,6 +878,7 @@ class _CustomStoryStructureEditor(_AbstractStructureEditor):
         lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         return lbl
+
 
 class _TwistsAndTurnsStructureEditor(_AbstractStructureEditor):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None, newStructure: bool = True):
