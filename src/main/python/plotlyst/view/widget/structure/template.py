@@ -1032,7 +1032,8 @@ class StoryStructureSelectorDialog(PopupDialog):
             structure = StoryStructure(title="Story Structure",
                                        icon='mdi6.bridge',
                                        template_type=TemplateStoryStructureType.CUSTOM,
-                                       display_type=StoryStructureDisplayType.Proportional_timeline)
+                                       display_type=StoryStructureDisplayType.Proportional_timeline,
+                                       acts=0)
             self.__initEditor(structure, self.pageCustom, _CustomStoryStructureEditor)
         else:
             return
