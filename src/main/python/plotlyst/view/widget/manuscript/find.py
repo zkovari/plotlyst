@@ -20,7 +20,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import re
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QShowEvent, QTextDocument, QTextCursor, QSyntaxHighlighter, QTextCharFormat, QColor
+from PyQt6.QtGui import QShowEvent, QTextDocument, QTextCursor, QSyntaxHighlighter, QTextCharFormat, QColor, \
+    QMouseEvent, QTextBlockUserData, QTextBlockFormat
 from PyQt6.QtWidgets import QWidget, QTextBrowser
 from overrides import overrides
 from qthandy import incr_font, vbox, busy, transparent
@@ -53,6 +54,12 @@ class SearchHighlighter(QSyntaxHighlighter):
             self.setFormat(0, len(text), self.format)
 
 
+class SearchBlockUserData(QTextBlockUserData):
+    def __init__(self, result):
+        super().__init__()
+        self.result = result
+
+
 class SearchResultsTextEdit(QTextBrowser):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -64,7 +71,7 @@ class SearchResultsTextEdit(QTextBrowser):
         self.highlighter = SearchHighlighter(self.document(), self)
 
     @overrides
-    def mouseMoveEvent(self, event):
+    def mouseMoveEvent(self, event: QMouseEvent):
         cursor = self.cursorForPosition(event.pos())
         self.hovered_cursor = cursor
         block = cursor.block()
@@ -72,6 +79,12 @@ class SearchResultsTextEdit(QTextBrowser):
         if block != self.hovered_paragraph and not block.blockFormat().headingLevel():
             self.hovered_paragraph = block
             self.highlighter.rehighlight()
+
+    @overrides
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        cursor = self.cursorForPosition(event.pos())
+        block = cursor.block()
+        print(block.userData().result)
 
 
 class ManuscriptFindWidget(QWidget):
@@ -105,24 +118,22 @@ class ManuscriptFindWidget(QWidget):
     @busy
     def _search(self, term: str):
         self.wdgResults.clear()
-
         if not term or term == ' ' or (len(term) == 1 and not re.match(r'[\d\W]', term)):
             self.lblResults.clear()
             return
 
         json_client.load_manuscript(self.novel)
-
         results = []
-        html_result = "<html><body>"
 
+        resultCursor = QTextCursor(self.wdgResults.document())
         for scene in self.novel.scenes:
             if not scene.manuscript:
                 continue
             doc = QTextDocument()
             doc.setHtml(scene.manuscript.content)
+            raw_text = doc.toPlainText()
 
             cursor = QTextCursor(doc)
-            raw_text = doc.toPlainText()
             scene_matches = []
             while not cursor.isNull() and not cursor.atEnd():
                 cursor = doc.find(term, cursor)
@@ -143,22 +154,25 @@ class ManuscriptFindWidget(QWidget):
 
                 formatted_match = f'{before}<span style="background-color: {PLOTLYST_TERTIARY_COLOR}; color: black; padding: 2px;">{match_text}</span>{after}'
 
-                scene_matches.append({
+                result = {
                     "scene": scene.title_or_index(self.novel),
                     "start": start,
                     "end": end,
                     "match": match_text,
                     "context": formatted_match
-                })
+                }
+                scene_matches.append(result)
 
             if scene_matches:
                 results.extend(scene_matches)
 
-                html_result += f'<h3>{scene.title_or_index(self.novel)}</h3>'
-                for match in scene_matches:
-                    html_result += f'<p>{match["context"]}</p>'
+                blockFormat = QTextBlockFormat()
+                blockFormat.setHeadingLevel(3)
+                resultCursor.insertBlock(blockFormat)
+                resultCursor.insertHtml(f'<h3>{scene.title_or_index(self.novel)}</h3>')
+                for result in scene_matches:
+                    resultCursor.insertBlock(QTextBlockFormat())
+                    resultCursor.insertHtml(result['context'])
+                    resultCursor.block().setUserData(SearchBlockUserData(result))
 
-        html_result += "</body></html>"
-        self.wdgResults.clear()
-        self.wdgResults.setHtml(html_result)
         self.lblResults.setText(f'{len(results)} results')
