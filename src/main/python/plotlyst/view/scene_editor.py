@@ -27,7 +27,7 @@ from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QTableView
 from overrides import overrides
 from qtanim import fade_in
-from qthandy import underline, incr_font, margins, pointy, hbox, clear_layout, busy, vbox, retain_when_hidden
+from qthandy import incr_font, margins, pointy, hbox, clear_layout, busy, vbox, retain_when_hidden
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -44,7 +44,7 @@ from plotlyst.events import NovelAboutToSyncEvent, SceneStoryBeatChangedEvent, \
 from plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
-from plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, set_tab_icon, \
+from plotlyst.view.common import emoji_font, set_tab_icon, \
     push_btn, fade_out_and_gc, set_tab_visible, scroll_to_bottom
 from plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
 from plotlyst.view.icons import IconRegistry
@@ -93,7 +93,6 @@ class SceneEditor(QObject, EventListener):
         set_tab_visible(self.ui.tabWidget, self.ui.tabDrive, False)
 
         self.ui.btnStageCharacterLabel.setIcon(IconRegistry.character_icon(color_on='black'))
-        underline(self.ui.btnStageCharacterLabel)
 
         if app_env.is_mac():
             incr_font(self.ui.lineTitle)
@@ -101,10 +100,6 @@ class SceneEditor(QObject, EventListener):
         self.ui.lineTitle.setReadOnly(self.novel.is_readonly())
         self.ui.lineTitle.textEdited.connect(self._title_edited)
 
-        # self.ui.lblDayEmoji.setFont(self._emoji_font)
-        # self.ui.lblDayEmoji.setText(emoji.emojize(':spiral_calendar:'))
-        self.ui.lblDayEmoji.setHidden(True)
-        self.ui.sbDay.setHidden(True)
         self.ui.lblTitleEmoji.setFont(self._emoji_font)
         self.ui.lblTitleEmoji.setText(emoji.emojize(':clapper_board:'))
         self.ui.lblSynopsisEmoji.setFont(self._emoji_font)
@@ -114,6 +109,8 @@ class SceneEditor(QObject, EventListener):
         self._povMenu.selected.connect(self._pov_changed)
         self.ui.wdgPov.btnAvatar.setText('POV')
         self.ui.wdgPov.setFixedSize(170, 170)
+
+        margins(self.ui.wdgCharacters, left=20)
 
         self._progressEditor = SceneProgressEditor()
         retain_when_hidden(self._progressEditor)
@@ -147,14 +144,8 @@ class SceneEditor(QObject, EventListener):
         self.tblCharacters.setModel(self._characters_model)
         self.tblCharacters.clicked.connect(self._characters_model.toggleSelection)
 
-        self.ui.btnEditCharacters.setIcon(IconRegistry.plus_edit_icon())
         menu = MenuWidget(self.ui.btnStageCharacterLabel)
         menu.addWidget(self.tblCharacters)
-        self.ui.btnEditCharacters.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnEditCharacters))
-        self.ui.btnEditCharacters.clicked.connect(lambda: menu.exec())
-
-        # self.tag_selector = SceneTagSelector(self.novel, self.scene)
-        # self.ui.wdgTags.layout().addWidget(self.tag_selector)
 
         self.ui.treeScenes.setSettings(TreeSettings(font_incr=1))
         self.ui.treeScenes.setNovel(self.novel, readOnly=True)
@@ -246,7 +237,6 @@ class SceneEditor(QObject, EventListener):
         self.ui.treeScenes.selectScene(self.scene)
 
         self._update_pov_avatar()
-        self.ui.sbDay.setValue(self.scene.day)
 
         # self.ui.wdgSceneStructure.setScene(self.novel, self.scene)
         # self.tag_selector.setScene(self.scene)
@@ -425,7 +415,6 @@ class SceneEditor(QObject, EventListener):
     def _save_scene(self):
         self.scene.title = self.ui.lineTitle.text()
         self.scene.synopsis = self.ui.textSynopsis.toPlainText()
-        # self.scene.day = self.ui.sbDay.value()
 
         self.scene.tag_references.clear()
         # for tag in self.tag_selector.tags():
