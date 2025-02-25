@@ -106,6 +106,16 @@ class ManuscriptFindWidget(QWidget):
         font.setPointSize(11)
         self.wdgResults.setFont(font)
 
+        self._headingBlockFormat = QTextBlockFormat()
+        self._headingBlockFormat.setHeadingLevel(3)
+        self._headingBlockFormat.setTopMargin(10)
+        self._headingBlockFormat.setBottomMargin(10)
+
+        self._textBlockFormat = QTextBlockFormat()
+        self._textBlockFormat.setTopMargin(3)
+        self._textBlockFormat.setBottomMargin(3)
+        self._textBlockFormat.setLeftMargin(10)
+
         self.layout().addWidget(self.search, alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(self.lblResults, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self.wdgResults)
@@ -158,7 +168,6 @@ class ManuscriptFindWidget(QWidget):
                     "scene": scene.title_or_index(self.novel),
                     "start": start,
                     "end": end,
-                    "match": match_text,
                     "context": formatted_match
                 }
                 scene_matches.append(result)
@@ -166,12 +175,10 @@ class ManuscriptFindWidget(QWidget):
             if scene_matches:
                 results.extend(scene_matches)
 
-                blockFormat = QTextBlockFormat()
-                blockFormat.setHeadingLevel(3)
-                resultCursor.insertBlock(blockFormat)
+                resultCursor.insertBlock(self._headingBlockFormat)
                 resultCursor.insertHtml(f'<h3>{scene.title_or_index(self.novel)}</h3>')
                 for result in scene_matches:
-                    resultCursor.insertBlock(QTextBlockFormat())
+                    resultCursor.insertBlock(self._textBlockFormat)
                     resultCursor.insertHtml(result['context'])
                     resultCursor.block().setUserData(SearchBlockUserData(result))
 
