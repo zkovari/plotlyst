@@ -17,6 +17,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import re
+
 from PyQt6.QtCore import Qt, QRegularExpression
 from PyQt6.QtGui import QShowEvent, QTextDocument, QTextCursor, QSyntaxHighlighter, QTextCharFormat, QColor
 from PyQt6.QtWidgets import QWidget, QTextBrowser
@@ -26,7 +28,7 @@ from qthandy import incr_font, vbox, busy, transparent
 from plotlyst.common import PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.client import json_client
 from plotlyst.core.domain import Novel
-from plotlyst.view.common import DelayedSignalSlotConnector
+from plotlyst.view.common import DelayedSignalSlotConnector, label
 from plotlyst.view.widget.input import SearchField
 
 
@@ -68,6 +70,8 @@ class SearchResultsTextEdit(QTextBrowser):
 
 
 class ManuscriptFindWidget(QWidget):
+    CONTEXT_SIZE: int = 30
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self.novel = novel
@@ -77,9 +81,15 @@ class ManuscriptFindWidget(QWidget):
         incr_font(self.search.lineSearch)
         DelayedSignalSlotConnector(self.search.lineSearch.textEdited, self._search, delay=500, parent=self)
 
+        self.lblResults = label('', bold=True)
+
         self.wdgResults = SearchResultsTextEdit()
+        font = self.wdgResults.font()
+        font.setPointSize(11)
+        self.wdgResults.setFont(font)
 
         self.layout().addWidget(self.search, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self.lblResults, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self.wdgResults)
 
     @overrides
@@ -90,14 +100,15 @@ class ManuscriptFindWidget(QWidget):
     @busy
     def _search(self, term: str):
         self.wdgResults.clear()
+
+        if not term or term == ' ' or (len(term) == 1 and not re.match(r'[\d\W]', term)):
+            self.lblResults.clear()
+            return
+
         json_client.load_manuscript(self.novel)
-        font = self.wdgResults.font()
-        font.setPointSize(11)
-        self.wdgResults.setFont(font)
 
         results = []
         html_result = "<html><body>"
-        context_size = 30
 
         for scene in self.novel.scenes:
             if not scene.manuscript:
@@ -116,8 +127,8 @@ class ManuscriptFindWidget(QWidget):
                 start = cursor.selectionStart()
                 end = cursor.selectionEnd()
 
-                before_start = raw_text.rfind(" ", 0, start - context_size) + 1
-                after_end = raw_text.find(" ", end + context_size)
+                before_start = raw_text.rfind(" ", 0, start - self.CONTEXT_SIZE) + 1
+                after_end = raw_text.find(" ", end + self.CONTEXT_SIZE)
                 if after_end == -1:
                     after_end = len(raw_text)
 
@@ -145,4 +156,5 @@ class ManuscriptFindWidget(QWidget):
         html_result += "</body></html>"
         self.wdgResults.clear()
         self.wdgResults.setHtml(html_result)
+        self.lblResults.setText(f'{len(results)} results')
         # self.highlighter = SearchHighlighter(term, self.wdgResults.document())
