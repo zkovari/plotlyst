@@ -528,8 +528,8 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>100</width>
-                      <height>30</height>
+                      <width>98</width>
+                      <height>16</height>
                      </rect>
                     </property>
                     <property name="relaxed-white-bg" stdset="0">
@@ -724,6 +724,34 @@
               </widget>
              </item>
              <item>
+              <widget class="QToolButton" name="btnFind">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>Find and replace</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>28</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="checkable">
+                <bool>false</bool>
+               </property>
+               <property name="transparent-circle-bg-on-hover" stdset="0">
+                <bool>true</bool>
+               </property>
+               <property name="large" stdset="0">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
               <widget class="QToolButton" name="btnExport">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
@@ -881,7 +909,7 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>98</width>
+             <width>80</width>
              <height>70</height>
             </rect>
            </property>
