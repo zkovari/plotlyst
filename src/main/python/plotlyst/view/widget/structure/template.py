@@ -24,6 +24,7 @@ from functools import partial
 from typing import Optional, List, Tuple, Set
 
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QSize
+from PyQt6.QtGui import QWheelEvent
 from PyQt6.QtWidgets import QWidget, QPushButton, QDialog, QScrollArea, QLabel, QButtonGroup, QStackedWidget, \
     QApplication, QDoubleSpinBox
 from overrides import overrides
@@ -652,6 +653,17 @@ class _StorySpineStructureEditor(_AbstractStructureEditor):
             description=True, wordWrap=True))
 
 
+class PercentageSpinBox(QDoubleSpinBox):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setMinimum(1)
+        self.setMaximum(99)
+
+    @overrides
+    def wheelEvent(self, event: QWheelEvent) -> None:
+        event.ignore()
+
+
 class CustomBeatItemWidget(ListItemWidget):
     def __init__(self, beat: StoryBeat, parent=None):
         super().__init__(beat, parent)
@@ -662,9 +674,7 @@ class CustomBeatItemWidget(ListItemWidget):
         self._lineEdit.setPlaceholderText('Beat description')
         decr_font(self._lineEdit)
 
-        self.sbPercentage = QDoubleSpinBox()
-        self.sbPercentage.setMinimum(1)
-        self.sbPercentage.setMaximum(99)
+        self.sbPercentage = PercentageSpinBox()
         self.sbPercentage.setValue(self.beat.percentage)
         self.sbPercentage.valueChanged.connect(self._percentageEdited)
 
@@ -837,7 +847,7 @@ class _CustomStoryStructureEditor(_AbstractStructureEditor):
         self.wdgEditor.layout().addWidget(self.wdgTitleEdit, alignment=Qt.AlignmentFlag.AlignLeft)
 
         lblBeat = self.__labelHeader('Name', 120)
-        self.lblPercentage = self.__labelHeader('%', 56)
+        self.lblPercentage = self.__labelHeader('%', 65)
         self.lblPercentage.setVisible(self.togglePercentage.isChecked())
         lblAct = self.__labelHeader('Act', 50)
         lblDescription = self.__labelHeader('Description', 800)
