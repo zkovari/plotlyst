@@ -143,6 +143,7 @@ class ManuscriptView(AbstractNovelView):
 
         self.wdgFind = ManuscriptFindWidget(self.novel)
         self.ui.pageFind.layout().addWidget(self.wdgFind)
+        self.wdgFind.wdgResults.matchClicked.connect(self._navigate)
 
         self._btnDistractionFree = tool_btn(IconRegistry.expand_icon(), 'Enter distraction-free mode',
                                             transparent_=True)
@@ -463,3 +464,10 @@ class ManuscriptView(AbstractNovelView):
         diff = self.ui.scrollEditor.verticalScrollBar().maximum() - value
         if 0 < diff < 40:
             scroll_to_bottom(self.ui.scrollEditor)
+
+    def _navigate(self, context: dict):
+        self.ui.treeChapters.selectScene(context['scene'])
+        self._editScene(context['scene'])
+        self.textEditor.jumpTo(context['start'], context['end'])
+        # print(pos)
+        # self.ui.scrollEditor.ensureVisible(pos.x(), pos.y())

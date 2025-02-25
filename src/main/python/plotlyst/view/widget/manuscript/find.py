@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import re
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QShowEvent, QTextDocument, QTextCursor, QSyntaxHighlighter, QTextCharFormat, QColor, \
     QMouseEvent, QTextBlockUserData, QTextBlockFormat
 from PyQt6.QtWidgets import QWidget, QTextBrowser
@@ -61,6 +61,8 @@ class SearchBlockUserData(QTextBlockUserData):
 
 
 class SearchResultsTextEdit(QTextBrowser):
+    matchClicked = pyqtSignal(object)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         transparent(self)
@@ -84,7 +86,7 @@ class SearchResultsTextEdit(QTextBrowser):
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         cursor = self.cursorForPosition(event.pos())
         block = cursor.block()
-        print(block.userData().result)
+        self.matchClicked.emit(block.userData().result)
 
 
 class ManuscriptFindWidget(QWidget):
@@ -165,7 +167,7 @@ class ManuscriptFindWidget(QWidget):
                 formatted_match = f'{before}<span style="background-color: {PLOTLYST_TERTIARY_COLOR}; color: black; padding: 2px;">{match_text}</span>{after}'
 
                 result = {
-                    "scene": scene.title_or_index(self.novel),
+                    "scene": scene,
                     "start": start,
                     "end": end,
                     "context": formatted_match
