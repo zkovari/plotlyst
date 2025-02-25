@@ -19,13 +19,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import re
 
-from PyQt6.QtCore import Qt, QRegularExpression
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QShowEvent, QTextDocument, QTextCursor, QSyntaxHighlighter, QTextCharFormat, QColor
 from PyQt6.QtWidgets import QWidget, QTextBrowser
 from overrides import overrides
 from qthandy import incr_font, vbox, busy, transparent
 
-from plotlyst.common import PLOTLYST_TERTIARY_COLOR
+from plotlyst.common import PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.client import json_client
 from plotlyst.core.domain import Novel
 from plotlyst.view.common import DelayedSignalSlotConnector, label
@@ -33,40 +33,45 @@ from plotlyst.view.widget.input import SearchField
 
 
 class SearchHighlighter(QSyntaxHighlighter):
-    def __init__(self, search_term: str, document: QTextDocument):
+    def __init__(self, document, parent=None):
         super().__init__(document)
-        self.search_term = search_term
+        self.parent = parent
+        self.highlighted_block = None
         self.format = QTextCharFormat()
-        self.format.setBackground(QColor(PLOTLYST_TERTIARY_COLOR))
-        self.format.setForeground(QColor('black'))
+        self.format.setForeground(QColor(PLOTLYST_SECONDARY_COLOR))
+        self.format.setFontUnderline(True)
+        self.format.setUnderlineStyle(QTextCharFormat.UnderlineStyle.DotLine)
+        self.format.setUnderlineColor(QColor(PLOTLYST_SECONDARY_COLOR))
 
     @overrides
-    def highlightBlock(self, text: str):
-        if not self.search_term:
+    def highlightBlock(self, text):
+        if self.parent.hovered_paragraph is None:
             return
 
-        pattern = QRegularExpression(self.search_term)
-        match_iter = pattern.globalMatch(text)
-
-        while match_iter.hasNext():
-            match = match_iter.next()
-            self.setFormat(match.capturedStart(), match.capturedLength(), self.format)
+        block = self.parent.hovered_paragraph
+        if self.currentBlock() == block:
+            self.setFormat(0, len(text), self.format)
 
 
 class SearchResultsTextEdit(QTextBrowser):
     def __init__(self, parent=None):
         super().__init__(parent)
         transparent(self)
-        # self.setMouseTracking(True)
+        self.setMouseTracking(True)
+        self.hovered_paragraph = None
+        self.hovered_cursor = None
 
-    # @overrides
-    # def enterEvent(self, event: QEnterEvent) -> None:
-    #     self.setCursor(Qt.CursorShape.PointingHandCursor)
-    #     pass
-    #
-    # @overrides
-    # def mouseMoveEvent(self, event: QMouseEvent) -> None:
-    #     self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.highlighter = SearchHighlighter(self.document(), self)
+
+    @overrides
+    def mouseMoveEvent(self, event):
+        cursor = self.cursorForPosition(event.pos())
+        self.hovered_cursor = cursor
+        block = cursor.block()
+
+        if block != self.hovered_paragraph and not block.blockFormat().headingLevel():
+            self.hovered_paragraph = block
+            self.highlighter.rehighlight()
 
 
 class ManuscriptFindWidget(QWidget):
@@ -157,4 +162,3 @@ class ManuscriptFindWidget(QWidget):
         self.wdgResults.clear()
         self.wdgResults.setHtml(html_result)
         self.lblResults.setText(f'{len(results)} results')
-        # self.highlighter = SearchHighlighter(term, self.wdgResults.document())
