@@ -17,16 +17,54 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QShowEvent, QTextDocument, QTextCursor
-from PyQt6.QtWidgets import QWidget, QTextEdit
+from PyQt6.QtCore import Qt, QRegularExpression
+from PyQt6.QtGui import QShowEvent, QTextDocument, QTextCursor, QSyntaxHighlighter, QTextCharFormat, QColor
+from PyQt6.QtWidgets import QWidget, QTextBrowser
 from overrides import overrides
 from qthandy import incr_font, vbox, busy, transparent
 
+from plotlyst.common import PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.client import json_client
 from plotlyst.core.domain import Novel
 from plotlyst.view.common import DelayedSignalSlotConnector
 from plotlyst.view.widget.input import SearchField
+
+
+class SearchHighlighter(QSyntaxHighlighter):
+    def __init__(self, search_term: str, document: QTextDocument):
+        super().__init__(document)
+        self.search_term = search_term
+        self.format = QTextCharFormat()
+        self.format.setBackground(QColor(PLOTLYST_TERTIARY_COLOR))
+        self.format.setForeground(QColor('black'))
+
+    @overrides
+    def highlightBlock(self, text: str):
+        if not self.search_term:
+            return
+
+        pattern = QRegularExpression(self.search_term)
+        match_iter = pattern.globalMatch(text)
+
+        while match_iter.hasNext():
+            match = match_iter.next()
+            self.setFormat(match.capturedStart(), match.capturedLength(), self.format)
+
+
+class SearchResultsTextEdit(QTextBrowser):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        transparent(self)
+        # self.setMouseTracking(True)
+
+    # @overrides
+    # def enterEvent(self, event: QEnterEvent) -> None:
+    #     self.setCursor(Qt.CursorShape.PointingHandCursor)
+    #     pass
+    #
+    # @overrides
+    # def mouseMoveEvent(self, event: QMouseEvent) -> None:
+    #     self.setCursor(Qt.CursorShape.PointingHandCursor)
 
 
 class ManuscriptFindWidget(QWidget):
@@ -39,8 +77,7 @@ class ManuscriptFindWidget(QWidget):
         incr_font(self.search.lineSearch)
         DelayedSignalSlotConnector(self.search.lineSearch.textEdited, self._search, delay=500, parent=self)
 
-        self.wdgResults = QTextEdit()
-        transparent(self.wdgResults)
+        self.wdgResults = SearchResultsTextEdit()
 
         self.layout().addWidget(self.search, alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(self.wdgResults)
@@ -52,7 +89,12 @@ class ManuscriptFindWidget(QWidget):
 
     @busy
     def _search(self, term: str):
+        self.wdgResults.clear()
         json_client.load_manuscript(self.novel)
+        font = self.wdgResults.font()
+        font.setPointSize(11)
+        self.wdgResults.setFont(font)
+
         results = []
         html_result = "<html><body>"
         context_size = 30
@@ -83,12 +125,14 @@ class ManuscriptFindWidget(QWidget):
                 after = raw_text[end:after_end]
                 match_text = raw_text[start:end]
 
+                formatted_match = f'{before}<span style="background-color: {PLOTLYST_TERTIARY_COLOR}; color: black; padding: 2px;">{match_text}</span>{after}'
+
                 scene_matches.append({
                     "scene": scene.title_or_index(self.novel),
                     "start": start,
                     "end": end,
                     "match": match_text,
-                    "context": f"{before}[{match_text}]{after}"
+                    "context": formatted_match
                 })
 
             if scene_matches:
@@ -101,3 +145,4 @@ class ManuscriptFindWidget(QWidget):
         html_result += "</body></html>"
         self.wdgResults.clear()
         self.wdgResults.setHtml(html_result)
+        # self.highlighter = SearchHighlighter(term, self.wdgResults.document())
