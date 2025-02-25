@@ -46,6 +46,7 @@ from plotlyst.view.common import ExclusiveOptionalButtonGroup, push_btn, label, 
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
+from plotlyst.view.widget.button import SmallToggleButton
 from plotlyst.view.widget.display import IconText, ReferencesButton, PopupDialog
 from plotlyst.view.widget.input import Toggle, DecoratedLineEdit
 from plotlyst.view.widget.list import ListView, ListItemWidget
@@ -655,6 +656,7 @@ class CustomBeatItemWidget(ListItemWidget):
     def __init__(self, beat: StoryBeat, parent=None):
         super().__init__(beat, parent)
         self.beat = beat
+        self.structure: Optional[StoryStructure] = None
         self._frozen = False
         self._lineEdit.setText(beat.description)
         self._lineEdit.setPlaceholderText('Beat description')
@@ -672,13 +674,27 @@ class CustomBeatItemWidget(ListItemWidget):
         self._titleEdit.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
         self._titleEdit.iconChanged.connect(self._iconChanged)
         self._titleEdit.lineEdit.textEdited.connect(self._nameChanged)
+
+        self.actToggle = SmallToggleButton()
+        self.actToggle.setChecked(self.beat.ends_act)
+        self.actToggle.clicked.connect(self._actChanged)
+
         self.layout().insertWidget(1, self._titleEdit)
         self.layout().insertWidget(2, self.sbPercentage)
+        self.layout().insertWidget(3, self.actToggle)
 
         self.setMaximumWidth(1000)
 
+    def setStructure(self, structure: StoryStructure):
+        self.structure = structure
+        self.togglePercentage(self.structure.display_type == StoryStructureDisplayType.Proportional_timeline)
+        self.setActsEnabled(self.structure.acts < 7)
+
     def togglePercentage(self, toggled: bool):
         self.sbPercentage.setVisible(toggled)
+
+    def setActsEnabled(self, enabled: bool):
+        self.actToggle.setEnabled(enabled or self.actToggle.isChecked())
 
     def updateBeatPercentage(self):
         self._frozen = True
@@ -704,6 +720,16 @@ class CustomBeatItemWidget(ListItemWidget):
         self.beat.percentage = percentage
         self.changed.emit()
 
+    def _actChanged(self, toggled: bool):
+        self.beat.ends_act = toggled
+        if toggled:
+            self.structure.increaseAct()
+        else:
+            self.structure.decreaseAct()
+
+        self.structure.update_acts()
+        self.changed.emit()
+
 
 class _CustomBeatsList(ListView):
     changed = pyqtSignal()
@@ -718,8 +744,7 @@ class _CustomBeatsList(ListView):
 
         for beat in structure.beats:
             wdg = self.addItem(beat)
-            wdg.changed.connect(self.changed)
-            wdg.togglePercentage(self.structure.display_type == StoryStructureDisplayType.Proportional_timeline)
+            self._initListItemWidget(wdg)
 
     def togglePercentage(self, toggled: bool):
         for i in range(self.layout().count()):
@@ -727,7 +752,7 @@ class _CustomBeatsList(ListView):
             if item.widget() and isinstance(item.widget(), CustomBeatItemWidget):
                 item.widget().togglePercentage(toggled)
 
-    def updateBeatPercentage(self, beat: StoryBeat):
+    def updateBeatPercentages(self):
         for i in range(self.layout().count()):
             item = self.layout().itemAt(i)
             if item.widget() and isinstance(item.widget(), CustomBeatItemWidget):
@@ -743,15 +768,19 @@ class _CustomBeatsList(ListView):
                          custom=True)
         self.structure.beats.append(beat)
         wdg = self.addItem(beat)
-        wdg.togglePercentage(self.structure.display_type == StoryStructureDisplayType.Proportional_timeline)
+        self._initListItemWidget(wdg)
         self.changed.emit()
-        wdg.changed.connect(self.changed)
 
     @overrides
     def _deleteItemWidget(self, widget: ListItemWidget):
         super()._deleteItemWidget(widget)
         self.structure.beats.remove(widget.item())
         self.changed.emit()
+
+    def _initListItemWidget(self, wdg: CustomBeatItemWidget):
+        wdg.setStructure(self.structure)
+        # wdg.togglePercentage(self.structure.display_type == StoryStructureDisplayType.Proportional_timeline)
+        wdg.changed.connect(self.changed)
 
 
 class _CustomStoryStructureEditor(_AbstractStructureEditor):
@@ -790,9 +819,9 @@ class _CustomStoryStructureEditor(_AbstractStructureEditor):
         self._titleEdit.lineEdit.textEdited.connect(self._titleEdited)
         self._titleEdit.iconChanged.connect(self._iconChanged)
 
-        self.wdgTitleEdit = frame()
-        self.wdgTitleEdit.setProperty('white-bg', True)
-        self.wdgTitleEdit.setProperty('large-rounded', True)
+        self.wdgTitleEdit = QWidget()
+        # self.wdgTitleEdit.setProperty('white-bg', True)
+        # self.wdgTitleEdit.setProperty('large-rounded', True)
         hbox(self.wdgTitleEdit, 10).addWidget(self._titleEdit)
 
         scroll = scroll_area(frameless=True)
@@ -826,7 +855,8 @@ class _CustomStoryStructureEditor(_AbstractStructureEditor):
 
         self.wdgEditor.layout().addWidget(scroll)
 
-        self.wdgPreview.beatMoved.connect(self._beatMoved)
+        self.wdgPreview.beatMoved.connect(self._beatsList.updateBeatPercentages)
+        self.wdgPreview.actsResized.connect(self._beatsList.updateBeatPercentages)
 
     def _titleEdited(self, title: str):
         self._structure.title = title
@@ -846,9 +876,6 @@ class _CustomStoryStructureEditor(_AbstractStructureEditor):
         self.lblPercentage.setVisible(toggled)
         self.wdgPreview.setStructure(self._novel, self._structure)
         self._beatsList.togglePercentage(toggled)
-
-    def _beatMoved(self, beat: StoryBeat):
-        self._beatsList.updateBeatPercentage(beat)
 
 
 class _TwistsAndTurnsStructureEditor(_AbstractStructureEditor):
