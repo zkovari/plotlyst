@@ -742,7 +742,7 @@ class _CustomBeatsList(ListView):
         self._btnAdd.setText('Add a new beat')
         self._btnAdd.setIcon(IconRegistry.plus_icon('grey'))
 
-        for beat in structure.beats:
+        for beat in structure.sorted_beats():
             wdg = self.addItem(beat)
             self._initListItemWidget(wdg)
 
