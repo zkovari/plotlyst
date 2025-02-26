@@ -757,8 +757,9 @@ class ManuscriptEditor(QWidget, EventListener):
         self.textChanged.emit()
 
         if self._find.isActive():
-            matches = self._find.updateScene(scene)
-            print(len(matches))
+            QTimer.singleShot(25, lambda: self._find.updateScene(scene))
+            # matches = self._find.updateScene(scene)
+            # print(len(matches))
 
     def _updateProgress(self, scene: Scene, wc: int) -> bool:
         if scene.manuscript.statistics.wc == wc:

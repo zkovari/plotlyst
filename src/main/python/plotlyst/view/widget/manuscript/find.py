@@ -61,6 +61,12 @@ class SearchBlockUserData(QTextBlockUserData):
         self.result = result
 
 
+class SearchSceneHeaderUserData(QTextBlockUserData):
+    def __init__(self, scene: Scene):
+        super().__init__()
+        self.scene = scene
+
+
 class SearchResultsTextEdit(QTextBrowser):
     matchClicked = pyqtSignal(object)
 
@@ -87,7 +93,8 @@ class SearchResultsTextEdit(QTextBrowser):
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         cursor = self.cursorForPosition(event.pos())
         block = cursor.block()
-        self.matchClicked.emit(block.userData().result)
+        if isinstance(block.userData(), SearchBlockUserData):
+            self.matchClicked.emit(block.userData().result)
 
 
 class ManuscriptFindWidget(QWidget):
@@ -144,15 +151,47 @@ class ManuscriptFindWidget(QWidget):
     def sceneMathes(self, scene: Scene) -> List[dict]:
         return self._results.get(scene, [])
 
+    @busy
     def updateScene(self, scene: Scene) -> List:
         scene_matches = self._searchForScene(scene)
         self._results[scene] = scene_matches
 
-        count = 0
-        for result in self._results.values():
-            count += len(result)
-        self.lblResults.setText(f'{count} results')
+        doc = self.wdgResults.document()
+        block = doc.begin()
 
+        scene_heading_block = None
+        while block.isValid():
+            block_data = block.userData()
+            next_block = block.next()
+
+            if isinstance(block_data, SearchSceneHeaderUserData):
+                print(f'header {block_data.scene.title}')
+                if block_data.scene == scene:
+                    scene_heading_block = block
+                elif scene_heading_block:  # already found
+                    print('break early')
+                    break
+
+            if isinstance(block_data, SearchBlockUserData) and block_data.result['scene'] == scene:
+                cursor = QTextCursor(block)
+                cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
+                cursor.beginEditBlock()
+                cursor.removeSelectedText()
+                if block.isValid():
+                    cursor.deleteChar()
+                cursor.endEditBlock()
+
+            block = next_block
+
+        if scene_heading_block:
+            resultCursor = QTextCursor(scene_heading_block)
+            resultCursor.movePosition(QTextCursor.MoveOperation.EndOfBlock)
+            for result in scene_matches:
+                resultCursor.insertBlock(self._textBlockFormat)
+                resultCursor.insertHtml(result['context'])
+                resultCursor.block().setUserData(SearchBlockUserData(result))
+
+        self._updateResultsLabel()
         return scene_matches
 
     @busy
@@ -176,6 +215,7 @@ class ManuscriptFindWidget(QWidget):
 
                 resultCursor.insertBlock(self._headingBlockFormat)
                 resultCursor.insertHtml(f'<h4>{scene.title_or_index(self.novel)}</h4>')
+                resultCursor.block().setUserData(SearchSceneHeaderUserData(scene))
                 for result in scene_matches:
                     resultCursor.insertBlock(self._textBlockFormat)
                     resultCursor.insertHtml(result['context'])
@@ -224,3 +264,9 @@ class ManuscriptFindWidget(QWidget):
             scene_matches.append(result)
 
         return scene_matches
+
+    def _updateResultsLabel(self):
+        count = 0
+        for result in self._results.values():
+            count += len(result)
+        self.lblResults.setText(f'{count} results')
