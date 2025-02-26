@@ -30,7 +30,7 @@ from PyQt6.QtWidgets import QWidget, QPushButton, QDialog, QScrollArea, QLabel, 
 from overrides import overrides
 from qthandy import vspacer, spacer, transparent, bold, vbox, incr_font, \
     hbox, margins, pointy, incr_icon, busy, flow, vline, line, decr_font, sp
-from qthandy.filter import OpacityEventFilter
+from qthandy.filter import OpacityEventFilter, ObjectReferenceMimeData
 from qtmenu import MenuWidget
 
 from plotlyst.common import WHITE_COLOR, RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR, MAX_NUMBER_OF_ACTS
@@ -657,6 +657,8 @@ class PercentageSpinBox(QDoubleSpinBox):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setMinimum(1)
+        self.setDecimals(0)
+        self.setSuffix('%')
         self.setMaximum(99)
 
     @overrides
@@ -673,6 +675,7 @@ class CustomBeatItemWidget(ListItemWidget):
         self._lineEdit.setText(beat.description)
         self._lineEdit.setPlaceholderText('Beat description')
         decr_font(self._lineEdit)
+        self.layout().setSpacing(5)
 
         self.sbPercentage = PercentageSpinBox()
         self.sbPercentage.setValue(self.beat.percentage)
@@ -787,6 +790,11 @@ class _CustomBeatsList(ListView):
         self.structure.beats.remove(widget.item())
         self.changed.emit()
 
+    @overrides
+    def _dropped(self, mimeData: ObjectReferenceMimeData):
+        wdg = super()._dropped(mimeData)
+        self._initListItemWidget(wdg)
+
     def _initListItemWidget(self, wdg: CustomBeatItemWidget):
         wdg.setStructure(self.structure)
         wdg.changed.connect(self._changed)
@@ -846,10 +854,10 @@ class _CustomStoryStructureEditor(_AbstractStructureEditor):
 
         self.wdgEditor.layout().addWidget(self.wdgTitleEdit, alignment=Qt.AlignmentFlag.AlignLeft)
 
-        lblBeat = self.__labelHeader('Name', 120)
-        self.lblPercentage = self.__labelHeader('%', 65)
+        lblBeat = self.__labelHeader('Name', 125)
+        self.lblPercentage = self.__labelHeader('%', 60)
         self.lblPercentage.setVisible(self.togglePercentage.isChecked())
-        lblAct = self.__labelHeader('Act', 50)
+        lblAct = self.__labelHeader('Act', 55)
         lblDescription = self.__labelHeader('Description', 800)
 
         spacer_ = spacer()
