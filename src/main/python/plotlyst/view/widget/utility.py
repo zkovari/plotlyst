@@ -17,7 +17,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Any, Optional, Tuple
+from functools import partial
+from typing import Any, Optional, Tuple, List
 
 from PyQt6.QtCore import QModelIndex, Qt, QAbstractListModel, pyqtSignal, QSize
 from PyQt6.QtGui import QColor, QBrush, QResizeEvent
@@ -56,7 +57,7 @@ BASE_COLORS = ['darkBlue', '#0077b6', '#00b4d8', '#007200', '#2a9d8f', '#94d2bd'
 class ColorPicker(QWidget):
     colorPicked = pyqtSignal(QColor)
 
-    def __init__(self, parent=None, maxColumn: Optional[int] = None):
+    def __init__(self, parent=None, maxColumn: Optional[int] = None, colors=None):
         super().__init__(parent)
         if maxColumn:
             grid(self, 1, 1, 1)
@@ -67,8 +68,10 @@ class ColorPicker(QWidget):
         self.btnGroup = QButtonGroup(self)
         self.btnGroup.setExclusive(True)
 
+        if colors is None:
+            colors = BASE_COLORS
         row = -1
-        for i, color in enumerate(BASE_COLORS):
+        for i, color in enumerate(colors):
             btn = ColorButton(color, self)
 
             self.btnGroup.addButton(btn)
@@ -103,6 +106,33 @@ class ColorPicker(QWidget):
         color = QColorDialog.getColor()
         if color.isValid():
             self.colorPicked.emit(color)
+
+
+class IconPicker(QWidget):
+    iconSelected = pyqtSignal(str)
+
+    def __init__(self, icons: List[str], parent=None, maxColumn: Optional[int] = None):
+        super().__init__(parent)
+        if maxColumn:
+            grid(self, 1, 1, 1)
+        else:
+            flow(self)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
+
+        row = -1
+        for i, icon in enumerate(icons):
+            btn = tool_btn(IconRegistry.from_name(icon), transparent_=True)
+            btn.setIconSize(QSize(22, 22))
+            btn.clicked.connect(partial(self.iconSelected.emit, icon))
+            if maxColumn:
+                if i % maxColumn == 0:
+                    row += 1
+                    col = 0
+                else:
+                    col = i % maxColumn
+                self.layout().addWidget(btn, row, col)
+            else:
+                self.layout().addWidget(btn)
 
 
 class ColorSelectorButton(QToolButton):

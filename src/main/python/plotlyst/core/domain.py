@@ -2519,6 +2519,7 @@ class TemplateStoryStructureType(Enum):
     PACE = 5
     TENSION = 6
     TRANSFORMATION = 7
+    CUSTOM = 8
 
 
 class StoryStructureDisplayType(Enum):
@@ -2547,7 +2548,7 @@ class StoryStructure(CharacterBased):
         self._character: Optional[Character] = None
 
     def act_beats(self) -> List[StoryBeat]:
-        return [x for x in self.beats if x.ends_act]
+        return [x for x in self.sorted_beats() if x.ends_act]
 
     def sorted_beats(self) -> List[StoryBeat]:
         return sorted(self.beats, key=lambda x: x.percentage)
@@ -2574,6 +2575,14 @@ class StoryStructure(CharacterBased):
                     beat.icon_color = act_color(act, self.acts)
                 if beat.ends_act:
                     act += 1
+
+    def normalize_beats(self):
+        if not self.beats or self.display_type != StoryStructureDisplayType.Sequential_timeline:
+            return
+
+        percentage_per_beat = 99.0 / len(self.beats)
+        for i, beat in enumerate(self.beats):
+            beat.percentage = percentage_per_beat * (i + 1)
 
 
 general_beat = StoryBeat(text='Beat',
@@ -3088,14 +3097,14 @@ tension_second_conflict = StoryBeat(text='Second conflict',
                                     icon='mdi.sword-cross',
                                     icon_color='#B88612',
                                     description="Tension tightens and the plot complicates",
-                                    percentage=25)
+                                    percentage=50)
 
 tension_third_conflict = StoryBeat(text='Third conflict',
                                    id=uuid.UUID('a5172e05-4e08-4c2c-8346-7f05ff5573d3'),
                                    icon='mdi.sword-cross',
                                    icon_color='#CD533B',
                                    description="A major revelation, twist, or dark moment",
-                                   percentage=25)
+                                   percentage=75)
 
 tension_driven_structure = StoryStructure(title="Tension",
                                           id=uuid.UUID('6b01f4e2-2116-4849-be88-85f519d2fbd4'),
