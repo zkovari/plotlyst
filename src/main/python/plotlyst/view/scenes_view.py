@@ -257,8 +257,9 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnCardsView.setChecked(True)
 
         self.ui.wdgStoryStructureParent.setHidden(True)
-        self.ui.wdgStoryStructure.setStructure(self.novel)
         self.ui.wdgStoryStructure.setActsClickable(False)
+        self.ui.wdgStoryStructure.setBeatsSelectable(True)
+        self.ui.wdgStoryStructure.setStructure(self.novel)
 
         self.ui.btnFilter.setIcon(IconRegistry.filter_icon())
 
@@ -601,6 +602,7 @@ class ScenesOutlineView(AbstractNovelView):
         if not self.novel.is_readonly():
             self.ui.btnDelete.setEnabled(enabled)
         self.ui.btnEdit.setEnabled(enabled)
+        self.ui.wdgStoryStructure.activateBeatSelection(enabled)
 
     def _customize_stages(self):
         diag = ItemsEditorDialog(NovelStagesModel(copy.deepcopy(self.novel.stages)))
