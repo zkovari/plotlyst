@@ -27,7 +27,7 @@ from PyQt6.QtCore import Qt, QModelIndex, \
 from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget, QHeaderView
 from overrides import overrides
-from qthandy import incr_font, translucent, clear_layout, busy, bold, sp, transparent, incr_icon, retain_when_hidden
+from qthandy import incr_font, translucent, busy, bold, sp, transparent, incr_icon, retain_when_hidden
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -67,7 +67,6 @@ from plotlyst.view.widget.scene.story_map import StoryMap, StoryMapDisplayMode
 from plotlyst.view.widget.scenes import SceneFilterWidget, \
     ScenesPreferencesWidget, ScenesDistributionWidget, ScenePreferencesTabType
 from plotlyst.view.widget.structure.selector import ActSelectorButtons
-from plotlyst.view.widget.structure.timeline import StoryStructureTimelineWidget
 from plotlyst.view.widget.tree import TreeSettings
 
 
@@ -793,18 +792,12 @@ class ScenesOutlineView(AbstractNovelView):
             card.refreshPov()
             card.refreshCharacters()
 
-    # @busy
     def _handle_structure_update(self):
         if self.ui.btnStoryStructure.isChecked():
             self.ui.btnStoryStructureSelector.setVisible(len(self.novel.story_structures) > 1)
         self._toggle_act_filters()
 
-        if self.ui.wdgStoryStructure.novel is not None:
-            clear_layout(self.ui.wdgStoryStructureParent)
-            self.ui.wdgStoryStructure = StoryStructureTimelineWidget(self.ui.wdgStoryStructureParent)
-            self.ui.wdgStoryStructureParent.layout().addWidget(self.ui.wdgStoryStructure)
         self.ui.wdgStoryStructure.setStructure(self.novel)
-        self.ui.wdgStoryStructure.setActsClickable(False)
 
         for card in self.ui.cards.cards():
             card.refreshBeat()
@@ -855,7 +848,8 @@ class ScenesOutlineView(AbstractNovelView):
             default_columns.append(ScenesTableModel.ColCharacters)
         if app_env.profile().get('scene-purpose') and self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_PURPOSE):
             default_columns.append(ScenesTableModel.ColType)
-        if app_env.profile().get('scene-progression') and self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_PLOT_PROGRESS):
+        if app_env.profile().get('scene-progression') and self.novel.prefs.toggled(
+                NovelSetting.SCENE_TABLE_PLOT_PROGRESS):
             default_columns.append(ScenesTableModel.ColProgress)
 
         default_columns.append(ScenesTableModel.ColSynopsis)
