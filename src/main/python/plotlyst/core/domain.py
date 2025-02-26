@@ -2548,7 +2548,7 @@ class StoryStructure(CharacterBased):
         self._character: Optional[Character] = None
 
     def act_beats(self) -> List[StoryBeat]:
-        return [x for x in self.beats if x.ends_act]
+        return [x for x in self.sorted_beats() if x.ends_act]
 
     def sorted_beats(self) -> List[StoryBeat]:
         return sorted(self.beats, key=lambda x: x.percentage)
@@ -2575,6 +2575,14 @@ class StoryStructure(CharacterBased):
                     beat.icon_color = act_color(act, self.acts)
                 if beat.ends_act:
                     act += 1
+
+    def normalize_beats(self):
+        if not self.beats or self.display_type != StoryStructureDisplayType.Sequential_timeline:
+            return
+
+        percentage_per_beat = 99.0 / len(self.beats)
+        for i, beat in enumerate(self.beats):
+            beat.percentage = percentage_per_beat * (i + 1)
 
 
 general_beat = StoryBeat(text='Beat',

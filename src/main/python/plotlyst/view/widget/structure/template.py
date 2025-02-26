@@ -782,7 +782,7 @@ class _CustomBeatsList(ListView):
         self.structure.beats.append(beat)
         wdg = self.addItem(beat)
         self._initListItemWidget(wdg)
-        self.changed.emit()
+        self._changed()
 
     @overrides
     def _deleteItemWidget(self, widget: ListItemWidget):
@@ -799,16 +799,28 @@ class _CustomBeatsList(ListView):
         wdg = super()._dropped(mimeData)
         self._initListItemWidget(wdg)
 
+        items = []
+        for wdg in self.widgets():
+            items.append(wdg.item())
+        self.structure.beats[:] = items
+        self._changed()
+
     def _initListItemWidget(self, wdg: CustomBeatItemWidget):
         wdg.setStructure(self.structure)
         wdg.changed.connect(self._changed)
 
     def _changed(self):
-        self.changed.emit()
+        if self.structure.display_type == StoryStructureDisplayType.Sequential_timeline:
+            self.structure.normalize_beats()
+
         for i in range(self.layout().count()):
             item = self.layout().itemAt(i)
             if item.widget() and isinstance(item.widget(), CustomBeatItemWidget):
                 item.widget().toggleActsEnabled()
+                item.widget().updateBeatPercentage()
+
+        self.changed.emit()
+
 
 
 class _CustomStoryStructureEditor(_AbstractStructureEditor):
