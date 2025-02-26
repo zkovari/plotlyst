@@ -143,6 +143,8 @@ class ManuscriptView(AbstractNovelView):
 
         self.wdgFind = ManuscriptFindWidget(self.novel)
         self.ui.pageFind.layout().addWidget(self.wdgFind)
+        self.textEditor.attachFindWidget(self.wdgFind)
+        self.wdgFind.matched.connect(self._term_searched)
         self.wdgFind.wdgResults.matchClicked.connect(self._navigate)
 
         self._btnDistractionFree = tool_btn(IconRegistry.expand_icon(), 'Enter distraction-free mode',
@@ -388,6 +390,7 @@ class ManuscriptView(AbstractNovelView):
         btn = self._btnGroupSideBar.checkedButton()
         if btn is None:
             qtanim.collapse(self.ui.wdgSide)
+            self.wdgFind.deactivate()
             return
 
         if toggled and not self.ui.wdgSide.isVisible():
@@ -464,6 +467,9 @@ class ManuscriptView(AbstractNovelView):
         diff = self.ui.scrollEditor.verticalScrollBar().maximum() - value
         if 0 < diff < 40:
             scroll_to_bottom(self.ui.scrollEditor)
+
+    def _term_searched(self):
+        self.textEditor.activateFind()
 
     def _navigate(self, context: dict):
         scene = context['scene']

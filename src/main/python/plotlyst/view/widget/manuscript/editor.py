@@ -55,6 +55,7 @@ from plotlyst.view.widget.display import WordsDisplay
 from plotlyst.view.widget.input import BasePopupTextEditorToolbar, TextEditBase, GrammarHighlighter, \
     GrammarHighlightStyle
 from plotlyst.view.widget.manuscript import SprintWidget
+from plotlyst.view.widget.manuscript.find import ManuscriptFindWidget
 from plotlyst.view.widget.manuscript.settings import ManuscriptEditorSettingsWidget
 
 
@@ -476,6 +477,8 @@ class ManuscriptEditor(QWidget, EventListener):
         self._settings: Optional[ManuscriptEditorSettingsWidget] = None
         self._lockCursorMove: bool = False
 
+        self._find: Optional[ManuscriptFindWidget] = None
+
         vbox(self, 0, 0)
 
         self.textTitle = QLineEdit()
@@ -592,6 +595,8 @@ class ManuscriptEditor(QWidget, EventListener):
         self.wdgEditor.layout().addWidget(vspacer())
         wdg.setFocus()
 
+        self.activateFind()
+
     def chapter(self) -> Optional[Chapter]:
         return self._chapter
 
@@ -615,6 +620,8 @@ class ManuscriptEditor(QWidget, EventListener):
 
         self.wdgEditor.layout().addWidget(vspacer())
         self._textedits[0].setFocus()
+
+        self.activateFind()
 
     def manuscriptFont(self) -> QFont:
         return self._font
@@ -651,6 +658,16 @@ class ManuscriptEditor(QWidget, EventListener):
         self._scene = None
         self._chapter = None
         clear_layout(self.wdgEditor)
+
+    def attachFindWidget(self, find: ManuscriptFindWidget):
+        self._find = find
+
+    def activateFind(self):
+        if not self._find.isActive():
+            return
+        for textedit in self._textedits:
+            matches = self._find.sceneMathes(textedit.scene())
+            print(len(matches))
 
     def setNightMode(self, mode: bool):
         for lbl in self._sceneLabels:

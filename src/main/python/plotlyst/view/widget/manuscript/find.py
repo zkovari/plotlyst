@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import re
+from typing import List, Dict
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QShowEvent, QTextDocument, QTextCursor, QSyntaxHighlighter, QTextCharFormat, QColor, \
@@ -91,12 +92,14 @@ class SearchResultsTextEdit(QTextBrowser):
 
 class ManuscriptFindWidget(QWidget):
     CONTEXT_SIZE: int = 30
+    matched = pyqtSignal()
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self.novel = novel
         vbox(self)
         self._term: str = ''
+        self._results: Dict[Scene, list] = {}
 
         self.search = SearchField()
         incr_font(self.search.lineSearch)
@@ -128,9 +131,23 @@ class ManuscriptFindWidget(QWidget):
         super().showEvent(event)
         self.search.lineSearch.setFocus()
 
-    def searchForScene(self, scene: Scene):
+    def isActive(self) -> bool:
+        return len(self._results) > 0
+
+    def deactivate(self):
+        self.search.lineSearch.clear()
+        self._term = ''
+        self.lblResults.clear()
+        self.wdgResults.clear()
+        self._results.clear()
+
+    def sceneMathes(self, scene: Scene) -> List[dict]:
+        return self._results.get(scene, [])
+
+    def searchForScene(self, scene: Scene) -> List:
+        self._results.pop(scene, None)
         if not scene.manuscript:
-            return
+            return []
         doc = QTextDocument()
         doc.setHtml(scene.manuscript.content)
         raw_text = doc.toPlainText()
@@ -172,18 +189,20 @@ class ManuscriptFindWidget(QWidget):
     def _search(self, term: str):
         self._term = term
         self.wdgResults.clear()
+        self._results.clear()
         if not term or term == ' ' or (len(term) == 1 and not re.match(r'[\d\W]', term)):
             self.lblResults.clear()
             return
 
         json_client.load_manuscript(self.novel)
-        results = []
 
+        count = 0
         resultCursor = QTextCursor(self.wdgResults.document())
         for scene in self.novel.scenes:
             scene_matches = self.searchForScene(scene)
             if scene_matches:
-                results.extend(scene_matches)
+                count += len(scene_matches)
+                self._results[scene] = scene_matches
 
                 resultCursor.insertBlock(self._headingBlockFormat)
                 resultCursor.insertHtml(f'<h4>{scene.title_or_index(self.novel)}</h4>')
@@ -192,4 +211,5 @@ class ManuscriptFindWidget(QWidget):
                     resultCursor.insertHtml(result['context'])
                     resultCursor.block().setUserData(SearchBlockUserData(result))
 
-        self.lblResults.setText(f'{len(results)} results')
+        self.lblResults.setText(f'{count} results')
+        self.matched.emit()
