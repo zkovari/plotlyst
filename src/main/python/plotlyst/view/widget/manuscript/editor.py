@@ -665,6 +665,7 @@ class ManuscriptEditor(QWidget, EventListener):
     def activateFind(self):
         if not self._find.isActive():
             return
+
         for textedit in self._textedits:
             matches = self._find.sceneMathes(textedit.scene())
             print(len(matches))
@@ -754,6 +755,10 @@ class ManuscriptEditor(QWidget, EventListener):
             self.repo.update_novel(self._novel)
 
         self.textChanged.emit()
+
+        if self._find.isActive():
+            matches = self._find.updateScene(scene)
+            print(len(matches))
 
     def _updateProgress(self, scene: Scene, wc: int) -> bool:
         if scene.manuscript.statistics.wc == wc:

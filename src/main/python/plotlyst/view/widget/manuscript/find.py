@@ -144,7 +144,47 @@ class ManuscriptFindWidget(QWidget):
     def sceneMathes(self, scene: Scene) -> List[dict]:
         return self._results.get(scene, [])
 
-    def searchForScene(self, scene: Scene) -> List:
+    def updateScene(self, scene: Scene) -> List:
+        scene_matches = self._searchForScene(scene)
+        self._results[scene] = scene_matches
+
+        count = 0
+        for result in self._results.values():
+            count += len(result)
+        self.lblResults.setText(f'{count} results')
+
+        return scene_matches
+
+    @busy
+    def _search(self, term: str):
+        self._term = term
+        self.wdgResults.clear()
+        self._results.clear()
+        if not term or term == ' ' or (len(term) == 1 and not re.match(r'[\d\W]', term)):
+            self.lblResults.clear()
+            return
+
+        json_client.load_manuscript(self.novel)
+
+        count = 0
+        resultCursor = QTextCursor(self.wdgResults.document())
+        for scene in self.novel.scenes:
+            scene_matches = self._searchForScene(scene)
+            if scene_matches:
+                count += len(scene_matches)
+                self._results[scene] = scene_matches
+
+                resultCursor.insertBlock(self._headingBlockFormat)
+                resultCursor.insertHtml(f'<h4>{scene.title_or_index(self.novel)}</h4>')
+                for result in scene_matches:
+                    resultCursor.insertBlock(self._textBlockFormat)
+                    resultCursor.insertHtml(result['context'])
+                    resultCursor.block().setUserData(SearchBlockUserData(result))
+
+        self.lblResults.setText(f'{count} results')
+        self.matched.emit()
+
+    def _searchForScene(self, scene: Scene) -> List:
         self._results.pop(scene, None)
         if not scene.manuscript:
             return []
@@ -184,32 +224,3 @@ class ManuscriptFindWidget(QWidget):
             scene_matches.append(result)
 
         return scene_matches
-
-    @busy
-    def _search(self, term: str):
-        self._term = term
-        self.wdgResults.clear()
-        self._results.clear()
-        if not term or term == ' ' or (len(term) == 1 and not re.match(r'[\d\W]', term)):
-            self.lblResults.clear()
-            return
-
-        json_client.load_manuscript(self.novel)
-
-        count = 0
-        resultCursor = QTextCursor(self.wdgResults.document())
-        for scene in self.novel.scenes:
-            scene_matches = self.searchForScene(scene)
-            if scene_matches:
-                count += len(scene_matches)
-                self._results[scene] = scene_matches
-
-                resultCursor.insertBlock(self._headingBlockFormat)
-                resultCursor.insertHtml(f'<h4>{scene.title_or_index(self.novel)}</h4>')
-                for result in scene_matches:
-                    resultCursor.insertBlock(self._textBlockFormat)
-                    resultCursor.insertHtml(result['context'])
-                    resultCursor.block().setUserData(SearchBlockUserData(result))
-
-        self.lblResults.setText(f'{count} results')
-        self.matched.emit()
