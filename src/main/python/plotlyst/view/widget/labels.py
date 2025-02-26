@@ -53,7 +53,7 @@ class Label(QFrame):
         self.clicked.emit()
 
 
-class LabelsWidget(QWidget):
+class LabelsWidget(QFrame):
 
     def __init__(self, parent=None):
         super(LabelsWidget, self).__init__(parent)

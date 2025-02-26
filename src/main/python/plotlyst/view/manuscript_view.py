@@ -31,14 +31,14 @@ from plotlyst.core.domain import Novel, Document, Chapter, DocumentProgress
 from plotlyst.core.domain import Scene
 from plotlyst.event.core import emit_global_event, emit_critical, emit_info, Event, emit_event
 from plotlyst.events import SceneChangedEvent, OpenDistractionFreeMode, \
-    ExitDistractionFreeMode, NovelSyncEvent, CloseNovelEvent
+    ExitDistractionFreeMode, NovelSyncEvent, CloseNovelEvent, SceneOrderChangedEvent, SceneAddedEvent
 from plotlyst.resources import ResourceType
 from plotlyst.service.grammar import language_tool_proxy
 from plotlyst.service.persistence import flush_or_fail
 from plotlyst.service.resource import ask_for_resource
 from plotlyst.view._view import AbstractNovelView
 from plotlyst.view.common import tool_btn, ButtonPressResizeEventFilter, action, \
-    ExclusiveOptionalButtonGroup, link_buttons_to_pages, shadow
+    ExclusiveOptionalButtonGroup, link_buttons_to_pages, shadow, scroll_to_bottom
 from plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -57,7 +57,7 @@ from plotlyst.view.widget.tree import TreeSettings
 class ManuscriptView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        super().__init__(novel)
+        super().__init__(novel, event_types=[SceneOrderChangedEvent, SceneAddedEvent])
         self.ui = Ui_ManuscriptView()
         self.ui.setupUi(self.widget)
         self.ui.splitter.setSizes([150, 500])
@@ -120,9 +120,9 @@ class ManuscriptView(AbstractNovelView):
         self._miniSceneEditor = SceneMiniEditor(self.novel)
         self.ui.pageInfo.layout().addWidget(self._miniSceneEditor)
         self.ui.pageInfo.layout().addWidget(vspacer())
+
         self.textEditor = ManuscriptEditor()
         self.ui.wdgEditor.layout().addWidget(self.textEditor)
-        self.textEditor.sceneSeparatorClicked.connect(self._scene_separator_clicked)
 
         self._manuscriptDailyProgressDisplay = ManuscriptDailyProgress(self.novel)
         self._manuscriptDailyProgressDisplay.refresh()
@@ -195,12 +195,15 @@ class ManuscriptView(AbstractNovelView):
         self.ui.wdgSide.setHidden(True)
 
         self.textEditor.setNovel(self.novel)
+        self.textEditor.sceneSeparatorClicked.connect(self._scene_separator_clicked)
+        self.textEditor.cleared.connect(self._empty_page)
         self.textEditor.attachSettingsWidget(self._settingsWidget)
         self.textEditor.textChanged.connect(self._text_changed)
         self.textEditor.progressChanged.connect(self._progress_changed)
         self.textEditor.selectionChanged.connect(self._text_selection_changed)
         self.textEditor.sceneTitleChanged.connect(self._scene_title_changed)
         self.textEditor.cursorPositionChanged.connect(self.ui.scrollEditor.ensureVisible)
+        self.ui.scrollEditor.verticalScrollBar().valueChanged.connect(self._scroll_changed)
         self._dist_free_bottom_bar.btnFocus.toggled.connect(self.textEditor.setSentenceHighlighterEnabled)
         self._dist_free_bottom_bar.btnTypewriterMode.toggled.connect(self._toggle_typewriter_mode)
 
@@ -220,6 +223,14 @@ class ManuscriptView(AbstractNovelView):
         if isinstance(event, NovelSyncEvent):
             self.textEditor.refresh()
             self._text_changed()
+        elif isinstance(event, SceneOrderChangedEvent):
+            if self.textEditor.chapter():
+                self._editChapter(self.textEditor.chapter())
+            return
+        elif isinstance(event, SceneAddedEvent):
+            if event.scene.chapter and event.scene.chapter == self.textEditor.chapter():
+                self._editChapter(self.textEditor.chapter())
+            return
         super(ManuscriptView, self).event_received(event)
 
     @overrides
@@ -311,7 +322,7 @@ class ManuscriptView(AbstractNovelView):
                 scene.manuscript = Document('', scene_id=scene.id)
                 self.repo.update_scene(scene)
         if scenes:
-            self.textEditor.setChapterScenes(scenes, chapter.display_name().replace('Chapter ', ''))
+            self.textEditor.setChapterScenes(chapter, scenes)
             self._miniSceneEditor.setScenes(scenes)
         else:
             self._empty_page('Add a scene to this chapter to start writing')
@@ -440,3 +451,8 @@ class ManuscriptView(AbstractNovelView):
             margins(self.ui.pageText, bottom=screen.size().height() // 3)
         else:
             margins(self.ui.pageText, bottom=0)
+
+    def _scroll_changed(self, value: int):
+        diff = self.ui.scrollEditor.verticalScrollBar().maximum() - value
+        if 0 < diff < 40:
+            scroll_to_bottom(self.ui.scrollEditor)

@@ -38,7 +38,8 @@ from qttextedit.ops import Heading1Operation, Heading2Operation, Heading3Operati
 from plotlyst.common import RELAXED_WHITE_COLOR, DEFAULT_MANUSCRIPT_LINE_SPACE, DEFAULT_MANUSCRIPT_INDENT, \
     PLACEHOLDER_TEXT_COLOR, PLOTLYST_TERTIARY_COLOR
 from plotlyst.core.client import json_client
-from plotlyst.core.domain import DocumentProgress, Novel, Scene, TextStatistics, DocumentStatistics, FontSettings
+from plotlyst.core.domain import DocumentProgress, Novel, Scene, TextStatistics, DocumentStatistics, FontSettings, \
+    Chapter
 from plotlyst.core.sprint import TimerModel
 from plotlyst.env import app_env
 from plotlyst.event.core import Event, EventListener
@@ -238,6 +239,7 @@ class SceneSeparator(QPushButton):
         pointy(self)
         italic(self)
         translucent(self)
+        self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
 
         self.refresh()
 
@@ -248,13 +250,16 @@ class SceneSeparator(QPushButton):
 class ManuscriptTextEdit(TextEditBase):
     sceneSeparatorClicked = pyqtSignal(Scene)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, first: bool = False, last: bool = False):
         super(ManuscriptTextEdit, self).__init__(parent)
+        self._first = first
+        self._last = last
         self._pasteAsOriginalEnabled = False
         self._resizedOnShow: bool = False
         self._minHeight = 40
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setTabChangesFocus(True)
+        self._scene: Optional[Scene] = None
 
         self.highlighter = GrammarHighlighter(self.document(), checkEnabled=False,
                                               highlightStyle=GrammarHighlightStyle.BACKGOUND)
@@ -294,6 +299,34 @@ class ManuscriptTextEdit(TextEditBase):
             if cursor.selectedText() == ' ':
                 self.textCursor().deletePreviousChar()
                 self.textCursor().insertText('.')
+
+        move_up = cursor.block().blockNumber() == 0 and event.key() == Qt.Key.Key_Up
+        move_down = cursor.block().blockNumber() == self.document().blockCount() - 1 and event.key() == Qt.Key.Key_Down
+
+        if move_up or move_down:
+            parent = self.parentWidget()
+            if parent:
+                focus_chain = parent.findChildren(QTextEdit)
+                if focus_chain:
+                    if (self is focus_chain[0] and move_up) or (self is focus_chain[-1] and move_down):
+                        return
+
+                    current_index = focus_chain.index(self)
+                    next_textedit = (
+                        focus_chain[current_index - 1] if move_up else focus_chain[current_index + 1]
+                    )
+
+                    if next_textedit:
+                        next_textedit.setFocus()
+
+                        next_cursor = next_textedit.textCursor()
+                        if move_up:
+                            next_cursor.movePosition(QTextCursor.MoveOperation.End)
+                        else:
+                            next_cursor.movePosition(QTextCursor.MoveOperation.Start)
+                        next_textedit.setTextCursor(next_cursor)
+
+                    return
         super(ManuscriptTextEdit, self).keyPressEvent(event)
 
     # @overrides
@@ -344,9 +377,12 @@ class ManuscriptTextEdit(TextEditBase):
     def setSentenceHighlighterEnabled(self, enabled: bool):
         self._sentenceHighlighter.setSentenceHighlightEnabled(enabled)
 
+    def scene(self) -> Optional[Scene]:
+        return self._scene
+
     def setScene(self, scene: Scene):
         # self._sceneTextObject.setScenes([scene])
-
+        self._scene = scene
         self._addScene(scene)
         self.setUneditableBlocksEnabled(False)
         self.document().clearUndoRedoStacks()
@@ -423,6 +459,7 @@ class ManuscriptEditor(QWidget, EventListener):
     sceneTitleChanged = pyqtSignal(Scene)
     sceneSeparatorClicked = pyqtSignal(Scene)
     cursorPositionChanged = pyqtSignal(int, int)
+    cleared = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -432,8 +469,10 @@ class ManuscriptEditor(QWidget, EventListener):
         self._sceneLabels: List[SceneSeparator] = []
         self._scenes: List[Scene] = []
         self._scene: Optional[Scene] = None
+        self._chapter: Optional[Chapter] = None
         self._font = self.defaultFont()
         self._characterWidth: int = 40
+        self._maxContentWidth = 0
         self._settings: Optional[ManuscriptEditorSettingsWidget] = None
 
         vbox(self, 0, 0)
@@ -474,17 +513,28 @@ class ManuscriptEditor(QWidget, EventListener):
                 if sceneLbl.scene == event.scene:
                     sceneLbl.refresh()
         elif isinstance(event, SceneDeletedEvent):
-            pass
-            # if self._scene and self._scene == event.scene:
-            #     self.clear()
-            # for sceneLbl in self._sceneLabels:
-
-            # if event.scene in self.ui.textEdit.scenes():
-            #     if len(self.ui.textEdit.scenes()) == 1:
-            #         self.ui.textEdit.clear()
-            #         self._empty_page()
-            #     else:
-            #         self._editChapter(event.scene.chapter)
+            if self._scene and self._scene == event.scene:
+                self.clear()
+                self.cleared.emit()
+            elif self._scenes and event.scene in self._scenes:
+                removedLbl = None
+                for lbl in self._sceneLabels:
+                    if lbl.scene == event.scene:
+                        removedLbl = lbl
+                        break
+                removedTextedit = None
+                for textedit in self._textedits:
+                    if textedit.scene() == event.scene:
+                        removedTextedit = textedit
+                        break
+                if removedLbl:
+                    self._sceneLabels.remove(removedLbl)
+                    gc(removedLbl)
+                if removedTextedit:
+                    self._textedits.remove(removedTextedit)
+                    gc(removedTextedit)
+                self._scenes.remove(event.scene)
+                self.textChanged.emit()
 
     @overrides
     def resizeEvent(self, a0: QtGui.QResizeEvent) -> None:
@@ -538,11 +588,15 @@ class ManuscriptEditor(QWidget, EventListener):
         self.wdgEditor.layout().addWidget(vspacer())
         wdg.setFocus()
 
-    def setChapterScenes(self, scenes: List[Scene], title: str):
+    def chapter(self) -> Optional[Chapter]:
+        return self._chapter
+
+    def setChapterScenes(self, chapter: Chapter, scenes: List[Scene]):
         self.clear()
+        self._chapter = chapter
         self._scenes.extend(scenes)
 
-        self.textTitle.setText(title)
+        self.textTitle.setText(chapter.display_name().replace('Chapter ', ''))
         self.textTitle.setPlaceholderText('Chapter')
         self.textTitle.setReadOnly(True)
 
@@ -584,13 +638,14 @@ class ManuscriptEditor(QWidget, EventListener):
         elif len(self._textedits) > 1:
             scenes = []
             scenes.extend(self._scenes)
-            self.setChapterScenes(scenes, self.textTitle.text())
+            self.setChapterScenes(self._chapter, scenes)
 
     def clear(self):
         self._textedits.clear()
         self._sceneLabels.clear()
         self._scenes.clear()
         self._scene = None
+        self._chapter = None
         clear_layout(self.wdgEditor)
 
     def setNightMode(self, mode: bool):
