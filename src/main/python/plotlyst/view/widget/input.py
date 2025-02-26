@@ -718,7 +718,6 @@ class DocumentTextEditor(TextEditorBase):
 
         self.textEdit.setFont(QFont(app_env.sans_serif_font(), 16))
         self.textEdit.setProperty('transparent', True)
-        self.textEdit.zoomIn(int(self.textEdit.font().pointSize() * 0.25))
         self.textEdit.setBlockFormat(lineSpacing=110, margin_bottom=10, margin_top=10)
         self.textEdit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
         self.textEdit.setPlaceholderText("Begin writing, or press '/' for commands...")

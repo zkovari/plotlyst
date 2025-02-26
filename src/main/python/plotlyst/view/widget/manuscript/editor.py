@@ -472,6 +472,7 @@ class ManuscriptEditor(QWidget, EventListener):
         self._chapter: Optional[Chapter] = None
         self._font = self.defaultFont()
         self._characterWidth: int = 40
+        self._maxContentWidth = 0
         self._settings: Optional[ManuscriptEditorSettingsWidget] = None
         self._lockCursorMove: bool = False
 
