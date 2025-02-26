@@ -28,7 +28,7 @@ from qthandy import incr_font, vbox, busy, transparent
 
 from plotlyst.common import PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.client import json_client
-from plotlyst.core.domain import Novel
+from plotlyst.core.domain import Novel, Scene
 from plotlyst.view.common import DelayedSignalSlotConnector, label
 from plotlyst.view.widget.input import SearchField
 
@@ -96,6 +96,7 @@ class ManuscriptFindWidget(QWidget):
         super().__init__(parent)
         self.novel = novel
         vbox(self)
+        self._term: str = ''
 
         self.search = SearchField()
         incr_font(self.search.lineSearch)
@@ -109,13 +110,13 @@ class ManuscriptFindWidget(QWidget):
         self.wdgResults.setFont(font)
 
         self._headingBlockFormat = QTextBlockFormat()
-        self._headingBlockFormat.setHeadingLevel(3)
-        self._headingBlockFormat.setTopMargin(10)
-        self._headingBlockFormat.setBottomMargin(10)
+        self._headingBlockFormat.setHeadingLevel(4)
+        self._headingBlockFormat.setTopMargin(5)
+        self._headingBlockFormat.setBottomMargin(5)
 
         self._textBlockFormat = QTextBlockFormat()
-        self._textBlockFormat.setTopMargin(3)
-        self._textBlockFormat.setBottomMargin(3)
+        self._textBlockFormat.setTopMargin(2)
+        self._textBlockFormat.setBottomMargin(2)
         self._textBlockFormat.setLeftMargin(10)
 
         self.layout().addWidget(self.search, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -127,8 +128,49 @@ class ManuscriptFindWidget(QWidget):
         super().showEvent(event)
         self.search.lineSearch.setFocus()
 
+    def searchForScene(self, scene: Scene):
+        if not scene.manuscript:
+            return
+        doc = QTextDocument()
+        doc.setHtml(scene.manuscript.content)
+        raw_text = doc.toPlainText()
+
+        cursor = QTextCursor(doc)
+        scene_matches = []
+        while not cursor.isNull() and not cursor.atEnd():
+            cursor = doc.find(self._term, cursor)
+            if cursor.isNull():
+                break
+
+            start = cursor.selectionStart()
+            end = cursor.selectionEnd()
+
+            before_start = raw_text.rfind(" ", 0, start - self.CONTEXT_SIZE)
+            before_start = 0 if before_start == -1 else before_start + 1
+            after_end = raw_text.find(" ", end + self.CONTEXT_SIZE)
+            after_end = len(raw_text) if after_end == -1 else after_end
+
+            before = raw_text[before_start:start]
+            after = raw_text[end:after_end]
+            match_text = raw_text[start:end]
+
+            formatted_match = f'{before}<span style="background-color: {PLOTLYST_TERTIARY_COLOR}; color: black; padding: 2px;">{match_text}</span>{after}'
+
+            result = {
+                "scene": scene,
+                "start": start,
+                "end": end,
+                "block": cursor.blockNumber(),
+                "pos_in_block": (cursor.positionInBlock() - len(match_text), cursor.positionInBlock()),
+                "context": formatted_match
+            }
+            scene_matches.append(result)
+
+        return scene_matches
+
     @busy
     def _search(self, term: str):
+        self._term = term
         self.wdgResults.clear()
         if not term or term == ' ' or (len(term) == 1 and not re.match(r'[\d\W]', term)):
             self.lblResults.clear()
@@ -139,46 +181,12 @@ class ManuscriptFindWidget(QWidget):
 
         resultCursor = QTextCursor(self.wdgResults.document())
         for scene in self.novel.scenes:
-            if not scene.manuscript:
-                continue
-            doc = QTextDocument()
-            doc.setHtml(scene.manuscript.content)
-            raw_text = doc.toPlainText()
-
-            cursor = QTextCursor(doc)
-            scene_matches = []
-            while not cursor.isNull() and not cursor.atEnd():
-                cursor = doc.find(term, cursor)
-                if cursor.isNull():
-                    break
-
-                start = cursor.selectionStart()
-                end = cursor.selectionEnd()
-
-                before_start = raw_text.rfind(" ", 0, start - self.CONTEXT_SIZE) + 1
-                after_end = raw_text.find(" ", end + self.CONTEXT_SIZE)
-                if after_end == -1:
-                    after_end = len(raw_text)
-
-                before = raw_text[before_start:start]
-                after = raw_text[end:after_end]
-                match_text = raw_text[start:end]
-
-                formatted_match = f'{before}<span style="background-color: {PLOTLYST_TERTIARY_COLOR}; color: black; padding: 2px;">{match_text}</span>{after}'
-
-                result = {
-                    "scene": scene,
-                    "start": start,
-                    "end": end,
-                    "context": formatted_match
-                }
-                scene_matches.append(result)
-
+            scene_matches = self.searchForScene(scene)
             if scene_matches:
                 results.extend(scene_matches)
 
                 resultCursor.insertBlock(self._headingBlockFormat)
-                resultCursor.insertHtml(f'<h3>{scene.title_or_index(self.novel)}</h3>')
+                resultCursor.insertHtml(f'<h4>{scene.title_or_index(self.novel)}</h4>')
                 for result in scene_matches:
                     resultCursor.insertBlock(self._textBlockFormat)
                     resultCursor.insertHtml(result['context'])
