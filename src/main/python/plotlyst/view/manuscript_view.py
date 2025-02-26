@@ -466,8 +466,8 @@ class ManuscriptView(AbstractNovelView):
             scroll_to_bottom(self.ui.scrollEditor)
 
     def _navigate(self, context: dict):
-        self.ui.treeChapters.selectScene(context['scene'])
-        self._editScene(context['scene'])
+        scene = context['scene']
+        self.ui.treeChapters.selectScene(scene)
+        if self.textEditor.scene() != scene:
+            self._editScene(scene)
         self.textEditor.jumpTo(context['start'], context['end'])
-        # print(pos)
-        # self.ui.scrollEditor.ensureVisible(pos.x(), pos.y())

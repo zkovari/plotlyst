@@ -576,6 +576,9 @@ class ManuscriptEditor(QWidget, EventListener):
 
         event_dispatchers.instance(self._novel).register(self, SceneDeletedEvent, SceneChangedEvent)
 
+    def scene(self) -> Optional[Scene]:
+        return self._scene
+
     def setScene(self, scene: Scene):
         self.clear()
         self._scene = scene
