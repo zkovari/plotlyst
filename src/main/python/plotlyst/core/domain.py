@@ -3097,14 +3097,14 @@ tension_second_conflict = StoryBeat(text='Second conflict',
                                     icon='mdi.sword-cross',
                                     icon_color='#B88612',
                                     description="Tension tightens and the plot complicates",
-                                    percentage=25)
+                                    percentage=50)
 
 tension_third_conflict = StoryBeat(text='Third conflict',
                                    id=uuid.UUID('a5172e05-4e08-4c2c-8346-7f05ff5573d3'),
                                    icon='mdi.sword-cross',
                                    icon_color='#CD533B',
                                    description="A major revelation, twist, or dark moment",
-                                   percentage=25)
+                                   percentage=75)
 
 tension_driven_structure = StoryStructure(title="Tension",
                                           id=uuid.UUID('6b01f4e2-2116-4849-be88-85f519d2fbd4'),
