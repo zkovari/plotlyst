@@ -24,7 +24,7 @@ from functools import partial
 from typing import Optional, List, Tuple, Set
 
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QSize
-from PyQt6.QtGui import QWheelEvent
+from PyQt6.QtGui import QWheelEvent, QColor
 from PyQt6.QtWidgets import QWidget, QPushButton, QDialog, QScrollArea, QLabel, QButtonGroup, QStackedWidget, \
     QApplication, QDoubleSpinBox
 from overrides import overrides
@@ -43,7 +43,7 @@ from plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     midpoint_hero_mirror, second_plot_point_hero_road_back, second_plot_point_hero_ordeal, hero_reward, \
     hero_false_victory, pace_driven_structure, TemplateStoryStructureType, tension_driven_structure, \
     transformation_driven_structure, StoryStructureDisplayType
-from plotlyst.view.common import ExclusiveOptionalButtonGroup, push_btn, label, scroll_area, frame
+from plotlyst.view.common import ExclusiveOptionalButtonGroup, push_btn, label, scroll_area, frame, action
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
 from plotlyst.view.style.base import apply_white_menu
@@ -53,6 +53,7 @@ from plotlyst.view.widget.input import Toggle, DecoratedLineEdit
 from plotlyst.view.widget.list import ListView, ListItemWidget
 from plotlyst.view.widget.structure.beat import BeatsPreview
 from plotlyst.view.widget.structure.outline import StoryStructureTimelineWidget
+from plotlyst.view.widget.utility import ColorPicker, IconPicker, IconSelectorDialog
 
 
 class _AbstractStructureEditor(QWidget):
@@ -681,12 +682,39 @@ class CustomBeatItemWidget(ListItemWidget):
         self.sbPercentage.setValue(self.beat.percentage)
         self.sbPercentage.valueChanged.connect(self._percentageEdited)
 
-        self._titleEdit = DecoratedLineEdit(iconEditable=True, autoAdjustable=False)
+        self._titleEdit = DecoratedLineEdit(iconEditable=False, autoAdjustable=False)
+        pointy(self._titleEdit.icon)
+        self._titleEdit.icon.installEventFilter(
+            OpacityEventFilter(self._titleEdit.icon, leaveOpacity=1.0, enterOpacity=0.7))
         self._titleEdit.setMaximumWidth(150)
         self._titleEdit.setText(beat.text)
         self._titleEdit.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
         self._titleEdit.iconChanged.connect(self._iconChanged)
         self._titleEdit.lineEdit.textEdited.connect(self._nameChanged)
+
+        iconMenu = MenuWidget(self._titleEdit.icon)
+        colorPicker = ColorPicker(maxColumn=7, colors=['grey', '#829399', '#d4a373', '#e63946', '#457b9d', '#a2ad59',
+                                                       '#e5989b', '#8338ec', '#f20089', '#f4a261', '#588157', '#494368',
+                                                       '#b81365', '#cd533b', '#2a4494', '#6a0136', '#b5838d', '#2e86ab',
+                                                       '#0096c7', '#ce2d4f', '#7192be'
+                                                       ])
+        colorPicker.colorPicked.connect(self._colorChanged)
+        iconMenu.addWidget(colorPicker)
+        iconMenu.addSeparator()
+        iconPicker = IconPicker([
+            'mdi.lightning-bolt-outline', 'mdi.hook', 'mdi.motion-outline', 'mdi.chemical-weapon', 'mdi6.human-scooter',
+            'mdi.bell-alert-outline',
+            'mdi6.hand-back-left', 'mdi.sign-direction', 'ph.shuffle-bold', 'ei.fire', 'fa5s.binoculars',
+            'mdi.weather-night', 'fa5s.thermometer-three-quarters', 'fa5s.biohazard', 'mdi6.chevron-double-right',
+            'mdi6.chevron-triple-right', 'fa5s.door-closed',
+            'fa5.lightbulb', 'fa5s.heartbeat', 'mdi6.skull', 'mdi6.flask-round-bottom', 'mdi.trophy-broken',
+            'mdi.middleware-outline',
+            'mdi6.mirror-variant', 'mdi.account-convert', 'mdi.arrow-decision-outline', 'fa5s.chevron-up', 'fa5s.water',
+            'ei.adjust'], maxColumn=7)
+        iconPicker.iconSelected.connect(self._iconChanged)
+        iconMenu.addWidget(iconPicker)
+        iconMenu.addSeparator()
+        iconMenu.addAction(action('Custom icon...', IconRegistry.icons_icon(), slot=self._customIconTriggered))
 
         self.actToggle = SmallToggleButton()
         self.actToggle.setChecked(self.beat.ends_act)
@@ -719,13 +747,23 @@ class CustomBeatItemWidget(ListItemWidget):
         super()._textChanged(text)
         self.beat.description = text
 
+    def _colorChanged(self, color: QColor):
+        self.beat.icon_color = color.name()
+        self._titleEdit.icon.setIcon(IconRegistry.from_name(self.beat.icon, self.beat.icon_color))
+        self.changed.emit()
+
+    def _customIconTriggered(self):
+        result = IconSelectorDialog.popup(pickColor=False)
+        if result:
+            self._iconChanged(result[0])
+
+    def _iconChanged(self, icon: str):
+        self.beat.icon = icon
+        self._titleEdit.icon.setIcon(IconRegistry.from_name(self.beat.icon, self.beat.icon_color))
+        self.changed.emit()
+
     def _nameChanged(self, text: str):
         self.beat.text = text
-
-    def _iconChanged(self, icon: str, color: str):
-        self.beat.icon = icon
-        self.beat.icon_color = color
-        self.changed.emit()
 
     def _percentageEdited(self, percentage: float):
         if self._frozen:
@@ -820,7 +858,6 @@ class _CustomBeatsList(ListView):
                 item.widget().updateBeatPercentage()
 
         self.changed.emit()
-
 
 
 class _CustomStoryStructureEditor(_AbstractStructureEditor):
