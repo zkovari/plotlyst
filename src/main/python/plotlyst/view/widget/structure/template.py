@@ -787,8 +787,12 @@ class _CustomBeatsList(ListView):
     @overrides
     def _deleteItemWidget(self, widget: ListItemWidget):
         super()._deleteItemWidget(widget)
-        self.structure.beats.remove(widget.item())
-        self.changed.emit()
+        beat: StoryBeat = widget.item()
+        self.structure.beats.remove(beat)
+        if beat.ends_act:
+            self.structure.decreaseAct()
+            self.structure.update_acts()
+        self._changed()
 
     @overrides
     def _dropped(self, mimeData: ObjectReferenceMimeData):
