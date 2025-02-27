@@ -119,6 +119,8 @@ class _BeatButton(QToolButton):
         super().setChecked(checked)
 
     def activateSelection(self, value: bool):
+        if not self._selectable:
+            return
         if value or self.isChecked():
             self.setEnabled(True)
             pointy(self)
@@ -208,8 +210,7 @@ class _ActButton(QPushButton):
 class StoryStructureTimelineWidget(QWidget):
     BeatMimeType = 'application/story-beat'
 
-    beatSelected = pyqtSignal(StoryBeat)
-    beatRemovalRequested = pyqtSignal(StoryBeat)
+    beatToggled = pyqtSignal(StoryBeat, bool)
     actsResized = pyqtSignal()
     beatMoved = pyqtSignal(StoryBeat)
 
@@ -305,7 +306,6 @@ class StoryStructureTimelineWidget(QWidget):
 
     def __initButton(self, beat: StoryBeat, btn: Union[QAbstractButton, _BeatButton], occupied_beats: Set[StoryBeat]):
         if beat.type == StoryBeatType.BEAT:
-            btn.toggled.connect(partial(self._beatToggled, btn))
             btn.clicked.connect(partial(self._beatClicked, btn))
             # btn.installEventFilter(self)
             self._refreshBeatButtonDragStatus(btn)
@@ -557,16 +557,14 @@ class StoryStructureTimelineWidget(QWidget):
         self.btnCurrentScene.setHidden(True)
 
     def toggleBeat(self, beat: StoryBeat, toggled: bool):
+        if not self._beatsCheckable:
+            return
+
         btn = self._beats.get(beat)
         if btn is None:
             return
-
-        # if toggled:
-        #     btn.setCheckable(False)
-        # else:
-        # pointy(btn)
-        # btn.setCheckable(True)
-        self._beatToggled(btn, toggled)
+        btn.setChecked(toggled)
+        btn.activateSelection(self._beatSelectionActive)
 
     def toggleBeatVisibility(self, beat: StoryBeat):
         btn = self._beats.get(beat)
@@ -589,16 +587,10 @@ class StoryStructureTimelineWidget(QWidget):
     def _actToggled(self, btn: _ActButton, toggled: bool):
         translucent(btn, 1.0 if toggled else 0.2)
 
-    def _beatToggled(self, btn: QToolButton, toggled: bool):
-        pass
-        # translucent(btn, 1.0 if toggled else 0.2)
-
-    def _beatClicked(self, btn: _BeatButton):
-        if btn.isCheckable() and btn.isChecked():
-            self.beatSelected.emit(btn.beat)
-            # btn.activateSelection(self._beatSelectionActive)
-        # else:
-        btn.activateSelection(self._beatSelectionActive)
+    def _beatClicked(self, btn: _BeatButton, toggled: bool):
+        if self._beatsCheckable:
+            self.beatToggled.emit(btn.beat, toggled)
+            btn.activateSelection(self._beatSelectionActive)
 
     def _refreshBeatButtonDragStatus(self, btn: _BeatButton):
         if self._beatsMoveable and not btn.beat.ends_act and self.isProportionalDisplay():

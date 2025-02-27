@@ -33,7 +33,7 @@ from qtmenu import MenuWidget
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, ScenePurposeType, \
-    StoryStructure, NovelSetting, CardSizeRatio, Character
+    StoryStructure, NovelSetting, CardSizeRatio, Character, StoryBeat
 from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, emit_event
 from plotlyst.event.handler import event_dispatchers
@@ -47,6 +47,7 @@ from plotlyst.events import SceneOrderChangedEvent
 from plotlyst.model.common import SelectionItemsModel
 from plotlyst.model.novel import NovelStagesModel
 from plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
+from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import delete_scene
 from plotlyst.view._view import AbstractNovelView
 from plotlyst.view.common import ButtonPressResizeEventFilter, action, restyle, insert_after
@@ -259,6 +260,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.wdgStoryStructureParent.setHidden(True)
         self.ui.wdgStoryStructure.setActsClickable(False)
         self.ui.wdgStoryStructure.setBeatsSelectable(True)
+        self.ui.wdgStoryStructure.beatToggled.connect(self._beat_toggled)
         self.ui.wdgStoryStructure.setStructure(self.novel)
 
         self.ui.btnFilter.setIcon(IconRegistry.filter_icon())
@@ -874,3 +876,23 @@ class ScenesOutlineView(AbstractNovelView):
         self._actFilter.setVisible(acts > 0)
         self._scene_filter.lblActs.setVisible(acts > 0)
         self.ui.lineBeforeActFilter.setVisible(acts > 0)
+
+    def _beat_toggled(self, beat: StoryBeat, toggled: bool):
+        if toggled:
+            scene = self._selected_scene()
+            if scene is None:
+                return
+
+            previous_beat = scene.beat(self.novel)
+            if previous_beat and previous_beat != beat:
+                scene.remove_beat(self.novel)
+                self.ui.wdgStoryStructure.toggleBeat(previous_beat, False)
+            scene.link_beat(self.novel.active_story_structure, beat)
+        else:
+            scene = acts_registry.scene(beat)
+            scene.remove_beat(self.novel)
+
+        card = self.ui.cards.card(scene)
+        card.refreshBeat()
+        self.repo.update_scene(scene)
+        emit_event(self.novel, SceneStoryBeatChangedEvent(self, scene, beat, toggled=toggled))
