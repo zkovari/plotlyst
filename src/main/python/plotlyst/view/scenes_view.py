@@ -243,6 +243,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.cards.cardSelected.connect(self._card_selected)
         self.ui.cards.cardDoubleClicked.connect(self._on_edit)
         self.ui.cards.cardEntered.connect(lambda x: self.ui.wdgStoryStructure.highlightScene(x.scene))
+        self.ui.cards.cardLeft.connect(lambda x: self.ui.wdgStoryStructure.clearHighlights())
         self.ui.cards.cardCustomContextMenuRequested.connect(self._show_card_menu)
 
         self.ui.btnPreferences.setIcon(IconRegistry.preferences_icon())

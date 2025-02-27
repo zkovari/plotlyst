@@ -58,6 +58,7 @@ class Card(QFrame):
     selected = pyqtSignal()
     doubleClicked = pyqtSignal()
     cursorEntered = pyqtSignal()
+    cursorLeft = pyqtSignal()
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -88,6 +89,7 @@ class Card(QFrame):
             color.setAlpha(175)
             qtanim.glow(self, color=color, radius=0, startRadius=12, reverseAnimation=False,
                         teardown=lambda: self.setGraphicsEffect(None))
+            self.cursorLeft.emit()
 
     @overrides
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
@@ -512,6 +514,7 @@ class SceneCardFilter(CardFilter):
 class CardsView(QFrame):
     cardSelected = pyqtSignal(Card)
     cardEntered = pyqtSignal(Card)
+    cardLeft = pyqtSignal(Card)
     cardDoubleClicked = pyqtSignal(Card)
     cardCustomContextMenuRequested = pyqtSignal(Card, QPoint)
     orderChanged = pyqtSignal(list, Card)  # dropped Card
@@ -630,6 +633,7 @@ class CardsView(QFrame):
         card.selected.connect(lambda: self._cardSelected(card))
         card.doubleClicked.connect(lambda: self.cardDoubleClicked.emit(card))
         card.cursorEntered.connect(lambda: self.cardEntered.emit(card))
+        card.cursorLeft.connect(lambda: self.cardLeft.emit(card))
         card.customContextMenuRequested.connect(partial(self.cardCustomContextMenuRequested.emit, card))
         card.installEventFilter(DropEventFilter(card, [card.mimeType()], motionDetection=Qt.Orientation.Horizontal,
                                                 motionSlot=partial(self._dragMoved, card),
