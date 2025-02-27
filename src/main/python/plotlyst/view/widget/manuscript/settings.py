@@ -34,7 +34,7 @@ from qttextedit.util import EN_DASH, EM_DASH
 
 from plotlyst.core.domain import Novel
 from plotlyst.view.common import label, push_btn, \
-    ExclusiveOptionalButtonGroup
+    ExclusiveOptionalButtonGroup, exclusive_buttons
 from plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.widget.button import CollapseButton
@@ -330,7 +330,7 @@ class EditorSettingsHeader(QFrame):
 
         self.layout().addWidget(sectionTitle, alignment=Qt.AlignmentFlag.AlignLeft)
         self._widget.setHidden(True)
-        self.btnCollapse.clicked.connect(self._widget.setVisible)
+        self.btnCollapse.toggled.connect(self._widget.setVisible)
         self.layout().addWidget(self.btnCollapse, alignment=Qt.AlignmentFlag.AlignRight)
 
     @overrides
@@ -351,10 +351,12 @@ class ManuscriptEditorSettingsWidget(QWidget):
         self.smartTypingSettings = ManuscriptSmartTypingSettingsWidget(novel)
         self.langSelectionWidget = ManuscriptSpellcheckingSettingsWidget(novel)
 
-        header = self._addSection('Font settings', 'fa5s.font', self.fontSettings)
-        header.setChecked(True)
-        self._addSection('Smart Typing', 'ri.double-quotes-r', self.smartTypingSettings)
-        self._addSection('Spellchecking', 'fa5s.spell-check', self.langSelectionWidget)
+        headerSettings = self._addSection('Font settings', 'fa5s.font', self.fontSettings)
+        headerSmart = self._addSection('Smart Typing', 'ri.double-quotes-r', self.smartTypingSettings)
+        headerSpellcheck = self._addSection('Spellchecking', 'fa5s.spell-check', self.langSelectionWidget)
+        exclusive_buttons(self, headerSettings.btnCollapse, headerSmart.btnCollapse, headerSpellcheck.btnCollapse,
+                          optional=True)
+        headerSettings.setChecked(True)
         self.layout().addWidget(vspacer())
 
     def _addSection(self, title: str, icon: str, widget: QWidget) -> EditorSettingsHeader:
