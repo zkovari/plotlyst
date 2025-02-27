@@ -35,7 +35,7 @@ from plotlyst.common import PLOTLYST_SECONDARY_COLOR, act_color, RELAXED_WHITE_C
 from plotlyst.core.domain import StoryBeat, StoryBeatType, Novel, \
     StoryStructure, Scene, StoryStructureDisplayType, TemplateStoryStructureType
 from plotlyst.service.cache import acts_registry
-from plotlyst.view.common import to_rgba_str
+from plotlyst.view.common import to_rgba_str, ButtonPressResizeEventFilter
 from plotlyst.view.icons import IconRegistry
 
 
@@ -58,7 +58,10 @@ class _BeatButton(QToolButton):
         self.setCheckable(self._selectable)
         self.toggled.connect(self._checked)
 
-        color = 'grey' if self._selectable else beat.icon_color
+        color = '#909BA6' if self._selectable else beat.icon_color
+
+        if self._selectable:
+            self.installEventFilter(ButtonPressResizeEventFilter(self))
 
         if beat.icon:
             self.setIcon(IconRegistry.from_name(beat.icon, color, beat.icon_color))

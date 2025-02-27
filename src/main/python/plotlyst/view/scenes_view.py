@@ -389,7 +389,6 @@ class ScenesOutlineView(AbstractNovelView):
 
     def _switch_view(self):
         height = 50
-        relax_colors = False
         columns = self._default_columns()
 
         if self.ui.btnStatusView.isChecked():
@@ -439,7 +438,6 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.tblSceneStages.clearSelection()
             self.prefs_widget.showTableTab()
 
-        self.tblModel.setRelaxColors(relax_colors)
         self._toggle_table_columns(columns)
 
         self.ui.tblScenes.verticalHeader().setDefaultSectionSize(height)
@@ -449,12 +447,11 @@ class ScenesOutlineView(AbstractNovelView):
     def _on_scene_selected(self):
         indexes = self.ui.tblScenes.selectedIndexes()
         selection = len(indexes) > 0
-        if not self.novel.is_readonly():
-            self.ui.btnDelete.setEnabled(selection)
-        self.ui.btnEdit.setEnabled(selection)
+        self._enable_action_buttons(selection)
         if selection:
-            self.ui.treeChapters.clearSelection()
-            emit_event(self.novel, SceneSelectedEvent(self, indexes[0].data(ScenesTableModel.SceneRole)))
+            scene = indexes[0].data(ScenesTableModel.SceneRole)
+            self.ui.treeChapters.selectScene(scene)
+            emit_event(self.novel, SceneSelectedEvent(self, scene))
 
     def _on_chapter_selected(self, chapter: Chapter):
         self.ui.tblScenes.clearSelection()
@@ -805,6 +802,8 @@ class ScenesOutlineView(AbstractNovelView):
         self._toggle_act_filters()
 
         self.ui.wdgStoryStructure.setStructure(self.novel)
+        if self._selected_scene():
+            self.ui.wdgStoryStructure.activateBeatSelection(True)
 
         for card in self.ui.cards.cards():
             card.refreshBeat()
