@@ -27,13 +27,13 @@ from PyQt6.QtCore import Qt, QModelIndex, \
 from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget, QHeaderView
 from overrides import overrides
-from qthandy import incr_font, translucent, clear_layout, busy, bold, sp, transparent, incr_icon, retain_when_hidden
+from qthandy import incr_font, translucent, busy, bold, sp, transparent, incr_icon, retain_when_hidden
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
 from plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, ScenePurposeType, \
-    StoryStructure, NovelSetting, CardSizeRatio, Character
+    StoryStructure, NovelSetting, CardSizeRatio, Character, StoryBeat
 from plotlyst.env import app_env
 from plotlyst.event.core import EventListener, emit_event
 from plotlyst.event.handler import event_dispatchers
@@ -47,6 +47,7 @@ from plotlyst.events import SceneOrderChangedEvent
 from plotlyst.model.common import SelectionItemsModel
 from plotlyst.model.novel import NovelStagesModel
 from plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
+from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import delete_scene
 from plotlyst.view._view import AbstractNovelView
 from plotlyst.view.common import ButtonPressResizeEventFilter, action, restyle, insert_after
@@ -67,7 +68,6 @@ from plotlyst.view.widget.scene.story_map import StoryMap, StoryMapDisplayMode
 from plotlyst.view.widget.scenes import SceneFilterWidget, \
     ScenesPreferencesWidget, ScenesDistributionWidget, ScenePreferencesTabType
 from plotlyst.view.widget.structure.selector import ActSelectorButtons
-from plotlyst.view.widget.structure.timeline import StoryStructureTimelineWidget
 from plotlyst.view.widget.tree import TreeSettings
 
 
@@ -112,6 +112,9 @@ class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
         self.btnScene.setText(f'{len([x for x in self.novel.scenes if x.purpose == ScenePurposeType.Story])}')
         self.btnSequel.setText(f'{len([x for x in self.novel.scenes if x.purpose == ScenePurposeType.Reaction])}')
 
+        self.refreshDistributionChart()
+
+    def refreshDistributionChart(self):
         self._chartDistribution.refresh(self.novel)
 
 
@@ -240,6 +243,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.cards.cardSelected.connect(self._card_selected)
         self.ui.cards.cardDoubleClicked.connect(self._on_edit)
         self.ui.cards.cardEntered.connect(lambda x: self.ui.wdgStoryStructure.highlightScene(x.scene))
+        self.ui.cards.cardLeft.connect(lambda x: self.ui.wdgStoryStructure.clearHighlights())
         self.ui.cards.cardCustomContextMenuRequested.connect(self._show_card_menu)
 
         self.ui.btnPreferences.setIcon(IconRegistry.preferences_icon())
@@ -258,8 +262,10 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnCardsView.setChecked(True)
 
         self.ui.wdgStoryStructureParent.setHidden(True)
-        self.ui.wdgStoryStructure.setStructure(self.novel)
         self.ui.wdgStoryStructure.setActsClickable(False)
+        self.ui.wdgStoryStructure.setBeatsSelectable(True)
+        self.ui.wdgStoryStructure.beatToggled.connect(self._beat_toggled)
+        self.ui.wdgStoryStructure.setStructure(self.novel)
 
         self.ui.btnFilter.setIcon(IconRegistry.filter_icon())
 
@@ -384,7 +390,6 @@ class ScenesOutlineView(AbstractNovelView):
 
     def _switch_view(self):
         height = 50
-        relax_colors = False
         columns = self._default_columns()
 
         if self.ui.btnStatusView.isChecked():
@@ -434,7 +439,6 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.tblSceneStages.clearSelection()
             self.prefs_widget.showTableTab()
 
-        self.tblModel.setRelaxColors(relax_colors)
         self._toggle_table_columns(columns)
 
         self.ui.tblScenes.verticalHeader().setDefaultSectionSize(height)
@@ -444,12 +448,11 @@ class ScenesOutlineView(AbstractNovelView):
     def _on_scene_selected(self):
         indexes = self.ui.tblScenes.selectedIndexes()
         selection = len(indexes) > 0
-        if not self.novel.is_readonly():
-            self.ui.btnDelete.setEnabled(selection)
-        self.ui.btnEdit.setEnabled(selection)
+        self._enable_action_buttons(selection)
         if selection:
-            self.ui.treeChapters.clearSelection()
-            emit_event(self.novel, SceneSelectedEvent(self, indexes[0].data(ScenesTableModel.SceneRole)))
+            scene = indexes[0].data(ScenesTableModel.SceneRole)
+            self.ui.treeChapters.selectScene(scene)
+            emit_event(self.novel, SceneSelectedEvent(self, scene))
 
     def _on_chapter_selected(self, chapter: Chapter):
         self.ui.tblScenes.clearSelection()
@@ -602,6 +605,7 @@ class ScenesOutlineView(AbstractNovelView):
         if not self.novel.is_readonly():
             self.ui.btnDelete.setEnabled(enabled)
         self.ui.btnEdit.setEnabled(enabled)
+        self.ui.wdgStoryStructure.activateBeatSelection(enabled)
 
     def _customize_stages(self):
         diag = ItemsEditorDialog(NovelStagesModel(copy.deepcopy(self.novel.stages)))
@@ -793,18 +797,14 @@ class ScenesOutlineView(AbstractNovelView):
             card.refreshPov()
             card.refreshCharacters()
 
-    # @busy
     def _handle_structure_update(self):
         if self.ui.btnStoryStructure.isChecked():
             self.ui.btnStoryStructureSelector.setVisible(len(self.novel.story_structures) > 1)
         self._toggle_act_filters()
 
-        if self.ui.wdgStoryStructure.novel is not None:
-            clear_layout(self.ui.wdgStoryStructureParent)
-            self.ui.wdgStoryStructure = StoryStructureTimelineWidget(self.ui.wdgStoryStructureParent)
-            self.ui.wdgStoryStructureParent.layout().addWidget(self.ui.wdgStoryStructure)
         self.ui.wdgStoryStructure.setStructure(self.novel)
-        self.ui.wdgStoryStructure.setActsClickable(False)
+        if self._selected_scene():
+            self.ui.wdgStoryStructure.activateBeatSelection(True)
 
         for card in self.ui.cards.cards():
             card.refreshBeat()
@@ -855,7 +855,8 @@ class ScenesOutlineView(AbstractNovelView):
             default_columns.append(ScenesTableModel.ColCharacters)
         if app_env.profile().get('scene-purpose') and self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_PURPOSE):
             default_columns.append(ScenesTableModel.ColType)
-        if app_env.profile().get('scene-progression') and self.novel.prefs.toggled(NovelSetting.SCENE_TABLE_PLOT_PROGRESS):
+        if app_env.profile().get('scene-progression') and self.novel.prefs.toggled(
+                NovelSetting.SCENE_TABLE_PLOT_PROGRESS):
             default_columns.append(ScenesTableModel.ColProgress)
 
         default_columns.append(ScenesTableModel.ColSynopsis)
@@ -878,3 +879,27 @@ class ScenesOutlineView(AbstractNovelView):
         self._actFilter.setVisible(acts > 0)
         self._scene_filter.lblActs.setVisible(acts > 0)
         self.ui.lineBeforeActFilter.setVisible(acts > 0)
+
+    def _beat_toggled(self, beat: StoryBeat, toggled: bool):
+        if toggled:
+            scene = self._selected_scene()
+            if scene is None:
+                return
+
+            previous_beat = scene.beat(self.novel)
+            if previous_beat and previous_beat != beat:
+                scene.remove_beat(self.novel)
+                self.ui.wdgStoryStructure.toggleBeat(previous_beat, False)
+            scene.link_beat(self.novel.active_story_structure, beat)
+        else:
+            scene = acts_registry.scene(beat)
+            scene.remove_beat(self.novel)
+
+        card = self.ui.cards.card(scene)
+        card.refreshBeat()
+        self.repo.update_scene(scene)
+        emit_event(self.novel, SceneStoryBeatChangedEvent(self, scene, beat, toggled=toggled))
+
+        self.title.refreshDistributionChart()
+        if self.stagesProgress:
+            self.stagesProgress.refresh()

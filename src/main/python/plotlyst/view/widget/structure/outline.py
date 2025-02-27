@@ -36,7 +36,7 @@ from plotlyst.core.domain import StoryBeat, StoryBeatType, midpoints, hook_beat,
     twist_beat, inciting_incident_beat, refusal_beat, synchronicity_beat, establish_beat, trigger_beat, \
     first_pinch_point_beat, second_pinch_point_beat, crisis, climax_beat, resolution_beat, contrast_beat, \
     retrospection_beat, revelation_beat, dark_moment, plot_point, plot_point_ponr, plot_point_aha, \
-    plot_point_rededication, danger_beat, copy_beat, TemplateStoryStructureType
+    plot_point_rededication, danger_beat, copy_beat, TemplateStoryStructureType, StoryStructureDisplayType
 from plotlyst.view.common import label, push_btn, wrap, tool_btn, scrolled
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.layout import group
@@ -429,6 +429,8 @@ class StoryStructureOutline(OutlineTimelineWidget):
             self._structureTimeline.toggleBeatVisibility(wdg.beat)
             self._beatWidgetRemoved(wdg, teardownFunction=teardown)
 
+        self._structure.normalize_beats()
+
     @overrides
     def _placeholderClicked(self, placeholder: QWidget):
         self._currentPlaceholder = placeholder
@@ -457,22 +459,26 @@ class StoryStructureOutline(OutlineTimelineWidget):
         self._structureTimeline.insertBeat(beat)
 
     def _recalculatePercentage(self, wdg: StoryStructureBeatWidget):
-        beat = wdg.item
-        i = self._beatWidgets.index(wdg)
-        if i > 0:
-            percentBefore = self._beatWidgets[i - 1].item.percentage
-            if i < len(self._beatWidgets) - 1:
-                percentAfter = self._beatWidgets[i + 1].item.percentage
+        if self._structure.display_type == StoryStructureDisplayType.Proportional_timeline:
+            beat = wdg.item
+            i = self._beatWidgets.index(wdg)
+            if i > 0:
+                percentBefore = self._beatWidgets[i - 1].item.percentage
+                if i < len(self._beatWidgets) - 1:
+                    percentAfter = self._beatWidgets[i + 1].item.percentage
+                else:
+                    percentAfter = 99
+                beat.percentage = percentBefore + (percentAfter - percentBefore) / 2
             else:
-                percentAfter = 99
-            beat.percentage = percentBefore + (percentAfter - percentBefore) / 2
+                beat.percentage = 1
         else:
-            beat.percentage = 1
+            self._structure.normalize_beats()
 
         self._structure.update_acts()
 
     @overrides
     def _insertDroppedItem(self, wdg: OutlineItemWidget):
+        super()._insertDroppedItem(wdg)
         self._recalculatePercentage(wdg)
         self._structureTimeline.setStructure(self._novel, self._structure)
         QTimer.singleShot(150, self._beatsPreview.refresh)

@@ -41,7 +41,6 @@ from plotlyst.events import NovelAboutToSyncEvent, SceneStoryBeatChangedEvent, \
     NovelStorylinesToggleEvent, NovelStructureToggleEvent, NovelPovTrackingToggleEvent, SceneChangedEvent, \
     NovelSyncEvent
 from plotlyst.model.characters_model import CharactersSceneAssociationTableModel
-from plotlyst.service.cache import acts_registry
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import emoji_font, set_tab_icon, \
     push_btn, fade_out_and_gc, set_tab_visible, scroll_to_bottom
@@ -285,11 +284,10 @@ class SceneEditor(QObject, EventListener):
 
     def _beat_removed(self):
         beat = self.scene.beat(self.novel)
-        scene = acts_registry.scene(beat)
-        scene.remove_beat(self.novel)
+        self.scene.remove_beat(self.novel)
         self._structureSelector.reset()
 
-        emit_event(self.novel, SceneStoryBeatChangedEvent(self, scene, beat, toggled=False))
+        emit_event(self.novel, SceneStoryBeatChangedEvent(self, self.scene, beat, toggled=False))
 
     def _update_notes(self):
         if self.scene and self.scene.document:
