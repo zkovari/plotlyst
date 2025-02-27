@@ -1112,6 +1112,7 @@ class StoryStructureSelectorDialog(PopupDialog):
     def structure(self) -> StoryStructure:
         if self.btnCore.isChecked():
             self._structure = self.pageCore.layout().itemAt(0).widget().structure()
+            self._structure.update_acts()
         return self._structure
 
     def display(self) -> Optional[StoryStructure]:
