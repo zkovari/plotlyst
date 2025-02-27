@@ -112,6 +112,9 @@ class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
         self.btnScene.setText(f'{len([x for x in self.novel.scenes if x.purpose == ScenePurposeType.Story])}')
         self.btnSequel.setText(f'{len([x for x in self.novel.scenes if x.purpose == ScenePurposeType.Reaction])}')
 
+        self.refreshDistributionChart()
+
+    def refreshDistributionChart(self):
         self._chartDistribution.refresh(self.novel)
 
 
@@ -896,3 +899,7 @@ class ScenesOutlineView(AbstractNovelView):
         card.refreshBeat()
         self.repo.update_scene(scene)
         emit_event(self.novel, SceneStoryBeatChangedEvent(self, scene, beat, toggled=toggled))
+
+        self.title.refreshDistributionChart()
+        if self.stagesProgress:
+            self.stagesProgress.refresh()

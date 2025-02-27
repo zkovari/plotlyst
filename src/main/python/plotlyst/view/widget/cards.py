@@ -32,7 +32,7 @@ from qthandy import clear_layout, retain_when_hidden, transparent, flow, translu
 from qthandy.filter import DragEventFilter, DropEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
-from plotlyst.common import act_color, PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
+from plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.domain import Character, Scene, Novel, NovelSetting, CardSizeRatio, NovelDescriptor
 from plotlyst.core.help import enneagram_help, mbti_help
 from plotlyst.env import app_env
@@ -277,8 +277,7 @@ class SceneCard(Ui_SceneCard, Card):
         beat = self.scene.beat(self.novel)
         if beat:
             icon = beat.icon if beat.icon else f'ri.number-{beat.seq}'
-            self.btnBeat.setIcon(IconRegistry.scene_beat_badge_icon(icon, beat.icon_color, act_color(beat.act,
-                                                                                                     self.novel.active_story_structure.acts)))
+            self.btnBeat.setIcon(IconRegistry.scene_beat_badge_icon(icon, beat.icon_color, beat.icon_color))
             self.btnBeat.setToolTip(beat.text)
             self.btnBeat.setVisible(True)
         else:
