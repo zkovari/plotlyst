@@ -27,10 +27,14 @@ from PyQt6.QtWidgets import QWidget, QTextBrowser
 from overrides import overrides
 from qthandy import incr_font, vbox, busy, transparent
 
-from plotlyst.common import PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR
+from plotlyst.common import PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.client import json_client
 from plotlyst.core.domain import Novel, Scene
-from plotlyst.view.common import DelayedSignalSlotConnector, label
+from plotlyst.core.text import wc
+from plotlyst.service.persistence import RepositoryPersistenceManager
+from plotlyst.view.common import DelayedSignalSlotConnector, label, push_btn
+from plotlyst.view.icons import IconRegistry
+from plotlyst.view.widget.confirm import asked
 from plotlyst.view.widget.input import SearchField
 
 
@@ -100,17 +104,28 @@ class SearchResultsTextEdit(QTextBrowser):
 class ManuscriptFindWidget(QWidget):
     CONTEXT_SIZE: int = 30
     matched = pyqtSignal()
+    replaced = pyqtSignal()
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self.novel = novel
-        vbox(self)
+        vbox(self, spacing=5)
         self._term: str = ''
         self._results: Dict[Scene, list] = {}
 
-        self.search = SearchField()
+        self.search = SearchField(ignoreCapitalization=True)
         incr_font(self.search.lineSearch)
         DelayedSignalSlotConnector(self.search.lineSearch.textEdited, self._search, delay=500, parent=self)
+
+        self.replace = SearchField(ignoreCapitalization=True)
+        incr_font(self.replace.lineSearch)
+        self.replace.lineSearch.setPlaceholderText('Replace with...')
+        self.replace.btnIcon.setIcon(IconRegistry.from_name('ri.find-replace-fill'))
+
+        self.btnReplace = push_btn(IconRegistry.from_name('ri.find-replace-fill', RELAXED_WHITE_COLOR), 'Replace all',
+                                   properties=['confirm', 'positive'])
+        self.btnReplace.setDisabled(True)
+        self.btnReplace.clicked.connect(self._replace)
 
         self.lblResults = label('', bold=True)
 
@@ -130,6 +145,8 @@ class ManuscriptFindWidget(QWidget):
         self._textBlockFormat.setLeftMargin(10)
 
         self.layout().addWidget(self.search, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self.replace, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self.btnReplace, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self.lblResults, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self.wdgResults)
 
@@ -143,7 +160,9 @@ class ManuscriptFindWidget(QWidget):
 
     def deactivate(self):
         self.search.lineSearch.clear()
+        self.replace.lineSearch.clear()
         self._term = ''
+        self.btnReplace.setDisabled(True)
         self.lblResults.clear()
         self.wdgResults.clear()
         self._results.clear()
@@ -201,6 +220,7 @@ class ManuscriptFindWidget(QWidget):
         self._results.clear()
         if not term or term == ' ' or (len(term) == 1 and not re.match(r'[\d\W]', term)):
             self.lblResults.clear()
+            self.btnReplace.setDisabled(True)
             return
 
         json_client.load_manuscript(self.novel)
@@ -222,6 +242,7 @@ class ManuscriptFindWidget(QWidget):
                     resultCursor.block().setUserData(SearchBlockUserData(result))
 
         self.lblResults.setText(f'{count} results')
+        self.btnReplace.setEnabled(count > 0)
         self.matched.emit()
 
     def _searchForScene(self, scene: Scene) -> List:
@@ -270,3 +291,42 @@ class ManuscriptFindWidget(QWidget):
         for result in self._results.values():
             count += len(result)
         self.lblResults.setText(f'{count} results')
+
+    def _replace(self):
+        count = 0
+        for result in self._results.values():
+            count += len(result)
+        if asked(
+                f"Are you sure you want to replace all {count} occurrences with '<b>{self.replace.lineSearch.text()}</b>'?",
+                'Replace all'):
+            self._replaceResults(self._results)
+
+    @busy
+    def _replaceResults(self, results: Dict[Scene, list]):
+        if not results:
+            return
+        replace_text = self.replace.lineSearch.text()
+
+        repo = RepositoryPersistenceManager.instance()
+
+        for scene, matches in results.items():
+            if not matches:
+                continue
+
+            doc = QTextDocument()
+            doc.setHtml(scene.manuscript.content)
+            cursor = QTextCursor(doc)
+
+            for result in sorted(matches, key=lambda res: res["start"], reverse=True):
+                start, end = result["start"], result["end"]
+
+                cursor.setPosition(start)
+                cursor.setPosition(end, QTextCursor.MoveMode.KeepAnchor)
+                cursor.insertText(replace_text)
+
+            scene.manuscript.content = doc.toHtml()
+            scene.manuscript.statistics.wc = wc(doc.toPlainText())
+            repo.update_doc(self.novel, scene.manuscript)
+
+        self.replaced.emit()
+        self._search(self._term)

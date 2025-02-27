@@ -148,6 +148,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.pageFind.layout().addWidget(self.wdgFind)
         self.textEditor.attachFindWidget(self.wdgFind)
         self.wdgFind.matched.connect(self._term_searched)
+        self.wdgFind.replaced.connect(self._term_replaced)
         self.wdgFind.wdgResults.matchClicked.connect(self._navigate)
 
         self._btnDistractionFree = tool_btn(IconRegistry.expand_icon(), 'Enter distraction-free mode',
@@ -473,6 +474,19 @@ class ManuscriptView(AbstractNovelView):
 
     def _term_searched(self):
         self.textEditor.activateFind()
+
+    def _term_replaced(self):
+        scene = self.textEditor.scene()
+        if scene:
+            self.ui.treeChapters.selectScene(scene)
+            self._editScene(scene)
+        else:
+            chapter = self.textEditor.chapter()
+            if chapter:
+                self.ui.treeChapters.selectChapter(chapter)
+                self._editChapter(chapter)
+
+        self._update_story_goal()
 
     def _navigate(self, context: dict):
         scene = context['scene']

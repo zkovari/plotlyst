@@ -749,7 +749,7 @@ class ManuscriptEditor(QWidget, EventListener):
         updated_progress = self._updateProgress(scene, wc)
 
         scene.manuscript.content = textedit.toHtml()
-        self.repo.update_doc(app_env.novel, scene.manuscript)
+        self.repo.update_doc(self._novel, scene.manuscript)
         if updated_progress:
             self.repo.update_scene(scene)
             self.repo.update_novel(self._novel)
