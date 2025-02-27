@@ -25,7 +25,7 @@ from PyQt6.QtGui import QShowEvent, QTextDocument, QTextCursor, QSyntaxHighlight
     QMouseEvent, QTextBlockUserData, QTextBlockFormat
 from PyQt6.QtWidgets import QWidget, QTextBrowser
 from overrides import overrides
-from qthandy import incr_font, vbox, busy, transparent
+from qthandy import incr_font, vbox, busy, transparent, decr_icon
 
 from plotlyst.common import PLOTLYST_TERTIARY_COLOR, PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
 from plotlyst.core.client import json_client
@@ -34,6 +34,8 @@ from plotlyst.core.text import wc
 from plotlyst.service.persistence import RepositoryPersistenceManager
 from plotlyst.view.common import DelayedSignalSlotConnector, label, push_btn
 from plotlyst.view.icons import IconRegistry
+from plotlyst.view.layout import group
+from plotlyst.view.widget.button import SelectorToggleButton
 from plotlyst.view.widget.confirm import asked
 from plotlyst.view.widget.input import SearchField
 
@@ -117,12 +119,24 @@ class ManuscriptFindWidget(QWidget):
         incr_font(self.search.lineSearch)
         DelayedSignalSlotConnector(self.search.lineSearch.textEdited, self._search, delay=500, parent=self)
 
+        self.btnCase = SelectorToggleButton(Qt.ToolButtonStyle.ToolButtonIconOnly, minWidth=40, animated=False)
+        self.btnCase.setIcon(IconRegistry.from_name('msc.case-sensitive', 'grey', 'black'))
+        self.btnCase.setToolTip('Toggle case sensitivity')
+        decr_icon(self.btnCase)
+        self.btnCase.clicked.connect(self._settingChanged)
+
+        self.btnWord = SelectorToggleButton(Qt.ToolButtonStyle.ToolButtonIconOnly, minWidth=40, animated=False)
+        self.btnWord.setIcon(IconRegistry.from_name('msc.whole-word', 'grey', 'black'))
+        self.btnWord.setToolTip('Match whole word only')
+        decr_icon(self.btnWord)
+        self.btnWord.clicked.connect(self._settingChanged)
+
         self.replace = SearchField(ignoreCapitalization=True)
         incr_font(self.replace.lineSearch)
         self.replace.lineSearch.setPlaceholderText('Replace with...')
-        self.replace.btnIcon.setIcon(IconRegistry.from_name('ri.find-replace-fill'))
+        self.replace.btnIcon.setIcon(IconRegistry.from_name('mdi.find-replace'))
 
-        self.btnReplace = push_btn(IconRegistry.from_name('ri.find-replace-fill', RELAXED_WHITE_COLOR), 'Replace all',
+        self.btnReplace = push_btn(IconRegistry.from_name('mdi.find-replace', RELAXED_WHITE_COLOR), 'Replace all',
                                    properties=['confirm', 'positive'])
         self.btnReplace.setDisabled(True)
         self.btnReplace.clicked.connect(self._replace)
@@ -145,6 +159,7 @@ class ManuscriptFindWidget(QWidget):
         self._textBlockFormat.setLeftMargin(10)
 
         self.layout().addWidget(self.search, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(group(self.btnCase, self.btnWord, margin_left=20), alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(self.replace, alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(self.btnReplace, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self.lblResults, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -213,6 +228,9 @@ class ManuscriptFindWidget(QWidget):
         self._updateResultsLabel()
         return scene_matches
 
+    def _settingChanged(self):
+        self._search(self._term)
+
     @busy
     def _search(self, term: str):
         self._term = term
@@ -253,10 +271,19 @@ class ManuscriptFindWidget(QWidget):
         doc.setHtml(scene.manuscript.content)
         raw_text = doc.toPlainText()
 
+        flags = None
+        if self.btnCase.isChecked():
+            flags = QTextDocument.FindFlag.FindCaseSensitively
+        if self.btnWord.isChecked():
+            flags = flags | QTextDocument.FindFlag.FindWholeWords if flags else QTextDocument.FindFlag.FindWholeWords
+
         cursor = QTextCursor(doc)
         scene_matches = []
         while not cursor.isNull() and not cursor.atEnd():
-            cursor = doc.find(self._term, cursor)
+            if flags:
+                cursor = doc.find(self._term, cursor, options=flags)
+            else:
+                cursor = doc.find(self._term, cursor)
             if cursor.isNull():
                 break
 

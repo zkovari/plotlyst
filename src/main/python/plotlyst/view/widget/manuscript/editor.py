@@ -668,7 +668,6 @@ class ManuscriptEditor(QWidget, EventListener):
 
         for textedit in self._textedits:
             matches = self._find.sceneMathes(textedit.scene())
-            print(len(matches))
 
     def setNightMode(self, mode: bool):
         for lbl in self._sceneLabels:
@@ -758,8 +757,6 @@ class ManuscriptEditor(QWidget, EventListener):
 
         if self._find.isActive():
             QTimer.singleShot(25, lambda: self._find.updateScene(scene))
-            # matches = self._find.updateScene(scene)
-            # print(len(matches))
 
     def _updateProgress(self, scene: Scene, wc: int) -> bool:
         if scene.manuscript.statistics.wc == wc:
@@ -824,18 +821,13 @@ class ManuscriptEditor(QWidget, EventListener):
         return self._novel.prefs.manuscript.font[app_env.platform()]
 
     def _resizeToCharacterWidth(self):
-        # print(f'max {self._maxContentWidth} width {self.width()}')
         if 0 < self._maxContentWidth < self.width():
             margin = self.width() - self._maxContentWidth
         else:
             margin = 0
 
         margin = int(margin // 2)
-        # print(margin)
         margins(self, left=margin, right=margin)
-        # current_margins: QMargins = self.viewportMargins()
-        # self.setViewportMargins(margin, current_margins.top(), margin, current_margins.bottom())
-        # self.resizeToContent()
 
     def _dashInsertionChanged(self, mode: DashInsertionMode):
         for textedit in self._textedits:
